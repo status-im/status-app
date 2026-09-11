@@ -15,7 +15,7 @@ class MessagingSettingsPage(BasePage):
     def open_contacts(self):
         from .contacts_page import ContactsSettingsPage
 
-        if not self.safe_click(self.locators.CONTACTS_ENTRY):
+        if not self.try_click(self.locators.CONTACTS_ENTRY):
             return None
         page = ContactsSettingsPage(self.driver)
         return page if page.is_loaded(timeout=10) else None

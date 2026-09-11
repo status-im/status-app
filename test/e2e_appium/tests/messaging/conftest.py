@@ -721,7 +721,7 @@ async def _setup_group_chat_context(
         one_to_one_names_by_device: dict[str, list[str]] = {}
         for ctx_dev in (admin, member_b, member_c):
             try:
-                _App(ctx_dev.driver).click_messages_button()
+                assert _App(ctx_dev.driver).click_messages_button(), "Failed to navigate to Messages"
                 await asyncio.sleep(0.5)
                 names = _extract_chat_row_names(ctx_dev)
                 one_to_one_names_by_device[ctx_dev.device_id] = names

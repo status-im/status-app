@@ -144,13 +144,53 @@ class MessageContextMenuPage(BasePage):
             self.logger.error(f"Long-press on element failed: {e}")
             return False
 
+    def is_expanded(self, timeout: int = 2) -> bool:
+        """Check if the menu is open in its expanded state."""
+        if not self.is_displayed(timeout=timeout):
+            return False
+        return not self.is_element_visible(self.locators.EXPAND_BUTTON, timeout=1)
+
+    def tap_expand(self, timeout: int = 5) -> bool:
+        """Expand the menu from its collapsed single-row state.
+
+        Idempotent — an already-expanded menu returns True.
+
+        Returns:
+            bool: True if the menu is open and expanded.
+        """
+        if not self.is_displayed(timeout=2):
+            self.logger.error("Context menu not visible when trying to expand")
+            return False
+
+        if self.is_element_visible(self.locators.EXPAND_BUTTON, timeout=3):
+            if not self.try_click(self.locators.EXPAND_BUTTON, timeout=timeout):
+                self.logger.error("Failed to tap the expand button")
+                return False
+
+        # Success is positive: the menu must still be open with the expand
+        # button gone. A tap that dismissed the menu must not read as expanded.
+        if not self.wait_for_condition(
+            lambda: self.is_expanded(timeout=1), timeout=timeout
+        ):
+            self.logger.error("Menu is not open in the expanded state")
+            return False
+
+        self.logger.info("Context menu expanded")
+        return True
+
     def _tap_menu_action(self, locator: tuple, action_name: str, timeout: int = 5) -> bool:
-        """Tap a menu action and wait for menu to close."""
+        """Tap a menu action, expanding the menu first when the action needs it."""
         if not self.is_displayed(timeout=2):
             self.logger.error(f"Context menu not visible when trying to tap {action_name}")
             return False
 
-        if not self.safe_click(locator, timeout=timeout):
+        # Some actions exist only in the expanded menu: delete always, pin on
+        # own messages (edit takes the compact slot).
+        if not self.is_element_visible(locator, timeout=1) and not self.is_expanded(timeout=1):
+            if not self.tap_expand(timeout=timeout):
+                return False
+
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap {action_name}")
             return False
 
@@ -224,7 +264,7 @@ class MessageContextMenuPage(BasePage):
             bool: True if reaction was added.
         """
         locator = self.locators.quick_reaction_by_emoji(emoji)
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap quick reaction '{emoji}'")
             return False
 
@@ -287,7 +327,7 @@ class MessageContextMenuPage(BasePage):
         Returns:
             bool: True if emoji picker opened.
         """
-        if not self.safe_click(self.locators.ADD_REACTION_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.ADD_REACTION_BUTTON, timeout=timeout):
             self.logger.error("Failed to tap Add reaction button")
             return False
 
@@ -309,7 +349,7 @@ class MessageContextMenuPage(BasePage):
             bool: True if emoji was selected.
         """
         locator = self.emoji_locators.emoji_by_character(emoji)
-        if not self.safe_click(locator, timeout=timeout):
+        if not self.try_click(locator, timeout=timeout):
             self.logger.error(f"Failed to select emoji '{emoji}' from picker")
             return False
 
@@ -352,6 +392,10 @@ class MessageContextMenuPage(BasePage):
     def is_pin_visible(self, timeout: int = 2) -> bool:
         """Check if Pin/Unpin action is visible."""
         return self.is_element_visible(self.locators.PIN_MESSAGE, timeout=timeout)
+
+    def is_mark_unread_visible(self, timeout: int = 2) -> bool:
+        """Check if Mark as unread action is visible."""
+        return self.is_element_visible(self.locators.MARK_AS_UNREAD, timeout=timeout)
 
     # ===== Compound Actions =====
 
@@ -397,7 +441,7 @@ class MessageContextMenuPage(BasePage):
             self.logger.warning("Delete confirmation dialog not visible")
             return False
 
-        if not self.safe_click(self.locators.DELETE_CONFIRMATION_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.DELETE_CONFIRMATION_BUTTON, timeout=timeout):
             self.logger.error("Failed to click delete confirmation button")
             return False
 

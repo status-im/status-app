@@ -16,7 +16,10 @@ intercepts the Messaging nav and then blocks the nav drawer entirely -- the
 concrete cause of the nav wedges seen while building this.
 """
 
+import xml.etree.ElementTree as ET
+
 from locators.base_locators import BaseLocators
+from utils.exceptions import is_session_fatal
 from locators.wallet.accounts_locators import WalletAccountsLocators
 from locators.settings.settings_locators import SettingsLocators
 from locators.messaging.chat_locators import ChatLocators
@@ -43,13 +46,15 @@ def dismiss_backup_modal(page, timeout: int = 2) -> bool:
 
     Never raises: callers use this as a guard inside nav retry loops, so a
     failed dismissal must fall through to the caller's own retry, not abort
-    it (safe_click raises on exhaustion)."""
+    it (click raises on exhaustion)."""
     if not page.is_element_visible(BACKUP_MODAL, timeout=timeout):
         return False
     try:
-        page.safe_click(BACKUP_MODAL_SKIP, timeout=5)
+        page.click(BACKUP_MODAL_SKIP, timeout=5)
         return page.wait_for_invisibility(BACKUP_MODAL, timeout=5)
     except Exception as exc:
+        if is_session_fatal(exc):
+            raise
         page.logger.warning("Backup modal present but dismissal failed: %s", exc)
         return False
 
@@ -65,9 +70,11 @@ def dismiss_introduce_yourself(page, timeout: int = 2) -> bool:
     if not page.is_element_visible(INTRODUCE_MODAL_SKIP, timeout=timeout):
         return False
     try:
-        page.safe_click(INTRODUCE_MODAL_SKIP, timeout=5)
+        page.click(INTRODUCE_MODAL_SKIP, timeout=5)
         return page.wait_for_invisibility(INTRODUCE_MODAL_SKIP, timeout=5)
     except Exception as exc:
+        if is_session_fatal(exc):
+            raise
         page.logger.warning(
             "Introduce-yourself sheet present but dismissal failed: %s", exc
         )
@@ -79,3 +86,69 @@ def confirm_screen(page, expected: str, timeout: int = 15) -> bool:
     unique a11y anchor with a lag-tolerant timeout. Raises KeyError for an
     unknown screen name so a typo fails loudly instead of silently passing."""
     return page.is_element_visible(SCREEN_ANCHORS[expected], timeout=timeout)
+
+
+def topmost_overlay(page, object_names: tuple[str, ...]) -> str | None:
+    """Return the object name of whichever listed overlay holds focus.
+
+    Qt renders these dialogs as siblings and gives focus only to the top
+    one. A dialog underneath stays in the tree and still reports itself
+    visible, so a tap aimed at it lands on the dialog above instead.
+    Focus is the only attribute that tracks the stack: two dumps taken
+    with the lower dialog open and closed are otherwise identical.
+    """
+    try:
+        root = ET.fromstring(page.driver.page_source.encode("utf-8"))
+    except Exception as exc:
+        if is_session_fatal(exc):
+            raise
+        page.logger.warning("Could not read the page source to find the top overlay: %s", exc)
+        return None
+
+    for node in root.iter():
+        if node.get("focused") != "true":
+            continue
+        resource_id = node.get("resource-id") or ""
+        for name in object_names:
+            if name in resource_id:
+                return name
+    return None
+
+
+def overlay_locator(object_name: str) -> tuple:
+    return ("xpath", f"//*[contains(@resource-id,'{object_name}')]")
+
+
+def dismiss_stacked_overlays(page, overlays, max_rounds: int = 4):
+    """Close overlays from the top of the stack down.
+
+    ``overlays`` is a sequence of (label, object name, dismiss callable).
+    Each round asks the device which listed dialog holds focus and closes
+    that one, because a lower dialog cannot be tapped until the ones above
+    it are gone. When focus names none of them, the sequence order decides:
+    the first listed dialog still visible is closed, so a dialog on screen
+    is never reported as absent.
+
+    Returns (actions, error). ``error`` is None once nothing is left on
+    top, otherwise a message naming the overlay that is still there.
+    """
+    by_name = {name: (label, dismiss) for label, name, dismiss in overlays}
+    actions: list[str] = []
+
+    for _ in range(max_rounds):
+        name = topmost_overlay(page, tuple(by_name))
+        if name is None:
+            name = next(
+                (n for n in by_name if page.is_element_visible(overlay_locator(n), timeout=2)),
+                None,
+            )
+        if name is None:
+            return actions, None
+
+        label, dismiss = by_name[name]
+        if not dismiss():
+            actions.append(f"{label}:dismiss_failed")
+            return actions, f"The {label} overlay is on top and would not close"
+        actions.append(f"{label}:dismissed")
+
+    return actions, f"Overlays were still on top after {max_rounds} rounds"

@@ -18,8 +18,8 @@ class WelcomePage(BasePage):
 
     def click_create_profile(self) -> bool:
         self.logger.info("Clicking 'Create profile' button")
-        return self.safe_click(self.locators.CREATE_PROFILE_BUTTON)
+        return self.try_click(self.locators.CREATE_PROFILE_BUTTON)
 
     def click_login(self) -> bool:
         self.logger.info("Clicking 'Log in' button")
-        return self.safe_click(self.locators.LOGIN_BUTTON)
+        return self.try_click(self.locators.LOGIN_BUTTON)

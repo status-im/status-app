@@ -92,7 +92,7 @@ class ReceiveModal(BasePage):
         except Exception as exc:
             self.logger.debug("Unable to reset clipboard before copy: %s", exc)
 
-        if not self.safe_click(self.locators.COPY_BUTTON, timeout=timeout):
+        if not self.try_click(self.locators.COPY_BUTTON, timeout=timeout):
             self.logger.error("Failed to click copy address button")
             return None
         

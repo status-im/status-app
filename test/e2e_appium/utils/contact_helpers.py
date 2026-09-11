@@ -510,10 +510,9 @@ async def establish_contacts_admin_to_many(
     sender_chat.dismiss_backup_prompt(timeout=2)
     sender_chat.dismiss_introduce_prompt(timeout=2)
 
-    for rcv_suffix in receiver_suffixes:
-        assert sender_chat.wait_for_new_chat_to_arrive(
-            rcv_suffix, display_name=None, timeout=timeout,
-        ), f"Admin never saw chat from {rcv_suffix}"
+    assert sender_chat.wait_for_peer_rows(len(receivers), timeout=timeout), (
+        f"Admin never saw chat rows for all of {receiver_suffixes}"
+    )
 
     logger.info(
         "Contacts established admin↔[%s]",

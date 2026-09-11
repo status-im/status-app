@@ -19,7 +19,7 @@ class PushNotificationsPage(BasePage):
     def select_maybe_later(self) -> bool:
         """Dismiss the dialog by tapping 'Maybe later'."""
         try:
-            self.safe_click(self.locators.MAYBE_LATER_BUTTON)
+            self.click(self.locators.MAYBE_LATER_BUTTON)
         except ElementInteractionError:
             self.logger.error(
                 "Failed to tap 'Maybe later' on push notifications dialog",

@@ -16,10 +16,10 @@ class BackupSeedModal(BasePage):
         return self.is_element_visible(self.locators.MODAL_ROOT, timeout=timeout)
 
     def click_next(self) -> bool:
-        return self.safe_click(self.locators.NEXT_BUTTON)
+        return self.try_click(self.locators.NEXT_BUTTON)
 
     def reveal_seed_phrase(self) -> bool:
-        return self.safe_click(self.locators.REVEAL_BUTTON)
+        return self.try_click(self.locators.REVEAL_BUTTON)
 
     def get_seed_words_map(self) -> Dict[int, str]:
         mapping: Dict[int, str] = {}
@@ -85,10 +85,10 @@ class BackupSeedModal(BasePage):
         return True
 
     def click_continue(self) -> bool:
-        return self.safe_click(self.locators.CONTINUE_BUTTON)
+        return self.try_click(self.locators.CONTINUE_BUTTON)
 
     def click_done(self) -> bool:
-        return self.safe_click(self.locators.DONE_BUTTON)
+        return self.try_click(self.locators.DONE_BUTTON)
 
     def set_remove_checkbox(self, checked: bool = True) -> bool:
         el = self.find_element_safe(self.locators.DELETE_CHECKBOX, timeout=3)
@@ -97,7 +97,7 @@ class BackupSeedModal(BasePage):
         current = ElementStateChecker.is_checked(el)
         if current == checked:
             return True
-        return self.safe_click(self.locators.DELETE_CHECKBOX)
+        return self.try_click(self.locators.DELETE_CHECKBOX)
 
     def wait_until_closed(self, timeout: Optional[int] = 10) -> bool:
         try:

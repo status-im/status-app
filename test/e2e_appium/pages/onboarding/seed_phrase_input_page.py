@@ -40,7 +40,7 @@ class SeedPhraseInputPage(BasePage):
             # Step 1: select the length tab so EnterSeedPhrase renders N fields.
             self.logger.info("Selecting %d-word length", length)
             length_button = BaseLocators.tid(f"{length}SeedButton")
-            if not self.safe_click(length_button, timeout=5):
+            if not self.try_click(length_button, timeout=5):
                 self.logger.warning(
                     "Failed to click %dSeedButton — proceeding (default may be %d already)",
                     length, length,

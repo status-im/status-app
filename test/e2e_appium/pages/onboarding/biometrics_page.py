@@ -13,7 +13,7 @@ class BiometricsPage(BasePage):
 
     def select_maybe_later(self) -> bool:
         try:
-            self.safe_click(self.locators.MAYBE_LATER_BUTTON)
+            self.click(self.locators.MAYBE_LATER_BUTTON)
         except ElementInteractionError:
             self.logger.error("Failed to tap 'Maybe later' on biometrics prompt", exc_info=True)
             return False

@@ -45,8 +45,9 @@ class AppLocators(BaseLocators):
     SETTINGS_ACTION = BaseLocators.xpath(
         "//*[contains(@resource-id,'userStatusSettingsAction')]"
     )
+    # The profile sheet's QML type name; there is no 'ProfileMenu' objectName.
     PROFILE_MENU_CONTAINER = BaseLocators.xpath(
-        "//*[contains(@resource-id,'ProfileMenu')]"
+        "//*[contains(@resource-id,'UserStatusContextMenu')]"
     )
 
     # Toolbar

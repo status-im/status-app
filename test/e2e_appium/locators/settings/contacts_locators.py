@@ -1,3 +1,5 @@
+from constants.support_bot import SUPPORT_BOT_CHAT_KEY, SUPPORT_BOT_DISPLAY_NAME
+
 from ..base_locators import BaseLocators
 
 
@@ -11,11 +13,18 @@ class ContactsSettingsLocators(BaseLocators):
     PENDING_REQUEST_ROW = BaseLocators.xpath(
         "//android.view.TextView[contains(@resource-id,'ContactPanel')]"
     )
+    # Every new profile has a request out to the support bot, so its panel
+    # can sit in either list; the peer's is the first panel that is not the bot's.
+    _PEER_PANEL = (
+        "//*[contains(@resource-id,'ContactPanel')"
+        f" and not(contains(@content-desc,'{SUPPORT_BOT_DISPLAY_NAME}'))"
+        f" and not(contains(@resource-id,'{SUPPORT_BOT_CHAT_KEY}'))]"
+    )
     FIRST_PENDING_ACCEPT_BUTTON = BaseLocators.xpath(
-        "(//*[contains(@resource-id,'ContactPanel')]//*[contains(@resource-id,'acceptBtn')])[1]"
+        f"({_PEER_PANEL}//*[contains(@resource-id,'acceptBtn')])[1]"
     )
     FIRST_CONTACT_CHAT_BUTTON = BaseLocators.xpath(
-        "(//*[contains(@resource-id,'ContactPanel')]//*[contains(@resource-id,'chatBtn')])[1]"
+        f"({_PEER_PANEL}//*[contains(@resource-id,'chatBtn')])[1]"
     )
     DISMISSED_TAB = BaseLocators.xpath(
         "//*[contains(@resource-id,'ContactsView_DismissedRequest_Button')]"

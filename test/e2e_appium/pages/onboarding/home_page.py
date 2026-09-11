@@ -18,10 +18,10 @@ class HomePage(BasePage):
         return self.is_element_visible(self.locators.SEARCH_FIELD)
 
     def click_dock_settings(self) -> bool:
-        return self.safe_click(self.locators.SETTINGS_BUTTON)
+        return self.try_click(self.locators.SETTINGS_BUTTON)
 
     def click_dock_wallet(self) -> bool:
-        return self.safe_click(self.locators.WALLET_BUTTON)
+        return self.try_click(self.locators.WALLET_BUTTON)
 
     def click_dock_messages(self) -> bool:
-        return self.safe_click(self.locators.MESSAGES_BUTTON)
+        return self.try_click(self.locators.MESSAGES_BUTTON)
