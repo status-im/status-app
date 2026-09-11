@@ -17,6 +17,7 @@
 #include "StatusQ/networkchecker.h"
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
+#include "StatusQ/rowbinder.h"
 #include "StatusQ/rxvalidator.h"
 #include "StatusQ/shareutils.h"
 #include "StatusQ/statuscolors.h"
@@ -78,6 +79,7 @@ void registerStatusQTypes() {
                 "StatusQ", 0, 1, "InputMethodEvent",
                 QStringLiteral("InputMethodEvent is created by InputMethodEventFilter"));
     qmlRegisterType<RXValidator>("StatusQ", 0, 1, "RXValidator");
+    qmlRegisterType<RowBinder>("StatusQ", 0, 1, "RowBinder");
 
     qmlRegisterUncreatableType<QValidator>(
                 "StatusQ", 0, 1,

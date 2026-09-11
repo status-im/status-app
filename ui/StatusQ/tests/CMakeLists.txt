@@ -84,6 +84,10 @@ qt_add_executable(TestFonts src/tst_fonts.cpp)
 target_link_libraries(TestFonts PRIVATE Qt::Test Qt::Gui Qt::GuiPrivate Qt::Qml StatusQ)
 add_test(NAME TestFonts COMMAND TestFonts)
 
+add_executable(TestRowBinder src/tst_rowbinder.cpp)
+target_link_libraries(TestRowBinder PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
+add_test(NAME TestRowBinder COMMAND TestRowBinder)
+
 add_executable(TestNetworkAccessFactory src/tst_networkaccessfactory.cpp)
 target_link_libraries(TestNetworkAccessFactory PRIVATE Qt::Test Qt::Network Qt::Qml StatusQ)
 add_test(NAME TestNetworkAccessFactory COMMAND TestNetworkAccessFactory)
