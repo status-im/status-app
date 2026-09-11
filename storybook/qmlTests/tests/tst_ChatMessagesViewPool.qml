@@ -57,7 +57,7 @@ Item {
             signal messageSuccessfullySent()
             signal sendingMessageFailed(string error)
             signal reactionActionFailed()
-            signal scrollToMessage(string messageId)
+            signal scrollToMessage(int messageIndex)
 
             function getChatId() { return moduleMock.mockChatId }
             function loadMoreMessages() { fetchCalls++ }
@@ -194,6 +194,11 @@ Item {
         function insertNewest(i) {
             messagesModel.insert(0, messageRoles("msg-new-" + i, -1 - i,
                                                  Date.now() + (i + 1) * 60000))
+        }
+
+        function insertNewestB(i) {
+            messagesModelB.insert(0, messageRoles("b-new-" + i, -1 - i,
+                                                  Date.now() + (i + 1) * 60000))
         }
 
         function messageRoles(id, i, ts, contentType) {
@@ -630,6 +635,226 @@ Item {
                    "the reveal must be atomic and viewport-sized: first visible "
                    + "count was " + firstVisible + ", expected at least "
                    + chat.internal.initialRevealTarget)
+        }
+
+        // ---- Window record: capture/restore of the viewing
+        // position across chat and section switches ----
+
+        // The top-most row whose pixels are in the viewport, with its
+        // viewport-relative y — the pair a restore must reproduce.
+        function topmostVisibleRow(listView) {
+            let best = null
+            let bestY = Number.MAX_VALUE
+            for (let k = 0; k < listView.count; ++k) {
+                const item = listView.itemAtRow(k)
+                if (!item || !item.visible || item.height <= 0)
+                    continue
+                const y = item.mapToItem(listView, 0, 0).y
+                if (y + item.height <= 0 || y >= listView.height)
+                    continue
+                if (y < bestY) {
+                    bestY = y
+                    best = item
+                }
+            }
+            return best ? ({ id: String(best.messageId), y: bestY }) : null
+        }
+
+        function rowVisibleInViewport(listView, id) {
+            for (let k = 0; k < listView.count; ++k) {
+                const item = listView.itemAtRow(k)
+                if (!item || String(item.messageId) !== id
+                        || !item.visible || item.height <= 0)
+                    continue
+                const y = item.mapToItem(listView, 0, 0).y
+                return y + item.height > 0 && y < listView.height
+            }
+            return false
+        }
+
+        // Slides the window into history (windowStart > 0, so later inserts
+        // rot indices from both window ends) and parks the viewport on a
+        // mid-window row — a user move, so the view unsticks from the bottom.
+        // The paging timer is severed first: it chases the bottom-pinned
+        // viewport and would undo the manual slides.
+        function scrollMidHistory(chat) {
+            chat.listView.moreUpAvailable = false
+            chat.listView.moreDownAvailable = false
+            for (let i = 0; i < 20 && chat.internal.windowStart === 0; ++i) {
+                chat.internal.slideWindowToHistory()
+                waitForQuietWindow(chat)
+            }
+            verify(chat.internal.windowStart > 0,
+                   "the window must slide into history, at "
+                   + chat.internal.windowStart + ".." + chat.internal.windowEnd)
+            const mid = Math.floor(chat.listView.count / 2)
+            const item = chat.listView.itemAtRow(mid)
+            verify(!!item)
+            chat.listView.contentY += item.mapToItem(chat.listView, 0, 0).y - 10
+            waitForQuietWindow(chat)
+            verify(!chat.listView.stickingToNewest)
+            verify(!chat.listView.atNewest)
+        }
+
+        function switchAndSettle(chat, index, idPrefix) {
+            chat.view.activeIndex = index
+            tryVerify(() => chat.listView.count > 0
+                            && !!topmostVisibleRow(chat.listView)
+                            && topmostVisibleRow(chat.listView).id.startsWith(idPrefix),
+                      20000, "the shared view must settle on the switched chat")
+            waitForQuietWindow(chat)
+        }
+
+        // The heart of the issue: leave a chat mid-history, mutate BOTH chats
+        // while away (indices rot from the newest end), come back — the
+        // top-most visible row is the same message at the same pixel.
+        function test_switchBackRestoresViewportPixelExact() {
+            for (let i = 0; i < 200; ++i)
+                appendMessageB(i)
+            const chat = openPooledChat(300, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            scrollMidHistory(chat)
+            const expected = topmostVisibleRow(chat.listView)
+            verify(!!expected, "a viewport row must exist to record")
+
+            switchAndSettle(chat, 1, "b-")
+            for (let i = 1; i <= 3; ++i) {
+                insertNewest(i)
+                insertNewestB(i)
+            }
+
+            switchAndSettle(chat, 0, "msg-")
+            const actual = topmostVisibleRow(chat.listView)
+            verify(!!actual, "the restored view must show rows")
+            compare(actual.id, expected.id,
+                    "the top-most visible row must be restored")
+            verify(Math.abs(actual.y - expected.y) <= 1,
+                   "the restore must be pixel-exact: expected y " + expected.y
+                   + ", got " + actual.y)
+        }
+
+        // At-bottom exception: a chat left pinned to the newest message
+        // restores pinned to the CURRENT newest, including messages that
+        // arrived while away.
+        function test_atBottomRestoresPinnedToNewestArrivals() {
+            for (let i = 0; i < 200; ++i)
+                appendMessageB(i)
+            const chat = openPooledChat(200, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            verify(chat.listView.atNewest, "precondition: the chat opens at bottom")
+
+            switchAndSettle(chat, 1, "b-")
+            for (let i = 1; i <= 3; ++i)
+                insertNewest(i)
+
+            switchAndSettle(chat, 0, "msg-")
+            tryVerify(() => chat.listView.atNewest, 10000,
+                      "an at-bottom chat must restore pinned to the newest message")
+            const newest = chat.listView.itemAtRow(0)
+            verify(!!newest && newest.visible && newest.height > 0)
+            compare(String(newest.messageId), "msg-new-3",
+                    "the while-away arrivals must be included")
+        }
+
+        // A recorded anchor deleted while away (cleared history) falls back
+        // to the bottom of the new content, without errors.
+        function test_deletedAnchorFallsBackToBottom() {
+            for (let i = 0; i < 200; ++i)
+                appendMessageB(i)
+            const chat = openPooledChat(300, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            scrollMidHistory(chat)
+
+            switchAndSettle(chat, 1, "b-")
+            messagesModel.clear()
+            for (let i = 0; i < 60; ++i)
+                messagesModel.append(messageRoles("fresh-" + i, i,
+                                                  Date.now() - i * 60000))
+
+            switchAndSettle(chat, 0, "fresh-")
+            tryVerify(() => chat.listView.atNewest, 10000,
+                      "a deleted anchor must fall back to the bottom")
+            const newest = chat.listView.itemAtRow(0)
+            verify(!!newest && newest.visible && newest.height > 0)
+            compare(String(newest.messageId), "fresh-0")
+        }
+
+        // Section deactivation (dressActive flip) releases every pooled item
+        // through the same capture path; activation restores the position.
+        function test_sectionFlipReleasesPoolAndRestoresPosition() {
+            const chat = openPooledChat(300, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            scrollMidHistory(chat)
+            const expected = topmostVisibleRow(chat.listView)
+            verify(!!expected)
+            const built = builtCount(chat)
+
+            chat.view.visible = false
+            tryCompare(chat.internal, "acquiredCount", 0)
+            tryVerify(() => chat.kind.readyCount === built, 10000,
+                      "every pooled item must return to the pool, ready "
+                      + chat.kind.readyCount + " of " + built)
+
+            chat.view.visible = true
+            waitForQuietWindow(chat)
+            tryVerify(() => {
+                const actual = topmostVisibleRow(chat.listView)
+                return !!actual && actual.id === expected.id
+                        && Math.abs(actual.y - expected.y) <= 1
+            }, 20000, "the section flip must restore the viewing position, "
+                      + "expected " + expected.id + " at y " + expected.y
+                      + ", got " + JSON.stringify(topmostVisibleRow(chat.listView)))
+        }
+
+        // First entry has no record: the new-messages-marker scroll from the
+        // backend governs where the view lands.
+        function test_markerScrollGovernsFirstEntry() {
+            const chat = openPooledChat(200, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            contentModuleMock.messagesModule.scrollToMessage(30)
+            tryVerify(() => rowVisibleInViewport(chat.listView, "msg-30"), 20000,
+                      "the marker scroll must position the view on first entry")
+        }
+
+        // Within a session the window record beats the marker: a marker
+        // scroll arriving while the record restore is in flight is ignored.
+        function test_recordBeatsMarkerScrollInSession() {
+            for (let i = 0; i < 200; ++i)
+                appendMessageB(i)
+            const chat = openPooledChat(300, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            scrollMidHistory(chat)
+            const expected = topmostVisibleRow(chat.listView)
+            verify(!!expected)
+
+            switchAndSettle(chat, 1, "b-")
+
+            chat.view.activeIndex = 0
+            contentModuleMock.messagesModule.scrollToMessage(50)
+            tryVerify(() => chat.listView.count > 0
+                            && !!topmostVisibleRow(chat.listView)
+                            && topmostVisibleRow(chat.listView).id.startsWith("msg-"),
+                      20000)
+            waitForQuietWindow(chat)
+
+            const actual = topmostVisibleRow(chat.listView)
+            verify(!!actual)
+            compare(actual.id, expected.id,
+                    "the in-session record must win over the marker scroll")
+            verify(Math.abs(actual.y - expected.y) <= 1,
+                   "the restore must be pixel-exact: expected y " + expected.y
+                   + ", got " + actual.y)
         }
     }
 }

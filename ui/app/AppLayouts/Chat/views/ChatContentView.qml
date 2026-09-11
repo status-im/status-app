@@ -81,9 +81,13 @@ ColumnLayout {
             anchors.fill: parent
             z: 1
             // covers the backend fetch; the shared view's own staged fill
-            // covers the rows region until its atomic reveal
-            active: root.messageStore.loading || !messagesSlot.occupied
-            visible: active
+            // covers the rows region until its atomic reveal. Built once and
+            // kept: the skeleton is expensive (~200ms of tiles and masks) and
+            // every chat switch needs it again — visibility does the toggling
+            active: false
+            visible: root.messageStore.loading || !messagesSlot.occupied
+            onVisibleChanged: if (visible) active = true
+            Component.onCompleted: if (visible) active = true
             sourceComponent: MessageRowsSkeleton {
                 objectName: "chatMessagesSkeleton"
             }

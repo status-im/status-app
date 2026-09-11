@@ -124,8 +124,39 @@ Flickable {
         d.releaseAnchor()
         d.seekingNewest = false
         d.stickToBottom = false
+        d.pendingRowOffset = NaN
         d.pendingRow = row
         d.restorePosition()
+    }
+
+    /*!
+       Place the viewport top \a offset px below the top of a window row —
+       the restore primitive of the window record. Applied as soon as the row
+       is laid out, then handed over to the anchor so later relayouts keep
+       the row in place.
+    */
+    function positionAtRowOffset(row, offset) {
+        d.releaseAnchor()
+        d.seekingNewest = false
+        d.stickToBottom = false
+        d.pendingRowOffset = offset
+        d.pendingRow = row
+        d.restorePosition()
+    }
+
+    /*!
+       The viewport top's offset below the top of a window row, or NaN while
+       the row holds no measurable geometry. Counterpart of
+       \c positionAtRowOffset.
+    */
+    function viewportOffsetToRow(row) {
+        // no visibility requirement: measured geometry outlives an
+        // ancestor's hide until the next layout polish, and capturing on a
+        // hide is this function's main use
+        const item = repeater.itemAt(row)
+        if (!item || item.height <= 0)
+            return NaN
+        return root.contentY - (d.freshContentTop() + item.y)
     }
 
     /*!
@@ -162,17 +193,26 @@ Flickable {
         // Row positionAtRow() was asked to show, kept until the user scrolls.
         property int pendingRow: -1
 
+        // Offset positionAtRowOffset() was asked to keep below the pending
+        // row's top; NaN means the pending row is centered instead.
+        property real pendingRowOffset: NaN
+
         readonly property bool placeholderUpVisible:
-            topPlaceholder.active && content.y + topPlaceholder.y + topPlaceholder.height
+            topPlaceholder.visible && content.y + topPlaceholder.y + topPlaceholder.height
                                      > root.contentY - root.prefetchMargin
         readonly property bool placeholderDownVisible:
-            bottomPlaceholder.active && content.y + bottomPlaceholder.y
+            bottomPlaceholder.visible && content.y + bottomPlaceholder.y
                                         < root.contentY + root.height + root.prefetchMargin
 
         // From live values, not the bottomContentY binding: inside an
         // onHeightChanged handler the binding still holds the pre-change value.
         function freshBottomY() {
             return Math.max(0, content.height - root.height)
+        }
+
+        // Same for content.y — its binding lags a height change too.
+        function freshContentTop() {
+            return Math.max(0, root.height - content.height)
         }
 
         function clampContentY(y) {
@@ -229,7 +269,7 @@ Flickable {
                 // an unpolished row still sits at y 0 — a position no laid-out
                 // delegate can hold while the top placeholder occupies it —
                 // so its geometry cannot be measured yet
-                if (item.y === 0 && topPlaceholder.active) {
+                if (item.y === 0 && topPlaceholder.visible) {
                     fallback = item
                     continue
                 }
@@ -276,16 +316,31 @@ Flickable {
                 // visible + height > 0 keeps a staged or pre-polish item from
                 // being positioned on stale geometry
                 if (target && target.visible && target.height > 0) {
-                    d.apply(d.clampContentY(
-                                content.y + target.y + target.height / 2 - root.height / 2))
+                    const centered = isNaN(d.pendingRowOffset)
+                    const contentTop = d.freshContentTop()
+                    const wanted = centered
+                                 ? contentTop + target.y + target.height / 2 - root.height / 2
+                                 : contentTop + target.y + d.pendingRowOffset
+                    const applied = d.clampContentY(wanted)
+                    d.apply(applied)
+                    if (!centered && applied !== wanted) {
+                        // reveal-frame geometry: the layout has not absorbed
+                        // the freshly revealed rows yet — hold the request
+                        // and retry on the next relayout. Content that stays
+                        // genuinely too short keeps the view at the clamp,
+                        // which is the bottom fallback.
+                        return
+                    }
                     // hand over to the anchor: later content changes hold this
                     // row in place without re-firing the request — the window
                     // may slide meanwhile, making the row a different message
                     const row = d.pendingRow
                     d.anchorItem = target
-                    d.anchorOffset = content.y + target.y - root.contentY
+                    d.anchorOffset = contentTop + target.y - root.contentY
                     d.pendingRow = -1
-                    root.rowPositioned(row)
+                    d.pendingRowOffset = NaN
+                    if (centered)
+                        root.rowPositioned(row)
                     return
                 }
             }
@@ -403,10 +458,14 @@ Flickable {
             Layout.row: 1
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: active ? root.topPlaceholderHeight : 0
+            Layout.preferredHeight: visible ? root.topPlaceholderHeight : 0
 
-            active: root.moreUpAvailable
-            visible: active
+            // built once, kept: the skeleton content is expensive and paging
+            // state toggles it constantly (invisible items leave the layout)
+            active: false
+            visible: root.moreUpAvailable
+            onVisibleChanged: if (visible) active = true
+            Component.onCompleted: if (visible) active = true
             sourceComponent: root.placeholder
         }
 
@@ -421,9 +480,14 @@ Flickable {
             // The row leaving the window may be the one the viewport is
             // measured against. The survivors still hold their pre-relayout
             // positions here, so the offset taken now is the one to keep.
+            // And the removed delegate must let go of everything it borrowed
+            // NOW: it keeps its index (no -1 renumbering) and dies deferred,
+            // and the destruction cascade would take borrowed children with it.
             onItemRemoved: (index, item) => {
                 if (item === d.anchorItem)
                     d.anchorAtViewportEdge(d.anchorAtTop, item)
+                if (item && item.retire)
+                    item.retire()
             }
         }
 
@@ -433,10 +497,12 @@ Flickable {
             Layout.row: repeater.count + 2
             Layout.column: 0
             Layout.fillWidth: true
-            Layout.preferredHeight: active ? root.bottomPlaceholderHeight : 0
+            Layout.preferredHeight: visible ? root.bottomPlaceholderHeight : 0
 
-            active: root.moreDownAvailable
-            visible: active
+            active: false
+            visible: root.moreDownAvailable
+            onVisibleChanged: if (visible) active = true
+            Component.onCompleted: if (visible) active = true
             sourceComponent: root.placeholder
         }
 
