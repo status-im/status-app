@@ -106,6 +106,7 @@ Item {
             height: 600
 
             property DelegatePool rowPool: null
+            property bool dressHold: false
             property int activeIndex: 0
 
             readonly property Item activeShell: {
@@ -152,6 +153,7 @@ Item {
                 anchors.fill: parent
 
                 rowPool: harness.rowPool
+                dressHold: harness.dressHold
                 rootStore: rootStoreMock
                 messageStore: harness.activeShell ? harness.activeShell.messageStore
                                                   : harness.fallbackMessageStore
@@ -496,6 +498,254 @@ Item {
             compare(JSON.stringify(probe.order),
                     JSON.stringify([0, 1, top - 1, top]),
                     "bottom rows must dress before top rows")
+        }
+
+        // lets scheduled drain slices and availability cascades run; used
+        // for negative assertions (nothing may dress while held)
+        function settle() {
+            for (let i = 0; i < 10; ++i)
+                wait(20)
+        }
+
+        // Dress hold: with the hold up, every trigger enqueues
+        // but nothing dresses; release drains paced, viewport-nearest-first.
+        function test_holdEnqueuesAndReleaseDrainsNearestFirst() {
+            const chat = openPooledChat(30, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            severPaging(chat)
+            verify(chat.listView.stickingToNewest,
+                   "precondition: the view sticks to the newest message")
+
+            const top = chat.listView.count - 1
+            verify(top >= 3, "the window must span enough rows")
+
+            const probe = createTemporaryObject(dressOrderProbeComp, root,
+                                                { target: chat.internal,
+                                                  listView: chat.listView })
+            verify(!!probe)
+            probe.prime()
+
+            chat.view.dressHold = true
+
+            const released = [top - 1, 0, top, 1]
+            for (let i = 0; i < released.length; ++i) {
+                const shell = chat.listView.itemAtRow(released[i])
+                verify(!!shell.pooledItem)
+                shell.releasePooled()
+            }
+
+            settle()
+            compare(probe.order.length, 0, "held: nothing may dress")
+            compare(chat.internal.dressQueue.length, released.length,
+                    "held: every trigger must enqueue, once each")
+
+            chat.view.dressHold = false
+            tryVerify(() => probe.order.length === released.length, 10000,
+                      "release must drain the queue, got "
+                      + JSON.stringify(probe.order))
+            compare(JSON.stringify(probe.order),
+                    JSON.stringify([0, 1, top - 1, top]),
+                    "the released drain must dress viewport-nearest-first")
+            compare(chat.internal.dressQueue.length, 0)
+        }
+
+        // Rapid on-off toggles (interrupted animations) must lose or
+        // duplicate nothing and must always end fully drained.
+        function test_rapidToggleEndsFullyDrained() {
+            const chat = openPooledChat(30, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            severPaging(chat)
+
+            const dressedBefore = chat.internal.acquiredCount
+            const probe = createTemporaryObject(dressOrderProbeComp, root,
+                                                { target: chat.internal,
+                                                  listView: chat.listView })
+            verify(!!probe)
+            probe.prime()
+
+            chat.view.dressHold = true
+            const released = [0, 1, 2, 3]
+            for (let i = 0; i < released.length; ++i) {
+                const shell = chat.listView.itemAtRow(released[i])
+                verify(!!shell.pooledItem)
+                shell.releasePooled()
+            }
+
+            chat.view.dressHold = false
+            chat.view.dressHold = true
+            chat.view.dressHold = false
+            chat.view.dressHold = true
+            compare(chat.internal.dressQueue.length, released.length,
+                    "toggling must neither lose nor duplicate queue entries")
+
+            settle()
+            compare(probe.order.length, 0, "held: nothing may dress")
+            compare(chat.internal.dressQueue.length, released.length)
+
+            chat.view.dressHold = false
+            tryVerify(() => probe.order.length === released.length, 10000,
+                      "release must drain the queue, got "
+                      + JSON.stringify(probe.order))
+            tryCompare(chat.internal, "acquiredCount", dressedBefore)
+            compare(chat.internal.dressQueue.length, 0)
+            for (let k = 0; k < released.length; ++k) {
+                verify(!!chat.listView.itemAtRow(released[k]).pooledItem,
+                       "row " + released[k] + " must end dressed")
+            }
+        }
+
+        // A hold raised mid-drain stops the drain after the current slice;
+        // release resumes it to completion.
+        function test_holdMidDrainStopsAfterCurrentSlice() {
+            const chat = openPooledChat(30, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            severPaging(chat)
+
+            const shells = [0, 1, 2].map(k => chat.listView.itemAtRow(k))
+            for (let i = 0; i < shells.length; ++i) {
+                verify(!!shells[i].pooledItem)
+                shells[i].releasePooled()
+            }
+
+            const spy = createTemporaryObject(signalSpyComp, root,
+                                              { target: chat.internal,
+                                                signalName: "acquiredCountChanged" })
+            verify(spy.valid)
+            compare(chat.internal.dressQueue.length, shells.length)
+
+            chat.internal.drainDressQueue()
+            compare(spy.count, 1, "one drain slice dresses exactly one row")
+            compare(chat.internal.dressQueue.length, shells.length - 1)
+
+            chat.view.dressHold = true
+            settle()
+            compare(spy.count, 1,
+                    "held mid-drain: no further slice may dress")
+            compare(chat.internal.dressQueue.length, shells.length - 1)
+
+            chat.view.dressHold = false
+            tryVerify(() => shells.every(s => !!s.pooledItem), 5000,
+                      "release must resume the drain to completion")
+            compare(chat.internal.dressQueue.length, 0)
+        }
+
+        // Scroll gate: fast-fling velocity holds dressing
+        // like a panel switch; the queue grows, and the drain resumes by
+        // itself once the velocity decays below the exit threshold.
+        function test_fastScrollHoldsDressingUntilVelocityDecays() {
+            const chat = openPooledChat(30, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            severPaging(chat)
+
+            const probe = createTemporaryObject(dressOrderProbeComp, root,
+                                                { target: chat.internal,
+                                                  listView: chat.listView })
+            verify(!!probe)
+            probe.prime()
+
+            const enter = chat.internal.fastScrollEnterVelocity
+            const exit = chat.internal.fastScrollExitVelocity
+            chat.internal.updateScrollGate(enter * 1.5)
+            verify(chat.internal.fastScroll,
+                   "fast velocity must raise the gate")
+
+            const released = [0, 1, 2, 3]
+            for (let i = 0; i < released.length; ++i) {
+                const shell = chat.listView.itemAtRow(released[i])
+                verify(!!shell.pooledItem)
+                shell.releasePooled()
+            }
+
+            settle()
+            compare(probe.order.length, 0,
+                    "held by velocity: nothing may dress")
+            compare(chat.internal.dressQueue.length, released.length)
+
+            // a decaying fling still above the exit threshold keeps holding
+            chat.internal.updateScrollGate(exit * 1.2)
+            verify(chat.internal.fastScroll)
+            // dropping below exit resumes the drain, no explicit release
+            chat.internal.updateScrollGate(exit * 0.5)
+            verify(!chat.internal.fastScroll)
+            tryVerify(() => probe.order.length === released.length, 10000,
+                      "the drain must resume on its own, got "
+                      + JSON.stringify(probe.order))
+            compare(chat.internal.dressQueue.length, 0)
+        }
+
+        // Oscillation between the enter and exit thresholds must not thrash
+        // the gate: enter only above the high mark, exit only below the low.
+        function test_scrollGateHysteresis() {
+            const chat = openPooledChat(10, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            const enter = chat.internal.fastScrollEnterVelocity
+            const exit = chat.internal.fastScrollExitVelocity
+            verify(exit < enter, "exit threshold must sit below enter")
+            const between = (enter + exit) / 2
+
+            verify(!chat.internal.fastScroll)
+            chat.internal.updateScrollGate(between)
+            verify(!chat.internal.fastScroll,
+                   "between thresholds: the gate must stay down")
+            chat.internal.updateScrollGate(enter * 1.1)
+            verify(chat.internal.fastScroll)
+            chat.internal.updateScrollGate(between)
+            verify(chat.internal.fastScroll,
+                   "between thresholds: the gate must stay up")
+            chat.internal.updateScrollGate(between)
+            verify(chat.internal.fastScroll)
+            chat.internal.updateScrollGate(exit * 0.5)
+            verify(!chat.internal.fastScroll)
+            chat.internal.updateScrollGate(between)
+            verify(!chat.internal.fastScroll,
+                   "between thresholds: the gate must stay down")
+        }
+
+        // The two hold inputs compose: either alone holds the drain, and
+        // dressing resumes only when both have cleared.
+        function test_holdInputsCompose() {
+            const chat = openPooledChat(30, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            severPaging(chat)
+
+            const probe = createTemporaryObject(dressOrderProbeComp, root,
+                                                { target: chat.internal,
+                                                  listView: chat.listView })
+            verify(!!probe)
+            probe.prime()
+
+            chat.view.dressHold = true
+            chat.internal.updateScrollGate(
+                chat.internal.fastScrollEnterVelocity * 2)
+
+            const released = [0, 1, 2]
+            for (let i = 0; i < released.length; ++i) {
+                const shell = chat.listView.itemAtRow(released[i])
+                verify(!!shell.pooledItem)
+                shell.releasePooled()
+            }
+
+            settle()
+            compare(probe.order.length, 0, "both up: nothing may dress")
+
+            chat.view.dressHold = false
+            settle()
+            compare(probe.order.length, 0,
+                    "velocity alone must keep holding")
+            compare(chat.internal.dressQueue.length, released.length)
+
+            chat.internal.updateScrollGate(0)
+            tryVerify(() => probe.order.length === released.length, 10000,
+                      "both cleared: the drain must run, got "
+                      + JSON.stringify(probe.order))
+            compare(chat.internal.dressQueue.length, 0)
         }
 
         // A restored mid-history window dresses the rows nearest the restored
