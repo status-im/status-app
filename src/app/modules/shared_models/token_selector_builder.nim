@@ -60,7 +60,11 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
     if g.communityId.len > 0 and not params.showCommunityAssets:
       continue
 
-    var chips: seq[TokenSelectorChip] = @[]
+    # Balances are per (account, chain); chips are keyed per chain in the
+    # balances submodel. With no account filter a chain held by several
+    # accounts yields several rows for the same chain, so sum per chain first
+    # or the submodel sync trips on the duplicate key.
+    var perChain = initOrderedTable[int, UInt256]()
     var total = 0.u256
     for b in g.balances:
       if accountLower.len > 0 and b.account.toLowerAscii != accountLower:
@@ -70,10 +74,14 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
       if b.balance.isZero and not params.showZeroBalanceForDefaultTokens:
         continue
       total = total + b.balance
-      let net = netByChain.getOrDefault(b.chainId)
-      chips.add(TokenSelectorChip(chainId: b.chainId, iconUrl: net.iconUrl,
-        chainName: net.chainName, balance: toFloatUnits(b.balance, g.decimals),
-        rawBalance: $b.balance))
+      perChain[b.chainId] = perChain.getOrDefault(b.chainId, 0.u256) + b.balance
+
+    var chips: seq[TokenSelectorChip] = @[]
+    for chainId, balance in perChain:
+      let net = netByChain.getOrDefault(chainId)
+      chips.add(TokenSelectorChip(chainId: chainId, iconUrl: net.iconUrl,
+        chainName: net.chainName, balance: toFloatUnits(balance, g.decimals),
+        rawBalance: $balance))
 
     # Drop groups with no surviving balance (QML `balancesModelCount != 0`).
     if chips.len == 0:
