@@ -140,9 +140,11 @@ ColumnLayout {
             status: model.onlineStatus
 
             onClicked: {
+                console.warn("!!! CLICK")
                 Global.openProfilePopup(model.pubKey)
             }
             onRightClicked: position => {
+                console.warn("!!! RIGHT CLICK")
                 const profileType = Utils.getProfileType(model.isCurrentUser, false, model.isBlocked)
                 const contactType = Utils.getContactType(model.contactRequest, model.isContact)
 
