@@ -1,5 +1,5 @@
 Appium-Python-Client==5.2.4
-pytest==8.4.2
+pytest==9.0.3
 pytest-asyncio==1.2.0
 pytest-html==4.1.1
 pytest-rerunfailures==16.1
