@@ -35,6 +35,28 @@ Control {
     font.family: Fonts.baseFont.family
     font.pixelSize: Theme.primaryTextFontSize
 
+    QtObject {
+        id: d
+
+        // CSS (mirrors ChatTextView.richTextFor) plus a quote color rule. Kept out of
+        // the text binding: the body changes on every dress, these colors almost never do.
+        readonly property string styleSheet:
+            "<style>code { background-color: " + root.codeBackgroundColor
+            + "; font-family: '" + Fonts.codeFont.family + "' }"
+            + " a { color: " + root.linkColor + " }"
+            + " a.mention { color: " + root.mentionTextColor
+            + "; background-color: " + root.mentionBackgroundColor
+            + "; text-decoration: none }"
+            + " span.quote { color: " + root.quoteTextColor + " }"
+            + "</style>"
+
+        readonly property string editedMarker: {
+            if (!root.edited)
+                return ""
+            return StringUtils.editedMarker(Theme.palette.baseColor1, root.editedMarkerFontSize)
+        }
+    }
+
     contentItem: Text {
         id: label
 
@@ -46,21 +68,7 @@ Control {
         font.pixelSize: root.font.pixelSize
         clip: true
 
-        // CSS (mirrors ChatTextView.richTextFor) plus a quote color rule, prepended to the body.
-        text: {
-            const style = "<style>code { background-color: " + root.codeBackgroundColor
-                        + "; font-family: '" + Fonts.codeFont.family + "' }"
-                        + " a { color: " + root.linkColor + " }"
-                        + " a.mention { color: " + root.mentionTextColor
-                        + "; background-color: " + root.mentionBackgroundColor
-                        + "; text-decoration: none }"
-                        + " span.quote { color: " + root.quoteTextColor + " }"
-                        + "</style>"
-            const marker = root.edited
-                ? StringUtils.editedMarker(Theme.palette.baseColor1, root.editedMarkerFontSize)
-                : ""
-            return style + root.html + marker
-        }
+        text: d.styleSheet + root.html + d.editedMarker
 
         // Right-edge fade ("dimming") when the single line overflows. Painted as a gradient that
         // blends into `fadeColor` on top of the glyphs — rather than masking the text through an
