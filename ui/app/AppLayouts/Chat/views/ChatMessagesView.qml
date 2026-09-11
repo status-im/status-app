@@ -46,7 +46,10 @@ Item {
     // (popups, storybook pages) build rows inline as before.
     property DelegatePool rowPool: null
     onRowPoolChanged: d.applyPoolTarget()
-    Component.onCompleted: d.applyPoolTarget()
+    Component.onCompleted: {
+        d.applyPoolTarget()
+        d.viewCompleted = true
+    }
 
     // Users related data:
     property var usersModel
@@ -141,6 +144,11 @@ Item {
         property int windowStart: 0
         property int windowEnd: initialWindowSize - 1
 
+        // The window proxy's filters only engage at completion: a source
+        // attached during creation would flash the ENTIRE unfiltered history
+        // through the Repeater once. Hold the source off until then.
+        property bool viewCompleted: false
+
         // ---- Dressed window (ADR 0007): in-window ⇔ holds a pooled item ----
         readonly property bool usePool: !!root.rowPool
         readonly property string rowPoolKind: "message"
@@ -155,7 +163,7 @@ Item {
                 return
             if (d.dressActive) {
                 d.resetWindow()
-                Qt.callLater(chatLogView.positionAtNewest)
+                d.schedulePositionAtNewest()
             } else {
                 d.clearStaging()
                 d.initialFillActive = false
@@ -635,7 +643,7 @@ Item {
             lastFetchHistoryCount = -1
         }
 
-        function slideWindowToHistory() {
+        function slideWindowToHistory(allowTrade = true) {
             // one batch at a time: the paging timer keeps asking while the
             // placeholder shows, and the next chunk must wait for this one
             if (d.stagedCount > 0 || d.initialFillActive || !d.dressActive)
@@ -647,14 +655,20 @@ Item {
                     // end releases before the history end acquires, so a
                     // slide can never over-subscribe the pool; a viewport's
                     // worth of rows always survives it, so what the user is
-                    // looking at never leaves the window mid-slide
+                    // looking at never leaves the window mid-slide. A trade
+                    // evicts the recent end — forbidden while the viewport is
+                    // pinned there (allowTrade false), or the exhausted-pool
+                    // prefetch would evict the very rows being looked at and
+                    // ping-pong against the slide back
                     const headroom = d.poolHeadroom()
                     const wanted = Math.min(d.historyCount - 1 - d.windowEnd,
                                             d.windowChunkSize)
                     const grow = Math.min(wanted, headroom)
                     const size = d.windowEnd - d.windowStart + 1
-                    const slide = Math.min(wanted - grow,
+                    const slide = allowTrade
+                                ? Math.min(wanted - grow,
                                            Math.max(0, size - d.initialRevealTarget))
+                                : 0
                     if (grow + slide === 0) {
                         // dry and nothing to trade: grow the pool instead of
                         // spinning on the paging timer
@@ -984,7 +998,7 @@ Item {
         // revealed before its placeholder is ever seen.
         prefetchMargin: chatLogView.height
 
-        onMoreUpRequested: d.slideWindowToHistory()
+        onMoreUpRequested: d.slideWindowToHistory(!chatLogView.stickingToNewest)
         onMoreDownRequested: d.slideWindowToRecent()
 
         onRowPositioned: row => {
@@ -1021,7 +1035,8 @@ Item {
             // pooled MessageView at a row is a plain per-role bulk assign
             // (RowBinder) with no per-role glue.
             sourceModel: RolesRenamingModel {
-                sourceModel: messageStore.loading ? null : messageStore.messagesModel
+                sourceModel: d.viewCompleted && !messageStore.loading
+                             ? messageStore.messagesModel : null
                 onSourceModelChanged: {
                     d.resetWindow()
                     d.updateHistoryExhausted()
@@ -1080,9 +1095,20 @@ Item {
                         shell.retire()
                 }
             }
-            // a reset removes every row without per-row signals: a staged
-            // batch would otherwise wait on ids that no longer exist
-            onModelAboutToBeReset: d.clearStaging()
+            // A reset removes every row without per-row signals: the staged
+            // batch is released, and the whole window retires the same way as
+            // removed rows, or the outgoing shells -- alive until their deferred
+            // destruction -- keep their availability connections and steal
+            // every item the dying window releases, starving the incoming
+            // chat's shells for good.
+            onModelAboutToBeReset: {
+                d.clearStaging()
+                for (let i = 0; i < chatLogView.count; ++i) {
+                    const shell = chatLogView.itemAtRow(i)
+                    if (shell && shell.retire)
+                        shell.retire()
+                }
+            }
 
             onCountChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
         }

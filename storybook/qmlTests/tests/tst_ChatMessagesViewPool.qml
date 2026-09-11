@@ -25,15 +25,19 @@ Item {
     ChatStores.RootStore { id: rootStoreMock }
 
     ListModel { id: messagesModel }
+    ListModel { id: messagesModelB }
 
-    QtObject {
-        id: contentModuleMock
+    component ContentModuleMock: QtObject {
+        id: moduleMock
+
+        property string mockChatId: "chat-1"
+        property var mockModel
 
         property int markAllMessagesReadCalls: 0
         function markAllMessagesRead() { markAllMessagesReadCalls++ }
 
         readonly property var chatDetails: QtObject {
-            readonly property string id: "chat-1"
+            readonly property string id: moduleMock.mockChatId
             readonly property int type: Constants.chatType.oneToOne
             readonly property bool active: true
             readonly property bool highlight: false
@@ -45,7 +49,7 @@ Item {
         }
 
         readonly property var messagesModule: QtObject {
-            readonly property var model: messagesModel
+            readonly property var model: moduleMock.mockModel
             property bool loading: false
             property bool keepUnread: false
             property int fetchCalls: 0
@@ -55,13 +59,27 @@ Item {
             signal reactionActionFailed()
             signal scrollToMessage(string messageId)
 
-            function getChatId() { return "chat-1" }
+            function getChatId() { return moduleMock.mockChatId }
             function loadMoreMessages() { fetchCalls++ }
             function updateKeepUnread(flag) {}
         }
 
-        function getMyChatId() { return "chat-1" }
+        function getMyChatId() { return moduleMock.mockChatId }
         function amIChatAdmin() { return false }
+    }
+
+    ContentModuleMock {
+        id: contentModuleMock
+
+        mockChatId: "chat-1"
+        mockModel: messagesModel
+    }
+
+    ContentModuleMock {
+        id: contentModuleMockB
+
+        mockChatId: "chat-2"
+        mockModel: messagesModelB
     }
 
     Component {
@@ -80,19 +98,75 @@ Item {
         }
     }
 
+    // Section harness wired as ChatColumnView wires production: per-chat
+    // shells plus ONE shared messages view reparented into the active
+    // chat's slot; a switch swaps the model bindings, never the view.
     Component {
-        id: contentViewComp
+        id: sectionComp
 
-        ChatContentView {
+        Item {
+            id: harness
+
             width: 800
             height: 600
 
-            rootStore: rootStoreMock
-            chatContentModule: contentModuleMock
-            chatId: "chat-1"
-            chatType: Constants.chatType.oneToOne
-            usersModel: ListModel {}
-            joined: true
+            property DelegatePool rowPool: null
+            property int activeIndex: 0
+
+            readonly property Item activeShell: {
+                if (activeIndex === 0)
+                    return shellA
+                if (activeIndex === 1)
+                    return shellB
+                return null
+            }
+
+            readonly property ChatStores.MessageStore fallbackMessageStore: ChatStores.MessageStore {
+                messageModule: null
+            }
+
+            ChatContentView {
+                id: shellA
+                anchors.fill: parent
+                visible: harness.activeIndex === 0
+                rootStore: rootStoreMock
+                chatContentModule: contentModuleMock
+                chatId: "chat-1"
+                chatType: Constants.chatType.oneToOne
+            }
+
+            ChatContentView {
+                id: shellB
+                anchors.fill: parent
+                visible: harness.activeIndex === 1
+                rootStore: rootStoreMock
+                chatContentModule: contentModuleMockB
+                chatId: "chat-2"
+                chatType: Constants.chatType.oneToOne
+            }
+
+            Item {
+                id: parkingHolder
+                anchors.fill: parent
+                visible: false
+            }
+
+            ChatMessagesView {
+                parent: harness.activeShell ? harness.activeShell.messagesSlot
+                                            : parkingHolder
+                anchors.fill: parent
+
+                rowPool: harness.rowPool
+                rootStore: rootStoreMock
+                messageStore: harness.activeShell ? harness.activeShell.messageStore
+                                                  : harness.fallbackMessageStore
+                chatContentModule: harness.activeShell ? harness.activeShell.chatContentModule
+                                                       : null
+                chatId: harness.activeShell ? harness.activeShell.chatId : ""
+                isOneToOne: true
+                usersModel: ListModel {}
+                joined: true
+            }
         }
     }
 
@@ -103,11 +177,18 @@ Item {
         function cleanup() {
             contentModuleMock.messagesModule.loading = false
             contentModuleMock.messagesModule.fetchCalls = 0
+            contentModuleMockB.messagesModule.loading = false
+            contentModuleMockB.messagesModule.fetchCalls = 0
             messagesModel.clear()
+            messagesModelB.clear()
         }
 
         function appendMessage(i, contentType) {
             messagesModel.append(messageRoles("msg-" + i, i, Date.now() - i * 60000, contentType))
+        }
+
+        function appendMessageB(i, contentType) {
+            messagesModelB.append(messageRoles("b-" + i, i, Date.now() - i * 60000, contentType))
         }
 
         function insertNewest(i) {
@@ -188,9 +269,8 @@ Item {
             const pool = createTemporaryObject(poolComp, root,
                                                { backgroundIntervalMs: poolIntervalMs })
             verify(!!pool)
-            const view = createTemporaryObject(contentViewComp, root, { rowPool: pool })
+            const view = createTemporaryObject(sectionComp, root, { rowPool: pool })
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -350,9 +430,8 @@ Item {
             const pool = createTemporaryObject(poolComp, root,
                                                { backgroundIntervalMs: 400 })
             verify(!!pool)
-            const view = createTemporaryObject(contentViewComp, root, { rowPool: pool })
+            const view = createTemporaryObject(sectionComp, root, { rowPool: pool })
             verify(!!view)
-            tryVerify(() => view.chatMessagesLoader.status === Loader.Ready, 10000)
 
             const listView = findChild(view, "chatLogView")
             verify(!!listView)
@@ -470,6 +549,87 @@ Item {
             tryVerify(() => chat.listView.count > opening, 30000,
                       "the window must widen as the pool fills")
             verify(chat.listView.count <= Math.max(1, builtCount(chat)))
+        }
+
+        // Chat switch: the shared view swaps models — the old
+        // window's items return to the pool and the new chat's rows
+        // re-acquire them. Nothing is created, nothing leaks: the built
+        // census is identical after every switch, in both directions.
+        function test_chatSwitchReusesPooledItems() {
+            for (let i = 0; i < 200; ++i)
+                appendMessageB(i)
+            const chat = openPooledChat(200, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+            const built = builtCount(chat)
+
+            chat.view.activeIndex = 1
+            tryVerify(() => chat.listView.count > 0
+                            && String(chat.listView.itemAtRow(0).messageId).startsWith("b-"),
+                      20000, "the shared view must show the new chat's rows")
+            waitForQuietWindow(chat)
+
+            for (let k = 0; k < chat.listView.count; ++k)
+                verify(chat.listView.itemAtRow(k).pooled,
+                       "row " + k + " must hold a pooled item after the switch")
+            tryVerify(() => builtCount(chat) === built, 10000,
+                      "the switch must reuse the pool: built " + builtCount(chat)
+                      + " vs " + built + " before it")
+
+            chat.view.activeIndex = 0
+            tryVerify(() => chat.listView.count > 0
+                            && String(chat.listView.itemAtRow(0).messageId).startsWith("msg-"),
+                      20000, "switching back must show the first chat again")
+            waitForQuietWindow(chat)
+            tryVerify(() => builtCount(chat) === built, 10000,
+                      "switching back must reuse the pool: built " + builtCount(chat)
+                      + " vs " + built + " before it")
+        }
+
+        // Switching chats must never paint the previous chat's rows in the
+        // new chat, and the new rows enter as one staged batch: the visible
+        // count jumps from zero to a viewport-worth in a single step.
+        function test_chatSwitchRevealsAtomicallyWithoutOldRows() {
+            for (let i = 0; i < 200; ++i)
+                appendMessageB(i)
+            const chat = openPooledChat(200, 0)
+            waitForFullPool(chat)
+            waitForQuietWindow(chat)
+
+            chat.view.activeIndex = 1
+
+            // from the swap on, a previous-chat row may never be seen again
+            // and the first nonzero visible count is already a full batch
+            let firstVisible = -1
+            for (let i = 0; i < 4000 && firstVisible < 0; ++i) {
+                let visible = 0
+                for (let k = 0; k < chat.listView.count; ++k) {
+                    const item = chat.listView.itemAtRow(k)
+                    if (!item || !item.visible || item.height <= 0)
+                        continue
+                    verify(String(item.messageId).startsWith("b-"),
+                           "a previous-chat row is visible after the switch: "
+                           + item.messageId)
+                    ++visible
+                }
+                if (visible > 0)
+                    firstVisible = visible
+                else
+                    wait(4)
+            }
+            verify(firstVisible > 0, "the switch must reveal the new chat"
+                   + " (count " + chat.listView.count
+                   + " staged " + chat.internal.stagedCount
+                   + " initial " + chat.internal.initialFillActive
+                   + " win " + chat.internal.windowStart + ".." + chat.internal.windowEnd
+                   + " acquired " + chat.internal.acquiredCount
+                   + " ready " + chat.kind.readyCount
+                   + " starved " + chat.internal.starvedCount + ")")
+            verify(firstVisible >= Math.min(chat.internal.initialRevealTarget,
+                                            messagesModelB.count),
+                   "the reveal must be atomic and viewport-sized: first visible "
+                   + "count was " + firstVisible + ", expected at least "
+                   + chat.internal.initialRevealTarget)
         }
     }
 }
