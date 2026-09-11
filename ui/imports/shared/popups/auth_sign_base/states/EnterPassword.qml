@@ -4,7 +4,6 @@ import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils as SQUtils
 import StatusQ.Controls
 
 import utils
@@ -13,11 +12,19 @@ Control {
     id: root
 
     property bool wrongPassword: false
+    property bool autoFocusInput: true
 
     property alias password: passwordInput.text
     readonly property bool passwordValid: passwordInput.text !== "" && !root.wrongPassword
 
     signal accepted()
+
+    function focusInputIfRequested() {
+        if (root.autoFocusInput)
+            passwordInput.forceActiveFocus(Qt.MouseFocusReason)
+    }
+
+    onAutoFocusInputChanged: root.focusInputIfRequested()
 
     topPadding: Theme.halfPadding
     bottomPadding: Theme.halfPadding
@@ -54,7 +61,7 @@ Control {
             Layout.maximumWidth: parent.width
             placeholderText: qsTr("Password")
             selectByMouse: true
-            focus: !SQUtils.Utils.isMobile
+            focus: root.autoFocusInput
 
             onTextChanged: root.wrongPassword = false
 
@@ -79,7 +86,5 @@ Control {
         }
     }
 
-    Component.onCompleted: {
-        passwordInput.forceActiveFocus(Qt.MouseFocusReason)
-    }
+    Component.onCompleted: root.focusInputIfRequested()
 }
