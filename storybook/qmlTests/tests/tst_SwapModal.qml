@@ -339,20 +339,17 @@ Item {
             let comboBoxList = openFromAccountPopup()
             verify(!!comboBoxList)
 
-            for(let i =0; i< comboBoxList.count; i++) {
-                let delegateUnderTest = comboBoxList.itemAtIndex(i)
-                verify(!delegateUnderTest.model.accountBalance)
-            }
-
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
             root.swapFormData.fromGroupKey = root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel.get(0).key
             compare(controlUnderTest.swapInputParamsForm.selectedNetworkChainId, root.swapFormData.selectedNetworkChainId)
             compare(controlUnderTest.swapInputParamsForm.fromGroupKey, root.swapFormData.fromGroupKey)
 
+            // the adaptor still computes accountBalance (SwapApproveCapModal
+            // reads it), but the account rows no longer render the token tag
             tryVerify(() => {
                 for (let j = 0; j < comboBoxList.count; j++) {
                     const d = comboBoxList.itemAtIndex(j)
-                    if (!d || !d.model.accountBalance || d.inlineTagModel !== 1)
+                    if (!d || !d.model.accountBalance)
                         return false
                 }
                 return true
@@ -361,21 +358,8 @@ Item {
             for(let i =0; i< comboBoxList.count; i++) {
                 let delegateUnderTest = comboBoxList.itemAtIndex(i)
                 verify(!!delegateUnderTest)
-                verify(!!delegateUnderTest.model.accountBalance)
-                compare(delegateUnderTest.inlineTagModel, 1)
-
-                const inlineTagDelegate_0 = findChild(delegateUnderTest, "inlineTagDelegate_0")
-                verify(!!inlineTagDelegate_0)
-
-                const balance = delegateUnderTest.model.accountBalance.balance
-
-                compare(inlineTagDelegate_0.asset.name, Assets.svg(delegateUnderTest.model.accountBalance.iconUrl))
-                compare(inlineTagDelegate_0.asset.color.toString().toUpperCase(), delegateUnderTest.model.accountBalance.chainColor.toString().toUpperCase())
-                compare(inlineTagDelegate_0.titleText.color, balance === "0" ? Theme.palette.baseColor1 : Theme.palette.directColor1)
-
-                let bigIntBalance = SQUtils.AmountsArithmetic.toNumber(balance, controlUnderTest.swapAdaptor.fromToken.decimals)
-                compare(inlineTagDelegate_0.title, balance === "0" ? "0 %1".arg(controlUnderTest.swapAdaptor.fromToken.symbol)
-                                                                   : root.swapAdaptor.currencyStore.formatCurrencyAmount(bigIntBalance, controlUnderTest.swapAdaptor.fromToken.symbol))
+                compare(delegateUnderTest.inlineTagModel, 0)
+                verify(!findChild(delegateUnderTest, "inlineTagDelegate_0"))
             }
 
             closeAndVerfyModal()
@@ -476,27 +460,13 @@ Item {
 
                 waitForRendering(comboBoxList)
 
+                // the account rows no longer render the per-network token tag
                 for(let j =0; j< comboBoxList.count; j++) {
                     let accountDelegateUnderTest = comboBoxList.itemAtIndex(j)
                     verify(!!accountDelegateUnderTest)
                     waitForItemPolished(accountDelegateUnderTest)
-                    const inlineTagDelegate_0 = findChild(accountDelegateUnderTest, "inlineTagDelegate_0")
-                    verify(!!inlineTagDelegate_0)
-
-                    let balancesModel = SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.baseGroupedAccountAssetModel, "key", root.swapFormData.fromGroupKey).balances
-                    verify(!!balancesModel)
-                    let filteredBalances = SQUtils.ModelUtils.modelToArray(balancesModel).filter(balances => balances.chainId === root.swapFormData.selectedNetworkChainId).filter(balances => balances.account === accountDelegateUnderTest.model.address)
-                    verify(!!filteredBalances)
-                    let accountBalance = filteredBalances.length > 0 ? filteredBalances[0]: { balance: "0", iconUrl: networkModelItem.iconUrl, chainColor: networkModelItem.chainColor}
-                    verify(!!accountBalance)
-                    let fromToken = SQUtils.ModelUtils.getByKey(root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel, "key", root.swapFormData.fromGroupKey)
-                    verify(!!fromToken)
-                    let bigIntBalance = SQUtils.AmountsArithmetic.toNumber(accountBalance.balance, fromToken.decimals)
-
-                    tryCompare(inlineTagDelegate_0.asset, "name", Assets.svg(networkModelItem.iconUrl))
-                    compare(inlineTagDelegate_0.asset.color.toString().toUpperCase(), networkModelItem.chainColor.toString().toUpperCase())
-                    tryCompare(inlineTagDelegate_0, "title", bigIntBalance === 0 ? "0 %1".arg(fromToken.symbol)
-                                                                           : root.swapAdaptor.currencyStore.formatCurrencyAmount(bigIntBalance, fromToken.symbol))
+                    compare(accountDelegateUnderTest.inlineTagModel, 0)
+                    verify(!findChild(accountDelegateUnderTest, "inlineTagDelegate_0"))
                 }
             }
             root.swapFormData.selectedNetworkChainId = -1
