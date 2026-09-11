@@ -22,8 +22,8 @@ StatusAdaptiveDialog {
     required property string publicKey
     // Display-ready compressed public key. Resolve it outside this component.
     required property string compressedPublicKey
-    // Display-ready emoji hash. Resolve it outside this component.
-    required property string emojiHash
+    // Display-ready emoji hash in form of an array of emojis. Resolve it outside this component.
+    required property var emojiHash
     // Contact profile details used by the header area.
     required property var contactDetails
     // Whether the contact profile details are currently being refreshed.

@@ -26,7 +26,7 @@ SplitView {
 
         readonly property string publicKey: "0x04d9f8b31df7b53f8ef91c0f5f85b0fbd9a96a9b7c2e4f6d8a1b3c5d7e9f102030405060708090a0b0c0d0e0f00112233445566778899aabbccddeeff"
         readonly property string compressedPublicKey: publicKey.substring(0, 10) + "..." + publicKey.substring(publicKey.length - 8)
-        readonly property string emojiHash: ""
+        readonly property var emojiHash: ["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮", "🤷🏻‍♂️", "🤦🏻", "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"]
         readonly property var contactDetails: ({
                 "localNickname": nicknameInput.text,
                 "name": "steady-signal",
