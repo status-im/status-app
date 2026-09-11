@@ -20,12 +20,12 @@ pipeline {
     )
     string(
       name: 'DOCKER_TAG_ANDROID',
-      defaultValue: '1.0.1-qt6.11.0-android',
-      description: 'Docker image tag for the Andorid image'
+      defaultValue: '20260829-qt6.11.0-android',
+      description: 'Docker image tag for the Android image'
     )
     string(
       name: 'DOCKER_TAG_LINUX',
-      defaultValue: '1.0.10-qt6.11.0',
+      defaultValue: '20260901-qt6.11.0',
       description: 'Docker image tag for the Linux image'
     )
     string(
@@ -66,7 +66,7 @@ pipeline {
     string(
       name: 'NIM_VERSION',
       description: 'Nim language version',
-      defaultValue: '2.2.4',
+      defaultValue: '2.2.10',
     )
     string(
       name: 'NIX_VERSION',
