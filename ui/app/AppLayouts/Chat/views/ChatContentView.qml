@@ -3,6 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ 0.1
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as StatusQUtils
 import StatusQ.Components
@@ -35,6 +36,10 @@ ColumnLayout {
     property string chatId
     property int chatType: Constants.chatType.unknown
     property var formatBalance
+
+    // Row pool (ADR 0007), handed down from the app level; null hosts build
+    // message rows inline.
+    property DelegatePool rowPool: null
 
     readonly property alias chatMessagesLoader: chatMessagesLoader
     property bool areTestNetworksEnabled
@@ -126,6 +131,7 @@ ColumnLayout {
             visible: !chatMessagesSkeleton.visible
 
             chatContentModule: root.chatContentModule
+            rowPool: root.rowPool
 
             rootStore: root.rootStore
             messageStore: root.messageStore
