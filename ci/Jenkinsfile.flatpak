@@ -142,7 +142,7 @@ pipeline {
       parallel {
         stage('Upload') {
           steps { script {
-            env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_FLATPAK)
+            env.PKG_URL = s5cmd.upload(retriesCount: 5, env.STATUS_CLIENT_FLATPAK)
             jenkins.setBuildDesc(Flatpak: env.PKG_URL)
           } }
         }
