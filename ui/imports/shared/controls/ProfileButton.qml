@@ -84,8 +84,6 @@ StatusIconTabButton {
 
         directParent: root
 
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-
         relativeY: root.y - userStatusContextMenu.height + root.height
         relativeX: root.x + root.width + 8
 
