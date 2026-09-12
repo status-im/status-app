@@ -158,6 +158,9 @@ pipeline {
       steps { script { dir('test/e2e') {
         sh "python3 -m venv ${VIRTUAL_ENV}"
         sh 'pip3 install -r requirements.txt'
+        dir('scripts/wallet_connect_dapp') {
+          sh 'npm ci --no-audit --no-fund'
+        }
       } } }
     }
 
