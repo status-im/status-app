@@ -302,11 +302,13 @@ StatusModal {
                         asset.width: 40
                         asset.height: 40
                         asset.isImage: !!model.image
-                        badge.primaryText: model.badgePrimaryText
-                        badge.secondaryText: model.badgeSecondaryText
-                        badge.asset.name: model.badgeImage
-                        badge.asset.isLetterIdenticon: model.badgeIsLetterIdenticon
-                        badge.asset.color: model.badgeIconColor
+                        badgeComponent: StatusListItemBadge {
+                            primaryText: model.badgePrimaryText
+                            secondaryText: model.badgeSecondaryText
+                            asset.name: model.badgeImage
+                            asset.isLetterIdenticon: model.badgeIsLetterIdenticon
+                            asset.color: model.badgeIconColor
+                        }
 
                         onClicked: {
                             root.resultItemClicked(itemId)
