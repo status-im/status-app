@@ -260,10 +260,10 @@ Item {
         // no visual parent. Bound it with the chrome geometry for that phase —
         // otherwise the loader falls back to the chat list's implicit height
         // (its full content height), which builds a delegate for every chat
-        // only to discard them once the proxy applies the real size. The
-        // anchors are inert until then and take over once the proxy parents it.
-        width: Constants.chatSectionLeftColumnWidth
-        height: root.sectionLayout?.height ?? 0
+        // only to discard them once the proxy applies the real size. Bound to
+        // the slot's box rather than guessed, the adoption writes nothing.
+        width: root.sectionLayout?.leftPanelSlotWidth ?? 0
+        height: root.sectionLayout?.leftPanelSlotHeight ?? 0
         asynchronous: true
         visible: contactColumnLoader.status === Loader.Ready
         sourceComponent: root.rootStore.chatCommunitySectionModule.isCommunity()?

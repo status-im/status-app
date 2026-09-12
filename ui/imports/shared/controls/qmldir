@@ -44,6 +44,7 @@ StyledTextEdit 1.0 StyledTextEdit.qml
 StyledTextEditWithLoadingState 1.0 StyledTextEditWithLoadingState.qml
 Timer 1.0 Timer.qml
 TokenDelegate 1.0 TokenDelegate.qml
+TokenDelegateShell 1.0 TokenDelegateShell.qml
 TransactionDelegate 1.0 TransactionDelegate.qml
 TransactionDetailsHeader.qml 1.0 TransactionDetailsHeader.qml
 WalletAccountListItem 1.0 WalletAccountListItem.qml

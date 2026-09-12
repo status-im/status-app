@@ -284,6 +284,72 @@ LayoutChooser {
 
     readonly property int windowWidth: root.Window?.width ?? Screen.width
 
+    /*!
+        \qmlproperty bool StatusSectionLayout::coalesceResizes
+        Whether a change of the section's own box should be treated as a
+        system-driven geometry transition (see \l geometryTransitionOngoing).
+
+        Defaults to true on mobile, where the window is only ever resized by the
+        system — a rotation, split screen or multi-window — and every such
+        resize arrives as a run of intermediate sizes over a few hundred
+        milliseconds. False on desktop, where a resize is the user dragging the
+        window edge and the panels must track it live.
+    */
+    property bool coalesceResizes: Qt.platform.os === "android" || Qt.platform.os === "ios"
+
+    /*!
+        \qmlproperty bool StatusSectionLayout::geometryTransitionOngoing
+        True while the section's geometry is being changed by something other
+        than the user: a device rotation, the portrait/landscape swap, or the
+        landscape left column animating to a new width.
+
+        The panel slots hold their last good box for the duration, so the whole
+        transition costs one relayout of the (populated, expensive) panel
+        subtrees instead of one per intermediate size. Outside a transition the
+        slots are live pass-throughs.
+
+        Derived from the settle timer rather than latched by hand: there is no
+        "end" to forget, so no path can leave a panel frozen at a stale size.
+    */
+    readonly property bool geometryTransitionOngoing: geometrySettleTimer.running
+
+    // Runs for as long as the bracket is up, and stopping it is the only way
+    // the bracket comes down. Started (never restarted - restart() would drop
+    // `running` for an instant and flush the very relayout being coalesced) by
+    // every input that can begin a transition; stops on the first tick that
+    // sees no input since the last one and no left-column animation still in
+    // flight, that animation outliving the resize that triggered it.
+    Timer {
+        id: geometrySettleTimer
+        interval: 48
+        repeat: true
+        onTriggered: {
+            if (d.geometryInputSeen || landscapeView.leftColumnAnimating) {
+                d.geometryInputSeen = false
+                return
+            }
+            geometrySettleTimer.stop()
+        }
+    }
+
+    onWidthChanged: if (root.coalesceResizes) d.beginGeometryTransition()
+    onHeightChanged: if (root.coalesceResizes) d.beginGeometryTransition()
+    // A swap between the two sub-layouts, not the initial choice: bracketing
+    // that one would only delay the section's first layout.
+    onChosenLayoutChanged: {
+        if (d.previousChosenLayout)
+            d.beginGeometryTransition()
+        d.previousChosenLayout = chosenLayout
+    }
+
+    // The one input that arrives *before* the window starts resizing, so the
+    // bracket is already up when the platform's rotation animation begins.
+    Connections {
+        target: root.Screen
+        function onOrientationChanged() { d.beginGeometryTransition() }
+        function onPrimaryOrientationChanged() { d.beginGeometryTransition() }
+    }
+
     criteria: [
         root.windowWidth < ThemeUtils.portraitBreakpoint.width, // Portrait mode
         true // Defaults to landscape mode
@@ -295,6 +361,29 @@ LayoutChooser {
     ]
 
     readonly property bool isPortrait: chosenLayout === portraitView
+
+    /*!
+        \qmlproperty real StatusSectionLayout::leftPanelSlotWidth
+        \qmlproperty real StatusSectionLayout::leftPanelSlotHeight
+        \qmlproperty real StatusSectionLayout::centerPanelSlotWidth
+        \qmlproperty real StatusSectionLayout::centerPanelSlotHeight
+        \qmlproperty real StatusSectionLayout::rightPanelSlotWidth
+        \qmlproperty real StatusSectionLayout::rightPanelSlotHeight
+
+        The box each slot will give its panel, taken from whichever sub-layout
+        is currently chosen. They are valid before a panel arrives, which is the
+        point: a section that builds its panels outside the tree (as the ones
+        behind an async Loader do) can size them to these and be adopted without
+        a single resize. The centre one is the one that cannot be guessed from
+        the section's own box - it is short by the header and the footer, and
+        narrow by the left column in landscape.
+    */
+    readonly property real leftPanelSlotWidth: chosenLayout ? chosenLayout.leftPanelSlotWidth : 0
+    readonly property real leftPanelSlotHeight: chosenLayout ? chosenLayout.leftPanelSlotHeight : 0
+    readonly property real centerPanelSlotWidth: chosenLayout ? chosenLayout.centerPanelSlotWidth : 0
+    readonly property real centerPanelSlotHeight: chosenLayout ? chosenLayout.centerPanelSlotHeight : 0
+    readonly property real rightPanelSlotWidth: chosenLayout ? chosenLayout.rightPanelSlotWidth : 0
+    readonly property real rightPanelSlotHeight: chosenLayout ? chosenLayout.rightPanelSlotHeight : 0
 
     StatusSectionLayoutLandscape {
         id: landscapeView
@@ -314,6 +403,7 @@ LayoutChooser {
         backButtonName: root.backButtonName
         headerContent: root.headerContent
         backgroundColor: root.backgroundColor
+        panelsFrozen: root.geometryTransitionOngoing
 
         onBackButtonClicked: root.backButtonClicked()
     }
@@ -335,6 +425,7 @@ LayoutChooser {
         headerContent: root.headerContent
         backgroundColor: root.backgroundColor
         invertedLayout: root.invertedLayout
+        panelsFrozen: root.geometryTransitionOngoing
 
         property int currentIndexCache
 
@@ -362,6 +453,18 @@ LayoutChooser {
 
     QtObject {
         id: d
+
+        // Set by every geometry input, cleared by the settle tick that sees it.
+        // Only ever read from that tick, so a stale true costs one extra tick
+        // and can never wedge the bracket up.
+        property bool geometryInputSeen: false
+
+        property var previousChosenLayout: null
+
+        function beginGeometryTransition() {
+            d.geometryInputSeen = true
+            geometrySettleTimer.start()
+        }
 
         // The emitted bracket pairs on the edges of this: a slide counts as
         // a panel switch only while the portrait layout is the visible one.

@@ -38,6 +38,10 @@ StatusListItem {
 
         readonly property bool isCommunityToken: !!root.communityId
 
+        readonly property bool chainsErrorVisible: !!root.errorTooltipText_1
+        readonly property bool marketDataErrorVisible: root.marketDetailsAvailable
+                                                       && !!root.errorTooltipText_2
+
         readonly property string textColor: {
             if (!root.marketDetailsAvailable)
                 return root.Theme.palette.successColor1
@@ -55,38 +59,43 @@ StatusListItem {
     errorIcon.tooltip.maxWidth: 300
     height: implicitHeight
 
+    // Both warning buttons are latched off rather than merely hidden: a button
+    // and its tooltip are ~40 QObjects each, and the rows that carry an error
+    // are the exception.
+    statusListItemTitleIcons.active: d.chainsErrorVisible
     statusListItemTitleIcons.sourceComponent: StatusFlatRoundButton {
         width: 14
-        height: visible ? 14 : 0
+        height: 14
         icon.width: 14
         icon.height: 14
         icon.name: "tiny/warning"
         icon.color: Theme.palette.dangerColor1
         tooltip.text: root.errorTooltipText_1
         tooltip.maxWidth: 300
-        visible: !!tooltip.text
     }
 
     components: [
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            StatusFlatRoundButton {
-                id: errorIcon
-                width: 14
-                height: visible ? 14 : 0
-                icon.width: 14
-                icon.height: 14
-                icon.name: "tiny/warning"
-                icon.color: Theme.palette.dangerColor1
-                tooltip.text: root.errorTooltipText_2
-                tooltip.maxWidth: 200
-                visible: root.marketDetailsAvailable && !!tooltip.text
+            Loader {
+                active: d.marketDataErrorVisible
+
+                sourceComponent: StatusFlatRoundButton {
+                    width: 14
+                    height: 14
+                    icon.width: 14
+                    icon.height: 14
+                    icon.name: "tiny/warning"
+                    icon.color: Theme.palette.dangerColor1
+                    tooltip.text: root.errorTooltipText_2
+                    tooltip.maxWidth: 200
+                }
             }
             StatusTextWithLoadingState   {
                 id: currencyBalance
 
                 anchors.right: parent.right
-                visible: !errorIcon.visible && root.marketDetailsAvailable
+                visible: !d.marketDataErrorVisible && root.marketDetailsAvailable
 
                 loading: root.marketDetailsLoading || root.balanceLoading
                 text: loading ? Constants.dummyText : root.marketBalance
@@ -94,7 +103,7 @@ StatusListItem {
             Row {
                 anchors.right: parent.right
                 spacing: 6
-                visible: !errorIcon.visible && root.marketDetailsAvailable
+                visible: !d.marketDataErrorVisible && root.marketDetailsAvailable
 
                 StatusTextWithLoadingState {
                     id: change24HourPercentageText
