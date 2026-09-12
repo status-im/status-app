@@ -12,6 +12,7 @@ tmp/
 *.DS_Store
 
 /local_run_results/
+benchmark-results*/
 squish.ini
 .envrc
 
