@@ -500,17 +500,22 @@ Control {
         spacing: d.padding
 
         Repeater {
-            model: d.renderBlocks
+            // Integer model so a rebind with an unchanged block count keeps the instantiated
+            // delegates alive and only re-evaluates their `block` bindings (recycling); a type
+            // change swaps just that delegate's Loader content, a count change regenerates all.
+            model: d.renderBlocks.length
 
             // One Loader per block builds only the matching renderer (text/code or quote).
             delegate: Loader {
                 id: blk
 
-                required property var modelData
-                readonly property var block: modelData
+                required property int index
+                // Null-safe: on a count change the Repeater may tear this delegate down after
+                // `renderBlocks` already shrank.
+                readonly property var block: d.renderBlocks[index] ?? null
 
                 Layout.fillWidth: true
-                sourceComponent: blk.block.type === "quote" ? quoteComp : textComp
+                sourceComponent: blk.block?.type === "quote" ? quoteComp : textComp
 
                 Component {
                     id: textComp
@@ -518,13 +523,17 @@ Control {
                     BlockText {
                         width: blk.width
                         selectable: root.selectable
-                        isCode: blk.block.type === "code"
-                        content: blk.block.type === "code" ? (blk.block.code || "")
-                                                           : (blk.block.html || "")
-                        codeHtml: blk.block.type === "code" ? (blk.block.codeHtml || "") : ""
-                        bold: !!blk.block.bold
-                        italic: !!blk.block.italic
-                        strikethrough: !!blk.block.strikethrough
+                        isCode: blk.block?.type === "code"
+                        content: {
+                            const b = blk.block
+                            if (!b)
+                                return ""
+                            return b.type === "code" ? (b.code || "") : (b.html || "")
+                        }
+                        codeHtml: blk.block?.type === "code" ? (blk.block.codeHtml || "") : ""
+                        bold: !!(blk.block?.bold)
+                        italic: !!(blk.block?.italic)
+                        strikethrough: !!(blk.block?.strikethrough)
                     }
                 }
 
@@ -532,6 +541,10 @@ Control {
                     id: quoteComp
 
                     RowLayout {
+                        id: quoteRow
+
+                        readonly property var quoteBlocks: blk.block?.blocks ?? []
+
                         spacing: d.padding
 
                         Rectangle {
@@ -548,21 +561,26 @@ Control {
                             spacing: d.padding
 
                             Repeater {
-                                model: blk.block.blocks
+                                model: quoteRow.quoteBlocks.length
 
                                 delegate: BlockText {
-                                    required property var modelData
+                                    required property int index
+                                    readonly property var subBlock: quoteRow.quoteBlocks[index] ?? null
 
                                     Layout.fillWidth: true
 
                                     selectable: root.selectable
-                                    isCode: modelData.type === "code"
-                                    content: modelData.type === "code" ? (modelData.code || "")
-                                                                       : (modelData.html || "")
-                                    codeHtml: modelData.type === "code" ? (modelData.codeHtml || "") : ""
-                                    bold: !!modelData.bold
-                                    italic: !!modelData.italic
-                                    strikethrough: !!modelData.strikethrough
+                                    isCode: subBlock?.type === "code"
+                                    content: {
+                                        const b = subBlock
+                                        if (!b)
+                                            return ""
+                                        return b.type === "code" ? (b.code || "") : (b.html || "")
+                                    }
+                                    codeHtml: subBlock?.type === "code" ? (subBlock.codeHtml || "") : ""
+                                    bold: !!(subBlock?.bold)
+                                    italic: !!(subBlock?.italic)
+                                    strikethrough: !!(subBlock?.strikethrough)
                                     textColor: root.quoteTextColor // dim quoted text
                                 }
                             }

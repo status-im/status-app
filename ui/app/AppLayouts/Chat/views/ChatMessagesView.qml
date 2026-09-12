@@ -46,8 +46,13 @@ Item {
     // (popups, storybook pages) build rows inline as before.
     property DelegatePool rowPool: null
     onRowPoolChanged: d.applyPoolTarget()
+
+    // Dress hold (ADR 0007): raised while a view transition runs. Dress
+    // triggers keep enqueuing; the drain waits and restarts on release.
+    property bool dressHold: false
     Component.onCompleted: {
         d.applyPoolTarget()
+        d.updatePlaceholderHeights()
         d.viewCompleted = true
     }
 
@@ -253,9 +258,8 @@ Item {
 
         function applyPendingRestore() {
             const restore = d.pendingRestore
-            // cleared a turn later, not here: the pooled rebind makes the
-            // whole restore synchronous, and the marker scroll it must win
-            // over can arrive in the same turn, right after the reveal
+            // cleared a turn later, not here: the marker scroll this restore
+            // must win over can arrive in the same turn as the reveal
             Qt.callLater(function() {
                 if (d.pendingRestore === restore)
                     d.pendingRestore = null
@@ -412,6 +416,184 @@ Item {
         property var dressQueue: []
         property bool drainScheduled: false
 
+        // ---- Scroll gate: a fast fling holds
+        // dressing exactly like a panel switch — a dress blows the frame
+        // when motion makes dropped frames most visible. Velocity-only:
+        // `moving` stays true through the whole deceleration tail and a
+        // resting finger mid-drag must dress. Hysteresis (enter high, exit
+        // low) keeps the gate from flapping around one threshold.
+        readonly property real fastScrollEnterVelocity: chatLogView.height
+        readonly property real fastScrollExitVelocity: chatLogView.height * 0.4
+        property bool fastScroll: false
+
+        function updateScrollGate(speed) {
+            if (!d.fastScroll && speed > d.fastScrollEnterVelocity)
+                d.fastScroll = true
+            else if (d.fastScroll && speed < d.fastScrollExitVelocity)
+                d.fastScroll = false
+        }
+
+        // Either hold input gates the drain; both must clear to dress.
+        readonly property bool dressHeld: root.dressHold || d.fastScroll
+        onDressHeldChanged: {
+            if (!d.dressHeld && d.dressQueue.length)
+                d.scheduleDrain()
+        }
+
+        // ---- Scroll freeze: content geometry never mutates
+        // while the view is in motion — drag, fling and the whole
+        // deceleration tail. Slides, reveals and placeholder resizes wait
+        // for rest; fetches, model assimilation and dress-queueing stay
+        // free. Deliberately broader than the velocity gate above: any
+        // programmatic contentY correction cancels an active flick, so the
+        // geometry underneath the physics must simply not change.
+        readonly property bool viewMoving: chatLogView.moving
+
+        onViewMovingChanged: {
+            if (!d.viewMoving)
+                d.settleAfterMotion()
+        }
+
+        // A staged batch that completed mid-motion; revealed at settle.
+        property bool revealOnRest: false
+
+        // Per-side placeholder estimates: top covers the history above the
+        // window, bottom the recent rows below it — never each other, so a
+        // slide resizes only the end it moved (the coupled max() height is
+        // what made the bottom placeholder pop into the viewport mid-fling
+        // and ping-pong the window). Floored at a viewport only while that
+        // side pages, because the height doubles as the paging trigger depth.
+        readonly property real liveTopPlaceholderHeight: {
+            const remaining = Math.max(0, d.historyCount - 1 - d.windowEnd)
+            const estimate = Math.min(remaining, 300) * d.rowHeightOr48()
+            const active = d.olderMessagesAvailable || d.stagedCount > 0
+            return Math.max(active ? chatLogView.height : 0, estimate)
+        }
+        readonly property real liveBottomPlaceholderHeight: {
+            const estimate = Math.min(Math.max(0, d.windowStart), 300)
+                             * d.rowHeightOr48()
+            return Math.max(d.windowStart > 0 ? chatLogView.height : 0,
+                            estimate)
+        }
+
+        // What the view actually gets: latched while in motion, following
+        // the live estimates at rest.
+        property real topPlaceholderHeight: 0
+        property real bottomPlaceholderHeight: 0
+
+        onLiveTopPlaceholderHeightChanged: d.updatePlaceholderHeights()
+        onLiveBottomPlaceholderHeightChanged: d.updatePlaceholderHeights()
+
+        function updatePlaceholderHeights() {
+            if (d.viewMoving)
+                return
+            d.topPlaceholderHeight = d.liveTopPlaceholderHeight
+            d.bottomPlaceholderHeight = d.liveBottomPlaceholderHeight
+        }
+
+        // The viewport top's estimated history row while it sits inside the
+        // top placeholder: pixel depth ÷ avgRowHeight past the window's
+        // history end — the same estimate the scrollbar renders, so the
+        // landing is self-consistent — exactly the oldest loaded row at the
+        // placeholder's far edge. -1 outside the placeholder.
+        function scrollTargetRow() {
+            const depth = chatLogView.viewportDepthIntoTopPlaceholder()
+            if (depth <= 0 || d.historyCount === 0)
+                return -1
+            if (depth >= d.topPlaceholderHeight - 1)
+                return d.historyCount - 1
+            const rowHeight = d.avgRowHeight > 0 ? d.avgRowHeight : 48
+            return Math.min(d.historyCount - 1,
+                            d.windowEnd + Math.round(depth / rowHeight))
+        }
+
+        // Settle: everything motion deferred happens here. Capture first,
+        // then mutate — the teleport target must be read from the frozen
+        // geometry before the placeholder heights unlatch.
+        function settleAfterMotion() {
+            const target = d.scrollTargetRow()
+            d.updatePlaceholderHeights()
+            if (target > d.windowEnd + d.windowChunkSize
+                    && d.dressActive && !d.initialFillActive
+                    && !d.pendingRestore && d.teleportToRow(target)) {
+                d.revealOnRest = false
+                return
+            }
+            if (d.revealOnRest) {
+                d.revealOnRest = false
+                d.checkStagedReady()
+            }
+        }
+
+        // Teleport slide: the viewport out-scrolled the window by more than
+        // a chunk, so instead of unrolling every chunk in between the whole
+        // window releases and re-admits at the target through the window
+        // record restore path, which pins the viewport to the target row at
+        // the atomic reveal — never a raw contentY write.
+        function teleportToRow(targetIndex) {
+            const id = SQUtils.ModelUtils.get(root.messageStore.messagesModel,
+                                              targetIndex, "id")
+            if (id === undefined || id === null)
+                return false
+            const span = Math.max(1, d.windowEnd - d.windowStart + 1)
+            d.windowAtInitial = false
+            // same chat, same session: the restore's fetch-guard reset does
+            // not apply — a fetch already fired for this history count must
+            // not repeat until it actually grows the history
+            const lastFetch = d.lastFetchHistoryCount
+            d.restoreWindow(targetIndex,
+                            { oldestRowId: String(id), span: span, offset: 0 })
+            d.lastFetchHistoryCount = lastFetch
+            return true
+        }
+
+        // Rows a trade may evict: rows fully outside the viewport on the
+        // evicted side. The "a viewport's worth survives" size cap assumes
+        // the viewport rides the slide's leading edge; after a teleport it
+        // sits at the window's history end, where an unguarded recent-trade
+        // evicts the very rows being read and the window walks away from
+        // the viewport. A viewport anchored to the newest message is not
+        // free-floating — the anchor re-pins it, so nothing needs guarding.
+        function tradableRows(fromRecentEnd) {
+            if (chatLogView.stickingToNewest)
+                return d.maxWindowSize
+            let rows = 0
+            for (let i = 0; i < chatLogView.count; ++i) {
+                const item = chatLogView.itemAtRow(i)
+                if (!item || !item.visible || item.height <= 0)
+                    continue
+                const y = item.mapToItem(chatLogView.contentItem, 0, 0).y
+                if (fromRecentEnd) {
+                    if (y >= chatLogView.contentY + chatLogView.height)
+                        ++rows
+                } else if (y + item.height <= chatLogView.contentY) {
+                    ++rows
+                }
+            }
+            return rows
+        }
+
+        // Eager history prefetch: fetching is pure I/O and stays free during
+        // motion. While the viewport scrolls through the placeholder toward
+        // the loaded-history end, fire the fetch early so the settle usually
+        // finds its rows already loaded. The lastFetchHistoryCount guard
+        // blocks repeats until the fetch actually grows the history.
+        function prefetchHistoryAhead() {
+            if (!d.viewMoving)
+                return
+            if (root.rootStore.loadingHistoryMessagesInProgress
+                    || d.historyExhausted || !d.mayFetchMoreHistory)
+                return
+            const depth = chatLogView.viewportDepthIntoTopPlaceholder()
+            if (depth <= 0)
+                return
+            const rowHeight = d.avgRowHeight > 0 ? d.avgRowHeight : 48
+            if (d.windowEnd + depth / rowHeight
+                    < d.historyCount - 1 - d.windowChunkSize)
+                return
+            d.lastFetchHistoryCount = d.historyCount
+            messageStore.loadMoreMessages()
+        }
 
         function enqueueDress(shell) {
             if (d.dressQueue.indexOf(shell) === -1)
@@ -432,6 +614,53 @@ Item {
                 d.dressQueue.splice(i, 1)
         }
 
+        // Drain order: viewport-nearest-first, so the skeleton clears where
+        // the user is looking. Undressed shells hold no geometry (invisible,
+        // zero height), so distance is counted in rows from a reference row
+        // resolved fresh at every slice — never from insertion order.
+        function dressReferenceRow() {
+            if (d.pendingRestore) {
+                // restoring mid-history: the record's offset is the viewport
+                // top's distance below the window's top row (the highest
+                // proxy row); estimate the rows above the viewport center at
+                // the running average height
+                const rowHeight = d.avgRowHeight > 0 ? d.avgRowHeight : 48
+                const rowsAbove = (d.pendingRestore.offset
+                                   + chatLogView.height / 2) / rowHeight
+                return Math.max(0, Math.round(
+                                    d.windowEnd - d.windowStart - rowsAbove))
+            }
+            // fresh open and every bottom-pinned view: row 0 is the bottom
+            if (chatLogView.stickingToNewest)
+                return 0
+            // mid-history without a restore in flight: the dressed rows
+            // still on screen locate the viewport
+            const center = chatLogView.contentY + chatLogView.height / 2
+            let best = 0
+            let bestDistance = Number.MAX_VALUE
+            for (let i = 0; i < chatLogView.count; ++i) {
+                const item = chatLogView.itemAtRow(i)
+                if (!item || !item.visible || item.height <= 0)
+                    continue
+                const distance = Math.abs(center - item.mapToItem(
+                                     chatLogView.contentItem,
+                                     0, item.height / 2).y)
+                if (distance < bestDistance) {
+                    bestDistance = distance
+                    best = i
+                }
+            }
+            return best
+        }
+
+        function sortDressQueue() {
+            if (d.dressQueue.length < 2)
+                return
+            const ref = d.dressReferenceRow()
+            d.dressQueue.sort((a, b) => Math.abs(a.index - ref)
+                                        - Math.abs(b.index - ref))
+        }
+
         function drainDressQueue() {
             d.drainScheduled = false
             // an un-dressed view must never take items — whatever is queued
@@ -440,13 +669,20 @@ Item {
                 d.dressQueue = []
                 return
             }
-            const deadline = Date.now() + 8
+            // held: the queue keeps accumulating, release restarts the drain
+            if (d.dressHeld)
+                return
+            // at most one dress per slice: a single dress already fills a
+            // frame on the devices this paces for, and the callLater chain
+            // yields to rendering between slices
+            d.sortDressQueue()
             while (d.dressQueue.length) {
                 const shell = d.dressQueue.shift()
-                if (shell && !shell.retired)
-                    shell.doAcquire()
-                if (Date.now() >= deadline)
-                    break
+                if (!shell || shell.retired || !shell.pooled
+                        || shell.pooledItem)
+                    continue
+                shell.doAcquire()
+                break
             }
             if (d.dressQueue.length)
                 d.scheduleDrain()
@@ -731,6 +967,7 @@ Item {
             d.stagedShells = []
             d.stagedIds.clear()
             d.syncStagedCount()
+            d.revealOnRest = false
             revealTimeout.stop()
         }
 
@@ -738,6 +975,12 @@ Item {
         // a partial one (better than wedging paging on a pathological row).
         function revealStaged() {
             revealTimeout.stop()
+            // scroll freeze: a batch completing mid-motion holds its atomic
+            // reveal until rest — the skeleton keeps covering it
+            if (d.viewMoving) {
+                d.revealOnRest = true
+                return
+            }
             if (d.initialFillActive) {
                 d.initialFillActive = false
                 if (root.rowPool)
@@ -844,8 +1087,10 @@ Item {
 
         function slideWindowToHistory(allowTrade = true) {
             // one batch at a time: the paging timer keeps asking while the
-            // placeholder shows, and the next chunk must wait for this one
-            if (d.stagedCount > 0 || d.initialFillActive || !d.dressActive)
+            // placeholder shows, and the next chunk must wait for this one.
+            // Frozen in motion: no slide may start until the view rests.
+            if (d.stagedCount > 0 || d.initialFillActive || !d.dressActive
+                    || d.viewMoving)
                 return
 
             if (d.windowEnd < d.historyCount - 1) {
@@ -866,7 +1111,8 @@ Item {
                     const size = d.windowEnd - d.windowStart + 1
                     const slide = allowTrade
                                 ? Math.min(wanted - grow,
-                                           Math.max(0, size - d.initialRevealTarget))
+                                           Math.max(0, size - d.initialRevealTarget),
+                                           d.tradableRows(true))
                                 : 0
                     if (grow + slide === 0) {
                         // dry and nothing to trade: grow the pool instead of
@@ -900,7 +1146,7 @@ Item {
 
         function slideWindowToRecent() {
             if (d.stagedCount > 0 || d.windowStart <= 0
-                    || d.initialFillActive || !d.dressActive)
+                    || d.initialFillActive || !d.dressActive || d.viewMoving)
                 return
 
             if (d.usePool) {
@@ -909,7 +1155,8 @@ Item {
                 const grow = Math.min(wanted, headroom)
                 const size = d.windowEnd - d.windowStart + 1
                 const slide = Math.min(wanted - grow,
-                                       Math.max(0, size - d.initialRevealTarget))
+                                       Math.max(0, size - d.initialRevealTarget),
+                                       d.tradableRows(false))
                 if (grow + slide === 0) {
                     root.rowPool.boost(d.rowPoolKind, 1)
                     return
@@ -1192,15 +1439,10 @@ Item {
         // roughly proportional across reveals: the rows a reveal adds are
         // taken out of the placeholder, keeping the content height steady.
         // One per side, each standing for its own span, so a slide resizes
-        // only the end it moved — a shared height popped the opposite
-        // placeholder into the viewport and ping-ponged the slide direction.
-        topPlaceholderHeight: {
-            const remaining = Math.max(0, d.historyCount - 1 - d.windowEnd)
-            return Math.max(chatLogView.height,
-                            Math.min(remaining, 300) * d.rowHeightOr48())
-        }
-        bottomPlaceholderHeight: Math.max(chatLogView.height,
-                                          Math.min(d.windowStart, 300) * d.rowHeightOr48())
+        // only the end it moved. Latched while the view is in motion
+        // (scroll freeze).
+        topPlaceholderHeight: d.topPlaceholderHeight
+        bottomPlaceholderHeight: d.bottomPlaceholderHeight
 
         // Page one viewport ahead of the scroll so a batch is usually
         // revealed before its placeholder is ever seen.
@@ -1208,6 +1450,9 @@ Item {
 
         onMoreUpRequested: d.slideWindowToHistory(!chatLogView.stickingToNewest)
         onMoreDownRequested: d.slideWindowToRecent()
+
+        onVerticalVelocityChanged: d.updateScrollGate(Math.abs(verticalVelocity))
+        onContentYChanged: d.prefetchHistoryAhead()
 
         onRowPositioned: row => {
             const item = chatLogView.itemAtRow(row)
@@ -1416,18 +1661,16 @@ Item {
                 releasePooled()
             }
 
-            // Staged rows dress through the paced queue: a rebind rebuilds the
-            // message's inner content (text blocks, previews), and a whole
-            // window of them in one turn is a seconds-long freeze. Only a live
-            // row — already revealed, the user is looking at its spot — binds
-            // on the spot.
+            // Every dress goes through the paced queue: a rebind rebuilds the
+            // message's inner content (text blocks, previews), one costs a
+            // whole frame on a low-end device, and any trigger (availability,
+            // reveal, slide, restore, live insert) can fire for a window's
+            // worth of shells in one turn. The drain is doAcquire's only
+            // caller — nothing dresses inside a signal handler.
             function tryAcquire() {
                 if (!pooled || pooledItem || retired || !root.rowPool)
                     return
-                if (revealed)
-                    doAcquire()
-                else
-                    d.enqueueDress(shell)
+                d.enqueueDress(shell)
             }
 
             // Guards the pool's availability cascade re-entering THIS shell

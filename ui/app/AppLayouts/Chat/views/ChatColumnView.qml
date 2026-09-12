@@ -47,6 +47,7 @@ Item {
     property var emojiPopup
     property var stickersPopup
     property DelegatePool rowPool: null
+    property bool dressHold: false
     property bool areTestNetworksEnabled
 
     /*
@@ -542,6 +543,7 @@ Item {
 
                 rootStore: root.rootStore
                 rowPool: root.rowPool
+                dressHold: root.dressHold
                 formatBalance: d.formatBalance
                 emojiPopup: root.emojiPopup
                 stickersPopup: root.stickersPopup
