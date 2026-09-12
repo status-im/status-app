@@ -177,6 +177,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/clipboardutils.h
         include/StatusQ/incubationhints.h
         include/StatusQ/constantrole.h
+        include/StatusQ/delegatepool.h
         include/StatusQ/fastexpressionfilter.h
         include/StatusQ/fastexpressionrole.h
         include/StatusQ/fastexpressionsorter.h
@@ -201,6 +202,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/networkchecker.h
         include/StatusQ/oneoffilter.h
         include/StatusQ/permissionutilsinternal.h
+        include/StatusQ/rowbinder.h
         include/StatusQ/rxvalidator.h
         include/StatusQ/shareutils.h
         include/StatusQ/stablearraysorter.h
@@ -221,6 +223,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/clipboardutils.cpp
         src/incubationhints.cpp
         src/constantrole.cpp
+        src/delegatepool.cpp
         src/externc.cpp
         src/fastexpressionfilter.cpp
         src/fastexpressionrole.cpp
@@ -244,6 +247,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp
+        src/rowbinder.cpp
         src/rxvalidator.cpp
         src/stablearraysorter.cpp
         src/statuscolors.cpp

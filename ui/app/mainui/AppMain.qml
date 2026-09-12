@@ -28,6 +28,7 @@ import shared.stores as SharedStores
 import shared.popups.send as SendPopups
 import shared.popups.send.views
 import shared.stores.send
+import shared.views.chat as ChatViews
 
 import StatusQ
 import StatusQ.Components
@@ -261,6 +262,20 @@ Item {
     }
     readonly property var allContacsAdaptor: contactInfrastructureLoader.item?.allContactsAdaptor ?? null
     readonly property var contactsModelAdaptor: contactInfrastructureLoader.item?.contactsAdaptor ?? null
+
+    // Row pool (ADR 0007): the app-wide reservoir of pre-built message rows.
+    // Building starts here, right after login, at background pace; the chat
+    // views refine the target (grow-only) and boost while a skeleton waits.
+    readonly property DelegatePool messageRowPool: DelegatePool {
+        DelegatePoolKind {
+            kind: "message"
+            target: Math.min(80, Math.max(24, Math.ceil(appMain.height / 48) * 2))
+
+            delegate: Component {
+                ChatViews.MessageView {}
+            }
+        }
+    }
 
     Loader {
         id: supportBotContactLoader
@@ -2297,6 +2312,7 @@ Item {
                         popupHandler: popupRequestsHandler
                         emojiPopupLoader: statusEmojiPopup
                         stickersPopupLoader: statusStickersPopupLoader
+                        rowPool: appMain.messageRowPool
 
                         createChatViewOpened: createChatView.opened
                         isPortraitMode: appMain.isPortraitMode
@@ -2487,6 +2503,7 @@ Item {
                             popupHandler: popupRequestsHandler
                             emojiPopupLoader: statusEmojiPopup
                             stickersPopupLoader: statusStickersPopupLoader
+                            rowPool: appMain.messageRowPool
 
                             createChatViewOpened: createChatView.opened
                             isPortraitMode: appMain.isPortraitMode
