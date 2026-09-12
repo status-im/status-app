@@ -279,7 +279,7 @@ StatusListView {
             }
         }
 
-        statusListItemInlineTagsSlot.spacing: Theme.padding
+        tagsSpacing: Theme.padding
 
         tagsDelegate: Row {
             spacing: 4

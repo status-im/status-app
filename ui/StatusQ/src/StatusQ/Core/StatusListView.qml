@@ -46,15 +46,14 @@ ListView {
     maximumFlickVelocity: 2000
     synchronousDrag: true
 
+    // No `visible`: an attached StatusScrollBar resolves the policy itself.
     ScrollBar.horizontal: StatusScrollBar {
         id: horizontalScrollBar
         policy: ScrollBar.AsNeeded
-        visible: resolveVisibility(policy, root.width, root.contentWidth)
     }
 
     ScrollBar.vertical: StatusScrollBar {
         id: verticalScrollBar
         policy: ScrollBar.AsNeeded
-        visible: resolveVisibility(policy, root.height, root.contentHeight)
     }
 }

@@ -143,6 +143,12 @@ Rectangle {
         readonly property color iconColor: !root.enabled ? root.icon.disabledColor :
                                                            (root.enabled && (root.hovered || root.highlighted)) ? root.icon.hoverColor :
                                                                                                                   root.icon.color
+        readonly property bool rippleReactive: root.rippleEnabled && root.enabled && !root.loading
+
+        function releaseRipple() {
+            if (rippleLoader.item)
+                rippleLoader.item.release()
+        }
     }
 
     implicitWidth: 44
@@ -156,14 +162,21 @@ Rectangle {
         return backgroundSettings.disabledColor
     }
 
-    StatusRipple {
-        id: ripple
-        objectName: "buttonRipple"
+    // The ripple only exists to animate a press, so nothing is built until the
+    // button is first pressed. The press is delivered by hand here, so the item
+    // is loaded and pressed in the same call.
+    Loader {
+        id: rippleLoader
         anchors.fill: parent
-        enabled: root.rippleEnabled && root.enabled && !root.loading
-        color: root.rippleColor
-        radius: root.radius
-        origin: root.rippleOrigin
+        active: false
+
+        sourceComponent: StatusRipple {
+            objectName: "buttonRipple"
+            enabled: d.rippleReactive
+            color: root.rippleColor
+            radius: root.radius
+            origin: root.rippleOrigin
+        }
     }
 
     StatusMouseArea {
@@ -199,15 +212,17 @@ Rectangle {
 
         onClicked: mouse => root.clicked(mouse)
         onPressed: mouse => {
-            if (ripple.enabled)
-                ripple.press(mouse.x, mouse.y)
+            if (d.rippleReactive) {
+                rippleLoader.active = true
+                rippleLoader.item.press(mouse.x, mouse.y)
+            }
             root.pressed(mouse)
         }
         onReleased: mouse => {
-            ripple.release()
+            d.releaseRipple()
             root.released(mouse)
         }
-        onCanceled: ripple.release()
+        onCanceled: d.releaseRipple()
         onPressAndHold: mouse => root.pressAndHold(mouse)
     } // Sensor
 } // Rectangle
