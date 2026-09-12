@@ -11,7 +11,7 @@ import pytest
 from .config import get_config, setup_logging, log_test_start, log_test_end
 from .config.logging_config import get_logger, LoggingConfig
 from .support.screenshot import save_screenshot, save_page_source
-from core import peer_containers
+from core import collection_order, peer_containers
 from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY, PEER_REFUSED_KEY
 from core.capacity_reserver import set_shared_pending_counter
 from core.shared_counter import FileBasedCounter, create_shared_counter
@@ -298,6 +298,11 @@ def pytest_runtest_setup(item):
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
     """Automatically add single_device marker to tests with device_count(1)."""
+    # Before anything else: loadscope hands modules out in collection order, so
+    # the longest must be first or a worker starts it once the others are idle.
+    # Deselection below only removes items, which keeps this order intact.
+    items[:] = collection_order.heaviest_first(items)
+
     for item in items:
         device_count_marker = item.get_closest_marker("device_count")
         if device_count_marker:
