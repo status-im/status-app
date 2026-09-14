@@ -82,6 +82,7 @@ Rectangle {
     property alias statusListItemIcon: iconOrImage
     property alias statusListItemTitle: statusListItemTitle
     property alias statusListItemTitleAside: statusListItemTitleAsideText
+    property alias statusListItemTitleTextRightIcon: statusListItemTitleTextRightIcon
     property alias statusListItemTitleIcons: titleIconsRow
     property alias statusListItemTitleArea: statusListItemTitleArea
     property alias statusListItemSubTitle: statusListItemSubTitle
@@ -252,6 +253,7 @@ Rectangle {
                 loading: root.loading
 
                 StatusIcon {
+                    id: statusListItemTitleTextRightIcon
                     width: visible ? 12 : 0
                     height: visible ? 12 : 0
                     visible: !!root.titleTextIcon
