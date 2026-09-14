@@ -32,6 +32,9 @@ class KeycardManagementPopup(QObject):
         self.unknown_pin_button = Button(keycard_names.keycardManagementUnknownPinButton)
         self.done_button = Button(keycard_names.keycardManagementDoneButton)
         self.understand_checkbox = CheckBox(keycard_names.keycardManagementUnderstandCheckBox)
+        self._factory_reset_checkbox = CheckBox(keycard_names.keycardFactoryResetConfirmCheckbox)
+        self._factory_reset_button = Button(keycard_names.keycardManagementFactoryResetButton)
+        self._progress_title = TextLabel(keycard_names.keycardProgressTitle)
         self.key_pair_name_input = QObject(keycard_names.keycardKeyPairNameInput)
         self.account_name_input = QObject(keycard_names.keycardManageAccountNameInput)
 
@@ -160,6 +163,29 @@ class KeycardManagementPopup(QObject):
 
     @allure.step('Close popup after successful import')
     def close_after_success(self, timeout_msec: int):
+        self.done_button.wait_until_appears(timeout_msec)
+        self.done_button.click()
+        self.wait_until_hidden(timeout_msec)
+        return self
+
+    @allure.step('Confirm and run factory reset')
+    def confirm_factory_reset(self) -> 'KeycardManagementPopup':
+        self._factory_reset_checkbox.wait_until_appears()
+        self._factory_reset_checkbox.set(True)
+        self._factory_reset_button.wait_until_enabled()
+        self._factory_reset_button.click()
+        return self
+
+    @allure.step('Wait for factory reset success and close popup')
+    def close_after_factory_reset_success(
+            self,
+            expected_title: str,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        assert driver.waitFor(
+            lambda: self._progress_title.text == expected_title,
+            timeout_msec,
+        ), f'Expected progress title {expected_title!r}, got {self._progress_title.text!r}'
         self.done_button.wait_until_appears(timeout_msec)
         self.done_button.click()
         self.wait_until_hidden(timeout_msec)
