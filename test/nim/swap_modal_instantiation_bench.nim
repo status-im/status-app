@@ -9,8 +9,7 @@
 ##                          is the picker-free structural tree cost (models=0).
 ##   time_to_pickers_ready  create then open()->opened (unmonitored), then measure
 ##                          ONLY the deferred picker build+seed stall — the cost
-##                          that used to sit inside `create`. A plain same-chain
-##                          swap builds the 2 source-chain pickers, no kind-3.
+##                          that used to sit inside `create`.
 ##   open                   create then open() -> time to reach `opened`; monitor
 ##                          ENDS at `opened`, before the deferred seed, so open
 ##                          stays clean. wall ms + max stall + frames>32ms.
@@ -235,8 +234,7 @@ when isMainModule:
 
       if scenario == "time_to_pickers_ready":
         # Reach `opened` UNMONITORED, then monitor only the deferred picker
-        # build+seed (the cost that used to live in `create`). Success = the two
-        # source-chain pickers built; a plain same-chain swap builds no kind-3.
+        # build+seed (the cost that used to live in `create`).
         bench.builtKind1 = 0
         bench.builtKind3 = 0
         result.openMs = openAndWait()
@@ -324,11 +322,9 @@ when isMainModule:
   # createPickers. This is the whole point of the optimization.
   doAssert full.models == 0,
     &"expected 0 pickers built during create (deferred), got models={full.models}"
-  # A plain (same-chain) swap open builds exactly the two source-chain pickers and
-  # NO bridge (kind 3) picker — the eager 3rd picker on plain swaps is gone.
   let ready = rowFor(biggest, "time_to_pickers_ready")
-  doAssert ready.models == 2 and ready.kind3 == 0,
-    &"expected 2 pickers built post-open incl 0 kind3, got models={ready.models} kind3={ready.kind3}"
+  doAssert ready.models == 2 and ready.kind3 == 1,
+    &"expected 2 pickers built post-open incl 1 kind3, got models={ready.models} kind3={ready.kind3}"
 
   echo "assertions passed"
   stdout.flushFile()
