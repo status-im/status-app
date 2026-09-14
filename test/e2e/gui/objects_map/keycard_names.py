@@ -45,6 +45,9 @@ settingsKeycardDetailsImportNewKeypair = {"container": mainWindow_KeycardView,
 settingsKeycardDetailsMoveProfileKeypair = {"container": mainWindow_KeycardView,
                                             "objectName": "keycardDetailsMoveProfileKeypair",
                                             "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsFactoryReset = {"container": mainWindow_KeycardView,
+                                      "objectName": "keycardDetailsFactoryReset",
+                                      "type": "StatusListItem", "visible": True}
 
 # Keycard management popup
 
@@ -72,3 +75,11 @@ keycardManagementUnderstandCheckBox = {"container": keycardManagementPopup,
                                        "type": "StatusCheckBox", "visible": True}
 keycardKeyPairNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardKeyPairNameInput", "type": "StatusInput", "visible": True}
 keycardManageAccountNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManageAccountNameInput", "type": "StatusInput","visible": True}
+keycardFactoryResetConfirmCheckbox = {"container": statusDesktop_mainWindow_overlay,
+                                      "objectName": "keycardFactoryResetConfirmCheckbox",
+                                      "type": "StatusCheckBox", "visible": True}
+keycardManagementFactoryResetButton = {"container": statusDesktop_mainWindow_overlay,
+                                       "objectName": "keycardManagementFactoryResetButton",
+                                       "type": "StatusButton", "visible": True}
+keycardProgressTitle = {"container": keycardManagementPopup, "objectName": "keycardProgressTitle",
+                        "type": "StatusBaseText", "visible": True}
