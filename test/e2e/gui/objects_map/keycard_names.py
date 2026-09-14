@@ -48,6 +48,12 @@ settingsKeycardDetailsMoveProfileKeypair = {"container": mainWindow_KeycardView,
 settingsKeycardDetailsFactoryReset = {"container": mainWindow_KeycardView,
                                       "objectName": "keycardDetailsFactoryReset",
                                       "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsUnblockPuk = {"container": mainWindow_KeycardView,
+                                  "objectName": "keycardDetailsUnblockPuk",
+                                  "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsSetOrChangePuk = {"container": mainWindow_KeycardView,
+                                        "objectName": "keycardDetailsSetOrChangePuk",
+                                        "type": "StatusListItem", "visible": True}
 
 # Keycard management popup
 
@@ -83,3 +89,10 @@ keycardManagementFactoryResetButton = {"container": statusDesktop_mainWindow_ove
                                        "type": "StatusButton", "visible": True}
 keycardProgressTitle = {"container": keycardManagementPopup, "objectName": "keycardProgressTitle",
                         "type": "StatusBaseText", "visible": True}
+keycardManagementPukInput = {"container": statusDesktop_mainWindow_overlay,
+                             "objectName": "keycardManagementPukInput",
+                             "type": "StatusPinInput", "visible": True}
+keycardPinStepTitle = {"container": statusDesktop_mainWindow_overlay,
+                       "objectName": "keycardPinStepTitle", "type": "StatusBaseText", "visible": True}
+keycardPukStepTitle = {"container": statusDesktop_mainWindow_overlay,
+                       "objectName": "keycardPukStepTitle", "type": "StatusBaseText", "visible": True}
