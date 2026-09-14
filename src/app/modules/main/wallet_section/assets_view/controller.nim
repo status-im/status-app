@@ -1,4 +1,4 @@
-import sets
+import sets, times
 
 import io_interface
 import app_service/service/token/service as token_service
@@ -9,6 +9,11 @@ import app_service/service/wallet_account/dto/asset_group_item
 import app_service/service/network/service as network_service
 import app_service/service/settings/service as settings_service
 import app_service/service/community/service as community_service
+
+# A community holding assets we own may not be in the local cache at all (never
+# joined, never spectated). Ask for it, throttled the same way the chat section
+# throttles its link-preview lookups.
+const COMMUNITY_INFO_REQUEST_INTERVAL = initDuration(minutes = 10)
 
 # The below-balance threshold is stored as a raw integer scaled by 9 decimals
 # (mirrors TokensStore.getDisplayAssetsBelowBalanceThresholdDisplayAmount in QML).
@@ -76,6 +81,10 @@ proc getNativeSymbolsForChains*(self: Controller, chainIds: seq[int]): seq[strin
 proc getCommunityInfo*(self: Controller, communityId: string): tuple[name: string, image: string] =
   let community {.cursor.} = self.communityService.getCommunityById(communityId)
   return (community.name, community.images.thumbnail)
+
+proc requestCommunityInfo*(self: Controller, communityId: string) =
+  self.communityService.requestCommunityInfo(communityId, importing = false, tryDatabase = true,
+    requiredTimeSinceLastRequest = COMMUNITY_INFO_REQUEST_INTERVAL)
 
 proc getMarketValueThreshold*(self: Controller): float =
   if not self.settingsService.displayAssetsBelowBalance():
