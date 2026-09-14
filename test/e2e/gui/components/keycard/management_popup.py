@@ -35,6 +35,9 @@ class KeycardManagementPopup(QObject):
         self._factory_reset_checkbox = CheckBox(keycard_names.keycardFactoryResetConfirmCheckbox)
         self._factory_reset_button = Button(keycard_names.keycardManagementFactoryResetButton)
         self._progress_title = TextLabel(keycard_names.keycardProgressTitle)
+        self._puk_input = QObject(keycard_names.keycardManagementPukInput)
+        self._pin_step_title = TextLabel(keycard_names.keycardPinStepTitle)
+        self._puk_step_title = TextLabel(keycard_names.keycardPukStepTitle)
         self.key_pair_name_input = QObject(keycard_names.keycardKeyPairNameInput)
         self.account_name_input = QObject(keycard_names.keycardManageAccountNameInput)
 
@@ -174,6 +177,100 @@ class KeycardManagementPopup(QObject):
         self._factory_reset_checkbox.set(True)
         self._factory_reset_button.wait_until_enabled()
         self._factory_reset_button.click()
+        return self
+
+    def _wait_for_pin_step(self, title: str, timeout_msec: int):
+        assert driver.waitFor(
+            lambda: self._pin_step_title.text == title,
+            timeout_msec,
+        ), f'Expected PIN step {title!r}, got {self._pin_step_title.text!r}'
+
+    def _wait_for_pin_input_reset(self, timeout_msec: int):
+        assert driver.waitFor(
+            lambda: self.pin_input.is_visible
+                    and len(getattr(self.pin_input.object, 'pinInput', '')) == 0,
+            timeout_msec,
+        ), 'PIN input did not reset after wrong PIN'
+
+    @allure.step('Enter wrong PIN until Keycard is blocked')
+    def enter_wrong_pin_until_blocked(
+            self,
+            wrong_pin: str,
+            attempts: int = 3,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        for attempt in range(attempts):
+            self._wait_for_pin_step('Enter Keycard PIN', timeout_msec)
+            self.pin_input.wait_until_appears(timeout_msec)
+            self.pin_input.object.setPin(wrong_pin)
+            if attempt < attempts - 1:
+                self._wait_for_pin_input_reset(timeout_msec)
+            else:
+                self.wait_until_hidden(timeout_msec)
+        return self
+
+    @allure.step('Set or change PUK to {new_puk} using current PIN {current_pin}')
+    def set_or_change_puk(
+            self,
+            current_pin: str,
+            new_puk: str,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        self._wait_for_pin_step('Enter Keycard PIN', timeout_msec)
+        self.pin_input.wait_until_appears(timeout_msec)
+        self.pin_input.object.setPin(current_pin)
+        assert driver.waitFor(
+            lambda: self._puk_step_title.text == 'Choose a Keycard PUK',
+            timeout_msec,
+        ), f'Expected PUK setup step, got {self._puk_step_title.text!r}'
+        self._puk_input.wait_until_appears(timeout_msec)
+        self._puk_input.object.setPin(new_puk)
+        self.next_button.wait_until_enabled()
+        self.next_button.click()
+        assert driver.waitFor(
+            lambda: self._puk_step_title.text == 'Repeat your Keycard PUK',
+            timeout_msec,
+        ), f'Expected PUK repeat step, got {self._puk_step_title.text!r}'
+        self._puk_input.object.setPin(new_puk)
+        self.next_button.wait_until_enabled()
+        self.next_button.click()
+        return self
+
+    @allure.step('Unblock Keycard with new PIN {new_pin} and PUK {puk}')
+    def unblock_with_puk(
+            self,
+            new_pin: str,
+            puk: str,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        self._wait_for_pin_step('Enter new PIN', timeout_msec)
+        self.pin_input.wait_until_appears(timeout_msec)
+        self.pin_input.object.setPin(new_pin)
+        self._wait_for_pin_step('Repeat new PIN', timeout_msec)
+        self.pin_input.object.setPin(new_pin)
+        assert driver.waitFor(
+            lambda: self._puk_step_title.text == 'Enter PUK',
+            timeout_msec,
+        ), f'Expected PUK step, got {self._puk_step_title.text!r}'
+        self._puk_input.wait_until_appears(timeout_msec)
+        self._puk_input.object.setPin(puk)
+        self.next_button.wait_until_enabled()
+        self.next_button.click()
+        return self
+
+    @allure.step('Wait for unblock success and close popup')
+    def close_after_unblock_success(
+            self,
+            expected_title: str,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        assert driver.waitFor(
+            lambda: self._progress_title.text == expected_title,
+            timeout_msec,
+        ), f'Expected progress title {expected_title!r}, got {self._progress_title.text!r}'
+        self.done_button.wait_until_appears(timeout_msec)
+        self.done_button.click()
+        self.wait_until_hidden(timeout_msec)
         return self
 
     @allure.step('Wait for factory reset success and close popup')

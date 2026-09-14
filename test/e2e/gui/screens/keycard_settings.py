@@ -7,7 +7,7 @@ from gui.components.keycard.management_popup import KeycardManagementPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
-from gui.objects_map import keycard_names
+from gui.objects_map import keycard_names, settings_names
 
 
 class KeycardSettingsView(QObject):
@@ -21,6 +21,9 @@ class KeycardSettingsView(QObject):
         self._import_new_keypair_item = Button(keycard_names.settingsKeycardDetailsImportNewKeypair)
         self._move_profile_keypair_item = Button(keycard_names.settingsKeycardDetailsMoveProfileKeypair)
         self._factory_reset_item = Button(keycard_names.settingsKeycardDetailsFactoryReset)
+        self._unblock_puk_item = Button(keycard_names.settingsKeycardDetailsUnblockPuk)
+        self._set_or_change_puk_item = Button(keycard_names.settingsKeycardDetailsSetOrChangePuk)
+        self._back_button = Button(settings_names.main_toolBar_back_button)
 
     @property
     def is_read_keycard_button_visible(self) -> bool:
@@ -39,8 +42,18 @@ class KeycardSettingsView(QObject):
         self._read_keycard_button.wait_until_appears(timeout_msec)
         return self
 
+    @allure.step('Go back to Keycard settings main screen')
+    def go_back_to_main(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        if self.is_read_keycard_button_visible:
+            return self
+        self._back_button.wait_until_appears(timeout_msec)
+        self._back_button.click()
+        self._read_keycard_button.wait_until_appears(timeout_msec)
+        return self
+
     @allure.step('Open Read Keycard flow')
     def open_read_keycard(self) -> KeycardManagementPopup:
+        self.go_back_to_main()
         self._read_keycard_button.click()
         return KeycardManagementPopup().wait_until_appears()
 
@@ -54,7 +67,7 @@ class KeycardSettingsView(QObject):
             lambda: self.details_title == expected_title,
             timeout_msec,
         ), f'Expected Keycard details title {expected_title!r}, got {self.details_title!r}'
-        if expected_title == constants.KEYCARD_EMPTY_TITLE:
+        if expected_title in (constants.KEYCARD_EMPTY_TITLE, constants.KEYCARD_BLOCKED_TITLE):
             return self
         self._key_pair_info.wait_until_appears(timeout_msec)
         assert driver.waitFor(
@@ -82,3 +95,24 @@ class KeycardSettingsView(QObject):
     def factory_reset(self) -> KeycardManagementPopup:
         self._factory_reset_item.click()
         return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Set or change Keycard PUK')
+    def set_or_change_puk(self) -> KeycardManagementPopup:
+        self._set_or_change_puk_item.wait_until_appears()
+        self._set_or_change_puk_item.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Unblock Keycard with PUK')
+    def unblock_with_puk(self) -> KeycardManagementPopup:
+        self._unblock_puk_item.wait_until_appears()
+        self._unblock_puk_item.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Wait until blocked Keycard details appear')
+    def wait_until_blocked_details_appear(
+            self,
+            timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+    ):
+        self.wait_until_details_appears(constants.KEYCARD_BLOCKED_TITLE, timeout_msec)
+        self._unblock_puk_item.wait_until_appears(timeout_msec)
+        return self
