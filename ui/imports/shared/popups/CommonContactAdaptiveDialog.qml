@@ -43,6 +43,8 @@ StatusAdaptiveDialog {
     contentComponent: ColumnLayout {
         id: contentLayout
 
+        readonly property alias bodyItem: bodyLoader.item
+
         spacing: Theme.padding
 
         RowLayout {
@@ -141,6 +143,8 @@ StatusAdaptiveDialog {
         }
 
         Loader {
+            id: bodyLoader
+
             Layout.fillWidth: true
             sourceComponent: root.bodyComponent
         }
