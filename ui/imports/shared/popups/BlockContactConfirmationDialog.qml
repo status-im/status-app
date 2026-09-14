@@ -12,19 +12,15 @@ import utils
 CommonContactAdaptiveDialog {
     id: root
 
-    readonly property bool removeIDVerification: d.removeIDVerification
-    readonly property bool removeContact: d.removeContact
+    readonly property bool removeIDVerification: root.hostedItem?.bodyItem?.removeIDVerification ?? false
+    readonly property bool removeContact: root.hostedItem?.bodyItem?.removeContact ?? false
 
     title: qsTr("Block user")
 
-    QtObject {
-        id: d
-
-        property bool removeIDVerification
-        property bool removeContact
-    }
-
     bodyComponent: ColumnLayout {
+        readonly property alias removeIDVerification: ctrlRemoveIDVerification.checked
+        readonly property alias removeContact: ctrlRemoveContact.checked
+
         spacing: Theme.halfPadding
 
         StatusBaseText {
@@ -57,8 +53,6 @@ CommonContactAdaptiveDialog {
             checked: visible
             enabled: false
             text: qsTr("Remove contact")
-            onCheckedChanged: d.removeContact = checked
-            Component.onCompleted: d.removeContact = checked
         }
 
         StatusCheckBox {
@@ -67,8 +61,6 @@ CommonContactAdaptiveDialog {
             checked: visible
             enabled: false
             text: qsTr("Remove trust mark")
-            onCheckedChanged: d.removeIDVerification = checked
-            Component.onCompleted: d.removeIDVerification = checked
         }
     }
 
