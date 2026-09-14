@@ -1824,7 +1824,7 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Not Connected to P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepřipojeno k síti P2P</translation>
     </message>
     <message>
         <source>CoinGecko connection successful</source>
@@ -1848,11 +1848,11 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Odešlete žádost o kontakt peer-to-peer botovi týmu Status přes decentralizovanou síť a získejte uvítací zprávy a tipy, jak na to, nebo sdílejte zpětnou vazbu či problémy. Další podrobnosti o interakci s botem najdete v Zásadách ochrany osobních údajů. Kdykoli se můžete odpojit</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Odešlete žádost o kontakt peer-to-peer botovi týmu Status přes decentralizovanou síť a získejte novinky Status a tipy, jak na to, nebo sdílejte zpětnou vazbu či problémy. Další podrobnosti o interakci s botem najdete v Zásadách ochrany osobních údajů. Kdykoli se můžete odpojit</translation>
     </message>
     <message>
         <source>Invite People</source>
@@ -6807,7 +6807,7 @@ Keycard bude vyžadována pro podepisování</translation>
     <name>EmptyChatPanel</name>
     <message>
         <source>%1 to connect with or&lt;br&gt;invite your friends to Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;for welcome messages, how-to tips, or just to share feedback or issues.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 pro spojení s přáteli nebo&lt;br&gt;pozvání přátel do Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;pro uvítací zprávy, tipy, jak na to, nebo abyste jen sdíleli zpětnou vazbu či problémy.</translation>
     </message>
     <message>
         <source>Share your profile</source>
@@ -6815,7 +6815,7 @@ Keycard bude vyžadována pro podepisování</translation>
     </message>
     <message>
         <source>Chat with the Status Team peer-to-peer bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Napište peer-to-peer botovi týmu Status</translation>
     </message>
 </context>
 <context>
@@ -7199,51 +7199,51 @@ Keycard bude vyžadována pro podepisování</translation>
     <name>EnsTermsAndConditionsPopup</name>
     <message>
         <source>Terms of name registration</source>
-        <translation type="unfinished">Podmínky registrace jména</translation>
+        <translation>Podmínky registrace jména</translation>
     </message>
     <message>
         <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation type="unfinished">Prostředky jsou uloženy na 1 rok. Vaše SNT budou uzamčeny, ale nebudou utraceny.</translation>
+        <translation>Prostředky jsou uloženy na 1 rok. Vaše SNT budou uzamčeny, ale nebudou utraceny.</translation>
     </message>
     <message>
         <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation type="unfinished">Po 1 roce můžete jméno uvolnit a získat svůj vklad zpět, nebo neprovádět žádnou akci a jméno si ponechat.</translation>
+        <translation>Po 1 roce můžete jméno uvolnit a získat svůj vklad zpět, nebo neprovádět žádnou akci a jméno si ponechat.</translation>
     </message>
     <message>
         <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation type="unfinished">Pokud se změní podmínky smlouvy — např. Status provede upgrade smlouvy — uživatel má právo uvolnit uživatelské jméno bez ohledu na dobu držení.</translation>
+        <translation>Pokud se změní podmínky smlouvy — např. Status provede upgrade smlouvy — uživatel má právo uvolnit uživatelské jméno bez ohledu na dobu držení.</translation>
     </message>
     <message>
         <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation type="unfinished">Správce smlouvy nemá přístup k vašim uloženým prostředkům. Mohou být přesunuty pouze zpět na adresu, která je odeslala.</translation>
+        <translation>Správce smlouvy nemá přístup k vašim uloženým prostředkům. Mohou být přesunuty pouze zpět na adresu, která je odeslala.</translation>
     </message>
     <message>
         <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation type="unfinished">Vaše adresa(y) budou veřejně spojeny s vaším ENS jménem.</translation>
+        <translation>Vaše adresa(y) budou veřejně spojeny s vaším ENS jménem.</translation>
     </message>
     <message>
         <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation type="unfinished">Uživatelská jména jsou vytvářena jako uzly subdomén stateofus.eth a podléhají podmínkám chytré smlouvy ENS.</translation>
+        <translation>Uživatelská jména jsou vytvářena jako uzly subdomén stateofus.eth a podléhají podmínkám chytré smlouvy ENS.</translation>
     </message>
     <message>
         <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation type="unfinished">Autorizujete smlouvu k převodu SNT vaším jménem. K tomu může dojít pouze tehdy, když schválíte transakci k autorizaci převodu.</translation>
+        <translation>Autorizujete smlouvu k převodu SNT vaším jménem. K tomu může dojít pouze tehdy, když schválíte transakci k autorizaci převodu.</translation>
     </message>
     <message>
         <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation type="unfinished">Tyto podmínky jsou zaručeny logikou chytré smlouvy na adresách:</translation>
+        <translation>Tyto podmínky jsou zaručeny logikou chytré smlouvy na adresách:</translation>
     </message>
     <message>
         <source>%1 (Status UsernameRegistrar).</source>
-        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+        <translation>%1 (Status UsernameRegistrar).</translation>
     </message>
     <message>
         <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Vyhledat na Etherscanu&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Vyhledat na Etherscanu&lt;/a&gt;</translation>
     </message>
     <message>
         <source>%1 (ENS Registry).</source>
-        <translation type="unfinished">%1 (ENS Registry).</translation>
+        <translation>%1 (ENS Registry).</translation>
     </message>
 </context>
 <context>
@@ -10561,11 +10561,11 @@ selhalo</translation>
     </message>
     <message>
         <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Zprávy jsou odesílány prostřednictvím decentralizované sítě, peer-to-peer (p2p) sítě postavené na technologii Logos Messaging a poháněné společně uživateli provozujícími Status Desktop, díky čemuž je Status decentralizovaný, odolný a odolný vůči cenzuře. %1</translation>
     </message>
     <message>
         <source>Connected network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Připojené síťové uzly</translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10585,19 +10585,19 @@ selhalo</translation>
     </message>
     <message>
         <source>Refresh network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit síťové uzly</translation>
     </message>
     <message>
         <source>Unable to refresh network peers: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se obnovit síťové uzly: %1</translation>
     </message>
     <message>
         <source>How to fix p2p network connection</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak opravit připojení k síti P2P</translation>
     </message>
     <message>
         <source>If Status has no connected network peers, check:</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud Status nemá žádné připojené síťové uzly, zkontrolujte:</translation>
     </message>
     <message>
         <source>Try using a VPN</source>
@@ -10605,7 +10605,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Some networks may block access to the p2p network. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Některé sítě mohou blokovat přístup k síti P2P. %1</translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -14255,7 +14255,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Align the QR code within the frame to scan</source>
-        <translation></translation>
+        <translation>Umístěte QR kód do rámečku pro naskenování</translation>
     </message>
     <message>
         <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
@@ -15368,7 +15368,7 @@ selhalo</translation>
     </message>
     <message>
         <source>P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>Síť P2P</translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -16915,7 +16915,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Swap + Bridge</source>
-        <translation type="unfinished">Výměna + most</translation>
+        <translation>Směna + Most</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16936,15 +16936,15 @@ selhalo</translation>
     </message>
     <message>
         <source>Bridge</source>
-        <translation type="unfinished">Most</translation>
+        <translation>Most</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
-        <translation type="unfinished"></translation>
+        <translation>od %1 přes %2</translation>
     </message>
     <message>
         <source>by %1</source>
-        <translation type="unfinished"></translation>
+        <translation>od %1</translation>
     </message>
     <message>
         <source>Approving %1</source>
@@ -16960,7 +16960,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Confirm %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Potvrdit %1</translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -16972,7 +16972,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Sign %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepsat %1</translation>
     </message>
     <message>
         <source>Sign</source>
@@ -16984,7 +16984,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Swaps on %1 are coming soon.</source>
-        <translation type="unfinished">Výměny na %1 budou brzy dostupné.</translation>
+        <translation>Směny na %1 budou brzy dostupné.</translation>
     </message>
     <message>
         <source>Fastest</source>
@@ -17038,38 +17038,38 @@ selhalo</translation>
     </message>
     <message>
         <source>via %1</source>
-        <translation type="unfinished">přes %1</translation>
+        <translation>přes %1</translation>
     </message>
 </context>
 <context>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished">Trasa pro směnu</translation>
+        <translation>Trasa pro směnu</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished">Nejlepší výnos</translation>
+        <translation>Nejlepší výnos</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished">Nejvyšší obdržená částka</translation>
+        <translation>Nejvyšší obdržená částka</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished">Nejrychlejší</translation>
+        <translation>Nejrychlejší</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished">Nejkratší doba provedení</translation>
+        <translation>Nejkratší doba provedení</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished">Nejnižší poplatek</translation>
+        <translation>Nejnižší poplatek</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished">Nejnižší náklady na síť</translation>
+        <translation>Nejnižší náklady na síť</translation>
     </message>
 </context>
 <context>
@@ -17082,7 +17082,7 @@ selhalo</translation>
     <message>
         <source>From %1 %2 on %3 to %4 %5 on %6</source>
         <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>Z %1 %2 na %3 do %4 %5 na %6</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17102,22 +17102,22 @@ selhalo</translation>
     </message>
     <message>
         <source>From account</source>
-        <translation type="unfinished">Z účtu</translation>
+        <translation>Z účtu</translation>
     </message>
     <message>
         <source>To account</source>
-        <translation type="unfinished"></translation>
+        <translation>Na účet</translation>
     </message>
 </context>
 <context>
     <name>SwapSlippagePopup</name>
     <message>
         <source>Set max price slippage</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastavit maximální cenový skluz</translation>
     </message>
     <message>
         <source>The swap will revert if the price shifts beyond this percentage.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud se cena posune nad toto procento, směna se vrátí zpět.</translation>
     </message>
 </context>
 <context>
@@ -17969,79 +17969,79 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>%1 (community asset) from %2 on %3</source>
-        <translation type="unfinished">%1 (komunitní aktivum) od %2 dne %3</translation>
+        <translation>%1 (komunitní aktivum) od %2 dne %3</translation>
     </message>
     <message>
         <source>%1 from %2 to %3 on %4 and %5</source>
-        <translation type="unfinished">%1 od %2 do %3 dne %4 a %5</translation>
+        <translation>%1 od %2 do %3 dne %4 a %5</translation>
     </message>
     <message>
         <source>%1 to %2 on %3 and %4</source>
-        <translation type="unfinished">%1 do %2 dne %3 a %4</translation>
+        <translation>%1 do %2 dne %3 a %4</translation>
     </message>
     <message>
         <source>%1 from %2 to %3 on %4</source>
-        <translation type="unfinished">%1 od %2 do %3 dne %4</translation>
+        <translation>%1 od %2 do %3 dne %4</translation>
     </message>
     <message>
         <source>%1 to %2 on %3</source>
-        <translation type="unfinished">%1 do %2 dne %3</translation>
+        <translation>%1 do %2 dne %3</translation>
     </message>
     <message>
         <source>%1 from %2 on %3 and %4</source>
-        <translation type="unfinished">%1 od %2 dne %3 a %4</translation>
+        <translation>%1 od %2 dne %3 a %4</translation>
     </message>
     <message>
         <source>%1 from %2 on %3</source>
-        <translation type="unfinished">%1 od %2 dne %3</translation>
+        <translation>%1 od %2 dne %3</translation>
     </message>
     <message>
         <source>%1 at %2 on %3 in %4</source>
-        <translation type="unfinished">%1 na %2 dne %3 v %4</translation>
+        <translation>%1 na %2 dne %3 v %4</translation>
     </message>
     <message>
         <source>%1 at %2 on %3</source>
-        <translation type="unfinished">%1 na %2 dne %3</translation>
+        <translation>%1 na %2 dne %3</translation>
     </message>
     <message>
         <source>%1 to %2 in %3 on %4</source>
-        <translation type="unfinished">%1 do %2 v %3 dne %4</translation>
+        <translation>%1 do %2 v %3 dne %4</translation>
     </message>
     <message>
         <source>%1 from %2 to %3 in %4</source>
-        <translation type="unfinished">%1 od %2 do %3 v %4</translation>
+        <translation>%1 od %2 do %3 v %4</translation>
     </message>
     <message>
         <source>%1 from %2 to %3</source>
-        <translation type="unfinished">%1 od %2 do %3</translation>
+        <translation>%1 od %2 do %3</translation>
     </message>
     <message>
         <source>Via %1 on %2</source>
-        <translation type="unfinished">Přes %1 dne %2</translation>
+        <translation>Přes %1 dne %2</translation>
     </message>
     <message>
         <source>%1 via %2 in %3</source>
-        <translation type="unfinished">%1 přes %2 v %3</translation>
+        <translation>%1 přes %2 v %3</translation>
     </message>
     <message>
         <source>%1 via %2</source>
-        <translation type="unfinished">%1 přes %2</translation>
+        <translation>%1 přes %2</translation>
     </message>
     <message>
         <source>%1 in %2 for %3 on %4</source>
-        <translation type="unfinished">%1 v %2 pro %3 dne %4</translation>
+        <translation>%1 v %2 pro %3 dne %4</translation>
     </message>
     <message>
         <source>%1 for %2 on %3</source>
-        <translation type="unfinished">%1 pro %2 dne %3</translation>
+        <translation>%1 pro %2 dne %3</translation>
     </message>
     <message>
         <source>Between %1 and %2 on %3</source>
-        <translation type="unfinished">Mezi %1 a %2 dne %3</translation>
+        <translation>Mezi %1 a %2 dne %3</translation>
     </message>
     <message>
         <source>With %1 on %2</source>
-        <translation type="unfinished">S %1 dne %2</translation>
+        <translation>S %1 dne %2</translation>
     </message>
     <message>
         <source>Send failed</source>
@@ -18196,132 +18196,132 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Set your own fees &amp; nonce</source>
-        <translation type="unfinished">Nastavte si vlastní poplatky a nonce</translation>
+        <translation>Nastavte si vlastní poplatky a nonce</translation>
     </message>
     <message>
         <source>Set your own base fee, priority fee, gas amount and nonce</source>
-        <translation type="unfinished">Nastavte si vlastní základní poplatek, prioritní poplatek, množství gasu a nonce</translation>
+        <translation>Nastavte si vlastní základní poplatek, prioritní poplatek, množství gasu a nonce</translation>
     </message>
     <message>
         <source>Regular cost option using suggested gas price</source>
-        <translation type="unfinished">Standardní možnost nákladů s použitím doporučené ceny gasu</translation>
+        <translation>Standardní možnost nákladů s použitím doporučené ceny gasu</translation>
     </message>
     <message>
         <source>Increased gas price, incentivising miners to confirm more quickly</source>
-        <translation type="unfinished">Zvýšená cena gasu, která motivuje těžaře k rychlejšímu potvrzení</translation>
+        <translation>Zvýšená cena gasu, která motivuje těžaře k rychlejšímu potvrzení</translation>
     </message>
     <message>
         <source>Highest base and priority fee, ensuring the fastest possible confirmation</source>
-        <translation type="unfinished">Nejvyšší základní a prioritní poplatek, zajišťující nejrychlejší možné potvrzení</translation>
+        <translation>Nejvyšší základní a prioritní poplatek, zajišťující nejrychlejší možné potvrzení</translation>
     </message>
     <message>
         <source>Low cost option using current network base fee and a low priority fee</source>
-        <translation type="unfinished">Nízkonákladová možnost s použitím aktuálního základního poplatku sítě a nízkého prioritního poplatku</translation>
+        <translation>Nízkonákladová možnost s použitím aktuálního základního poplatku sítě a nízkého prioritního poplatku</translation>
     </message>
     <message>
         <source>Gas price</source>
-        <translation type="unfinished">Cena gasu</translation>
+        <translation>Cena gasu</translation>
     </message>
     <message>
         <source>Max base fee</source>
-        <translation type="unfinished">Maximální základní poplatek</translation>
+        <translation>Maximální základní poplatek</translation>
     </message>
     <message>
         <source>Lower than necessary (current %1)</source>
-        <translation type="unfinished">Nižší, než je nutné (aktuálně %1)</translation>
+        <translation>Nižší, než je nutné (aktuálně %1)</translation>
     </message>
     <message>
         <source>Higher than necessary (current %1)</source>
-        <translation type="unfinished">Vyšší, než je nutné (aktuálně %1)</translation>
+        <translation>Vyšší, než je nutné (aktuálně %1)</translation>
     </message>
     <message>
         <source>Current: %1</source>
-        <translation type="unfinished">Aktuální: %1</translation>
+        <translation>Aktuální: %1</translation>
     </message>
     <message>
         <source>The gas price you set is the exact amount you’ll pay per unit of gas used. If you set a gas price higher than what’s required for inclusion, the difference will not be refunded. Choose your gas price carefully to avoid overpaying.
 </source>
-        <translation type="unfinished">Cena gasu, kterou nastavíte, je přesná částka, kterou zaplatíte za jednotku použitého gasu. Pokud nastavíte cenu gasu vyšší, než je vyžadováno pro zahrnutí, rozdíl vám nebude vrácen. Pečlivě si vyberte cenu gasu, abyste se vyhnuli přeplacení.</translation>
+        <translation>Cena gasu, kterou nastavíte, je přesná částka, kterou zaplatíte za jednotku použitého gasu. Pokud nastavíte cenu gasu vyšší, než je vyžadováno pro zahrnutí, rozdíl vám nebude vrácen. Pečlivě si vyberte cenu gasu, abyste se vyhnuli přeplacení.</translation>
     </message>
     <message>
         <source>When your transaction gets included in the block, any difference between your max base fee and the actual base fee will be refunded.
 </source>
-        <translation type="unfinished">Když bude vaše transakce zahrnuta do bloku, jakýkoli rozdíl mezi vaším maximálním základním poplatkem a skutečným základním poplatkem vám bude vrácen.</translation>
+        <translation>Když bude vaše transakce zahrnuta do bloku, jakýkoli rozdíl mezi vaším maximálním základním poplatkem a skutečným základním poplatkem vám bude vrácen.</translation>
     </message>
     <message>
         <source>Note: the %1 amount shown for this value is calculated:
 Gas price (in GWEI) * gas amount</source>
-        <translation type="unfinished">Poznámka: částka %1 zobrazená pro tuto hodnotu se vypočítá: Cena gasu (v GWEI) * množství gasu</translation>
+        <translation>Poznámka: částka %1 zobrazená pro tuto hodnotu se vypočítá: Cena gasu (v GWEI) * množství gasu</translation>
     </message>
     <message>
         <source>Note: the %1 amount shown for this value is calculated:
 Max base fee (in GWEI) * Max gas amount</source>
-        <translation type="unfinished">Poznámka: částka %1 zobrazená pro tuto hodnotu se vypočítá: Maximální základní poplatek (v GWEI) * maximální množství gasu</translation>
+        <translation>Poznámka: částka %1 zobrazená pro tuto hodnotu se vypočítá: Maximální základní poplatek (v GWEI) * maximální množství gasu</translation>
     </message>
     <message>
         <source>Priority fee</source>
-        <translation type="unfinished">Prioritní poplatek</translation>
+        <translation>Prioritní poplatek</translation>
     </message>
     <message>
         <source>Higher than max base fee: %1</source>
-        <translation type="unfinished">Vyšší než maximální základní poplatek: %1</translation>
+        <translation>Vyšší než maximální základní poplatek: %1</translation>
     </message>
     <message>
         <source>Higher than necessary (current %1 - %2)</source>
-        <translation type="unfinished">Vyšší, než je nutné (aktuálně %1 - %2)</translation>
+        <translation>Vyšší, než je nutné (aktuálně %1 - %2)</translation>
     </message>
     <message>
         <source>Current: %1 - %2</source>
-        <translation type="unfinished">Aktuální: %1 - %2</translation>
+        <translation>Aktuální: %1 - %2</translation>
     </message>
     <message>
         <source>AKA miner tip. A voluntary fee you can add to incentivise miners or validators to prioritise your transaction.
 
 The higher the tip, the faster your transaction is likely to be processed, especially curing periods of higher network congestion.
 </source>
-        <translation type="unfinished">Také známý jako odměna pro těžaře. Jedná se o dobrovolný poplatek, který můžete přidat, abyste motivovali těžaře nebo validátory, aby vaší transakci dali přednost.
+        <translation>Také známý jako odměna pro těžaře. Jedná se o dobrovolný poplatek, který můžete přidat, abyste motivovali těžaře nebo validátory, aby vaší transakci dali přednost.
 
 Čím vyšší je odměna, tím pravděpodobnější je, že bude vaše transakce zpracována rychleji, zejména v obdobích vyššího zatížení sítě.</translation>
     </message>
     <message>
         <source>Note: the %1 amount shown for this value is calculated: Priority fee (in GWEI) * Max gas amount</source>
-        <translation type="unfinished">Poznámka: zobrazená hodnota %1 pro tuto položku se vypočítá: Prioritní poplatek (v GWEI) * Maximální množství gasu</translation>
+        <translation>Poznámka: zobrazená hodnota %1 pro tuto položku se vypočítá: Prioritní poplatek (v GWEI) * Maximální množství gasu</translation>
     </message>
     <message>
         <source>Max gas amount</source>
-        <translation type="unfinished">Maximální množství gasu</translation>
+        <translation>Maximální množství gasu</translation>
     </message>
     <message>
         <source>Too low (should be between %1 and %2)</source>
-        <translation type="unfinished">Příliš nízká hodnota (měla by být mezi %1 a %2)</translation>
+        <translation>Příliš nízká hodnota (měla by být mezi %1 a %2)</translation>
     </message>
     <message>
         <source>Too high (should be between %1 and %2)</source>
-        <translation type="unfinished">Příliš vysoká hodnota (měla by být mezi %1 a %2)</translation>
+        <translation>Příliš vysoká hodnota (měla by být mezi %1 a %2)</translation>
     </message>
     <message>
         <source>UNITS</source>
-        <translation type="unfinished">JEDNOTKY</translation>
+        <translation>JEDNOTKY</translation>
     </message>
     <message>
         <source>Gas amount</source>
-        <translation type="unfinished">Množství gasu</translation>
+        <translation>Množství gasu</translation>
     </message>
     <message>
         <source>AKA gas limit. Refers to the maximum number of computational steps (or units of gas) that a transaction can consume. It represents the complexity or amount of work required to execute a transaction or smart contract.
 
 The gas limit is a cap on how much work the transaction can do on the blockchain. If the gas limit is set too low, the transaction may fail due to insufficient gas.</source>
-        <translation type="unfinished">Také známé jako limit gasu. Označuje maximální počet výpočetních kroků (nebo jednotek gasu), které může transakce spotřebovat. Představuje složitost nebo množství práce potřebné k provedení transakce nebo chytré smlouvy. 
+        <translation>Také známé jako limit gasu. Označuje maximální počet výpočetních kroků (nebo jednotek gasu), které může transakce spotřebovat. Představuje složitost nebo množství práce potřebné k provedení transakce nebo chytré smlouvy. 
 
 Limit gasu je strop pro množství práce, kterou může transakce na blockchainu vykonat. Pokud je limit gasu nastaven příliš nízko, transakce může selhat kvůli nedostatečnému množství gasu.</translation>
     </message>
     <message>
         <source>Nonce</source>
-        <translation type="unfinished">Nonce</translation>
+        <translation>Nonce</translation>
     </message>
     <message>
         <source>Higher than suggested nonce of %1</source>
-        <translation type="unfinished">Vyšší než doporučený nonce %1</translation>
+        <translation>Vyšší než doporučený nonce %1</translation>
     </message>
     <message>
         <source>Last transaction: %1</source>
@@ -18331,7 +18331,7 @@ Limit gasu je strop pro množství práce, kterou může transakce na blockchain
         <source>Transaction counter ensuring transactions from your account are processed in the correct order and can’t be replayed. Each new transaction increments the nonce by 1, ensuring uniqueness and preventing double-spending.
 
 If a transaction with a lower nonce is pending, higher nonce transactions will remain in the queue until the earlier one is confirmed.</source>
-        <translation type="unfinished">Čítač transakcí, který zajišťuje, že transakce z vašeho účtu budou zpracovány ve správném pořadí a nebudou opakovaně odeslány. Každá nová transakce zvýší nonce o 1, čímž zajistí jedinečnost a zabrání dvojímu utrácení. 
+        <translation>Čítač transakcí, který zajišťuje, že transakce z vašeho účtu budou zpracovány ve správném pořadí a nebudou opakovaně odeslány. Každá nová transakce zvýší nonce o 1, čímž zajistí jedinečnost a zabrání dvojímu utrácení. 
 
 Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zůstanou ve frontě, dokud se dřívější nepotvrdí.</translation>
     </message>
@@ -18352,11 +18352,11 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>&lt;b&gt;It looks like you haven’t minted the %1 Owner token yet.&lt;/b&gt; Once you have minted this token, you can transfer ownership of %1 by sending the Owner token to the account of the person you want to be the new Community owner.</source>
-        <translation type="unfinished">&lt;b&gt;Zdá se, že jste ještě nevytvořili token %1 Owner.&lt;/b&gt; Jakmile tento token vytvoříte, můžete převést vlastnictví %1 odesláním tokenu Owner na účet osoby, kterou chcete určit jako nového vlastníka komunity.</translation>
+        <translation>&lt;b&gt;Zdá se, že jste ještě nevytvořili token %1 Owner.&lt;/b&gt; Jakmile tento token vytvoříte, můžete převést vlastnictví %1 odesláním tokenu Owner na účet osoby, kterou chcete určit jako nového vlastníka komunity.</translation>
     </message>
     <message>
         <source>&lt;b&gt;It looks like you haven’t minted the %1 Owner token yet.&lt;/b&gt; Once you have minted this token, you can make one of your other synced desktop devices the control node for the %1 Community.</source>
-        <translation type="unfinished">&lt;b&gt;Zdá se, že jste ještě nevytvořili token %1 Owner.&lt;/b&gt; Jakmile tento token vytvoříte, můžete jedno ze svých dalších synchronizovaných stolních zařízení nastavit jako řídicí uzel pro komunitu %1.</translation>
+        <translation>&lt;b&gt;Zdá se, že jste ještě nevytvořili token %1 Owner.&lt;/b&gt; Jakmile tento token vytvoříte, můžete jedno ze svých dalších synchronizovaných stolních zařízení nastavit jako řídicí uzel pro komunitu %1.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -19056,11 +19056,11 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>&lt; 30 sec</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 s</translation>
     </message>
     <message>
         <source>&lt; 30 seconds</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 sekund</translation>
     </message>
     <message>
         <source>&lt; 1 minute</source>
@@ -19072,11 +19072,11 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>&lt; 2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 min</translation>
     </message>
     <message>
         <source>&lt; 2 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 minuty</translation>
     </message>
     <message>
         <source>&lt; 3 minutes</source>
@@ -19088,11 +19088,11 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>&lt; 4 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 min</translation>
     </message>
     <message>
         <source>&lt; 4 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 minuty</translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
@@ -19164,11 +19164,11 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>failed to parse base fee</source>
-        <translation type="unfinished">nepodařilo se analyzovat základní poplatek</translation>
+        <translation>nepodařilo se analyzovat základní poplatek</translation>
     </message>
     <message>
         <source>failed to parse percentage fee</source>
-        <translation type="unfinished">nepodařilo se analyzovat procentuální poplatek</translation>
+        <translation>nepodařilo se analyzovat procentuální poplatek</translation>
     </message>
     <message>
         <source>contract not found</source>
@@ -19192,7 +19192,7 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>no bonder fee found</source>
-        <translation type="unfinished">nebyl nalezen poplatek za zajištění</translation>
+        <translation>nebyl nalezen poplatek za zajištění</translation>
     </message>
     <message>
         <source>contract type not supported</source>
@@ -19208,175 +19208,175 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>tx for chain not supported</source>
-        <translation type="unfinished">transakce pro daný blockchain není podporována</translation>
+        <translation>transakce pro daný blockchain není podporována</translation>
     </message>
     <message>
         <source>ens resolver not found</source>
-        <translation type="unfinished">nenalezen resolver ENS</translation>
+        <translation>nenalezen resolver ENS</translation>
     </message>
     <message>
         <source>ens registrar not found</source>
-        <translation type="unfinished">nenalezen registrátor ENS</translation>
+        <translation>nenalezen registrátor ENS</translation>
     </message>
     <message>
         <source>to and from tokens must be set</source>
-        <translation type="unfinished">musí být nastaveny tokeny &apos;od&apos; a &apos;do&apos;</translation>
+        <translation>musí být nastaveny tokeny &apos;od&apos; a &apos;do&apos;</translation>
     </message>
     <message>
         <source>cannot resolve tokens</source>
-        <translation type="unfinished">nelze vyřešit tokeny</translation>
+        <translation>nelze vyřešit tokeny</translation>
     </message>
     <message>
         <source>price route not found</source>
-        <translation type="unfinished">nenalezena cesta pro výpočet ceny</translation>
+        <translation>nenalezena cesta pro výpočet ceny</translation>
     </message>
     <message>
         <source>converting amount issue</source>
-        <translation type="unfinished">problém při převodu částky</translation>
+        <translation>problém při převodu částky</translation>
     </message>
     <message>
         <source>no chain set</source>
-        <translation type="unfinished">nebyl nastaven žádný blockchain</translation>
+        <translation>nebyl nastaven žádný blockchain</translation>
     </message>
     <message>
         <source>no token set</source>
-        <translation type="unfinished">nebyl nastaven žádný token</translation>
+        <translation>nebyl nastaven žádný token</translation>
     </message>
     <message>
         <source>to token should not be set</source>
-        <translation type="unfinished">token &apos;do&apos; by neměl být nastaven</translation>
+        <translation>token &apos;do&apos; by neměl být nastaven</translation>
     </message>
     <message>
         <source>from and to chains must be different</source>
-        <translation type="unfinished">blockchainy &apos;od&apos; a &apos;do&apos; musí být odlišné</translation>
+        <translation>blockchainy &apos;od&apos; a &apos;do&apos; musí být odlišné</translation>
     </message>
     <message>
         <source>from and to chains must be same</source>
-        <translation type="unfinished">blockchainy &apos;od&apos; a &apos;do&apos; musí být stejné</translation>
+        <translation>blockchainy &apos;od&apos; a &apos;do&apos; musí být stejné</translation>
     </message>
     <message>
         <source>from and to tokens must be different</source>
-        <translation type="unfinished">tokeny &apos;od&apos; a &apos;do&apos; musí být odlišné</translation>
+        <translation>tokeny &apos;od&apos; a &apos;do&apos; musí být odlišné</translation>
     </message>
     <message>
         <source>context cancelled</source>
-        <translation type="unfinished">kontext byl zrušen</translation>
+        <translation>kontext byl zrušen</translation>
     </message>
     <message>
         <source>context deadline exceeded</source>
-        <translation type="unfinished">překročena doba platnosti kontextu</translation>
+        <translation>překročena doba platnosti kontextu</translation>
     </message>
     <message>
         <source>fetching price timeout</source>
-        <translation type="unfinished">vypršel časový limit pro načítání ceny</translation>
+        <translation>vypršel časový limit pro načítání ceny</translation>
     </message>
     <message>
         <source>not enough liquidity</source>
-        <translation type="unfinished">nedostatečná likvidita</translation>
+        <translation>nedostatečná likvidita</translation>
     </message>
     <message>
         <source>price impact too high</source>
-        <translation type="unfinished">příliš vysoký dopad na cenu</translation>
+        <translation>příliš vysoký dopad na cenu</translation>
     </message>
     <message>
         <source>username and public key are required for registering ens name</source>
-        <translation type="unfinished">pro registraci názvu ENS jsou vyžadovány uživatelské jméno a veřejný klíč</translation>
+        <translation>pro registraci názvu ENS jsou vyžadovány uživatelské jméno a veřejný klíč</translation>
     </message>
     <message>
         <source>only STT is supported for registering ens name on testnet</source>
-        <translation type="unfinished">pro registraci názvu ENS v testovací síti je podporován pouze STT</translation>
+        <translation>pro registraci názvu ENS v testovací síti je podporován pouze STT</translation>
     </message>
     <message>
         <source>only SNT is supported for registering ens name on mainnet</source>
-        <translation type="unfinished">Pro registraci názvu ENS na hlavní síti je podporován pouze SNT</translation>
+        <translation>Pro registraci názvu ENS na hlavní síti je podporován pouze SNT</translation>
     </message>
     <message>
         <source>username is required for releasing ens name</source>
-        <translation type="unfinished">Pro uvolnění názvu ENS je vyžadováno uživatelské jméno</translation>
+        <translation>Pro uvolnění názvu ENS je vyžadováno uživatelské jméno</translation>
     </message>
     <message>
         <source>username and public key are required for setting public key</source>
-        <translation type="unfinished">Pro nastavení veřejného klíče je vyžadováno uživatelské jméno a veřejný klíč</translation>
+        <translation>Pro nastavení veřejného klíče je vyžadováno uživatelské jméno a veřejný klíč</translation>
     </message>
     <message>
         <source>stickers pack id is required for buying stickers</source>
-        <translation type="unfinished">Pro zakoupení samolepek je vyžadováno ID balíčku samolepek</translation>
+        <translation>Pro zakoupení samolepek je vyžadováno ID balíčku samolepek</translation>
     </message>
     <message>
         <source>to token is required for Swap</source>
-        <translation type="unfinished">Pro funkci Swap je vyžadován token &apos;to&apos;</translation>
+        <translation>Pro funkci Swap je vyžadován token &apos;to&apos;</translation>
     </message>
     <message>
         <source>from and to token must be different</source>
-        <translation type="unfinished">Tokeny &apos;from&apos; a &apos;to&apos; musí být odlišné</translation>
+        <translation>Tokeny &apos;from&apos; a &apos;to&apos; musí být odlišné</translation>
     </message>
     <message>
         <source>only one of amount to send or receiving amount can be set</source>
-        <translation type="unfinished">Lze nastavit pouze jednu hodnotu: buď odesílanou částku, nebo přijímanou částku</translation>
+        <translation>Lze nastavit pouze jednu hodnotu: buď odesílanou částku, nebo přijímanou částku</translation>
     </message>
     <message>
         <source>amount to send must be positive</source>
-        <translation type="unfinished">Odesílaná částka musí být kladná</translation>
+        <translation>Odesílaná částka musí být kladná</translation>
     </message>
     <message>
         <source>receiving amount must be positive</source>
-        <translation type="unfinished">Přijímaná částka musí být kladná</translation>
+        <translation>Přijímaná částka musí být kladná</translation>
     </message>
     <message>
         <source>locked amount is not supported for the selected network</source>
-        <translation type="unfinished">Uzamčená částka není podporována pro vybranou síť</translation>
+        <translation>Uzamčená částka není podporována pro vybranou síť</translation>
     </message>
     <message>
         <source>locked amount must not be negative</source>
-        <translation type="unfinished">Uzamčená částka nesmí být záporná</translation>
+        <translation>Uzamčená částka nesmí být záporná</translation>
     </message>
     <message>
         <source>locked amount exceeds the total amount to send</source>
-        <translation type="unfinished">Uzamčená částka přesahuje celkovou odesílanou částku</translation>
+        <translation>Uzamčená částka přesahuje celkovou odesílanou částku</translation>
     </message>
     <message>
         <source>locked amount is less than the total amount to send, but all networks are locked</source>
-        <translation type="unfinished">Uzamčená částka je menší než celková odesílaná částka, ale všechny sítě jsou uzamčeny</translation>
+        <translation>Uzamčená částka je menší než celková odesílaná částka, ale všechny sítě jsou uzamčeny</translation>
     </message>
     <message>
         <source>native token not found</source>
-        <translation type="unfinished">Nativní token nebyl nalezen</translation>
+        <translation>Nativní token nebyl nalezen</translation>
     </message>
     <message>
         <source>disabled chain found among locked networks</source>
-        <translation type="unfinished">Mezi uzamčenými sítěmi byla nalezena deaktivovaná síť</translation>
+        <translation>Mezi uzamčenými sítěmi byla nalezena deaktivovaná síť</translation>
     </message>
     <message>
         <source>a valid username, ending in &apos;.eth&apos;, is required for setting public key</source>
-        <translation type="unfinished">Pro nastavení veřejného klíče je vyžadováno platné uživatelské jméno, které končí na &apos;.eth&apos;</translation>
+        <translation>Pro nastavení veřejného klíče je vyžadováno platné uživatelské jméno, které končí na &apos;.eth&apos;</translation>
     </message>
     <message>
         <source>all supported chains are excluded, routing impossible</source>
-        <translation type="unfinished">Všechny podporované sítě jsou vyloučeny, směrování je nemožné</translation>
+        <translation>Všechny podporované sítě jsou vyloučeny, směrování je nemožné</translation>
     </message>
     <message>
         <source>no best route found</source>
-        <translation type="unfinished">Nebyl nalezen nejlepší směr</translation>
+        <translation>Nebyl nalezen nejlepší směr</translation>
     </message>
     <message>
         <source>cannot check balance</source>
-        <translation type="unfinished">Nelze zkontrolovat zůstatek</translation>
+        <translation>Nelze zkontrolovat zůstatek</translation>
     </message>
     <message>
         <source>cannot check locked amounts</source>
-        <translation type="unfinished">Nelze zkontrolovat uzamčené částky</translation>
+        <translation>Nelze zkontrolovat uzamčené částky</translation>
     </message>
     <message>
         <source>not enough balance for %1 on %2 chain</source>
-        <translation type="unfinished">nedostatečný zůstatek pro %1 v síti %2</translation>
+        <translation>nedostatečný zůstatek pro %1 v síti %2</translation>
     </message>
     <message>
         <source>bonder fee greater than estimated received, a higher amount is needed to cover fees</source>
-        <translation type="unfinished">poplatek pro bondera je vyšší, než se očekávalo, je potřeba vyšší částka na pokrytí poplatků</translation>
+        <translation>poplatek pro bondera je vyšší, než se očekávalo, je potřeba vyšší částka na pokrytí poplatků</translation>
     </message>
     <message>
         <source>no positive balance for your account across chains</source>
-        <translation type="unfinished">nemáte žádný kladný zůstatek na vašem účtu v žádné ze sítí</translation>
+        <translation>nemáte žádný kladný zůstatek na vašem účtu v žádné ze sítí</translation>
     </message>
     <message>
         <source>Fast</source>
