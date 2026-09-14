@@ -43,6 +43,7 @@ import app_service/service/node/service as node_service
 import app_service/service/network_connection/service as network_connection_service
 import app_service/service/devices/service as devices_service
 import app_service/service/community_tokens/service as community_tokens_service
+import app_service/service/community/service as community_service
 import app_service/service/wallet_connect/service as wc_service
 import app_service/service/connector/service as connector_service
 
@@ -128,6 +129,7 @@ proc newModule*(
   networkConnectionService: network_connection_service.Service,
   devicesService: devices_service.Service,
   communityTokensService: community_tokens_service.Service,
+  communityService: community_service.Service,
   threadpool: ThreadPool
 ): Module =
   result = Module()
@@ -151,7 +153,7 @@ proc newModule*(
   result.assetsModule = assets_module.newModule(result, events, walletAccountService, networkService, tokenService,
     currencyService)
   result.assetsViewModule = assets_view_module.newModule(events, tokenService, walletAccountService, networkService,
-    settingsService)
+    settingsService, communityService)
   result.sendModule = send_module.newModule(result, events, tokenService, walletAccountService, networkService, currencyService,
   transactionService)
   result.newSendModule = newSendModule.newModule(result, events, walletAccountService, networkService, transactionService)
