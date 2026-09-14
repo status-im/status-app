@@ -5,23 +5,23 @@
     <name>A11YInformationTag</name>
     <message>
         <source>Accessibility services on your device may access screen content. Check your device&apos;s %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>기기의 접근성 서비스가 화면 콘텐츠에 접근할 수 있습니다. 기기의 %1을(를) 확인하세요.</translation>
     </message>
     <message>
         <source>Settings &gt; Accessibility</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 &gt; 접근성</translation>
     </message>
     <message>
         <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>컴퓨터의 접근성 서비스가 화면 콘텐츠에 접근할 수 있습니다. 운영체제의 %1을(를) 확인하세요.</translation>
     </message>
     <message>
         <source>Accessibility services on your device may access screen content. Check your device&apos;s Accessibility settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>기기의 접근성 서비스가 화면 콘텐츠에 접근할 수 있습니다. 기기의 접근성 설정을 확인하세요.</translation>
     </message>
     <message>
         <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s Accessibility settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>컴퓨터의 접근성 서비스가 화면 콘텐츠에 접근할 수 있습니다. 운영체제의 접근성 설정을 확인하세요.</translation>
     </message>
 </context>
 <context>
@@ -56,15 +56,15 @@
     </message>
     <message>
         <source>status-app</source>
-        <translation type="unfinished"></translation>
+        <translation>status-app</translation>
     </message>
     <message>
         <source>logos-delivery-go</source>
-        <translation type="unfinished"></translation>
+        <translation>logos-delivery-go</translation>
     </message>
     <message>
         <source>Status App&apos;s GitHub Repositories</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 앱의 GitHub 저장소</translation>
     </message>
     <message>
         <source>status-go</source>
@@ -103,11 +103,11 @@
     </message>
     <message>
         <source>Decline</source>
-        <translation type="unfinished"></translation>
+        <translation>거절</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation type="unfinished">수락</translation>
+        <translation>수락</translation>
     </message>
 </context>
 <context>
@@ -273,19 +273,19 @@
     <name>ActivityCenterAdaptor</name>
     <message>
         <source>Removed you from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처에서 회원님을 삭제했습니다</translation>
     </message>
     <message>
         <source>You’re added to private group chat</source>
-        <translation type="unfinished"></translation>
+        <translation>비공개 그룹 채팅에 추가되었습니다</translation>
     </message>
     <message>
         <source>Invitation to join community</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티 가입 초대</translation>
     </message>
     <message>
         <source>Community membership request</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티 가입 요청</translation>
     </message>
     <message>
         <source>Accept pending</source>
@@ -297,138 +297,138 @@
     </message>
     <message>
         <source>Pending</source>
-        <translation type="unfinished">대기 중</translation>
+        <translation>대기 중</translation>
     </message>
     <message>
         <source>Request to join community</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티 가입 요청</translation>
     </message>
     <message>
         <source>In progress</source>
-        <translation type="unfinished"></translation>
+        <translation>진행 중</translation>
     </message>
     <message>
         <source>You have been kicked out of community</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티에서 강퇴되었습니다</translation>
     </message>
     <message>
         <source>You have been &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티에서 &lt;font color=&apos;%1&apos;&gt;차단&lt;/font&gt;되었습니다</translation>
     </message>
     <message>
         <source>You have been &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; in community</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티에서 &lt;font color=&apos;%1&apos;&gt;차단 해제&lt;/font&gt;되었습니다</translation>
     </message>
     <message>
         <source>You’re received a token in community</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티에서 토큰을 받았습니다</translation>
     </message>
     <message>
         <source>You received your first community token</source>
-        <translation type="unfinished"></translation>
+        <translation>첫 커뮤니티 토큰을 받았습니다</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1 %2 (%3) minted by %4.&lt;/b&gt;&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%4님이 발행한 %1 %2 (%3).&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <source>Community tokens are created by the community and aren’t verified. Always check their source before interacting.</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티 토큰은 커뮤니티에서 생성하며 검증되지 않습니다. 상호작용하기 전에 항상 출처를 확인하세요.</translation>
     </message>
     <message>
         <source>You received the owner token</source>
-        <translation type="unfinished"></translation>
+        <translation>소유자 토큰을 받았습니다</translation>
     </message>
     <message>
         <source>Ownership transfer</source>
-        <translation type="unfinished"></translation>
+        <translation>소유권 이전</translation>
     </message>
     <message>
         <source>To continue to be a member of community, you need to share your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티 회원 자격을 유지하려면 계정을 공유해야 합니다</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">스테이터스</translation>
+        <translation>스테이터스</translation>
     </message>
     <message>
         <source>New device detected</source>
-        <translation type="unfinished">새 기기 감지</translation>
+        <translation>새 기기 감지</translation>
     </message>
     <message>
         <source>New device with %1 profile has been detected.</source>
-        <translation type="unfinished">%1 프로필을 가진 새로운 기기가 감지되었습니다.</translation>
+        <translation>%1 프로필을 가진 새로운 기기가 감지되었습니다.</translation>
     </message>
     <message>
         <source>Sync your profile</source>
-        <translation type="unfinished">프로필 동기화</translation>
+        <translation>프로필 동기화</translation>
     </message>
     <message>
         <source>Check your other device for a pairing request.</source>
-        <translation type="unfinished">다른 기기에서 페어링 요청을 확인하세요.</translation>
+        <translation>다른 기기에서 페어링 요청을 확인하세요.</translation>
     </message>
     <message>
         <source>Accepted</source>
-        <translation type="unfinished">수락됨</translation>
+        <translation>수락됨</translation>
     </message>
     <message>
         <source>Decline</source>
-        <translation type="unfinished"></translation>
+        <translation>거절</translation>
     </message>
     <message>
         <source>You are now the owner of the community</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 커뮤니티의 소유자가 되었습니다</translation>
     </message>
     <message>
         <source>You no longer control the community</source>
-        <translation type="unfinished"></translation>
+        <translation>더 이상 커뮤니티를 관리하지 않습니다</translation>
     </message>
     <message>
         <source>Failed</source>
-        <translation type="unfinished">실패</translation>
+        <translation>실패</translation>
     </message>
     <message>
         <source>Declined</source>
-        <translation type="unfinished">거부됨</translation>
+        <translation>거부됨</translation>
     </message>
 </context>
 <context>
     <name>ActivityCenterPanel</name>
     <message>
         <source>Enable Status News notifications</source>
-        <translation type="unfinished">Status 뉴스 알림 활성화</translation>
+        <translation>Status 뉴스 알림 활성화</translation>
     </message>
     <message>
         <source>Enable RSS</source>
-        <translation type="unfinished">RSS 활성화</translation>
+        <translation>RSS 활성화</translation>
     </message>
     <message>
         <source>No notifications right now.</source>
-        <translation type="unfinished"></translation>
+        <translation>지금은 알림이 없습니다.</translation>
     </message>
     <message>
         <source>Check back later for updates.</source>
-        <translation type="unfinished"></translation>
+        <translation>나중에 다시 확인해 주세요.</translation>
     </message>
     <message>
         <source>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>새로운 기능과 공지사항에 대한 업데이트를 받으려면 켜세요. 개인정보 및 보안 설정에서 언제든지 활성화할 수 있습니다.</translation>
     </message>
     <message>
         <source>Status News RSS is off</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 뉴스 RSS가 꺼져 있습니다</translation>
     </message>
     <message>
         <source>Status News notifications are off</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 뉴스 알림이 꺼져 있습니다</translation>
     </message>
     <message>
         <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>새로운 기능과 공지사항에 대한 업데이트를 받으려면 켜세요. 알림 및 소리 설정에서 언제든지 활성화할 수 있습니다.</translation>
     </message>
     <message>
         <source>Activity</source>
-        <translation type="unfinished">활동</translation>
+        <translation>활동</translation>
     </message>
 </context>
 <context>
@@ -703,15 +703,15 @@
     </message>
     <message>
         <source>Re-import the %1 key pair to add accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>계정을 추가하려면 %1 키 페어를 다시 가져오세요</translation>
     </message>
     <message>
         <source>Adding accounts to the &lt;b&gt;%1&lt;/b&gt; key pair isn&apos;t possible due to recent improvements in how key pairs are stored. Please remove this key pair from the app and import it again from your Keycard — after that you&apos;ll be able to add accounts to it. Your keys are safe: removing the key pair from the app doesn&apos;t affect the Keycard, and importing it back takes only a moment.&lt;br/&gt;&lt;br/&gt;• Go to Settings → Wallet → click the three dots on the &lt;b&gt;%1&lt;/b&gt; key pair → Remove key pair and derived accounts&lt;br/&gt;• Go to Settings → Keycard → Read Keycard → Add key pair to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어 저장 방식이 최근 개선되어 &lt;b&gt;%1&lt;/b&gt; 키 페어에 계정을 추가할 수 없습니다. 이 키 페어를 앱에서 제거한 후 키카드에서 다시 가져오세요 — 그러면 계정을 추가할 수 있습니다. 키는 안전합니다. 앱에서 키 페어를 제거해도 키카드에는 영향을 주지 않으며, 다시 가져오는 데는 잠깐이면 됩니다.&lt;br/&gt;&lt;br/&gt;• 설정 → 지갑 → &lt;b&gt;%1&lt;/b&gt; 키 페어의 점 3개 클릭 → 키 페어 및 파생 계정 제거로 이동&lt;br/&gt;• 설정 → 키카드 → 키카드 읽기 → Status 지갑에 키 페어 추가로 이동</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">닫기</translation>
+        <translation>닫기</translation>
     </message>
     <message>
         <source>Save changes</source>
@@ -840,11 +840,11 @@
     <name>AddFavoriteModal</name>
     <message>
         <source>Edit bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크 편집</translation>
     </message>
     <message>
         <source>Add bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크 추가</translation>
     </message>
     <message>
         <source>URL</source>
@@ -876,11 +876,11 @@
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">삭제</translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>Save changes</source>
-        <translation type="unfinished"></translation>
+        <translation>변경사항 저장</translation>
     </message>
     <message>
         <source>Add</source>
@@ -950,11 +950,11 @@
     </message>
     <message>
         <source>URL</source>
-        <translation type="unfinished">URL</translation>
+        <translation>URL</translation>
     </message>
     <message>
         <source>URL already added</source>
-        <translation type="unfinished"></translation>
+        <translation>URL이 이미 추가되었습니다</translation>
     </message>
 </context>
 <context>
@@ -1017,15 +1017,15 @@
     <name>AdvancedStore</name>
     <message>
         <source>Logos Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Logos 스토리지</translation>
     </message>
     <message>
         <source>Torrent</source>
-        <translation type="unfinished"></translation>
+        <translation>토렌트</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>비활성화</translation>
     </message>
 </context>
 <context>
@@ -1036,67 +1036,67 @@
     </message>
     <message>
         <source>The collected profile could not be read: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>수집된 프로필을 읽을 수 없습니다: %1</translation>
     </message>
     <message>
         <source>just now</source>
-        <translation type="unfinished"></translation>
+        <translation>방금 전</translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n분 전</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n시간 전</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n일 전</numerusform>
         </translation>
     </message>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">메시지</translation>
+        <translation>메시지</translation>
     </message>
     <message>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>채팅</translation>
     </message>
     <message>
         <source>Communities</source>
-        <translation type="unfinished">커뮤니티</translation>
+        <translation>커뮤니티</translation>
     </message>
     <message>
         <source>Oldest message</source>
-        <translation type="unfinished"></translation>
+        <translation>가장 오래된 메시지</translation>
     </message>
     <message>
         <source>Max sync gap</source>
-        <translation type="unfinished"></translation>
+        <translation>최대 동기화 간격</translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n일</numerusform>
         </translation>
     </message>
     <message>
         <source>Collectibles</source>
-        <translation type="unfinished">수집품</translation>
+        <translation>수집품</translation>
     </message>
     <message>
         <source>App database</source>
-        <translation type="unfinished"></translation>
+        <translation>앱 데이터베이스</translation>
     </message>
     <message>
         <source>Wallet database</source>
-        <translation type="unfinished"></translation>
+        <translation>지갑 데이터베이스</translation>
     </message>
     <message>
         <source>Fleet</source>
@@ -1116,7 +1116,7 @@
     </message>
     <message>
         <source>Minimize to tray icon on close</source>
-        <translation type="unfinished"></translation>
+        <translation>닫을 때 트레이 아이콘으로 최소화</translation>
     </message>
     <message>
         <source>Application Logs</source>
@@ -1124,11 +1124,11 @@
     </message>
     <message>
         <source>Logs (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>로그 (%1)</translation>
     </message>
     <message>
         <source>Refresh logs size</source>
-        <translation type="unfinished"></translation>
+        <translation>로그 크기 새로고침</translation>
     </message>
     <message>
         <source>Experimental features</source>
@@ -1144,7 +1144,7 @@
     </message>
     <message>
         <source>Enable Copying Message Links</source>
-        <translation type="unfinished"></translation>
+        <translation>메시지 링크 복사 활성화</translation>
     </message>
     <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
@@ -1172,51 +1172,51 @@
     </message>
     <message>
         <source>Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 프로필에 대한 통계(채팅, 메시지, 커뮤니티, 수집품 수 및 앱과 지갑 데이터베이스 크기 등)를 표시합니다. 통계는 기기에서만 표시되고 보관되며 메시지, 채팅, 연락처, 주소 등의 콘텐츠는 포함하지 않습니다. 통계를 표시하거나 업데이트하려면 통계 새로고침을 클릭하세요.</translation>
     </message>
     <message>
         <source>Refreshing...</source>
-        <translation type="unfinished"></translation>
+        <translation>새로고침 중...</translation>
     </message>
     <message>
         <source>Refresh stats</source>
-        <translation type="unfinished"></translation>
+        <translation>통계 새로고침</translation>
     </message>
     <message>
         <source>%1 of %2</source>
-        <translation type="unfinished">%2 중 %1</translation>
+        <translation>%2 중 %1</translation>
     </message>
     <message>
         <source>Starting...</source>
-        <translation type="unfinished"></translation>
+        <translation>시작 중...</translation>
     </message>
     <message>
         <source>Collected %1, saved to %2 and picked up by Application Logs</source>
-        <translation type="unfinished"></translation>
+        <translation>%1이(가) 수집되어 %2에 저장되었으며 애플리케이션 로그에 포함되었습니다</translation>
     </message>
     <message>
         <source>Collected %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 수집됨</translation>
     </message>
     <message>
         <source>Chats by message count</source>
-        <translation type="unfinished"></translation>
+        <translation>메시지 수 기준 채팅</translation>
     </message>
     <message>
         <source>The app will restart if you confirm.</source>
-        <translation type="unfinished"></translation>
+        <translation>확인하면 앱이 재시작됩니다.</translation>
     </message>
     <message>
         <source>Choose a number between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>1에서 50 사이의 숫자를 선택하세요</translation>
     </message>
     <message>
         <source>Number between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>1에서 50 사이의 숫자</translation>
     </message>
     <message>
         <source>Number needs to be between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>숫자는 1에서 50 사이여야 합니다</translation>
     </message>
     <message>
         <source>Debug</source>
@@ -1224,33 +1224,33 @@
     </message>
     <message>
         <source>Some old log files could not be cleared</source>
-        <translation type="unfinished"></translation>
+        <translation>일부 오래된 로그 파일을 지우지 못했습니다</translation>
     </message>
     <message>
         <source>No old log files to clear</source>
-        <translation type="unfinished"></translation>
+        <translation>지울 오래된 로그 파일이 없습니다</translation>
     </message>
     <message numerus="yes">
         <source>%n old log file(s) cleared</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>오래된 로그 파일 %n개 삭제됨</numerusform>
         </translation>
     </message>
     <message>
         <source>Clearing...</source>
-        <translation type="unfinished"></translation>
+        <translation>지우는 중...</translation>
     </message>
     <message>
         <source>Clear old logs</source>
-        <translation type="unfinished"></translation>
+        <translation>오래된 로그 지우기</translation>
     </message>
     <message>
         <source>Archive Protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>아카이브 프로토콜</translation>
     </message>
     <message>
         <source>Logos Messaging options</source>
-        <translation type="unfinished"></translation>
+        <translation>Logos 메시징 옵션</translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>
@@ -1274,19 +1274,19 @@
     </message>
     <message>
         <source>HTTP statistics</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTP 통계</translation>
     </message>
     <message>
         <source>On-device profile stats</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 내 프로필 통계</translation>
     </message>
     <message>
         <source>Are you sure you want to disable debug mode?</source>
-        <translation type="unfinished"></translation>
+        <translation>디버그 모드를 비활성화하시겠습니까?</translation>
     </message>
     <message>
         <source>Are you sure you want to enable debug mode?</source>
-        <translation type="unfinished"></translation>
+        <translation>디버그 모드를 활성화하시겠습니까?</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -1294,7 +1294,7 @@
     </message>
     <message>
         <source>Number of archive files per group</source>
-        <translation type="unfinished"></translation>
+        <translation>그룹당 아카이브 파일 수</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -1306,31 +1306,31 @@
     </message>
     <message>
         <source>Are you sure you want to clear old log files?</source>
-        <translation type="unfinished"></translation>
+        <translation>오래된 로그 파일을 지우시겠습니까?</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>비활성화</translation>
     </message>
     <message>
         <source>Logos Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Logos 스토리지</translation>
     </message>
     <message>
         <source>Torrent</source>
-        <translation type="unfinished"></translation>
+        <translation>토렌트</translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
-        <translation type="unfinished"></translation>
+        <translation>거래 내역 다시 가져오기</translation>
     </message>
     <message>
         <source>Refetch</source>
-        <translation type="unfinished"></translation>
+        <translation>다시 가져오기</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation type="unfinished">완료</translation>
+        <translation>완료</translation>
     </message>
 </context>
 <context>
@@ -1797,35 +1797,35 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Not Connected to P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>P2P 네트워크에 연결되지 않음</translation>
     </message>
     <message>
         <source>CoinGecko connection successful</source>
-        <translation type="unfinished"></translation>
+        <translation>CoinGecko 연결 성공</translation>
     </message>
     <message>
         <source>CoinGecko connection down. Market values are as of %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>CoinGecko 연결이 끊어졌습니다. 시장 가치는 %1 기준입니다.</translation>
     </message>
     <message>
         <source>CoinGecko connection down. Market values cannot be retrieved.</source>
-        <translation type="unfinished"></translation>
+        <translation>CoinGecko 연결이 끊어졌습니다. 시장 가치를 가져올 수 없습니다.</translation>
     </message>
     <message>
         <source>Retrying connection to CoinGecko...</source>
-        <translation type="unfinished"></translation>
+        <translation>CoinGecko에 다시 연결하는 중...</translation>
     </message>
     <message>
         <source>This channel no longer exists</source>
-        <translation type="unfinished"></translation>
+        <translation>이 채널은 더 이상 존재하지 않습니다</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>탈중앙화 네트워크를 통해 Status 팀의 피어투피어 봇에 연락처 요청을 보내 환영 메시지와 사용법 팁을 받고 피드백이나 문제를 공유하세요. 봇과의 상호작용에 대한 자세한 내용은 개인정보 보호정책을 참조하세요. 언제든지 연결을 끊을 수 있습니다</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>탈중앙화 네트워크를 통해 Status 팀의 피어투피어 봇에 연락처 요청을 보내 Status 업데이트와 사용법 팁을 받고 피드백이나 문제를 공유하세요. 봇과의 상호작용에 대한 자세한 내용은 개인정보 보호정책을 참조하세요. 언제든지 연결을 끊을 수 있습니다</translation>
     </message>
     <message>
         <source>Invite People</source>
@@ -1935,7 +1935,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>How to fix</source>
-        <translation type="unfinished"></translation>
+        <translation>해결 방법</translation>
     </message>
     <message>
         <source>Retrying connection to POKT Network (grove.city).</source>
@@ -2027,7 +2027,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
-        <translation type="unfinished"></translation>
+        <translation>POKT 및 Infura가 &lt;a href=&apos;#&apos;&gt;여러 체인&lt;/a&gt;에서 다운되었습니다. 해당 체인의 토큰 잔액을 가져올 수 없습니다.</translation>
     </message>
 </context>
 <context>
@@ -2057,31 +2057,31 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Interface zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>인터페이스 확대/축소</translation>
     </message>
     <message>
         <source>Scale the app interface and text</source>
-        <translation type="unfinished"></translation>
+        <translation>앱 인터페이스와 텍스트 크기 조절</translation>
     </message>
     <message>
         <source>Join</source>
-        <translation type="unfinished">참여</translation>
+        <translation>참여</translation>
     </message>
     <message>
         <source>Follow display zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이 확대/축소 따르기</translation>
     </message>
     <message>
         <source>Apply your system settings defaults values</source>
-        <translation type="unfinished"></translation>
+        <translation>시스템 설정의 기본값 적용</translation>
     </message>
     <message>
         <source>Restart to apply</source>
-        <translation type="unfinished"></translation>
+        <translation>적용하려면 재시작</translation>
     </message>
     <message>
         <source>Restart Status to apply the new interface zoom level</source>
-        <translation type="unfinished"></translation>
+        <translation>새 인터페이스 확대/축소 수준을 적용하려면 Status를 재시작하세요</translation>
     </message>
     <message>
         <source>System</source>
@@ -2112,7 +2112,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Swap</source>
-        <translation type="unfinished">스왑</translation>
+        <translation>스왑</translation>
     </message>
 </context>
 <context>
@@ -2216,15 +2216,15 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <name>AuthenticationPopup</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">인증</translation>
+        <translation>인증</translation>
     </message>
     <message>
         <source>Update password &amp; authenticate</source>
-        <translation type="unfinished">비밀번호 업데이트 및 인증</translation>
+        <translation>비밀번호 업데이트 및 인증</translation>
     </message>
     <message>
         <source>Update PIN &amp; authenticate</source>
-        <translation type="unfinished">PIN 업데이트 및 인증</translation>
+        <translation>PIN 업데이트 및 인증</translation>
     </message>
 </context>
 <context>
@@ -2299,7 +2299,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</source>
-        <translation type="unfinished"></translation>
+        <translation>자금에 대한 전체 접근 권한을 부여하며 복구할 수 있는 유일한 방법인 12단어 구문입니다. 화면을 보거나 기록할 수 있는 것이 없는지 확인하세요.</translation>
     </message>
     <message>
         <source>Reveal recovery phrase</source>
@@ -2307,7 +2307,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문을 절대 공유하지 마세요. 복구 구문을 요구하는 사람은 사기를 시도하는 것입니다. 복구 구문을 백업하려면 적어서 안전하게 보관하세요.</translation>
     </message>
     <message>
         <source>Confirm recovery phrase</source>
@@ -2373,7 +2373,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Choose a folder to store your backup files in.</source>
-        <translation type="unfinished"></translation>
+        <translation>백업 파일을 저장할 폴더를 선택하세요.</translation>
     </message>
     <message>
         <source>Choose a folder to store your backup files or use the default one.</source>
@@ -2421,15 +2421,15 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Backups are stored in the Status folder in Files.</source>
-        <translation type="unfinished"></translation>
+        <translation>백업은 파일 앱의 Status 폴더에 저장됩니다.</translation>
     </message>
     <message>
         <source>Locate in Files</source>
-        <translation type="unfinished"></translation>
+        <translation>파일에서 찾기</translation>
     </message>
     <message>
         <source>Locate your backup directory in Files</source>
-        <translation type="unfinished"></translation>
+        <translation>파일 앱에서 백업 디렉터리 찾기</translation>
     </message>
 </context>
 <context>
@@ -2470,39 +2470,39 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <name>Biometrics</name>
     <message>
         <source>Biometric %1 failed</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식 %1 실패</translation>
     </message>
     <message>
         <source>signing</source>
-        <translation type="unfinished"></translation>
+        <translation>서명</translation>
     </message>
     <message>
         <source>authentication</source>
-        <translation type="unfinished"></translation>
+        <translation>인증</translation>
     </message>
     <message>
         <source>%1 with biometrics</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식으로 %1</translation>
     </message>
     <message>
         <source>Signing</source>
-        <translation type="unfinished">서명</translation>
+        <translation>서명</translation>
     </message>
     <message>
         <source>Authentication</source>
-        <translation type="unfinished"></translation>
+        <translation>인증</translation>
     </message>
     <message>
         <source>Use your %1 instead</source>
-        <translation type="unfinished"></translation>
+        <translation>대신 %1을(를) 사용하세요</translation>
     </message>
     <message>
         <source>PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN</translation>
     </message>
     <message>
         <source>password</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호</translation>
     </message>
 </context>
 <context>
@@ -2558,85 +2558,85 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <name>BrowserAddressField</name>
     <message>
         <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
+        <translation>검색하거나 주소 입력</translation>
     </message>
 </context>
 <context>
     <name>BrowserDownloadOpenContext</name>
     <message>
         <source>This file cannot be played here. Open it with another app.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 파일은 여기에서 재생할 수 없습니다. 다른 앱으로 여세요.</translation>
     </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
     <message>
         <source>Audio and video</source>
-        <translation type="unfinished"></translation>
+        <translation>오디오 및 비디오</translation>
     </message>
     <message>
         <source>Documents and images</source>
-        <translation type="unfinished"></translation>
+        <translation>문서 및 이미지</translation>
     </message>
     <message>
         <source>Images</source>
-        <translation type="unfinished"></translation>
+        <translation>이미지</translation>
     </message>
     <message>
         <source>Plain text</source>
-        <translation type="unfinished"></translation>
+        <translation>일반 텍스트</translation>
     </message>
 </context>
 <context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
-        <translation type="unfinished">뒤로</translation>
+        <translation>뒤로</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished"></translation>
+        <translation>앞으로</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>중지</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>새로고침</translation>
     </message>
     <message>
         <source>Home</source>
         <comment>web browser home page</comment>
-        <translation type="unfinished"></translation>
+        <translation>홈</translation>
     </message>
     <message>
         <source>Exit Incognito mode</source>
-        <translation type="unfinished">시크릿 모드 종료</translation>
+        <translation>시크릿 모드 종료</translation>
     </message>
     <message>
         <source>Go Incognito</source>
-        <translation type="unfinished">시크릿 모드로 전환</translation>
+        <translation>시크릿 모드로 전환</translation>
     </message>
     <message>
         <source>Bookmarked</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크됨</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크에 추가</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">지갑</translation>
+        <translation>지갑</translation>
     </message>
     <message>
         <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
+        <translation>탭 보기 열기</translation>
     </message>
     <message>
         <source>Menu</source>
-        <translation type="unfinished"></translation>
+        <translation>메뉴</translation>
     </message>
 </context>
 <context>
@@ -2657,95 +2657,95 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Add bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크 추가</translation>
     </message>
 </context>
 <context>
     <name>BrowserLinkContextMenu</name>
     <message>
         <source>Share link</source>
-        <translation type="unfinished"></translation>
+        <translation>링크 공유</translation>
     </message>
     <message>
         <source>Copy link</source>
-        <translation type="unfinished">링크 복사</translation>
+        <translation>링크 복사</translation>
     </message>
     <message>
         <source>Open in new tab</source>
-        <translation type="unfinished"></translation>
+        <translation>새 탭에서 열기</translation>
     </message>
     <message>
         <source>Download link</source>
-        <translation type="unfinished"></translation>
+        <translation>링크 다운로드</translation>
     </message>
     <message>
         <source>Download image</source>
-        <translation type="unfinished">이미지 다운로드</translation>
+        <translation>이미지 다운로드</translation>
     </message>
 </context>
 <context>
     <name>BrowserPortraitToolbar</name>
     <message>
         <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
+        <translation>탭 보기 열기</translation>
     </message>
     <message>
         <source>Bookmarked</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크됨</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크에 추가</translation>
     </message>
     <message>
         <source>Back</source>
-        <translation type="unfinished">뒤로</translation>
+        <translation>뒤로</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">검색</translation>
+        <translation>검색</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished"></translation>
+        <translation>앞으로</translation>
     </message>
     <message>
         <source>Exit Incognito mode</source>
-        <translation type="unfinished">시크릿 모드 종료</translation>
+        <translation>시크릿 모드 종료</translation>
     </message>
     <message>
         <source>Go Incognito</source>
-        <translation type="unfinished">시크릿 모드로 전환</translation>
+        <translation>시크릿 모드로 전환</translation>
     </message>
     <message>
         <source>Menu</source>
-        <translation type="unfinished"></translation>
+        <translation>메뉴</translation>
     </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
     <message>
         <source>Enable third-party services for browser features to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>브라우저 기능이 작동하려면 제3자 서비스를 활성화하세요.</translation>
     </message>
     <message>
         <source>Dapp browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Dapp 브라우저</translation>
     </message>
     <message>
         <source>Browse decentralized apps</source>
-        <translation type="unfinished"></translation>
+        <translation>탈중앙화 앱 둘러보기</translation>
     </message>
 </context>
 <context>
     <name>BrowserSavedSessionContext</name>
     <message>
         <source>Start Page</source>
-        <translation type="unfinished">시작 페이지</translation>
+        <translation>시작 페이지</translation>
     </message>
     <message>
         <source>New Tab</source>
-        <translation type="unfinished">새 탭</translation>
+        <translation>새 탭</translation>
     </message>
 </context>
 <context>
@@ -2776,11 +2776,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>지원되는 형식</translation>
     </message>
     <message>
         <source>Find in page</source>
-        <translation type="unfinished"></translation>
+        <translation>페이지에서 찾기</translation>
     </message>
     <message>
         <source>Compatibility mode</source>
@@ -2792,27 +2792,27 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Force reload</source>
-        <translation type="unfinished"></translation>
+        <translation>강제 새로고침</translation>
     </message>
     <message>
         <source>Clear site data</source>
-        <translation type="unfinished"></translation>
+        <translation>사이트 데이터 지우기</translation>
     </message>
     <message>
         <source>Use it to reset the current site if it doesn&apos;t load or work properly.</source>
-        <translation type="unfinished"></translation>
+        <translation>현재 사이트가 로드되지 않거나 제대로 작동하지 않을 때 초기화하는 데 사용하세요.</translation>
     </message>
     <message>
         <source>Clearing browsing data...</source>
-        <translation type="unfinished"></translation>
+        <translation>탐색 데이터를 지우는 중...</translation>
     </message>
     <message>
         <source>Clear browsing data</source>
-        <translation type="unfinished"></translation>
+        <translation>탐색 데이터 지우기</translation>
     </message>
     <message>
         <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
-        <translation type="unfinished"></translation>
+        <translation>브라우저 전체의 캐시와 쿠키를 지웁니다. 완료될 때까지 탐색이 일시 중지됩니다.</translation>
     </message>
     <message>
         <source>Settings</source>
@@ -2835,15 +2835,15 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Show bookmarks bar</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크 바 표시</translation>
     </message>
     <message>
         <source>Restore open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>열려 있던 탭 복원</translation>
     </message>
     <message>
         <source>Turn on to save your tabs only on this device and restore them next time. Turning off deletes all saved session data.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기에서만 탭을 저장하고 다음에 복원하려면 켜세요. 끄면 저장된 세션 데이터가 모두 삭제됩니다.</translation>
     </message>
 </context>
 <context>
@@ -2911,11 +2911,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">%1의 자산</translation>
+        <translation>%1의 자산</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">인기 자산</translation>
+        <translation>인기 자산</translation>
     </message>
     <message>
         <source>Ways to buy %1 for %2</source>
@@ -3224,15 +3224,15 @@ Do you wish to override the security check and continue?</source>
     <name>ChatMessagesView</name>
     <message>
         <source>Couldn&apos;t add reaction</source>
-        <translation type="unfinished"></translation>
+        <translation>반응을 추가하지 못했습니다</translation>
     </message>
     <message>
         <source>Couldn&apos;t remove reaction</source>
-        <translation type="unfinished"></translation>
+        <translation>반응을 제거하지 못했습니다</translation>
     </message>
     <message>
         <source>Please try again later</source>
-        <translation type="unfinished">나중에 다시 시도해 주세요</translation>
+        <translation>나중에 다시 시도해 주세요</translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -3362,7 +3362,7 @@ file format</source>
     </message>
     <message>
         <source>Displaying collectibles on %1 is not currently supported by Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 현재 %1에서 수집품 표시를 지원하지 않습니다.</translation>
     </message>
 </context>
 <context>
@@ -3420,7 +3420,7 @@ file format</source>
     </message>
     <message>
         <source>Collectibles could not be loaded</source>
-        <translation type="unfinished"></translation>
+        <translation>수집품을 불러올 수 없습니다</translation>
     </message>
     <message>
         <source>Community minted</source>
@@ -3524,11 +3524,11 @@ file format</source>
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 초대</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">검색</translation>
+        <translation>검색</translation>
     </message>
 </context>
 <context>
@@ -3536,12 +3536,12 @@ file format</source>
     <message>
         <source>Featured</source>
         <extracomment>Featured communities</extracomment>
-        <translation type="unfinished">추천</translation>
+        <translation>추천</translation>
     </message>
     <message>
         <source>All</source>
         <extracomment>All communities</extracomment>
-        <translation type="unfinished">전체</translation>
+        <translation>전체</translation>
     </message>
     <message>
         <source>No communities found</source>
@@ -3673,7 +3673,7 @@ file format</source>
     <name>CommunityColumnView</name>
     <message>
         <source>Search channels...</source>
-        <translation type="unfinished"></translation>
+        <translation>채널 검색...</translation>
     </message>
     <message>
         <source>Create channel</source>
@@ -3756,19 +3756,19 @@ file format</source>
     <name>CommunityFetchPopup</name>
     <message>
         <source>Unable to fetch the community</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티를 가져올 수 없습니다</translation>
     </message>
     <message>
         <source>We&apos;re fetching community...</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티를 가져오는 중...</translation>
     </message>
     <message>
         <source>It may be offline, or Status couldn&apos;t reach it</source>
-        <translation type="unfinished"></translation>
+        <translation>오프라인 상태이거나 Status가 연결할 수 없습니다</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">다시 시도</translation>
+        <translation>다시 시도</translation>
     </message>
 </context>
 <context>
@@ -3952,7 +3952,7 @@ file format</source>
     <name>CommunityTokensStore</name>
     <message>
         <source>Transaction failed</source>
-        <translation type="unfinished"></translation>
+        <translation>거래 실패</translation>
     </message>
 </context>
 <context>
@@ -4005,35 +4005,35 @@ file format</source>
     </message>
     <message>
         <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호가 변경됩니다. 이는 프로필 키 파일만 다시 암호화하며 잠깐이면 완료되고 재시작이 필요하지 않습니다.</translation>
     </message>
     <message>
         <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>데이터가 새로운 암호화 키로 완전히 다시 암호화됩니다. 이 과정은 시간이 걸릴 수 있으며, 진행 중에는 앱을 사용할 수 없습니다. 앱을 종료하거나 기기를 끄지 마세요. 그럴 경우 데이터가 손상되고 Status 프로필을 잃게 되며 Status를 다시 시작할 수 없게 됩니다.</translation>
     </message>
     <message>
         <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
-        <translation type="unfinished"></translation>
+        <translation>데이터가 이제 새 비밀번호로 다시 암호화되어야 합니다. 이 일회성 과정은 시간이 걸릴 수 있으며, 진행 중에는 앱을 사용할 수 없습니다. 앱을 종료하거나 기기를 끄지 마세요. 그럴 경우 데이터가 손상되고 Status 프로필을 잃게 되며 Status를 다시 시작할 수 없게 됩니다. 이후 비밀번호 변경은 즉시 처리됩니다.</translation>
     </message>
     <message>
         <source>Also re-encrypt my data with a new encryption key</source>
-        <translation type="unfinished"></translation>
+        <translation>새로운 암호화 키로 내 데이터도 다시 암호화</translation>
     </message>
     <message>
         <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation type="unfinished"></translation>
+        <translation>기기가 침해되었다고 의심되는 경우에만 필요합니다. 시간이 훨씬 더 오래 걸리며 재시작이 필요합니다.</translation>
     </message>
     <message>
         <source>Password changed</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호가 변경되었습니다</translation>
     </message>
     <message>
         <source>Re-encrypting your data...</source>
-        <translation type="unfinished"></translation>
+        <translation>데이터를 다시 암호화하는 중...</translation>
     </message>
     <message>
         <source>Changing your password...</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호를 변경하는 중...</translation>
     </message>
     <message>
         <source>Restart Status and log in using your new password</source>
@@ -4041,7 +4041,7 @@ file format</source>
     </message>
     <message>
         <source>You can continue using Status</source>
-        <translation type="unfinished"></translation>
+        <translation>계속해서 Status를 사용할 수 있습니다</translation>
     </message>
     <message>
         <source>Do not quit the app or turn off your device</source>
@@ -4049,7 +4049,7 @@ file format</source>
     </message>
     <message>
         <source>This should only take a moment</source>
-        <translation type="unfinished"></translation>
+        <translation>잠깐이면 완료됩니다</translation>
     </message>
     <message>
         <source>Change password</source>
@@ -4069,7 +4069,7 @@ file format</source>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">닫기</translation>
+        <translation>닫기</translation>
     </message>
 </context>
 <context>
@@ -4129,30 +4129,30 @@ file format</source>
     <name>ConfirmKeyPairForStopUsingState</name>
     <message>
         <source>I understand Keycard will no longer be used for signing, and Status password will be required</source>
-        <translation type="unfinished"></translation>
+        <translation>키카드가 더 이상 서명에 사용되지 않으며 Status 비밀번호가 필요하다는 것을 이해합니다</translation>
     </message>
 </context>
 <context>
     <name>ConfirmPasswordState</name>
     <message>
         <source>Have you written down your password?</source>
-        <translation type="unfinished">비밀번호를 기록해 두셨나요?</translation>
+        <translation>비밀번호를 기록해 두셨나요?</translation>
     </message>
     <message>
         <source>You will never be able to recover your password if you lose it.</source>
-        <translation type="unfinished">비밀번호를 잃어버리면 복구할 수 없습니다.</translation>
+        <translation>비밀번호를 잃어버리면 복구할 수 없습니다.</translation>
     </message>
     <message>
         <source>If you lose your password you will lose access to your Status profile.</source>
-        <translation type="unfinished">비밀번호를 잃어버리면 Status 프로필에 접근할 수 없게 됩니다.</translation>
+        <translation>비밀번호를 잃어버리면 Status 프로필에 접근할 수 없게 됩니다.</translation>
     </message>
     <message>
         <source>If you need to, write it using pen and paper and keep in a safe place.</source>
-        <translation type="unfinished">필요하다면 펜과 종이에 적어서 안전한 곳에 보관하세요.</translation>
+        <translation>필요하다면 펜과 종이에 적어서 안전한 곳에 보관하세요.</translation>
     </message>
     <message>
         <source>Confirm your password (again)</source>
-        <translation type="unfinished">비밀번호 확인(다시)</translation>
+        <translation>비밀번호 확인(다시)</translation>
     </message>
 </context>
 <context>
@@ -4209,11 +4209,11 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <name>ConfirmationPopup</name>
     <message>
         <source>Enable KLIPY GIFs?</source>
-        <translation type="unfinished"></translation>
+        <translation>KLIPY GIF를 활성화하시겠습니까?</translation>
     </message>
     <message>
         <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation type="unfinished"></translation>
+        <translation>활성화하면 채팅에 게시된 GIF가 회원님의 메타데이터를 KLIPY와 공유할 수 있습니다.</translation>
     </message>
     <message>
         <source>Enable</source>
@@ -4269,117 +4269,117 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <name>Constants</name>
     <message>
         <source>Key pair starting with whitespace are not allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>공백으로 시작하는 키 페어는 허용되지 않습니다</translation>
     </message>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>키 페어는 최소 %n자여야 합니다</numerusform>
         </translation>
     </message>
     <message>
         <source>Only letters and numbers allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>문자와 숫자만 허용됩니다</translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, whitespaces and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>문자, 숫자, 밑줄, 마침표, 공백, 하이픈만 허용됩니다</translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>문자, 숫자, 밑줄, 마침표, 쉼표, 공백, 하이픈만 허용됩니다</translation>
     </message>
     <message>
         <source>Special characters are not allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>특수 문자는 허용되지 않습니다</translation>
     </message>
     <message>
         <source>Only letters, numbers and ASCII characters allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>문자, 숫자, ASCII 문자만 허용됩니다</translation>
     </message>
     <message>
         <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>잘못된 문자입니다 (문자, 숫자, 단일 공백, 하이픈, 밑줄만 가능)</translation>
     </message>
     <message>
         <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>이름이 너무 멋져요 (문자, 숫자, 단일 공백, 하이픈, 밑줄만 사용하세요)</translation>
     </message>
     <message>
         <source>Whole numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>정수만 가능</translation>
     </message>
     <message>
         <source>Positive real numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>양의 실수만 가능</translation>
     </message>
     <message>
         <source>How to display the QR code on your other device</source>
-        <translation type="unfinished"></translation>
+        <translation>다른 기기에서 QR 코드를 표시하는 방법</translation>
     </message>
     <message>
         <source>How to copy the encrypted key from your other device</source>
-        <translation type="unfinished"></translation>
+        <translation>다른 기기에서 암호화된 키를 복사하는 방법</translation>
     </message>
     <message>
         <source>Limit of 20 accounts reached</source>
-        <translation type="unfinished"></translation>
+        <translation>계정 20개 한도에 도달했습니다</translation>
     </message>
     <message>
         <source>Remove any account to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>새 계정을 추가하려면 계정을 하나 삭제하세요.</translation>
     </message>
     <message>
         <source>Limit of 5 key pairs reached</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어 5개 한도에 도달했습니다</translation>
     </message>
     <message>
         <source>Remove key pair to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>새 키 페어를 추가하려면 키 페어를 삭제하세요.</translation>
     </message>
     <message>
         <source>Limit of 3 watched addresses reached</source>
-        <translation type="unfinished"></translation>
+        <translation>관찰 중인 주소 3개 한도에 도달했습니다</translation>
     </message>
     <message>
         <source>Remove a watched address to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>새 주소를 추가하려면 관찰 중인 주소를 삭제하세요.</translation>
     </message>
     <message>
         <source>Limit of 20 saved addresses reached</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 주소 20개 한도에 도달했습니다</translation>
     </message>
     <message>
         <source>Remove a saved address to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>새 주소를 추가하려면 저장된 주소를 삭제하세요.</translation>
     </message>
     <message>
         <source>Username already taken :(</source>
-        <translation type="unfinished"></translation>
+        <translation>이미 사용 중인 사용자 이름입니다 :(</translation>
     </message>
     <message>
         <source>Username doesn’t belong to you :(</source>
-        <translation type="unfinished"></translation>
+        <translation>회원님의 사용자 이름이 아닙니다 :(</translation>
     </message>
     <message>
         <source>Continuing will connect this username with your chat key.</source>
-        <translation type="unfinished"></translation>
+        <translation>계속하면 이 사용자 이름이 채팅 키와 연결됩니다.</translation>
     </message>
     <message>
         <source>✓ Username available!</source>
-        <translation type="unfinished"></translation>
+        <translation>✓ 사용 가능한 사용자 이름입니다!</translation>
     </message>
     <message>
         <source>Username is already connected with your chat key and can be used inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 이름이 이미 채팅 키와 연결되어 있으며 Status 내에서 사용할 수 있습니다.</translation>
     </message>
     <message>
         <source>This user name is owned by you and connected with your chat key. Continue to set `Show my ENS username in chats`.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 사용자 이름은 회원님 소유이며 채팅 키와 연결되어 있습니다. 계속해서 &apos;채팅에서 내 ENS 사용자 이름 표시&apos;를 설정하세요.</translation>
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation type="unfinished"></translation>
+        <translation>계속하려면 사용자 이름을 현재 채팅 키와 연결하는 거래가 필요합니다.</translation>
     </message>
 </context>
 <context>
@@ -4413,7 +4413,7 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <name>ContactsColumnView</name>
     <message>
         <source>Search contacts and groups...</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 및 그룹 검색...</translation>
     </message>
 </context>
 <context>
@@ -4497,7 +4497,7 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>View %1 %2 contract address on %3</source>
         <extracomment>e.g. &quot;View Optimism (DAI) contract address on Optimistic&quot;</extracomment>
-        <translation type="unfinished">%3에서 %1 %2 컨트랙트 주소 보기</translation>
+        <translation>%3에서 %1 %2 컨트랙트 주소 보기</translation>
     </message>
     <message>
         <source>View %1 contract address on %2</source>
@@ -4550,11 +4550,11 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 암호화 키도 업데이트됩니다. 계속하시겠습니까?</translation>
     </message>
     <message>
         <source>Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>데이터도 다시 암호화되며, 최대 30분 동안 Status 접근이 제한됩니다. 계속하시겠습니까?</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -4578,7 +4578,8 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Your profile data was re-encrypted successfully.
 Log in with your new password.</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 데이터가 성공적으로 다시 암호화되었습니다.
+새 비밀번호로 로그인하세요.</translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
@@ -4650,22 +4651,22 @@ Log in with your new password.</source>
     <name>CountdownProgressIndicator</name>
     <message>
         <source>%1s</source>
-        <translation type="unfinished"></translation>
+        <translation>%1초</translation>
     </message>
 </context>
 <context>
     <name>CrashedWebPage</name>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>문제가 발생했습니다</translation>
     </message>
     <message>
         <source>This page stopped responding and needs to be reloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 페이지가 응답을 멈춰 새로고침이 필요합니다.</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>새로고침</translation>
     </message>
 </context>
 <context>
@@ -4845,7 +4846,7 @@ Log in with your new password.</source>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>문자, 숫자, 밑줄, 마침표, 하이픈만 허용됩니다</translation>
     </message>
     <message>
         <source>Channel colour</source>
@@ -5065,39 +5066,39 @@ Remember your password and don&apos;t share it with anyone.</source>
     <name>CreatePasswordState</name>
     <message>
         <source>Create a password</source>
-        <translation type="unfinished">비밀번호 만들기</translation>
+        <translation>비밀번호 만들기</translation>
     </message>
     <message>
         <source>Create a password to unlock Status on this device &amp; sign transactions. &lt;span style=&apos;color:%1;&apos;&gt;You won’t be able to recover password if lost.&lt;/span&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기에서 Status의 잠금을 해제하고 거래에 서명하려면 비밀번호를 만드세요. &lt;span style=&apos;color:%1;&apos;&gt;비밀번호를 잃어버리면 복구할 수 없습니다.&lt;/span&gt;</translation>
     </message>
     <message>
         <source>New password</source>
-        <translation type="unfinished"></translation>
+        <translation>새 비밀번호</translation>
     </message>
     <message>
         <source>To strengthen your password consider including:</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호를 강화하려면 다음을 포함하는 것을 고려하세요:</translation>
     </message>
     <message>
         <source>Lower case</source>
-        <translation type="unfinished">소문자</translation>
+        <translation>소문자</translation>
     </message>
     <message>
         <source>Upper case</source>
-        <translation type="unfinished">대문자</translation>
+        <translation>대문자</translation>
     </message>
     <message>
         <source>Numbers</source>
-        <translation type="unfinished">숫자</translation>
+        <translation>숫자</translation>
     </message>
     <message>
         <source>Symbols</source>
-        <translation type="unfinished">기호</translation>
+        <translation>기호</translation>
     </message>
     <message>
         <source>Confirm password</source>
-        <translation type="unfinished">비밀번호 확인</translation>
+        <translation>비밀번호 확인</translation>
     </message>
 </context>
 <context>
@@ -5132,11 +5133,11 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
     <message>
         <source>Use Keycard</source>
-        <translation type="unfinished">Keycard 사용</translation>
+        <translation>Keycard 사용</translation>
     </message>
     <message>
         <source>Reveal what you have on Keycard first</source>
-        <translation type="unfinished"></translation>
+        <translation>먼저 Keycard에 있는 내용을 확인하세요</translation>
     </message>
 </context>
 <context>
@@ -5642,152 +5643,153 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished">Keycard가 비어 있습니다</translation>
+        <translation>Keycard가 비어 있습니다</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 차단되었습니다</translation>
     </message>
     <message>
         <source>Keycard stores only PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에는 PIN만 저장됩니다</translation>
     </message>
     <message>
         <source>Keycard stores Status profile key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 Status 프로필 키 쌍이 저장됩니다</translation>
     </message>
     <message>
         <source>Keycard stores key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 키 쌍이 저장됩니다</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">키카드</translation>
+        <translation>키카드</translation>
     </message>
     <message>
         <source>Keycard is blocked due to five failed PUK input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>다섯 번의 PUK 입력 실패로 Keycard가 차단되었습니다</translation>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>세 번의 PIN 입력 실패로 Keycard가 차단되었습니다</translation>
     </message>
     <message>
         <source>You are using this Keycard to login to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard를 사용하여 Status에 로그인하고 있습니다</translation>
     </message>
     <message>
         <source>This key pair have been already added to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>이 키 쌍은 이미 Status 지갑에 추가되었습니다</translation>
     </message>
     <message>
         <source>Key pair has not been added to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>키 쌍이 Status 지갑에 추가되지 않았습니다</translation>
     </message>
     <message>
         <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 사용 가능한 페어링 슬롯이 없어 지금은 Keycard 콘텐츠를 사용할 수 없습니다. 하지만 이전에 페어링된 설치에서는 사용할 수 있습니다.</translation>
     </message>
     <message>
         <source>Status profile is not migrated to keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 프로필이 keycard로 마이그레이션되지 않았습니다.</translation>
     </message>
     <message>
         <source>, </source>
-        <translation type="unfinished"></translation>
+        <translation>, </translation>
     </message>
     <message>
         <source>UID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UID: %1</translation>
     </message>
     <message>
         <source>What you can do:</source>
-        <translation type="unfinished"></translation>
+        <translation>할 수 있는 작업:</translation>
     </message>
     <message>
         <source>Move profile key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 키 쌍을 Keycard로 이동</translation>
     </message>
     <message>
         <source>Move key pair from Status wallet to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 지갑에서 Keycard로 키 쌍 이동</translation>
     </message>
     <message>
         <source>Keycard will be required for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>서명하려면 Keycard가 필요합니다</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 새 키 쌍 가져오기</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문으로 잠금 해제</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK로 잠금 해제</translation>
     </message>
     <message>
         <source>If you set your PUK earlier for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard에 대해 이전에 PUK를 설정한 경우</translation>
     </message>
     <message>
         <source>Add key pair to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 지갑에 키 쌍 추가</translation>
     </message>
     <message>
         <source>You’ll be able to sign transactions in Status wallet with Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard로 Status 지갑에서 트랜잭션에 서명할 수 있습니다</translation>
     </message>
     <message>
         <source>New name will be visible in Status and in other apps</source>
-        <translation type="unfinished"></translation>
+        <translation>새 이름은 Status와 다른 앱에서 표시됩니다</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK 설정 또는 변경</translation>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에서 모든 항목 제거</translation>
     </message>
     <message>
         <source>Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>서명 및 Status 로그인에 Keycard가 필요합니다</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문으로 키 쌍 가져오기</translation>
     </message>
     <message>
         <source>In case you lost Keycard, want to create a backup or import a
 key pair. Keycard will be required for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 분실했거나 백업을 만들거나
+키 쌍을 가져오려는 경우. 서명하려면 Keycard가 필요합니다</translation>
     </message>
     <message>
         <source>If you want to have a different PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>다른 PIN을 사용하려는 경우</translation>
     </message>
     <message>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>이름 바꾸기</translation>
     </message>
     <message>
         <source>If you want an additional recovery option</source>
-        <translation type="unfinished"></translation>
+        <translation>추가 복구 옵션을 원하는 경우</translation>
     </message>
     <message>
         <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 저장된 키 쌍의 복구 구문을 입력해야 합니다</translation>
     </message>
     <message>
         <source>Factory reset Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 공장 초기화</translation>
     </message>
     <message>
         <source>No free pairing slots</source>
-        <translation type="unfinished"></translation>
+        <translation>사용 가능한 페어링 슬롯 없음</translation>
     </message>
 </context>
 <context>
@@ -5830,23 +5832,23 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation type="unfinished"></translation>
+        <translation>완전한 메타데이터 프라이버시는 인터넷 트래픽을 감시해도 누구와 대화하는지 알 수 없다는 것을 의미합니다</translation>
     </message>
     <message>
         <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 크립토 업계를 선도하는 멀티체인 셀프 커스터디 지갑의 본거지입니다</translation>
     </message>
     <message>
         <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
-        <translation type="unfinished"></translation>
+        <translation>여러분의 암호화 키 쌍은 모든 메시지를 암호화하며, 의도된 수신자만 이를 해독할 수 있습니다</translation>
     </message>
     <message>
         <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Status의 Web3 브라우저는 모든 DApp이 지갑에 연결하기 전에 권한을 요청하도록 합니다</translation>
     </message>
     <message>
         <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 P2P 네트워크와 상호 작용할 수 있게 해주는 오픈소스 소프트웨어입니다. Status 자체는 어떠한 서비스도 제공하지 않습니다</translation>
     </message>
     <message>
         <source>Status is a way to access p2p networks that are permissionlessly created and run by individuals around the world</source>
@@ -5878,35 +5880,35 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 MPL-2.0 오픈소스 라이선스로 제공되는 공공재로, 누구나 공유하고 수정하며 혜택을 누릴 수 있습니다</translation>
     </message>
     <message>
         <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
-        <translation type="unfinished"></translation>
+        <translation>아직 Status 핵심 기여자가 없는 유일한 대륙은 남극입니다</translation>
     </message>
     <message>
         <source>We are the 5th most active crypto project on GitHub</source>
-        <translation type="unfinished"></translation>
+        <translation>저희는 GitHub에서 5번째로 활발한 크립토 프로젝트입니다</translation>
     </message>
     <message>
         <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
-        <translation type="unfinished"></translation>
+        <translation>종단 간 암호화를 사용하는 다른 메신저들은 대부분 메타데이터 프라이버시를 제공하지 않습니다!</translation>
     </message>
     <message>
         <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
-        <translation type="unfinished"></translation>
+        <translation>Status를 여러분의 모국어로 번역하는 것을 도와주세요. 자세한 내용은 https://status.app/translations 를 참고하세요</translation>
     </message>
     <message>
         <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status에는 멀티체인 지갑이 있어 빠르고 쉬운 멀티체인 트랜잭션이 가능합니다.</translation>
     </message>
     <message>
         <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Status의 Nimbus 팀은 이더리움 재단과 협력하여 Portal Network를 만들고 있습니다</translation>
     </message>
     <message>
         <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
-        <translation type="unfinished"></translation>
+        <translation>Status의 Portal Network 클라이언트(Fluffy)를 사용하면 Status 사용자가 완전히 탈중앙화된 방식으로 이더리움과 상호 작용할 수 있습니다</translation>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
@@ -5914,7 +5916,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Status uses the Logos Messaging p2p gossip messaging protocol — an evolution of the EF&apos;s original Whisper protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 Logos Messaging P2P 가십 메시징 프로토콜을 사용합니다 — 이더리움 재단의 기존 Whisper 프로토콜의 진화형입니다</translation>
     </message>
     <message>
         <source>Status allows you to communicate freely without the threat of surveillance</source>
@@ -6162,7 +6164,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
+        <translation>잘못된 문자입니다 (문자, 숫자, 하이픈, 밑줄, 공백만 사용하세요)</translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6223,73 +6225,73 @@ key pair. Keycard will be required for signing</source>
     <name>DownloadPill</name>
     <message>
         <source>Missing file</source>
-        <translation type="unfinished"></translation>
+        <translation>파일 누락</translation>
     </message>
     <message>
         <source>Cancelled</source>
-        <translation type="unfinished">취소됨</translation>
+        <translation>취소됨</translation>
     </message>
     <message>
         <source>Interrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>중단됨</translation>
     </message>
 </context>
 <context>
     <name>DownloadRecordMenu</name>
     <message>
         <source>Share file</source>
-        <translation type="unfinished"></translation>
+        <translation>파일 공유</translation>
     </message>
     <message>
         <source>Copy file path</source>
-        <translation type="unfinished"></translation>
+        <translation>파일 경로 복사</translation>
     </message>
     <message>
         <source>Share URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URL 공유</translation>
     </message>
     <message>
         <source>Copy URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URL 복사</translation>
     </message>
     <message>
         <source>Downloads</source>
-        <translation type="unfinished">다운로드</translation>
+        <translation>다운로드</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation type="unfinished">일시 중지</translation>
+        <translation>일시 중지</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation type="unfinished">재개</translation>
+        <translation>재개</translation>
     </message>
     <message>
         <source>Open in Browser</source>
-        <translation type="unfinished"></translation>
+        <translation>브라우저에서 열기</translation>
     </message>
     <message>
         <source>Show in folder</source>
-        <translation type="unfinished">폴더에서 보기</translation>
+        <translation>폴더에서 보기</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">다시 시도</translation>
+        <translation>다시 시도</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">취소</translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Dismiss</source>
-        <translation type="unfinished"></translation>
+        <translation>닫기</translation>
     </message>
 </context>
 <context>
     <name>DownloadsListView</name>
     <message>
         <source>Downloaded files will appear here.</source>
-        <translation type="unfinished">다운로드한 파일이 여기에 표시됩니다.</translation>
+        <translation>다운로드한 파일이 여기에 표시됩니다.</translation>
     </message>
 </context>
 <context>
@@ -6342,7 +6344,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>No members found</source>
-        <translation type="unfinished"></translation>
+        <translation>멤버를 찾을 수 없습니다</translation>
     </message>
     <message>
         <source>Show fees (will be enabled once the form is filled)</source>
@@ -6449,19 +6451,19 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>토큰 이름을 지정해 주세요 (문자, 숫자, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
         <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>토큰 이름이 너무 멋집니다 (문자, 숫자, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
         <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>토큰 이름에 유효하지 않은 문자가 포함되어 있습니다 (문자, 숫자, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
         <source>Only letters, numbers, standard punctuation and emojis allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>문자, 숫자, 표준 문장 부호, 이모지만 허용됩니다</translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -6745,22 +6747,22 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>There was an error saving the permission: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>권한 저장 중 오류가 발생했습니다: %1</translation>
     </message>
 </context>
 <context>
     <name>EmptyChatPanel</name>
     <message>
         <source>%1 to connect with or&lt;br&gt;invite your friends to Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;for welcome messages, how-to tips, or just to share feedback or issues.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1하여 친구와 연결하거나 Status에 초대하세요.&lt;br&gt;&lt;br&gt;&lt;br&gt;환영 메시지, 사용 방법 팁을 받거나&lt;br&gt;피드백이나 문제를 공유하려면 %2하세요.</translation>
     </message>
     <message>
         <source>Share your profile</source>
-        <translation type="unfinished">프로필 공유하기</translation>
+        <translation>프로필 공유하기</translation>
     </message>
     <message>
         <source>Chat with the Status Team peer-to-peer bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 팀 P2P 봇과 채팅하기</translation>
     </message>
 </context>
 <context>
@@ -6779,7 +6781,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Error while contacting KLIPY API, please retry.</source>
-        <translation type="unfinished"></translation>
+        <translation>KLIPY API 연결 중 오류가 발생했습니다. 다시 시도해 주세요.</translation>
     </message>
     <message>
         <source>Retry</source>
@@ -6847,7 +6849,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 서비스는 아카이브 프로토콜을 사용하여 작동하며, 기본적으로 Logos Storage를 통해 자동으로 활성화됩니다.</translation>
     </message>
     <message>
         <source>Read more</source>
@@ -6862,15 +6864,15 @@ key pair. Keycard will be required for signing</source>
     <name>EnableMessageBackupPopup</name>
     <message>
         <source>Enable on-device backup?</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 내 백업을 활성화하시겠습니까?</translation>
     </message>
     <message>
         <source>On-device backups are:&lt;br&gt;&lt;b&gt;Automatic&lt;/b&gt; –  created every 30 minutes&lt;br&gt;&lt;b&gt;Secure&lt;/b&gt; – encrypted with your profile’s private key&lt;br&gt;&lt;b&gt;Private&lt;/b&gt; – stored only on your device</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 내 백업은 다음과 같습니다:&lt;br&gt;&lt;b&gt;자동&lt;/b&gt; – 30분마다 생성됨&lt;br&gt;&lt;b&gt;보안&lt;/b&gt; – 프로필의 개인 키로 암호화됨&lt;br&gt;&lt;b&gt;비공개&lt;/b&gt; – 기기에만 저장됨</translation>
     </message>
     <message>
         <source>To enable backups, choose a folder to store your backup files under the &lt;b&gt;Backup location&lt;/b&gt; setting.&lt;br&gt;&lt;br&gt;You can also &lt;b&gt;optionally&lt;/b&gt; back up your &lt;b&gt;1-on-1, group, and community messages&lt;/b&gt; by turning on the &lt;b&gt;Backup your messages&lt;/b&gt; toggle under the &lt;b&gt;Backup data&lt;/b&gt; setting.</source>
-        <translation type="unfinished"></translation>
+        <translation>백업을 활성화하려면 &lt;b&gt;백업 위치&lt;/b&gt; 설정에서 백업 파일을 저장할 폴더를 선택하세요.&lt;br&gt;&lt;br&gt;또한 &lt;b&gt;백업 데이터&lt;/b&gt; 설정에서 &lt;b&gt;메시지 백업&lt;/b&gt; 토글을 켜서 &lt;b&gt;1:1, 그룹, 커뮤니티 메시지&lt;/b&gt;를 &lt;b&gt;선택적으로&lt;/b&gt; 백업할 수도 있습니다.</translation>
     </message>
     <message>
         <source>Skip</source>
@@ -6882,7 +6884,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Go to settings</source>
-        <translation type="unfinished"></translation>
+        <translation>설정으로 이동</translation>
     </message>
     <message>
         <source>Backups let you restore your 1-on-1, group, and community messages if you need to reinstall the app or switch devices. You can skip this step now and enable it anytime under: &lt;i&gt;Settings &gt; On-device backup &gt; Backup data&lt;/i&gt;</source>
@@ -6890,38 +6892,38 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Enable on-device message backup?</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 내 메시지 백업을 활성화하시겠습니까?</translation>
     </message>
 </context>
 <context>
     <name>EnablePushNotificationsPopup</name>
     <message>
         <source>Enable notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>알림 활성화</translation>
     </message>
     <message>
         <source>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</source>
-        <translation type="unfinished"></translation>
+        <translation>기기에서 수신 메시지, 멘션, 연락처 요청에 대한 알림을 받아 실시간으로 최신 정보를 확인하세요. &lt;b&gt;설정 → 알림&lt;/b&gt;에서 언제든지 변경할 수 있습니다.&lt;br&gt;&lt;br&gt;Status는 알림 신호를 전달하기 위해서만 APNs(Apple Push Notification service)를 사용하며, 종단 간 암호화된 메시지 내용은 이를 통해 전달되거나 저장되지 않습니다.</translation>
     </message>
     <message>
         <source>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>기기에서 수신 메시지, 멘션, 연락처 요청에 대한 실시간 알림을 받아 앱을 열지 않고도 최신 정보를 확인하고 답장하거나 반응할 수 있습니다. &lt;b&gt;설정 → 알림&lt;/b&gt;에서 언제든지 변경할 수 있습니다&lt;br&gt;&lt;br&gt;Status는 제3자, 중앙 서버, 중개자 없이 기기 내 백그라운드 서비스를 통해 알림을 전달합니다.</translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
-        <translation type="unfinished">다시 묻지 않기</translation>
+        <translation>다시 묻지 않기</translation>
     </message>
     <message>
         <source>Maybe later</source>
-        <translation type="unfinished">나중에</translation>
+        <translation>나중에</translation>
     </message>
     <message>
         <source>Open settings</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 열기</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">계속</translation>
+        <translation>계속</translation>
     </message>
 </context>
 <context>
@@ -7144,51 +7146,51 @@ key pair. Keycard will be required for signing</source>
     <name>EnsTermsAndConditionsPopup</name>
     <message>
         <source>Terms of name registration</source>
-        <translation type="unfinished">이름 등록 약관</translation>
+        <translation>이름 등록 약관</translation>
     </message>
     <message>
         <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation type="unfinished">자산은 1년 동안 예치됩니다. 여러분의 SNT는 잠기게 되며, 별도로 지출되지 않습니다.</translation>
+        <translation>자산은 1년 동안 예치됩니다. 여러분의 SNT는 잠기게 되며, 별도로 지출되지 않습니다.</translation>
     </message>
     <message>
         <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation type="unfinished">1년 후, 등록한 이름의 계약을 해지하고 예치금을 돌려받을 수 있습니다. 이름을 유지하고 싶을 경우에는 별도의 조치를 할 필요가 없습니다.</translation>
+        <translation>1년 후, 등록한 이름의 계약을 해지하고 예치금을 돌려받을 수 있습니다. 이름을 유지하고 싶을 경우에는 별도의 조치를 할 필요가 없습니다.</translation>
     </message>
     <message>
         <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation type="unfinished">스테이터스가 컨트랙트를 업그레이드 하는 등으로 이용 약관을 변경하는 경우, 사용자는 남은 기간에 상관 없이 사용자 이름을 해지할 수 있습니다.</translation>
+        <translation>스테이터스가 컨트랙트를 업그레이드 하는 등으로 이용 약관을 변경하는 경우, 사용자는 남은 기간에 상관 없이 사용자 이름을 해지할 수 있습니다.</translation>
     </message>
     <message>
         <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation type="unfinished">컨트랙트 관리자는 사용자의 예치금에 접근할 수 없습니다. 이는 등록된 주소로만 반환됩니다.</translation>
+        <translation>컨트랙트 관리자는 사용자의 예치금에 접근할 수 없습니다. 이는 등록된 주소로만 반환됩니다.</translation>
     </message>
     <message>
         <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation type="unfinished">사용자의 주소는 ENS 이름과 공개적으로 연동됩니다.</translation>
+        <translation>사용자의 주소는 ENS 이름과 공개적으로 연동됩니다.</translation>
     </message>
     <message>
         <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation type="unfinished">사용자 이름은 stateofus.eth 의 서브 도메인 노드로 생성되며, ENS 스마트 컨트랙트 이용 약관을 따릅니다.</translation>
+        <translation>사용자 이름은 stateofus.eth 의 서브 도메인 노드로 생성되며, ENS 스마트 컨트랙트 이용 약관을 따릅니다.</translation>
     </message>
     <message>
         <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation type="unfinished">사용자를 대신하여 SNT를 양도하는 계약을 승인합니다. 이는 트랜잭션에 전송 권한을 부여할 때부터 유효합니다.</translation>
+        <translation>사용자를 대신하여 SNT를 양도하는 계약을 승인합니다. 이는 트랜잭션에 전송 권한을 부여할 때부터 유효합니다.</translation>
     </message>
     <message>
         <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation type="unfinished">이러한 조항은 다음 주소의 스마트 컨트랙트 로직으로 보장됩니다:</translation>
+        <translation>이러한 조항은 다음 주소의 스마트 컨트랙트 로직으로 보장됩니다:</translation>
     </message>
     <message>
         <source>%1 (Status UsernameRegistrar).</source>
-        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+        <translation>%1 (Status UsernameRegistrar).</translation>
     </message>
     <message>
         <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Etherscan에서 조회&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Etherscan에서 조회&lt;/a&gt;</translation>
     </message>
     <message>
         <source>%1 (ENS Registry).</source>
-        <translation type="unfinished">%1 (ENS Registry).</translation>
+        <translation>%1 (ENS Registry).</translation>
     </message>
 </context>
 <context>
@@ -7310,11 +7312,11 @@ Please add it and try again.</source>
     <name>EnterKeyPairNameState</name>
     <message>
         <source>Name your key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>키 쌍 이름 지정</translation>
     </message>
     <message>
         <source>What would you like this key pair to be called?</source>
-        <translation type="unfinished"></translation>
+        <translation>이 키 쌍을 어떻게 부르고 싶으신가요?</translation>
     </message>
 </context>
 <context>
@@ -7342,19 +7344,19 @@ Please add it and try again.</source>
     <name>EnterPairingPassword</name>
     <message>
         <source>Enter Keycard pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 페어링 비밀번호 입력</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard는 사용자 지정 페어링 비밀번호로 설정되었습니다. 계속하려면 입력하세요.</translation>
     </message>
     <message>
         <source>Pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 비밀번호</translation>
     </message>
     <message>
         <source>Pairing password incorrect</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 비밀번호가 올바르지 않습니다</translation>
     </message>
 </context>
 <context>
@@ -7376,59 +7378,60 @@ Please add it and try again.</source>
     <name>EnterPin</name>
     <message>
         <source>Authorization required</source>
-        <translation type="unfinished"></translation>
+        <translation>권한 인증 필요</translation>
     </message>
     <message>
         <source>This key pair is not stored on your Keycard. Authorize with your profile
 to sign using the keys stored on this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 키 쌍은 Keycard에 저장되어 있지 않습니다. 이 기기에 저장된 키로 서명하려면
+프로필로 인증하세요.</translation>
     </message>
     <message>
         <source>Authorize</source>
-        <translation type="unfinished"></translation>
+        <translation>인증</translation>
     </message>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">PIN이 올바르지 않습니다</translation>
+        <translation>PIN이 올바르지 않습니다</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n회 시도 남음</numerusform>
         </translation>
     </message>
     <message>
         <source>Enter the Keycard PIN</source>
-        <translation type="unfinished">Keycard PIN을 입력하세요</translation>
+        <translation>Keycard PIN을 입력하세요</translation>
     </message>
 </context>
 <context>
     <name>EnterPinState</name>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">PIN이 올바르지 않습니다</translation>
+        <translation>PIN이 올바르지 않습니다</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n회 시도 남음</numerusform>
         </translation>
     </message>
     <message>
         <source>PIN doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN이 일치하지 않습니다</translation>
     </message>
     <message>
         <source>Enter new PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>새 PIN 입력</translation>
     </message>
     <message>
         <source>Repeat new PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>새 PIN 다시 입력</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard PIN 입력</translation>
     </message>
 </context>
 <context>
@@ -7484,23 +7487,23 @@ to sign using the keys stored on this device.</source>
     <name>EnterPukState</name>
     <message>
         <source>Repeat your Keycard PUK</source>
-        <translation type="unfinished">Keycard PUK을 다시 입력하세요</translation>
+        <translation>Keycard PUK을 다시 입력하세요</translation>
     </message>
     <message>
         <source>Choose a Keycard PUK</source>
-        <translation type="unfinished">Keycard PUK 선택</translation>
+        <translation>Keycard PUK 선택</translation>
     </message>
     <message>
         <source>Use numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>숫자만 사용하세요</translation>
     </message>
     <message>
         <source>PUK doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK이 일치하지 않습니다</translation>
     </message>
     <message>
         <source>Enter PUK</source>
-        <translation type="unfinished">PUK 입력</translation>
+        <translation>PUK 입력</translation>
     </message>
 </context>
 <context>
@@ -7548,11 +7551,11 @@ to sign using the keys stored on this device.</source>
     <name>EnterSeedPhraseState</name>
     <message>
         <source>Enter recovery phrase</source>
-        <translation type="unfinished">복구 구문 입력</translation>
+        <translation>복구 구문 입력</translation>
     </message>
     <message>
         <source>Invalid recovery phrase</source>
-        <translation type="unfinished">유효하지 않은 복구 구문</translation>
+        <translation>유효하지 않은 복구 구문</translation>
     </message>
 </context>
 <context>
@@ -7620,47 +7623,47 @@ to sign using the keys stored on this device.</source>
     <name>ExemptionsView</name>
     <message>
         <source>Community</source>
-        <translation type="unfinished">커뮤니티</translation>
+        <translation>커뮤니티</translation>
     </message>
     <message>
         <source>1:1 Chat</source>
-        <translation type="unfinished">1:1 채팅</translation>
+        <translation>1:1 채팅</translation>
     </message>
     <message>
         <source>Group Chat</source>
-        <translation type="unfinished">그룹 채팅</translation>
+        <translation>그룹 채팅</translation>
     </message>
     <message>
         <source>Muted</source>
-        <translation type="unfinished">음소거됨</translation>
+        <translation>음소거됨</translation>
     </message>
     <message>
         <source>Off</source>
-        <translation type="unfinished">끄기</translation>
+        <translation>끄기</translation>
     </message>
     <message>
         <source>Quiet</source>
-        <translation type="unfinished">조용히</translation>
+        <translation>조용히</translation>
     </message>
     <message>
         <source>Personal @ Mentions %1</source>
-        <translation type="unfinished">개인 @ 멘션 %1</translation>
+        <translation>개인 @ 멘션 %1</translation>
     </message>
     <message>
         <source>Global @ Mentions %1</source>
-        <translation type="unfinished">글로벌 @ 멘션 %1</translation>
+        <translation>글로벌 @ 멘션 %1</translation>
     </message>
     <message>
         <source>Alerts</source>
-        <translation type="unfinished">알림</translation>
+        <translation>알림</translation>
     </message>
     <message>
         <source>Other Messages %1</source>
-        <translation type="unfinished">기타 메시지 %1</translation>
+        <translation>기타 메시지 %1</translation>
     </message>
     <message>
         <source>Multiple Exemptions</source>
-        <translation type="unfinished">다중 면제</translation>
+        <translation>다중 면제</translation>
     </message>
 </context>
 <context>
@@ -7754,11 +7757,11 @@ to sign using the keys stored on this device.</source>
     <name>ExportKeypair</name>
     <message>
         <source>Authenticate to create a QR code</source>
-        <translation type="unfinished"></translation>
+        <translation>QR 코드를 생성하려면 인증하세요</translation>
     </message>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">인증</translation>
+        <translation>인증</translation>
     </message>
     <message>
         <source>Encrypted key pairs code</source>
@@ -7845,12 +7848,12 @@ to sign using the keys stored on this device.</source>
     <message>
         <source>A factory reset will delete the key on this Keycard.
 Are you sure you want to do this?</source>
-        <translation type="unfinished">공장 초기화를 하면 이 Keycard의 키가 삭제됩니다.
+        <translation>공장 초기화를 하면 이 Keycard의 키가 삭제됩니다.
 정말 진행하시겠어요?</translation>
     </message>
     <message>
         <source>I understand the key pair on this Keycard will be deleted</source>
-        <translation type="unfinished">이 Keycard의 키 페어가 삭제된다는 것을 이해합니다</translation>
+        <translation>이 Keycard의 키 페어가 삭제된다는 것을 이해합니다</translation>
     </message>
 </context>
 <context>
@@ -7872,7 +7875,7 @@ Are you sure you want to do this?</source>
     <name>FeeRow</name>
     <message>
         <source>Max.</source>
-        <translation type="unfinished"></translation>
+        <translation>최대</translation>
     </message>
 </context>
 <context>
@@ -8074,53 +8077,53 @@ Are you sure you want to do this?</source>
     <name>FollowingAddressMenu</name>
     <message>
         <source>Address copied</source>
-        <translation type="unfinished"></translation>
+        <translation>주소가 복사되었습니다</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation type="unfinished">주소 복사</translation>
+        <translation>주소 복사</translation>
     </message>
     <message>
         <source>Show address QR</source>
-        <translation type="unfinished">주소 QR 표시</translation>
+        <translation>주소 QR 표시</translation>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 주소에 추가</translation>
     </message>
     <message>
         <source>Remove from saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 주소에서 제거</translation>
     </message>
 </context>
 <context>
     <name>FollowingAddresses</name>
     <message>
         <source>Search for name, ENS or address</source>
-        <translation type="unfinished">이름, ENS 또는 주소 검색</translation>
+        <translation>이름, ENS 또는 주소 검색</translation>
     </message>
     <message>
         <source>No following addresses found. Check spelling or whether the address is correct.</source>
-        <translation type="unfinished"></translation>
+        <translation>팔로우한 주소를 찾을 수 없습니다. 철자나 주소가 올바른지 확인하세요.</translation>
     </message>
     <message>
         <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
-        <translation type="unfinished"></translation>
+        <translation>아직 온체인 팔로우가 없습니다. %1에서 이더리움 계정을 찾아 팔로우하면 여기에 표시됩니다.</translation>
     </message>
     <message>
         <source>Ethereum Follow Protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Ethereum Follow Protocol</translation>
     </message>
 </context>
 <context>
     <name>FollowingAddressesDelegate</name>
     <message>
         <source>Remove from saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 주소에서 제거</translation>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 주소에 추가</translation>
     </message>
 </context>
 <context>
@@ -8138,7 +8141,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation type="unfinished"></translation>
+        <translation>두 기기가 동일한 네트워크에 있는지 확인하세요</translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8218,11 +8221,11 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
+        <translation>%1 %2</translation>
     </message>
     <message>
         <source>%1 %2 %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 %2 %3</translation>
     </message>
 </context>
 <context>
@@ -8236,7 +8239,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation type="unfinished"></translation>
+        <translation>두 기기가 동일한 네트워크에 있는지 확인하세요</translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8316,11 +8319,11 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
+        <translation>%1 %2</translation>
     </message>
     <message>
         <source>%1 %2 %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 %2 %3</translation>
     </message>
 </context>
 <context>
@@ -8354,22 +8357,22 @@ Are you sure you want to do this?</source>
     <name>GroupsModel</name>
     <message>
         <source>Popular assets on %1</source>
-        <translation type="unfinished">%1에서 인기 있는 자산</translation>
+        <translation>%1에서 인기 있는 자산</translation>
     </message>
 </context>
 <context>
     <name>HandlersManager</name>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>정보</translation>
     </message>
     <message>
         <source>Swap is not available in the testnet mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>테스트넷 모드에서는 스왑을 사용할 수 없습니다.</translation>
     </message>
     <message>
         <source>Push notifications enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>푸시 알림이 활성화되었습니다</translation>
     </message>
 </context>
 <context>
@@ -8554,35 +8557,35 @@ Are you sure you want to do this?</source>
     <name>HttpStatsModal</name>
     <message>
         <source>network %1 in %2 req · cache %3 in %4 req</source>
-        <translation type="unfinished"></translation>
+        <translation>네트워크 %1(%2건 요청) · 캐시 %3(%4건 요청)</translation>
     </message>
     <message>
         <source>Total: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>합계: %1</translation>
     </message>
     <message>
         <source>Disk cache: %1 of %2</source>
-        <translation type="unfinished"></translation>
+        <translation>디스크 캐시: %2 중 %1</translation>
     </message>
     <message>
         <source>Not counted here: status-go, messaging, the webviews, and requests made outside the QML network access manager.</source>
-        <translation type="unfinished"></translation>
+        <translation>여기에 포함되지 않음: status-go, 메시징, 웹뷰, QML 네트워크 액세스 관리자 외부에서 이루어진 요청.</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">새로고침</translation>
+        <translation>새로고침</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished">초기화</translation>
+        <translation>초기화</translation>
     </message>
     <message>
         <source>Clear cache</source>
-        <translation type="unfinished"></translation>
+        <translation>캐시 지우기</translation>
     </message>
     <message>
         <source>Total</source>
-        <translation type="unfinished">합계</translation>
+        <translation>합계</translation>
     </message>
 </context>
 <context>
@@ -8774,19 +8777,19 @@ Are you sure you want to do this?</source>
     <name>InlineSelectorPanel</name>
     <message>
         <source>No results found</source>
-        <translation type="unfinished">결과가 없습니다</translation>
+        <translation>결과가 없습니다</translation>
     </message>
     <message>
         <source>Group Members</source>
-        <translation type="unfinished"></translation>
+        <translation>그룹 멤버</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">취소</translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Save Changes</source>
-        <translation type="unfinished">변경 사항 저장</translation>
+        <translation>변경 사항 저장</translation>
     </message>
 </context>
 <context>
@@ -8812,11 +8815,11 @@ Are you sure you want to do this?</source>
     <name>InsertEmptyKeycardState</name>
     <message>
         <source>Insert an empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>빈 Keycard 삽입</translation>
     </message>
     <message>
         <source>Insert an empty Keycard you want to migrate your key pair to.</source>
-        <translation type="unfinished"></translation>
+        <translation>키 쌍을 마이그레이션할 빈 Keycard를 삽입하세요.</translation>
     </message>
 </context>
 <context>
@@ -9020,15 +9023,15 @@ Are you sure you want to do this?</source>
     <name>KeyPairCompactItem</name>
     <message>
         <source>Moving this key pair will require you to use your Keycard to login</source>
-        <translation type="unfinished">이 키 쌍을 이동하려면 로그인할 때 Keycard를 사용해야 합니다</translation>
+        <translation>이 키 쌍을 이동하려면 로그인할 때 Keycard를 사용해야 합니다</translation>
     </message>
     <message>
         <source>Keycard Locked</source>
-        <translation type="unfinished">Keycard 잠김</translation>
+        <translation>Keycard 잠김</translation>
     </message>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Keycard와 호환되지 않는 파생 경로가 있는 계정 %n개 포함</numerusform>
         </translation>
     </message>
@@ -9051,845 +9054,846 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Active Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>활성 계정</translation>
     </message>
 </context>
 <context>
     <name>KeycardAuth</name>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
+        <translation>Keycard 리더를 연결하세요...</translation>
     </message>
     <message>
         <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 태그하거나 삽입하세요...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Keycard 읽는 중...</translation>
+        <translation>Keycard 읽는 중...</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished">Keycard가 비어 있습니다</translation>
+        <translation>Keycard가 비어 있습니다</translation>
     </message>
     <message>
         <source>There is no key pair on this Keycard</source>
-        <translation type="unfinished">이 Keycard에는 키 쌍이 없습니다</translation>
+        <translation>이 Keycard에는 키 쌍이 없습니다</translation>
     </message>
     <message>
         <source>This is not a Keycard</source>
-        <translation type="unfinished">이건 Keycard가 아닙니다</translation>
+        <translation>이건 Keycard가 아닙니다</translation>
     </message>
     <message>
         <source>Connection error</source>
-        <translation type="unfinished"></translation>
+        <translation>연결 오류</translation>
     </message>
     <message>
         <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>문제가 발생했습니다. 다시 시도해 주세요</translation>
     </message>
     <message>
         <source>Keycard locked</source>
-        <translation type="unfinished">Keycard 잠금됨</translation>
+        <translation>Keycard 잠금됨</translation>
     </message>
     <message>
         <source>PIN entered incorrectly too many times</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN을 너무 여러 번 잘못 입력했습니다</translation>
     </message>
     <message>
         <source>PUK entered incorrectly too many times</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK를 너무 여러 번 잘못 입력했습니다</translation>
     </message>
     <message>
         <source>Keycard pairing error</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 페어링 오류</translation>
     </message>
     <message>
         <source>Max pairing slots reached for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard의 최대 페어링 슬롯 수에 도달했습니다</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard는 사용자 지정 페어링 비밀번호로 설정되었습니다</translation>
     </message>
     <message>
         <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">잘못된 Keycard가 삽입되었습니다</translation>
+        <translation>잘못된 Keycard가 삽입되었습니다</translation>
     </message>
     <message>
         <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
+        <translation>삽입된 Keycard가 예상된 키와 일치하지 않습니다</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>성공</translation>
     </message>
     <message>
         <source>The card is not a Keycard, try again with Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 카드는 Keycard가 아닙니다. Keycard로 다시 시도하세요.</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>문제가 발생했습니다</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">다시 시도</translation>
+        <translation>다시 시도</translation>
     </message>
 </context>
 <context>
     <name>KeycardChannelDrawer</name>
     <message>
         <source>Please tap your Keycard to the back of your device</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 뒷면에 Keycard를 태그해 주세요</translation>
     </message>
     <message>
         <source>Reading Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 읽는 중</translation>
     </message>
     <message>
         <source>Please keep your Keycard in place</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 제자리에 유지해 주세요</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>성공</translation>
     </message>
     <message>
         <source>Keycard operation completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 작업이 완료되었습니다</translation>
     </message>
     <message>
         <source>Keycard Not Supported</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 지원되지 않습니다</translation>
     </message>
     <message>
         <source>Your device does not support keycard operations. Please try again with a different device.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기는 Keycard 작업을 지원하지 않습니다. 다른 기기로 다시 시도해 주세요.</translation>
     </message>
     <message>
         <source>Keycard Not Available</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 사용할 수 없습니다</translation>
     </message>
     <message>
         <source>Please enable NFC on your device to use the Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 사용하려면 기기에서 NFC를 활성화하세요.</translation>
     </message>
     <message>
         <source>Dismiss</source>
-        <translation type="unfinished"></translation>
+        <translation>닫기</translation>
     </message>
     <message>
         <source>Ready to scan</source>
-        <translation type="unfinished"></translation>
+        <translation>스캔 준비 완료</translation>
     </message>
     <message>
         <source>Try to keep your Keycard in place</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 제자리에 유지하도록 해주세요</translation>
     </message>
 </context>
 <context>
     <name>KeycardDetailsPage</name>
     <message>
         <source>No free pairing slots</source>
-        <translation type="unfinished"></translation>
+        <translation>사용 가능한 페어링 슬롯 없음</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished">Keycard가 비어 있습니다</translation>
+        <translation>Keycard가 비어 있습니다</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 차단되었습니다</translation>
     </message>
     <message>
         <source>Keycard stores only PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에는 PIN만 저장됩니다</translation>
     </message>
     <message>
         <source>Profile already exists</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필이 이미 존재합니다</translation>
     </message>
     <message>
         <source>Keycard stores key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 키 쌍이 저장됩니다</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">키카드</translation>
+        <translation>키카드</translation>
     </message>
     <message>
         <source>, </source>
-        <translation type="unfinished"></translation>
+        <translation>, </translation>
     </message>
     <message>
         <source>UID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UID: %1</translation>
     </message>
     <message>
         <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 사용 가능한 페어링 슬롯이 없어 지금은 Keycard 콘텐츠를 사용할 수 없습니다. 하지만 이전에 페어링된 설치에서는 사용할 수 있습니다.</translation>
     </message>
     <message>
         <source>Profile for key pair stored on Keycard already added to this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 저장된 키 쌍의 프로필이 이미 이 기기에 추가되어 있습니다.</translation>
     </message>
     <message>
         <source>Keycard stores information about your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 계정 정보가 저장됩니다</translation>
     </message>
     <message>
         <source>What you can do:</source>
-        <translation type="unfinished"></translation>
+        <translation>할 수 있는 작업:</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard and create new profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 새 키 쌍을 가져와서 새 프로필 만들기</translation>
     </message>
     <message>
         <source>Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>서명 및 Status 로그인에 Keycard가 필요합니다</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문으로 키 쌍 가져오기</translation>
     </message>
     <message>
         <source>You’ll create a new profile or login if key pair already associated with existing Status profile. Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>키 쌍이 이미 기존 Status 프로필과 연결되어 있다면 새 프로필을 만들거나 로그인하게 됩니다. 서명 및 Status 로그인에 Keycard가 필요합니다</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문으로 잠금 해제</translation>
     </message>
     <message>
         <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 저장된 키 쌍의 복구 구문을 입력해야 합니다</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK로 잠금 해제</translation>
     </message>
     <message>
         <source>If you set your PUK earlier for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard에 대해 이전에 PUK를 설정한 경우</translation>
     </message>
     <message>
         <source>Login with this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard로 로그인</translation>
     </message>
     <message>
         <source>Go back to login screen</source>
-        <translation type="unfinished"></translation>
+        <translation>로그인 화면으로 돌아가기</translation>
     </message>
     <message>
         <source>You can login with password and move your profile to Keycard, from the settings/Keycard section</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호로 로그인한 후 설정/Keycard 섹션에서 프로필을 Keycard로 이동할 수 있습니다</translation>
     </message>
     <message>
         <source>Factory reset</source>
-        <translation type="unfinished"></translation>
+        <translation>공장 초기화</translation>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에서 모든 항목 제거</translation>
     </message>
 </context>
 <context>
     <name>KeycardLostPage</name>
     <message>
         <source>Lost Keycard</source>
-        <translation type="unfinished">분실된 Keycard</translation>
+        <translation>분실된 Keycard</translation>
     </message>
     <message>
         <source>If you don&apos;t have any other spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>여분의 Keycard가 없는 경우</translation>
     </message>
     <message>
         <source>Buy new</source>
-        <translation type="unfinished"></translation>
+        <translation>새로 구매</translation>
     </message>
     <message>
         <source>Go to Keycard.tech and order Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard.tech로 이동하여 Keycard를 주문하세요</translation>
     </message>
     <message>
         <source>If you have a spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>여분의 Keycard가 있는 경우</translation>
     </message>
     <message>
         <source>Read your spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>여분의 Keycard 읽기</translation>
     </message>
     <message>
         <source>You may need to factory reset it first and then import key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>먼저 공장 초기화를 한 다음 키 쌍을 가져와야 할 수 있습니다</translation>
     </message>
     <message>
         <source>Start using profile without Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 없이 프로필 사용 시작</translation>
     </message>
     <message>
         <source>Enter recovery phrase for your profile and login to status.</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필의 복구 구문을 입력하고 Status에 로그인하세요.</translation>
     </message>
 </context>
 <context>
     <name>KeycardManagementPopup</name>
     <message>
         <source>Read Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 읽기</translation>
     </message>
     <message>
         <source>Keycard Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 흐름</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">취소</translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation type="unfinished">완료</translation>
+        <translation>완료</translation>
     </message>
     <message>
         <source>Factory reset</source>
-        <translation type="unfinished"></translation>
+        <translation>공장 초기화</translation>
     </message>
     <message>
         <source>Start using profile without Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 없이 프로필 사용 시작</translation>
     </message>
     <message>
         <source>Log in with this Keycard</source>
-        <translation type="unfinished">이 Keycard로 로그인</translation>
+        <translation>이 Keycard로 로그인</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문으로 키 쌍 가져오기</translation>
     </message>
     <message>
         <source>No PIN? Skip</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN이 없나요? 건너뛰기</translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
-        <translation type="unfinished">이 Keycard를 공장 초기화</translation>
+        <translation>이 Keycard를 공장 초기화</translation>
     </message>
     <message>
         <source>Resetting Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 초기화 중...</translation>
     </message>
     <message>
         <source>Logging in with Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard로 로그인 중...</translation>
     </message>
     <message>
         <source>Reading...</source>
-        <translation type="unfinished"></translation>
+        <translation>읽는 중...</translation>
     </message>
     <message>
         <source>Keycard has been reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 초기화되었습니다</translation>
     </message>
     <message>
         <source>Ready to recover your profile</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필을 복구할 준비가 되었습니다</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>성공</translation>
     </message>
     <message>
         <source>Keycard is now empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 비어 있습니다.</translation>
     </message>
     <message>
         <source>Continue to log in and convert your profile to use a Status password.</source>
-        <translation type="unfinished"></translation>
+        <translation>계속 진행하여 로그인하고 프로필을 Status 비밀번호를 사용하도록 전환하세요.</translation>
     </message>
     <message>
         <source>Continue to finish logging in.</source>
-        <translation type="unfinished"></translation>
+        <translation>계속 진행하여 로그인을 완료하세요.</translation>
     </message>
     <message>
         <source>Continue to finish setting up your profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>계속 진행하여 프로필 설정을 완료하세요.</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>문제가 발생했습니다</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">다시 시도</translation>
+        <translation>다시 시도</translation>
     </message>
     <message>
         <source>Import key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문에서 키 페어 가져오기</translation>
     </message>
     <message>
         <source>Try setting the PIN again</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN을 다시 설정해 보세요</translation>
     </message>
     <message>
         <source>Next</source>
-        <translation type="unfinished">다음</translation>
+        <translation>다음</translation>
     </message>
     <message>
         <source>Importing key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 키 페어 가져오는 중...</translation>
     </message>
     <message>
         <source>Add another account</source>
-        <translation type="unfinished">다른 계정 추가</translation>
+        <translation>다른 계정 추가</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">계속</translation>
+        <translation>계속</translation>
     </message>
     <message>
         <source>Key pair has been imported to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어가 Keycard에 가져와졌습니다</translation>
     </message>
     <message>
         <source>Keycard is now required to sign with this key pair.</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 이 키 페어로 서명하려면 Keycard가 필요합니다.</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard에 새 키 페어 가져오기</translation>
     </message>
     <message>
         <source>Move key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어를 Keycard로 이동</translation>
     </message>
     <message>
         <source>Moving key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어를 Keycard로 이동하는 중...</translation>
     </message>
     <message>
         <source>Key pair has been moved to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어가 Keycard로 이동되었습니다</translation>
     </message>
     <message>
         <source>Move profile key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 키 페어를 Keycard로 이동</translation>
     </message>
     <message>
         <source>Moving profile key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 키 페어를 Keycard로 이동하는 중...</translation>
     </message>
     <message>
         <source>Profile key pair has been moved to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 키 페어가 Keycard로 이동되었습니다</translation>
     </message>
     <message>
         <source>Quit and restart Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 종료 후 재시작</translation>
     </message>
     <message>
         <source>Re-encrypting data may take some time</source>
-        <translation type="unfinished"></translation>
+        <translation>데이터 재암호화에는 시간이 걸릴 수 있습니다</translation>
     </message>
     <message>
         <source>Do not quit the application or turn off your device. Doing so will lead to data
 corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>애플리케이션을 종료하거나 기기를 끄지 마세요. 그렇게 하면 데이터 손상,
+Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합니다.</translation>
     </message>
     <message>
         <source>Keycard is now required to log in and sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 로그인과 서명에 Keycard가 필요합니다.</translation>
     </message>
     <message>
         <source>Add key pair to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Status에 키 페어 추가</translation>
     </message>
     <message>
         <source>Adding key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>Status에 키 페어 추가하는 중...</translation>
     </message>
     <message>
         <source>Key pair has been added to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어가 Status에 추가되었습니다</translation>
     </message>
     <message>
         <source>Now you can sign with this key pair using Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 Keycard를 사용해 이 키 페어로 서명할 수 있습니다.</translation>
     </message>
     <message>
         <source>Stop using Keycard for key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>이 키 페어에 Keycard 사용 중지</translation>
     </message>
     <message>
         <source>Create password</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호 생성</translation>
     </message>
     <message>
         <source>Finalize Status Password Creation</source>
-        <translation type="unfinished">Status 비밀번호 생성 마무리</translation>
+        <translation>Status 비밀번호 생성 마무리</translation>
     </message>
     <message>
         <source>Moving key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어를 Status로 이동하는 중...</translation>
     </message>
     <message>
         <source>Key pair has been moved to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>키 페어가 Status로 이동되었습니다</translation>
     </message>
     <message>
         <source>Keycard read completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 읽기 완료</translation>
     </message>
     <message>
         <source>Status password is now required to sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 서명하려면 Status 비밀번호가 필요합니다.</translation>
     </message>
     <message>
         <source>Stop using Keycard for profile key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 키 페어에 Keycard 사용 중지</translation>
     </message>
     <message>
         <source>Moving profile key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 키 페어를 Status로 이동하는 중...</translation>
     </message>
     <message>
         <source>Profile key pair has been moved to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 키 페어가 Status로 이동되었습니다</translation>
     </message>
     <message>
         <source>Status password is now required to log in and sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 로그인과 서명에 Status 비밀번호가 필요합니다.</translation>
     </message>
     <message>
         <source>Change Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard PIN 변경</translation>
     </message>
     <message>
         <source>Changing Keycard PIN...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard PIN 변경하는 중...</translation>
     </message>
     <message>
         <source>Keycard PIN has been changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard PIN이 변경되었습니다</translation>
     </message>
     <message>
         <source>New PIN is required to interact with Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 사용하려면 새 PIN이 필요합니다.</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK 설정 또는 변경</translation>
     </message>
     <message>
         <source>Setting your Keycard PUK...</source>
-        <translation type="unfinished">Keycard PUK 설정 중...</translation>
+        <translation>Keycard PUK 설정 중...</translation>
     </message>
     <message>
         <source>Keycard’s PUK successfully set</source>
-        <translation type="unfinished">Keycard의 PUK이 성공적으로 설정되었습니다</translation>
+        <translation>Keycard의 PUK이 성공적으로 설정되었습니다</translation>
     </message>
     <message>
         <source>Rename Keycard</source>
-        <translation type="unfinished">Keycard 이름 변경</translation>
+        <translation>Keycard 이름 변경</translation>
     </message>
     <message>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>이름 변경</translation>
     </message>
     <message>
         <source>Renaming Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 이름 변경하는 중...</translation>
     </message>
     <message>
         <source>Keycard has been renamed</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 이름이 변경되었습니다</translation>
     </message>
     <message>
         <source>New name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>새 이름: %1</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK로 차단 해제</translation>
     </message>
     <message>
         <source>Unblocking Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 차단 해제하는 중...</translation>
     </message>
     <message>
         <source>Keycard has been unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 차단이 해제되었습니다</translation>
     </message>
     <message>
         <source>You can now use your Keycard again</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 Keycard를 다시 사용할 수 있습니다</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문으로 차단 해제</translation>
     </message>
     <message>
         <source>It is now ready to use.</source>
-        <translation type="unfinished"></translation>
+        <translation>이제 사용할 준비가 되었습니다.</translation>
     </message>
 </context>
 <context>
     <name>KeycardProgressState</name>
     <message>
         <source>Reading...</source>
-        <translation type="unfinished"></translation>
+        <translation>읽는 중...</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>성공</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>문제가 발생했습니다</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">다시 시도</translation>
+        <translation>다시 시도</translation>
     </message>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
+        <translation>Keycard 리더를 연결하세요...</translation>
     </message>
     <message>
         <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 탭하거나 삽입하세요...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Keycard 읽는 중...</translation>
+        <translation>Keycard 읽는 중...</translation>
     </message>
     <message>
         <source>This is not a Keycard</source>
-        <translation type="unfinished">이건 Keycard가 아닙니다</translation>
+        <translation>이건 Keycard가 아닙니다</translation>
     </message>
     <message>
         <source>Connection error</source>
-        <translation type="unfinished"></translation>
+        <translation>연결 오류</translation>
     </message>
     <message>
         <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>문제가 발생했습니다. 다시 시도해 주세요</translation>
     </message>
     <message>
         <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">잘못된 Keycard가 삽입되었습니다</translation>
+        <translation>잘못된 Keycard가 삽입되었습니다</translation>
     </message>
     <message>
         <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
+        <translation>삽입된 Keycard가 예상된 키와 일치하지 않습니다</translation>
     </message>
     <message>
         <source>It&apos;s a different Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>다른 Keycard입니다</translation>
     </message>
     <message>
         <source>Keycard is not empty</source>
-        <translation type="unfinished">Keycard가 비어 있지 않습니다</translation>
+        <translation>Keycard가 비어 있지 않습니다</translation>
     </message>
     <message>
         <source>Try again with an empty keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>빈 Keycard로 다시 시도하세요</translation>
     </message>
     <message>
         <source>The card is not a Keycard, try again with Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>이 카드는 Keycard가 아닙니다. Keycard로 다시 시도하세요</translation>
     </message>
     <message>
         <source>Please try again with Keycard you read before</source>
-        <translation type="unfinished"></translation>
+        <translation>이전에 읽은 Keycard로 다시 시도해 주세요</translation>
     </message>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">PIN이 올바르지 않습니다</translation>
+        <translation>PIN이 올바르지 않습니다</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>남은 시도 %n회</numerusform>
         </translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 차단되었습니다</translation>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN을 3회 잘못 입력하여 Keycard가 차단되었습니다</translation>
     </message>
     <message>
         <source>PUK incorrect</source>
-        <translation type="unfinished">PUK가 올바르지 않습니다</translation>
+        <translation>PUK가 올바르지 않습니다</translation>
     </message>
     <message>
         <source>Keycard is blocked due to five failed PUK input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK를 5회 잘못 입력하여 Keycard가 차단되었습니다</translation>
     </message>
 </context>
 <context>
     <name>KeycardSimulatorController</name>
     <message>
         <source>Keycard Simulator Controller</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 시뮬레이터 컨트롤러</translation>
     </message>
     <message>
         <source>Keycard &quot;%1&quot; not created: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard &quot;%1&quot; 생성되지 않음: %2</translation>
     </message>
     <message>
         <source>Keycard &quot;%1&quot; created</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard &quot;%1&quot; 생성됨</translation>
     </message>
     <message>
         <source>Applet version</source>
-        <translation type="unfinished"></translation>
+        <translation>애플릿 버전</translation>
     </message>
     <message>
         <source>Use applet tag 4.0 (SecureChannel V2)</source>
-        <translation type="unfinished"></translation>
+        <translation>애플릿 태그 4.0 사용 (SecureChannel V2)</translation>
     </message>
     <message>
         <source>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</source>
-        <translation type="unfinished"></translation>
+        <translation>태그 4.0에는 keycard-qt SecureChannel V2 지원이 필요합니다 — 아직 앱에서 구동할 수 없으며, #72e9574 커밋 이후의 status-keycard를 나타냅니다.</translation>
     </message>
     <message>
         <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
-        <translation type="unfinished"></translation>
+        <translation>기본값: 태그 3.2(기존 비밀번호 페어링)이며, 현재 keycard-qt와 일치하고 status-keycard #72e9574 커밋을 나타냅니다.</translation>
     </message>
     <message>
         <source>1. Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>1. 시뮬레이터</translation>
     </message>
     <message>
         <source>Restart Keycard Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 시뮬레이터 재시작</translation>
     </message>
     <message>
         <source>Start Keycard Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 시뮬레이터 시작</translation>
     </message>
     <message>
         <source>2. Create keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>2. Keycard 생성</translation>
     </message>
     <message>
         <source>Card id:</source>
-        <translation type="unfinished"></translation>
+        <translation>카드 ID:</translation>
     </message>
     <message>
         <source>Create Empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>빈 Keycard 생성</translation>
     </message>
     <message>
         <source>— or create one with a seed —</source>
-        <translation type="unfinished"></translation>
+        <translation>— 또는 시드로 생성 —</translation>
     </message>
     <message>
         <source>Seed phrase (mandatory)</source>
-        <translation type="unfinished"></translation>
+        <translation>시드 구문(필수)</translation>
     </message>
     <message>
         <source>PIN:</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN:</translation>
     </message>
     <message>
         <source>PUK:</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK:</translation>
     </message>
     <message>
         <source>Keycard name (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 이름(선택)</translation>
     </message>
     <message>
         <source>Paths, comma-separated (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>경로, 쉼표로 구분(선택)</translation>
     </message>
     <message>
         <source>Pairing password (optional, default if empty)</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 비밀번호(선택, 비워두면 기본값)</translation>
     </message>
     <message>
         <source>Create Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 생성</translation>
     </message>
     <message>
         <source>Creating Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 생성하는 중...</translation>
     </message>
     <message>
         <source>Clear local pairings</source>
-        <translation type="unfinished"></translation>
+        <translation>로컬 페어링 지우기</translation>
     </message>
     <message>
         <source>3. Select keycard (does not insert it)</source>
-        <translation type="unfinished"></translation>
+        <translation>3. Keycard 선택(삽입하지 않음)</translation>
     </message>
     <message>
         <source>&lt;no keycard selected&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;선택된 Keycard 없음&gt;</translation>
     </message>
     <message>
         <source>4. Reader &amp; card</source>
-        <translation type="unfinished"></translation>
+        <translation>4. 리더 및 카드</translation>
     </message>
     <message>
         <source>Insert keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 삽입</translation>
     </message>
     <message>
         <source>Inserts the selected keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>선택한 Keycard를 삽입합니다</translation>
     </message>
     <message>
         <source>Remove keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 제거</translation>
     </message>
     <message>
         <source>Removes the selected keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>선택한 Keycard를 제거합니다</translation>
     </message>
     <message>
         <source>Plug reader</source>
-        <translation type="unfinished"></translation>
+        <translation>리더 연결</translation>
     </message>
     <message>
         <source>Unplug reader</source>
-        <translation type="unfinished"></translation>
+        <translation>리더 분리</translation>
     </message>
 </context>
 <context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard 읽기</translation>
     </message>
 </context>
 <context>
     <name>Keychain</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">인증</translation>
+        <translation>인증</translation>
     </message>
     <message>
         <source>Login to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Status에 로그인</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">취소</translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Save password</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호 저장</translation>
     </message>
     <message>
         <source>Confirm to enable biometric login</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인증 로그인을 활성화하려면 확인하세요</translation>
     </message>
 </context>
 <context>
@@ -10009,11 +10013,11 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Add account</source>
-        <translation type="unfinished">계정 추가</translation>
+        <translation>계정 추가</translation>
     </message>
     <message>
         <source>Onchain friends</source>
-        <translation type="unfinished"></translation>
+        <translation>온체인 친구</translation>
     </message>
 </context>
 <context>
@@ -10027,7 +10031,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <name>LinkPreviewGifDelegate</name>
     <message>
         <source>Animated GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>애니메이션 GIF</translation>
     </message>
 </context>
 <context>
@@ -10087,7 +10091,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Always Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>항상 활성화</translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
@@ -10229,73 +10233,73 @@ to load</source>
     <name>LoginKeycardBox</name>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
+        <translation>Keycard 리더를 연결하세요...</translation>
     </message>
     <message>
         <source>Tap or insert your Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 탭하거나 삽입하세요...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Keycard 읽는 중...</translation>
+        <translation>Keycard 읽는 중...</translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>
-        <translation type="unfinished"></translation>
+        <translation>이 프로필에 맞지 않는 Keycard입니다</translation>
     </message>
     <message>
         <source>Keycard blocked</source>
-        <translation type="unfinished">Keycard가 차단됨</translation>
+        <translation>Keycard가 차단됨</translation>
     </message>
     <message>
         <source>Unblock</source>
-        <translation type="unfinished">차단 해제</translation>
+        <translation>차단 해제</translation>
     </message>
     <message>
         <source>Pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 비밀번호</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">계속</translation>
+        <translation>계속</translation>
     </message>
     <message>
         <source>This isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>이것은 Keycard가 아닙니다.&lt;br&gt;카드를 제거하고 Keycard를 삽입하세요.</translation>
     </message>
     <message>
         <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 감지하는 데 문제가 발생했습니다.&lt;br&gt;Keycard를 다시 스캔하세요.</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard는 사용자 지정 페어링 비밀번호로 설정되었습니다. 계속하려면 입력하세요.</translation>
     </message>
     <message>
         <source>No free pairing slots on this Keycard.&lt;br&gt;You can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard에 남은 페어링 슬롯이 없습니다.&lt;br&gt;이전에 페어링된 설치에서 사용할 수 있습니다.</translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>스캔한 Keycard가 비어 있습니다.&lt;br&gt;이 프로필에 맞는 Keycard를 스캔하세요.</translation>
     </message>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>PIN이 올바르지 않습니다. 남은 시도 %n회.</numerusform>
         </translation>
     </message>
     <message>
         <source>Login failed. %1</source>
-        <translation type="unfinished">로그인 실패. %1</translation>
+        <translation>로그인 실패. %1</translation>
     </message>
     <message>
         <source>Show details.</source>
-        <translation type="unfinished">자세히 보기.</translation>
+        <translation>자세히 보기.</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard PIN 입력</translation>
     </message>
 </context>
 <context>
@@ -10380,7 +10384,7 @@ to load</source>
     </message>
     <message>
         <source>Lost Keycard?</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard를 분실하셨나요?</translation>
     </message>
     <message>
         <source>Login failed</source>
@@ -10422,7 +10426,7 @@ to load</source>
     </message>
     <message>
         <source>Manage profiles</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 관리</translation>
     </message>
 </context>
 <context>
@@ -10455,63 +10459,63 @@ to load</source>
     <name>LogosNetworkView</name>
     <message>
         <source>Learn more</source>
-        <translation type="unfinished">더 알아보기</translation>
+        <translation>더 알아보기</translation>
     </message>
     <message>
         <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>메시지는 탈중앙화 네트워크를 통해 전송됩니다. 이는 Logos Messaging 기술을 기반으로 구축된 피어투피어(P2P) 네트워크로, Status Desktop을 실행하는 사용자들이 공동으로 구동하여 Status를 탈중앙화되고 견고하며 검열에 저항력 있게 만듭니다. %1</translation>
     </message>
     <message>
         <source>Connected network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>연결된 네트워크 피어</translation>
     </message>
     <message>
         <source>Peers</source>
-        <translation type="unfinished"></translation>
+        <translation>피어</translation>
     </message>
     <message>
         <source>Peer</source>
-        <translation type="unfinished"></translation>
+        <translation>피어</translation>
     </message>
     <message>
         <source>Checking peer connection...</source>
-        <translation type="unfinished"></translation>
+        <translation>피어 연결 확인하는 중...</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>연결됨</translation>
     </message>
     <message>
         <source>Refresh network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>네트워크 피어 새로고침</translation>
     </message>
     <message>
         <source>Unable to refresh network peers: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>네트워크 피어를 새로고침할 수 없습니다: %1</translation>
     </message>
     <message>
         <source>How to fix p2p network connection</source>
-        <translation type="unfinished"></translation>
+        <translation>P2P 네트워크 연결 문제 해결 방법</translation>
     </message>
     <message>
         <source>If Status has no connected network peers, check:</source>
-        <translation type="unfinished"></translation>
+        <translation>Status에 연결된 네트워크 피어가 없다면 다음을 확인하세요:</translation>
     </message>
     <message>
         <source>Try using a VPN</source>
-        <translation type="unfinished"></translation>
+        <translation>VPN 사용해 보기</translation>
     </message>
     <message>
         <source>Some networks may block access to the p2p network. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>일부 네트워크는 P2P 네트워크 접근을 차단할 수 있습니다. %1</translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>현재 인터넷 연결이 불안정할 수 있습니다. %1</translation>
     </message>
     <message>
         <source>Try another network or disconnect your VPN</source>
-        <translation type="unfinished"></translation>
+        <translation>다른 네트워크를 사용하거나 VPN 연결을 해제하세요</translation>
     </message>
 </context>
 <context>
@@ -10567,11 +10571,11 @@ to load</source>
     </message>
     <message>
         <source>Import key pairs from this device to your other synced devices</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기의 키 페어를 동기화된 다른 기기로 가져오기</translation>
     </message>
     <message>
         <source>Show encrypted QR of key pairs on device</source>
-        <translation type="unfinished"></translation>
+        <translation>기기에서 키 페어의 암호화된 QR 코드 표시</translation>
     </message>
     <message numerus="yes">
         <source>%n key pair(s) require import to use on this device</source>
@@ -10585,15 +10589,15 @@ to load</source>
     </message>
     <message>
         <source>Automatically apply key pair migrations from paired devices</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링된 기기의 키 페어 마이그레이션 자동 적용</translation>
     </message>
     <message>
         <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>꺼져 있으면 페어링된 기기에서 키 페어를 Keycard로 또는 Keycard에서 이동해도 이 기기의 로그인 또는 서명 방식이 변경되지 않습니다. 다시 켜도 과거의 변경 사항은 적용되지 않습니다.</translation>
     </message>
     <message>
         <source>Get Keycard</source>
-        <translation type="unfinished">Keycard 받기</translation>
+        <translation>Keycard 받기</translation>
     </message>
 </context>
 <context>
@@ -10669,35 +10673,35 @@ to load</source>
     <name>ManageKeyPairAccountsState</name>
     <message>
         <source>Name your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>계정 이름 지정</translation>
     </message>
     <message>
         <source>Colour</source>
-        <translation type="unfinished">색상</translation>
+        <translation>색상</translation>
     </message>
     <message>
         <source>Remove account</source>
-        <translation type="unfinished">계정 제거</translation>
+        <translation>계정 제거</translation>
     </message>
     <message>
         <source>Do you want to delete the &quot;%1&quot; account?</source>
-        <translation type="unfinished"></translation>
+        <translation>&quot;%1&quot; 계정을 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Do you want to delete this account?</source>
-        <translation type="unfinished"></translation>
+        <translation>이 계정을 삭제하시겠습니까?</translation>
     </message>
     <message>
         <source>Yes, delete this account</source>
-        <translation type="unfinished">네, 이 계정을 삭제합니다</translation>
+        <translation>네, 이 계정을 삭제합니다</translation>
     </message>
     <message>
         <source>What would you like this account to be called?</source>
-        <translation type="unfinished">이 계정을 뭐라고 부를까요?</translation>
+        <translation>이 계정을 뭐라고 부를까요?</translation>
     </message>
     <message>
         <source>Preview</source>
-        <translation type="unfinished"></translation>
+        <translation>미리보기</translation>
     </message>
 </context>
 <context>
@@ -10872,7 +10876,7 @@ to load</source>
     </message>
     <message>
         <source>Available if third-party services enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>타사 서비스가 활성화된 경우 사용 가능</translation>
     </message>
 </context>
 <context>
@@ -10917,8 +10921,8 @@ to load</source>
     <name>MarketFooter</name>
     <message numerus="yes">
         <source>Showing %L1 to %L2 of %n result(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n개 결과 중 %L1-%L2 표시 중</numerusform>
         </translation>
     </message>
 </context>
@@ -11032,25 +11036,25 @@ to load</source>
     <name>MembersListSkeleton</name>
     <message>
         <source>Members</source>
-        <translation type="unfinished">멤버들</translation>
+        <translation>멤버들</translation>
     </message>
 </context>
 <context>
     <name>MembersPanelHeader</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">검색</translation>
+        <translation>검색</translation>
     </message>
 </context>
 <context>
     <name>MembersSelectorBase</name>
     <message>
         <source>To:</source>
-        <translation type="unfinished"></translation>
+        <translation>받는 사람:</translation>
     </message>
     <message>
         <source>%1 USER LIMIT REACHED</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 사용자 제한에 도달했습니다</translation>
     </message>
 </context>
 <context>
@@ -11163,15 +11167,15 @@ to load</source>
     <name>MessageContextMenuView</name>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">답장</translation>
+        <translation>답장</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">편집</translation>
+        <translation>편집</translation>
     </message>
     <message>
         <source>Copy selected</source>
-        <translation type="unfinished"></translation>
+        <translation>선택 항목 복사</translation>
     </message>
     <message>
         <source>Copy message</source>
@@ -11179,7 +11183,7 @@ to load</source>
     </message>
     <message>
         <source>Copy link to message</source>
-        <translation type="unfinished"></translation>
+        <translation>메시지 링크 복사</translation>
     </message>
     <message>
         <source>Unpin</source>
@@ -11191,7 +11195,7 @@ to load</source>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">삭제</translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>Mark as unread</source>
@@ -11202,7 +11206,7 @@ to load</source>
     <name>MessageReactionsRow</name>
     <message>
         <source>Add reaction</source>
-        <translation type="unfinished">반응 추가</translation>
+        <translation>반응 추가</translation>
     </message>
 </context>
 <context>
@@ -11261,30 +11265,30 @@ to load</source>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
-        <translation type="unfinished"></translation>
+        <translation>알 수 없는 메시지입니다. 복구를 시도하는 중</translation>
     </message>
 </context>
 <context>
     <name>MessagesListHeader</name>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">메시지</translation>
+        <translation>메시지</translation>
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 초대</translation>
     </message>
     <message>
         <source>Start chat</source>
-        <translation type="unfinished">채팅 시작</translation>
+        <translation>채팅 시작</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">검색</translation>
+        <translation>검색</translation>
     </message>
 </context>
 <context>
@@ -11319,31 +11323,31 @@ to load</source>
     </message>
     <message>
         <source>Receive community messages &amp; requests from non-contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처가 아닌 사용자로부터 커뮤니티 메시지 및 요청 받기</translation>
     </message>
     <message>
         <source>Mobile data and Wi-Fi</source>
-        <translation type="unfinished"></translation>
+        <translation>모바일 데이터 및 Wi-Fi</translation>
     </message>
     <message>
         <source>Wi-Fi only</source>
-        <translation type="unfinished"></translation>
+        <translation>Wi-Fi에서만</translation>
     </message>
     <message>
         <source>Sync messages on mobile data?</source>
-        <translation type="unfinished"></translation>
+        <translation>모바일 데이터로 메시지를 동기화하시겠습니까?</translation>
     </message>
     <message>
         <source>If you choose to sync over Wi-Fi only, messages sent to you while you are offline will be delivered once you connect to Wi-Fi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wi-Fi에서만 동기화를 선택하면, 오프라인 상태일 때 받은 메시지는 Wi-Fi에 연결되면 전달됩니다.</translation>
     </message>
     <message>
         <source>The Status App uses a lot of data when fetching missed messages. If you have a limited data plan, consider syncing over Wi-Fi only.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 앱은 놓친 메시지를 가져올 때 많은 데이터를 사용합니다. 데이터 요금제가 제한적이라면 Wi-Fi에서만 동기화하는 것을 고려하세요.</translation>
     </message>
     <message>
         <source>Message syncing</source>
-        <translation type="unfinished"></translation>
+        <translation>메시지 동기화</translation>
     </message>
 </context>
 <context>
@@ -11559,74 +11563,74 @@ to load</source>
     <name>MobileAddressBar</name>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>중지</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>새로고침</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">지갑</translation>
+        <translation>지갑</translation>
     </message>
 </context>
 <context>
     <name>MobileSettingsMenu</name>
     <message>
         <source>Browser</source>
-        <translation type="unfinished">브라우저</translation>
+        <translation>브라우저</translation>
     </message>
     <message>
         <source>Incognito</source>
-        <translation type="unfinished"></translation>
+        <translation>시크릿 모드</translation>
     </message>
     <message>
         <source>Find in page</source>
-        <translation type="unfinished"></translation>
+        <translation>페이지에서 찾기</translation>
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished">확대/축소</translation>
+        <translation>확대/축소</translation>
     </message>
     <message>
         <source>Zoom Out</source>
-        <translation type="unfinished">축소</translation>
+        <translation>축소</translation>
     </message>
     <message>
         <source>Zoom In</source>
-        <translation type="unfinished">확대</translation>
+        <translation>확대</translation>
     </message>
     <message>
         <source>Zoom Fit</source>
-        <translation type="unfinished">맞춤 확대</translation>
+        <translation>맞춤 확대</translation>
     </message>
     <message>
         <source>Compatibility mode</source>
-        <translation type="unfinished">호환 모드</translation>
+        <translation>호환 모드</translation>
     </message>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>지원되는 형식</translation>
     </message>
     <message>
         <source>Force reload</source>
-        <translation type="unfinished"></translation>
+        <translation>강제 새로고침</translation>
     </message>
     <message>
         <source>Clear site data</source>
-        <translation type="unfinished"></translation>
+        <translation>사이트 데이터 지우기</translation>
     </message>
     <message>
         <source>Clearing browsing data...</source>
-        <translation type="unfinished"></translation>
+        <translation>탐색 데이터 지우는 중...</translation>
     </message>
     <message>
         <source>Clear browsing data</source>
-        <translation type="unfinished"></translation>
+        <translation>탐색 데이터 지우기</translation>
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished">설정</translation>
+        <translation>설정</translation>
     </message>
 </context>
 <context>
@@ -11677,7 +11681,7 @@ to load</source>
     </message>
     <message>
         <source>URL already added</source>
-        <translation type="unfinished"></translation>
+        <translation>URL이 이미 추가되었습니다</translation>
     </message>
 </context>
 <context>
@@ -11758,7 +11762,7 @@ to load</source>
     </message>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
-        <translation type="unfinished">이 표시 이름은 당신이 가입한 커뮤니티 중 하나에서 이미 사용 중입니다</translation>
+        <translation>이 표시 이름은 가입한 커뮤니티 중 한 곳에서 이미 사용 중입니다</translation>
     </message>
 </context>
 <context>
@@ -11780,14 +11784,14 @@ to load</source>
     <name>NavigationEducationDialog</name>
     <message>
         <source>To open app menu</source>
-        <translation type="unfinished"></translation>
+        <translation>앱 메뉴를 열려면</translation>
     </message>
 </context>
 <context>
     <name>NetworkChipFilter</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">전체</translation>
+        <translation>전체</translation>
     </message>
 </context>
 <context>
@@ -11806,15 +11810,15 @@ to load</source>
     </message>
     <message>
         <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>토큰 잔액은 Pocket Network(POKT)와 Infura에서 가져오는데, 현재 둘 다 사용할 수 없습니다</translation>
     </message>
     <message>
         <source>Market values are fetched from CoinGecko which is currently unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>시세는 CoinGecko에서 가져오는데, 현재 사용할 수 없습니다</translation>
     </message>
     <message>
         <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
-        <translation type="unfinished"></translation>
+        <translation>시세와 토큰 잔액은 CoinGecko 및 POKT/Infura를 사용하는데, 현재 모두 사용할 수 없습니다.</translation>
     </message>
     <message>
         <source>Requires POKT/Infura for %1, which is currently unavailable</source>
@@ -11872,107 +11876,107 @@ to load</source>
     <name>NewAccountLoginPage</name>
     <message>
         <source>Log in</source>
-        <translation type="unfinished">로그인</translation>
+        <translation>로그인</translation>
     </message>
     <message>
         <source>How would you like to log in to Status?</source>
-        <translation type="unfinished"></translation>
+        <translation>Status에 어떻게 로그인하시겠습니까?</translation>
     </message>
     <message>
         <source>Log in with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문으로 로그인</translation>
     </message>
     <message>
         <source>If you have your Status recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 복구 구문이 있는 경우</translation>
     </message>
     <message>
         <source>Enter recovery phrase</source>
-        <translation type="unfinished">복구 구문 입력</translation>
+        <translation>복구 구문 입력</translation>
     </message>
     <message>
         <source>Log in by syncing</source>
-        <translation type="unfinished"></translation>
+        <translation>동기화로 로그인</translation>
     </message>
     <message>
         <source>If you have Status on another device</source>
-        <translation type="unfinished">다른 기기에 Status가 있는 경우</translation>
+        <translation>다른 기기에 Status가 있는 경우</translation>
     </message>
     <message>
         <source>Reveal what you have on Keycard first</source>
-        <translation type="unfinished"></translation>
+        <translation>먼저 Keycard에 있는 내용을 공개하세요</translation>
     </message>
     <message>
         <source>To pair your devices and sync your profile, make sure:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Both devices are on the same non-mobile network&lt;/li&gt;&lt;li&gt;You&apos;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>기기를 페어링하고 프로필을 동기화하려면 다음을 확인하세요:&lt;br&gt;&lt;ul&gt;&lt;li&gt;두 기기가 동일한 비모바일 네트워크에 연결되어 있어야 합니다&lt;/li&gt;&lt;li&gt;다른 기기에 로그인되어 있어야 합니다&lt;/li&gt;&lt;li&gt;방화벽이나 VPN이 로컬 네트워크 접근을 차단하지 않아야 합니다&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">취소</translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">계속</translation>
+        <translation>계속</translation>
     </message>
     <message>
         <source>Status does not have access to local network</source>
-        <translation type="unfinished"></translation>
+        <translation>Status가 로컬 네트워크에 접근할 수 없습니다</translation>
     </message>
     <message>
         <source>Status must be connected to the local network on this device for you to be able to log in via syncing. To rectify this...</source>
-        <translation type="unfinished"></translation>
+        <translation>동기화로 로그인하려면 이 기기에서 Status가 로컬 네트워크에 연결되어 있어야 합니다. 이를 해결하려면...</translation>
     </message>
     <message>
         <source>1. Open System Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>1. 시스템 설정 열기</translation>
     </message>
     <message>
         <source>2. Click Privacy &amp; Security</source>
-        <translation type="unfinished"></translation>
+        <translation>2. 개인정보 보호 및 보안 클릭</translation>
     </message>
     <message>
         <source>3. Click Local Network</source>
-        <translation type="unfinished"></translation>
+        <translation>3. 로컬 네트워크 클릭</translation>
     </message>
     <message>
         <source>4. Find Status</source>
-        <translation type="unfinished"></translation>
+        <translation>4. Status 찾기</translation>
     </message>
     <message>
         <source>5. Toggle the switch to grant access</source>
-        <translation type="unfinished"></translation>
+        <translation>5. 스위치를 켜서 접근 권한 부여</translation>
     </message>
     <message>
         <source>6. Click %1 below</source>
-        <translation type="unfinished"></translation>
+        <translation>6. 아래의 %1 클릭</translation>
     </message>
     <message>
         <source>Verify local network access</source>
-        <translation type="unfinished"></translation>
+        <translation>로컬 네트워크 접근 확인</translation>
     </message>
     <message>
         <source>Verifying</source>
-        <translation type="unfinished"></translation>
+        <translation>확인하는 중</translation>
     </message>
     <message>
         <source>Checking access...</source>
-        <translation type="unfinished"></translation>
+        <translation>접근 권한 확인하는 중...</translation>
     </message>
     <message>
         <source>Use Keycard</source>
-        <translation type="unfinished">Keycard 사용</translation>
+        <translation>Keycard 사용</translation>
     </message>
     <message>
         <source>Enable local network access to sync devices</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 동기화를 위해 로컬 네트워크 접근 활성화</translation>
     </message>
     <message>
         <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 설정의 설정 &gt;&gt; Status &gt;&gt; 로컬 네트워크에서 로컬 네트워크 접근을 켜세요.</translation>
     </message>
     <message>
         <source>Open Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 열기</translation>
     </message>
 </context>
 <context>
@@ -11980,12 +11984,12 @@ to load</source>
     <message>
         <source>UNREAD</source>
         <comment>unread message(s)</comment>
-        <translation type="unfinished"></translation>
+        <translation>읽지 않음</translation>
     </message>
     <message numerus="yes">
         <source>%n unread message(s) since %1</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1부터 읽지 않은 메시지 %n개</numerusform>
         </translation>
     </message>
 </context>
@@ -12012,7 +12016,7 @@ to load</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>잘못된 문자입니다(문자, 숫자, 하이픈, 밑줄만 사용 가능)</translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
@@ -12098,53 +12102,53 @@ to load</source>
     <name>NotificationAdaptorContactRequest</name>
     <message>
         <source>New contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>새 연락처 요청</translation>
     </message>
     <message>
         <source>You’ve sent request to contact</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 요청을 보냈습니다</translation>
     </message>
     <message>
         <source>Accepted your contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 요청을 수락했습니다</translation>
     </message>
     <message>
         <source>Declined your contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 요청을 거절했습니다</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished">연락 요청이 승인됨</translation>
+        <translation>연락처 요청이 승인됨</translation>
     </message>
     <message>
         <source>Contact request declined</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 요청이 거절됨</translation>
     </message>
 </context>
 <context>
     <name>NotificationAdaptorMessenger</name>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
 </context>
 <context>
     <name>NotificationCard</name>
     <message>
         <source>Decline</source>
-        <translation type="unfinished"></translation>
+        <translation>거절</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation type="unfinished">수락</translation>
+        <translation>수락</translation>
     </message>
     <message>
         <source>Mark as read</source>
-        <translation type="unfinished">읽음으로 표시</translation>
+        <translation>읽음으로 표시</translation>
     </message>
     <message>
         <source>Mark as unread</source>
-        <translation type="unfinished">읽지 않음으로 표시</translation>
+        <translation>읽지 않음으로 표시</translation>
     </message>
 </context>
 <context>
@@ -12166,23 +12170,23 @@ to load</source>
     <name>NotificationsView</name>
     <message>
         <source>Enable notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>알림 활성화</translation>
     </message>
     <message>
         <source>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>컴퓨터에서 실시간으로 최신 정보를 받아볼 수 있도록 수신 메시지, 멘션, 연락처 요청에 대한 알림을 받으세요. &lt;b&gt;설정 → 알림&lt;/b&gt;에서 언제든지 사용자 지정할 수 있습니다.&lt;br&gt;&lt;br&gt;Status는 제3자, 중앙 서버 또는 중개자 없이 운영체제를 통해 직접 알림을 전달합니다.</translation>
     </message>
     <message>
         <source>&lt;font color=&apos;%1&apos;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;font color=&apos;%1&apos;&gt;기기 설정에서 알림 활성화&lt;/font&gt;&lt;br&gt;&lt;br&gt;아래에서 앱 알림을 활성화하기 전에 먼저 &lt;font color=&apos;%1&apos;&gt;기기 설정&lt;/font&gt;에서 알림을 활성화하세요.</translation>
     </message>
     <message>
         <source>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 기기에 알림 신호를 전달하기 위해서만 APNs(Apple Push Notification service)를 사용합니다. 종단 간 암호화된 메시지 내용은 그곳을 거치거나 저장되지 않습니다.</translation>
     </message>
     <message>
         <source>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 제3자, 중앙 서버 또는 중개자 없이 기기 내 백그라운드 서비스를 통해 기기에 알림을 전달합니다.</translation>
     </message>
     <message>
         <source>Messages</source>
@@ -12270,7 +12274,7 @@ to load</source>
     </message>
     <message>
         <source>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Status는 중앙 서버나 중개자 없이 운영체제를 통해 직접 알림을 전달합니다. 시스템 설정에서 Status에 대한 알림이 활성화되어 있는지 확인하세요</translation>
     </message>
     <message>
         <source>Exemptions</source>
@@ -12286,15 +12290,15 @@ to load</source>
     </message>
     <message>
         <source>Including:</source>
-        <translation type="unfinished"></translation>
+        <translation>포함 항목:</translation>
     </message>
     <message>
         <source>Mentions and replies in communities</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티의 멘션 및 답장</translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 요청 및 그룹 메시지</translation>
     </message>
 </context>
 <context>
@@ -12313,19 +12317,19 @@ to load</source>
     </message>
     <message>
         <source>Remove %1 profile</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 프로필 제거</translation>
     </message>
     <message>
         <source>If you remove %1, all data for this profile will be deleted from this device. To use this profile again, you&apos;ll need to reimport it to this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1을(를) 제거하면 이 기기에서 해당 프로필의 모든 데이터가 삭제됩니다. 이 프로필을 다시 사용하려면 이 기기에 다시 가져와야 합니다.</translation>
     </message>
     <message>
         <source>Remove profile</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 제거</translation>
     </message>
     <message>
         <source>Manage profiles</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 관리</translation>
     </message>
 </context>
 <context>
@@ -12340,11 +12344,11 @@ to load</source>
     </message>
     <message>
         <source>Error loading accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>계정을 불러오는 중 오류 발생</translation>
     </message>
     <message>
         <source>Failed to load accounts. Please restart the app and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>계정을 불러오지 못했습니다. 앱을 재시작한 후 다시 시도해 주세요.</translation>
     </message>
     <message>
         <source>Credentials not found.</source>
@@ -12732,15 +12736,15 @@ to load</source>
     <name>PaymentRequestCardDelegate</name>
     <message>
         <source>Send %1 %2 to %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%3에게 %1 %2 보내기</translation>
     </message>
     <message>
         <source>Requested by %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1이(가) 요청함</translation>
     </message>
     <message>
         <source>Not available in the testnet mode</source>
-        <translation type="unfinished"></translation>
+        <translation>테스트넷 모드에서는 사용할 수 없습니다</translation>
     </message>
 </context>
 <context>
@@ -13120,19 +13124,19 @@ to load</source>
     <name>PopupBase</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">인증</translation>
+        <translation>인증</translation>
     </message>
     <message>
         <source>Use biometrics</source>
-        <translation type="unfinished">생체인증 사용</translation>
+        <translation>생체인증 사용</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">취소</translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">계속</translation>
+        <translation>계속</translation>
     </message>
     <message>
         <source>Please enter your password — biometrics cannot be used for this action</source>
@@ -13140,238 +13144,238 @@ to load</source>
     </message>
     <message>
         <source>Failed to update stored credentials</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 자격 증명을 업데이트하지 못했습니다</translation>
     </message>
     <message>
         <source>Credentials successfully obtained from biometrics</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식으로 자격 증명을 성공적으로 가져왔습니다</translation>
     </message>
     <message>
         <source>Biometrics not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식이 지원되지 않습니다</translation>
     </message>
     <message>
         <source>Generic error occurred</source>
-        <translation type="unfinished"></translation>
+        <translation>일반 오류가 발생했습니다</translation>
     </message>
     <message>
         <source>Biometrics is unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식을 사용할 수 없습니다</translation>
     </message>
     <message>
         <source>Biometrics cancelled</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식이 취소되었습니다</translation>
     </message>
     <message>
         <source>Biometrics not found</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식을 찾을 수 없습니다</translation>
     </message>
     <message>
         <source>Biometrics fallback error</source>
-        <translation type="unfinished"></translation>
+        <translation>생체 인식 대체 오류</translation>
     </message>
     <message>
         <source>Unknown biometrics error</source>
-        <translation type="unfinished"></translation>
+        <translation>알 수 없는 생체 인식 오류</translation>
     </message>
 </context>
 <context>
     <name>Popups</name>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
-        <translation type="unfinished"></translation>
+        <translation>%1의 소유자와 주소 공유</translation>
     </message>
     <message>
         <source>Share addresses to rejoin %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1에 다시 참여하려면 주소 공유</translation>
     </message>
     <message>
         <source>Image saved to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>이미지가 %1에 저장되었습니다</translation>
     </message>
     <message>
         <source>Image saved to system gallery</source>
-        <translation type="unfinished"></translation>
+        <translation>이미지가 시스템 갤러리에 저장되었습니다</translation>
     </message>
     <message>
         <source>Failed to save image</source>
-        <translation type="unfinished"></translation>
+        <translation>이미지 저장 실패</translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1이(가) 연락처에서 삭제되고 신뢰할 수 없음으로 표시되었습니다</translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1이(가) 신뢰함으로 표시되었습니다</translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1의 신뢰 표시가 제거되고 연락처에서 삭제되었으며 신뢰할 수 없음으로 표시되었습니다</translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1의 신뢰 표시가 제거되고 신뢰할 수 없음으로 표시되었습니다</translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>%1의 신뢰 표시가 제거되고 연락처에서 삭제되었습니다</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished">연락 요청이 승인됨</translation>
+        <translation>연락처 요청이 승인됨</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 요청 무시됨</translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문이 Status 애플리케이션 저장소에서 영구적으로 삭제되었습니다</translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>복구 구문을 백업했습니다. 설정에서 확인할 수 있습니다</translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필 사진</translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation type="unfinished"></translation>
+        <translation>내 프로필 사진으로 설정</translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1이(가) 신뢰할 수 없음으로 표시되었습니다</translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 차단 해제됨</translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 차단됨</translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation type="unfinished"></translation>
+        <translation>디렉터리를 선택해 주세요</translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>&apos;%1&apos;을(를) 나가시겠습니까?</translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation type="unfinished"></translation>
+        <translation>다시 멤버가 되려면 참여를 요청해야 합니다. 공개 키를 통해 커뮤니티에 참여했다면 나가기 전에 공개 키 사본을 보관해 두세요.</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">취소</translation>
+        <translation>취소</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 나가기</translation>
     </message>
     <message>
         <source>Align with paired device</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링된 기기와 동기화</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">계속</translation>
+        <translation>계속</translation>
     </message>
     <message>
         <source>Your profile has been migrated to Keycard on paired device</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필이 페어링된 기기에서 키카드로 마이그레이션되었습니다</translation>
     </message>
     <message>
         <source>Your profile has been migrated from Keycard to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필이 키카드에서 Status로 마이그레이션되었습니다</translation>
     </message>
     <message>
         <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기에서 로그인/서명 방법을 맞추려면 아래의 &quot;계속&quot; 버튼을 클릭하여 마이그레이션 과정을 완료하거나, 현재 로그인/서명 방법을 유지하려면 이 팝업을 취소하세요.</translation>
     </message>
     <message>
         <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 메시지를 다시 보고 싶지 않다면 설정/지갑으로 이동하여 &quot;페어링된 기기의 키 쌍 마이그레이션 자동 적용&quot;을 꺼 주세요.</translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation type="unfinished"></translation>
+        <translation>트랜잭션 서명 - %1 스마트 계약 업데이트</translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1(%2)이(가) 성공적으로 숨겨졌습니다. %3을(를) 통해 자산 표시 여부를 전환할 수 있습니다.</translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation type="unfinished">설정</translation>
+        <translation>설정</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation type="unfinished"></translation>
+        <translation>수집품 숨기기</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 숨기기</translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1을(를) 숨기시겠습니까? 이후에는 Status 내 어디에서도 이 수집품을 보거나 상호작용할 수 없습니다.</translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1이(가) 성공적으로 숨겨졌습니다. %2을(를) 통해 수집품 표시 여부를 전환할 수 있습니다.</translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation type="unfinished">Status 소프트웨어 개인정보 처리방침</translation>
+        <translation>Status 소프트웨어 개인정보 처리방침</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation type="unfinished">Status 소프트웨어 이용약관</translation>
+        <translation>Status 소프트웨어 이용약관</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>로그아웃</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished"></translation>
+        <translation>계정 비밀번호와 복구 구문을 반드시 저장해 두세요. 저장해 두지 않으면 계정에서 잠겨 자금을 잃을 수 있습니다.</translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">로그아웃 및 종료</translation>
+        <translation>로그아웃 및 종료</translation>
     </message>
     <message>
         <source>Display zoom changed</source>
-        <translation type="unfinished"></translation>
+        <translation>디스플레이 확대/축소가 변경되었습니다</translation>
     </message>
     <message>
         <source>Restart</source>
-        <translation type="unfinished">다시 시작</translation>
+        <translation>다시 시작</translation>
     </message>
     <message>
         <source>Not Now</source>
-        <translation type="unfinished"></translation>
+        <translation>나중에</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>새 디스플레이 확대/축소를 적용하려면 Status를 다시 시작하세요</translation>
     </message>
 </context>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
         <source>Status Help Bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 도움말 봇</translation>
     </message>
     <message>
         <source>Activity Center</source>
-        <translation type="unfinished">활동 센터</translation>
+        <translation>활동 센터</translation>
     </message>
 </context>
 <context>
@@ -13578,7 +13582,7 @@ to load</source>
     </message>
     <message>
         <source>Copied to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>클립보드에 복사됨</translation>
     </message>
     <message>
         <source>Remove trusted mark</source>
@@ -14120,7 +14124,7 @@ to load</source>
     <name>QObject</name>
     <message>
         <source>Use Status profile password</source>
-        <translation type="unfinished"></translation>
+        <translation>Status 프로필 비밀번호 사용</translation>
     </message>
 </context>
 <context>
@@ -14131,50 +14135,50 @@ to load</source>
     </message>
     <message>
         <source>Align the QR code within the frame to scan</source>
-        <translation type="unfinished"></translation>
+        <translation>QR 코드를 프레임 안에 맞춰 스캔하세요</translation>
     </message>
     <message>
         <source>Scanned successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>스캔 완료</translation>
     </message>
     <message>
         <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
-        <translation type="unfinished"></translation>
+        <translation>QR 코드 스캔, 연락처 추가, 지갑으로 자금 전송, 앱 동기화를 위해 필요합니다.</translation>
     </message>
     <message>
         <source>Open settings</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 열기</translation>
     </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
         <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
+        <translation>QR 스캐너</translation>
     </message>
     <message>
         <source>Contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 요청</translation>
     </message>
     <message>
         <source>Join communities</source>
-        <translation type="unfinished"></translation>
+        <translation>커뮤니티 참여</translation>
     </message>
     <message>
         <source>Send tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>토큰 전송</translation>
     </message>
     <message>
         <source>Open WEB links</source>
-        <translation type="unfinished"></translation>
+        <translation>웹 링크 열기</translation>
     </message>
     <message>
         <source>We cannot read that QR code.</source>
-        <translation type="unfinished"></translation>
+        <translation>해당 QR 코드를 읽을 수 없습니다.</translation>
     </message>
     <message>
         <source>WalletConnect to connect to dApps</source>
-        <translation type="unfinished"></translation>
+        <translation>dApp에 연결하기 위한 WalletConnect</translation>
     </message>
 </context>
 <context>
@@ -14200,11 +14204,11 @@ to load</source>
     <name>ReceiveModal</name>
     <message>
         <source>Copy address</source>
-        <translation type="unfinished">주소 복사</translation>
+        <translation>주소 복사</translation>
     </message>
     <message>
         <source>QR code for wallet address</source>
-        <translation type="unfinished"></translation>
+        <translation>지갑 주소 QR 코드</translation>
     </message>
 </context>
 <context>
@@ -14212,7 +14216,7 @@ to load</source>
     <message>
         <source>View receiver address on %1</source>
         <extracomment>e.g. &quot;View receiver address on Etherscan&quot;</extracomment>
-        <translation type="unfinished">%1에서 수신자 주소 보기</translation>
+        <translation>%1에서 수신자 주소 보기</translation>
     </message>
     <message>
         <source>Copy receiver address</source>
@@ -14433,7 +14437,7 @@ to load</source>
     </message>
     <message>
         <source>Are you sure you want to remove %1 from your saved addresses?</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 주소에서 %1을(를) 삭제하시겠습니까?</translation>
     </message>
 </context>
 <context>
@@ -14562,11 +14566,11 @@ to load</source>
     </message>
     <message>
         <source>History</source>
-        <translation type="unfinished"></translation>
+        <translation>기록</translation>
     </message>
     <message>
         <source>Checking collectibles ownership…</source>
-        <translation type="unfinished"></translation>
+        <translation>수집품 소유권 확인 중…</translation>
     </message>
 </context>
 <context>
@@ -14585,7 +14589,7 @@ to load</source>
     </message>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
+        <translation>내용을 입력하세요</translation>
     </message>
 </context>
 <context>
@@ -14645,7 +14649,7 @@ to load</source>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>저장된 주소에 추가</translation>
     </message>
 </context>
 <context>
@@ -14754,11 +14758,11 @@ to load</source>
     </message>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">붙여넣기</translation>
+        <translation>붙여넣기</translation>
     </message>
     <message>
         <source>Loading more tokens...</source>
-        <translation type="unfinished"></translation>
+        <translation>토큰을 더 불러오는 중...</translation>
     </message>
 </context>
 <context>
@@ -14795,11 +14799,11 @@ to load</source>
     <name>SeedPhraseDisplayState</name>
     <message>
         <source>Write down your recovery phrase</source>
-        <translation type="unfinished">복구 구문을 적어 두세요</translation>
+        <translation>복구 구문을 적어 두세요</translation>
     </message>
     <message>
         <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
-        <translation type="unfinished">다음 화면에는 복구 구문이 표시됩니다.&lt;br/&gt;&lt;b&gt;누구든지&lt;/b&gt; 그것을 보면 당신의 자금에 접근할 수 있습니다.</translation>
+        <translation>다음 화면에는 복구 구문이 표시됩니다.&lt;br/&gt;&lt;b&gt;누구든지&lt;/b&gt; 그것을 보면 당신의 자금에 접근할 수 있습니다.</translation>
     </message>
 </context>
 <context>
@@ -14851,23 +14855,23 @@ to load</source>
     <name>SelectKeyPairState</name>
     <message>
         <source>Select key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>키 쌍 선택</translation>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to sign</source>
-        <translation type="unfinished"></translation>
+        <translation>이 키 쌍을 이동하면 서명 시 키카드 사용이 필요하다는 것을 이해합니다</translation>
     </message>
     <message>
         <source>Profile key pair</source>
-        <translation type="unfinished">프로필 키 페어</translation>
+        <translation>프로필 키 쌍</translation>
     </message>
     <message>
         <source>Key pair</source>
-        <translation type="unfinished">키 쌍</translation>
+        <translation>키 쌍</translation>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to log in and sign</source>
-        <translation type="unfinished"></translation>
+        <translation>이 키 쌍을 이동하면 로그인 및 서명 시 키카드 사용이 필요하다는 것을 이해합니다</translation>
     </message>
 </context>
 <context>
@@ -14932,7 +14936,7 @@ to load</source>
     </message>
     <message>
         <source>key pair requires import to use on this device</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기에서 사용하려면 키 쌍을 가져와야 합니다</translation>
     </message>
 </context>
 <context>
@@ -14996,19 +15000,19 @@ to load</source>
     </message>
     <message>
         <source>Cannot send a contact request to oneself</source>
-        <translation type="unfinished"></translation>
+        <translation>자기 자신에게 연락처 요청을 보낼 수 없습니다</translation>
     </message>
     <message>
         <source>This user is blocked. Unblock to send a contact request.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 사용자는 차단되었습니다. 연락처 요청을 보내려면 차단을 해제하세요.</translation>
     </message>
     <message>
         <source>You already sent a contact request.</source>
-        <translation type="unfinished"></translation>
+        <translation>이미 연락처 요청을 보냈습니다.</translation>
     </message>
     <message>
         <source>You are already contacts.</source>
-        <translation type="unfinished"></translation>
+        <translation>이미 연락처로 등록되어 있습니다.</translation>
     </message>
     <message>
         <source>Say who you are / why you want to become a contact...</source>
@@ -15049,19 +15053,19 @@ to load</source>
     <name>SendModalHandler</name>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>정보</translation>
     </message>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
-        <translation type="unfinished"></translation>
+        <translation>전송하려는 토큰은 지원되지 않습니다.</translation>
     </message>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">%1의 자산</translation>
+        <translation>%1의 자산</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">인기 자산</translation>
+        <translation>인기 자산</translation>
     </message>
 </context>
 <context>
@@ -15111,7 +15115,7 @@ to load</source>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">편집</translation>
+        <translation>편집</translation>
     </message>
     <message>
         <source>Send</source>
@@ -15220,7 +15224,7 @@ to load</source>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">키카드</translation>
+        <translation>키카드</translation>
     </message>
     <message>
         <source>ENS usernames</source>
@@ -15240,7 +15244,7 @@ to load</source>
     </message>
     <message>
         <source>P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>P2P 네트워크</translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -15272,7 +15276,7 @@ to load</source>
     </message>
     <message>
         <source>Notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>알림</translation>
     </message>
     <message>
         <source>Language &amp; Currency</source>
@@ -15353,11 +15357,11 @@ to load</source>
     </message>
     <message>
         <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>프라이버시가 우선입니다! 진정으로 사적이고 안전한 채팅을 위해 Status에서 저와 함께하세요. 제 프로필 링크로 Status를 다운로드하고 연결하세요: %1</translation>
     </message>
     <message>
         <source>Copy invitation &amp; link</source>
-        <translation type="unfinished"></translation>
+        <translation>초대 및 링크 복사</translation>
     </message>
     <message>
         <source>Copy link</source>
@@ -15365,22 +15369,22 @@ to load</source>
     </message>
     <message>
         <source>Connect with %1 on Status: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Status에서 %1과(와) 연결하세요: %2</translation>
     </message>
     <message>
         <source>%1&apos;s profile</source>
-        <translation type="unfinished">%1의 프로필</translation>
+        <translation>%1의 프로필</translation>
     </message>
     <message>
         <source>Share profile to invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>프로필을 공유하여 연락처 초대</translation>
     </message>
 </context>
 <context>
     <name>ShareUtils</name>
     <message>
         <source>Share via</source>
-        <translation type="unfinished"></translation>
+        <translation>공유 방법</translation>
     </message>
 </context>
 <context>
@@ -15518,16 +15522,16 @@ to load</source>
     </message>
     <message>
         <source>Sign</source>
-        <translation type="unfinished">서명</translation>
+        <translation>서명</translation>
     </message>
     <message>
         <source>Signed</source>
-        <translation type="unfinished"></translation>
+        <translation>서명됨</translation>
     </message>
     <message numerus="yes">
         <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>&lt;b&gt;%1&lt;/b&gt;과(와) %n개의 주소를 공유하려면 연결된 키 쌍으로 서명하세요...</numerusform>
         </translation>
     </message>
     <message>
@@ -15575,7 +15579,7 @@ to load</source>
     <message>
         <source>View collectible on %1</source>
         <extracomment>e.g. &quot;View collectible on Etherscan&quot;</extracomment>
-        <translation type="unfinished">%1에서 수집품 보기</translation>
+        <translation>%1에서 수집품 보기</translation>
     </message>
     <message>
         <source>Copy %1 collectible address</source>
@@ -15590,27 +15594,27 @@ to load</source>
     <name>SignPopup</name>
     <message>
         <source>Sign community request with %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1(으)로 커뮤니티 요청 서명</translation>
     </message>
     <message>
         <source>Sign Transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>트랜잭션 서명</translation>
     </message>
     <message>
         <source>Sign</source>
-        <translation type="unfinished">서명</translation>
+        <translation>서명</translation>
     </message>
     <message>
         <source>Update password &amp; sign</source>
-        <translation type="unfinished"></translation>
+        <translation>비밀번호 업데이트 및 서명</translation>
     </message>
     <message>
         <source>Update PIN &amp; sign</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN 업데이트 및 서명</translation>
     </message>
     <message>
         <source>Failed to sign with the authorized credentials</source>
-        <translation type="unfinished"></translation>
+        <translation>승인된 자격 증명으로 서명하지 못했습니다</translation>
     </message>
 </context>
 <context>
@@ -15643,31 +15647,31 @@ to load</source>
     <name>SimpleSendModal</name>
     <message>
         <source>To</source>
-        <translation type="unfinished">수신</translation>
+        <translation>수신</translation>
     </message>
     <message>
         <source>Fees</source>
-        <translation type="unfinished">수수료</translation>
+        <translation>수수료</translation>
     </message>
     <message>
         <source>Insufficient funds for send transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>전송 트랜잭션을 위한 자금이 부족합니다</translation>
     </message>
     <message>
         <source>Add ETH</source>
-        <translation type="unfinished"></translation>
+        <translation>ETH 추가</translation>
     </message>
     <message>
         <source>Add BNB</source>
-        <translation type="unfinished"></translation>
+        <translation>BNB 추가</translation>
     </message>
     <message>
         <source>Add assets</source>
-        <translation type="unfinished">자산 추가</translation>
+        <translation>자산 추가</translation>
     </message>
     <message>
         <source>Add %1</source>
-        <translation type="unfinished">%1 추가</translation>
+        <translation>%1 추가</translation>
     </message>
 </context>
 <context>
@@ -15688,7 +15692,7 @@ to load</source>
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 지정 %</translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -15881,45 +15885,45 @@ to load</source>
     <name>StatusChatInput</name>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
+        <translation>내용을 입력하세요</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished"></translation>
+        <translation>스티커</translation>
     </message>
     <message>
         <source>Multiple payment requests</source>
-        <translation type="unfinished"></translation>
+        <translation>여러 결제 요청</translation>
     </message>
     <message>
         <source>Payment request %1 %2</source>
-        <translation type="unfinished"></translation>
+        <translation>결제 요청 %1 %2</translation>
     </message>
     <message numerus="yes">
         <source>%n Image(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>이미지 %n개</numerusform>
         </translation>
     </message>
     <message>
         <source>Please choose an image</source>
-        <translation type="unfinished">이미지를 선택하세요</translation>
+        <translation>이미지를 선택하세요</translation>
     </message>
     <message>
         <source>Image files (%1)</source>
-        <translation type="unfinished">이미지 파일(%1)</translation>
+        <translation>이미지 파일(%1)</translation>
     </message>
     <message>
         <source>Please reduce the message length</source>
-        <translation type="unfinished">메시지 길이를 줄여 주세요</translation>
+        <translation>메시지 길이를 줄여 주세요</translation>
     </message>
     <message>
         <source>Maximum message character count is %1</source>
-        <translation type="unfinished"></translation>
+        <translation>최대 메시지 글자 수는 %1자입니다</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">편집</translation>
+        <translation>편집</translation>
     </message>
 </context>
 <context>
@@ -15993,7 +15997,7 @@ to load</source>
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">검색</translation>
+        <translation>검색</translation>
     </message>
 </context>
 <context>
@@ -16150,7 +16154,7 @@ to load</source>
     <name>StatusGifPopup</name>
     <message>
         <source>Search KLIPY</source>
-        <translation type="unfinished"></translation>
+        <translation>KLIPY 검색</translation>
     </message>
     <message>
         <source>TRENDING</source>
@@ -16166,26 +16170,26 @@ to load</source>
     </message>
     <message>
         <source>Enable third-party services for gifs feature to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF 기능을 사용하려면 타사 서비스를 활성화하세요.</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
-        <translation type="unfinished"></translation>
+        <translation>타사 서비스 활성화</translation>
     </message>
 </context>
 <context>
     <name>StatusImageModal</name>
     <message>
         <source>Failed to load %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1을(를) 불러오지 못했습니다</translation>
     </message>
     <message>
         <source>empty image</source>
-        <translation type="unfinished"></translation>
+        <translation>빈 이미지</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">닫기</translation>
+        <translation>닫기</translation>
     </message>
 </context>
 <context>
@@ -16338,7 +16342,7 @@ to load</source>
     <name>StatusPasteButton</name>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">붙여넣기</translation>
+        <translation>붙여넣기</translation>
     </message>
 </context>
 <context>
@@ -16411,7 +16415,7 @@ to load</source>
     <name>StatusStickerButton</name>
     <message>
         <source>Buy for %L1 SNT</source>
-        <translation type="unfinished"></translation>
+        <translation>%L1 SNT로 구매</translation>
     </message>
     <message>
         <source>Uninstall</source>
@@ -16439,7 +16443,7 @@ to load</source>
     </message>
     <message>
         <source>%L1 SNT</source>
-        <translation type="unfinished"></translation>
+        <translation>%L1 SNT</translation>
     </message>
 </context>
 <context>
@@ -16466,11 +16470,11 @@ to load</source>
     </message>
     <message>
         <source>Enable third-party services</source>
-        <translation type="unfinished"></translation>
+        <translation>타사 서비스 활성화</translation>
     </message>
     <message>
         <source>Enable third-party services for stickers feature to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>스티커 기능을 사용하려면 타사 서비스를 활성화하세요.</translation>
     </message>
 </context>
 <context>
@@ -16529,19 +16533,19 @@ to load</source>
     <name>StatusTextEditMenu</name>
     <message>
         <source>Cut</source>
-        <translation type="unfinished"></translation>
+        <translation>잘라내기</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished">클립보드로 복사</translation>
+        <translation>복사</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">붙여넣기</translation>
+        <translation>붙여넣기</translation>
     </message>
     <message>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>전체 선택</translation>
     </message>
 </context>
 <context>
@@ -16632,34 +16636,34 @@ to load</source>
     <name>StringUtils</name>
     <message>
         <source>(edited)</source>
-        <translation type="unfinished">(수정됨)</translation>
+        <translation>(수정됨)</translation>
     </message>
 </context>
 <context>
     <name>SupportedFormatsModal</name>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>지원되는 형식</translation>
     </message>
     <message>
         <source>Files in these formats open in a browser tab. Everything else opens in another app.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 형식의 파일은 브라우저 탭에서 열립니다. 그 외에는 다른 앱에서 열립니다.</translation>
     </message>
     <message>
         <source>Opens here</source>
-        <translation type="unfinished"></translation>
+        <translation>여기서 열림</translation>
     </message>
     <message>
         <source>Opens in another app</source>
-        <translation type="unfinished"></translation>
+        <translation>다른 앱에서 열림</translation>
     </message>
     <message>
         <source>Checked against this platform&apos;s media engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 플랫폼의 미디어 엔진을 기준으로 확인되었습니다.</translation>
     </message>
     <message>
         <source>Reported by this platform&apos;s browser engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 플랫폼의 브라우저 엔진에서 보고되었습니다.</translation>
     </message>
 </context>
 <context>
@@ -16684,7 +16688,7 @@ to load</source>
     <message>
         <source>Set %1 spending cap in %2 for %3 on %4</source>
         <extracomment>e.g. &quot;Set 100 DAI spending cap in &lt;account name&gt; for &lt;service&gt; on &lt;network name&gt;&quot;</extracomment>
-        <translation type="unfinished">%4에서 %3에 대해 %2의 %1 지출 한도 설정</translation>
+        <translation>%4에서 %3에 대해 %2의 %1 지출 한도 설정</translation>
     </message>
     <message>
         <source>The smart contract specified will be able to spend up to %1 of your current or future balance.</source>
@@ -16735,26 +16739,26 @@ to load</source>
     <name>SwapFromAccountPopup</name>
     <message>
         <source>From account</source>
-        <translation type="unfinished"></translation>
+        <translation>보내는 계정</translation>
     </message>
 </context>
 <context>
     <name>SwapInputPanel</name>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">%1의 자산</translation>
+        <translation>%1의 자산</translation>
     </message>
     <message>
         <source>Your assets</source>
-        <translation type="unfinished">내 자산</translation>
+        <translation>내 자산</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">인기 자산</translation>
+        <translation>인기 자산</translation>
     </message>
     <message>
         <source>≈ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>≈ %1</translation>
     </message>
 </context>
 <context>
@@ -16765,7 +16769,7 @@ to load</source>
     </message>
     <message>
         <source>Swap + Bridge</source>
-        <translation type="unfinished"></translation>
+        <translation>스왑 + 브리지</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16778,23 +16782,23 @@ to load</source>
     <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
-        <translation type="unfinished"></translation>
+        <translation>%1초</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished"></translation>
+        <translation>최고 수익률</translation>
     </message>
     <message>
         <source>Bridge</source>
-        <translation type="unfinished">브리지</translation>
+        <translation>브리지</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%2 경유, %1 제공</translation>
     </message>
     <message>
         <source>by %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 제공</translation>
     </message>
     <message>
         <source>Approving %1</source>
@@ -16806,11 +16810,11 @@ to load</source>
     </message>
     <message>
         <source>Fetching quote...</source>
-        <translation type="unfinished"></translation>
+        <translation>견적을 가져오는 중...</translation>
     </message>
     <message>
         <source>Confirm %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 확인</translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -16822,7 +16826,7 @@ to load</source>
     </message>
     <message>
         <source>Sign %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 서명</translation>
     </message>
     <message>
         <source>Sign</source>
@@ -16830,23 +16834,23 @@ to load</source>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>정보</translation>
     </message>
     <message>
         <source>Swaps on %1 are coming soon.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1에서의 스왑은 곧 제공될 예정입니다.</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>가장 빠름</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>최저 수수료</translation>
     </message>
     <message>
         <source>Choose route</source>
-        <translation type="unfinished"></translation>
+        <translation>경로 선택</translation>
     </message>
 </context>
 <context>
@@ -16873,7 +16877,7 @@ to load</source>
     </message>
     <message>
         <source>No routes found with enough liquidity</source>
-        <translation type="unfinished"></translation>
+        <translation>충분한 유동성을 가진 경로를 찾을 수 없습니다</translation>
     </message>
     <message>
         <source>Something went wrong. Change amount, token or try again later.</source>
@@ -16888,38 +16892,38 @@ to load</source>
     </message>
     <message>
         <source>via %1</source>
-        <translation type="unfinished">%1 경유</translation>
+        <translation>%1 경유</translation>
     </message>
 </context>
 <context>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished"></translation>
+        <translation>스왑 경로</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished"></translation>
+        <translation>최고 수익률</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished"></translation>
+        <translation>최고 수령액</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>가장 빠름</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished"></translation>
+        <translation>가장 짧은 실행 시간</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>최저 수수료</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished"></translation>
+        <translation>최저 네트워크 비용</translation>
     </message>
 </context>
 <context>
@@ -16927,12 +16931,12 @@ to load</source>
     <message>
         <source>%1 to %2</source>
         <extracomment>e.g. (swap) 100 DAI to 100 USDT</extracomment>
-        <translation type="unfinished">%1에서 %2로</translation>
+        <translation>%1에서 %2로</translation>
     </message>
     <message>
         <source>From %1 %2 on %3 to %4 %5 on %6</source>
         <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>%3의 %1 %2에서 %6의 %4 %5로</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -16952,29 +16956,29 @@ to load</source>
     </message>
     <message>
         <source>From account</source>
-        <translation type="unfinished"></translation>
+        <translation>보내는 계정</translation>
     </message>
     <message>
         <source>To account</source>
-        <translation type="unfinished"></translation>
+        <translation>받는 계정</translation>
     </message>
 </context>
 <context>
     <name>SwapSlippagePopup</name>
     <message>
         <source>Set max price slippage</source>
-        <translation type="unfinished"></translation>
+        <translation>최대 가격 슬리피지 설정</translation>
     </message>
     <message>
         <source>The swap will revert if the price shifts beyond this percentage.</source>
-        <translation type="unfinished"></translation>
+        <translation>가격이 이 비율을 초과하여 변동하면 스왑이 취소됩니다.</translation>
     </message>
 </context>
 <context>
     <name>SwapToAccountPopup</name>
     <message>
         <source>Send to</source>
-        <translation type="unfinished"></translation>
+        <translation>보낼 주소</translation>
     </message>
 </context>
 <context>
@@ -17001,7 +17005,7 @@ to load</source>
     </message>
     <message>
         <source>Delete Device</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 삭제</translation>
     </message>
 </context>
 <context>
@@ -17144,7 +17148,7 @@ to load</source>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation type="unfinished"></translation>
+        <translation>두 기기가 동일한 로컬 네트워크에 있는지 확인하세요</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -17231,67 +17235,68 @@ to load</source>
     </message>
     <message>
         <source>Restore my past messages to this device</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기로 과거 메시지 복원</translation>
     </message>
     <message>
         <source>Copies and sends your direct, group, and community messages to your new device using encrypted local pairing.</source>
-        <translation type="unfinished"></translation>
+        <translation>암호화된 로컬 페어링을 사용해 다이렉트, 그룹, 커뮤니티 메시지를 새 기기로 복사하여 전송합니다.</translation>
     </message>
     <message>
         <source>Delete Device</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 삭제</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">삭제</translation>
+        <translation>삭제</translation>
     </message>
     <message>
         <source>Error deleting device: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 삭제 오류: %1</translation>
     </message>
     <message>
         <source>Are you sure you want to delete this device?
 This action cannot be undone.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기기를 삭제하시겠습니까?
+이 작업은 되돌릴 수 없습니다.</translation>
     </message>
 </context>
 <context>
     <name>TabsBookmarksOverviewModal</name>
     <message>
         <source>Open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>열린 탭</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크</translation>
     </message>
     <message>
         <source>Downloads</source>
-        <translation type="unfinished">다운로드</translation>
+        <translation>다운로드</translation>
     </message>
     <message>
         <source>Search in open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>열린 탭에서 검색</translation>
     </message>
     <message>
         <source>Search in bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크에서 검색</translation>
     </message>
     <message>
         <source>Edit bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크 편집</translation>
     </message>
     <message>
         <source>Delete bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>북마크 삭제</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">검색</translation>
+        <translation>검색</translation>
     </message>
     <message>
         <source>Add</source>
-        <translation type="unfinished">추가</translation>
+        <translation>추가</translation>
     </message>
 </context>
 <context>
@@ -17344,27 +17349,27 @@ This action cannot be undone.</source>
     <name>TestnetModePopup</name>
     <message>
         <source>Turn off testnet mode</source>
-        <translation type="unfinished">Testnet 모드 끄기</translation>
+        <translation>Testnet 모드 끄기</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Testnet 모드 켜기</translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation type="unfinished"></translation>
+        <translation>%1을(를) 끄시겠습니까? 이후 모든 트랜잭션은 실제 자금으로 라이브 네트워크에서 처리됩니다</translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1을(를) 켜시겠습니까? 이 모드에서는 표시되는 모든 블록체인 데이터가 테스트넷에서 제공되며 모든 블록체인 상호작용도 테스트넷에서 이루어집니다. Testnet 모드는 앱 전체를 테스트넷 전용으로 전환합니다. 정확히 필요한 이유를 알고 있을 때만 이 모드를 켜세요.</translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation type="unfinished"></translation>
+        <translation>Testnet 모드가 켜졌습니다</translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>Testnet 모드가 꺼졌습니다</translation>
     </message>
 </context>
 <context>
@@ -17435,15 +17440,15 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Browser (browse web-pages, connect dApps)</source>
-        <translation type="unfinished"></translation>
+        <translation>브라우저(웹페이지 탐색, dApp 연결)</translation>
     </message>
     <message>
         <source>Sync with NTP (Network Time Protocol) servers</source>
-        <translation type="unfinished"></translation>
+        <translation>NTP(네트워크 시간 프로토콜) 서버와 동기화</translation>
     </message>
     <message>
         <source>Missed messages if your device time isn’t synced to network time</source>
-        <translation type="unfinished"></translation>
+        <translation>기기 시간이 네트워크 시간과 동기화되지 않으면 메시지를 놓칠 수 있습니다</translation>
     </message>
 </context>
 <context>
@@ -17519,23 +17524,23 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Contact removed</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 삭제됨</translation>
     </message>
     <message>
         <source>%1 removed you as a contact</source>
-        <translation type="unfinished">%1 님이 당신을 연락처에서 제거했어요</translation>
+        <translation>%1 님이 당신을 연락처에서 제거했어요</translation>
     </message>
     <message>
         <source>You removed %1 as a contact</source>
-        <translation type="unfinished">%1님을 연락처에서 삭제했습니다</translation>
+        <translation>%1님을 연락처에서 삭제했습니다</translation>
     </message>
     <message>
         <source>Backup failed</source>
-        <translation type="unfinished"></translation>
+        <translation>백업 실패</translation>
     </message>
     <message>
         <source>Check Settings &gt; Backups to see the details and try again</source>
-        <translation type="unfinished"></translation>
+        <translation>설정 &gt; 백업에서 세부 정보를 확인하고 다시 시도하세요</translation>
     </message>
     <message>
         <source>Your data backup restored successfully</source>
@@ -17543,7 +17548,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Import failed. Make sure the backup file matches your profile key.</source>
-        <translation type="unfinished"></translation>
+        <translation>가져오기에 실패했습니다. 백업 파일이 프로필 키와 일치하는지 확인하세요.</translation>
     </message>
 </context>
 <context>
@@ -18020,11 +18025,11 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Unknown token</source>
-        <translation type="unfinished"></translation>
+        <translation>알 수 없는 토큰</translation>
     </message>
     <message>
         <source>Unknown token (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>알 수 없는 토큰(%1)</translation>
     </message>
 </context>
 <context>
@@ -18281,15 +18286,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>UrlUtils</name>
     <message>
         <source>Internal storage</source>
-        <translation type="unfinished"></translation>
+        <translation>내부 저장소</translation>
     </message>
     <message>
         <source>SD card</source>
-        <translation type="unfinished"></translation>
+        <translation>SD 카드</translation>
     </message>
     <message>
         <source>Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>저장소</translation>
     </message>
 </context>
 <context>
@@ -18323,7 +18328,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>UserListPanel</name>
     <message>
         <source>Search members...</source>
-        <translation type="unfinished"></translation>
+        <translation>멤버 검색...</translation>
     </message>
     <message>
         <source>Member re-evaluation in progress...</source>
@@ -18346,7 +18351,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>UserStatusContextMenu</name>
     <message>
         <source>Copy Chat Key</source>
-        <translation type="unfinished">채팅 키 복사</translation>
+        <translation>채팅 키 복사</translation>
     </message>
     <message>
         <source>Copy link to profile</source>
@@ -18354,7 +18359,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished">설정</translation>
+        <translation>설정</translation>
     </message>
     <message>
         <source>Always online</source>
@@ -18370,7 +18375,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>연락처 초대</translation>
     </message>
 </context>
 <context>
@@ -18487,7 +18492,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
+        <translation>QR 스캐너</translation>
     </message>
     <message>
         <source>Add new user</source>
@@ -18527,27 +18532,27 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Failed to start the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>트랜잭션을 시작하지 못했습니다</translation>
     </message>
     <message>
         <source>No account selected to send the transaction from</source>
-        <translation type="unfinished"></translation>
+        <translation>트랜잭션을 보낼 계정이 선택되지 않았습니다</translation>
     </message>
     <message>
         <source>Failed to prepare the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>트랜잭션을 준비하지 못했습니다</translation>
     </message>
     <message>
         <source>Failed to send the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>트랜잭션을 전송하지 못했습니다</translation>
     </message>
     <message>
         <source>Transaction signing was not completed</source>
-        <translation type="unfinished"></translation>
+        <translation>트랜잭션 서명이 완료되지 않았습니다</translation>
     </message>
     <message>
         <source>Failed to prepare the transaction for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>서명을 위한 트랜잭션 준비에 실패했습니다</translation>
     </message>
     <message>
         <source>acc</source>
@@ -18568,7 +18573,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Robinhood Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Robinhood Explorer</translation>
     </message>
     <message>
         <source>BscScan</source>
@@ -18600,43 +18605,43 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>LineaScan</source>
-        <translation type="unfinished"></translation>
+        <translation>LineaScan</translation>
     </message>
     <message>
         <source>Messages are loading...</source>
-        <translation type="unfinished"></translation>
+        <translation>메시지를 불러오는 중...</translation>
     </message>
     <message>
         <source>Unichain Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Unichain Explorer</translation>
     </message>
     <message>
         <source>Katana Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Katana Explorer</translation>
     </message>
     <message>
         <source>Ink Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Ink Explorer</translation>
     </message>
     <message>
         <source>Abstract Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Abstract Explorer</translation>
     </message>
     <message>
         <source>ZkSync Era Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>ZkSync Era Explorer</translation>
     </message>
     <message>
         <source>Soneium Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Soneium Explorer</translation>
     </message>
     <message>
         <source>ScrollScan</source>
-        <translation type="unfinished"></translation>
+        <translation>ScrollScan</translation>
     </message>
     <message>
         <source>BlastScan</source>
-        <translation type="unfinished"></translation>
+        <translation>BlastScan</translation>
     </message>
 </context>
 <context>
@@ -18699,7 +18704,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WalletAccountsSkeleton</name>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">지갑</translation>
+        <translation>지갑</translation>
     </message>
 </context>
 <context>
@@ -18736,15 +18741,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WalletFollowingAddressesHeader</name>
     <message>
         <source>Last refreshed %1</source>
-        <translation type="unfinished">마지막 새로고침 %1</translation>
+        <translation>마지막 새로고침 %1</translation>
     </message>
     <message>
         <source>Find a friend</source>
-        <translation type="unfinished"></translation>
+        <translation>친구 찾기</translation>
     </message>
     <message>
         <source>Onchain friends</source>
-        <translation type="unfinished"></translation>
+        <translation>온체인 친구</translation>
     </message>
 </context>
 <context>
@@ -18755,11 +18760,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Soulbound tokens cannot be sent to another wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>소울바운드 토큰은 다른 지갑으로 전송할 수 없습니다</translation>
     </message>
     <message>
         <source>Go to &quot;Manage community -&gt; Tokens&quot; page to send it</source>
-        <translation type="unfinished"></translation>
+        <translation>전송하려면 &quot;커뮤니티 관리 -&gt; 토큰&quot; 페이지로 이동하세요</translation>
     </message>
     <message>
         <source>Receive</source>
@@ -18771,7 +18776,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Swap</source>
-        <translation type="unfinished">스왑</translation>
+        <translation>스왑</translation>
     </message>
 </context>
 <context>
@@ -18828,7 +18833,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WalletNetworkDelegate</name>
     <message>
         <source>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</source>
-        <translation type="unfinished">%1 체인이 통합되었습니다. 이제 &lt;br&gt;%1 자산을 확인하고 스왑하며, %1 dApps와 상호작용할 수 있습니다.</translation>
+        <translation>%1 체인이 통합되었습니다. 이제 &lt;br&gt;%1 자산을 확인하고 스왑하며, %1 dApps와 상호작용할 수 있습니다.</translation>
     </message>
     <message>
         <source>Required for some Status features</source>
@@ -18897,11 +18902,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 30 sec</source>
-        <translation type="unfinished"></translation>
+        <translation>30초 미만</translation>
     </message>
     <message>
         <source>&lt; 30 seconds</source>
-        <translation type="unfinished"></translation>
+        <translation>30초 미만</translation>
     </message>
     <message>
         <source>&lt; 1 minute</source>
@@ -18909,15 +18914,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>1분 미만</translation>
     </message>
     <message>
         <source>&lt; 2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>2분 미만</translation>
     </message>
     <message>
         <source>&lt; 2 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>2분 미만</translation>
     </message>
     <message>
         <source>&lt; 3 minutes</source>
@@ -18925,15 +18930,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 3 min</source>
-        <translation type="unfinished"></translation>
+        <translation>3분 미만</translation>
     </message>
     <message>
         <source>&lt; 4 min</source>
-        <translation type="unfinished"></translation>
+        <translation>4분 미만</translation>
     </message>
     <message>
         <source>&lt; 4 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>4분 미만</translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
@@ -18941,7 +18946,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>5분 미만</translation>
     </message>
     <message>
         <source>&gt; 5 minutes</source>
@@ -18949,7 +18954,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&gt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>5분 초과</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -19266,7 +19271,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Wallet</source>
         <comment>Go to Wallet</comment>
-        <translation type="unfinished">지갑</translation>
+        <translation>지갑</translation>
     </message>
     <message>
         <source>Edit %1</source>
@@ -19421,23 +19426,23 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
+        <translation>Status Desktop</translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>
-        <translation type="unfinished"></translation>
+        <translation>로그를 공유하거나 버그를 신고하시겠습니까?</translation>
     </message>
     <message>
         <source>Export log files</source>
-        <translation type="unfinished"></translation>
+        <translation>로그 파일 내보내기</translation>
     </message>
     <message>
         <source>No log files found</source>
-        <translation type="unfinished"></translation>
+        <translation>로그 파일을 찾을 수 없습니다</translation>
     </message>
     <message>
         <source>Report a bug on GitHub</source>
-        <translation type="unfinished"></translation>
+        <translation>GitHub에서 버그 신고</translation>
     </message>
 </context>
 <context>

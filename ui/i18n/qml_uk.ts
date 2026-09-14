@@ -1282,19 +1282,19 @@
     </message>
     <message>
         <source>On-device profile stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Статистика профілю на пристрої</translation>
     </message>
     <message>
         <source>Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Показує статистику вашого профілю Status, як-от кількість чатів, повідомлень, спільнот і NFT, а також розмір баз даних застосунку та гаманця. Статистика відображається й зберігається лише на вашому пристрої та не містить ЖОДНОГО повідомлення, чату, контакту, адреси чи іншого вмісту. Натисніть «Оновити статистику», щоб показати або оновити її.</translation>
     </message>
     <message>
         <source>Refreshing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Оновлення…</translation>
     </message>
     <message>
         <source>Refresh stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Оновити статистику</translation>
     </message>
     <message>
         <source>Are you sure you want to disable debug mode?</source>
@@ -1824,7 +1824,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Not Connected to P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>Немає з’єднання з мережею P2P</translation>
     </message>
     <message>
         <source>CoinGecko connection successful</source>
@@ -1848,11 +1848,11 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Надішліть запит на контакт до однорангового бота команди Status через децентралізовану мережу, щоб отримати вітальні повідомлення й поради з користування, а також поділитися відгуком або повідомити про проблему. Докладніше про взаємодію з ботом читайте в нашій Політиці конфіденційності. Відключитися можна будь-коли</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Надішліть запит на контакт до однорангового бота команди Status через децентралізовану мережу, щоб отримувати новини Status і поради з користування, а також ділитися відгуками або повідомляти про проблеми. Докладніше про взаємодію з ботом читайте в нашій Політиці конфіденційності. Відключитися можна будь-коли</translation>
     </message>
     <message>
         <source>Invite People</source>
@@ -4338,11 +4338,11 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Недопустимі символи (лише літери, цифри, один пробіл, дефіси й підкреслення)</translation>
     </message>
     <message>
         <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ім’я надто круте (використовуйте лише літери, цифри, один пробіл, дефіси й підкреслення)</translation>
     </message>
     <message>
         <source>Whole numbers only</source>
@@ -4617,7 +4617,8 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Your profile data was re-encrypted successfully.
 Log in with your new password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Дані вашого профілю успішно повторно зашифровано.
+Увійдіть за допомогою нового пароля.</translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
@@ -4700,15 +4701,15 @@ Log in with your new password.</source>
     <name>CrashedWebPage</name>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished">Щось пішло не так</translation>
+        <translation>Щось пішло не так</translation>
     </message>
     <message>
         <source>This page stopped responding and needs to be reloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ця сторінка перестала відповідати, її потрібно перезавантажити.</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished">Перезавантажити</translation>
+        <translation>Перезавантажити</translation>
     </message>
 </context>
 <context>
@@ -6212,7 +6213,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Недопустимі символи (використовуйте лише літери, цифри, дефіси, підкреслення та пробіли)</translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6507,19 +6508,19 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Вкажіть назву токена (використовуйте лише літери, цифри, дефіси й підкреслення)</translation>
     </message>
     <message>
         <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Назва токена надто крута (використовуйте лише літери, цифри, дефіси й підкреслення)</translation>
     </message>
     <message>
         <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Назва токена містить недопустимі символи (використовуйте лише літери, цифри, дефіси й підкреслення)</translation>
     </message>
     <message>
         <source>Only letters, numbers, standard punctuation and emojis allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Дозволено лише літери, цифри, стандартні розділові знаки та емодзі</translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -6810,7 +6811,7 @@ key pair. Keycard will be required for signing</source>
     <name>EmptyChatPanel</name>
     <message>
         <source>%1 to connect with or&lt;br&gt;invite your friends to Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;for welcome messages, how-to tips, or just to share feedback or issues.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1, щоб зв’язатися з друзями або&lt;br&gt;запросити їх до Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;для вітальних повідомлень, порад з користування або щоб поділитися відгуком чи повідомити про проблему.</translation>
     </message>
     <message>
         <source>Share your profile</source>
@@ -6818,7 +6819,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Chat with the Status Team peer-to-peer bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Спілкуйтеся з одноранговим ботом команди Status</translation>
     </message>
 </context>
 <context>
@@ -7202,51 +7203,51 @@ key pair. Keycard will be required for signing</source>
     <name>EnsTermsAndConditionsPopup</name>
     <message>
         <source>Terms of name registration</source>
-        <translation type="unfinished">Умови реєстрації імені</translation>
+        <translation>Умови реєстрації імені</translation>
     </message>
     <message>
         <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation type="unfinished">Кошти вносяться на депозит на 1 рік. Ваші SNT буде заблоковано, але не витрачено.</translation>
+        <translation>Кошти вносяться на депозит на 1 рік. Ваші SNT буде заблоковано, але не витрачено.</translation>
     </message>
     <message>
         <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation type="unfinished">Через 1 рік ви можете звільнити ім’я та повернути депозит або нічого не робити й зберегти ім’я.</translation>
+        <translation>Через 1 рік ви можете звільнити ім’я та повернути депозит або нічого не робити й зберегти ім’я.</translation>
     </message>
     <message>
         <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation type="unfinished">Якщо умови контракту зміняться, наприклад Status оновить контракт, користувач має право звільнити ім’я незалежно від терміну володіння.</translation>
+        <translation>Якщо умови контракту зміняться, наприклад Status оновить контракт, користувач має право звільнити ім’я незалежно від терміну володіння.</translation>
     </message>
     <message>
         <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation type="unfinished">Контролер контракту не має доступу до внесених вами коштів. Їх можна повернути лише на адресу, з якої їх надіслано.</translation>
+        <translation>Контролер контракту не має доступу до внесених вами коштів. Їх можна повернути лише на адресу, з якої їх надіслано.</translation>
     </message>
     <message>
         <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation type="unfinished">Ваші адреси буде публічно пов’язано з вашим іменем ENS.</translation>
+        <translation>Ваші адреси буде публічно пов’язано з вашим іменем ENS.</translation>
     </message>
     <message>
         <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation type="unfinished">Імена користувачів створюються як вузли субдомену stateofus.eth і підпорядковуються умовам смартконтракту ENS.</translation>
+        <translation>Імена користувачів створюються як вузли субдомену stateofus.eth і підпорядковуються умовам смартконтракту ENS.</translation>
     </message>
     <message>
         <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation type="unfinished">Ви дозволяєте контракту переказувати SNT від вашого імені. Це можливо лише після схвалення транзакції, яка дозволяє переказ.</translation>
+        <translation>Ви дозволяєте контракту переказувати SNT від вашого імені. Це можливо лише після схвалення транзакції, яка дозволяє переказ.</translation>
     </message>
     <message>
         <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation type="unfinished">Ці умови гарантовано логікою смартконтрактів за адресами:</translation>
+        <translation>Ці умови гарантовано логікою смартконтрактів за адресами:</translation>
     </message>
     <message>
         <source>%1 (Status UsernameRegistrar).</source>
-        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+        <translation>%1 (Status UsernameRegistrar).</translation>
     </message>
     <message>
         <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Переглянути на Etherscan&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Переглянути на Etherscan&lt;/a&gt;</translation>
     </message>
     <message>
         <source>%1 (ENS Registry).</source>
-        <translation type="unfinished">%1 (реєстр ENS).</translation>
+        <translation>%1 (реєстр ENS).</translation>
     </message>
 </context>
 <context>
@@ -9457,7 +9458,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>No PIN? Skip</source>
-        <translation type="unfinished"></translation>
+        <translation>Немає PIN-коду? Пропустити</translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
@@ -10565,11 +10566,11 @@ to load</source>
     </message>
     <message>
         <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Повідомлення надсилаються децентралізованою одноранговою (p2p) мережею, побудованою на технології Logos Messaging та підтримуваною спільно користувачами, які запускають Status Desktop, що робить Status децентралізованим, стійким і захищеним від цензури. %1</translation>
     </message>
     <message>
         <source>Connected network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Підключені вузли мережі</translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10589,19 +10590,19 @@ to load</source>
     </message>
     <message>
         <source>Refresh network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Оновити вузли мережі</translation>
     </message>
     <message>
         <source>Unable to refresh network peers: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося оновити вузли мережі: %1</translation>
     </message>
     <message>
         <source>How to fix p2p network connection</source>
-        <translation type="unfinished"></translation>
+        <translation>Як виправити з’єднання з мережею P2P</translation>
     </message>
     <message>
         <source>If Status has no connected network peers, check:</source>
-        <translation type="unfinished"></translation>
+        <translation>Якщо Status не має підключених вузлів мережі, перевірте:</translation>
     </message>
     <message>
         <source>Try using a VPN</source>
@@ -10609,7 +10610,7 @@ to load</source>
     </message>
     <message>
         <source>Some networks may block access to the p2p network. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Деякі мережі можуть блокувати доступ до мережі P2P. %1</translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -11283,15 +11284,15 @@ to load</source>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Відповісти</translation>
+        <translation>Відповісти</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Редагувати</translation>
     </message>
     <message>
         <source>Copy selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Копіювати вибране</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -11307,7 +11308,7 @@ to load</source>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Видалити</translation>
+        <translation>Видалити</translation>
     </message>
     <message>
         <source>Mark as unread</source>
@@ -12134,7 +12135,7 @@ to load</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Недопустимі символи (використовуйте лише літери, цифри, дефіси й підкреслення)</translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
@@ -13501,7 +13502,7 @@ to load</source>
     <name>PrimaryNavSidebar</name>
     <message>
         <source>Status Help Bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Бот довідки Status</translation>
     </message>
     <message>
         <source>Activity Center</source>
@@ -15251,7 +15252,7 @@ to load</source>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Редагувати</translation>
     </message>
     <message>
         <source>Send</source>
@@ -15380,7 +15381,7 @@ to load</source>
     </message>
     <message>
         <source>P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>Мережа P2P</translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -15836,7 +15837,7 @@ to load</source>
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>
-        <translation type="unfinished"></translation>
+        <translation>Власний %</translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -16931,11 +16932,11 @@ to load</source>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Найшвидший</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Найменша комісія</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16947,24 +16948,24 @@ to load</source>
     </message>
     <message>
         <source>Best return</source>
-        <translation>Найкращий дохід</translation>
+        <translation>Макс. сума</translation>
     </message>
     <message>
         <source>Bridge</source>
-        <translation type="unfinished">Бридж</translation>
+        <translation>Бридж</translation>
     </message>
     <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
-        <translation type="unfinished">%1 с</translation>
+        <translation>%1 с</translation>
     </message>
     <message>
         <source>Choose route</source>
-        <translation type="unfinished"></translation>
+        <translation>Вибрати маршрут</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
-        <translation type="unfinished"></translation>
+        <translation>від %1 через %2</translation>
     </message>
     <message>
         <source>by %1</source>
@@ -16984,7 +16985,7 @@ to load</source>
     </message>
     <message>
         <source>Confirm %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Підтвердити %1</translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -16996,7 +16997,7 @@ to load</source>
     </message>
     <message>
         <source>Sign %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Підписати %1</translation>
     </message>
     <message>
         <source>Sign</source>
@@ -17050,38 +17051,38 @@ to load</source>
     </message>
     <message>
         <source>via %1</source>
-        <translation type="unfinished">через %1</translation>
+        <translation>через %1</translation>
     </message>
 </context>
 <context>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished"></translation>
+        <translation>Маршрут обміну</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished">Найкращий дохід</translation>
+        <translation>Найкращий дохід</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Найбільша сума отримання</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Найшвидше</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished"></translation>
+        <translation>Найкоротший час виконання</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Мін. комісія</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished"></translation>
+        <translation>Найнижча мережева комісія</translation>
     </message>
 </context>
 <context>
@@ -17094,7 +17095,7 @@ to load</source>
     <message>
         <source>From %1 %2 on %3 to %4 %5 on %6</source>
         <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>З %1 %2 у мережі %3 на %4 %5 у мережі %6</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17114,22 +17115,22 @@ to load</source>
     </message>
     <message>
         <source>From account</source>
-        <translation type="unfinished">З рахунку</translation>
+        <translation>З рахунку</translation>
     </message>
     <message>
         <source>To account</source>
-        <translation type="unfinished"></translation>
+        <translation>На рахунок</translation>
     </message>
 </context>
 <context>
     <name>SwapSlippagePopup</name>
     <message>
         <source>Set max price slippage</source>
-        <translation type="unfinished"></translation>
+        <translation>Встановити макс. прослизання ціни</translation>
     </message>
     <message>
         <source>The swap will revert if the price shifts beyond this percentage.</source>
-        <translation type="unfinished"></translation>
+        <translation>Обмін буде скасовано, якщо ціна зміниться більше ніж на цей відсоток.</translation>
     </message>
 </context>
 <context>
@@ -17937,7 +17938,7 @@ This action cannot be undone.</source>
     <name>TokenSelectorButton</name>
     <message>
         <source>Select token</source>
-        <translation>Вибрати токен</translation>
+        <translation>Токен</translation>
     </message>
 </context>
 <context>
@@ -18519,7 +18520,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished">Налаштування</translation>
+        <translation>Налаштування</translation>
     </message>
     <message>
         <source>Always online</source>
@@ -19072,11 +19073,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 30 sec</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 с</translation>
     </message>
     <message>
         <source>&lt; 30 seconds</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 секунд</translation>
     </message>
     <message>
         <source>&lt; 1 minute</source>
@@ -19084,15 +19085,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 1 хв</translation>
     </message>
     <message>
         <source>&lt; 2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 хв</translation>
     </message>
     <message>
         <source>&lt; 2 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 хвилини</translation>
     </message>
     <message>
         <source>&lt; 3 minutes</source>
@@ -19100,15 +19101,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 3 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 3 хв</translation>
     </message>
     <message>
         <source>&lt; 4 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 хв</translation>
     </message>
     <message>
         <source>&lt; 4 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 хвилини</translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
@@ -19116,7 +19117,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&lt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 5 хв</translation>
     </message>
     <message>
         <source>&gt; 5 minutes</source>
@@ -19124,7 +19125,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>&gt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&gt; 5 хв</translation>
     </message>
     <message>
         <source>Unknown</source>

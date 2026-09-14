@@ -5,23 +5,23 @@
     <name>A11YInformationTag</name>
     <message>
         <source>Accessibility services on your device may access screen content. Check your device&apos;s %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los servicios de accesibilidad de tu dispositivo pueden acceder al contenido de la pantalla. Consulta %1 de tu dispositivo.</translation>
     </message>
     <message>
         <source>Settings &gt; Accessibility</source>
-        <translation type="unfinished"></translation>
+        <translation>Configuración &gt; Accesibilidad</translation>
     </message>
     <message>
         <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los servicios de accesibilidad de tu ordenador pueden acceder al contenido de la pantalla. Consulta %1 de tu sistema operativo.</translation>
     </message>
     <message>
         <source>Accessibility services on your device may access screen content. Check your device&apos;s Accessibility settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los servicios de accesibilidad de tu dispositivo pueden acceder al contenido de la pantalla. Consulta la configuración de accesibilidad de tu dispositivo.</translation>
     </message>
     <message>
         <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s Accessibility settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los servicios de accesibilidad de tu ordenador pueden acceder al contenido de la pantalla. Consulta la configuración de accesibilidad de tu sistema operativo.</translation>
     </message>
 </context>
 <context>
@@ -56,15 +56,15 @@
     </message>
     <message>
         <source>status-app</source>
-        <translation type="unfinished"></translation>
+        <translation>status-app</translation>
     </message>
     <message>
         <source>logos-delivery-go</source>
-        <translation type="unfinished"></translation>
+        <translation>logos-delivery-go</translation>
     </message>
     <message>
         <source>Status App&apos;s GitHub Repositories</source>
-        <translation type="unfinished"></translation>
+        <translation>Repositorios de GitHub de Status App</translation>
     </message>
     <message>
         <source>status-go</source>
@@ -103,11 +103,11 @@
     </message>
     <message>
         <source>Decline</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechazar</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation type="unfinished">Aceptar</translation>
+        <translation>Aceptar</translation>
     </message>
 </context>
 <context>
@@ -273,19 +273,19 @@
     <name>ActivityCenterAdaptor</name>
     <message>
         <source>Removed you from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Te eliminó de sus contactos</translation>
     </message>
     <message>
         <source>You’re added to private group chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Te han añadido a un chat de grupo privado</translation>
     </message>
     <message>
         <source>Invitation to join community</source>
-        <translation type="unfinished"></translation>
+        <translation>Invitación para unirte a la comunidad</translation>
     </message>
     <message>
         <source>Community membership request</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud de membresía de la comunidad</translation>
     </message>
     <message>
         <source>Accept pending</source>
@@ -297,99 +297,99 @@
     </message>
     <message>
         <source>Pending</source>
-        <translation type="unfinished">Pendiente</translation>
+        <translation>Pendiente</translation>
     </message>
     <message>
         <source>Request to join community</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud para unirte a la comunidad</translation>
     </message>
     <message>
         <source>In progress</source>
-        <translation type="unfinished"></translation>
+        <translation>En curso</translation>
     </message>
     <message>
         <source>You have been kicked out of community</source>
-        <translation type="unfinished"></translation>
+        <translation>Has sido expulsado de la comunidad</translation>
     </message>
     <message>
         <source>You have been &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
-        <translation type="unfinished"></translation>
+        <translation>Has sido &lt;font color=&apos;%1&apos;&gt;baneado&lt;/font&gt; de la comunidad</translation>
     </message>
     <message>
         <source>You have been &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; in community</source>
-        <translation type="unfinished"></translation>
+        <translation>Has sido &lt;font color=&apos;%1&apos;&gt;desbaneado&lt;/font&gt; en la comunidad</translation>
     </message>
     <message>
         <source>You’re received a token in community</source>
-        <translation type="unfinished"></translation>
+        <translation>Has recibido un token en la comunidad</translation>
     </message>
     <message>
         <source>You received your first community token</source>
-        <translation type="unfinished"></translation>
+        <translation>Has recibido tu primer token de la comunidad</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1 %2 (%3) minted by %4.&lt;/b&gt;&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1 %2 (%3) acuñado por %4.&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <source>Community tokens are created by the community and aren’t verified. Always check their source before interacting.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los tokens de la comunidad son creados por la comunidad y no están verificados. Comprueba siempre su origen antes de interactuar con ellos.</translation>
     </message>
     <message>
         <source>You received the owner token</source>
-        <translation type="unfinished"></translation>
+        <translation>Has recibido el token de propietario</translation>
     </message>
     <message>
         <source>Ownership transfer</source>
-        <translation type="unfinished"></translation>
+        <translation>Transferencia de propiedad</translation>
     </message>
     <message>
         <source>To continue to be a member of community, you need to share your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Para seguir siendo miembro de la comunidad, debes compartir tus cuentas</translation>
     </message>
     <message>
         <source>Status</source>
-        <translation type="unfinished">Status</translation>
+        <translation>Status</translation>
     </message>
     <message>
         <source>New device detected</source>
-        <translation type="unfinished">Nuevo dispositivo detectado</translation>
+        <translation>Nuevo dispositivo detectado</translation>
     </message>
     <message>
         <source>New device with %1 profile has been detected.</source>
-        <translation type="unfinished">Se detectó un nuevo dispositivo con el perfil %1.</translation>
+        <translation>Se detectó un nuevo dispositivo con el perfil %1.</translation>
     </message>
     <message>
         <source>Sync your profile</source>
-        <translation type="unfinished">Sincronizar tu perfil</translation>
+        <translation>Sincronizar tu perfil</translation>
     </message>
     <message>
         <source>Check your other device for a pairing request.</source>
-        <translation type="unfinished">Revisa tu otro dispositivo para una solicitud de emparejamiento.</translation>
+        <translation>Revisa tu otro dispositivo para una solicitud de emparejamiento.</translation>
     </message>
     <message>
         <source>Accepted</source>
-        <translation type="unfinished"></translation>
+        <translation>Aceptado</translation>
     </message>
     <message>
         <source>Decline</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechazar</translation>
     </message>
     <message>
         <source>You are now the owner of the community</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora eres el propietario de la comunidad</translation>
     </message>
     <message>
         <source>You no longer control the community</source>
-        <translation type="unfinished"></translation>
+        <translation>Ya no controlas la comunidad</translation>
     </message>
     <message>
         <source>Failed</source>
-        <translation type="unfinished">Fallido</translation>
+        <translation>Fallido</translation>
     </message>
     <message>
         <source>Declined</source>
-        <translation type="unfinished">Rechazado</translation>
+        <translation>Rechazado</translation>
     </message>
 </context>
 <context>
@@ -412,23 +412,23 @@
     </message>
     <message>
         <source>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Actívalo para recibir novedades sobre nuevas funciones y anuncios. También puedes activarlo en cualquier momento en la configuración de Privacidad y seguridad.</translation>
     </message>
     <message>
         <source>Status News RSS is off</source>
-        <translation type="unfinished"></translation>
+        <translation>El RSS de noticias de Status está desactivado</translation>
     </message>
     <message>
         <source>Status News notifications are off</source>
-        <translation type="unfinished"></translation>
+        <translation>Las notificaciones de noticias de Status están desactivadas</translation>
     </message>
     <message>
         <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Actívalas para recibir novedades sobre nuevas funciones y anuncios. También puedes activarlas en cualquier momento en la configuración de Notificaciones y sonido.</translation>
     </message>
     <message>
         <source>Activity</source>
-        <translation type="unfinished">Actividad</translation>
+        <translation>Actividad</translation>
     </message>
 </context>
 <context>
@@ -482,7 +482,7 @@
     </message>
     <message>
         <source>Saved</source>
-        <translation></translation>
+        <translation>Guardado</translation>
     </message>
     <message>
         <source>No Recents</source>
@@ -540,7 +540,7 @@
     </message>
     <message>
         <source>Swap</source>
-        <translation></translation>
+        <translation>Swap</translation>
     </message>
     <message>
         <source>Bridge</source>
@@ -552,7 +552,7 @@
     </message>
     <message>
         <source>Mint</source>
-        <translation></translation>
+        <translation>Mint</translation>
     </message>
     <message>
         <source>Contract Interaction</source>
@@ -603,7 +603,7 @@
     </message>
     <message>
         <source>Last week</source>
-        <translation></translation>
+        <translation>La semana pasada</translation>
     </message>
     <message>
         <source>This month</source>
@@ -611,7 +611,7 @@
     </message>
     <message>
         <source>Last month</source>
-        <translation></translation>
+        <translation>El mes pasado</translation>
     </message>
     <message>
         <source>Custom range</source>
@@ -680,7 +680,7 @@
     </message>
     <message>
         <source>Mint</source>
-        <translation></translation>
+        <translation>Mint</translation>
     </message>
     <message>
         <source>Swap</source>
@@ -688,7 +688,7 @@
     </message>
     <message>
         <source>Bridge</source>
-        <translation></translation>
+        <translation>Bridge</translation>
     </message>
 </context>
 <context>
@@ -703,15 +703,15 @@
     </message>
     <message>
         <source>Re-import the %1 key pair to add accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Vuelve a importar el par de claves %1 para añadir cuentas</translation>
     </message>
     <message>
         <source>Adding accounts to the &lt;b&gt;%1&lt;/b&gt; key pair isn&apos;t possible due to recent improvements in how key pairs are stored. Please remove this key pair from the app and import it again from your Keycard — after that you&apos;ll be able to add accounts to it. Your keys are safe: removing the key pair from the app doesn&apos;t affect the Keycard, and importing it back takes only a moment.&lt;br/&gt;&lt;br/&gt;• Go to Settings → Wallet → click the three dots on the &lt;b&gt;%1&lt;/b&gt; key pair → Remove key pair and derived accounts&lt;br/&gt;• Go to Settings → Keycard → Read Keycard → Add key pair to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>No es posible añadir cuentas al par de claves &lt;b&gt;%1&lt;/b&gt; debido a mejoras recientes en la forma en que se almacenan los pares de claves. Elimina este par de claves de la aplicación y vuelve a importarlo desde tu Keycard; después podrás añadirle cuentas. Tus claves están seguras: eliminar el par de claves de la aplicación no afecta a la Keycard, y volver a importarlo solo lleva un momento.&lt;br/&gt;&lt;br/&gt;• Ve a Configuración → Billetera → haz clic en los tres puntos del par de claves &lt;b&gt;%1&lt;/b&gt; → Eliminar par de claves y cuentas derivadas&lt;br/&gt;• Ve a Configuración → Keycard → Leer Keycard → Añadir par de claves a la billetera de Status</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Cerrar</translation>
+        <translation>Cerrar</translation>
     </message>
     <message>
         <source>Save changes</source>
@@ -821,7 +821,7 @@
     </message>
     <message>
         <source>Checksum of the entered address is incorrect</source>
-        <translation></translation>
+        <translation>La suma de comprobación de la dirección introducida es incorrecta</translation>
     </message>
     <message>
         <source>Colour</source>
@@ -840,11 +840,11 @@
     <name>AddFavoriteModal</name>
     <message>
         <source>Edit bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Editar marcador</translation>
     </message>
     <message>
         <source>Add bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir marcador</translation>
     </message>
     <message>
         <source>URL</source>
@@ -876,11 +876,11 @@
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Eliminar</translation>
+        <translation>Eliminar</translation>
     </message>
     <message>
         <source>Save changes</source>
-        <translation type="unfinished">Guardar cambios</translation>
+        <translation>Guardar cambios</translation>
     </message>
     <message>
         <source>Add</source>
@@ -950,11 +950,11 @@
     </message>
     <message>
         <source>URL</source>
-        <translation type="unfinished">URL</translation>
+        <translation>URL</translation>
     </message>
     <message>
         <source>URL already added</source>
-        <translation type="unfinished"></translation>
+        <translation>La URL ya se ha añadido</translation>
     </message>
 </context>
 <context>
@@ -1020,15 +1020,15 @@
     <name>AdvancedStore</name>
     <message>
         <source>Logos Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Almacenamiento Logos</translation>
     </message>
     <message>
         <source>Torrent</source>
-        <translation type="unfinished"></translation>
+        <translation>Torrent</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Desactivado</translation>
     </message>
 </context>
 <context>
@@ -1039,71 +1039,71 @@
     </message>
     <message>
         <source>The collected profile could not be read: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo leer el perfil recopilado: %1</translation>
     </message>
     <message>
         <source>just now</source>
-        <translation type="unfinished"></translation>
+        <translation>justo ahora</translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s) ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Hace %n minuto</numerusform>
+            <numerusform>Hace %n minutos</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Hace %n hora</numerusform>
             <numerusform>Hace %n horas</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s) ago</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Hace %n día</numerusform>
             <numerusform>Hace %n días</numerusform>
         </translation>
     </message>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">Mensajes</translation>
+        <translation>Mensajes</translation>
     </message>
     <message>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <source>Communities</source>
-        <translation type="unfinished">Comunidades</translation>
+        <translation>Comunidades</translation>
     </message>
     <message>
         <source>Oldest message</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensaje más antiguo</translation>
     </message>
     <message>
         <source>Max sync gap</source>
-        <translation type="unfinished"></translation>
+        <translation>Intervalo máximo de sincronización</translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n día</numerusform>
+            <numerusform>%n días</numerusform>
         </translation>
     </message>
     <message>
         <source>Collectibles</source>
-        <translation type="unfinished">Coleccionables</translation>
+        <translation>Coleccionables</translation>
     </message>
     <message>
         <source>App database</source>
-        <translation type="unfinished"></translation>
+        <translation>Base de datos de la aplicación</translation>
     </message>
     <message>
         <source>Wallet database</source>
-        <translation type="unfinished"></translation>
+        <translation>Base de datos de la billetera</translation>
     </message>
     <message>
         <source>Fleet</source>
@@ -1123,7 +1123,7 @@
     </message>
     <message>
         <source>Minimize to tray icon on close</source>
-        <translation type="unfinished"></translation>
+        <translation>Minimizar al icono de la bandeja al cerrar</translation>
     </message>
     <message>
         <source>Application Logs</source>
@@ -1131,11 +1131,11 @@
     </message>
     <message>
         <source>Logs (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Registros (%1)</translation>
     </message>
     <message>
         <source>Refresh logs size</source>
-        <translation type="unfinished"></translation>
+        <translation>Actualizar tamaño de los registros</translation>
     </message>
     <message>
         <source>Experimental features</source>
@@ -1151,7 +1151,7 @@
     </message>
     <message>
         <source>Enable Copying Message Links</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar la copia de enlaces de mensajes</translation>
     </message>
     <message>
         <source>The account will be logged out. When you login again, the selected mode will be enabled</source>
@@ -1179,51 +1179,51 @@
     </message>
     <message>
         <source>Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Muestra estadísticas de tu perfil de Status, como el número de chats, mensajes, comunidades y coleccionables, y el tamaño de las bases de datos de la aplicación y la billetera. Las estadísticas se muestran y permanecen solo en tu dispositivo y NO incluyen mensajes, chats, contactos, direcciones ni ningún otro contenido. Haz clic en Actualizar estadísticas para mostrarlas o actualizarlas.</translation>
     </message>
     <message>
         <source>Refreshing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Actualizando...</translation>
     </message>
     <message>
         <source>Refresh stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Actualizar estadísticas</translation>
     </message>
     <message>
         <source>%1 of %2</source>
-        <translation type="unfinished">%1 de %2</translation>
+        <translation>%1 de %2</translation>
     </message>
     <message>
         <source>Starting...</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciando...</translation>
     </message>
     <message>
         <source>Collected %1, saved to %2 and picked up by Application Logs</source>
-        <translation type="unfinished"></translation>
+        <translation>Se recopiló %1, se guardó en %2 y fue recogido por los registros de la aplicación</translation>
     </message>
     <message>
         <source>Collected %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Recopilado %1</translation>
     </message>
     <message>
         <source>Chats by message count</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats por número de mensajes</translation>
     </message>
     <message>
         <source>The app will restart if you confirm.</source>
-        <translation type="unfinished"></translation>
+        <translation>La aplicación se reiniciará si confirmas.</translation>
     </message>
     <message>
         <source>Choose a number between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>Elige un número entre 1 y 50</translation>
     </message>
     <message>
         <source>Number between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>Número entre 1 y 50</translation>
     </message>
     <message>
         <source>Number needs to be between 1 and 50</source>
-        <translation type="unfinished"></translation>
+        <translation>El número debe estar entre 1 y 50</translation>
     </message>
     <message>
         <source>Debug</source>
@@ -1231,34 +1231,34 @@
     </message>
     <message>
         <source>Some old log files could not be cleared</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron eliminar algunos archivos de registro antiguos</translation>
     </message>
     <message>
         <source>No old log files to clear</source>
-        <translation type="unfinished"></translation>
+        <translation>No hay archivos de registro antiguos para eliminar</translation>
     </message>
     <message numerus="yes">
         <source>%n old log file(s) cleared</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n archivo de registro antiguo eliminado</numerusform>
+            <numerusform>%n archivos de registro antiguos eliminados</numerusform>
         </translation>
     </message>
     <message>
         <source>Clearing...</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminando...</translation>
     </message>
     <message>
         <source>Clear old logs</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar registros antiguos</translation>
     </message>
     <message>
         <source>Archive Protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Protocolo de archivo</translation>
     </message>
     <message>
         <source>Logos Messaging options</source>
-        <translation type="unfinished"></translation>
+        <translation>Opciones de mensajería de Logos</translation>
     </message>
     <message>
         <source>The value is overridden with runtime options</source>
@@ -1282,19 +1282,19 @@
     </message>
     <message>
         <source>HTTP statistics</source>
-        <translation type="unfinished"></translation>
+        <translation>Estadísticas HTTP</translation>
     </message>
     <message>
         <source>On-device profile stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Estadísticas del perfil en el dispositivo</translation>
     </message>
     <message>
         <source>Are you sure you want to disable debug mode?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Seguro que quieres desactivar el modo de depuración?</translation>
     </message>
     <message>
         <source>Are you sure you want to enable debug mode?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Seguro que quieres activar el modo de depuración?</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -1302,7 +1302,7 @@
     </message>
     <message>
         <source>Number of archive files per group</source>
-        <translation type="unfinished"></translation>
+        <translation>Número de archivos de archivado por grupo</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -1314,31 +1314,31 @@
     </message>
     <message>
         <source>Are you sure you want to clear old log files?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Seguro que quieres eliminar los archivos de registro antiguos?</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Desactivado</translation>
     </message>
     <message>
         <source>Logos Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Almacenamiento Logos</translation>
     </message>
     <message>
         <source>Torrent</source>
-        <translation type="unfinished"></translation>
+        <translation>Torrent</translation>
     </message>
     <message>
         <source>Refetch transaction history</source>
-        <translation type="unfinished"></translation>
+        <translation>Volver a obtener el historial de transacciones</translation>
     </message>
     <message>
         <source>Refetch</source>
-        <translation type="unfinished"></translation>
+        <translation>Volver a obtener</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation type="unfinished">Listo</translation>
+        <translation>Listo</translation>
     </message>
 </context>
 <context>
@@ -1404,7 +1404,7 @@
     </message>
     <message>
         <source>Reward individual members with custom tokens for their contribution</source>
-        <translation></translation>
+        <translation>Recompensa a miembros individuales con tokens personalizados por su contribución</translation>
     </message>
     <message>
         <source>Incentivise joining, retention, moderation and desired behaviour</source>
@@ -1412,7 +1412,7 @@
     </message>
     <message>
         <source>Require holding a token or NFT to obtain exclusive membership rights</source>
-        <translation></translation>
+        <translation>Requiere tener un token o NFT para obtener derechos de membresía exclusivos</translation>
     </message>
     <message>
         <source>Get started</source>
@@ -1424,7 +1424,7 @@
     </message>
     <message>
         <source>In order to Mint, Import and Airdrop community tokens, you first need to mint your Owner token which will give you permissions to access the token management features for your community.</source>
-        <translation></translation>
+        <translation>Para acuñar, importar y distribuir (airdrop) tokens de la comunidad, primero debes acuñar tu token de propietario, que te dará permisos para acceder a las funciones de gestión de tokens de tu comunidad.</translation>
     </message>
     <message>
         <source>Mint Owner token</source>
@@ -1813,35 +1813,35 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Not Connected to P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>No conectado a la red P2P</translation>
     </message>
     <message>
         <source>CoinGecko connection successful</source>
-        <translation type="unfinished"></translation>
+        <translation>Conexión con CoinGecko correcta</translation>
     </message>
     <message>
         <source>CoinGecko connection down. Market values are as of %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>La conexión con CoinGecko está caída. Los valores de mercado corresponden a %1.</translation>
     </message>
     <message>
         <source>CoinGecko connection down. Market values cannot be retrieved.</source>
-        <translation type="unfinished"></translation>
+        <translation>La conexión con CoinGecko está caída. No se pueden obtener los valores de mercado.</translation>
     </message>
     <message>
         <source>Retrying connection to CoinGecko...</source>
-        <translation type="unfinished"></translation>
+        <translation>Reintentando la conexión con CoinGecko...</translation>
     </message>
     <message>
         <source>This channel no longer exists</source>
-        <translation type="unfinished"></translation>
+        <translation>Este canal ya no existe</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Envía una solicitud de contacto al bot peer-to-peer del equipo de Status a través de la red descentralizada para recibir mensajes de bienvenida y consejos de uso, y para compartir comentarios o problemas. Consulta nuestra Política de privacidad para más detalles sobre cómo interactuar con el bot. Puedes desconectarte en cualquier momento</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Envía una solicitud de contacto al bot peer-to-peer del equipo de Status a través de la red descentralizada para recibir novedades de Status y consejos de uso, y para compartir comentarios o problemas. Consulta nuestra Política de privacidad para más detalles sobre cómo interactuar con el bot. Puedes desconectarte en cualquier momento</translation>
     </message>
     <message>
         <source>Invite People</source>
@@ -1877,7 +1877,7 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Leave Community</source>
-        <translation></translation>
+        <translation>Abandonar comunidad</translation>
     </message>
     <message>
         <source>The import of ‘%1’ from Discord to Status was stopped: &lt;a href=&apos;#&apos;&gt;Critical issues found&lt;/a&gt;</source>
@@ -1952,7 +1952,7 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>How to fix</source>
-        <translation type="unfinished"></translation>
+        <translation>Cómo solucionarlo</translation>
     </message>
     <message>
         <source>Retrying connection to POKT Network (grove.city).</source>
@@ -2040,7 +2040,7 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
-        <translation type="unfinished"></translation>
+        <translation>POKT e Infura están caídos para &lt;a href=&apos;#&apos;&gt;varias cadenas&lt;/a&gt;. No se pueden obtener los saldos de tokens de esas cadenas.</translation>
     </message>
 </context>
 <context>
@@ -2070,31 +2070,31 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Interface zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Zoom de la interfaz</translation>
     </message>
     <message>
         <source>Scale the app interface and text</source>
-        <translation type="unfinished"></translation>
+        <translation>Escala la interfaz y el texto de la aplicación</translation>
     </message>
     <message>
         <source>Join</source>
-        <translation type="unfinished">Unirse</translation>
+        <translation>Unirse</translation>
     </message>
     <message>
         <source>Follow display zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Seguir el zoom de la pantalla</translation>
     </message>
     <message>
         <source>Apply your system settings defaults values</source>
-        <translation type="unfinished"></translation>
+        <translation>Aplicar los valores predeterminados de la configuración del sistema</translation>
     </message>
     <message>
         <source>Restart to apply</source>
-        <translation type="unfinished"></translation>
+        <translation>Reiniciar para aplicar</translation>
     </message>
     <message>
         <source>Restart Status to apply the new interface zoom level</source>
-        <translation type="unfinished"></translation>
+        <translation>Reinicia Status para aplicar el nuevo nivel de zoom de la interfaz</translation>
     </message>
     <message>
         <source>System</source>
@@ -2125,7 +2125,7 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Swap</source>
-        <translation type="unfinished">Swap</translation>
+        <translation>Swap</translation>
     </message>
 </context>
 <context>
@@ -2222,22 +2222,22 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
 </context>
 <context>
     <name>AuthenticationPopup</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">Autenticar</translation>
+        <translation>Autenticar</translation>
     </message>
     <message>
         <source>Update password &amp; authenticate</source>
-        <translation type="unfinished">Actualizar contraseña y autenticar</translation>
+        <translation>Actualizar contraseña y autenticar</translation>
     </message>
     <message>
         <source>Update PIN &amp; authenticate</source>
-        <translation type="unfinished">Actualizar PIN y autenticar</translation>
+        <translation>Actualizar PIN y autenticar</translation>
     </message>
 </context>
 <context>
@@ -2312,7 +2312,7 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</source>
-        <translation type="unfinished"></translation>
+        <translation>Una frase de 12 palabras que da acceso total a tus fondos y es la única forma de recuperarlos. Asegúrate de que nada pueda ver o grabar tu pantalla.</translation>
     </message>
     <message>
         <source>Reveal recovery phrase</source>
@@ -2320,7 +2320,7 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nunca compartas tu frase de recuperación. Cualquiera que te la pida está intentando estafarte. Para hacer una copia de seguridad de tu frase de recuperación, anótala y guárdala de forma segura.</translation>
     </message>
     <message>
         <source>Confirm recovery phrase</source>
@@ -2426,7 +2426,7 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Supported backup formats (%1)</source>
-        <translation></translation>
+        <translation>Formatos de copia de seguridad admitidos (%1)</translation>
     </message>
     <message>
         <source>Choose a folder to store your backup files in.</source>
@@ -2434,15 +2434,15 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Backups are stored in the Status folder in Files.</source>
-        <translation type="unfinished"></translation>
+        <translation>Las copias de seguridad se guardan en la carpeta Status en Archivos.</translation>
     </message>
     <message>
         <source>Locate in Files</source>
-        <translation type="unfinished"></translation>
+        <translation>Localizar en Archivos</translation>
     </message>
     <message>
         <source>Locate your backup directory in Files</source>
-        <translation type="unfinished"></translation>
+        <translation>Localiza tu directorio de copias de seguridad en Archivos</translation>
     </message>
 </context>
 <context>
@@ -2483,39 +2483,39 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <name>Biometrics</name>
     <message>
         <source>Biometric %1 failed</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 biométrica fallida</translation>
     </message>
     <message>
         <source>signing</source>
-        <translation type="unfinished"></translation>
+        <translation>firma</translation>
     </message>
     <message>
         <source>authentication</source>
-        <translation type="unfinished"></translation>
+        <translation>autenticación</translation>
     </message>
     <message>
         <source>%1 with biometrics</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 con datos biométricos</translation>
     </message>
     <message>
         <source>Signing</source>
-        <translation type="unfinished">Firmando</translation>
+        <translation>Firmando</translation>
     </message>
     <message>
         <source>Authentication</source>
-        <translation type="unfinished"></translation>
+        <translation>Autenticación</translation>
     </message>
     <message>
         <source>Use your %1 instead</source>
-        <translation type="unfinished"></translation>
+        <translation>Usa tu %1 en su lugar</translation>
     </message>
     <message>
         <source>PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN</translation>
     </message>
     <message>
         <source>password</source>
-        <translation type="unfinished"></translation>
+        <translation>contraseña</translation>
     </message>
 </context>
 <context>
@@ -2571,85 +2571,85 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <name>BrowserAddressField</name>
     <message>
         <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar o introducir dirección</translation>
     </message>
 </context>
 <context>
     <name>BrowserDownloadOpenContext</name>
     <message>
         <source>This file cannot be played here. Open it with another app.</source>
-        <translation type="unfinished"></translation>
+        <translation>Este archivo no se puede reproducir aquí. Ábrelo con otra aplicación.</translation>
     </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
     <message>
         <source>Audio and video</source>
-        <translation type="unfinished"></translation>
+        <translation>Audio y video</translation>
     </message>
     <message>
         <source>Documents and images</source>
-        <translation type="unfinished"></translation>
+        <translation>Documentos e imágenes</translation>
     </message>
     <message>
         <source>Images</source>
-        <translation type="unfinished"></translation>
+        <translation>Imágenes</translation>
     </message>
     <message>
         <source>Plain text</source>
-        <translation type="unfinished"></translation>
+        <translation>Texto sin formato</translation>
     </message>
 </context>
 <context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
-        <translation type="unfinished">Atrás</translation>
+        <translation>Atrás</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished"></translation>
+        <translation>Adelante</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Detener</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Recargar</translation>
     </message>
     <message>
         <source>Home</source>
         <comment>web browser home page</comment>
-        <translation type="unfinished"></translation>
+        <translation>Inicio</translation>
     </message>
     <message>
         <source>Exit Incognito mode</source>
-        <translation type="unfinished">Salir del modo incógnito</translation>
+        <translation>Salir del modo incógnito</translation>
     </message>
     <message>
         <source>Go Incognito</source>
-        <translation type="unfinished">Ir a modo incógnito</translation>
+        <translation>Ir a modo incógnito</translation>
     </message>
     <message>
         <source>Bookmarked</source>
-        <translation type="unfinished"></translation>
+        <translation>Guardado en marcadores</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir a marcadores</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Billetera</translation>
+        <translation>Billetera</translation>
     </message>
     <message>
         <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir vista de pestañas</translation>
     </message>
     <message>
         <source>Menu</source>
-        <translation type="unfinished"></translation>
+        <translation>Menú</translation>
     </message>
 </context>
 <context>
@@ -2670,69 +2670,69 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Add bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir marcador</translation>
     </message>
 </context>
 <context>
     <name>BrowserLinkContextMenu</name>
     <message>
         <source>Share link</source>
-        <translation type="unfinished"></translation>
+        <translation>Compartir enlace</translation>
     </message>
     <message>
         <source>Copy link</source>
-        <translation type="unfinished">Copiar enlace</translation>
+        <translation>Copiar enlace</translation>
     </message>
     <message>
         <source>Open in new tab</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir en nueva pestaña</translation>
     </message>
     <message>
         <source>Download link</source>
-        <translation type="unfinished"></translation>
+        <translation>Descargar enlace</translation>
     </message>
     <message>
         <source>Download image</source>
-        <translation type="unfinished">Descargar imagen</translation>
+        <translation>Descargar imagen</translation>
     </message>
 </context>
 <context>
     <name>BrowserPortraitToolbar</name>
     <message>
         <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir vista de pestañas</translation>
     </message>
     <message>
         <source>Bookmarked</source>
-        <translation type="unfinished"></translation>
+        <translation>Guardado en marcadores</translation>
     </message>
     <message>
         <source>Add to bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir a marcadores</translation>
     </message>
     <message>
         <source>Back</source>
-        <translation type="unfinished">Atrás</translation>
+        <translation>Atrás</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
     <message>
         <source>Forward</source>
-        <translation type="unfinished"></translation>
+        <translation>Adelante</translation>
     </message>
     <message>
         <source>Exit Incognito mode</source>
-        <translation type="unfinished">Salir del modo incógnito</translation>
+        <translation>Salir del modo incógnito</translation>
     </message>
     <message>
         <source>Go Incognito</source>
-        <translation type="unfinished">Ir a modo incógnito</translation>
+        <translation>Ir a modo incógnito</translation>
     </message>
     <message>
         <source>Menu</source>
-        <translation type="unfinished"></translation>
+        <translation>Menú</translation>
     </message>
 </context>
 <context>
@@ -2754,11 +2754,11 @@ Do you wish to override the security check and continue?</source>
     <name>BrowserSavedSessionContext</name>
     <message>
         <source>Start Page</source>
-        <translation type="unfinished">Página de inicio</translation>
+        <translation>Página de inicio</translation>
     </message>
     <message>
         <source>New Tab</source>
-        <translation type="unfinished">Nueva pestaña</translation>
+        <translation>Nueva pestaña</translation>
     </message>
 </context>
 <context>
@@ -2797,11 +2797,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>Formatos compatibles</translation>
     </message>
     <message>
         <source>Find in page</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar en la página</translation>
     </message>
     <message>
         <source>Compatibility mode</source>
@@ -2813,27 +2813,27 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Force reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Forzar recarga</translation>
     </message>
     <message>
         <source>Clear site data</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar datos del sitio</translation>
     </message>
     <message>
         <source>Use it to reset the current site if it doesn&apos;t load or work properly.</source>
-        <translation type="unfinished"></translation>
+        <translation>Úsalo para restablecer el sitio actual si no carga o no funciona correctamente.</translation>
     </message>
     <message>
         <source>Clearing browsing data...</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrando datos de navegación...</translation>
     </message>
     <message>
         <source>Clear browsing data</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar datos de navegación</translation>
     </message>
     <message>
         <source>Clears the cache and cookies for the entire browser. Browsing is paused until it is done.</source>
-        <translation type="unfinished"></translation>
+        <translation>Borra la caché y las cookies de todo el navegador. La navegación se pausa hasta que termine.</translation>
     </message>
     <message>
         <source>Settings</source>
@@ -2848,15 +2848,15 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Show bookmarks bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar barra de marcadores</translation>
     </message>
     <message>
         <source>Restore open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>Restaurar pestañas abiertas</translation>
     </message>
     <message>
         <source>Turn on to save your tabs only on this device and restore them next time. Turning off deletes all saved session data.</source>
-        <translation type="unfinished"></translation>
+        <translation>Actívalo para guardar tus pestañas solo en este dispositivo y restaurarlas la próxima vez. Desactivarlo elimina todos los datos de sesión guardados.</translation>
     </message>
 </context>
 <context>
@@ -2894,7 +2894,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Show fees (will be enabled once the form is filled)</source>
-        <translation></translation>
+        <translation>Mostrar comisiones (se habilitará una vez completado el formulario)</translation>
     </message>
     <message>
         <source>Choose number of tokens to burn to see gas fees</source>
@@ -2925,11 +2925,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">Tus activos en %1</translation>
+        <translation>Tus activos en %1</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">Activos populares</translation>
+        <translation>Activos populares</translation>
     </message>
     <message>
         <source>Ways to buy %1 for %2</source>
@@ -3099,7 +3099,7 @@ Do you wish to override the security check and continue?</source>
     <name>ChatContentView</name>
     <message>
         <source>Blocked</source>
-        <translation></translation>
+        <translation>Bloqueado</translation>
     </message>
 </context>
 <context>
@@ -3239,15 +3239,15 @@ Do you wish to override the security check and continue?</source>
     <name>ChatMessagesView</name>
     <message>
         <source>Couldn&apos;t add reaction</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo añadir la reacción</translation>
     </message>
     <message>
         <source>Couldn&apos;t remove reaction</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo eliminar la reacción</translation>
     </message>
     <message>
         <source>Please try again later</source>
-        <translation type="unfinished">Por favor, intenta de nuevo más tarde</translation>
+        <translation>Por favor, intenta de nuevo más tarde</translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -3307,7 +3307,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Minted by %1</source>
-        <translation></translation>
+        <translation>Acuñado por %1</translation>
     </message>
     <message>
         <source>Properties</source>
@@ -3377,7 +3377,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Displaying collectibles on %1 is not currently supported by Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status actualmente no admite mostrar coleccionables en %1.</translation>
     </message>
 </context>
 <context>
@@ -3444,7 +3444,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
     <message>
         <source>Others</source>
@@ -3540,11 +3540,11 @@ no compatible</translation>
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Invitar contactos</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
 </context>
 <context>
@@ -3611,7 +3611,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Leave Community</source>
-        <translation></translation>
+        <translation>Abandonar comunidad</translation>
     </message>
 </context>
 <context>
@@ -3622,7 +3622,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Join Community</source>
-        <translation></translation>
+        <translation>Unirse a la comunidad</translation>
     </message>
     <message>
         <source>Create New Community</source>
@@ -3690,7 +3690,7 @@ no compatible</translation>
     <name>CommunityColumnView</name>
     <message>
         <source>Search channels...</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar canales...</translation>
     </message>
     <message>
         <source>Create channel</source>
@@ -3746,7 +3746,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Join Community</source>
-        <translation></translation>
+        <translation>Unirse a la comunidad</translation>
     </message>
     <message>
         <source>Request to join failed</source>
@@ -3773,19 +3773,19 @@ no compatible</translation>
     <name>CommunityFetchPopup</name>
     <message>
         <source>Unable to fetch the community</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo obtener la comunidad</translation>
     </message>
     <message>
         <source>We&apos;re fetching community...</source>
-        <translation type="unfinished"></translation>
+        <translation>Obteniendo la comunidad...</translation>
     </message>
     <message>
         <source>It may be offline, or Status couldn&apos;t reach it</source>
-        <translation type="unfinished"></translation>
+        <translation>Puede estar sin conexión, o Status no pudo contactarla</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">Reintentar</translation>
+        <translation>Reintentar</translation>
     </message>
 </context>
 <context>
@@ -3952,7 +3952,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Collectible minting failed</source>
-        <translation></translation>
+        <translation>Error al acuñar el coleccionable</translation>
     </message>
     <message>
         <source>Review token details before minting it as they can&apos;t be edited later</source>
@@ -3960,7 +3960,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Mint</source>
-        <translation></translation>
+        <translation>Acuñar</translation>
     </message>
     <message>
         <source>Loading token holders...</source>
@@ -3971,7 +3971,7 @@ no compatible</translation>
     <name>CommunityTokensStore</name>
     <message>
         <source>Transaction failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Transacción fallida</translation>
     </message>
 </context>
 <context>
@@ -4024,35 +4024,35 @@ no compatible</translation>
     </message>
     <message>
         <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Se cambiará tu contraseña. Esto solo vuelve a cifrar el archivo de clave de tu perfil y toma un momento; no es necesario reiniciar.</translation>
     </message>
     <message>
         <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tus datos se volverán a cifrar por completo con una nueva clave de cifrado. Este proceso puede tardar algún tiempo, durante el cual no podrás interactuar con la aplicación. No cierres la aplicación ni apagues tu dispositivo. Hacerlo provocará la corrupción de datos, la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status.</translation>
     </message>
     <message>
         <source>Your data must now be re-encrypted with your new password. This one-time process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status. Future password changes will be instant.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tus datos deben volver a cifrarse ahora con tu nueva contraseña. Este proceso único puede tardar algún tiempo, durante el cual no podrás interactuar con la aplicación. No cierres la aplicación ni apagues tu dispositivo. Hacerlo provocará la corrupción de datos, la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status. Los futuros cambios de contraseña serán instantáneos.</translation>
     </message>
     <message>
         <source>Also re-encrypt my data with a new encryption key</source>
-        <translation type="unfinished"></translation>
+        <translation>También volver a cifrar mis datos con una nueva clave de cifrado</translation>
     </message>
     <message>
         <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo es necesario si sospechas que tu dispositivo fue comprometido. Tarda considerablemente más y requiere reiniciar.</translation>
     </message>
     <message>
         <source>Password changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña cambiada</translation>
     </message>
     <message>
         <source>Re-encrypting your data...</source>
-        <translation type="unfinished"></translation>
+        <translation>Volviendo a cifrar tus datos...</translation>
     </message>
     <message>
         <source>Changing your password...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cambiando tu contraseña...</translation>
     </message>
     <message>
         <source>Restart Status and log in using your new password</source>
@@ -4060,7 +4060,7 @@ no compatible</translation>
     </message>
     <message>
         <source>You can continue using Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Puedes seguir usando Status</translation>
     </message>
     <message>
         <source>Do not quit the app or turn off your device</source>
@@ -4068,7 +4068,7 @@ no compatible</translation>
     </message>
     <message>
         <source>This should only take a moment</source>
-        <translation type="unfinished"></translation>
+        <translation>Esto solo debería tomar un momento</translation>
     </message>
     <message>
         <source>Change password</source>
@@ -4088,7 +4088,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Cerrar</translation>
+        <translation>Cerrar</translation>
     </message>
 </context>
 <context>
@@ -4148,14 +4148,14 @@ no compatible</translation>
     <name>ConfirmKeyPairForStopUsingState</name>
     <message>
         <source>I understand Keycard will no longer be used for signing, and Status password will be required</source>
-        <translation type="unfinished"></translation>
+        <translation>Entiendo que Keycard ya no se usará para firmar, y se requerirá la contraseña de Status</translation>
     </message>
 </context>
 <context>
     <name>ConfirmPasswordState</name>
     <message>
         <source>Have you written down your password?</source>
-        <translation type="unfinished">¿Has anotado tu contraseña?</translation>
+        <translation>¿Has anotado tu contraseña?</translation>
     </message>
     <message>
         <source>You will never be able to recover your password if you lose it.</source>
@@ -4167,11 +4167,11 @@ no compatible</translation>
     </message>
     <message>
         <source>If you need to, write it using pen and paper and keep in a safe place.</source>
-        <translation type="unfinished">Si es necesario, escríbela con lápiz y papel y guárdala en un lugar seguro.</translation>
+        <translation>Si es necesario, escríbela con lápiz y papel y guárdala en un lugar seguro.</translation>
     </message>
     <message>
         <source>Confirm your password (again)</source>
-        <translation type="unfinished">Confirma tu contraseña (de nuevo)</translation>
+        <translation>Confirma tu contraseña (de nuevo)</translation>
     </message>
 </context>
 <context>
@@ -4228,11 +4228,11 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <name>ConfirmationPopup</name>
     <message>
         <source>Enable KLIPY GIFs?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Habilitar los GIFs de KLIPY?</translation>
     </message>
     <message>
         <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation type="unfinished"></translation>
+        <translation>Una vez habilitado, los GIFs publicados en el chat pueden compartir tus metadatos con KLIPY.</translation>
     </message>
     <message>
         <source>Enable</source>
@@ -4288,118 +4288,118 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <name>Constants</name>
     <message>
         <source>Key pair starting with whitespace are not allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>No se permite que el par de claves comience con espacios en blanco</translation>
     </message>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>El par de claves debe tener al menos %n carácter</numerusform>
+            <numerusform>El par de claves debe tener al menos %n caracteres</numerusform>
         </translation>
     </message>
     <message>
         <source>Only letters and numbers allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo se permiten letras y números</translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, whitespaces and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo se permiten letras, números, guiones bajos, puntos, espacios en blanco y guiones</translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo se permiten letras, números, guiones bajos, puntos, comas, espacios en blanco y guiones</translation>
     </message>
     <message>
         <source>Special characters are not allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>No se permiten caracteres especiales</translation>
     </message>
     <message>
         <source>Only letters, numbers and ASCII characters allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo se permiten letras, números y caracteres ASCII</translation>
     </message>
     <message>
         <source>Invalid characters (letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caracteres inválidos (solo letras y números, un único espacio en blanco, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>Name is too cool (use letters and numbers, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>El nombre es demasiado genial (usa solo letras y números, un único espacio en blanco, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>Whole numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo números enteros</translation>
     </message>
     <message>
         <source>Positive real numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo números reales positivos</translation>
     </message>
     <message>
         <source>How to display the QR code on your other device</source>
-        <translation type="unfinished"></translation>
+        <translation>Cómo mostrar el código QR en tu otro dispositivo</translation>
     </message>
     <message>
         <source>How to copy the encrypted key from your other device</source>
-        <translation type="unfinished"></translation>
+        <translation>Cómo copiar la clave cifrada desde tu otro dispositivo</translation>
     </message>
     <message>
         <source>Limit of 20 accounts reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Se alcanzó el límite de 20 cuentas</translation>
     </message>
     <message>
         <source>Remove any account to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elimina alguna cuenta para añadir una nueva.</translation>
     </message>
     <message>
         <source>Limit of 5 key pairs reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Se alcanzó el límite de 5 pares de claves</translation>
     </message>
     <message>
         <source>Remove key pair to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elimina un par de claves para añadir uno nuevo.</translation>
     </message>
     <message>
         <source>Limit of 3 watched addresses reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Se alcanzó el límite de 3 direcciones observadas</translation>
     </message>
     <message>
         <source>Remove a watched address to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elimina una dirección observada para añadir una nueva.</translation>
     </message>
     <message>
         <source>Limit of 20 saved addresses reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Se alcanzó el límite de 20 direcciones guardadas</translation>
     </message>
     <message>
         <source>Remove a saved address to add a new one.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elimina una dirección guardada para añadir una nueva.</translation>
     </message>
     <message>
         <source>Username already taken :(</source>
-        <translation type="unfinished"></translation>
+        <translation>Nombre de usuario ya en uso :(</translation>
     </message>
     <message>
         <source>Username doesn’t belong to you :(</source>
-        <translation type="unfinished"></translation>
+        <translation>El nombre de usuario no te pertenece :(</translation>
     </message>
     <message>
         <source>Continuing will connect this username with your chat key.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si continúas, este nombre de usuario se conectará con tu clave de chat.</translation>
     </message>
     <message>
         <source>✓ Username available!</source>
-        <translation type="unfinished"></translation>
+        <translation>✓ ¡Nombre de usuario disponible!</translation>
     </message>
     <message>
         <source>Username is already connected with your chat key and can be used inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>El nombre de usuario ya está conectado con tu clave de chat y puede usarse dentro de Status.</translation>
     </message>
     <message>
         <source>This user name is owned by you and connected with your chat key. Continue to set `Show my ENS username in chats`.</source>
-        <translation type="unfinished"></translation>
+        <translation>Este nombre de usuario te pertenece y está conectado con tu clave de chat. Continúa para activar «Mostrar mi nombre de usuario ENS en los chats».</translation>
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation type="unfinished"></translation>
+        <translation>Continuar requerirá una transacción para conectar el nombre de usuario con tu clave de chat actual.</translation>
     </message>
 </context>
 <context>
@@ -4433,7 +4433,7 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <name>ContactsColumnView</name>
     <message>
         <source>Search contacts and groups...</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar contactos y grupos...</translation>
     </message>
 </context>
 <context>
@@ -4482,7 +4482,7 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
     <message>
         <source>Blocked</source>
-        <translation></translation>
+        <translation>Bloqueado</translation>
     </message>
     <message>
         <source>Search by name or chat key</source>
@@ -4494,7 +4494,7 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
     <message>
         <source>Received</source>
-        <translation></translation>
+        <translation>Recibido</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -4570,11 +4570,11 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
     <message>
         <source>Your profile encryption key will also be updated. Do you wish to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>También se actualizará la clave de cifrado de tu perfil. ¿Deseas continuar?</translation>
     </message>
     <message>
         <source>Your data will also be re-encrypted, restricting access to Status for up to 30 mins. Do you wish to continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Tus datos también se volverán a cifrar, lo que restringirá el acceso a Status durante hasta 30 minutos. ¿Deseas continuar?</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -4598,7 +4598,8 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>Your profile data was re-encrypted successfully.
 Log in with your new password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tus datos de perfil se volvieron a cifrar correctamente.
+Inicia sesión con tu nueva contraseña.</translation>
     </message>
     <message>
         <source>Re-encryption failed</source>
@@ -4672,22 +4673,22 @@ Log in with your new password.</source>
     <name>CountdownProgressIndicator</name>
     <message>
         <source>%1s</source>
-        <translation type="unfinished"></translation>
+        <translation>%1s</translation>
     </message>
 </context>
 <context>
     <name>CrashedWebPage</name>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Algo salió mal</translation>
     </message>
     <message>
         <source>This page stopped responding and needs to be reloaded.</source>
-        <translation type="unfinished"></translation>
+        <translation>Esta página dejó de responder y necesita recargarse.</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Recargar</translation>
     </message>
 </context>
 <context>
@@ -4868,7 +4869,7 @@ Log in with your new password.</source>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods and hyphens allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo se permiten letras, números, guiones bajos, puntos y guiones</translation>
     </message>
     <message>
         <source>Channel colour</source>
@@ -5088,39 +5089,39 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     <name>CreatePasswordState</name>
     <message>
         <source>Create a password</source>
-        <translation type="unfinished">Crea una contraseña</translation>
+        <translation>Crea una contraseña</translation>
     </message>
     <message>
         <source>Create a password to unlock Status on this device &amp; sign transactions. &lt;span style=&apos;color:%1;&apos;&gt;You won’t be able to recover password if lost.&lt;/span&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Crea una contraseña para desbloquear Status en este dispositivo y firmar transacciones. &lt;span style=&apos;color:%1;&apos;&gt;No podrás recuperar la contraseña si la pierdes.&lt;/span&gt;</translation>
     </message>
     <message>
         <source>New password</source>
-        <translation type="unfinished"></translation>
+        <translation>Nueva contraseña</translation>
     </message>
     <message>
         <source>To strengthen your password consider including:</source>
-        <translation type="unfinished"></translation>
+        <translation>Para fortalecer tu contraseña, considera incluir:</translation>
     </message>
     <message>
         <source>Lower case</source>
-        <translation type="unfinished">Minúsculas</translation>
+        <translation>Minúsculas</translation>
     </message>
     <message>
         <source>Upper case</source>
-        <translation type="unfinished">Mayúsculas</translation>
+        <translation>Mayúsculas</translation>
     </message>
     <message>
         <source>Numbers</source>
-        <translation type="unfinished">Números</translation>
+        <translation>Números</translation>
     </message>
     <message>
         <source>Symbols</source>
-        <translation type="unfinished">Símbolos</translation>
+        <translation>Símbolos</translation>
     </message>
     <message>
         <source>Confirm password</source>
-        <translation type="unfinished">Confirmar contraseña</translation>
+        <translation>Confirmar contraseña</translation>
     </message>
 </context>
 <context>
@@ -5155,11 +5156,11 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
     <message>
         <source>Use Keycard</source>
-        <translation type="unfinished">Usar Keycard</translation>
+        <translation>Usar Keycard</translation>
     </message>
     <message>
         <source>Reveal what you have on Keycard first</source>
-        <translation type="unfinished"></translation>
+        <translation>Primero revela lo que tienes en Keycard</translation>
     </message>
 </context>
 <context>
@@ -5410,7 +5411,7 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
     <message>
         <source>Max fees:</source>
-        <translation></translation>
+        <translation>Comisiones máximas:</translation>
     </message>
     <message>
         <source>No fees</source>
@@ -5430,7 +5431,7 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
     <message>
         <source>Fees</source>
-        <translation></translation>
+        <translation>Comisiones</translation>
     </message>
     <message>
         <source>Max. fees on %1</source>
@@ -5487,7 +5488,7 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     <name>DAppsUriCopyInstructionsPopup</name>
     <message>
         <source>How to copy the dApp URI</source>
-        <translation></translation>
+        <translation>Cómo copiar el URI de la dApp</translation>
     </message>
     <message>
         <source>Navigate to a dApp with WalletConnect support</source>
@@ -5665,152 +5666,153 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard está vacío</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard está bloqueado</translation>
     </message>
     <message>
         <source>Keycard stores only PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard solo almacena el PIN</translation>
     </message>
     <message>
         <source>Keycard stores Status profile key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard almacena el par de claves del perfil de Status</translation>
     </message>
     <message>
         <source>Keycard stores key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard almacena el par de claves</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">Keycard</translation>
+        <translation>Keycard</translation>
     </message>
     <message>
         <source>Keycard is blocked due to five failed PUK input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard está bloqueado debido a cinco intentos fallidos de introducción del PUK</translation>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard está bloqueado debido a tres intentos fallidos de introducción del PIN</translation>
     </message>
     <message>
         <source>You are using this Keycard to login to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Estás usando este Keycard para iniciar sesión en Status</translation>
     </message>
     <message>
         <source>This key pair have been already added to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Este par de claves ya se ha añadido a la billetera de Status</translation>
     </message>
     <message>
         <source>Key pair has not been added to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>El par de claves no se ha añadido a la billetera de Status</translation>
     </message>
     <message>
         <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>No puedes operar con el contenido de Keycard en este momento, porque Keycard no tiene espacios de emparejamiento libres. Pero puedes usarlo con instalaciones emparejadas anteriormente.</translation>
     </message>
     <message>
         <source>Status profile is not migrated to keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>El perfil de Status no está migrado a Keycard.</translation>
     </message>
     <message>
         <source>, </source>
-        <translation type="unfinished"></translation>
+        <translation>, </translation>
     </message>
     <message>
         <source>UID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UID: %1</translation>
     </message>
     <message>
         <source>What you can do:</source>
-        <translation type="unfinished"></translation>
+        <translation>Qué puedes hacer:</translation>
     </message>
     <message>
         <source>Move profile key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Mover el par de claves del perfil a Keycard</translation>
     </message>
     <message>
         <source>Move key pair from Status wallet to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Mover el par de claves de la billetera de Status a Keycard</translation>
     </message>
     <message>
         <source>Keycard will be required for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Se requerirá Keycard para firmar</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar un nuevo par de claves a Keycard</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloquear con frase de recuperación</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloquear con PUK</translation>
     </message>
     <message>
         <source>If you set your PUK earlier for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Si ya configuraste tu PUK para este Keycard</translation>
     </message>
     <message>
         <source>Add key pair to Status wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir par de claves a la billetera de Status</translation>
     </message>
     <message>
         <source>You’ll be able to sign transactions in Status wallet with Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Podrás firmar transacciones en la billetera de Status con Keycard</translation>
     </message>
     <message>
         <source>New name will be visible in Status and in other apps</source>
-        <translation type="unfinished"></translation>
+        <translation>El nuevo nombre será visible en Status y en otras aplicaciones</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Configurar o cambiar PUK</translation>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar todo de Keycard</translation>
     </message>
     <message>
         <source>Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Se requerirá Keycard para firmar e iniciar sesión en Status</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar un par de claves desde una frase de recuperación</translation>
     </message>
     <message>
         <source>In case you lost Keycard, want to create a backup or import a
 key pair. Keycard will be required for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Por si pierdes tu Keycard, quieres crear una copia de seguridad o importar un
+par de claves. Se requerirá Keycard para firmar</translation>
     </message>
     <message>
         <source>If you want to have a different PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Si quieres tener un PIN diferente</translation>
     </message>
     <message>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>Renombrar</translation>
     </message>
     <message>
         <source>If you want an additional recovery option</source>
-        <translation type="unfinished"></translation>
+        <translation>Si quieres una opción de recuperación adicional</translation>
     </message>
     <message>
         <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Requiere proporcionar la frase de recuperación del par de claves almacenado en Keycard</translation>
     </message>
     <message>
         <source>Factory reset Keycard</source>
-        <translation type="unfinished">Restablecer Keycard de fábrica</translation>
+        <translation>Restablecer Keycard de fábrica</translation>
     </message>
     <message>
         <source>No free pairing slots</source>
-        <translation type="unfinished"></translation>
+        <translation>Sin espacios de emparejamiento libres</translation>
     </message>
 </context>
 <context>
@@ -5853,23 +5855,23 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Full metadata privacy means it&apos;s impossible to tell who you are talking to by surveilling your internet traffic</source>
-        <translation type="unfinished"></translation>
+        <translation>La privacidad total de metadatos significa que es imposible saber con quién hablas vigilando tu tráfico de internet</translation>
     </message>
     <message>
         <source>Status is home to crypto&apos;s leading multi-chain self-custodial wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Status alberga la billetera multicadena autocustodiada líder en cripto</translation>
     </message>
     <message>
         <source>Your cryptographic key pairs encrypt all of your messages which can only be unlocked by the intended recipient</source>
-        <translation type="unfinished"></translation>
+        <translation>Tus pares de claves criptográficas cifran todos tus mensajes, que solo pueden ser desbloqueados por el destinatario previsto</translation>
     </message>
     <message>
         <source>Status&apos; Web3 browser requires all DApps to ask permission before connecting to your wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>El navegador Web3 de Status exige que todas las DApps pidan permiso antes de conectarse a tu billetera</translation>
     </message>
     <message>
         <source>Status is open source software that lets you interact with p2p networks. Status itself doesn&apos;t provide any services</source>
-        <translation type="unfinished"></translation>
+        <translation>Status es un software de código abierto que te permite interactuar con redes p2p. Status en sí no proporciona ningún servicio</translation>
     </message>
     <message>
         <source>Status is a way to access p2p networks that are permissionlessly created and run by individuals around the world</source>
@@ -5901,35 +5903,35 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Status is a public good licensed under the MPL-2.0 open source license, for anyone to share, modify and benefit from</source>
-        <translation type="unfinished"></translation>
+        <translation>Status es un bien público con licencia de código abierto MPL-2.0, para que cualquiera pueda compartirlo, modificarlo y beneficiarse de él</translation>
     </message>
     <message>
         <source>The only continent that doesn&apos;t (yet!) have any Status core contributors is Antarctica</source>
-        <translation type="unfinished"></translation>
+        <translation>El único continente que (¡todavía!) no tiene colaboradores principales de Status es la Antártida</translation>
     </message>
     <message>
         <source>We are the 5th most active crypto project on GitHub</source>
-        <translation type="unfinished"></translation>
+        <translation>Somos el quinto proyecto cripto más activo en GitHub</translation>
     </message>
     <message>
         <source>Many other messengers with e2e encryption don&apos;t have metadata privacy!</source>
-        <translation type="unfinished"></translation>
+        <translation>¡Muchos otros mensajeros con cifrado de extremo a extremo no tienen privacidad de metadatos!</translation>
     </message>
     <message>
         <source>Help to translate Status into your native language. See https://status.app/translations for more info</source>
-        <translation type="unfinished"></translation>
+        <translation>Ayuda a traducir Status a tu idioma nativo. Consulta https://status.app/translations para más información</translation>
     </message>
     <message>
         <source>Status has a multi-chain wallet which will allow quick and easy multi-chain txns.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status tiene una billetera multicadena que permitirá transacciones multicadena rápidas y sencillas.</translation>
     </message>
     <message>
         <source>Status&apos; Nimbus team is collaborating with the Ethereum Foundation to create the Portal Network</source>
-        <translation type="unfinished"></translation>
+        <translation>El equipo Nimbus de Status está colaborando con la Ethereum Foundation para crear la Portal Network</translation>
     </message>
     <message>
         <source>Status&apos; Portal Network client (Fluffy) will let Status users interact with Ethereum in a fully decentralised way</source>
-        <translation type="unfinished"></translation>
+        <translation>El cliente Portal Network de Status (Fluffy) permitirá a los usuarios de Status interactuar con Ethereum de forma completamente descentralizada</translation>
     </message>
     <message>
         <source>Status supports free communication without the approval or oversight of big tech</source>
@@ -6187,7 +6189,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caracteres inválidos (usa solo letras, números, guiones, guiones bajos y espacios)</translation>
     </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
@@ -6250,73 +6252,73 @@ key pair. Keycard will be required for signing</source>
     <name>DownloadPill</name>
     <message>
         <source>Missing file</source>
-        <translation type="unfinished"></translation>
+        <translation>Archivo no encontrado</translation>
     </message>
     <message>
         <source>Cancelled</source>
-        <translation type="unfinished">Cancelado</translation>
+        <translation>Cancelado</translation>
     </message>
     <message>
         <source>Interrupted</source>
-        <translation type="unfinished"></translation>
+        <translation>Interrumpido</translation>
     </message>
 </context>
 <context>
     <name>DownloadRecordMenu</name>
     <message>
         <source>Share file</source>
-        <translation type="unfinished"></translation>
+        <translation>Compartir archivo</translation>
     </message>
     <message>
         <source>Copy file path</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiar ruta del archivo</translation>
     </message>
     <message>
         <source>Share URL</source>
-        <translation type="unfinished"></translation>
+        <translation>Compartir URL</translation>
     </message>
     <message>
         <source>Copy URL</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiar URL</translation>
     </message>
     <message>
         <source>Downloads</source>
-        <translation type="unfinished">Descargas</translation>
+        <translation>Descargas</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation type="unfinished">Pausar</translation>
+        <translation>Pausar</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation type="unfinished">Reanudar</translation>
+        <translation>Reanudar</translation>
     </message>
     <message>
         <source>Open in Browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir en el navegador</translation>
     </message>
     <message>
         <source>Show in folder</source>
-        <translation type="unfinished">Mostrar en carpeta</translation>
+        <translation>Mostrar en carpeta</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">Reintentar</translation>
+        <translation>Reintentar</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Dismiss</source>
-        <translation type="unfinished"></translation>
+        <translation>Descartar</translation>
     </message>
 </context>
 <context>
     <name>DownloadsListView</name>
     <message>
         <source>Downloaded files will appear here.</source>
-        <translation type="unfinished">Los archivos descargados aparecerán aquí.</translation>
+        <translation>Los archivos descargados aparecerán aquí.</translation>
     </message>
 </context>
 <context>
@@ -6369,11 +6371,11 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>No members found</source>
-        <translation type="unfinished"></translation>
+        <translation>No se encontraron miembros</translation>
     </message>
     <message>
         <source>Show fees (will be enabled once the form is filled)</source>
-        <translation></translation>
+        <translation>Mostrar comisiones (se habilitará una vez completado el formulario)</translation>
     </message>
     <message>
         <source>Add valid “What” and “To” values to see fees</source>
@@ -6478,19 +6480,19 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Please name your token name (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ponle un nombre a tu token (usa solo letras, números, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>Your token name is too cool (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>El nombre de tu token es demasiado genial (usa solo letras, números, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>Your token name contains invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>El nombre de tu token contiene caracteres inválidos (usa solo letras, números, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>Only letters, numbers, standard punctuation and emojis allowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo se permiten letras, números, puntuación estándar y emojis</translation>
     </message>
     <message>
         <source>Symbol</source>
@@ -6719,7 +6721,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Mint</source>
-        <translation></translation>
+        <translation>Acuñar</translation>
     </message>
 </context>
 <context>
@@ -6774,22 +6776,22 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>There was an error saving the permission: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Se produjo un error al guardar el permiso: %1</translation>
     </message>
 </context>
 <context>
     <name>EmptyChatPanel</name>
     <message>
         <source>%1 to connect with or&lt;br&gt;invite your friends to Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;for welcome messages, how-to tips, or just to share feedback or issues.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 para conectar con&lt;br&gt;tus amigos o invitarlos a Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;para mensajes de bienvenida, consejos de uso, o simplemente para compartir comentarios o problemas.</translation>
     </message>
     <message>
         <source>Share your profile</source>
-        <translation type="unfinished">Comparte tu perfil</translation>
+        <translation>Comparte tu perfil</translation>
     </message>
     <message>
         <source>Chat with the Status Team peer-to-peer bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Chatea con el bot peer-to-peer del equipo de Status</translation>
     </message>
 </context>
 <context>
@@ -6808,7 +6810,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Error while contacting KLIPY API, please retry.</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al contactar con la API de KLIPY, inténtalo de nuevo.</translation>
     </message>
     <message>
         <source>Retry</source>
@@ -6823,7 +6825,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Use biometrics to fill in your password</source>
-        <translation></translation>
+        <translation>Usa la biometría para completar tu contraseña</translation>
     </message>
     <message>
         <source>Enable</source>
@@ -6842,7 +6844,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Use biometrics to fill in your password</source>
-        <translation></translation>
+        <translation>Usa la biometría para completar tu contraseña</translation>
     </message>
     <message>
         <source>Maybe later</source>
@@ -6876,7 +6878,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>This service operates using the Archive Protocol, which will be automatically enabled using Logos Storage by default.</source>
-        <translation type="unfinished"></translation>
+        <translation>Este servicio funciona mediante el Archive Protocol, que se habilitará automáticamente usando Logos Storage de forma predeterminada.</translation>
     </message>
     <message>
         <source>Read more</source>
@@ -6907,50 +6909,50 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Enable on-device backup?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Habilitar copia de seguridad en el dispositivo?</translation>
     </message>
     <message>
         <source>On-device backups are:&lt;br&gt;&lt;b&gt;Automatic&lt;/b&gt; –  created every 30 minutes&lt;br&gt;&lt;b&gt;Secure&lt;/b&gt; – encrypted with your profile’s private key&lt;br&gt;&lt;b&gt;Private&lt;/b&gt; – stored only on your device</source>
-        <translation type="unfinished"></translation>
+        <translation>Las copias de seguridad en el dispositivo son:&lt;br&gt;&lt;b&gt;Automáticas&lt;/b&gt; –  se crean cada 30 minutos&lt;br&gt;&lt;b&gt;Seguras&lt;/b&gt; – cifradas con la clave privada de tu perfil&lt;br&gt;&lt;b&gt;Privadas&lt;/b&gt; – se almacenan solo en tu dispositivo</translation>
     </message>
     <message>
         <source>To enable backups, choose a folder to store your backup files under the &lt;b&gt;Backup location&lt;/b&gt; setting.&lt;br&gt;&lt;br&gt;You can also &lt;b&gt;optionally&lt;/b&gt; back up your &lt;b&gt;1-on-1, group, and community messages&lt;/b&gt; by turning on the &lt;b&gt;Backup your messages&lt;/b&gt; toggle under the &lt;b&gt;Backup data&lt;/b&gt; setting.</source>
-        <translation type="unfinished"></translation>
+        <translation>Para habilitar las copias de seguridad, elige una carpeta donde guardar tus archivos de copia de seguridad en el ajuste &lt;b&gt;Ubicación de la copia de seguridad&lt;/b&gt;.&lt;br&gt;&lt;br&gt;También puedes, &lt;b&gt;opcionalmente&lt;/b&gt;, hacer copia de seguridad de tus &lt;b&gt;mensajes individuales, de grupo y de comunidad&lt;/b&gt; activando el interruptor &lt;b&gt;Hacer copia de seguridad de tus mensajes&lt;/b&gt; en el ajuste &lt;b&gt;Copia de seguridad de datos&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Go to settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ir a ajustes</translation>
     </message>
 </context>
 <context>
     <name>EnablePushNotificationsPopup</name>
     <message>
         <source>Enable notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar notificaciones</translation>
     </message>
     <message>
         <source>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</source>
-        <translation type="unfinished"></translation>
+        <translation>Recibe alertas de notificación de mensajes entrantes, menciones y solicitudes de contacto en tu dispositivo para que puedas mantenerte al día en tiempo real. Personalízalo en cualquier momento en &lt;b&gt;Ajustes → Notificaciones&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status usa APNs (Apple Push Notification service) únicamente para entregar las señales de notificación; el contenido de tus mensajes cifrados de extremo a extremo nunca pasa por ahí ni se almacena allí.</translation>
     </message>
     <message>
         <source>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Recibe notificaciones en tiempo real de mensajes entrantes, menciones y solicitudes de contacto en tu dispositivo para que puedas mantenerte al día y responder o reaccionar sin abrir la aplicación. Personalízalo en cualquier momento en &lt;b&gt;Ajustes → Notificaciones&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status entrega las notificaciones mediante su servicio en segundo plano en el dispositivo, sin terceros, servidores centralizados ni intermediarios involucrados.</translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
-        <translation type="unfinished">No me vuelvas a preguntar</translation>
+        <translation>No me vuelvas a preguntar</translation>
     </message>
     <message>
         <source>Maybe later</source>
-        <translation type="unfinished">Quizás más tarde</translation>
+        <translation>Quizás más tarde</translation>
     </message>
     <message>
         <source>Open settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir ajustes</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Continuar</translation>
+        <translation>Continuar</translation>
     </message>
 </context>
 <context>
@@ -7173,51 +7175,51 @@ key pair. Keycard will be required for signing</source>
     <name>EnsTermsAndConditionsPopup</name>
     <message>
         <source>Terms of name registration</source>
-        <translation type="unfinished">Términos de registro de nombre</translation>
+        <translation>Términos de registro de nombre</translation>
     </message>
     <message>
         <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation type="unfinished">Los fondos se depositan por 1 año. Tu SNT se bloqueará, pero no se gastará.</translation>
+        <translation>Los fondos se depositan por 1 año. Tu SNT se bloqueará, pero no se gastará.</translation>
     </message>
     <message>
         <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation type="unfinished">Después de 1 año, puedes liberar el nombre y recuperar tu depósito, o no tomar ninguna acción para mantener el nombre.</translation>
+        <translation>Después de 1 año, puedes liberar el nombre y recuperar tu depósito, o no tomar ninguna acción para mantener el nombre.</translation>
     </message>
     <message>
         <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation type="unfinished">Si los términos del contrato cambian —por ejemplo, Status actualiza el contrato— el usuario tiene derecho a liberar el nombre de usuario independientemente del tiempo retenido.</translation>
+        <translation>Si los términos del contrato cambian —por ejemplo, Status actualiza el contrato— el usuario tiene derecho a liberar el nombre de usuario independientemente del tiempo retenido.</translation>
     </message>
     <message>
         <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation type="unfinished">El controlador del contrato no puede acceder a tus fondos depositados. Sólo pueden ser devueltos a la dirección que los envió.</translation>
+        <translation>El controlador del contrato no puede acceder a tus fondos depositados. Sólo pueden ser devueltos a la dirección que los envió.</translation>
     </message>
     <message>
         <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation type="unfinished">Tu(s) dirección(es) se asociará(n) públicamente con tu nombre ENS.</translation>
+        <translation>Tu(s) dirección(es) se asociará(n) públicamente con tu nombre ENS.</translation>
     </message>
     <message>
         <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation type="unfinished">Los nombres de usuario se crean como nodos de subdominio de stateofus.eth y están sujetos a los términos del contrato inteligente de ENS.</translation>
+        <translation>Los nombres de usuario se crean como nodos de subdominio de stateofus.eth y están sujetos a los términos del contrato inteligente de ENS.</translation>
     </message>
     <message>
         <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation type="unfinished">Autorizas el contrato para transferir SNT en tu nombre. Esto solo puede ocurrir cuando apruebas una transacción para autorizar la transferencia.</translation>
+        <translation>Autorizas el contrato para transferir SNT en tu nombre. Esto solo puede ocurrir cuando apruebas una transacción para autorizar la transferencia.</translation>
     </message>
     <message>
         <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation type="unfinished">Estos términos están garantizados por la lógica del contrato inteligente en las direcciones:</translation>
+        <translation>Estos términos están garantizados por la lógica del contrato inteligente en las direcciones:</translation>
     </message>
     <message>
         <source>%1 (Status UsernameRegistrar).</source>
-        <translation type="unfinished">%1 (Status UsernameRegistrar).</translation>
+        <translation>%1 (Status UsernameRegistrar).</translation>
     </message>
     <message>
         <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Buscar en Etherscan&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Buscar en Etherscan&lt;/a&gt;</translation>
     </message>
     <message>
         <source>%1 (ENS Registry).</source>
-        <translation type="unfinished">%1 (ENS Registry).</translation>
+        <translation>%1 (ENS Registry).</translation>
     </message>
 </context>
 <context>
@@ -7339,11 +7341,11 @@ Por favor, agrégala e intenta de nuevo.</translation>
     <name>EnterKeyPairNameState</name>
     <message>
         <source>Name your key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Ponle nombre a tu par de claves</translation>
     </message>
     <message>
         <source>What would you like this key pair to be called?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Cómo te gustaría llamar a este par de claves?</translation>
     </message>
 </context>
 <context>
@@ -7354,7 +7356,7 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
     <message>
         <source>Enter a name</source>
-        <translation></translation>
+        <translation>Escribe un nombre</translation>
     </message>
     <message numerus="yes">
         <source>Key pair name must be at least %n character(s)</source>
@@ -7372,19 +7374,19 @@ Por favor, agrégala e intenta de nuevo.</translation>
     <name>EnterPairingPassword</name>
     <message>
         <source>Enter Keycard pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe la contraseña de emparejamiento de Keycard</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>Este Keycard se configuró con una contraseña de emparejamiento personalizada. Escríbela para continuar.</translation>
     </message>
     <message>
         <source>Pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña de emparejamiento</translation>
     </message>
     <message>
         <source>Pairing password incorrect</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña de emparejamiento incorrecta</translation>
     </message>
 </context>
 <context>
@@ -7406,61 +7408,62 @@ Por favor, agrégala e intenta de nuevo.</translation>
     <name>EnterPin</name>
     <message>
         <source>Authorization required</source>
-        <translation type="unfinished"></translation>
+        <translation>Autorización requerida</translation>
     </message>
     <message>
         <source>This key pair is not stored on your Keycard. Authorize with your profile
 to sign using the keys stored on this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Este par de claves no está almacenado en tu Keycard. Autoriza con tu perfil
+para firmar usando las claves almacenadas en este dispositivo.</translation>
     </message>
     <message>
         <source>Authorize</source>
-        <translation type="unfinished"></translation>
+        <translation>Autorizar</translation>
     </message>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">PIN incorrecto</translation>
+        <translation>PIN incorrecto</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Queda %n intento</numerusform>
             <numerusform>Quedan %n intentos</numerusform>
         </translation>
     </message>
     <message>
         <source>Enter the Keycard PIN</source>
-        <translation type="unfinished">Escribe el PIN de Keycard</translation>
+        <translation>Escribe el PIN de Keycard</translation>
     </message>
 </context>
 <context>
     <name>EnterPinState</name>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">PIN incorrecto</translation>
+        <translation>PIN incorrecto</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Queda %n intento</numerusform>
             <numerusform>Quedan %n intentos</numerusform>
         </translation>
     </message>
     <message>
         <source>PIN doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
+        <translation>El PIN no coincide</translation>
     </message>
     <message>
         <source>Enter new PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe el nuevo PIN</translation>
     </message>
     <message>
         <source>Repeat new PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Repite el nuevo PIN</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe el PIN de Keycard</translation>
     </message>
 </context>
 <context>
@@ -7471,7 +7474,7 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>Enter recovery phrase for %1 key pair</source>
-        <translation></translation>
+        <translation>Escribe la frase de recuperación para el par de claves %1</translation>
     </message>
     <message>
         <source>Type or paste your private key</source>
@@ -7499,7 +7502,7 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>Enter a name</source>
-        <translation></translation>
+        <translation>Escribe un nombre</translation>
     </message>
     <message numerus="yes">
         <source>Key pair name must be at least %n character(s)</source>
@@ -7517,23 +7520,23 @@ to sign using the keys stored on this device.</source>
     <name>EnterPukState</name>
     <message>
         <source>Repeat your Keycard PUK</source>
-        <translation type="unfinished">Repite tu PUK de Keycard</translation>
+        <translation>Repite tu PUK de Keycard</translation>
     </message>
     <message>
         <source>Choose a Keycard PUK</source>
-        <translation type="unfinished">Elige un PUK de Keycard</translation>
+        <translation>Elige un PUK de Keycard</translation>
     </message>
     <message>
         <source>Use numbers only</source>
-        <translation type="unfinished"></translation>
+        <translation>Usa solo números</translation>
     </message>
     <message>
         <source>PUK doesn&apos;t match</source>
-        <translation type="unfinished"></translation>
+        <translation>El PUK no coincide</translation>
     </message>
     <message>
         <source>Enter PUK</source>
-        <translation type="unfinished">Ingresa el PUK</translation>
+        <translation>Ingresa el PUK</translation>
     </message>
 </context>
 <context>
@@ -7544,7 +7547,7 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>Enter recovery phrase</source>
-        <translation></translation>
+        <translation>Escribe la frase de recuperación</translation>
     </message>
     <message>
         <source>Enter private key for %1 key pair</source>
@@ -7552,7 +7555,7 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>The entered recovery phrase is already added</source>
-        <translation></translation>
+        <translation>La frase de recuperación introducida ya ha sido añadida</translation>
     </message>
     <message>
         <source>This is not the correct recovery phrase for %1 key</source>
@@ -7564,7 +7567,7 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>Enter a name</source>
-        <translation></translation>
+        <translation>Escribe un nombre</translation>
     </message>
     <message numerus="yes">
         <source>Key pair name must be at least %n character(s)</source>
@@ -7582,11 +7585,11 @@ to sign using the keys stored on this device.</source>
     <name>EnterSeedPhraseState</name>
     <message>
         <source>Enter recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe la frase de recuperación</translation>
     </message>
     <message>
         <source>Invalid recovery phrase</source>
-        <translation type="unfinished">Frase de recuperación inválida</translation>
+        <translation>Frase de recuperación inválida</translation>
     </message>
 </context>
 <context>
@@ -7605,7 +7608,7 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>Enter word</source>
-        <translation></translation>
+        <translation>Escribe la palabra</translation>
     </message>
     <message>
         <source>Incorrect word</source>
@@ -7654,47 +7657,47 @@ to sign using the keys stored on this device.</source>
     <name>ExemptionsView</name>
     <message>
         <source>Community</source>
-        <translation type="unfinished">Comunidad</translation>
+        <translation>Comunidad</translation>
     </message>
     <message>
         <source>1:1 Chat</source>
-        <translation type="unfinished">Chat 1:1</translation>
+        <translation>Chat 1:1</translation>
     </message>
     <message>
         <source>Group Chat</source>
-        <translation type="unfinished">Chat grupal</translation>
+        <translation>Chat grupal</translation>
     </message>
     <message>
         <source>Muted</source>
-        <translation type="unfinished">Silenciado</translation>
+        <translation>Silenciado</translation>
     </message>
     <message>
         <source>Off</source>
-        <translation type="unfinished">Apagado</translation>
+        <translation>Apagado</translation>
     </message>
     <message>
         <source>Quiet</source>
-        <translation type="unfinished">Silencioso</translation>
+        <translation>Silencioso</translation>
     </message>
     <message>
         <source>Personal @ Mentions %1</source>
-        <translation type="unfinished">Menciones personales @ %1</translation>
+        <translation>Menciones personales @ %1</translation>
     </message>
     <message>
         <source>Global @ Mentions %1</source>
-        <translation type="unfinished">Menciones globales @ %1</translation>
+        <translation>Menciones globales @ %1</translation>
     </message>
     <message>
         <source>Alerts</source>
-        <translation type="unfinished">Alertas</translation>
+        <translation>Alertas</translation>
     </message>
     <message>
         <source>Other Messages %1</source>
-        <translation type="unfinished">Otros mensajes %1</translation>
+        <translation>Otros mensajes %1</translation>
     </message>
     <message>
         <source>Multiple Exemptions</source>
-        <translation type="unfinished">Múltiples exenciones</translation>
+        <translation>Múltiples exenciones</translation>
     </message>
 </context>
 <context>
@@ -7761,7 +7764,7 @@ to sign using the keys stored on this device.</source>
     </message>
     <message>
         <source>Syncing</source>
-        <translation></translation>
+        <translation>Sincronizando</translation>
     </message>
     <message>
         <source>3. Click &lt;font color=&apos;%1&apos;&gt;Setup Syncing&lt;/font&gt; and sync your other devices</source>
@@ -7788,11 +7791,11 @@ to sign using the keys stored on this device.</source>
     <name>ExportKeypair</name>
     <message>
         <source>Authenticate to create a QR code</source>
-        <translation type="unfinished"></translation>
+        <translation>Autentícate para crear un código QR</translation>
     </message>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">Autenticar</translation>
+        <translation>Autenticar</translation>
     </message>
     <message>
         <source>Encrypted key pairs code</source>
@@ -7879,11 +7882,11 @@ to sign using the keys stored on this device.</source>
     <message>
         <source>A factory reset will delete the key on this Keycard.
 Are you sure you want to do this?</source>
-        <translation type="unfinished">Un restablecimiento de fábrica eliminará la clave en este Keycard. ¿Estás seguro de que deseas hacer esto?</translation>
+        <translation>Un restablecimiento de fábrica eliminará la clave en este Keycard. ¿Estás seguro de que deseas hacer esto?</translation>
     </message>
     <message>
         <source>I understand the key pair on this Keycard will be deleted</source>
-        <translation type="unfinished">Entiendo que el par de claves en este Keycard será eliminado</translation>
+        <translation>Entiendo que el par de claves en este Keycard será eliminado</translation>
     </message>
 </context>
 <context>
@@ -7905,14 +7908,14 @@ Are you sure you want to do this?</source>
     <name>FeeRow</name>
     <message>
         <source>Max.</source>
-        <translation type="unfinished"></translation>
+        <translation>Máx.</translation>
     </message>
 </context>
 <context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
-        <translation></translation>
+        <translation>Comisiones</translation>
     </message>
     <message>
         <source>Select account to pay gas fees from</source>
@@ -7949,7 +7952,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
     <message>
         <source>Other</source>
@@ -7991,7 +7994,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Finalise %1 ownership</source>
-        <translation></translation>
+        <translation>Finalizar la propiedad de %1</translation>
     </message>
     <message>
         <source>Make this device the control node and update smart contract</source>
@@ -8066,7 +8069,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>You received your first community asset</source>
-        <translation></translation>
+        <translation>Recibiste tu primer activo de la comunidad</translation>
     </message>
     <message>
         <source>You received your first community collectible</source>
@@ -8107,53 +8110,53 @@ Are you sure you want to do this?</source>
     <name>FollowingAddressMenu</name>
     <message>
         <source>Address copied</source>
-        <translation type="unfinished">Dirección copiada</translation>
+        <translation>Dirección copiada</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation type="unfinished">Copiar dirección</translation>
+        <translation>Copiar dirección</translation>
     </message>
     <message>
         <source>Show address QR</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar código QR de la dirección</translation>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir a direcciones guardadas</translation>
     </message>
     <message>
         <source>Remove from saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitar de direcciones guardadas</translation>
     </message>
 </context>
 <context>
     <name>FollowingAddresses</name>
     <message>
         <source>Search for name, ENS or address</source>
-        <translation type="unfinished">Buscar por nombre, ENS o dirección</translation>
+        <translation>Buscar por nombre, ENS o dirección</translation>
     </message>
     <message>
         <source>No following addresses found. Check spelling or whether the address is correct.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se encontraron direcciones seguidas. Comprueba la ortografía o si la dirección es correcta.</translation>
     </message>
     <message>
         <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aún no hay seguimientos on-chain. Busca y sigue cuentas de Ethereum en %1 para verlas aquí.</translation>
     </message>
     <message>
         <source>Ethereum Follow Protocol</source>
-        <translation type="unfinished"></translation>
+        <translation>Ethereum Follow Protocol</translation>
     </message>
 </context>
 <context>
     <name>FollowingAddressesDelegate</name>
     <message>
         <source>Remove from saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitar de direcciones guardadas</translation>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir a direcciones guardadas</translation>
     </message>
 </context>
 <context>
@@ -8171,7 +8174,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeDesktopInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation type="unfinished"></translation>
+        <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8251,11 +8254,11 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
+        <translation>%1 %2</translation>
     </message>
     <message>
         <source>%1 %2 %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 %2 %3</translation>
     </message>
 </context>
 <context>
@@ -8269,7 +8272,7 @@ Are you sure you want to do this?</source>
     <name>GetSyncCodeMobileInstructions</name>
     <message>
         <source>Ensure both devices are on the same network</source>
-        <translation type="unfinished"></translation>
+        <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
     </message>
     <message>
         <source>Open Status on the device you want to import from</source>
@@ -8305,7 +8308,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Syncing</source>
-        <translation></translation>
+        <translation>Sincronizando</translation>
     </message>
     <message>
         <source>Copy the</source>
@@ -8349,11 +8352,11 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
+        <translation>%1 %2</translation>
     </message>
     <message>
         <source>%1 %2 %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 %2 %3</translation>
     </message>
 </context>
 <context>
@@ -8387,29 +8390,29 @@ Are you sure you want to do this?</source>
     <name>GroupsModel</name>
     <message>
         <source>Popular assets on %1</source>
-        <translation type="unfinished">Activos populares en %1</translation>
+        <translation>Activos populares en %1</translation>
     </message>
 </context>
 <context>
     <name>HandlersManager</name>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Información</translation>
     </message>
     <message>
         <source>Swap is not available in the testnet mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Swap no está disponible en el modo testnet.</translation>
     </message>
     <message>
         <source>Push notifications enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Notificaciones push habilitadas</translation>
     </message>
 </context>
 <context>
     <name>Helpers</name>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
     <message>
         <source>Other</source>
@@ -8440,7 +8443,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Last week</source>
-        <translation></translation>
+        <translation>La semana pasada</translation>
     </message>
     <message>
         <source>Earlier this month</source>
@@ -8448,7 +8451,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Last month</source>
-        <translation></translation>
+        <translation>El mes pasado</translation>
     </message>
     <message>
         <source>New transactions</source>
@@ -8520,7 +8523,7 @@ Are you sure you want to do this?</source>
     <name>HomePageDockButton</name>
     <message>
         <source>Unpin</source>
-        <translation></translation>
+        <translation>Desanclar</translation>
     </message>
     <message>
         <source>Disconnect</source>
@@ -8550,7 +8553,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Banned</source>
-        <translation></translation>
+        <translation>Baneado</translation>
     </message>
 </context>
 <context>
@@ -8587,35 +8590,35 @@ Are you sure you want to do this?</source>
     <name>HttpStatsModal</name>
     <message>
         <source>network %1 in %2 req · cache %3 in %4 req</source>
-        <translation type="unfinished"></translation>
+        <translation>red %1 en %2 solicitudes · caché %3 en %4 solicitudes</translation>
     </message>
     <message>
         <source>Total: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Total: %1</translation>
     </message>
     <message>
         <source>Disk cache: %1 of %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Caché de disco: %1 de %2</translation>
     </message>
     <message>
         <source>Not counted here: status-go, messaging, the webviews, and requests made outside the QML network access manager.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se incluye aquí: status-go, la mensajería, las vistas web y las solicitudes realizadas fuera del gestor de acceso de red de QML.</translation>
     </message>
     <message>
         <source>Refresh</source>
-        <translation type="unfinished">Actualizar</translation>
+        <translation>Actualizar</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished">Restablecer</translation>
+        <translation>Restablecer</translation>
     </message>
     <message>
         <source>Clear cache</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar caché</translation>
     </message>
     <message>
         <source>Total</source>
-        <translation type="unfinished">Total</translation>
+        <translation>Total</translation>
     </message>
 </context>
 <context>
@@ -8672,7 +8675,7 @@ Are you sure you want to do this?</source>
     <name>ImportCommunityPopup</name>
     <message>
         <source>Join Community</source>
-        <translation></translation>
+        <translation>Unirse a la comunidad</translation>
     </message>
     <message>
         <source>Invalid key</source>
@@ -8847,11 +8850,11 @@ Are you sure you want to do this?</source>
     <name>InsertEmptyKeycardState</name>
     <message>
         <source>Insert an empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserta un Keycard vacío</translation>
     </message>
     <message>
         <source>Insert an empty Keycard you want to migrate your key pair to.</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserta el Keycard vacío al que quieres migrar tu par de claves.</translation>
     </message>
 </context>
 <context>
@@ -9060,15 +9063,15 @@ Are you sure you want to do this?</source>
     <name>KeyPairCompactItem</name>
     <message>
         <source>Moving this key pair will require you to use your Keycard to login</source>
-        <translation type="unfinished">Mover este par de claves requerirá que uses tu Keycard para iniciar sesión</translation>
+        <translation>Mover este par de claves requerirá que uses tu Keycard para iniciar sesión</translation>
     </message>
     <message>
         <source>Keycard Locked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard bloqueado</translation>
     </message>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Contiene %n cuenta con rutas de derivación incompatibles con Keycard</numerusform>
             <numerusform>Contiene %n cuentas con rutas de derivación incompatibles con Keycard</numerusform>
         </translation>
@@ -9082,7 +9085,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Keycard Locked</source>
-        <translation></translation>
+        <translation>Keycard bloqueado</translation>
     </message>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
@@ -9093,846 +9096,847 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Active Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuentas activas</translation>
     </message>
 </context>
 <context>
     <name>KeycardAuth</name>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Conecta el lector de Keycard...</translation>
+        <translation>Conecta el lector de Keycard...</translation>
     </message>
     <message>
         <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Acerca o inserta el Keycard...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Leyendo Keycard...</translation>
+        <translation>Leyendo Keycard...</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard está vacío</translation>
     </message>
     <message>
         <source>There is no key pair on this Keycard</source>
-        <translation type="unfinished">No hay par de claves en este Keycard</translation>
+        <translation>No hay par de claves en este Keycard</translation>
     </message>
     <message>
         <source>This is not a Keycard</source>
-        <translation type="unfinished">Esto no es un Keycard</translation>
+        <translation>Esto no es un Keycard</translation>
     </message>
     <message>
         <source>Connection error</source>
-        <translation type="unfinished"></translation>
+        <translation>Error de conexión</translation>
     </message>
     <message>
         <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Algo salió mal, inténtalo de nuevo</translation>
     </message>
     <message>
         <source>Keycard locked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard bloqueado</translation>
     </message>
     <message>
         <source>PIN entered incorrectly too many times</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN introducido incorrectamente demasiadas veces</translation>
     </message>
     <message>
         <source>PUK entered incorrectly too many times</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK introducido incorrectamente demasiadas veces</translation>
     </message>
     <message>
         <source>Keycard pairing error</source>
-        <translation type="unfinished"></translation>
+        <translation>Error de emparejamiento del Keycard</translation>
     </message>
     <message>
         <source>Max pairing slots reached for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Se alcanzó el número máximo de emparejamientos para este Keycard</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Este Keycard se configuró con una contraseña de emparejamiento personalizada</translation>
     </message>
     <message>
         <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">Keycard incorrecto insertado</translation>
+        <translation>Se ha insertado un Keycard incorrecto</translation>
     </message>
     <message>
         <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard insertado no coincide con la clave esperada</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Éxito</translation>
     </message>
     <message>
         <source>The card is not a Keycard, try again with Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>La tarjeta no es un Keycard, inténtalo de nuevo con un Keycard.</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Algo salió mal</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">Inténtalo de nuevo</translation>
+        <translation>Inténtalo de nuevo</translation>
     </message>
 </context>
 <context>
     <name>KeycardChannelDrawer</name>
     <message>
         <source>Please tap your Keycard to the back of your device</source>
-        <translation type="unfinished"></translation>
+        <translation>Acerca tu Keycard a la parte trasera de tu dispositivo</translation>
     </message>
     <message>
         <source>Reading Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Leyendo Keycard</translation>
     </message>
     <message>
         <source>Please keep your Keycard in place</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantén tu Keycard en su lugar</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Éxito</translation>
     </message>
     <message>
         <source>Keycard operation completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>La operación del Keycard se completó correctamente</translation>
     </message>
     <message>
         <source>Keycard Not Supported</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard no compatible</translation>
     </message>
     <message>
         <source>Your device does not support keycard operations. Please try again with a different device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tu dispositivo no admite operaciones con Keycard. Inténtalo de nuevo con otro dispositivo.</translation>
     </message>
     <message>
         <source>Keycard Not Available</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard no disponible</translation>
     </message>
     <message>
         <source>Please enable NFC on your device to use the Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Activa el NFC en tu dispositivo para usar el Keycard.</translation>
     </message>
     <message>
         <source>Dismiss</source>
-        <translation type="unfinished"></translation>
+        <translation>Descartar</translation>
     </message>
     <message>
         <source>Ready to scan</source>
-        <translation type="unfinished"></translation>
+        <translation>Listo para escanear</translation>
     </message>
     <message>
         <source>Try to keep your Keycard in place</source>
-        <translation type="unfinished"></translation>
+        <translation>Intenta mantener tu Keycard en su lugar</translation>
     </message>
 </context>
 <context>
     <name>KeycardDetailsPage</name>
     <message>
         <source>No free pairing slots</source>
-        <translation type="unfinished"></translation>
+        <translation>No hay ranuras de emparejamiento libres</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard está vacío</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard está bloqueado</translation>
     </message>
     <message>
         <source>Keycard stores only PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard solo almacena el PIN</translation>
     </message>
     <message>
         <source>Profile already exists</source>
-        <translation type="unfinished"></translation>
+        <translation>El perfil ya existe</translation>
     </message>
     <message>
         <source>Keycard stores key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard almacena el par de claves</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">Keycard</translation>
+        <translation>Keycard</translation>
     </message>
     <message>
         <source>, </source>
-        <translation type="unfinished"></translation>
+        <translation>, </translation>
     </message>
     <message>
         <source>UID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UID: %1</translation>
     </message>
     <message>
         <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>No puedes operar con el contenido del Keycard en este momento porque no tiene ranuras de emparejamiento libres. Pero puedes usarlo con instalaciones emparejadas previamente.</translation>
     </message>
     <message>
         <source>Profile for key pair stored on Keycard already added to this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>El perfil del par de claves almacenado en el Keycard ya se agregó a este dispositivo.</translation>
     </message>
     <message>
         <source>Keycard stores information about your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard almacena información sobre tus cuentas</translation>
     </message>
     <message>
         <source>What you can do:</source>
-        <translation type="unfinished"></translation>
+        <translation>Qué puedes hacer:</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard and create new profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar un nuevo par de claves al Keycard y crear un nuevo perfil</translation>
     </message>
     <message>
         <source>Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Se requerirá el Keycard para firmar e iniciar sesión en Status</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar un par de claves desde la frase de recuperación</translation>
     </message>
     <message>
         <source>You’ll create a new profile or login if key pair already associated with existing Status profile. Keycard will be required for signing and logging in to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Crearás un nuevo perfil o iniciarás sesión si el par de claves ya está asociado a un perfil de Status existente. Se requerirá el Keycard para firmar e iniciar sesión en Status</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloquear con la frase de recuperación</translation>
     </message>
     <message>
         <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Requiere proporcionar la frase de recuperación del par de claves almacenado en el Keycard</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloquear con PUK</translation>
     </message>
     <message>
         <source>If you set your PUK earlier for this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Si configuraste tu PUK anteriormente para este Keycard</translation>
     </message>
     <message>
         <source>Login with this Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar sesión con este Keycard</translation>
     </message>
     <message>
         <source>Go back to login screen</source>
-        <translation type="unfinished"></translation>
+        <translation>Volver a la pantalla de inicio de sesión</translation>
     </message>
     <message>
         <source>You can login with password and move your profile to Keycard, from the settings/Keycard section</source>
-        <translation type="unfinished"></translation>
+        <translation>Puedes iniciar sesión con contraseña y mover tu perfil al Keycard desde la sección de ajustes/Keycard</translation>
     </message>
     <message>
         <source>Factory reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Restablecer de fábrica</translation>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar todo del Keycard</translation>
     </message>
 </context>
 <context>
     <name>KeycardLostPage</name>
     <message>
         <source>Lost Keycard</source>
-        <translation type="unfinished">Keycard perdida</translation>
+        <translation>Keycard perdido</translation>
     </message>
     <message>
         <source>If you don&apos;t have any other spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Si no tienes otro Keycard de repuesto</translation>
     </message>
     <message>
         <source>Buy new</source>
-        <translation type="unfinished"></translation>
+        <translation>Comprar uno nuevo</translation>
     </message>
     <message>
         <source>Go to Keycard.tech and order Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Ve a Keycard.tech y pide un Keycard</translation>
     </message>
     <message>
         <source>If you have a spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Si tienes un Keycard de repuesto</translation>
     </message>
     <message>
         <source>Read your spare Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Lee tu Keycard de repuesto</translation>
     </message>
     <message>
         <source>You may need to factory reset it first and then import key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Puede que necesites restablecerlo de fábrica primero y luego importar el par de claves</translation>
     </message>
     <message>
         <source>Start using profile without Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Empezar a usar el perfil sin Keycard</translation>
     </message>
     <message>
         <source>Enter recovery phrase for your profile and login to status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Introduce la frase de recuperación de tu perfil e inicia sesión en Status.</translation>
     </message>
 </context>
 <context>
     <name>KeycardManagementPopup</name>
     <message>
         <source>Read Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Leer Keycard</translation>
     </message>
     <message>
         <source>Keycard Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>Flujo de Keycard</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation type="unfinished">Listo</translation>
+        <translation>Listo</translation>
     </message>
     <message>
         <source>Factory reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Restablecer de fábrica</translation>
     </message>
     <message>
         <source>Start using profile without Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Empezar a usar el perfil sin Keycard</translation>
     </message>
     <message>
         <source>Log in with this Keycard</source>
-        <translation type="unfinished">Iniciar sesión con este Keycard</translation>
+        <translation>Iniciar sesión con este Keycard</translation>
     </message>
     <message>
         <source>Import a key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar un par de claves desde la frase de recuperación</translation>
     </message>
     <message>
         <source>No PIN? Skip</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Sin PIN? Omitir</translation>
     </message>
     <message>
         <source>Factory reset this Keycard</source>
-        <translation type="unfinished">Restablecer este Keycard de fábrica</translation>
+        <translation>Restablecer este Keycard de fábrica</translation>
     </message>
     <message>
         <source>Resetting Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Restableciendo Keycard...</translation>
     </message>
     <message>
         <source>Logging in with Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciando sesión con Keycard...</translation>
     </message>
     <message>
         <source>Reading...</source>
-        <translation type="unfinished"></translation>
+        <translation>Leyendo...</translation>
     </message>
     <message>
         <source>Keycard has been reset</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard se ha restablecido</translation>
     </message>
     <message>
         <source>Ready to recover your profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Listo para recuperar tu perfil</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Éxito</translation>
     </message>
     <message>
         <source>Keycard is now empty.</source>
-        <translation type="unfinished"></translation>
+        <translation>El Keycard ahora está vacío.</translation>
     </message>
     <message>
         <source>Continue to log in and convert your profile to use a Status password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Continúa para iniciar sesión y convertir tu perfil para usar una contraseña de Status.</translation>
     </message>
     <message>
         <source>Continue to finish logging in.</source>
-        <translation type="unfinished"></translation>
+        <translation>Continúa para terminar de iniciar sesión.</translation>
     </message>
     <message>
         <source>Continue to finish setting up your profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>Continúa para terminar de configurar tu perfil.</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Algo salió mal</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">Inténtalo de nuevo</translation>
+        <translation>Inténtalo de nuevo</translation>
     </message>
     <message>
         <source>Import key pair from recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar par de claves desde la frase de recuperación</translation>
     </message>
     <message>
         <source>Try setting the PIN again</source>
-        <translation type="unfinished"></translation>
+        <translation>Intenta configurar el PIN de nuevo</translation>
     </message>
     <message>
         <source>Next</source>
-        <translation type="unfinished">Siguiente</translation>
+        <translation>Siguiente</translation>
     </message>
     <message>
         <source>Importing key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Importando par de claves al Keycard...</translation>
     </message>
     <message>
         <source>Add another account</source>
-        <translation type="unfinished">Agregar otra cuenta</translation>
+        <translation>Agregar otra cuenta</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Continuar</translation>
+        <translation>Continuar</translation>
     </message>
     <message>
         <source>Key pair has been imported to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>El par de claves se ha importado al Keycard</translation>
     </message>
     <message>
         <source>Keycard is now required to sign with this key pair.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora se requiere el Keycard para firmar con este par de claves.</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar un nuevo par de claves al Keycard</translation>
     </message>
     <message>
         <source>Move key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Mover par de claves al Keycard</translation>
     </message>
     <message>
         <source>Moving key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Moviendo par de claves al Keycard...</translation>
     </message>
     <message>
         <source>Key pair has been moved to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>El par de claves se ha movido al Keycard</translation>
     </message>
     <message>
         <source>Move profile key pair to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Mover el par de claves del perfil al Keycard</translation>
     </message>
     <message>
         <source>Moving profile key pair to Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Moviendo el par de claves del perfil al Keycard...</translation>
     </message>
     <message>
         <source>Profile key pair has been moved to Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>El par de claves del perfil se ha movido al Keycard</translation>
     </message>
     <message>
         <source>Quit and restart Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Salir y reiniciar Status</translation>
     </message>
     <message>
         <source>Re-encrypting data may take some time</source>
-        <translation type="unfinished"></translation>
+        <translation>Volver a cifrar los datos puede tardar un tiempo</translation>
     </message>
     <message>
         <source>Do not quit the application or turn off your device. Doing so will lead to data
 corruption, loss of your Status profile and the inability to restart Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>No cierres la aplicación ni apagues tu dispositivo. Hacerlo provocará daños en los datos,
+la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status.</translation>
     </message>
     <message>
         <source>Keycard is now required to log in and sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora se requiere Keycard para iniciar sesión y firmar.</translation>
     </message>
     <message>
         <source>Add key pair to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar par de claves a Status</translation>
     </message>
     <message>
         <source>Adding key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregando par de claves a Status...</translation>
     </message>
     <message>
         <source>Key pair has been added to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>El par de claves se agregó a Status</translation>
     </message>
     <message>
         <source>Now you can sign with this key pair using Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora puedes firmar con este par de claves usando Keycard.</translation>
     </message>
     <message>
         <source>Stop using Keycard for key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Dejar de usar Keycard para el par de claves</translation>
     </message>
     <message>
         <source>Create password</source>
-        <translation type="unfinished"></translation>
+        <translation>Crear contraseña</translation>
     </message>
     <message>
         <source>Finalize Status Password Creation</source>
-        <translation type="unfinished">Finalizar creación de contraseña de Status</translation>
+        <translation>Finalizar creación de contraseña de Status</translation>
     </message>
     <message>
         <source>Moving key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>Moviendo par de claves a Status...</translation>
     </message>
     <message>
         <source>Key pair has been moved to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>El par de claves se movió a Status</translation>
     </message>
     <message>
         <source>Keycard read completed</source>
-        <translation type="unfinished"></translation>
+        <translation>Lectura de Keycard completada</translation>
     </message>
     <message>
         <source>Status password is now required to sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora se requiere la contraseña de Status para firmar.</translation>
     </message>
     <message>
         <source>Stop using Keycard for profile key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Dejar de usar Keycard para el par de claves del perfil</translation>
     </message>
     <message>
         <source>Moving profile key pair to Status...</source>
-        <translation type="unfinished"></translation>
+        <translation>Moviendo el par de claves del perfil a Status...</translation>
     </message>
     <message>
         <source>Profile key pair has been moved to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>El par de claves del perfil se movió a Status</translation>
     </message>
     <message>
         <source>Status password is now required to log in and sign.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora se requiere la contraseña de Status para iniciar sesión y firmar.</translation>
     </message>
     <message>
         <source>Change Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Cambiar PIN de Keycard</translation>
     </message>
     <message>
         <source>Changing Keycard PIN...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cambiando el PIN de Keycard...</translation>
     </message>
     <message>
         <source>Keycard PIN has been changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Se cambió el PIN de Keycard</translation>
     </message>
     <message>
         <source>New PIN is required to interact with Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Se requiere un nuevo PIN para interactuar con Keycard.</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Configurar o cambiar PUK</translation>
     </message>
     <message>
         <source>Setting your Keycard PUK...</source>
-        <translation type="unfinished">Configurando tu PUK de Keycard...</translation>
+        <translation>Configurando tu PUK de Keycard...</translation>
     </message>
     <message>
         <source>Keycard’s PUK successfully set</source>
-        <translation type="unfinished">PUK de Keycard configurada exitosamente</translation>
+        <translation>PUK de Keycard configurada exitosamente</translation>
     </message>
     <message>
         <source>Rename Keycard</source>
-        <translation type="unfinished">Renombrar Keycard</translation>
+        <translation>Renombrar Keycard</translation>
     </message>
     <message>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>Renombrar</translation>
     </message>
     <message>
         <source>Renaming Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Renombrando Keycard...</translation>
     </message>
     <message>
         <source>Keycard has been renamed</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ha sido renombrada</translation>
     </message>
     <message>
         <source>New name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuevo nombre: %1</translation>
     </message>
     <message>
         <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloquear con PUK</translation>
     </message>
     <message>
         <source>Unblocking Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloqueando Keycard...</translation>
     </message>
     <message>
         <source>Keycard has been unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard ha sido desbloqueada</translation>
     </message>
     <message>
         <source>You can now use your Keycard again</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora puedes volver a usar tu Keycard</translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloquear con frase de recuperación</translation>
     </message>
     <message>
         <source>It is now ready to use.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ya está lista para usarse.</translation>
     </message>
 </context>
 <context>
     <name>KeycardProgressState</name>
     <message>
         <source>Reading...</source>
-        <translation type="unfinished"></translation>
+        <translation>Leyendo...</translation>
     </message>
     <message>
         <source>Success</source>
-        <translation type="unfinished"></translation>
+        <translation>Éxito</translation>
     </message>
     <message>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Algo salió mal</translation>
     </message>
     <message>
         <source>Try again</source>
-        <translation type="unfinished">Inténtalo de nuevo</translation>
+        <translation>Inténtalo de nuevo</translation>
     </message>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Conecta el lector de Keycard...</translation>
+        <translation>Conecta el lector de Keycard...</translation>
     </message>
     <message>
         <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Toca o inserta la Keycard...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Leyendo Keycard...</translation>
+        <translation>Leyendo Keycard...</translation>
     </message>
     <message>
         <source>This is not a Keycard</source>
-        <translation type="unfinished">Esto no es un Keycard</translation>
+        <translation>Esto no es una Keycard</translation>
     </message>
     <message>
         <source>Connection error</source>
-        <translation type="unfinished"></translation>
+        <translation>Error de conexión</translation>
     </message>
     <message>
         <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Algo salió mal, inténtalo de nuevo</translation>
     </message>
     <message>
         <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">Keycard incorrecto insertado</translation>
+        <translation>Keycard incorrecta insertada</translation>
     </message>
     <message>
         <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
+        <translation>La Keycard insertada no coincide con la clave esperada</translation>
     </message>
     <message>
         <source>It&apos;s a different Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Es una Keycard diferente</translation>
     </message>
     <message>
         <source>Keycard is not empty</source>
-        <translation type="unfinished">La Keycard no está vacía</translation>
+        <translation>La Keycard no está vacía</translation>
     </message>
     <message>
         <source>Try again with an empty keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Inténtalo de nuevo con una Keycard vacía</translation>
     </message>
     <message>
         <source>The card is not a Keycard, try again with Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>La tarjeta no es una Keycard, inténtalo de nuevo con una Keycard</translation>
     </message>
     <message>
         <source>Please try again with Keycard you read before</source>
-        <translation type="unfinished"></translation>
+        <translation>Inténtalo de nuevo con la Keycard que leíste antes</translation>
     </message>
     <message>
         <source>PIN incorrect</source>
-        <translation type="unfinished">PIN incorrecto</translation>
+        <translation>PIN incorrecto</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Queda %n intento</numerusform>
             <numerusform>Quedan %n intentos</numerusform>
         </translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard está bloqueada</translation>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard está bloqueada debido a tres intentos fallidos de PIN</translation>
     </message>
     <message>
         <source>PUK incorrect</source>
-        <translation type="unfinished">PUK incorrecto</translation>
+        <translation>PUK incorrecto</translation>
     </message>
     <message>
         <source>Keycard is blocked due to five failed PUK input attempts</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard está bloqueada debido a cinco intentos fallidos de PUK</translation>
     </message>
 </context>
 <context>
     <name>KeycardSimulatorController</name>
     <message>
         <source>Keycard Simulator Controller</source>
-        <translation type="unfinished"></translation>
+        <translation>Controlador del simulador de Keycard</translation>
     </message>
     <message>
         <source>Keycard &quot;%1&quot; not created: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard &quot;%1&quot; no creada: %2</translation>
     </message>
     <message>
         <source>Keycard &quot;%1&quot; created</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard &quot;%1&quot; creada</translation>
     </message>
     <message>
         <source>Applet version</source>
-        <translation type="unfinished"></translation>
+        <translation>Versión del applet</translation>
     </message>
     <message>
         <source>Use applet tag 4.0 (SecureChannel V2)</source>
-        <translation type="unfinished"></translation>
+        <translation>Usar applet tag 4.0 (SecureChannel V2)</translation>
     </message>
     <message>
         <source>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tag 4.0 necesita soporte de SecureChannel V2 en keycard-qt — la app aún no puede manejarlo y se refiere a status-keycard después del commit #72e9574.</translation>
     </message>
     <message>
         <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Predeterminado: tag 3.2 (emparejamiento clásico por contraseña), coincide con el keycard-qt actual y se refiere al commit #72e9574 de status-keycard.</translation>
     </message>
     <message>
         <source>1. Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>1. Simulador</translation>
     </message>
     <message>
         <source>Restart Keycard Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>Reiniciar simulador de Keycard</translation>
     </message>
     <message>
         <source>Start Keycard Simulator</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar simulador de Keycard</translation>
     </message>
     <message>
         <source>2. Create keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>2. Crear Keycard</translation>
     </message>
     <message>
         <source>Card id:</source>
-        <translation type="unfinished"></translation>
+        <translation>ID de tarjeta:</translation>
     </message>
     <message>
         <source>Create Empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Crear Keycard vacía</translation>
     </message>
     <message>
         <source>— or create one with a seed —</source>
-        <translation type="unfinished"></translation>
+        <translation>— o crear una con una semilla —</translation>
     </message>
     <message>
         <source>Seed phrase (mandatory)</source>
-        <translation type="unfinished"></translation>
+        <translation>Frase de recuperación (obligatoria)</translation>
     </message>
     <message>
         <source>PIN:</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN:</translation>
     </message>
     <message>
         <source>PUK:</source>
-        <translation type="unfinished"></translation>
+        <translation>PUK:</translation>
     </message>
     <message>
         <source>Keycard name (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nombre de la Keycard (opcional)</translation>
     </message>
     <message>
         <source>Paths, comma-separated (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Rutas, separadas por comas (opcional)</translation>
     </message>
     <message>
         <source>Pairing password (optional, default if empty)</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña de emparejamiento (opcional, predeterminada si está vacía)</translation>
     </message>
     <message>
         <source>Create Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Crear Keycard</translation>
     </message>
     <message>
         <source>Creating Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Creando Keycard...</translation>
     </message>
     <message>
         <source>Clear local pairings</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar emparejamientos locales</translation>
     </message>
     <message>
         <source>3. Select keycard (does not insert it)</source>
-        <translation type="unfinished"></translation>
+        <translation>3. Seleccionar Keycard (no la inserta)</translation>
     </message>
     <message>
         <source>&lt;no keycard selected&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;ninguna Keycard seleccionada&gt;</translation>
     </message>
     <message>
         <source>4. Reader &amp; card</source>
-        <translation type="unfinished"></translation>
+        <translation>4. Lector y tarjeta</translation>
     </message>
     <message>
         <source>Insert keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Insertar Keycard</translation>
     </message>
     <message>
         <source>Inserts the selected keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserta la Keycard seleccionada</translation>
     </message>
     <message>
         <source>Remove keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitar Keycard</translation>
     </message>
     <message>
         <source>Removes the selected keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Quita la Keycard seleccionada</translation>
     </message>
     <message>
         <source>Plug reader</source>
-        <translation type="unfinished"></translation>
+        <translation>Conectar lector</translation>
     </message>
     <message>
         <source>Unplug reader</source>
-        <translation type="unfinished"></translation>
+        <translation>Desconectar lector</translation>
     </message>
 </context>
 <context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Leer Keycard</translation>
     </message>
 </context>
 <context>
     <name>Keychain</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">Autenticar</translation>
+        <translation>Autenticar</translation>
     </message>
     <message>
         <source>Login to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar sesión en Status</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Save password</source>
-        <translation type="unfinished"></translation>
+        <translation>Guardar contraseña</translation>
     </message>
     <message>
         <source>Confirm to enable biometric login</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirma para habilitar el inicio de sesión biométrico</translation>
     </message>
 </context>
 <context>
@@ -9974,7 +9978,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Ban %1</source>
-        <translation></translation>
+        <translation>Banear a %1</translation>
     </message>
     <message>
         <source>Are you sure you want to kick &lt;b&gt;%1&lt;/b&gt; from %2?</source>
@@ -10052,11 +10056,11 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Add account</source>
-        <translation type="unfinished">Agregar cuenta</translation>
+        <translation>Agregar cuenta</translation>
     </message>
     <message>
         <source>Onchain friends</source>
-        <translation type="unfinished"></translation>
+        <translation>Amigos on-chain</translation>
     </message>
 </context>
 <context>
@@ -10070,7 +10074,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <name>LinkPreviewGifDelegate</name>
     <message>
         <source>Animated GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF animado</translation>
     </message>
 </context>
 <context>
@@ -10111,7 +10115,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Always show previews</source>
-        <translation></translation>
+        <translation>Mostrar siempre las vistas previas</translation>
     </message>
     <message>
         <source>Never show previews</source>
@@ -10130,7 +10134,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Always Enable</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar siempre</translation>
     </message>
     <message>
         <source>Don&apos;t ask me again</source>
@@ -10279,74 +10283,74 @@ al cargar</translation>
     <name>LoginKeycardBox</name>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Conecta el lector de Keycard...</translation>
+        <translation>Conecta el lector de Keycard...</translation>
     </message>
     <message>
         <source>Tap or insert your Keycard...</source>
-        <translation type="unfinished"></translation>
+        <translation>Toca o inserta tu Keycard...</translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation type="unfinished">Leyendo Keycard...</translation>
+        <translation>Leyendo Keycard...</translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard incorrecta para este perfil</translation>
     </message>
     <message>
         <source>Keycard blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard bloqueada</translation>
     </message>
     <message>
         <source>Unblock</source>
-        <translation type="unfinished">Desbloquear</translation>
+        <translation>Desbloquear</translation>
     </message>
     <message>
         <source>Pairing password</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña de emparejamiento</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Continuar</translation>
+        <translation>Continuar</translation>
     </message>
     <message>
         <source>This isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Esto no es una Keycard.&lt;br&gt;Retira la tarjeta e inserta una Keycard.</translation>
     </message>
     <message>
         <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Problema al detectar la Keycard.&lt;br&gt;Vuelve a escanear la Keycard.</translation>
     </message>
     <message>
         <source>This Keycard was set up with a custom pairing password. Enter it to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>Esta Keycard se configuró con una contraseña de emparejamiento personalizada. Introdúcela para continuar.</translation>
     </message>
     <message>
         <source>No free pairing slots on this Keycard.&lt;br&gt;You can use it with previously paired installations.</source>
-        <translation type="unfinished"></translation>
+        <translation>No hay espacios de emparejamiento libres en esta Keycard.&lt;br&gt;Puedes usarla con instalaciones emparejadas anteriormente.</translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>La Keycard escaneada está vacía.&lt;br&gt;Escanea la Keycard correcta para este perfil.</translation>
     </message>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>PIN incorrecto. Queda %n intento.</numerusform>
+            <numerusform>PIN incorrecto. Quedan %n intentos.</numerusform>
         </translation>
     </message>
     <message>
         <source>Login failed. %1</source>
-        <translation type="unfinished">Error al iniciar sesión. %1</translation>
+        <translation>Error al iniciar sesión. %1</translation>
     </message>
     <message>
         <source>Show details.</source>
-        <translation type="unfinished">Mostrar detalles.</translation>
+        <translation>Mostrar detalles.</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
+        <translation>Introduce el PIN de Keycard</translation>
     </message>
 </context>
 <context>
@@ -10431,7 +10435,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Lost Keycard?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Perdiste tu Keycard?</translation>
     </message>
     <message>
         <source>Login failed</source>
@@ -10473,7 +10477,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Manage profiles</source>
-        <translation type="unfinished"></translation>
+        <translation>Gestionar perfiles</translation>
     </message>
 </context>
 <context>
@@ -10506,63 +10510,63 @@ al cargar</translation>
     <name>LogosNetworkView</name>
     <message>
         <source>Learn more</source>
-        <translation type="unfinished">Ver más</translation>
+        <translation>Ver más</translation>
     </message>
     <message>
         <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Los mensajes se envían a través de una red descentralizada, una red entre pares (p2p) construida sobre la tecnología Logos Messaging e impulsada colectivamente por los usuarios que ejecutan Status Desktop, lo que hace que Status sea descentralizado, resiliente y resistente a la censura. %1</translation>
     </message>
     <message>
         <source>Connected network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Pares de red conectados</translation>
     </message>
     <message>
         <source>Peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Pares</translation>
     </message>
     <message>
         <source>Peer</source>
-        <translation type="unfinished"></translation>
+        <translation>Par</translation>
     </message>
     <message>
         <source>Checking peer connection...</source>
-        <translation type="unfinished"></translation>
+        <translation>Comprobando la conexión con los pares...</translation>
     </message>
     <message>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Conectado</translation>
     </message>
     <message>
         <source>Refresh network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Actualizar pares de red</translation>
     </message>
     <message>
         <source>Unable to refresh network peers: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron actualizar los pares de red: %1</translation>
     </message>
     <message>
         <source>How to fix p2p network connection</source>
-        <translation type="unfinished"></translation>
+        <translation>Cómo solucionar la conexión a la red p2p</translation>
     </message>
     <message>
         <source>If Status has no connected network peers, check:</source>
-        <translation type="unfinished"></translation>
+        <translation>Si Status no tiene pares de red conectados, comprueba:</translation>
     </message>
     <message>
         <source>Try using a VPN</source>
-        <translation type="unfinished"></translation>
+        <translation>Prueba a usar una VPN</translation>
     </message>
     <message>
         <source>Some networks may block access to the p2p network. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Algunas redes pueden bloquear el acceso a la red p2p. %1</translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>La conexión a internet actual puede ser inestable. %1</translation>
     </message>
     <message>
         <source>Try another network or disconnect your VPN</source>
-        <translation type="unfinished"></translation>
+        <translation>Prueba con otra red o desconecta tu VPN</translation>
     </message>
 </context>
 <context>
@@ -10578,8 +10582,8 @@ al cargar</translation>
     <message numerus="yes">
         <source>Account name must be at least %n character(s)</source>
         <translation>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>El nombre de la cuenta debe tener al menos %n carácter</numerusform>
+            <numerusform>El nombre de la cuenta debe tener al menos %n caracteres</numerusform>
         </translation>
     </message>
     <message>
@@ -10619,11 +10623,11 @@ al cargar</translation>
     </message>
     <message>
         <source>Import key pairs from this device to your other synced devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Importar pares de claves desde este dispositivo a tus otros dispositivos sincronizados</translation>
     </message>
     <message>
         <source>Show encrypted QR of key pairs on device</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar QR cifrado de los pares de claves en el dispositivo</translation>
     </message>
     <message numerus="yes">
         <source>%n key pair(s) require import to use on this device</source>
@@ -10638,15 +10642,15 @@ al cargar</translation>
     </message>
     <message>
         <source>Automatically apply key pair migrations from paired devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Aplicar automáticamente las migraciones de pares de claves desde dispositivos emparejados</translation>
     </message>
     <message>
         <source>When off, moving a key pair to or from a Keycard on a paired device won&apos;t change how this device logs in or signs. Turning it back on doesn&apos;t apply past changes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuando está desactivado, mover un par de claves hacia o desde una Keycard en un dispositivo emparejado no cambiará cómo este dispositivo inicia sesión o firma. Volver a activarlo no aplica los cambios anteriores.</translation>
     </message>
     <message>
         <source>Get Keycard</source>
-        <translation type="unfinished">Obtener Keycard</translation>
+        <translation>Obtener Keycard</translation>
     </message>
 </context>
 <context>
@@ -10661,7 +10665,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
     <message>
         <source>Arrange by community</source>
@@ -10676,7 +10680,7 @@ al cargar</translation>
     <name>ManageCollectiblesPanel</name>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
     <message>
         <source>Arrange by community</source>
@@ -10688,7 +10692,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation></translation>
+        <translation>Otro</translation>
     </message>
     <message>
         <source>Arrange by collection</source>
@@ -10722,35 +10726,35 @@ al cargar</translation>
     <name>ManageKeyPairAccountsState</name>
     <message>
         <source>Name your accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Nombra tus cuentas</translation>
     </message>
     <message>
         <source>Colour</source>
-        <translation type="unfinished">Color</translation>
+        <translation>Color</translation>
     </message>
     <message>
         <source>Remove account</source>
-        <translation type="unfinished">Eliminar cuenta</translation>
+        <translation>Eliminar cuenta</translation>
     </message>
     <message>
         <source>Do you want to delete the &quot;%1&quot; account?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Quieres eliminar la cuenta &quot;%1&quot;?</translation>
     </message>
     <message>
         <source>Do you want to delete this account?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Quieres eliminar esta cuenta?</translation>
     </message>
     <message>
         <source>Yes, delete this account</source>
-        <translation type="unfinished">Sí, eliminar esta cuenta</translation>
+        <translation>Sí, eliminar esta cuenta</translation>
     </message>
     <message>
         <source>What would you like this account to be called?</source>
-        <translation type="unfinished">¿Cómo te gustaría llamar a esta cuenta?</translation>
+        <translation>¿Cómo te gustaría llamar a esta cuenta?</translation>
     </message>
     <message>
         <source>Preview</source>
-        <translation type="unfinished">Vista previa</translation>
+        <translation>Vista previa</translation>
     </message>
 </context>
 <context>
@@ -10859,7 +10863,7 @@ al cargar</translation>
     <name>ManageTokensDelegate</name>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
     <message>
         <source>%1 was successfully hidden</source>
@@ -10897,7 +10901,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Hidden</source>
-        <translation></translation>
+        <translation>Oculto</translation>
     </message>
     <message>
         <source>Advanced</source>
@@ -10925,7 +10929,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Available if third-party services enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Disponible si los servicios de terceros están habilitados</translation>
     </message>
 </context>
 <context>
@@ -10970,9 +10974,9 @@ al cargar</translation>
     <name>MarketFooter</name>
     <message numerus="yes">
         <source>Showing %L1 to %L2 of %n result(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Mostrando %L1 a %L2 de %n resultado</numerusform>
+            <numerusform>Mostrando %L1 a %L2 de %n resultados</numerusform>
         </translation>
     </message>
 </context>
@@ -10989,7 +10993,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Swap</source>
-        <translation></translation>
+        <translation>Swap</translation>
     </message>
 </context>
 <context>
@@ -11087,14 +11091,14 @@ al cargar</translation>
     <name>MembersListSkeleton</name>
     <message>
         <source>Members</source>
-        <translation type="unfinished">Miembros</translation>
+        <translation>Miembros</translation>
     </message>
 </context>
 <context>
     <name>MembersPanelHeader</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
 </context>
 <context>
@@ -11146,7 +11150,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Banned</source>
-        <translation></translation>
+        <translation>Bloqueado</translation>
     </message>
     <message>
         <source>Search by name or chat key</source>
@@ -11193,7 +11197,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Ban</source>
-        <translation></translation>
+        <translation>Bloquear</translation>
     </message>
     <message>
         <source>Unban</source>
@@ -11219,15 +11223,15 @@ al cargar</translation>
     <name>MessageContextMenuView</name>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Responder</translation>
+        <translation>Responder</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Editar</translation>
+        <translation>Editar</translation>
     </message>
     <message>
         <source>Copy selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiar selección</translation>
     </message>
     <message>
         <source>Copy message</source>
@@ -11235,7 +11239,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Copy link to message</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiar enlace al mensaje</translation>
     </message>
     <message>
         <source>Unpin</source>
@@ -11247,7 +11251,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Eliminar</translation>
+        <translation>Eliminar</translation>
     </message>
     <message>
         <source>Mark as unread</source>
@@ -11258,7 +11262,7 @@ al cargar</translation>
     <name>MessageReactionsRow</name>
     <message>
         <source>Add reaction</source>
-        <translation type="unfinished">Agregar reacción</translation>
+        <translation>Agregar reacción</translation>
     </message>
 </context>
 <context>
@@ -11317,30 +11321,30 @@ al cargar</translation>
     </message>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensaje desconocido. Intentando recuperarlo</translation>
     </message>
 </context>
 <context>
     <name>MessagesListHeader</name>
     <message>
         <source>Messages</source>
-        <translation type="unfinished">Mensajes</translation>
+        <translation>Mensajes</translation>
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Invitar contactos</translation>
     </message>
     <message>
         <source>Start chat</source>
-        <translation type="unfinished">Iniciar chat</translation>
+        <translation>Iniciar chat</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
 </context>
 <context>
@@ -11367,7 +11371,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Always show previews</source>
-        <translation></translation>
+        <translation>Mostrar siempre las vistas previas</translation>
     </message>
     <message>
         <source>Never show previews</source>
@@ -11379,34 +11383,34 @@ al cargar</translation>
     </message>
     <message>
         <source>Mobile data and Wi-Fi</source>
-        <translation type="unfinished"></translation>
+        <translation>Datos móviles y Wi-Fi</translation>
     </message>
     <message>
         <source>Wi-Fi only</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo Wi-Fi</translation>
     </message>
     <message>
         <source>Sync messages on mobile data?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Sincronizar mensajes con datos móviles?</translation>
     </message>
     <message>
         <source>If you choose to sync over Wi-Fi only, messages sent to you while you are offline will be delivered once you connect to Wi-Fi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si eliges sincronizar solo por Wi-Fi, los mensajes que te envíen mientras estás sin conexión se entregarán cuando te conectes a Wi-Fi.</translation>
     </message>
     <message>
         <source>The Status App uses a lot of data when fetching missed messages. If you have a limited data plan, consider syncing over Wi-Fi only.</source>
-        <translation type="unfinished"></translation>
+        <translation>La aplicación Status usa muchos datos al recuperar mensajes perdidos. Si tienes un plan de datos limitado, considera sincronizar solo por Wi-Fi.</translation>
     </message>
     <message>
         <source>Message syncing</source>
-        <translation type="unfinished"></translation>
+        <translation>Sincronización de mensajes</translation>
     </message>
 </context>
 <context>
     <name>MintTokensFooterPanel</name>
     <message>
         <source>Send Owner token to transfer %1 Community ownership</source>
-        <translation></translation>
+        <translation>Envía el token de propietario para transferir la propiedad de la comunidad %1</translation>
     </message>
     <message>
         <source>Airdrop</source>
@@ -11449,7 +11453,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Mint Owner token</source>
-        <translation></translation>
+        <translation>Acuñar token de propietario</translation>
     </message>
     <message>
         <source>Sign transaction - Mint %1 tokens</source>
@@ -11473,7 +11477,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Retry mint</source>
-        <translation></translation>
+        <translation>Reintentar acuñación</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -11570,7 +11574,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Reward individual members with custom tokens for their contribution</source>
-        <translation></translation>
+        <translation>Recompensa a miembros individuales con tokens personalizados por su contribución</translation>
     </message>
     <message>
         <source>Mint tokens for use with community and channel permissions</source>
@@ -11586,7 +11590,7 @@ al cargar</translation>
     </message>
     <message>
         <source>In order to Mint, Import and Airdrop community tokens, you first need to mint your Owner token which will give you permissions to access the token management features for your community.</source>
-        <translation></translation>
+        <translation>Para acuñar, importar y hacer airdrop de tokens de la comunidad, primero debes acuñar tu token de propietario, que te dará permisos para acceder a las funciones de gestión de tokens de tu comunidad.</translation>
     </message>
     <message>
         <source>Mint Owner token</source>
@@ -11610,81 +11614,81 @@ al cargar</translation>
     </message>
     <message>
         <source>Retry mint</source>
-        <translation></translation>
+        <translation>Reintentar acuñación</translation>
     </message>
 </context>
 <context>
     <name>MobileAddressBar</name>
     <message>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Detener</translation>
     </message>
     <message>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Recargar</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Billetera</translation>
+        <translation>Billetera</translation>
     </message>
 </context>
 <context>
     <name>MobileSettingsMenu</name>
     <message>
         <source>Browser</source>
-        <translation type="unfinished">Navegador</translation>
+        <translation>Navegador</translation>
     </message>
     <message>
         <source>Incognito</source>
-        <translation type="unfinished"></translation>
+        <translation>Incógnito</translation>
     </message>
     <message>
         <source>Find in page</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar en la página</translation>
     </message>
     <message>
         <source>Zoom</source>
-        <translation type="unfinished">Zoom</translation>
+        <translation>Zoom</translation>
     </message>
     <message>
         <source>Zoom Out</source>
-        <translation type="unfinished">Alejar</translation>
+        <translation>Alejar</translation>
     </message>
     <message>
         <source>Zoom In</source>
-        <translation type="unfinished">Acercar</translation>
+        <translation>Acercar</translation>
     </message>
     <message>
         <source>Zoom Fit</source>
-        <translation type="unfinished">Ajustar zoom</translation>
+        <translation>Ajustar zoom</translation>
     </message>
     <message>
         <source>Compatibility mode</source>
-        <translation type="unfinished">Modo de compatibilidad</translation>
+        <translation>Modo de compatibilidad</translation>
     </message>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>Formatos admitidos</translation>
     </message>
     <message>
         <source>Force reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Forzar recarga</translation>
     </message>
     <message>
         <source>Clear site data</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar datos del sitio</translation>
     </message>
     <message>
         <source>Clearing browsing data...</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrando datos de navegación...</translation>
     </message>
     <message>
         <source>Clear browsing data</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar datos de navegación</translation>
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished">Ajustes</translation>
+        <translation>Ajustes</translation>
     </message>
 </context>
 <context>
@@ -11735,7 +11739,7 @@ al cargar</translation>
     </message>
     <message>
         <source>URL already added</source>
-        <translation type="unfinished"></translation>
+        <translation>La URL ya fue añadida</translation>
     </message>
 </context>
 <context>
@@ -11816,7 +11820,7 @@ al cargar</translation>
     </message>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
-        <translation type="unfinished">Este nombre público ya está en uso en una de tus comunidades unidas</translation>
+        <translation>Este nombre público ya está en uso en una de tus comunidades unidas</translation>
     </message>
 </context>
 <context>
@@ -11845,7 +11849,7 @@ al cargar</translation>
     <name>NetworkChipFilter</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Todos</translation>
+        <translation>Todos</translation>
     </message>
 </context>
 <context>
@@ -11864,15 +11868,15 @@ al cargar</translation>
     </message>
     <message>
         <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Los saldos de tokens se obtienen de Pocket Network (POKT) e Infura, que actualmente no están disponibles</translation>
     </message>
     <message>
         <source>Market values are fetched from CoinGecko which is currently unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Los valores de mercado se obtienen de CoinGecko, que actualmente no está disponible</translation>
     </message>
     <message>
         <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los valores de mercado y los saldos de tokens usan CoinGecko y POKT/Infura, que actualmente no están disponibles.</translation>
     </message>
     <message>
         <source>Requires POKT/Infura for %1, which is currently unavailable</source>
@@ -11930,107 +11934,107 @@ al cargar</translation>
     <name>NewAccountLoginPage</name>
     <message>
         <source>Log in</source>
-        <translation type="unfinished">Iniciar sesión</translation>
+        <translation>Iniciar sesión</translation>
     </message>
     <message>
         <source>How would you like to log in to Status?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Cómo te gustaría iniciar sesión en Status?</translation>
     </message>
     <message>
         <source>Log in with recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar sesión con frase de recuperación</translation>
     </message>
     <message>
         <source>If you have your Status recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Si tienes tu frase de recuperación de Status</translation>
     </message>
     <message>
         <source>Enter recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation>Introducir frase de recuperación</translation>
     </message>
     <message>
         <source>Log in by syncing</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar sesión mediante sincronización</translation>
     </message>
     <message>
         <source>If you have Status on another device</source>
-        <translation type="unfinished">Si tienes Status en otro dispositivo</translation>
+        <translation>Si tienes Status en otro dispositivo</translation>
     </message>
     <message>
         <source>Reveal what you have on Keycard first</source>
-        <translation type="unfinished"></translation>
+        <translation>Revela primero lo que tienes en Keycard</translation>
     </message>
     <message>
         <source>To pair your devices and sync your profile, make sure:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Both devices are on the same non-mobile network&lt;/li&gt;&lt;li&gt;You&apos;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Para emparejar tus dispositivos y sincronizar tu perfil, asegúrate de que:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Ambos dispositivos están en la misma red no móvil&lt;/li&gt;&lt;li&gt;Has iniciado sesión en el otro dispositivo&lt;/li&gt;&lt;li&gt;Ningún firewall o VPN está bloqueando el acceso a la red local&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Continuar</translation>
+        <translation>Continuar</translation>
     </message>
     <message>
         <source>Status does not have access to local network</source>
-        <translation type="unfinished"></translation>
+        <translation>Status no tiene acceso a la red local</translation>
     </message>
     <message>
         <source>Status must be connected to the local network on this device for you to be able to log in via syncing. To rectify this...</source>
-        <translation type="unfinished"></translation>
+        <translation>Status debe estar conectado a la red local en este dispositivo para que puedas iniciar sesión mediante sincronización. Para solucionar esto...</translation>
     </message>
     <message>
         <source>1. Open System Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>1. Abre Configuración del sistema</translation>
     </message>
     <message>
         <source>2. Click Privacy &amp; Security</source>
-        <translation type="unfinished"></translation>
+        <translation>2. Haz clic en Privacidad y seguridad</translation>
     </message>
     <message>
         <source>3. Click Local Network</source>
-        <translation type="unfinished"></translation>
+        <translation>3. Haz clic en Red local</translation>
     </message>
     <message>
         <source>4. Find Status</source>
-        <translation type="unfinished"></translation>
+        <translation>4. Busca Status</translation>
     </message>
     <message>
         <source>5. Toggle the switch to grant access</source>
-        <translation type="unfinished"></translation>
+        <translation>5. Activa el interruptor para conceder acceso</translation>
     </message>
     <message>
         <source>6. Click %1 below</source>
-        <translation type="unfinished"></translation>
+        <translation>6. Haz clic en %1 abajo</translation>
     </message>
     <message>
         <source>Verify local network access</source>
-        <translation type="unfinished"></translation>
+        <translation>Verificar acceso a la red local</translation>
     </message>
     <message>
         <source>Verifying</source>
-        <translation type="unfinished"></translation>
+        <translation>Verificando</translation>
     </message>
     <message>
         <source>Checking access...</source>
-        <translation type="unfinished"></translation>
+        <translation>Comprobando acceso...</translation>
     </message>
     <message>
         <source>Use Keycard</source>
-        <translation type="unfinished">Usar Keycard</translation>
+        <translation>Usar Keycard</translation>
     </message>
     <message>
         <source>Enable local network access to sync devices</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilita el acceso a la red local para sincronizar dispositivos</translation>
     </message>
     <message>
         <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Activa el acceso a la red local en la configuración de tu dispositivo, en Ajustes &gt;&gt; Status &gt;&gt; Red local.</translation>
     </message>
     <message>
         <source>Open Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir Ajustes</translation>
     </message>
 </context>
 <context>
@@ -12038,13 +12042,13 @@ al cargar</translation>
     <message>
         <source>UNREAD</source>
         <comment>unread message(s)</comment>
-        <translation type="unfinished"></translation>
+        <translation>NO LEÍDO</translation>
     </message>
     <message numerus="yes">
         <source>%n unread message(s) since %1</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n mensaje no leído desde %1</numerusform>
+            <numerusform>%n mensajes no leídos desde %1</numerusform>
         </translation>
     </message>
 </context>
@@ -12071,7 +12075,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Invalid characters (use letters and numbers, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
+        <translation>Caracteres inválidos (usa solo letras, números, guiones y guiones bajos)</translation>
     </message>
     <message numerus="yes">
         <source>Nicknames must be at least %n character(s) long</source>
@@ -12162,49 +12166,49 @@ al cargar</translation>
     </message>
     <message>
         <source>You’ve sent request to contact</source>
-        <translation type="unfinished"></translation>
+        <translation>Has enviado una solicitud de contacto</translation>
     </message>
     <message>
         <source>Accepted your contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>Aceptó tu solicitud de contacto</translation>
     </message>
     <message>
         <source>Declined your contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechazó tu solicitud de contacto</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished">Solicitud de contacto aceptada</translation>
+        <translation>Solicitud de contacto aceptada</translation>
     </message>
     <message>
         <source>Contact request declined</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud de contacto rechazada</translation>
     </message>
 </context>
 <context>
     <name>NotificationAdaptorMessenger</name>
     <message>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
 </context>
 <context>
     <name>NotificationCard</name>
     <message>
         <source>Decline</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechazar</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation type="unfinished">Aceptar</translation>
+        <translation>Aceptar</translation>
     </message>
     <message>
         <source>Mark as read</source>
-        <translation type="unfinished">Marcar como leído</translation>
+        <translation>Marcar como leído</translation>
     </message>
     <message>
         <source>Mark as unread</source>
-        <translation type="unfinished">Marcar como no leído</translation>
+        <translation>Marcar como no leído</translation>
     </message>
 </context>
 <context>
@@ -12226,23 +12230,23 @@ al cargar</translation>
     <name>NotificationsView</name>
     <message>
         <source>Enable notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar notificaciones</translation>
     </message>
     <message>
         <source>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Recibe notificaciones de mensajes entrantes, menciones y solicitudes de contacto en tu ordenador para mantenerte al día en tiempo real. Personalízalo en cualquier momento en &lt;b&gt;Ajustes → Notificaciones&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status entrega las notificaciones directamente a través de tu sistema operativo, sin terceros, servidores centralizados ni intermediarios.</translation>
     </message>
     <message>
         <source>&lt;font color=&apos;%1&apos;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;font color=&apos;%1&apos;&gt;Habilita las notificaciones en los Ajustes de tu dispositivo&lt;/font&gt;&lt;br&gt;&lt;br&gt;Antes de habilitar las notificaciones en la aplicación a continuación, actívalas primero en &lt;font color=&apos;%1&apos;&gt;los ajustes de tu dispositivo&lt;/font&gt;.</translation>
     </message>
     <message>
         <source>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status usa APNs (Apple Push Notification service) únicamente para entregar señales de notificación en tu dispositivo; el contenido de tus mensajes cifrados de extremo a extremo nunca pasa por ahí ni se almacena ahí.</translation>
     </message>
     <message>
         <source>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status entrega las notificaciones en tu dispositivo mediante su servicio en segundo plano local, sin terceros, servidores centralizados ni intermediarios.</translation>
     </message>
     <message>
         <source>Messages</source>
@@ -12330,7 +12334,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Status entrega las notificaciones directamente a través de tu sistema operativo, sin servidores centralizados ni intermediarios. Asegúrate de que estén habilitadas para Status en la configuración de tu sistema</translation>
     </message>
     <message>
         <source>Exemptions</source>
@@ -12346,15 +12350,15 @@ al cargar</translation>
     </message>
     <message>
         <source>Including:</source>
-        <translation type="unfinished"></translation>
+        <translation>Incluyendo:</translation>
     </message>
     <message>
         <source>Mentions and replies in communities</source>
-        <translation type="unfinished"></translation>
+        <translation>Menciones y respuestas en comunidades</translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitudes de contacto y mensajes de grupo</translation>
     </message>
 </context>
 <context>
@@ -12373,19 +12377,19 @@ al cargar</translation>
     </message>
     <message>
         <source>Remove %1 profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar el perfil %1</translation>
     </message>
     <message>
         <source>If you remove %1, all data for this profile will be deleted from this device. To use this profile again, you&apos;ll need to reimport it to this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si eliminas %1, todos los datos de este perfil se borrarán de este dispositivo. Para volver a usar este perfil, tendrás que reimportarlo a este dispositivo.</translation>
     </message>
     <message>
         <source>Remove profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar perfil</translation>
     </message>
     <message>
         <source>Manage profiles</source>
-        <translation type="unfinished"></translation>
+        <translation>Gestionar perfiles</translation>
     </message>
 </context>
 <context>
@@ -12400,11 +12404,11 @@ al cargar</translation>
     </message>
     <message>
         <source>Error loading accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al cargar las cuentas</translation>
     </message>
     <message>
         <source>Failed to load accounts. Please restart the app and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron cargar las cuentas. Reinicia la aplicación e inténtalo de nuevo.</translation>
     </message>
     <message>
         <source>Credentials not found.</source>
@@ -12558,7 +12562,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Finalise %1 ownership</source>
-        <translation></translation>
+        <translation>Finalizar la propiedad de %1</translation>
     </message>
     <message>
         <source>This device is currently the control node for the %1 Community</source>
@@ -12667,7 +12671,7 @@ al cargar</translation>
     </message>
     <message>
         <source>How to copy the dApp URI</source>
-        <translation></translation>
+        <translation>Cómo copiar el URI de la dApp</translation>
     </message>
     <message>
         <source>Done</source>
@@ -12794,15 +12798,15 @@ al cargar</translation>
     <name>PaymentRequestCardDelegate</name>
     <message>
         <source>Send %1 %2 to %3</source>
-        <translation type="unfinished"></translation>
+        <translation>Enviar %1 %2 a %3</translation>
     </message>
     <message>
         <source>Requested by %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitado por %1</translation>
     </message>
     <message>
         <source>Not available in the testnet mode</source>
-        <translation type="unfinished"></translation>
+        <translation>No disponible en modo testnet</translation>
     </message>
 </context>
 <context>
@@ -13124,7 +13128,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Require holding a token or NFT to obtain exclusive membership rights</source>
-        <translation></translation>
+        <translation>Requiere tener un token o NFT para obtener derechos de membresía exclusivos</translation>
     </message>
     <message>
         <source>No channel permissions</source>
@@ -13170,7 +13174,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Unpin</source>
-        <translation></translation>
+        <translation>Desfijar</translation>
     </message>
     <message>
         <source>Jump to</source>
@@ -13185,19 +13189,19 @@ al cargar</translation>
     <name>PopupBase</name>
     <message>
         <source>Authenticate</source>
-        <translation type="unfinished">Autenticar</translation>
+        <translation>Autenticar</translation>
     </message>
     <message>
         <source>Use biometrics</source>
-        <translation type="unfinished">Usar biometría</translation>
+        <translation>Usar biometría</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Continuar</translation>
+        <translation>Continuar</translation>
     </message>
     <message>
         <source>Please enter your password — biometrics cannot be used for this action</source>
@@ -13205,238 +13209,238 @@ al cargar</translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron actualizar las credenciales almacenadas</translation>
     </message>
     <message>
         <source>Credentials successfully obtained from biometrics</source>
-        <translation type="unfinished"></translation>
+        <translation>Credenciales obtenidas correctamente mediante biometría</translation>
     </message>
     <message>
         <source>Biometrics not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>Biometría no compatible</translation>
     </message>
     <message>
         <source>Generic error occurred</source>
-        <translation type="unfinished"></translation>
+        <translation>Se produjo un error genérico</translation>
     </message>
     <message>
         <source>Biometrics is unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>La biometría no está disponible</translation>
     </message>
     <message>
         <source>Biometrics cancelled</source>
-        <translation type="unfinished"></translation>
+        <translation>Biometría cancelada</translation>
     </message>
     <message>
         <source>Biometrics not found</source>
-        <translation type="unfinished"></translation>
+        <translation>No se encontró biometría</translation>
     </message>
     <message>
         <source>Biometrics fallback error</source>
-        <translation type="unfinished"></translation>
+        <translation>Error de biometría alternativa</translation>
     </message>
     <message>
         <source>Unknown biometrics error</source>
-        <translation type="unfinished"></translation>
+        <translation>Error de biometría desconocido</translation>
     </message>
 </context>
 <context>
     <name>Popups</name>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
-        <translation type="unfinished"></translation>
+        <translation>Comparte direcciones con el propietario de %1</translation>
     </message>
     <message>
         <source>Share addresses to rejoin %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Comparte direcciones para volver a unirte a %1</translation>
     </message>
     <message>
         <source>Image saved to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Imagen guardada en %1</translation>
     </message>
     <message>
         <source>Image saved to system gallery</source>
-        <translation type="unfinished"></translation>
+        <translation>Imagen guardada en la galería del sistema</translation>
     </message>
     <message>
         <source>Failed to save image</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo guardar la imagen</translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 se eliminó de los contactos y se marcó como no confiable</translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 marcado como confiable</translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>Se eliminó la marca de confianza de %1, se eliminó de los contactos y se marcó como no confiable</translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>Se eliminó la marca de confianza de %1 y se marcó como no confiable</translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Se eliminó la marca de confianza de %1 y se eliminó de los contactos</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished">Solicitud de contacto aceptada</translation>
+        <translation>Solicitud de contacto aceptada</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud de contacto ignorada</translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Frase de recuperación eliminada permanentemente del almacenamiento de la aplicación Status</translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Has respaldado tu frase de recuperación. Accede a ella en Ajustes</translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Foto de perfil</translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation type="unfinished"></translation>
+        <translation>Usar esto como mi foto de perfil</translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 marcado como no confiable</translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 desbloqueado</translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 bloqueado</translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Por favor elige un directorio</translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Seguro que quieres salir de &apos;%1&apos;?</translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tendrás que solicitar unirte si quieres volver a ser miembro en el futuro. Si te uniste a la comunidad mediante una clave pública, asegúrate de tener una copia de ella antes de irte.</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Salir de %1</translation>
     </message>
     <message>
         <source>Align with paired device</source>
-        <translation type="unfinished"></translation>
+        <translation>Alinear con dispositivo emparejado</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation type="unfinished">Continuar</translation>
+        <translation>Continuar</translation>
     </message>
     <message>
         <source>Your profile has been migrated to Keycard on paired device</source>
-        <translation type="unfinished"></translation>
+        <translation>Tu perfil se ha migrado a Keycard en el dispositivo emparejado</translation>
     </message>
     <message>
         <source>Your profile has been migrated from Keycard to Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Tu perfil se ha migrado de Keycard a Status</translation>
     </message>
     <message>
         <source>In order to align on the login/signing method on this device, you need to complete the migration flow, clicking the &quot;Continue&quot; button below, or cancel this popup if you want to keep the current login/signing method.</source>
-        <translation type="unfinished"></translation>
+        <translation>Para alinear el método de inicio de sesión/firma en este dispositivo, debes completar el flujo de migración haciendo clic en el botón &quot;Continuar&quot; a continuación, o cancelar esta ventana si quieres mantener el método de inicio de sesión/firma actual.</translation>
     </message>
     <message>
         <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si no quieres volver a ver este mensaje, ve a Ajustes/Billetera y desactiva &quot;Aplicar automáticamente las migraciones de pares de claves desde el dispositivo emparejado&quot;.</translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation type="unfinished"></translation>
+        <translation>Firmar transacción: actualizar contrato inteligente %1</translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 (%2) ocultado correctamente. Puedes alternar la visibilidad de los activos mediante %3.</translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation type="unfinished">Ajustes</translation>
+        <translation>Ajustes</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation type="unfinished">Ocultar coleccionable</translation>
+        <translation>Ocultar coleccionable</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Ocultar %1</translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Seguro que quieres ocultar %1? Ya no podrás verlo ni interactuar con este coleccionable en ningún lugar de Status.</translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ocultado correctamente. Puedes alternar la visibilidad de los coleccionables mediante %2.</translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation type="unfinished">Política de Privacidad del Software Status</translation>
+        <translation>Política de Privacidad del Software Status</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation type="unfinished">Términos de Uso del Software Status</translation>
+        <translation>Términos de Uso del Software Status</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>Cerrar sesión</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished"></translation>
+        <translation>Asegúrate de tener guardados la contraseña de tu cuenta y tu frase de recuperación. Sin ellos, podrías quedar bloqueado fuera de tu cuenta y perder fondos.</translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Cerrar sesión y salir</translation>
     </message>
     <message>
         <source>Display zoom changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Zoom de pantalla cambiado</translation>
     </message>
     <message>
         <source>Restart</source>
-        <translation type="unfinished">Reiniciar</translation>
+        <translation>Reiniciar</translation>
     </message>
     <message>
         <source>Not Now</source>
-        <translation type="unfinished"></translation>
+        <translation>Ahora no</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Reinicia Status para aplicar tu nuevo zoom de pantalla</translation>
     </message>
 </context>
 <context>
     <name>PrimaryNavSidebar</name>
     <message>
         <source>Status Help Bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Bot de ayuda de Status</translation>
     </message>
     <message>
         <source>Activity Center</source>
-        <translation type="unfinished">Centro de actividad</translation>
+        <translation>Centro de actividad</translation>
     </message>
 </context>
 <context>
@@ -13463,7 +13467,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Trusted sites</source>
-        <translation></translation>
+        <translation>Sitios de confianza</translation>
     </message>
     <message>
         <source>Manage trusted sites. Their links open without confirmation.</source>
@@ -13644,7 +13648,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Copied to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiado al portapapeles</translation>
     </message>
     <message>
         <source>Remove trusted mark</source>
@@ -13733,7 +13737,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Trusted contact</source>
-        <translation></translation>
+        <translation>Contacto de confianza</translation>
     </message>
     <message>
         <source>Preview as %1</source>
@@ -13790,7 +13794,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Leave Community</source>
-        <translation></translation>
+        <translation>Abandonar comunidad</translation>
     </message>
 </context>
 <context>
@@ -13828,7 +13832,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Show address QR</source>
-        <translation></translation>
+        <translation>Mostrar código QR de la dirección</translation>
     </message>
     <message>
         <source>Save address</source>
@@ -14020,7 +14024,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Hidden</source>
-        <translation></translation>
+        <translation>Oculto</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -14070,7 +14074,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Minted by %1</source>
-        <translation></translation>
+        <translation>Acuñado por %1</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -14186,7 +14190,7 @@ al cargar</translation>
     <name>QObject</name>
     <message>
         <source>Use Status profile password</source>
-        <translation type="unfinished"></translation>
+        <translation>Usar la contraseña del perfil de Status</translation>
     </message>
 </context>
 <context>
@@ -14197,50 +14201,50 @@ al cargar</translation>
     </message>
     <message>
         <source>Align the QR code within the frame to scan</source>
-        <translation type="unfinished"></translation>
+        <translation>Alinea el código QR dentro del marco para escanear</translation>
     </message>
     <message>
         <source>Scanned successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Escaneado correctamente</translation>
     </message>
     <message>
         <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
-        <translation type="unfinished"></translation>
+        <translation>Para escanear códigos QR, agregar contactos, enviar fondos a billeteras y sincronizar aplicaciones.</translation>
     </message>
     <message>
         <source>Open settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir ajustes</translation>
     </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
         <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
+        <translation>Escáner QR</translation>
     </message>
     <message>
         <source>Contact request</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud de contacto</translation>
     </message>
     <message>
         <source>Join communities</source>
-        <translation type="unfinished"></translation>
+        <translation>Unirse a comunidades</translation>
     </message>
     <message>
         <source>Send tokens</source>
-        <translation type="unfinished"></translation>
+        <translation>Enviar tokens</translation>
     </message>
     <message>
         <source>Open WEB links</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir enlaces web</translation>
     </message>
     <message>
         <source>We cannot read that QR code.</source>
-        <translation type="unfinished"></translation>
+        <translation>No podemos leer ese código QR.</translation>
     </message>
     <message>
         <source>WalletConnect to connect to dApps</source>
-        <translation type="unfinished"></translation>
+        <translation>WalletConnect para conectarse a dApps</translation>
     </message>
 </context>
 <context>
@@ -14266,11 +14270,11 @@ al cargar</translation>
     <name>ReceiveModal</name>
     <message>
         <source>Copy address</source>
-        <translation type="unfinished">Copiar dirección</translation>
+        <translation>Copiar dirección</translation>
     </message>
     <message>
         <source>QR code for wallet address</source>
-        <translation type="unfinished"></translation>
+        <translation>Código QR para la dirección de la billetera</translation>
     </message>
 </context>
 <context>
@@ -14297,7 +14301,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Saved</source>
-        <translation></translation>
+        <translation>Guardado</translation>
     </message>
     <message>
         <source>My Accounts</source>
@@ -14358,7 +14362,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Show fees (will be enabled once the form is filled)</source>
-        <translation></translation>
+        <translation>Mostrar comisiones (se habilitará una vez completado el formulario)</translation>
     </message>
     <message>
         <source>Select a hodler to see remote destruction gas fees</source>
@@ -14500,7 +14504,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Are you sure you want to remove %1 from your saved addresses?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Seguro que quieres eliminar %1 de tus direcciones guardadas?</translation>
     </message>
 </context>
 <context>
@@ -14516,8 +14520,8 @@ al cargar</translation>
     <message numerus="yes">
         <source>Account name must be at least %n character(s)</source>
         <translation>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>El nombre de la cuenta debe tener al menos %n carácter</numerusform>
+            <numerusform>El nombre de la cuenta debe tener al menos %n caracteres</numerusform>
         </translation>
     </message>
     <message>
@@ -14653,7 +14657,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe algo</translation>
     </message>
 </context>
 <context>
@@ -14705,7 +14709,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Show address QR</source>
-        <translation></translation>
+        <translation>Mostrar código QR de la dirección</translation>
     </message>
     <message>
         <source>Remove saved address</source>
@@ -14713,7 +14717,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Add to saved addresses</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar a direcciones guardadas</translation>
     </message>
 </context>
 <context>
@@ -14822,11 +14826,11 @@ al cargar</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">Pegar</translation>
+        <translation>Pegar</translation>
     </message>
     <message>
         <source>Loading more tokens...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargando más tokens...</translation>
     </message>
 </context>
 <context>
@@ -14841,7 +14845,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Community minted</source>
-        <translation></translation>
+        <translation>Acuñado por la comunidad</translation>
     </message>
     <message>
         <source>Other</source>
@@ -14863,11 +14867,11 @@ al cargar</translation>
     <name>SeedPhraseDisplayState</name>
     <message>
         <source>Write down your recovery phrase</source>
-        <translation type="unfinished">Anota tu frase de recuperación</translation>
+        <translation>Anota tu frase de recuperación</translation>
     </message>
     <message>
         <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
-        <translation type="unfinished">La siguiente pantalla contiene tu frase de recuperación.&lt;br/&gt;&lt;b&gt;Cualquiera&lt;/b&gt; que la vea puede usarla para acceder a tus fondos.</translation>
+        <translation>La siguiente pantalla contiene tu frase de recuperación.&lt;br/&gt;&lt;b&gt;Cualquiera&lt;/b&gt; que la vea puede usarla para acceder a tus fondos.</translation>
     </message>
 </context>
 <context>
@@ -14889,7 +14893,7 @@ al cargar</translation>
     <name>SeedphraseVerifyInput</name>
     <message>
         <source>Enter word</source>
-        <translation></translation>
+        <translation>Introduce la palabra</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -14908,7 +14912,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Import via entering recovery phrase</source>
-        <translation></translation>
+        <translation>Importar introduciendo la frase de recuperación</translation>
     </message>
     <message>
         <source>Import via entering private key</source>
@@ -14919,23 +14923,23 @@ al cargar</translation>
     <name>SelectKeyPairState</name>
     <message>
         <source>Select key pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar par de claves</translation>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Entiendo que mover este par de claves requerirá usar Keycard para firmar</translation>
     </message>
     <message>
         <source>Profile key pair</source>
-        <translation type="unfinished">Par de claves del perfil</translation>
+        <translation>Par de claves del perfil</translation>
     </message>
     <message>
         <source>Key pair</source>
-        <translation type="unfinished">Par de claves</translation>
+        <translation>Par de claves</translation>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to log in and sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Entiendo que mover este par de claves requerirá usar Keycard para iniciar sesión y firmar</translation>
     </message>
 </context>
 <context>
@@ -15000,7 +15004,7 @@ al cargar</translation>
     </message>
     <message>
         <source>key pair requires import to use on this device</source>
-        <translation type="unfinished"></translation>
+        <translation>el par de claves requiere importación para usarse en este dispositivo</translation>
     </message>
 </context>
 <context>
@@ -15064,19 +15068,19 @@ al cargar</translation>
     </message>
     <message>
         <source>Cannot send a contact request to oneself</source>
-        <translation type="unfinished"></translation>
+        <translation>No puedes enviarte una solicitud de contacto a ti mismo</translation>
     </message>
     <message>
         <source>This user is blocked. Unblock to send a contact request.</source>
-        <translation type="unfinished"></translation>
+        <translation>Este usuario está bloqueado. Desbloquéalo para enviar una solicitud de contacto.</translation>
     </message>
     <message>
         <source>You already sent a contact request.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ya enviaste una solicitud de contacto.</translation>
     </message>
     <message>
         <source>You are already contacts.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ya sois contactos.</translation>
     </message>
     <message>
         <source>Say who you are / why you want to become a contact...</source>
@@ -15117,19 +15121,19 @@ al cargar</translation>
     <name>SendModalHandler</name>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Información</translation>
     </message>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
-        <translation type="unfinished"></translation>
+        <translation>El token que intentas enviar no es compatible.</translation>
     </message>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">Tus activos en %1</translation>
+        <translation>Tus activos en %1</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">Activos populares</translation>
+        <translation>Activos populares</translation>
     </message>
 </context>
 <context>
@@ -15179,7 +15183,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Editar</translation>
+        <translation>Editar</translation>
     </message>
     <message>
         <source>Send</source>
@@ -15203,7 +15207,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Fees</source>
-        <translation></translation>
+        <translation>Comisiones</translation>
     </message>
     <message>
         <source>Max. fees on %1</source>
@@ -15288,7 +15292,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Keycard</source>
-        <translation type="unfinished">Keycard</translation>
+        <translation>Keycard</translation>
     </message>
     <message>
         <source>ENS usernames</source>
@@ -15300,7 +15304,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Syncing</source>
-        <translation></translation>
+        <translation>Sincronizando</translation>
     </message>
     <message>
         <source>Connection problems can happen.&lt;br&gt;If they do, please use the Enter a Recovery Phrase feature instead.</source>
@@ -15312,7 +15316,7 @@ al cargar</translation>
     </message>
     <message>
         <source>P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>Red P2P</translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -15344,7 +15348,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>Notificaciones</translation>
     </message>
     <message>
         <source>Language &amp; Currency</source>
@@ -15360,7 +15364,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation></translation>
+        <translation>Cerrar sesión y salir</translation>
     </message>
 </context>
 <context>
@@ -15421,11 +15425,11 @@ al cargar</translation>
     </message>
     <message>
         <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>¡La privacidad es lo primero! Únete a mí en Status para chats verdaderamente privados y seguros. Usa mi enlace de perfil para descargar Status y conectar: %1</translation>
     </message>
     <message>
         <source>Copy invitation &amp; link</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiar invitación y enlace</translation>
     </message>
     <message>
         <source>Copy link</source>
@@ -15433,22 +15437,22 @@ al cargar</translation>
     </message>
     <message>
         <source>Connect with %1 on Status: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Conecta con %1 en Status: %2</translation>
     </message>
     <message>
         <source>%1&apos;s profile</source>
-        <translation type="unfinished">Perfil de %1</translation>
+        <translation>Perfil de %1</translation>
     </message>
     <message>
         <source>Share profile to invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Comparte tu perfil para invitar contactos</translation>
     </message>
 </context>
 <context>
     <name>ShareUtils</name>
     <message>
         <source>Share via</source>
-        <translation type="unfinished"></translation>
+        <translation>Compartir mediante</translation>
     </message>
 </context>
 <context>
@@ -15589,17 +15593,17 @@ al cargar</translation>
     </message>
     <message>
         <source>Sign</source>
-        <translation type="unfinished">Firmar</translation>
+        <translation>Firmar</translation>
     </message>
     <message>
         <source>Signed</source>
-        <translation type="unfinished"></translation>
+        <translation>Firmado</translation>
     </message>
     <message numerus="yes">
         <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Para compartir %n dirección con &lt;b&gt;%1&lt;/b&gt;, firma con los pares de claves asociados...</numerusform>
+            <numerusform>Para compartir %n direcciones con &lt;b&gt;%1&lt;/b&gt;, firma con los pares de claves asociados...</numerusform>
         </translation>
     </message>
     <message>
@@ -15662,27 +15666,27 @@ al cargar</translation>
     <name>SignPopup</name>
     <message>
         <source>Sign community request with %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Firmar solicitud de comunidad con %1</translation>
     </message>
     <message>
         <source>Sign Transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Firmar transacción</translation>
     </message>
     <message>
         <source>Sign</source>
-        <translation type="unfinished">Firmar</translation>
+        <translation>Firmar</translation>
     </message>
     <message>
         <source>Update password &amp; sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Actualizar contraseña y firmar</translation>
     </message>
     <message>
         <source>Update PIN &amp; sign</source>
-        <translation type="unfinished"></translation>
+        <translation>Actualizar PIN y firmar</translation>
     </message>
     <message>
         <source>Failed to sign with the authorized credentials</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo firmar con las credenciales autorizadas</translation>
     </message>
 </context>
 <context>
@@ -15715,31 +15719,31 @@ al cargar</translation>
     <name>SimpleSendModal</name>
     <message>
         <source>To</source>
-        <translation type="unfinished">Para</translation>
+        <translation>Para</translation>
     </message>
     <message>
         <source>Fees</source>
-        <translation type="unfinished"></translation>
+        <translation>Comisiones</translation>
     </message>
     <message>
         <source>Insufficient funds for send transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Fondos insuficientes para la transacción de envío</translation>
     </message>
     <message>
         <source>Add ETH</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar ETH</translation>
     </message>
     <message>
         <source>Add BNB</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar BNB</translation>
     </message>
     <message>
         <source>Add assets</source>
-        <translation type="unfinished">Agregar activos</translation>
+        <translation>Agregar activos</translation>
     </message>
     <message>
         <source>Add %1</source>
-        <translation type="unfinished">Agregar %1</translation>
+        <translation>Agregar %1</translation>
     </message>
 </context>
 <context>
@@ -15760,7 +15764,7 @@ al cargar</translation>
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>
-        <translation type="unfinished"></translation>
+        <translation>Personalizado %</translation>
     </message>
     <message>
         <source>Slippage should be more than 0</source>
@@ -15794,7 +15798,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Hodling</source>
-        <translation></translation>
+        <translation>Tenencia</translation>
     </message>
 </context>
 <context>
@@ -15805,7 +15809,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Search hodlers</source>
-        <translation></translation>
+        <translation>Buscar poseedores</translation>
     </message>
     <message>
         <source>Search results</source>
@@ -15813,7 +15817,7 @@ al cargar</translation>
     </message>
     <message>
         <source>No hodlers found</source>
-        <translation></translation>
+        <translation>No se encontraron poseedores</translation>
     </message>
     <message>
         <source>No hodlers just yet</source>
@@ -15845,7 +15849,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Ban</source>
-        <translation></translation>
+        <translation>Bloquear</translation>
     </message>
 </context>
 <context>
@@ -15955,46 +15959,46 @@ al cargar</translation>
     <name>StatusChatInput</name>
     <message>
         <source>Type something</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe algo</translation>
     </message>
     <message>
         <source>Sticker</source>
-        <translation type="unfinished"></translation>
+        <translation>Sticker</translation>
     </message>
     <message>
         <source>Multiple payment requests</source>
-        <translation type="unfinished"></translation>
+        <translation>Múltiples solicitudes de pago</translation>
     </message>
     <message>
         <source>Payment request %1 %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud de pago %1 %2</translation>
     </message>
     <message numerus="yes">
         <source>%n Image(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n imagen</numerusform>
+            <numerusform>%n imágenes</numerusform>
         </translation>
     </message>
     <message>
         <source>Please choose an image</source>
-        <translation type="unfinished">Por favor elige una imagen</translation>
+        <translation>Por favor elige una imagen</translation>
     </message>
     <message>
         <source>Image files (%1)</source>
-        <translation type="unfinished">Archivos de imagen (%1)</translation>
+        <translation>Archivos de imagen (%1)</translation>
     </message>
     <message>
         <source>Please reduce the message length</source>
-        <translation type="unfinished">Por favor reduce la longitud del mensaje</translation>
+        <translation>Por favor reduce la longitud del mensaje</translation>
     </message>
     <message>
         <source>Maximum message character count is %1</source>
-        <translation type="unfinished"></translation>
+        <translation>El número máximo de caracteres del mensaje es %1</translation>
     </message>
     <message>
         <source>Edit</source>
-        <translation type="unfinished">Editar</translation>
+        <translation>Editar</translation>
     </message>
 </context>
 <context>
@@ -16045,7 +16049,7 @@ al cargar</translation>
     <name>StatusContactVerificationIcons</name>
     <message>
         <source>Blocked</source>
-        <translation></translation>
+        <translation>Bloqueado</translation>
     </message>
     <message>
         <source>Trusted contact</source>
@@ -16068,7 +16072,7 @@ al cargar</translation>
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
 </context>
 <context>
@@ -16225,7 +16229,7 @@ al cargar</translation>
     <name>StatusGifPopup</name>
     <message>
         <source>Search KLIPY</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar en KLIPY</translation>
     </message>
     <message>
         <source>TRENDING</source>
@@ -16241,26 +16245,26 @@ al cargar</translation>
     </message>
     <message>
         <source>Enable third-party services for gifs feature to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilita los servicios de terceros para que la función de gifs funcione.</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
-        <translation type="unfinished">Habilitar servicios de terceros</translation>
+        <translation>Habilitar servicios de terceros</translation>
     </message>
 </context>
 <context>
     <name>StatusImageModal</name>
     <message>
         <source>Failed to load %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al cargar %1</translation>
     </message>
     <message>
         <source>empty image</source>
-        <translation type="unfinished"></translation>
+        <translation>imagen vacía</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation type="unfinished">Cerrar</translation>
+        <translation>Cerrar</translation>
     </message>
 </context>
 <context>
@@ -16414,7 +16418,7 @@ al cargar</translation>
     <name>StatusPasteButton</name>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">Pegar</translation>
+        <translation>Pegar</translation>
     </message>
 </context>
 <context>
@@ -16487,7 +16491,7 @@ al cargar</translation>
     <name>StatusStickerButton</name>
     <message>
         <source>Buy for %L1 SNT</source>
-        <translation type="unfinished"></translation>
+        <translation>Comprar por %L1 SNT</translation>
     </message>
     <message>
         <source>Uninstall</source>
@@ -16515,7 +16519,7 @@ al cargar</translation>
     </message>
     <message>
         <source>%L1 SNT</source>
-        <translation type="unfinished"></translation>
+        <translation>%L1 SNT</translation>
     </message>
 </context>
 <context>
@@ -16542,11 +16546,11 @@ al cargar</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
-        <translation type="unfinished">Habilitar servicios de terceros</translation>
+        <translation>Habilitar servicios de terceros</translation>
     </message>
     <message>
         <source>Enable third-party services for stickers feature to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilita los servicios de terceros para que la función de stickers funcione.</translation>
     </message>
 </context>
 <context>
@@ -16606,19 +16610,19 @@ al cargar</translation>
     <name>StatusTextEditMenu</name>
     <message>
         <source>Cut</source>
-        <translation type="unfinished"></translation>
+        <translation>Cortar</translation>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished">Copiar</translation>
+        <translation>Copiar</translation>
     </message>
     <message>
         <source>Paste</source>
-        <translation type="unfinished">Pegar</translation>
+        <translation>Pegar</translation>
     </message>
     <message>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar todo</translation>
     </message>
 </context>
 <context>
@@ -16710,34 +16714,34 @@ al cargar</translation>
     <name>StringUtils</name>
     <message>
         <source>(edited)</source>
-        <translation type="unfinished">(editado)</translation>
+        <translation>(editado)</translation>
     </message>
 </context>
 <context>
     <name>SupportedFormatsModal</name>
     <message>
         <source>Supported formats</source>
-        <translation type="unfinished"></translation>
+        <translation>Formatos compatibles</translation>
     </message>
     <message>
         <source>Files in these formats open in a browser tab. Everything else opens in another app.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los archivos en estos formatos se abren en una pestaña del navegador. Todo lo demás se abre en otra aplicación.</translation>
     </message>
     <message>
         <source>Opens here</source>
-        <translation type="unfinished"></translation>
+        <translation>Se abre aquí</translation>
     </message>
     <message>
         <source>Opens in another app</source>
-        <translation type="unfinished"></translation>
+        <translation>Se abre en otra aplicación</translation>
     </message>
     <message>
         <source>Checked against this platform&apos;s media engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>Verificado con el motor multimedia de esta plataforma.</translation>
     </message>
     <message>
         <source>Reported by this platform&apos;s browser engine.</source>
-        <translation type="unfinished"></translation>
+        <translation>Informado por el motor del navegador de esta plataforma.</translation>
     </message>
 </context>
 <context>
@@ -16775,7 +16779,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Max fees:</source>
-        <translation></translation>
+        <translation>Comisiones máximas:</translation>
     </message>
     <message>
         <source>Est. time:</source>
@@ -16803,7 +16807,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Fees</source>
-        <translation></translation>
+        <translation>Comisiones</translation>
     </message>
     <message>
         <source>Max. fees on %1</source>
@@ -16814,45 +16818,45 @@ al cargar</translation>
     <name>SwapFromAccountPopup</name>
     <message>
         <source>From account</source>
-        <translation type="unfinished"></translation>
+        <translation>Desde la cuenta</translation>
     </message>
 </context>
 <context>
     <name>SwapInputPanel</name>
     <message>
         <source>Your assets on %1</source>
-        <translation type="unfinished">Tus activos en %1</translation>
+        <translation>Tus activos en %1</translation>
     </message>
     <message>
         <source>Your assets</source>
-        <translation type="unfinished">Tus activos</translation>
+        <translation>Tus activos</translation>
     </message>
     <message>
         <source>Popular assets</source>
-        <translation type="unfinished">Activos populares</translation>
+        <translation>Activos populares</translation>
     </message>
     <message>
         <source>≈ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>≈ %1</translation>
     </message>
 </context>
 <context>
     <name>SwapModal</name>
     <message>
         <source>Swap</source>
-        <translation></translation>
+        <translation>Swap</translation>
     </message>
     <message>
         <source>Swap + Bridge</source>
-        <translation type="unfinished"></translation>
+        <translation>Swap + Bridge</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Más rápido</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Comisión más baja</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16864,28 +16868,28 @@ al cargar</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished"></translation>
+        <translation>Mejor rendimiento</translation>
     </message>
     <message>
         <source>Bridge</source>
-        <translation type="unfinished">Bridge</translation>
+        <translation>Bridge</translation>
     </message>
     <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
-        <translation type="unfinished"></translation>
+        <translation>%1s</translation>
     </message>
     <message>
         <source>Choose route</source>
-        <translation type="unfinished"></translation>
+        <translation>Elegir ruta</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
-        <translation type="unfinished"></translation>
+        <translation>por %1 vía %2</translation>
     </message>
     <message>
         <source>by %1</source>
-        <translation type="unfinished"></translation>
+        <translation>por %1</translation>
     </message>
     <message>
         <source>Approving %1</source>
@@ -16897,11 +16901,11 @@ al cargar</translation>
     </message>
     <message>
         <source>Fetching quote...</source>
-        <translation type="unfinished"></translation>
+        <translation>Obteniendo cotización...</translation>
     </message>
     <message>
         <source>Confirm %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirmar %1</translation>
     </message>
     <message>
         <source>Approving %1 spending cap to Swap</source>
@@ -16913,7 +16917,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Sign %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Firmar %1</translation>
     </message>
     <message>
         <source>Sign</source>
@@ -16921,11 +16925,11 @@ al cargar</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Información</translation>
     </message>
     <message>
         <source>Swaps on %1 are coming soon.</source>
-        <translation type="unfinished"></translation>
+        <translation>Los swaps en %1 estarán disponibles pronto.</translation>
     </message>
 </context>
 <context>
@@ -16952,7 +16956,7 @@ al cargar</translation>
     </message>
     <message>
         <source>No routes found with enough liquidity</source>
-        <translation type="unfinished"></translation>
+        <translation>No se encontraron rutas con suficiente liquidez</translation>
     </message>
     <message>
         <source>Something went wrong. Change amount, token or try again later.</source>
@@ -16967,38 +16971,38 @@ al cargar</translation>
     </message>
     <message>
         <source>via %1</source>
-        <translation type="unfinished">vía %1</translation>
+        <translation>vía %1</translation>
     </message>
 </context>
 <context>
     <name>SwapRoutePopup</name>
     <message>
         <source>Swap route</source>
-        <translation type="unfinished"></translation>
+        <translation>Ruta de swap</translation>
     </message>
     <message>
         <source>Best return</source>
-        <translation type="unfinished"></translation>
+        <translation>Mejor rendimiento</translation>
     </message>
     <message>
         <source>Best received amount</source>
-        <translation type="unfinished"></translation>
+        <translation>Mejor cantidad recibida</translation>
     </message>
     <message>
         <source>Fastest</source>
-        <translation type="unfinished"></translation>
+        <translation>Más rápido</translation>
     </message>
     <message>
         <source>Shortest execution time</source>
-        <translation type="unfinished"></translation>
+        <translation>Menor tiempo de ejecución</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
+        <translation>Comisión más baja</translation>
     </message>
     <message>
         <source>Lowest network cost</source>
-        <translation type="unfinished"></translation>
+        <translation>Menor costo de red</translation>
     </message>
 </context>
 <context>
@@ -17011,11 +17015,11 @@ al cargar</translation>
     <message>
         <source>From %1 %2 on %3 to %4 %5 on %6</source>
         <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>De %1 %2 en %3 a %4 %5 en %6</translation>
     </message>
     <message>
         <source>Max fees:</source>
-        <translation></translation>
+        <translation>Comisiones máximas:</translation>
     </message>
     <message>
         <source>Max slippage:</source>
@@ -17031,29 +17035,29 @@ al cargar</translation>
     </message>
     <message>
         <source>From account</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuenta de origen</translation>
     </message>
     <message>
         <source>To account</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuenta de destino</translation>
     </message>
 </context>
 <context>
     <name>SwapSlippagePopup</name>
     <message>
         <source>Set max price slippage</source>
-        <translation type="unfinished"></translation>
+        <translation>Establecer deslizamiento máximo de precio</translation>
     </message>
     <message>
         <source>The swap will revert if the price shifts beyond this percentage.</source>
-        <translation type="unfinished"></translation>
+        <translation>El swap se revertirá si el precio cambia más allá de este porcentaje.</translation>
     </message>
 </context>
 <context>
     <name>SwapToAccountPopup</name>
     <message>
         <source>Send to</source>
-        <translation type="unfinished"></translation>
+        <translation>Enviar a</translation>
     </message>
 </context>
 <context>
@@ -17080,7 +17084,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Delete Device</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar dispositivo</translation>
     </message>
 </context>
 <context>
@@ -17199,7 +17203,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Enter code</source>
-        <translation></translation>
+        <translation>Introducir código</translation>
     </message>
     <message>
         <source>How to get a pairing code</source>
@@ -17223,7 +17227,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Ensure both devices are on the same local network</source>
-        <translation type="unfinished"></translation>
+        <translation>Asegúrate de que ambos dispositivos estén en la misma red local</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -17310,67 +17314,68 @@ al cargar</translation>
     </message>
     <message>
         <source>Restore my past messages to this device</source>
-        <translation type="unfinished"></translation>
+        <translation>Restaurar mis mensajes anteriores en este dispositivo</translation>
     </message>
     <message>
         <source>Copies and sends your direct, group, and community messages to your new device using encrypted local pairing.</source>
-        <translation type="unfinished"></translation>
+        <translation>Copia y envía tus mensajes directos, de grupo y de comunidad a tu nuevo dispositivo mediante emparejamiento local cifrado.</translation>
     </message>
     <message>
         <source>Delete Device</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar dispositivo</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Eliminar</translation>
+        <translation>Eliminar</translation>
     </message>
     <message>
         <source>Error deleting device: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al eliminar el dispositivo: %1</translation>
     </message>
     <message>
         <source>Are you sure you want to delete this device?
 This action cannot be undone.</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres eliminar este dispositivo?
+Esta acción no se puede deshacer.</translation>
     </message>
 </context>
 <context>
     <name>TabsBookmarksOverviewModal</name>
     <message>
         <source>Open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>Pestañas abiertas</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Marcadores</translation>
     </message>
     <message>
         <source>Downloads</source>
-        <translation type="unfinished">Descargas</translation>
+        <translation>Descargas</translation>
     </message>
     <message>
         <source>Search in open tabs</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar en pestañas abiertas</translation>
     </message>
     <message>
         <source>Search in bookmarks</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar en marcadores</translation>
     </message>
     <message>
         <source>Edit bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Editar marcador</translation>
     </message>
     <message>
         <source>Delete bookmark</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar marcador</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Buscar</translation>
+        <translation>Buscar</translation>
     </message>
     <message>
         <source>Add</source>
-        <translation type="unfinished">Agregar</translation>
+        <translation>Agregar</translation>
     </message>
 </context>
 <context>
@@ -17423,27 +17428,27 @@ This action cannot be undone.</source>
     <name>TestnetModePopup</name>
     <message>
         <source>Turn off testnet mode</source>
-        <translation type="unfinished">Desactivar modo testnet</translation>
+        <translation>Desactivar modo testnet</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Activar modo testnet</translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres desactivar %1? Todas las transacciones futuras se realizarán en redes activas con fondos reales</translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres activar %1? En este modo, todos los datos de blockchain mostrados provendrán de testnets y todas las interacciones con blockchain serán con testnets. El modo testnet cambia toda la app para usar únicamente testnets. Activa este modo solo si sabes exactamente por qué lo necesitas.</translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation type="unfinished"></translation>
+        <translation>Modo testnet activado</translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>Modo testnet desactivado</translation>
     </message>
 </context>
 <context>
@@ -17514,15 +17519,15 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Browser (browse web-pages, connect dApps)</source>
-        <translation type="unfinished"></translation>
+        <translation>Navegador (navegar páginas web, conectar dApps)</translation>
     </message>
     <message>
         <source>Sync with NTP (Network Time Protocol) servers</source>
-        <translation type="unfinished"></translation>
+        <translation>Sincronizar con servidores NTP (Network Time Protocol)</translation>
     </message>
     <message>
         <source>Missed messages if your device time isn’t synced to network time</source>
-        <translation type="unfinished"></translation>
+        <translation>Mensajes perdidos si la hora de tu dispositivo no está sincronizada con la hora de red</translation>
     </message>
 </context>
 <context>
@@ -17558,7 +17563,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>You received your first community asset</source>
-        <translation></translation>
+        <translation>Recibiste tu primer activo de comunidad</translation>
     </message>
     <message>
         <source>You received your first community collectible</source>
@@ -17574,7 +17579,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>You were airdropped %1 %2 from %3 to %4</source>
-        <translation></translation>
+        <translation>Recibiste un airdrop de %1 %2 de %3 a %4</translation>
     </message>
     <message>
         <source>View transaction details</source>
@@ -17598,23 +17603,23 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Contact removed</source>
-        <translation type="unfinished"></translation>
+        <translation>Contacto eliminado</translation>
     </message>
     <message>
         <source>%1 removed you as a contact</source>
-        <translation type="unfinished">%1 te eliminó como contacto</translation>
+        <translation>%1 te eliminó como contacto</translation>
     </message>
     <message>
         <source>You removed %1 as a contact</source>
-        <translation type="unfinished">Eliminaste a %1 como contacto</translation>
+        <translation>Eliminaste a %1 como contacto</translation>
     </message>
     <message>
         <source>Backup failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Copia de seguridad fallida</translation>
     </message>
     <message>
         <source>Check Settings &gt; Backups to see the details and try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Consulta Ajustes &gt; Copias de seguridad para ver los detalles e inténtalo de nuevo</translation>
     </message>
     <message>
         <source>Your data backup restored successfully</source>
@@ -17668,7 +17673,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Hodling</source>
-        <translation></translation>
+        <translation>Hodling</translation>
     </message>
 </context>
 <context>
@@ -17679,7 +17684,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Search hodlers</source>
-        <translation></translation>
+        <translation>Buscar hodlers</translation>
     </message>
     <message>
         <source>No hodlers found</source>
@@ -17771,7 +17776,7 @@ This action cannot be undone.</source>
     <name>TokenMasterActionPopup</name>
     <message>
         <source>Ban %1</source>
-        <translation></translation>
+        <translation>Banear a %1</translation>
     </message>
     <message>
         <source>Kick %1</source>
@@ -18004,7 +18009,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Received</source>
-        <translation></translation>
+        <translation>Recibido</translation>
     </message>
     <message>
         <source>Destroy failed</source>
@@ -18056,7 +18061,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Collectible minting failed</source>
-        <translation></translation>
+        <translation>Error al acuñar el coleccionable</translation>
     </message>
     <message>
         <source>Minting collectible</source>
@@ -18100,11 +18105,11 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Unknown token</source>
-        <translation type="unfinished"></translation>
+        <translation>Token desconocido</translation>
     </message>
     <message>
         <source>Unknown token (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Token desconocido (%1)</translation>
     </message>
 </context>
 <context>
@@ -18361,15 +18366,15 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>UrlUtils</name>
     <message>
         <source>Internal storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Almacenamiento interno</translation>
     </message>
     <message>
         <source>SD card</source>
-        <translation type="unfinished"></translation>
+        <translation>Tarjeta SD</translation>
     </message>
     <message>
         <source>Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Almacenamiento</translation>
     </message>
 </context>
 <context>
@@ -18380,7 +18385,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Enter recovery phrase of lost Keycard</source>
-        <translation></translation>
+        <translation>Introduce la frase de recuperación de la Keycard perdida</translation>
     </message>
     <message>
         <source>Log in with your Status recovery phrase</source>
@@ -18392,7 +18397,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>The entered recovery phrase is already added</source>
-        <translation></translation>
+        <translation>La frase de recuperación introducida ya ha sido añadida</translation>
     </message>
     <message>
         <source>Invalid recovery phrase</source>
@@ -18403,7 +18408,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>UserListPanel</name>
     <message>
         <source>Search members...</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar miembros...</translation>
     </message>
     <message>
         <source>Member re-evaluation in progress...</source>
@@ -18426,7 +18431,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>UserStatusContextMenu</name>
     <message>
         <source>Copy Chat Key</source>
-        <translation type="unfinished">Copiar clave de chat</translation>
+        <translation>Copiar clave de chat</translation>
     </message>
     <message>
         <source>Copy link to profile</source>
@@ -18434,7 +18439,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished">Ajustes</translation>
+        <translation>Ajustes</translation>
     </message>
     <message>
         <source>Always online</source>
@@ -18450,7 +18455,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Invite contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Invitar contactos</translation>
     </message>
 </context>
 <context>
@@ -18507,7 +18512,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>PINs don&apos;t match</source>
-        <translation></translation>
+        <translation>Los PIN no coinciden</translation>
     </message>
     <message>
         <source>You need to enter a %1</source>
@@ -18557,7 +18562,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Swap</source>
-        <translation></translation>
+        <translation>Swap</translation>
     </message>
     <message>
         <source>Market</source>
@@ -18577,7 +18582,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
+        <translation>Escáner de QR</translation>
     </message>
     <message>
         <source>Add new user</source>
@@ -18617,27 +18622,27 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Failed to start the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al iniciar la transacción</translation>
     </message>
     <message>
         <source>No account selected to send the transaction from</source>
-        <translation type="unfinished"></translation>
+        <translation>No se seleccionó ninguna cuenta desde la cual enviar la transacción</translation>
     </message>
     <message>
         <source>Failed to prepare the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al preparar la transacción</translation>
     </message>
     <message>
         <source>Failed to send the transaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al enviar la transacción</translation>
     </message>
     <message>
         <source>Transaction signing was not completed</source>
-        <translation type="unfinished"></translation>
+        <translation>La firma de la transacción no se completó</translation>
     </message>
     <message>
         <source>Failed to prepare the transaction for signing</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al preparar la transacción para la firma</translation>
     </message>
     <message>
         <source>Arbiscan</source>
@@ -18653,7 +18658,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Robinhood Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Robinhood Explorer</translation>
     </message>
     <message>
         <source>BscScan</source>
@@ -18685,43 +18690,43 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>LineaScan</source>
-        <translation type="unfinished"></translation>
+        <translation>LineaScan</translation>
     </message>
     <message>
         <source>Messages are loading...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargando mensajes...</translation>
     </message>
     <message>
         <source>Unichain Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Unichain Explorer</translation>
     </message>
     <message>
         <source>Katana Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Katana Explorer</translation>
     </message>
     <message>
         <source>Ink Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Ink Explorer</translation>
     </message>
     <message>
         <source>Abstract Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Abstract Explorer</translation>
     </message>
     <message>
         <source>ZkSync Era Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>ZkSync Era Explorer</translation>
     </message>
     <message>
         <source>Soneium Explorer</source>
-        <translation type="unfinished"></translation>
+        <translation>Soneium Explorer</translation>
     </message>
     <message>
         <source>ScrollScan</source>
-        <translation type="unfinished"></translation>
+        <translation>ScrollScan</translation>
     </message>
     <message>
         <source>BlastScan</source>
-        <translation type="unfinished"></translation>
+        <translation>BlastScan</translation>
     </message>
 </context>
 <context>
@@ -18784,7 +18789,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>WalletAccountsSkeleton</name>
     <message>
         <source>Wallet</source>
-        <translation type="unfinished">Billetera</translation>
+        <translation>Billetera</translation>
     </message>
 </context>
 <context>
@@ -18799,7 +18804,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Show address QR</source>
-        <translation></translation>
+        <translation>Mostrar código QR de la dirección</translation>
     </message>
 </context>
 <context>
@@ -18821,15 +18826,15 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>WalletFollowingAddressesHeader</name>
     <message>
         <source>Last refreshed %1</source>
-        <translation type="unfinished">Última actualización %1</translation>
+        <translation>Última actualización %1</translation>
     </message>
     <message>
         <source>Find a friend</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscar un amigo</translation>
     </message>
     <message>
         <source>Onchain friends</source>
-        <translation type="unfinished"></translation>
+        <translation>Amigos onchain</translation>
     </message>
 </context>
 <context>
@@ -18840,11 +18845,11 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Soulbound tokens cannot be sent to another wallet</source>
-        <translation type="unfinished"></translation>
+        <translation>Los tokens soulbound no se pueden enviar a otra billetera</translation>
     </message>
     <message>
         <source>Go to &quot;Manage community -&gt; Tokens&quot; page to send it</source>
-        <translation type="unfinished"></translation>
+        <translation>Ve a la página &quot;Gestionar comunidad -&gt; Tokens&quot; para enviarlo</translation>
     </message>
     <message>
         <source>Receive</source>
@@ -18856,7 +18861,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Swap</source>
-        <translation type="unfinished">Swap</translation>
+        <translation>Swap</translation>
     </message>
 </context>
 <context>
@@ -18894,7 +18899,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Import via entering private key</source>
-        <translation></translation>
+        <translation>Importar introduciendo la clave privada</translation>
     </message>
     <message>
         <source>Import via entering recovery phrase</source>
@@ -18913,7 +18918,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>WalletNetworkDelegate</name>
     <message>
         <source>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</source>
-        <translation type="unfinished">Cadena %1 integrada. Ahora puedes ver e intercambiar &lt;br&gt;activos %1, así como interactuar con dApps %1.</translation>
+        <translation>Cadena %1 integrada. Ahora puedes ver e intercambiar &lt;br&gt;activos %1, así como interactuar con dApps %1.</translation>
     </message>
     <message>
         <source>Required for some Status features</source>
@@ -18982,11 +18987,11 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>&lt; 30 sec</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 seg</translation>
     </message>
     <message>
         <source>&lt; 30 seconds</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 segundos</translation>
     </message>
     <message>
         <source>&lt; 1 minute</source>
@@ -18994,15 +18999,15 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>&lt; 1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 1 min</translation>
     </message>
     <message>
         <source>&lt; 2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 min</translation>
     </message>
     <message>
         <source>&lt; 2 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 minutos</translation>
     </message>
     <message>
         <source>&lt; 3 minutes</source>
@@ -19010,15 +19015,15 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>&lt; 3 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 3 min</translation>
     </message>
     <message>
         <source>&lt; 4 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 min</translation>
     </message>
     <message>
         <source>&lt; 4 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 minutos</translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
@@ -19026,7 +19031,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>&lt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 5 min</translation>
     </message>
     <message>
         <source>&gt; 5 minutes</source>
@@ -19034,7 +19039,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>&gt; 5 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&gt; 5 min</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -19394,7 +19399,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Checksum of the entered address is incorrect</source>
-        <translation></translation>
+        <translation>El checksum de la dirección introducida es incorrecto</translation>
     </message>
     <message>
         <source>Please enter a valid Ethereum address or ENS name</source>
@@ -19491,7 +19496,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>WhitelistedDomainsView</name>
     <message>
         <source>Trusted sites</source>
-        <translation></translation>
+        <translation>Sitios de confianza</translation>
     </message>
     <message>
         <source>Manage trusted sites. Their links open without confirmation.</source>
@@ -19506,23 +19511,23 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
+        <translation>Status Desktop</translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Compartir registros o reportar un error?</translation>
     </message>
     <message>
         <source>Export log files</source>
-        <translation type="unfinished"></translation>
+        <translation>Exportar archivos de registro</translation>
     </message>
     <message>
         <source>No log files found</source>
-        <translation type="unfinished"></translation>
+        <translation>No se encontraron archivos de registro</translation>
     </message>
     <message>
         <source>Report a bug on GitHub</source>
-        <translation type="unfinished"></translation>
+        <translation>Reportar un error en GitHub</translation>
     </message>
 </context>
 <context>
