@@ -394,6 +394,7 @@ ColumnLayout {
     }
 
     StatusListItem {
+        objectName: "keycardDetailsSetOrChangePuk"
         Layout.fillWidth: true
         visible: (d.hasKeyPair
                   || d.onlyPinSet)
