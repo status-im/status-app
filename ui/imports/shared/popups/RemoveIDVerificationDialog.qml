@@ -11,19 +11,15 @@ import StatusQ.Controls
 CommonContactAdaptiveDialog {
     id: root
 
-    readonly property bool markAsUntrusted: d.markAsUntrusted
-    readonly property bool removeContact: d.removeContact
+    readonly property bool markAsUntrusted: root.hostedItem?.bodyItem?.markAsUntrusted ?? false
+    readonly property bool removeContact: root.hostedItem?.bodyItem?.removeContact ?? false
 
     title: qsTr("Remove trust mark")
 
-    QtObject {
-        id: d
-
-        property bool markAsUntrusted
-        property bool removeContact
-    }
-
     bodyComponent: ColumnLayout {
+        readonly property alias markAsUntrusted: ctrlMarkAsUntrusted.checked
+        readonly property alias removeContact: ctrlRemoveContact.checked
+
         spacing: Theme.halfPadding
 
         StatusBaseText {
@@ -36,15 +32,11 @@ CommonContactAdaptiveDialog {
         StatusCheckBox {
             id: ctrlMarkAsUntrusted
             text: qsTr("Mark %1 as untrusted").arg(mainDisplayName)
-            onCheckedChanged: d.markAsUntrusted = checked
-            Component.onCompleted: d.markAsUntrusted = checked
         }
 
         StatusCheckBox {
             id: ctrlRemoveContact
             text: qsTr("Remove contact")
-            onCheckedChanged: d.removeContact = checked
-            Component.onCompleted: d.removeContact = checked
         }
     }
 
