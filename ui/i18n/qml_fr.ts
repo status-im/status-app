@@ -1813,7 +1813,7 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Not Connected to P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>Non connecté au réseau P2P</translation>
     </message>
     <message>
         <source>CoinGecko connection successful</source>
@@ -1837,11 +1837,11 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Envoyez une demande de contact au bot pair à pair de l&apos;équipe Status sur le réseau décentralisé pour recevoir des messages de bienvenue et des conseils pratiques, et pour partager vos commentaires ou signaler des problèmes. Consultez notre Politique de confidentialité pour en savoir plus sur les interactions avec le bot. Déconnectez-vous à tout moment</translation>
     </message>
     <message>
         <source>Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime</source>
-        <translation type="unfinished"></translation>
+        <translation>Envoyez une demande de contact au bot pair à pair de l&apos;équipe Status sur le réseau décentralisé pour recevoir les actualités de Status et des conseils pratiques, et pour partager vos commentaires ou signaler des problèmes. Consultez notre Politique de confidentialité pour en savoir plus sur les interactions avec le bot. Déconnectez-vous à tout moment</translation>
     </message>
     <message>
         <source>Invite People</source>
@@ -6075,8 +6075,8 @@ key pair. Keycard will be required for signing</source>
     <message numerus="yes">
         <source>%n more issue(s) downloading assets</source>
         <translation>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>%n problème supplémentaire lors du téléchargement des ressources</numerusform>
+            <numerusform>%n problèmes supplémentaires lors du téléchargement des ressources</numerusform>
         </translation>
     </message>
     <message>
@@ -6094,8 +6094,8 @@ key pair. Keycard will be required for signing</source>
     <message numerus="yes">
         <source>‘%1’ was imported with %n issue(s).</source>
         <translation>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+            <numerusform>« %1 » a été importé avec %n problème.</numerusform>
+            <numerusform>« %1 » a été importé avec %n problèmes.</numerusform>
         </translation>
     </message>
     <message>
@@ -6776,7 +6776,7 @@ key pair. Keycard will be required for signing</source>
     <name>EmptyChatPanel</name>
     <message>
         <source>%1 to connect with or&lt;br&gt;invite your friends to Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;for welcome messages, how-to tips, or just to share feedback or issues.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 pour vous connecter avec vos amis ou&lt;br&gt;les inviter à rejoindre Status.&lt;br&gt;&lt;br&gt;&lt;br&gt;%2&lt;br&gt;pour des messages de bienvenue, des conseils pratiques, ou simplement pour partager vos commentaires ou signaler des problèmes.</translation>
     </message>
     <message>
         <source>Share your profile</source>
@@ -6784,7 +6784,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Chat with the Status Team peer-to-peer bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Discutez avec le bot pair à pair de l&apos;équipe Status</translation>
     </message>
 </context>
 <context>
@@ -7168,51 +7168,51 @@ key pair. Keycard will be required for signing</source>
     <name>EnsTermsAndConditionsPopup</name>
     <message>
         <source>Terms of name registration</source>
-        <translation type="unfinished">Conditions d’enregistrement des noms</translation>
+        <translation>Conditions d’enregistrement des noms</translation>
     </message>
     <message>
         <source>Funds are deposited for 1 year. Your SNT will be locked, but not spent.</source>
-        <translation type="unfinished">Les fonds sont déposés pour une durée de 1 an. Vos SNT seront bloqués, mais non dépensés.</translation>
+        <translation>Les fonds sont déposés pour une durée de 1 an. Vos SNT seront bloqués, mais non dépensés.</translation>
     </message>
     <message>
         <source>After 1 year, you can release the name and get your deposit back, or take no action to keep the name.</source>
-        <translation type="unfinished">Après 1 an, vous pouvez libérer le nom et récupérer votre dépôt, ou ne rien faire pour conserver le nom.</translation>
+        <translation>Après 1 an, vous pouvez libérer le nom et récupérer votre dépôt, ou ne rien faire pour conserver le nom.</translation>
     </message>
     <message>
         <source>If terms of the contract change — e.g. Status makes contract upgrades — user has the right to release the username regardless of time held.</source>
-        <translation type="unfinished">Si les conditions du contrat changent (par exemple, si Status effectue des mises à niveau du contrat), l’utilisateur a le droit de libérer le nom d’utilisateur, quel que soit le temps pendant lequel il l’a conservé.</translation>
+        <translation>Si les conditions du contrat changent (par exemple, si Status effectue des mises à niveau du contrat), l’utilisateur a le droit de libérer le nom d’utilisateur, quel que soit le temps pendant lequel il l’a conservé.</translation>
     </message>
     <message>
         <source>The contract controller cannot access your deposited funds. They can only be moved back to the address that sent them.</source>
-        <translation type="unfinished">Le contrôleur du contrat n’a pas accès à vos fonds déposés. Ils ne peuvent être renvoyés qu’à l’adresse qui les a envoyés.</translation>
+        <translation>Le contrôleur du contrat n’a pas accès à vos fonds déposés. Ils ne peuvent être renvoyés qu’à l’adresse qui les a envoyés.</translation>
     </message>
     <message>
         <source>Your address(es) will be publicly associated with your ENS name.</source>
-        <translation type="unfinished">Votre ou vos adresses seront publiquement associées à votre nom ENS.</translation>
+        <translation>Votre ou vos adresses seront publiquement associées à votre nom ENS.</translation>
     </message>
     <message>
         <source>Usernames are created as subdomain nodes of stateofus.eth and are subject to the ENS smart contract terms.</source>
-        <translation type="unfinished">Les noms d’utilisateur sont créés en tant que nœuds de sous-domaine de stateofus.eth et sont soumis aux conditions du contrat intelligent ENS.</translation>
+        <translation>Les noms d’utilisateur sont créés en tant que nœuds de sous-domaine de stateofus.eth et sont soumis aux conditions du contrat intelligent ENS.</translation>
     </message>
     <message>
         <source>You authorize the contract to transfer SNT on your behalf. This can only occur when you approve a transaction to authorize the transfer.</source>
-        <translation type="unfinished">Vous autorisez le contrat à transférer des SNT en votre nom. Cela ne peut se produire que lorsque vous approuvez une transaction pour autoriser le transfert.</translation>
+        <translation>Vous autorisez le contrat à transférer des SNT en votre nom. Cela ne peut se produire que lorsque vous approuvez une transaction pour autoriser le transfert.</translation>
     </message>
     <message>
         <source>These terms are guaranteed by the smart contract logic at addresses:</source>
-        <translation type="unfinished">Ces conditions sont garanties par la logique du contrat intelligent aux adresses suivantes&#xa0;:</translation>
+        <translation>Ces conditions sont garanties par la logique du contrat intelligent aux adresses suivantes :</translation>
     </message>
     <message>
         <source>%1 (Status UsernameRegistrar).</source>
-        <translation type="unfinished">%1 (Enregistreur de noms d’utilisateur Status).</translation>
+        <translation>%1 (Enregistreur de noms d’utilisateur Status).</translation>
     </message>
     <message>
         <source>&lt;a href=&apos;%1/%2&apos;&gt;Look up on Etherscan&lt;/a&gt;</source>
-        <translation type="unfinished">&lt;a href=&apos;%1/%2&apos;&gt;Rechercher sur Etherscan&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;%1/%2&apos;&gt;Rechercher sur Etherscan&lt;/a&gt;</translation>
     </message>
     <message>
         <source>%1 (ENS Registry).</source>
-        <translation type="unfinished">%1 (Registre ENS).</translation>
+        <translation>%1 (Registre ENS).</translation>
     </message>
 </context>
 <context>
@@ -10504,11 +10504,11 @@ chargement</translation>
     </message>
     <message>
         <source>Messages are sent via a decentralised network, a peer-to-peer (p2p) network built on Logos Messaging technology and powered collectively by users running Status Desktop, making Status decentralised, resilient, and censorship-resistant. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Les messages sont envoyés via un réseau décentralisé, un réseau pair à pair (p2p) construit sur la technologie Logos Messaging et alimenté collectivement par les utilisateurs de Status Desktop, rendant Status décentralisé, résilient et résistant à la censure. %1</translation>
     </message>
     <message>
         <source>Connected network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Pairs du réseau connectés</translation>
     </message>
     <message>
         <source>Peers</source>
@@ -10528,19 +10528,19 @@ chargement</translation>
     </message>
     <message>
         <source>Refresh network peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Rafraîchir les pairs du réseau</translation>
     </message>
     <message>
         <source>Unable to refresh network peers: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible d&apos;actualiser les pairs du réseau : %1</translation>
     </message>
     <message>
         <source>How to fix p2p network connection</source>
-        <translation type="unfinished"></translation>
+        <translation>Comment résoudre la connexion au réseau p2p</translation>
     </message>
     <message>
         <source>If Status has no connected network peers, check:</source>
-        <translation type="unfinished"></translation>
+        <translation>Si Status n&apos;a aucun pair de réseau connecté, vérifiez :</translation>
     </message>
     <message>
         <source>Try using a VPN</source>
@@ -10548,7 +10548,7 @@ chargement</translation>
     </message>
     <message>
         <source>Some networks may block access to the p2p network. %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Certains réseaux peuvent bloquer l&apos;accès au réseau p2p. %1</translation>
     </message>
     <message>
         <source>Current internet connection may be unstable. %1</source>
@@ -15296,7 +15296,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
     <message>
         <source>P2P network</source>
-        <translation type="unfinished"></translation>
+        <translation>Réseau P2P</translation>
     </message>
     <message>
         <source>Messaging</source>
@@ -16901,7 +16901,7 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Sign %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Signer %1</translation>
     </message>
     <message>
         <source>Sign</source>
@@ -16999,7 +16999,7 @@ avec un retour à la ligne</translation>
     <message>
         <source>From %1 %2 on %3 to %4 %5 on %6</source>
         <extracomment>e.g. &quot;From &lt;account name&gt; 100 DAI on Ethereum to &lt;account name&gt; 100 USDT on Optimism&quot;</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>De %1 %2 sur %3 vers %4 %5 sur %6</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -17019,11 +17019,11 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>From account</source>
-        <translation type="unfinished">Compte d&apos;origine</translation>
+        <translation>Compte d&apos;origine</translation>
     </message>
     <message>
         <source>To account</source>
-        <translation type="unfinished"></translation>
+        <translation>Compte de destination</translation>
     </message>
 </context>
 <context>
@@ -18970,11 +18970,11 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 30 sec</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 sec</translation>
     </message>
     <message>
         <source>&lt; 30 seconds</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 30 secondes</translation>
     </message>
     <message>
         <source>&lt; 1 minute</source>
@@ -18986,11 +18986,11 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 min</translation>
     </message>
     <message>
         <source>&lt; 2 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 2 minutes</translation>
     </message>
     <message>
         <source>&lt; 3 minutes</source>
@@ -19002,11 +19002,11 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>&lt; 4 min</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 min</translation>
     </message>
     <message>
         <source>&lt; 4 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt; 4 minutes</translation>
     </message>
     <message>
         <source>&lt; 5 minutes</source>
