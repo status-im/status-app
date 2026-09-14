@@ -409,6 +409,10 @@ proc `senderEnsVerified=`*(self: Item, value: bool) {.inline.} =
 proc isBridged*(self: Item): bool {.inline.} =
   self.contentType == ContentType.BridgeMessage or self.contentType == ContentType.DiscordMessage
 
+proc isQuotedMessageBridged*(self: Item): bool {.inline.} =
+  self.quotedMessageContentType == ContentType.BridgeMessage or
+    self.quotedMessageContentType == ContentType.DiscordMessage
+
 # Applies a contact update to the message sender. A bridged message was authored
 # outside Status, so the identity its header renders -- display name, secondary
 # name and avatar -- is the external author's and survives the update. The
@@ -423,6 +427,13 @@ proc updateSenderDetails*(self: Item, contact: ContactDetails) =
   self.senderIsAdded = contact.dto.added
   self.senderTrustStatus = contact.dto.trustStatus
   self.senderEnsVerified = contact.dto.ensVerified
+
+# Keeps the external author's name and avatar when the quoted message is bridged.
+proc updateQuotedAuthorDetails*(self: Item, contact: ContactDetails) =
+  self.quotedMessageAuthorDetails = contact
+  if not self.isQuotedMessageBridged:
+    self.quotedMessageAuthorDisplayName = contact.defaultDisplayName
+    self.quotedMessageAuthorAvatar = contact.icon
 
 proc outgoingStatus*(self: Item): string {.inline.} =
   self.outgoingStatus

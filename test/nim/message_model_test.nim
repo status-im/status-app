@@ -551,6 +551,58 @@ suite "contact updates on bridged messages":
 
     check(item.senderOptionalName == relayingAccount.optionalName)
 
+  proc createReplyItem(quotedContentType: ContentType): Item =
+    return message_model.createMessageItemFromDtos(
+      message = MessageDto(
+        id: "0x2",
+        clock: 2,
+        contentType: ContentType.Message,
+        quotedMessage: QuotedMessage(
+          `from`: "0xsender",
+          contentType: quotedContentType,
+          bridgeMessage: BridgeMessage(
+            bridgeName: "forum",
+            userName: bridgeAuthorName,
+            userAvatar: bridgeAuthorAvatar,
+            content: "gm",
+          ),
+          discordMessage: DiscordMessage(
+            content: "gm",
+            author: DiscordMessageAuthor(
+              id: "42",
+              name: bridgeAuthorName,
+              avatarUrl: bridgeAuthorAvatar,
+            ),
+          ),
+        ),
+      ),
+      communityId = "",
+      sender = ContactDetails(),
+      isCurrentUser = false,
+      renderedMessageText = "",
+      clearText = "",
+      quotedMessageAuthorDetails = ContactDetails(),
+    )
+
+  test "a reply to a bridged message keeps the quoted author's name and avatar":
+    for quotedContentType in [ContentType.BridgeMessage, ContentType.DiscordMessage]:
+      let item = createReplyItem(quotedContentType)
+      require(item.quotedMessageAuthorDisplayName == bridgeAuthorName)
+
+      item.updateQuotedAuthorDetails(relayingAccount)
+
+      check(item.quotedMessageAuthorDisplayName == bridgeAuthorName)
+      check(item.quotedMessageAuthorAvatar == bridgeAuthorAvatar)
+      check(item.quotedMessageAuthorDetails.dto.id == relayingAccount.dto.id)
+
+  test "a reply to an ordinary message takes the quoted author's contact details":
+    let item = createReplyItem(ContentType.Message)
+
+    item.updateQuotedAuthorDetails(relayingAccount)
+
+    check(item.quotedMessageAuthorDisplayName == relayingAccount.defaultDisplayName)
+    check(item.quotedMessageAuthorAvatar == relayingAccount.icon)
+
   test "a bridge message still tracks the relaying account's attributes":
     let item = createItem(ContentType.BridgeMessage, ContactDetails())
 

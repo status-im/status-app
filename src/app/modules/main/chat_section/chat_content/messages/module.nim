@@ -438,9 +438,7 @@ method updateContactDetails*(self: Module, contactId: string) =
       item.updateSenderDetails(updatedContact)
 
     if item.quotedMessageAuthorDetails.dto.id == contactId:
-      item.quotedMessageAuthorDetails = updatedContact
-      item.quotedMessageAuthorDisplayName = updatedContact.defaultDisplayName
-      item.quotedMessageAuthorAvatar = updatedContact.icon
+      item.updateQuotedAuthorDetails(updatedContact)
 
     if item.messageContainsMentions and item.mentionedUsersPks.anyIt(it == contactId):
       item.messageText = self.controller.getRenderedText(item.parsedText, self.controller.getCommunityDetails().chats)
