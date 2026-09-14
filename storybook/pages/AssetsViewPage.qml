@@ -13,6 +13,7 @@ import AppLayouts.Wallet.controls
 import AppLayouts.Wallet.panels
 
 import StatusQ
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Popups.Dialog
 
 import SortFilterProxyModel
@@ -130,7 +131,7 @@ SplitView {
 
                     communityId: "34",
                     communityName: "Crypto Kitties",
-                    communityImage: Constants.tokenIcon("DAI", false),
+                    communityImage: Qt.resolvedUrl(Constants.tokenIcon("DAI", false)),
 
                     position: 4,
                     canBeHidden: true,
@@ -196,7 +197,7 @@ SplitView {
 
                     communityId: "3423",
                     communityName: "Best tokens",
-                    communityImage: Constants.tokenIcon("UNI", false),
+                    communityImage: Qt.resolvedUrl(Constants.tokenIcon("UNI", false)),
 
                     position: 6,
                     canBeHidden: true,
@@ -239,7 +240,10 @@ SplitView {
                                  ? "Market data error!" : ""
 
                 model: assetsModel
-                formatBalance: (balance, key) => root.format(balance, key)
+                formatBalance: function(balance, key) {
+                    const symbol = SQUtils.ModelUtils.getByKey(assetsModel, "key", key, "symbol")
+                    return root.format(balance, symbol)
+                }
                 onSortRequested: (roleName, order) => assetsModel.sortBy(roleName, order)
 
                 onSendRequested: (key) =>logs.logEvent(`send requested: ${key}`)

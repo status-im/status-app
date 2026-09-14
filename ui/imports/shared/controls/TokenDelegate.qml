@@ -131,7 +131,7 @@ StatusListItem {
                 sourceComponent: ManageTokensCommunityTag {
                     anchors.right: parent.right
 
-                    communityImage: root.communityIcon
+                    communityImage: root.communityIcon.toString()
                     communityName: root.communityName
                     communityId: root.communityId
 
@@ -153,7 +153,7 @@ StatusListItem {
         PropertyChanges {
             target: root.asset
             isLetterIdenticon: true
-            color: Theme.palette.miscColor5
+            color: root.Theme.palette.miscColor5
             name: root.name
         }
     }
