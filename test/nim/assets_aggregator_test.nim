@@ -145,3 +145,23 @@ suite "buildAssetItems — joins and flags":
     check it.marketPrice == 1234.5
     check it.marketChangePct24hour == 2.5
     check it.marketDetailsLoading == false
+
+suite "resolveCommunities":
+
+  test "looks community info up per distinct communityId, skipping tokens without one":
+    var asked: seq[string] = @[]
+    let lookup = proc(id: string): AggCommunity =
+      asked.add(id)
+      AggCommunity(name: "Name of " & id, image: "img://" & id)
+
+    let comms = resolveCommunities(@[
+      group("CT1", communityId = "comm1"),
+      group("CT2", communityId = "comm2"),
+      group("CT3", communityId = "comm1"),
+      group("ETH")], lookup)
+
+    check asked == @["comm1", "comm2"]
+    check comms.len == 2
+    check comms["comm1"].name == "Name of comm1"
+    check comms["comm1"].image == "img://comm1"
+    check comms["comm2"].name == "Name of comm2"

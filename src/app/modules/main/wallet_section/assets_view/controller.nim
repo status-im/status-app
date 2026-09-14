@@ -8,6 +8,7 @@ import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/wallet_account/dto/asset_group_item
 import app_service/service/network/service as network_service
 import app_service/service/settings/service as settings_service
+import app_service/service/community/service as community_service
 
 # The below-balance threshold is stored as a raw integer scaled by 9 decimals
 # (mirrors TokensStore.getDisplayAssetsBelowBalanceThresholdDisplayAmount in QML).
@@ -20,6 +21,7 @@ type
     walletAccountService: wallet_account_service.Service
     networkService: network_service.Service
     settingsService: settings_service.Service
+    communityService: community_service.Service
 
 proc newController*(
   delegate: io_interface.AccessInterface,
@@ -27,6 +29,7 @@ proc newController*(
   walletAccountService: wallet_account_service.Service,
   networkService: network_service.Service,
   settingsService: settings_service.Service,
+  communityService: community_service.Service,
 ): Controller =
   result = Controller()
   result.delegate = delegate
@@ -34,6 +37,7 @@ proc newController*(
   result.walletAccountService = walletAccountService
   result.networkService = networkService
   result.settingsService = settingsService
+  result.communityService = communityService
 
 proc delete*(self: Controller) =
   discard
@@ -68,6 +72,10 @@ proc getNativeSymbolsForChains*(self: Controller, chainIds: seq[int]): seq[strin
   for network in self.networkService.getCurrentNetworks():
     if network.chainId in chainSet:
       result.add(network.nativeCurrencySymbol)
+
+proc getCommunityInfo*(self: Controller, communityId: string): tuple[name: string, image: string] =
+  let community {.cursor.} = self.communityService.getCommunityById(communityId)
+  return (community.name, community.images.thumbnail)
 
 proc getMarketValueThreshold*(self: Controller): float =
   if not self.settingsService.displayAssetsBelowBalance():
