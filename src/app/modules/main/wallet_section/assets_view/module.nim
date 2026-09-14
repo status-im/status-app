@@ -99,6 +99,12 @@ proc buildAndPush(self: Module) =
     let info = self.controller.getCommunityInfo(communityId)
     AggCommunity(name: info.name, image: info.image))
 
+  # An asset of a community we hold no data on renders an empty badge; ask for the
+  # data so the next SIGNAL_COMMUNITY_DATA_IMPORTED fills it in (request throttled).
+  for communityId, info in self.communityInfo:
+    if info.name.len == 0:
+      self.controller.requestCommunityInfo(communityId)
+
   let filters = AggFilters(
     accounts: self.addresses,
     chains: self.chainIds,
@@ -126,7 +132,10 @@ method load*(self: Module) =
     self.buildAndPush()
   self.events.on(SIGNAL_COMMUNITY_DATA_LOADED) do(e: Args):
     self.buildAndPush()
-  self.events.on(SIGNAL_COMMUNITY_JOINED) do(e: Args):
+  self.events.on(SIGNAL_COMMUNITY_ADDED) do(e: Args):
+    let args = CommunityArgs(e)
+    self.onCommunityChanged(args.community.id, args.community.name, args.community.images.thumbnail)
+  self.events.on(SIGNAL_COMMUNITY_DATA_IMPORTED) do(e: Args):
     let args = CommunityArgs(e)
     self.onCommunityChanged(args.community.id, args.community.name, args.community.images.thumbnail)
   self.events.on(SIGNAL_COMMUNITY_EDITED) do(e: Args):
