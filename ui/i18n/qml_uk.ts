@@ -16920,11 +16920,11 @@ to load</source>
     </message>
     <message>
         <source>Fastest</source>
-        <translation>Найшвидший</translation>
+        <translation>Найшвидше</translation>
     </message>
     <message>
         <source>Lowest fee</source>
-        <translation>Найменша комісія</translation>
+        <translation>Мін. комісія</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -17050,7 +17050,7 @@ to load</source>
     </message>
     <message>
         <source>Best return</source>
-        <translation>Найкращий дохід</translation>
+        <translation>Макс. сума</translation>
     </message>
     <message>
         <source>Best received amount</source>
