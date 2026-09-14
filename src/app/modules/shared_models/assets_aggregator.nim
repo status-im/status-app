@@ -117,8 +117,15 @@ proc buildAssetItems*(groups: seq[AggTokenGroup],
       chainIds: chainIds)
 
     if hasCommunity and communities.hasKey(g.communityId):
-      let c = communities[g.communityId]
+      let c {.cursor.} = communities[g.communityId]
       item.communityName = c.name
       item.communityImage = c.image
 
     result.add(item)
+
+proc resolveCommunities*(groups: seq[AggTokenGroup],
+    lookup: proc(communityId: string): AggCommunity): Table[string, AggCommunity] =
+  for g in groups:
+    if g.communityId.len == 0 or result.hasKey(g.communityId):
+      continue
+    result[g.communityId] = lookup(g.communityId)

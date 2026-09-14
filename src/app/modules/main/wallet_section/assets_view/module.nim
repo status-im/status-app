@@ -8,6 +8,7 @@ import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/wallet_account/dto/asset_group_item
 import app_service/service/network/service as network_service
 import app_service/service/settings/service as settings_service
+import app_service/service/community/service as community_service
 
 import app/modules/shared_models/assets_aggregator
 
@@ -24,6 +25,7 @@ type
     moduleLoaded: bool
     addresses: seq[string]
     chainIds: seq[int]
+    communityInfo: Table[string, AggCommunity]
 
 proc newModule*(
   events: EventEmitter,
@@ -31,12 +33,14 @@ proc newModule*(
   walletAccountService: wallet_account_service.Service,
   networkService: network_service.Service,
   settingsService: settings_service.Service,
+  communityService: community_service.Service,
 ): Module =
   result = Module()
   result.events = events
   result.view = newView(result)
   result.viewVariant = newQVariant(result.view)
-  result.controller = newController(result, tokenService, walletAccountService, networkService, settingsService)
+  result.controller = newController(result, tokenService, walletAccountService, networkService, settingsService,
+    communityService)
   result.moduleLoaded = false
 
 method delete*(self: Module) =
@@ -71,11 +75,9 @@ proc buildAndPush(self: Module) =
   let detailsLoading = self.controller.getTokensDetailsLoading()
 
   var aggGroups: seq[AggTokenGroup] = @[]
-  var communities = initTable[string, AggCommunity]()
   for group in self.controller.getTokenGroups():
     if group.tokens.len == 0:
       continue
-    let community = group.tokens[0].communityData
     let (price, change) = self.priceAndChangeForGroup(group)
     aggGroups.add(AggTokenGroup(
       key: group.key,
@@ -83,7 +85,7 @@ proc buildAndPush(self: Module) =
       symbol: group.symbol,
       logoUri: group.logoUri,
       decimals: group.decimals,
-      communityId: community.id,
+      communityId: group.tokens[0].communityData.id,
       soulbound: group.tokens.anyIt(it.soulbound),
       ownerToken: group.tokens.anyIt(it.isOwnerToken),
       marketPrice: price,
@@ -92,8 +94,10 @@ proc buildAndPush(self: Module) =
       visible: self.controller.getTokenVisible(group.key),
       position: self.controller.getTokenPosition(group.key),
       balances: balancesByKey.getOrDefault(group.key, @[])))
-    if community.id.len > 0 and not communities.hasKey(community.id):
-      communities[community.id] = AggCommunity(name: community.name, image: community.image)
+
+  self.communityInfo = resolveCommunities(aggGroups, proc(communityId: string): AggCommunity =
+    let info = self.controller.getCommunityInfo(communityId)
+    AggCommunity(name: info.name, image: info.image))
 
   let filters = AggFilters(
     accounts: self.addresses,
@@ -101,7 +105,15 @@ proc buildAndPush(self: Module) =
     marketValueThreshold: self.controller.getMarketValueThreshold(),
     nativeSymbols: self.controller.getNativeSymbolsForChains(self.chainIds))
 
-  self.view.setSourceItems(buildAssetItems(aggGroups, communities, filters))
+  self.view.setSourceItems(buildAssetItems(aggGroups, self.communityInfo, filters))
+
+proc onCommunityChanged(self: Module, id, name, image: string) =
+  if not self.communityInfo.hasKey(id):
+    return
+  let known {.cursor.} = self.communityInfo[id]
+  if known.name == name and known.image == image:
+    return
+  self.buildAndPush()
 
 method load*(self: Module) =
   singletonInstance.engine.setRootContextProperty("walletSectionAssetsView", self.viewVariant)
@@ -112,6 +124,18 @@ method load*(self: Module) =
     self.buildAndPush()
   self.events.on(SIGNAL_TOKEN_PREFERENCES_UPDATED) do(e: Args):
     self.buildAndPush()
+  self.events.on(SIGNAL_COMMUNITY_DATA_LOADED) do(e: Args):
+    self.buildAndPush()
+  self.events.on(SIGNAL_COMMUNITY_JOINED) do(e: Args):
+    let args = CommunityArgs(e)
+    self.onCommunityChanged(args.community.id, args.community.name, args.community.images.thumbnail)
+  self.events.on(SIGNAL_COMMUNITY_EDITED) do(e: Args):
+    let args = CommunityArgs(e)
+    self.onCommunityChanged(args.community.id, args.community.name, args.community.images.thumbnail)
+  self.events.on(SIGNAL_COMMUNITIES_UPDATE) do(e: Args):
+    let args = CommunitiesArgs(e)
+    for community in args.communities:
+      self.onCommunityChanged(community.id, community.name, community.images.thumbnail)
 
   self.controller.init()
   self.view.load()
