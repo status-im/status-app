@@ -448,6 +448,8 @@ Loader {
                 return false
             }
             return root.senderId !== root.nextMessageAsJsonObj.senderId ||
+                   root.isBridgeMessage ||
+                   root.nextMessageAsJsonObj.contentType === Constants.messageContentType.bridgeMessageType ||
                    d.getShouldRepeatHeader(root.nextMessageAsJsonObj.timeStamp, root.messageTimestamp, root.nextMessageAsJsonObj.outgoingStatus) ||
                    root.nextMessageAsJsonObj.responseToMessageWithId !== ""
         }
@@ -951,6 +953,8 @@ Loader {
                             root.prevMessageContentType === Constants.messageContentType.systemMessageMutualEventAccepted ||
                             root.prevMessageContentType === Constants.messageContentType.systemMessageMutualEventRemoved ||
                             root.prevMessageContentType === Constants.messageContentType.bridgeMessageType ||
+                            // bridged messages share the relaying account's senderId
+                            root.isBridgeMessage ||
                             root.senderId !== root.prevMessageSenderId || root.prevMessageDeleted
                 isActiveMessage: d.isMessageActive
                 leftPadding: root.extraLeftPadding

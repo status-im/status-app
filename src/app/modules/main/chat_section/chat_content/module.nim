@@ -325,9 +325,7 @@ method onContactDetailsUpdated*(self: Module, contactId: string) =
       item.updateSenderDetails(updatedContact)
 
     if item.quotedMessageAuthorDetails.dto.id == contactId:
-      item.quotedMessageAuthorDetails = updatedContact
-      item.quotedMessageAuthorDisplayName = updatedContact.defaultDisplayName
-      item.quotedMessageAuthorAvatar = updatedContact.icon
+      item.updateQuotedAuthorDetails(updatedContact)
 
     if item.messageContainsMentions and item.mentionedUsersPks.anyIt(it == contactId):
       let communityChats = self.controller.getCommunityDetails().chats
