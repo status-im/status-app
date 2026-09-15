@@ -33,6 +33,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 FetchContent_Declare(
   status-keycard-qt
   GIT_REPOSITORY https://github.com/status-im/status-keycard-qt
-  GIT_TAG a6cbdd052251f0dd01f4ce1b3d77016df7c1d4d7
+  GIT_TAG 8582bffc915b9cfb4dc96be5c1b914b8d1ebbc18
 )
 FetchContent_MakeAvailable(status-keycard-qt)

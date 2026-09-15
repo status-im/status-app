@@ -12,7 +12,10 @@ skipExt       = @["nim"]
 # Nim version pin + app dependencies, resolved by `nimble setup` into
 # nimble's default store (~/.nimble; run automatically by the Makefile and
 # by nimble build/run themselves). Frozen in nimble.lock.
-requires "nim == 2.2.4"
+# 2.2.10 since the 2026-09-15 rebase onto master: CI's agent images and the
+# flatpak image standardised on system nim 2.2.10 (master 143fecd95d /
+# 45d68d8641), so the pinned store compiler and the images agree.
+requires "nim == 2.2.10"
 
 requires "https://github.com/status-im/nim-chronicles.git#e7f87336d2fa47b7752b42f0be4cabd5663a5e5c"  # chronicles
 requires "https://github.com/status-im/nim-chronos.git#31ddf9be6560072f83aeb25933c3132d4ecd638e"  # chronos
@@ -52,28 +55,33 @@ requires "https://github.com/pragmagic/uuids.git#1a8111cc2b0e82867d19d584012e510
 # status-go is a nimble package (the status_go wrapper ships inside it, so the
 # former separate nim-status-go wrapper requirement is gone); its manifest
 # carries the nim-sds pin, which lands in this graph transitively. INTERIM
-# branch pin (nimble-phase1-pin on status-im/status-go) until the nimble
-# packaging work merges upstream — bump by amending the #hash. Default mode
+# branch pin (nimble-phase1-pin-2 on status-im/status-go: the nimble packaging
+# commits rebased onto develop 9f09f902, master's submodule revision as of
+# 2026-09-15) until the packaging work merges upstream — bump by amending the
+# #hash. Default mode
 # has no vendor/status-go checkout: the store copy is built via the
 # .statusgo-build scratch (issue 0010), and `nim develop status.nims statusgo`
 # materializes an editable checkout (issue 0009, ADR 0004 overlay — nimble
 # 0.22.3 develop links cannot satisfy URL#hash requires).
-requires "https://github.com/status-im/status-go.git#d9281bce98803c84c8c414a3b4a64103b629206a"
-requires "https://github.com/status-im/nim-keycard-go.git#c8a39e8d4a8abd1bba2fb3d8fe32f8a11cbbd75a"  # keycard_go
+requires "https://github.com/status-im/status-go.git#3e0dda8db5435e54dc380ebe3dfa79790b2f1959"
+requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
 # The seaqt pair (issue 0012): generated Qt bindings (package `seaqt`, repo
 # nim-seaqt) + the NimQml layer on top (package `nimqml`, repo nimqml-seaqt).
 # Pure-source packages: the generated C++ shims compile via {.compile.} into
 # the client's own nimcache, so the read-only store copies are consumed
-# directly (no sub-build, no scratch engine). The seaqt pin is the tip of
-# upstream branch `smo-6.4` (the Status-specific generation; the repo's tag
-# qt-6.4-seaqt-gen-5bc1bc58… points exactly at it) — NOT branch `qt-6.4`,
-# which is force-pushed and its head drops the QVariantConstPointer compat
-# shim that seaqt_compat/ relies on. The nimqml pin is an ancestor of its
-# upstream master. Any pin bump is a deliberate separate decision (API-churn
-# risk; see the 0012 grill record). `nim develop status.nims seaqt|nimqml`
-# materializes editable checkouts (ADR 0004 overlay).
-requires "https://github.com/seaqt/nim-seaqt.git#2d95808bdd9f6dd2c212b69a57af4618da241d37"  # seaqt (branch smo-6.4)
-requires "https://github.com/seaqt/nimqml-seaqt.git#c5e5831ae7d71e09f7061bc7735a8f3e1adc8fb3"  # nimqml
+# directly (no sub-build, no scratch engine). The seaqt pin is the head of
+# upstream branch `qt-6.8` — the Qt 6.8 generation master's submodule tracked
+# when this branch was rebased (2026-09-15). HAZARD: seaqt's per-Qt-version
+# generation branches are orphans that get force-pushed, so a hash pin can
+# become unreachable when the branch is regenerated; master's submodule
+# carries the identical hazard, and a tag is an upstream ask (ledger).
+# seaqt_compat/ still provides the QVariantConstPointer shim the generated
+# code includes. The nimqml pin is master's submodule revision. Any pin bump
+# is a deliberate separate decision (API-churn risk; see the 0012 grill
+# record). `nim develop status.nims seaqt|nimqml` materializes editable
+# checkouts (ADR 0007 overlay).
+requires "https://github.com/seaqt/nim-seaqt.git#7d40abd7b493036b4ede5b111fc4260237504796"  # seaqt (branch qt-6.8)
+requires "https://github.com/seaqt/nimqml-seaqt.git#fa084a8d9bcf00c9ed4c2adf857793fcc059357f"  # nimqml
 # prl-to-pc (issues 0014, 0015): qt_pkgconfig.nims (the executed consumer
 # interface: kit derivation, the System/Generated probe, tool building and
 # .pc generation) + the committed relocatable Qt .pc trees + the
@@ -85,15 +93,16 @@ requires "https://github.com/seaqt/nimqml-seaqt.git#c5e5831ae7d71e09f7061bc7735a
 # bin nor srcDir: either one makes nimble strip the store copy down to
 # sources. The tools build into the repo-local .prl-to-pc-build/ scratch;
 # the store copy is never written to. `nim develop status.nims prl-to-pc`
-# for an editable checkout (ADR 0004 overlay).
+# for an editable checkout (ADR 0007 overlay).
 #
-# Pinned to the annotated tag `v0.3.0` (peels to 4a31fc06). Tag pins resolve
-# on nimble 0.22.3 exactly like a `#sha` special version, and additionally
-# carry the manifest's semantic version: the store entry's nimblemeta.json
-# records `specialVersions ['0.3.0', '#v0.3.0']`. The pkgcache key embeds the
-# ref, so bumping the tag mints a fresh clone — the pkgcache-staleness wall
-# (walls doc) does not bite here.
-requires "https://github.com/status-im/prl-to-pc.git#v0.3.0"  # prl_to_pc
+# Pinned to main's head 03a8a917 (4 commits past the annotated tag `v0.3.0`
+# this graph pinned until the 2026-09-15 rebase): master's submodule revision,
+# byte for byte. A tag for it is an upstream ask (ledger); a tag pin resolves
+# on nimble 0.22.3 exactly like a `#sha` special version and additionally
+# carries the manifest's semantic version. The pkgcache key embeds the ref, so
+# bumping the pin mints a fresh clone — the pkgcache-staleness wall (walls
+# doc) does not bite here.
+requires "https://github.com/status-im/prl-to-pc.git#03a8a91707db7d9257d8617453fefb58fe848904"  # prl_to_pc
 
 include "status.nims"
 
