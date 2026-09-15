@@ -34,7 +34,7 @@ public slots:
         // Without it async Loaders incubate on Qt's render-loop budget, which
         // under offscreen rendering makes a section load take tens of seconds —
         // tests would be pinning a configuration the app never runs.
-        statusq_installBoostedIncubationController(engine, 20, 300, 0);
+        statusq_installBoostedIncubationController(engine, 12, 300, 2);
 
 
         const QStringList additionalImportPaths {
