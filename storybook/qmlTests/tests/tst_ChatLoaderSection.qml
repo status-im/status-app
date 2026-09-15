@@ -415,6 +415,31 @@ Item {
                    + " ms @150 vs " + large.ms + " ms @3000")
         }
 
+        // One shared messages view per section: visiting chats
+        // must never accumulate ChatMessagesView instances — the section owns
+        // a single view that follows the active chat.
+        function test_oneMessagesViewRegardlessOfVisitedChats() {
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            tryVerify(() => !!activeReadyLogView(loader), 120000)
+
+            const visits = ["chat-1", "chat-2", "chat-3", "chat-1"]
+            for (const chatId of visits) {
+                d.setActiveChat(chatId)
+                tryVerify(() => {
+                    const lv = activeReadyLogView(loader)
+                    return !!lv && lv.parent.visible
+                }, 120000)
+                waitForRendering(loader)
+                const views = findAllIn(loader, "chatLogView", [])
+                compare(views.length, 1,
+                        "after visiting " + chatId + " the section must hold "
+                        + "exactly one messages view, found " + views.length)
+            }
+        }
+
         // Opening a chat must only ever hold a bounded window of the message
         // history — never one row per historic message.
         function test_messagesListVirtualized() {
