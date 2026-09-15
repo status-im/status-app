@@ -137,13 +137,18 @@ pipeline {
     }
 
     stage('Deps') {
-      steps { script { dir('test/e2e') {
+      steps {
+        script { dir('test/e2e') {
           bat """
             python310 -m venv ${VIRTUAL_ENV}
             ${VIRTUAL_ENV}\\Scripts\\python.exe -m pip install --upgrade pip
             ${VIRTUAL_ENV}\\Scripts\\python.exe -m pip install -r requirements.txt
           """
-      } } }
+        } }
+        script { dir('test/e2e/scripts/wallet_connect_dapp') {
+          bat 'npm ci --no-audit --no-fund'
+        } }
+      }
     }
 
     stage('Download') {
