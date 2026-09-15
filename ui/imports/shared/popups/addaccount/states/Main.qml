@@ -206,8 +206,6 @@ Item {
 
             WatchOnlyAddressSection {
                 Layout.fillWidth: true
-                Layout.leftMargin: Theme.padding
-                Layout.rightMargin:  Theme.padding
 
                 spacing: Theme.padding
                 visible: !root.store.editMode &&
