@@ -12,13 +12,13 @@ Item {
     id: root
 
     /*!
-        \qmlsignal StatusCommunityCard::learnMore
+        \qmlsignal PromotionalCommunityCard::learnMore
         This signal is emitted when the card learn more button is clicked.
     */
     signal learnMore
 
     /*!
-        \qmlsignal StatusCommunityCard::initiateVote
+        \qmlsignal PromotionalCommunityCard::initiateVote
         This signal is emitted when the card initiate vote button is clicked
     */
     signal initiateVote

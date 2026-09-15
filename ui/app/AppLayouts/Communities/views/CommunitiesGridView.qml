@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 
 import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Core.Utils
 
 import utils
@@ -15,7 +17,7 @@ import SortFilterProxyModel
 import AppLayouts.Communities.controls
 import AppLayouts.Communities.helpers
 
-StatusScrollView {
+Flickable {
     id: root
 
     property var model
@@ -31,8 +33,41 @@ StatusScrollView {
 
     signal cardClicked(string communityId)
 
-    clip: false
-    contentWidth: availableWidth
+    // Minimal subset of QtQuick.Controls.Control's padding API, since this is a
+    // plain Flickable rather than a StatusScrollView/T.ScrollView (see below).
+    property real padding: 16
+    property real topPadding: padding
+    property real bottomPadding: padding
+    property real leftPadding: padding
+    property real rightPadding: padding
+
+    readonly property real availableWidth: Math.max(0, width - leftPadding - rightPadding)
+    readonly property real availableHeight: Math.max(0, height - topPadding - bottomPadding)
+
+    clip: true
+    // No horizontal scrolling is ever needed; content padding is applied via
+    // contentColumn's x/y offset below instead of contentWidth/contentHeight.
+    contentWidth: width
+    contentHeight: contentColumn.implicitHeight + topPadding + bottomPadding
+
+    // Plain Flickable (unlike StatusScrollView/T.ScrollView) supports real
+    // mouse-drag scrolling out of the box: QQuickScrollView deliberately
+    // disables it via childMouseEventFilter, favoring scroll-bar dragging with
+    // a physical mouse instead (only touch/touchpad flicking is unaffected).
+    // See the equivalent StatusGridView/StatusListView, and the StatusCommunityTagsRow fix in
+    // this same issue (#18981), for the established pattern in this codebase.
+    boundsBehavior: Flickable.StopAtBounds
+    maximumFlickVelocity: 2000
+    synchronousDrag: true
+
+    ScrollBar.vertical: StatusScrollBar {
+        parent: root
+        x: root.width - width - 1
+        y: root.topPadding
+        height: root.availableHeight
+        policy: ScrollBar.AsNeeded
+        visible: resolveVisibility(policy, root.availableHeight, root.contentHeight)
+    }
 
     QtObject {
         id: d
@@ -165,6 +200,8 @@ StatusScrollView {
 
     ColumnLayout {
         id: contentColumn
+        x: root.leftPadding
+        y: root.topPadding
         width: root.availableWidth
 
         StatusBaseText {

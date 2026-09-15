@@ -1,4 +1,5 @@
 import QtQuick
+
 import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
@@ -11,22 +12,29 @@ Rectangle {
     property string name
     property bool removable: false
     property bool highlighted: false
+    property bool interactive: enabled
 
     signal clicked()
 
     implicitHeight: 32
     implicitWidth: row.width + 20
     radius: height / 2
-    border.color: Theme.palette.baseColor2
+    border.color: Theme.palette.directColor8
     border.width: 1
-    color: root.highlighted || mouseArea.containsMouse ? Theme.palette.primaryColor2 : "transparent"
+    color: root.highlighted ? Theme.palette.primaryColor2
+                            : hoverHandler.hovered ? Theme.palette.primaryColor3
+                                                   : "transparent"
 
-    StatusMouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+    TapHandler {
+        enabled: root.interactive
+        onTapped: root.clicked()
+    }
+
+    HoverHandler {
+        id: hoverHandler
+        enabled: root.interactive
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+        cursorShape: hovered ? Qt.PointingHandCursor : undefined
     }
 
     Row {
@@ -48,9 +56,11 @@ Rectangle {
         StatusBaseText {
             anchors.verticalCenter: parent.verticalCenter
             font.pixelSize: Theme.primaryTextFontSize
-            font.weight: Font.Medium
+            font.weight: root.interactive ? Font.Medium : Font.Normal
             font.capitalization: Font.AllLowercase
-            color: root.enabled ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
+            color: !root.interactive ? Theme.palette.directColor1
+                                     : root.enabled ? Theme.palette.primaryColor1
+                                                    : Theme.palette.baseColor1
             text: root.name
         }
 

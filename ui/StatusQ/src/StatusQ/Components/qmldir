@@ -20,6 +20,7 @@ StatusChatListItem 0.1 StatusChatListItem.qml
 StatusColorSpace 0.0 StatusColorSpace.qml
 StatusCommunityCard 0.1 StatusCommunityCard.qml
 StatusCommunityTags 0.1 StatusCommunityTags.qml
+StatusCommunityTagsRow 0.1 StatusCommunityTagsRow.qml
 StatusContactRequestsIndicatorListItem 0.1 StatusContactRequestsIndicatorListItem.qml
 StatusContactVerificationIcons 0.1 StatusContactVerificationIcons.qml
 StatusCursorDelegate 0.1 StatusCursorDelegate.qml

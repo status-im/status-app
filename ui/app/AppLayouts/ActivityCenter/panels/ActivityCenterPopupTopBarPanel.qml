@@ -8,9 +8,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
-import StatusQ.Popups
 
-import AppLayouts.stores
 import AppLayouts.ActivityCenter.helpers
 
 StatusRollArea {

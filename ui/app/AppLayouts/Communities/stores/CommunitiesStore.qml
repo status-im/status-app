@@ -37,7 +37,7 @@ QtObject {
 
     readonly property bool testEnvironment: localAppSettings.testEnvironment ?? false
 
-    property string communityTags: communitiesModuleInst.tags
+    readonly property string communityTags: communitiesModuleInst.tags
 
     readonly property int communityFetchState: d.communityFetchState
     readonly property bool communityFetchInProgress: d.communityFetchInProgress

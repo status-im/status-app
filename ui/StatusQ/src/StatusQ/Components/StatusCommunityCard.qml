@@ -405,34 +405,13 @@ Rectangle {
 
             Component {
                 id: tagsListComponent
-                StatusRollArea {
+                StatusCommunityTagsRow {
                     implicitWidth: d.cardWidth
+                    implicitHeight: 24
                     gradientColor: d.cardColor
-
-                    // TODO: Replace by `StatusListItemTagRow` - To be done!
-                    content: Row {
-                        spacing: 4
-
-                        Repeater {
-                            model: root.categories
-                            delegate: StatusListItemTag {
-                                bgColor: "transparent"
-                                bgRadius: 20
-                                bgBorderColor: Theme.palette.directColor8
-                                height: 24
-                                spacing: 0
-                                closeButtonVisible: false
-                                asset.emoji: model.emoji
-                                asset.width: 24
-                                asset.height: 24
-                                asset.color: "transparent"
-                                asset.isLetterIdenticon: true
-                                title: model.name
-                                titleText.font.pixelSize: Theme.tertiaryTextFontSize
-                                titleText.color: d.fontColor
-                            }
-                        }
-                    }
+                    spacing: 4
+                    model: root.categories
+                    clickable: false
                 }
             }
         }

@@ -19,7 +19,7 @@ import QtQml.Models
     ])
   }
 
-  TagsRow {
+  StatusCommunityTagsRow {
     model: jsonModel.model
   }
  */

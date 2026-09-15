@@ -66,26 +66,41 @@ Control {
 
     padding: 0
 
-    contentItem: Item {
+    contentItem: Flickable {
+        id: scrollFlick
+
+        // The grid itself is intentionally narrower than this container (it
+        // only occupies as many columns as fit, to stay horizontally
+        // centered), so a plain GridView's own Flickable bounds wouldn't
+        // cover the empty side margins with mouse-drag/wheel scrolling. This
+        // outer Flickable spans the full width instead and owns all
+        // scrolling (drag physics, wheel, scrollbar); the GridView below is
+        // just a non-interactive layout/recycling engine nested inside it,
+        // so both the cards and the margins around them scroll identically.
+        clip: true
+        contentWidth: width
+        contentHeight: gridView.height
+
+        ScrollBar.vertical: StatusScrollBar {
+            implicitWidth: Theme.defaultSmallPadding
+            parent: scrollFlick
+            anchors.top: scrollFlick.top
+            anchors.bottom: scrollFlick.bottom
+            anchors.right: scrollFlick.right
+        }
+
         StatusGridView {
             id: gridView
 
             objectName: "homePageGridView"
 
-            readonly property int delegateCountPerRow: Math.min(Math.trunc(parent.width / (root.delegateWidth + root.spacing)),
+            readonly property int delegateCountPerRow: Math.min(Math.trunc(parent.width / cellWidth),
                                                                 root.model?.ModelCount.count ?? 0) // for small models where count < delegateCountPerRow
 
-            height: parent.height
+            interactive: false
+            height: contentHeight
             width: delegateCountPerRow * cellWidth
             anchors.horizontalCenter: parent.horizontalCenter
-
-            ScrollBar.vertical: StatusScrollBar {
-                implicitWidth: Theme.defaultSmallPadding
-                parent: gridView.parent
-                anchors.top: gridView.top
-                anchors.bottom: gridView.bottom
-                anchors.right: parent.right
-            }
 
             cellWidth: root.delegateWidth + root.spacing
             cellHeight: root.delegateHeight + root.spacing
