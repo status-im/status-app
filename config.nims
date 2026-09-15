@@ -53,6 +53,17 @@ elif hostOS == "windows":
 elif hostOS == "linux":
   echo "Building for Linux"
   --dynlibOverrideAll # don't use dlopen()
+  # Force PIC codegen at link time. With LTO (-flto=auto) GCC re-generates code
+  # during the link and defaults to -fPIE semantics, which enable
+  # -fdirect-access-external-data; -fPIC disables it. Without this, direct access
+  # to external data makes the linker emit COPY relocations for Qt's exported
+  # metaobjects (QObject::staticMetaObject et al), placing a *second* copy inside
+  # the executable. QQmlMetaType::canConvert() identifies QObject-derived types by
+  # walking the metaobject superdata chain and comparing pointers, so the duplicate
+  # makes every C++ QObject subclass fail to assign into a QObject list, e.g.
+  # 'Cannot assign object of type "qqsfpm::QQmlSortFilterProxyModel" ... expected "QObject"'.
+  # Keep this ahead of -Wl,-as-needed; it costs no optimisation (LTO stays on).
+  switch("passL", "-fPIC")
   # don't link libraries we're not actually using
   switch("passL", "-Wl,-as-needed")
   # dynamically link these libs, since we're opting out of dlopen()
