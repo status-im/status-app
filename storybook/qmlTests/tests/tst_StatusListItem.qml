@@ -24,6 +24,16 @@ Item {
     }
 
     Component {
+        id: bottomDelegate
+
+        Item {
+            objectName: "bottom_" + index
+            width: 100
+            height: 24
+        }
+    }
+
+    Component {
         id: badgeComponentUnderTest
 
         StatusListItemBadge {
@@ -140,6 +150,32 @@ Item {
 
             compare(controlUnderTest.tagsCount, data.count)
             compare(countByType(controlUnderTest, Flickable), data.count > 0 ? 1 : 0)
+        }
+
+        // The bottom slot and the row's height must agree on whether there is
+        // a bottom row, for every model kind, not only for a JS array.
+        function test_bottomRowFollowsTheModelKind_data() {
+            return [
+                { tag: "null", model: null, count: 0 },
+                { tag: "empty array", model: [], count: 0 },
+                { tag: "array", model: ["a", "b"], count: 2 },
+                { tag: "zero", model: 0, count: 0 },
+                { tag: "number", model: 4, count: 4 },
+                { tag: "list model", model: threeRowsModel, count: 3 }
+            ]
+        }
+
+        function test_bottomRowFollowsTheModelKind(data) {
+            controlUnderTest = createTemporaryObject(listItemComponent, root, {
+                bottomModel: data.model,
+                bottomDelegate: bottomDelegate
+            })
+            verify(!!controlUnderTest)
+
+            compare(!!findChild(controlUnderTest, "bottom_0"), data.count > 0)
+            compare(!!findChild(controlUnderTest, "bottom_" + data.count), false)
+            compare(controlUnderTest.implicitHeight > 64, data.count > 0,
+                    "the row grows exactly when a bottom row is built")
         }
 
         function test_scrollViewFollowsTheModelGoingUpAndDown() {
