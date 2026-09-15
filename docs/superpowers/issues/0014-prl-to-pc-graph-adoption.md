@@ -48,7 +48,7 @@ imports here.
   branch + tag live ONLY there and in the store overlay afterwards — do not
   lose them).
 - Vendor-table row (nimble flavor): `prl-to-pc`, developBranch `main`,
-  manifest `prl_to_pc.nimble`. Develop mode = overlay (ADR 0004), like
+  manifest `prl_to_pc.nimble`. Develop mode = overlay (ADR 0007), like
   seaqt/nimqml.
 
 ## Design constraints (answered up front so you don't have to grill)

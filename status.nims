@@ -529,7 +529,7 @@ task qtPkgconfigGenerate, "Regenerate the active Qt kit's committed .pc tree in 
   exec nimEval(script) & " generate " & quoteShell(thisDir() / qtPcBuildDir) &
     " " & quoteShell(thisDir() / "nimble.paths")
 
-# --- develop mode (issue 0009; mechanism: ADR 0004 nimble.paths overlay) -----
+# --- develop mode (issue 0009; mechanism: ADR 0007 nimble.paths overlay) -----
 #
 # Vendors stay pinned dependencies; `develop <vendor>` materializes a real git
 # checkout under vendor/<name> and records it in the gitignored overlay file
@@ -538,7 +538,7 @@ task qtPkgconfigGenerate, "Regenerate the active Qt kit's committed .pc tree in 
 # stamp recipe) rewrites the developed vendor's entries in the generated
 # nimble.paths to the checkout — derived copies (vendor/status-go/nimble.paths)
 # inherit through the existing cmp-gated copy rules. Resolution still reads
-# the PINNED manifest (ADR 0004's known limit): a diverging checkout manifest
+# the PINNED manifest (ADR 0007's known limit): a diverging checkout manifest
 # fails the build loudly (see guardDivergence) instead of drifting silently.
 
 # overlayFile / readOverlay come from status_env.nims (shared with config.nims).
@@ -853,7 +853,7 @@ proc rewriteEntries(content: string, v: Vendor): tuple[content: string, matched:
 proc pinnedManifestContent(v: Vendor, rev: string): string =
   ## The vendor manifest at the pinned revision, read from the checkout's own
   ## git history — byte-identical to what `nimble setup` materialized in the
-  ## store (resolution reads THIS, not the checkout's working tree; ADR 0004).
+  ## store (resolution reads THIS, not the checkout's working tree; ADR 0007).
   let cmd = "git -C " & quoteShell(thisDir() / v.checkoutDir) & " show " &
     quoteShell(rev & ":" & v.manifestName)
   let (output, rc) = gorgeEx(cmd)
@@ -864,7 +864,7 @@ proc pinnedManifestContent(v: Vendor, rev: string): string =
   output
 
 proc guardDivergence(v: Vendor, rev: string) =
-  ## ADR 0004's one forbidden failure mode is silent drift: dependency
+  ## ADR 0007's one forbidden failure mode is silent drift: dependency
   ## resolution reads the PINNED manifest, so a checkout whose own manifest
   ## diverged must fail the build loudly, with the escape hatch spelled out.
   if v.flavor == vfCmake:
@@ -885,7 +885,7 @@ proc guardDivergence(v: Vendor, rev: string) =
   fail "developed vendor '" & v.name & "' has a DIVERGED manifest.\n\n" &
     v.checkoutDir & "/" & v.manifestName & " no longer matches the pinned" &
     " revision " & shortRev(rev) & " — but dependency resolution reads the" &
-    " PINNED manifest, not the checkout's (ADR 0004), so requires-edits in" &
+    " PINNED manifest, not the checkout's (ADR 0007), so requires-edits in" &
     " the checkout would NOT take effect and the build would drift silently." &
     "\n\nEither revert the manifest edit:\n" &
     "  git -C " & v.checkoutDir & " diff " & shortRev(rev) & " -- " & v.manifestName & "\n" &
@@ -1038,7 +1038,7 @@ task develop, "Materialize a vendor as an editable checkout and switch the build
       readFile(checkoutAbs / v.manifestName).strip != pinnedManifestContent(v, rev).strip:
     echo "develop: WARNING — " & v.checkoutDir & "/" & v.manifestName &
       " already diverges from the pinned revision; the next build will fail" &
-      " with the escape-hatch instructions (ADR 0004 divergence guard)."
+      " with the escape-hatch instructions (ADR 0007 divergence guard)."
   var devs = readOverlay()
   if v.name in devs:
     echo "develop: '" & v.name & "' is already in develop mode (overlay: " &
@@ -1177,7 +1177,7 @@ task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths
 # (store path ⊃ pin revision + manifest checksum; the platform sentinel covers
 # target-triple flips; --key carries the flag set). While the scratch is
 # up-to-date and artifacts exist, the Makefiles skip the status-go sub-make
-# entirely (the stamp-skip default arm; ADR 0004). Developed statusgo keeps
+# entirely (the stamp-skip default arm; ADR 0007). Developed statusgo keeps
 # ADR 0003's FORCE + compare-before-copy semantics in the checkout instead.
 
 task prepareStatusgo, "Maintain the pinned-statusgo scratch copy (.statusgo-build) — internal: the mobile make legs run this before statusgo builds":

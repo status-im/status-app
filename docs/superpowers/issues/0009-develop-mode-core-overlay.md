@@ -10,7 +10,7 @@ status: done (2026-07-07)
 ## Parent
 
 PRD: `docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md`
-Mechanism ADR: `docs/adr/0004-develop-mode-via-paths-overlay.md`
+Mechanism ADR: `docs/adr/0007-develop-mode-via-paths-overlay.md`
 
 ## What to build
 

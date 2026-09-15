@@ -3,7 +3,7 @@
 Read `docs/superpowers/plans/agent-briefs/SHARED.md` first, then your issue:
 `docs/superpowers/issues/0014-prl-to-pc-graph-adoption.md` (Decisions and
 Design-constraints sections are user-approved — do not relitigate), plus
-the 0012 conversion brief + verification record (your playbook), ADR 0004,
+the 0012 conversion brief + verification record (your playbook), ADR 0007,
 and the walls doc (`.phase2-vendor-backup/status-go/AGENTS.md`).
 
 ## Your role

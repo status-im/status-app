@@ -10,7 +10,7 @@ your tab when you ask.
 1. Your issue file (named in your own brief) — it is the contract.
 2. `docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md`
 3. `CONTEXT.md` (glossary — use these terms exactly)
-4. `docs/adr/0004-develop-mode-via-paths-overlay.md`
+4. `docs/adr/0007-develop-mode-via-paths-overlay.md`
 5. `vendor/status-go/AGENTS.md` — ALL of it, especially "nimble 0.22.3
    resolution walls". Every wall there was verified empirically; do not
    rediscover them, and do not fight them.

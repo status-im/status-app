@@ -33,7 +33,7 @@ between phase-A steps.
 - Prepare the cmake-flavor vendor-table rows ({status-keycard-qt,
   keycard-qt}: pin refs, checkout dirs, redirect env
   `FETCHCONTENT_SOURCE_DIR_<NAME>` — verify the exact NAME casing cmake
-  derives) and the develop/undevelop behavior per ADR 0004 + CONTEXT.md.
+  derives) and the develop/undevelop behavior per ADR 0007 + CONTEXT.md.
   MobileUI's FETCHCONTENT_SOURCE_DIR redirect in `scripts/buildStatusQ.sh`
   is the proven precedent — read it.
 - Write your plan into the issue file (a "Survey findings" section) and

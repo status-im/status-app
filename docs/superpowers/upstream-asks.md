@@ -2,7 +2,7 @@
 
 Everything the nimble migration is carrying as local patches, fork pins, or
 documented workarounds, and where it should eventually land. Sources: PRD
-2026-07-06, ADR 0004, vendor/status-go/AGENTS.md walls, issue verification
+2026-07-06, ADR 0007, vendor/status-go/AGENTS.md walls, issue verification
 records 0007–0012.
 
 ## nimble (issues to file at nim-lang/nimble)

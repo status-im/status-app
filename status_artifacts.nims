@@ -401,7 +401,7 @@ proc nimbleSetupIfStale() =
   ## make's `$(NIMBLE_SETUP_STAMP)` rule used.
   ##
   ## Ordering is load-bearing and must survive: `nimble setup` FIRST, then the
-  ## overlay is applied to the freshly generated nimble.paths (ADR 0004).
+  ## overlay is applied to the freshly generated nimble.paths (ADR 0007).
   ##
   ## Since the gate became a content key (issue 0017) the stamp no longer *is*
   ## nimble.paths' mtime, which closes the walls doc's `applyOverlay` trap: a

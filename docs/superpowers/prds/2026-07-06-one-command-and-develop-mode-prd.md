@@ -51,7 +51,7 @@ Two modes with one front door:
   at the pinned revision) and switches the build to it; every Nim/C++/Go
   change is picked up on the next build via the ADR-0003 FORCE + cmp
   discipline. `undevelop` returns to the pin. Nim-graph vendors switch via a
-  nimble.paths overlay (ADR 0004); CMake vendors via
+  nimble.paths overlay (ADR 0007); CMake vendors via
   `FETCHCONTENT_SOURCE_DIR_<NAME>`.
 - **Mode-selected rebuild gating.** Pinned vendor ⇒ stamp-skip (pin + target +
   flags unchanged and artifact present → vendor sub-build not invoked at
@@ -124,10 +124,10 @@ this repo or recorded in vendor/status-go/AGENTS.md):
   user to make its pin reachable. Pin bumps rebuild from store/FetchContent
   copies; artifact-dir contracts move behind the driver.
 - **Two vendor flavors, one UX.** Nimble-graph vendors: `URL#hash` requires +
-  nimble.paths overlay (ADR 0004). CMake vendors: FetchContent `GIT_TAG` +
+  nimble.paths overlay (ADR 0007). CMake vendors: FetchContent `GIT_TAG` +
   `FETCHCONTENT_SOURCE_DIR_<NAME>` redirect (proven by MobileUI). Nested
   CMake vendors (keycard-qt inside status-keycard-qt) need no parent cascade.
-- **Overlay, not file:// flips, not patched nimble** (ADR 0004): develop
+- **Overlay, not file:// flips, not patched nimble** (ADR 0007): develop
   links cannot satisfy `URL#hash` requires on stock 0.22.3; file:// flips
   cascade through parent manifests (which are read-only store copies in the
   end-state), trip the sibling-pin drop wall, and dirty tracked files; a
@@ -138,7 +138,7 @@ this repo or recorded in vendor/status-go/AGENTS.md):
 - **Mode-selected gating.** Pinned ⇒ stamp-skip, stamp = (resolved store
   path, target triple, flag set) and nothing else; developed ⇒ ADR-0003
   FORCE + compare-before-copy. ADR 0003 is not violated — its FORCE
-  semantics become the develop-mode arm (recorded in ADR 0004).
+  semantics become the develop-mode arm (recorded in ADR 0007).
 - **Make frozen (strangler ratchet).** The driver delegates to existing make
   recipes; make targets keep working for CI; no new logic lands in make —
   new logic is nimscript, and vendor conversions delete make rules. Full
@@ -188,6 +188,6 @@ boundaries a developer actually touches:
 ## Further Notes
 
 - Glossary: CONTEXT.md (app entry point, vendor, default/develop mode).
-- Mechanism decision record: docs/adr/0004-develop-mode-via-paths-overlay.md.
+- Mechanism decision record: docs/adr/0007-develop-mode-via-paths-overlay.md.
 - All nimble 0.22.3 walls referenced here are verified and documented in
   vendor/status-go/AGENTS.md ("nimble 0.22.3 resolution walls").

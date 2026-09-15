@@ -1,7 +1,7 @@
 # Agent brief — issue 0009: develop-mode core (overlay + develop/undevelop/vendors)
 
 Read `docs/superpowers/plans/agent-briefs/SHARED.md` first, then your issue:
-`docs/superpowers/issues/0009-develop-mode-core-overlay.md`, then ADR 0004.
+`docs/superpowers/issues/0009-develop-mode-core-overlay.md`, then ADR 0007.
 
 ## Your role
 

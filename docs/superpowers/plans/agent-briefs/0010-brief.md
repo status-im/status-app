@@ -2,7 +2,7 @@
 
 Read `docs/superpowers/plans/agent-briefs/SHARED.md` first, then your issue:
 `docs/superpowers/issues/0010-statusgo-full-pin.md`, plus the 0009
-verification record + ADR 0004 (the overlay you now build on).
+verification record + ADR 0007 (the overlay you now build on).
 
 ## Your role
 

@@ -64,7 +64,7 @@ when not declared(qmakeProp):
         return v
     statusEnvFail "qmake -query dump has no '" & key & "' property."
 
-# --- develop-mode overlay + statusgo roots (ADR 0004 / issue 0010) -----------
+# --- develop-mode overlay + statusgo roots (ADR 0007 / issue 0010) -----------
 # The overlay file records vendors in develop mode; the statusgo build root
 # (scratch copy vs checkout) follows it. config.nims needs the same answers
 # the driver and the Makefiles derive, from the same single source.

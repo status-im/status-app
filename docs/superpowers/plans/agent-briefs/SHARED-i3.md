@@ -14,7 +14,7 @@ to tell him must travel through the orchestrator in your **final message**.
 3. `CONTEXT.md` (glossary — use these terms exactly: Vendor, default mode,
    develop mode, App entry point).
 4. `docs/adr/0003-platform-sentinel-ownership.md` and
-   `docs/adr/0004-develop-mode-via-paths-overlay.md`.
+   `docs/adr/0007-develop-mode-via-paths-overlay.md`.
 5. `.phase2-vendor-backup/status-go/AGENTS.md` — ALL of it, especially the
    "nimble 0.22.3 resolution walls". Every wall there was verified
    empirically. Do not rediscover them; do not fight them.

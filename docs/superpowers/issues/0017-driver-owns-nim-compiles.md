@@ -549,7 +549,7 @@ Consequences, all deliberate:
   regenerated `nimble.paths` without the overlay. Under a content key that touch
   changes nothing: the next build would find `.status-setup.key` current, skip
   resolution, never apply the overlay — and silently compile a developed vendor
-  against its **PIN**. That is ADR 0004's one forbidden failure mode, so the
+  against its **PIN**. That is ADR 0007's one forbidden failure mode, so the
   "`applyOverlay` trap is closed" bullet above was only half true when written.
   It now `rmFile`s `.status-setup.key`, which is what invalidating a key-file
   stamp means.

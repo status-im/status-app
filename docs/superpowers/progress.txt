@@ -463,7 +463,7 @@ file) unchanged.
 
 === 2026-07-06 — grilling session: new iteration (one-command + develop mode) ===
 Interview-driven design (grill-with-docs + domain-modeling); all decisions
-recorded in PRD 2026-07-06-one-command-and-develop-mode-prd.md, ADR 0004,
+recorded in PRD 2026-07-06-one-command-and-develop-mode-prd.md, ADR 0007,
 CONTEXT.md (new glossary), issues 0007-0012. Key outcomes:
 - Front door = task not install (nimble install --os/--cpu structurally dead:
   hooks target-blind); dev-build scope; one task + --os/--cpu flags.
@@ -479,13 +479,13 @@ CONTEXT.md (new glossary), issues 0007-0012. Key outcomes:
   nimble-graph (statusgo, sds, seaqt, nimqml; URL#hash + nimble.paths
   overlay) and cmake (status-keycard-qt, keycard-qt; FetchContent GIT_TAG +
   FETCHCONTENT_SOURCE_DIR redirect, MobileUI pattern). seaqt pair spike-gated.
-- Develop mechanism = overlay (ADR 0004): stock nimble, clean manifests, no
+- Develop mechanism = overlay (ADR 0007): stock nimble, clean manifests, no
   cascade; limitation (resolution reads pinned manifest) guarded by loud
   divergence check; file:// flip demoted to escape hatch; patched nimble =
   upstream-only track. 0005's pending mechanism pick is hereby RESOLVED.
 - Rebuild gating: pinned => stamp-skip (stamp = store path + target triple +
   flags, nothing else); developed => ADR-0003 FORCE + cmp (scope narrowed,
-  recorded in ADR 0004).
+  recorded in ADR 0007).
 - make frozen (strangler ratchet): driver delegates to existing recipes, all
   new logic in nimscript, vendor conversions delete make rules; dropping make
   deferred to the Windows push.
@@ -649,7 +649,7 @@ vendor UX; `run` stays host-only until develop-mode iterations; standing
 
 Picked up: docs/superpowers/issues/0009-develop-mode-core-overlay.md
 (PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md;
-mechanism: ADR 0004 nimble.paths overlay)
+mechanism: ADR 0007 nimble.paths overlay)
 
 What was built:
 - status.nims: vendor table (statusgo + sds rows; flavor/developBranch/FORCE
@@ -1686,7 +1686,7 @@ NEW WALL (not in the review; found while deleting the dead `forceTouch` field):
    nimble.paths without the overlay, it `touch`ed nimble.overlay to invalidate
    the setup stamp. Under the content key that is a no-op → the next build skips
    resolution, never applies the overlay, and silently compiles a DEVELOPED
-   vendor against its PIN (ADR 0004's one forbidden failure mode). Fixed by
+   vendor against its PIN (ADR 0007's one forbidden failure mode). Fixed by
    rmFile'ing .status-setup.key. Generalization for the next agent: after
    swapping an mtime gate for a content key, grep the tree for `touch` and ask
    of each one "what content does this change?".

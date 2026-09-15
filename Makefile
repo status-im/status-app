@@ -358,7 +358,7 @@ endif
 # pin), so editing those manifests must re-run the app's one resolution.
 # There is no separate status-go solve.
 NIMBLE_SETUP_STAMP := nimble.paths
-# The develop-mode overlay (issue 0009, ADR 0004) joins the stamp key: a
+# The develop-mode overlay (issue 0009, ADR 0007) joins the stamp key: a
 # develop/undevelop flip rewrites the gitignored nimble.overlay, which
 # schedules regeneration; after every `nimble setup` the driver rewrites the
 # developed vendors' entries in the fresh nimble.paths to their checkouts
