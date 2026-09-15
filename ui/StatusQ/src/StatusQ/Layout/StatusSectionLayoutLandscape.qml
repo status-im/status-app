@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -46,8 +47,35 @@ Control {
     implicitWidth: 822
     implicitHeight: 600
 
+    required property string userUID
+    required property string sectionName
+
+    Component.onCompleted: d.restoreState()
+    Component.onDestruction: d.saveState()
+
     // Keep same “API surface” used by StatusSectionLayout.qml
-    property Component handle: Item { }
+    property Component handle: Component {
+        Item {
+            implicitWidth: 4 // make the resize target wider than the actual rect below
+            visible: d.showLeftSplitter
+            Rectangle {
+                id: outerHandle
+                width: parent.width/2
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: parent.SplitHandle.pressed ? Theme.palette.primaryColor1
+                                                  : (parent.SplitHandle.hovered ? Theme.palette.primaryColor2 : Theme.palette.primaryColor3)
+                Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
+            }
+            Rectangle { // inner handle
+                width: parent.width
+                height: 186 // by design
+                anchors.centerIn: parent
+                color: outerHandle.color
+                Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
+            }
+        }
+    }
     /*!
         \qmlproperty int StatusSectionLayoutLandscape::leftPanelWidthOverride
         This property provides an external override for the left panel width.
@@ -56,7 +84,7 @@ Control {
         left panel area. When set to 0, the override is cleared and the layout
         collapses the left panel back to its default width.
     */
-    property int leftPanelWidthOverride: root.leftPanel ? d.defaultLeftPanelWidth : 0
+    property int leftPanelWidthOverride: 0
     /*!
         \qmlproperty Item StatusSectionLayout::leftPanel
         This property holds the left panel of the component.
@@ -157,21 +185,43 @@ Control {
         // Default width of the left panel in its collapsed state.
         readonly property int defaultLeftPanelWidth: 306
 
+        // Default width of the right panel in its collapsed state.
+        readonly property int defaultRightPanelWidth: 153
+
         // Effective left panel used for geometry reference:
         // - If real leftPanel if provided
-        // - else virtualLeftPanel while leftPanelWidth is provided
-        readonly property Item effectiveLeftPanel: root.leftPanel ? root.leftPanel
-                                                                  : (root.leftPanelWidthOverride != 0 ? virtualLeftPanel : null)
+        // - else virtualLeftPanel while leftPanelWidthOverride is provided
+        readonly property Item effectiveLeftPanel: !!root.leftPanel ? root.leftPanel
+                                                                    : (root.leftPanelWidthOverride !== 0 ? virtualLeftPanel : null)
 
         // Resolved left panel width used by the layout, taking overrides into account.
-        property int effectiveLeftPanelWidth: root.leftPanelWidthOverride != 0 ? root.leftPanelWidthOverride :
-                                                                                 (root.leftPanel ? d.defaultLeftPanelWidth : 0)
+        property int effectiveLeftPanelWidth: root.leftPanelWidthOverride !== 0 ? root.leftPanelWidthOverride :
+                                                                                  (!!root.leftPanel ? d.defaultLeftPanelWidth : 0)
 
         Behavior on effectiveLeftPanelWidth {
             NumberAnimation {
                 duration: ThemeUtils.AnimationDuration.Slow
                 easing.type: Easing.InOutCubic
             }
+        }
+
+        // Settings
+        readonly property bool showLeftSplitter: {
+            return d.effectiveLeftPanelWidth !== 0 && d.effectiveLeftPanelWidth !== root.leftPanelWidthOverride
+        }
+        readonly property Settings settings: Settings {
+            category: "%1_%2".arg(root.userUID).arg(root.sectionName)
+            property var splitView
+        }
+        function saveState() {
+            if (!d.settings.category || d.settings.category === "_")
+                return
+            d.settings.splitView = splitView.saveState()
+        }
+        function restoreState() {
+            if (!d.settings.category || d.settings.category === "_")
+                return
+            splitView.restoreState(d.settings.splitView)
         }
     }
 
@@ -184,10 +234,11 @@ Control {
         anchors.fill: parent
         handle: root.handle
 
-        // Use effectiveLeftPanel so geometry exists when leftPanel == null but a leftPanelWidth value is provided
+        // Use effectiveLeftPanelWidth so geometry exists when leftPanel == null but a leftPanelWidthOverride value is provided
         Control {
-            id: leftPanelSlot
+            visible: d.effectiveLeftPanelWidth > 0 // otherwise the splitter shows up here, even with 0 width
             SplitView.preferredWidth: d.effectiveLeftPanelWidth
+            SplitView.minimumWidth: !!root.leftPanel ? d.defaultLeftPanelWidth : 0
             SplitView.fillHeight: true
             background: Rectangle {
                 color: root.Theme.palette.baseColor4
@@ -248,7 +299,7 @@ Control {
 
         Control {
             SplitView.preferredWidth: root.showRightPanel ? root.rightPanelWidth : 0
-            SplitView.minimumWidth: root.showRightPanel ? 58 : 0
+            SplitView.minimumWidth: root.showRightPanel ? d.defaultRightPanelWidth : 0
             opacity: root.showRightPanel ? 1.0 : 0.0
             visible: (opacity > 0.1)
             background: Rectangle {
@@ -267,7 +318,7 @@ Control {
     // -------------------------------------------------------------------------------------------------------------
     Rectangle {
         id: virtualLeftPanel
-        visible: !root.leftPanel && root.leftPanelWidthOverride != 0
+        visible: !root.leftPanel && root.leftPanelWidthOverride !== 0
         width: root.leftPanelWidthOverride
         height: root.height
         color: Theme.palette.baseColor4
