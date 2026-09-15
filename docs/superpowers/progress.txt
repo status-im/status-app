@@ -1946,19 +1946,24 @@ SEMANTIC COLLISIONS (git-silent; each its own commit on top of the replay):
 STATUS-GO (cross-repo): the nimble package lives only on `nimble-phase1-pin`
 (5 commits, 228 behind develop; develop's tip 9f09f902 has no manifest, so
 "re-pin to master's SHA" was impossible as stated). Rebased those 5 commits
-onto develop in a scratch clone → `nimble-phase1-pin-2` @ 3e0dda8db (one
+onto develop in a scratch clone → `nimble-phase1-pin-2` @ 4c4cfc271 (one
 stop: tools/generate-cbindings — develop had made emission reproducible on
 its own, its version kept; Makefile keeps NIM_SDS_VERSION derived from the
 manifest, develop's ldflags win). The wrapper refresh and the nim-sds pin
 change ride on a sixth commit. **PUSH PENDING (human): `git push origin
 nimble-phase1-pin-2` from the scratch clone** — the app manifest already pins
-3e0dda8db, which resolves only after that push.
+4c4cfc271, which resolves only after that push.
 
 NIM-SDS: develop's go.mod requires the `release/v0.3` FFI ABI (v0.3.3), so the
 statusgo.nimble pin moved from the fork PR #85 head (5c89d61f, the 6-patch
-queue) to upstream `logos-messaging/nim-sds#v0.3.3`. Per-patch cost recorded
-in upstream-asks (reproducibility of the static archive UNVERIFIED on the new
-pin; v0.3.3's name-form requires resolve nim-ffi/libp2p from the registry).
+queue on a master-line 0.3.0). First attempt pinned upstream `#v0.3.3`
+directly: nimble rejects it ("Skipping package statusgo due to invalid
+dependency" — release/v0.3 has TWO root manifests, reliability.nimble +
+sds.nimble, plus the wrapper outside srcDir and undeclared deps). Pinned
+instead to fork branch `nimble-v0.3.3` (alexjba/nim-sds @ a771a894) =
+v0.3.3 + one commit that makes it a nimble package (ABI untouched; details in
+upstream-asks). **PUSH PENDING (human): `git push fork nimble-v0.3.3`** —
+the status-go manifest pins that SHA.
 
 DOCS: ADR 0004 (develop-mode overlay) → 0007 (master took 0004 for the typed
 task-completion handoff); 0019 gains "Master moved under this issue" (the

@@ -56,23 +56,25 @@ records 0007–0012.
 - **2026-09-15 rebase:** PR #85 is still open, and status-go develop now
   requires the `release/v0.3` line (`v0.3.3`: the retrieval-hint provider the
   sds-go-bindings pin in go.mod links against; master/release-v0.4 changed the
-  FFI ABI). The statusgo.nimble pin therefore moved to upstream
-  `logos-messaging/nim-sds#v0.3.3`, which carries NONE of the #85 queue. What
-  that costs, per patch: ffi pin — v0.3.3's manifest has name-form requires
-  only, so the graph resolves nim-ffi/libp2p from the registry (watch the
-  lock); NIMFLAGS forwarding — statusgo.nims materializes the resolution into
-  the scratch copy itself, so unpatched sds builds; libsdsStaticMac
-  localization — the upstream fix landed in v0.2.5 (ADR 0003 part 2), so the
-  v0.3 line has it; installDirs whitelist — the source-only manifest needs no
-  whitelist (0010); ZERO_AR_DATE / -fno-common — byte-reproducibility of the
-  static archive is UNVERIFIED on the new pin. Ask becomes: land #85 (or its
-  reproducibility half) on `release/v0.3` too, then pin the tag that carries it.
+  FFI ABI). v0.3.3 is NOT consumable as a nimble dependency as-is:
+  release/v0.3 keeps the pre-nimble layout — two manifests at the root
+  (nimble rejects the package: "Skipping package statusgo due to invalid
+  dependency"), the FFI wrapper outside srcDir (a store copy would drop it),
+  a vendored build system, taskpools undeclared and libp2p unpinned. The
+  statusgo.nimble pin therefore moved to `alexjba/nim-sds#a771a894` = branch
+  `nimble-v0.3.3`: v0.3.3 + one commit (reliability.nimble removed,
+  installDirs = library+src, taskpools declared, libp2p == 2.0.0, NIMFLAGS
+  forwarding, nimbase.h from the running nim, PR #85's localized and
+  reproducible static archives). Library ABI untouched. Ask: land that commit
+  (or PR #85's equivalent) on `release/v0.3`, tag it, and flip the pin to the
+  upstream tag. Byte-reproducibility of the static archive is UNVERIFIED on
+  this pin (Linux host).
 
 ## status-go (status-im/status-go)
 
-- Branch `nimble-phase1-pin-2` (currently pinned at `3e0dda8db`; the
+- Branch `nimble-phase1-pin-2` (currently pinned at `4c4cfc271`; the
   2026-09-15 rebase of `nimble-phase1-pin` onto develop `9f09f902`, wrapper
-  refreshed from status-desktop master, nim-sds pin v0.3.3) needs to become
+  refreshed from status-desktop master, nim-sds pin `nimble-v0.3.3`) needs to become
   a PR to `develop`: nimble package manifest (source-only) +
   statusgo.nims tasks, absorbed status_go wrapper, status_backend cgo
   export, cbindings determinism (sorted emit, `-buildid=`, ZERO_AR_DATE

@@ -63,7 +63,7 @@ nim status-go bindings and nuke vendor") and grown it by three procs
 (`getProfileEncryptionInfo`, `exportProfileDEK`, `setProfileLogMaxBackups`).
 The contract above stands: the package's wrapper was refreshed from master's
 copy (auto-link block and `statusBackendRunServer` retained) on
-`nimble-phase1-pin-2` (`3e0dda8db`), and status-desktop deleted its in-tree
+`nimble-phase1-pin-2` (`4c4cfc271`), and status-desktop deleted its in-tree
 copy — one `status_go` module, shipped next to the C API it wraps. No
 re-verification of the outside-consumer harness on the new pin (macOS host
 only; this pass ran on Linux).

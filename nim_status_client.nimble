@@ -63,7 +63,7 @@ requires "https://github.com/pragmagic/uuids.git#1a8111cc2b0e82867d19d584012e510
 # .statusgo-build scratch (issue 0010), and `nim develop status.nims statusgo`
 # materializes an editable checkout (issue 0009, ADR 0007 overlay — nimble
 # 0.22.3 develop links cannot satisfy URL#hash requires).
-requires "https://github.com/status-im/status-go.git#3e0dda8db5435e54dc380ebe3dfa79790b2f1959"
+requires "https://github.com/status-im/status-go.git#4c4cfc2710c196e23e582e37234d3e8f939e503e"
 requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
 # The seaqt pair (issue 0012): generated Qt bindings (package `seaqt`, repo
 # nim-seaqt) + the NimQml layer on top (package `nimqml`, repo nimqml-seaqt).
