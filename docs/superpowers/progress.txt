@@ -2058,9 +2058,9 @@ copies. `.statusgo-build/` still exists and still has the same internal layout
 outputs — no status-go source tree, no nim-sds source tree.
 
 THREE PINS (all pushed):
-- nim-sds   alexjba/nim-sds `nimble-v0.3.3`      a771a894 -> 0f8dc868
-- status-go status-im/status-go `nimble-phase1-pin-2` 6d3368e9 -> (see below)
-- desktop   `worktree-nimble-migration`
+- nim-sds   alexjba/nim-sds `nimble-v0.3.3`            a771a894 -> 0f8dc868
+- status-go status-im/status-go `nimble-phase1-pin-2`  6d3368e9 -> ba45188ab
+- desktop   `worktree-nimble-migration`                fc7d7ed951 -> 6f119cfa66
 
 WHAT MADE IT POSSIBLE (three walls, in the order they were hit):
 

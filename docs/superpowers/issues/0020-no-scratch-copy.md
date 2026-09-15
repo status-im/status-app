@@ -52,19 +52,21 @@ untouched.
 
 ## What changed in each repo
 
-### nim-sds (fork branch `nimble-v0.3.3`, `425287ae`)
+### nim-sds (fork branch `nimble-v0.3.3`, `425287ae` + `0f8dc868`)
 
 - `SDS_OUT_DIR` (default `build`, so the in-repo Makefile flow is unchanged) is
   the only directory any task writes to.
 - `--nimcache` is set explicitly on every compile — the macOS/iOS tasks list
   the generated `.c` files by hand, so the location must be known.
 - Sources are located from `thisDir()`, not from the working directory.
-- `sds.nims` is COMMITTED and declared in `installFiles` (`installDirs` is a
-  whitelist: an undeclared root file is stripped from installed copies). The
-  Makefile rule and the Nix `preBuild` hook that created it are gone.
+- The task entry point is COMMITTED instead of symlinked on demand:
+  `library/sds_tasks.nims` for installed copies (see the installFiles wall
+  below) and `sds.nims` at the root for checkouts, both one include of the
+  manifest. The Makefile rule and the Nix `preBuild` hook that created the
+  symlink are gone.
 - ABI, `envNimFlags`, `nimLibDir` and the PR #85 localization are untouched.
 
-### status-go (branch `nimble-phase1-pin-2`, `d71ea5d9d` + `a8a15198a`)
+### status-go (branch `nimble-phase1-pin-2`, `d71ea5d9d` + `a8a15198a` + `ba45188ab`)
 
 - **The generated Go sources the library build needs are committed**: `*.pb.go`,
   `bindata.go`, `migrations.go`, `cmd/status-backend/server/endpoints.go`,
@@ -93,7 +95,7 @@ untouched.
   whole, sds entry included — the compiled copy IS the resolved copy, so there
   is no second sds to split type identities.
 
-### status-desktop (this repo)
+### status-desktop (this repo, `6f119cfa66`)
 
 - `statusgoBuildRoot()` is now the OUTPUT root and is `.statusgo-build` in
   EVERY mode; the new `statusgoSourceRoot()` is the tree the sub-builds read
