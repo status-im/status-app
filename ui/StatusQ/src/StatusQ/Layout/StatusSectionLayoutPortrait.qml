@@ -142,6 +142,43 @@ SwipeView {
         when true, otherwise  Header - Center - Footer
     */
     property bool invertedLayout: false
+    /*!
+        \qmlproperty bool StatusSectionLayoutPortrait::panelsFrozen
+        While true the panel slots stop tracking their box: each panel keeps the
+        last geometry it was given. Raised by \l StatusSectionLayout for the
+        duration of a geometry transition it did not initiate (a device
+        rotation, an orientation swap), so a burst of host sizes costs one
+        relayout of the panel subtree instead of one per size.
+    */
+    property bool panelsFrozen: false
+
+    /*!
+        \qmlproperty real StatusSectionLayoutPortrait::leftPanelSlotWidth
+        \qmlproperty real StatusSectionLayoutPortrait::leftPanelSlotHeight
+        The box the left panel slot will give its panel. Valid whether or not a
+        panel has arrived, so a section that builds its panel before the chrome
+        adopts it can pre-size it exactly and make the handoff resize-free.
+    */
+    readonly property real leftPanelSlotWidth: leftPanelProxy.width
+    readonly property real leftPanelSlotHeight: leftPanelProxy.height
+    /*!
+        \qmlproperty real StatusSectionLayoutPortrait::centerPanelSlotWidth
+        \qmlproperty real StatusSectionLayoutPortrait::centerPanelSlotHeight
+        The box the centre panel slot will give its panel. Valid whether or not a
+        panel has arrived, so a section that builds its panel before the chrome
+        adopts it can pre-size it exactly and make the handoff resize-free.
+    */
+    readonly property real centerPanelSlotWidth: centerPanelProxy.width
+    readonly property real centerPanelSlotHeight: centerPanelProxy.height
+    /*!
+        \qmlproperty real StatusSectionLayoutPortrait::rightPanelSlotWidth
+        \qmlproperty real StatusSectionLayoutPortrait::rightPanelSlotHeight
+        The box the right panel slot will give its panel. Valid whether or not a
+        panel has arrived, so a section that builds its panel before the chrome
+        adopts it can pre-size it exactly and make the handoff resize-free.
+    */
+    readonly property real rightPanelSlotWidth: rightPanelProxy.width
+    readonly property real rightPanelSlotHeight: rightPanelProxy.height
 
     /*!
         \qmlsignal
@@ -186,6 +223,27 @@ SwipeView {
                 root.panelSwitchStarted()
             else
                 root.panelSwitchEnded()
+        }
+
+        // Where the page currently sits in the view, or -1 if it has been taken
+        // out of it.
+        function pageIndexOf(page) {
+            for (let i = 0; i < root.count; ++i)
+                if (root.itemAt(i) === page)
+                    return i
+            return -1
+        }
+
+        // Pages keep their declared order, so a page belongs after every
+        // lower-numbered page that is currently in the view.
+        function insertionIndexFor(page) {
+            let at = 0
+            for (let i = 0; i < root.count; ++i) {
+                const other = root.itemAt(i)
+                if (!!other && other.implicitIndex < page.implicitIndex)
+                    ++at
+            }
+            return at
         }
 
         function handleBackAction() {
@@ -242,10 +300,16 @@ SwipeView {
         onInViewChanged: {
             // If the panel is not in view, we need to remove it from the swipe view
             // and add it to the cache wrapper items so that we can restore it later if needed.
-            if (!inView && !!parent) {
-                d.items.push(root.takeItem(baseProxyPanel.implicitIndex));
-            } else if (inView && !parent) {
-                root.insertItem(implicitIndex, baseProxyPanel)
+            //
+            // Both positions are looked up rather than taken from implicitIndex:
+            // SwipeView indices close up as pages come and go, so with no left
+            // panel the right panel's page sits at index 1, and takeItem(2)
+            // would silently leave it in the view.
+            const at = d.pageIndexOf(baseProxyPanel)
+            if (!inView && at >= 0) {
+                d.items.push(root.takeItem(at));
+            } else if (inView && at < 0) {
+                root.insertItem(d.insertionIndexFor(baseProxyPanel), baseProxyPanel)
                 d.items.splice(d.items.indexOf(this), 1);
             }
         }
@@ -260,10 +324,14 @@ SwipeView {
     }
 
     BaseProxyPanel {
-        id: leftPanelProxy
         backgroundColor: Theme.palette.baseColor4
         implicitIndex: 0
         inView: !!root.leftPanel
+        target: SectionPanelSlot {
+            id: leftPanelProxy
+            anchors.fill: parent
+            frozen: root.panelsFrozen
+        }
     }
 
     BaseProxyPanel {
@@ -303,11 +371,12 @@ SwipeView {
             }
 
             // Central
-            LayoutItemProxy {
+            SectionPanelSlot {
                 id: centerPanelProxy
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.row: 1
+                frozen: root.panelsFrozen
                 implicitHeight: centerPanel ? centerPanel.implicitHeight : 0
                 implicitWidth: centerPanel ? centerPanel.implicitWidth : 0
             }
@@ -335,10 +404,11 @@ SwipeView {
             BaseToolBar {
                 Layout.fillWidth: true
             }
-            LayoutItemProxy {
+            SectionPanelSlot {
                 id: rightPanelProxy
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                frozen: root.panelsFrozen
             }
         }
     }

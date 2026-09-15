@@ -64,6 +64,15 @@ Loader {
 
     asynchronous: true
 
+    // Once a skeleton is on screen and no panel switch is animating, building
+    // the panel the user is waiting for synchronously beats incubating it. The
+    // work is the same either way, but the incubation controller's gentle
+    // pacing - a 2ms bite every 4ms - spreads it across several hundred ms, and
+    // the only thing a block would stutter is the skeleton it replaces.
+    readonly property bool panelsMayBuildSync:
+        (accountsSkeleton.status === Loader.Ready || centerSkeleton.status === Loader.Ready)
+        && !d.panelSwitchOngoing
+
     // The section chrome is owned by the loader: it shows instantly with
     // skeleton panels and swaps in the real panels produced by WalletLayout
     // (LayoutItemProxy retarget) once the section finishes incubating.
@@ -95,13 +104,13 @@ Loader {
     // chrome's panel-switch animation, or the swap frame stutters it.
     PanelSwapGate {
         id: leftPanelGate
-        ready: !!(root.item?.leftPanel ?? null)
+        ready: root.item?.leftPanelReady ?? false
         switchOngoing: d.panelSwitchOngoing
     }
 
     PanelSwapGate {
         id: centerPanelGate
-        ready: !!(root.item?.centerPanel ?? null)
+        ready: root.item?.centerPanelReady ?? false
         switchOngoing: d.panelSwitchOngoing
     }
 
@@ -200,6 +209,7 @@ Loader {
                                             ? root.dappsServiceLoader.item.dappsModel
                                             : null),
             isKeycardEnabled:       Qt.binding(() => root.featureFlagsStore.keycardEnabled),
+            buildPanelsSync:        Qt.binding(() => root.panelsMayBuildSync),
         })
     }
 
