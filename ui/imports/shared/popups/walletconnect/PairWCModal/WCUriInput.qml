@@ -37,6 +37,8 @@ ColumnLayout {
     StatusBaseInput {
         id: input
 
+        objectName: "wcUriInput"
+
         Component.onCompleted: {
             forceActiveFocus()
         }

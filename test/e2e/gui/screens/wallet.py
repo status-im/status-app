@@ -16,6 +16,7 @@ from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPop
 from gui.components.wallet.asset_context_menu_popup import AssetContextMenuPopup
 from gui.components.wallet.assets_view import AssetsView
 from gui.components.wallet.bridge_popup import BridgePopup
+from gui.components.wallet.dapps_workflow import DappsWorkflow
 from gui.components.wallet.confirmation_popup import ConfirmationPopup
 from gui.components.wallet.delete_account_confirmation_popup import RemoveAccountWithConfirmation
 from gui.components.wallet.receive_popup import ReceivePopup
@@ -402,6 +403,10 @@ class WalletAccountView(QObject):
     def open_receive_popup(self) -> ReceivePopup:
         self._receive_button.click()
         return ReceivePopup().wait_until_appears()
+
+    @allure.step('Open WalletConnect connect dApp flow')
+    def open_dapps_connect_flow(self) -> DappsWorkflow:
+        return DappsWorkflow().open_connect_dapp_flow()
 
     @allure.step('Wait for assets tab content to finish loading')
     def wait_for_assets_tab_content_loaded(
