@@ -37,7 +37,6 @@ StatusSectionLayout {
     id: root
 
     required property bool isProduction
-    required property string userUID
 
     property int settingsSubsection: -1
     property int settingsSubSubsection: -1

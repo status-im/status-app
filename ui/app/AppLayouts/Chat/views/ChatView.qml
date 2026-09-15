@@ -9,8 +9,6 @@ import shared.popups
 import shared.status
 import shared.stores as SharedStores
 import shared.views.chat
-import shared.stores.send as SendStores
-import SortFilterProxyModel
 
 import StatusQ
 import StatusQ.Controls
@@ -30,7 +28,6 @@ import AppLayouts.Profile.stores
 import AppLayouts.Wallet.stores as WalletStore
 
 import AppLayouts.Chat.stores as ChatStores
-import AppLayouts.stores as AppLayoutStores
 
 import "../controls"
 import "../helpers"
