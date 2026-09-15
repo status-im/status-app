@@ -25,6 +25,7 @@ Rectangle {
     property string tertiaryTitle: ""
     property string label: ""
     property string titleTextIcon: ""
+    property color titleTextIconColor: "transparent"
     property string beneathTagsIcon: ""
     property color beneathTagsIconColor: Theme.palette.primaryColor1
     property string beneathTagsTitle: ""
@@ -102,7 +103,6 @@ Rectangle {
     property alias statusListItemIcon: iconOrImage
     property alias statusListItemTitle: statusListItemTitle
     property alias statusListItemTitleAside: statusListItemTitleAsideText
-    property alias statusListItemTitleTextRightIcon: statusListItemTitleTextRightIcon
     property alias statusListItemTitleIcons: titleIconsRow
     property alias statusListItemTitleArea: statusListItemTitleArea
     property alias statusListItemSubTitle: statusListItemSubTitle
@@ -325,6 +325,7 @@ Rectangle {
 
                     sourceComponent: StatusIcon {
                         icon: root.titleTextIcon
+                        color: root.titleTextIconColor
                     }
                 }
 
