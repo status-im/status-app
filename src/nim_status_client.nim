@@ -360,7 +360,7 @@ proc mainProc() =
   singletonInstance.engine.setRootContextProperty("featureFlagsRootContextProperty", newQVariant(singletonInstance.featureFlags()))
 
   when defined(useSimulatedKeycard):
-    keycardTestControllerInstance = newKeycardTestController()
+    keycardTestControllerInstance = newKeycardTestController(statusFoundation.threadpool)
     singletonInstance.engine.setRootContextProperty("keycardTestController", newQVariant(keycardTestControllerInstance))
 
   statusq_registerQmlTypes()
@@ -373,6 +373,7 @@ proc mainProc() =
 
   defer:
     info "shutting down..."
+    markShuttingDown()
     signalsManagerQObjPointer = nil
     featureGuard KEYCARD_ENABLED:
       keycardServiceV2QObjPointer = nil
@@ -381,6 +382,8 @@ proc mainProc() =
     signalsManagerQVariant.delete()
     appController.delete()
     statusFoundation.delete()
+    when defined(useSimulatedKeycard):
+      keycardTestControllerInstance.delete()
     when defined(ios):
       servicesPauseBridge.delete()
     singleInstance.delete()

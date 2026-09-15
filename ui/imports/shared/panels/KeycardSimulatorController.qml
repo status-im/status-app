@@ -28,6 +28,7 @@ ApplicationWindow {
         id: d
 
         property bool simulatorStarted: false
+        property bool simulatorStarting: false
         property string simulatorError: ""
         property var cardIds: []
         property bool readerPlugged: false
@@ -77,6 +78,14 @@ ApplicationWindow {
             d.cardInserted = false
             cardSelector.currentIndex = -1
         }
+
+        function onSimulatorStartFinished(error) {
+            d.simulatorStarting = false
+            d.simulatorError = error
+            d.simulatorStarted = !error
+            if (d.simulatorStarted)
+                d.resetState()
+        }
     }
 
     component SectionHeader: StatusBaseText {
@@ -101,7 +110,7 @@ ApplicationWindow {
             objectName: "keycardSimUseTag40"
             text: qsTr("Use applet tag 4.0 (SecureChannel V2)")
             checked: false
-            enabled: !d.simulatorStarted
+            enabled: !d.simulatorStarted && !d.simulatorStarting
         }
         StatusBaseText {
             Layout.fillWidth: true
@@ -120,13 +129,20 @@ ApplicationWindow {
         StatusButton {
             objectName: "keycardSimStartButton"
             Layout.fillWidth: true
-            text: d.simulatorStarted ? qsTr("Restart Keycard Simulator")
-                                     : qsTr("Start Keycard Simulator")
+            text: d.simulatorStarting ? qsTr("Starting Keycard Simulator...")
+                                     : d.simulatorStarted ? qsTr("Restart Keycard Simulator")
+                                                          : qsTr("Start Keycard Simulator")
+            enabled: !d.simulatorStarting
             onClicked: {
-                d.simulatorError = root.controller.startSimulator(d.selectedVersion)
-                d.simulatorStarted = !d.simulatorError
-                if (d.simulatorStarted)
-                    d.resetState()
+                d.simulatorError = ""
+                d.simulatorStarted = false
+                d.simulatorStarting = true
+                const err = root.controller.startSimulator(d.selectedVersion)
+                if (err) {
+                    d.simulatorStarting = false
+                    d.simulatorError = err
+                    d.simulatorStarted = false
+                }
             }
         }
         StatusBaseText {
