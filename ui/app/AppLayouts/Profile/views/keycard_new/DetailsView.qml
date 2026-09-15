@@ -171,6 +171,7 @@ ColumnLayout {
     }
 
     StatusBaseText {
+        objectName: "keycardDetailsInfo"
         Layout.fillWidth: true
         Layout.leftMargin: Theme.padding
         Layout.rightMargin: Theme.padding
