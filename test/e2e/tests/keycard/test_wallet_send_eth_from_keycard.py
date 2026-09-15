@@ -5,7 +5,7 @@ import pytest
 from allure_commons._allure import step
 
 import configs
-from constants import DEFAULT_PIN, KEYCARD_EMPTY_TITLE
+from constants import DEFAULT_PIN
 from constants.wallet import (
     WalletAddress,
     WalletHistoryTitles,
@@ -14,20 +14,17 @@ from constants.wallet import (
 from gui.components.wallet.send_popup import SendPopup
 from helpers.keycard_helper import (
     assert_status_account_matches_seed,
+    create_keycard_profile_from_seed,
     sign_with_keycard_pin,
 )
-from helpers.onboarding_helper import (
-    open_create_profile_view,
-    skip_post_login_popups_if_visible,
-    wait_until_logged_in,
-)
+from helpers.onboarding_helper import skip_post_login_popups_if_visible
 from helpers.settings_helper import enable_testnet_mode
 from helpers.wallet_helper import (
     open_wallet_account,
     wait_for_account_assets_loaded,
     wallet_send_returning_user,
 )
-from scripts.utils.generators import get_wallet_address_from_mnemonic, keycard_card_id
+from scripts.utils.generators import get_wallet_address_from_mnemonic
 
 FUNDED_WALLET_ADDRESS = wallet_send_returning_user().status_address
 
@@ -67,20 +64,7 @@ def test_wallet_send_0_eth_from_keycard(
         f'{FUNDED_WALLET_ADDRESS!r}'
     )
 
-    card_id = keycard_card_id()
-    keycard_simulator.create_empty_card(card_id=card_id)
-    keycard_simulator.plug_reader()
-    keycard_mng_popup = open_create_profile_view().open_create_profile_with_keycard()
-    keycard_simulator.select_card(card_id).insert_card()
-    keycard_dtls_view = keycard_mng_popup.enter_keycard_pin(pin=DEFAULT_PIN)
-    assert keycard_dtls_view.keycard_view_title.text == KEYCARD_EMPTY_TITLE
-
-    keycard_mng_popup = keycard_dtls_view.import_from_recovery_phrase()
-    keycard_mng_popup.enter_new_pin_and_confirm(pin=DEFAULT_PIN, expect_reveal_seed=False)
-    keycard_mng_popup.enter_recovery_phrase(seed_phrase.split())
-    keycard_mng_popup.continue_after_key_pair_imported()
-    wait_until_logged_in(main_window)
-    skip_post_login_popups_if_visible()
+    create_keycard_profile_from_seed(keycard_simulator, main_window, seed_phrase)
 
     assert_status_account_matches_seed(main_window, seed_phrase)
 
