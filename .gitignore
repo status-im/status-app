@@ -40,6 +40,7 @@ mobile/android/qt6/.gradle/
 # Used to track the simulated keycard mode changes via the USE_SIMULATED_KEYCARD build flag
 .use_simulated_keycard_previous
 *.qm
+.direnv/
 
 # Squish test ================================================================
 
