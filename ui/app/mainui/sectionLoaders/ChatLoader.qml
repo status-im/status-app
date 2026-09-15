@@ -19,9 +19,8 @@ import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStores
 
 import mainui.adaptors
-import mainui.sectionLoaders
 
-Loader {
+StatusSectionLoader {
     id: root
 
     // Stores
@@ -50,7 +49,6 @@ Loader {
     required property bool createChatViewOpened
     required property bool isPortraitMode
 
-    property real leftPanelWidthOverride: 0
     property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
     // Bridges the chat profile button to the global app-section navigation.
@@ -92,6 +90,9 @@ Loader {
         objectName: "sectionChrome"
 
         anchors.fill: parent
+
+        userUID: root.userUID
+        sectionName: root.sectionName
 
         headerContent: headerGate.up ? root.item.headerContent : headerSkeleton
         leftPanel: leftPanelGate.up ? root.item.leftPanel : listSkeleton

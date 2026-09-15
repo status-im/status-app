@@ -10,9 +10,7 @@ import shared.stores as SharedStores
 import AppLayouts.stores as AppStores
 import AppLayouts.Market.stores
 
-import mainui.sectionLoaders
-
-Loader {
+StatusSectionLoader {
     id: root
 
     required property AppStores.RootStore rootStore
@@ -21,8 +19,6 @@ Loader {
     required property MarketStore marketStore
 
     required property HandlersManagerLoader popupHandler
-
-    property real leftPanelWidthOverride: 0
 
     asynchronous: false
 
@@ -45,13 +41,18 @@ Loader {
         if (!!item && root.source === d.targetUrl)
             return
         if (d.targetUrl === d.privacyWallUrl) {
-            setSource(d.targetUrl, {})
+            setSource(d.targetUrl, {
+                          userUID:                    root.userUID,
+                          sectionName:                root.sectionName,
+                      })
             return
         }
 
         setSource(d.targetUrl, {
             objectName:             "marketLayout",
             visible:                false,
+            userUID:                root.userUID,
+            sectionName:            root.sectionName,
             tokensModel:            Qt.binding(() => root.marketStore.marketLeaderboardModel),
             totalTokensCount:       Qt.binding(() => root.marketStore.totalLeaderboardCount),
             loading:                Qt.binding(() => root.marketStore.marketLeaderboardLoading),

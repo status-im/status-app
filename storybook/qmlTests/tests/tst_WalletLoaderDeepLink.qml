@@ -33,6 +33,9 @@ Item {
         // never load the real section in the test harness
         active: false
 
+        userUID: "0xdeadbeef"
+        sectionName: "Wallet"
+
         rootStore: appRootStore
         contactsStore: appContactsStore
         featureFlagsStore: appFeatureFlagsStore

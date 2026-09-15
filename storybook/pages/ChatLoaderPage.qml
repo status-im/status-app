@@ -400,6 +400,8 @@ SplitView {
                 sourceComponent: ChatLoader {
                     active: true
 
+                    userUID: "0xdeadbeef"
+                    sectionName: "chat"
                     rootStore: appRootStoreMock
                     contactsStore: contactsStoreMock
                     accountSettingsStore: accountSettingsStoreMock

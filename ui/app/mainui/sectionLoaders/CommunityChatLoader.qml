@@ -21,9 +21,8 @@ import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStores
 
 import mainui.adaptors
-import mainui.sectionLoaders
 
-Loader {
+StatusSectionLoader {
     id: root
 
     // Stores
@@ -56,8 +55,6 @@ Loader {
     required property bool createChatViewOpened
     required property bool isPortraitMode
     property bool navToMsgDetails: root.rootStore.navToMsgDetails
-
-    property real leftPanelWidthOverride: 0
 
     signal openAppSearchRequested()
     signal supportBotChatRequested()
@@ -112,6 +109,9 @@ Loader {
 
         sourceComponent: StatusSectionLayout {
             objectName: "sectionChrome"
+
+            userUID: root.userUID
+            sectionName: root.sectionName
 
             visible: !root.item || !root.item.ownsFullPage
 

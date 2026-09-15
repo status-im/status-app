@@ -53,6 +53,9 @@ LayoutChooser {
         RightPanel
     }
 
+    // used in StatusSectionLayoutLandscape for panel resizing/persistence
+    property string userUID
+    property string sectionName
     property alias handle: landscapeView.handle
 
     /*!
@@ -299,6 +302,8 @@ LayoutChooser {
     StatusSectionLayoutLandscape {
         id: landscapeView
         anchors.fill: parent
+        userUID: root.userUID
+        sectionName: root.sectionName
         leftPanelWidthOverride: root.leftPanelWidthOverride
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
