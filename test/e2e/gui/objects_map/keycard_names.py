@@ -34,6 +34,9 @@ settings_Keycard_ReadKeycardButton = {"container": mainWindow_KeycardView,
 keycardSettingsDetailsTitle = {"container": mainWindow_KeycardView,
                                "objectName": "settingsContentBaseSectionTitle", "type": "StatusBaseText",
                                "visible": True}
+keycardSettingsDetailsInfo = {"container": mainWindow_KeycardView,
+                              "objectName": "keycardDetailsInfo", "type": "StatusBaseText",
+                              "visible": True}
 keycardSettingsKeyPairInfo = {"container": mainWindow_KeycardView, "objectName": "keyPairItemInfo",
                               "type": "StatusListItem", "visible": True}
 settingsKeycardDetailsImportSeedPhrase = {"container": mainWindow_KeycardView,
@@ -51,6 +54,9 @@ settingsKeycardDetailsFactoryReset = {"container": mainWindow_KeycardView,
 settingsKeycardDetailsUnblockPuk = {"container": mainWindow_KeycardView,
                                   "objectName": "keycardDetailsUnblockPuk",
                                   "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsUnblockRecovery = {"container": mainWindow_KeycardView,
+                                         "objectName": "keycardDetailsUnblockRecovery",
+                                         "type": "StatusListItem", "visible": True}
 settingsKeycardDetailsSetOrChangePuk = {"container": mainWindow_KeycardView,
                                         "objectName": "keycardDetailsSetOrChangePuk",
                                         "type": "StatusListItem", "visible": True}
