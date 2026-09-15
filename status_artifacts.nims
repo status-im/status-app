@@ -351,7 +351,6 @@ proc cmakeArtifact(label, source, buildDir: string,
 # --- bootstrap (submodules + brew bottles) ------------------------------------
 
 const hostSubmodules = [
-  "vendor/DOtherSide",           # cmake artifact (dead on master; rides the generic proc)
   "vendor/QR-Code-generator",    # C source, {.compile.}d by src/app/global/utils/qrcodegen.nim
   "vendor/SortFilterProxyModel", # add_subdirectory'd by ui/StatusQ/CMakeLists.txt
 ]
@@ -578,33 +577,21 @@ proc statusqBuildPath(): string =
   thisDir() / "ui/StatusQ/build/Qt" & qtProp("QT_VERSION")
 
 proc buildStatusQ() =
-  cmakeArtifact("StatusQ", thisDir() / "ui/StatusQ", statusqBuildPath(),
-    ["-DCMAKE_INSTALL_PREFIX=" & thisDir() / "bin",
-     "-DSTATUSQ_BUILD_SANITY_CHECKER=OFF",
-     "-DSTATUSQ_BUILD_TESTS=OFF"],
-    target = "StatusQ", install = true)
-
-proc buildDOtherSide() =
-  var args = @["-DENABLE_DOCS=OFF", "-DENABLE_TESTS=OFF"]
-  if hostOS == "windows":
-    args.add "-DENABLE_DYNAMIC_LIBS=ON"
-    args.add "-DENABLE_STATIC_LIBS=OFF"
-  else:
-    args.add "-DENABLE_DYNAMIC_LIBS=OFF"
-    args.add "-DENABLE_STATIC_LIBS=ON"
-  if qmlDebug():
-    args.add "-DQML_DEBUG_PORT=" & getEnv("QML_DEBUG_PORT", "49152")
+  var args = @["-DCMAKE_INSTALL_PREFIX=" & thisDir() / "bin",
+               "-DSTATUSQ_BUILD_SANITY_CHECKER=OFF",
+               "-DSTATUSQ_BUILD_TESTS=OFF"]
+  # The QML monitoring tool lives in StatusQ since master dropped DOtherSide
+  # (2026-07); make's STATUSQ_CMAKE_CONFIG_PARAMS arm, ported.
   if getEnv("MONITORING", "false") != "false":
     args.add "-DMONITORING:BOOL=ON"
     args.add "-DMONITORING_QML_ENTRY_POINT:STRING=/../monitoring/Main.qml"
-  cmakeArtifact("DOtherSide", thisDir() / "vendor/DOtherSide",
-    dotherSideBuildDir(qtProp("QT_VERSION")), args)
+  cmakeArtifact("StatusQ", thisDir() / "ui/StatusQ", statusqBuildPath(), args,
+    target = "StatusQ", install = true)
 
-## dotherSideBuildDir/dotherSideLibDir and keycardBuildDir/keycardLibDir live in
-## status_env.nims: config.nims links against exactly these directories, and the
-## driver's private copies had already drifted from it (they missed the Windows
-## per-config leg). One definition, two consumers (issue 0017 review, I5).
-proc dosLibDir(): string = dotherSideLibDir(qtProp("QT_VERSION"))
+## keycardBuildDir/keycardLibDir live in status_env.nims: config.nims links
+## against exactly these directories, and the driver's private copies had
+## already drifted from it (they missed the Windows per-config leg). One
+## definition, two consumers (issue 0017 review, I5).
 
 proc developRedirect(vendor, checkoutDir: string): string =
   ## Issue 0011's contract, preserved verbatim: the FETCHCONTENT_SOURCE_DIR_*
@@ -717,7 +704,6 @@ const clientFlagEnv = [
   "NIMSDS_LIBDIR",           # -L + rpath
   "STATUSQ_INSTALL_PATH",    # -L + rpath
   "STATUSKEYCARD_QT_LIBDIR", # -L + rpath
-  "DOTHERSIDE_LIBDIR",       # the static lib's path on the link line
   "MACOSX_DEPLOYMENT_TARGET",# decides ObjC-metadata section placement at link
 ]
 
@@ -908,7 +894,6 @@ proc runNimTests(only: seq[string]) =
     flags.add "--passL:-F" & qtLibDir
   else:
     flags.add "--passL:-L" & qtLibDir
-  flags.add "--passL:" & dosLibDir() / "libDOtherSideStatic.a"
   flags.add "--passL:" & qtSeaqtExtraLibs()
   flags.add "--passL:-L" & nimsdsLibDir()
   flags.add "--passL:-lsds"
@@ -1047,6 +1032,5 @@ proc buildHostArtifacts() =
   ## vendor's FORCE arms are applied by applyDevelopModeArms(), before this runs.
   prepareHostBuild()
   buildStatusQ()
-  buildDOtherSide()
   buildKeycardQt()
   buildResources()

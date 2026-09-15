@@ -100,7 +100,7 @@ include "status.nims"
 # nimble-native front door (issue 0013). nimble's bin compile only compiles
 # src/nim_status_client.nim (config.nims provides the full flag set); every
 # artifact the client links or loads — StatusQ, libstatus + libsds, the
-# keycard pair, qrcodegen, DOtherSide, resources.rcc, translations, the Qt
+# keycard pair, qrcodegen, resources.rcc, translations, the Qt
 # pkg-config wrapper — is built by this hook through the same stamp-gated
 # engine `nim app status.nims` drives. A no-op re-run costs seconds; the
 # hook fires for both `nimble build` and `nimble run` (run builds the root

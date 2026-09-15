@@ -146,15 +146,6 @@ when not declared(winCfgSuffix):
 # copies did not. The cmake BUILD dir and the LINK dir are different directories
 # on Windows, so they get different procs rather than a re-synced comment.
 
-when not declared(dotherSideBuildDir):
-  proc dotherSideBuildDir(qtVersion: string): string =
-    thisDir() / "vendor/DOtherSide/build/Qt" & qtVersion
-
-when not declared(dotherSideLibDir):
-  proc dotherSideLibDir(qtVersion: string): string =
-    ## Where DOtherSide's static lib / import lib lands (make's DOTHERSIDE_LIBDIR).
-    dotherSideBuildDir(qtVersion) / "lib" & winCfgSuffix()
-
 when not declared(keycardBuildDir):
   proc keycardBuildDir(): string =
     ## The cmake `-B` tree. NOT the link dir on Windows — see keycardLibDir.

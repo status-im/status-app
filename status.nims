@@ -368,8 +368,7 @@ proc launchHostApp(args: string) =
     let binDir = thisDir() / "bin"
     exec "cp -f -R " & quoteShell(statusqBuildPath() / "bin" / buildType()) & "/* " &
       quoteShell(binDir) & "/"
-    for f in [dotherSideLibDir(qtProp("QT_VERSION")) / "DOtherSide.dll",
-              statusgoLibDir() / "libstatus.dll",
+    for f in [statusgoLibDir() / "libstatus.dll",
               keycardLibDir() / "status-keycard-qt.dll",
               nimsdsLibDir() / "libsds.dll"]:
       exec "cp -f " & quoteShell(f) & " " & quoteShell(binDir) & "/"
@@ -478,7 +477,6 @@ task tests, "Run the Nim test suite (test/nim/*.nim); pass a test name to run on
   validateHost(t)
   discard applyDevelopModeArms()
   prepareHostBuild()   # shared with buildHostArtifacts (issue 0017 review, M7)
-  buildDOtherSide()    # the suite links libDOtherSideStatic.a
   runNimTests(only)
 
 task windowsLauncher, "Build bin/nim_windows_launcher.exe for `make pkg-windows` (--compileOnly stops before the link; issue 0017)":

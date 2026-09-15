@@ -311,11 +311,11 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
     # Artifact locations follow the develop-mode overlay exactly like the
     # Makefiles do (nimble.overlay → scratch copy vs vendor checkout).
     # Windows: cmake writes shared libraries into a per-config subdirectory, so
-    # StatusQ / status-keycard-qt / DOtherSide all gain a `/<BuildType>` leg —
-    # the same STATUSQ_LIB_PATH / STATUSKEYCARD_QT_LIBDIR / DOTHERSIDE_LIBDIR
-    # the win32 Makefile branch derived. `winCfgSuffix()`, `keycardLibDir()` and
-    # `dotherSideLibDir()` come from status_env.nims — the driver links/loads
-    # exactly these directories, so there is one definition, not two (0017).
+    # StatusQ / status-keycard-qt gain a `/<BuildType>` leg — the same
+    # STATUSQ_LIB_PATH / STATUSKEYCARD_QT_LIBDIR the win32 Makefile branch
+    # derived. `winCfgSuffix()` and `keycardLibDir()` come from status_env.nims —
+    # the driver links/loads exactly these directories, so there is one
+    # definition, not two (0017).
     let winCfg = winCfgSuffix()
     let sgRoot = statusgoBuildRoot()
     let statusgoLibDir = envOr("STATUSGO_LIBDIR", sgRoot / "build/bin")
@@ -327,9 +327,7 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       else: statusqInstall / "StatusQ"
     let statusqExtraLibs = statusqBuild / "lib"
     let keycardDefault = keycardLibDir()   # status_env.nims (shared with the driver)
-    let dosDefault = dotherSideLibDir(qtVersion)
     let keycardLibDir = envOr("STATUSKEYCARD_QT_LIBDIR", keycardDefault)
-    let dosLibDir = envOr("DOTHERSIDE_LIBDIR", dosDefault)
 
     # seaqt resolves Qt at compile time via gorge("pkg-config Qt6..."): the
     # environment that makes that resolve the ACTIVE kit is prl-to-pc's to
@@ -420,10 +418,9 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       for staleVar in ["LIB", "INCLUDE", "LIBPATH", "VCINSTALLDIR"]:
         delEnv(staleVar)
       # lld-link links the IMPORT library, not the .dll (passing the .dll gives
-      # "bad file type"). cmake emits DOtherSide.lib next to the .dll; the Go
-      # c-shared libs get theirs synthesized by the driver (genImportLib), named
-      # status.lib / sds.lib to match the -l flags below.
-      switch("passL", dosLibDir / "DOtherSide.lib")
+      # "bad file type"). The Go c-shared libs get theirs synthesized by the
+      # driver (genImportLib), named status.lib / sds.lib to match the -l flags
+      # below.
       switch("passL", "-L" & statusgoLibDir)
       switch("passL", "-lstatus")
       switch("passL", "-L" & statusqLibPath)
@@ -445,7 +442,6 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
         switch("passL", "-F" & qtLibDir)
       else:
         switch("passL", "-L" & qtLibDir)
-      switch("passL", dosLibDir / "libDOtherSideStatic.a")
       # The Qt modules the app links beyond what the seaqt bindings pull in
       # themselves (the former QT_SEAQT_EXTRA_LIBS make var — which the win32
       # branch never passed, hence its absence above). status_env.nims owns the
