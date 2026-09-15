@@ -22,7 +22,11 @@
 #include <vector>
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
-                                                           int gentlePeriodMs);
+                                                           int gentlePeriodMs, int boostGapMs);
+
+// The pause between boosted ticks in the shipped configuration
+// (src/nim_status_client.nim).
+constexpr int kShippedBoostGapMs = 2;
 
 namespace {
 
@@ -58,7 +62,8 @@ int minRegisteredTimerIntervalMs(QObject* object)
 QObject* installController(QQmlEngine& engine, int msPerTick, int gentlePeriodMs)
 {
     const QObjectList childrenBefore = engine.children();
-    statusq_installBoostedIncubationController(&engine, msPerTick, gentlePeriodMs);
+    statusq_installBoostedIncubationController(&engine, msPerTick, gentlePeriodMs,
+                                               kShippedBoostGapMs);
 
     QObject* controller = nullptr;
     for (QObject* child : engine.children()) {
