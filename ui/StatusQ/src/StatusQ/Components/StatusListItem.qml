@@ -135,7 +135,7 @@ Rectangle {
 
     implicitWidth: 448
     implicitHeight: {
-        if (bottomModel.length === 0) {
+        if (d.bottomCount === 0) {
             return Math.max(64, statusListItemTitleArea.height + 16)
         }
         return Math.max(64, statusListItemTitleArea.height + 90)
@@ -161,6 +161,7 @@ Rectangle {
         id: d
 
         readonly property int inlineTagsCount: d.modelCount(root.inlineTagModel)
+        readonly property int bottomCount: d.modelCount(root.bottomModel)
         readonly property real tagsAvailableWidth: root.width - iconOrImage.width
                                                  - root.rightPadding - 2 * root.leftPadding
 
@@ -279,7 +280,7 @@ Rectangle {
             anchors.right: statusListItemLabel.visible ? statusListItemLabel.left : statusListItemComponentsSlot.left
             anchors.leftMargin: iconOrImage.active ? Theme.padding : loadingIndicator.active ? Theme.halfPadding : root.leftPadding
             anchors.rightMargin: Math.max(root.rightPadding, titleIconsRow.requiredWidth)
-            anchors.verticalCenter:  bottomModel.length === 0 ? parent.verticalCenter : undefined
+            anchors.verticalCenter:  d.bottomCount === 0 ? parent.verticalCenter : undefined
 
             height: childrenRect.height
 
@@ -294,8 +295,8 @@ Rectangle {
                 wrapMode: Text.Wrap
 
                 anchors.left: parent.left
-                anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-                anchors.topMargin: bottomModel.length === 0 ? undefined : 20
+                anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+                anchors.topMargin: d.bottomCount === 0 ? undefined : 20
 
                 customColor: {
                     if (!root.enabled) {
@@ -359,8 +360,8 @@ Rectangle {
                 anchors.left: statusListItemTitle.right
                 anchors.leftMargin: 4
                 anchors.verticalCenter: statusListItemTitle.verticalCenter
-                anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-                anchors.topMargin: bottomModel.length === 0 ? undefined : 20
+                anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+                anchors.topMargin: d.bottomCount === 0 ? undefined : 20
                 text: root.titleAsideText
                 font.pixelSize: Theme.asideTextFontSize
                 customColor: Theme.palette.baseColor1
@@ -573,7 +574,7 @@ Rectangle {
             anchors.left: parent.left
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            active: d.modelCount(root.bottomModel) > 0
+            active: d.bottomCount > 0
 
             sourceComponent: Row {
                 spacing: 10
@@ -587,9 +588,9 @@ Rectangle {
 
         StatusTextWithLoadingState {
             id: statusListItemLabel
-            anchors.verticalCenter: bottomModel.length === 0 ? parent.verticalCenter : undefined
-            anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-            anchors.topMargin: bottomModel.length === 0 ? 0 : 16
+            anchors.verticalCenter: d.bottomCount === 0 ? parent.verticalCenter : undefined
+            anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+            anchors.topMargin: d.bottomCount === 0 ? 0 : 16
             anchors.right: statusListItemComponentsSlot.left
             anchors.rightMargin: statusListItemComponentsSlot.width > 0 ? 10 : 0
 
@@ -604,9 +605,9 @@ Rectangle {
             id: statusListItemComponentsSlot
             anchors.right: parent.right
             anchors.rightMargin: root.rightPadding
-            anchors.verticalCenter: bottomModel.length === 0 ? parent.verticalCenter : undefined
-            anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-            anchors.topMargin: bottomModel.length === 0 ? undefined : 12
+            anchors.verticalCenter: d.bottomCount === 0 ? parent.verticalCenter : undefined
+            anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+            anchors.topMargin: d.bottomCount === 0 ? undefined : 12
             spacing: 10
         }
     }
