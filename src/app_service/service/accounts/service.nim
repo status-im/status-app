@@ -195,7 +195,7 @@ QtObject:
     )
 
   proc defaultCreateAccountRequest*(): CreateAccountRequest =
-    return CreateAccountRequest(
+    var request = CreateAccountRequest(
         rootDataDir: main_constants.STATUSGODIR,
         kdfIterations: KDF_ITERATIONS,
         customizationColor: DEFAULT_CUSTOMIZATION_COLOR,
@@ -215,6 +215,10 @@ QtObject:
         apiConfig: defaultApiConfig(),
         walletConnectProjectID: main_constants.WALLET_CONNECT_PROJECT_ID,
       )
+    if main_constants.USE_ANVIL:
+      request.networkID = some(31337'u64)
+      request.testOverrideNetworks = @[newAnvilNetwork()]
+    return request
 
   proc buildCreateAccountRequest(password: string, displayName: string, imagePath: string,
     imageCropRectangle: ImageCropRectangle, thirdpartyServicesEnabled: bool): CreateAccountRequest =
