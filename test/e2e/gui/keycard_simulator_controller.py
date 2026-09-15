@@ -8,6 +8,7 @@ from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.window import Window
 from gui.objects_map import keycard_names
+from scripts.utils.local_system import free_keycard_simulator_port
 
 # Matches KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS in keycardV2/test_controller.nim
 _KEYCARD_SIMULATOR_HOST = '127.0.0.1'
@@ -75,10 +76,9 @@ class KeycardSimulatorController(Window):
 
     @allure.step('Click Start Keycard Simulator')
     def start_simulator(self):
+        free_keycard_simulator_port(_KEYCARD_SIMULATOR_PORT)
         self._start_button.click()
         self._plug_reader_button.wait_until_enabled(configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC)
-        # Restart kills a leftover JVM on 9025. PING to that leftover is a false ready —
-        # wait until it drops, then until the new server answers PING.
         driver.waitFor(
             lambda: not self._simulator_ping_ok(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,

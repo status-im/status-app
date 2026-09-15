@@ -13,6 +13,8 @@ from configs.system import get_platform
 
 LOG = logging.getLogger(__name__)
 
+_WINDOWS_CREATE_NO_WINDOW = getattr(subprocess, 'CREATE_NO_WINDOW', 0x08000000)
+
 
 def find_process_by_port(port: int) -> typing.List[int]:
     pid_list = []
@@ -58,19 +60,46 @@ def find_free_port(start: int, step: int) -> int:
     raise RuntimeError(f'No free TCP port found from {start}')
 
 
+@allure.step('Kill leftover keycard simulator on port')
+def free_keycard_simulator_port(port: int = 9025) -> None:
+    pids = find_process_by_port(port) or []
+    for pid in pids:
+        try:
+            proc = psutil.Process(pid)
+            name = (proc.name() or '').lower()
+            try:
+                cmdline = ' '.join(proc.cmdline()).lower()
+            except (psutil.AccessDenied, psutil.ZombieProcess):
+                cmdline = ''
+        except psutil.NoSuchProcess:
+            continue
+        is_simulator = (
+            'keycardqt' in cmdline
+            or 'keycard-simulator' in cmdline
+            or 'jcardsim' in cmdline
+            or name in ('java', 'java.exe')
+        )
+        if is_simulator:
+            LOG.info('Killing leftover keycard simulator pid=%s on port %s', pid, port)
+            kill_process(pid)
+        else:
+            raise RuntimeError(
+                f'port {port} is in use by a non-simulator process (pid {pid}, name={name})'
+            )
+
+
 @allure.step('Kill process')
 def kill_process(pid, timeout_sec=5):
     LOG.debug(f'Terminating process {pid}')
 
     try:
         if get_platform() == "Windows":
-            # Use subprocess.run with timeout to prevent hanging on Windows CI
             subprocess.run(
-                f"taskkill /F /T /PID {str(pid)}",
-                shell=True,
+                ['taskkill', '/F', '/T', '/PID', str(pid)],
+                creationflags=_WINDOWS_CREATE_NO_WINDOW,
                 timeout=timeout_sec,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
             )
         elif get_platform() in ["Linux", "Darwin"]:
             os.kill(pid, signal.SIGKILL)
