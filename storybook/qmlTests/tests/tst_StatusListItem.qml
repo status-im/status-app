@@ -1,8 +1,11 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtTest
 
+import StatusQ.Core
 import StatusQ.Components
+import StatusQ.Controls
 
 Item {
     id: root
@@ -17,6 +20,24 @@ Item {
             width: 100
             height: 24
             color: "red"
+        }
+    }
+
+    Component {
+        id: bottomDelegate
+
+        Item {
+            objectName: "bottom_" + index
+            width: 100
+            height: 24
+        }
+    }
+
+    Component {
+        id: badgeComponentUnderTest
+
+        StatusListItemBadge {
+            primaryText: "badge"
         }
     }
 
@@ -131,6 +152,32 @@ Item {
             compare(countByType(controlUnderTest, Flickable), data.count > 0 ? 1 : 0)
         }
 
+        // The bottom slot and the row's height must agree on whether there is
+        // a bottom row, for every model kind, not only for a JS array.
+        function test_bottomRowFollowsTheModelKind_data() {
+            return [
+                { tag: "null", model: null, count: 0 },
+                { tag: "empty array", model: [], count: 0 },
+                { tag: "array", model: ["a", "b"], count: 2 },
+                { tag: "zero", model: 0, count: 0 },
+                { tag: "number", model: 4, count: 4 },
+                { tag: "list model", model: threeRowsModel, count: 3 }
+            ]
+        }
+
+        function test_bottomRowFollowsTheModelKind(data) {
+            controlUnderTest = createTemporaryObject(listItemComponent, root, {
+                bottomModel: data.model,
+                bottomDelegate: bottomDelegate
+            })
+            verify(!!controlUnderTest)
+
+            compare(!!findChild(controlUnderTest, "bottom_0"), data.count > 0)
+            compare(!!findChild(controlUnderTest, "bottom_" + data.count), false)
+            compare(controlUnderTest.implicitHeight > 64, data.count > 0,
+                    "the row grows exactly when a bottom row is built")
+        }
+
         function test_scrollViewFollowsTheModelGoingUpAndDown() {
             controlUnderTest = createTemporaryObject(listItemComponent, root)
             verify(!!controlUnderTest)
@@ -158,6 +205,59 @@ Item {
 
             flickable.contentX = 40
             compare(flickable.contentX, 40)
+        }
+
+        // The warning icon used to decide its own existence from its own
+        // tooltip text, so it had to be built to be found unnecessary.
+        function test_errorIconNeedsBothErrorModeAndText() {
+            controlUnderTest = createTemporaryObject(listItemComponent, root)
+            verify(!!controlUnderTest)
+            compare(countByType(controlUnderTest, StatusFlatRoundButton), 0)
+
+            controlUnderTest.errorMode = true
+            compare(countByType(controlUnderTest, StatusFlatRoundButton), 0,
+                    "error mode without a message must not build the icon")
+
+            controlUnderTest.errorTooltipText = "no balance"
+            compare(countByType(controlUnderTest, StatusFlatRoundButton), 1)
+
+            controlUnderTest.errorMode = false
+            compare(countByType(controlUnderTest, StatusFlatRoundButton), 0)
+        }
+
+        function test_badgeBuildsOnlyWhenOneIsSupplied() {
+            controlUnderTest = createTemporaryObject(listItemComponent, root)
+            verify(!!controlUnderTest)
+            compare(countByType(controlUnderTest, StatusListItemBadge), 0)
+
+            controlUnderTest.badgeComponent = badgeComponentUnderTest
+            compare(countByType(controlUnderTest, StatusListItemBadge), 1)
+        }
+
+        function test_titleTextIconBuildsOnlyWhenNamed() {
+            controlUnderTest = createTemporaryObject(listItemComponent, root)
+            verify(!!controlUnderTest)
+            const before = countByType(controlUnderTest, StatusIcon)
+
+            controlUnderTest.titleTextIcon = "keycard"
+            compare(countByType(controlUnderTest, StatusIcon), before + 1)
+
+            controlUnderTest.titleTextIcon = ""
+            compare(countByType(controlUnderTest, StatusIcon), before)
+        }
+
+        // The subtitle/tags row is the only RowLayout a plain item needs; the
+        // beneath-tags row is built only for the keypair and keycard callers.
+        function test_beneathTagsBuildsOnlyWhenAsked() {
+            controlUnderTest = createTemporaryObject(listItemComponent, root)
+            verify(!!controlUnderTest)
+            compare(countByType(controlUnderTest, RowLayout), 1)
+
+            controlUnderTest.beneathTagsTitle = "on a keycard"
+            compare(countByType(controlUnderTest, RowLayout), 2)
+
+            controlUnderTest.beneathTagsTitle = ""
+            compare(countByType(controlUnderTest, RowLayout), 1)
         }
 
         function test_tagsSpacing() {

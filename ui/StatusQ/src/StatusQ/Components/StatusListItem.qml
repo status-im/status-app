@@ -25,6 +25,7 @@ Rectangle {
     property string tertiaryTitle: ""
     property string label: ""
     property string titleTextIcon: ""
+    property color titleTextIconColor: "transparent"
     property string beneathTagsIcon: ""
     property color beneathTagsIconColor: Theme.palette.primaryColor1
     property string beneathTagsTitle: ""
@@ -51,6 +52,19 @@ Rectangle {
     property bool loading: false
     property bool loadingSubTitle: loading
     property bool errorMode: false
+
+    /*!
+       Text of the tooltip on the error warning icon. Replaces the former
+       \c errorIcon alias: the icon is built on demand, so nothing outside can
+       hold a reference to it. Empty text keeps the icon from being built at
+       all, which is also what the old \c visible guard meant.
+    */
+    property string errorTooltipText: ""
+    /*!
+       Maximum width of that tooltip. Negative keeps StatusToolTip's own default.
+    */
+    property int errorTooltipMaxWidth: -1
+
     property int rippleOrigin: StatusRipple.RippleOrigin.Pointer
 
     property StatusAssetSettings asset: StatusAssetSettings {
@@ -86,20 +100,22 @@ Rectangle {
     }
 
     property alias sensor: sensor
-    property alias badge: statusListItemBadge
     property alias statusListItemIcon: iconOrImage
     property alias statusListItemTitle: statusListItemTitle
     property alias statusListItemTitleAside: statusListItemTitleAsideText
-    property alias statusListItemTitleTextRightIcon: statusListItemTitleTextRightIcon
     property alias statusListItemTitleIcons: titleIconsRow
     property alias statusListItemTitleArea: statusListItemTitleArea
     property alias statusListItemSubTitle: statusListItemSubTitle
     property alias statusListItemTertiaryTitle: statusListItemTertiaryTitle
     property alias statusListItemComponentsSlot: statusListItemComponentsSlot
-    property alias statusListItemTagsSlot: statusListItemTagsSlot
     property alias statusListItemLabel: statusListItemLabel
     property alias subTitleBadgeComponent: subTitleBadgeLoader.sourceComponent
-    property alias errorIcon: errorIcon
+    /*!
+       Badge shown beneath the tertiary title, typically a StatusListItemBadge.
+       Replaces the former \c badge alias to a live item, so that a row which
+       needs no badge builds none.
+    */
+    property alias badgeComponent: badgeLoader.sourceComponent
     property alias statusListItemTagsRowLayout: statusListItemSubtitleTagsRow
 
     property bool showLoadingIndicator: false
@@ -119,7 +135,7 @@ Rectangle {
 
     implicitWidth: 448
     implicitHeight: {
-        if (bottomModel.length === 0) {
+        if (d.bottomCount === 0) {
             return Math.max(64, statusListItemTitleArea.height + 16)
         }
         return Math.max(64, statusListItemTitleArea.height + 90)
@@ -145,6 +161,7 @@ Rectangle {
         id: d
 
         readonly property int inlineTagsCount: d.modelCount(root.inlineTagModel)
+        readonly property int bottomCount: d.modelCount(root.bottomModel)
         readonly property real tagsAvailableWidth: root.width - iconOrImage.width
                                                  - root.rightPadding - 2 * root.leftPadding
 
@@ -263,7 +280,7 @@ Rectangle {
             anchors.right: statusListItemLabel.visible ? statusListItemLabel.left : statusListItemComponentsSlot.left
             anchors.leftMargin: iconOrImage.active ? Theme.padding : loadingIndicator.active ? Theme.halfPadding : root.leftPadding
             anchors.rightMargin: Math.max(root.rightPadding, titleIconsRow.requiredWidth)
-            anchors.verticalCenter:  bottomModel.length === 0 ? parent.verticalCenter : undefined
+            anchors.verticalCenter:  d.bottomCount === 0 ? parent.verticalCenter : undefined
 
             height: childrenRect.height
 
@@ -278,8 +295,8 @@ Rectangle {
                 wrapMode: Text.Wrap
 
                 anchors.left: parent.left
-                anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-                anchors.topMargin: bottomModel.length === 0 ? undefined : 20
+                anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+                anchors.topMargin: d.bottomCount === 0 ? undefined : 20
 
                 customColor: {
                     if (!root.enabled) {
@@ -296,15 +313,21 @@ Rectangle {
                 }
                 loading: root.loading
 
-                StatusIcon {
-                    id: statusListItemTitleTextRightIcon
-                    width: visible ? 12 : 0
-                    height: visible ? 12 : 0
-                    visible: !!root.titleTextIcon
+                // A ColorImage per row, for a decoration only the keypair rows
+                // ever ask for.
+                Loader {
+                    id: titleTextIconLoader
+                    width: active ? 12 : 0
+                    height: active ? 12 : 0
+                    active: !!root.titleTextIcon
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: statusListItemTitle.contentWidth + 6
-                    icon: root.titleTextIcon
+
+                    sourceComponent: StatusIcon {
+                        icon: root.titleTextIcon
+                        color: root.titleTextIconColor
+                    }
                 }
 
                 StatusLazyToolTip {
@@ -337,8 +360,8 @@ Rectangle {
                 anchors.left: statusListItemTitle.right
                 anchors.leftMargin: 4
                 anchors.verticalCenter: statusListItemTitle.verticalCenter
-                anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-                anchors.topMargin: bottomModel.length === 0 ? undefined : 20
+                anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+                anchors.topMargin: d.bottomCount === 0 ? undefined : 20
                 text: root.titleAsideText
                 font.pixelSize: Theme.asideTextFontSize
                 customColor: Theme.palette.baseColor1
@@ -356,16 +379,25 @@ Rectangle {
                 anchors.leftMargin: 4
             }
 
-            StatusFlatRoundButton {
-                id: errorIcon
+            // A whole StatusFlatRoundButton per row for a warning that only
+            // shows in errorMode. The guard used to read the button's own
+            // tooltip text, so the button had to exist to decide whether it
+            // should exist; it reads root.errorTooltipText now.
+            Loader {
+                id: errorIconLoader
                 anchors.top: statusListItemTitle.bottom
                 width: 14
-                height: visible ? 14 : 0
-                icon.width: 14
-                icon.height: 14
-                icon.name: "tiny/warning"
-                icon.color: Theme.palette.dangerColor1
-                visible: root.errorMode && !!errorIcon.tooltip.text
+                height: active ? 14 : 0
+                active: root.errorMode && !!root.errorTooltipText
+
+                sourceComponent: StatusFlatRoundButton {
+                    icon.width: 14
+                    icon.height: 14
+                    icon.name: "tiny/warning"
+                    icon.color: Theme.palette.dangerColor1
+                    tooltip.text: root.errorTooltipText
+                    tooltip.maxWidth: root.errorTooltipMaxWidth
+                }
             }
 
             RowLayout {
@@ -452,11 +484,14 @@ Rectangle {
                 loading: root.loading
             }
 
-            StatusListItemBadge {
-                id: statusListItemBadge
+            // A StatusListItemBadge is a Control with a background, a rounded
+            // image, a letter identicon, two texts and an icon. Only the search
+            // results carry one, so it is supplied as a Component now and every
+            // other row builds nothing. The loader takes its size from the item,
+            // which is what the badge's own implicit size already gave.
+            Loader {
+                id: badgeLoader
                 anchors.top: statusListItemTertiaryTitle.bottom
-                width: contentItem.width
-                implicitHeight: visible ? 22 : 0
             }
 
             // Same story as the inline tags: the scroll view only exists to let
@@ -494,55 +529,68 @@ Rectangle {
                 }
             }
 
-            RowLayout {
+            // Only the keypair and keycard rows set beneathTagsIcon /
+            // beneathTagsTitle, so every other row built a layout, an icon and
+            // a text that could never become visible.
+            Loader {
+                id: beneathTagsLoader
                 anchors.top: tagsScrollViewLoader.bottom
-                anchors.topMargin: visible ? 4 : 0
+                anchors.topMargin: active ? 4 : 0
                 width: parent.width
-                visible: !!root.beneathTagsIcon || !!root.beneathTagsTitle
-                spacing: 4
+                active: !!root.beneathTagsIcon || !!root.beneathTagsTitle
 
-                StatusIcon {
-                    id: statusListItemBeneathTagsIcon
-                    Layout.preferredWidth: visible ? 16 : 0
-                    Layout.preferredHeight: visible ? 16 : 0
-                    visible: !!root.beneathTagsIcon
-                    icon: root.beneathTagsIcon
-                    color: root.beneathTagsIconColor
-                }
+                sourceComponent: RowLayout {
+                    spacing: 4
 
-                StatusTextWithLoadingState {
-                    id: statusListItemBeneathTagsTitle
-                    Layout.fillWidth: true
-                    visible: !!root.beneathTagsTitle
-                    text: root.beneathTagsTitle
-                    customColor: Theme.palette.baseColor1
-                    font.pixelSize: Theme.additionalTextSize
-                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    StatusIcon {
+                        Layout.preferredWidth: visible ? 16 : 0
+                        Layout.preferredHeight: visible ? 16 : 0
+                        visible: !!root.beneathTagsIcon
+                        icon: root.beneathTagsIcon
+                        color: root.beneathTagsIconColor
+                    }
+
+                    StatusTextWithLoadingState {
+                        Layout.fillWidth: true
+                        visible: !!root.beneathTagsTitle
+                        text: root.beneathTagsTitle
+                        customColor: Theme.palette.baseColor1
+                        font.pixelSize: Theme.additionalTextSize
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                    }
                 }
             }
         }
 
-        Row {
-            id: statusListItemTagsSlot
+        // The bottom slot only ever holds bottomDelegate instances, so a row
+        // with an empty bottomModel builds neither the Row nor its Repeater.
+        // The former `width: statusListItemBadge.width` is gone with it: it tied
+        // this slot's width to an unrelated subtree that is itself deferred now,
+        // and a Row sizes itself from its children.
+        Loader {
+            id: bottomSlotLoader
             anchors.topMargin: 16
             anchors.top: iconOrImage.bottom
             anchors.left: parent.left
             anchors.leftMargin: 16
-            width: statusListItemBadge.width
-            spacing: 10
             anchors.verticalCenter: parent.verticalCenter
+            active: d.bottomCount > 0
 
-            Repeater {
-                model: bottomModel
-                delegate: bottomDelegate
+            sourceComponent: Row {
+                spacing: 10
+
+                Repeater {
+                    model: root.bottomModel
+                    delegate: root.bottomDelegate
+                }
             }
         }
 
         StatusTextWithLoadingState {
             id: statusListItemLabel
-            anchors.verticalCenter: bottomModel.length === 0 ? parent.verticalCenter : undefined
-            anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-            anchors.topMargin: bottomModel.length === 0 ? 0 : 16
+            anchors.verticalCenter: d.bottomCount === 0 ? parent.verticalCenter : undefined
+            anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+            anchors.topMargin: d.bottomCount === 0 ? 0 : 16
             anchors.right: statusListItemComponentsSlot.left
             anchors.rightMargin: statusListItemComponentsSlot.width > 0 ? 10 : 0
 
@@ -557,9 +605,9 @@ Rectangle {
             id: statusListItemComponentsSlot
             anchors.right: parent.right
             anchors.rightMargin: root.rightPadding
-            anchors.verticalCenter: bottomModel.length === 0 ? parent.verticalCenter : undefined
-            anchors.top: bottomModel.length === 0 ? undefined:  parent.top
-            anchors.topMargin: bottomModel.length === 0 ? undefined : 12
+            anchors.verticalCenter: d.bottomCount === 0 ? parent.verticalCenter : undefined
+            anchors.top: d.bottomCount === 0 ? undefined:  parent.top
+            anchors.topMargin: d.bottomCount === 0 ? undefined : 12
             spacing: 10
         }
     }
