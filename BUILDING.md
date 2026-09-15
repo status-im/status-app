@@ -326,7 +326,7 @@ nim run status.nims
 🎉
 
 > **You do not install Nim.** `nim_status_client.nimble` pins the compiler
-> (`requires "nim == 2.2.4"`) and nimble materialises it in its own store, so
+> (`requires "nim == 2.2.10"`) and nimble materialises it in its own store, so
 > after `source ./env.sh` the `nim` on your PATH *is* the pinned compiler, by
 > construction. Two guards keep it that way (issue 0018 review): `env.sh`
 > asserts the compiler it hoists against the manifest's `requires "nim == …"`,
@@ -364,7 +364,7 @@ status-go and not by a vendored compiler.
 
 **Prerequisite:** **Nimble (>= 0.22) on your PATH — and nothing else Nim-side.**
 The compiler is not a prerequisite: `nim_status_client.nimble` pins it
-(`requires "nim == 2.2.4"`) and `nimble setup` materialises it in nimble's store
+(`requires "nim == 2.2.10"`) and `nimble setup` materialises it in nimble's store
 (`~/.nimble/pkgs2/nim-<version>-<checksum>/`), building it from source once if
 no binary is cached. `source ./env.sh` (a `nimble shellenv` wrapper) then puts
 that store compiler at the FRONT of `PATH`, and every Nim compile in this repo —
@@ -470,7 +470,7 @@ prl-to-pc`, then `nim qtPkgconfigGenerate status.nims`) and commit them
 upstream.
 
 **What's still a git submodule:** only things that aren't pure Nim (C/C++):
-`DOtherSide`, `SortFilterProxyModel`, `QR-Code-generator`, `fcitx5-qt`,
+`SortFilterProxyModel`, `QR-Code-generator`, `fcitx5-qt`,
 `mobile/vendors/openssl`. They are *pins*, not Vendors (CONTEXT.md), and the
 driver initialises the ones the host build consumes itself — there is no
 `make update` and no submodule auto-init in the Makefile.

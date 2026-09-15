@@ -53,11 +53,27 @@ records 0007–0012.
   queue. When it merges: flip the statusgo.nimble pin from
   `alexjba/nim-sds#5c89d61` to the upstream merge SHA. Nothing else changes
   (0007 made the pin the only coupling).
+- **2026-09-15 rebase:** PR #85 is still open, and status-go develop now
+  requires the `release/v0.3` line (`v0.3.3`: the retrieval-hint provider the
+  sds-go-bindings pin in go.mod links against; master/release-v0.4 changed the
+  FFI ABI). The statusgo.nimble pin therefore moved to upstream
+  `logos-messaging/nim-sds#v0.3.3`, which carries NONE of the #85 queue. What
+  that costs, per patch: ffi pin — v0.3.3's manifest has name-form requires
+  only, so the graph resolves nim-ffi/libp2p from the registry (watch the
+  lock); NIMFLAGS forwarding — statusgo.nims materializes the resolution into
+  the scratch copy itself, so unpatched sds builds; libsdsStaticMac
+  localization — the upstream fix landed in v0.2.5 (ADR 0003 part 2), so the
+  v0.3 line has it; installDirs whitelist — the source-only manifest needs no
+  whitelist (0010); ZERO_AR_DATE / -fno-common — byte-reproducibility of the
+  static archive is UNVERIFIED on the new pin. Ask becomes: land #85 (or its
+  reproducibility half) on `release/v0.3` too, then pin the tag that carries it.
 
 ## status-go (status-im/status-go)
 
-- Branch `nimble-phase1-pin` (currently pinned at `d9281bce9`) needs to
-  become a PR to `develop`: nimble package manifest (source-only) +
+- Branch `nimble-phase1-pin-2` (currently pinned at `3e0dda8db`; the
+  2026-09-15 rebase of `nimble-phase1-pin` onto develop `9f09f902`, wrapper
+  refreshed from status-desktop master, nim-sds pin v0.3.3) needs to become
+  a PR to `develop`: nimble package manifest (source-only) +
   statusgo.nims tasks, absorbed status_go wrapper, status_backend cgo
   export, cbindings determinism (sorted emit, `-buildid=`, ZERO_AR_DATE
   repack). After merge: bump the app pin; eventually pin release tags.
@@ -87,11 +103,15 @@ records 0007–0012.
 
 ## seaqt (seaqt/nim-seaqt, seaqt/nimqml-seaqt)
 
-- Current pins: `smo-6.4@2d95808` (durable via tag
-  `qt-6.4-seaqt-gen-5bc1bc58…`) and nimqml `c5e5831`. Asks: durable tags as
-  standard practice (qt-6.4 branch is force-pushed), and a decision path for
-  the `qt-6.11` generation (matches the actual Qt kit; app-wide API-churn
-  risk — needs its own compile/QA pass).
+- Current pins (2026-09-15 rebase): `qt-6.8@7d40abd7` — master's submodule
+  moved to the Qt 6.8 generation while the migration was in flight — and
+  nimqml `fa084a8d` (master's submodule). The former `smo-6.4@2d95808` pin was
+  durable via tag `qt-6.4-seaqt-gen-5bc1bc58…`; `7d40abd7` has NO tag, and the
+  generation branches are force-pushed orphans, so this pin can become
+  unreachable (master's submodule carries the identical hazard). Asks: a tag
+  for `qt-6.8@7d40abd7`, durable tags as standard practice, and a decision
+  path for the `qt-6.11` generation (matches the actual Qt kit; app-wide
+  API-churn risk — needs its own compile/QA pass).
 
 ## prl-to-pc (status-im/prl-to-pc)
 
@@ -102,11 +122,15 @@ records 0007–0012.
   `main` is 2 commits past the tag (probe-based System/Generated mode
   merge + 81aa1e8 space-safe consumer-paths review fix) — bump the app pin
   when upstream tags a v0.2.1, not urgent.
+- **2026-09-15 rebase:** the app pin moved from tag `v0.3.0` to main's head
+  `03a8a917` (master's submodule revision, 4 commits past the tag). Ask: tag
+  it (v0.3.1 or v0.4.0) so the pin goes back to tag form.
 
 ## CMake vendors
 
-- No upstream asks — status-keycard-qt `a6cbdd05` and keycard-qt `df00b931`
-  are consumed as-is via FetchContent.
+- No upstream asks — status-keycard-qt `8582bffc` (master's submodule
+  revision as of the 2026-09-15 rebase; was `a6cbdd05`) and its nested
+  keycard-qt pin are consumed as-is via FetchContent.
 
 ## nimside (seaqt/nimside)
 

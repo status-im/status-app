@@ -119,6 +119,47 @@ stage and run every step inside that shell; a per-step `source` multiplies the
 tax by the step count. A cached shellenv (key = `nimble.lock` + manifests) is
 0018's follow-up 6, not this issue's.
 
+## Master moved under this issue (2026-09-15 rebase addendum — read with the handoff)
+
+The branch was rebased onto master `872090c705` (1002 commits past its July
+base). The CI map the handoff above and the acceptance criteria describe has
+changed on master since:
+
+1. **`ci/Jenkinsfile.tests-nim`, `.tests-ui` and `.ios` no longer exist**
+   (master 143fecd95d, 2026-08-16). Their work is serialised into
+   `Jenkinsfile.linux` (stages `Nim Tests`, `UI Tests`, AppImage `Package`)
+   and `Jenkinsfile.macos` (stages `macOS`, `iOS`). Criterion "the Nim test
+   pipeline invokes the driver's tests task" now means the `Nim Tests` stage
+   of `Jenkinsfile.linux`, which since this rebase runs
+   `BENCH_ASSERTS=0 BENCH_QUICK=1 nim tests status.nims --benches` — still
+   WITHOUT the PATH bootstrap (handoff item 1 applies; the driver's compiler
+   guard makes it fail loudly).
+2. **Master builds from a system nim 2.2.10** on every agent (Docker images
+   bumped, nim installed on the Windows/macOS hosts; `USE_SYSTEM_NIM=1` in
+   `MAKEFLAGS`, now a no-op variable since 0018 deleted the make legs that
+   read it). The manifest pin was moved to `nim == 2.2.10` in this rebase so
+   the store compiler and the images agree — but the guard asserts the pinned
+   STORE ENTRY, not a version, so an image nim of the same version is still
+   refused. The agent prerequisite this issue asks for ("nimble only") is
+   therefore unchanged: the images' nim is at most where `nimble` comes from.
+3. **Cold-agent cost is now avoidable**: the images already carry nim 2.2.10,
+   so `nimble setup` need not build the compiler — but only if nimble is
+   taught to adopt an existing 2.2.10 as the store entry, which nimble 0.22
+   does not do (it always materialises its own). The `~/.nimble` cache ask
+   stands.
+4. Master's `Jenkinsfile.linux` still runs `./scripts/ci-fetch-submodules.sh`,
+   `make status-go`, `make statusq`, `make qrcodegen` (a no-op alias kept for
+   it), `make tests-nim-linux` (now the driver call above) and the
+   `override-status-go-ref.sh` stage ("must run after `make update`, which
+   resets submodules" — there is no `make update` and no status-go submodule
+   any more; the override must become a pin override, e.g. an env-driven
+   develop-mode materialisation).
+5. Master added `Jenkinsfile.combined` (keycard e2e against a
+   `USE_SIMULATED_KEYCARD: true` build — the flag is a driver knob since this
+   rebase), `Jenkinsfile.flatpak` in nightly/releases (its image is the
+   nim-2.2.10 one), and an e2e messaging peer container. None of these are in
+   the acceptance list above; walk them in the static review.
+
 ## Blocked by
 
 - 0018 (pipelines cannot assume a Nim-free agent until the build system that

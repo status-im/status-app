@@ -1892,3 +1892,86 @@ REGRESSION (all from a `source ./env.sh` shell): check-no-nim-compiles.sh rc=0;
 rc=0; `nim tests status.nims utils_test` rc=0 (all OK); `nimble build` rc=0
 1:46.6; `make -n clean` rc=0. NOT re-verified (unchanged, unverifiable here):
 signed dmg, Android leg, CI, Linux/Windows.
+
+================================================================================
+2026-09-15  REBASE onto master — worktree-nimble-migration replayed on 872090c705
+================================================================================
+
+Base moved 7e38d3873a (2026-07-01) → 872090c705 (2026-09-15): 1002 master
+commits under the 92-commit branch. Grill session settled the tree first
+(12 decisions; recorded in the commit messages of the follow-up commits):
+true replay (history kept) in a throwaway worktree, semantic collisions fixed
+in explicit follow-up commits (never folded into history), re-pin to master's
+revisions, nim 2.2.10, DOtherSide stripped, ADR 0004 → 0007, docs record.
+
+REPLAY: `git rebase origin/master`, 14 conflict stops (checkpoint 2c2ca26f60;
+0009 fa06e48280; 0010 e37ea1a273; 0011 1a13e054eb + 67b3f91566; 0012
+862c277244; 0013 ed854150f7; 0014 52ed78e049; 0016 f19b0479d3 + a7017dbfd5 +
+c3e6034678; 0017 994c7913e5 + 1b54cfaaa9 + 28f7e10b00; 0018 96d76723d4 +
+4598f6b35d + cd31c00a6f + 8f7c9cbe38). Resolution rule at every stop: the
+branch's structure, master's newer intent folded in (kcSuffix nimcache, the
+macOS rpath loop, Linux -fPIC, the iOS -d:lto removal, master's condensed ADR
+0003 + the 0016 amendment, master's Jenkinsfile.macos layout with `nimble
+setup`/`make bottles`). Six submodule modify/delete conflicts → deleted (the
+branch's pins). `ci/Jenkinsfile.tests-nim` and `makefiles/nim-tests.mk` are
+deleted on master; their branch-side edits were carried into
+`ci/Jenkinsfile.linux` and the driver's `tests` task instead.
+
+SEMANTIC COLLISIONS (git-silent; each its own commit on top of the replay):
+1. DOtherSide — master dropped it (d3b8917a04); the driver still built and
+   linked it. Stripped: cmake artifact, link inputs, Windows staging,
+   DOTHERSIDE_LIBDIR key entry, status_env helpers; MONITORING cmake flags →
+   StatusQ (where master put the tool).
+2. Makefile-era NIM_PARAMS knobs master kept adding after 0017 made them dead:
+   QML_DEBUG (-d:qmldebug/-d:qmlDebugPort/-DQT_QML_DEBUG), MONITORING
+   (-d:monitoring), USE_SIMULATED_KEYCARD (-d:useSimulatedKeycard + own
+   nimcache + -DUSE_SIMULATED_KEYCARD=ON for status-keycard-qt) → config.nims
+   + clientFlagEnv; Linux -Wl,-rpath-link,<Qt libdir> (872090c705); run-macos'
+   Assets.car + monitoring copies → launchHostApp; makefiles/nim-tests.mk
+   (StatusQ-linking suites, per-file QT_MODEL_SPY, per-test nimcache,
+   benches) → `nim tests status.nims [--benches]`; fix-wallet-migrations →
+   $(STATUSGO_ROOT).
+3. status_go wrapper — master moved it in-tree (aca56a93bb) and grew it by 3
+   procs; the package shipped a July copy. Package wins (0001's contract):
+   refreshed on status-go `nimble-phase1-pin-2`, desktop's src/status_go*
+   deleted.
+4. Pins — every converted vendor moved on master: status-go (see below),
+   nim-keycard-go de7eec7d, nim-seaqt 7d40abd7 (branch qt-6.8: master moved
+   to the Qt 6.8 generation; NO tag, orphan-branch hazard recorded in the
+   manifest and upstream-asks), nimqml fa084a8d, prl-to-pc 03a8a917 (main;
+   tag ask), status-keycard-qt 8582bffc (FetchContent). nim == 2.2.10 (CI
+   images / flatpak image standardised on system nim 2.2.10 — 143fecd95d,
+   45d68d8641). CONTEXT.md gains "Pinned compiler" vs "system nim".
+
+STATUS-GO (cross-repo): the nimble package lives only on `nimble-phase1-pin`
+(5 commits, 228 behind develop; develop's tip 9f09f902 has no manifest, so
+"re-pin to master's SHA" was impossible as stated). Rebased those 5 commits
+onto develop in a scratch clone → `nimble-phase1-pin-2` @ 3e0dda8db (one
+stop: tools/generate-cbindings — develop had made emission reproducible on
+its own, its version kept; Makefile keeps NIM_SDS_VERSION derived from the
+manifest, develop's ldflags win). The wrapper refresh and the nim-sds pin
+change ride on a sixth commit. **PUSH PENDING (human): `git push origin
+nimble-phase1-pin-2` from the scratch clone** — the app manifest already pins
+3e0dda8db, which resolves only after that push.
+
+NIM-SDS: develop's go.mod requires the `release/v0.3` FFI ABI (v0.3.3), so the
+statusgo.nimble pin moved from the fork PR #85 head (5c89d61f, the 6-patch
+queue) to upstream `logos-messaging/nim-sds#v0.3.3`. Per-patch cost recorded
+in upstream-asks (reproducibility of the static archive UNVERIFIED on the new
+pin; v0.3.3's name-form requires resolve nim-ffi/libp2p from the registry).
+
+DOCS: ADR 0004 (develop-mode overlay) → 0007 (master took 0004 for the typed
+task-completion handoff); 0019 gains "Master moved under this issue" (the
+tests-nim/tests-ui/ios pipelines are gone — folded into linux/macos; system
+nim 2.2.10 images; the override-status-go-ref stage assumes a submodule);
+0001 addendum; upstream-asks updated (nim-sds, status-go branch, seaqt tag,
+prl-to-pc tag, keycard pin).
+
+NOT CARRIED (deliberate): master's `LINK_PCRE=0` (an NBS variable; NBS is
+gone); master's BUILDING.md `~/go/bin` step (master dropped protoc-gen-go
+installs, 61189797fe); the branch's `-d:lto` on the iOS client (master
+removed it for a miscompile, 2026-07 — master's note kept).
+
+VERIFICATION: see the addendum below (Linux x86_64 host, Qt 6.11.0, go
+1.24.7, cmake 4.2.3; nim/nimble were NOT installed on this machine — a
+nim-2.2.10 tarball in the session scratchpad provided `nimble`).

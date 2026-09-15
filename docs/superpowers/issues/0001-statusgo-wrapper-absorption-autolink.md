@@ -54,3 +54,17 @@ None - can start immediately.
   status-desktop pins), auto-link block added guarded; desktop's existing
   `import status_go` surface unchanged. Desktop's shared flavor unaffected:
   `nim libsds statusgo.nims` (dynamic) re-verified after the change.
+
+## Addendum (2026-09-15, rebase onto master)
+
+status-desktop master had meanwhile moved the same wrapper IN-TREE
+(`src/status_go.nim` + `src/status_go/impl.nim`, commit aca56a93bb "bring in
+nim status-go bindings and nuke vendor") and grown it by three procs
+(`getProfileEncryptionInfo`, `exportProfileDEK`, `setProfileLogMaxBackups`).
+The contract above stands: the package's wrapper was refreshed from master's
+copy (auto-link block and `statusBackendRunServer` retained) on
+`nimble-phase1-pin-2` (`3e0dda8db`), and status-desktop deleted its in-tree
+copy — one `status_go` module, shipped next to the C API it wraps. No
+re-verification of the outside-consumer harness on the new pin (macOS host
+only; this pass ran on Linux).
+

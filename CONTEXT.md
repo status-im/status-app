@@ -26,9 +26,9 @@ Two flavors, one develop-mode UX:
   redirect to the materialized checkout. Nested CMake vendors (keycard-qt)
   need no parent cascade.
 End-state: **default mode has no Vendor checkouts at all** — no submodule
-carries a Vendor. (Third-party C/C++ submodules — DOtherSide, SFPM,
-QR-Code-generator, fcitx5-qt, mobile openssl — are pins, not Vendors, and may
-remain submodules; converting them is a separate decision.)
+carries a Vendor. (Third-party C/C++ submodules — SFPM, QR-Code-generator,
+fcitx5-qt, mobile openssl — are pins, not Vendors, and may remain submodules;
+converting them is a separate decision.)
 Vendor names, as used by `develop <vendor>`, are the package/project names
 above.
 
@@ -42,3 +42,15 @@ above.
   (Nim, C/C++, Go) is picked up by the next app build. The developer can
   commit/push/PR from the checkout. A second command exits develop mode and
   returns to the pin.
+
+## Pinned compiler
+The Nim compiler the app's manifest names by exact version, which nimble
+materializes in its own store. It is the only compiler that may compile
+anything in this repo: every front door reaches it through nimble, and the
+build refuses any other. Contrast **system nim**: a compiler installed on a
+machine or a CI image. A system nim is never the compiler that builds the app,
+even when its version happens to equal the pin; at most it is how nimble
+itself gets onto a machine. (CI images standardized on a system nim while this
+migration was in flight; the pin was moved to the same version so the two
+agree, but the rule is unchanged: the pinned compiler builds, the system one
+does not.)
