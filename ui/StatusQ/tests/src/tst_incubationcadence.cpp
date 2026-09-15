@@ -35,34 +35,32 @@ private slots:
     void gentleCadenceMustStayPreemptibleAndDense()
     {
         QQmlEngine engine;
-        // The shipped configuration (src/nim_status_client.nim).
-        statusq_installBoostedIncubationController(&engine, 20, 300, 0);
+        // The shipped configuration (src/nim_status_client.nim). The gentle
+        // cadence is a constant of the controller, not of these arguments.
+        statusq_installBoostedIncubationController(&engine, 12, 300, 2);
 
         int count = 0, phase = 0, hints = 0, intervalMs = 0, budgetMs = 0;
         QVERIFY2(statusq_incubationDebugStats(&engine, &count, &phase, &hints,
                                               &intervalMs, &budgetMs),
                  "the boosted controller must be introspectable");
 
-        QVERIFY2(budgetMs <= 2,
-                 qPrintable(QStringLiteral("gentle bite is %1 ms: the bite is what an "
-                                           "interaction pays, because a frame that comes due "
-                                           "inside one waits it out - 4 ms cost a scrolling "
-                                           "list half again as many late frames as 2 ms at the "
-                                           "same duty cycle")
+        // Both values are pinned exactly: a smaller bite or a shorter interval
+        // is as much an unbenchmarked cadence change as a larger one.
+        QVERIFY2(budgetMs == 2,
+                 qPrintable(QStringLiteral("gentle bite is %1 ms, expected 2: the bite is "
+                                           "what an interaction pays, because a frame that "
+                                           "comes due inside one waits it out - 4 ms cost a "
+                                           "scrolling list half again as many late frames as "
+                                           "2 ms at the same duty cycle")
                             .arg(budgetMs)));
 
-        QVERIFY2(budgetMs * 2 >= intervalMs,
-                 qPrintable(QStringLiteral("gentle duty cycle is %1/%2: metered work takes "
-                                           "interval/bite times its own cost in wall clock, "
-                                           "which is the tax every preemptibility fix pays - "
-                                           "and lowering it does not buy an interaction back "
-                                           "the frames, only a longer window to lose them in")
-                            .arg(budgetMs).arg(intervalMs)));
-
-        QVERIFY2(intervalMs <= 8,
-                 qPrintable(QStringLiteral("gentle interval is %1 ms: a warm open finds the "
-                                           "controller idle, so the whole interval is dead "
-                                           "latency before its first bite")
+        QVERIFY2(intervalMs == 4,
+                 qPrintable(QStringLiteral("gentle interval is %1 ms, expected 4: metered "
+                                           "work takes interval/bite times its own cost in "
+                                           "wall clock, so the 50% duty cycle is the tax every "
+                                           "preemptibility fix pays, and the interval is also "
+                                           "the dead latency a warm open waits before its "
+                                           "first bite")
                             .arg(intervalMs)));
     }
 };

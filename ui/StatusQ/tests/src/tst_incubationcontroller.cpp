@@ -24,6 +24,10 @@
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
                                                            int gentlePeriodMs, int boostGapMs);
 
+// The pause between boosted ticks in the shipped configuration
+// (src/nim_status_client.nim).
+constexpr int kShippedBoostGapMs = 2;
+
 namespace {
 
 // Enough plain Items that a single asynchronous incubation spans several
@@ -61,8 +65,8 @@ QObject* installController(QQmlEngine& engine,
                            int boostGapMs)
 {
     const QObjectList childrenBefore = engine.children();
-    statusq_installBoostedIncubationController(
-            &engine, msPerTick, gentlePeriodMs, boostGapMs);
+    statusq_installBoostedIncubationController(&engine, msPerTick, gentlePeriodMs,
+                                               kShippedBoostGapMs);
 
     QObject* controller = nullptr;
     for (QObject* child : engine.children()) {
