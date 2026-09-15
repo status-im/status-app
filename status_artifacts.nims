@@ -758,7 +758,12 @@ proc pinnedNimEntry(): tuple[version, checksum: string] =
       if not l.startsWith("requires"):
         continue
       let parts = l.split('"')
-      if parts.len >= 2 and parts[1].strip.startsWith("nim") and "==" in parts[1]:
+      # The requirement NAME must be exactly "nim" (issue 0018 review, R4): a
+      # `requires "nimcrypto == 0.6.0"` line ordered first would otherwise match
+      # on "starts with nim" + "contains ==" and pin the guard to the wrong
+      # package's version.
+      if parts.len >= 2 and "==" in parts[1] and
+          parts[1].split("==")[0].strip == "nim":
         result.version = parts[1].split("==")[1].strip
         break
   let lock = thisDir() / "nimble.lock"
@@ -927,6 +932,13 @@ proc runNimTests(only: seq[string]) =
         tests.join("\n  ")
     tests = picked
 
+  # The suite is a Nim compile like any other, and it links the same libraries
+  # the client does: the compiler that runs it must be the pin too (issue 0018
+  # review, R3 — buildClient() was the only guarded compile). After the cheap
+  # gates (a bad test name must still fail on its own message), before the first
+  # compile, STATUS_NIM override honored inside the guard.
+  guardPinnedCompiler()
+
   var cmd = quoteShell(nimExe())
   for f in flags:
     cmd &= " " & quoteShell(f)
@@ -955,6 +967,10 @@ proc buildWindowsLauncher(compileOnly: bool) =
   ## link needs an x86_64-w64-mingw32 toolchain this machine does not carry.
   ## `nim windowsLauncher status.nims --compileOnly` is the check a non-Windows
   ## host can run.
+  # The launcher ships INSIDE the Windows package, so the compiler that builds
+  # it is asserted against the pin exactly like the client's (issue 0018 review,
+  # R3). No gate precedes it — this task always compiles.
+  guardPinnedCompiler()
   var cmd = "cd " & quoteShell(thisDir()) & " && " & quoteShell(nimExe()) &
     " c -d:debug --outdir:./bin" &
     " --passL:\"-static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread" &

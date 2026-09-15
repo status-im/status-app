@@ -106,14 +106,53 @@ fi
 #
 # `nim` comes from PATH, and PATH is what carries the pinned compiler (issue
 # 0018): nimble injects <store>/pkgs2/nim-<ver>-<checksum>/bin into the
-# environment of its tasks and hooks, and a `nimble shellenv` shell (the
+# environment of its tasks and hooks, and a `source ./env.sh` shell (the
 # documented bootstrap, BUILDING.md) does the same for a bare `make
 # mobile-build` — so this compile uses exactly the compiler
 # nim_status_client.nimble pins, with no compiler on the machine. This used to
 # go through nimbus-build-system's scripts/env.sh, which — with USE_SYSTEM_NIM=1,
 # the only mode this repo ever ran — did nothing but echo "[using system Nim]"
 # and exec the same `nim`. NBS is gone; so is the wrapper.
-env "${FEATURE_FLAGS[@]}" nim c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
+#
+# "comes from PATH" is a claim, so ASSERT it (issue 0018 review, R3): this is
+# the one Nim compile the driver does not own — `nim app status.nims
+# --os:android|ios` delegates the mobile leg to make — so it carries the same
+# guard the driver's guardPinnedCompiler() applies to the client, the test suite
+# and the Windows launcher. The pin is read from the same two files the driver
+# reads (never hardcoded): the manifest's `requires "nim == X"` and
+# nimble.lock's packages.nim.checksums.sha1, which together name the store
+# entry pkgs2/nim-<version>-<checksum>. STATUS_NIM deliberately overrides it.
+NIM=${STATUS_NIM:-nim}
+if [[ -z "${STATUS_NIM:-}" ]]; then
+    NIM_EXE=$(command -v nim || true)
+    if [[ -z "$NIM_EXE" ]]; then
+        echo "ERROR: no \`nim\` on PATH. Bootstrap the shell first: nimble setup && source ./env.sh" 1>&2
+        exit 1
+    fi
+    PIN_VER=$(sed -n -E 's/^[[:space:]]*requires[[:space:]]+"nim[[:space:]]*==[[:space:]]*([^"[:space:]]+)".*/\1/p' \
+        "$STATUS_DESKTOP/nim_status_client.nimble" 2>/dev/null || true)
+    # [{] / [}] rather than escaped braces: an ERE brace is an interval operator.
+    PIN_SHA=$(sed -n -E '/"nim"[[:space:]]*:[[:space:]]*[{]/,/[}]/{s/.*"sha1"[[:space:]]*:[[:space:]]*"([0-9a-f]+)".*/\1/p;}' \
+        "$STATUS_DESKTOP/nimble.lock" 2>/dev/null || true)
+    if [[ -n "$PIN_VER" ]]; then
+        if [[ -n "$PIN_SHA" ]]; then
+            WANT="/pkgs2/nim-$PIN_VER-$PIN_SHA/"
+        else
+            WANT="/pkgs2/nim-$PIN_VER-"
+        fi
+        if [[ "$NIM_EXE" != *"$WANT"* ]]; then
+            echo "ERROR: the Nim about to compile the client is NOT the pinned compiler." 1>&2
+            echo "  running: $NIM_EXE" 1>&2
+            echo "  pinned:  <store>${WANT}bin/nim   (nim_status_client.nimble: requires \"nim == $PIN_VER\")" 1>&2
+            echo "Bootstrap the shell so the pin wins the PATH race:" 1>&2
+            echo "  nimble setup && source ./env.sh" 1>&2
+            echo "STATUS_NIM=<path> deliberately overrides this check." 1>&2
+            exit 1
+        fi
+    fi
+fi
+
+env "${FEATURE_FLAGS[@]}" "$NIM" c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
     "${NIM_FLAGS[@]}" \
     "$STATUS_DESKTOP"/src/nim_status_client.nim
 
