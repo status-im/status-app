@@ -39,6 +39,20 @@ T.ScrollBar {
         }
     }
 
+    // A bare T.ScrollBar has no style behind it, so it would be visible whatever
+    // the policy says. Resolve it here from `size` - the visible fraction the
+    // attachment keeps up to date - so an attached bar needs no `visible` of its
+    // own. A bar decorating a foreign Flickable knows sizes this one does not;
+    // that is what `resolveVisibility` is for, and assigning `visible` overrides
+    // this.
+    visible: {
+        if (root.policy === T.ScrollBar.AlwaysOn)
+            return true
+        if (root.policy === T.ScrollBar.AlwaysOff)
+            return false
+        return root.size < 1.0
+    }
+
     QtObject {
         id: d
 
@@ -58,9 +72,10 @@ T.ScrollBar {
     implicitWidth: 14
     implicitHeight: 14
 
-    background: Item{
-        width: 0 // Needed to prevent a white background from showing on Windows
-    }
+    // No background at all, rather than a zero-width one: it kept a white
+    // background from showing on Windows, and one Item per bar is not free when
+    // a section builds dozens of them.
+    background: null
 
     contentItem: Loader {
         active: d.thumbShown
