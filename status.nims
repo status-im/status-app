@@ -338,6 +338,11 @@ proc prepareQtPkgconfig() =
     if i <= 0 or l[0] notin {'A' .. 'Z'}:
       fail "prl-to-pc's `env` printed a line that is not KEY=VAL:\n  " & l &
         "\nFull output:\n" & output
+  # A System-mode kit (the .pc files usable as shipped — Linux distro or /opt
+  # Qt; prl-to-pc main since 03a8a917) builds no tools, so `tools` above never
+  # created the scratch dir the cache lives in. The Generated-mode kits this
+  # was verified on (macOS) always had. Create it here, whichever mode ran.
+  mkDir cache.parentDir
   writeFile(cache,
     "# Qt pkg-config environment, printed by prl-to-pc's `qt_pkgconfig.nims" &
     " env`\n# and cached by `nim app status.nims` (issue 0015). Generated —" &

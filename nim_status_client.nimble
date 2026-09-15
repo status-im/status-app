@@ -12,9 +12,18 @@ skipExt       = @["nim"]
 # Nim version pin + app dependencies, resolved by `nimble setup` into
 # nimble's default store (~/.nimble; run automatically by the Makefile and
 # by nimble build/run themselves). Frozen in nimble.lock.
-# 2.2.10 since the 2026-09-15 rebase onto master: CI's agent images and the
-# flatpak image standardised on system nim 2.2.10 (master 143fecd95d /
-# 45d68d8641), so the pinned store compiler and the images agree.
+# 2.2.10 since the 2026-09-15 rebase onto master: master's code needs it (a
+# closure returning `var seq` inside a Table value trips 2.2.4-2.2.8's generic
+# instantiation — wallet_section/all_tokens, 5487b67d71; fixed in 2.2.10), and
+# CI's agent images standardised on system nim 2.2.10 (143fecd95d / 45d68d8641).
+# WALLS (2026-09-15, Linux): (1) nimble reuses a PATH nim whose version equals
+# the pin instead of materialising the store entry — bootstrap (`nimble setup`)
+# must run with NO nim of the pinned version on PATH, or env.sh finds no
+# `pkgs2/nim-2.2.10-…` to hoist; verified 0.22.3 (nim-free: "Downloading Nim
+# 2.2.10 from nim-lang.org", ~1 min) and 0.24.1 (never materialises; SIGSEGV
+# nim-free). (2) The nimble 0.22.2 bundled in the nim-2.2.10 tarball resolved
+# against a static release list ending at 2.2.6 ("Couldnt find a solution";
+# its releases.json fetch fell back) — use the 0.22.3 release binary.
 requires "nim == 2.2.10"
 
 requires "https://github.com/status-im/nim-chronicles.git#e7f87336d2fa47b7752b42f0be4cabd5663a5e5c"  # chronicles
@@ -63,7 +72,7 @@ requires "https://github.com/pragmagic/uuids.git#1a8111cc2b0e82867d19d584012e510
 # .statusgo-build scratch (issue 0010), and `nim develop status.nims statusgo`
 # materializes an editable checkout (issue 0009, ADR 0007 overlay — nimble
 # 0.22.3 develop links cannot satisfy URL#hash requires).
-requires "https://github.com/status-im/status-go.git#4c4cfc2710c196e23e582e37234d3e8f939e503e"
+requires "https://github.com/status-im/status-go.git#6d3368e97644167e54e812a9f2c2813839727729"
 requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
 # The seaqt pair (issue 0012): generated Qt bindings (package `seaqt`, repo
 # nim-seaqt) + the NimQml layer on top (package `nimqml`, repo nimqml-seaqt).

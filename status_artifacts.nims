@@ -421,7 +421,33 @@ proc nimbleSetupIfStale() =
     fail "nimble is not on PATH (see BUILDING.md) — it resolves the whole" &
       " dependency graph, including the pinned Nim compiler."
   echo "\e[92mResolving:\e[39m nimble graph (lock/manifests/overlay changed)"
-  let (output, rc) = gorgeEx("cd " & quoteShell(thisDir()) & " && nimble setup")
+  # WALL (2026-09-15, nimble 0.22.3, Linux): when the pinned store compiler's
+  # own directory (`pkgs2/nim-<ver>-<sha>/bin`) is ANYWHERE on PATH — exactly
+  # what env.sh's hoist puts there, and in any position: reproduced first,
+  # last, and behind another nim — `nimble setup` under a lock skips the solver
+  # and clones every `#hash`-pinned package by vcsRevision through
+  # download.nim's cloneSpecificRevision, which createDir()s the
+  # quoteShell()ed temp path and then quoteShell()s it AGAIN for `git -C`;
+  # every such path contains `#`, so git sees a name that was never created
+  # ("cannot change to '…uuids…#1a8111cc…_1a8111cc…'"). With that directory
+  # absent from PATH nimble solves and installs from its pkgcache and never
+  # enters that proc. So the call gets a PATH with the store directory
+  # filtered out and the SAME binary in front through a symlink outside the
+  # store: nimble still reports "using pkgs2/nim-… for compilation" — the pin
+  # is not weakened, only nimble's PATH scan is. Upstream ask (nimble #9).
+  # Windows keeps the plain call (symlinks; unverified host).
+  var envPrefix = ""
+  if hostOS != "windows":
+    let shim = getEnv("TMPDIR", "/tmp") / "status-nim-shim"
+    mkDir shim
+    exec "ln -sfn " & quoteShell(nimExe()) & " " & quoteShell(shim / "nim")
+    var kept: seq[string]
+    for entry in getEnv("PATH").split(':'):
+      if (DirSep & "pkgs2" & DirSep & "nim-") notin entry:
+        kept.add entry
+    envPrefix = "PATH=" & quoteShell(shim & ":" & kept.join(":")) & " "
+  let (output, rc) = gorgeEx("cd " & quoteShell(thisDir()) & " && " & envPrefix &
+    "nimble setup")
   if rc != 0:
     fail "`nimble setup` failed:\n" & output & "\nIf a .nimble manifest" &
       " changed, regenerate the lock with `nimble lock` (a full solve, takes" &
@@ -554,7 +580,13 @@ proc buildLibstatus() =
   if crossDesktop():
     env &= " GOBIN_SHARED_LIB_CFLAGS=" &
       quoteShell("CGO_ENABLED=1 GOOS=darwin GOARCH=amd64")
-  let (version, _) = gorgeEx("cd " & quoteShell(thisDir()) & " && ./scripts/version.sh")
+  # stdout ONLY: version.sh runs `git fetch --tags`, whose progress lines go
+  # to stderr, and gorgeEx merges the two streams — the day origin moved, the
+  # "version" carried " + abc...def branch -> origin/branch (forced update)"
+  # lines and status-go's `sh -c "echo $SENTRY_CONTEXT_VERSION > …"` generate
+  # step died on the "(". make's $(shell) never saw stderr (2026-09-15).
+  let (version, _) = gorgeEx("cd " & quoteShell(thisDir()) &
+    " && ./scripts/version.sh 2>/dev/null")
   exec env & " make -C " & quoteShell(statusgoBuildRoot()) &
     " statusgo-shared-library SHELL=/bin/sh" &
     " SENTRY_CONTEXT_NAME=status-desktop" &
