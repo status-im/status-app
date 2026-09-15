@@ -426,38 +426,38 @@ Item {
     Component {
         id: leftPanelComponent
 
-    LeftTabView {
-                id: leftTab
-                anchors.fill: parent
-                viewState: leftPanelState
-    
-                onAddAccountPopupRequested: root.walletRootStore.runAddAccountPopup()
-                onAddWatchOnlyAccountPopupRequested: root.walletRootStore.runAddWatchOnlyAccountPopup()
-                onEditAccountPopupRequested: address => root.walletRootStore.runEditAccountPopup(address)
-                onWatchAccountHiddenFromTotalBalanceUpdated: (address, hideFromTotalBalance) =>
-                    root.walletRootStore.updateWatchAccountHiddenFromTotalBalance(address, hideFromTotalBalance)
-                onAccountDeletionRequested: (address, password) =>
-                    root.walletRootStore.deleteAccount(address, password)
-                onUserAuthenticationRequested: requestedBy =>
-                    root.walletRootStore.authenticateLoggedInUser(requestedBy)
-    
-                onAccountSelected: address => {
-                    root.sectionLayout?.goToNextPanel()
-                    d.displayAddress(address)
-                }
-                onAllAccountsSelected: {
-                    root.sectionLayout?.goToNextPanel()
-                    d.displayAllAddresses()
-                }
-                onSavedAddressesSelected: {
-                    root.sectionLayout?.goToNextPanel()
-                    d.displaySavedAddresses()
-                }
-                onFollowingAddressesSelected: {
-                    root.sectionLayout?.goToNextPanel()
-                    d.displayFollowingAddresses()
-                }
+        LeftTabView {
+            id: leftTab
+            anchors.fill: parent
+            viewState: leftPanelState
+
+            onAddAccountPopupRequested: root.walletRootStore.runAddAccountPopup()
+            onAddWatchOnlyAccountPopupRequested: root.walletRootStore.runAddWatchOnlyAccountPopup()
+            onEditAccountPopupRequested: address => root.walletRootStore.runEditAccountPopup(address)
+            onWatchAccountHiddenFromTotalBalanceUpdated: (address, hideFromTotalBalance) =>
+                root.walletRootStore.updateWatchAccountHiddenFromTotalBalance(address, hideFromTotalBalance)
+            onAccountDeletionRequested: (address, password) =>
+                root.walletRootStore.deleteAccount(address, password)
+            onUserAuthenticationRequested: requestedBy =>
+                root.walletRootStore.authenticateLoggedInUser(requestedBy)
+
+            onAccountSelected: address => {
+                root.sectionLayout?.goToNextPanel()
+                d.displayAddress(address)
             }
+            onAllAccountsSelected: {
+                root.sectionLayout?.goToNextPanel()
+                d.displayAllAddresses()
+            }
+            onSavedAddressesSelected: {
+                root.sectionLayout?.goToNextPanel()
+                d.displaySavedAddresses()
+            }
+            onFollowingAddressesSelected: {
+                root.sectionLayout?.goToNextPanel()
+                d.displayFollowingAddresses()
+            }
+        }
     }
 
     readonly property Item centerPanel: Loader {
@@ -479,57 +479,58 @@ Item {
     Component {
         id: centerPanelComponent
 
-    StackView {
-                id: rightPanelStackView
-                initialItem: walletContainer
-                replaceEnter: Transition {
-                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 400; easing.type: Easing.OutCubic }
-                }
-                replaceExit: Transition {
-                    NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 400; easing.type: Easing.OutCubic }
-                }
+        StackView {
+            id: rightPanelStackView
+            initialItem: walletContainer
+            replaceEnter: Transition {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 400; easing.type: Easing.OutCubic }
             }
-    }
-    readonly property Item headerBackground: AccountHeaderGradient {
-            width: parent ? parent.width : 0
-            overview: RootStore.overview
+            replaceExit: Transition {
+                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 400; easing.type: Easing.OutCubic }
+            }
         }
+    }
+
+    readonly property Item headerBackground: AccountHeaderGradient {
+        width: parent ? parent.width : 0
+        overview: RootStore.overview
+    }
 
     readonly property Item footer: WalletFooter {
-            id: footer
+        id: footer
 
-            visible: anyActionAvailable
-            width: parent ? parent.width : 0
-            height: visible ? implicitHeight: 0
-            walletStore: RootStore
-            transactionStore: root.transactionStore
-            swapEnabled: root.swapEnabled
-            buyEnabled: root.buyEnabled
-            networkConnectionStore: root.networkConnectionStore
+        visible: anyActionAvailable
+        width: parent ? parent.width : 0
+        height: visible ? implicitHeight: 0
+        walletStore: RootStore
+        transactionStore: root.transactionStore
+        swapEnabled: root.swapEnabled
+        buyEnabled: root.buyEnabled
+        networkConnectionStore: root.networkConnectionStore
 
-            onLaunchShareAddressModal: Global.openShowQRPopup({
-                                                                  switchingAccounsEnabled: true,
-                                                                  hasFloatingButtons: true
-                                                              })
-            onLaunchSendModal: (fromAddress) => {
-                                   root.sendTokenRequested(fromAddress,
-                                                             walletStore.currentViewedHoldingTokenGroupKey,
-                                                             walletStore.currentViewedHoldingType)
-                               }
+        onLaunchShareAddressModal: Global.openShowQRPopup({
+                                                              switchingAccounsEnabled: true,
+                                                              hasFloatingButtons: true
+                                                          })
+        onLaunchSendModal: (fromAddress) => {
+                               root.sendTokenRequested(fromAddress,
+                                                         walletStore.currentViewedHoldingTokenGroupKey,
+                                                         walletStore.currentViewedHoldingType)
+                           }
 
-            onLaunchSwapModal: {
-                let params = {
-                    selectedAccountAddress: d.getSelectedOrFirstNonWatchedAddress(),
-                    selectedNetworkChainId: StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId"),
-                }
-
-                if(!!walletStore.currentViewedHoldingTokenGroupKey && walletStore.currentViewedHoldingType === Constants.TokenType.ERC20) {
-                    params.defaultFromGroupKey =  walletStore.currentViewedHoldingTokenGroupKey
-                }
-                root.openSwapModalRequested(params)
+        onLaunchSwapModal: {
+            let params = {
+                selectedAccountAddress: d.getSelectedOrFirstNonWatchedAddress(),
+                selectedNetworkChainId: StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId"),
             }
-            onLaunchBuyCryptoModal: d.launchBuyCryptoModal()
+
+            if(!!walletStore.currentViewedHoldingTokenGroupKey && walletStore.currentViewedHoldingType === Constants.TokenType.ERC20) {
+                params.defaultFromGroupKey =  walletStore.currentViewedHoldingTokenGroupKey
+            }
+            root.openSwapModalRequested(params)
         }
+        onLaunchBuyCryptoModal: d.launchBuyCryptoModal()
+    }
 
     Loader {
         id: addAccount

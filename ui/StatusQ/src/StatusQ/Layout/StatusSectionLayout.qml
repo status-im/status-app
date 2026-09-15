@@ -4,6 +4,7 @@ import QtQuick.Controls
 
 import StatusQ
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 /*!
      \qmltype StatusSectionLayout
@@ -295,7 +296,7 @@ LayoutChooser {
         milliseconds. False on desktop, where a resize is the user dragging the
         window edge and the panels must track it live.
     */
-    property bool coalesceResizes: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    property bool coalesceResizes: SQUtils.Utils.isMobile
 
     /*!
         \qmlproperty bool StatusSectionLayout::geometryTransitionOngoing
