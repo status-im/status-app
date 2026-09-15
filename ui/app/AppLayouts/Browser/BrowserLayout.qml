@@ -36,7 +36,6 @@ StatusSectionLayout {
     id: root
 
     required property bool isMobile
-    required property string userUID
     required property bool thirdpartyServicesEnabled
     required property bool dappsEnabled
 

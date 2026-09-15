@@ -13,12 +13,9 @@ import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Wallet.stores as WalletStores
 
-import mainui.sectionLoaders
-
-Loader {
+StatusSectionLoader {
     id: root
 
-    required property string userUID
     required property AppStores.RootStore rootStore
     required property AppStores.FeatureFlagsStore featureFlagsStore
     required property ProfileStores.AdvancedStore advancedStore
@@ -27,8 +24,6 @@ Loader {
     required property TransactionStore transactionStore
 
     required property HandlersManagerLoader popupHandler
-
-    property real leftPanelWidthOverride: 0
 
     asynchronous: false
 
@@ -69,7 +64,10 @@ Loader {
         }
 
         if (d.targetUrl === d.privacyWallUrl) {
-            setSource(d.targetUrl, {})
+            setSource(d.targetUrl, {
+                          userUID:                    root.userUID,
+                          sectionName:                root.sectionName,
+                      })
             return
         }
 
@@ -88,13 +86,14 @@ Loader {
         setSource(d.targetUrl, {
             isMobile:                   SQUtils.Utils.isMobile,
             visible:                    false,
+            userUID:                    root.userUID,
+            sectionName:                root.sectionName,
             bookmarksStore:             bookmarksStore,
             downloadsStore:             downloadsStore,
             browserRootStore:           browserRootStore,
             browserPreferencesStore:    browserPreferencesStore,
             browserWalletStore:         browserWalletStore,
             browserActivityStore:       browserActivityStore,
-            userUID:                    root.userUID,
             thirdpartyServicesEnabled:  Qt.binding(() => root.rootStore.thirdpartyServicesEnabled),
             dappsEnabled:               Qt.binding(() => root.featureFlagsStore.dappsEnabled),
             currencyStore:              Qt.binding(() => root.currencyStore),

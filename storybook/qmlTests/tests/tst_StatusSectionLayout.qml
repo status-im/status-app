@@ -24,8 +24,20 @@ Item {
     }
 
     Component {
+        id: landscapeComponent
+
+        StatusSectionLayoutLandscape {
+            anchors.fill: parent
+            showRightPanel: true
+        }
+    }
+
+    Component {
         id: panelComponent
-        Rectangle {}
+        Rectangle {
+            width: 300
+            height: 700
+        }
     }
 
     SignalSpy {
@@ -56,6 +68,19 @@ Item {
             endedSpy.target = layout
             startedSpy.clear()
             endedSpy.clear()
+        }
+
+        function createLandscapeLayout(userUID, sectionName) {
+            const item = createTemporaryObject(landscapeComponent, root)
+            verify(!!item)
+            item.userUID = userUID
+            item.sectionName = sectionName
+            item.leftPanel = createTemporaryObject(panelComponent, root)
+            item.centerPanel = createTemporaryObject(panelComponent, root)
+            item.rightPanel = createTemporaryObject(panelComponent, root)
+            item.showRightPanel = true
+            waitForRendering(item)
+            return item
         }
 
         // The internal portrait view; its `visible` is what the orientation
@@ -131,6 +156,29 @@ Item {
             wait(500)
             compare(startedSpy.count, 1)
             compare(endedSpy.count, 1)
+        }
+
+        function test_landscapeSplitStateIsIsolatedPerUserAndSection() {
+            const settingsA = Qt.createQmlObject(
+                'import QtCore; Settings { category: "%1_%2".arg("userA").arg("sectionA"); property int splitWidth: 420 }',
+                root)
+            const settingsB = Qt.createQmlObject(
+                'import QtCore; Settings { category: "%1_%2".arg("userA").arg("sectionB"); property int splitWidth: 300 }',
+                root)
+            const settingsC = Qt.createQmlObject(
+                'import QtCore; Settings { category: "%1_%2".arg("userB").arg("sectionA"); property int splitWidth: 340 }',
+                root)
+
+            compare(settingsA.category, "userA_sectionA")
+            compare(settingsB.category, "userA_sectionB")
+            compare(settingsC.category, "userB_sectionA")
+            compare(settingsA.category !== settingsB.category, true)
+            compare(settingsA.category !== settingsC.category, true)
+            compare(settingsB.category !== settingsC.category, true)
+
+            compare(settingsA.splitWidth, 420)
+            compare(settingsB.splitWidth, 300)
+            compare(settingsC.splitWidth, 340)
         }
     }
 }

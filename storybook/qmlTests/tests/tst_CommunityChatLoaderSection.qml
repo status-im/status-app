@@ -66,6 +66,9 @@ Item {
         sourceComponent: CommunityChatLoader {
             active: true
 
+            userUID: "0xdeadbeef"
+            sectionName: "community_%1".arg(sectionId)
+
             rootStore: appRootStoreMock
             contactsStore: contactsStoreMock
             accountSettingsStore: accountSettingsStoreMock
