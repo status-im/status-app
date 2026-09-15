@@ -11,6 +11,14 @@ from scripts.tools.image import Image
 LOG = logging.getLogger(__name__)
 
 
+def _is_aut_stopped_responding(exc: BaseException) -> bool:
+    while exc is not None:
+        if 'did not respond to network communication' in str(exc).lower():
+            return True
+        exc = exc.__cause__ or exc.__context__
+    return False
+
+
 def set_text_property_on_object(obj, text: str, timeout_msec: int = None) -> None:
     if timeout_msec is None:
         timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
@@ -272,6 +280,8 @@ class QObject:
                     LOG.info('%s: is opened and enabled', self)
                     return self
             except Exception as e:
+                if _is_aut_stopped_responding(e):
+                    raise
                 LOG.warning("Exception during visibility check: %s", e)
             time.sleep(check_interval)
 

@@ -1,5 +1,3 @@
-import socket
-
 import allure
 
 import configs
@@ -9,9 +7,6 @@ from gui.elements.object import QObject
 from gui.elements.window import Window
 from gui.objects_map import keycard_names
 
-# Matches KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS in keycardV2/test_controller.nim
-_KEYCARD_SIMULATOR_HOST = '127.0.0.1'
-_KEYCARD_SIMULATOR_PORT = 9025
 _CREATING_KEYCARD_TEXT = 'Creating Keycard...'
 
 
@@ -77,16 +72,6 @@ class KeycardSimulatorController(Window):
     def start_simulator(self):
         self._start_button.click()
         self._plug_reader_button.wait_until_enabled(configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC)
-        # Restart kills a leftover JVM on 9025. PING to that leftover is a false ready —
-        # wait until it drops, then until the new server answers PING.
-        driver.waitFor(
-            lambda: not self._simulator_ping_ok(),
-            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-        )
-        assert driver.waitFor(
-            self._simulator_ping_ok,
-            configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC,
-        ), 'Keycard simulator did not accept PING'
         return self.background()
 
     @allure.step('Create empty keycard {card_id}')
@@ -193,15 +178,3 @@ class KeycardSimulatorController(Window):
         if combo.currentIndex < 0:
             return ''
         return str(combo.textAt(combo.currentIndex))
-
-    def _simulator_ping_ok(self) -> bool:
-        try:
-            with socket.create_connection(
-                (_KEYCARD_SIMULATOR_HOST, _KEYCARD_SIMULATOR_PORT), timeout=1
-            ) as sock:
-                sock.sendall(b'PING\n')
-                sock.settimeout(1)
-                data = sock.recv(64)
-            return data.decode('utf-8', errors='replace').strip().startswith('OK')
-        except OSError:
-            return False
