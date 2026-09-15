@@ -146,7 +146,7 @@ StatusSectionLayout {
                 }
             }
 
-            TagsRow {
+            StatusCommunityTagsRow {
                 id: communityTags
                 Layout.fillWidth: true
                 Layout.rightMargin: Theme.xlPadding

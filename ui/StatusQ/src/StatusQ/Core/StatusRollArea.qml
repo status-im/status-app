@@ -1,11 +1,9 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
-import StatusQ.Popups
 import StatusQ.Controls
 
 Control {
