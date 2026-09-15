@@ -67,12 +67,13 @@ requires "https://github.com/pragmagic/uuids.git#1a8111cc2b0e82867d19d584012e510
 # branch pin (nimble-phase1-pin-2 on status-im/status-go: the nimble packaging
 # commits rebased onto develop 9f09f902, master's submodule revision as of
 # 2026-09-15) until the packaging work merges upstream — bump by amending the
-# #hash. Default mode
-# has no vendor/status-go checkout: the store copy is built via the
-# .statusgo-build scratch (issue 0010), and `nim develop status.nims statusgo`
-# materializes an editable checkout (issue 0009, ADR 0007 overlay — nimble
-# 0.22.3 develop links cannot satisfy URL#hash requires).
-requires "https://github.com/status-im/status-go.git#6d3368e97644167e54e812a9f2c2813839727729"
+# #hash. Default mode has no vendor/status-go checkout: the READ-ONLY store
+# copy is built IN PLACE, with every artifact under .statusgo-build (issues
+# 0010, 0020 — this pin is the one that carries the committed generated Go
+# sources, the -ldflags build values and STATUS_GO_BUILD_DIR), and `nim develop
+# status.nims statusgo` materializes an editable checkout (issue 0009, ADR 0007
+# overlay — nimble 0.22.3 develop links cannot satisfy URL#hash requires).
+requires "https://github.com/status-im/status-go.git#ba45188ab9c61213100408b8fde273db6f32e555"
 requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
 # The seaqt pair (issue 0012): generated Qt bindings (package `seaqt`, repo
 # nim-seaqt) + the NimQml layer on top (package `nimqml`, repo nimqml-seaqt).

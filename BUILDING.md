@@ -417,15 +417,20 @@ owns the nim-sds pin), pinned by `nim_status_client.nimble` as a
 `nimble setup` resolves status-go's Nim dependencies together with the app's
 own: one resolution, one store, one lock file. There is no separate
 per-status-go dependency solve or cache, and no `vendor/status-go` checkout
-in the default flow. Because the store copy is read-only, the build maintains
-a writable scratch copy of it at `.statusgo-build/` (refreshed only when the
-pin or the build-flag set changes — `nim prepareStatusgo status.nims`, run by
-make): libstatus and libsds build there, and while the pin is unchanged and
-the artifacts exist, no-op builds skip the status-go sub-make entirely.
-status-go's `statusgo.nims` build tasks (libsds) read the resolution from the
-`nimble.paths` beside them, which the Makefiles derive by copying the app's
-`nimble.paths` (all entries are absolute). The app compiles the wrapper with
-`-d:statusGoNoAutoLink` (set in `config.nims`): it links the shared
+in the default flow. The read-only store copy is **built in place** — nothing
+is copied anywhere. status-go and nim-sds keep every build output under a
+directory the caller chooses, and the driver chooses `.statusgo-build/` at the
+repo root, which therefore holds outputs only: `build/bin/libstatus.*`, the
+generated cbindings entry point, `.sds-build/build/libsds.*`,
+`.sds-build/library/libsds.h`, the nimcaches and two key files. `nim
+prepareStatusgo status.nims` (run by make) maintains it: wiped when the
+resolved store path changes, artifacts dropped when the build-flag set
+changes; while both keys hold and the artifacts exist, no-op builds skip the
+status-go sub-make entirely. status-go's `statusgo.nims` tasks take the
+resolution from `STATUSGO_NIMBLE_PATHS` — the app's own `nimble.paths`, by
+path, never a copy — and the output root from `STATUSGO_BUILD_DIR`.
+
+The app compiles the wrapper with `-d:statusGoNoAutoLink` (set in `config.nims`): it links the shared
 libstatus/libsds flavors it builds itself instead of the wrapper's static
 auto-link layout. To hack on status-go, run `nim develop status.nims
 statusgo`: it materializes a real git clone at `vendor/status-go` (origin =
@@ -495,11 +500,11 @@ requires — they are silently ignored and the store copy wins. See
   (a `requires "<git-url>#<sha>"` entry — interim the alexjba fork pin
   carrying the nim-sds patch queue until logos-messaging/nim-sds#85 merges
   and the pin moves to the upstream merge SHA). status-go's sds build tasks
-  compile whatever copy the nimble resolution names: the pinned store copy
-  is built in a scratch dir at `<statusgo root>/.sds-build` (i.e.
-  `.statusgo-build/.sds-build` in the default flow — the store stays
-  pristine; no `vendor/nim-sds` checkout exists), a develop-linked local
-  checkout is built in place.
+  compile whatever copy the nimble resolution names, IN PLACE — store copy or
+  develop link alike (nim-sds writes only under `SDS_OUT_DIR`). Artifacts land
+  in `.statusgo-build/.sds-build/build`, the header contract is copied to
+  `.statusgo-build/.sds-build/library`, and no `vendor/nim-sds` checkout
+  exists.
 
 These run automatically as part of `nim app status.nims` / mobile builds.
 No sibling `../nim-sds` clone is needed or used.

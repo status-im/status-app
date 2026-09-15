@@ -29,15 +29,20 @@ export LIB_DIR=$(LIB_PATH)
 WRAPPER_APP?=$(ROOT_DIR)/wrapperApp
 STATUS_DESKTOP?=$(ROOT_DIR)/vendors/status-desktop
 STATUSQ?=$(STATUS_DESKTOP)/ui/StatusQ
-# statusgo is a pinned URL#hash nimble dependency (issue 0010): default mode
-# builds the scratch copy of its store entry at .statusgo-build (maintained by
-# `nim prepareStatusgo status.nims`); `develop statusgo` (issue 0009) switches
-# to the vendor/status-go checkout.
+# statusgo is a pinned URL#hash nimble dependency (issue 0010). Since issue
+# 0020 nothing is copied: STATUS_GO is the tree the sub-builds READ (the
+# resolved store entry, or the vendor/status-go checkout under `develop
+# statusgo`, issue 0009) and STATUS_GO_OUT is where every artifact lands, the
+# same directory in both modes. `nim prepareStatusgo status.nims` maintains it.
 STATUSGO_DEVELOPED := $(shell grep -sqx statusgo $(STATUS_DESKTOP)/nimble.overlay 2>/dev/null && echo 1)
+STATUS_GO_OUT ?= $(STATUS_DESKTOP)/.statusgo-build
 ifeq ($(STATUSGO_DEVELOPED),1)
 STATUS_GO?=$(STATUS_DESKTOP)/vendor/status-go
 else
-STATUS_GO?=$(STATUS_DESKTOP)/.statusgo-build
+# The statusgo store entry from the generated resolution (status.nims'
+# statusgoSourceRoot answers the same question for the driver). Recursively
+# expanded: nimble.paths may not exist yet at parse time.
+STATUS_GO = $(shell sed -n 's|^--path:"\(.*/pkgs2/statusgo-[^/"]*\).*|\1|p' $(STATUS_DESKTOP)/nimble.paths 2>/dev/null | head -1)
 endif
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
@@ -96,8 +101,8 @@ QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '
 # default mode both vars are empty (pinned _deps sources, lib-missing gating).
 STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT_SOURCE_DIR) $(KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
-STATUS_GO_STUB_GEN := $(STATUS_GO)/build/bin/statusgo_stub_exports.cpp
-STATUS_GO_SERVICE_GEN := $(STATUS_GO)/build/bin/statusgo_service_dispatch.cpp
+STATUS_GO_STUB_GEN := $(STATUS_GO_OUT)/build/bin/statusgo_stub_exports.cpp
+STATUS_GO_SERVICE_GEN := $(STATUS_GO_OUT)/build/bin/statusgo_service_dispatch.cpp
 
 # script files
 STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh

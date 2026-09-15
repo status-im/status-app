@@ -222,6 +222,7 @@ proc validateAndroid(t: Target) =
 proc applyDevelopModeArms(): bool
 # Defined below; status_artifacts.nims (included further down) calls into them.
 proc statusgoStoreRoot(): string
+proc statusgoSourceRoot(): string
 proc applyOverlayNow()
 
 proc ncpu(): string =
@@ -591,16 +592,16 @@ const vendorTable = [
     # make prerequisites, so removing it is what forces the sub-make (which
     # is internally incremental) to re-delegate.
     clientRebuild: true,
-    forceRemove: @["vendor/status-go/build/bin/libstatus.*"]),
+    forceRemove: @[".statusgo-build/build/bin/libstatus.*"]),
   Vendor(name: "sds", flavor: vfNimbleGraph,
     pinManifest: "@statusgo/statusgo.nimble", repoName: "nim-sds",
     pkgName: "sds", manifestName: "sds.nimble",
     checkoutDir: "vendor/nim-sds", developBranch: "develop",
     # libsds is a shared library loaded at runtime — no client rebuild. Its
     # FORCE arm lives in buildLibsds() (`"sds" in readOverlay()`): a content key
-    # cannot be forced by touching a file. An overlaid resolution builds the
-    # checkout in place and cmp-mirrors artifacts into .sds-build/, the layout
-    # every Makefile reads.
+    # cannot be forced by touching a file. An overlaid resolution is built in
+    # place like any other, with artifacts in .statusgo-build/.sds-build/ —
+    # the one layout every Makefile reads, in every mode (issue 0020).
     clientRebuild: false, forceRemove: @[]),
   Vendor(name: "seaqt", flavor: vfNimbleGraph,
     pinManifest: "nim_status_client.nimble", repoName: "nim-seaqt",
@@ -689,16 +690,15 @@ proc vendorRootIn(v: Vendor, entry: string): string =
 # --- statusgo root resolution (issue 0010) -----------------------------------
 #
 # statusgo is a pinned URL#hash dependency: in default mode it resolves to a
-# read-only store copy, and the build runs in a scratch copy of it at
-# .statusgo-build (maintained by the prepareStatusgo task below). While
-# developed (issue 0009) the vendor/status-go checkout is both. Anything that
-# needs "the statusgo tree" must pick by mode, via these two views:
-#   - the MANIFEST root (pin parsing, divergence baseline): store copy or
-#     checkout — never the scratch (it may not exist yet).
-#   - the BUILD root (nimble.paths beside statusgo.nims, artifacts under
-#     build/bin): scratch copy or checkout.
+# read-only store copy, which since issue 0020 is BUILT IN PLACE — nothing is
+# copied anywhere. While developed (issue 0009) the vendor/status-go checkout
+# takes its place. The two views anything touching "the statusgo tree" must
+# pick between are no longer mode-vs-mode but read-vs-write:
+#   - the SOURCE/MANIFEST root (pin parsing, divergence baseline, the tree the
+#     sub-builds compile): store copy or checkout. Read-only either way.
+#   - the BUILD root (every artifact): .statusgo-build, always.
 
-# statusgoScratchDir / statusgoDeveloped / statusgoBuildRoot come from
+# statusgoOutDir / statusgoDeveloped / statusgoBuildRoot come from
 # status_env.nims (shared with config.nims).
 
 proc statusgoStoreRoot(): string =
@@ -729,11 +729,20 @@ proc statusgoManifestRoot(): string =
       " and no vendor/status-go checkout). Run `nim app status.nims` or" &
       " `make nimble-deps` first."
 
+proc statusgoSourceRoot(): string =
+  ## The statusgo tree the build READS: the develop checkout, else the
+  ## read-only store copy. Since issue 0020 it is never written to and never
+  ## copied — statusgo.nims and status-go's Makefile put every output under
+  ## statusgoBuildRoot() instead — so source root and build root are two
+  ## different directories, and only this one follows the overlay.
+  statusgoManifestRoot()
+
 proc expandVendorPath(f: string): string =
-  ## Vendor-table paths may address the active statusgo build root via the
-  ## "@statusgo/" prefix; everything else is repo-relative.
+  ## Vendor-table paths may address the active statusgo SOURCE root via the
+  ## "@statusgo/" prefix; everything else is repo-relative. (Artifact globs
+  ## live under the build root and spell it out — there is only one.)
   if f.startsWith("@statusgo/"):
-    statusgoBuildRoot() / f["@statusgo/".len .. ^1]
+    statusgoSourceRoot() / f["@statusgo/".len .. ^1]
   else:
     thisDir() / f
 
@@ -1172,23 +1181,25 @@ proc applyOverlayNow() =
 task applyOverlay, "Apply the develop-mode overlay to the generated nimble.paths (internal: the setup-stamp gate runs this after every `nimble setup`)":
   applyOverlayNow()
 
-# --- pinned statusgo scratch engine (issue 0010) ------------------------------
+# --- the statusgo output directory (issues 0010, 0020) ------------------------
 #
-# Default mode resolves statusgo to a READ-ONLY store copy; libstatus/libsds
-# builds need a writable tree (nimble.paths beside statusgo.nims, .sds-build,
-# build/bin, go generate outputs). prepareStatusgo maintains that tree at
-# .statusgo-build: wiped and re-copied only when the resolved store path or
-# the caller's artifact key changes — this IS the pinned-mode rebuild stamp
+# There is no scratch copy any more. status-go and nim-sds both keep every
+# build output under a caller-chosen directory, so the resolved copies — read
+# only, shared between every consumer of the pin — are compiled IN PLACE, and
+# .statusgo-build holds outputs only. prepareStatusgo maintains that directory:
+# wiped when the resolved SOURCE root changes, artifacts dropped when the
+# caller's artifact key changes. That pair IS the pinned-mode rebuild stamp
 # (store path ⊃ pin revision + manifest checksum; the platform sentinel covers
-# target-triple flips; --key carries the flag set). While the scratch is
-# up-to-date and artifacts exist, the Makefiles skip the status-go sub-make
-# entirely (the stamp-skip default arm; ADR 0007). Developed statusgo keeps
-# ADR 0003's FORCE + compare-before-copy semantics in the checkout instead.
+# target-triple flips; --key carries the flag set). While the keys hold and
+# artifacts exist, the Makefiles skip the status-go sub-make entirely (the
+# stamp-skip default arm; ADR 0007). Developed statusgo keeps ADR 0003's FORCE
+# + compare-before-copy semantics, with its outputs in the same directory so
+# the checkout stays clean.
 
-task prepareStatusgo, "Maintain the pinned-statusgo scratch copy (.statusgo-build) — internal: the mobile make legs run this before statusgo builds":
+task prepareStatusgo, "Maintain the statusgo output directory (.statusgo-build) — internal: the mobile make legs run this before statusgo builds":
   var key = ""
   for p in taskArgv():
     let k = flagVal(p, "key")
     if k.len > 0:
       key = k
-  prepareStatusgoScratch(key)
+  prepareStatusgoOut(key)

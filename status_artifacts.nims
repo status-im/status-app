@@ -462,53 +462,22 @@ proc platformCleanup() =
   exec "cd " & quoteShell(thisDir()) &
     " && scripts/platform_pre_build_cleanup.sh " & quoteShell(platformTarget())
 
-# --- status-go: scratch copy, libsds, libstatus -------------------------------
+# --- status-go: outputs, libsds, libstatus ------------------------------------
+#
+# NOTHING IS COPIED (issue 0020). status-go and nim-sds are built IN PLACE from
+# whatever the resolution points at — in default mode two READ-ONLY nimble
+# store copies — because both packages now keep every output under a
+# caller-chosen directory. The driver chooses .statusgo-build/ at the repo
+# root, and that directory holds ONLY outputs: libstatus + its header, the
+# generated cbindings entry point, libsds + the header contract, the nimcaches,
+# and the two key files.
 
 proc statusgoArtifactKey(): string =
-  ## Keyed invalidation (pattern 2): the flag set the scratch copy's artifacts
-  ## were built with. Byte-identical to the key make's `statusgo-scratch` rule
-  ## passed, so a tree built by either front door stays valid for the other.
+  ## Keyed invalidation (pattern 2): the flag set the outputs were built with.
+  ## Byte-identical to the key make's `statusgo-out` rule passed, so artifacts
+  ## built by either front door stay valid for the other.
   "desktop-" & libExt() & "-" & (if qtArch().len > 0: qtArch() else: "host") &
     "-dbg" & (if debugSymbols(): "true" else: "false")
-
-proc prepareStatusgoScratch(key: string) =
-  ## Default mode resolves statusgo to a READ-ONLY store copy; libstatus/libsds
-  ## need a writable tree. Wipe+re-copy only when the resolved store path
-  ## changes (that path embeds the pin revision AND the manifest checksum);
-  ## drop artifacts only when the flag key changes.
-  if statusgoDeveloped():
-    echo "prepareStatusgo: statusgo is developed — building the checkout, no scratch."
-    return
-  let storeRoot = statusgoStoreRoot()
-  if storeRoot.len == 0:
-    fail "statusgo has no store entry in nimble.paths — the resolution must" &
-      " exist before building (did `nimble setup` run?)."
-  let scratch = thisDir() / statusgoScratchDir
-  let originFile = scratch / ".statusgo-origin"
-  let keyFile = scratch / ".statusgo-artifact-key"
-  # Two keys, two scopes: the ORIGIN key (the resolved store path — which
-  # embeds the pin revision and the manifest checksum) decides whether the
-  # whole scratch tree is the right tree; its witness is the copy's own
-  # statusgo.nims. The ARTIFACT key (the flag set) decides only whether the
-  # artifacts inside a correct tree are still valid.
-  if keyStale(originFile, storeRoot, witness = scratch / "statusgo.nims"):
-    echo "prepareStatusgo: refreshing " & statusgoScratchDir & " from " & storeRoot
-    if dirExists(scratch):
-      exec "chmod -R u+w " & quoteShell(scratch)
-      rmDir scratch
-    exec "cp -R " & quoteShell(storeRoot) & " " & quoteShell(scratch)
-    exec "chmod -R u+w " & quoteShell(scratch)
-    writeKey(originFile, storeRoot)
-    if key.len > 0:
-      writeKey(keyFile, key)
-  elif key.len > 0 and keyStale(keyFile, key):
-    echo "prepareStatusgo: build flags changed (" & key & ") — dropping artifacts"
-    exec "rm -f " & scratch / "build" / "bin" / "libstatus.*"
-    if fileExists(scratch / "nimble.paths"):
-      exec "touch " & quoteShell(scratch / "nimble.paths")
-    writeKey(keyFile, key)
-  else:
-    echo "prepareStatusgo: scratch up-to-date (pin unchanged)"
 
 # NAMING CONVENTION (issue 0018 review, I2): every key file the driver writes at
 # the REPO ROOT is `.status-<artifact>.key` — .status-client.key, .status-rcc.key,
@@ -516,7 +485,7 @@ proc prepareStatusgoScratch(key: string) =
 # glob, which is why `make clean` no longer carries a hand-kept list to drift out
 # of step with these consts (the libsds key used to be spelled `.libsds.key`, and
 # the Makefile's list was the only place that knew). Key files that live INSIDE a
-# build tree (<buildDir>/.status-cmake.key, <scratch>/.statusgo-artifact-key) are
+# build tree (<buildDir>/.status-cmake.key, <out>/.statusgo-artifact-key) are
 # exempt: they are removed with the tree they gate, and no clean rule names them.
 const libsdsKeyFile = ".status-libsds.key"  # gitignored; at the repo root (see buildLibsds)
 
@@ -526,13 +495,42 @@ proc nimsdsLibFile(): string = nimsdsLibDir() / ("libsds." & libExt())
 proc statusgoLibDir(): string = statusgoBuildRoot() / "build/bin"
 proc statusgoLibFile(): string = statusgoLibDir() / ("libstatus." & libExt())
 
-proc syncStatusgoPaths() =
-  ## statusgo.nims locates nim-sds through a nimble.paths beside itself; under
-  ## the single graph that file is a COPY of the app's resolution. Copy only on
-  ## content change, or the libsds artifact is invalidated by no-op setups.
-  let dst = statusgoBuildRoot() / "nimble.paths"
-  exec "cd " & quoteShell(thisDir()) & " && cmp -s nimble.paths " &
-    quoteShell(dst) & " || cp nimble.paths " & quoteShell(dst)
+proc prepareStatusgoOut(key: string) =
+  ## Maintains the OUTPUT directory only — there is no tree to copy any more.
+  ## Two keys, two scopes, unchanged from the scratch engine this replaced:
+  ## the ORIGIN key (the resolved SOURCE root — which embeds the pin revision
+  ## AND the manifest checksum) decides whether the outputs in there belong to
+  ## the statusgo tree now being built; the ARTIFACT key (the flag set) decides
+  ## only whether they were built with the right flags. The origin key's
+  ## witness is libstatus itself: a key file that survived an `rm -f` of the
+  ## artifacts must not read fresh.
+  let src = statusgoSourceRoot()
+  let outDir = statusgoBuildRoot()
+  let originFile = outDir / ".statusgo-origin"
+  let keyFile = outDir / ".statusgo-artifact-key"
+  if keyStale(originFile, src, witness = statusgoLibFile()):
+    if fileExists(originFile) and readFile(originFile).strip != src:
+      echo "prepareStatusgo: outputs were built from " &
+        readFile(originFile).strip & " — wiping " & statusgoOutDir
+      rmDir outDir
+    mkDir outDir
+    writeKey(originFile, src)
+    if key.len > 0:
+      writeKey(keyFile, key)
+  elif key.len > 0 and keyStale(keyFile, key):
+    echo "prepareStatusgo: build flags changed (" & key & ") — dropping artifacts"
+    exec "rm -f " & outDir / "build" / "bin" / "libstatus.*"
+    writeKey(keyFile, key)
+  else:
+    echo "prepareStatusgo: outputs up-to-date (pin unchanged)"
+
+proc statusgoTaskEnv(): string =
+  ## The whole contract statusgo.nims asks for: WHERE outputs go, and WHICH
+  ## resolution to build against. The app's own nimble.paths is handed over BY
+  ## PATH — it used to be copied next to statusgo.nims, which for a store copy
+  ## is a write into the shared package store (issue 0020).
+  "STATUSGO_BUILD_DIR=" & quoteShell(statusgoBuildRoot()) &
+    " STATUSGO_NIMBLE_PATHS=" & quoteShell(thisDir() / "nimble.paths") & " "
 
 proc buildLibsds() =
   ## A developed nim-sds is FORCED: its sources live in the checkout, which is
@@ -541,22 +539,23 @@ proc buildLibsds() =
   ## was done by the sds vendor's `forceTouch` arm — a `touch` of the derived
   ## nimble.paths — which a content key correctly ignores.
   let force = "sds" in readOverlay()
-  var inputs = @[statusgoBuildRoot() / "nimble.paths"]
+  var inputs = @[thisDir() / "nimble.paths"]
   let devManifest = thisDir() / "vendor/status-go/statusgo.nimble"
   if fileExists(devManifest):
     inputs.add devManifest # a nim-sds pin bump must invalidate the built lib
   # The key file lives at the REPO root, beside the driver's other key files —
-  # never under statusgoBuildRoot(): in develop mode that root is the
-  # vendor/status-go checkout, and a build would leave it permanently dirty
-  # (issue 0017 review, I3). Nothing else reads it, so relocating costs one
-  # extra libsds sub-build on the first build after this lands.
+  # never under statusgoBuildRoot() (issue 0017 review, I3).
+  # The artifact key joins the content key because the flag-change arm of
+  # prepareStatusgoOut() drops libstatus only: libsds is compiled with the same
+  # flag set and must not survive a flip. (Before 0020 this was done by
+  # touching the scratch nimble.paths, an input that no longer exists.)
   let keyFile = thisDir() / libsdsKeyFile
-  let key = contentKey("", inputs)
+  let key = contentKey("", inputs) & "|" & statusgoArtifactKey()
   if not force and not stale(keyFile, [nimsdsLibFile()], key):
     return
   echo "\e[92mBuilding:\e[39m libsds"
-  exec "cd " & quoteShell(statusgoBuildRoot()) & " && " &
-    quoteShell(nimExe()) & " libsds statusgo.nims"
+  exec statusgoTaskEnv() & quoteShell(nimExe()) & " libsds " &
+    quoteShell(statusgoSourceRoot() / "statusgo.nims")
   writeKey(keyFile, key)
 
 proc buildLibstatus() =
@@ -565,14 +564,12 @@ proc buildLibstatus() =
   ## it decides WHEN, status-go decides HOW. `statusgo-shared-library` has no
   ## nimscript task upstream, so this is the one sub-build the driver still
   ## delegates to a foreign Makefile — never to THIS repo's Makefile.
-  ## In pinned mode the artifact's existence is the whole gate (the scratch
-  ## engine's key file already covers pin and flag changes; a develop-mode
-  ## checkout gets its FORCE arm from applyDevelopModeArms()).
+  ## In pinned mode the artifact's existence is the whole gate (the key files
+  ## already cover pin and flag changes; a develop-mode checkout gets its FORCE
+  ## arm from applyDevelopModeArms()).
   if not stale([statusgoLibFile()]):
     return
   echo "\e[92mBuilding:\e[39m status-go"
-  # protoc-gen-go is a `go generate` prerequisite of status-go's own build.
-  exec "go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1"
   var env = "NIM_SDS_LIB_DIR=" & quoteShell(nimsdsLibDir()) &
     " NIM_SDS_INC_DIR=" & quoteShell(nimsdsIncDir())
   if not debugSymbols():
@@ -583,23 +580,32 @@ proc buildLibstatus() =
   # stdout ONLY: version.sh runs `git fetch --tags`, whose progress lines go
   # to stderr, and gorgeEx merges the two streams — the day origin moved, the
   # "version" carried " + abc...def branch -> origin/branch (forced update)"
-  # lines and status-go's `sh -c "echo $SENTRY_CONTEXT_VERSION > …"` generate
-  # step died on the "(". make's $(shell) never saw stderr (2026-09-15).
+  # lines and the make invocation below died on the "(" (2026-09-15).
   let (version, _) = gorgeEx("cd " & quoteShell(thisDir()) &
     " && ./scripts/version.sh 2>/dev/null")
-  exec env & " make -C " & quoteShell(statusgoBuildRoot()) &
+  # STATUS_GO_VERSION is the DESKTOP version on purpose. status-go derives it
+  # from `git describe` in its own tree, which a store copy does not have; the
+  # scratch copy used to sit inside this repo and pick the desktop version up
+  # by accident (git walks UP), and that value is what the app has always
+  # reported. It is now passed explicitly instead of inherited from a layout.
+  # GENERATE_PREREQ=: the generated Go sources are committed in status-go, so
+  # the consumer build needs no protoc/mockgen — and `make generate` would try
+  # to write into the read-only store copy.
+  exec env & " make -C " & quoteShell(statusgoSourceRoot()) &
     " statusgo-shared-library SHELL=/bin/sh" &
+    " STATUS_GO_BUILD_DIR=" & quoteShell(statusgoBuildRoot() / "build") &
+    " GENERATE_PREREQ=" &
+    " STATUS_GO_VERSION=" & quoteShell(version.strip) &
     " SENTRY_CONTEXT_NAME=status-desktop" &
     " SENTRY_CONTEXT_VERSION=" & quoteShell(version.strip)
 
 proc buildStatusgo() =
   if statusgoDeveloped():
     # 24h staleness pre-clean: only a mutable checkout can go stale (a pinned
-    # store copy cannot — the scratch engine's origin key covers it).
+    # store copy cannot — the origin key covers it).
     exec "cd " & quoteShell(thisDir()) &
       " && bash ./scripts/force-rebuild-status-go.sh " & quoteShell(statusgoLibFile())
-  prepareStatusgoScratch(statusgoArtifactKey())
-  syncStatusgoPaths()
+  prepareStatusgoOut(statusgoArtifactKey())
   buildLibsds()
   buildLibstatus()
 

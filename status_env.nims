@@ -64,16 +64,21 @@ when not declared(qmakeProp):
         return v
     statusEnvFail "qmake -query dump has no '" & key & "' property."
 
-# --- develop-mode overlay + statusgo roots (ADR 0007 / issue 0010) -----------
-# The overlay file records vendors in develop mode; the statusgo build root
-# (scratch copy vs checkout) follows it. config.nims needs the same answers
-# the driver and the Makefiles derive, from the same single source.
+# --- develop-mode overlay + statusgo roots (ADR 0007 / issues 0010, 0020) ----
+# The overlay file records vendors in develop mode. Since issue 0020 the
+# statusgo SOURCE tree (store copy vs checkout) and the statusgo OUTPUT
+# directory are two different things, and only the source tree follows the
+# overlay: status-go and nim-sds are built IN PLACE from whatever the
+# resolution points at — a READ-ONLY nimble store copy in default mode — and
+# every artifact lands in the one output directory below, in both modes.
+# config.nims only ever needs the OUTPUT directory (that is where it links
+# from), which is why the source-root lookup lives in status.nims instead.
 
 when not declared(overlayFile):
   const overlayFile = "nimble.overlay"  # gitignored; joins the make setup-stamp key
 
-when not declared(statusgoScratchDir):
-  const statusgoScratchDir = ".statusgo-build"  # gitignored scratch at the repo root
+when not declared(statusgoOutDir):
+  const statusgoOutDir = ".statusgo-build"  # gitignored OUTPUTS at the repo root
 
 when not declared(readOverlay):
   proc readOverlay(): seq[string] =
@@ -90,10 +95,12 @@ when not declared(statusgoDeveloped):
 
 when not declared(statusgoBuildRoot):
   proc statusgoBuildRoot(): string =
-    ## Where statusgo builds run and artifacts live (Makefiles derive the same
-    ## path themselves; keep all three in sync).
-    if statusgoDeveloped(): thisDir() / "vendor/status-go"
-    else: thisDir() / statusgoScratchDir
+    ## Where statusgo's build OUTPUTS live: libstatus + its header under
+    ## build/bin, libsds + the header contract under .sds-build (the layout
+    ## statusgo.nims produces under STATUSGO_BUILD_DIR). The SAME directory in
+    ## every mode — a developed checkout is read like a store copy and stays
+    ## clean. The Makefiles derive the same path themselves; keep them in sync.
+    thisDir() / statusgoOutDir
 
 when not declared(prlToPcRoot):
   proc prlToPcRoot(): string =

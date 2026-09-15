@@ -292,30 +292,40 @@ ifeq ($(mkspecs),macx)
 endif
 
 # status-go is a pinned URL#hash dependency in the app's single nimble graph
-# (nim_status_client.nimble requires it; issue 0010). Default mode builds it
-# from a scratch copy of the read-only store entry at .statusgo-build,
-# maintained by `nim prepareStatusgo status.nims` (the statusgo-scratch rule
-# below): the scratch is refreshed only when the pin/store path changes, so
-# while artifacts exist the status-go sub-make is not invoked at all (the
-# stamp-skip default arm). `nim develop status.nims statusgo` (issue 0009)
-# switches STATUSGO_ROOT to the vendor/status-go checkout, which keeps ADR
-# 0003's FORCE + compare-before-copy semantics (driven from status.nims).
+# (nim_status_client.nimble requires it; issue 0010). Since issue 0020 NOTHING
+# IS COPIED: status-go and nim-sds keep every build output under a
+# caller-chosen directory, so the read-only store copies are compiled in place
+# and .statusgo-build holds outputs only. Two roots, and they are no longer
+# mode-vs-mode but read-vs-write:
+#   STATUSGO_SRC  the tree the sub-builds READ: the resolved store entry, or
+#                 the vendor/status-go checkout while developed (`nim develop
+#                 status.nims statusgo`, issue 0009). Never written to.
+#   STATUSGO_OUT  every artifact. The same directory in both modes, so a
+#                 develop checkout stays clean.
+# `nim prepareStatusgo status.nims` (the statusgo-out rule below) maintains
+# STATUSGO_OUT: it wipes it when the resolved source root changes and drops
+# artifacts when the flag key changes, so while both keys hold the status-go
+# sub-make is not invoked at all (the stamp-skip default arm). A developed
+# statusgo keeps ADR 0003's FORCE + compare-before-copy semantics (driven from
+# status.nims).
 STATUSGO_DEVELOPED := $(shell grep -sqx statusgo nimble.overlay 2>/dev/null && echo 1)
+STATUSGO_OUT := .statusgo-build
 ifeq ($(STATUSGO_DEVELOPED),1)
-STATUSGO_ROOT := vendor/status-go
+STATUSGO_SRC = vendor/status-go
 else
-STATUSGO_ROOT := .statusgo-build
+# The statusgo store entry from the generated resolution (status.nims'
+# statusgoSourceRoot answers the same question for the driver — keep them in
+# sync). Recursively expanded: nimble.paths may not exist yet at parse time.
+STATUSGO_SRC = $(shell sed -n 's|^--path:"\(.*/pkgs2/statusgo-[^/"]*\).*|\1|p' nimble.paths 2>/dev/null | head -1)
 endif
 # libsds is built by status-go's own nimble tasks (see statusgo.nimble in
-# $(STATUSGO_ROOT)); the workspace feeds the artifacts back via
+# $(STATUSGO_SRC)); the workspace feeds the artifacts back via
 # NIM_SDS_LIB_DIR/NIM_SDS_INC_DIR. statusgo.nimble pins nim-sds by URL#hash,
-# so nimble resolves sds into the shared store and status-go's sds tasks
-# build a scratch copy of it at $(STATUSGO_ROOT)/.sds-build (the store stays
-# pristine; no vendor/nim-sds checkout is needed). Artifacts land in
-# .sds-build/build, header contract .sds-build/library. A develop-linked
-# local checkout (resolved path outside the store) is instead built in place
-# — see statusgo.nims.
-NIMSDS_BUILD_ROOT := $(CURDIR)/$(STATUSGO_ROOT)/.sds-build
+# so nimble resolves sds into the shared store, and status-go's sds tasks build
+# THAT copy in place (no vendor/nim-sds checkout is needed), writing artifacts
+# to $(STATUSGO_OUT)/.sds-build/build and the header contract to
+# $(STATUSGO_OUT)/.sds-build/library.
+NIMSDS_BUILD_ROOT := $(CURDIR)/$(STATUSGO_OUT)/.sds-build
 NIMSDS_LIBDIR := $(NIMSDS_BUILD_ROOT)/build
 # Linux packaging scripts (init_app_dir.sh, bundle-flatpak.sh) bundle
 # libsds.so from here.
@@ -323,11 +333,13 @@ export NIMSDS_LIBDIR
 NIMSDS_INCDIR := $(NIMSDS_BUILD_ROOT)/library
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 STATUSGO_MAKE_PARAMS += NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)"
-# statusgo.nims resolves nim-sds from a nimble.paths next to itself; under the
-# single graph that file is a copy of the app's resolution (see its rule below),
-# not a second `nimble setup` — the former per-status-go dependency cache
-# (~/.cache/statusgo-nimbledeps) and its second multi-minute solve are gone.
-STATUSGO_NIMBLE_PATHS := $(STATUSGO_ROOT)/nimble.paths
+# statusgo.nims takes the resolution from STATUSGO_NIMBLE_PATHS — the app's
+# OWN nimble.paths, by path. It used to be COPIED next to statusgo.nims, which
+# for a store copy is a write into the shared package store. Entries are
+# absolute, so the file is valid from any directory. (The former per-status-go
+# dependency cache, ~/.cache/statusgo-nimbledeps, and its second multi-minute
+# solve went away with issue 0010.)
+STATUSGO_TASK_ENV := STATUSGO_BUILD_DIR="$(CURDIR)/$(STATUSGO_OUT)" STATUSGO_NIMBLE_PATHS="$(CURDIR)/nimble.paths"
 
 # desktop only; mobile cleanup lives in mobile/Makefile
 ifneq ($(filter $(mkspecs),macx linux),)
@@ -569,44 +581,41 @@ storybook-clean:
 ##	status-go
 ##
 
-STATUSGO := $(STATUSGO_ROOT)/build/bin/libstatus.$(LIB_EXT)
-STATUSGO_LIBDIR := $(shell pwd)/$(STATUSGO_ROOT)/build/bin
+STATUSGO := $(STATUSGO_OUT)/build/bin/libstatus.$(LIB_EXT)
+STATUSGO_LIBDIR := $(shell pwd)/$(STATUSGO_OUT)/build/bin
 export STATUSGO_LIBDIR
 
-# Pinned mode: keep the .statusgo-build scratch copy in sync with the store
-# entry before anything reads or writes it (wipe+copy only on a pin bump or a
-# flag-set change — the pinned-mode rebuild stamp lives in status.nims).
-# Developed mode: no-op (the checkout is the build tree). Ordered after the
-# platform sentinel so the two never race under -j.
-statusgo-scratch: $(NIMBLE_SETUP_STAMP) | platform-cleanup
+# Maintain the output directory before anything writes into it: wiped on a pin
+# bump (the resolved source root moves), artifacts dropped on a flag-set change
+# — the pinned-mode rebuild stamp lives in status.nims. Developed mode: no-op
+# (ADR 0003's FORCE arm owns it). Ordered after the platform sentinel so the
+# two never race under -j.
+statusgo-out: $(NIMBLE_SETUP_STAMP) | platform-cleanup
 ifneq ($(STATUSGO_DEVELOPED),1)
 	nim prepareStatusgo status.nims --key:"desktop-$(LIB_EXT)-$(or $(QT_ARCH),host)-dbg$(INCLUDE_DEBUG_SYMBOLS)" $(HANDLE_OUTPUT)
 endif
-.PHONY: statusgo-scratch
+.PHONY: statusgo-out
 
-# statusgo.nims locates nim-sds via the nimble.paths beside it; under the
-# single graph that file is a copy of the app's resolution (all entries are
-# absolute paths, so it is valid from any directory). Copy only on content
-# change so the libsds artifact isn't invalidated by no-op setups.
-$(STATUSGO_NIMBLE_PATHS): $(NIMBLE_SETUP_STAMP) | statusgo-scratch
-	cmp -s nimble.paths $@ || cp nimble.paths $@
-
-# statusgo.nimble carries the nim-sds pin: a pin bump must invalidate the
-# built lib (in pinned mode the bump changes the store path, which refreshes
-# the scratch — including this file's home — wholesale).
-$(NIMSDS_LIBFILE): $(wildcard vendor/status-go/statusgo.nimble) $(STATUSGO_NIMBLE_PATHS) | statusgo-scratch platform-cleanup
+# statusgo.nimble carries the nim-sds pin: a pin bump must invalidate the built
+# lib. In pinned mode the bump changes the resolved store path, which makes
+# statusgo-out wipe the whole output directory; nimble.paths is the resolution
+# the task builds against, so it joins the prerequisites directly (it is no
+# longer copied anywhere).
+$(NIMSDS_LIBFILE): $(wildcard vendor/status-go/statusgo.nimble) nimble.paths | statusgo-out platform-cleanup
 	echo -e $(BUILD_MSG) "libsds"
-	cd $(STATUSGO_ROOT) && nim libsds statusgo.nims $(HANDLE_OUTPUT)
+	$(STATUSGO_TASK_ENV) nim libsds $(STATUSGO_SRC)/statusgo.nims $(HANDLE_OUTPUT)
 
-$(STATUSGO): | check-qt-dir bottles $(NIMSDS_LIBFILE) statusgo-scratch platform-cleanup
+# GENERATE_PREREQ=: status-go commits the generated Go sources its library
+# build needs, so no protoc/mockgen is required here — and `make generate`
+# would try to write into the read-only store copy. STATUS_GO_VERSION is the
+# DESKTOP version on purpose: see buildLibstatus() in status_artifacts.nims.
+$(STATUSGO): | check-qt-dir bottles $(NIMSDS_LIBFILE) statusgo-out platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
-	# protoc-gen-go is a `go generate` prerequisite of status-go's own build. It
-	# was the whole body of the deleted `status-go-deps` target (issue 0018); the
-	# driver's buildLibstatus() already runs this exact line before delegating to
-	# the same foreign Makefile.
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
-	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C $(STATUSGO_ROOT) statusgo-shared-library SHELL=/bin/sh \
+	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C $(STATUSGO_SRC) statusgo-shared-library SHELL=/bin/sh \
+		STATUS_GO_BUILD_DIR="$(CURDIR)/$(STATUSGO_OUT)/build" \
+		GENERATE_PREREQ= \
+		STATUS_GO_VERSION="$(DESKTOP_VERSION)" \
 		SENTRY_CONTEXT_NAME="status-desktop" \
 		SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)" \
 		 $(HANDLE_OUTPUT)
@@ -616,7 +625,7 @@ status-go: $(STATUSGO)
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"
 	rm -f $(STATUSGO)
-	rm -rf .statusgo-build
+	rm -rf $(STATUSGO_OUT)
 
 
 ##
@@ -629,7 +638,7 @@ status-go-clean:
 # mode. `nim develop status.nims status-keycard-qt` / `… keycard-qt` (issues
 # 0009/0011) materializes vendor/<name> and the recipe below redirects the
 # matching FetchContent to it; develop state is derived from nimble.overlay
-# (same pattern as STATUSGO_ROOT above). Both knobs stay user-overridable
+# (same pattern as STATUSGO_SRC above). Both knobs stay user-overridable
 # (?=) to point at any local folder, matching the pre-0011 behavior.
 STATUS_KEYCARD_QT_DEVELOPED := $(shell grep -sqx status-keycard-qt nimble.overlay 2>/dev/null && echo 1)
 KEYCARD_QT_DEVELOPED := $(shell grep -sqx keycard-qt nimble.overlay 2>/dev/null && echo 1)
@@ -1117,14 +1126,17 @@ force-rebuild-status-go:
 
 # Repair wallet db migration marker: make fix-wallet-migrations <dbpath|datadir> <password>
 # Without arguments it lists the wallet migrations the resolved status-go knows
-# ($(STATUSGO_ROOT): the pinned scratch copy, or the develop-mode checkout).
+# ($(STATUSGO_SRC): the resolved store copy, or the develop-mode checkout).
+# NOTE: this recipe runs `go generate` IN the statusgo tree, so it needs a
+# writable one — run it under `nim develop status.nims statusgo`. Against a
+# store copy it will fail on a read-only filesystem (issue 0020).
 ifeq (fix-wallet-migrations,$(firstword $(MAKECMDGOALS)))
 FIX_WALLET_MIGRATIONS_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(FIX_WALLET_MIGRATIONS_ARGS):;@:)
 endif
 
 fix-wallet-migrations:
-	cd $(STATUSGO_ROOT) && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
+	cd $(STATUSGO_SRC) && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
 		$(if $(FIX_WALLET_MIGRATIONS_ARGS),$(abspath $(word 1,$(FIX_WALLET_MIGRATIONS_ARGS))) $(word 2,$(FIX_WALLET_MIGRATIONS_ARGS)))
 
 # `run`, `run-linux`, `run-linux-gdb`, `run-macos`, `run-windows` are DELETED

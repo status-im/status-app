@@ -150,7 +150,10 @@ nimble.develop
 /nimbledeps/
 /nimble.paths
 /nimble.overlay
-# pinned-statusgo build scratch (issue 0010): writable copy of the store entry
+# statusgo build OUTPUTS (issues 0010, 0020): libstatus + libsds + their
+# headers, the generated cbindings entry point, the nimcaches and the two key
+# files. No status-go or nim-sds source ever lives here — both are built in
+# place from the read-only store copies the resolution names.
 /.statusgo-build/
 # develop-mode statusgo checkout (issue 0009; materialized by `nim develop status.nims statusgo`)
 /vendor/status-go/

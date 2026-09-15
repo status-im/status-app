@@ -2047,3 +2047,90 @@ NOT VERIFIED HERE: launching the app (no display), macOS/Windows/mobile legs,
 CI, byte-reproducibility of the fork libsds static archive, `nimble build`
 (the nimble front door: costs the ~1 min dispatch tax; the driver path was
 the one exercised).
+
+================================================================================
+2026-09-15 (evening, session continued) — ISSUE 0020: the scratch copy is gone
+================================================================================
+
+status-go and nim-sds are now built IN PLACE from the read-only nimble store
+copies. `.statusgo-build/` still exists and still has the same internal layout
+(`build/bin/libstatus.*`, `.sds-build/{build,library}`), but it holds ONLY
+outputs — no status-go source tree, no nim-sds source tree.
+
+THREE PINS (all pushed):
+- nim-sds   alexjba/nim-sds `nimble-v0.3.3`      a771a894 -> 0f8dc868
+- status-go status-im/status-go `nimble-phase1-pin-2` 6d3368e9 -> (see below)
+- desktop   `worktree-nimble-migration`
+
+WHAT MADE IT POSSIBLE (three walls, in the order they were hit):
+
+1. nim-sds hardcoded `build/` + `build/nimcache` relative to the CWD, located
+   `./library` the same way, and needed `sds.nims` SYMLINKED into the tree
+   before `nim <task>` would run. Now: `SDS_OUT_DIR` (default `build`, so the
+   in-repo Makefile flow is unchanged) is the only directory any task writes
+   to, `--nimcache` is explicit on every compile, sources come from the
+   package root, and the entry point is committed.
+
+2. status-go's LIBRARY build needed `make generate` (protoc + mockgen +
+   go-generate-fast) and `go:generate`d files that `go:embed` read back. Now:
+   the generated Go sources are committed, `GENERATE_PREREQ=` skips generate,
+   and pkg/version + pkg/sentry take their values from `-ldflags -X`.
+   `STATUS_GO_BUILD_DIR` moves every library output out of the module.
+
+3. The desktop copied its `nimble.paths` next to statusgo.nims. Now
+   `STATUSGO_NIMBLE_PATHS` hands the app's own file over by path.
+
+WALLS FOR THE NEXT READER (also in status-go's AGENTS.md):
+
+- **`go build -overlay` cannot relocate a cgo package's source.** The plan was
+  to keep `./build/bin/statusgo-lib` as the in-module package path and map its
+  main.go to the out-of-tree file. The overlay DOES supply a file for a path
+  that is not on disk — and then cgo chdir()s into the real package directory:
+  `cgo: chdir .../build/bin/statusgo-lib: no such file or directory`. The
+  entry point is passed to `go build` as a FILE (the synthetic
+  `command-line-arguments` package) instead, which is what the static library
+  target already did and needs nothing committed.
+
+- **nimble 0.22.3 ignores `installFiles`.** installDirs AND installFiles are
+  both resolved relative to srcDir, and even spelled `../sds.nims` — which
+  nimble then finds, no "Missing file" warning — the root file is NOT
+  installed (verified with a minimal package, then observed for real on the
+  sds store copy). A `.nims` INSIDE an installDirs directory does survive, so
+  nim-sds's consumer entry point is `library/sds_tasks.nims`.
+
+- **`nim <task> <pkg>.nimble` does not dispatch tasks** — "invalid command:
+  libsdsDynamicLinux". It appears to work only when a `<pkg>.nims` sits beside
+  the manifest, because nim loads THAT as the project config and the tasks
+  come from there. Cost one round-trip pin bump to discover.
+
+- **`thisDir()` in nimscript follows the ENTRY script, not the file the code
+  is written in** (verified: an `include` of a manifest from another directory
+  reports the includer's directory). nim-sds's `sdsRootDir()` normalizes by
+  looking for `sds.nimble`.
+
+- **A stale store entry of the SAME package poisons the transitive
+  special-version pick.** After two pin bumps the store held five
+  `statusgo-0.1.0-*` copies whose manifests required three different
+  `sds#hash` revisions; nimble enumerated all of them and pre-bound sds to the
+  WRONG one ("Multiple dependencies require different special versions of
+  'sds': using #425287ae, ignoring #a771a894, #0f8dc868"), so the resolution
+  pointed at a store copy the current pin does not name. Deleting the stale
+  `pkgs2/statusgo-*` and `pkgs2/sds-*` entries fixes it. A fresh store never
+  sees this — it is a cost of ITERATING pins on one machine, and it is the
+  same first-one-wins pre-binding already recorded in status-go's AGENTS.md.
+
+- status-go's `pkg/version` go:generate ran `git describe`, which walks UP out
+  of the build directory: the old scratch copy sat inside status-desktop, so
+  status-go stamped the DESKTOP's version into its own `pkg/version/VERSION`.
+  The `-X` flags now pass that value on purpose (`STATUS_GO_VERSION`), instead
+  of inheriting it from a directory layout.
+
+- `pkg/services/connector/commands/test_helpers.go` is NOT a `_test.go` file
+  and imports `pkg/services/connector/chainutils/mock`, so the LIBRARY build
+  needs that one mock package. It is committed; every other mock is not.
+
+NOT VERIFIED HERE: mobile (iOS + Android nim-sds tasks and status-go library
+targets — mechanical out-dir treatment only), macOS, Windows, develop mode
+(`nim develop status.nims statusgo` / `sds` — code change in, not exercised),
+the `nimble build` front door, byte-reproducibility of the fork's static
+libsds archive.

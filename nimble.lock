@@ -654,7 +654,7 @@
       }
     },
     "sds": {
-      "version": "#a771a894fa4adfbaba1fa4af211c593623e07411",
+      "version": "#0f8dc8689b228910480ee7402248df254ddee2cd",
       "vcsRevision": "",
       "url": "https://github.com/alexjba/nim-sds.git",
       "downloadMethod": "git",
@@ -670,19 +670,19 @@
         "libp2p"
       ],
       "checksums": {
-        "sha1": "a180e3f2f0556603438174c993a26923f78447da"
+        "sha1": "9e82af16ad0743f2553cdd6dd89dd42f99c3ebd8"
       }
     },
     "statusgo": {
-      "version": "#6d3368e97644167e54e812a9f2c2813839727729",
-      "vcsRevision": "6d3368e97644167e54e812a9f2c2813839727729",
+      "version": "#ba45188ab9c61213100408b8fde273db6f32e555",
+      "vcsRevision": "ba45188ab9c61213100408b8fde273db6f32e555",
       "url": "https://github.com/status-im/status-go.git",
       "downloadMethod": "git",
       "dependencies": [
         "sds"
       ],
       "checksums": {
-        "sha1": "374237bd36260918e19f0fb22d040b24f90d2a65"
+        "sha1": "0e5b872f9df5ec913daf61ccab9d2f2fefc05e5b"
       }
     }
   },

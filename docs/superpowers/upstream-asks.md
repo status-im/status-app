@@ -88,31 +88,64 @@ records 0007–0012.
   (or PR #85's equivalent) on `release/v0.3`, tag it, and flip the pin to the
   upstream tag. Byte-reproducibility of the static archive is UNVERIFIED on
   this pin (Linux host).
+- **2026-09-15, no-scratch-copy (issue 0020) — RESOLVED on the fork branch,
+  still an upstream ask.** Every build task hardcoded `build/` and
+  `build/nimcache` relative to the working directory, located `./library` the
+  same way, and required `sds.nims` to be symlinked into the tree first — so
+  no consumer could build the nimble store copy, and status-desktop copied the
+  whole package instead. `nimble-v0.3.3` head `425287ae` fixes it: `SDS_OUT_DIR`
+  (default `build`, upstream behaviour unchanged) is the ONLY directory any
+  task writes to, `--nimcache` is explicit on every compile, sources come from
+  `thisDir()`, and `sds.nims` is committed + declared in `installFiles`. Ask:
+  take this alongside the packaging commit — it is additive, changes no
+  default, and touches no ABI. The macOS/iOS/Android legs got the same
+  mechanical treatment and are unverified.
 
 ## status-go (status-im/status-go)
 
-- Branch `nimble-phase1-pin-2` (currently pinned at `6d3368e97`; the
+- Branch `nimble-phase1-pin-2` (currently pinned at `a8a15198a`; the
   2026-09-15 rebase of `nimble-phase1-pin` onto develop `9f09f902`, wrapper
-  refreshed from status-desktop master, nim-sds pin `nimble-v0.3.3`) needs to become
+  refreshed from status-desktop master, nim-sds pin `nimble-v0.3.3`, plus the
+  no-scratch-copy work below) needs to become
   a PR to `develop`: nimble package manifest (source-only) +
   statusgo.nims tasks, absorbed status_go wrapper, status_backend cgo
   export, cbindings determinism (sorted emit, `-buildid=`, ZERO_AR_DATE
   repack). After merge: bump the app pin; eventually pin release tags.
 
 - **`status-go-deps` → a statusgo.nims task** (issue 0018, adjudication A2,
-  2026-07-12; **push-bearing, human**). Desktop's `make status-go-deps` is
-  deleted; its one line — `go install
-  google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1` (the plugin status-go's
-  own `go generate` needs) — is now inlined at the desktop call sites, which is
-  what the driver's `buildLibstatus()` already did. The tool install belongs to
-  status-go, not to its consumer: add it as a task/hook in `statusgo.nims` (the
-  same place `libsds`/`statusgo` live), then bump the app pin. That collapses
-  **three copies of the same `go install` line** into one:
-  1. `Makefile`'s `$(STATUSGO)` recipe (status-desktop),
-  2. `status_artifacts.nims`' `buildLibstatus()` (status-desktop),
-  3. `fdroid/build-app.sh` (status-desktop).
-  Until it lands, a version bump of `protoc-gen-go` must be applied in all
-  three — the drift risk this ask exists to remove.
+  2026-07-12). **CLOSED by issue 0020, differently than planned**: the
+  consumer does not need `protoc-gen-go` at all any more. status-go commits
+  the generated Go sources its library build needs, and `GENERATE_PREREQ=`
+  skips `make generate`, so all three copies of the `go install` line are
+  simply deleted rather than moved into a task. (CI images still install
+  protoc; only regenerating needs it.)
+
+- **No-scratch-copy (issue 0020), the big one, on `nimble-phase1-pin-2`
+  head `a8a15198a`.** A consumer that resolves status-go through nimble gets a
+  READ-ONLY store copy shared between every consumer of the pin, and until now
+  a build wrote into it, so status-desktop `cp -R`'d the whole tree first.
+  Three changes make the store copy directly buildable; all three are things
+  upstream would have to accept:
+  1. **Committing the generated Go sources** (`*.pb.go`, `bindata.go`,
+     `migrations.go`, the endpoint + messenger handler tables, and the ONE
+     mock a non-test file imports —
+     `pkg/services/connector/chainutils/mock`, reached from
+     `pkg/services/connector/commands/test_helpers.go`). ~1.8 MB of tracked
+     generated Go. The alternative upstream may prefer: keep them untracked
+     and ship them in a release artifact / require the generator toolchain on
+     every consumer machine. A cheaper half-measure for the mock: move that
+     import into a `_test.go` file and the mock can stay untracked.
+  2. **Replacing `go:generate` + `go:embed` with `-ldflags -X`** in
+     `pkg/version` and `pkg/sentry`. This also fixes a real bug: `git
+     describe` in the `go:generate` walked UP out of the build directory and
+     stamped whatever repository enclosed it (status-desktop's version ended
+     up in status-go's `pkg/version/VERSION`).
+  3. **`STATUS_GO_BUILD_DIR` / `GENERATE_PREREQ`** so the library targets can
+     write outside the module and skip the generate prerequisite. Note for
+     reviewers: `go build -overlay` does NOT let the cbindings entry point
+     keep an in-module package path — cgo `chdir()`s into the package
+     directory, which then does not exist. The entry point is passed as a file
+     argument instead.
 
 ## uuids / isaac (pragmagic)
 
