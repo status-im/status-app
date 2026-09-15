@@ -496,6 +496,11 @@ Platform-sentinel flip after the iOS leg (ADR 0003), i.e. the tree is left green
    unrelated to the code, and the error surfaces as a `curl: (56) … 401` deep
    inside the driver. A friendlier fail-fast ("export GITHUB_USER/GITHUB_TOKEN,
    see BUILDING.md") would pay for itself.
+6. **A cached `nimble shellenv` (round 2, R6).** Every `source ./env.sh` pays
+   nimble's full re-solve — 49–57 s measured at HEAD *and* in a pre-0018 scratch
+   clone, so it is the 0013-recorded dispatch tax, not this issue's doing. Until
+   a cache exists (key = `nimble.lock` + the manifests, like the Qt env cache),
+   the rule is: bootstrap ONCE per shell or CI stage, never once per step.
 
 ---
 
@@ -725,3 +730,93 @@ the client) is not user-supplied and is reported, not rejected.
 
 Not re-verified in this wave (unchanged by it, and unverifiable here as before):
 `make pkg-macos`'s signed dmg, the Android mobile leg, CI, Linux/Windows.
+
+## Fix-wave record, round 2 — 2026-07-12 (later; re-review R1–R6, see the brief's addendum)
+
+Round 1 left the compiler-pin story half-closed. Round 2 closes it; every item
+below was probed after the change, and R1/R2 were reproduced against the round-1
+file first.
+
+### R1. env.sh failed OPEN under any POSIX shell that is not bash/zsh — CRITICAL
+
+Reproduced (dash, `. ./env.sh release`): `${BASH_SOURCE[0]:-${(%):-%x}}` →
+"Bad substitution", execution CONTINUED, and the exec arm `exec`ed the CALLER's
+`$1`. Fix (`env.sh`): a pure-POSIX prologue decides shell + sourced-ness before
+any bashism, every shell-specific expansion is hidden inside `eval` (a string to
+any other parser), and an unrecognised shell is treated as SOURCED — it can
+never exec. dash can do the whole bootstrap in POSIX when sourced from the repo
+root (the working directory is the root); sourced from elsewhere it cannot name
+the file (`$0` is the caller), so it prints one clear "use bash or zsh, or
+source from the root" line and returns 1 with PATH untouched.
+
+### R2. env.sh asserted the VERSION only, and never checked for a compiler
+
+Reproduced: a stub shellenv naming `pkgs2/nim-2.2.4-<other-checksum>/bin` first
+was hoisted silently. The store here really holds two `nim-2.2.4-*` entries
+(`b4bb510b…` = the lock's, `a092a045…` = another build), so this is not a
+hypothetical. Fix: the pin is now the FULL store entry — version from the
+manifest's `requires "nim == X"` + checksum from `nimble.lock`'s
+`packages.nim.checksums.sha1` (the same two facts `guardPinnedCompiler()`
+reads) — compared against the whole `nim-<ver>-<sha1>` directory name; and
+`<dir>/nim` must exist and be executable. Degrades to version-only ONLY when the
+lock has no `nim` entry, and says so in a WARNING that names `nimble lock`.
+
+### R3. Only `buildClient()` was guarded
+
+- `status_artifacts.nims`: `guardPinnedCompiler()` now also runs in
+  `runNimTests()` (after the test-name gate, before the first compile) and
+  `buildWindowsLauncher()` (no gate precedes it). STATUS_NIM override honoured
+  inside the guard, as before.
+- `mobile/scripts/buildNimStatusClient.sh` (the one compile the driver does not
+  own): the resolved `nim` must live under `pkgs2/nim-<ver>-<lock sha1>/`,
+  parsed from the same two files with the same `sed`; `STATUS_NIM=<path>`
+  overrides. Same message shape as the driver's guard.
+
+### R4. Manifest pin parser matched any `requires "nim…=="`
+
+`parts[1].split("==")[0].strip == "nim"` — a `requires "nimcrypto == …"` line
+ordered first can no longer pin the guard to the wrong package.
+
+### R5. PATH left mutated on error paths; WARNING arm grew PATH per re-source
+
+`STATUS_ENV_PATH0` is saved at entry and restored on every error return; the
+dedupe now runs on BOTH arms (pinned and WARNING), so a re-source is a no-op on
+either.
+
+### R6. Per-`source` cost disclosed
+
+In env.sh's header, in follow-up 6 above, and in 0019's handoff: ~50 s per
+`nimble shellenv`, bootstrap once per shell/stage.
+
+### Probe matrix (stub `nimble` on PATH, no re-solve; `/tmp` scratch, deleted)
+
+    R1     bash  sourced, set -e, args     rc=0  nim = the pin, caller continues, 0 STATUS_ENV leftovers
+           zsh   sourced, set -e, args     rc=0  same
+           dash  sourced, set -e, args     rc=0  same — NO exec of the caller's $1
+           dash  sourced, no args          rc=0  pin first on PATH
+           dash  EXECUTED directly, args   rc=0  treated as sourced: no exec, no output
+           dash  sourced from /tmp         rc=1  "cannot locate the repo root under this shell (other)", PATH untouched
+           bash  ./env.sh EXECUTED, args   rc=0  runs THEM, nim = the pin
+           zsh   same                      rc=0
+    R2     wrong-checksum entry first      rc=1  "pinned … nim-2.2.4-b4bb510b… / first … nim-2.2.4-a092a045…", PATH RESTORED
+           entry with no nim binary        rc=1  "has no executable compiler", PATH RESTORED
+    R5     bash double source (pin arm)    PATH identical
+           bash double source (WARN arm)   PATH identical
+    R3     mobile guard, pin nim           OK
+           mobile guard, a092a045 nim      rc=1  "NOT the pinned compiler … running / pinned"
+           mobile guard, STATUS_NIM set    OK, no check
+
+### Regression re-run (real `source ./env.sh`, macOS kit)
+
+    $ source ./env.sh; command -v nim      …/pkgs2/nim-2.2.4-b4bb510b…/bin/nim
+    $ scripts/check-no-nim-compiles.sh     rc=0  (4 invariants ok)
+    $ nim windowsLauncher status.nims --compileOnly                    rc=0
+    $ PATH=<a092a045 bin>:$PATH nim tests status.nims utils_test       guard fires (ERROR … NOT the pinned compiler)
+    $ PATH=<a092a045 bin>:$PATH nim windowsLauncher status.nims …      guard fires
+    $ … STATUS_NIM=<pin> nim windowsLauncher …                         "note: STATUS_NIM overrides the pinned compiler", rc=0
+
+NOT re-run in round 2: `nim app` no-op ×3 and the `utils_test` happy path. Both
+reach past the guard and then die in cmake — this worktree's StatusQ and
+DOtherSide build caches name `MacOSX26.5.sdk`, which an Xcode update removed
+(only 27.x is installed). Environmental, untouched by this wave; clearing
+`ui/StatusQ/build/Qt6.11.0` and `vendor/DOtherSide/build/Qt6.11.0` is the fix.

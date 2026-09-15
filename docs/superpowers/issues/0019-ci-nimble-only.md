@@ -109,7 +109,15 @@ fast** when the compiler about to compile the client is not the pinned store
 entry (adjudication A1). A pipeline that forgets the bootstrap therefore fails
 loudly instead of silently building with the image's Nim — but it *does* fail,
 so every make/driver leg in CI must be given the bootstrap before this issue can
-go green.
+go green. Round 2 of that wave widened the guard to the test suite, the Windows
+launcher and the mobile `nim c` (`mobile/scripts/buildNimStatusClient.sh`), so
+the iOS/Android legs fail fast too.
+
+**Bootstrap cost (0018 round 2, R6):** `source ./env.sh` runs `nimble shellenv`,
+a full re-solve — ~50 s per call, pre-existing (issue 0013). Bootstrap ONCE per
+stage and run every step inside that shell; a per-step `source` multiplies the
+tax by the step count. A cached shellenv (key = `nimble.lock` + manifests) is
+0018's follow-up 6, not this issue's.
 
 ## Blocked by
 
