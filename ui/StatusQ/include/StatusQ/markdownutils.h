@@ -56,4 +56,16 @@ public:
     // (e.g. "0x04ab…", "0x00001"). Parsed via the Markdown AST, so "@0x…" tokens inside
     // code spans/blocks are excluded. Empty when there are none.
     Q_INVOKABLE QStringList mentions(const QString& text) const;
+
+    // Test seam for the toBlocks memo (not exposed to QML): cumulative hit/miss counters
+    // plus the cache's current entry count and capacity.
+    struct CacheStats
+    {
+        int hits = 0;
+        int misses = 0;
+        int size = 0;
+        int capacity = 0;
+    };
+    static CacheStats toBlocksCacheStats();
+    static void clearToBlocksCache();
 };

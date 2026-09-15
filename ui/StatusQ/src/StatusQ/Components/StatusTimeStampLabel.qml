@@ -11,6 +11,14 @@ StatusBaseText {
     property double timestamp: 0
     property bool showFullTimestamp
 
+    // The clock dependency of the relative label, named so it can be asserted on:
+    // formatRelativeTimestamp is day-granular ("Today 14:23"), so it may only be
+    // re-evaluated when the local day changes. Bound to the shared timer's
+    // per-second counter instead, it re-formats every visible row once a second
+    // forever, for a value that cannot move. Binding re-evaluation is invisible
+    // from QML, so this property is what a test can hold on to.
+    readonly property int clockTick: StatusSharedUpdateTimer.daysActive
+
     color: Theme.palette.baseColor1
     font.pixelSize: Theme.tertiaryTextFontSize
     visible: !!text
@@ -27,7 +35,7 @@ StatusBaseText {
         Binding on formattedLabel {
             when: !root.showFullTimestamp && root.timestamp && root.visible
             value: {
-                StatusSharedUpdateTimer.secondsActive
+                root.clockTick
                 return LocaleUtils.formatRelativeTimestamp(root.timestamp)
             }
             restoreMode: Binding.RestoreBinding

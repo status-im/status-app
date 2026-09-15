@@ -341,6 +341,7 @@ Loader {
             navToMsgDetails:                Qt.binding(() => root.rootStore.navToMsgDetails),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
             rowPool:                        Qt.binding(() => root.rowPool),
+            dressHold:                      Qt.binding(() => d.panelSwitchOngoing),
         })
     }
 
