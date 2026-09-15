@@ -137,16 +137,24 @@ changed on master since:
 2. **Master builds from a system nim 2.2.10** on every agent (Docker images
    bumped, nim installed on the Windows/macOS hosts; `USE_SYSTEM_NIM=1` in
    `MAKEFLAGS`, now a no-op variable since 0018 deleted the make legs that
-   read it). The manifest pin was moved to `nim == 2.2.10` in this rebase so
-   the store compiler and the images agree — but the guard asserts the pinned
-   STORE ENTRY, not a version, so an image nim of the same version is still
-   refused. The agent prerequisite this issue asks for ("nimble only") is
-   therefore unchanged: the images' nim is at most where `nimble` comes from.
-3. **Cold-agent cost is now avoidable**: the images already carry nim 2.2.10,
-   so `nimble setup` need not build the compiler — but only if nimble is
-   taught to adopt an existing 2.2.10 as the store entry, which nimble 0.22
-   does not do (it always materialises its own). The `~/.nimble` cache ask
-   stands.
+   read it). The manifest pin is `nim == 2.2.10` (master's code needs it: the
+   wallet token-model closure type does not compile on 2.2.4-2.2.8), and the
+   guard asserts the pinned STORE ENTRY, not a version, so the images' nim
+   is still refused for the client. TWO WALLS the pipelines must respect
+   (verified 2026-09-15, Linux): (a) `nimble setup` REUSES a PATH nim whose
+   version equals the pin and then never creates `pkgs2/nim-2.2.10-…` — so
+   on an image that has nim 2.2.10 on PATH, bootstrap must run with that nim
+   OFF the PATH (or env.sh's hoist finds nothing and the guard refuses every
+   compile); nim-free, nimble 0.22.3 downloads the 2.2.10 release binary in
+   ~1 min ("Downloading Nim 2.2.10 from nim-lang.org"). (b) The nimble that
+   ships in the nim-2.2.10 tarball is 0.22.2, which resolved against a static
+   release list ending at 2.2.6 and cannot satisfy the pin; the images need
+   the 0.22.3 release binary. The agent prerequisite therefore reads:
+   nimble 0.22.3, and no nim 2.2.10 on PATH during bootstrap.
+3. **Cold-agent cost is ~1 min, not ~5**: with the 2.2.10 pin nimble
+   downloads a release binary instead of building from csources (the spike's
+   ~5 min / ~8 GB was a source build of 2.2.4). The `~/.nimble` cache ask is
+   now a nicety.
 4. Master's `Jenkinsfile.linux` still runs `./scripts/ci-fetch-submodules.sh`,
    `make status-go`, `make statusq`, `make qrcodegen` (a no-op alias kept for
    it), `make tests-nim-linux` (now the driver call above) and the

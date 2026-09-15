@@ -362,7 +362,12 @@ libraries linked by status-go (nim-sds) — is resolved and built by this
 repo's build system via [Nimble](https://github.com/nim-lang/nimble), not by
 status-go and not by a vendored compiler.
 
-**Prerequisite:** **Nimble (>= 0.22) on your PATH — and nothing else Nim-side.**
+**Prerequisite:** **Nimble 0.22.3 on your PATH — and nothing else Nim-side.**
+(The verified version. Two walls, both 2026-09-15: run the FIRST `nimble setup`
+with no Nim of the pinned version on PATH — nimble reuses such a nim instead
+of materialising the store entry `env.sh` hoists; and the nimble bundled in the
+nim-2.2.10 tarball, 0.22.2, cannot resolve the 2.2.10 pin. See the manifest's
+`nim` pin comment.)
 The compiler is not a prerequisite: `nim_status_client.nimble` pins it
 (`requires "nim == 2.2.10"`) and `nimble setup` materialises it in nimble's store
 (`~/.nimble/pkgs2/nim-<version>-<checksum>/`), building it from source once if

@@ -1946,13 +1946,13 @@ SEMANTIC COLLISIONS (git-silent; each its own commit on top of the replay):
 STATUS-GO (cross-repo): the nimble package lives only on `nimble-phase1-pin`
 (5 commits, 228 behind develop; develop's tip 9f09f902 has no manifest, so
 "re-pin to master's SHA" was impossible as stated). Rebased those 5 commits
-onto develop in a scratch clone → `nimble-phase1-pin-2` @ 4c4cfc271 (one
+onto develop in a scratch clone → `nimble-phase1-pin-2` @ 6d3368e97 (one
 stop: tools/generate-cbindings — develop had made emission reproducible on
 its own, its version kept; Makefile keeps NIM_SDS_VERSION derived from the
 manifest, develop's ldflags win). The wrapper refresh and the nim-sds pin
 change ride on a sixth commit. **PUSH PENDING (human): `git push origin
 nimble-phase1-pin-2` from the scratch clone** — the app manifest already pins
-4c4cfc271, which resolves only after that push.
+6d3368e97, which resolves only after that push.
 
 NIM-SDS: develop's go.mod requires the `release/v0.3` FFI ABI (v0.3.3), so the
 statusgo.nimble pin moved from the fork PR #85 head (5c89d61f, the 6-patch
@@ -1980,3 +1980,70 @@ removed it for a miscompile, 2026-07 — master's note kept).
 VERIFICATION: see the addendum below (Linux x86_64 host, Qt 6.11.0, go
 1.24.7, cmake 4.2.3; nim/nimble were NOT installed on this machine — a
 nim-2.2.10 tarball in the session scratchpad provided `nimble`).
+
+--- 2026-09-15 — VERIFICATION of the rebase (Linux x86_64, WSL2; Qt 6.11.0, go 1.24.7, cmake 4.2.3) ---
+
+Toolchain: no nim/nimble on the machine. nimble 0.22.3 release binary +, for
+the first solve only, the nim-2.2.10 tarball as evaluator. Cross-repo pins
+that are not pushed yet were fed to the resolver from the local scratch
+clones (pkgcache dirs re-pointed at them); nothing in the repo differs from
+what a pushed pin resolves.
+
+RESULT: `source ./env.sh && nim app status.nims` — rc 0, bin/nim_status_client
+(134 MB) linked by the pinned store compiler pkgs2/nim-2.2.10-17ec440f; the
+driver resolved the graph itself (Resolving:), built libsds (fork
+nimble-v0.3.3) + libstatus (nimble-phase1-pin-2 @ 6d3368e9), StatusQ,
+status-keycard-qt (FetchContent 8582bffc), resources, then the client
+(343736 lines, 47 s). No-op re-run 1.34 s. `nim tests status.nims utils_test`
+green (16 s). scripts/check-no-nim-compiles.sh clean. `nimble lock` writes
+the lock (46 packages; nim 2.2.10 sha1 17ec440f = the store entry) and then
+errors "Sync file require … version control" — nimble does not recognise a
+git WORKTREE (.git is a file); the lock is complete, the exit code is not.
+
+FIXES THE VERIFICATION FORCED (all on this branch):
+- status-go nimble-phase1-pin-2: serve.go imported the dissolved root
+  `common` package (develop 23febf164) → internal/panics; the branch's
+  cbindings generator change was superseded by develop's reproducible emit,
+  but the StatusBackendRunServer export it appended was lost with it → the
+  two lines are back in develop's main.go. Pin bumped twice (docs updated).
+- driver: (1) ensureResolved hands nimble a PATH with the store compiler's
+  directory filtered out and the same binary in front via a symlink shim —
+  with that directory anywhere on PATH nimble 0.22.3 takes a lock fast path
+  whose cloneSpecificRevision double-quotes the download dir (upstream ask
+  #9); three PATH variants reproduced. (2) The Qt pkg-config env cache's
+  directory is created before writing — a System-mode kit (Linux /opt Qt,
+  prl-to-pc main) builds no tools, so nothing had created it. (3) version.sh
+  is read on stdout only: its `git fetch --tags` progress (origin moved
+  during this session) landed in SENTRY_CONTEXT_VERSION and status-go's
+  `sh -c "echo $… > …"` generate step died on a "(".
+- nim pin: 2.2.10 confirmed necessary (see the earlier record — the
+  2.2.4-2.2.8 wallet failure) and possible: the "nimble cannot do 2.2.10"
+  finding was the BUNDLED 0.22.2 only; 0.22.3 fetched releases.json, and
+  nim-free it materialised 2.2.10 into the store in ~1 min. The interim
+  "pin stays 2.2.4" commit and the wallet `ptr seq` compat patch were
+  dropped again — master's code is untouched.
+
+WALLS FOR THE NEXT READER (also in the manifest's nim comment / BUILDING.md):
+- Bootstrap must run with NO nim of the pinned version on PATH: nimble reuses
+  it and never creates pkgs2/nim-<ver>-<sha>; env.sh then has nothing to
+  hoist and the guard refuses. CI images with a system 2.2.10 need the nim
+  OFF the PATH for `nimble setup` (0019 addendum).
+- The nim tarball's bundled nimble (0.22.2) resolves against a static release
+  list ending at 2.2.6; the 0.22.3 release binary is the prerequisite.
+- nimble 0.24.1: resolves, but never materialises the compiler, rewrites
+  config.nims' Nimble block (`--noNimblePath` moves into nimble.paths) and
+  SIGSEGVs nim-free. Not usable for this migration (upstream ask #7).
+- env.sh under WSL: `nimble shellenv` prints an UNQUOTED `export PATH=…`, so
+  Windows PATH entries with spaces (/mnt/c/Program Files/…) make `eval` print
+  "export: … not a valid identifier" — the hoist still lands (the store bin
+  is prepended after), so it is noise, not a failure. Follow-up: quote it.
+- master moved on origin during this session (872090c705 → 7db7ffd958); the
+  branch is rebased on 872090c705.
+- On Linux the bare binary has no rpaths for libstatus/libStatusQ/keycard
+  (config.nims bakes rpaths on macOS only, as make did); `nim run status.nims`
+  supplies LD_LIBRARY_PATH. Not a regression.
+
+NOT VERIFIED HERE: launching the app (no display), macOS/Windows/mobile legs,
+CI, byte-reproducibility of the fork libsds static archive, `nimble build`
+(the nimble front door: costs the ~1 min dispatch tax; the driver path was
+the one exercised).

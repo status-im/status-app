@@ -47,6 +47,25 @@ records 0007–0012.
     "Cannot build the dependency graph … Missing package <url>" even though
     setup resolves, installs, and pathifies it fine (2026-07-07).
 
+7. **`nimble setup` reuses a PATH nim equal to the pin and materialises no
+   store entry** — 0.22.3 and 0.24.1 alike (2026-09-15, Linux): with a nim
+   2.2.10 first on PATH, `requires "nim == 2.2.10"` resolves and nimble prints
+   "using <that nim> for compilation", but `pkgs2/nim-2.2.10-…` is never
+   created and `nimble shellenv` exposes no store nim — so a bootstrapped
+   shell (env.sh hoists the store entry; the driver's guard asserts it) has
+   nothing to hoist. Nim-free, 0.22.3 downloads the release binary into the
+   store in ~1 min; 0.24.1 downloads the LATEST release for itself and
+   SIGSEGVs during setup. Ask: always materialise the pinned entry (or an
+   explicit `nimble install nim@X` that does), and fix the nim-free 0.24
+   bootstrap crash.
+8. **Bundled 0.22.2 falls back to a static release list** — the nimble in
+   the nim-2.2.10-linux_x64 tarball listed nim candidates only up to 2.2.6
+   and failed `nim == 2.2.10` ("Couldnt find a solution … + nim 2.2.10"),
+   i.e. its `releases.json` fetch fell back to the compiled-in list (cause not
+   isolated; the 0.22.3 release binary fetched and cached the list fine on
+   the same machine). Ask: surface the fetch failure loudly instead of
+   silently solving against a stale list.
+
 ## nim-sds (logos-messaging/nim-sds)
 
 - **PR #85** (embeddable + reproducible libsds) is the whole local patch
@@ -72,7 +91,7 @@ records 0007–0012.
 
 ## status-go (status-im/status-go)
 
-- Branch `nimble-phase1-pin-2` (currently pinned at `4c4cfc271`; the
+- Branch `nimble-phase1-pin-2` (currently pinned at `6d3368e97`; the
   2026-09-15 rebase of `nimble-phase1-pin` onto develop `9f09f902`, wrapper
   refreshed from status-desktop master, nim-sds pin `nimble-v0.3.3`) needs to become
   a PR to `develop`: nimble package manifest (source-only) +

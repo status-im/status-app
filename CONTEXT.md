@@ -50,7 +50,7 @@ anything in this repo: every front door reaches it through nimble, and the
 build refuses any other. Contrast **system nim**: a compiler installed on a
 machine or a CI image. A system nim is never the compiler that builds the app,
 even when its version happens to equal the pin; at most it is how nimble
-itself gets onto a machine. (CI images standardized on a system nim while this
-migration was in flight; the pin was moved to the same version so the two
-agree, but the rule is unchanged: the pinned compiler builds, the system one
-does not.)
+itself gets onto a machine. (CI images standardized on a system nim 2.2.10 while this
+migration was in flight, and master's code needs 2.2.10; the pin is 2.2.10 so
+the two agree, but the rule is unchanged: the pinned compiler builds, the
+system one does not — even when their versions are equal.)
