@@ -7,6 +7,6 @@
     "node": "^20.19.0 || >=22"
   },
   "dependencies": {
-    "@walletconnect/sign-client": "^2.17.0"
+    "@walletconnect/sign-client": "2.24.0"
   }
 }

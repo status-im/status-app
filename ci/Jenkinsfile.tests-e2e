@@ -155,10 +155,15 @@ pipeline {
     }
 
     stage('Deps') {
-      steps { script { dir('test/e2e') {
-        sh "python3 -m venv ${VIRTUAL_ENV}"
-        sh 'pip3 install -r requirements.txt'
-      } } }
+      steps {
+        script { dir('test/e2e') {
+          sh "python3 -m venv ${VIRTUAL_ENV}"
+          sh 'pip3 install -r requirements.txt'
+        } }
+        script { dir('test/e2e/scripts/wallet_connect_dapp') {
+          sh 'npm ci --no-audit --no-fund'
+        } }
+      }
     }
 
     stage('Download') {
