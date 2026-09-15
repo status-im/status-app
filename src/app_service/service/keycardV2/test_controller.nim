@@ -1,7 +1,7 @@
 import nimqml
 
 when defined(useSimulatedKeycard):
-  import std/[os, osproc, strutils, json]
+  import std/[os, osproc, strutils, json, locks, streams]
   import chronicles
   import keycard_go
   import constants as status_const
@@ -76,44 +76,198 @@ when defined(useSimulatedKeycard):
       except CatchableError as e:
         return "failed to run build.sh: " & e.msg
 
-  # Windows: free leftover keycardqt on port; refuse if held by something else (like run.sh).
-  proc freeSimulatorPort(port: string): string =
-    when defined(windows):
-      try:
-        proc listeningPids(): seq[string] =
-          let (netOut, _) = execCmdEx("netstat -ano -p TCP")
-          for line in netOut.splitLines():
-            let parts = line.splitWhitespace()
-            if parts.len >= 5 and parts[0] == "TCP" and parts[^2] == "LISTENING" and
-                parts[1].endsWith(":" & port):
-              let pid = parts[^1]
-              if pid.len > 0 and pid != "0" and pid notin result:
-                result.add(pid)
+  const CMD_TIMEOUT_MSEC = 10_000
 
-        let pids = listeningPids()
-        for pid in pids:
-          let (cmdOut, _) = execCmdEx(
-            "powershell -NoProfile -Command \"(Get-CimInstance Win32_Process -Filter 'ProcessId=" &
-            pid & "').CommandLine\"")
-          let cmd = cmdOut.strip()
-          if "keycardqt" in cmd.toLowerAscii():
-            info "Port held by previous simulator — stopping it", port = port, pid = pid
-            discard execCmdEx("taskkill /PID " & pid & " /F")
-          else:
-            return "port " & port & " is in use by a non-simulator process (pid " & pid & ")"
-        for _ in 0 ..< 20:
-          if listeningPids().len == 0:
-            break
-          sleep(200)
-        return ""
-      except CatchableError as e:
-        return "failed to check simulator port: " & e.msg
+  func subprocessOpts(): set[ProcessOption] =
+    when defined(windows):
+      {poUsePath, poStdErrToStdOut, poDaemon}
     else:
+      {poUsePath, poStdErrToStdOut}
+
+  proc stopProcess(p: Process) =
+    if not p.isNil:
+      if p.running:
+        p.terminate()
+      p.close()
+
+  var simProcessLock: Lock
+  var startedSimProcess: Process
+  simProcessLock.initLock()
+
+  proc setStartedSimProcess(p: Process) =
+    {.cast(gcsafe).}:
+      acquire(simProcessLock)
+      startedSimProcess = p
+      release(simProcessLock)
+
+  proc takeStartedSimProcess(): Process =
+    {.cast(gcsafe).}:
+      acquire(simProcessLock)
+      result = startedSimProcess
+      startedSimProcess = nil
+      release(simProcessLock)
+
+  proc runTimed(cmd: string; args: seq[string]; timeoutMs: int = CMD_TIMEOUT_MSEC):
+      tuple[output: string, exitCode: int] =
+    var p: Process
+    try:
+      p = startProcess(cmd, args = args, options = subprocessOpts())
+    except CatchableError:
+      return ("", 1)
+    try:
+      result.exitCode = p.waitForExit(timeoutMs)
+      try:
+        result.output = p.outputStream.readAll()
+      except CatchableError:
+        result.output = ""
+    finally:
+      p.close()
+
+  when defined(windows):
+    proc addrListensOnPort(addrPort, port: string): bool =
+      let colon = addrPort.rfind(':')
+      if colon < 0:
+        return false
+      addrPort.substr(colon + 1) == port
+
+    proc windowsListeningPids(port: string): seq[string] =
+      let (netOut, _) = runTimed("netstat", @["-ano", "-p", "TCP"])
+      for line in netOut.splitLines():
+        let parts = line.splitWhitespace()
+        if parts.len >= 5 and parts[0] == "TCP" and parts[^2] == "LISTENING" and
+            addrListensOnPort(parts[1], port):
+          let pid = parts[^1]
+          if pid.len > 0 and pid != "0" and pid notin result:
+            result.add(pid)
+
+    proc windowsImageName(pid: string): string =
+      let (outp, _) = runTimed("tasklist", @["/FI", "PID eq " & pid, "/FO", "CSV", "/NH"])
+      let line = outp.strip()
+      if line.startsWith("\""):
+        let endq = line.find('"', 1)
+        if endq > 1:
+          return line[1 ..< endq]
+      let comma = line.find(',')
+      if comma > 0:
+        return line[0 ..< comma]
+      return line
+  else:
+    proc unixListeningPids(port: string): seq[string] =
+      let (outp, _) = runTimed("lsof", @["-ti", "tcp:" & port])
+      for line in outp.splitLines():
+        let pid = line.strip()
+        if pid.len > 0 and pid notin result:
+          result.add(pid)
+
+    proc unixCommandLine(pid: string): string =
+      let (outp, _) = runTimed("ps", @["-p", pid, "-o", "command="])
+      return outp.strip()
+
+  template waitPortReleased(listeningPids: untyped, port: string) =
+    for _ in 0 ..< 20:
+      if listeningPids(port).len == 0:
+        break
+      sleep(200)
+
+  proc freeSimulatorPort(port: string): string =
+    try:
+      when defined(windows):
+        for pid in windowsListeningPids(port):
+          if windowsImageName(pid).toLowerAscii() != "java.exe":
+            return "port " & port & " is in use by a non-simulator process (pid " & pid & ")"
+          info "Port held by previous simulator — stopping it", port = port, pid = pid
+          discard runTimed("taskkill", @["/PID", pid, "/F"])
+        waitPortReleased(windowsListeningPids, port)
+      else:
+        for pid in unixListeningPids(port):
+          if "keycardqt" notin unixCommandLine(pid).toLowerAscii():
+            return "port " & port & " is in use by a non-simulator process (pid " & pid & ")"
+          info "Port held by previous simulator — stopping it", port = port, pid = pid
+          discard runTimed("kill", @["-9", pid])
+        waitPortReleased(unixListeningPids, port)
       return ""
+    except CatchableError as e:
+      return "failed to check simulator port: " & e.msg
+
+  when defined(windows):
+    proc findJavaExe(): string =
+      let home = getEnv("JAVA_HOME")
+      if home.len > 0:
+        let fromHome = home / "bin" / "java.exe"
+        if fileExists(fromHome):
+          return fromHome
+      result = findExe("java")
+      if result.len > 0:
+        return result
+      let scoopJavaGlobs = [
+        getHomeDir() / "scoop" / "shims" / "java.exe",
+        "C:/ProgramData/scoop/shims/java.exe",
+        getHomeDir() / "scoop" / "apps" / "*" / "current" / "bin" / "java.exe",
+        "C:/ProgramData/scoop/apps/*/current/bin/java.exe",
+      ]
+      for pattern in scoopJavaGlobs:
+        if pattern.contains('*'):
+          for javaPath in walkFiles(pattern):
+            return javaPath
+        elif fileExists(pattern):
+          return pattern
+      const programFilesRoots = [
+        "C:/Program Files/Eclipse Adoptium",
+        "C:/Program Files/Microsoft",
+        "C:/Program Files/Java",
+        "C:/Program Files/Zulu",
+        "C:/Program Files/Amazon Corretto",
+      ]
+      for root in programFilesRoots:
+        if not dirExists(root):
+          continue
+        for javaPath in walkFiles(root / "*" / "bin" / "java.exe"):
+          return javaPath
+      return ""
+
+  proc spawnSimulator(simDir, version, port, mainClass: string): string =
+    when defined(windows):
+      let portErr = freeSimulatorPort(port)
+      if portErr.len > 0:
+        error "keycard simulator port unavailable", err = portErr, port = port
+        return portErr
+    try:
+      when defined(windows):
+        let javaExe = findJavaExe()
+        if javaExe.len == 0:
+          error "java not found for keycard simulator"
+          return "java not found in PATH or JAVA_HOME; install a JRE >= 11"
+        let classpath = buildClasspath(simDir, version)
+        let p = startProcess(
+          javaExe,
+          workingDir = simDir,
+          args = @["-noverify", "-cp", classpath, mainClass, port],
+          options = subprocessOpts(),
+        )
+        setStartedSimProcess(p)
+      else:
+        let p = startProcess(
+          "/bin/bash",
+          workingDir = simDir,
+          args = @["./run.sh", port, version],
+          options = subprocessOpts(),
+        )
+        setStartedSimProcess(p)
+      info "starting keycard simulator", dir = simDir, port = port, version = version
+      return ""
+    except CatchableError as e:
+      error "failed to start keycard simulator", err = e.msg
+      return "failed to start keycard simulator: " & e.msg
 
   type
     LoadCardArg = ref object of QObjectTaskArg
       params: JsonNode
+
+    StartSimulatorArg = ref object of QObjectTaskArg
+      simDir: string
+      version: string
+      port: string
+      mainClass: string
 
   proc loadCardTask(argEncoded: string) {.gcsafe, nimcall.} =
     let arg = decode[LoadCardArg](argEncoded)
@@ -124,6 +278,16 @@ when defined(useSimulatedKeycard):
       output["error"] = %* e.msg
     arg.finish(output)
 
+  proc startSimulatorTask(argEncoded: string) {.gcsafe, nimcall.} =
+    let arg = decode[StartSimulatorArg](argEncoded)
+    var failure = ""
+    {.cast(gcsafe).}:
+      try:
+        failure = spawnSimulator(arg.simDir, arg.version, arg.port, arg.mainClass)
+      except CatchableError as e:
+        failure = e.msg
+    arg.finish(failure)
+
   QtObject:
     type KeycardTestController* = ref object of QObject
       simProcess: Process  # the spawned jcardsim simulator server (if started from the app)
@@ -132,18 +296,28 @@ when defined(useSimulatedKeycard):
     ## Forward declaration
     proc delete*(self: KeycardTestController)
 
-    proc newKeycardTestController*(): KeycardTestController =
+    proc newKeycardTestController*(threadpool: ThreadPool): KeycardTestController =
       new(result, delete)
       result.QObject.setup
-      result.threadpool = newThreadPool()
+      result.threadpool = threadpool
 
     proc delete*(self: KeycardTestController) =
-      if not self.simProcess.isNil and self.simProcess.running:
-        self.simProcess.terminate()
-        self.simProcess.close()
-      if not self.threadpool.isNil:
-        self.threadpool.teardown()
+      stopProcess(takeStartedSimProcess())
+      stopProcess(self.simProcess)
+      self.simProcess = nil
       self.QObject.delete
+
+    proc simulatorStartFinished*(self: KeycardTestController, error: string) {.signal.}
+
+    proc onStartSimulatorDone(self: KeycardTestController, failure: string) {.slot.} =
+      let pending = takeStartedSimProcess()
+      if failure.len > 0:
+        stopProcess(pending)
+        self.simProcess = nil
+        error "keycard simulator start failed", err = failure
+      else:
+        self.simProcess = pending
+      self.simulatorStartFinished(failure)
 
     proc startSimulator*(self: KeycardTestController, version: string): string {.slot.} =
       var safeVersion = ""
@@ -173,45 +347,22 @@ when defined(useSimulatedKeycard):
       if port.len == 0:
         port = "9025"
 
-      if not self.simProcess.isNil and self.simProcess.running:
-        self.simProcess.terminate()
-        self.simProcess.close()
+      stopProcess(self.simProcess)
       self.simProcess = nil
       discard callRPC("Stop")
       discard keycard_go.keycardTestRemoveCard()
       discard keycard_go.keycardTestUnplugReader()
 
-      try:
-        when defined(windows):
-          # Mirror run.sh: version/mainClass already validated above; free port then launch JVM.
-          let javaExe = findExe("java")
-          if javaExe.len == 0:
-            error "java not found for keycard simulator"
-            return "java not found in PATH; install a JRE >= 11"
-          let portErr = freeSimulatorPort(port)
-          if portErr.len > 0:
-            error "keycard simulator port unavailable", err = portErr, port = port
-            return portErr
-          let classpath = buildClasspath(simDir, safeVersion)
-          self.simProcess = startProcess(
-            javaExe,
-            workingDir = simDir,
-            args = @["-noverify", "-cp", classpath, mainClass, port],
-            options = {poParentStreams},
-          )
-        else:
-          # run.sh validates version props and frees a leftover simulator on the port.
-          self.simProcess = startProcess(
-            "/bin/bash",
-            workingDir = simDir,
-            args = @["./run.sh", port, safeVersion],
-            options = {poParentStreams},
-          )
-        info "starting keycard simulator", dir = simDir, port = port, version = safeVersion
-        return ""
-      except CatchableError as e:
-        error "failed to start keycard simulator", err = e.msg
-        return "failed to start keycard simulator: " & e.msg
+      self.threadpool.start(StartSimulatorArg(
+        tptr: startSimulatorTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onStartSimulatorDone",
+        simDir: simDir,
+        version: safeVersion,
+        port: port,
+        mainClass: mainClass,
+      ))
+      return ""
 
     proc createCard*(self: KeycardTestController, cardId: string) {.slot.} =
       info "creating a new keycard with id: ", cardId

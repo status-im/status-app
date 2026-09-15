@@ -360,7 +360,7 @@ proc mainProc() =
   singletonInstance.engine.setRootContextProperty("featureFlagsRootContextProperty", newQVariant(singletonInstance.featureFlags()))
 
   when defined(useSimulatedKeycard):
-    keycardTestControllerInstance = newKeycardTestController()
+    keycardTestControllerInstance = newKeycardTestController(statusFoundation.threadpool)
     singletonInstance.engine.setRootContextProperty("keycardTestController", newQVariant(keycardTestControllerInstance))
 
   statusq_registerQmlTypes()
