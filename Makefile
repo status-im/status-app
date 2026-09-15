@@ -203,7 +203,6 @@ QML_DEBUG_PORT ?= 49152
 
 ifneq ($(QML_DEBUG), false)
  COMMON_CMAKE_BUILD_TYPE=Debug
- NIM_PARAMS += -d:qmldebug -d:qmlDebugPort:$(QML_DEBUG_PORT) --passC:"-DQT_QML_DEBUG"
 else
  COMMON_CMAKE_BUILD_TYPE=Release
 endif
@@ -211,7 +210,6 @@ endif
 MONITORING ?= false
 ifneq ($(MONITORING), false)
  STATUSQ_CMAKE_CONFIG_PARAMS += -DMONITORING:BOOL=ON -DMONITORING_QML_ENTRY_POINT:STRING="/../monitoring/Main.qml"
- NIM_PARAMS += -d:monitoring
 endif
 
 # where Qt is installed, depends on the `QMAKE` path
@@ -662,7 +660,6 @@ endif
 ifeq ($(USE_SIMULATED_KEYCARD),true)
 STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_BUILD_DIR)-simulated-keycard
 STATUS_KEYCARD_QT_CMAKE_PARAMS += -DUSE_SIMULATED_KEYCARD=ON
-NIM_PARAMS += -d:useSimulatedKeycard
 endif
 
 STATUSKEYCARD_QT_LIB_PREFIX := lib
@@ -1119,14 +1116,15 @@ force-rebuild-status-go:
 	bash ./scripts/force-rebuild-status-go.sh $(STATUSGO)
 
 # Repair wallet db migration marker: make fix-wallet-migrations <dbpath|datadir> <password>
-# Without arguments it lists the wallet migrations the vendored status-go knows.
+# Without arguments it lists the wallet migrations the resolved status-go knows
+# ($(STATUSGO_ROOT): the pinned scratch copy, or the develop-mode checkout).
 ifeq (fix-wallet-migrations,$(firstword $(MAKECMDGOALS)))
 FIX_WALLET_MIGRATIONS_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(FIX_WALLET_MIGRATIONS_ARGS):;@:)
 endif
 
 fix-wallet-migrations:
-	cd vendor/status-go && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
+	cd $(STATUSGO_ROOT) && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
 		$(if $(FIX_WALLET_MIGRATIONS_ARGS),$(abspath $(word 1,$(FIX_WALLET_MIGRATIONS_ARGS))) $(word 2,$(FIX_WALLET_MIGRATIONS_ARGS)))
 
 # `run`, `run-linux`, `run-linux-gdb`, `run-macos`, `run-windows` are DELETED

@@ -387,7 +387,13 @@ proc launchHostApp(args: string) =
     mkDir contents / "Resources"
     cpFile(thisDir() / "Info.dev.plist", contents / "Info.plist")
     cpFile(thisDir() / "status-dev.icns", contents / "Resources/status-dev.icns")
+    cpFile(thisDir() / "resources/macos/dev/Assets.car", contents / "Resources/Assets.car")
     cpFile(thisDir() / "resources.rcc", contents / "resources.rcc")
+    # The monitoring tool loads MONITORING_QML_ENTRY_POINT="/../monitoring/Main.qml"
+    # relative to the app binary dir (Contents/MacOS -> Contents/monitoring).
+    if getEnv("MONITORING", "false") != "false":
+      rmDir contents / "monitoring"
+      cpDir thisDir() / "monitoring", contents / "monitoring"
     exec "cd " & quoteShell(contents / "MacOS") & " && ln -fs ../../../nim_status_client ./"
     # `fileicon` is a nicety, not a build input.
     exec "fileicon set " & quoteShell(bin) & " " &
@@ -464,20 +470,25 @@ task run, "Build if needed and launch the host dev build (StatusDev.app on macOS
   buildClient(force)
   launchHostApp("")
 
-task tests, "Run the Nim test suite (test/nim/*.nim); pass a test name to run one (issue 0017)":
+task tests, "Run the Nim test suite (test/nim/*.nim); pass a test name to run one; --benches adds the *_bench.nim benchmarks (issue 0017)":
   # The suite links libstatus/libsds and the Qt frameworks, so it needs the
-  # same artifacts the client does, minus StatusQ / status-keycard-qt / rcc.
+  # same artifacts the client does, minus status-keycard-qt / rcc (StatusQ only
+  # for the suites that link it — see nimTestsLinkStatusQ).
   var only: seq[string]
+  var benches = false
   for p in taskArgv():
-    if p.startsWith("-"):
+    if p == "--benches":
+      benches = true
+    elif p.startsWith("-"):
       fail "unrecognized flag for 'tests': " & p &
-        "\nusage: nim tests status.nims [<test name> ...]"
-    only.add p
+        "\nusage: nim tests status.nims [--benches] [<test name> ...]"
+    else:
+      only.add p
   let t = Target(os: "host")
   validateHost(t)
   discard applyDevelopModeArms()
   prepareHostBuild()   # shared with buildHostArtifacts (issue 0017 review, M7)
-  runNimTests(only)
+  runNimTests(only, benches)
 
 task windowsLauncher, "Build bin/nim_windows_launcher.exe for `make pkg-windows` (--compileOnly stops before the link; issue 0017)":
   # The task parses its own argv and hands the VALUE down, exactly like

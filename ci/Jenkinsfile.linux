@@ -188,8 +188,14 @@ pipeline {
           when { expression { params.RUN_NIM_TESTS } }
           steps { script {
             /* The Nim suite is a driver task since issue 0017; it owns the
-             * library-path environment the tests need. */
-            sh 'nim tests status.nims'
+             * library-path environment the tests need. --benches deliberately
+             * runs the benchmarks too: their setup code and structural
+             * GREEN-gate assertions only stay honest if CI keeps building and
+             * executing them. Wall-clock perf gates flake on the shared
+             * executors, so BENCH_ASSERTS=0 downgrades them to report-only, and
+             * BENCH_QUICK=1 trims the size sweeps to the assert-relevant sizes
+             * (see test/nim/benchmarks/perf_gate.nim). */
+            sh 'BENCH_ASSERTS=0 BENCH_QUICK=1 nim tests status.nims --benches'
           } }
         }
 

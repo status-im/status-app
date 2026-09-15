@@ -614,6 +614,11 @@ proc buildKeycardQt() =
     args.add "-DOPENSSL_ROOT_DIR=" &
       getEnv("WIN_OPENSSL_ROOT", "C:/ProgramData/scoop/apps/openssl-lts/current")
     args.add "-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON"
+  # The simulated keycard (CI's nightly keycard e2e) is a separate build tree —
+  # keycardBuildDir() carries the suffix — so its codegen never leaks into a
+  # real-keycard build (master 2026-08).
+  if getEnv("USE_SIMULATED_KEYCARD") == "true":
+    args.add "-DUSE_SIMULATED_KEYCARD=ON"
   cmakeArtifact("status-keycard-qt", thisDir() / "cmake/status-keycard-qt",
     keycardBuildDir(), args, target = "status-keycard-qt")
 
@@ -699,6 +704,10 @@ const clientFlagEnv = [
   "RESOURCES_LAYOUT",        # -d:development / -d:production
   "KDF_ITERATIONS",          # -d:KDF_ITERATIONS
   "OUTPUT_CSV",              # -d:output_csv
+  "QML_DEBUG",               # -d:qmldebug + -DQT_QML_DEBUG (and cmake's build type)
+  "QML_DEBUG_PORT",          # -d:qmlDebugPort
+  "MONITORING",              # -d:monitoring
+  "USE_SIMULATED_KEYCARD",   # -d:useSimulatedKeycard + its own nimcache
   "QT_LIBDIR",               # -F/-L + rpath
   "STATUSGO_LIBDIR",         # -L + rpath
   "NIMSDS_LIBDIR",           # -L + rpath
@@ -857,8 +866,52 @@ proc nimTestFiles(): seq[string] =
     if line.strip.len > 0:
       result.add line.strip
 
-proc runNimTests(only: seq[string]) =
-  ## `make nim-test-run/%` + `tests-nim-linux`, moved to the driver.
+# These stand up real StatusQ machinery — signal_handler /
+# statusq_invoke_method_queued, ModelQuery/ModelUtils, SFPM proxy chains, or
+# full modal QML trees in an offscreen engine — so they link libStatusQ and
+# need it built first. (make's NIM_TESTS_LINK_STATUSQ, ported from
+# makefiles/nim-tests.mk when the Makefile stopped invoking nim.)
+const nimTestsLinkStatusQ = [
+  "asset_proxy_chain_bench",
+  "collectibles_selector_bench",
+  "collectibles_selector_model_bench",
+  "send_handler_adaptors_bench",
+  "send_handler_lookup_bench",
+  "send_modal_instantiation_bench",
+  "services_pause_bridge_test",
+  "signal_handler_test",
+  "swap_key_harvest_bench",
+  "swap_modal_instantiation_bench",
+  "typed_completion_test",
+  "url_scheme_event_test",
+]
+
+# Model-spy tests call inspection accessors gated behind
+# `when defined(testing) or defined(QT_MODEL_SPY)` or assert on the granular
+# signals model_sync records only under QT_MODEL_SPY. The define is applied
+# per-file, NOT globally (make's NIM_TESTS_MODEL_SPY).
+const nimTestsModelSpy = [
+  "assets_adaptor_model_test",
+  "collectibles_selector_model_test",
+  "grouped_account_assets_model_test",
+  "market_leaderboard_model_test",
+  "member_model_test",
+  "model_sync_move_test",
+  "model_sync_unified_test",
+  "token_groups_model_test",
+  "token_lists_model_test",
+  "token_selector_model_bench",
+  "token_selector_model_test",
+  "token_selector_producer_view_test",
+]
+
+proc isBench(t: string): bool =
+  ## Naming convention (makefiles/nim-tests.mk): benchmarks end in `_bench.nim`;
+  ## everything else is a test.
+  t.endsWith("_bench.nim")
+
+proc runNimTests(only: seq[string], benches: bool) =
+  ## `make nim-test-run/%` + `tests-nim` / `benches-nim`, moved to the driver.
   ##
   ## The driver owns the library-path environment, which is the whole reason
   ## this could not stay a make one-liner: make's recipe exported
@@ -894,28 +947,50 @@ proc runNimTests(only: seq[string]) =
     flags.add "--passL:-F" & qtLibDir
   else:
     flags.add "--passL:-L" & qtLibDir
+    if hostOS == "linux":
+      flags.add "--passL:-Wl,-rpath-link," & qtLibDir  # see config.nims
   flags.add "--passL:" & qtSeaqtExtraLibs()
   flags.add "--passL:-L" & nimsdsLibDir()
   flags.add "--passL:-lsds"
   flags.add "--passL:-L" & statusgoLibDir()
   flags.add "--passL:-lstatus"
 
+  let statusqLibPath = thisDir() / "bin/StatusQ"
   var libPath = ""
-  for d in [qtLibDir, nimsdsLibDir(), statusgoLibDir()]:
+  for d in [qtLibDir, nimsdsLibDir(), statusgoLibDir(), statusqLibPath]:
     libPath &= d & ":"
   let libPathVar = if hostOS == "macosx": "DYLD_LIBRARY_PATH" else: "LD_LIBRARY_PATH"
 
-  var tests = nimTestFiles()
+  # Tests run by default; benchmarks only with --benches (make's tests-nim vs
+  # benches-nim). A NAMED benchmark is always allowed.
+  let allFiles = nimTestFiles()
+  var tests: seq[string]
   if only.len > 0:
-    var picked: seq[string]
-    for t in tests:
+    for t in allFiles:
       for o in only:
         if o == t or o == t.extractFilename or o == t.splitFile.name:
-          picked.add t
-    if picked.len == 0:
+          tests.add t
+    if tests.len == 0:
       fail "no test matches " & only.join(" ") & "\nKnown tests:\n  " &
-        tests.join("\n  ")
-    tests = picked
+        allFiles.join("\n  ")
+  else:
+    for t in allFiles:
+      if benches or not isBench(t):
+        tests.add t
+
+  # StatusQ-linking suites need libStatusQ built and on the rpath (config.nims'
+  # non-client arm bakes STATUSQ_INSTALL_PATH/StatusQ when the var is set).
+  var needStatusQ = false
+  for t in tests:
+    if t.splitFile.name in nimTestsLinkStatusQ:
+      needStatusQ = true
+  if needStatusQ:
+    putEnv("STATUSQ_INSTALL_PATH", thisDir() / "bin")
+    buildStatusQ()
+
+  # Per-test nimcache: parallel CI builds of the suite must not race on one
+  # cache (make's NIMCACHE_BASE).
+  let nimcacheBase = getEnv("WORKSPACE_TMP", thisDir() / "build") / "nimcache"
 
   # The suite is a Nim compile like any other, and it links the same libraries
   # the client does: the compiler that runs it must be the pin too (issue 0018
@@ -928,8 +1003,15 @@ proc runNimTests(only: seq[string]) =
   for f in flags:
     cmd &= " " & quoteShell(f)
   for t in tests:
+    let name = t.splitFile.name
+    var perTest = " " & quoteShell("--nimcache:" & nimcacheBase & "-" & name)
+    if name in nimTestsLinkStatusQ:
+      perTest &= " " & quoteShell("--passL:-L" & statusqLibPath) &
+        " " & quoteShell("--passL:-lStatusQ")
+    if name in nimTestsModelSpy:
+      perTest &= " -d:QT_MODEL_SPY"
     echo "\e[92mBuilding:\e[39m " & t
-    exec "cd " & quoteShell(thisDir()) & " && " & cmd & " " & quoteShell(t)
+    exec "cd " & quoteShell(thisDir()) & " && " & cmd & perTest & " " & quoteShell(t)
     let bin = thisDir() / "bin" / t.splitFile.name
     echo "\e[92mRunning:\e[39m " & bin.extractFilename
     exec "cd " & quoteShell(thisDir()) & " && " & libPathVar & "=" &

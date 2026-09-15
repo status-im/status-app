@@ -114,7 +114,11 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
   # Keep a separate nimcache per USE_SIMULATED_KEYCARD mode. That flag toggles -d:useSimulatedKeycard,
   # which adds/removes the KeycardTest* imports from libstatus-keycard-qt; sharing one cache let stale
   # (simulated) codegen leak into a non-simulated build -> dyld "Symbol not found: _KeycardTestCreateCard".
-  let kcSuffix = when defined(useSimulatedKeycard): "-simkeycard" else: ""
+  # The define itself is switched below (from USE_SIMULATED_KEYCARD, make's
+  # former NIM_PARAMS arm), so the env var decides the cache too.
+  let simulatedKeycard = defined(useSimulatedKeycard) or
+      getEnv("USE_SIMULATED_KEYCARD") == "true"
+  let kcSuffix = if simulatedKeycard: "-simkeycard" else: ""
   if defined(release) or clientRelease:
     switch("nimcache", "nimcache/release" & kcSuffix & "/$projectName")
   else:
@@ -384,6 +388,18 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
       switch("define", "KDF_ITERATIONS=" & kdfIterations)
     if getEnv("OUTPUT_CSV") == "true":
       switch("define", "output_csv")
+    # Make-era knobs that reached the client through NIM_PARAMS until the
+    # Makefile stopped invoking nim (issue 0017): QML debugging, the monitoring
+    # tool, the simulated keycard. Each is a clientFlagEnv entry in the driver,
+    # so flipping one relinks the client.
+    if qmlDebug():
+      switch("define", "qmldebug")
+      switch("define", "qmlDebugPort=" & getEnv("QML_DEBUG_PORT", "49152"))
+      switch("passC", "-DQT_QML_DEBUG")
+    if getEnv("MONITORING", "false") != "false":
+      switch("define", "monitoring")
+    if simulatedKeycard:
+      switch("define", "useSimulatedKeycard")
 
     if hostOS == "windows":
       # --- the Windows client's flag set (PORTED from make, UNVERIFIED) -------
@@ -442,6 +458,11 @@ if not projectPath().startsWith(thisDir() / "nimbledeps"):
         switch("passL", "-F" & qtLibDir)
       else:
         switch("passL", "-L" & qtLibDir)
+        if hostOS == "linux":
+          # GNU ld resolves transitive shared-lib deps (libStatusQ.so ->
+          # libQt6WebEngineQuick.so.6) through -rpath-link, not -L; without it
+          # linking fails when Qt lives outside the system library paths.
+          switch("passL", "-Wl,-rpath-link," & qtLibDir)
       # The Qt modules the app links beyond what the seaqt bindings pull in
       # themselves (the former QT_SEAQT_EXTRA_LIBS make var — which the win32
       # branch never passed, hence its absence above). status_env.nims owns the
