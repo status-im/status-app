@@ -64,6 +64,8 @@ Column {
         warningMessage: qsTr("Checksum of the entered address is incorrect")
         input.rightComponent: StatusPasteButton {
             anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.halfPadding
             onPasted: (text) => addressInput.text = text
         }
         validators: [
