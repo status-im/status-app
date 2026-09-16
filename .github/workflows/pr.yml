@@ -24,22 +24,58 @@ jobs:
           fetch-depth: 0
           submodules: false
 
-      - name: Get status-go submodule commit
+      - name: Get status-go pin
         id: statusgo
         run: |
-          commit=$(git ls-tree HEAD vendor/status-go | awk '{print $3}')
+          # The pin is a nimble requirement now, not a submodule gitlink, and
+          # nimble.lock must agree with it or nothing resolves.
+          commit=$(sed -n 's|^requires "https://github.com/status-im/status-go\.git#\([0-9a-f]\{40\}\)".*|\1|p' nim_status_client.nimble | head -1)
+          if [ -z "$commit" ]; then
+            echo "::error::no status-go pin in nim_status_client.nimble"
+            exit 1
+          fi
+          locked=$(python3 -c "import json; print(json.load(open('nimble.lock'))['packages'].get('statusgo',{}).get('vcsRevision',''))")
+          if [ "$locked" != "$commit" ]; then
+            echo "::error::nimble.lock pins status-go at '$locked' but nim_status_client.nimble requires '$commit'. Re-run 'nimble lock'."
+            exit 1
+          fi
           echo "commit=$commit" >> $GITHUB_OUTPUT
-          echo "[LOG] status-go submodule commit: $commit"
+          echo "[LOG] status-go pin: $commit"
+
+      - name: Get base branch status-go pin
+        id: base
+        run: |
+          git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
+          # The base may predate the nimble migration, where the pin was a
+          # submodule gitlink.
+          base_commit=$(git show ${{ github.base_ref }}:nim_status_client.nimble 2>/dev/null \
+            | sed -n 's|^requires "https://github.com/status-im/status-go\.git#\([0-9a-f]\{40\}\)".*|\1|p' | head -1)
+          if [ -z "$base_commit" ]; then
+            base_commit=$(git ls-tree ${{ github.base_ref }} vendor/status-go | awk '{print $3}')
+          fi
+          echo "commit=$base_commit" >> $GITHUB_OUTPUT
+          echo "[LOG] status-go pin on base branch (${{ github.base_ref }}): ${base_commit:-<none>}"
+
+      - name: Check if the status-go pin changed
+        id: check_statusgo_changed
+        run: |
+          if [ "${{ steps.statusgo.outputs.commit }}" = "${{ steps.base.outputs.commit }}" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "[LOG] status-go pin NOT changed in this PR."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "[LOG] status-go pin changed in this PR."
+          fi
 
       - name: Fetch relevant status-go branches
+        if: steps.check_statusgo_changed.outputs.changed == 'true'
         run: |
-          # pin the submodule URL so a PR-modified .gitmodules cannot point
-          # the policy check at a non-upstream remote
-          git submodule init vendor/status-go
-          git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
-          git submodule update vendor/status-go
-          cd vendor/status-go
-          if ! git fetch origin 'release/*:refs/remotes/origin/release/*' 2>/dev/null; then
+          # The upstream URL is hardcoded so a PR cannot point the policy check
+          # at a non-upstream remote.
+          git clone --no-checkout --filter=blob:none \
+            https://github.com/status-im/status-go.git status-go
+          cd status-go
+          if ! git fetch origin 'refs/heads/release/*:refs/remotes/origin/release/*' 2>/dev/null; then
             echo "[WARN] No release/* branches found."
           fi
           if ! git fetch origin develop:refs/remotes/origin/develop 2>/dev/null; then
@@ -49,8 +85,9 @@ jobs:
 
       - name: Get containing branches
         id: branches
+        if: steps.check_statusgo_changed.outputs.changed == 'true'
         run: |
-          cd vendor/status-go
+          cd status-go
           branches=$(git branch -r --contains ${{ steps.statusgo.outputs.commit }} | sed 's/ *origin\///')
           # Normalize branch list: remove 'HEAD -> ...', trim whitespace, one per line
           cleaned_branches=$(echo "$branches" | sed '/HEAD ->/d' | awk '{$1=$1};1')
@@ -60,32 +97,13 @@ jobs:
           echo "[LOG] status-go commit is contained in branches:"
           echo "$cleaned_branches"
 
-      - name: Fetch base branch status-go commit
-        run: |
-          git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
-          BASE_STATUS_GO_COMMIT=$(git ls-tree ${{ github.base_ref }} vendor/status-go | awk '{print $3}')
-          echo "BASE_STATUS_GO_COMMIT=$BASE_STATUS_GO_COMMIT" >> $GITHUB_ENV
-          echo "[LOG] status-go commit on base branch (${{ github.base_ref }}): $BASE_STATUS_GO_COMMIT"
-
-      - name: Check if status-go submodule changed
-        id: check_statusgo_changed
-        run: |
-          git fetch origin ${{ github.base_ref }}
-          if git diff --name-only origin/${{ github.base_ref }} HEAD | grep -q '^vendor/status-go$'; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "[LOG] status-go submodule changed in this PR."
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "[LOG] status-go submodule NOT changed in this PR."
-          fi
-
       - name: Validate status-go branch policy for master
         if: steps.check_statusgo_changed.outputs.changed == 'true' && github.base_ref == 'master'
         run: |
           BRANCHES="${{ steps.branches.outputs.branches }}"
           echo "[LOG] Checking branch policy for master branch"
           if ! echo "$BRANCHES" | grep -x 'develop'; then
-            echo "::error::status-go submodule must point to a commit on 'develop' branch when PR targets master."
+            echo "::error::the status-go pin must be a commit on 'develop' when the PR targets master."
             exit 1
           fi
           echo "[LOG] status-go commit is on develop branch."
@@ -96,7 +114,7 @@ jobs:
           BRANCHES="${{ steps.branches.outputs.branches }}"
           echo "[LOG] Checking branch policy for release branch: ${{ github.base_ref }}"
           if ! echo "$BRANCHES" | grep -E '^release/' >/dev/null; then
-            echo "::error::status-go submodule must point to a commit on a 'release/*' branch when PR targets a release branch."
+            echo "::error::the status-go pin must be a commit on a 'release/*' branch when the PR targets a release branch."
             exit 1
           fi
           echo "[LOG] status-go commit is on a release/* branch."
@@ -105,13 +123,18 @@ jobs:
         if: steps.check_statusgo_changed.outputs.changed == 'true'
         run: |
           STATUS_GO_COMMIT="${{ steps.statusgo.outputs.commit }}"
-          BASE_STATUS_GO_COMMIT="$BASE_STATUS_GO_COMMIT"
+          BASE_STATUS_GO_COMMIT="${{ steps.base.outputs.commit }}"
+          if [ -z "$BASE_STATUS_GO_COMMIT" ]; then
+            echo "[WARN] the base branch names no status-go pin; skipping the recency check."
+            exit 0
+          fi
           echo "[LOG] Checking commit recency: PR=$STATUS_GO_COMMIT, base=$BASE_STATUS_GO_COMMIT"
-          cd vendor/status-go
+          cd status-go
+          git fetch --filter=blob:none origin "$BASE_STATUS_GO_COMMIT"
           if git merge-base --is-ancestor "$BASE_STATUS_GO_COMMIT" "$STATUS_GO_COMMIT"; then
             echo "[LOG] status-go commit is newer than or equal to base branch. OK."
           else
-            echo "::error::status-go submodule commit in PR is older than the one on the base branch."
+            echo "::error::the status-go pin in this PR is older than the one on the base branch."
             exit 1
           fi
   wakuext-binding-contract:
@@ -119,16 +142,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # default (merge) ref on purpose: the contract must hold on the result of
-      # merging the PR, not on the PR's possibly-stale vendor pin
+      # merging the PR, not on the PR's possibly-stale pin
       - uses: actions/checkout@v4
         with:
           submodules: false
-      - name: Init vendored status-go (the shipped pin)
+      - name: Materialize the pinned status-go
         run: |
-          # same URL pinning as above: never fetch a PR-supplied remote
-          git submodule init vendor/status-go
-          git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
-          git submodule update vendor/status-go
+          # The test reads status-go's sources from vendor/status-go; the pin is
+          # a nimble requirement, so fetch exactly that commit. The upstream URL
+          # is hardcoded: never fetch a PR-supplied remote.
+          commit=$(sed -n 's|^requires "https://github.com/status-im/status-go\.git#\([0-9a-f]\{40\}\)".*|\1|p' nim_status_client.nimble | head -1)
+          if [ -z "$commit" ]; then
+            echo "::error::no status-go pin in nim_status_client.nimble"
+            exit 1
+          fi
+          git init -q vendor/status-go
+          git -C vendor/status-go remote add origin https://github.com/status-im/status-go.git
+          git -C vendor/status-go fetch -q --depth 1 origin "$commit"
+          git -C vendor/status-go checkout -q FETCH_HEAD
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
