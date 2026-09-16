@@ -35,6 +35,14 @@
 ##    qrcodegen_encodeSegments() or qrcodegen_encodeSegmentsAdvanced().
 ##  (Note that all ways require supplying the desired error correction level and various byte buffers.)
 ##
+
+##  QR-Code-generator has no C++ consumer, so the wrapper that binds it also
+##  compiles it: the C source lands in this compile's own nimcache and inherits
+##  its flag set on every target. There is no static library to build, no
+##  `--passL` for it and no platform-sentinel entry for its object files —
+##  nim's per-file command hash re-runs the C compile when the flags change.
+{.compile: "../../../../vendor/QR-Code-generator/c/qrcodegen.c".}
+
 ## ---- Enum and struct types----
 ##
 ##  The error correction level in a QR Code symbol.
