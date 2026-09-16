@@ -1,4 +1,5 @@
 BannedMemberCommunityView 1.0 BannedMemberCommunityView.qml
+ChannelsSelectionModel 1.0 ChannelsSelectionModel.qml
 CommunitiesGridView 1.0 CommunitiesGridView.qml
 CommunityColumnView 1.0 CommunityColumnView.qml
 CommunitySettingsView 1.0 CommunitySettingsView.qml

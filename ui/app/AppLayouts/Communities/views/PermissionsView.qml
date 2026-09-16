@@ -13,7 +13,6 @@ import AppLayouts.Communities.controls
 import AppLayouts.Communities.panels
 
 import QtModelsToolkit
-import SortFilterProxyModel
 
 ColumnLayout {
     id: root
@@ -80,6 +79,11 @@ ColumnLayout {
         Component.onCompleted: resetCommunityItemModel()
     }
 
+    ChannelsSelectionModel {
+        id: allChannelsTransformed
+        sourceModel: root.channelsModel
+    }
+
     IntroPanel {
         Layout.fillWidth: true
         Layout.maximumWidth: root.preferredContentWidth
@@ -128,7 +132,7 @@ ColumnLayout {
                 id: channelsSelectionModel
 
                 leftModel: model.channelsListModel ?? null
-                rightModel: root.channelsModel
+                rightModel: allChannelsTransformed
                 joinRole: "key"
             }
 
