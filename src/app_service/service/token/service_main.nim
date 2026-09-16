@@ -29,6 +29,8 @@ proc applyAllTokenListsResult(self: Service, res: AllTokenListsApplyResult) =
   self.allTokenLists = move res.allTokenLists
 
 proc prefetchParaswapSupport(self: Service) =
+  if not PARASWAP_ENABLED:
+    return
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
     return
@@ -571,6 +573,8 @@ proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int
 
 ## Checks if the chain is supported for swap via Paraswap
 proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
+  if not PARASWAP_ENABLED:
+    return false
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
     return false
