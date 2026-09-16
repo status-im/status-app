@@ -5,7 +5,7 @@
 
 - [docs/adr/0001-android-status-go-as-a-service.md](/docs/adr/0001-android-status-go-as-a-service.md): Android architecture where `status-go` runs in a separate Service process and the UI talks to it via Binder IPC.
 
-## Top level architecture
+## Top level architecture!
 
 This shows the flow from the UI all the way to the backend.
 
