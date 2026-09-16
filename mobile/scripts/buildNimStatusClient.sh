@@ -21,7 +21,18 @@ FLAG_BRIDGE_ENABLED=${FLAG_BRIDGE_ENABLED:-1}
 
 BUNDLE_IDENTIFIER=${BUNDLE_IDENTIFIER:-"app.status.mobile"}
 DESKTOP_VERSION=$(cd "$STATUS_DESKTOP" && ./scripts/version.sh)
-STATUSGO_VERSION=$(cd "$STATUS_DESKTOP/vendor/status-go" && ./scripts/version.sh)
+# A pinned statusgo store copy has no .git, so its version is the pin revision,
+# read from the store entry's nimblemeta.json via the resolved nimble.paths. A
+# developed checkout keeps `git describe`.
+if [[ -z "${STATUSGO_VERSION:-}" ]]; then
+    if [[ -d "$STATUS_DESKTOP/vendor/status-go/.git" || -f "$STATUS_DESKTOP/vendor/status-go/.git" ]] \
+       && grep -sqx statusgo "$STATUS_DESKTOP/nimble.overlay" 2>/dev/null; then
+        STATUSGO_VERSION=$(cd "$STATUS_DESKTOP/vendor/status-go" && ./scripts/version.sh)
+    else
+        STATUSGO_STORE=$(sed -n 's|^--path:"\(.*/pkgs2/statusgo-[^"/]*\)".*|\1|p' "$STATUS_DESKTOP/nimble.paths" 2>/dev/null | head -1)
+        STATUSGO_VERSION=$(sed -n 's|.*"vcsRevision": "\([0-9a-f]*\)".*|\1|p' "$STATUSGO_STORE/nimblemeta.json" 2>/dev/null | cut -c1-10)
+    fi
+fi
 
 if [[ "$ARCH" == "x86_64" ]]; then
     CARCH="amd64"
@@ -94,8 +105,38 @@ else
     NIM_FLAGS+=(-d:release -d:production)
 fi
 
-# build status-client with feature flags
-env "${FEATURE_FLAGS[@]}" ./vendor/nimbus-build-system/scripts/env.sh nim c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
+# Build status-client with feature flags.
+#
+# This is the one Nim compile the driver does not own (`./status app
+# --os:android|ios` delegates the mobile leg to make), so it resolves the
+# pinned compiler the same way `./status` does — `nimble path nim` reads
+# nimble's store, never PATH — and asserts its version against the manifest's
+# `requires "nim == X"`. STATUS_NIM overrides both.
+PIN_VER=$(sed -n -E 's/^[[:space:]]*requires[[:space:]]+"nim[[:space:]]*==[[:space:]]*([^"[:space:]]+)".*/\1/p' \
+    "$STATUS_DESKTOP/nim_status_client.nimble" 2>/dev/null | head -n 1 || true)
+NIM=${STATUS_NIM:-}
+if [[ -z "$NIM" ]]; then
+    # `nimble path nim` lists every nim the store holds, so pick the pin.
+    while IFS= read -r candidate; do
+        [[ -x "$candidate/bin/nim" ]] || continue
+        if [[ "$("$candidate/bin/nim" --version | head -n 1)" == "Nim Compiler Version $PIN_VER "* ]]; then
+            NIM="$candidate/bin/nim"; break
+        fi
+    done < <(cd "$STATUS_DESKTOP" && nimble path nim 2>/dev/null || true)
+    [[ -n "$NIM" ]] || NIM=$(command -v nim || true)
+    if [[ -z "$NIM" ]]; then
+        echo "ERROR: no Nim $PIN_VER. Run \`./status app\` in $STATUS_DESKTOP first." 1>&2
+        exit 1
+    fi
+fi
+NIM_VER=$("$NIM" --version | head -n 1 | sed -n -E 's/^Nim Compiler Version ([^ ]+).*/\1/p')
+if [[ -n "$PIN_VER" && "$NIM_VER" != "$PIN_VER" ]]; then
+    echo "ERROR: $NIM is Nim $NIM_VER, the manifest pins $PIN_VER." 1>&2
+    echo "Re-resolve with \`nimble setup\`; STATUS_NIM=<path> overrides this check." 1>&2
+    exit 1
+fi
+
+env "${FEATURE_FLAGS[@]}" "$NIM" c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
     "${NIM_FLAGS[@]}" \
     "$STATUS_DESKTOP"/src/nim_status_client.nim
 

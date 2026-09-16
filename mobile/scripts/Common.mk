@@ -29,11 +29,34 @@ export LIB_DIR=$(LIB_PATH)
 WRAPPER_APP?=$(ROOT_DIR)/wrapperApp
 STATUS_DESKTOP?=$(ROOT_DIR)/vendors/status-desktop
 STATUSQ?=$(STATUS_DESKTOP)/ui/StatusQ
+# statusgo is a pinned URL#hash nimble dependency. Nothing is copied:
+# STATUS_GO is the tree the sub-builds READ (the resolved store entry, or the
+# vendor/status-go checkout under `develop statusgo`) and STATUS_GO_OUT is
+# where every artifact lands, the same directory in both modes.
+# `./status prepareStatusgo` maintains it.
+STATUSGO_DEVELOPED := $(shell grep -sqx statusgo $(STATUS_DESKTOP)/nimble.overlay 2>/dev/null && echo 1)
+STATUS_GO_OUT ?= $(STATUS_DESKTOP)/.statusgo-build
+ifeq ($(STATUSGO_DEVELOPED),1)
 STATUS_GO?=$(STATUS_DESKTOP)/vendor/status-go
+else
+# The statusgo store entry from the generated resolution; status.nims'
+# statusgoSourceRoot answers the same question for the driver. Recursively
+# expanded: nimble.paths may not exist yet at parse time.
+STATUS_GO = $(shell sed -n 's|^--path:"\(.*/pkgs2/statusgo-[^/"]*\).*|\1|p' $(STATUS_DESKTOP)/nimble.paths 2>/dev/null | head -1)
+endif
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
+# status-keycard-qt is the desktop repo's vendor/status-keycard-qt submodule:
+# the -S dir of its own cmake project. The nested keycard-qt is a FetchContent
+# pin owned by that project; develop mode materializes vendor/keycard-qt and
+# redirects it there, read from nimble.overlay like STATUS_GO above.
 STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
-NIM_SDS_SOURCE_DIR ?= $(STATUS_DESKTOP)/vendor/nim-sds
+KEYCARD_QT_DEVELOPED := $(shell grep -sqx keycard-qt $(STATUS_DESKTOP)/nimble.overlay 2>/dev/null && echo 1)
+ifeq ($(KEYCARD_QT_DEVELOPED),1)
+KEYCARD_QT ?= $(STATUS_DESKTOP)/vendor/keycard-qt
+else
+KEYCARD_QT ?=
+endif
 
 # compile macros: pr -> StatusPR, release -> Status
 ifeq ($(BUILD_VARIANT),pr)
@@ -61,17 +84,20 @@ STATUS_DESKTOP_UI_FILES := $(shell find $(STATUS_DESKTOP)/ui -type f \( -iname '
 # Include CMakeLists.txt (mobilewebview pin) and prune build/ (generated sources).
 STATUS_Q_FILES := $(shell find $(STATUSQ) \( -path '$(STATUSQ)/build' \) -prune -o -type f \( -iname '*.cpp' -o -iname '*.h' -o -iname '*.mm' -o -iname 'CMakeLists.txt' \) -print)
 STATUS_Q_UI_FILES := $(shell find $(STATUSQ) -type f \( -iname '*.qml' -o -iname '*.qrc' \))
-STATUS_GO_FILES := $(shell find $(STATUS_GO) -type f \( -iname '*.go' \))
+# No STATUS_GO_FILES here: status-desktop does not track status-go sources
+# (ADR 0003) — $(STATUS_GO_LIB) delegates freshness to status-go's own PHONY
+# sub-make via FORCE.
 OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h' \))
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
-STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
+# The keycard sources are file-tracked so edits rebuild the lib. KEYCARD_QT is
+# empty unless developed (pinned _deps sources, lib-missing gating).
+STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) $(KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
-STATUS_GO_STUB_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_stub_exports.cpp
-STATUS_GO_SERVICE_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_service_dispatch.cpp
+STATUS_GO_STUB_GEN := $(STATUS_GO_OUT)/build/bin/statusgo_stub_exports.cpp
+STATUS_GO_SERVICE_GEN := $(STATUS_GO_OUT)/build/bin/statusgo_service_dispatch.cpp
 
 # script files
 STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh
-STATUS_GO_SCRIPT := $(SCRIPTS_PATH)/buildStatusGo.sh
 OPENSSL_SCRIPT := $(SCRIPTS_PATH)/buildOpenSSL.sh
 QRCODEGEN_SCRIPT := $(SCRIPTS_PATH)/buildQRCodeGen.sh
 STATUS_KEYCARD_QT_SCRIPT := $(SCRIPTS_PATH)/buildStatusKeycardQt.sh

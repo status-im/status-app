@@ -155,16 +155,16 @@ modules:
 
       # Native libraries we built ourselves. 
       - type: file
-        path: vendor/status-go/build/bin/libstatus.so
+        path: .statusgo-build/build/bin/libstatus.so
         dest: native-libs
       - type: file
-        path: vendor/status-go/build/bin/libstatus.so.0
+        path: .statusgo-build/build/bin/libstatus.so.0
         dest: native-libs
       - type: file
-        path: vendor/status-keycard-qt/build/linux/libstatus-keycard-qt.so.1
+        path: build/status-keycard-qt/linux/libstatus-keycard-qt.so.1
         dest: native-libs
       - type: file
-        path: vendor/status-keycard-qt/build/linux/libstatus-keycard-qt.so.1.0.0
+        path: build/status-keycard-qt/linux/libstatus-keycard-qt.so.1.0.0
         dest: native-libs
       # libsds.so is staged into tmp/linux/flatpak/in by bundle-flatpak.sh
       # because it's built outside the workspace tree.

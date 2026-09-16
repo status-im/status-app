@@ -6,7 +6,10 @@ BASEDIR=$(dirname "$0")
 # Load common config variables
 source "${BASEDIR}/commonCmakeConfig.sh"
 
-STATUS_KEYCARD_QT=${STATUS_KEYCARD_QT:="../vendors/status-desktop"}
+# STATUS_KEYCARD_QT = the status-keycard-qt submodule (the cmake -S dir).
+# KEYCARD_QT is the nested keycard-qt develop redirect (a checkout path, empty
+# = pinned).
+STATUS_KEYCARD_QT=${STATUS_KEYCARD_QT:="../vendors/status-desktop/vendor/status-keycard-qt"}
 KEYCARD_QT=${KEYCARD_QT:=""}
 LIB_DIR=${LIB_DIR}
 LIB_EXT=${LIB_EXT:=".a"}
@@ -42,15 +45,15 @@ echo "  Build include dir: ${OPENSSL_BUILD_INCLUDE_DIR}"
 echo "  Source include dir: ${OPENSSL_SOURCE_INCLUDE_DIR}"
 echo "  Crypto library: ${OPENSSL_CRYPTO_LIBRARY}"
 
-# Configure with CMake
-# Use local keycard-qt for faster development builds (FetchContent will use this)
-# If KEYCARD_QT path doesn't exist, FetchContent will clone from GitHub
-if [[ -d "${KEYCARD_QT}" ]]; then
-    echo "Using local keycard-qt from: ${KEYCARD_QT}"
-    KEYCARD_QT_SOURCE_DIR_ARG="-DKEYCARD_QT_SOURCE_DIR=${KEYCARD_QT}"
-else
-    echo "Local keycard-qt not found, will fetch from GitHub"
-    KEYCARD_QT_SOURCE_DIR_ARG=""
+# Configure with CMake.
+# FETCHCONTENT_SOURCE_DIR_KEYCARD-QT is ALWAYS passed (empty value = pinned
+# fetch; cmake treats an empty cache value as unset) so a develop/undevelop
+# flip can never leave a stale redirect in the cmake cache. Relative paths are
+# resolved against this script's cwd for the cache var.
+resolve_abs() { [[ -n "$1" ]] && (cd "$1" 2>/dev/null && pwd) || echo ""; }
+KEYCARD_QT_REDIRECT="$(resolve_abs "${KEYCARD_QT}")"
+if [[ -n "${KEYCARD_QT_REDIRECT}" ]]; then
+    echo "Using local keycard-qt from: ${KEYCARD_QT_REDIRECT}"
 fi
 
 cmake -S "${STATUS_KEYCARD_QT}" -B "${BUILD_DIR}" \
@@ -58,7 +61,7 @@ cmake -S "${STATUS_KEYCARD_QT}" -B "${BUILD_DIR}" \
     -DBUILD_TESTING=OFF \
     -DBUILD_EXAMPLES=OFF \
     -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
-    ${KEYCARD_QT_SOURCE_DIR_ARG} \
+    "-DFETCHCONTENT_SOURCE_DIR_KEYCARD-QT=${KEYCARD_QT_REDIRECT}" \
     -DOPENSSL_BUILD_INCLUDE_DIR="${OPENSSL_BUILD_INCLUDE_DIR}" \
     -DOPENSSL_SOURCE_INCLUDE_DIR="${OPENSSL_SOURCE_INCLUDE_DIR}" \
     -DOPENSSL_CRYPTO_LIBRARY="${OPENSSL_CRYPTO_LIBRARY}"
