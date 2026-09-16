@@ -57,6 +57,7 @@ Window {
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
         paraswapEnabled: featureFlags ? featureFlags.paraswapEnabled : false
         lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
+        swapProvidersEnabled: featureFlags ? featureFlags.swapProvidersEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}

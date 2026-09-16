@@ -10977,6 +10977,10 @@ chargement</translation>
         <translation>Marché</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Échange</translation>
     </message>
@@ -13429,6 +13433,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Activity Center</source>
         <translation>Centre d’activité</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18845,6 +18853,10 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <message>
         <source>Buy</source>
         <translation>Acheter</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

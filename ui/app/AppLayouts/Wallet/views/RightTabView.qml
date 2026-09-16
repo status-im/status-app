@@ -49,6 +49,7 @@ RightTabBaseView {
     required property SharedStores.NetworksStore networksStore
 
     property bool swapEnabled
+    property bool swapProvidersEnabled: true
     property bool buyEnabled
     property bool dAppsEnabled
     property bool dAppsVisible
@@ -538,7 +539,7 @@ RightTabBaseView {
                         sendEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled &&
                                      !RootStore.overview.isWatchOnlyAccount && RootStore.overview.canSend
                         communitySendEnabled: RootStore.tokensStore.showCommunityAssetsInSend
-                        swapEnabled: !RootStore.overview.isWatchOnlyAccount
+                        swapEnabled: !RootStore.overview.isWatchOnlyAccount && root.swapProvidersEnabled
                         swapVisible: root.swapEnabled
 
                         onSendRequested: (key) => {
