@@ -159,6 +159,12 @@ pipeline {
       }
     }
 
+    /* Run serially due to race condition with build also modifying translation files. */
+    stage('Check Translations') {
+      when { expression { params.RUN_UI_TESTS } }
+      steps { script { checkTranslations() } }
+    }
+
     stage('Build') {
       parallel {
         stage('Package') {
@@ -191,9 +197,6 @@ pipeline {
         stage('UI Tests') {
           when { expression { params.RUN_UI_TESTS } }
           stages {
-            stage('Check Translations') {
-              steps { script { checkTranslations() } }
-            }
             stage('QML Lint') {
               steps { script {
                 sh 'make qml-lint'
