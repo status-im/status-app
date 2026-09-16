@@ -723,6 +723,16 @@
     </message>
 </context>
 <context>
+    <name>ThreadCard</name>
+    <message numerus="yes">
+        <source>%n message(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n message</numerusform>
+            <numerusform>%n messages</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>TokenListPopup</name>
     <message numerus="yes">
         <source>%n token(s)</source>

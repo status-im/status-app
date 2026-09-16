@@ -17510,6 +17510,20 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThreadCard</name>
+    <message>
+        <source>deleted this thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n message(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ThumbnailsDropdownContent</name>
     <message>
         <source>No results</source>

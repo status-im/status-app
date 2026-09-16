@@ -78,6 +78,7 @@
         <file>icons/windows_titlebar/maximize.svg</file>
         <file>icons/windows_titlebar/minimise.svg</file>
         <file>icons/windows_titlebar/status.png</file>
+        <file>icons/thread.svg</file>
         <file>icons/activity.svg</file>
         <file>icons/add-circle.svg</file>
         <file>icons/add-contact.svg</file>

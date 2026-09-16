@@ -17531,6 +17531,20 @@ Esta acción no se puede deshacer.</translation>
     </message>
 </context>
 <context>
+    <name>ThreadCard</name>
+    <message>
+        <source>deleted this thread</source>
+        <translation>eliminó este hilo</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n message(s)</source>
+        <translation>
+            <numerusform>%n mensaje</numerusform>
+            <numerusform>%n mensajes</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ThumbnailsDropdownContent</name>
     <message>
         <source>No results</source>
