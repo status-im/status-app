@@ -1,126 +1,18 @@
-[submodule "vendor/nimbus-build-system"]
-	path = vendor/nimbus-build-system
-	url = https://github.com/status-im/nimbus-build-system.git
-	branch = master
-[submodule "vendor/uuids"]
-	path = vendor/uuids
-	url = https://github.com/pragmagic/uuids.git
 [submodule "vendor/QR-Code-generator"]
 	path = vendor/QR-Code-generator
 	url = https://github.com/status-im/QR-Code-generator
-[submodule "vendor/chroma"]
-	path = vendor/chroma
-	url = https://github.com/treeform/chroma
-[submodule "vendor/nimPNG"]
-	path = vendor/nimPNG
-	url = https://github.com/jangko/nimPNG/
-[submodule "vendor/nimage"]
-	path = vendor/nimage
-	url = https://github.com/Ethosa/nimage/
-[submodule "vendor/nim-confutils"]
-	path = vendor/nim-confutils
-	url = https://github.com/status-im/nim-confutils.git
-[submodule "vendor/semver.nim"]
-	path = vendor/semver.nim
-	url = https://github.com/euantorano/semver.nim
-	branch = main
-[submodule "vendor/nim-result"]
-	path = vendor/nim-result
-	url = https://github.com/arnetheduck/nim-result
-[submodule "vendor/edn.nim"]
-	path = vendor/edn.nim
-	url = https://github.com/status-im/edn.nim
-[submodule "vendor/nim-faststreams"]
-	path = vendor/nim-faststreams
-	url = https://github.com/status-im/nim-faststreams.git
-[submodule "vendor/nim-stew"]
-	path = vendor/nim-stew
-	url = https://github.com/status-im/nim-stew.git
-[submodule "vendor/nimcrypto"]
-	path = vendor/nimcrypto
-	url = https://github.com/cheatfate/nimcrypto.git
-[submodule "vendor/nim-eth"]
-	path = vendor/nim-eth
-	url = https://github.com/status-im/nim-eth
-[submodule "vendor/nim-chronos"]
-	path = vendor/nim-chronos
-	url = https://github.com/status-im/nim-chronos.git
-[submodule "vendor/isaac"]
-	path = vendor/isaac
-	url = https://github.com/pragmagic/isaac.git
-[submodule "vendor/nim-bearssl"]
-	path = vendor/nim-bearssl
-	url = https://github.com/status-im/nim-bearssl
-[submodule "vendor/nim-secp256k1"]
-	path = vendor/nim-secp256k1
-	url = https://github.com/status-im/nim-secp256k1
-[submodule "vendor/nim-metrics"]
-	path = vendor/nim-metrics
-	url = https://github.com/status-im/nim-metrics
-[submodule "vendor/nim-json-rpc"]
-	path = vendor/nim-json-rpc
-	url = https://github.com/status-im/nim-json-rpc
-[submodule "vendor/nim-web3"]
-	path = vendor/nim-web3
-	url = https://github.com/status-im/nim-web3.git
-[submodule "vendor/nim-chronicles"]
-	path = vendor/nim-chronicles
-	url = https://github.com/status-im/nim-chronicles.git
-[submodule "vendor/nim-websock"]
-	path = vendor/nim-websock
-	url = https://github.com/status-im/nim-websock
-[submodule "vendor/nim-http-utils"]
-	path = vendor/nim-http-utils
-	url = https://github.com/status-im/nim-http-utils
-[submodule "vendor/nim-zlib"]
-	path = vendor/nim-zlib
-	url = https://github.com/status-im/nim-zlib
-[submodule "vendor/nim-json-serialization"]
-	path = vendor/nim-json-serialization
-	url = https://github.com/status-im/nim-json-serialization.git
-[submodule "vendor/nim-serialization"]
-	path = vendor/nim-serialization
-	url = https://github.com/status-im/nim-serialization.git
 [submodule "vendor/fcitx5-qt"]
 	path = vendor/fcitx5-qt
 	url = https://github.com/fcitx/fcitx5-qt
 [submodule "vendor/status-go"]
 	path = vendor/status-go
 	url = https://github.com/status-im/status-go
-[submodule "vendor/nim-stint"]
-	path = vendor/nim-stint
-	url = https://github.com/status-im/nim-stint.git
-[submodule "vendor/nim-keycard-go"]
-	path = vendor/nim-keycard-go
-	url = https://github.com/status-im/nim-keycard-go
 [submodule "vendor/SortFilterProxyModel"]
 	path = vendor/SortFilterProxyModel
 	url = https://github.com/status-im/SortFilterProxyModel.git
-[submodule "vendor/nim-taskpools"]
-	path = vendor/nim-taskpools
-	url = https://github.com/status-im/nim-taskpools.git
 [submodule "mobile/vendors/openssl"]
 	path = mobile/vendors/openssl
 	url = https://github.com/openssl/openssl
-[submodule "vendor/nim-regex"]
-	path = vendor/nim-regex
-	url = https://github.com/nitely/nim-regex
-[submodule "vendor/nim-unicodedb"]
-	path = vendor/nim-unicodedb
-	url = https://github.com/nitely/nim-unicodedb
 [submodule "vendor/status-keycard-qt"]
 	path = vendor/status-keycard-qt
 	url = https://github.com/status-im/status-keycard-qt
-[submodule "vendor/nim-intops"]
-	path = vendor/nim-intops
-	url = https://github.com/vacp2p/nim-intops.git
-[submodule "vendor/nim-seaqt"]
-	path = vendor/nim-seaqt
-	url = https://github.com/seaqt/nim-seaqt.git
-	branch = qt-6.8
-[submodule "vendor/nimqml-seaqt"]
-	path = vendor/nimqml-seaqt
-	url = https://github.com/seaqt/nimqml-seaqt.git
-[submodule "vendor/prl-to-pc"]
-	path = vendor/prl-to-pc
-	url = https://github.com/status-im/prl-to-pc.git
