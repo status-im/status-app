@@ -30,10 +30,7 @@ Item {
     readonly property var dummySwapTransactionRoutes: SwapTransactionRoutes {}
 
     readonly property var swapStore: SwapStore {
-        signal suggestedRoutesReady(var txRoutes, string errCode, string errDescription)
-        signal transactionSent(var chainId,var txHash, var uuid, var error)
-        signal transactionSendingComplete(var txHash,  var status)
-
+        // suggestedRoutesReady / transactionSent / transactionSendingComplete come from the stub
         accounts: WalletAccountsModel {}
         function getWei2Eth(wei, decimals) {
             return wei/(10**decimals)
