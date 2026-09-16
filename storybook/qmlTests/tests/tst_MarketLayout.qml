@@ -106,6 +106,23 @@ Item {
             tryCompare(signalSpyLaunchSwap, "count", 1)
         }
 
+        function test_swapButtonWithoutProviders() {
+            verify(!!controlUnderTest)
+            controlUnderTest.swapProvidersEnabled = false
+
+            const swapButton = findChild(controlUnderTest.centerPanel, "swapButton")
+            verify(!!swapButton)
+            // still shown, but inert and explained
+            verify(swapButton.visible)
+            verify(!swapButton.interactive)
+            compare(swapButton.tooltip.text, qsTr("There are no enabled providers"))
+
+            signalSpyLaunchSwap.clear()
+            mouseClick(swapButton)
+            wait(100)
+            compare(signalSpyLaunchSwap.count, 0)
+        }
+
         function test_tokenList() {
             verify(!!controlUnderTest)
 

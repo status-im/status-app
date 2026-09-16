@@ -2699,6 +2699,7 @@ Item {
                 }
 
                 browserSectionActive: d.activeSectionType === Constants.appSection.browser
+                swapProvidersEnabled: appMain.featureFlagsStore.swapProvidersEnabled
 
                 PrimaryNavSidebarAdaptor {
                     id: sidebarAdaptor

@@ -54,6 +54,7 @@ Control {
 
     required property bool thirdpartyServicesEnabled
     property bool statusSupportBotEnabled: false
+    property bool swapProvidersEnabled: true
     property bool profileLoading: false
 
     // Set from AppMain: used on mobile so native overlay can dismiss the drawer over Browser WebView.
@@ -360,9 +361,15 @@ Control {
         objectName: model.name + "-navbar"
         anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
-        tooltipText: Utils.translatedSectionName(model.sectionType)
+        readonly property bool swapUnavailable: model.sectionType === Constants.appSection.swap
+                                                && !root.swapProvidersEnabled
+
+        tooltipText: swapUnavailable ? qsTr("There are no enabled providers")
+                                     : Utils.translatedSectionName(model.sectionType)
         checked: model.active
         enabled: model.sectionType !== Constants.appSection.loadingSection
+        opacity: !enabled || swapUnavailable ? ThemeUtils.disabledOpacity : 1
+        rippleEnabled: !swapUnavailable
         icon.name: model.icon
         icon.source: model.image
         text: model.icon.length > 0 ? "" : model.name
@@ -373,6 +380,8 @@ Control {
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
         onClicked: {
+            if (swapUnavailable)
+                return
             root.itemActivated(model.sectionType, model.id)
             if (root.interactive)
                 root.close()
