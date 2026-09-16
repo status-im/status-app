@@ -82,6 +82,7 @@ Item {
     property bool appMainVisible
 
     property bool swapEnabled
+    property bool swapProvidersEnabled: true
     property bool dAppsEnabled
     property bool dAppsVisible
     property bool buyEnabled
@@ -363,6 +364,7 @@ Item {
             networksStore: root.networksStore
 
             swapEnabled: root.swapEnabled
+            swapProvidersEnabled: root.swapProvidersEnabled
             buyEnabled: root.buyEnabled
             dAppsEnabled: root.dAppsEnabled
             dAppsVisible: root.dAppsVisible
@@ -505,6 +507,7 @@ Item {
         walletStore: RootStore
         transactionStore: root.transactionStore
         swapEnabled: root.swapEnabled
+        swapProvidersEnabled: root.swapProvidersEnabled
         buyEnabled: root.buyEnabled
         networkConnectionStore: root.networkConnectionStore
 
