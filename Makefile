@@ -7,13 +7,23 @@
 
 SHELL := bash # the shell used internally by Make
 
-# used inside the included makefiles
-BUILD_SYSTEM_DIR := vendor/nimbus-build-system
-
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
-LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
-# we don't want an error here, so we can handle things later, in the ".DEFAULT" target
--include $(BUILD_SYSTEM_DIR)/makefiles/variables.mk
+
+V ?= 0
+NIM_PARAMS := $(NIMFLAGS) --verbosity:$(V)
+HANDLE_OUTPUT :=
+ifeq ($(V), 0)
+  NIM_PARAMS += --hints:off
+  HANDLE_OUTPUT := >/dev/null
+.SILENT:
+endif
+ifdef LOG_LEVEL
+  NIM_PARAMS += -d:chronicles_log_level="$(LOG_LEVEL)"
+endif
+BUILD_MSG := "\\x1B[92mBuilding:\\x1B[39m"
+
+NIM := $(shell ./scripts/resolve-nim.sh)
+export NIM
 
 .PHONY: \
 	all \
@@ -65,27 +75,10 @@ LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 	flatpak-run \
 	flatpak-clean \
 	macos-icon-assets \
-	platform-cleanup
-
-ifeq ($(NIM_PARAMS),)
-# "variables.mk" was not included, so we update the submodules.
-GIT_SUBMODULE_UPDATE := git submodule update --init --recursive
-.DEFAULT:
-	+@ echo -e "Git submodules not found. Running '$(GIT_SUBMODULE_UPDATE)'.\n"; \
-		$(GIT_SUBMODULE_UPDATE); \
-		echo
-# Now that the included *.mk files appeared, and are newer than this file, Make will restart itself:
-# https://www.gnu.org/software/make/manual/make.html#Remaking-Makefiles
-#
-# After restarting, it will execute its original goal, so we don't have to start a child Make here
-# with "$(MAKE) $(MAKECMDGOALS)". Isn't hidden control flow great?
-
-else # "variables.mk" was included. Business as usual until the end of this file.
+	platform-cleanup \
+	nimble-deps
 
 all: nim_status_client
-
-# must be included after the default target
--include $(BUILD_SYSTEM_DIR)/makefiles/targets.mk
 
 # `qmake` path, either passed explicitely, or as found in PATH
 # (makes it possible to override with a custom Qt6 install dir)
@@ -113,9 +106,13 @@ ifeq ($(mkspecs),)
 	$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
 endif
 
-ifneq ($(USE_SYSTEM_NIM),1)
- # Add it to PATH for external build tools that use nim directly
- export PATH := $(CURDIR)/$(NIM_DIR)/bin:$(PATH)
+# The resolved compiler on PATH for the sub-builds that run a bare `nim`:
+# status-go's Makefile builds nim-sds with nim-sds's own build system, which
+# takes the compiler from PATH, and prl-to-pc's qt-pkgconfig.mk compiles its
+# tools with it. Empty NIM (a fresh clone before nimble setup ran) must not
+# put `.` on PATH.
+ifneq (,$(NIM))
+ export PATH := $(patsubst %/,%,$(dir $(NIM))):$(PATH)
 endif
 
 # Link libm by default; the win32 branch below clears it (MSVC has no libm).
@@ -203,10 +200,11 @@ $(BOTTLES):
 bottles: $(BOTTLES)
 endif
 
-deps: | check-qt-dir deps-common bottles
+deps: | check-qt-dir nimble-deps bottles
 
-update: | check-qt-dir update-common
-# Build the pkg-config wrapper (and generate this kit's Qt .pc if missing)
+update: | check-qt-dir nimble-deps
+	git submodule sync --quiet --recursive
+	git submodule update --init --recursive
 	+ "$(MAKE)" --no-print-directory qt-pkgconfig
 
 QML_DEBUG ?= false
@@ -241,11 +239,34 @@ ifneq ($(QT_MAJOR_VERSION),6)
  $(error Detected Qt major version $(QT_MAJOR_VERSION), but version 6 is required. Please install Qt 6 and set paths accordingly.)
 endif
 
-#-------- PKG_CONFIG wrapper for Qt's .pc files --------
-# This tool generates the .pc files
-# Installs a pkg-config wrapper that's profiding the `prefix` config for pkg-config files
+# nimble fetches packages with `git submodule update`, a shell script: on Windows
+# it must find Git's own sed first, or a foreign sed on PATH breaks it.
+ifeq ($(mkspecs),win32)
+ NIMBLE_ENV = PATH="$$(r=$$(cd "$$(git --exec-path)/../../.." && pwd); echo "$${r%/}/usr/bin"):$$PATH"
+endif
+nimble.paths: nim_status_client.nimble nimble.lock
+	echo -e $(BUILD_MSG) "Nim dependencies (nimble setup)"
+	$(NIMBLE_ENV) nimble -y setup || { echo "ERROR: nimble setup failed. If a manifest changed, regenerate the lock with 'nimble lock' and retry." >&2; exit 1; }
+	touch $@
+nimble-deps: nimble.paths
 
-include vendor/prl-to-pc/qt-pkgconfig.mk
+# Remade from nimble.paths; make then re-executes this Makefile, so the roots
+# below are defined on the second pass.
+-include .nimble-resolution.mk
+# nimble writes the entries Nim-escaped, so on Windows they are
+# "C:\\Users\\...\\prl_to_pc-..."; the separator before the name is either
+# slash and the backslashes come out as forward slashes for make.
+.nimble-resolution.mk: nimble.paths
+	sed -n -E 's#^--path:"(.*[/\\]prl_to_pc-[^"]*)"$$#PRL_TO_PC_ROOT ?= \1#p' $< | sed 's#\\\\#/#g' > $@
+
+#-------- PKG_CONFIG wrapper for Qt's .pc files --------
+# Included from the read-only store copy: its tool builds go to a repo-local
+# scratch, never into the store.
+ifneq (,$(PRL_TO_PC_ROOT))
+QT_PC_BUILD_DIR := $(CURDIR)/.prl-to-pc-build/.pcwrap
+QT_PC_CONSUMER_PATHS := $(CURDIR)/nimble.paths
+include $(PRL_TO_PC_ROOT)/qt-pkgconfig.mk
+endif
 # -----------------------------------------------------
 
 ifneq ($(mkspecs),win32)
@@ -686,11 +707,9 @@ endif
 
 RESOURCES_LAYOUT ?= -d:development
 
-# When modifying files that are not tracked in NIM_SOURCES (see below),
-# e.g. vendor/*.nim, REBUILD_NIM=true can be supplied to `make` to ensure a
-# rebuild of bin/nim_status_client: `make REBUILD_NIM=true run`
-# Note: it is not necessary to supply REBUILD_NIM=true after `make update`
-# because that target bumps .update.timestamp
+# When modifying files make does not track (see NIM_SOURCES below), e.g. a
+# checkout behind a `file://` requires line, `make REBUILD_NIM=true run`
+# forces a rebuild of bin/nim_status_client.
 REBUILD_NIM ?= false
 
 ifeq ($(REBUILD_NIM),true)
@@ -700,7 +719,7 @@ endif
 .update.timestamp:
 	touch .update.timestamp
 
-NIM_SOURCES := .update.timestamp $(shell find src -type f)
+NIM_SOURCES := .update.timestamp nimble.paths $(shell find src -type f)
 
 STATUS_RC_FILE := status.rc
 
@@ -761,7 +780,7 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
 $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
-	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
+	$(NIM) c $(NIM_PARAMS) \
 		--mm:orc \
 		-d:useMalloc \
 		--passL:"-L$(STATUSGO_LIBDIR)" \
@@ -975,7 +994,7 @@ notarize-macos:
 	scripts/notarize-macos-pkg.sh $(STATUS_CLIENT_DMG)
 
 nim_windows_launcher: | deps
-	$(ENV_SCRIPT) nim c -d:debug --outdir:./bin --passL:"-static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive" src/nim_windows_launcher.nim
+	$(NIM) c -d:debug --outdir:./bin --passL:"-static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive" src/nim_windows_launcher.nim
 
 STATUS_CLIENT_EXE ?= pkg/Status.exe
 STATUS_CLIENT_7Z ?= pkg/Status.7z
@@ -1051,8 +1070,8 @@ zip-windows: check-pkg-target-windows $(STATUS_CLIENT_7Z)
 clean-destdir:
 	rm -rf bin/*
 
-clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
-	rm -rf bottles/* pkg/* tmp/*
+clean: | clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
+	rm -rf bottles/* pkg/* tmp/* nimcache .prl-to-pc-build
 	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 
 clean-git:
@@ -1128,11 +1147,11 @@ endef
 export PATH := $(call qmkq,QT_INSTALL_BINS):$(call qmkq,QT_HOST_BINS):$(call qmkq,QT_HOST_LIBEXECS):$(PATH)
 export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
-mobile-run: qt-pkgconfig deps-common
+mobile-run: qt-pkgconfig nimble-deps
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-profile: qt-pkgconfig deps-common
+mobile-profile: qt-pkgconfig nimble-deps
 ifeq ($(mkspecs),ios)
 	@echo "TODO: iOS profiling is not implemented yet"; exit 1
 else
@@ -1143,8 +1162,7 @@ else
 	    QML_DEBUG_PORT=$(QML_DEBUG_PORT)
 endif
 
-mobile-build: USE_SYSTEM_NIM=1
-mobile-build: qt-pkgconfig | deps-common
+mobile-build: qt-pkgconfig | nimble-deps
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
 	$(MAKE) -C mobile aab
@@ -1160,4 +1178,3 @@ mobile-clean:
 	echo -e "\033[92mCleaning:\033[39m mobile app"
 	$(MAKE) -C mobile clean
 
-endif # "variables.mk" was not included
