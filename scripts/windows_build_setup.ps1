@@ -140,6 +140,7 @@ export PATH=`"/c/BuildTools/VC/Tools/MSVC/14.44.35207/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/openssl-lts/current/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/inno-setup/current:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/openjdk25/25.0.2-10/bin:`$PATH`"
+export PATH=`"/c/ProgramData/scoop/apps/nim/2.2.10/bin:`$PATH`"
 "@
 }
 
