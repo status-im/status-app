@@ -198,7 +198,7 @@ StatusDialog {
             }
 
             const walletTokensStore = root.swapAdaptor.walletAssetsStore.walletTokensStore
-            const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwapViaLiFi(chainId)
+            const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwap(chainId)
             if (!chainAvailableForSwap) {
                 console.warn("swap not supported for chain", chainId)
                 const networkName = Utils.getNetworkName(chainId)

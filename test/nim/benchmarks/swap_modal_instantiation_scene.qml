@@ -156,8 +156,7 @@ Window {
             return { model: root._preB, id: 2 }
         }
         function releaseTokenSelectorModel(id) {}
-        function isChainSupportedForSwapViaParaswap(chainId) { return true }
-        function isChainSupportedForSwapViaLiFi(chainId) { return true }
+        function isChainSupportedForSwap(chainId) { return true }
         function buildGroupsForChain(chainId, keys) {}
         function buildGroupsForChainTo(chainId, keys) {}
     }
