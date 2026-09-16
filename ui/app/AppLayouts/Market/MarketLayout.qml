@@ -30,6 +30,7 @@ StatusSectionLayout {
     required property int currentPage
     /** property to enable/disable swap button **/
     property bool swapEnabled: true
+    property bool swapProvidersEnabled: true
 
     /** Number of items per page **/
     readonly property int pageSize: 100
@@ -76,6 +77,8 @@ StatusSectionLayout {
             StatusButton {
                 objectName: "swapButton"
                 visible: root.swapEnabled
+                interactive: root.swapProvidersEnabled
+                tooltip.text: root.swapProvidersEnabled ? "" : qsTr("There are no enabled providers")
                 text: qsTr("Swap")
                 icon.name: "swap"
                 type: StatusBaseButton.Type.Primary
