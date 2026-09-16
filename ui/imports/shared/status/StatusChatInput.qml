@@ -516,6 +516,18 @@ Control {
         root.stickerSelected(hashId, packId, url)
     }
 
+    // Used by Squish tests to send a GIF URL without opening the GIF popup
+    function selectGifUrlForTest(url) {
+        messageInputField.text += "\n" + url
+        if (root.isEdit) {
+            messageInputField.forceActiveFocus()
+            return
+        }
+        root.sendMessageRequested()
+        root.isReply = false
+        messageInputField.forceActiveFocus()
+    }
+
     StatusFileDialog {
         id: imageDialog
 
