@@ -47,42 +47,61 @@ Flickable {
         root.flickDeceleration = deceleration
     }
 
+    // Asks for the next slice of the model when the viewport has reached one of
+    // the placeholders. contentY is anchored to a delegate that survives the
+    // shift, so the viewport stays on the same content once the new items are
+    // inserted above or below it.
+    function requestMoreIfPlaceholderReached() {
+        if (messagesRepeater.count === 0)
+            return
+
+        // topPlaceholder collapses to zero height when there is nothing more to
+        // load, which makes this false at contentY === 0
+        const isTopPlaceholderVisible = root.contentY < topPlaceholder.height
+
+        if (isTopPlaceholderVisible) {
+            const first = messagesRepeater.itemAt(0)
+
+            if (!first)
+                return
+
+            const offset = first.y - root.contentY
+
+            root.contentY = Qt.binding(() => {
+                return first.y - offset
+            })
+
+            root.moreUpRequested()
+            return
+        }
+
+        const isBottomPlaceholderVisible = bottomPlaceholder.visible &&
+                                         root.contentY + root.height >= bottomPlaceholder.y
+
+        if (isBottomPlaceholderVisible) {
+            const last = messagesRepeater.itemAt(messagesRepeater.count - 1)
+
+            if (!last)
+                return
+
+            const offset = root.contentY - last.y
+
+            root.contentY = Qt.binding(() => {
+                return last.y + offset
+            })
+
+            root.moreDownRequested()
+        }
+    }
+
     Connections {
         target: root.ScrollBar.vertical
-
 
         function onPressedChanged() {
             if (root.ScrollBar.vertical.pressed)
                 return
 
-            const isTopPlaceholderVisible = root.contentY < topPlaceholder.height
-
-            if (isTopPlaceholderVisible) {
-                const first = messagesRepeater.itemAt(0)
-                const offset = first.y - root.contentY
-
-                root.contentY = Qt.binding(() => {
-                    return first.y - offset
-                })
-
-                root.moreUpRequested()
-            }
-
-            const isBottomPlaceholderVisible = bottomPlaceholder.visible &&
-                                             !isTopPlaceholderVisible &&
-                                             root.contentY + root.height >= bottomPlaceholder.y
-
-            if (isBottomPlaceholderVisible) {
-                const last = messagesRepeater.itemAt(messagesRepeater.count - 1)
-
-                const offset = root.contentY - last.y
-
-                root.contentY = Qt.binding(() => {
-                    return last.y + offset
-                })
-
-                root.moreDownRequested()
-            }
+            root.requestMoreIfPlaceholderReached()
         }
     }
 
@@ -165,5 +184,10 @@ Flickable {
         property: "contentY"
         duration: root.wheelScrollDuration
         easing.type: Easing.OutQuad
+
+        // Emitted on natural completion only - stop() during a burst of notches
+        // does not emit it - so the window is shifted once the scrolling settles
+        // rather than on every notch.
+        onFinished: root.requestMoreIfPlaceholderReached()
     }
 }
