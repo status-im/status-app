@@ -39,6 +39,7 @@ const DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED = true
 
 # Swap providers are opt-in; Swap itself is only usable when at least one is enabled.
 const DEFAULT_FLAG_PARASWAP_ENABLED = false
+const DEFAULT_FLAG_LIFI_ENABLED = false
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
@@ -61,6 +62,7 @@ featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
 featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
 featureFlag("UNLIMITED_CHAT_IMAGES_ENABLED",  DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED, true)
 featureFlag("PARASWAP_ENABLED",               DEFAULT_FLAG_PARASWAP_ENABLED, true)
+featureFlag("LIFI_ENABLED",                   DEFAULT_FLAG_LIFI_ENABLED, true)
 
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
@@ -111,6 +113,7 @@ QtObject:
     threadsEnabled: bool
     unlimitedChatImagesEnabled: bool
     paraswapEnabled: bool
+    lifiEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -131,6 +134,7 @@ QtObject:
     self.threadsEnabled = THREADS_ENABLED
     self.unlimitedChatImagesEnabled = UNLIMITED_CHAT_IMAGES_ENABLED
     self.paraswapEnabled = PARASWAP_ENABLED
+    self.lifiEnabled = LIFI_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -240,3 +244,9 @@ QtObject:
 
   QtProperty[bool] paraswapEnabled:
     read = getParaswapEnabled
+
+  proc getLifiEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.lifiEnabled
+
+  QtProperty[bool] lifiEnabled:
+    read = getLifiEnabled
