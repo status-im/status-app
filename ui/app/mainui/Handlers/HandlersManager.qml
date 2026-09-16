@@ -66,7 +66,7 @@ QtObject {
     }
 
     readonly property SwapModalHandler swapModalHandler: SwapModalHandler {
-
+        swapEnabled: root.featureFlagsStore.swapEnabled
 
         function launchSwap() {
             if (root.walletRootStore.areTestNetworksEnabled) {

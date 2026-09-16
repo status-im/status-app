@@ -21,7 +21,14 @@ QtObject {
     required property var savedAddressesModel
     required property var recentRecipientsModel
 
+    required property bool swapEnabled
+
     function openSendModal(params = {}, callback = null) {
+        if (!root.swapEnabled) {
+            console.warn("SwapModalHandler: swap is disabled by feature flag")
+            return
+        }
+
         d.swapInputParams.resetFormData()
 
         let swapModalInst = swapModalComponent.createObject(popupParent)
@@ -67,7 +74,7 @@ QtObject {
             if (d.isValidParameter(params.toTokenAmount)) {
                 d.swapInputParams.toTokenAmount = params.toTokenAmount
             }
-        } 
+        }
 
         if (swapModalInst.opened) {
             setup(params)
