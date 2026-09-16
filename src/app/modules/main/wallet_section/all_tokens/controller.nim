@@ -165,11 +165,8 @@ proc toggleAutoRefreshTokensLists*(self: Controller): bool =
 proc getMandatoryTokenGroupKeys*(self: Controller): seq[string] =
   return self.tokenService.getMandatoryTokenGroupKeys()
 
-proc isChainSupportedForSwapViaParaswap*(self: Controller, chainId: int): bool =
-  return self.tokenService.isChainSupportedForSwapViaParaswap(chainId)
-
-proc isChainSupportedForSwapViaLiFi*(self: Controller, chainId: int): bool =
-  return self.tokenService.isChainSupportedForSwapViaLiFi(chainId)
+proc isChainSupportedForSwap*(self: Controller, chainId: int): bool =
+  return self.tokenService.isChainSupportedForSwap(chainId)
 
 proc loadTokenLists*(self: Controller) =
   self.tokenService.asyncFetchAllTokenLists()

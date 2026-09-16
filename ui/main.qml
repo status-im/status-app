@@ -55,6 +55,8 @@ Window {
         messageLinkSharingEnabled: featureFlags ? featureFlags.messageLinkSharingEnabled : false
         statusSupportBotEnabled: featureFlags ? featureFlags.statusSupportBotEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
+        paraswapEnabled: featureFlags ? featureFlags.paraswapEnabled : false
+        lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}
