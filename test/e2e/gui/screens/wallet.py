@@ -16,8 +16,8 @@ from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPop
 from gui.components.wallet.asset_context_menu_popup import AssetContextMenuPopup
 from gui.components.wallet.assets_view import AssetsView
 from gui.components.wallet.bridge_popup import BridgePopup
-from gui.components.wallet.dapps_workflow import DappsWorkflow
 from gui.components.wallet.confirmation_popup import ConfirmationPopup
+from gui.components.wallet.dapps_workflow import DappsWorkflow
 from gui.components.wallet.delete_account_confirmation_popup import RemoveAccountWithConfirmation
 from gui.components.wallet.receive_popup import ReceivePopup
 from gui.components.wallet.send_popup import SendPopup
@@ -349,6 +349,7 @@ class WalletAccountView(QObject):
         self._receive_button = Button(wallet_names.mainWindow_Receive_Button)
         self._bridge_button = Button(wallet_names.mainWindow_Bridge_Button)
         self._filter_button = Button(wallet_names.filterButton_StatusFlatButton)
+        self._dapps_combo_box = QObject(wallet_names.wallet_dapps_combo_box)
         self._assets_combobox = List(wallet_names.cmbTokenOrder_SortOrderComboBox)
         self._assets_tab_button = Button(wallet_names.rightSideWalletTabBar_Assets_StatusTabButton)
         self._collectibles_tab_button = Button(wallet_names.rightSideWalletTabBar_Collectibles_StatusTabButton)
@@ -406,7 +407,7 @@ class WalletAccountView(QObject):
 
     @allure.step('Open WalletConnect connect dApp flow')
     def open_dapps_connect_flow(self) -> DappsWorkflow:
-        return DappsWorkflow().open_connect_dapp_flow()
+        return DappsWorkflow().open_connect_dapp_flow(self._dapps_combo_box)
 
     @allure.step('Wait for assets tab content to finish loading')
     def wait_for_assets_tab_content_loaded(
