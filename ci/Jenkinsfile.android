@@ -31,7 +31,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0','1','2','3']
     )
     string(
@@ -74,7 +74,7 @@ pipeline {
     /* Control output the filename */
     APP_TYPE = "${utils.getAppType()}"
     PLATFORM = "android/arm64"
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
     QT_VERSION = "${QT_VERSION}"
     QT_ANDROID_PATH = "/opt/qt/${QT_VERSION}/android_arm64_v8a"
     QMAKE = "/opt/qt/${QT_VERSION}/android_arm64_v8a/bin/qmake"
