@@ -13,7 +13,7 @@ Two platform-target-specific concerns that compose without overlap:
 
 ### Context
 
-Some `vendor/` libraries write to **shared output paths** reused across desktop macOS, iOS, and Android builds in the same tree (`vendor/QR-Code-generator/c/`, `vendor/nim-sds/build/`, `vendor/status-go/build/`). Switching between `make run` (desktop) and `make mobile-run` (mobile) without cleaning them leaves stale platform-specific objects, so the link fails (`ld: building for 'iOS', but linking in object file … built for 'macOS'`) or the app crashes on mixed artifacts.
+Some dependencies write to **shared output paths** reused across desktop macOS, iOS, and Android builds in the same tree (`vendor/QR-Code-generator/c/`, the libsds outputs under the statusgo build root, and `libstatus.*` under it). Switching between `make run` (desktop) and `make mobile-run` (mobile) without cleaning them leaves stale platform-specific objects, so the link fails (`ld: building for 'iOS', but linking in object file … built for 'macOS'`) or the app crashes on mixed artifacts.
 
 Issue [#18377](https://github.com/status-im/status-desktop/issues/18377) moved the status-go/nim-sds mobile build into the **status-go repo** (`.PHONY` targets `statusgo-{ios,android}-library`, which own `NIM_SDS_VERSION` and the incremental-rebuild decision). status-desktop must therefore not re-introduce knowledge of status-go/nim-sds sources (e.g. `find`-based prerequisites), or it reverts #18377. But `$(STATUS_GO_LIB)` was a file target with **no prerequisites**: once it existed Make never re-ran the delegated sub-make, so stale copies linked against a fresh `libnim_status_client` and crashed.
 
@@ -22,9 +22,9 @@ Issue [#18377](https://github.com/status-im/status-desktop/issues/18377) moved t
 A single umbrella platform sentinel in status-desktop:
 
 1. Caller Makefiles define a `.PHONY` target `platform-cleanup` running `scripts/platform_pre_build_cleanup.sh` with `PLATFORM_TARGET` (root: `$(host_os)-$(QT_ARCH)`; mobile: `$(OS)-$(ARCH)`).
-2. Shared-artifact build targets list `platform-cleanup` as an **order-only** prerequisite (`| platform-cleanup`), so cleanup runs before them without forcing relinks.
+2. Shared-artifact build targets list `platform-cleanup` as an **order-only** prerequisite (`| platform-cleanup`), so cleanup runs before them without forcing relinks. The root sentinel is invoked by the build driver (`status.nims`), not by make; the mobile targets (`$(STATUS_GO_LIB)`, `$(QRCODEGEN_LIB)`) keep the make prerequisite.
 3. The script compares the key to `.platform-target`; on mismatch it deletes the shared paths in [Maintenance](#maintenance) (coarse, directory-level) and writes the new key.
-4. `$(STATUS_GO_LIB)` in `mobile/Makefile` depends on a `FORCE` target so it **always** delegates to status-go's sub-make, then copies into `mobile/lib` with `cmp -s … || cp` — dependents relink only when the library content actually changed.
+4. `$(STATUS_GO_LIB)` in `mobile/Makefile` delegates to status-go's sub-make, then copies into `mobile/lib` with `cmp -s … || cp` — dependents relink only when the library content actually changed. The `FORCE` prerequisite that made the delegation unconditional is now set only for a developed status-go checkout (`STATUSGO_DEVELOPED=1`); against the pinned store copy the artifact keys decide (ADR 0007).
 
 The libsds-specific sentinel in `vendor/status-go/Makefile` is removed. `clean_switch_os.sh` remains as a manual full reset.
 
@@ -42,11 +42,22 @@ Currently cleaned on platform switch:
 
 | Path | Action |
 |------|--------|
-| `vendor/QR-Code-generator/c/` | `make clean` (artifacts in the source tree, not `build/`) |
-| `vendor/nim-sds/build/` | `rm -rf` |
-| `vendor/status-go/build/` | `rm -rf` (whole tree) |
+| `.statusgo-build/.sds-build/` | `rm -rf` |
+| `vendor/status-go/.sds-build/` | `rm -rf` (a developed status-go checkout) |
+| `vendor/nim-sds/build/` | `rm -rf` (a developed sds checkout) |
+| `$HOME/.cache/nim/libsds_*` | `rm -rf` |
+| `.statusgo-build/build/bin/libstatus.*` | `rm -f` |
+| `vendor/status-go/build/bin/libstatus.*` | `rm -f` |
 
-When adding a new shared-artifact vendor dependency: add `| platform-cleanup` on its build target, add a cleanup step to the script (prefer wiping a whole `build/` dir), and update the table above. Vendors with separate desktop/mobile output dirs (DOtherSide, status-keycard-qt) do not belong here.
+The libstatus entries are files, not the whole `build/` tree the earlier
+revision of this ADR wiped: status-go's own outputs under that tree are
+platform-neutral, and the statusgo output directory is otherwise maintained by
+`./status prepareStatusgo`, which wipes it when the resolved source root
+moves.
+
+`vendor/QR-Code-generator/c/` needs no entry: the desktop client does not build that library — its Nim wrapper `{.compile.}`s the C source into the consuming compile's own nimcache, and nim re-runs that C compile whenever its command hash changes. Only `mobile/Makefile` builds `libqrcodegen.a`, and its `buildQRCodeGen.sh` `make clean`s the shared source tree before every build.
+
+When adding a new shared-artifact dependency: add `| platform-cleanup` on its build target, add a cleanup step to the script, and update the table above. Dependencies with separate desktop/mobile output dirs (status-keycard-qt) do not belong here.
 
 ### Alternatives considered
 
