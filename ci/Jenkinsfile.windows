@@ -22,7 +22,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0', '1', '2']
     )
     string(
@@ -77,7 +77,7 @@ pipeline {
   environment {
     PLATFORM = "windows/${getArch()}"
     /* Improve make performance */
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
     /* Explicitly set the QT version */
     QTDIR = "/c/Qt/${QT_VERSION}/msvc2022_64"
     GOPATH = "${WORKSPACE_TMP}/go"
@@ -216,7 +216,6 @@ def assembePath(List<String> extraPaths) {
       'C:/Windows/system32',
       'C:/Windows',
       'C:/ProgramData/scoop/apps/go/1.24.7/bin',
-      'C:/ProgramData/scoop/apps/nim/2.2.10/bin',
       'C:/ProgramData/scoop/apps/cmake/3.31.6/bin',
       'C:/ProgramData/scoop/apps/python/3.13.5',
       'C:/ProgramData/scoop/apps/python/3.13.5/Scripts',
