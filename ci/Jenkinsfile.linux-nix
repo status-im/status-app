@@ -82,6 +82,10 @@ pipeline {
     /* prevent sharing cache dir across different jobs */
     GO_GENERATE_FAST_DIR = "${env.WORKSPACE_TMP}/go-generate-fast"
     SENTRY_PRODUCTION = "${utils.isReleaseBuild() ? 'true' : 'false'}"
+    /* Swap ships in PR/nightly builds via LiFi only; release builds have no Swap. */
+    FLAG_SWAP_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+    FLAG_LIFI_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+    FLAG_PARASWAP_ENABLED = 0
     /* Hack fix for params not being set in job on first run */
     ENTITLEMENTS =           "${params.ENTITLEMENTS}"
     RELEASE =                "${params.RELEASE}"
