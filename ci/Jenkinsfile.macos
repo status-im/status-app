@@ -29,7 +29,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0', '1', '2', '3']
     )
     booleanParam(
@@ -49,7 +49,7 @@ pipeline {
     )
     string(
       name: 'STATUS_GO_REF',
-      description: 'Override vendor/status-go submodule to this SHA/ref.',
+      description: 'Re-pin the status-go dependency to this SHA, branch or PR number.',
       defaultValue: ''
     )
     string(
@@ -104,8 +104,6 @@ pipeline {
     GOTMPDIR = "${env.WORKSPACE_TMP}"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
-    /* nim-sds source directory */
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Controls the App version in Settings */
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */
@@ -152,7 +150,10 @@ pipeline {
       stages {
         stage('Deps') {
           steps { script {
-            sh 'make update'
+            /* nimble is the only prerequisite: the launcher resolves the
+             * graph, materialising the pinned Nim compiler in nimble's
+             * store. */
+            sh './status help'
             withCredentials([
               usernamePassword( /* For fetching HomeBrew bottles. */
                 credentialsId: "status-im-auto-pkgs",
@@ -160,13 +161,14 @@ pipeline {
                 passwordVariable: 'GITHUB_TOKEN'
               )
             ]) {
-              sh 'make deps'
+              /* The bottle fetch needs the credentials; the driver's bootstrap would
+               * otherwise do it later, outside this block. */
+              sh 'make bottles'
             }
           } }
         }
 
         stage('Override status-go ref') {
-          /* Must run after `make update`, which resets submodules. */
           when { expression { params.STATUS_GO_REF?.trim() } }
           steps {
             sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"

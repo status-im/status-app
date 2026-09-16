@@ -36,7 +36,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0', '1', '2']
     )
     string(
@@ -78,7 +78,6 @@ pipeline {
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
     /* nim-sds source directory: writable, isolated per build, used by status-go's clone-nim-sds */
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* sets App Version in Settings */
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */
@@ -115,8 +114,8 @@ pipeline {
     }
     stage('Deps') {
       steps {
-        sh 'make update'
-        sh 'make deps'
+        /* nimble is the only prerequisite; the launcher resolves the graph. */
+        sh './status help'
       }
     }
 
@@ -128,7 +127,8 @@ pipeline {
 
     stage('Build') {
       steps {
-        sh 'make nim_status_client'
+        /* The driver owns the client compile. */
+        sh './status app'
       }
     }
 

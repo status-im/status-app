@@ -22,7 +22,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0', '1', '2']
     )
     string(
@@ -48,7 +48,7 @@ pipeline {
     )
     string(
       name: 'STATUS_GO_REF',
-      description: 'Override vendor/status-go submodule to this SHA/ref.',
+      description: 'Re-pin the status-go dependency to this SHA, branch or PR number.',
       defaultValue: ''
     )
   }
@@ -109,7 +109,6 @@ pipeline {
     USERPROFILE = "${env.WORKSPACE_TMP}"
     /* Ensure nimcache is not shared between builds. */
     NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds".replace('\\', '/')
   }
 
   stages {
@@ -126,13 +125,12 @@ pipeline {
     }
     stage('Deps') {
       steps {
-        sh 'make update'
-        sh 'make deps'
+        /* nimble is the only prerequisite; the launcher resolves the graph. */
+        sh './status help'
       }
     }
 
     stage('Override status-go ref') {
-      /* Must run after `make update`, which resets submodules. */
       when { expression { params.STATUS_GO_REF?.trim() } }
       steps {
         sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"
@@ -216,7 +214,7 @@ def assembePath(List<String> extraPaths) {
       'C:/Windows/system32',
       'C:/Windows',
       'C:/ProgramData/scoop/apps/go/1.24.7/bin',
-      'C:/ProgramData/scoop/apps/nim/2.2.10/bin',
+      'C:/nimble',
       'C:/ProgramData/scoop/apps/cmake/3.31.6/bin',
       'C:/ProgramData/scoop/apps/python/3.13.5',
       'C:/ProgramData/scoop/apps/python/3.13.5/Scripts',

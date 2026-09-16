@@ -22,7 +22,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0', '1', '2']
     )
     string(
@@ -94,8 +94,8 @@ pipeline {
     }
     stage('Deps') {
       steps { script {
-        nix.shell('make update', pure: true)
-        nix.shell('make deps', pure: true)
+        /* nimble is the only prerequisite; the launcher resolves the graph. */
+        nix.shell('./status help', pure: true)
       } }
     }
 

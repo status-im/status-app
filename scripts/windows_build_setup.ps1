@@ -37,6 +37,32 @@ function Scoop-Install([string]$package, [string]$version) {
     }
 }
 
+# nimble is the ONLY Nim-side prerequisite: the compiler is pinned in
+# nim_status_client.nimble and nimble materialises it in its own store. It is
+# unpacked into a directory with no `nim` beside it, so nothing shadows the pin.
+# WARNING: Remember to update PATH in ci/Jenkinsfile.windows.
+$NimbleVersion = '0.24.1'
+$NimbleSha256  = '3afab31eea536f7256ed93769c0fd071e4f909fc9c3431fc0350405a785cdcb1'
+$NimbleDir     = 'C:\nimble'
+
+function Install-Nimble {
+    if (Test-Path "$NimbleDir\nimble.exe") {
+        Write-Host "Already installed: nimble $NimbleVersion"
+        return
+    }
+    Write-Host "Installing nimble $NimbleVersion"
+    $zip = "$env:TEMP\nimble-windows_x64.zip"
+    $url = "https://github.com/nim-lang/nimble/releases/download/v$NimbleVersion/nimble-windows_x64.zip"
+    (New-Object System.Net.WebClient).DownloadFile($url, $zip)
+    $hash = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower()
+    if ($hash -ne $NimbleSha256) {
+        throw "ERROR: nimble checksum mismatch: got $hash, want $NimbleSha256"
+    }
+    New-Item -ItemType Directory -Force -Path $NimbleDir | Out-Null
+    Expand-Archive -Force -Path $zip -DestinationPath $NimbleDir
+    Remove-Item $zip
+}
+
 # Install Git and other dependencies
 function Install-Dependencies {
     Write-Host "Installing dependencies..."
@@ -53,7 +79,6 @@ function Install-Dependencies {
     run scoop update --global 7zip innounp
     # WARNING: Remember to update PATH in ci/Jenkinsfile.windows.
     Scoop-Install 'status/go'            '1.24.7'
-    Scoop-Install 'status/nim'           '2.2.10'
     Scoop-Install 'status/cmake'         '3.31.6'
     Scoop-Install 'status/python'        '3.13.5'
     Scoop-Install 'status/mingw-winlibs' '15.2.0-13.0.0-r5'
@@ -140,6 +165,7 @@ export PATH=`"/c/BuildTools/VC/Tools/MSVC/14.44.35207/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/openssl-lts/current/bin:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/inno-setup/current:`$PATH`"
 export PATH=`"/c/ProgramData/scoop/apps/openjdk25/25.0.2-10/bin:`$PATH`"
+export PATH=`"/c/nimble:`$PATH`"
 "@
 }
 
@@ -154,6 +180,7 @@ $QtVersion = "6.11.0"
 If ($MyInvocation.InvocationName -ne ".") {
     Install-Scoop
     Install-Dependencies
+    Install-Nimble
     Install-MSYS2-Packages
     Install-Qt-SDK
     Install-VC-BuildTools

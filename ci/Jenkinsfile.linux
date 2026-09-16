@@ -38,7 +38,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0', '1', '2']
     )
     string(
@@ -53,7 +53,7 @@ pipeline {
     )
     string(
       name: 'STATUS_GO_REF',
-      description: 'Override vendor/status-go submodule to this SHA/ref.',
+      description: 'Re-pin the status-go dependency to this SHA, branch or PR number.',
       defaultValue: ''
     )
     booleanParam(
@@ -97,8 +97,6 @@ pipeline {
     QML_DISABLE_DISK_CACHE = "true"
     /* Needed for QGuiApplication in the UI tests. */
     QT_QPA_PLATFORM = "offscreen"
-    /* nim-sds source directory */
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* sets App Version in Settings */
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */
@@ -116,7 +114,7 @@ pipeline {
     USE_SIMULATED_KEYCARD =  "${params.USE_SIMULATED_KEYCARD}"
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}"
-    /* Ensure nimcache is not shared between builds. Note: per-test nimcache is set in nim-tests.mk */
+    /* Ensure nimcache is not shared between builds. */
     NIMFLAGS = "${params.NIMFLAGS} --colors:off"
   }
 
@@ -133,13 +131,25 @@ pipeline {
     }
     stage('Deps') {
       steps {
-        sh 'make update'
-        sh 'make deps'
+        /* nimble is the only prerequisite: the launcher resolves the graph,
+         * materialising the pinned Nim compiler in nimble's store, and every
+         * stage below reaches it the same way. Nothing is sourced. */
+        sh './status help'
+      }
+    }
+
+    /* Cheap and fail-fast: no Makefile has grown a Nim compile back, the
+     * manifest's task table still loads through nimble's own door, and every
+     * resolved store copy is at the revision nimble.lock pins. */
+    stage('Build invariants') {
+      steps {
+        sh './scripts/check-no-nim-compiles.sh'
+        sh 'nimble tasks'
+        sh './status auditDeps'
       }
     }
 
     stage('Override status-go ref') {
-      /* Must run after `make update`, which resets submodules. */
       when { expression { params.STATUS_GO_REF?.trim() } }
       steps {
         sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"
@@ -184,7 +194,14 @@ pipeline {
         stage('Nim Tests') {
           when { expression { params.RUN_NIM_TESTS } }
           steps { script {
-            sh 'make tests-nim-linux V=1'
+            /* The Nim suite is a driver task: it owns the library-path
+             * environment the tests need. --benches runs the benchmarks too, so
+             * their setup code and structural assertions keep being built and
+             * executed. Wall-clock perf gates flake on the shared executors, so
+             * BENCH_ASSERTS=0 downgrades them to report-only and BENCH_QUICK=1
+             * trims the size sweeps to the assert-relevant sizes (see
+             * test/nim/benchmarks/perf_gate.nim). */
+            sh 'BENCH_ASSERTS=0 BENCH_QUICK=1 ./status tests --benches'
           } }
         }
 
