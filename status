@@ -1,0 +1,64 @@
+#!/bin/sh
+# ./status <task> [args...] — the ONE front door (see BUILDING.md).
+# Resolves the graph if needed, then runs the driver (status.nims) with the
+# compiler nimble resolved. Nothing is sourced; PATH is never rewritten.
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$root"
+
+field() { sed -n -E "$1" nim_status_client.nimble | head -n 1; }
+# The pins, from the manifest — the one place either is written.
+pin=$(field 's/^[[:space:]]*requires[[:space:]]+"nim[[:space:]]*==[[:space:]]*([^"[:space:]]+)".*/\1/p')
+want=$(field 's/^[[:space:]]*const[[:space:]]+RequiredNimble[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p')
+
+if [ -n "${STATUS_NIM:-}" ]; then
+	nim="$STATUS_NIM"
+else
+	command -v nimble >/dev/null 2>&1 || {
+		echo "ERROR: nimble is not installed — it is the one prerequisite (see BUILDING.md)." >&2
+		exit 1; }
+	# First run (or a wiped store): resolve. Later runs are gated by the driver.
+	if [ ! -f nimble.paths ]; then
+		have=$(nimble --version 2>/dev/null | head -n 1 | sed -n -E 's/^nimble v?([0-9.]+).*/\1/p')
+		if [ -n "$have" ] &&
+		   [ "$(printf '%s\n%s\n' "$want" "$have" | sort -t. -k1,1n -k2,2n -k3,3n | head -n 1)" != "$want" ]; then
+			echo "NOTE: nimble $have is older than $want, which is what this graph needs" >&2
+			echo "  from a clean store. Install it from https://github.com/nim-lang/nimble/releases" >&2
+		fi
+		nimble setup || {
+			echo "ERROR: 'nimble setup' failed — see above. Nothing else will work" >&2
+			echo "  until the graph resolves (nimble $want or newer is required)." >&2
+			exit 1; }
+	fi
+	# `nimble path nim` reads the store, not PATH, and costs ~0.4s. It lists
+	# EVERY nim the store holds, one per line, so the pin is picked by version
+	# rather than by position. It lists none when nimble reused a PATH nim of
+	# the pinned version instead of materialising the store entry — and then
+	# that nim IS the pinned compiler.
+	nim=""
+	while IFS= read -r p; do
+		[ -n "$p" ] && [ -x "$p/bin/nim" ] || continue
+		case $("$p/bin/nim" --version 2>/dev/null | head -n 1) in
+			"Nim Compiler Version $pin "*) nim="$p/bin/nim"; break ;;
+		esac
+	done <<-PATHS
+		$(nimble path nim 2>/dev/null)
+	PATHS
+	if [ -z "$nim" ] && command -v nim >/dev/null 2>&1; then
+		nim=$(command -v nim)
+	fi
+	[ -n "$nim" ] || { echo "ERROR: no Nim $pin resolved. Run 'nimble setup'." >&2; exit 1; }
+fi
+
+got=$("$nim" --version | head -n 1 | sed -n -E 's/^Nim Compiler Version ([^ ]+).*/\1/p')
+[ "$got" = "$pin" ] || {
+	echo "ERROR: $nim is Nim $got, the manifest pins $pin." >&2
+	echo "Re-resolve with 'nimble setup'; if a foreign Nim $pin shadows the pin, remove it from PATH." >&2
+	exit 1; }
+
+# The task first, then the file, then the task's flags: nim consumes a switch
+# that precedes the file name (and --os/--cpu would re-target its own
+# evaluation of the script), while everything after it is forwarded untouched.
+task=${1:-help}
+[ "$#" -eq 0 ] || shift
+exec "$nim" "$task" status.nims "$@"

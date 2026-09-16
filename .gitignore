@@ -142,10 +142,24 @@ test/nim/benchmarks/results/
 /nimbledeps/
 /nimble.paths
 /nimble.develop
+/nimble.overlay
+# The driver's view of the resolution, for make to include.
+/.status-resolution.mk
 # statusgo build OUTPUTS: libstatus + libsds + their headers, the generated
 # cbindings entry point, the nimcaches and the two key files. No status-go or
 # nim-sds source lives here: both are built in place from the read-only store
 # copies the resolution names.
 /.statusgo-build/
+# develop-mode statusgo checkout (materialized by `./status develop statusgo`)
+/vendor/status-go/
 # keycard: the cmake build tree, out of the vendor/status-keycard-qt submodule
 /build/status-keycard-qt/
+# develop-mode keycard-qt checkout (`./status develop keycard-qt`)
+/vendor/keycard-qt/
+# seaqt pair: develop-mode checkouts (`./status develop seaqt|nimqml`)
+/vendor/nim-seaqt/
+/vendor/nimqml-seaqt/
+# prl-to-pc: repo-local tool build dir (the store copy is read-only) +
+# develop-mode checkout
+/.prl-to-pc-build/
+/vendor/prl-to-pc/

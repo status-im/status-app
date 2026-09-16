@@ -17,13 +17,14 @@ skipExt       = @["nim"]
 #
 # The nimble floor: 0.24.x is the first release that solves this graph from a
 # clean store (0.22.x fails with or without a system nim, and only gets there
-# against a store that is already warm). BUILDING.md has the download line.
+# against a store that is already warm). `./status` reads this constant to
+# name the version in its install hint; BUILDING.md has the download line.
 const RequiredNimble = "0.24.1"
 
 # A Nim 2.2.10 already on PATH is fine: nimble reuses it instead of
 # materialising the store entry, and it is the same official tarball nimble
 # would download. Any other Nim on PATH is fine too — nimble then materialises
-# the pin, and the build uses that.
+# the pin, and `./status` execs that.
 requires "nim == 2.2.10"
 
 requires "https://github.com/status-im/nim-chronicles.git#e7f87336d2fa47b7752b42f0be4cabd5663a5e5c"  # chronicles
@@ -64,8 +65,8 @@ requires "https://github.com/pragmagic/uuids.git#1a8111cc2b0e82867d19d584012e510
 # generated Go sources, the -ldflags build values and STATUS_GO_BUILD_DIR;
 # bump by amending the #hash until the packaging merges upstream. Default mode
 # has no vendor/status-go checkout — the read-only store copy is built in place
-# with every artifact under .statusgo-build, and `nim develop status.nims
-# statusgo` materializes an editable one (ADR 0007: nimble 0.22.3 develop links
+# with every artifact under .statusgo-build, and `./status develop
+# statusgo` materializes an editable one (ADR 0007: nimble develop links
 # cannot satisfy URL#hash requires).
 requires "https://github.com/status-im/status-go.git#e0ea415b18c747c99f7d284c6a0a7233cf68d17c"
 requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
@@ -89,3 +90,31 @@ requires "https://github.com/seaqt/nimqml-seaqt.git#fa084a8d9bcf00c9ed4c2adf8577
 # either one makes nimble strip the store copy down to sources. The tools build
 # into the repo-local .prl-to-pc-build/ scratch, never into the store copy.
 requires "https://github.com/status-im/prl-to-pc.git#03a8a91707db7d9257d8617453fefb58fe848904"  # prl_to_pc
+
+include "status.nims"
+
+# nimble's bin compile only compiles src/nim_status_client.nim (config.nims
+# provides the full flag set), so every artifact the client links or loads is
+# built by this hook, through the same gated engine `./status app`
+# drives. It fires for both `nimble build` and `nimble run`.
+#
+# STATUS_SKIP_BUILD_ARTIFACTS=1 skips the artifact build as a successful no-op,
+# for source-only workflows. It cannot be spelled as nimble's hook-cancel
+# (`return false`): in 0.22.3 that hard-fails the whole action.
+before build:
+  if getEnv("STATUS_SKIP_BUILD_ARTIFACTS") == "1":
+    echo "status: skipping the artifact build (STATUS_SKIP_BUILD_ARTIFACTS=1)"
+  else:
+    try:
+      exec "nim buildArtifacts status.nims"
+    except OSError:
+      echo "status: artifact build failed — fix the error above, then re-run."
+      return false
+
+after build:
+  # The Go-built libstatus carries a bare install name, so the reference must
+  # be rewritten to @rpath for the baked rpaths to resolve it. Idempotent: a
+  # rewritten binary has no bare reference left to change.
+  when defined(macosx):
+    exec "install_name_tool -change libstatus.dylib @rpath/libstatus.dylib bin/nim_status_client"
+    exec "install_name_tool -change libstatus-keycard-qt.dylib @rpath/libstatus-keycard-qt.dylib bin/nim_status_client"
