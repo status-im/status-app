@@ -197,7 +197,7 @@ when defined(useSimulatedKeycard):
             javaExe,
             workingDir = simDir,
             args = @["-noverify", "-cp", classpath, mainClass, port],
-            options = {poParentStreams},
+            options = {poParentStreams, poDaemon},
           )
         else:
           # run.sh validates version props and frees a leftover simulator on the port.
