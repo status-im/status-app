@@ -350,11 +350,8 @@ QtObject:
   proc loadTokenLists*(self: View) {.slot.} =
     self.delegate.loadTokenLists()
 
-  proc isChainSupportedForSwapViaParaswap*(self: View, chainId: int): bool {.slot.} =
-    return self.delegate.isChainSupportedForSwapViaParaswap(chainId)
-
-  proc isChainSupportedForSwapViaLiFi*(self: View, chainId: int): bool {.slot.} =
-    return self.delegate.isChainSupportedForSwapViaLiFi(chainId)
+  proc isChainSupportedForSwap*(self: View, chainId: int): bool {.slot.} =
+    return self.delegate.isChainSupportedForSwap(chainId)
 
   proc delete*(self: View) =
     self.QObject.delete

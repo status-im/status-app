@@ -54,7 +54,7 @@ TokensStore {
     function releaseTokenSelectorModel(id) {}
 
     property var swapUnsupportedChainIds: []
-    function isChainSupportedForSwapViaLiFi(chainId) {
+    function isChainSupportedForSwap(chainId) {
         return root.swapUnsupportedChainIds.indexOf(chainId) === -1
     }
 

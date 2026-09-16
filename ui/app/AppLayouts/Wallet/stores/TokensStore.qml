@@ -231,11 +231,7 @@ QtObject {
         return root._allTokensModule.getTokenPreferencesJson(jsonData)
     }
 
-    function isChainSupportedForSwapViaParaswap(chainId) {
-        return root._allTokensModule.isChainSupportedForSwapViaParaswap(chainId)
-    }
-
-    function isChainSupportedForSwapViaLiFi(chainId) {
-        return root._allTokensModule.isChainSupportedForSwapViaLiFi(chainId)
+    function isChainSupportedForSwap(chainId) {
+        return root._allTokensModule.isChainSupportedForSwap(chainId)
     }
 }
