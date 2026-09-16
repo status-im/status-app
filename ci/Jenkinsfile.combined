@@ -216,6 +216,11 @@ pipeline {
             )
           } }
         }
+        stage('Linux Nix Shell Test') {
+          steps { script {
+            jenkins.Build('status-app/systems/linux/x86_64/package-nix')
+          } }
+        }
         stage('MacOS and iOS/aarch64') { steps { script {
           /* Single job builds both the macOS DMG and the iOS IPA. */
           macos_aarch64 = getArtifacts(
@@ -274,6 +279,8 @@ pipeline {
       archiveArtifacts('pkg/*')
     } }
     failure { script {
+      // https://discord.com/channels/624205794384281629/697843216048717905
+      // TODO: find a better channel
       discord.send(
         header: 'CI Desktop build Failure!',
         cred: 'discord-status-desktop-webhook',

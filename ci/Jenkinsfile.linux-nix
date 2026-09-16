@@ -168,13 +168,16 @@ pipeline {
   }
 
   post {
-    // TODO: enable after merge to master
-    // failure { script {
-    //   discord.send(
-    //     header: 'CI Desktop build Failure!',
-    //     cred: 'discord-status-desktop-webhook',
-    //   )
-    // } }
+    success { script { github.notifyPR(true) } }
+    failure { script {
+      github.notifyPR(false)
+      // https://discord.com/channels/624205794384281629/697843216048717905
+      // TODO: find a better channel
+      discord.send(
+        header: 'CI Nix build Failure!',
+        cred: 'discord-status-desktop-webhook',
+      )
+    } }
     cleanup {
       cleanWs(disableDeferredWipeout: true)
       dir(env.WORKSPACE_TMP) { deleteDir() }
