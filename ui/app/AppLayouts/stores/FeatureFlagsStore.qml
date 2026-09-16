@@ -15,4 +15,6 @@ QtObject {
     property bool messageLinkSharingEnabled
     property bool statusSupportBotEnabled
     property bool buyEnabled
+    property bool paraswapEnabled
+    property bool lifiEnabled
 }
