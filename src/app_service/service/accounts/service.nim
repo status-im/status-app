@@ -194,6 +194,7 @@ QtObject:
       marketDataFullDataRefreshInterval: toInt(MARKET_DATA_FULL_REFRESH_INTERVAL, 0),
       marketDataPriceRefreshInterval: toInt(MARKET_DATA_PRICE_REFRESH_INTERVAL, 0),
       enableParaswapProvider: PARASWAP_ENABLED,
+      enableLiFiProvider: LIFI_ENABLED,
     )
 
   proc defaultCreateAccountRequest*(): CreateAccountRequest =
