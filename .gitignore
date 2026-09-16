@@ -13,7 +13,6 @@ noBackup/
 bin/
 /bottles/
 pkg/
-vendor/.nimble
 # nim-sds is vendored from status-go. Remove this when we support Nimble
 vendor/nim-sds
 *.AppImage
@@ -111,7 +110,6 @@ builds/
 *.exe
 *.out
 *.app
-nimbus-build-system.paths
 
 # ui-tests
 /test/ui-pytest/configs/_local.py
@@ -140,3 +138,10 @@ mobile/fastlane/result
 
 # Benchmark output (regenerated locally, never committed)
 test/nim/benchmarks/results/
+
+# nimble setup products and repo-local tool scratch
+/nimble.paths
+/nimble.develop
+/nimbledeps/
+/.nimble-resolution.mk
+/.prl-to-pc-build/
