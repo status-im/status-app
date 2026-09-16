@@ -1,12 +1,14 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 import SortFilterProxyModel 0.2
 
+import Storybook
+
 import "ChatViewPocComponents"
 
-Item {
+SplitView {
     id: root
 
     readonly property int numberOfMessagesInViewport: 120
@@ -107,90 +109,318 @@ Item {
         return array
     }
 
-    Rectangle {
-        anchors.fill: parent
+    QtObject {
+        id: d
 
-        color: "#232325"
-    }
+        // Frame meter ////////////////////////////////////////////////////////
+        //
+        // FrameAnimation fires once per rendered frame, so the interval between
+        // firings is the frame time: a GUI thread blocked building delegates
+        // shows up here as one huge value rather than as many small ones.
 
-    ListModel {
-        id: lm
+        readonly property real jankThresholdMs: 33.4
 
-        Component.onCompleted: {
-            const size = 320
-            const maxWordCount = 40
+        property real lastMs: 0
+        property real worstMs: 0
+        property real totalMs: 0
+        property int frames: 0
+        property int jankyFrames: 0
 
-            append(root.generateSampleModelData(size, maxWordCount))
-        }
-    }
+        readonly property real averageMs: d.frames > 0 ? d.totalMs / d.frames : 0
 
-    ChatViewFlickable {
-        id: flickable
-
-        ScrollBar.vertical: ScrollBar {}
-
-        fakeConversationPlaceholder: FakeConversationColumn {
-            model: generatePlaceholderContent()
-        }
-
-        onMoreDownRequested: {
-            const shift = Math.min(40, lm.count - indexFilter.maximumIndex - 1)
-
-            indexFilter.minimumIndex += shift
-            indexFilter.maximumIndex += shift
+        function resetStats() {
+            d.lastMs = 0
+            d.worstMs = 0
+            d.totalMs = 0
+            d.frames = 0
+            d.jankyFrames = 0
         }
 
-        onMoreUpRequested: {
-            const shift = Math.min(40, indexFilter.minimumIndex)
-
-            indexFilter.minimumIndex -= shift
-            indexFilter.maximumIndex -= shift
-        }
-
-        anchors.fill: parent
-
-        // scrolling behaviour
-        maximumFlickVelocity: 50000
-        flickDeceleration: 800000
-        boundsMovement: Flickable.StopAtBounds
-        boundsBehavior: Flickable.DragAndOvershootBounds
-
-        model: SortFilterProxyModel {
-            sourceModel: lm
-
-            filters: IndexFilter {
-                id: indexFilter
-
-                minimumIndex: lm.count - 1 - root.numberOfMessagesInViewport
-                maximumIndex: lm.count - 1
+        function recordFrame(ms) {
+            // The first frame after a reset measures the gap across the reset
+            // itself, not a rendered frame; skip it.
+            if (d.frames === 0 && ms > d.jankThresholdMs * 4) {
+                d.frames = 1
+                return
             }
 
-            onRowsInserted: console.log("inserted!")
+            d.lastMs = ms
+            d.totalMs += ms
+            d.frames++
+
+            if (ms > d.worstMs)
+                d.worstMs = ms
+            if (ms > d.jankThresholdMs)
+                d.jankyFrames++
         }
 
-        moreUpAvailable: indexFilter.minimumIndex !== 0
-        moreDownAvailable: indexFilter.maximumIndex !== lm.count - 1
+        // Applied load ///////////////////////////////////////////////////////
+        //
+        // Deliberately not bound straight to the sliders. The window holds
+        // `numberOfMessagesInViewport` delegates and a Repeater builds all of
+        // them, so a complexity change tears down and rebuilds every one of
+        // them synchronously on the GUI thread. A slider emits on every step of
+        // a drag, which would mean one full rebuild of the whole window per
+        // step. These only follow once the slider has been still for a moment.
+
+        property int appliedBuildComplexity: 0
+        property int appliedPaintComplexity: 0
     }
 
-    RoundButton {
-        id: recentMessagesButton
+    // Fires once per rendered frame.
+    FrameAnimation {
+        running: true
 
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: 16
+        onTriggered: d.recordFrame(frameTime * 1000)
+    }
 
-        visible: indexFilter.maximumIndex !== lm.count - 1
+    Timer {
+        id: applyLoadTimer
 
-        text: "⬇️"
-        font.pixelSize: 18
+        interval: 150
 
-        flat: true
+        onTriggered: {
+            d.appliedBuildComplexity = buildSlider.value
+            d.appliedPaintComplexity = paintSlider.value
 
-        onClicked: {
-            indexFilter.minimumIndex = lm.count - 1 - root.numberOfMessagesInViewport
-            indexFilter.maximumIndex = lm.count - 1
+            // The rebuild itself is a stall by construction; counting it would
+            // swamp everything the meter is meant to show about scrolling.
+            d.resetStats()
+        }
+    }
 
-            flickable.moveDown()
+    Item {
+        SplitView.fillWidth: true
+        SplitView.fillHeight: true
+
+        Rectangle {
+            anchors.fill: parent
+
+            color: "#232325"
+        }
+
+        ListModel {
+            id: lm
+
+            Component.onCompleted: {
+                const size = 320
+                const maxWordCount = 40
+
+                append(root.generateSampleModelData(size, maxWordCount))
+            }
+        }
+
+        ChatViewFlickable {
+            id: flickable
+
+            ScrollBar.vertical: ScrollBar {}
+
+            fakeConversationPlaceholder: FakeConversationColumn {
+                model: generatePlaceholderContent()
+            }
+
+            onMoreDownRequested: {
+                const shift = Math.min(40, lm.count - indexFilter.maximumIndex - 1)
+
+                indexFilter.minimumIndex += shift
+                indexFilter.maximumIndex += shift
+            }
+
+            onMoreUpRequested: {
+                const shift = Math.min(40, indexFilter.minimumIndex)
+
+                indexFilter.minimumIndex -= shift
+                indexFilter.maximumIndex -= shift
+            }
+
+            anchors.fill: parent
+
+            delegateBuildComplexity: d.appliedBuildComplexity
+            delegatePaintComplexity: d.appliedPaintComplexity
+
+            // scrolling behaviour
+            maximumFlickVelocity: 50000
+            flickDeceleration: 800000
+            boundsMovement: Flickable.StopAtBounds
+            boundsBehavior: Flickable.DragAndOvershootBounds
+
+            model: SortFilterProxyModel {
+                sourceModel: lm
+
+                filters: IndexFilter {
+                    id: indexFilter
+
+                    minimumIndex: lm.count - 1 - root.numberOfMessagesInViewport
+                    maximumIndex: lm.count - 1
+                }
+
+                onRowsInserted: console.log("inserted!")
+            }
+
+            moreUpAvailable: indexFilter.minimumIndex !== 0
+            moreDownAvailable: indexFilter.maximumIndex !== lm.count - 1
+        }
+
+        RoundButton {
+            id: recentMessagesButton
+
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: 16
+
+            visible: indexFilter.maximumIndex !== lm.count - 1
+
+            text: "⬇️"
+            font.pixelSize: 18
+
+            flat: true
+
+            onClicked: {
+                indexFilter.minimumIndex = lm.count - 1 - root.numberOfMessagesInViewport
+                indexFilter.maximumIndex = lm.count - 1
+
+                flickable.moveDown()
+            }
+        }
+
+        // Pinned over the conversation rather than parked in the controls tab:
+        // the numbers only mean anything while you are scrolling, and you
+        // cannot scroll and watch another tab at the same time.
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.margins: 12
+
+            implicitWidth: meterLayout.implicitWidth + 20
+            implicitHeight: meterLayout.implicitHeight + 16
+
+            color: "#cc16161a"
+            radius: 6
+            border.width: 1
+            border.color: "#343438"
+
+            ColumnLayout {
+                id: meterLayout
+
+                anchors.centerIn: parent
+                spacing: 2
+
+                Text {
+                    color: d.worstMs > d.jankThresholdMs ? "#ff6b6b" : "#e0e0e3"
+                    font.bold: true
+                    font.pixelSize: 12
+                    text: "worst " + d.worstMs.toFixed(1) + " ms"
+                }
+
+                Text {
+                    color: "#a0a0a8"
+                    font.pixelSize: 12
+                    text: "last " + d.lastMs.toFixed(1) + " \u00b7 avg " + d.averageMs.toFixed(1) + " ms"
+                }
+
+                Text {
+                    color: d.jankyFrames > 0 ? "#ffb86b" : "#a0a0a8"
+                    font.pixelSize: 12
+                    text: "janky " + d.jankyFrames + " / " + d.frames
+                }
+
+                Text {
+                    color: "#6f6f78"
+                    font.pixelSize: 11
+                    text: "build " + d.appliedBuildComplexity
+                          + " \u00b7 paint " + d.appliedPaintComplexity
+                }
+            }
+        }
+    }
+
+    LogsAndControlsPanel {
+        SplitView.minimumWidth: 300
+        SplitView.preferredWidth: 360
+
+        ColumnLayout {
+            Layout.fillWidth: true
+
+            spacing: 4
+
+            Label {
+                text: "Simulated device load"
+                font.bold: true
+            }
+
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pixelSize: 11
+                text: "The window holds " + root.numberOfMessagesInViewport
+                      + " delegates and a Repeater builds all of them, so every "
+                      + "figure below is paid that many times over. Sliders apply "
+                      + "150 ms after they stop moving, and reset the meter."
+            }
+
+            Item { Layout.preferredHeight: 8 }
+
+            Label {
+                text: "Build: " + buildSlider.value + " groups \u2192 "
+                      + (buildSlider.value * 8 * root.numberOfMessagesInViewport)
+                      + " objects in the window"
+            }
+
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pixelSize: 11
+                text: "Objects constructed per delegate, never drawn. Paid on the "
+                      + "GUI thread in the frame that realises the delegate, so this "
+                      + "is what a windowing shift costs."
+            }
+
+            Slider {
+                id: buildSlider
+
+                Layout.fillWidth: true
+
+                from: 0
+                to: 256
+                stepSize: 1
+
+                onValueChanged: applyLoadTimer.restart()
+            }
+
+            Item { Layout.preferredHeight: 8 }
+
+            Label {
+                text: "Paint: " + paintSlider.value + " extra copies per message"
+            }
+
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pixelSize: 11
+                text: "Wrapped markdown laid out on every width change and drawn "
+                      + "through an offscreen buffer. This is what scrolling costs, "
+                      + "frame after frame. Far more expensive per unit than build."
+            }
+
+            Slider {
+                id: paintSlider
+
+                Layout.fillWidth: true
+
+                from: 0
+                to: 12
+                stepSize: 1
+
+                onValueChanged: applyLoadTimer.restart()
+            }
+
+            Item { Layout.preferredHeight: 8 }
+
+            Button {
+                text: "Reset meter"
+
+                onClicked: d.resetStats()
+            }
         }
     }
 }

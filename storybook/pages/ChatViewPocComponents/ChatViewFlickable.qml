@@ -15,6 +15,11 @@ Flickable {
 
     property alias model: messagesRepeater.model
 
+    // Simulated device load, forwarded to every delegate. See MessageDelegate
+    // for what each one buys.
+    property int delegateBuildComplexity: 0
+    property int delegatePaintComplexity: 0
+
     // Distance scrolled per "click" (120 units) of the mouse wheel. Flickable's
     // built-in wheel handling is hardcoded to wheelScrollLines * 24 (~72px) and
     // is driven by a private wheelDeceleration, so neither flickDeceleration nor
@@ -143,6 +148,9 @@ Flickable {
 
             delegate: MessageDelegate {
                 Layout.fillWidth: true
+
+                buildComplexity: root.delegateBuildComplexity
+                paintComplexity: root.delegatePaintComplexity
             }
         }
 
