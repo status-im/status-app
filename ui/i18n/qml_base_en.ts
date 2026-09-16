@@ -10970,6 +10970,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13421,6 +13425,10 @@ to load</source>
     </message>
     <message>
         <source>Activity Center</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18824,6 +18832,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Buy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

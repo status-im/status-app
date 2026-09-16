@@ -10933,6 +10933,10 @@ to load</source>
         <translation>마켓</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>스왑</translation>
     </message>
@@ -13376,6 +13380,10 @@ to load</source>
     <message>
         <source>Activity Center</source>
         <translation>활동 센터</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18773,6 +18781,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Buy</source>
         <translation>구매</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>
