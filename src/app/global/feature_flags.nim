@@ -33,7 +33,7 @@ const DEFAULT_FLAG_KEYCARD_ENABLED = true
 const DEFAULT_FLAG_THREADPOOL_ENABLED = true
 const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
 const DEFAULT_FLAG_BUY_ENABLED = true
-const DEFAULT_FLAG_SWAP_ENABLED = true
+const DEFAULT_FLAG_SWAP_ENABLED = false
 # Swap providers are opt-in; Swap itself is only usable when at least one is enabled.
 const DEFAULT_FLAG_PARASWAP_ENABLED = false
 const DEFAULT_FLAG_LIFI_ENABLED = false
@@ -112,7 +112,7 @@ QtObject:
     self.QObject.setup()
     self.dappsEnabled = DAPPS_ENABLED
     self.browserEnabled = BROWSER_ENABLED
-    self.swapEnabled = SWAP_ENABLED
+    self.swapEnabled = SWAP_ENABLED and (LIFI_ENABLED or PARASWAP_ENABLED)
     self.connectorEnabled = CONNECTOR_ENABLED
     self.sendViaPersonalChatEnabled = SEND_VIA_PERSONAL_CHAT_ENABLED
     self.paymentRequestEnabled = PAYMENT_REQUEST_ENABLED
