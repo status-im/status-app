@@ -101,7 +101,7 @@ class ProcessMonitor:
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 continue
 
-        if self._stop_event.wait(self._interval_sec):
+        if self._stop_event.wait(self._interval_sec) and self._cpu_samples:
             return None
 
         cpu_percent = 0.0
