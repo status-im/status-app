@@ -7,12 +7,13 @@ from gui.objects_map import wallet_names
 from constants import ReturningUser
 from constants.wallet import WalletNetworkSettings
 from gui.components.authenticate_popup import AuthenticatePopup
+from gui.components.sign_popup import SignPopup
 from helpers.onboarding_helper import (
     import_seed_and_log_in,
     open_create_profile_view,
     skip_post_login_popups_if_visible,
 )
-from helpers.settings_helper import enable_testnet_mode
+from helpers.settings_helper import enable_testnet_mode, open_wallet_settings
 
 
 @step('Wait for wallet balances to finish loading')
@@ -58,9 +59,12 @@ def wait_for_account_assets_loaded(
 
 
 def authenticate_with_password(user_account):
-    auth_popup = AuthenticatePopup().wait_until_appears()
-    auth_popup.authenticate(user_account.password)
-    auth_popup.wait_until_hidden()
+    AuthenticatePopup().wait_until_appears().authenticate(user_account.password)
+
+
+@step('Sign with profile password')
+def sign_with_password(user_account):
+    SignPopup().enter_password(user_account.password)
 
 
 @step('Verify authentication popup does not appear')
@@ -74,6 +78,15 @@ def open_wallet_account(main_window, account_name=None):
     wallet = main_window.left_panel.open_wallet()
     wait_for_wallet_balances_loaded(wallet.left_panel)
     return wallet.left_panel.select_account(account_name)
+
+
+@step('Get default Status account address')
+def get_status_account_address(main_window) -> str:
+    account_view = open_wallet_settings(main_window).open_account_in_settings(
+        WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value,
+        0,
+    )
+    return account_view.get_account_address_value()
 
 
 def wallet_send_returning_user():

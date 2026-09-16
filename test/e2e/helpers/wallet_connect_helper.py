@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -11,50 +12,109 @@ import configs
 import driver
 from eth_account import Account
 from eth_account.messages import encode_defunct
+from helpers.wallet_helper import open_wallet_account
 from web3 import Web3
 
 LOG = logging.getLogger(__name__)
 
 _DAPP_DIR = configs.testpath.ROOT / 'scripts' / 'wallet_connect_dapp'
 _DAPP_SCRIPT = _DAPP_DIR / 'run_wc_dapp.js'
-_NODE_MODULES = _DAPP_DIR / 'node_modules'
-_SIGN_CLIENT = _NODE_MODULES / '@walletconnect' / 'sign-client' / 'package.json'
+_SIGN_CLIENT_PACKAGE = _DAPP_DIR / 'node_modules/@walletconnect/sign-client/package.json'
 
 
-_NODE_CANDIDATES = (
-    Path('/opt/homebrew/bin/node'),
-    Path('/usr/local/bin/node'),
-    Path('/opt/homebrew/opt/node@22/bin/node'),
-    Path('/opt/homebrew/opt/node@20/bin/node'),
-    Path('/opt/homebrew/opt/node@18/bin/node'),
-)
+@allure.step('Connect WalletConnect dApp and request personal_sign')
+def request_personal_sign(main_window, dapp: 'WalletConnectDapp', address: str) -> None:
+    dapp.start(address)
+    wallet_account = open_wallet_account(main_window)
+    uri = dapp.wait_for_uri()
+    dapps_workflow = wallet_account.open_dapps_connect_flow()
+    dapps_workflow.pair_with_uri(uri).approve_connection_and_close()
+    dapp.wait_until_connected()
+    dapps_workflow.approve_sign_request()
 
 
-def _nvm_node_binaries():
-    nvm_dir = Path.home() / '.nvm' / 'versions' / 'node'
-    if not nvm_dir.is_dir():
-        return []
-    return sorted(nvm_dir.glob('*/bin/node'), reverse=True)
+_NODE_REQUIREMENT = 'Node.js 20.19–20.x or 22+'
+
+
+def _node_fallback_paths() -> tuple[Path, ...]:
+    if os.name == 'nt':
+        paths = []
+        if nvm_symlink := os.getenv('NVM_SYMLINK'):
+            paths.append(Path(nvm_symlink) / 'node.exe')
+        if program_files := os.getenv('ProgramFiles'):
+            paths.append(Path(program_files) / 'nodejs' / 'node.exe')
+        return tuple(paths)
+
+    paths = [
+        Path('/usr/local/bin/node'),
+        Path('/usr/bin/node'),
+        *Path.home().joinpath('.nvm', 'versions', 'node').glob('*/bin/node'),
+    ]
+    if sys.platform == 'darwin':
+        paths.extend((
+            Path('/opt/homebrew/bin/node'),
+            *Path('/opt/homebrew/opt').glob('node*/bin/node'),
+        ))
+    return tuple(paths)
+
+
+def _node_version(node_path: str) -> tuple[int, int] | None:
+    try:
+        output = subprocess.check_output(
+            [node_path, '-v'],
+            text=True,
+            timeout=5,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    parts = output.strip().lstrip('v').split('.')
+    try:
+        return int(parts[0]), int(parts[1])
+    except (ValueError, IndexError):
+        return None
+
+
+def _is_supported_node(node_path: str) -> bool:
+    version = _node_version(node_path)
+    if version is None:
+        return False
+    major, minor = version
+    return (major == 20 and minor >= 19) or major >= 22
 
 
 def _resolve_node_binary() -> str:
-    node_bin = os.getenv('NODE_BIN')
-    if node_bin:
-        node_path = Path(node_bin).expanduser()
+    if configured_node := os.getenv('NODE_BIN'):
+        node_path = Path(configured_node).expanduser()
         if not node_path.is_file():
             raise FileNotFoundError(f'NODE_BIN does not point to a file: {node_path}')
-        return str(node_path)
+        resolved = str(node_path)
+        if not _is_supported_node(resolved):
+            raise FileNotFoundError(
+                f'NODE_BIN {resolved} is not {_NODE_REQUIREMENT}'
+            )
+        return resolved
 
-    node_on_path = shutil.which('node')
-    if node_on_path:
-        return node_on_path
+    candidates = []
+    if node_on_path := shutil.which('node'):
+        candidates.append(Path(node_on_path))
+    candidates.extend(_node_fallback_paths())
 
-    for candidate in (*_NODE_CANDIDATES, *_nvm_node_binaries()):
-        if candidate.is_file() and os.access(candidate, os.X_OK):
-            return str(candidate)
+    supported = []
+    seen = set()
+    for candidate in candidates:
+        resolved = str(candidate)
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        if candidate.is_file() and os.access(candidate, os.X_OK) and _is_supported_node(resolved):
+            supported.append(resolved)
+
+    if supported:
+        return max(supported, key=lambda path: _node_version(path) or (0, 0))
 
     raise FileNotFoundError(
-        'Node.js not found. Install Node.js or set NODE_BIN, then run:\n'
+        f'{_NODE_REQUIREMENT} not found. Install it or set NODE_BIN, then run:\n'
         f'  cd {_DAPP_DIR} && npm ci'
     )
 
@@ -66,15 +126,18 @@ class WalletConnectDapp:
         self._status_file: Path | None = None
         self._message = message
 
+    def __enter__(self) -> 'WalletConnectDapp':
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
+
     @allure.step('Start WalletConnect test dApp for {address}')
-    def start(self, address: str, message: str | None = None) -> 'WalletConnectDapp':
+    def start(self, address: str) -> 'WalletConnectDapp':
         if self._process is not None:
             raise RuntimeError('WalletConnect dApp is already running')
 
-        if message is not None:
-            self._message = message
-
-        if not _SIGN_CLIENT.is_file():
+        if not _SIGN_CLIENT_PACKAGE.is_file():
             raise FileNotFoundError(
                 'WalletConnect dApp dependencies are missing. Run:\n'
                 f'  cd {_DAPP_DIR} && npm ci'
@@ -84,7 +147,6 @@ class WalletConnectDapp:
         handle = tempfile.NamedTemporaryFile(prefix='wc_dapp_status_', suffix='.json', delete=False)
         handle.close()
         self._status_file = Path(handle.name)
-        self._write_status({'phase': 'launching'})
 
         command = [
             node_binary,
@@ -97,17 +159,9 @@ class WalletConnectDapp:
         self._process = subprocess.Popen(
             command,
             cwd=str(_DAPP_DIR),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-        if self._process.poll() is not None:
-            stderr = (self._process.stderr.read() if self._process.stderr else '') or ''
-            stdout = (self._process.stdout.read() if self._process.stdout else '') or ''
-            raise RuntimeError(
-                f'WalletConnect dApp failed to start (code {self._process.returncode})\n'
-                f'stdout: {stdout}\nstderr: {stderr}'
-            )
         return self
 
     def _read_status(self) -> dict:
@@ -118,51 +172,54 @@ class WalletConnectDapp:
         except json.JSONDecodeError:
             return {}
 
-    def _write_status(self, payload: dict):
-        if self._status_file is None:
-            return
-        self._status_file.write_text(json.dumps(payload), encoding='utf-8')
+    def _wait_for_phase(self, phase: str, timeout_msec: int) -> dict:
+        process = self._process
+        if process is None:
+            raise RuntimeError('WalletConnect dApp is not running')
 
-    @allure.step('Wait for WalletConnect dApp phase {phase}')
-    def wait_for_phase(self, phase: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> dict:
+        process_error: str | None = None
+
         def _phase_reached() -> bool:
-            if self._process is not None and self._process.poll() is not None:
-                stderr = (self._process.stderr.read() if self._process.stderr else '') or ''
-                stdout = (self._process.stdout.read() if self._process.stdout else '') or ''
-                raise AssertionError(
-                    f'WalletConnect dApp exited with code {self._process.returncode} '
-                    f'before phase {phase!r}\nstdout: {stdout}\nstderr: {stderr}'
-                )
+            nonlocal process_error
             status = self._read_status()
             current_phase = status.get('phase')
+            if current_phase == phase:
+                return True
             if current_phase == 'error':
-                raise AssertionError(
-                    f'WalletConnect dApp failed: {status.get("error", status)}'
+                process_error = f'WalletConnect dApp failed: {status.get("error", status)}'
+                return True
+            if process.poll() is not None:
+                process_error = (
+                    f'WalletConnect dApp exited with code {process.returncode} '
+                    f'before phase {phase!r}'
                 )
-            return current_phase == phase
+                return True
+            return False
 
-        assert driver.waitFor(_phase_reached, timeout_msec), (
+        reached = driver.waitFor(_phase_reached, timeout_msec)
+        if process_error:
+            raise AssertionError(process_error)
+        assert reached, (
             f'WalletConnect dApp did not reach phase {phase!r}, got {self._read_status()}'
         )
         return self._read_status()
 
     @allure.step('Wait for WalletConnect pairing URI')
     def wait_for_uri(self, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> str:
-        status = self.wait_for_phase('uri_ready', timeout_msec)
+        status = self._wait_for_phase('uri_ready', timeout_msec)
         uri = status.get('uri', '')
         assert uri.startswith('wc:'), f'Unexpected WalletConnect URI: {uri!r}'
         return uri
 
-    @allure.step('Wait for WalletConnect personal_sign signature')
-    def wait_for_signature(self, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> str:
-        status = self.wait_for_phase('sign_complete', timeout_msec)
-        signature = str(status.get('signature', ''))
-        assert signature.startswith('0x'), f'Unexpected signature: {signature!r}'
-        return signature
+    @allure.step('Wait until WalletConnect dApp is connected')
+    def wait_until_connected(self, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC):
+        self._wait_for_phase('session_approved', timeout_msec)
 
     @allure.step('Verify personal_sign recovered the expected address')
-    def assert_signed_by(self, address: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> str:
-        signature = self.wait_for_signature(timeout_msec)
+    def assert_signed_by(self, address: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC):
+        status = self._wait_for_phase('sign_complete', timeout_msec)
+        signature = str(status.get('signature', ''))
+        assert signature.startswith('0x'), f'Unexpected signature: {signature!r}'
         recovered = Web3.to_checksum_address(
             Account.recover_message(encode_defunct(text=self._message), signature=signature)
         )
@@ -170,7 +227,6 @@ class WalletConnectDapp:
         assert recovered == expected, (
             f'personal_sign recovered {recovered}, expected {expected}; signature={signature}'
         )
-        return signature
 
     @allure.step('Stop WalletConnect test dApp')
     def stop(self):
@@ -182,17 +238,8 @@ class WalletConnectDapp:
                 except subprocess.TimeoutExpired:
                     self._process.kill()
                     self._process.wait(timeout=5)
-            if self._process.returncode not in (0, None):
-                stderr = (self._process.stderr.read() if self._process.stderr else '') or ''
-                stdout = (self._process.stdout.read() if self._process.stdout else '') or ''
-                LOG.warning(
-                    'WalletConnect dApp exited with code %s\nstdout: %s\nstderr: %s',
-                    self._process.returncode,
-                    stdout,
-                    stderr,
-                )
             self._process = None
 
-        if self._status_file is not None and self._status_file.exists():
+        if self._status_file is not None:
             self._status_file.unlink(missing_ok=True)
             self._status_file = None

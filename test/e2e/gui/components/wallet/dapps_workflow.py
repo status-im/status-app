@@ -2,22 +2,9 @@ import allure
 
 import configs
 import driver
-from driver.objects_access import find_descendant_by_object_name
 from gui.elements.button import Button
 from gui.elements.object import QObject, set_text_property_on_object
 from gui.objects_map import dapps_names
-from gui.objects_map.wallet_names import mainWindow_RightTabView
-
-
-def _get_wallet_dapps_anchor():
-    wallet_tab = driver.waitForObject(
-        mainWindow_RightTabView,
-        configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-    )
-    content_item = find_descendant_by_object_name(wallet_tab, 'dappsContentItem')
-    if content_item is not None:
-        return content_item
-    raise TimeoutError('Wallet dApps combobox not found in RightTabView')
 
 
 class DappsWorkflow:
@@ -30,9 +17,9 @@ class DappsWorkflow:
         self._sign_button = Button(dapps_names.dapp_sign_button)
 
     @allure.step('Open WalletConnect connect dApp flow')
-    def open_connect_dapp_flow(self) -> 'DappsWorkflow':
+    def open_connect_dapp_flow(self, dapps_combo: QObject) -> 'DappsWorkflow':
         if not self._connect_dapp_button.is_visible:
-            driver.mouseClick(_get_wallet_dapps_anchor())
+            dapps_combo.click()
             self._connect_dapp_button.wait_until_appears()
         self._connect_dapp_button.click()
 
@@ -47,19 +34,28 @@ class DappsWorkflow:
             uri: str,
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ) -> 'DappsWorkflow':
-        self._wc_uri_input.wait_until_appears(timeout_msec)
         set_text_property_on_object(self._wc_uri_input.object.edit, uri.strip(), timeout_msec)
         self._connect_primary_button.wait_until_appears(timeout_msec)
+        self._connect_primary_button.wait_until_enabled(timeout_msec)
         return self
 
-    @allure.step('Approve WalletConnect connection')
-    def approve_connection(self, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> 'DappsWorkflow':
+    @allure.step('Approve WalletConnect connection and close popup')
+    def approve_connection_and_close(
+            self,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'DappsWorkflow':
+        connect_button_text = str(self._connect_primary_button.object.text)
+        self._connect_primary_button.wait_until_enabled(timeout_msec)
         self._connect_primary_button.click()
 
         def _close_ready() -> bool:
             try:
                 button = self._connect_primary_button.object
-                return bool(button.visible) and bool(button.enabled) and str(button.text) == 'Close'
+                return (
+                    bool(button.visible)
+                    and bool(button.enabled)
+                    and str(button.text) != connect_button_text
+                )
             except (LookupError, RuntimeError, AttributeError):
                 return False
 

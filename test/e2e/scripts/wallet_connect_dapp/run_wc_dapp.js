@@ -8,7 +8,9 @@ function parseArgs(argv) {
   const args = {
     address: '',
     message: 'Status e2e WC sign',
-    projectId: process.env.WALLET_CONNECT_PROJECT_ID || DEFAULT_PROJECT_ID,
+    projectId: process.env.WALLET_CONNECT_PROJECT_ID
+      || process.env.STATUS_BUILD_WALLET_CONNECT_PROJECT_ID
+      || DEFAULT_PROJECT_ID,
     statusFile: '',
   };
 
