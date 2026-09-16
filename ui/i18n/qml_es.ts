@@ -10988,6 +10988,10 @@ al cargar</translation>
         <translation>Mercado</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Swap</translation>
     </message>
@@ -13433,6 +13437,10 @@ al cargar</translation>
     <message>
         <source>Activity Center</source>
         <translation>Centro de actividad</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18850,6 +18858,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Buy</source>
         <translation>Comprar</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

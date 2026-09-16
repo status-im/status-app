@@ -11037,6 +11037,10 @@ selhalo</translation>
         <translation>Trh</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Směnit</translation>
     </message>
@@ -13498,6 +13502,10 @@ selhalo</translation>
     <message>
         <source>Activity Center</source>
         <translation>Centrum aktivit</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18931,6 +18939,10 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <message>
         <source>Buy</source>
         <translation>Koupit</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

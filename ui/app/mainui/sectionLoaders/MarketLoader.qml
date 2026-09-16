@@ -56,6 +56,7 @@ Loader {
             totalTokensCount:       Qt.binding(() => root.marketStore.totalLeaderboardCount),
             loading:                Qt.binding(() => root.marketStore.marketLeaderboardLoading),
             swapEnabled:            Qt.binding(() => root.featureFlagsStore.swapEnabled),
+            swapProvidersEnabled:   Qt.binding(() => root.featureFlagsStore.swapProvidersEnabled),
             currentPage:            Qt.binding(() => root.marketStore.currentPage),
             leftPanelWidthOverride: Qt.binding(() => root.leftPanelWidthOverride),
             currencySymbol:         Qt.binding(() => {
