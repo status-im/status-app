@@ -21,8 +21,6 @@ OTHER_FILES += $$files("$$PWD/../monitoring/*.qml", true)
 OTHER_FILES += $$files("$$PWD/../vendor/SortFilterProxyModel/*.cpp", true)
 OTHER_FILES += $$files("$$PWD/../vendor/SortFilterProxyModel/*.h", true)
 
-OTHER_FILES += $$files("$$PWD/../vendor/nimqml/src/*.nim", true)
-
 OTHER_FILES += $$files("$$PWD/../Makefile")
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
