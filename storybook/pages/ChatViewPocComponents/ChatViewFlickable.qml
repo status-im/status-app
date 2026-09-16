@@ -47,6 +47,24 @@ Flickable {
         root.flickDeceleration = deceleration
     }
 
+    // Flickable only reports itself as moving while being dragged or flicked, so
+    // animating contentY directly leaves the attached ScrollBar inactive, and
+    // therefore faded out. Drive its active state for the duration of a wheel
+    // scroll instead; the style still owns the fade out delay.
+    function setScrollBarActive(active) {
+        const scrollBar = root.ScrollBar.vertical
+
+        if (!scrollBar)
+            return
+
+        // leave the state alone when something else already owns it, otherwise
+        // the bar would be hidden mid drag or while the pointer rests on it
+        if (!active && (scrollBar.pressed || scrollBar.hovered || root.movingVertically))
+            return
+
+        scrollBar.active = active
+    }
+
     // Asks for the next slice of the model when the viewport has reached one of
     // the placeholders. contentY is anchored to a delegate that survives the
     // shift, so the viewport stays on the same content once the new items are
@@ -170,6 +188,8 @@ Flickable {
             if (target === root.contentY)
                 return
 
+            root.setScrollBarActive(true)
+
             wheelScrollAnimation.stop()
             wheelScrollAnimation.from = root.contentY
             wheelScrollAnimation.to = target
@@ -186,8 +206,11 @@ Flickable {
         easing.type: Easing.OutQuad
 
         // Emitted on natural completion only - stop() during a burst of notches
-        // does not emit it - so the window is shifted once the scrolling settles
-        // rather than on every notch.
-        onFinished: root.requestMoreIfPlaceholderReached()
+        // does not emit it - so this runs once the scrolling settles rather than
+        // on every notch.
+        onFinished: {
+            root.requestMoreIfPlaceholderReached()
+            root.setScrollBarActive(false)
+        }
     }
 }
