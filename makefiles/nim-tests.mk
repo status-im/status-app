@@ -60,8 +60,8 @@ NIMCACHE_BASE ?= $(or $(WORKSPACE_TMP),build)/nimcache
 nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(notdir $(basename $@))
 
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
-	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
-	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
+	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" \
+	$(NIM) c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
 tests-nim: $(NIM_TESTS)
 

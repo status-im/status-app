@@ -95,7 +95,7 @@ else
 fi
 
 # build status-client with feature flags
-env "${FEATURE_FLAGS[@]}" ./vendor/nimbus-build-system/scripts/env.sh nim c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
+env "${FEATURE_FLAGS[@]}" "${NIM:-$(./scripts/resolve-nim.sh)}" c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
     "${NIM_FLAGS[@]}" \
     "$STATUS_DESKTOP"/src/nim_status_client.nim
 
