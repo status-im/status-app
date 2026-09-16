@@ -31,9 +31,13 @@ nim_status_client.log
 .flatpak-builder
 /ui/StatusQ/sandbox/android/.gradle/
 mobile/android/qt6/.gradle/
+# The driver's key files: every repo-root one is `.status-<artifact>.key`, and
+# the pattern covers the in-tree ones too (<buildDir>/.status-cmake.key).
+# .qmake_previous stays listed so a leftover copy keeps being ignored.
 .qmake_previous
 # Used to track the simulated keycard mode changes via the USE_SIMULATED_KEYCARD build flag
 .use_simulated_keycard_previous
+.status-*.key
 *.qm
 
 # Squish test ================================================================
@@ -138,3 +142,10 @@ test/nim/benchmarks/results/
 /nimbledeps/
 /nimble.paths
 /nimble.develop
+# statusgo build OUTPUTS: libstatus + libsds + their headers, the generated
+# cbindings entry point, the nimcaches and the two key files. No status-go or
+# nim-sds source lives here: both are built in place from the read-only store
+# copies the resolution names.
+/.statusgo-build/
+# keycard: the cmake build tree, out of the vendor/status-keycard-qt submodule
+/build/status-keycard-qt/
