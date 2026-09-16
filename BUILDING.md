@@ -15,7 +15,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
       - [Install Required Packages](#install-required-packages)
       - [Install Microsoft Visual C++ Build Tools](#install-microsoft-visual-c-build-tools)
       - [Install Go 1.26](#install-go-126)
-      - [Install Nim 2.2.x](#install-nim-22x)
+      - [Install nimble](#install-nimble)
       - [Install protobuf](#install-protobuf)
     - [Linux](#linux)
       - [Ubuntu](#ubuntu)
@@ -23,6 +23,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
     - [macOS](#macos)
       - [Install Homebrew](#install-homebrew)
       - [Install Required Packages](#install-required-packages-1)
+      - [Install nimble](#install-nimble-1)
       - [Export GITHUB\_USER and GITHUB\_TOKEN environment variables](#export-github_user-and-github_token-environment-variables)
       - [Install Node.js](#install-nodejs)
       - [Install Python Dependencies](#install-python-dependencies)
@@ -35,6 +36,9 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
     - [Windows](#windows-1)
     - [Linux](#linux-1)
   - [4️⃣ Build the App](#4️⃣-build-the-app)
+    - [Nim dependencies](#nim-dependencies)
+      - [Bumping a dependency](#bumping-a-dependency)
+      - [Editing a dependency locally](#editing-a-dependency-locally)
     - [Build Configuration Options](#build-configuration-options)
   - [Pro tips](#pro-tips)
     - [Working with VS Code](#working-with-vs-code)
@@ -42,6 +46,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
   - [🐞 Troubleshooting](#-troubleshooting)
     - [Qt Not Found](#qt-not-found)
     - [Application doesn't build](#application-doesnt-build)
+    - [No Nim 2.2.10 found / nimble setup failed](#no-nim-2210-found--nimble-setup-failed)
   - [📬 Need Further Help?](#-need-further-help)
 
 ## 1️⃣ Prerequisites
@@ -75,9 +80,22 @@ You can install them from the [Microsoft website](https://visualstudio.microsoft
 
 Download and install Go 1.26 from the [official website](https://go.dev/dl/).
 
-#### Install Nim 2.2.x
+#### Install nimble
 
-Download and install Nim 2.2.x from the [official website](https://nim-lang.org/install_windows.html).
+The Nim-side prerequisite is **nimble 0.24.1**, not a Nim compiler: `nim_status_client.nimble`
+pins the compiler (`requires "nim == 2.2.10"`) and `make update` has nimble download it into
+nimble's store. Install it from the status scoop bucket (the `nim` package's bundled nimble
+is 0.22.2 and cannot solve this project's graph):
+
+```
+scoop install --global status/nimble@0.24.1
+```
+
+`scripts/windows_build_setup.ps1` does this and puts `C:\ProgramData\scoop\apps\nimble\0.24.1`
+on `PATH`.
+
+Do not install Nim. A Nim already on `PATH` does no harm: one of exactly 2.2.10 is reused as it
+is, any other version is ignored.
 
 #### Install protobuf
 
@@ -106,6 +124,20 @@ sudo apt install libpcsclite-dev build-essential mesa-common-dev libglu1-mesa-de
 Install **Go 1.26**:
 
 Download and install from the [official website](https://go.dev/dl/).
+
+Install **nimble 0.24.1**, the whole Nim-side prerequisite. Do *not* install Nim:
+`nim_status_client.nimble` pins the compiler and `make update` has nimble download it into its
+store (`~/.nimble`). The release is a single binary; any directory on `PATH` works (CI uses
+`/opt/nimble`):
+
+```bash
+mkdir -p ~/.local/bin && curl -fsSL \
+  https://github.com/nim-lang/nimble/releases/download/v0.24.1/nimble-linux_x64.tar.gz \
+  | tar xz -C ~/.local/bin
+```
+
+A Nim already on `PATH` does no harm: one of exactly 2.2.10 is reused as it is, any other
+version is ignored.
 
 Install **nvm** (Node Version Manager):
 
@@ -136,7 +168,8 @@ Install required packages:
 sudo dnf install pcsc-lite-devel openssl-devel protobuf-devel protobuf-compiler
 ```
 
-Install **nvm** and Node.js as per the [Ubuntu instructions above](#ubuntu).
+Install **Go**, **nimble** (not Nim), **nvm** and Node.js as per the
+[Ubuntu instructions above](#ubuntu).
 
 
 ### macOS
@@ -148,8 +181,23 @@ Install [Homebrew](https://brew.sh/) if not already installed.
 #### Install Required Packages
 
 ```bash
-brew install cmake pkg-config go qt protobuf 
+brew install cmake pkg-config go qt protobuf
 ```
+
+#### Install nimble
+
+**nimble 0.24.1** is the whole Nim-side prerequisite; do not `brew install nim`
+(`nim_status_client.nimble` pins the compiler and `make update` has nimble download it).
+`scripts/macos_build_setup.sh`, the script CI runs, installs it into `~/.local/bin`; by hand:
+
+```bash
+# Apple silicon; use nimble-macosx_x64.tar.gz on Intel
+mkdir -p ~/.local/bin && curl -fsSL \
+  https://github.com/nim-lang/nimble/releases/download/v0.24.1/nimble-macosx_aarch64.tar.gz \
+  | tar xz -C ~/.local/bin
+```
+
+Make sure `~/.local/bin` is on `PATH`.
 
 Install additional packages if you are planning to build DMG
 
@@ -259,8 +307,7 @@ C:\ProgramData\chocolatey\bin
 C:\ProgramData\scoop\shims
 С:\Users\{your_username}\go\bin
 C:\Program Files\Go\bin
-C:\nim-2.2.6\bin
-C:\Users\{you_username}\.nimble\bin
+C:\nimble
 C:\Qt\6.11.0\msvc2022_64\bin
 C:\BuildTools\VC\Tools\MSVC\14.44.35207\bin
 C:\ProgramData\mingw64\mingw64\bin
@@ -293,11 +340,18 @@ cd status-desktop
 ```
 
 
-Update all submodules and build the dependencies:
+Fetch everything the build needs at the pinned revisions:
 
 ```bash
 make update
 ```
+
+This initialises the remaining git submodules (status-go and the C/C++ libraries), runs
+`nimble setup` (the Nim packages and the pinned compiler, from `nimble.lock` into nimble's
+store) and builds the Qt pkg-config wrapper. The first run on an empty store downloads the
+dependency graph and the compiler, about two minutes; later runs take seconds. A C compiler
+is needed at this point already: nat_traversal (eth's dependency) builds miniupnpc and
+libnatpmp during setup.
 
 > Tip: Nim takes a long compile. Try using the `-j8` flag where 8 is the number of cores you want to allocate
 
@@ -308,22 +362,88 @@ make run
 ```
 🎉
 
+### Nim dependencies
+
+The Nim packages the client imports are not git submodules. `nim_status_client.nimble`
+declares each one as `requires "<git url>#<sha>"`, the committed `nimble.lock` freezes the
+resolved graph, and `nimble setup` materialises it in nimble's store (`~/.nimble` by default,
+shared by every checkout on the machine; `NIMBLE_DIR` overrides it). Setup also writes
+`nimble.paths` at the repo root, which `config.nims` includes, so the compiler finds the
+packages without any environment. `make update` runs it for you; `make deps` (and so the client build) depends on the
+`nimble.paths` stamp, which make regenerates only when the manifest or the lock is newer
+than it.
+
+The compiler is pinned in the same manifest (`requires "nim == 2.2.10"`) and comes from the
+same store. `scripts/resolve-nim.sh` is the one place that finds it: `STATUS_NIM` if set,
+else the store entry `nimble setup` materialised, else a `nim` on `PATH`; whatever it finds
+must be the pinned version or it exits with an error. make evaluates it once per invocation
+and runs every Nim compile with it (the client, the Nim tests, the mobile legs), and puts its
+directory on `PATH` for the sub-builds that run a bare `nim` (status-go's nim-sds, the
+pkg-config wrapper). Nothing is installed on your machine and your `PATH` is not rewritten.
+
+#### Bumping a dependency
+
+1. Edit the package's `requires` line in `nim_status_client.nimble`: replace the `#<sha>` with
+   the new revision.
+2. Regenerate the lock with `nimble lock` (a full solve, about 1.5 minutes on a cold store).
+   Run it from a real clone: in a git *worktree* nimble does not recognise the `.git` file
+   and exits 1 after writing the lock. The lock it wrote is complete; the exit status is the
+   only casualty.
+3. `make update` materialises the new revision; the client depends on `nimble.paths`, so
+   the next build recompiles it.
+4. Review the `nimble.lock` diff. Only the package you bumped should move. Every package
+   in the graph is pinned at the root, the transitive ones marked `# transitive` in the
+   manifest, so if the bumped package's manifest now needs a newer revision of one of
+   those, `nimble lock` fails on an unsatisfiable constraint instead of moving it: bump
+   that `# transitive` line too.
+
+One package deliberately floats on what the solver picks (websock), and isaac is pinned by
+version rather than by revision; the comments on their lines in `nim_status_client.nimble`
+say why. A revision the solver moves off a pin gets the same treatment: a comment on the
+line.
+
+#### Editing a dependency locally
+
+To work on one of the pinned packages in place, point the manifest at a checkout instead of a
+revision:
+
+1. Clone the package anywhere, e.g. `git clone https://github.com/status-im/nim-chronos
+   ~/src/nim-chronos`.
+2. In `nim_status_client.nimble`, change its `requires` line to an **absolute** `file://`
+   URL: `requires "file:///home/you/src/nim-chronos"`. Absolute, because nimble copies a
+   relative path verbatim into `nimble.paths`.
+3. `make deps` (the manifest changed, so it re-runs `nimble setup`; the committed lock is
+   left alone) and build. `nimble.paths` now points at your checkout, so the client
+   recompiles once. Later edits inside the checkout are not tracked by make:
+   `make REBUILD_NIM=true run` picks them up.
+
+Never commit the flip: restore the `requires "<url>#<sha>"` line when you are done and
+`make deps` again. If you ran `nimble lock` while the flip was in place, revert `nimble.lock`
+too (it rewrites that package's entry). `nimble develop` is not an option here: on nimble
+0.24.1 a develop link cannot override a requirement pinned to a revision, it is silently
+ignored and the store copy wins.
+
 ### Build Configuration Options
 
 The following environment variables can be used to customize the build:
 
 - INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
 - KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
+- LOG_LEVEL (string) - Chronicles log level compiled into the client (`-d:chronicles_log_level=`). Unset by default
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
-- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/../nim-sds`
+- NIMBLE_DIR (path) - nimble's store, where `make update` materialises the Nim packages and the compiler. Defaults to `~/.nimble`, shared between checkouts
+- NIMFLAGS (string) - Extra flags for every Nim compile, e.g. `NIMFLAGS="-d:someDefine"`
+- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/vendor/nim-sds`
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
 - QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
 - QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
 - QML_DEBUG_PORT (number) - Configure the qml debugger port. Defaults to `49152`
 - QT_ARCH (string) - Configure the Qt architecture for macOS cross-compilation. Can be used to compile Intel builds on ARM64 OS. Defaults to `$(shell uname -m)`
-- REBUILD_NIM (true,false) - Force nim recompilation
+- REBUILD_NIM (true,false) - Force a recompile of the client when nothing make tracks changed, i.e. after an edit inside a checkout behind a `file://` requires line (a pin bump or a manifest change is tracked through `nimble.paths`)
 - REBUILD_UI (true,false) - Force qrc recompilation
 - STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to `vendor/status-keycard-qt`
+- STATUS_NIM (path to executable) - Use this Nim instead of the one resolved from nimble's store. It must be the pinned version; `scripts/resolve-nim.sh` checks
+- V (0-3) - Build output verbosity. `0` (default) silences make recipes and Nim hints; the value is also passed to nim as `--verbosity`
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
 
 
@@ -331,7 +451,14 @@ The following environment variables can be used to customize the build:
 
 ### Working with VS Code
 
-To have nim code parsing, set the environment variables before opening your IDE. E.g. run `./env.sh code .` in the source root folder.
+To have nim code parsing, the editor needs the pinned compiler on `PATH`: run `./env.sh code .` in
+the source root folder. `env.sh` asks `scripts/resolve-nim.sh` for the compiler `make update`
+materialised, puts its directory on `PATH` and runs what you gave it; `./env.sh bash` opens a
+shell in that environment and `source ./env.sh` sets up the current one. No build needs it.
+Module resolution needs nothing else: `config.nims` includes `nimble.paths`, so run
+`make update` once first. (`nim check` on the whole client does not get through: the seaqt
+bindings shell out at compile time with `gorge`, which `check` does not run. That predates
+nimble.)
 
 ### Data folder
 
@@ -363,6 +490,14 @@ Get more log output:
 ```bash
 make run V=1
 ```
+
+### No Nim 2.2.10 found / nimble setup failed
+
+`resolve-nim: no Nim 2.2.10 found` means the store has not been populated yet: run
+`make update`. `resolve-nim: … is not Nim 2.2.10` means what it found (`STATUS_NIM`, or a `nim` on `PATH`
+before the store was populated) is another version: unset or fix it, or run `make update`. `ERROR: nimble setup failed` after you edited `nim_status_client.nimble` means the
+lock no longer matches the manifest: run `nimble lock` (see
+[Bumping a dependency](#bumping-a-dependency)) and retry.
 
 ## 📬 Need Further Help?
 
