@@ -5,3 +5,5 @@ Exec=nim_status_client
 Icon=status
 Comment=Desktop client for the Status Network
 Categories=Network;InstantMessaging;Chat;
+StartupNotify=true
+StartupWMClass=Status
