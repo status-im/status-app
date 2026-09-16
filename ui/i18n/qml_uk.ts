@@ -11038,6 +11038,10 @@ to load</source>
         <translation>Ринок</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Обмін</translation>
     </message>
@@ -13499,6 +13503,10 @@ to load</source>
     <message>
         <source>Activity Center</source>
         <translation>Центр активності</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18936,6 +18944,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Buy</source>
         <translation>Купити</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

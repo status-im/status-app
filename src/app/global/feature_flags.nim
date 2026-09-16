@@ -107,12 +107,13 @@ QtObject:
     buyEnabled: bool
     paraswapEnabled: bool
     lifiEnabled: bool
+    swapProvidersEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
     self.dappsEnabled = DAPPS_ENABLED
     self.browserEnabled = BROWSER_ENABLED
-    self.swapEnabled = SWAP_ENABLED and (LIFI_ENABLED or PARASWAP_ENABLED)
+    self.swapEnabled = SWAP_ENABLED
     self.connectorEnabled = CONNECTOR_ENABLED
     self.sendViaPersonalChatEnabled = SEND_VIA_PERSONAL_CHAT_ENABLED
     self.paymentRequestEnabled = PAYMENT_REQUEST_ENABLED
@@ -126,6 +127,7 @@ QtObject:
     self.buyEnabled = BUY_ENABLED
     self.paraswapEnabled = PARASWAP_ENABLED
     self.lifiEnabled = LIFI_ENABLED
+    self.swapProvidersEnabled = LIFI_ENABLED or PARASWAP_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -229,3 +231,9 @@ QtObject:
 
   QtProperty[bool] lifiEnabled:
     read = getLifiEnabled
+
+  proc getSwapProvidersEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.swapProvidersEnabled
+
+  QtProperty[bool] swapProvidersEnabled:
+    read = getSwapProvidersEnabled

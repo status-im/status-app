@@ -189,6 +189,7 @@ Loader {
             networksStore:          Qt.binding(() => root.networksStore),
             appMainVisible:         Qt.binding(() => root.appMainVisible),
             swapEnabled:            Qt.binding(() => root.featureFlagsStore.swapEnabled),
+            swapProvidersEnabled:   Qt.binding(() => root.featureFlagsStore.swapProvidersEnabled),
             buyEnabled:             Qt.binding(() => root.featureFlagsStore.buyEnabled),
             dAppsVisible:           Qt.binding(() => root.dappsServiceLoader.item
                                             ? root.dappsServiceLoader.item.serviceAvailableToCurrentAddress
