@@ -81,3 +81,32 @@ def accept_contact_request_from_settings(aut, main_window, user_name):
     contacts_settings = messaging_settings.open_contacts_settings()
     contacts_settings.accept_contact_request(user_name)
 
+
+def add_mutual_contact_via_activity_center(
+        aut_sender,
+        aut_receiver,
+        main_window,
+        sender_account,
+        receiver_account,
+):
+    with step(f'User {receiver_account.name}, get chat key'):
+        receiver_chat_key = get_chat_key(aut_receiver, main_window)
+        main_window.minimize()
+
+    with step(f'User {sender_account.name}, send contact request to {receiver_account.name}'):
+        send_contact_request_from_settings(
+            aut_sender,
+            main_window,
+            receiver_chat_key,
+            f'Hello {receiver_account.name}',
+        )
+        main_window.minimize()
+
+    with step(f'User {receiver_account.name}, accept contact request from {sender_account.name}'):
+        switch_to_aut(aut_receiver, main_window)
+        activity_center = main_window.left_panel.open_activity_center()
+        request = activity_center.find_contact_request_in_list(sender_account.name)
+        activity_center.accept_contact_request(request)
+        main_window.left_panel.click()
+        main_window.minimize()
+
