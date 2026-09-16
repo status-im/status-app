@@ -873,7 +873,7 @@ method load*[T](
     self.view.model().addItem(marketItem)
     if activeSectionId == marketItem.id:
       activeSection = marketItem
-  else:
+  elif singletonInstance.featureFlags().getSwapEnabled():
     # Swap Section
     let swapSectionItem = initSectionItem(
       SWAP_SECTION_ID,
