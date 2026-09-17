@@ -124,8 +124,9 @@ proc getTotalCurrencyBalance*(self: Service, walletAccounts: seq[string], chainI
 proc getGroupedAssetsList*(self: Service): var seq[AssetGroupItem] =
   return self.groupedAssets
 
+# Loading only until market values are cached; refreshes keep the last values.
 proc getTokensMarketValuesLoading*(self: Service): bool =
-  return self.tokenService.getTokensMarketValuesLoading()
+  return self.tokenService.getTokensMarketValuesLoading() and not self.tokenService.getHasMarketValuesCache()
 
 proc getHasBalanceCache*(self: Service): bool =
   return self.hasBalanceCache
