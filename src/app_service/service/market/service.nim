@@ -100,12 +100,14 @@ QtObject:
           self.updateBelongsToPage(leaderboardData.currency):
         self.currentCurrency = leaderboardData.currency
 
-        var updates: seq[LeaderboardTokenUpdated] = @[]
+        let pageDiff = applyPageDiff(self.marketLeaderboardTokens, leaderboardData.data)
+        if pageDiff.reloaded:
+          self.events.emit(SIGNAL_MARKET_LEADERBOARD_PAGE_LOADED, Args())
+          return
 
-        for i in 0..<leaderboardData.data.len:
-          let result = leaderboardData.data[i].diff(self.marketLeaderboardTokens[i])
-          if not result.isEqual:
-            updates.add(LeaderboardTokenUpdated(index: i, changedFields: result.changedFields))
+        var updates: seq[LeaderboardTokenUpdated] = @[]
+        for d in pageDiff.updates:
+          updates.add(LeaderboardTokenUpdated(index: d.index, changedFields: d.changedFields))
 
         if updates.len > 0:
           self.events.emit(SIGNAL_MARKET_LEADERBOARD_TOKEN_UPDATED,
