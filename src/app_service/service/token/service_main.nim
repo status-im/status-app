@@ -322,6 +322,7 @@ proc init*(self: Service) =
     self.prefetchLiFiSupport()
 
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
+    self.resetMarketValuesCache()
     self.rebuildMarketData()
 
   self.asyncRefreshTokens(fetchAllTokens = true)
