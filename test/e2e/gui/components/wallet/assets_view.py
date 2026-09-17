@@ -57,6 +57,20 @@ class AssetsView(QObject):
 
     @allure.step('Open asset')
     def open_asset_details(self, asset_name):
-        self.asset.real_name['objectName'] = 'AssetView_TokenListItem_' + asset_name
-        self.asset.click()
+        expected_name = f'AssetView_TokenListItem_{asset_name}'
+        real_name = dict(self.asset.real_name)
+        real_name.pop('index', None)
+        found = []
+
+        def asset_row():
+            found[:] = [
+                item for item in driver.findAllObjects(real_name)
+                if str(getattr(item, 'objectName', '')) == expected_name
+            ]
+            return bool(found)
+
+        assert driver.waitFor(asset_row, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), (
+            f'Asset "{asset_name}" did not appear'
+        )
+        QObject(found[0]).click()
         return AssetDetailsView().wait_until_appears().wait_until_header_loaded()
