@@ -13,8 +13,6 @@ noBackup/
 bin/
 /bottles/
 pkg/
-# nim-sds is vendored from status-go. Remove this when we support Nimble
-vendor/nim-sds
 *.AppImage
 tmp
 nimcache
@@ -145,3 +143,5 @@ test/nim/benchmarks/results/
 /nimbledeps/
 /.nimble-resolution.mk
 /.prl-to-pc-build/
+# status-go and libsds build outputs
+/.statusgo-build/
