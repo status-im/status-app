@@ -22,6 +22,14 @@ proc setTokensMarketDetailsLoadingStateAndNotify(self: Service, state: bool) =
 proc setTokensPricesLoadingStateAndNotify(self: Service, state: bool) =
   self.resolveTokensMarketValuesLoadingStateAndNotify(state, self.tokensMarketDetailsLoading)
 
+# Drops values priced in the previous currency and marks prices loading until refetched.
+proc resetMarketValuesCache(self: Service) =
+  self.tokenPriceTable.clear()
+  self.tokenMarketValuesTable.clear()
+  self.hasPriceValuesCache = false
+  self.hasMarketDetailsCache = false
+  self.setTokensPricesLoadingStateAndNotify(true)
+
 proc updateTokenPrices*(self: Service, updatedPrices: Table[string, float64]) =
   var anyUpdated = false
   for tokenKey, price in updatedPrices:
