@@ -87,10 +87,18 @@ CommonContactAdaptiveDialog {
             }
 
             onTextChanged: root.message = text
-            onValidChanged: d.messageValid = valid
             Component.onCompleted: {
-                d.messageValid = valid
                 input.edit.forceActiveFocus()
+                // Prefilled message - make sure to validate on load
+                if (root.message.length > 0) {
+                    messageInput.validate(true)
+                }
+            }
+
+            Binding {
+                target: d
+                property: "messageValid"
+                value: messageInput.valid
             }
         }
     }
