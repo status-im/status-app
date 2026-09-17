@@ -1,5 +1,5 @@
 ## Thin wrappers around the status-go `preferences` JSON-RPC namespace.
-## See vendor/status-go/services/preferences/api.go for the server side.
+## Server side: pkg/services/preferences/api.go in status-go.
 import json
 import core
 import response_type
