@@ -9,13 +9,6 @@ srcDir        = "src"
 
 requires "nim == 2.2.10"  # 2.2.4-2.2.8 cannot compile wallet_section/all_tokens
 
-# Every master vendor submodule that is in the graph, pinned to the revision
-# the submodule pointed at before nimble took over: the packages src/ and
-# test/ import directly, and (marked transitive) the ones only reached through
-# them, which the solver would otherwise move to whatever tag their dependents
-# allow. One exception is documented inline (websock). Packages master
-# never vendored (unittest2, testutils, nat_traversal, snappy, minilru,
-# sqlite3_abi) are left to the solver; nimble.lock records them.
 requires "https://github.com/status-im/nim-chronicles.git#e7f87336d2fa47b7752b42f0be4cabd5663a5e5c"  # chronicles
 requires "https://github.com/status-im/nim-chronos.git#31ddf9be6560072f83aeb25933c3132d4ecd638e"  # chronos
 requires "https://github.com/status-im/nim-confutils.git#36f3115ca350f40841ac0eecc7dfa5fe7790c864"  # confutils
@@ -30,6 +23,7 @@ requires "https://github.com/cheatfate/nimcrypto.git#423ea4fed8de6f4544b7e3b30d8
 requires "https://github.com/status-im/uuids.git#42052ba362a9cd4685463edb3781beeb9b8e547e"  # uuids, status-im fork, same revision
 requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
 requires "https://github.com/status-im/nim-taskpools.git#4acdc6ef005a93dba09f902ed75197548cf7b451"  # taskpools
+requires "https://github.com/status-im/status-go.git#857caa456ca502d62430a24a995912b36316c027"  # statusgo
 # isaac by version, not revision: a revision pin leaves later `nimble setup` on the same store naming a missing directory.
 requires "isaac == 0.2.0"  # isaac, transitive (uuids)
 requires "https://github.com/status-im/nim-bearssl.git#9a4eed052abbded2d94feaf3f5bbd95a30ec4671"  # bearssl, transitive (chronos)
