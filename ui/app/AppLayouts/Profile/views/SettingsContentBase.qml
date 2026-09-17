@@ -195,6 +195,7 @@ FocusScope {
                 focusedItem, Qt.rect(0, 0, focusedItem.width, focusedItem.height))
             SQUtils.Utils.ensureVisible(scrollView.flickable,
                                 Qt.rect(0, rect.y, contentItem.width, rect.height))
+            scrollView.flickable.returnToBounds()
         }
 
         function onContentHeightChanged() {
