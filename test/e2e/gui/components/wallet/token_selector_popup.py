@@ -42,7 +42,8 @@ class TokenSelectorPopup(QObject):
         assert driver.waitFor(asset_found, configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), (
             f'Asset with symbol "{asset_name}" did not appear'
         )
-        QObject(found[0]).click()
+        QObject(found[0]).click(x=10, y=10)
+        self.wait_until_hidden()
         return self
 
     def open_collectibles_search_view(self):
