@@ -103,8 +103,6 @@ ComboBox {
         }
         relativeY: directParent.height + 4
 
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-
         background: Rectangle {
             color: root.incognitoMode ?
                        Theme.palette.privacyColors.primary:
