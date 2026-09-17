@@ -48,7 +48,7 @@ pipeline {
     )
     string(
       name: 'STATUS_GO_REF',
-      description: 'Override vendor/status-go submodule to this SHA/ref.',
+      description: 'Re-pin the status-go dependency to this SHA, branch or PR number.',
       defaultValue: ''
     )
   }
@@ -109,7 +109,6 @@ pipeline {
     USERPROFILE = "${env.WORKSPACE_TMP}"
     /* Ensure nimcache is not shared between builds. */
     NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds".replace('\\', '/')
   }
 
   stages {
@@ -132,7 +131,7 @@ pipeline {
     }
 
     stage('Override status-go ref') {
-      /* Must run after `make update`, which resets submodules. */
+      /* Runs after Deps so the re-lock replaces the resolution make already generated. */
       when { expression { params.STATUS_GO_REF?.trim() } }
       steps {
         sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"

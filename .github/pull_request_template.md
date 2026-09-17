@@ -25,7 +25,7 @@ Also ask Copilot to align feedback with repository architecture boundaries:
 
 - QML/StatusQ: presentation and interaction
 - Nim (`src/`): orchestration, signals, module wiring
-- `vendor/status-go`: backend logic, persistence, protocol, notifications
+- status-go (the package: the store copy `.nimble-resolution.mk` names as `STATUSGO_SRC`, or a checkout via `STATUSGO_SRC=`): backend logic, persistence, protocol, notifications
 
 ### Screencapture of the functionality
 
