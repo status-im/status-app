@@ -106,11 +106,8 @@ ifeq ($(mkspecs),)
 	$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
 endif
 
-# The resolved compiler on PATH for the sub-builds that run a bare `nim`:
-# status-go's Makefile builds nim-sds with nim-sds's own build system, which
-# takes the compiler from PATH, and prl-to-pc's qt-pkgconfig.mk compiles its
-# tools with it. Empty NIM (a fresh clone before nimble setup ran) must not
-# put `.` on PATH.
+# Sub-builds run a bare `nim` (statusgo.nims, qt-pkgconfig.mk). An empty NIM
+# must not put `.` on PATH.
 ifneq (,$(NIM))
  export PATH := $(patsubst %/,%,$(dir $(NIM))):$(PATH)
 endif
@@ -248,11 +245,8 @@ nimble-deps: nimble.paths
 # Remade from nimble.paths; make then re-executes this Makefile, so the roots
 # below are defined on the second pass.
 -include .nimble-resolution.mk
-# nimble writes the entries Nim-escaped, so on Windows they are
-# "C:\\Users\\...\\prl_to_pc-..."; the separator before the name is either
-# slash and the backslashes come out as forward slashes for make.
-.nimble-resolution.mk: nimble.paths
-	sed -n -E 's#^--path:"(.*[/\\]prl_to_pc-[^"]*)"$$#PRL_TO_PC_ROOT ?= \1#p' $< | sed 's#\\\\#/#g' > $@
+.nimble-resolution.mk: nimble.paths scripts/nimble-resolution.sh
+	./scripts/nimble-resolution.sh $< > $@
 
 #-------- PKG_CONFIG wrapper for Qt's .pc files --------
 # Included from the read-only store copy: its tool builds go to a repo-local
@@ -308,12 +302,19 @@ ifeq ($(mkspecs),macx)
  endif
 endif
 
-NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/vendor/nim-sds
-export NIM_SDS_SOURCE_DIR
-NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
+# STATUSGO_SRC (the store copy, or `make STATUSGO_SRC=/path/to/status-go`) is
+# never written to: every status-go and libsds output goes under STATUSGO_OUT.
+STATUSGO_OUT := .statusgo-build
+export STATUSGO_SRC
+NIMSDS_BUILD_ROOT := $(CURDIR)/$(STATUSGO_OUT)/.sds-build
+NIMSDS_LIBDIR := $(NIMSDS_BUILD_ROOT)/build
+# exported for init_app_dir.sh and bundle-flatpak.sh
+export NIMSDS_LIBDIR
+NIMSDS_INCDIR := $(NIMSDS_BUILD_ROOT)/library
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
-STATUSGO_MAKE_PARAMS += NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)"
+STATUSGO_MAKE_PARAMS += NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)"
+STATUSGO_TASK_ENV := STATUSGO_BUILD_DIR="$(CURDIR)/$(STATUSGO_OUT)" STATUSGO_NIMBLE_PATHS="$(CURDIR)/nimble.paths"
 
 # desktop only; mobile cleanup lives in mobile/Makefile
 ifneq ($(filter $(mkspecs),macx linux),)
@@ -322,7 +323,7 @@ else ifeq ($(mkspecs),win32)
 PLATFORM_TARGET := windows-$(or $(QT_ARCH),$(shell uname -m))
 endif
 
-# Order-only prerequisite: delete shared vendor artifacts (qrcodegen, nim-sds, libstatus) when the build platform/arch changes.
+# Order-only prerequisite: delete shared artifacts (qrcodegen, libsds, libstatus) when the build platform/arch changes.
 platform-cleanup:
 ifneq ($(PLATFORM_TARGET),)
 	scripts/platform_pre_build_cleanup.sh "$(PLATFORM_TARGET)"
@@ -347,7 +348,16 @@ NIM_PARAMS += --outdir:./bin
 
 # App version
 DESKTOP_VERSION = $(shell ./scripts/version.sh)
-STATUSGO_VERSION = $(shell make -C vendor/status-go version -s)
+# A store copy has no .git: its version is the short pin ("dev" under a file:// flip).
+# STATUSGO_SRC is empty on a fresh clone's first parse, hence the guard.
+STATUSGO_PIN := $(shell ./scripts/status-go-pin.sh 2>/dev/null)
+ifneq (,$(STATUSGO_SRC))
+ ifneq (,$(wildcard $(STATUSGO_SRC)/.git))
+  STATUSGO_VERSION := $(shell $(MAKE) -C "$(STATUSGO_SRC)" version -s)
+ endif
+endif
+STATUSGO_VERSION ?= $(if $(STATUSGO_PIN),$(shell printf '%.10s' "$(STATUSGO_PIN)"),dev)
+export STATUSGO_VERSION
 NIM_PARAMS += -d:DESKTOP_VERSION="$(DESKTOP_VERSION)"
 NIM_PARAMS += -d:STATUSGO_VERSION="$(STATUSGO_VERSION)"
 
@@ -520,19 +530,41 @@ storybook-clean:
 ##	status-go
 ##
 
-STATUSGO := vendor/status-go/build/bin/libstatus.$(LIB_EXT)
-STATUSGO_LIBDIR := $(shell pwd)/$(shell dirname "$(STATUSGO)")
+STATUSGO := $(STATUSGO_OUT)/build/bin/libstatus.$(LIB_EXT)
+STATUSGO_LIBDIR := $(CURDIR)/$(STATUSGO_OUT)/build/bin
 export STATUSGO_LIBDIR
 
-# Rebuild libsds independently after platform switch cleanup deletes vendor/nim-sds/build.
-$(NIMSDS_LIBFILE): | platform-cleanup
-	echo -e $(BUILD_MSG) "nim-sds"
-	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh $(HANDLE_OUTPUT)
+# .source-root and .build-key are rewritten only when their content changes, so
+# the libraries rebuild only then. They must be NORMAL prerequisites: a wipe done
+# by an order-only one would go unnoticed in the same run.
+STATUSGO_BUILD_KEY := desktop-$(LIB_EXT)-$(or $(QT_ARCH),host)-dbg$(INCLUDE_DEBUG_SYMBOLS)
+STATUSGO_KEYS := $(STATUSGO_OUT)/.source-root $(STATUSGO_OUT)/.build-key
+$(STATUSGO_OUT)/.source-root: FORCE | platform-cleanup
+	test -n "$(STATUSGO_SRC)" || { echo "ERROR: no status-go entry in nimble.paths (STATUSGO_SRC is empty); run 'make update'" >&2; exit 1; }
+	test -f "$(STATUSGO_SRC)/statusgo.nims" || { echo "ERROR: $(STATUSGO_SRC) is not a status-go tree (no statusgo.nims)" >&2; exit 1; }
+	if [ "$$(cat $@ 2>/dev/null)" != "$(STATUSGO_SRC)" ]; then \
+		rm -rf $(STATUSGO_OUT) && mkdir -p $(STATUSGO_OUT) && printf '%s\n' "$(STATUSGO_SRC)" > $@; \
+	fi
+$(STATUSGO_OUT)/.build-key: $(STATUSGO_OUT)/.source-root FORCE
+	if [ "$$(cat $@ 2>/dev/null)" != "$(STATUSGO_BUILD_KEY)" ]; then \
+		rm -rf $(STATUSGO_OUT)/build $(NIMSDS_BUILD_ROOT) && printf '%s\n' "$(STATUSGO_BUILD_KEY)" > $@; \
+	fi
+FORCE:
+.PHONY: FORCE
 
-$(STATUSGO): | deps $(NIMSDS_LIBFILE) platform-cleanup
+$(NIMSDS_LIBFILE): $(STATUSGO_KEYS) nimble.paths | platform-cleanup
+	echo -e $(BUILD_MSG) "libsds"
+	$(STATUSGO_TASK_ENV) "$(NIM)" libsds "$(STATUSGO_SRC)/statusgo.nims" $(HANDLE_OUTPUT)
+
+# GENERATE_PREREQ=: `make generate` would write into the read-only store copy.
+# STATUS_GO_VERSION is the desktop version on purpose (the library reports the product's version).
+$(STATUSGO): $(STATUSGO_KEYS) | deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
-	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library SHELL=/bin/sh \
+	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C "$(STATUSGO_SRC)" statusgo-shared-library SHELL=/bin/sh \
+		STATUS_GO_BUILD_DIR="$(CURDIR)/$(STATUSGO_OUT)/build" \
+		GENERATE_PREREQ= \
+		STATUS_GO_VERSION="$(DESKTOP_VERSION)" \
 		SENTRY_CONTEXT_NAME="status-desktop" \
 		SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)" \
 		 $(HANDLE_OUTPUT)
@@ -541,7 +573,7 @@ status-go: $(STATUSGO)
 
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"
-	rm -f $(STATUSGO)
+	rm -rf $(STATUSGO_OUT)
 
 
 ##
@@ -629,7 +661,7 @@ ifeq ($(mkspecs),win32)
 
  $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
-	bash scripts/gen-import-lib.sh "$(NIM_SDS_SOURCE_DIR)/library/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
+	bash scripts/gen-import-lib.sh "$(NIMSDS_INCDIR)/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
 
  import-libs: $(WIN_IMPORT_LIBS)
 endif
@@ -1076,14 +1108,15 @@ force-rebuild-status-go:
 	bash ./scripts/force-rebuild-status-go.sh $(STATUSGO)
 
 # Repair wallet db migration marker: make fix-wallet-migrations <dbpath|datadir> <password>
-# Without arguments it lists the wallet migrations the vendored status-go knows.
+# Without arguments it lists the wallet migrations the resolved status-go knows.
+# Runs `go generate` IN the status-go tree: use a checkout (`make STATUSGO_SRC=... fix-wallet-migrations`), not the store copy.
 ifeq (fix-wallet-migrations,$(firstword $(MAKECMDGOALS)))
 FIX_WALLET_MIGRATIONS_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(FIX_WALLET_MIGRATIONS_ARGS):;@:)
 endif
 
 fix-wallet-migrations:
-	cd vendor/status-go && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
+	cd "$(STATUSGO_SRC)" && go generate ./internal/db/walletdb/migrations/sql && go run ./cmd/fix-wallet-migrations \
 		$(if $(FIX_WALLET_MIGRATIONS_ARGS),$(abspath $(word 1,$(FIX_WALLET_MIGRATIONS_ARGS))) $(word 2,$(FIX_WALLET_MIGRATIONS_ARGS)))
 
 run: $(RUN_TARGET)

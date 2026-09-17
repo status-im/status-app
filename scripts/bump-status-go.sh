@@ -108,16 +108,8 @@ fi
 git checkout -q ${STATUS_DESKTOP_MAIN_BRANCH}
 git pull
 git checkout -b ${BRANCH_NAME}
-cd vendor/status-go
-if [ -z ${STATUS_GO_VERSION} ]; then
-    git fetch origin
-    git checkout develop
-    git pull
-else
-    git checkout ${STATUS_GO_COMMIT_SHA1}
-fi
-cd ../..
-git add ./vendor/status-go
+./scripts/override-status-go-ref.sh "${STATUS_GO_COMMIT_SHA1:-develop}"
+git add nim_status_client.nimble nimble.lock
 git commit -m "${COMMIT_MESSAGE}"
 git push --set-upstream origin ${BRANCH_NAME}
 git push
