@@ -19,4 +19,4 @@ def test_check_asset_details_from_wallet(main_screen: MainWindow, asset_symbol: 
     assert asset_symbol == asset_details_view.token_symbol
     asset_details_view.verify_balance_displayed()
     assert asset_details_view.back_button_title == 'Assets'
-    asset_details_view.wait_until_graph_has_data()
+    asset_details_view.select_yearly_chart_range().wait_until_graph_has_data()
