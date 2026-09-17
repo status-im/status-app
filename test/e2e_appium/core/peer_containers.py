@@ -104,20 +104,21 @@ def check_docker_resources(image_ref: str, project: str, docker_client=None) -> 
 
 
 def vendored_status_go_sha(repo_root: str) -> str:
-    """The status-go commit the app vendors, from the index rather than the checkout."""
+    """The status-go commit the app pins: the manifest's requires line, read by
+    scripts/status-go-pin.sh (which fails under a file:// flip to a checkout)."""
+    script = os.path.join(repo_root, "scripts", "status-go-pin.sh")
     try:
         out = subprocess.run(
-            ["git", "-C", repo_root, "ls-tree", "HEAD", "vendor/status-go"],
-            capture_output=True, text=True, timeout=30,
+            ["sh", script], cwd=repo_root, capture_output=True, text=True, timeout=30,
         )
     except (OSError, subprocess.SubprocessError) as exc:
-        raise PeerProvenanceError(f"could not read the vendored status-go pin: {exc}") from exc
+        raise PeerProvenanceError(f"could not read the status-go pin: {exc}") from exc
     if out.returncode != 0 or not out.stdout.strip():
         raise PeerProvenanceError(
-            f"could not read the vendored status-go pin from {repo_root}: "
-            f"{out.stderr.strip() or 'no gitlink entry for vendor/status-go'}"
+            f"could not read the status-go pin from {repo_root}: "
+            f"{out.stderr.strip() or 'status-go-pin.sh printed nothing'}"
         )
-    return out.stdout.split()[2]
+    return out.stdout.split()[0]
 
 
 def check_provenance(image_ref: str, vendored_sha: str) -> str:

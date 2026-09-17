@@ -110,10 +110,6 @@ modules:
         # /run/host inside the sandbox. The freedesktop runtime doesn't ship
         # the krb5 chain or NSS's PKCS#11 modules, so we read them from there.
         - --filesystem=host-os:ro
-        # /tmp itself is bwrap-managed (mounting it ro breaks the sandbox), so
-        # we narrow-mount only the nim-sds dir for local-dev. In CI this is a
-        # no-op: NIM_SDS_SOURCE_DIR sits under WORKSPACE_TMP under home.
-        - --filesystem=/tmp/nim-sds:ro
     build-commands:
       - ./scripts/flatpak-copy-to-app.sh
 
@@ -155,10 +151,10 @@ modules:
 
       # Native libraries we built ourselves. 
       - type: file
-        path: vendor/status-go/build/bin/libstatus.so
+        path: .statusgo-build/build/bin/libstatus.so
         dest: native-libs
       - type: file
-        path: vendor/status-go/build/bin/libstatus.so.0
+        path: .statusgo-build/build/bin/libstatus.so.0
         dest: native-libs
       - type: file
         path: vendor/status-keycard-qt/build/linux/libstatus-keycard-qt.so.1

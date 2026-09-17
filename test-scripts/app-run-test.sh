@@ -24,7 +24,7 @@ do
   echo "------------------------------------"
   ((COUNTER=COUNTER+1))
   echo "Running the app..."
-  export LD_LIBRARY_PATH=vendor/status-go/build/bin/libstatus.so &
+  export LD_LIBRARY_PATH=.statusgo-build/build/bin:.statusgo-build/.sds-build/build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
   ./bin/nim_status_client &
   PID=$!
   sleep 4

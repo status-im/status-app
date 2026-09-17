@@ -29,7 +29,6 @@ export PATH="$QT_BASE/gcc_64/bin:$QT_BASE/android_arm64_v8a/bin:$NDK_TOOLCHAIN/b
 cd "$BUILD_DIR"
 
 ulimit -n 65536 || true
-export NIM_SDS_SOURCE_DIR="$BUILD_DIR/vendor/nim-sds"
 
 make deps
 

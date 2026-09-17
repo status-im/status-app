@@ -41,9 +41,18 @@ def repo_root() -> str:
     return os.path.abspath(os.path.join(here, "..", "..", ".."))
 
 
+def checkout_dir(root: str | None = None) -> str:
+    """Where scripts/status-go-checkout.sh puts the status-go tree at the pin
+    (scripts/peer_image.sh runs it): under WORKSPACE_TMP on CI, else at the
+    repo root. The build never reads it; it exists for the tools that need
+    status-go's sources, this client among them."""
+    base = os.environ.get("WORKSPACE_TMP") or root or repo_root()
+    return os.path.abspath(os.path.join(base, ".statusgo-src"))
+
+
 def tf_candidates(root: str | None = None) -> list[str]:
-    """Where the functional-test client lives under the vendored submodule."""
-    base = os.path.join(root or repo_root(), "vendor", "status-go")
+    """Where the functional-test client lives under the checkout at the pin."""
+    base = checkout_dir(root)
     return [os.path.abspath(os.path.join(base, layout)) for layout in _TF_LAYOUTS]
 
 
@@ -60,11 +69,12 @@ def tf_root(root: str | None = None) -> str:
 
     raise RuntimeError(
         "status-go functional-test client not found. Looked for a 'clients' "
-        "directory under: " + ", ".join(candidates) + ". The vendored "
-        "submodule is probably not checked out (git submodule update --init "
-        "vendor/status-go); if it is, status-go has moved the tree and "
-        "_TF_LAYOUTS needs the new path. Set STATUS_GO_TESTS_FUNCTIONAL to "
-        "point at it directly."
+        "directory under: " + ", ".join(candidates) + ". The status-go "
+        "checkout at the pin is probably missing (scripts/status-go-checkout.sh "
+        + checkout_dir(root) + " materialises it; test/e2e_appium/scripts/"
+        "peer_image.sh does so too); if it is there, status-go has moved the "
+        "tree and _TF_LAYOUTS needs the new path. Set STATUS_GO_TESTS_FUNCTIONAL "
+        "to point at it directly."
     )
 
 

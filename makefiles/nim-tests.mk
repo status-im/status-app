@@ -66,8 +66,11 @@ else
 endif
 nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,$@)
 
+# PATH too: on Windows the test executables find the DLLs through it. Relative
+# paths: a `C:/...` entry in a colon-separated MSYS PATH splits at the drive colon.
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" \
+	PATH="$(patsubst $(CURDIR)/%,%,$(STATUSGO_LIBDIR)):$(patsubst $(CURDIR)/%,%,$(NIMSDS_LIBDIR)):$$PATH" \
 	$(NIM) c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
 tests-nim: $(NIM_TESTS)
