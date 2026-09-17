@@ -77,8 +77,6 @@ pipeline {
     MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
-    /* nim-sds source directory: writable, isolated per build, used by status-go's clone-nim-sds */
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* sets App Version in Settings */
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */

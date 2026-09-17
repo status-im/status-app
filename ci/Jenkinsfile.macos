@@ -47,7 +47,7 @@ pipeline {
     )
     string(
       name: 'STATUS_GO_REF',
-      description: 'Override vendor/status-go submodule to this SHA/ref.',
+      description: 'Re-pin the status-go dependency to this SHA, branch or PR number.',
       defaultValue: ''
     )
     string(
@@ -102,8 +102,6 @@ pipeline {
     GOTMPDIR = "${env.WORKSPACE_TMP}"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
-    /* nim-sds source directory */
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Controls the App version in Settings */
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */
@@ -165,7 +163,7 @@ pipeline {
         }
 
         stage('Override status-go ref') {
-          /* Must run after `make update`, which resets submodules. */
+          /* Runs after Deps so the re-lock replaces the resolution make already generated. */
           when { expression { params.STATUS_GO_REF?.trim() } }
           steps {
             sh "./scripts/override-status-go-ref.sh ${params.STATUS_GO_REF}"

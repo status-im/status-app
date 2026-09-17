@@ -38,8 +38,12 @@ flowchart LR
     click nim "https://github.com/status-im/status-app/tree/master/src" "Link to the Nim code"
     click statusgo "https://github.com/status-im/status-go" "Link to the Status-Go repo"
     click waku "https://github.com/waku-org" "Link to the Waku org"
-    click nimstatusgo "https://github.com/status-im/status-app/tree/master/src/status_go.nim" "Link to the status-go Nim bindings"
+    click nimstatusgo "https://github.com/status-im/status-go/blob/develop/status_go.nim" "Link to the status-go Nim bindings (shipped by the status-go nimble package)"
 ```
+
+The backend is the status-go nimble package: the store copy `.nimble-resolution.mk` names as
+`STATUSGO_SRC`, or a checkout via `STATUSGO_SRC=`. The bindings link above resolves once the
+status-go packaging PRs merge to develop (until then the pin is a status-go branch).
 
 ## Standard Nim module
 

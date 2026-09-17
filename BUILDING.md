@@ -39,6 +39,11 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
     - [Nim dependencies](#nim-dependencies)
       - [Bumping a dependency](#bumping-a-dependency)
       - [Editing a dependency locally](#editing-a-dependency-locally)
+    - [status-go](#status-go)
+      - [Bumping the status-go pin](#bumping-the-status-go-pin)
+      - [Editing status-go locally](#editing-status-go-locally)
+      - [Stale store entries](#stale-store-entries)
+      - [Windows](#windows-2)
     - [Build Configuration Options](#build-configuration-options)
   - [Pro tips](#pro-tips)
     - [Working with VS Code](#working-with-vs-code)
@@ -80,22 +85,21 @@ You can install them from the [Microsoft website](https://visualstudio.microsoft
 
 Download and install Go 1.26 from the [official website](https://go.dev/dl/).
 
-#### Install nimble
+#### Install Nim 2.2.10 and nimble
 
-The Nim-side prerequisite is **nimble 0.24.1**, not a Nim compiler: `nim_status_client.nimble`
-pins the compiler (`requires "nim == 2.2.10"`) and `make update` has nimble download it into
-nimble's store. Install it from the status scoop bucket (the `nim` package's bundled nimble
-is 0.22.2 and cannot solve this project's graph):
+`nim_status_client.nimble` pins the compiler (`requires "nim == 2.2.10"`) and `make update` runs
+`nimble setup` for the whole graph. On Windows install Nim 2.2.10 from the status scoop bucket;
+it ships nimble 0.22.2, which is enough, and nimble reuses that compiler instead of downloading
+one:
 
 ```
-scoop install --global status/nimble@0.24.1
+scoop install --global status/nim@2.2.10
 ```
 
-`scripts/windows_build_setup.ps1` does this and puts `C:\ProgramData\scoop\apps\nimble\0.24.1`
-on `PATH`.
-
-Do not install Nim. A Nim already on `PATH` does no harm: one of exactly 2.2.10 is reused as it
-is, any other version is ignored.
+`scripts/windows_build_setup.ps1` does this; `C:\ProgramData\scoop\apps\nim\2.2.10\bin` must be
+on `PATH` (the same entry CI uses). Any other Nim on `PATH` is ignored by the build. A standalone
+nimble 0.24.1 without Nim on `PATH` is not recommended on Windows (see
+[Windows](#windows-2) under status-go).
 
 #### Install protobuf
 
@@ -125,9 +129,10 @@ Install **Go 1.26**:
 
 Download and install from the [official website](https://go.dev/dl/).
 
-Install **nimble 0.24.1**, the whole Nim-side prerequisite. Do *not* install Nim:
+Install **nimble 0.24.1**, the whole Nim-side prerequisite; no Nim is needed:
 `nim_status_client.nimble` pins the compiler and `make update` has nimble download it into its
-store (`~/.nimble`). The release is a single binary; any directory on `PATH` works (CI uses
+store (`~/.nimble`). (Any nimble from 0.22.2 works too when a Nim 2.2.10 is on `PATH`; it is
+then reused instead of downloaded.) The release is a single binary; any directory on `PATH` works (CI uses
 `/opt/nimble`):
 
 ```bash
@@ -186,8 +191,9 @@ brew install cmake pkg-config go qt protobuf
 
 #### Install nimble
 
-**nimble 0.24.1** is the whole Nim-side prerequisite; do not `brew install nim`
-(`nim_status_client.nimble` pins the compiler and `make update` has nimble download it).
+**nimble 0.24.1** is the whole Nim-side prerequisite; no `brew install nim` needed
+(`nim_status_client.nimble` pins the compiler and `make update` has nimble download it; a Nim
+2.2.10 already on `PATH` is reused instead, with any nimble from 0.22.2).
 `scripts/macos_build_setup.sh`, the script CI runs, installs it into `~/.local/bin`; by hand:
 
 ```bash
@@ -346,7 +352,7 @@ Fetch everything the build needs at the pinned revisions:
 make update
 ```
 
-This initialises the remaining git submodules (status-go and the C/C++ libraries), runs
+This initialises the remaining git submodules (the C/C++ libraries), runs
 `nimble setup` (the Nim packages and the pinned compiler, from `nimble.lock` into nimble's
 store) and builds the Qt pkg-config wrapper. The first run on an empty store downloads the
 dependency graph and the compiler, about two minutes; later runs take seconds. A C compiler
@@ -378,14 +384,16 @@ same store. `scripts/resolve-nim.sh` is the one place that finds it: `STATUS_NIM
 else the store entry `nimble setup` materialised, else a `nim` on `PATH`; whatever it finds
 must be the pinned version or it exits with an error. make evaluates it once per invocation
 and runs every Nim compile with it (the client, the Nim tests, the mobile legs), and puts its
-directory on `PATH` for the sub-builds that run a bare `nim` (status-go's nim-sds, the
+directory on `PATH` for the sub-builds that run a bare `nim` (status-go's libsds task, the
 pkg-config wrapper). Nothing is installed on your machine and your `PATH` is not rewritten.
 
 #### Bumping a dependency
 
 1. Edit the package's `requires` line in `nim_status_client.nimble`: replace the `#<sha>` with
    the new revision.
-2. Regenerate the lock with `nimble lock` (a full solve, about 1.5 minutes on a cold store).
+2. Regenerate the lock with `NIMBLE_DIR=$(mktemp -d) nimble lock` (a full solve against an
+   empty store, about two minutes: on a warm store nimble 0.24.1 lets entries it already
+   holds into the solve, so the same manifest would lock differently on every machine).
    Run it from a real clone: in a git *worktree* nimble does not recognise the `.git` file
    and exits 1 after writing the lock. The lock it wrote is complete; the exit status is the
    only casualty.
@@ -423,6 +431,84 @@ too (it rewrites that package's entry). `nimble develop` is not an option here: 
 0.24.1 a develop link cannot override a requirement pinned to a revision, it is silently
 ignored and the store copy wins.
 
+### status-go
+
+status-go is one of those pinned packages: `requires "https://github.com/status-im/status-go.git#<sha>"`
+in `nim_status_client.nimble`, resolved and materialised by the same `nimble setup`, frozen in
+the same lock. The package ships the `status_go` Nim wrapper the client imports, and its own
+manifest (`statusgo.nimble`) pins nim-sds, so nim-sds is in the graph transitively and the
+desktop repo never names it. There is no `vendor/status-go` submodule and no `vendor/nim-sds`
+checkout.
+
+Both libraries are built from the read-only store copies, **in place**: `make status-go` runs
+status-go's `libsds` nimble task (`nim libsds <store copy>/statusgo.nims`, which compiles the
+nim-sds store copy the resolution names) and then status-go's own Makefile
+(`make -C <store copy> statusgo-shared-library`), with every output redirected to
+`.statusgo-build/` at the repo root: `build/bin/libstatus.*`, the generated cbindings entry
+point, `.sds-build/build/libsds.*`, `.sds-build/library/libsds.h`, and two key files. Nothing
+is written into the store. The key files gate rebuilds: `.source-root` records the tree the
+artifacts came from (a change, i.e. a pin bump or a `STATUSGO_SRC` flip, wipes the directory)
+and `.build-key` the flag set (a change drops the artifacts). While both hold, a no-op build
+never invokes the status-go sub-builds. `make status-go-clean` removes the directory.
+
+`make status-go-version` prints the pin's short SHA: a store copy has no git history to
+`git describe`. The version compiled into libstatus itself is the desktop version.
+
+#### Bumping the status-go pin
+
+`scripts/override-status-go-ref.sh <sha|branch|PR number>` resolves the ref, rewrites the
+requires line, runs `nimble lock` against an empty store and then `nimble setup` (from a
+real clone, see [Bumping a dependency](#bumping-a-dependency)). By hand it is the same three
+steps: edit the `#<sha>`, `NIMBLE_DIR=$(mktemp -d) nimble lock`, `make update`. The next
+build rebuilds libsds, libstatus and the client. A nim-sds bump is a status-go bump: the pin
+lives in status-go's `statusgo.nimble`, so pin the status-go revision that carries the nim-sds
+revision you want.
+
+Until the status-go packaging branch lands on develop the pin points at that branch (the
+manifest comment names it), and the pull-request check that wants the pin on `develop` is red
+by design.
+
+#### Editing status-go locally
+
+- `make STATUSGO_SRC=/path/to/status-go` (or export it) builds libsds and libstatus from that
+  checkout instead of the store copy. The switch wipes `.statusgo-build/` (the source root
+  changed), so a checkout and the store copy never share outputs, and switching back wipes it
+  again. The `status_go` wrapper still comes from the store copy: this is for the Go side.
+  `make fix-wallet-migrations` runs `go generate` in the status-go tree and needs a checkout
+  this way too.
+- The `file://` flip from [Editing a dependency locally](#editing-a-dependency-locally) works
+  for status-go as for any package: the wrapper, `statusgo.nims` and the libraries all come from
+  the checkout then (`STATUSGO_SRC` follows `nimble.paths`), and its `statusgo.nimble` decides
+  the nim-sds revision.
+
+#### Stale store entries
+
+nimble 0.24.1 unions the requirements of same-named entries in its store. If
+`~/.nimble/pkgs2` holds several `statusgo-*` entries (after bumping the status-go pin a few
+times) that pin different nim-sds revisions, `nimble setup` can bind the wrong `sds-*` copy or
+write a stale `nimble.paths`. Symptoms: `nimble.paths` names an `sds-…` entry whose revision
+is not the one in `nimble.lock`, or the libsds build stops on a nim-sds copy that "has no
+library/sds_tasks.nims". Fix:
+
+```bash
+rm -rf ~/.nimble/pkgs2/statusgo-* ~/.nimble/pkgs2/sds-*
+make update
+```
+
+A fresh store never sees this.
+
+#### Windows
+
+Nothing status-go-specific: the two libraries build the same way as on Linux under Git Bash
+(the libsds task, then status-go's Makefile), plus the MSVC import libraries the Makefile
+synthesises from the headers.
+
+The compiler is the one Windows-only difference: it comes from the scoop `nim` package, not from
+nimble's store. Standalone nimble 0.24.1 cannot materialise the pinned Nim reliably on Windows:
+its architecture probe fails on some setups (nimble #1862, fixed after 0.24.1) and it silently
+fetches the 32-bit build, with which every compile stops on "Pointer size mismatch between Nim
+and C/C++ backend". With Nim 2.2.10 on `PATH`, nimble reuses it and downloads nothing.
+
 ### Build Configuration Options
 
 The following environment variables can be used to customize the build:
@@ -433,7 +519,6 @@ The following environment variables can be used to customize the build:
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
 - NIMBLE_DIR (path) - nimble's store, where `make update` materialises the Nim packages and the compiler. Defaults to `~/.nimble`, shared between checkouts
 - NIMFLAGS (string) - Extra flags for every Nim compile, e.g. `NIMFLAGS="-d:someDefine"`
-- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/vendor/nim-sds`
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
 - QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
 - QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
@@ -442,6 +527,7 @@ The following environment variables can be used to customize the build:
 - REBUILD_NIM (true,false) - Force a recompile of the client when nothing make tracks changed, i.e. after an edit inside a checkout behind a `file://` requires line (a pin bump or a manifest change is tracked through `nimble.paths`)
 - REBUILD_UI (true,false) - Force qrc recompilation
 - STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to `vendor/status-keycard-qt`
+- STATUSGO_SRC (path) - Build libsds and libstatus from this status-go checkout instead of the resolved store copy (see [status-go](#status-go)). Defaults to the store copy `nimble.paths` names
 - STATUS_NIM (path to executable) - Use this Nim instead of the one resolved from nimble's store. It must be the pinned version; `scripts/resolve-nim.sh` checks
 - V (0-3) - Build output verbosity. `0` (default) silences make recipes and Nim hints; the value is also passed to nim as `--verbosity`
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
