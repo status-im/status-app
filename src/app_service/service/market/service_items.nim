@@ -114,6 +114,20 @@ proc diff* (a: MarketItem, b: var MarketItem): tuple[isEqual:bool, changedFields
     b.priceChangePercentage24h = a.priceChangePercentage24h
     result.changedFields.add("priceChangePercentage24h")
 
+type PageDiff* = object
+  reloaded*: bool
+  updates*: seq[tuple[index: int, changedFields: seq[string]]]
+
+# Replaces the page when the row count differs, otherwise diffs and updates rows in place.
+proc applyPageDiff*(current: var seq[MarketItem], incoming: seq[MarketItem]): PageDiff =
+  if current.len != incoming.len:
+    current = incoming
+    return PageDiff(reloaded: true)
+  for i in 0..<incoming.len:
+    let d = incoming[i].diff(current[i])
+    if not d.isEqual:
+      result.updates.add((index: i, changedFields: d.changedFields))
+
 proc pricesDiff* (a: PriceData, b: var MarketItem): tuple[isEqual:bool, changedFields: seq[string]] =
   result.isEqual = true
   result.changedFields = @[]
