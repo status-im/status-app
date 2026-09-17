@@ -49,6 +49,7 @@ activity_new_transactions_button = {"container": mainWindow_RightTabView, "id": 
 
 """Wallet assets view"""
 assets_view = {"container": mainWindow_RightTabView, "objectName": "assetViewStatusListView", "type": "StatusListView", "visible": True}
+assets_viewTokenRowShell = {"container": mainWindow_RightTabView, "objectName": RegularExpression("AssetView_TokenRowShell_*"), "visible": True}
 assets_viewTokenItem = {"container": mainWindow_RightTabView, "objectName": RegularExpression("AssetView_TokenListItem_*"), "type": "TokenDelegate", "visible": True}
 asset_details_view = {"container": mainWindow_RightTabView, "id": "assetDetailView", "type": "AssetsDetailView", "unnamed": 1, "visible": True}
 asset_details_header = {"container": mainWindow_RightTabView, "id": "tokenDetailsHeader", "type": "AssetsDetailsHeader", "unnamed": 1, "visible": True}

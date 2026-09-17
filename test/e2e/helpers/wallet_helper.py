@@ -37,6 +37,10 @@ def is_assets_tab_content_loaded(asset_item) -> bool:
     except (RuntimeError, AttributeError):
         return False
 
+    shells = driver.findAllObjects(wallet_names.assets_viewTokenRowShell)
+    if shells and not all(getattr(shell, 'contentReady', False) for shell in shells):
+        return False
+
     items = driver.findAllObjects(asset_item.real_name)
     return bool(items) and all(not getattr(item, 'balanceLoading', False) for item in items)
 
