@@ -145,3 +145,5 @@ test/nim/benchmarks/results/
 /.prl-to-pc-build/
 # status-go and libsds build outputs
 /.statusgo-build/
+# status-go checkout at the pin (scripts/status-go-checkout.sh)
+/.statusgo-src/

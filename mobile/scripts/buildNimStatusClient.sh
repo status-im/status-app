@@ -21,7 +21,15 @@ FLAG_BRIDGE_ENABLED=${FLAG_BRIDGE_ENABLED:-1}
 
 BUNDLE_IDENTIFIER=${BUNDLE_IDENTIFIER:-"app.status.mobile"}
 DESKTOP_VERSION=$(cd "$STATUS_DESKTOP" && ./scripts/version.sh)
-STATUSGO_VERSION=$(cd "$STATUS_DESKTOP/vendor/status-go" && ./scripts/version.sh)
+# As the desktop Makefile: a store copy has no .git, so its version is the short pin ("dev" under a file:// flip).
+if [[ -z "${STATUSGO_VERSION:-}" ]]; then
+    if [[ -n "${STATUSGO_SRC:-}" && -e "$STATUSGO_SRC/.git" ]]; then
+        STATUSGO_VERSION=$(cd "$STATUSGO_SRC" && ./scripts/version.sh)
+    else
+        STATUSGO_VERSION=$("$STATUS_DESKTOP/scripts/status-go-pin.sh" 2>/dev/null | cut -c1-10)
+        STATUSGO_VERSION=${STATUSGO_VERSION:-dev}
+    fi
+fi
 
 if [[ "$ARCH" == "x86_64" ]]; then
     CARCH="amd64"
