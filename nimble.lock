@@ -95,6 +95,18 @@
         "sha1": "d8e6738cdf91f131a773a87ddf3408aee5545969"
       }
     },
+    "npeg": {
+      "version": "1.3.0",
+      "vcsRevision": "409f6796d0e880b3f0222c964d1da7de6e450811",
+      "url": "https://github.com/zevv/npeg",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim"
+      ],
+      "checksums": {
+        "sha1": "64f15c85a059c889cb11c5fe72372677c50da621"
+      }
+    },
     "results": {
       "version": "#06deae1c81fd27b6c94bbc7cd0e619b6905d49da",
       "vcsRevision": "06deae1c81fd27b6c94bbc7cd0e619b6905d49da",
@@ -253,6 +265,23 @@
       ],
       "checksums": {
         "sha1": "18e239f3dda5738ec03de1529e8e7d71d31dfff3"
+      }
+    },
+    "protobuf_serialization": {
+      "version": "0.6.1",
+      "vcsRevision": "24ddb65800b351268412840b19a33c6b61bb3046",
+      "url": "https://github.com/status-im/nim-protobuf-serialization",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim",
+        "stew",
+        "faststreams",
+        "serialization",
+        "npeg",
+        "unittest2"
+      ],
+      "checksums": {
+        "sha1": "6d42c6f78efb3d93c2ba87fe5a9be7e12622cc21"
       }
     },
     "confutils": {
@@ -524,6 +553,54 @@
       ],
       "checksums": {
         "sha1": "1e61be291271bcf1f70f1312824860b7b34a4754"
+      }
+    },
+    "ffi": {
+      "version": "#v0.1.5",
+      "vcsRevision": "fa2838ee0402c44bfa4583913fc14deceec28bcd",
+      "url": "https://github.com/logos-messaging/nim-ffi",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim",
+        "chronos",
+        "chronicles",
+        "taskpools"
+      ],
+      "checksums": {
+        "sha1": "f421641ef3cbaa6650c3f42718f71d7210786cdc"
+      }
+    },
+    "sds": {
+      "version": "#d0bd6f914123d7cf4a2f0fd7e9f133f6be1f04c3",
+      "vcsRevision": "d0bd6f914123d7cf4a2f0fd7e9f133f6be1f04c3",
+      "url": "https://github.com/alexjba/nim-sds.git",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim",
+        "chronos",
+        "protobuf_serialization",
+        "chronicles",
+        "stew",
+        "stint",
+        "metrics",
+        "results",
+        "taskpools",
+        "ffi"
+      ],
+      "checksums": {
+        "sha1": "5c77d0b3068f32a3629e1856ef4fbf42309450cd"
+      }
+    },
+    "statusgo": {
+      "version": "#857caa456ca502d62430a24a995912b36316c027",
+      "vcsRevision": "857caa456ca502d62430a24a995912b36316c027",
+      "url": "https://github.com/status-im/status-go.git",
+      "downloadMethod": "git",
+      "dependencies": [
+        "sds"
+      ],
+      "checksums": {
+        "sha1": "d06b6c23a23ff62688b92317f31e7e1ff989133e"
       }
     }
   },
