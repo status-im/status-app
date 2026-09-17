@@ -99,7 +99,6 @@ _UNRESOLVED_ALLOWLIST: set[tuple[str, str]] = {
     ("src/backend/core.nim", "inputJSON"),
     ("src/backend/core.nim", "$inputJSON"),
     ("src/backend/core.nim", "methodName"),
-    ("src/status_go.nim", "inputJSON.cstring"),
 }
 
 # Call sites that name a method the shipped status-go genuinely does not
