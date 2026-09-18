@@ -69,7 +69,7 @@ $(STATUS_GO_LIB): $(STATUS_GO_FORCE) $(STATUSGO_KEYS) $(STATUS_DESKTOP)/nimble.p
 ifeq ($(OS),android)
 	$(STATUSGO_TASK_ENV) ARCH=$(ARCH) ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" "$(NIM)" libsdsAndroid "$(STATUS_GO)/statusgo.nims"
 else ifeq ($(OS),ios)
-	$(STATUSGO_TASK_ENV) "$(NIM)" libsdsIos "$(STATUS_GO)/statusgo.nims"
+	$(STATUSGO_TASK_ENV) ARCH=$(ARCH) IPHONE_SDK=$(IPHONE_SDK) "$(NIM)" libsdsIos "$(STATUS_GO)/statusgo.nims"
 endif
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
