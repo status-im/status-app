@@ -22,6 +22,7 @@
         <file>StatusQ/Components/StatusColorSpace.qml</file>
         <file>StatusQ/Components/StatusCommunityCard.qml</file>
         <file>StatusQ/Components/StatusCommunityTags.qml</file>
+        <file>StatusQ/Components/StatusCommunityTagsRow.qml</file>
         <file>StatusQ/Components/StatusContactRequestsIndicatorListItem.qml</file>
         <file>StatusQ/Components/StatusContactVerificationIcons.qml</file>
         <file>StatusQ/Components/StatusCursorDelegate.qml</file>

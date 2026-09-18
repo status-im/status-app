@@ -2,6 +2,7 @@ import QtQuick
 
 import StatusQ
 import StatusQ.Core
+import StatusQ.Core.Utils
 import StatusQ.Controls
 
 import SortFilterProxyModel
@@ -48,13 +49,10 @@ Item {
                 }
 
                 filters: [
-                    FastExpressionFilter {
+                    SearchFilter {
                         enabled: root.filterString !== ""
-                        expression: {
-                            root.filterString
-                            return model.name.toUpperCase().indexOf(root.filterString.toUpperCase()) !== -1
-                        }
-                        expectedRoles: ["name"]
+                        searchPhrase: root.filterString
+                        roleName: "name"
                     },
                     FastExpressionFilter {
                         enabled: root.mode !== StatusCommunityTags.Highlight

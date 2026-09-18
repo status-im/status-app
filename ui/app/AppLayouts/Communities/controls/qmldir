@@ -31,7 +31,6 @@ PermissionsRow 1.0 PermissionsRow.qml
 PromotionalCommunityCard 1.0 PromotionalCommunityCard.qml
 SettingsPageHeader 1.0 SettingsPageHeader.qml
 TagsPicker 1.0 TagsPicker.qml
-TagsRow 1.0 TagsRow.qml
 ThumbnailsDropdownContent 1.0 ThumbnailsDropdownContent.qml
 TokenItem 1.0 TokenItem.qml
 TokenPanel 1.0 TokenPanel.qml
