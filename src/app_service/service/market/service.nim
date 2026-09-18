@@ -36,9 +36,7 @@ QtObject:
   type Service* = ref object of QObject
     events: EventEmitter
     settingsService: settings_service.Service
-    marketLeaderboardTokens: seq[MarketItem]
-    leaderboardPageLoading: bool
-    totalLeaderboardCount: int
+    page: LeaderboardPageState
     currentPage: int
     currentCurrency: string
 
@@ -56,11 +54,8 @@ QtObject:
     result.QObject.setup
     result.events = events
     result.settingsService = settingsService
-    result.leaderboardPageLoading = false
-    result.totalLeaderboardCount = 0
     result.currentPage = -1
     result.currentCurrency = ""
-    result.marketLeaderboardTokens = @[]
 
   proc init*(self: Service) =
     self.events.on(SignalType.Wallet.event) do(e:Args):
@@ -85,9 +80,7 @@ QtObject:
     try:
       let leaderboardData = Json.decode($data.message, LeaderboardPage, allowUnknownFields = true)
       if self.currentPage == leaderboardData.page:
-        self.leaderboardPageLoading = false
-        self.totalLeaderboardCount = leaderboardData.totalCount
-        self.marketLeaderboardTokens = leaderboardData.data
+        self.page.applyLoadedPage(leaderboardData)
         self.currentCurrency = leaderboardData.currency
         self.events.emit(SIGNAL_MARKET_LEADERBOARD_PAGE_LOADED, Args())
     except:
@@ -100,7 +93,7 @@ QtObject:
           self.updateBelongsToPage(leaderboardData.currency):
         self.currentCurrency = leaderboardData.currency
 
-        let pageDiff = applyPageDiff(self.marketLeaderboardTokens, leaderboardData.data)
+        let pageDiff = self.page.applyPageUpdate(leaderboardData)
         if pageDiff.reloaded:
           self.events.emit(SIGNAL_MARKET_LEADERBOARD_PAGE_LOADED, Args())
           return
@@ -124,7 +117,7 @@ QtObject:
 
         # Create a temporary Table for fast lookups: key => (index, MarketItem)
         var tokenMap = initTable[string, int]()
-        for i, token in self.marketLeaderboardTokens:
+        for i, token in self.page.tokens:
           tokenMap[token.key] = i
 
         var updates: seq[LeaderboardTokenUpdated] = @[]
@@ -132,11 +125,11 @@ QtObject:
         for newToken in leaderboardPricesUpdate.data:
           if newToken.id in tokenMap:
             let index = tokenMap[newToken.id]
-            var tokenToBeUpdated = self.marketLeaderboardTokens[index]
+            var tokenToBeUpdated = self.page.tokens[index]
             let result = newToken.pricesDiff(tokenToBeUpdated)
             if not result.isEqual:
               # Update the sequence at the correct index
-              self.marketLeaderboardTokens[index] = tokenToBeUpdated
+              self.page.tokens[index] = tokenToBeUpdated
               updates.add(LeaderboardTokenUpdated(index: index, changedFields: result.changedFields))
 
         if updates.len > 0:
@@ -146,13 +139,13 @@ QtObject:
       error "Error parsing leaderboard prices update data"
 
   proc getMarketLeaderboardList*(self: Service): var seq[MarketItem] =
-    return self.marketLeaderboardTokens
+    return self.page.tokens
 
   proc getMarketLeaderboardLoading*(self: Service): bool =
-    return self.leaderboardPageLoading
+    return self.page.loading
 
   proc getTotalMarketLeaderboardModelCount*(self: Service): int =
-    return self.totalLeaderboardCount
+    return self.page.totalCount
 
   proc getCurrentPage*(self: Service): int =
     return self.currentPage
@@ -161,7 +154,7 @@ QtObject:
   proc fetchMarketTokenPage*(self: Service, page: int, pageSize: int = 100, sortOrder: int = 0) =
     try:
       self.currentPage = page
-      self.leaderboardPageLoading =  true
+      self.page.loading = true
       var currentCurrency = self.settingsService.getCurrency()
       discard backend.fetchMarketTokenPageAsync(page, pageSize, sortOrder, currentCurrency)
     except Exception as e:

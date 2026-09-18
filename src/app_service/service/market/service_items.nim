@@ -118,13 +118,23 @@ type PageDiff* = object
   reloaded*: bool
   updates*: seq[tuple[index: int, changedFields: seq[string]]]
 
+type LeaderboardPageState* = object
+  tokens*: seq[MarketItem]
+  totalCount*: int
+  loading*: bool
+
+proc applyLoadedPage*(state: var LeaderboardPageState, page: LeaderboardPage) =
+  state.tokens = page.data
+  state.totalCount = page.totalCount
+  state.loading = false
+
 # Replaces the page when the row count differs, otherwise diffs and updates rows in place.
-proc applyPageDiff*(current: var seq[MarketItem], incoming: seq[MarketItem]): PageDiff =
-  if current.len != incoming.len:
-    current = incoming
+proc applyPageUpdate*(state: var LeaderboardPageState, page: LeaderboardPage): PageDiff =
+  if state.tokens.len != page.data.len:
+    state.applyLoadedPage(page)
     return PageDiff(reloaded: true)
-  for i in 0..<incoming.len:
-    let d = incoming[i].diff(current[i])
+  for i in 0..<page.data.len:
+    let d = page.data[i].diff(state.tokens[i])
     if not d.isEqual:
       result.updates.add((index: i, changedFields: d.changedFields))
 
