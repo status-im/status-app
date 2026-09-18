@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-library 'status-jenkins-lib@v1.9.50'
+library 'status-jenkins-lib@v1.9.52'
 
 QT_VERSION = "6.11.0"
 
@@ -170,7 +170,7 @@ pipeline {
         stage('Package') {
           steps { script {
             status.buildSigned(platform='linux', target='tgz-linux')
-            env.PKG_URL = s5cmd.upload(retriesCount: 5, env.STATUS_CLIENT_TARBALL)
+            env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_TARBALL)
             jenkins.setBuildDesc(AppImage: env.PKG_URL)
             archiveArtifacts("${env.STATUS_CLIENT_TARBALL}*")
             if (utils.isPRBuild()) {
