@@ -2812,10 +2812,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Najít na stránce</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>Režim kompatibility</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>Vývojářské nástroje</translation>
     </message>
@@ -11723,10 +11719,6 @@ selhalo</translation>
     <message>
         <source>Zoom Fit</source>
         <translation>Přizpůsobit velikost</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Režim kompatibility</translation>
     </message>
     <message>
         <source>Supported formats</source>

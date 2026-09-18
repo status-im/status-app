@@ -4,3 +4,4 @@ LazyWebViewAdapter 1.0 LazyWebViewAdapter.qml
 ProfileParams 1.0 ProfileParams.qml
 WebViewAdapter 1.0 WebViewAdapter.qml
 MobileWebViewAdapter 1.0 MobileWebViewAdapter.qml
+UserAgentUtils 1.0 UserAgentUtils.js

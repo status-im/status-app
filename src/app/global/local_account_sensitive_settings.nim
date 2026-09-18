@@ -62,8 +62,6 @@ const LSS_KEY_DEV_TOOLS_ENABLED* = "devToolsEnabled"
 const DEFAULT_DEV_TOOLS_ENABLED = false
 const LSS_KEY_PDF_VIEWER_ENABLED* = "pdfViewerEnabled"
 const DEFAULT_PDF_VIEWER_ENABLED = true
-const LSS_KEY_COMPATIBILITY_MODE* = "compatibilityMode"
-const DEFAULT_COMPATIBILITY_MODE = true
 const LSS_KEY_STICKERS_ENS_ROPSTEN* = "stickersEnsRopsten"
 const DEFAULT_STICKERS_ENS_ROPSTEN = false
 const LSS_KEY_USER_DECLINED_BACKUP_BANNER* = "userDeclinedBackupBanner"
@@ -492,19 +490,6 @@ QtObject:
     notify = pdfViewerEnabledChanged
 
 
-  proc compatibilityModeChanged*(self: LocalAccountSensitiveSettings) {.signal.}
-  proc getCompatibilityMode*(self: LocalAccountSensitiveSettings): bool {.slot.} =
-    getSettingsProp[bool](self, LSS_KEY_COMPATIBILITY_MODE, newQVariant(DEFAULT_COMPATIBILITY_MODE))
-  proc setCompatibilityMode*(self: LocalAccountSensitiveSettings, value: bool) {.slot.} =
-    setSettingsProp(self, LSS_KEY_COMPATIBILITY_MODE, newQVariant(value)):
-      self.compatibilityModeChanged()
-
-  QtProperty[bool] compatibilityMode:
-    read = getCompatibilityMode
-    write = setCompatibilityMode
-    notify = compatibilityModeChanged
-
-
   proc stickersEnsRopstenChanged*(self: LocalAccountSensitiveSettings) {.signal.}
   proc getStickersEnsRopsten*(self: LocalAccountSensitiveSettings): bool {.slot.} =
     getSettingsProp[bool](self, LSS_KEY_STICKERS_ENS_ROPSTEN, newQVariant(DEFAULT_STICKERS_ENS_ROPSTEN))
@@ -617,7 +602,6 @@ QtObject:
       of LSS_KEY_WEB_RTC_PUBLIC_INTERFACES_ONLY: self.webRTCPublicInterfacesOnlyChanged()
       of LSS_KEY_DEV_TOOLS_ENABLED: self.devToolsEnabledChanged()
       of LSS_KEY_PDF_VIEWER_ENABLED: self.pdfViewerEnabledChanged()
-      of LSS_KEY_COMPATIBILITY_MODE: self.compatibilityModeChanged()
       of LSS_KEY_STICKERS_ENS_ROPSTEN: self.stickersEnsRopstenChanged()
       of LSS_KEY_USER_DECLINED_BACKUP_BANNER: self.userDeclinedBackupBannerChanged()
       of LSS_KEY_GIF_UNFURLING_ENABLED: self.gifUnfurlingEnabledChanged()
