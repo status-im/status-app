@@ -46,7 +46,7 @@ QtObject {
     // Host Download Target policy: platform downloads location (overridable in tests).
     property string downloadsDirectory: {
         const loc = StandardPaths.writableLocation(StandardPaths.DownloadLocation)
-        return loc ? String(loc).replace("file://", "") : ""
+        return loc ? UrlUtils.convertUrlToLocalPath(loc) : ""
     }
 
     /// The one platform seam: filesystem, share/clipboard, and the two platform
