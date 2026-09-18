@@ -206,7 +206,6 @@ Item {
                 anchors.fill: parent
                 anchors.leftMargin: d.listContentLeftMargin
                 draggableItems: root.isSectionAdmin
-                draggableCategories: root.isSectionAdmin
 
                 // banners live below the channels and scroll with them
                 footer: root.isSectionAdmin ? bannerFooterComponent : null
@@ -252,7 +251,7 @@ Item {
                     MuteChatMenuItem {
                         enabled: !!categoryItem && !categoryItem.muted
                         title: qsTr("Mute category")
-                        onMuteTriggered: {
+                        onMuteTriggered: function(interval) {
                             root.communitySectionModule.muteCategory(categoryItem.itemId, interval)
                             contextMenuCategory.close()
                         }

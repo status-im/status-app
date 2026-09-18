@@ -239,15 +239,15 @@ AbstractButton {
     property bool drawBackgroundBorder: true
 
     Drag.dragType: Drag.Automatic
-    Drag.hotSpot.x: dragHandler.mouseX
-    Drag.hotSpot.y: dragHandler.mouseY
+    Drag.hotSpot: dragHandler.centroid.position
     Drag.keys: ["x-status-draggable-list-item-internal"]
+    Drag.active: dragActive
 
     /*!
        \qmlproperty readonly bool StatusDraggableListItem::dragActive
        This property holds whether a drag is currently in progress
     */
-    readonly property bool dragActive: dragHandler.drag.active
+    readonly property bool dragActive: dragHandler.active
     onDragActiveChanged: {
         if (dragActive) {
             Drag.start()
@@ -305,36 +305,42 @@ AbstractButton {
     icon.width: 20
     icon.height: 20
 
-    StatusMouseArea {
-        anchors.fill: parent
-
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-        onClicked: (mouse) => {
-            root.clicked(mouse)
-        }
-    }
-
-    // Qt6: use a TapHandler with a regular contentItem, and derive again from ItemDelegate
-    StatusMouseArea {
-        id: dragHandler
-
-        parent: root.dragByHandleOnly ? dragHandleIcon : root
-
-        anchors.fill: parent
-        drag.target: root.dragEnabled ? root : null
-        drag.axis: root.dragAxis
-        preventStealing: true // otherwise DND is broken inside a Flickable/ScrollView
-        propagateComposedEvents: true // handle mouse click from MouseArea below
-
+    HoverHandler {
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
         cursorShape: {
             if (!root.enabled)
                 return undefined
             if (root.dragEnabled)
                 return root.dragActive ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            return Qt.PointingHandCursor
         }
+    }
 
+    TapHandler {
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
         acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onTapped: (eventPoint, button) => {
+                      const pos = eventPoint.position
+                      root.clicked({button, x: pos.x, y: pos.y, modifiers: point.modifiers})
+                  }
+    }
+
+    TapHandler {
+        acceptedDevices: PointerDevice.TouchScreen
+        onLongPressed: {
+            const pos = point.position
+            root.clicked({button: Qt.RightButton, x: pos.x, y: pos.y, modifiers: point.modifiers})
+        }
+    }
+
+    DragHandler {
+        id: dragHandler
+
+        enabled: root.dragEnabled
+        parent: root.dragByHandleOnly ? dragHandleIcon : root
+        target: root
+        yAxis.enabled: root.dragAxis === Drag.YAxis || root.dragAxis === Drag.XAndYAxis
+        xAxis.enabled: root.dragAxis === Drag.XAxis || root.dragAxis === Drag.XAndYAxis
     }
 
     RowLayout {

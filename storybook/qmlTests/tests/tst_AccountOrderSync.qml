@@ -182,9 +182,11 @@ Item {
             verifyOrder(["Account 1", "Generated 1", "Generated 2"])
 
             let delegate = delegateAt(0)
+            verify(!!delegate)
             waitForRendering(delegate)
-            mouseDrag(delegate, delegate.width / 2, delegate.height / 2,
-                      0, delegate.height * 2)
+            mousePress(delegate)
+            mouseMove(delegate, delegate.width / 2, delegate.height * 2, 100, Qt.LeftButton)
+            mouseRelease(delegate)
 
             verifyOrder(["Generated 1", "Generated 2", "Account 1"])
 

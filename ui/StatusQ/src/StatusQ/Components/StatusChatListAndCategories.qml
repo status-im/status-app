@@ -2,6 +2,7 @@ import QtQuick
 
 import StatusQ.Components
 import StatusQ.Core
+import StatusQ.Core.Utils
 
 import SortFilterProxyModel
 
@@ -18,7 +19,8 @@ Item {
     property bool showPopupMenu: true
     property alias sensor: sensor
     property bool draggableItems: false
-    property bool draggableCategories: false
+    property bool showThreads: true
+    property bool isMobile: Utils.isMobile
 
     property Component categoryPopupMenu
     property Component chatListPopupMenu
@@ -36,8 +38,8 @@ Item {
         id: sensor
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: {
-            if (mouse.button === Qt.RightButton && showPopupMenu && !!root.popupMenu) {
+        onClicked: function (mouse) {
+            if (mouse.button === Qt.RightButton && root.showPopupMenu && !!root.popupMenu) {
                 popupMenuSlot.item.popup(mouse.x + 4, mouse.y + 6)
                 return
             }
@@ -48,15 +50,17 @@ Item {
             id: statusChatList
             width: parent.width
             height: parent.height
-            onChatItemSelected: root.chatItemSelected(categoryId, id)
-            onChatItemClicked: root.chatItemClicked(id)
-            onChatItemUnmuted: root.chatItemUnmuted(id)
-            onChatItemReordered: root.chatItemReordered(categoryId, chatId, to)
-            onCategoryReordered: root.chatListCategoryReordered(categoryId, to)
+            onChatItemSelected: (categoryId, id) => root.chatItemSelected(categoryId, id)
+            onChatItemClicked: id => root.chatItemClicked(id)
+            onChatItemUnmuted: id => root.chatItemUnmuted(id)
+            onChatItemReordered: (categoryId, chatId, to) => root.chatItemReordered(categoryId, chatId, to)
+            onCategoryReordered: (categoryId, to) => root.chatListCategoryReordered(categoryId, to)
             draggableItems: root.draggableItems
             showCategoryActionButtons: root.showCategoryActionButtons
-            onCategoryAddButtonClicked: root.categoryAddButtonClicked(id)
-            onToggleCollapsedCommunityCategory: root.toggleCollapsedCommunityCategory(categoryId, collapsed)
+            showThreads: root.showThreads
+            isMobile: root.isMobile
+            onCategoryAddButtonClicked: id => root.categoryAddButtonClicked(id)
+            onToggleCollapsedCommunityCategory: (categoryId, collapsed) => root.toggleCollapsedCommunityCategory(categoryId, collapsed)
 
             model: SortFilterProxyModel {
                 sourceModel: root.model

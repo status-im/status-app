@@ -16,16 +16,13 @@ import shared.controls
 import shared.popups
 import shared.popups.send
 import shared.status
-import shared.stores as SharedStores
 import shared.views.chat
 import utils
 
-import SortFilterProxyModel
 import QtModelsToolkit
 
 import AppLayouts.Communities.popups
 import AppLayouts.Communities.panels
-import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Wallet.stores as WalletStore
 
