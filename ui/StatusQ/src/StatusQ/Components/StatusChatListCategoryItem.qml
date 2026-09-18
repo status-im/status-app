@@ -9,8 +9,8 @@ import StatusQ.Components
 Control {
     id: root
 
-    implicitWidth: visible ? 288 : 0
-    implicitHeight: visible ? 34 : 0
+    implicitWidth: 288
+    implicitHeight: 34
 
     horizontalPadding: Theme.halfPadding
 
@@ -25,6 +25,7 @@ Control {
     property alias addButton: addButton
     property alias menuButton: menuButton
     property alias toggleButton: toggleButton
+    property int cursorShape: Qt.PointingHandCursor
 
     signal clicked(var mouse)
     signal addButtonClicked(var mouse)
@@ -39,7 +40,7 @@ Control {
     contentItem: Item {
         HoverHandler {
             id: hoverHandler
-            cursorShape: Qt.PointingHandCursor
+            cursorShape: root.cursorShape
         }
 
         StatusBaseText {
@@ -54,7 +55,7 @@ Control {
                 if (root.hasUnreadMessages || root.highlighted || hoverHandler.hovered) {
                     return Theme.palette.directColor1
                 }
-                return Theme.palette.directColor4
+                return Theme.palette.directColor2
             }
 
             text: root.text
@@ -69,7 +70,7 @@ Control {
                 icon.name: "add"
                 icon.width: 20
                 visible: (root.showAddButton && (hoverHandler.hovered || root.highlighted))
-                onClicked: root.addButtonClicked(mouse)
+                onClicked: mouse => root.addButtonClicked(mouse)
                 tooltip.text: qsTr("Add channel inside category")
             }
             StatusChatListCategoryItemButton {
@@ -78,7 +79,7 @@ Control {
                 icon.name: "more"
                 icon.width: 21
                 visible: (root.showMenuButton && (hoverHandler.hovered || root.highlighted))
-                onClicked: root.menuButtonClicked(mouse)
+                onClicked: mouse => root.menuButtonClicked(mouse)
                 tooltip.text: qsTr("More")
             }
             StatusChatListCategoryItemButton {
@@ -87,7 +88,8 @@ Control {
                 icon.name: "chevron-down"
                 icon.width: 18
                 icon.rotation: root.opened ? 0 : 270
-                onClicked: root.toggleButtonClicked(mouse)
+                Behavior on icon.rotation { RotationAnimation {direction: RotationAnimation.Shortest; duration: ThemeUtils.AnimationDuration.Fast}}
+                onClicked: mouse => root.toggleButtonClicked(mouse)
             }
         }
     }

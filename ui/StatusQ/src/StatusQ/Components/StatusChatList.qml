@@ -32,6 +32,8 @@ Item {
     property bool draggableItems: false
     property bool highlightItem: true
     property bool showCategoryActionButtons: false
+    property bool showThreads: true
+    property bool isMobile: Utils.isMobile
 
     property alias statusChatListItems: statusChatListItems
     property alias footer: statusChatListItems.footer
@@ -64,10 +66,17 @@ Item {
         // of the model contract: rows without it are filtered out too.
         model: SortFilterProxyModel {
             sourceModel: root.model
-            filters: ValueFilter {
-                roleName: "hidden"
-                value: false
-            }
+            filters: [
+                ValueFilter {
+                    roleName: "hidden"
+                    value: false
+                },
+                ValueFilter {
+                    roleName: "isThread"
+                    value: false
+                    enabled: !root.showThreads
+                }
+            ]
         }
         spacing: 0
         // content stops before the overlaid scrollbar; delegates and footer
@@ -90,6 +99,7 @@ Item {
             readonly property string categoryId: model.categoryId
             readonly property int position: model.position // needed for the DnD
             readonly property int categoryPosition: model.categoryPosition // needed for the DnD
+            readonly property bool isThread: model.isThread ?? false
             readonly property bool isCategory: model.isCategory
             readonly property Item item: isCategory ? draggableItem.actions[0] : draggableItem.actions[1]
 
@@ -132,7 +142,7 @@ Item {
                 height: chatListDelegate.height
                 dragParent: root.draggableItems ? statusChatListItems : null
                 visualIndex: chatListDelegate.visualIndex
-                draggable: (root.draggableItems && (statusChatListItems.count > 1))
+                draggable: root.draggableItems && statusChatListItems.count > 1 && !chatListDelegate.isThread
                 horizontalPadding: 0
                 verticalPadding: 0
                 icon.width: 0
@@ -141,13 +151,13 @@ Item {
                 topInset: 0
                 bottomInset: 0
 
-                showDragHandle: Utils.isMobile
-                dragByHandleOnly: Utils.isMobile
+                showDragHandle: root.isMobile
+                dragByHandleOnly: root.isMobile
                 drawBackgroundBorder: false
 
                 Drag.keys: chatListDelegate.keys
 
-                onClicked: function(mouse) {
+                onClicked: mouse => {
                     if (draggableItem.isCategory) {
                         statusChatListCategoryItem.clicked(mouse);
                     } else {
@@ -156,7 +166,7 @@ Item {
                 }
 
                 actions: [
-                   StatusChatListCategoryItem {
+                    StatusChatListCategoryItem {
                         id: statusChatListCategoryItem
                         objectName: "categoryItem"
                         Layout.fillWidth: true
@@ -177,12 +187,13 @@ Item {
                         text: model.name
                         opened: model.categoryOpened
                         highlighted: draggableItem.dragActive
-                        showAddButton: showCategoryActionButtons
+                        showAddButton: root.showCategoryActionButtons
                         showMenuButton: !!root.popupMenu
                         hasUnreadMessages: model.hasUnreadMessages
                         muted: model.muted
+                        cursorShape: draggableItem.dragActive ? Qt.ClosedHandCursor : Qt.PointingHandCursor
                         onClicked: function(mouse) {
-                            if (mouse.button === Qt.RightButton && showCategoryActionButtons && !!root.categoryPopupMenu) {
+                            if (mouse.button === Qt.RightButton && !!root.categoryPopupMenu) {
                                 statusChatListCategoryItem.setupPopup()
                                 highlighted = true;
                                 categoryPopupMenuSlot.item.popup()
@@ -202,13 +213,13 @@ Item {
                             categoryPopupMenuSlot.item.popup()
                         }
                         onAddButtonClicked: {
-                            root.categoryAddButtonClicked(categoryId)
+                            root.categoryAddButtonClicked(model.categoryId)
                         }
                     },
                     StatusChatListItem {
                         id: statusChatListItem
 
-                        readonly property bool isContactIcon: type === StatusChatListItem.Type.OneToOneChat && model.usesDefaultName
+                        readonly property bool isContactIcon: type === StatusChatListItem.Type.OneToOneChat && (model.usesDefaultName ?? false)
                         readonly property int iconWidth: 24
                         readonly property int iconHeight: 24
 
@@ -218,6 +229,7 @@ Item {
                         visible: !draggableItem.isCategory
                         chatId: model.itemId
                         categoryId: model.categoryId
+                        isThread: model.isThread ?? false
                         name: model.name
                         type: model.type ?? StatusChatListItem.Type.CommunityChat
                         muted: model.muted
@@ -247,44 +259,47 @@ Item {
 
                         onlineStatus: !!model.onlineStatus ? model.onlineStatus : StatusChatListItem.OnlineStatus.Inactive
                         sensor.enabled: draggableItem.dragActive
+                        sensor.cursorShape: dragged ? Qt.ClosedHandCursor : Qt.PointingHandCursor
                         dragged: draggableItem.dragActive
                         requiresPermissions: model.requiresPermissions
                         locked: model.locked
                         onClicked: function(mouse) {
                             highlightWhenCreated = false
 
-                            if (mouse.button === Qt.RightButton && !!root.popupMenu) {
-                                statusChatListItem.highlighted = true
+                            if (mouse.button === Qt.RightButton) {
+                                if (!!root.popupMenu) {
+                                    statusChatListItem.highlighted = true
 
-                                popupMenuSlot.active = true
-                                const originalOpenHandler = popupMenuSlot.item.openHandler
-                                const originalCloseHandler = popupMenuSlot.item.closeHandler
+                                    popupMenuSlot.active = true
+                                    const originalOpenHandler = popupMenuSlot.item.openHandler
+                                    const originalCloseHandler = popupMenuSlot.item.closeHandler
 
-                                popupMenuSlot.item.openHandler = function () {
-                                    if (!!originalOpenHandler) {
-                                        originalOpenHandler(statusChatListItem.chatId)
+                                    popupMenuSlot.item.openHandler = function () {
+                                        if (!!originalOpenHandler) {
+                                            originalOpenHandler(statusChatListItem.chatId)
+                                        }
                                     }
+
+                                    popupMenuSlot.item.closeHandler = function () {
+                                        if (statusChatListItem) {
+                                            statusChatListItem.highlighted = false
+                                        }
+                                        if (!!originalCloseHandler) {
+                                            originalCloseHandler()
+                                        }
+                                    }
+
+                                    const p = statusChatListItem.mapToItem(root, mouse.x, mouse.y)
+
+                                    popupMenuSlot.item.popup(p.x + 4, p.y + 6)
+                                    popupMenuSlot.item.openHandler = originalOpenHandler
                                 }
-
-                                popupMenuSlot.item.closeHandler = function () {
-                                    if (statusChatListItem) {
-                                        statusChatListItem.highlighted = false
-                                    }
-                                    if (!!originalCloseHandler) {
-                                        originalCloseHandler()
-                                    }
+                            } else {
+                                if (!statusChatListItem.selected) {
+                                    root.chatItemSelected(statusChatListItem.categoryId, statusChatListItem.chatId)
                                 }
-
-                                const p = statusChatListItem.mapToItem(root, mouse.x, mouse.y)
-
-                                popupMenuSlot.item.popup(p.x + 4, p.y + 6)
-                                popupMenuSlot.item.openHandler = originalOpenHandler
-                                return
+                                root.chatItemClicked(statusChatListItem.chatId)
                             }
-                            if (!statusChatListItem.selected) {
-                                root.chatItemSelected(statusChatListItem.categoryId, statusChatListItem.chatId)
-                            }
-                            root.chatItemClicked(statusChatListItem.chatId)
                         }
 
                         onUnmute: root.chatItemUnmuted(statusChatListItem.chatId)

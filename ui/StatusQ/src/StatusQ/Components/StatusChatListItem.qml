@@ -14,6 +14,7 @@ Rectangle {
     property string chatId: ""
     property string categoryId: ""
     property string name: ""
+    property bool isThread: false
     property alias badge: statusBadge
     property bool hasUnreadMessages: false
     property int notificationsCount: 0
@@ -27,7 +28,8 @@ Rectangle {
         height: 24
         color: root.Theme.palette.miscColor5
         emoji: ""
-        charactersLen: root.type === StatusChatListItem.Type.OneToOneChat ? 2 : 1
+        useAcronymForLetterIdenticon: root.type === StatusChatListItem.Type.OneToOneChat
+        charactersLen: useAcronymForLetterIdenticon ? 2 : 1
     }
     property int type: StatusChatListItem.Type.Unknown0
     property bool highlighted: false
@@ -82,7 +84,7 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-        onClicked: root.clicked(mouse)
+        onClicked: mouse => root.clicked(mouse)
 
         StatusSmartIdenticon {
             id: identicon
@@ -91,10 +93,12 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             asset: root.asset
             name: root.name
+            active: !root.isThread
+            visible: active
 
             badge {
                 visible: root.type === StatusChatListItem.Type.OneToOneChat
-                color: onlineStatus === StatusChatListItem.OnlineStatus.Online ? Theme.palette.successColor1 : Theme.palette.baseColor1
+                color: root.onlineStatus === StatusChatListItem.OnlineStatus.Online ? Theme.palette.successColor1 : Theme.palette.baseColor1
                 border.width: 2
                 border.color: hoverHander.hovered ? Theme.palette.statusBadge.hoverBorderColor : root.color
                 height: 9
@@ -105,35 +109,25 @@ Rectangle {
         StatusIcon {
             id: statusIcon
             anchors.left: identicon.right
-            anchors.leftMargin: Theme.halfPadding
+            anchors.leftMargin: root.isThread ? Theme.defaultXlPadding : Theme.halfPadding
             anchors.verticalCenter: parent.verticalCenter
 
             width: 16
-            visible: root.type !== StatusChatListItem.Type.OneToOneChat
-            opacity: {
-                if (root.muted && !hoverHander.hovered && !root.highlighted) {
-                    return ThemeUtils.disabledOpacity
-                }
-                return root.hasUnreadMessages ||
-                        root.notificationsCount > 0 ||
-                        root.selected ||
-                        root.highlighted ||
-                        statusBadge.visible ||
-                        hoverHander.hovered ? 1.0 : 0.7
-            }
-
+            visible: root.isThread || root.type !== StatusChatListItem.Type.OneToOneChat
+            color: chatName.color
             icon: {
+                if (root.isThread)
+                    return "thread"
                 switch (root.type) {
                 case StatusChatListItem.Type.GroupChat:
-                    return Theme.palette.name === "light" ? "tiny/group" : "tiny/group-white"
+                    return "tiny/group"
                 case StatusChatListItem.Type.CommunityChat: {
-                    var iconName = "tiny/channel"
                     if (root.requiresPermissions)
-                        iconName = root.locked ? "tiny/channel-locked" : "tiny/channel-unlocked"
-                    return Theme.palette.name === "light" ? iconName : iconName+"-white"
+                        return root.locked ? "tiny/channel-locked" : "tiny/channel-unlocked"
+                    return "tiny/channel"
                 }
                 default:
-                    return Theme.palette.name === "light" ? "tiny/public-chat" : "tiny/public-chat-white"
+                    return "tiny/public-chat"
                 }
             }
         }
@@ -141,7 +135,7 @@ Rectangle {
         StatusBaseText {
             id: chatName
             anchors.left: statusIcon.visible ? statusIcon.right : identicon.right
-            anchors.leftMargin: statusIcon.visible ? 1 : Theme.halfPadding
+            anchors.leftMargin: statusIcon.visible ? (root.isThread ? Theme.halfPadding : 1) : Theme.halfPadding
             anchors.right: mutedIcon.visible ? mutedIcon.left :
                                                statusBadge.visible ? statusBadgeContainer.left : parent.right
             anchors.rightMargin: root.horizontalMargin
@@ -159,14 +153,14 @@ Rectangle {
                         root.highlighted ||
                         root.highlightWhenCreated ||
                         hoverHander.hovered ||
-                        statusBadge.visible ? Theme.palette.directColor1 : Theme.palette.directColor4
+                        statusBadge.visible ? Theme.palette.directColor1 : Theme.palette.directColor2
             }
             font.weight: !root.muted &&
                          (root.hasUnreadMessages ||
                           root.notificationsCount > 0 ||
                           root.highlightWhenCreated ||
                           statusBadge.visible) ? Font.Bold : Font.Medium
-            font.pixelSize: Theme.primaryTextFontSize
+            font.pixelSize: root.isThread ? Theme.fontSize(14) : Theme.primaryTextFontSize
         }
 
         // most rows are not muted — the icon, its sensor and tooltip only
@@ -174,28 +168,19 @@ Rectangle {
         Loader {
             id: mutedIcon
             anchors.right: statusBadge.visible ? statusBadgeContainer.left : parent.right
-            anchors.rightMargin: root.horizontalMargin
+            anchors.rightMargin: statusBadge.visible ? root.horizontalMargin : root.horizontalMargin * 2
             anchors.verticalCenter: parent.verticalCenter
             active: root.muted
             visible: active
 
-            sourceComponent: StatusIcon {
-                width: 14
-                opacity: mutedIconSensor.containsMouse ? 1.0 : 0.2
-                icon: Theme.palette.name === "light" ? "tiny/muted" : "tiny/muted-white"
-
-                StatusMouseArea {
-                    id: mutedIconSensor
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    anchors.fill: parent
-                    onClicked: root.unmute()
-                }
-
-                StatusToolTip {
-                    text: qsTr("Unmute")
-                    visible: mutedIconSensor.containsMouse
-                }
+            sourceComponent: StatusIconWithTooltip {
+                width: 16
+                height: 16
+                opacity: hovered ? 1.0 : 0.2
+                icon: "tiny/muted"
+                color: chatName.color
+                tooltipText: qsTr("Unmute")
+                onClicked: root.unmute()
             }
         }
         Item {
