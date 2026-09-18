@@ -15,7 +15,6 @@ QtObject {
 
     required property string userUID
     property bool featureEnabled: true
-    property string httpUserAgent: ""
 
     readonly property var scriptPaths: {
         const scripts = []
@@ -36,14 +35,12 @@ QtObject {
 
     readonly property ProfileParams defaultProfileParams: ProfileParams {
         userId: root.userUID
-        userAgent: root.httpUserAgent
         scripts: root.scriptPaths
         offTheRecord: false
     }
 
     readonly property ProfileParams otrProfileParams: ProfileParams {
         userId: root.userUID
-        userAgent: root.httpUserAgent
         scripts: root.scriptPaths
         offTheRecord: true
     }
@@ -52,7 +49,6 @@ QtObject {
     // local page must not meet site_utils or the dapp injectors (ADR 0006 §8).
     readonly property ProfileParams localPreviewProfileParams: ProfileParams {
         userId: root.userUID
-        userAgent: root.httpUserAgent
         scripts: []
         offTheRecord: true
         localPreview: true

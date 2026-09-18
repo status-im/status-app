@@ -2,6 +2,8 @@ import QtQuick
 
 import StatusQ.CustomWebView 1.0
 
+import "UserAgentUtils.js" as UserAgentUtils
+
 AbstractWebView {
     id: root
 
@@ -44,6 +46,8 @@ AbstractWebView {
         offTheRecord: root.profileParams.offTheRecord
         storageName: root.profileParams.storageName
         httpUserAgent: root.profileParams.userAgent
+                       || UserAgentUtils.honestUserAgent(backend.defaultHttpUserAgent,
+                                                         Qt.application.version)
     }
 
     Connections {

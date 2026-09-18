@@ -22,7 +22,6 @@ StatusDialog {
     property bool clearSiteDataSupported: false
     // True while a data-clearing operation is in flight.
     property bool clearing: false
-    property bool compatibilityMode: true
 
     signal goIncognito(bool checked)
     signal launchFindBar
@@ -32,7 +31,6 @@ StatusDialog {
     signal forceReload
     signal clearSiteData
     signal clearBrowsingData
-    signal toggleCompatibilityMode(bool checked)
     signal supportedFormatsRequested
     signal settingsRequested
 
@@ -109,23 +107,6 @@ StatusDialog {
             onClicked: {
                 root.resetZoomFactor()
                 root.close()
-            }
-        }
-        SettingsListItem {
-            title: qsTr("Compatibility mode")
-            asset.name: "browser"
-            components: [
-                StatusSwitch {
-                    id: compatibilitySwitch
-                    checked: root.compatibilityMode
-                    onToggled: {
-                        root.toggleCompatibilityMode(checked)
-                        root.close()
-                    }
-                }
-            ]
-            onClicked: {
-                compatibilitySwitch.click()
             }
         }
         SettingsListItem {
