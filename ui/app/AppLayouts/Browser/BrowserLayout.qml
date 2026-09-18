@@ -188,8 +188,6 @@ StatusSectionLayout {
         id: _internal
 
         readonly property Item currentWebView: webViewContext.currentWebView
-        // A hovered link belongs to the page it was hovered on.
-        onCurrentWebViewChanged: statusBubble.hide()
         readonly property bool currentTabIncognito: currentWebView?.incognito ?? false
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
         property real lastScrollPos: 0
@@ -358,6 +356,8 @@ StatusSectionLayout {
 
         onCurrentWebViewChanged: {
             findBar.reset()
+            // A hovered link belongs to the page it was hovered on.
+            statusBubble.hide()
             // MobileWebView has no native-find dismiss signal; clear Find XOR on tab change.
             if (root.isMobile)
                 downloadsContext.setFindOpen(false)
