@@ -556,7 +556,7 @@ SettingsContentBase {
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
                     font.pixelSize: Theme.tertiaryTextFontSize
-                    text: qsTr("Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Refresh stats to show or update them.")
+                    text: qsTr("Shows stats for your Status profile, such as counts of chats, messages, communities and collectibles, and app and wallet database sizes. Stats are shown and remain only on your device and include NO message, chat, contact, address or other content. Click Get stats to show or update them.")
                 }
 
                 RowLayout {
@@ -566,7 +566,7 @@ SettingsContentBase {
                     StatusButton {
                         objectName: "collectStorageStatsButton"
                         text: root.advancedStore.isCollectingStorageStats
-                              ? qsTr("Refreshing...") : qsTr("Refresh stats")
+                              ? qsTr("Refreshing...") : qsTr("Get stats")
                         enabled: !root.advancedStore.isCollectingStorageStats
                         onClicked: {
                             d.beginStorageStatsCollection()
@@ -599,9 +599,9 @@ SettingsContentBase {
                                     ? qsTr("%1 of %2").arg(d.storageStatsStep).arg(d.storageStatsTotal)
                                     : qsTr("Starting...")
                         if (d.storageStatsSnapshotPath !== "")
-                            return qsTr("Collected %1, saved to %2 and picked up by Application Logs").arg(d.formatAge(d.storageStatsAgeSeconds)).arg(d.storageStatsSnapshotPath)
+                            return qsTr("Refreshed %1, saved to %2 and picked up by Application Logs").arg(d.formatAge(d.storageStatsAgeSeconds)).arg(d.storageStatsSnapshotPath)
                         if (d.storageStatsAgeSeconds >= 0)
-                            return qsTr("Collected %1").arg(d.formatAge(d.storageStatsAgeSeconds))
+                            return qsTr("Refreshed %1").arg(d.formatAge(d.storageStatsAgeSeconds))
                         return ""
                     }
                 }
