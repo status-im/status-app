@@ -5,16 +5,8 @@ import times, std/strformat, json
 #################################################
 
 type
-  TokensMarketValuesSlotResponse* = object
-    tokenMarketValues*: JsonNode
-    error*: string
-
   TokensDetailsSlotResponse* = object
     tokensDetails*: JsonNode
-    error*: string
-
-  TokensPricesSlotResponse* = object
-    tokensPrices*: JsonNode
     error*: string
 
 #################################################
@@ -202,6 +194,7 @@ proc fetchTokensMarketValuesTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[FetchTokensMarketValuesTaskArg](argEncoded)
   var output = %*{
     "tokenMarketValues": newJNull(),
+    "currency": arg.currency,
     "error": ""
   }
   try:
@@ -232,16 +225,17 @@ proc fetchTokensDetailsTask*(argEncoded: string) {.gcsafe, nimcall.} =
 type
   FetchTokensPricesTaskArg = ref object of QObjectTaskArg
     tokensKeys: seq[string]
-    currencies: seq[string]
+    currency: string
 
 proc fetchTokensPricesTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[FetchTokensPricesTaskArg](argEncoded)
   var output = %*{
     "tokensPrices": newJNull(),
+    "currency": arg.currency,
     "error": ""
   }
   try:
-    let response = backend.fetchPrices(arg.tokensKeys, arg.currencies)
+    let response = backend.fetchPrices(arg.tokensKeys, @[arg.currency])
     output["tokensPrices"] = %*response
   except Exception as e:
     output["error"] = %* fmt"Error fetching prices: {e.msg}"
