@@ -18,12 +18,9 @@
         <file>icons/tiny/add.svg</file>
         <file>icons/tiny/arrow-down.svg</file>
         <file>icons/tiny/bridge.svg</file>
-        <file>icons/tiny/channel-white.svg</file>
         <file>icons/tiny/channel.svg</file>
         <file>icons/tiny/channel-locked.svg</file>
-        <file>icons/tiny/channel-locked-white.svg</file>
         <file>icons/tiny/channel-unlocked.svg</file>
-        <file>icons/tiny/channel-unlocked-white.svg</file>
         <file>icons/tiny/chat.svg</file>
         <file>icons/tiny/chatbot.svg</file>
         <file>icons/tiny/checkmark.svg</file>
@@ -41,18 +38,15 @@
         <file>icons/tiny/external.svg</file>
         <file>icons/tiny/flash.svg</file>
         <file>icons/tiny/gas.svg</file>
-        <file>icons/tiny/group-white.svg</file>
         <file>icons/tiny/group.svg</file>
         <file>icons/tiny/locked.svg</file>
         <file>icons/tiny/members.svg</file>
         <file>icons/tiny/more.svg</file>
-        <file>icons/tiny/muted-white.svg</file>
         <file>icons/tiny/muted.svg</file>
         <file>icons/tiny/not-secure.svg</file>
         <file>icons/tiny/in-progress.svg</file>
         <file>icons/tiny/pending.svg</file>
         <file>icons/tiny/pin.svg</file>
-        <file>icons/tiny/public-chat-white.svg</file>
         <file>icons/tiny/public-chat.svg</file>
         <file>icons/tiny/reply.svg</file>
         <file>icons/tiny/secure.svg</file>
@@ -109,7 +103,6 @@
         <file>icons/camera.svg</file>
         <file>icons/cancel.svg</file>
         <file>icons/channel-category.svg</file>
-        <file>icons/channel-white.svg</file>
         <file>icons/channel.svg</file>
         <file>icons/chat-commands.svg</file>
         <file>icons/chat.svg</file>

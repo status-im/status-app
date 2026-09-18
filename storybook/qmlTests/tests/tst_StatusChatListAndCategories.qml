@@ -287,6 +287,11 @@ Item {
             return getToggleButton(categoryItem).icon.rotation
         }
 
+        function assertToggleRotation(categoryItem, value) {
+            const toggleButtonIcon = getToggleButton(categoryItem).icon
+            tryCompare(toggleButtonIcon, "rotation", value)
+        }
+
         function openCategoryMoreMenu(categoryItem) {
             categoryItem.highlighted = true
             categoryItem.menuButtonClicked({button: Qt.LeftButton})
@@ -313,7 +318,7 @@ Item {
             compare(toggleCollapsedSpy.signalArguments[0][0], root.testCategoryId)
             compare(toggleCollapsedSpy.signalArguments[0][1], true)
             verifyChannelVisible(root.testChannelName, false)
-            compare(getToggleRotation(categoryItem), 270)
+            assertToggleRotation(categoryItem, 270)
         }
 
         function test_click_category_expands() {
@@ -324,49 +329,49 @@ Item {
             tryCompare(toggleCollapsedSpy, "count", 2)
             compare(toggleCollapsedSpy.signalArguments[1][1], false)
             verifyChannelVisible(root.testChannelName, true)
-            compare(getToggleRotation(categoryItem), 0)
+            assertToggleRotation(categoryItem, 0)
         }
 
         function test_toggle_button_collapses() {
             const categoryItem = getCategoryItem()
-            compare(getToggleRotation(categoryItem), 0)
+            assertToggleRotation(categoryItem, 0)
             mouseClick(getToggleButton(categoryItem))
             tryCompare(toggleCollapsedSpy, "count", 1)
             compare(toggleCollapsedSpy.signalArguments[0][1], true)
             verifyChannelVisible(root.testChannelName, false)
-            compare(getToggleRotation(categoryItem), 270)
+            assertToggleRotation(categoryItem, 270)
         }
 
         function test_toggle_after_collapse_expands() {
             const categoryItem = getCategoryItem()
             mouseClick(getCategoryDropArea())
             verifyChannelVisible(root.testChannelName, false)
-            compare(getToggleRotation(categoryItem), 270)
+            assertToggleRotation(categoryItem, 270)
             mouseClick(getToggleButton(categoryItem))
             verifyChannelVisible(root.testChannelName, true)
-            compare(getToggleRotation(categoryItem), 0)
+            assertToggleRotation(categoryItem, 0)
         }
 
         function test_more_button_after_collapse_expands() {
             const categoryItem = getCategoryItem()
             mouseClick(getCategoryDropArea())
-            compare(getToggleRotation(categoryItem), 270)
+            assertToggleRotation(categoryItem, 270)
             mouseClick(getToggleButton(categoryItem))
-            compare(getToggleRotation(categoryItem), 0)
+            assertToggleRotation(categoryItem, 0)
             categoryItem.highlighted = true
             const moreButton = findChild(categoryItem, "categoryItemButtonMore")
             verify(!!moreButton)
             tryCompare(moreButton, "visible", true)
             categoryItem.menuButtonClicked({button: Qt.LeftButton})
-            compare(getToggleRotation(categoryItem), 0)
+            assertToggleRotation(categoryItem, 0)
         }
 
         function test_add_button_keeps_category_expanded() {
             const categoryItem = getCategoryItem()
             mouseClick(getCategoryDropArea())
-            compare(getToggleRotation(categoryItem), 270)
+            assertToggleRotation(categoryItem, 270)
             mouseClick(getToggleButton(categoryItem))
-            compare(getToggleRotation(categoryItem), 0)
+            assertToggleRotation(categoryItem, 0)
             categoryItem.highlighted = true
             const addButton = findChild(categoryItem, "categoryItemButtonAdd")
             verify(!!addButton)
@@ -393,12 +398,12 @@ Item {
 
             mouseClick(getCategoryDropArea())
             verifyChannelVisible(root.testAddedChannelName, false)
-            compare(getToggleRotation(categoryItem), 270)
+            assertToggleRotation(categoryItem, 270)
 
             mouseClick(getToggleButton(categoryItem))
             verifyChannelVisible(root.testAddedChannelName, true)
             verifyChannelVisible(root.testChannelName, true)
-            compare(getToggleRotation(categoryItem), 0)
+            assertToggleRotation(categoryItem, 0)
         }
 
         function test_mute_category_via_more_menu() {

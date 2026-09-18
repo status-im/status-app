@@ -9,15 +9,22 @@ StatusIcon {
 
     property string tooltipText
 
-    StatusMouseArea {
-        id: tooltipSensor
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+    readonly property bool hovered: hoverHandler.hovered
+
+    signal clicked()
+
+    TapHandler {
+        grabPermissions: PointerHandler.ApprovesTakeOverByHandlersOfDifferentType
+        onTapped: root.clicked()
     }
 
-    StatusToolTip {
-        visible: tooltipSensor.containsMouse && !!text
+    HoverHandler {
+        id: hoverHandler
+        cursorShape: hovered ? Qt.PointingHandCursor : undefined
+    }
+
+    StatusLazyToolTip {
+        enabled: !!text
         text: root.tooltipText
     }
 }

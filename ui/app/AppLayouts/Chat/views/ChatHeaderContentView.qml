@@ -31,7 +31,7 @@ RowLayout {
     property int padding: Theme.halfPadding
 
     property var usersModel
-    property var amIChatAdmin
+    property bool amIChatAdmin
 
     property bool showMembersButtonHighlighted
 
@@ -65,7 +65,7 @@ RowLayout {
         readonly property string stateInfoButtonContent: ""
         readonly property string stateMembersSelectorContent: "selectingMembers"
 
-        readonly property bool selectingMembers: root.state == stateMembersSelectorContent
+        readonly property bool selectingMembers: root.state === stateMembersSelectorContent
     }
 
     ChatStores.MessageStore {
@@ -193,7 +193,7 @@ RowLayout {
                             hideIfPermissionsNotMet = chatContentModule.chatDetails.hideIfPermissionsNotMet
                         }
 
-                        onMuteChat: {
+                        onMuteChat: (chatId, interval) => {
                             if(!chatContentModule) {
                                 console.debug("error on mute chat from context menu - chat content module is not set")
                                 return
@@ -201,7 +201,7 @@ RowLayout {
                             chatContentModule.muteChat(interval)
                         }
 
-                        onUnmuteChat: {
+                        onUnmuteChat: chatId => {
                             if(!chatContentModule) {
                                 console.debug("error on unmute chat from context menu - chat content module is not set")
                                 return
@@ -209,7 +209,7 @@ RowLayout {
                             chatContentModule.unmuteChat()
                         }
 
-                        onMarkAllMessagesRead: {
+                        onMarkAllMessagesRead: chatId => {
                             if(!chatContentModule) {
                                 console.debug("error on mark all messages read from context menu - chat content module is not set")
                                 return
@@ -217,7 +217,7 @@ RowLayout {
                             chatContentModule.markAllMessagesRead()
                         }
 
-                        onClearChatHistory: {
+                        onClearChatHistory: chatId => {
                             if(!chatContentModule) {
                                 console.debug("error on clear chat history from context menu - chat content module is not set")
                                 return
@@ -225,7 +225,7 @@ RowLayout {
                             chatContentModule.clearChatHistory()
                         }
 
-                        onLeaveChat: {
+                        onLeaveChat: chatId => {
                             if(!chatContentModule) {
                                 console.debug("error on leave chat from context menu - chat content module is not set")
                                 return
@@ -233,12 +233,11 @@ RowLayout {
                             chatContentModule.leaveChat()
                         }
 
-                        onDeleteCommunityChat: root.rootStore.removeCommunityChat(chatId)
+                        onDeleteCommunityChat: chatId => root.rootStore.removeCommunityChat(chatId)
 
-                        onDisplayProfilePopup: {
-                            Global.openProfilePopup(publicKey)
-                        }
-                        onDisplayEditChannelPopup: {
+                        onDisplayProfilePopup: publicKey => Global.openProfilePopup(publicKey)
+
+                        onDisplayEditChannelPopup: chatId => {
                             root.displayEditChannelPopup(chatId, chatName, chatDescription,
                                                          chatEmoji, chatColor,
                                                          chatCategoryId, channelPosition,
@@ -248,7 +247,7 @@ RowLayout {
                         onAddRemoveGroupMember: {
                             root.addRemoveGroupMember()
                         }
-                        onUpdateGroupChatDetails: {
+                        onUpdateGroupChatDetails: (chatId, groupName, groupColor, groupImage) => {
                             root.rootStore.chatCommunitySectionModule.updateGroupChatDetails(
                                         chatId,
                                         groupName,
