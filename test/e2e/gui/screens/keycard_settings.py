@@ -122,6 +122,12 @@ class KeycardSettingsView(QObject):
         self._unblock_puk_item.click()
         return KeycardManagementPopup().wait_until_appears()
 
+    @allure.step('Unblock Keycard with recovery phrase')
+    def unblock_with_recovery(self) -> KeycardManagementPopup:
+        self._unblock_recovery_item.wait_until_appears()
+        self._unblock_recovery_item.click()
+        return KeycardManagementPopup().wait_until_appears()
+
     @allure.step('Wait until blocked Keycard details appear')
     def wait_until_blocked_details_appear(
             self,
