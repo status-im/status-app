@@ -22,6 +22,11 @@ Rectangle {
         }
     }
 
+    function hide() {
+        hideTimer.stop()
+        statusText.text = ""
+    }
+
     StatusBaseText {
         id: statusText
         anchors.fill: parent
