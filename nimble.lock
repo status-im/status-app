@@ -592,15 +592,15 @@
       }
     },
     "statusgo": {
-      "version": "#c0405cf6ba22e50f42eccedd0ea16edf5d652397",
-      "vcsRevision": "c0405cf6ba22e50f42eccedd0ea16edf5d652397",
+      "version": "#56ae4167518a2e1fcfcb5aa75ffac367056c3dc0",
+      "vcsRevision": "56ae4167518a2e1fcfcb5aa75ffac367056c3dc0",
       "url": "https://github.com/status-im/status-go.git",
       "downloadMethod": "git",
       "dependencies": [
         "sds"
       ],
       "checksums": {
-        "sha1": "25395131a42c36c6324c217ff1b561f126151c38"
+        "sha1": "8a85f3257c7c6ecc06cde992b72fbbaa19bc4cf2"
       }
     }
   },
