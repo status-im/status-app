@@ -282,6 +282,22 @@ Item {
                     "/tmp/status-downloads/report.pdf")
         }
 
+        function test_defaultDownloadsDirectory_isLocalPath() {
+            const store = createStore()
+            verify(!store.downloadsDirectory.startsWith("file:"), store.downloadsDirectory)
+            verify(!/^\/[A-Za-z]:/.test(store.downloadsDirectory), store.downloadsDirectory)
+        }
+
+        function test_downloadTarget_windowsDriveDirectory() {
+            const store = createStore()
+            store.downloadsDirectory = "C:/Users/x/Downloads"
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            compare(store.acceptLiveDownload(live, null), "C:/Users/x/Downloads/report.pdf")
+            compare(live.downloadDirectory, "C:/Users/x/Downloads")
+            compare(live.downloadFileName, "report.pdf")
+        }
+
         function test_downloadTarget_addsCollisionSuffixes() {
             const store = createStore()
             store.downloadsDirectory = "/tmp/status-downloads"
