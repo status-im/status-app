@@ -1,5 +1,7 @@
 pragma ComponentBehavior: Bound
 
+import QtCore
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -13,6 +15,14 @@ SplitView {
 
     readonly property int initialMessageCount: 200
 
+    // Delegate loading ////////////////////////////////////////////////////////
+    //
+    // The delay is drawn per row from [0, maxDelegateLoadingDelay], which is
+    // what makes a batch arrive scattered rather than all at once.
+
+    readonly property bool asynchronousDelegates: asyncSwitch.checked
+    readonly property int maxDelegateLoadingDelay: maxDelaySpinBox.value
+
     // Sample data /////////////////////////////////////////////////////////////
     //
     // Deterministic on purpose - every reload gives the same heights, so what
@@ -24,6 +34,23 @@ SplitView {
 
     QtObject {
         id: d
+
+        // Control defaults. Named here rather than inlined, so the initial
+        // value of a control and what "Restore defaults" puts back cannot
+        // drift apart.
+        readonly property bool defaultAsynchronous: true
+        readonly property int defaultMaxDelay: 200
+        readonly property int defaultInsertCount: 10
+        readonly property int defaultInsertPosition: 0   // "End"
+        readonly property int defaultInsertIndex: 0
+
+        function restoreDefaults() {
+            asyncSwitch.checked = d.defaultAsynchronous
+            maxDelaySpinBox.value = d.defaultMaxDelay
+            countSpinBox.value = d.defaultInsertCount
+            positionComboBox.currentIndex = d.defaultInsertPosition
+            indexSpinBox.value = d.defaultInsertIndex
+        }
 
         readonly property var lorem:
             ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
@@ -110,21 +137,35 @@ SplitView {
 
                     model: messagesModel
 
-                    delegate: MessageDelegate {
+                    delegate: Loader {
                         id: messageItem
+
+                        Timer {
+                            interval: Math.random() * root.maxDelegateLoadingDelay
+                            running: true
+
+                            onTriggered: {
+                                messageItem.active = true
+                            }
+                        }
+
+                        asynchronous: root.asynchronousDelegates
+
+                        active: false
+                        width: messagesColumn.width
+                        height: messageItem.implicitHeight
 
                         required property string messageText
                         required property var messageImages
                         required property date messageDate
                         required property string messageAvatar
 
-                        width: messagesColumn.width
-                        height: messageItem.implicitHeight
-
-                        text: messageItem.messageText
-                        images: messageItem.messageImages
-                        date: messageItem.messageDate
-                        avatar: messageItem.messageAvatar
+                        sourceComponent: MessageDelegate {
+                            text: messageItem.messageText
+                            images: messageItem.messageImages
+                            date: messageItem.messageDate
+                            avatar: messageItem.messageAvatar
+                        }
                     }
                 }
             }
@@ -156,6 +197,43 @@ SplitView {
             Item { Layout.preferredHeight: 8 }
 
             Label {
+                text: "Delegate loading"
+                font.bold: true
+            }
+
+            Switch {
+                id: asyncSwitch
+
+                Layout.fillWidth: true
+
+                text: "Asynchronous"
+                checked: d.defaultAsynchronous
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label { text: "Max delay" }
+
+                SpinBox {
+                    id: maxDelaySpinBox
+
+                    Layout.fillWidth: true
+
+                    from: 0
+                    to: 5000
+                    stepSize: 50
+                    value: d.defaultMaxDelay
+                    editable: true
+
+                    textFromValue: (value) => value + " ms"
+                    valueFromText: (text) => parseInt(text)
+                }
+            }
+
+            Item { Layout.preferredHeight: 8 }
+
+            Label {
                 text: "Insert messages"
                 font.bold: true
             }
@@ -172,7 +250,7 @@ SplitView {
 
                     from: 1
                     to: 1000
-                    value: 10
+                    value: d.defaultInsertCount
                     editable: true
                 }
             }
@@ -188,6 +266,7 @@ SplitView {
                     Layout.fillWidth: true
 
                     model: ["End", "Beginning", "Index"]
+                    currentIndex: d.defaultInsertPosition
                 }
             }
 
@@ -208,6 +287,7 @@ SplitView {
 
                     from: 0
                     to: messagesModel.count
+                    value: d.defaultInsertIndex
                     editable: true
                 }
             }
@@ -227,7 +307,29 @@ SplitView {
                     root.insertMessages(countSpinBox.value, index)
                 }
             }
+
+            Item { Layout.preferredHeight: 16 }
+
+            Button {
+                Layout.fillWidth: true
+
+                text: "Restore defaults"
+
+                onClicked: d.restoreDefaults()
+            }
         }
+    }
+
+    // Kept across reloads, so a hot reload does not silently drop the view back
+    // to whatever the default happened to be mid-experiment.
+    Settings {
+        category: "WindowedChatViewPage"
+
+        property alias asynchronousDelegates: asyncSwitch.checked
+        property alias maxDelegateLoadingDelay: maxDelaySpinBox.value
+        property alias insertCount: countSpinBox.value
+        property alias insertPosition: positionComboBox.currentIndex
+        property alias insertIndex: indexSpinBox.value
     }
 }
 
