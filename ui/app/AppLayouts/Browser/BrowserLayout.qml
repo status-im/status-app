@@ -53,10 +53,6 @@ StatusSectionLayout {
     required property var connectorController
 
     property bool isDebugEnabled: false
-    property string platformOS: Qt.platform.os
-
-    readonly property string userAgent: browserConfig.httpUserAgent
-
     signal sendToRecipientRequested(string address)
 
     function openUrlInNewTab(url, initialTitle, activate=false) {
@@ -78,10 +74,6 @@ StatusSectionLayout {
             if (tab)
                 tab.loadFileUrl(fileUrl, readAccessUrl || "")
         })
-    }
-
-    function reloadCurrentTab() {
-        webViewContext.reloadCurrent()
     }
 
     // Drive the current tab from Storybook / automation (web content is not in AX).
@@ -832,7 +824,6 @@ StatusSectionLayout {
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
         onLaunchFindBar: _internal.showFindBar()
-        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
         onLaunchBrowserSettings: {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
         }
@@ -855,11 +846,9 @@ StatusSectionLayout {
 
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? false
         clearing: _internal.currentWebView?.clearing ?? false
-        compatibilityMode: localAccountSensitiveSettings.compatibilityMode
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
         onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
-        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSupportedFormatsRequested: _internal.openSupportedFormats()
@@ -1026,28 +1015,6 @@ StatusSectionLayout {
 
         userUID: root.userUID
         featureEnabled: root.dappsEnabled
-        httpUserAgent: {
-            if (localAccountSensitiveSettings.compatibilityMode) {
-                // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement
-                const os = root.platformOS
-                let platform = "X11; Linux x86_64" // default Linux
-                let mobile = ""
-                if (os === SQUtils.Utils.windows)
-                    platform = "Windows NT 11.0; Win64; x64"
-                else if (os === SQUtils.Utils.mac)
-                    platform = "Macintosh; Intel Mac OS X 10_15_7"
-                else if (os === SQUtils.Utils.android) {
-                    platform = "Linux; Android 10; K"
-                    mobile = "Mobile"
-                } else if (os === SQUtils.Utils.ios) {
-                    platform = "iPhone; CPU iPhone OS 18_6 like Mac OS X"
-                    mobile = "Mobile/15E148"
-                }
-
-                return "Mozilla/5.0 (%1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 %2 Safari/604.1".arg(platform).arg(mobile)
-            }
-            return ""
-        }
     }
 
     BCBrowserDappsProvider {
