@@ -17,7 +17,10 @@ Flickable {
     property Component fakeConversationPlaceholder
 
     property var model
-    //property alias model: messagesRepeater.model
+
+    // True while a batch is still being built off-view.
+    readonly property bool batchPending: proxyModel.loadCounter !== 0
+    //property alias model: messagesView.model
 
     // Simulated device load, forwarded to every delegate. See MessageDelegate
     // for what each one buys.
@@ -34,9 +37,146 @@ Flickable {
     // Kept short so the view tracks the wheel closely instead of coasting.
     property int wheelScrollDuration: 200
 
-    contentY: contentHeight - height
     contentWidth: root.width
     contentHeight: contentLayout.height
+
+    QtObject {
+        id: d
+
+        // Cleared once the view has been put on the newest message for the first
+        // time. See onContentHeightChanged.
+        property bool initialPositionPending: true
+
+        // The row the view is currently pinned to, if any, and the y it had when
+        // it was last seen - so a move can be measured, not just observed.
+        property Item anchorItem: null
+        property real lastAnchorY: 0
+
+        // Armed once the structural change is through, so the anchor can be let
+        // go as soon as it has done its job.
+        property bool releasePending: false
+    }
+
+    // `contentY: contentHeight - height` used to live here. As a declared binding
+    // it re-asserted itself on *every* contentHeight change - so the moment a
+    // batch landed, or rows left the window, the view was slammed back to the
+    // bottom. It only appeared to work because installing an anchor binding from
+    // JS replaced it. Position the view once, explicitly, and never again.
+    onContentHeightChanged: {
+        if (!d.initialPositionPending || messagesView.count === 0)
+            return
+
+        // Re-asserted on every change rather than done once: a content-sized
+        // ListView reaches its real height over several passes, so the first
+        // value is an estimate built from averageSize and lands short. Held
+        // until the view is actually used - see releaseInitialPosition.
+        root.contentY = root.contentHeight - root.height
+    }
+
+    // Stops holding the newest message in view. Called the moment the view is
+    // put to use - a deliberate scroll, or a batch arriving - after which
+    // position is whatever the user and the anchoring make it.
+    function releaseInitialPosition() {
+        d.initialPositionPending = false
+    }
+
+    // Pins the view to a row, so that whatever the layout does next the content
+    // under the viewport stays where it is.
+    //
+    // Installed from the model's own signals rather than when more rows are
+    // requested: the batch does not arrive for hundreds of milliseconds, and an
+    // offset captured that long ago describes where the view was, not where it
+    // is. Anything the user scrolled in between would be thrown away when the
+    // binding finally fired.
+    function anchorTo(item) {
+        root.releaseInitialPosition()
+
+        d.anchorItem = item
+
+        if (!item)
+            return
+
+        d.lastAnchorY = root.anchorPosition()
+
+        const offset = d.lastAnchorY - root.contentY
+
+        root.contentY = Qt.binding(() => messagesView.y + item.y - offset)
+    }
+
+    // Where the anchored row sits in the coordinates the outer Flickable
+    // scrolls. A ListView delegate's y is relative to the *ListView's* content
+    // item, so on its own it does not say where the row is in the column - it is
+    // short by the view's own y, which itself moves whenever the placeholder
+    // above it resizes. Both terms have to be in the binding, which is why this
+    // cannot be mapToItem(): a function call in a binding does not re-evaluate
+    // when the positions it read change.
+    function anchorPosition() {
+        // `y` reads back undefined on a destroyed object whose JS wrapper is
+        // still around, and that would poison contentY with NaN.
+        if (!d.anchorItem || d.anchorItem.y === undefined)
+            return 0
+
+        return messagesView.y + d.anchorItem.y
+    }
+
+    // Fires once the anchored row has stopped moving, which is the only reliable
+    // signal that the layout has finished reacting to the change.
+    Timer {
+        id: anchorReleaseDebounce
+
+        interval: 50
+        repeat: false
+
+        onTriggered: {
+            d.releasePending = false
+            root.releaseAnchor()
+        }
+    }
+
+    // Converts the anchor back into a plain value. Left installed, the binding
+    // outlives the change it was for, and any later move of that row - an image
+    // loading above it - would drag the view to an offset captured long ago.
+    //
+    // Deliberately not called when the user scrolls: a wheel scroll during the
+    // wait for a batch is exactly the case the anchor exists to survive.
+    function releaseAnchor() {
+        if (!d.anchorItem)
+            return
+
+        root.contentY = root.contentY
+        d.anchorItem = null
+    }
+
+    // A wheel scroll in flight is the one thing that can undo the anchor. It
+    // drives contentY from a destination captured before the rows arrived, and
+    // animations write with DontRemoveBinding - so the binding survives, fires,
+    // and is then overwritten on the animation's very next tick. Move its
+    // destination by however far the anchor moved and let it carry on from where
+    // the view now is.
+    Connections {
+        target: d.anchorItem
+
+        function onYChanged() {
+            const position = root.anchorPosition()
+            const delta = position - d.lastAnchorY
+            d.lastAnchorY = position
+
+            if (delta !== 0 && wheelScrollAnimation.running) {
+                const retargeted = Math.max(0, wheelScrollAnimation.to + delta)
+
+                wheelScrollAnimation.stop()
+                wheelScrollAnimation.from = root.contentY
+                wheelScrollAnimation.to = retargeted
+                wheelScrollAnimation.start()
+            }
+
+            // Not released on the first move: a content-sized ListView settles
+            // its height over several passes, so the first is rarely the last.
+            // Wait for them to stop instead.
+            if (delta !== 0 && d.releasePending)
+                anchorReleaseDebounce.restart()
+        }
+    }
 
     function moveDown() {
         // save "regular" values of max flick velocity and deceleration
@@ -79,7 +219,18 @@ Flickable {
     // shift, so the viewport stays on the same content once the new items are
     // inserted above or below it.
     function requestMoreIfPlaceholderReached() {
-        if (messagesRepeater.count === 0)
+        if (messagesView.count === 0)
+            return
+
+        // One shift at a time. This runs every time a wheel scroll settles, and
+        // scrolling keeps the placeholder in reach for as long as the batch takes
+        // to build - so without this a steady scroll fires a request per notch.
+        // Each one moves the window another 40 rows, and two of them overshoot a
+        // 60 row window completely: every row the view was holding onto is
+        // unloaded, there is nothing left to anchor to, and the message the user
+        // was reading is no longer in the model at all. The placeholder stays put
+        // meanwhile, so the next request simply happens once the batch has landed.
+        if (root.batchPending)
             return
 
         // topPlaceholder collapses to zero height when there is nothing more to
@@ -87,17 +238,6 @@ Flickable {
         const isTopPlaceholderVisible = root.contentY < topPlaceholder.height
 
         if (isTopPlaceholderVisible) {
-            const first = messagesRepeater.itemAt(0)
-
-            if (!first)
-                return
-
-            const offset = first.y - root.contentY
-
-            root.contentY = Qt.binding(() => {
-                return first.y - offset
-            })
-
             root.moreUpRequested()
             return
         }
@@ -105,20 +245,8 @@ Flickable {
         const isBottomPlaceholderVisible = bottomPlaceholder.visible &&
                                          root.contentY + root.height >= bottomPlaceholder.y
 
-        if (isBottomPlaceholderVisible) {
-            const last = messagesRepeater.itemAt(messagesRepeater.count - 1)
-
-            if (!last)
-                return
-
-            const offset = root.contentY - last.y
-
-            root.contentY = Qt.binding(() => {
-                return last.y + offset
-            })
-
+        if (isBottomPlaceholderVisible)
             root.moreDownRequested()
-        }
     }
 
     Connections {
@@ -147,10 +275,43 @@ Flickable {
             visible: active
         }
 
-        Repeater {
-            id: messagesRepeater
+        ListView {
+            id: messagesView
 
-            //model: root.model
+            Layout.fillWidth: true
+
+            // Sized to its own content, so it never scrolls itself and realises
+            // every row of the window - the outer Flickable is still the thing
+            // that scrolls. Note this is a feedback loop: the height decides
+            // which rows are realised, those decide averageSize, and averageSize
+            // decides contentHeight for the rows that are not
+            // (qquicklistview.cpp:505-523, :913). It converges once the height
+            // covers everything, but it takes a few passes to get there and does
+            // so again after each batch.
+            Layout.preferredHeight: contentHeight
+
+            // Not optional. A ListView is a Flickable, this one sits inside
+            // another, and pointer events are delivered innermost first - so
+            // without this the inner view swallows the wheel before the outer
+            // WheelHandler ever sees it.
+            interactive: false
+
+            // Delegates adopt an externally built instance, so they cannot be
+            // recycled: a reused delegate is handed a different contentInstance
+            // without Component.onCompleted running again, and the reparenting
+            // below would never happen for it. Off is the default; stated here
+            // because turning it on would break quietly.
+            reuseItems: false
+
+            // Every row of the window is meant to exist, and to keep existing.
+            // Sized to its content the view's height dips while rows leave -
+            // contentHeight is rebuilt from an averageSize estimate - and any
+            // delegate outside that shrunken range is released and later rebuilt
+            // as a different object. That breaks delegate identity across a
+            // shift, which the anchoring depends on: it holds a reference to a
+            // row and would be left pointing at a destroyed one. A buffer this
+            // large simply never lets go.
+            cacheBuffer: 1000000
 
             model: SortFilterProxyModel {
 
@@ -226,23 +387,41 @@ Flickable {
                     value: true
                 }
 
-    //             onRowsAboutToBeInserted: (parent, first, last) => {
-    //                 console.log("about inserted", first, last)
-    //             }
+                // Only a change at the head displaces what is below it, and
+                // therefore what the viewport is looking at; a change at the tail
+                // moves nothing above it. QQmlDelegateModel connects to
+                // rowsInserted and not to rowsAboutToBeInserted, so the Repeater's
+                // items here are still the pre-change set.
+                onRowsAboutToBeInserted: (parent, first, last) => {
+                    // The very first fill also arrives at index 0, but there is
+                    // nothing on screen to hold still and nothing to anchor to -
+                    // and treating it as a shift would release the initial
+                    // position before the view has even reached its height.
+                    if (first === 0 && messagesView.count > 0)
+                        root.anchorTo(messagesView.itemAtIndex(0))
+                }
 
-                // onRowsInserted: (parent, first, last) => {
-                //     console.log("inserted", first, last)
-                // }
+                // itemAt(last + 1), not itemAt(0): the rows being removed are
+                // about to be destroyed, and a binding onto one of them would be
+                // left pointing at nothing.
+                onRowsAboutToBeRemoved: (parent, first, last) => {
+                    if (first === 0)
+                        root.anchorTo(messagesView.itemAtIndex(last + 1))
+                }
+
+                onRowsInserted: d.releasePending = !!d.anchorItem
+                onRowsRemoved: d.releasePending = !!d.anchorItem
             }
 
+            // A ListView positions its delegates itself, so these are plain
+            // width/height rather than Layout attached properties.
             delegate: Item {
-                Layout.fillWidth: true
+                width: ListView.view.width
+                height: model.contentInstance.height
 
-                Layout.preferredHeight: model.contentInstance.height
                 Component.onCompleted: {
                     model.contentInstance.parent = this
                 }
-
             }
         }
 
@@ -267,6 +446,8 @@ Flickable {
         // deliver pixel deltas in scroll phases and are better served by
         // Flickable's own handling, which gives them momentum.
         onWheel: (event) => {
+            root.releaseInitialPosition()
+
             // High resolution wheels report deltas smaller than one full notch,
             // hence the proportional scaling rather than a per-event step.
             const notches = event.angleDelta.y / 120
