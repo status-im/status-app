@@ -24,7 +24,6 @@ StatusMenu {
     signal zoomOut()
     signal resetZoomFactor()
     signal launchFindBar()
-    signal toggleCompatibilityMode(bool checked)
     signal launchBrowserSettings()
     signal forceReload()
     signal clearSiteData()
@@ -123,13 +122,6 @@ StatusMenu {
         icon.name: "search-custom"
         shortcut: StandardKey.Find
         onTriggered: launchFindBar()
-    }
-
-    StatusAction {
-        text: qsTr("Compatibility mode")
-        checkable: true
-        checked: root.browserSettings.compatibilityMode
-        onToggled: toggleCompatibilityMode(checked)
     }
 
     StatusAction {

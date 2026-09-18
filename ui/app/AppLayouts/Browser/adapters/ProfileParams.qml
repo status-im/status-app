@@ -4,7 +4,8 @@ import QtQuick
 // To switch incognito mode, swap the tab's profileParams reference (default vs otr).
 QtObject {
     required property string userId
-    required property string userAgent
+    // Empty: the engine's own User-Agent, made honest by UserAgentUtils.
+    property string userAgent: ""
     required property var scripts
     required property bool offTheRecord
 
