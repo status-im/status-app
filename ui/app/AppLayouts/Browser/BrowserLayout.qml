@@ -356,6 +356,8 @@ StatusSectionLayout {
         }
 
         onCurrentWebViewChanged: {
+            // A hovered link belongs to the page it was hovered on.
+            statusBubble.hide()
             findBar.reset()
             // MobileWebView has no native-find dismiss signal; clear Find XOR on tab change.
             if (root.isMobile)
@@ -710,6 +712,9 @@ StatusSectionLayout {
         z: centerPanel.z + 1
         anchors.left: parent.left
         anchors.bottom: parent.bottom
+        // Sits above the desktop Download Pill strip; an inverted portrait layout puts the strip on top.
+        anchors.bottomMargin: root.showFooter && footerLoader.item
+                              && !(root.isPortrait && root.invertedLayout) ? footerLoader.height : 0
     }
 
     Connections {
