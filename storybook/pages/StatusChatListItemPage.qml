@@ -20,6 +20,7 @@ SplitView {
         StatusChatListItem {
             anchors.centerIn: parent
             name: ctrlName.text
+            isThread: ctrlThread.checked
             hasUnreadMessages: ctrlHasUnreadMessages.checked
             notificationsCount: ctrlNotificationsCount.value
             muted: ctrlMuted.checked
@@ -49,7 +50,7 @@ SplitView {
                 TextField {
                     Layout.fillWidth: true
                     id: ctrlName
-                    text: "Example channel"
+                    text: ctrlThread.checked ? "Example thread#1 foo bar baz" : "Example channel"
                     placeholderText: "name"
                 }
             }
@@ -74,17 +75,6 @@ SplitView {
                 text: "Muted"
             }
             RowLayout {
-                Label { text: "Online status:" }
-                ComboBox {
-                    Layout.fillWidth: true
-                    id: ctrlOnlineStatus
-                    model: [
-                        "Inactive",
-                        "Online"
-                    ]
-                }
-            }
-            RowLayout {
                 Label { text: "Type:" }
                 ComboBox {
                     Layout.fillWidth: true
@@ -100,6 +90,22 @@ SplitView {
                         "SCLI.Type.CommunityChat" // 6
                     ]
                 }
+            }
+            RowLayout {
+                enabled: ctrlType.currentIndex === 1
+                Label { text: "Online status:" }
+                ComboBox {
+                    Layout.fillWidth: true
+                    id: ctrlOnlineStatus
+                    model: [
+                        "Inactive",
+                        "Online"
+                    ]
+                }
+            }
+            CheckBox {
+                id: ctrlThread
+                text: "Is thread?"
             }
             CheckBox {
                 id: ctrlHighlighted

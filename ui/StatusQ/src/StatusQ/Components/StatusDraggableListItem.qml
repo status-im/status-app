@@ -239,15 +239,15 @@ AbstractButton {
     property bool drawBackgroundBorder: true
 
     Drag.dragType: Drag.Automatic
-    Drag.hotSpot.x: dragHandler.mouseX
-    Drag.hotSpot.y: dragHandler.mouseY
+    Drag.hotSpot.x: dragHandler.centroid.position.x
+    Drag.hotSpot.y: dragHandler.centroid.position.y
     Drag.keys: ["x-status-draggable-list-item-internal"]
 
     /*!
        \qmlproperty readonly bool StatusDraggableListItem::dragActive
        This property holds whether a drag is currently in progress
     */
-    readonly property bool dragActive: dragHandler.drag.active
+    readonly property bool dragActive: dragHandler.active
     onDragActiveChanged: {
         if (dragActive) {
             Drag.start()
@@ -309,32 +309,28 @@ AbstractButton {
         anchors.fill: parent
 
         acceptedButtons: Qt.LeftButton | Qt.RightButton
+        hoverEnabled: true
+        cursorShape: {
+            if (!root.enabled)
+                return undefined
+            if (root.dragEnabled)
+                return root.dragActive ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            return Qt.PointingHandCursor
+        }
 
         onClicked: (mouse) => {
             root.clicked(mouse)
         }
     }
 
-    // Qt6: use a TapHandler with a regular contentItem, and derive again from ItemDelegate
-    StatusMouseArea {
+    DragHandler {
         id: dragHandler
 
+        enabled: root.dragEnabled
         parent: root.dragByHandleOnly ? dragHandleIcon : root
-
-        anchors.fill: parent
-        drag.target: root.dragEnabled ? root : null
-        drag.axis: root.dragAxis
-        preventStealing: true // otherwise DND is broken inside a Flickable/ScrollView
-        propagateComposedEvents: true // handle mouse click from MouseArea below
-
-        cursorShape: {
-            if (!root.enabled)
-                return undefined
-            if (root.dragEnabled)
-                return root.dragActive ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-        }
-
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        target: root
+        yAxis.enabled: root.dragAxis === Drag.YAxis || root.dragAxis === Drag.XAndYAxis
+        xAxis.enabled: root.dragAxis === Drag.XAxis || root.dragAxis === Drag.XAndYAxis
     }
 
     RowLayout {
