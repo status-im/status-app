@@ -188,6 +188,8 @@ StatusSectionLayout {
         id: _internal
 
         readonly property Item currentWebView: webViewContext.currentWebView
+        // A hovered link belongs to the page it was hovered on.
+        onCurrentWebViewChanged: statusBubble.hide()
         readonly property bool currentTabIncognito: currentWebView?.incognito ?? false
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
         property real lastScrollPos: 0
@@ -709,6 +711,8 @@ StatusSectionLayout {
         z: centerPanel.z + 1
         anchors.left: parent.left
         anchors.bottom: parent.bottom
+        // Sits above the desktop Download Pill strip.
+        anchors.bottomMargin: root.showFooter && footerLoader.item ? footerLoader.height : 0
     }
 
     Connections {
