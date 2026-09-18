@@ -2812,10 +2812,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Знайти на сторінці</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>Режим сумісності</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>Інструменти розробника</translation>
     </message>
@@ -11720,10 +11716,6 @@ to load</source>
     <message>
         <source>Zoom Fit</source>
         <translation>Підігнати масштаб</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Режим сумісності</translation>
     </message>
     <message>
         <source>Supported formats</source>

@@ -2799,10 +2799,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Rechercher dans la page</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>Mode de compatibilité</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>Outils de développement</translation>
     </message>
@@ -11655,10 +11651,6 @@ chargement</translation>
     <message>
         <source>Zoom Fit</source>
         <translation>Ajuster le zoom à la fenêtre</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Mode de compatibilité</translation>
     </message>
     <message>
         <source>Supported formats</source>

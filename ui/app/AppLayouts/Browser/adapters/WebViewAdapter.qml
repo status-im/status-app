@@ -7,6 +7,8 @@ import StatusQ.Internal
 
 import AppLayouts.Browser.views
 
+import "UserAgentUtils.js" as UserAgentUtils
+
 AbstractWebView {
     id: root
 
@@ -324,7 +326,9 @@ AbstractWebView {
         when: !!(root.profile && root.profileParams && root.profileManager)
         target: root.profile
         property: "httpUserAgent"
-        value: root.profileParams.userAgent || root.profileManager.defaultHttpUserAgent
+        value: root.profileParams.userAgent
+               || UserAgentUtils.honestUserAgent(root.profileManager.defaultHttpUserAgent,
+                                                 Qt.application.version)
     }
 
     function applyProfileScripts() {
