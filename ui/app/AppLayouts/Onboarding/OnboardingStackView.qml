@@ -10,6 +10,13 @@ RecursiveStackView {
     readonly property bool backAvailable:
         topLevelItem ? (topLevelItem.backAvailableHint ?? true) : false
 
+    // Release focus and dismiss the keyboard unconditionally on every navigation,
+    // instead of chasing down individual fields on individual pages.
+    onCurrentItemChanged: {
+        root.forceActiveFocus()
+        Qt.inputMethod.hide()
+    }
+
     QtObject {
         id: d
 
