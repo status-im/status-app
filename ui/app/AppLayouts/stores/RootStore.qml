@@ -255,6 +255,10 @@ QtObject {
                 root.openUrl(url)
             }
 
+            function onOpenUrlInNewBrowserTab(url) {
+                root.openUrlInNewBrowserTab(url)
+            }
+
             function onOpenActivityCenter(group) {
                 root.activityCenterStore.setActiveNotificationGroup(group)
                 root.openActivityCenter()
@@ -310,6 +314,7 @@ QtObject {
 
     signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
     signal openUrl(string link)
+    signal openUrlInNewBrowserTab(string link)
     signal openActivityCenter()
     signal wcLinkActivated(string link)
     signal profileMigrationFlowRequested(bool migrateToKeycard)
