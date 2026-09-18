@@ -2,6 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import QtModelsToolkit
+import SortFilterProxyModel
+
 Flickable {
     id: root
 
@@ -13,7 +16,8 @@ Flickable {
 
     property Component fakeConversationPlaceholder
 
-    property alias model: messagesRepeater.model
+    property var model
+    //property alias model: messagesRepeater.model
 
     // Simulated device load, forwarded to every delegate. See MessageDelegate
     // for what each one buys.
@@ -32,7 +36,7 @@ Flickable {
 
     contentY: contentHeight - height
     contentWidth: root.width
-    contentHeight: content.height
+    contentHeight: contentLayout.height
 
     function moveDown() {
         // save "regular" values of max flick velocity and deceleration
@@ -129,7 +133,7 @@ Flickable {
     }
 
     ColumnLayout {
-        id: content
+        id: contentLayout
 
         width: root.width
 
@@ -146,11 +150,99 @@ Flickable {
         Repeater {
             id: messagesRepeater
 
-            delegate: MessageDelegate {
+            //model: root.model
+
+            model: SortFilterProxyModel {
+
+                sourceModel: ObjectProxyModel {
+                    id: proxyModel
+                    sourceModel: root.model
+
+                    property int loadCounter: 0
+
+                    onLoadCounterChanged: {
+                        if (loadCounter === 0) {
+                            console.log("X!")
+                            for (let i = 0; i < proxyModel.rowCount(); i++) {
+                                proxyModel.proxyObject(i).loaded = true
+                            }
+                        }
+
+                    }
+
+                    delegate: QtObject {
+                        id: opmDelegate
+
+                        property MessageDelegate contentInstance//: contentLoader.item
+                        property bool loaded//: contentLoader.status === Loader.Ready
+
+                        readonly property Loader contentLoader: Loader {
+                            id: loader
+
+                            asynchronous: true
+                            // active: false
+
+                            // Timer {
+                            //     interval: 2000
+                            //     running: true
+                            //     onTriggered: {
+                            //         loader.active = true
+                            //     }
+                            // }
+
+                            Component.onCompleted: {
+                                proxyModel.loadCounter++
+                            }
+
+                            sourceComponent: MessageDelegate {
+
+                                width: contentLayout.width
+
+                                text: model.text
+                                images: model.images
+                                date: model.date
+                                avatar: model.avatar
+
+                                //"text", "images", "date", "avatar"
+                                buildComplexity: root.delegateBuildComplexity
+                                paintComplexity: root.delegatePaintComplexity
+
+                                Component.onCompleted: {
+                                    opmDelegate.contentInstance = this
+                                    proxyModel.loadCounter--
+                                }
+
+                            }
+                        }
+                    }
+
+                    expectedRoles: ["text", "images", "date", "avatar"]
+                    exposedRoles: ["contentInstance", "loaded"]
+
+                }
+
+                filters: ValueFilter {
+                    roleName: "loaded"
+                    value: true
+                }
+
+    //             onRowsAboutToBeInserted: (parent, first, last) => {
+    //                 console.log("about inserted", first, last)
+    //             }
+
+                // onRowsInserted: (parent, first, last) => {
+                //     console.log("inserted", first, last)
+                // }
+            }
+
+            delegate: Item {
                 Layout.fillWidth: true
 
-                buildComplexity: root.delegateBuildComplexity
-                paintComplexity: root.delegatePaintComplexity
+                Layout.preferredHeight: model.contentInstance.height
+                Component.onCompleted: {
+                    model.contentInstance.parent = this
+                }
+
             }
         }
 

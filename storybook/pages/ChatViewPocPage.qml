@@ -11,7 +11,7 @@ import "ChatViewPocComponents"
 SplitView {
     id: root
 
-    readonly property int numberOfMessagesInViewport: 120
+    readonly property int numberOfMessagesInViewport: 60
 
     /**
      * Generates a sample Lorem Ipsum text with the specified number of words.
@@ -167,12 +167,12 @@ SplitView {
         property int appliedPaintComplexity: 0
     }
 
-    // Fires once per rendered frame.
-    FrameAnimation {
-        running: true
+    // // Fires once per rendered frame.
+    // FrameAnimation {
+    //     running: true
 
-        onTriggered: d.recordFrame(frameTime * 1000)
-    }
+    //     onTriggered: d.recordFrame(frameTime * 1000)
+    // }
 
     Timer {
         id: applyLoadTimer
@@ -381,7 +381,7 @@ SplitView {
                 Layout.fillWidth: true
 
                 from: 0
-                to: 256
+                to: 512
                 stepSize: 1
 
                 onValueChanged: applyLoadTimer.restart()
@@ -420,6 +420,10 @@ SplitView {
                 text: "Reset meter"
 
                 onClicked: d.resetStats()
+            }
+
+            Label {
+                text: "content height: " + flickable.contentHeight
             }
         }
     }

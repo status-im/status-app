@@ -11,8 +11,13 @@ MouseArea {
 
     //property Flickable container
 
-    readonly property var delegateModel: model
-    readonly property int index: model.index
+    property string text
+    property var images
+    property var date
+    property string avatar
+
+    //readonly property var delegateModel: model
+    //readonly property int index: model.index
     // readonly property int imagesSeed: model.imagesSeed
 
     // Simulated device load ///////////////////////////////////////////////////
@@ -49,7 +54,7 @@ MouseArea {
     AvatarImage {
         id: avatarImage
 
-        source: model.avatar
+        source: root.avatar
 
         x: 16
         y: 16
@@ -85,15 +90,15 @@ MouseArea {
 
                 color: "#888991"
                 font.pixelSize: 12
-                text: model.date.toLocaleDateString(null, Locale.ShortFormat)
-                      + ", " + model.date.toLocaleTimeString(null, Locale.ShortFormat)
+                text: root.date.toLocaleDateString(null, Locale.ShortFormat)
+                      + ", " + root.date.toLocaleTimeString(null, Locale.ShortFormat)
                 wrapMode: Text.Wrap
             }
         }
 
         TextEdit {
             color: "white"
-            text: model.text// + " 🙂 🥰 🥸"
+            text: root.text// + " 🙂 🥰 🥸"
             wrapMode: Text.Wrap
 
             textFormat: Text.MarkdownText
@@ -105,7 +110,7 @@ MouseArea {
         }
 
         ImageGrid {
-            model: root.delegateModel.images
+            model: root.images
         }
     }
 
@@ -189,7 +194,7 @@ MouseArea {
                     color: "#ff6b6b"
                     wrapMode: Text.Wrap
                     textFormat: Text.MarkdownText
-                    text: root.delegateModel.text
+                    text: root.text
                 }
             }
         }
