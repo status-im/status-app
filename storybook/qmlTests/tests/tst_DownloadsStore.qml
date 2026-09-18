@@ -5,6 +5,8 @@ import AppLayouts.Browser.adapters
 
 import utils
 
+import "../../../ui/app/AppLayouts/Browser/webview/DownloadFormatUtils.js" as DownloadFormatUtils
+
 /**
  * DownloadsStore seam: Download Records own list identity; a fake live Download
  * attaches for progress and can be destroyed without losing the Record.
@@ -280,6 +282,38 @@ Item {
             const live = createTemporaryObject(fakeDownloadComponent, root)
             compare(store.acceptLiveDownload(live, null),
                     "/tmp/status-downloads/report.pdf")
+        }
+
+        function test_localPathFromFileUrl_data() {
+            return [
+                { tag: "unix", url: "file:///Users/x/Downloads", path: "/Users/x/Downloads" },
+                { tag: "windows drive", url: "file:///C:/Users/x/Downloads", path: "C:/Users/x/Downloads" },
+                { tag: "encoded space", url: "file:///C:/Users/John%20Doe/Downloads", path: "C:/Users/John Doe/Downloads" },
+                { tag: "unc share", url: "file://server/share/Downloads", path: "//server/share/Downloads" },
+                { tag: "plain path", url: "/tmp/downloads", path: "/tmp/downloads" },
+                { tag: "empty", url: "", path: "" }
+            ]
+        }
+
+        function test_localPathFromFileUrl(data) {
+            compare(DownloadFormatUtils.localPathFromFileUrl(data.url), data.path)
+        }
+
+        function test_defaultDownloadsDirectory_isLocalPath() {
+            const store = createStore()
+            verify(!store.downloadsDirectory.startsWith("file:"), store.downloadsDirectory)
+            verify(!/^\/[A-Za-z]:/.test(store.downloadsDirectory), store.downloadsDirectory)
+        }
+
+        function test_downloadTarget_windowsDriveDirectory() {
+            const store = createStore()
+            store.downloadsDirectory = DownloadFormatUtils.localPathFromFileUrl(
+                "file:///C:/Users/x/Downloads")
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            compare(store.acceptLiveDownload(live, null), "C:/Users/x/Downloads/report.pdf")
+            compare(live.downloadDirectory, "C:/Users/x/Downloads")
+            compare(live.downloadFileName, "report.pdf")
         }
 
         function test_downloadTarget_addsCollisionSuffixes() {

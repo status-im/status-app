@@ -10,6 +10,8 @@ import utils
 
 import AppLayouts.Browser.adapters
 
+import "../webview/DownloadFormatUtils.js" as DownloadFormatUtils
+
 /**
  * Owns Download Records for the browser (see Browser CONTEXT / ADR 0006).
  * Live Backend downloads attach to Records; the list identity is the Record.
@@ -46,7 +48,7 @@ QtObject {
     // Host Download Target policy: platform downloads location (overridable in tests).
     property string downloadsDirectory: {
         const loc = StandardPaths.writableLocation(StandardPaths.DownloadLocation)
-        return loc ? String(loc).replace("file://", "") : ""
+        return loc ? DownloadFormatUtils.localPathFromFileUrl(loc) : ""
     }
 
     /// The one platform seam: filesystem, share/clipboard, and the two platform

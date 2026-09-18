@@ -160,3 +160,19 @@ function elideFileName(fileName, maxLength) {
     const tail = Math.floor(keep / 2)
     return base.substring(0, head) + "…" + base.substring(base.length - tail) + ext
 }
+
+/// file: URL → local path; a Windows drive keeps no leading slash ("file:///C:/x" → "C:/x").
+function localPathFromFileUrl(url) {
+    const s = String(url || "")
+    if (!/^file:/i.test(s))
+        return s
+    let path = s.substring(5)
+    if (path.startsWith("///"))
+        path = path.substring(2)
+    try {
+        path = decodeURIComponent(path)
+    } catch (e) {
+        // Malformed escapes: keep the path as written.
+    }
+    return /^\/[A-Za-z]:/.test(path) ? path.substring(1) : path
+}
