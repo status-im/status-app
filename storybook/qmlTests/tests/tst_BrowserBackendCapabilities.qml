@@ -22,5 +22,11 @@ Item {
             // This suite runs on the desktop (WebEngine) Backend.
             compare(BrowserBackendCapabilities.pdfViewerSupported, true)
         }
+
+        function test_imageViewerPageRequired_isFalseOnWebEngine() {
+            compare(typeof BrowserBackendCapabilities.imageViewerPageRequired, "boolean")
+            // This suite runs on the desktop (WebEngine) Backend.
+            compare(BrowserBackendCapabilities.imageViewerPageRequired, false)
+        }
     }
 }

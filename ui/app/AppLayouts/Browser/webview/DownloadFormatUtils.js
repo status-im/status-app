@@ -64,6 +64,13 @@ function canOpenInBrowser(mimeType, fileName, supportsPdf, mediaPlaybackSupporte
             && isPlayableMedia(ext ? "" : mime, name, proprietaryCodecs)
 }
 
+/// Raster image on the Open-in-Browser allowlist (same extension-first rule).
+function isImage(mimeType, fileName) {
+    const mime = String(mimeType || "").toLowerCase()
+    const ext = _extensionOf(String(fileName || "").toLowerCase())
+    return _allows(mime, ext, _IMAGE_MIME_TYPES, _IMAGE_EXTENSIONS)
+}
+
 /// One branch of the allowlist: the name's extension must be one of the
 /// branch's own, or — for a name without an extension — the MIME type must be.
 function _allows(mime, ext, mimeTypes, extensions) {

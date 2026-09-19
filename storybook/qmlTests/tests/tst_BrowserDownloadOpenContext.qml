@@ -319,6 +319,50 @@ Item {
             compare(written, 1)
         }
 
+        /// Android's WebView shows a local image at its natural size with no pinch
+        /// zoom; where the Backend needs it, the image opens in a page that fits it.
+        function test_openInBrowser_imageRoute_followsImagePageCapability() {
+            const ctx = createContext()
+            let pagePath = ""
+            let html = ""
+            ctx.writeTextFileFn = function(path, text) { pagePath = path; html = text; return true }
+
+            ctx.imageViewerPageRequired = false
+            verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
+            compare(pagePath, "", "no page where the Backend fits images itself")
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].endsWith("/tmp/downloads/photo.png"))
+
+            ctx.imageViewerPageRequired = true
+            verify(ctx.openInBrowser(completed("image/png", "my photo <1>.png"), false))
+            verify(pagePath.startsWith("/tmp/status-player/image-"), pagePath)
+            verify(pagePath.endsWith(".html"), pagePath)
+            compare(openedUrls.length, 2)
+            compare(openedUrls[1], "file://" + pagePath)
+            verify(html.indexOf('name="viewport"') >= 0, html)
+            verify(html.indexOf('src="file:///tmp/downloads/my%20photo%20%3C1%3E.png"') >= 0, html)
+            verify(html.indexOf("<1>") < 0, "the file name is escaped")
+
+            // Not an image: still a plain navigation.
+            verify(ctx.openInBrowser(completed("text/plain", "notes.txt"), false))
+            compare(openedUrls.length, 3)
+            verify(openedUrls[2].endsWith("/tmp/downloads/notes.txt"))
+
+            // No page (write failed): the image still opens, directly.
+            ctx.writeTextFileFn = function() { return false }
+            verify(ctx.openInBrowser(completed("image/jpeg", "b.jpg"), false))
+            compare(openedUrls.length, 4)
+            verify(openedUrls[3].endsWith("/tmp/downloads/b.jpg"))
+        }
+
+        function test_imageViewerPageRequired_defaultsToTheBackendCapability() {
+            const component = Qt.createComponent(root.openContextUrl)
+            verify(component.status === Component.Ready, component.errorString())
+            const ctx = createTemporaryObject(component, root)
+            compare(ctx.imageViewerPageRequired,
+                    BrowserBackendCapabilities.imageViewerPageRequired)
+        }
+
         /// The Capability is a Backend fact, not a platform check.
         function test_mediaPlayerPageRequired_defaultsToTheBackendCapability() {
             const component = Qt.createComponent(root.openContextUrl)

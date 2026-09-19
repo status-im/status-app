@@ -46,6 +46,18 @@ bool BrowserBackendCapabilities::isMediaPlayerPageRequired()
 #endif
 }
 
+bool BrowserBackendCapabilities::isImageViewerPageRequired()
+{
+#if defined(STATUSQ_MOBILE_BACKEND) && defined(Q_OS_ANDROID)
+    // The Android WebView draws a local image at its natural size and has
+    // pinch zoom off, so a large photo shows only its top-left corner.
+    return true;
+#else
+    // WebEngine and WKWebView fit a directly loaded image to the view.
+    return false;
+#endif
+}
+
 bool BrowserBackendCapabilities::isPdfViewerSupported()
 {
 #if defined(STATUSQ_MOBILE_BACKEND)

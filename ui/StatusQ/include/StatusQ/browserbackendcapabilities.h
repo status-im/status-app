@@ -12,6 +12,7 @@ class BrowserBackendCapabilities : public QObject
     Q_PROPERTY(bool inPageMediaPlaybackSupported READ inPageMediaPlaybackSupported CONSTANT)
     Q_PROPERTY(bool proprietaryCodecsSupported READ proprietaryCodecsSupported CONSTANT)
     Q_PROPERTY(bool mediaPlayerPageRequired READ mediaPlayerPageRequired CONSTANT)
+    Q_PROPERTY(bool imageViewerPageRequired READ imageViewerPageRequired CONSTANT)
     Q_PROPERTY(bool pdfViewerSupported READ pdfViewerSupported CONSTANT)
 
 public:
@@ -29,6 +30,10 @@ public:
     // a top-level navigation to a local media file into a download do.
     static bool isMediaPlayerPageRequired();
 
+    // Does a local image need our page that fits it to the screen? Only Backends
+    // that draw a directly loaded image unscaled, with pinch zoom off, do.
+    static bool isImageViewerPageRequired();
+
     // Can the Backend render a PDF inside a loaded page? WKWebView renders PDF
     // natively; the system Android WebView cannot render it at all.
     static bool isPdfViewerSupported();
@@ -36,5 +41,6 @@ public:
     bool inPageMediaPlaybackSupported() const { return isInPageMediaPlaybackSupported(); }
     bool proprietaryCodecsSupported() const { return isProprietaryCodecsSupported(); }
     bool mediaPlayerPageRequired() const { return isMediaPlayerPageRequired(); }
+    bool imageViewerPageRequired() const { return isImageViewerPageRequired(); }
     bool pdfViewerSupported() const { return isPdfViewerSupported(); }
 };

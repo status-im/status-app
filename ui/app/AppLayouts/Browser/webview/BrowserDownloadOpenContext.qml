@@ -69,6 +69,11 @@ QtObject {
     property bool mediaPlayerPageRequired:
         BrowserBackendCapabilities.mediaPlayerPageRequired
 
+    // Does this Backend show a local image unscaled? Then it opens in a page that
+    // fits it to the screen. Injectable for QML tests.
+    property bool imageViewerPageRequired:
+        BrowserBackendCapabilities.imageViewerPageRequired
+
     // Player pages for downloaded media (see mediaPlayerPageUrl); temp, disposable.
     // The subdirectory name is also an allowed root of the Backend's local-browsing
     // policy — keep in sync with kMediaPlayerDirName in browserprofileutils.cpp.
@@ -188,8 +193,44 @@ QtObject {
             return true
         }
 
+        if (root.imageViewerPageRequired
+                && DownloadFormatUtils.isImage(record.mimeType, record.fileName)) {
+            const page = imageViewerPageUrl(record)
+            if (page) {
+                root.openUrlFn(page)
+                return true
+            }
+        }
+
         root.openUrlFn(UrlUtils.urlFromUserInput(path))
         return true
+    }
+
+    /// Write (and reuse) a page that fits a downloaded image to the screen and
+    /// return its file URL, or "" when it cannot be written.
+    function imageViewerPageUrl(record) {
+        const path = String(record?.targetPath || "")
+        const dir = root.mediaPlayerDirectory
+        if (!path || !dir)
+            return ""
+        if (root.ensureDirectoryFn)
+            root.ensureDirectoryFn(dir)
+
+        const name = StringUtils.escapeHtml(String(record.fileName || ""))
+        // Every path segment is percent-encoded, so the src carries no quote to escape.
+        const html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            + '<title>' + name + '</title><style>'
+            + 'html,body{margin:0;height:100%;background:#0e0e0e}'
+            + 'body{display:flex;align-items:center;justify-content:center}'
+            + 'img{max-width:100%;max-height:100%;object-fit:contain}'
+            + '</style></head><body><img src="' + d.fileUrlForPage(path) + '" alt="' + name + '">'
+            + '</body></html>'
+
+        const pagePath = d.joinPath(dir, "image-" + d.pathKey(path) + ".html")
+        if (!root.writeTextFileFn(pagePath, html))
+            return ""
+        return UrlUtils.urlFromUserInput(pagePath)
     }
 
     /// Write (and reuse) a player page for a downloaded media Record and return its
