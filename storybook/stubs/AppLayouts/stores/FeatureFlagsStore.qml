@@ -7,4 +7,7 @@ QtObject {
     property bool swapEnabled: false
     property bool buyEnabled: false
     property bool keycardEnabled: false
+    property bool paraswapEnabled: false
+    property bool lifiEnabled: false
+    property bool swapProvidersEnabled: false
 }
