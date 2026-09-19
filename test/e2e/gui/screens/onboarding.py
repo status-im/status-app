@@ -21,7 +21,7 @@ from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
-from gui.components.keycard.management_popup import KeycardManagementPopup
+from gui.components.keycard.management_popup import KeycardDetailsView, KeycardManagementPopup
 from gui.objects_map import onboarding_names
 from scripts.tools.image import Image
 from scripts.utils.system_path import SystemPath
@@ -735,7 +735,44 @@ class KeycardLoginView(QObject):
     def __init__(self):
         super().__init__(onboarding_names.loginView_keycardBox)
         self.pin_input = QObject(onboarding_names.loginView_keycardPinInput)
+        self._info_text = TextLabel(onboarding_names.loginView_keycardInfoText)
+        self._unblock_button = Button(onboarding_names.loginView_unblockButton)
         self._lost_keycard_button = Button(onboarding_names.lostKeycardButton)
+
+    @property
+    def info_text(self) -> str:
+        return self._safe_info_text()
+
+    def _safe_info_text(self) -> str:
+        try:
+            obj = driver.waitForObject(self._info_text.real_name, 200)
+            return str(obj.text)
+        except (LookupError, RuntimeError, AttributeError, TypeError):
+            return ''
+
+    def _pin_value(self) -> str:
+        try:
+            obj = driver.waitForObject(self.pin_input.real_name, 200)
+            return str(getattr(obj, 'pinInput', '') or '')
+        except (LookupError, RuntimeError, AttributeError, TypeError):
+            return ''
+
+    def _wait_for_info_containing(self, expected_info: str, timeout_msec: int):
+        assert driver.waitFor(
+            lambda: expected_info in self._safe_info_text(),
+            timeout_msec,
+        ), f'Expected {expected_info!r} on login Keycard box, got {self._safe_info_text()!r}'
+
+    def _wait_for_pin_ready(self, expected_info: str, timeout_msec: int):
+        self.pin_input.wait_until_appears(timeout_msec)
+        self.pin_input.wait_until_stable()
+        assert driver.waitFor(
+            lambda: expected_info in self._safe_info_text()
+                    and self.pin_input.is_visible
+                    and len(self._pin_value()) == 0,
+            timeout_msec,
+        ), f'PIN input was not ready, info={self._safe_info_text()!r}'
+        time.sleep(0.3)
 
     @allure.step('Open Lost Keycard page')
     def open_lost_keycard_page(self) -> 'KeycardLostView':
@@ -744,9 +781,33 @@ class KeycardLoginView(QObject):
 
     @allure.step('Log in with Keycard PIN')
     def log_in_with_pin(self, pin: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC):
-        self.pin_input.wait_until_appears(timeout_msec)
+        self._wait_for_pin_ready('Enter Keycard PIN', timeout_msec)
         self.pin_input.object.setPin(pin)
         return self
+
+    @allure.step('Enter wrong PIN until Keycard is blocked')
+    def enter_wrong_pin_until_blocked(
+            self,
+            wrong_pin: str,
+            attempts: int = 3,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardLoginView':
+        for attempt in range(attempts):
+            remaining = attempts - attempt - 1
+            expected_info = 'Enter Keycard PIN' if attempt == 0 else 'PIN incorrect'
+            self._wait_for_pin_ready(expected_info, timeout_msec)
+            self.pin_input.object.setPin(wrong_pin)
+            if remaining > 0:
+                self._wait_for_info_containing('PIN incorrect', timeout_msec)
+            else:
+                self._unblock_button.wait_until_appears(timeout_msec)
+        return self
+
+    @allure.step('Open unblock Keycard details from login')
+    def open_unblock_details(self) -> KeycardDetailsView:
+        self._unblock_button.wait_until_appears()
+        self._unblock_button.click()
+        return KeycardDetailsView().wait_until_appears()
 
 
 class KeycardLostView(QObject):

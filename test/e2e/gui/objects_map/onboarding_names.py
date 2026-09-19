@@ -41,6 +41,12 @@ onboardingKeycardDetailsLoginWithThisKeycard = {"container": mainWindow_keycardD
 onboardingKeycardDetailsGoBackToLogin = {"container": mainWindow_keycardDetailsPage,
                                         "objectName": "keycardDetailsGoBackToLogin",
                                         "type": "StatusListItem", "visible": True}
+onboardingKeycardDetailsUnblockWithPuk = {"container": mainWindow_keycardDetailsPage,
+                                          "objectName": "keycardDetailsUnblockWithPuk",
+                                          "type": "StatusListItem", "visible": True}
+onboardingKeycardDetailsUnblockWithRecovery = {"container": mainWindow_keycardDetailsPage,
+                                               "objectName": "keycardDetailsUnblockWithRecovery",
+                                               "type": "StatusListItem", "visible": True}
 
 # Log in view
 loginWithKeycardButton = {"container": statusDesktop_mainWindow, "objectName": "btnWithKeycard", "type": "ListItemButton",
@@ -197,6 +203,10 @@ loginView_keycardBox = {"container": mainWindow_LoginView, "objectName": "keycar
                         "visible": True}
 loginView_keycardPinInput = {"container": loginView_keycardBox, "objectName": "pinInput", "type": "StatusPinInput",
                              "visible": True}
+loginView_keycardInfoText = {"container": loginView_keycardBox, "objectName": "loginKeycardInfoText",
+                             "type": "StatusBaseText", "visible": True}
+loginView_unblockButton = {"container": loginView_keycardBox, "objectName": "btnUnblock",
+                           "type": "MaybeOutlineButton", "visible": True}
 lostKeycardButton = {"container": mainWindow_LoginView, "objectName": "lostKeycardButon", "type": "StatusButton",
                      "visible": True}
 

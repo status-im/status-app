@@ -76,6 +76,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardLostBuyNew"
                     title: qsTr("Buy new")
                     subTitle: qsTr("Go to Keycard.tech and order Keycard")
                     components: [

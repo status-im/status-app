@@ -258,6 +258,20 @@ class KeycardManagementPopup(QObject):
         self.next_button.click()
         return self
 
+    @allure.step('Unblock Keycard with new PIN {new_pin} and recovery phrase')
+    def unblock_with_recovery_phrase(
+            self,
+            new_pin: str,
+            seed_phrase_words: typing.List[str],
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        self._wait_for_pin_step('Enter new PIN', timeout_msec)
+        self.pin_input.wait_until_appears(timeout_msec)
+        self.pin_input.object.setPin(new_pin)
+        self._wait_for_pin_step('Repeat new PIN', timeout_msec)
+        self.pin_input.object.setPin(new_pin)
+        return self.enter_recovery_phrase(seed_phrase_words)
+
     @allure.step('Wait for unblock success and close popup')
     def close_after_unblock_success(
             self,
@@ -307,6 +321,8 @@ class KeycardDetailsView(QObject):
         self.keycard_view_login_with_this_keycard = Button(
             onboarding_names.onboardingKeycardDetailsLoginWithThisKeycard)
         self.keycard_view_go_back_to_login = Button(onboarding_names.onboardingKeycardDetailsGoBackToLogin)
+        self._unblock_puk_item = Button(onboarding_names.onboardingKeycardDetailsUnblockWithPuk)
+        self._unblock_recovery_item = Button(onboarding_names.onboardingKeycardDetailsUnblockWithRecovery)
 
     @allure.step('Import a new keypair to Keycard and create new profile')
     def import_a_new_keypair(self):
@@ -326,3 +342,17 @@ class KeycardDetailsView(QObject):
     @allure.step('Go back to login screen from Keycard details page')
     def go_back_to_login(self):
         self.keycard_view_go_back_to_login.click()
+
+    @property
+    def is_unblock_puk_visible(self) -> bool:
+        return self._unblock_puk_item.is_visible
+
+    @property
+    def is_unblock_recovery_visible(self) -> bool:
+        return self._unblock_recovery_item.is_visible
+
+    @allure.step('Unblock Keycard with PUK from onboarding details')
+    def unblock_with_puk(self) -> KeycardManagementPopup:
+        self._unblock_puk_item.wait_until_appears()
+        self._unblock_puk_item.click()
+        return KeycardManagementPopup().wait_until_appears()
