@@ -2783,10 +2783,6 @@ Do you wish to override the security check and continue?</source>
         <translation>페이지에서 찾기</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>호환 모드</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>개발자 도구</translation>
     </message>
@@ -11603,10 +11599,6 @@ to load</source>
     <message>
         <source>Zoom Fit</source>
         <translation>맞춤 확대</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>호환 모드</translation>
     </message>
     <message>
         <source>Supported formats</source>
