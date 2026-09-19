@@ -41,6 +41,65 @@ from helpers.chat_helper import (
 from scripts.tools.image import Image
 from scripts.utils.generators import random_sticker
 
+SENT_OUTGOING_ENUM = 2
+DELIVERED_OUTGOING_ENUM = 3
+SENT_TICK_ICON = 'tiny/message/sent'
+DELIVERED_TICK_ICON = 'tiny/message/delivered'
+_OUTGOING_QML_DEPTH = 48
+
+
+def _iter_message_qml_nodes(obj, depth: int = _OUTGOING_QML_DEPTH):
+    roots = [obj]
+    try:
+        loaded = getattr(obj, 'item', None)
+        if loaded is not None:
+            roots.append(loaded)
+    except (RuntimeError, AttributeError):
+        pass
+    for root in roots:
+        yield root
+        try:
+            yield from walk_children(root, depth)
+        except (RuntimeError, AttributeError, LookupError):
+            pass
+
+
+def _qml_str(node, name: str) -> str:
+    try:
+        value = getattr(node, name, None)
+        return str(value) if value not in (None, '') else ''
+    except (RuntimeError, AttributeError):
+        return ''
+
+
+def _qml_int(node, name: str) -> typing.Optional[int]:
+    try:
+        value = getattr(node, name, None)
+        return int(value) if value not in (None, '') else None
+    except (RuntimeError, AttributeError, TypeError, ValueError):
+        return None
+
+
+def _qml_tick_flags(node) -> typing.Tuple[bool, bool]:
+    try:
+        icon = getattr(node, 'icon', None)
+        if icon is None:
+            return False, False
+        icon_name = str(icon)
+        return SENT_TICK_ICON in icon_name, DELIVERED_TICK_ICON in icon_name
+    except (RuntimeError, AttributeError):
+        return False, False
+
+
+def _nudge_outgoing_header(message: 'Message') -> None:
+    obj = message.object
+    try:
+        loaded = getattr(obj, 'item', None)
+        driver.mouseMove(loaded if loaded is not None else obj)
+    except (RuntimeError, AttributeError, LookupError, TypeError):
+        pass
+    message._outgoing = None
+
 
 def _find_named_descendant(parent, object_name: str):
     try:
@@ -149,12 +208,37 @@ class ToolBar(QObject):
         return PinnedMessagesPopup().wait_until_appears()
 
 
+class _OutgoingSnapshot(typing.NamedTuple):
+    status: str
+    enum: typing.Optional[int]
+    message_id: str
+    sent_tick: bool = False
+    delivered_tick: bool = False
+
+    def is_delivered(self) -> bool:
+        return (
+            self.delivered_tick
+            or self.status == 'delivered'
+            or self.enum == DELIVERED_OUTGOING_ENUM
+        )
+
+    def is_sent(self) -> bool:
+        if self.is_delivered():
+            return True
+        return (
+            self.sent_tick
+            or self.status == 'sent'
+            or self.enum in (SENT_OUTGOING_ENUM, DELIVERED_OUTGOING_ENUM)
+        )
+
+
 class Message:
     _UI_PARSE_DEPTH = 48
 
     def __init__(self, obj):
         self.object = obj
         self._ui_parsed = False
+        self._outgoing: typing.Optional[_OutgoingSnapshot] = None
         self.date: typing.Optional[str] = None
         self.time: typing.Optional[str] = None
         self.icon: typing.Optional[Image] = None
@@ -388,6 +472,54 @@ class Message:
     def is_sticker_message(self) -> bool:
         return bool(getattr(self.object, 'isSticker', False))
 
+    def _outgoing_snapshot(self) -> _OutgoingSnapshot:
+        if self._outgoing is None:
+            self._outgoing = self._read_outgoing_snapshot()
+        return self._outgoing
+
+    def _read_outgoing_snapshot(self) -> _OutgoingSnapshot:
+        status, enum, message_id = '', None, ''
+        sent_tick = delivered_tick = False
+
+        for node in _iter_message_qml_nodes(self.object):
+            raw_status = _qml_str(node, 'messageOutgoingStatus')
+            if raw_status == 'delivered' or not status:
+                status = raw_status or status
+            raw_enum = _qml_int(node, 'outgoingStatus')
+            if raw_enum == DELIVERED_OUTGOING_ENUM or enum is None:
+                enum = raw_enum if raw_enum is not None else enum
+            if not message_id:
+                message_id = _qml_str(node, 'messageId')
+            node_sent, node_delivered = _qml_tick_flags(node)
+            sent_tick |= node_sent
+            delivered_tick |= node_delivered
+            if delivered_tick or status == 'delivered' or enum == DELIVERED_OUTGOING_ENUM:
+                break
+
+        return _OutgoingSnapshot(status, enum, message_id, sent_tick, delivered_tick)
+
+    @property
+    def is_outgoing_delivered(self) -> bool:
+        self._outgoing = None
+        return self._outgoing_snapshot().is_delivered()
+
+    @property
+    def is_outgoing_sent(self) -> bool:
+        self._outgoing = None
+        return self._outgoing_snapshot().is_sent()
+
+    def describe_outgoing(self) -> str:
+        snapshot = self._outgoing_snapshot()
+        return (
+            f'id={snapshot.message_id!r} messageOutgoingStatus={snapshot.status!r} '
+            f'outgoingStatus={snapshot.enum!r} sent_tick={snapshot.sent_tick} '
+            f'delivered_tick={snapshot.delivered_tick}'
+        )
+
+    @property
+    def message_id(self) -> str:
+        return self._outgoing_snapshot().message_id
+
     @allure.step('Get title of link preview')
     def get_link_preview_title(self) -> str:
         self._ensure_ui_parsed()
@@ -458,22 +590,32 @@ class ChatView(QObject):
         self._deleted_message = QObject(messaging_names.chatMessageViewDelegate_deletedMessage_RowLayout)
         self._recent_messages_button = QObject(messaging_names.layout_recentMessagesButton_AnchorButton)
 
-    def _iter_message_objects(self, index: typing.Optional[int]):
+    def _iter_message_objects(self, index: typing.Optional[int], scroll_to_recent: bool = True):
         # message_list_item has different indexes if we run multiple instances, so we pass index
-        if index is not None:
-            self._message_list_item.real_name['index'] = index
-        else:
-            # When index is None, remove index from real_name so findAllObjects returns all list items
-            self._message_list_item.real_name.pop('index', None)
-        if self._recent_messages_button.is_visible:
-            self._recent_messages_button.click()
-        for item in driver.findAllObjects(self._message_list_item.real_name):
-            if getattr(item, 'isMessage', True):
-                yield item
+        real_name = self._message_list_item.real_name
+        previous_index = real_name.get('index')
+        try:
+            if index is not None:
+                real_name['index'] = index
+            else:
+                real_name.pop('index', None)
+            if scroll_to_recent and self._recent_messages_button.is_visible:
+                try:
+                    self._recent_messages_button.click()
+                except RuntimeError:
+                    pass
+            for item in driver.findAllObjects(real_name):
+                if getattr(item, 'isMessage', True):
+                    yield item
+        finally:
+            if previous_index is not None:
+                real_name['index'] = previous_index
+            else:
+                real_name.pop('index', None)
 
     @allure.step('Get messages')
-    def messages(self, index: int) -> typing.List[Message]:
-        return [Message(item) for item in self._iter_message_objects(index)]
+    def messages(self, index: int, scroll_to_recent: bool = True) -> typing.List[Message]:
+        return [Message(item) for item in self._iter_message_objects(index, scroll_to_recent)]
 
     @allure.step('Open send modal from address link in message')
     def open_send_modal_from_link(self, text: str, index: int = 0):
@@ -489,10 +631,11 @@ class ChatView(QObject):
             self,
             message_text: str,
             index: typing.Optional[int],
+            scroll_to_recent: bool = True,
     ) -> typing.Optional[Message]:
         indexes = (index, None) if index is not None else (None,)
         for current_index in indexes:
-            for item in self._iter_message_objects(current_index):
+            for item in self._iter_message_objects(current_index, scroll_to_recent):
                 if message_text in plain_text_from_message_object(item):
                     return Message(item)
         return None
@@ -521,6 +664,109 @@ class ChatView(QObject):
                 f'last error was {last_error!r}'
             )
         return message
+
+    def _latest_outgoing_message(self) -> typing.Optional[Message]:
+        # Incoming SDS ACKs from the other AUT sit above our bubble; skip them.
+        for index in range(20):
+            item = next(self._iter_message_objects(index, scroll_to_recent=index == 0), None)
+            if item is None:
+                return None
+            try:
+                if bool(getattr(item, 'amISender', False)):
+                    return Message(item)
+            except (RuntimeError, AttributeError):
+                continue
+        return None
+
+    def latest_message_id(self) -> str:
+        message = self._latest_outgoing_message()
+        return message.message_id if message is not None else ''
+
+    def _iter_outgoing_candidates(
+            self,
+            message_text: typing.Optional[str],
+            after_message_id: typing.Optional[str],
+    ) -> typing.List[Message]:
+        candidates = []
+        for item in self._iter_message_objects(None, scroll_to_recent=True):
+            if message_text is not None:
+                if message_text not in plain_text_from_message_object(item):
+                    continue
+            else:
+                try:
+                    if not bool(getattr(item, 'amISender', False)):
+                        continue
+                except (RuntimeError, AttributeError):
+                    continue
+            message = Message(item)
+            if after_message_id and message.message_id == after_message_id:
+                continue
+            candidates.append(message)
+        return candidates
+
+    def _resolve_outgoing_message(
+            self,
+            message_text: typing.Optional[str],
+            after_message_id: typing.Optional[str],
+    ) -> tuple[typing.Optional[Message], str]:
+        candidates = self._iter_outgoing_candidates(message_text, after_message_id)
+        if not candidates:
+            return None, 'message not found'
+        if message_text is None:
+            latest = self._latest_outgoing_message()
+            if latest is None or (after_message_id and latest.message_id == after_message_id):
+                return None, 'message not found'
+            target_id = latest.message_id
+            candidates = [
+                message for message in candidates if message.message_id == target_id
+            ] or [latest]
+        best = max(candidates, key=lambda message: message._outgoing_snapshot().is_delivered())
+        return best, best.describe_outgoing()
+
+    def _wait_until_outgoing(
+            self,
+            label: str,
+            is_ready,
+            message_text: typing.Optional[str] = None,
+            timeout_msec: int = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000,
+            after_message_id: typing.Optional[str] = None,
+    ) -> Message:
+        found = None
+        last_seen = ''
+
+        def reached() -> bool:
+            nonlocal found, last_seen
+            message, last_seen = self._resolve_outgoing_message(message_text, after_message_id)
+            if message is None:
+                return False
+            if is_ready(message):
+                found = message
+                return True
+            # Community header ticks/label often bind only after the bubble is hovered.
+            _nudge_outgoing_header(message)
+            if is_ready(message):
+                found = message
+                return True
+            return False
+
+        assert driver.waitFor(reached, timeout_msec), (
+            f'Outgoing message was not marked {label} within {timeout_msec} ms'
+            + (f': {message_text!r}' if message_text is not None else '')
+            + f'; last seen: {last_seen}'
+        )
+        return found
+
+    @allure.step('Wait until outgoing message is marked Sent')
+    def wait_until_outgoing_sent(self, message_text=None, **kwargs) -> Message:
+        return self._wait_until_outgoing(
+            'sent', lambda message: message.is_outgoing_sent, message_text, **kwargs,
+        )
+
+    @allure.step('Wait until outgoing message is marked Delivered')
+    def wait_until_outgoing_delivered(self, message_text=None, **kwargs) -> Message:
+        return self._wait_until_outgoing(
+            'delivered', lambda message: message.is_outgoing_delivered, message_text, **kwargs,
+        )
 
     @allure.step('Wait for message pinned state')
     def wait_for_message_pinned(
@@ -720,6 +966,7 @@ class ChatMessagesView(QObject):
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
         super().wait_until_appears(timeout_msec, check_interval)
         self._chat_input.wait_until_appears(timeout_msec)
+        self._message_field.wait_until_appears(timeout_msec)
         return self
 
     @property
@@ -767,12 +1014,13 @@ class ChatMessagesView(QObject):
 
     @allure.step('Send message to group chat')
     def send_message_to_group_chat(self, message: str):
-        self._message_field.click()
         self.type_message(message)
         self.confirm_sending_message()
 
     @allure.step('Type text to message field')
     def type_message(self, message: str):
+        self._message_field.wait_until_appears()
+        self._message_field.click()
         self._message_field.set_text_property(message)
 
     @allure.step('Confirm sending message')
@@ -835,6 +1083,28 @@ class ChatMessagesView(QObject):
     def send_image_to_chat(self, path_or_base64):
         self.choose_image(path_or_base64)
         self.send_message()
+
+    @allure.step('Attach images to chat input')
+    def choose_images(self, paths):
+        for path in paths:
+            self.choose_image(path)
+        return self
+
+    @allure.step('Send image album to chat')
+    def send_images_to_chat(self, paths):
+        self.choose_images(paths)
+        self.send_message()
+
+    @allure.step('Send GIF URL to chat')
+    def send_gif_to_chat(self, url: str):
+        chat_input = self._chat_input.object
+        try:
+            chat_input.selectGifUrlForTest(url)
+            return
+        except AttributeError:
+            pass
+        self.type_message(url)
+        self.confirm_sending_message()
 
     @allure.step('Choose image')
     def choose_image(self, path_or_base64):
