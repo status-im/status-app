@@ -403,7 +403,14 @@ QtObject {
     function sourceUrlString(record) {
         if (!record || record.url === undefined || record.url === null)
             return ""
-        return String(record.url)
+        // String(url) is QUrl's pretty form, which decodes %20 into a space; a
+        // URL parser re-encodes it so the link survives being shared as text.
+        const text = String(record.url)
+        try {
+            return new URL(text).href
+        } catch (e) {
+            return text
+        }
     }
 
     /// Mobile: system share sheet. Desktop: copy the Download Target path.
