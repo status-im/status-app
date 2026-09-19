@@ -31,12 +31,12 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Build output verbosity (V).',
       choices: ['0','1','2','3']
     )
     string(
       name: 'STATUS_GO_REF',
-      description: 'Override vendor/status-go submodule to this SHA/ref.',
+      description: 'Re-pin the status-go dependency to this SHA, branch or PR number.',
       defaultValue: ''
     )
     booleanParam(
@@ -74,13 +74,12 @@ pipeline {
     /* Control output the filename */
     APP_TYPE = "${utils.getAppType()}"
     PLATFORM = "android/arm64"
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
     QT_VERSION = "${QT_VERSION}"
     QT_ANDROID_PATH = "/opt/qt/${QT_VERSION}/android_arm64_v8a"
     QMAKE = "/opt/qt/${QT_VERSION}/android_arm64_v8a/bin/qmake"
     STATUS_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'apk', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
     STATUS_AAB_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'aab', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Enable test mode (hooks for e2e) for PR/nightly builds, but NOT for releases */
     STATUSQ_TESTMODE = "${!utils.isReleaseBuild()}"
   }

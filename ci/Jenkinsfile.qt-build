@@ -64,11 +64,6 @@ pipeline {
       defaultValue: '1.24.7',
     )
     string(
-      name: 'NIM_VERSION',
-      description: 'Nim language version',
-      defaultValue: '2.2.10',
-    )
-    string(
       name: 'NIX_VERSION',
       description: 'Nix package manager version',
       defaultValue: '2.24.11',
@@ -104,6 +99,7 @@ pipeline {
         script {
           image.inside('--entrypoint=""') {
             sh "qmake --version"
+            sh "nimble --version"
             sh "ls -la /opt/qt/${params.QT_VERSION}/"
           }
         }
@@ -131,7 +127,6 @@ pipeline {
               "--build-arg ANDROID_API_LEVEL=${params.ANDROID_API_LEVEL} " +
               "--build-arg ANDROID_NDK_VERSION=${params.ANDROID_NDK_VERSION} " +
               "--build-arg GOLANG_VERSION=${params.GOLANG_VERSION} " +
-              "--build-arg NIM_VERSION=${params.NIM_VERSION} " +
               "--build-arg NIX_VERSION=${params.NIX_VERSION} " +
               "."
             )
@@ -145,7 +140,7 @@ pipeline {
         script {
           image.inside('--entrypoint=""') {
             sh "qmake --version"
-            sh "nim --version"
+            sh "nimble --version"
             sh "go version"
             sh "protoc --version"
             sh "java -version"

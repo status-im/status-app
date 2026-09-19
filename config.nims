@@ -1,3 +1,9 @@
+# begin Nimble config (version 2)
+--noNimblePath
+when withDir(thisDir(), system.fileExists("nimble.paths")):
+  include "nimble.paths"
+# end Nimble config
+
 # Keep a separate nimcache per USE_SIMULATED_KEYCARD mode. That flag toggles -d:useSimulatedKeycard,
 # which adds/removes the KeycardTest* imports from libstatus-keycard-qt; sharing one cache let stale
 # (simulated) codegen leak into a non-simulated build -> dyld "Symbol not found: _KeycardTestCreateCard".
@@ -25,7 +31,8 @@ if hostOS == "macosx":
   # path), which the linker mis-parses — it consumes the next -rpath flag as its
   # argument and leaves a real path dangling as an input file
   # ("ld: file cannot be mmap()ed"). Only emit the flag when the dir is non-empty.
-  for rpathDir in [getEnv("QT_LIBDIR"), getEnv("STATUSGO_LIBDIR"), getEnv("STATUSKEYCARD_QT_LIBDIR")]:
+  # libsds carries an @rpath install name, so its dir must be an rpath too.
+  for rpathDir in [getEnv("QT_LIBDIR"), getEnv("STATUSGO_LIBDIR"), getEnv("NIMSDS_LIBDIR"), getEnv("STATUSKEYCARD_QT_LIBDIR")]:
     if rpathDir.len > 0:
       switch("passL", "-rpath " & rpathDir)
   let statusqInstallPath = getEnv("STATUSQ_INSTALL_PATH")

@@ -1,5 +1,5 @@
 ## Thin wrapper around the status-go `storagestats` JSON-RPC namespace.
-## See vendor/status-go/services/storagestats/service.go for the server side.
+## Server side: pkg/services/storagestats/service.go in status-go.
 import json
 import core
 import response_type

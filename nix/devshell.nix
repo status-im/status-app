@@ -43,7 +43,7 @@ in
         go_1_26                    # 1.26.3
         libglvnd
         mockgen                    # v0.6.0
-        nim                        # 2.2.4
+        nimble                     # 0.24.1 (nix/packages/nimble.nix); no nim: it would shadow the pin
         openssl
         pcre
         pkg-config

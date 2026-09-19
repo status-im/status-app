@@ -16,10 +16,9 @@ echo "platform changed ($PREV -> $KEY); cleaning shared artifacts" >&2
 
 # 1) qrcodegen (desktop links directly, mobile builds into the same tree)
 make -C "$GIT_ROOT/vendor/QR-Code-generator/c" clean 2>/dev/null || true
-# 2) nim-sds (shared libsds.* + nimcache)
-rm -rf "$GIT_ROOT/vendor/nim-sds/build" 2>/dev/null || true
-[ -n "${HOME:-}" ] && rm -rf "$HOME"/.cache/nim/libsds_* 2>/dev/null || true
+# 2) libsds (shared libsds.* + its nimcache under the status-go build root)
+rm -rf "$GIT_ROOT/.statusgo-build/.sds-build" 2>/dev/null || true
 # 3) status-go (shared build/ between make run and mobile-run)
-rm -rf "$GIT_ROOT/vendor/status-go/build" 2>/dev/null || true
+rm -rf "$GIT_ROOT/.statusgo-build/build" 2>/dev/null || true
 
 echo "$KEY" > "$STATE"

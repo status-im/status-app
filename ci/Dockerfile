@@ -3,7 +3,8 @@ ARG QT_MODULES="qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtweb
 ARG LINUXDEPLOYQT_VERSION="20250615-0393b84"
 ARG PCSCLITE_VERSION="2.2.3"
 ARG PCSCLITE_SHA256="6e0205a47ec0dd10c000965ee88e08e60c2f7f3ce7280ce0e624915821ea2402"
-ARG NIM_VERSION="2.2.10"
+ARG NIMBLE_VERSION="0.24.1"
+ARG NIMBLE_SHA256="5bbcea2999f79b7a5aff1409fa28ffead5954e5aa4a87a5055a53530d0d615de"
 ARG CCID_VERSION="1.7.0"
 ARG CCID_SHA256="4abe76010a72944e02e8d5d4d60ba665f941891eee2a35f77fd35cebc095e14b"
 
@@ -63,7 +64,7 @@ RUN cd builddir && ninja && ninja install
 # Build Image ------------------------------------------------------------------
 FROM ubuntu:22.04
 
-ARG QT_VERSION LINUXDEPLOYQT_VERSION PCSCLITE_VERSION NIM_VERSION
+ARG QT_VERSION LINUXDEPLOYQT_VERSION PCSCLITE_VERSION NIMBLE_VERSION NIMBLE_SHA256
 
 # Adapted from a12e/docker-qt by Aurélien Brooke
 
@@ -187,19 +188,15 @@ RUN curl -s https://nixos.org/releases/nix/nix-2.24.11/install | sh -s -- --no-d
 # for nix-shell to work
 ENV PATH="/home/jenkins/.nix-profile/bin:${PATH}"
 
-# Nim
-RUN curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y \
- && /home/jenkins/.nimble/bin/choosenim ${NIM_VERSION}
-ENV PATH="/home/jenkins/.nimble/bin:${PATH}"
-
-# Switch to root to create system-wide symlinks for Nim tools
+# Nimble only: a nim beside it would shadow the pinned compiler.
 USER root
-
-RUN ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nim /usr/local/bin/nim \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nimble /usr/local/bin/nimble \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/choosenim /usr/local/bin/choosenim \
- && chmod 755 /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/* \
- && chown -R root:root /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin
+RUN curl -fsSLo /tmp/nimble.tar.gz "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-linux_x64.tar.gz" \
+ && echo "${NIMBLE_SHA256}  /tmp/nimble.tar.gz" | sha256sum -c \
+ && mkdir -p /opt/nimble \
+ && tar -xzf /tmp/nimble.tar.gz -C /opt/nimble \
+ && rm -f /tmp/nimble.tar.gz \
+ && chmod 755 /opt/nimble/nimble
+ENV PATH="/opt/nimble:${PATH}"
 
 USER jenkins
 

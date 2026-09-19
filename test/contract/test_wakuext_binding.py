@@ -13,8 +13,9 @@ Three static forms name a wakuext method in the app:
   3. `rpc(<name>, "wakuext")` — the src/backend/gen.nim macro composes the
      method string at compile time.
 
-Every name from all three forms must resolve to a method the vendored
-status-go (the shipped pin) registers under the `wakuext` namespace.
+Every name from all three forms must resolve to a method the pinned
+status-go (a checkout at the manifest's pin) registers under the `wakuext`
+namespace.
 Name-existence only: a method that exists but changed its params is out of
 scope — the registered set is a superset of the truly-callable one.
 
@@ -35,7 +36,9 @@ import pytest
 
 _HERE = Path(__file__).resolve()
 APP_ROOT = _HERE.parents[2]
-STATUS_GO_ROOT = APP_ROOT / "vendor" / "status-go"
+# A checkout at the pin (scripts/status-go-checkout.sh -> .statusgo-src), or STATUSGO_SRC.
+STATUS_GO_ROOT = (Path(os.environ["STATUSGO_SRC"]) if os.environ.get("STATUSGO_SRC")
+                  else APP_ROOT / ".statusgo-src")
 
 # wakuv2ext serves the `wakuext` namespace and embeds ext's PublicAPI, so the
 # registered set is the union of both files. test_wakuext_namespace_wiring
@@ -56,7 +59,7 @@ _APP_SRC_SUFFIXES = {".nim", ".java", ".kt", ".swift", ".m", ".mm", ".qml",
                      ".js", ".jsx", ".mjs", ".ts", ".tsx", ".cpp", ".cc",
                      ".h", ".hpp"}
 _SCAN_SKIP_DIRS = {"vendor", ".git", "build", "node_modules", "result", ".cache",
-                     ".claude"}
+                     ".claude", ".statusgo-src", ".statusgo-build"}
 
 _GO_METHOD_RE = re.compile(r"^func \(\w+ \*PublicAPI\) ([A-Z][A-Za-z0-9]*)\(", re.M)
 _LITERAL_RE = re.compile(r'"wakuext_([A-Za-z0-9_]+)"')
@@ -96,7 +99,6 @@ _UNRESOLVED_ALLOWLIST: set[tuple[str, str]] = {
     ("src/backend/core.nim", "inputJSON"),
     ("src/backend/core.nim", "$inputJSON"),
     ("src/backend/core.nim", "methodName"),
-    ("src/status_go.nim", "inputJSON.cstring"),
 }
 
 # Call sites that name a method the shipped status-go genuinely does not
@@ -260,7 +262,8 @@ def test_wakuext_namespace_wiring():
     svc = STATUS_GO_ROOT / _GO_SERVICES_DIR / "wakuv2ext" / "service.go"
     assert api.is_file() and svc.is_file(), (
         f"wakuv2ext sources missing under {STATUS_GO_ROOT / _GO_SERVICES_DIR} — "
-        f"is the status-go submodule checked out, or did the layout move?"
+        f"run scripts/status-go-checkout.sh (or set STATUSGO_SRC), or did the "
+        f"layout move?"
     )
     assert re.search(r"type PublicAPI struct \{[^}]*\*ext\.PublicAPI", api.read_text(), re.S), (
         "wakuv2ext.PublicAPI no longer embeds ext.PublicAPI — the registered-"
@@ -277,7 +280,7 @@ def test_wakuext_call_sites_resolve():
     registered = registered_methods()
     assert registered, (
         f"No wakuext methods parsed from {STATUS_GO_ROOT} — is the status-go "
-        f"submodule checked out?"
+        f"checkout there (scripts/status-go-checkout.sh, or STATUSGO_SRC)?"
     )
     checked, _, _, _ = collect()
     assert checked, (

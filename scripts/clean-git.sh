@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Extracted from Makefile to avoid nimbus-build-system blocking use.
+# Extracted from Makefile so it runs without the Makefile's prerequisites (Qt, nimble).
 git clean -qfdx
 # nuke vendor, they're regenerated anyways
 rm -rf vendor
