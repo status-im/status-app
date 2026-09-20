@@ -6,6 +6,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import SortFilterProxyModel 0.2
+
 import Storybook
 
 import "ChatViewPocComponents"
@@ -14,6 +16,14 @@ SplitView {
     id: root
 
     readonly property int initialMessageCount: 200
+
+    // Window //////////////////////////////////////////////////////////////////
+    //
+    // Only a slice of the source model reaches the view. Nothing moves the
+    // window yet - it is placed by hand from the panel.
+
+    readonly property int windowFirst: windowFirstSpinBox.value
+    readonly property int windowSize: windowSizeSpinBox.value
 
     // Delegate loading ////////////////////////////////////////////////////////
     //
@@ -38,6 +48,9 @@ SplitView {
         // Control defaults. Named here rather than inlined, so the initial
         // value of a control and what "Restore defaults" puts back cannot
         // drift apart.
+        readonly property int defaultWindowFirst: 0
+        readonly property int defaultWindowSize: 60
+
         readonly property bool defaultAsynchronous: true
         readonly property int defaultMaxDelay: 200
         readonly property int defaultInsertCount: 10
@@ -45,6 +58,8 @@ SplitView {
         readonly property int defaultInsertIndex: 0
 
         function restoreDefaults() {
+            windowFirstSpinBox.value = d.defaultWindowFirst
+            windowSizeSpinBox.value = d.defaultWindowSize
             asyncSwitch.checked = d.defaultAsynchronous
             maxDelaySpinBox.value = d.defaultMaxDelay
             countSpinBox.value = d.defaultInsertCount
@@ -111,6 +126,38 @@ SplitView {
         Component.onCompleted: append(d.createMessages(root.initialMessageCount))
     }
 
+    // Both bounds are inclusive, and IndexFilter reads them against the source
+    // model's rows, so this is a plain [first, first + size) slice.
+    SortFilterProxyModel {
+        id: windowModel
+
+        sourceModel: messagesModel
+
+        filters: IndexFilter {
+            id: windowFilter
+
+            minimumIndex: root.windowFirst
+            maximumIndex: root.windowFirst + root.windowSize - 1
+        }
+
+        // IndexFilter judges a row by its position, and QSortFilterProxyModel
+        // never re-tests a row it has already judged: an insertion renumbers
+        // the rows after it, so accepted rows stay accepted past maximumIndex
+        // and rejected rows never come back into range. The filter therefore
+        // has to be re-run whenever the source changes shape.
+        //
+        // Connected here rather than from a handler on the model, because the
+        // order matters: re-filtering from a slot that runs before the proxy
+        // has processed the same change is at best undone, and on a removal
+        // leaves empty rows behind. Connecting once the proxy is complete puts
+        // this after the proxy's own handler. (It assumes sourceModel is never
+        // reassigned, which would reconnect the proxy behind us.)
+        Component.onCompleted: {
+            messagesModel.rowsInserted.connect(windowFilter.invalidated)
+            messagesModel.rowsRemoved.connect(windowFilter.invalidated)
+        }
+    }
+
     Rectangle {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
@@ -135,7 +182,7 @@ SplitView {
                 Repeater {
                     id: messagesRepeater
 
-                    model: messagesModel
+                    model: windowModel
 
                     delegate: Loader {
                         id: messageItem
@@ -192,6 +239,49 @@ SplitView {
 
             Label {
                 text: "Items in the model: " + messagesModel.count
+            }
+
+            Item { Layout.preferredHeight: 8 }
+
+            Label {
+                text: "Window"
+                font.bold: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label { text: "First" }
+
+                SpinBox {
+                    id: windowFirstSpinBox
+
+                    Layout.fillWidth: true
+
+                    from: 0
+                    to: Math.max(0, messagesModel.count - 1)
+                    stepSize: 10
+                    value: d.defaultWindowFirst
+                    editable: true
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label { text: "Size" }
+
+                SpinBox {
+                    id: windowSizeSpinBox
+
+                    Layout.fillWidth: true
+
+                    from: 1
+                    to: 1000
+                    stepSize: 10
+                    value: d.defaultWindowSize
+                    editable: true
+                }
             }
 
             Item { Layout.preferredHeight: 8 }
@@ -325,6 +415,8 @@ SplitView {
     Settings {
         category: "WindowedChatViewPage"
 
+        property alias windowFirst: windowFirstSpinBox.value
+        property alias windowSize: windowSizeSpinBox.value
         property alias asynchronousDelegates: asyncSwitch.checked
         property alias maxDelegateLoadingDelay: maxDelaySpinBox.value
         property alias insertCount: countSpinBox.value
