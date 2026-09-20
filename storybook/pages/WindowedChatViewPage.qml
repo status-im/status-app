@@ -19,28 +19,53 @@ SplitView {
 
     // Window //////////////////////////////////////////////////////////////////
     //
-    // Only a slice of the source model reaches the view. Nothing moves the
-    // window yet - it is placed by hand from the panel.
+    // Only a slice of the source model reaches the view. The two bounds are
+    // independent state rather than first + size, because a slide has to move
+    // one end, wait, and only then move the other.
 
-    readonly property int windowFirst: windowFirstSpinBox.value
-    readonly property int windowSize: windowSizeSpinBox.value
+    readonly property int windowFirst: d.windowFirst
+    readonly property int windowLast: d.windowLast
+    readonly property int windowSize: d.windowLast - d.windowFirst + 1
+
+    // True while a slide in that direction is waiting for its delegates. "Up"
+    // means toward the beginning of the model - older messages - which is what
+    // scrolling up in a chat does.
+    readonly property bool movingUp: d.movingUp
+    readonly property bool movingDown: d.movingDown
 
     // Delegate loading ////////////////////////////////////////////////////////
     //
-    // The delay is drawn per row from [0, maxDelegateLoadingDelay], which is
-    // what makes a batch arrive scattered rather than all at once.
+    // The delay is drawn per row from [minDelegateLoadingDelay,
+    // maxDelegateLoadingDelay]. The spread is what makes a batch arrive
+    // scattered rather than all at once; the floor is what makes every row
+    // slow, which is a different kind of bad device.
 
     readonly property bool asynchronousDelegates: asyncSwitch.checked
+    readonly property int minDelegateLoadingDelay: minDelaySpinBox.value
     readonly property int maxDelegateLoadingDelay: maxDelaySpinBox.value
 
-    // Sample data /////////////////////////////////////////////////////////////
-    //
-    // Deterministic on purpose - every reload gives the same heights, so what
-    // the view does is comparable between runs. Each message carries its own
-    // serial in the text, so an insertion is visible for what it is.
-    //
-    // The roles are prefixed because MessageDelegate already owns `text`,
-    // `images`, `date` and `avatar`; a required property cannot redeclare them.
+    // Moves the window by `count` rows, clamped to what the model has left.
+    // Returns how far it actually went, 0 if it could not move or a slide is
+    // already running.
+    function slideWindowUp(count) {
+        return d.startSlide(-count)
+    }
+
+    function slideWindowDown(count) {
+        return d.startSlide(count)
+    }
+
+    // Inserts `count` freshly generated messages at `index`. Both ends are just
+    // indices - 0 is the beginning, model.count the end - so there is one path
+    // here regardless of what the panel asked for.
+    function insertMessages(count, index) {
+        const rows = d.createMessages(count)
+
+        if (index >= messagesModel.count)
+            messagesModel.append(rows)
+        else
+            messagesModel.insert(Math.max(0, index), rows)
+    }
 
     QtObject {
         id: d
@@ -50,22 +75,135 @@ SplitView {
         // drift apart.
         readonly property int defaultWindowFirst: 0
         readonly property int defaultWindowSize: 60
+        readonly property int defaultSlideStep: 10
 
         readonly property bool defaultAsynchronous: true
+        readonly property int defaultMinDelay: 0
         readonly property int defaultMaxDelay: 200
         readonly property int defaultInsertCount: 10
         readonly property int defaultInsertPosition: 0   // "End"
         readonly property int defaultInsertIndex: 0
 
         function restoreDefaults() {
-            windowFirstSpinBox.value = d.defaultWindowFirst
-            windowSizeSpinBox.value = d.defaultWindowSize
+            d.windowFirst = d.defaultWindowFirst
+            d.windowLast = d.defaultWindowFirst + d.defaultWindowSize - 1
+            slideStepSpinBox.value = d.defaultSlideStep
             asyncSwitch.checked = d.defaultAsynchronous
+            minDelaySpinBox.value = d.defaultMinDelay
             maxDelaySpinBox.value = d.defaultMaxDelay
             countSpinBox.value = d.defaultInsertCount
             positionComboBox.currentIndex = d.defaultInsertPosition
             indexSpinBox.value = d.defaultInsertIndex
         }
+
+        // Window state ////////////////////////////////////////////////////////
+
+        property int windowFirst: d.defaultWindowFirst
+        property int windowLast: d.defaultWindowFirst + d.defaultWindowSize - 1
+
+        // Slide state /////////////////////////////////////////////////////////
+
+        property bool movingUp: false
+        property bool movingDown: false
+
+        readonly property bool moving: d.movingUp || d.movingDown
+
+        // How far this slide is going, and how many of the rows it added are
+        // still building. Rows count themselves in and out, so nothing here
+        // has to guess which delegates belong to the batch.
+        property int slideAmount: 0
+        property int batchPending: 0
+
+        // Guards finishSlide() against being re-entered by the destruction of
+        // the rows it is itself trimming.
+        property bool finishing: false
+
+        // Grows the window at one end and leaves the other alone. The opposite
+        // end is trimmed in finishSlide(), once every delegate added here has
+        // something to show - that delay is the whole point: the two ends must
+        // not change in the same frame.
+        function startSlide(delta) {
+            if (d.moving)
+                return 0
+
+            const room = delta > 0 ? messagesModel.count - 1 - d.windowLast
+                                   : d.windowFirst
+            const n = Math.min(Math.abs(delta), room)
+
+            if (n <= 0)
+                return 0
+
+            d.slideAmount = n
+            d.batchPending = 0
+
+            // Set before the bound moves: the rows the proxy is about to insert
+            // read it as they are built, and hold themselves back.
+            if (delta > 0) {
+                d.movingDown = true
+                d.windowLast += n
+            } else {
+                d.movingUp = true
+                d.windowFirst -= n
+            }
+
+            // Repeater builds its delegates synchronously, so by now every row
+            // of the batch has counted itself in. Zero means there was nothing
+            // to wait for.
+            if (d.batchPending === 0)
+                d.finishSlide()
+
+            return n
+        }
+
+        function finishSlide() {
+            d.finishing = true
+
+            d.revealAll()
+
+            if (d.movingDown)
+                d.windowFirst += d.slideAmount
+            else
+                d.windowLast -= d.slideAmount
+
+            d.movingUp = false
+            d.movingDown = false
+            d.slideAmount = 0
+            d.finishing = false
+        }
+
+        function revealAll() {
+            for (let i = 0; i < messagesRepeater.count; i++) {
+                const row = messagesRepeater.itemAt(i)
+
+                if (row)
+                    row.revealed = true
+            }
+        }
+
+        // Called by every row as it is built. Returns whether the row joined
+        // the batch, which the row remembers so it reports back exactly once.
+        function rowCreated() {
+            if (!d.moving)
+                return false
+
+            d.batchPending++
+            return true
+        }
+
+        // Called once by each counted row, whether it finished loading or was
+        // destroyed before it could.
+        function rowSettled() {
+            d.batchPending--
+
+            if (d.batchPending === 0 && d.moving && !d.finishing)
+                d.finishSlide()
+        }
+
+        // Sample data /////////////////////////////////////////////////////////
+        //
+        // Deterministic on purpose - every reload gives the same heights, so
+        // what the view does is comparable between runs. Each message carries
+        // its own serial in the text, so an insertion is visible for what it is.
 
         readonly property var lorem:
             ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor "
@@ -108,18 +246,8 @@ SplitView {
         }
     }
 
-    // Inserts `count` freshly generated messages at `index`. Both ends are just
-    // indices - 0 is the beginning, model.count the end - so there is one path
-    // here regardless of what the panel asked for.
-    function insertMessages(count, index) {
-        const rows = d.createMessages(count)
-
-        if (index >= messagesModel.count)
-            messagesModel.append(rows)
-        else
-            messagesModel.insert(Math.max(0, index), rows)
-    }
-
+    // The roles are prefixed because MessageDelegate already owns `text`,
+    // `images`, `date` and `avatar`; a required property cannot redeclare them.
     ListModel {
         id: messagesModel
 
@@ -127,7 +255,7 @@ SplitView {
     }
 
     // Both bounds are inclusive, and IndexFilter reads them against the source
-    // model's rows, so this is a plain [first, first + size) slice.
+    // model's rows, so this is a plain [first, last] slice.
     SortFilterProxyModel {
         id: windowModel
 
@@ -136,8 +264,8 @@ SplitView {
         filters: IndexFilter {
             id: windowFilter
 
-            minimumIndex: root.windowFirst
-            maximumIndex: root.windowFirst + root.windowSize - 1
+            minimumIndex: d.windowFirst
+            maximumIndex: d.windowLast
         }
 
         // IndexFilter judges a row by its position, and QSortFilterProxyModel
@@ -187,8 +315,42 @@ SplitView {
                     delegate: Loader {
                         id: messageItem
 
+                        required property string messageText
+                        required property var messageImages
+                        required property date messageDate
+                        required property string messageAvatar
+
+                        // A row is not shown the moment it finishes building.
+                        // One built outside a slide is a batch of one and
+                        // reveals itself; one built for a slide waits until
+                        // every row of that slide is ready, so the batch
+                        // arrives in a single frame instead of trickling in.
+                        property bool revealed: false
+
+                        // Whether this row is one of the outstanding loads
+                        // d.batchPending is counting. Remembered rather than
+                        // recomputed, so the row reports back exactly once.
+                        property bool counted: false
+
+                        width: messagesColumn.width
+                        height: messageItem.revealed ? messageItem.implicitHeight : 0
+                        visible: messageItem.revealed
+
+                        asynchronous: root.asynchronousDelegates
+                        active: false
+
+                        sourceComponent: MessageDelegate {
+                            text: messageItem.messageText
+                            images: messageItem.messageImages
+                            date: messageItem.messageDate
+                            avatar: messageItem.messageAvatar
+                        }
+
                         Timer {
-                            interval: Math.random() * root.maxDelegateLoadingDelay
+                            interval: root.minDelegateLoadingDelay
+                                      + Math.random() * Math.max(
+                                            0, root.maxDelegateLoadingDelay
+                                             - root.minDelegateLoadingDelay)
                             running: true
 
                             onTriggered: {
@@ -196,22 +358,24 @@ SplitView {
                             }
                         }
 
-                        asynchronous: root.asynchronousDelegates
+                        Component.onCompleted: {
+                            messageItem.counted = d.rowCreated()
+                        }
 
-                        active: false
-                        width: messagesColumn.width
-                        height: messageItem.implicitHeight
+                        onLoaded: {
+                            if (messageItem.counted) {
+                                messageItem.counted = false
+                                d.rowSettled()
+                            } else {
+                                messageItem.revealed = true
+                            }
+                        }
 
-                        required property string messageText
-                        required property var messageImages
-                        required property date messageDate
-                        required property string messageAvatar
-
-                        sourceComponent: MessageDelegate {
-                            text: messageItem.messageText
-                            images: messageItem.messageImages
-                            date: messageItem.messageDate
-                            avatar: messageItem.messageAvatar
+                        Component.onDestruction: {
+                            if (messageItem.counted) {
+                                messageItem.counted = false
+                                d.rowSettled()
+                            }
                         }
                     }
                 }
@@ -248,6 +412,12 @@ SplitView {
                 font.bold: true
             }
 
+            // The upper bound never dips below the initial row count, and that
+            // matters: Settings restores this value from a C++ componentComplete,
+            // which runs before any Component.onCompleted - so the model is still
+            // empty at that point. A `to` of 0 would clamp the restored value to
+            // 0, and since the property it is bound to has not changed, the
+            // binding would never re-evaluate once the model fills.
             RowLayout {
                 Layout.fillWidth: true
 
@@ -258,11 +428,23 @@ SplitView {
 
                     Layout.fillWidth: true
 
+                    // Locked while a slide is running: the slide owns both
+                    // bounds until it completes.
+                    enabled: !root.movingUp && !root.movingDown
+
                     from: 0
-                    to: Math.max(0, messagesModel.count - 1)
+                    to: Math.max(messagesModel.count, root.initialMessageCount) - 1
                     stepSize: 10
-                    value: d.defaultWindowFirst
                     editable: true
+
+                    value: d.windowFirst
+
+                    onValueModified: {
+                        const size = root.windowSize
+
+                        d.windowFirst = value
+                        d.windowLast = value + size - 1
+                    }
                 }
             }
 
@@ -276,12 +458,93 @@ SplitView {
 
                     Layout.fillWidth: true
 
+                    enabled: !root.movingUp && !root.movingDown
+
                     from: 1
                     to: 1000
                     stepSize: 10
-                    value: d.defaultWindowSize
+                    editable: true
+
+                    value: root.windowSize
+
+                    onValueModified: d.windowLast = d.windowFirst + value - 1
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label { text: "Slide by" }
+
+                SpinBox {
+                    id: slideStepSpinBox
+
+                    Layout.fillWidth: true
+
+                    from: 1
+                    to: 1000
+                    stepSize: 10
+                    value: d.defaultSlideStep
                     editable: true
                 }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Button {
+                    Layout.fillWidth: true
+
+                    text: "Slide up"
+                    enabled: !root.movingUp && !root.movingDown
+
+                    onClicked: root.slideWindowUp(slideStepSpinBox.value)
+                }
+
+                Button {
+                    Layout.fillWidth: true
+
+                    text: "Slide down"
+                    enabled: !root.movingUp && !root.movingDown
+
+                    onClicked: root.slideWindowDown(slideStepSpinBox.value)
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                spacing: 12
+
+                RowLayout {
+                    spacing: 4
+
+                    Rectangle {
+                        Layout.preferredWidth: 10
+                        Layout.preferredHeight: 10
+
+                        radius: width / 2
+                        color: root.movingUp ? "#2ecc71" : "#bdbdbd"
+                    }
+
+                    Label { text: "Moving up" }
+                }
+
+                RowLayout {
+                    spacing: 4
+
+                    Rectangle {
+                        Layout.preferredWidth: 10
+                        Layout.preferredHeight: 10
+
+                        radius: width / 2
+                        color: root.movingDown ? "#2ecc71" : "#bdbdbd"
+                    }
+
+                    Label { text: "Moving down" }
+                }
+
+                Item { Layout.fillWidth: true }
             }
 
             Item { Layout.preferredHeight: 8 }
@@ -300,6 +563,28 @@ SplitView {
                 checked: d.defaultAsynchronous
             }
 
+            // The two bounds cap each other, so the range cannot be inverted.
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label { text: "Min delay" }
+
+                SpinBox {
+                    id: minDelaySpinBox
+
+                    Layout.fillWidth: true
+
+                    from: 0
+                    to: maxDelaySpinBox.value
+                    stepSize: 50
+                    value: d.defaultMinDelay
+                    editable: true
+
+                    textFromValue: (value) => value + " ms"
+                    valueFromText: (text) => parseInt(text)
+                }
+            }
+
             RowLayout {
                 Layout.fillWidth: true
 
@@ -310,7 +595,7 @@ SplitView {
 
                     Layout.fillWidth: true
 
-                    from: 0
+                    from: minDelaySpinBox.value
                     to: 5000
                     stepSize: 50
                     value: d.defaultMaxDelay
@@ -375,8 +660,9 @@ SplitView {
 
                     enabled: positionComboBox.currentValue === "Index"
 
+                    // Same restore-ordering trap as the window's First box.
                     from: 0
-                    to: messagesModel.count
+                    to: Math.max(messagesModel.count, root.initialMessageCount)
                     value: d.defaultInsertIndex
                     editable: true
                 }
@@ -386,6 +672,12 @@ SplitView {
                 Layout.fillWidth: true
 
                 text: "Insert"
+
+                // A model change mid-slide re-filters the window and can build
+                // or drop rows outside the batch the slide is counting. The
+                // accounting survives it, but a PoC is easier to read when it
+                // cannot happen at all.
+                enabled: !root.movingUp && !root.movingDown
 
                 onClicked: {
                     const index = {
@@ -415,9 +707,11 @@ SplitView {
     Settings {
         category: "WindowedChatViewPage"
 
-        property alias windowFirst: windowFirstSpinBox.value
-        property alias windowSize: windowSizeSpinBox.value
+        property alias windowFirst: d.windowFirst
+        property alias windowLast: d.windowLast
+        property alias slideStep: slideStepSpinBox.value
         property alias asynchronousDelegates: asyncSwitch.checked
+        property alias minDelegateLoadingDelay: minDelaySpinBox.value
         property alias maxDelegateLoadingDelay: maxDelaySpinBox.value
         property alias insertCount: countSpinBox.value
         property alias insertPosition: positionComboBox.currentIndex
