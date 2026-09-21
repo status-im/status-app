@@ -41,7 +41,6 @@ $(TARGET): $(STATUS_DESKTOP_NIM_FILES) $(STATUS_DESKTOP_UI_FILES) $(STATUS_Q_FIL
 		-e ANDROID_ABI=$(ANDROID_ABI) \
 		-e QT_VERSION=$(QT_VERSION) \
 		-e PACKAGE_TYPE=$(PACKAGE_TYPE) \
-		-e NIM_SDS_SOURCE_DIR=/tmp/nim-sds \
 		-e MAKEFLAGS="-j$$(nproc) V=$(V)" \
 		$(DOCKER_IMAGE) \
 		bash -c '\
@@ -53,7 +52,7 @@ $(TARGET): $(STATUS_DESKTOP_NIM_FILES) $(STATUS_DESKTOP_UI_FILES) $(STATUS_Q_FIL
 			make deps V=$(V) && \
 			echo "=== Building Android APK ===" && \
 			cd mobile && \
-			make apk-debug ARCH=$(ARCH) PACKAGE_TYPE=$(PACKAGE_TYPE) NIM_SDS_SOURCE_DIR=/tmp/nim-sds V=$(V) \
+			make apk-debug ARCH=$(ARCH) PACKAGE_TYPE=$(PACKAGE_TYPE) V=$(V) \
 		'
 	@echo "Build completed: $(TARGET)"
 	@touch $(TARGET)

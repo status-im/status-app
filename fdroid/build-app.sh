@@ -35,7 +35,6 @@ export FLAG_SWAP_ENABLED=0
 export FLAG_RELAY_ENABLED=0
 export FLAG_LIFI_ENABLED=0
 export FLAG_PARASWAP_ENABLED=0
-export NIM_SDS_SOURCE_DIR="$BUILD_DIR/vendor/nim-sds"
 
 make deps
 
