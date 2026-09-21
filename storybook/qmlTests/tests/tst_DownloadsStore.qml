@@ -874,6 +874,32 @@ Item {
             compare(shared.length, 0)
         }
 
+        function test_canShareUrl_refusesPageLocalUrls() {
+            const store = createStore()
+            const http = createTemporaryObject(fakeDownloadComponent, root)
+            http.url = "https://example.com/photo.png"
+            verify(store.canShareUrl(store.addDownload(http)))
+
+            const blob = createTemporaryObject(fakeDownloadComponent, root)
+            blob.url = "blob:https://example.com/f1e65319-142c-47cf-ac82-79bc2a65e458"
+            verify(!store.canShareUrl(store.addDownload(blob)))
+
+            const data = createTemporaryObject(fakeDownloadComponent, root)
+            data.url = "data:image/png;base64,iVBORw0KGgo="
+            verify(!store.canShareUrl(store.addDownload(data)))
+
+            // The link menu shares a raw URL through the same policy.
+            verify(store.canShareUrlString("https://example.com/photo.png"))
+            verify(!store.canShareUrlString("blob:https://example.com/f1e65319"))
+
+            store.platform.preferShareSheet = true
+            let shared = ""
+            store.platform.shareText = function(text) { shared = text }
+            verify(!store.shareUrl(store.addDownload(blob)))
+            verify(!store.shareUrlString("blob:https://example.com/f1e65319"))
+            compare(shared, "")
+        }
+
         function test_shareUrl_mobile_usesShareText_desktop_copies() {
             const store = createStore()
             const live = createTemporaryObject(fakeDownloadComponent, root)

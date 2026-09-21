@@ -162,7 +162,6 @@ SplitView {
                           && !record.missingFile,
             retry: !!record && (record.state === AbstractWebView.DownloadState.DownloadCancelled
                                 || record.state === AbstractWebView.DownloadState.DownloadInterrupted),
-            dismiss: false,
             downloadsEntry: false,
             useShareLabels: ctrlShareLabels.checked
         })

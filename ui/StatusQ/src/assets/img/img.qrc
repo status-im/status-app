@@ -158,6 +158,7 @@
         <file>icons/flags.svg</file>
         <file>icons/flash-disable.svg</file>
         <file>icons/flash.svg</file>
+        <file>icons/folder.svg</file>
         <file>icons/food-and-drinks.svg</file>
         <file>icons/gallery.svg</file>
         <file>icons/gavel.svg</file>
@@ -186,6 +187,7 @@
         <file>icons/language.svg</file>
         <file>icons/ledger.svg</file>
         <file>icons/link.svg</file>
+        <file>icons/link-2.svg</file>
         <file>icons/loading.svg</file>
         <file>icons/location.svg</file>
         <file>icons/lock.svg</file>
