@@ -72,6 +72,7 @@ Rectangle {
             }
             components: [
                 StatusFlatRoundButton {
+                    objectName: "walletKeyPairDelegateMoreButton-" + (!!root.keyPair ? root.keyPair.name : "")
                     icon.name: "more"
                     icon.color: Theme.palette.directColor1
                     visible: !d.isWatchOnly

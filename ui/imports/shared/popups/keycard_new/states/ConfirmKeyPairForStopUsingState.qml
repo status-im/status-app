@@ -66,6 +66,7 @@ Control {
 
         StatusCheckBox {
             id: understandCheckBox
+            objectName: "keycardManagementUnderstandCheckBox"
             Layout.fillWidth: true
             text: qsTr("I understand Keycard will no longer be used for signing, and Status password will be required")
 
