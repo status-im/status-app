@@ -12,6 +12,8 @@ BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
+# Nimble that resolves status-go's libsds; older ones pick the wrong Nim.
+export NIMBLE_COMMIT := 68ba20e753ba63d11fb8b60974e981afca376f97
 # we don't want an error here, so we can handle things later, in the ".DEFAULT" target
 -include $(BUILD_SYSTEM_DIR)/makefiles/variables.mk
 
@@ -292,12 +294,9 @@ ifeq ($(mkspecs),macx)
  endif
 endif
 
-NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/vendor/nim-sds
-export NIM_SDS_SOURCE_DIR
-NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
+NIMSDS_LIBDIR := $(GIT_ROOT)/vendor/status-go/build
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
-STATUSGO_MAKE_PARAMS += NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)"
 
 # desktop only; mobile cleanup lives in mobile/Makefile
 ifneq ($(filter $(mkspecs),macx linux),)
@@ -508,7 +507,7 @@ STATUSGO := vendor/status-go/build/bin/libstatus.$(LIB_EXT)
 STATUSGO_LIBDIR := $(shell pwd)/$(shell dirname "$(STATUSGO)")
 export STATUSGO_LIBDIR
 
-# Rebuild libsds independently after platform switch cleanup deletes vendor/nim-sds/build.
+# Rebuild libsds independently after platform switch cleanup deletes it.
 $(NIMSDS_LIBFILE): | platform-cleanup
 	echo -e $(BUILD_MSG) "nim-sds"
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh $(HANDLE_OUTPUT)
@@ -613,7 +612,7 @@ ifeq ($(mkspecs),win32)
 
  $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
-	bash scripts/gen-import-lib.sh "$(NIM_SDS_SOURCE_DIR)/library/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
+	bash scripts/gen-import-lib.sh "$(NIMSDS_LIBDIR)/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
 
  import-libs: $(WIN_IMPORT_LIBS)
 endif

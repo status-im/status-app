@@ -30,7 +30,6 @@ cd "$BUILD_DIR"
 
 ulimit -n 65536 || true
 export USE_SYSTEM_NIM=1
-export NIM_SDS_SOURCE_DIR="$BUILD_DIR/vendor/nim-sds"
 
 make deps
 
