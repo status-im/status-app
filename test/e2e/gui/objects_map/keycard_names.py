@@ -60,6 +60,9 @@ settingsKeycardDetailsUnblockRecovery = {"container": mainWindow_KeycardView,
 settingsKeycardDetailsSetOrChangePuk = {"container": mainWindow_KeycardView,
                                         "objectName": "keycardDetailsSetOrChangePuk",
                                         "type": "StatusListItem", "visible": True}
+settingsKeycardDetailsAddKeypairToStatus = {"container": mainWindow_KeycardView,
+                                            "objectName": "keycardDetailsAddKeypairToStatus",
+                                            "type": "StatusListItem", "visible": True}
 
 # Keycard management popup
 

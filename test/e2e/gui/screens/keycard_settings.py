@@ -25,6 +25,7 @@ class KeycardSettingsView(QObject):
         self._unblock_puk_item = Button(keycard_names.settingsKeycardDetailsUnblockPuk)
         self._unblock_recovery_item = Button(keycard_names.settingsKeycardDetailsUnblockRecovery)
         self._set_or_change_puk_item = Button(keycard_names.settingsKeycardDetailsSetOrChangePuk)
+        self._add_keypair_to_status_item = Button(keycard_names.settingsKeycardDetailsAddKeypairToStatus)
         self._back_button = Button(settings_names.main_toolBar_back_button)
 
     @property
@@ -104,6 +105,34 @@ class KeycardSettingsView(QObject):
     def move_profile_keypair(self) -> KeycardManagementPopup:
         self._move_profile_keypair_item.click()
         return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Add key pair to Status wallet')
+    def add_keypair_to_status(self) -> KeycardManagementPopup:
+        self._add_keypair_to_status_item.wait_until_appears()
+        self._add_keypair_to_status_item.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Wait until Keycard details show a key pair not in Status wallet')
+    def wait_until_keypair_not_in_wallet(
+            self,
+            timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+    ):
+        assert driver.waitFor(
+            lambda: self.details_title == constants.KEYCARD_STORES_KEY_PAIR_TITLE,
+            timeout_msec,
+        ), (
+            f'Expected Keycard details title {constants.KEYCARD_STORES_KEY_PAIR_TITLE!r}, '
+            f'got {self.details_title!r}'
+        )
+        assert driver.waitFor(
+            lambda: self.details_info == constants.KEYCARD_KEYPAIR_NOT_ADDED_MESSAGE,
+            timeout_msec,
+        ), (
+            f'Expected {constants.KEYCARD_KEYPAIR_NOT_ADDED_MESSAGE!r}, '
+            f'got {self.details_info!r}'
+        )
+        self._add_keypair_to_status_item.wait_until_appears(timeout_msec)
+        return self
 
     @allure.step('Factory reset Keycard')
     def factory_reset(self) -> KeycardManagementPopup:
