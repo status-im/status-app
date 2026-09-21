@@ -57,6 +57,16 @@ mainWindow_keycardLostPage = {"container": statusDesktop_mainWindow, "objectName
                               "type": "KeycardLostPage", "visible": True}
 keycardLostReadSpareKeycard = {"container": mainWindow_keycardLostPage, "objectName": "keycardLostReadSpareKeycard",
                                "type": "StatusListItem", "visible": True}
+keycardLostStartUsingWithoutKeycard = {"container": mainWindow_keycardLostPage,
+                                       "objectName": "keycardLostStartUsingWithoutKeycard",
+                                       "type": "StatusListItem", "visible": True}
+convertKeycardAccountPage = {"container": statusDesktop_mainWindow, "objectName": "convertKeycardAccountPage",
+                             "type": "ConvertKeycardAccountPage", "visible": True}
+convertKeycardAccountTitle = {"container": convertKeycardAccountPage, "objectName": "convertKeycardAccountTitle",
+                              "type": "StatusBaseText", "visible": True}
+convertKeycardAccountRestartButton = {"container": convertKeycardAccountPage,
+                                      "objectName": "convertKeycardAccountRestartButton",
+                                      "type": "StatusButton", "visible": True}
 
 # Log in by syncing dialog
 statusDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusDialog", "type": "PopupItem", "visible": True}
