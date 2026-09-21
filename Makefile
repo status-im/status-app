@@ -561,14 +561,13 @@ $(NIMSDS_LIBFILE): $(STATUSGO_KEYS) nimble.paths | platform-cleanup
 	echo -e $(BUILD_MSG) "libsds"
 	$(STATUSGO_TASK_ENV) "$(NIM)" libsds "$(STATUSGO_SRC)/statusgo.nims" $(HANDLE_OUTPUT)
 
-# GENERATE_PREREQ=: `make generate` would write into the read-only store copy.
+# The library target generates its Go sources under STATUS_GO_BUILD_DIR (go build -overlay); needs protoc.
 # STATUS_GO_VERSION is the desktop version on purpose (the library reports the product's version).
 $(STATUSGO): $(STATUSGO_KEYS) | deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C "$(STATUSGO_SRC)" statusgo-shared-library SHELL=/bin/sh \
 		STATUS_GO_BUILD_DIR="$(CURDIR)/$(STATUSGO_OUT)/build" \
-		GENERATE_PREREQ= \
 		STATUS_GO_VERSION="$(DESKTOP_VERSION)" \
 		SENTRY_CONTEXT_NAME="status-desktop" \
 		SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)" \
