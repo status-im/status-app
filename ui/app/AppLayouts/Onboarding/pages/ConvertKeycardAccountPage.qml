@@ -11,6 +11,8 @@ import AppLayouts.Onboarding.enums
 OnboardingPage {
     id: root
 
+    objectName: "convertKeycardAccountPage"
+
     readonly property bool backAvailableHint: false
     required property int convertKeycardAccountState
 
@@ -114,6 +116,7 @@ OnboardingPage {
             }
 
             StatusBaseText {
+                objectName: "convertKeycardAccountTitle"
                 Layout.fillWidth: true
                 font.pixelSize: Theme.fontSize(22)
                 font.bold: true
@@ -146,6 +149,7 @@ OnboardingPage {
 
             StatusButton {
                 id: btnQuit
+                objectName: "convertKeycardAccountRestartButton"
 
                 visible: false
                 isOutline: false

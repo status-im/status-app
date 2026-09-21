@@ -114,6 +114,7 @@ OnboardingPage {
 
                 StatusListItem {
                     Layout.fillWidth: true
+                    objectName: "keycardLostStartUsingWithoutKeycard"
                     title: qsTr("Start using profile without Keycard")
                     subTitle: qsTr("Enter recovery phrase for your profile and login to status.")
                     components: [
