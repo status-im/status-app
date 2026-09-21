@@ -155,8 +155,36 @@ SplitView {
             return n
         }
 
+        // Reveals the batch, drops the far end, and puts the viewport back
+        // where it was. Only the change *above* the viewport moves anything on
+        // screen - the batch appended below a downward slide, and the rows
+        // trimmed below an upward one, cost nothing.
+        //
+        // Every surviving row shifts by the same amount, because they are
+        // stacked in a Column and all that changed is height above them. So
+        // any one of them works as the reference; there is no need to work out
+        // which row the viewport is actually showing.
         function finishSlide() {
             d.finishing = true
+
+            // During the transition the window holds size + n rows. Sliding
+            // down, the old rows are 0..size-1 and the trim takes 0..n-1;
+            // sliding up, the old rows start at n and the trim takes the last
+            // n. Either way index n is an old row that survives - as long as
+            // one exists at all, which it does only while n < size. A slide
+            // longer than the window replaces everything on screen, and then
+            // there is nothing to hold still.
+            const survivors = messagesRepeater.count - d.slideAmount
+
+            const anchor = d.slideAmount < survivors
+                         ? messagesRepeater.itemAt(d.slideAmount) : null
+
+            // Both read before anything moves: changing contentHeight runs
+            // Flickable's own fixup, which can move contentY behind our back.
+            messagesColumn.forceLayout()
+
+            const anchorY = anchor ? anchor.y : 0
+            const contentY = flickable.contentY
 
             d.revealAll()
 
@@ -164,6 +192,21 @@ SplitView {
                 d.windowFirst += d.slideAmount
             else
                 d.windowLast -= d.slideAmount
+
+            if (anchor) {
+                // Column positions from a polish, so anchor.y would still be
+                // the old one without this.
+                messagesColumn.forceLayout()
+
+                // Holding the anchor still under the viewport is just this.
+                // The clamp only bites when standing still is impossible
+                // anyway - sliding down while already at the top removes the
+                // very rows being read, and there is nothing above to show.
+                const limit = Math.max(0, flickable.contentHeight - flickable.height)
+
+                flickable.contentY = Math.max(
+                    0, Math.min(limit, contentY + anchor.y - anchorY))
+            }
 
             d.movingUp = false
             d.movingDown = false
