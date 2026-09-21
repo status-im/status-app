@@ -85,6 +85,15 @@ keycardManagementDoneButton = {"container": keycardManagementPopup, "objectName"
 keycardManagementUnderstandCheckBox = {"container": keycardManagementPopup,
                                        "objectName": "keycardManagementUnderstandCheckBox",
                                        "type": "StatusCheckBox", "visible": True}
+keycardCreatePasswordInput = {"container": keycardManagementPopup,
+                              "objectName": "keycardCreatePasswordInput",
+                              "type": "StatusPasswordInput", "visible": True}
+keycardCreatePasswordConfirmInput = {"container": keycardManagementPopup,
+                                     "objectName": "keycardCreatePasswordConfirmInput",
+                                     "type": "StatusPasswordInput", "visible": True}
+keycardConfirmPasswordInput = {"container": keycardManagementPopup,
+                               "objectName": "keycardConfirmPasswordInput",
+                               "type": "StatusPasswordInput", "visible": True}
 keycardKeyPairNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardKeyPairNameInput", "type": "StatusInput", "visible": True}
 keycardManageAccountNameInput = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManageAccountNameInput", "type": "StatusInput","visible": True}
 keycardFactoryResetConfirmCheckbox = {"container": statusDesktop_mainWindow_overlay,

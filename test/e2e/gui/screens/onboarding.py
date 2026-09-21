@@ -711,9 +711,14 @@ class ReturningLoginView(QObject):
         if str(self.user_selector_button.object.label) != account.name:
             self.user_selector_button.click()
             self.select_user_by_name(account.name)
+        return self.log_in_with_password(account.password)
+
+    @allure.step('Log in with password')
+    def log_in_with_password(self, password: str):
+        self.login_password_input.wait_until_appears()
         self.login_password_input.click()
         self.login_password_input.clear()
-        self.login_password_input.type_text(account.password)
+        self.login_password_input.type_text(password)
         self.login_button.click()
         return SplashScreen()
 
@@ -815,8 +820,43 @@ class KeycardLostView(QObject):
     def __init__(self):
         super().__init__(onboarding_names.mainWindow_keycardLostPage)
         self._read_spare_keycard_button = Button(onboarding_names.keycardLostReadSpareKeycard)
+        self._start_using_without_keycard_button = Button(onboarding_names.keycardLostStartUsingWithoutKeycard)
 
     @allure.step('Read spare Keycard')
     def read_spare_keycard(self) -> KeycardManagementPopup:
         self._read_spare_keycard_button.click()
         return KeycardManagementPopup().wait_until_appears()
+
+    @allure.step('Start using profile without Keycard')
+    def start_using_profile_without_keycard(self) -> KeycardManagementPopup:
+        self._start_using_without_keycard_button.click()
+        return KeycardManagementPopup().wait_until_appears()
+
+
+class ConvertKeycardAccountView(QObject):
+
+    def __init__(self):
+        super().__init__(onboarding_names.convertKeycardAccountPage)
+        self._title = TextLabel(onboarding_names.convertKeycardAccountTitle)
+        self._restart_button = Button(onboarding_names.convertKeycardAccountRestartButton)
+
+    @property
+    def title(self) -> str:
+        try:
+            return self._title.text
+        except (LookupError, RuntimeError, AttributeError, TypeError):
+            return ''
+
+    @allure.step('Wait until profile re-encryption completes')
+    def wait_until_convert_succeeds(
+            self,
+            expected_title: str,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ):
+        self.wait_until_appears(timeout_msec)
+        assert driver.waitFor(
+            lambda: self.title == expected_title,
+            timeout_msec,
+        ), f'Expected convert title {expected_title!r}, got {self.title!r}'
+        self._restart_button.wait_until_appears(timeout_msec)
+        return self

@@ -40,6 +40,9 @@ class KeycardManagementPopup(QObject):
         self._puk_step_title = TextLabel(keycard_names.keycardPukStepTitle)
         self.key_pair_name_input = QObject(keycard_names.keycardKeyPairNameInput)
         self.account_name_input = QObject(keycard_names.keycardManageAccountNameInput)
+        self.create_password_input = TextEdit(keycard_names.keycardCreatePasswordInput)
+        self.create_password_confirm_input = TextEdit(keycard_names.keycardCreatePasswordConfirmInput)
+        self.confirm_password_input = TextEdit(keycard_names.keycardConfirmPasswordInput)
 
     @allure.step('Enter Keycard PIN {pin}')
     def enter_keycard_pin(self, pin: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -300,6 +303,19 @@ class KeycardManagementPopup(QObject):
         self.done_button.wait_until_appears(timeout_msec)
         self.done_button.click()
         self.wait_until_hidden(timeout_msec)
+        return self
+
+    @allure.step('Create and confirm Status password')
+    def create_and_confirm_password(self, password: str):
+        self.create_password_input.wait_until_appears()
+        self.create_password_input.set_text_property(password)
+        self.create_password_confirm_input.set_text_property(password)
+        self.next_button.wait_until_enabled()
+        self.next_button.click()
+        self.confirm_password_input.wait_until_appears()
+        self.confirm_password_input.set_text_property(password)
+        self.next_button.wait_until_enabled()
+        self.next_button.click()
         return self
 
     @allure.step('Continue after key pair imported to Keycard')
