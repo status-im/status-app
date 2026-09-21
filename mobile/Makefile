@@ -83,7 +83,6 @@ ifeq ($(OS),android)
 	  CGO_LDFLAGS="-Wl,--build-id=none" \
 	  CC="$(CC)" $(MAKE) -C "$(STATUS_GO)" statusgo-android-library \
 		STATUS_GO_BUILD_DIR="$(STATUS_GO_OUT)/build" \
-		GENERATE_PREREQ= \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
@@ -103,7 +102,6 @@ else ifeq ($(OS),ios)
 	CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
 	$(MAKE) -C "$(STATUS_GO)" statusgo-ios-library \
 		STATUS_GO_BUILD_DIR="$(STATUS_GO_OUT)/build" \
-		GENERATE_PREREQ= \
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
