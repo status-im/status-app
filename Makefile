@@ -204,8 +204,8 @@ endif
 deps: | check-qt-dir nimble-deps bottles
 
 update: | check-qt-dir nimble-deps
-	git submodule sync --quiet --recursive
-	git submodule update --init --recursive
+	$(GIT_TOOLS_ENV) git submodule sync --quiet --recursive
+	$(GIT_TOOLS_ENV) git submodule update --init --recursive
 	+ "$(MAKE)" --no-print-directory qt-pkgconfig
 
 QML_DEBUG ?= false
@@ -240,10 +240,10 @@ ifneq ($(QT_MAJOR_VERSION),6)
  $(error Detected Qt major version $(QT_MAJOR_VERSION), but version 6 is required. Please install Qt 6 and set paths accordingly.)
 endif
 
-# nimble fetches packages with `git submodule update`, a shell script: on Windows
-# it must find Git's own sed first, or a foreign sed on PATH breaks it.
+# `git submodule` is a shell script (nimble runs it for every package too): on
+# Windows it must find Git's own sed first, or a foreign sed on PATH breaks it.
 ifeq ($(mkspecs),win32)
- NIMBLE_ENV = PATH="$$(r=$$(cd "$$(git --exec-path)/../../.." && pwd); echo "$${r%/}/usr/bin"):$$PATH"
+ GIT_TOOLS_ENV = PATH="$$(r=$$(cd "$$(git --exec-path)/../../.." && pwd); echo "$${r%/}/usr/bin"):$$PATH"
 endif
 # The stamp tracks "setup ran for this manifest and lock"; nimble.paths keeps its
 # mtime when setup rewrites it unchanged, so libsds and the client are not
@@ -252,7 +252,7 @@ endif
 .nimble-setup.stamp: nim_status_client.nimble nimble.lock
 	echo -e $(BUILD_MSG) "Nim dependencies (nimble setup)"
 	rm -f nimble.paths.prev; test ! -f nimble.paths || mv nimble.paths nimble.paths.prev
-	$(NIMBLE_ENV) "$(NIMBLE)" -y setup || { rm -f nimble.paths; test ! -f nimble.paths.prev || mv nimble.paths.prev nimble.paths; \
+	$(GIT_TOOLS_ENV) "$(NIMBLE)" -y setup || { rm -f nimble.paths; test ! -f nimble.paths.prev || mv nimble.paths.prev nimble.paths; \
 		echo "ERROR: nimble setup failed. If a manifest changed, regenerate the lock with 'nimble lock' and retry." >&2; exit 1; }
 	if cmp -s nimble.paths nimble.paths.prev; then mv nimble.paths.prev nimble.paths; else rm -f nimble.paths.prev; fi
 	touch $@
