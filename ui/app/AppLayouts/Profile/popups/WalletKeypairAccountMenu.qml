@@ -35,6 +35,7 @@ StatusMenu {
     }
 
     StatusAction {
+        objectName: "walletKeypairMenuKeycardAction"
         text: enabled? root.keyPair.migratedToColdWallet? qsTr("Stop using Keycard") : qsTr("Move key pair to a Keycard") : ""
         enabled: !!root.keyPair && root.keyPair.pairType !== Constants.keypair.type.privateKeyImport
         icon.name: !!root.keyPair && root.keyPair.migratedToColdWallet? "keycard-crossed" : "keycard"
