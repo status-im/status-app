@@ -13,7 +13,7 @@ pipeline {
   agent {
     /* Image with Ubuntu 22.04 and QT ${QT_VERSION} */
     docker {
-      label 'linuxcontainer'
+      label getAgentLabel()
       image "harbor.status.im/status-im/status-desktop-build:20260902-qt${QT_VERSION}"
       /* allows jenkins use cat and mounts '/dev/fuse' for linuxdeployqt */
       args '--entrypoint="" ' +
@@ -260,4 +260,8 @@ def getArch() {
   for (def arch in ['x86_64', 'aarch64']) {
     if (tokens.contains(arch)) { return arch }
   }
+}
+
+def getAgentLabel() {
+  return getArch() == 'aarch64' ? 'linux-arm-container' : 'linuxcontainer'
 }
