@@ -58,13 +58,22 @@ SplitView {
     // Inserts `count` freshly generated messages at `index`. Both ends are just
     // indices - 0 is the beginning, model.count the end - so there is one path
     // here regardless of what the panel asked for.
-    function insertMessages(count, index) {
+    // With `instant`, the rows this builds skip the simulated build delay. The
+    // Repeater creates them synchronously inside the model change, so the flag
+    // only has to stand for the duration of the call - every row belonging to
+    // this insertion, including the ones the re-filter pulls in at the far end,
+    // is constructed before it is cleared.
+    function insertMessages(count, index, instant) {
         const rows = d.createMessages(count)
+
+        d.instantLoading = instant === true
 
         if (index >= messagesModel.count)
             messagesModel.append(rows)
         else
             messagesModel.insert(Math.max(0, index), rows)
+
+        d.instantLoading = false
     }
 
     QtObject {
@@ -242,6 +251,18 @@ SplitView {
                 d.finishSlide()
         }
 
+        // True only while insertMessages() is building rows that should not
+        // wait. Read by each row as it is created.
+        property bool instantLoading: false
+
+        function panelInsertIndex() {
+            return {
+                "Beginning": 0,
+                "End": messagesModel.count,
+                "Index": indexSpinBox.value
+            }[positionComboBox.currentValue]
+        }
+
         // Sample data /////////////////////////////////////////////////////////
         //
         // Deterministic on purpose - every reload gives the same heights, so
@@ -375,6 +396,12 @@ SplitView {
                         // recomputed, so the row reports back exactly once.
                         property bool counted: false
 
+                        // Whether this row skips the simulated build delay.
+                        // Captured at creation rather than bound, so changing
+                        // the knobs afterwards cannot retime a row already on
+                        // its way in.
+                        property bool instant: false
+
                         width: messagesColumn.width
                         height: messageItem.revealed ? messageItem.implicitHeight : 0
                         visible: messageItem.revealed
@@ -390,7 +417,12 @@ SplitView {
                         }
 
                         Timer {
-                            interval: root.minDelegateLoadingDelay
+                            // Zero rather than activating the Loader outright:
+                            // an instant row built during a slide would
+                            // otherwise be able to complete the batch from
+                            // inside the Repeater's own creation pass.
+                            interval: messageItem.instant ? 0
+                                    : root.minDelegateLoadingDelay
                                       + Math.random() * Math.max(
                                             0, root.maxDelegateLoadingDelay
                                              - root.minDelegateLoadingDelay)
@@ -402,6 +434,7 @@ SplitView {
                         }
 
                         Component.onCompleted: {
+                            messageItem.instant = d.instantLoading
                             messageItem.counted = d.rowCreated()
                         }
 
@@ -711,25 +744,25 @@ SplitView {
                 }
             }
 
-            Button {
+            RowLayout {
                 Layout.fillWidth: true
 
-                text: "Insert"
+                Button {
+                    Layout.fillWidth: true
 
-                // A model change mid-slide re-filters the window and can build
-                // or drop rows outside the batch the slide is counting. The
-                // accounting survives it, but a PoC is easier to read when it
-                // cannot happen at all.
-                enabled: !root.movingUp && !root.movingDown
+                    text: "Insert"
 
-                onClicked: {
-                    const index = {
-                        "Beginning": 0,
-                        "End": messagesModel.count,
-                        "Index": indexSpinBox.value
-                    }[positionComboBox.currentValue]
+                    onClicked: root.insertMessages(
+                                   countSpinBox.value, d.panelInsertIndex(), false)
+                }
 
-                    root.insertMessages(countSpinBox.value, index)
+                Button {
+                    Layout.fillWidth: true
+
+                    text: "Insert now"
+
+                    onClicked: root.insertMessages(
+                                   countSpinBox.value, d.panelInsertIndex(), true)
                 }
             }
 
