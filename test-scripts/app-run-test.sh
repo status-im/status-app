@@ -19,12 +19,18 @@ function checkSuccess {
   fi
 }
 
+STATUS_LIBS=".statusgo-build/build/bin:.statusgo-build/.sds-build/build"
+if [ -n "$LD_LIBRARY_PATH" ]; then
+  export LD_LIBRARY_PATH="$STATUS_LIBS:$LD_LIBRARY_PATH"
+else
+  export LD_LIBRARY_PATH="$STATUS_LIBS"
+fi
+
 while [ $COUNTER -lt $TOTAL_NUM_OF_TRIES ]
 do
   echo "------------------------------------"
   ((COUNTER=COUNTER+1))
   echo "Running the app..."
-  export LD_LIBRARY_PATH=.statusgo-build/build/bin:.statusgo-build/.sds-build/build${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
   ./bin/nim_status_client &
   PID=$!
   sleep 4
