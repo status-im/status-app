@@ -106,6 +106,10 @@ ifeq ($(mkspecs),)
 	$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
 endif
 
+# The user's nimble, resolved before the pinned Nim's bin/ goes on PATH: that
+# directory ships the older nimble bundled with Nim, which would shadow it.
+NIMBLE := $(or $(shell command -v nimble 2>/dev/null),nimble)
+
 # Sub-builds run a bare `nim` (statusgo.nims, qt-pkgconfig.mk). An empty NIM
 # must not put `.` on PATH.
 ifneq (,$(NIM))
@@ -241,10 +245,19 @@ endif
 ifeq ($(mkspecs),win32)
  NIMBLE_ENV = PATH="$$(r=$$(cd "$$(git --exec-path)/../../.." && pwd); echo "$${r%/}/usr/bin"):$$PATH"
 endif
-nimble.paths: nim_status_client.nimble nimble.lock
+# The stamp tracks "setup ran for this manifest and lock"; nimble.paths keeps its
+# mtime when setup rewrites it unchanged, so libsds and the client are not
+# rebuilt for a lock change that did not move anything they use. A failed setup
+# leaves no half-written nimble.paths behind to pass for an up-to-date one.
+.nimble-setup.stamp: nim_status_client.nimble nimble.lock
 	echo -e $(BUILD_MSG) "Nim dependencies (nimble setup)"
-	$(NIMBLE_ENV) nimble -y setup || { echo "ERROR: nimble setup failed. If a manifest changed, regenerate the lock with 'nimble lock' and retry." >&2; exit 1; }
+	rm -f nimble.paths.prev; test ! -f nimble.paths || mv nimble.paths nimble.paths.prev
+	$(NIMBLE_ENV) "$(NIMBLE)" -y setup || { rm -f nimble.paths; test ! -f nimble.paths.prev || mv nimble.paths.prev nimble.paths; \
+		echo "ERROR: nimble setup failed. If a manifest changed, regenerate the lock with 'nimble lock' and retry." >&2; exit 1; }
+	if cmp -s nimble.paths nimble.paths.prev; then mv nimble.paths.prev nimble.paths; else rm -f nimble.paths.prev; fi
 	touch $@
+nimble.paths: .nimble-setup.stamp
+	@test -f $@ || { rm -f $<; "$(MAKE)" --no-print-directory $<; }
 nimble-deps: nimble.paths
 
 # Remade from nimble.paths; make then re-executes this Makefile, so the roots

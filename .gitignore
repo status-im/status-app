@@ -139,6 +139,8 @@ test/nim/benchmarks/results/
 
 # nimble setup products and repo-local tool scratch
 /nimble.paths
+/nimble.paths.prev
+/.nimble-setup.stamp
 /nimble.develop
 /nimbledeps/
 /.nimble-resolution.mk
