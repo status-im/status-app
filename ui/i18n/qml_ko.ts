@@ -6251,10 +6251,6 @@ key pair. Keycard will be required for signing</source>
         <translation>URL 복사</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>다운로드</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>일시 중지</translation>
     </message>
@@ -6279,8 +6275,12 @@ key pair. Keycard will be required for signing</source>
         <translation>취소</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>닫기</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

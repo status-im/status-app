@@ -6304,10 +6304,6 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Kopírovat URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Stažené soubory</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Pozastavit</translation>
     </message>
@@ -6332,8 +6328,12 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Zrušit</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Zavřít</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

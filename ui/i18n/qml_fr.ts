@@ -6275,10 +6275,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Copier l’URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Téléchargements</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Mettre en pause</translation>
     </message>
@@ -6303,8 +6299,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Annuler</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Fermer</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

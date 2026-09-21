@@ -970,6 +970,8 @@ StatusSectionLayout {
     BrowserLinkContextMenu {
         id: linkContextMenuInst
 
+        canShareLink: root.downloadsStore.canShareUrlString(linkUrl)
+
         onOpenInNewTabRequested: targetUrl => root.openUrlInNewTab(targetUrl)
         onShareUrlRequested: targetUrl => root.downloadsStore.shareUrlString(targetUrl)
         onDownloadRequested: function (targetUrl) {
@@ -987,8 +989,10 @@ StatusSectionLayout {
     DownloadRecordMenu {
         id: downloadRecordMenuInst
 
-        capabilities: downloadsContext.capabilitiesFor(record, { showDismiss: forStrip, showDownloadsEntry: forStrip })
+        capabilities: downloadsContext.capabilitiesFor(
+                          record, { showDismiss: forStrip, showDownloadsEntry: forStrip })
 
+        onDismissRequested: root.downloadsStore.dismissRecordFromStrip(record)
         onDownloadsRequested: _internal.openDownloadsOverview()
         onShowInFolderRequested: root.downloadsStore.openDirectoryForRecord(record)
         onShareFileRequested: downloadsContext.shareFileRecord(record)
@@ -996,7 +1000,6 @@ StatusSectionLayout {
         onOpenInBrowserRequested: downloadsContext.openInBrowserRecord(record)
         onRetryRequested: downloadsContext.retryRecord(record)
         // stripVisible observes strip-model emptiness — no visibility sync call.
-        onDismissRequested: root.downloadsStore.dismissRecordFromStrip(record)
     }
 
     Component {

@@ -6278,10 +6278,6 @@ par de claves. Se requerirá Keycard para firmar</translation>
         <translation>Copiar URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Descargas</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Pausar</translation>
     </message>
@@ -6306,8 +6302,12 @@ par de claves. Se requerirá Keycard para firmar</translation>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Descartar</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
