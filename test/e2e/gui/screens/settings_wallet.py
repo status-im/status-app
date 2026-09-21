@@ -16,6 +16,7 @@ from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPop
 from gui.components.wallet.delete_account_confirmation_popup import RemoveAccountWithConfirmation
 from gui.components.wallet.testnet_mode_popup import TestnetModePopup
 
+from gui.components.keycard.management_popup import KeycardManagementPopup
 from gui.components.wallet.wallet_account_popups import AccountPopup, EditAccountFromSettingsPopup
 from gui.elements.button import Button
 from gui.elements.check_box import CheckBox
@@ -41,6 +42,8 @@ class WalletSettingsView(QObject):
         self.status_account_in_keypair = QObject(settings_names.settingsWalletAccountDelegate_Status_account)
         self.wallet_account_from_keypair = QObject(settings_names.settingsWalletAccountDelegate)
         self.wallet_settings_keypair_item = QObject(settings_names.settingsWalletKeyPairDelegate)
+        self.wallet_settings_keycard_menu_action = Button(
+            settings_names.settingsWalletKeypairMenuKeycardAction)
         self.wallet_settings_total_balance_item = QObject(settings_names.settingsWalletAccountTotalBalance)
         self.wallet_settings_total_balance_toggle = CheckBox(settings_names.settingsWalletAccountTotalBalanceToggle)
 
@@ -94,6 +97,33 @@ class WalletSettingsView(QObject):
                 return self.open_account_order(attempts - 1)
             else:
                 raise err
+
+    @allure.step('Get keypair location for {keypair_name}')
+    def get_keypair_location(self, keypair_name: str) -> str:
+        for item in driver.findAllObjects(self.wallet_settings_keypair_item.real_name):
+            if str(getattr(item, 'title', '')) == keypair_name:
+                return str(getattr(item, 'subTitle', ''))
+        raise LookupError(f'Keypair {keypair_name!r} not found')
+
+    @allure.step('Open keypair Keycard menu for {keypair_name}')
+    def open_keypair_keycard_menu(
+            self,
+            keypair_name: str,
+            attempts: int = 3,
+    ) -> KeycardManagementPopup:
+        more_button = Button(dict(settings_names.settingsWalletKeyPairMoreButton))
+        more_button.real_name['objectName'] = f'walletKeyPairDelegateMoreButton-{keypair_name}'
+        for _ in range(attempts):
+            try:
+                self.scroll.vertical_scroll_down(more_button)
+                more_button.click()
+                self.wallet_settings_keycard_menu_action.wait_until_appears().click()
+                return KeycardManagementPopup().wait_until_appears()
+            except Exception:
+                pass
+        raise LookupError(
+            f'Failed to open keypair Keycard menu for {keypair_name!r}'
+        )
 
     @allure.step('Get keypair settings_names')
     def get_keypairs_names(self):
