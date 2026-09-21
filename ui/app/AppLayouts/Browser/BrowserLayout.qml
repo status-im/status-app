@@ -5,6 +5,7 @@ import QtQuick.Layouts
 
 import QtModelsToolkit
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
@@ -290,6 +291,11 @@ StatusSectionLayout {
                 webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
                 return
             }
+            // A local path dead-ends here (ADR 0006 §8) rather than becoming
+            // a query, which would leak it to the search engine.
+            if (UrlUtils.isLocalUrl(url))
+                return
+
             // An explicit scheme is an address, never a query: chrome://crash,
             // view-source://…, about:blank. isURL() only knows http(s). file://
             // is left out: browsing tabs never reach it (ADR 0006 §8).
