@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QImageReader>
+#include <QRegularExpression>
 #include <QStandardPaths>
 #include <QUrl>
 
@@ -59,6 +60,12 @@ qint64 UrlUtils::getFileSize(const QUrl& url)
     // don't convert "content:/" like URLs to an empty path
     const auto filePath = url.isLocalFile() ? url.toLocalFile() : url.toString();
     return QFile(filePath).size(); // will return 0 for unknown file paths
+}
+
+bool UrlUtils::isLocalUrl(const QString &input) {
+    static const QRegularExpression localScheme(
+        QStringLiteral("^\\s*(file|content):"), QRegularExpression::CaseInsensitiveOption);
+    return localScheme.match(input).hasMatch();
 }
 
 QString UrlUtils::convertUrlToLocalPath(const QString &url) const {
