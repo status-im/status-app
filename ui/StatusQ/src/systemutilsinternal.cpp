@@ -258,11 +258,11 @@ void SystemUtilsInternal::showInFolder(const QString &path) const
     // Show in folder is hidden on iOS (no folder UI to open).
     return;
 #elif defined(Q_OS_ANDROID)
-    Q_UNUSED(path);
     QJniObject::callStaticMethod<void>(
         "app/status/mobile/StatusQtActivity",
-        "openDownloadsUi",
-        "()V"
+        "showDownload",
+        "(Ljava/lang/String;)V",
+        QJniObject::fromString(path).object<jstring>()
     );
 #else
     if (path.isEmpty())
