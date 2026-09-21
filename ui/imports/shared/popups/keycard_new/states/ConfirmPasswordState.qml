@@ -71,6 +71,7 @@ Control {
 
         StatusPasswordInput {
             id: input
+            objectName: "keycardConfirmPasswordInput"
 
             property bool showPassword
 

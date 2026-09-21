@@ -93,6 +93,7 @@ Control {
 
             StatusPasswordInput {
                 id: newPswInput
+                objectName: "keycardCreatePasswordInput"
 
                 property bool showPassword
 
@@ -177,6 +178,7 @@ Control {
 
             StatusPasswordInput {
                 id: confirmPswInput
+                objectName: "keycardCreatePasswordConfirmInput"
 
                 property bool showPassword
 
