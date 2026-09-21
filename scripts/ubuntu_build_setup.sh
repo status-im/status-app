@@ -6,6 +6,8 @@ GO_INSTALL_DIR="/usr/local/go"
 QT_VERSION="6.11.0"
 QT_INSTALL_DIR="/opt/qt"
 PROTOC_VERSION="36.0"
+NIMBLE_VERSION="0.24.1"
+NIMBLE_INSTALL_DIR="/opt/nimble"
 
 function check_version {
   source /etc/os-release
@@ -106,6 +108,29 @@ function install_golang {
   ln -s "${GO_INSTALL_DIR}/go/bin/go" /usr/local/bin
 }
 
+function install_nimble {
+  if [[ "$(nimble --version 2>/dev/null)" == *"v${NIMBLE_VERSION}"* ]]; then
+    echo "Already present: nimble ${NIMBLE_VERSION}"
+    return
+  fi
+  declare -A NIMBLE_ARCH_MAP NIMBLE_SHA256_MAP
+  NIMBLE_ARCH_MAP=(["x86_64"]="x64" ["aarch64"]="aarch64")
+  NIMBLE_SHA256_MAP=(
+    ["x64"]="5bbcea2999f79b7a5aff1409fa28ffead5954e5aa4a87a5055a53530d0d615de"
+    ["aarch64"]="6017123580c151256cd82c0135580c09e2ee4bbba34020bee005f5255021d7cd"
+  )
+  echo "Install nimble ${NIMBLE_VERSION}"
+  NIMBLE_ARCH="${NIMBLE_ARCH_MAP[$(uname -m)]}"
+  [[ -z "${NIMBLE_ARCH}" ]] && { echo "ERROR: no nimble release for $(uname -m)!"; exit 1; }
+  NIMBLE_TARBALL="nimble-linux_${NIMBLE_ARCH}.tar.gz"
+  wget -q "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/${NIMBLE_TARBALL}" -O "${NIMBLE_TARBALL}"
+  echo "${NIMBLE_SHA256_MAP[${NIMBLE_ARCH}]} ${NIMBLE_TARBALL}" | sha256sum -c
+  mkdir -p "${NIMBLE_INSTALL_DIR}"
+  tar -C "${NIMBLE_INSTALL_DIR}" -xzf "${NIMBLE_TARBALL}"
+  rm "${NIMBLE_TARBALL}"
+  ln -sf "${NIMBLE_INSTALL_DIR}/nimble" /usr/local/bin
+}
+
 function success_message {
   msg="
 SUCCESS!
@@ -127,5 +152,6 @@ if [ "$0" = "$BASH_SOURCE" ]; then
     install_runtime_dependencies
     install_qt
     install_golang
+    install_nimble
     success_message
 fi

@@ -132,8 +132,8 @@ Download and install from the [official website](https://go.dev/dl/).
 Install **nimble 0.24.1**, the whole Nim-side prerequisite; no Nim is needed:
 `nim_status_client.nimble` pins the compiler and `make update` has nimble download it into its
 store (`~/.nimble`). (Any nimble from 0.22.2 works too when a Nim 2.2.10 is on `PATH`; it is
-then reused instead of downloaded.) The release is a single binary; any directory on `PATH` works (CI uses
-`/opt/nimble`):
+then reused instead of downloaded.) The release is a single binary; any directory on `PATH` works (CI and
+`scripts/ubuntu_build_setup.sh` use `/opt/nimble`):
 
 ```bash
 mkdir -p ~/.local/bin && curl -fsSL \
