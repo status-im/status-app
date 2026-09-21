@@ -23,7 +23,7 @@ requires "https://github.com/cheatfate/nimcrypto.git#423ea4fed8de6f4544b7e3b30d8
 requires "https://github.com/status-im/uuids.git#42052ba362a9cd4685463edb3781beeb9b8e547e"  # uuids, status-im fork, same revision
 requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
 requires "https://github.com/status-im/nim-taskpools.git#4acdc6ef005a93dba09f902ed75197548cf7b451"  # taskpools
-requires "https://github.com/status-im/status-go.git#5fc3d9406c4f8edf47e3f5b043bc7e257dfd5579"  # statusgo
+requires "https://github.com/status-im/status-go.git#7f5d9c2ac6d675ee2acc3920e0c0be20cd0ada54"  # statusgo
 # isaac by version, not revision: a revision pin leaves later `nimble setup` on the same store naming a missing directory.
 requires "isaac == 0.2.0"  # isaac, transitive (uuids)
 requires "https://github.com/status-im/nim-bearssl.git#9a4eed052abbded2d94feaf3f5bbd95a30ec4671"  # bearssl, transitive (chronos)
