@@ -397,7 +397,13 @@ QtObject {
     }
 
     function canShareUrl(record) {
-        return !!record && sourceUrlString(record).length > 0
+        return canShareUrlString(sourceUrlString(record))
+    }
+
+    /// blob: and data: URLs address memory in the page that made them.
+    function canShareUrlString(url) {
+        const text = String(url || "")
+        return text.length > 0 && !/^(blob|data):/i.test(text)
     }
 
     function sourceUrlString(record) {
@@ -435,7 +441,7 @@ QtObject {
     /// Same share-vs-copy policy for a raw URL (link long-press menu).
     function shareUrlString(url) {
         const text = String(url || "")
-        if (!text)
+        if (!canShareUrlString(text))
             return false
         if (root.platform.preferShareSheet) {
             if (root.platform.shareText)

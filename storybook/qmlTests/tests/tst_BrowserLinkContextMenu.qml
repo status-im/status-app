@@ -68,6 +68,28 @@ Item {
             verify(texts.indexOf(qsTr("Download image")) >= 0)
         }
 
+        // Opts into the Design System row; the numbers live in
+        // tst_StatusMenuMetrics.
+        function test_rows_followTheDesignSystem() {
+            const menu = createTemporaryObject(menuComponent, root, {
+                linkUrl: "https://example.com/page",
+                imageUrl: ""
+            })
+            compare(menu.itemMinimumHeight, 30)
+            compare(menu.itemIconSize, 20)
+        }
+
+        function test_shareIsHidden_whenTheLinkCannotBeShared() {
+            const menu = createTemporaryObject(menuComponent, root, {
+                linkUrl: "blob:https://example.com/f1e65319",
+                imageUrl: "",
+                canShareLink: false
+            })
+            const texts = enabledTexts(menu)
+            verify(texts.indexOf(menu.shareLabel) < 0, "texts: " + texts)
+            verify(texts.indexOf(qsTr("Download link")) >= 0)
+        }
+
         function test_signals_carryTheMatchingUrl() {
             const menu = createTemporaryObject(menuComponent, root, {
                 linkUrl: "https://example.com/file.zip",

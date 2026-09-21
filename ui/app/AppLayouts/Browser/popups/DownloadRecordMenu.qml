@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ.Core.Theme
 import StatusQ.Popups
 import StatusQ.Core.Utils as SQUtils
 
@@ -17,9 +18,18 @@ import AppLayouts.Browser.adapters
 StatusMenu {
     id: root
 
+    // Design System context menu row (Figma).
+    itemIconSize: 20
+    itemTextSpacing: Theme.halfPadding
+    itemVerticalPadding: Theme.halfPadding * 0.625
+    itemMinimumHeight: 30
+    itemBackgroundRadius: 10
+    itemsSpacing: Theme.halfPadding
+
     property var record: null
 
-    /// Pill strip opens grant session Dismiss; list opens do not.
+    /// Pill strip opens grant session Dismiss and the Downloads entry;
+    /// list opens do not.
     /// Set by openAt options; read by the host's capabilities binding.
     property bool forStrip: false
 
@@ -62,6 +72,10 @@ StatusMenu {
     // Mobile: Share file / Share URL. Desktop: Copy file path / Copy URL.
     readonly property bool _useShareLabels: !!_caps.useShareLabels
 
+    // Pill strip only: the one way a terminal pill leaves the strip.
+    readonly property bool _canClearFromBar:
+            !!_caps.dismiss && (isComplete || isCancelled || isInterrupted)
+
     readonly property bool isCancelled: record?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false
     readonly property bool isComplete: record?.state === AbstractWebView.DownloadState.DownloadCompleted ?? false
     readonly property bool isInterrupted: record?.state === AbstractWebView.DownloadState.DownloadInterrupted ?? false
@@ -85,30 +99,17 @@ StatusMenu {
     readonly property string shareFileIcon: _useShareLabels
             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
             : "copy"
-    readonly property string shareUrlIcon: _useShareLabels
-            ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
-            : "copy"
+    readonly property string shareUrlIcon: "link-2"
 
     // Plain signals — callers already hold the menu's Record.
+    signal dismissRequested()
     signal downloadsRequested()
     signal showInFolderRequested()
     signal shareFileRequested()
     signal shareUrlRequested()
     signal openInBrowserRequested()
     signal retryRequested()
-    signal dismissRequested()
 
-    StatusAction {
-        // Pill strip only (Figma pill menu): opens the Downloads List section
-        // of the Open tabs overview. Absent in list menus — you are already there.
-        enabled: !!root._caps.downloadsEntry
-        icon.name: "download"
-        text: qsTr("Downloads")
-        onTriggered: root.downloadsRequested()
-    }
-    StatusMenuSeparator {
-        visible: !!root._caps.downloadsEntry
-    }
     StatusAction {
         enabled: isActiveTransfer && !isPaused
         icon.name: "pause"
@@ -144,12 +145,19 @@ StatusMenu {
     }
     StatusAction {
         enabled: isComplete && !!root._caps.showInFolder
-        icon.name: "show"
+        icon.name: "folder"
         text: qsTr("Show in folder")
         onTriggered: {
             root.showInFolderRequested()
             root._leaveHost()
         }
+    }
+    StatusAction {
+        // Pill strip only: opens the Downloads List section of the overview.
+        enabled: !!root._caps.downloadsEntry
+        icon.name: "download"
+        text: qsTr("Show in Downloads")
+        onTriggered: root.downloadsRequested()
     }
     StatusAction {
         enabled: !!root._caps.retry
@@ -158,7 +166,7 @@ StatusMenu {
         onTriggered: root.retryRequested()
     }
     StatusMenuSeparator {
-        visible: isActiveTransfer || (!!root._caps.dismiss && (isComplete || isCancelled))
+        visible: isActiveTransfer || root._canClearFromBar
     }
     StatusAction {
         enabled: isActiveTransfer
@@ -168,10 +176,9 @@ StatusMenu {
         onTriggered: root.record.cancel()
     }
     StatusAction {
-        // Pill strip only: remove Completed/Cancelled from the session strip.
-        enabled: !!root._caps.dismiss && (isComplete || isCancelled)
+        enabled: root._canClearFromBar
         icon.name: "close"
-        text: qsTr("Dismiss")
+        text: qsTr("Clear from bar")
         onTriggered: root.dismissRequested()
     }
 }

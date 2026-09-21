@@ -4,6 +4,7 @@ import QtTest
 
 import StatusQ.Popups
 import StatusQ.Popups.Dialog
+import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.Browser.adapters
 import AppLayouts.Browser.popups
@@ -84,7 +85,6 @@ Item {
                 shareUrl: false,
                 showInFolder: false,
                 retry: false,
-                dismiss: false,
                 downloadsEntry: false,
                 useShareLabels: false
             }, overrides || {})
@@ -111,6 +111,57 @@ Item {
                     texts.push(item.text)
             }
             return texts
+        }
+
+        // Opts into the Design System row; the numbers live in
+        // tst_StatusMenuMetrics.
+        function test_rows_followTheDesignSystem() {
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record,
+                capabilities: caps({ shareFile: true, shareUrl: true, showInFolder: true })
+            })
+            compare(menu.itemMinimumHeight, 30)
+            compare(menu.itemIconSize, 20)
+        }
+
+        function iconFor(menu, text) {
+            for (let i = 0; i < menu.count; ++i) {
+                const action = menu.actionAt(i)
+                if (action && action.text === text)
+                    return String(action.icon.name)
+            }
+            return ""
+        }
+
+        // The Design System glyphs: an upload box, a link, a folder.
+        function test_shareAndFolderActions_useTheDesignSystemIcons() {
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record,
+                capabilities: caps({
+                    shareFile: true, shareUrl: true, showInFolder: true, useShareLabels: true
+                })
+            })
+
+            compare(iconFor(menu, qsTr("Share file")),
+                    SQUtils.Utils.isIOS ? "share-ios" : "share-android")
+            compare(iconFor(menu, qsTr("Share URL")), "link-2")
+            compare(iconFor(menu, qsTr("Show in folder")), "folder")
+        }
+
+        // Desktop copies rather than shares, so those two keep the copy glyph;
+        // the folder is the same everywhere.
+        function test_copyActions_keepTheCopyIcon() {
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record,
+                capabilities: caps({ shareFile: true, shareUrl: true, showInFolder: true })
+            })
+
+            compare(iconFor(menu, qsTr("Copy file path")), "copy")
+            compare(iconFor(menu, qsTr("Copy URL")), "link-2")
+            compare(iconFor(menu, qsTr("Show in folder")), "folder")
         }
 
         function test_openAt_opensOverAStatusDialogHost() {
@@ -205,21 +256,32 @@ Item {
             verify(texts.indexOf(qsTr("Cancel")) < 0)
         }
 
-        function test_pill_completed_canShowDismiss() {
+        function test_dismiss_isOfferedForTerminalStripOpens() {
             const record = createTemporaryObject(recordComponent, root)
             const menu = createTemporaryObject(menuComponent, root, {
                 record: record,
-                capabilities: caps({
-                    shareFile: true,
-                    shareUrl: true,
-                    showInFolder: true,
-                    dismiss: true,
-                    useShareLabels: true
-                })
+                capabilities: caps({ dismiss: true, downloadsEntry: true })
             })
 
-            const texts = actionTexts(menu)
-            verify(texts.indexOf(qsTr("Dismiss")) >= 0)
+            record.state = AbstractWebView.DownloadState.DownloadCompleted
+            verify(actionTexts(menu).indexOf(qsTr("Clear from bar")) >= 0, "completed")
+
+            record.state = AbstractWebView.DownloadState.DownloadCancelled
+            verify(actionTexts(menu).indexOf(qsTr("Clear from bar")) >= 0, "cancelled")
+
+            record.state = AbstractWebView.DownloadState.DownloadInProgress
+            verify(actionTexts(menu).indexOf(qsTr("Clear from bar")) < 0, "still running")
+        }
+
+        function test_dismiss_isAbsentWithoutTheCapability() {
+            const record = createTemporaryObject(recordComponent, root)
+            const menu = createTemporaryObject(menuComponent, root, {
+                record: record,
+                capabilities: caps({ shareUrl: true })
+            })
+            record.state = AbstractWebView.DownloadState.DownloadCompleted
+
+            verify(actionTexts(menu).indexOf(qsTr("Clear from bar")) < 0)
         }
 
         function test_actionSignals_arePlain_recordIsTheMenus() {
@@ -237,9 +299,9 @@ Item {
             compare(menu.record, record)
         }
 
-        /// The pill strip menu leads with "Downloads" (opens the
-        /// Downloads List section of the Open tabs overview), above a divider.
-        function test_downloadsEntry_firstInStripMenu_emitsSignal() {
+        /// "Show in Downloads" sits with the other navigation rows, right
+        /// after "Show in folder"; only "Clear from bar" is below the divider.
+        function test_downloadsEntry_followsShowInFolder_emitsSignal() {
             const record = createTemporaryObject(recordComponent, root)
             const menu = createTemporaryObject(menuComponent, root, {
                 record: record,
@@ -247,20 +309,24 @@ Item {
                     shareFile: true,
                     shareUrl: true,
                     showInFolder: true,
-                    dismiss: true,
-                    downloadsEntry: true
+                    downloadsEntry: true,
+                    dismiss: true
                 })
             })
+            record.state = AbstractWebView.DownloadState.DownloadCompleted
 
             const texts = actionTexts(menu)
-            verify(texts.indexOf(qsTr("Downloads")) >= 0)
-            compare(texts[0], qsTr("Downloads"), "Downloads leads the strip menu")
+            compare(texts.indexOf(qsTr("Show in Downloads")),
+                    texts.indexOf(qsTr("Show in folder")) + 1,
+                    "the entry follows Show in folder")
+            compare(texts[texts.length - 1], qsTr("Clear from bar"),
+                    "only Clear from bar is below the divider")
 
             let opened = 0
             menu.downloadsRequested.connect(function() { opened += 1 })
             for (let i = 0; i < menu.count; ++i) {
                 const action = menu.actionAt(i)
-                if (action && action.enabled && action.text === qsTr("Downloads"))
+                if (action && action.enabled && action.text === qsTr("Show in Downloads"))
                     action.trigger()
             }
             compare(opened, 1, "activating the entry requests the Downloads List")
@@ -281,7 +347,7 @@ Item {
             })
 
             const texts = actionTexts(menu)
-            verify(texts.indexOf(qsTr("Downloads")) < 0)
+            verify(texts.indexOf(qsTr("Show in Downloads")) < 0)
         }
 
         /// `capabilities` is a BINDING at the call site, so the menu
