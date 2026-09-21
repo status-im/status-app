@@ -45,22 +45,25 @@ class KeycardManagementPopup(QObject):
         self.confirm_password_input = TextEdit(keycard_names.keycardConfirmPasswordInput)
 
     @allure.step('Enter Keycard PIN {pin}')
-    def enter_keycard_pin(self, pin: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+    def enter_pin(self, pin: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self.pin_input.wait_until_appears(timeout_msec)
         self.pin_input.object.setPin(pin)
+        return self
+
+    @allure.step('Enter Keycard PIN {pin}')
+    def enter_keycard_pin(self, pin: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.enter_pin(pin, timeout_msec)
         return KeycardDetailsView().wait_until_appears()
 
     @allure.step('Enter Keycard PIN {pin} and wait until popup closes')
     def enter_keycard_pin_and_close(self, pin: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        self.pin_input.wait_until_appears(timeout_msec)
-        self.pin_input.object.setPin(pin)
+        self.enter_pin(pin, timeout_msec)
         self.wait_until_hidden(timeout_msec)
         return self
 
     @allure.step('Enter Keycard PIN {pin} and continue onboarding keycard flow')
     def enter_keycard_pin_and_continue(self, pin: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC):
-        self.pin_input.wait_until_appears(timeout_msec)
-        self.pin_input.object.setPin(pin)
+        self.enter_pin(pin, timeout_msec)
         return self.continue_after_key_pair_imported(timeout_msec)
 
     @allure.step('Skip PIN and wait until popup closes')
