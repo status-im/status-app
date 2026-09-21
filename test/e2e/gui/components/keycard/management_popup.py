@@ -167,6 +167,19 @@ class KeycardManagementPopup(QObject):
     def enter_account_name(self, name: str):
         return self._fill_and_next(self.account_name_input, name)
 
+    @allure.step('Wait until Keycard flow succeeds with {expected_title}')
+    def wait_until_success(
+            self,
+            expected_title: str,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        assert driver.waitFor(
+            lambda: self._progress_title.text == expected_title,
+            timeout_msec,
+        ), f'Expected progress title {expected_title!r}, got {self._progress_title.text!r}'
+        self.done_button.wait_until_appears(timeout_msec)
+        return self
+
     @allure.step('Close popup after successful import')
     def close_after_success(self, timeout_msec: int):
         self.done_button.wait_until_appears(timeout_msec)
