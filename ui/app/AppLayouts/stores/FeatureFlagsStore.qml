@@ -19,5 +19,6 @@ QtObject {
     property bool unlimitedChatImagesEnabled
     property bool paraswapEnabled
     property bool lifiEnabled
+    property bool relayEnabled
     property bool swapProvidersEnabled
 }

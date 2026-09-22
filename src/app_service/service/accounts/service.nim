@@ -171,6 +171,7 @@ QtObject:
       raribleTestnetApiKey: RARIBLE_TESTNET_API_KEY_RESOLVED,
       alchemyApiKey: ALCHEMY_API_KEY_RESOLVED,
       lifiApiKey: LIFI_API_KEY_RESOLVED,
+      relayApiKey: RELAY_API_KEY_RESOLVED,
       statusProxyStageName: STATUS_PROXY_STAGE_NAME_RESOLVED,
       marketDataProxyUrl: MARKET_DATA_PROXY_URL_RESOLVED,
       marketDataProxyUser: MARKET_DATA_PROXY_USER_RESOLVED,
@@ -193,8 +194,10 @@ QtObject:
       tokensListsAutoRefreshCheckInterval: 0,
       marketDataFullDataRefreshInterval: toInt(MARKET_DATA_FULL_REFRESH_INTERVAL, 0),
       marketDataPriceRefreshInterval: toInt(MARKET_DATA_PRICE_REFRESH_INTERVAL, 0),
-      enableParaswapProvider: PARASWAP_ENABLED,
-      enableLiFiProvider: LIFI_ENABLED,
+      # no fallback support for more than one swap/bridge provider
+      enableParaswapProvider: false, # currently the UI doesn't support Paraswap due to a single chain swap only
+      enableLiFiProvider: LIFI_ENABLED and not RELAY_ENABLED,
+      enableRelayProvider: RELAY_ENABLED,
     )
 
   proc defaultCreateAccountRequest*(): CreateAccountRequest =
