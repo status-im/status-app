@@ -119,7 +119,7 @@ class _MessageContextMenuBase:
             # Capture diagnostics before failing
             chat_page.dump_page_source(f"msg_not_visible_{message[:20]}")
             chat_page.take_screenshot(f"msg_not_visible_{message[:20]}")
-            raise AssertionError(f"Message not visible after sending: {message}")
+            raise AssertionError(f"Message not present after sending: {message}")
 
         return chat_page
 
@@ -289,7 +289,7 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
         async with self.step("Ensure secondary is in chat and verify message visible"):
             secondary_chat = await self._ensure_secondary_in_chat()
             assert secondary_chat.message_exists(test_message, timeout=self.CROSS_DEVICE_TIMEOUT), (
-                "Secondary should see message before deletion"
+                "Secondary: message not received before deletion"
             )
 
         async with self.step("Delete message via context menu"):
@@ -338,7 +338,7 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
             secondary_chat = await self._ensure_secondary_in_chat()
             assert secondary_chat.message_exists(
                 test_message, timeout=self.CROSS_DEVICE_TIMEOUT,
-            ), "Secondary should see original message before reply"
+            ), "Secondary: original message not received before reply"
 
         async with self.step("Open context menu and tap Reply"):
             assert context_menu.long_press_message(test_message), (
@@ -359,7 +359,7 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
                 f"Failed to send reply: {reply_text}"
             )
             assert chat_page.message_exists(reply_text, timeout=self.UI_TIMEOUT), (
-                "Reply message not visible after sending"
+                "Reply message not present after sending"
             )
 
         async with self.step("Verify reply indicator on primary device"):
@@ -450,7 +450,7 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
         async with self.step("Wait for message on primary"):
             chat_page = await self._ensure_in_chat()
             assert chat_page.message_exists(other_message, timeout=self.CROSS_DEVICE_TIMEOUT), (
-                "Primary should see secondary's message"
+                "Primary: secondary's message not received"
             )
 
         async with self.step("Long-press other user's message"):
@@ -501,7 +501,7 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
         async with self.step("Ensure secondary sees the original message"):
             secondary_chat = await self._ensure_secondary_in_chat()
             assert secondary_chat.message_exists(original_text, timeout=self.CROSS_DEVICE_TIMEOUT), (
-                "Secondary should see original message before edit"
+                "Secondary: original message not received before edit"
             )
 
         async with self.step("Long-press message and tap Edit"):

@@ -12,6 +12,15 @@ from locators.messaging.message_context_menu_locators import (
 )
 
 from ..base_page import BasePage
+from .chat_page import ChatPage
+
+
+def _rect_of(element):
+    """An element's rect for a log line, never raising."""
+    try:
+        return element.rect
+    except Exception as exc:
+        return f"unavailable ({exc})"
 
 
 class MessageContextMenuPage(BasePage):
@@ -58,14 +67,20 @@ class MessageContextMenuPage(BasePage):
         timeout: int = 10,
         duration_ms: int = 1000,
     ) -> bool:
-        """Long-press a message to open the context menu."""
+        """Long-press a message to open the context menu.
+
+        The message must be on screen, not merely in the accessibility tree: a
+        delegate the ListView keeps in its cache buffer reports a rect the list
+        has not scrolled to, and a press there lands on whatever is painted at
+        that point. A present but off-screen message is swiped towards, left
+        to settle, and re-checked before the press.
+        """
         # An open keyboard halves the sheet: actions past the first fold get
         # clipped behind it and in-menu swipes land on the keys.
         try:
             self.hide_keyboard()
         except Exception:
             pass
-
         # Try exact match first, then partial match
         locators = (
             self.chat_locators.message_text_exact(message_content),
@@ -93,6 +108,25 @@ class MessageContextMenuPage(BasePage):
             self.logger.warning(
                 f"Message '{message_content}' never stopped moving; pressing anyway"
             )
+        chat = ChatPage(self.driver)
+        bounds = chat.chat_bounds()
+        scrolled = 0
+        if bounds is not None and not chat.message_on_screen(message_content, bounds):
+            scrolled = self._scroll_message_into_view(chat, message_content, element, bounds)
+            self._wait_until_settled(element)
+        visible = chat.visible_message(
+            message_content, timeout=timeout, scrolled=bool(scrolled), bounds=bounds,
+        )
+        if visible is None:
+            self.logger.error(
+                "Message '%s' is in the tree but not on screen after %s swipe(s); "
+                "last rect %s, list band %s",
+                message_content, scrolled, _rect_of(element), bounds,
+            )
+            return False
+        # Press the element that satisfied the rule: another delegate carrying the
+        # same text may be first in the tree and off screen.
+        element = visible
 
         # Try W3C Actions first, then mobile: longClickGesture as fallback.
         # Different BrowserStack devices respond to different gesture APIs.
@@ -124,6 +158,44 @@ class MessageContextMenuPage(BasePage):
 
         self.logger.warning("Context menu did not appear after all long-press strategies")
         return False
+
+    def _scroll_message_into_view(
+        self, chat: ChatPage, message_content: str, element, bounds, max_swipes: int = 3,
+    ) -> int:
+        """Swipe the chat log towards ``element`` until ``message_content`` is on
+        screen or ``max_swipes`` is spent. Returns how many swipes were made."""
+        toolbar_bottom, composer_top, _ = bounds
+        list_height = composer_top - toolbar_bottom
+        if list_height <= 0:
+            return 0
+        try:
+            x = self.driver.get_window_size()["width"] // 2
+        except Exception:
+            x = 540
+        swiped = 0
+        for _ in range(max_swipes):
+            try:
+                rect = element.rect
+            except Exception:
+                rect = {}
+            # Only a rect above the toolbar means older content; a zero rect is a
+            # delegate wholly off the display and is treated as newer, below.
+            towards_older = rect.get("height", 0) > 0 and rect.get("y", 0) < toolbar_bottom
+            if towards_older:
+                start_y = toolbar_bottom + int(list_height * 0.1)
+                end_y = start_y + int(list_height * 0.4)
+            else:
+                start_y = composer_top - int(list_height * 0.1)
+                end_y = start_y - int(list_height * 0.4)
+            try:
+                self.driver.swipe(x, start_y, x, end_y, duration=300)
+            except Exception as exc:
+                self.logger.debug("Swipe towards '%s' failed: %s", message_content, exc)
+                return swiped
+            swiped += 1
+            if chat.message_on_screen(message_content, bounds):
+                break
+        return swiped
 
     def _find_message(self, locators, timeout):
         for locator in locators:
