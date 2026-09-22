@@ -59,6 +59,7 @@ Window {
         unlimitedChatImagesEnabled: featureFlags ? featureFlags.unlimitedChatImagesEnabled : false
         paraswapEnabled: featureFlags ? featureFlags.paraswapEnabled : false
         lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
+        relayEnabled: featureFlags ? featureFlags.relayEnabled : false
         swapProvidersEnabled: featureFlags ? featureFlags.swapProvidersEnabled : false
     }
 
