@@ -273,7 +273,6 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
     """
 
     @pytest.mark.smoke
-    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     @pytest.mark.spec("SC-MACT-03")
     async def test_delete_own_message(self) -> None:
         """Verify deleting own message removes it from both devices.
@@ -378,7 +377,10 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
             ), "Secondary: Reply message should show reply corner indicator (cross-device sync)"
 
     @pytest.mark.smoke
-    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
+    @pytest.mark.xfail(
+        reason="pin verify: the secondary misses its own setup message in the 5 s pre-check; the built-in rerun is invalid because Pin toggles",
+        strict=False,
+    )
     async def test_pin_message(self) -> None:
         """Verify pinning a message via context menu syncs to both devices.
 
@@ -430,7 +432,6 @@ class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
 
     @pytest.mark.gate
     @pytest.mark.smoke
-    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     @pytest.mark.spec("SC-MACT-05")
     async def test_cannot_delete_other_users_message(self) -> None:
         """Verify delete action is NOT available on another user's message.
