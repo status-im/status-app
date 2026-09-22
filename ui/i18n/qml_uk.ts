@@ -6325,11 +6325,11 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Clear from bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Прибрати з панелі</translation>
     </message>
     <message>
         <source>Show in Downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Показати в Завантаженнях</translation>
     </message>
 </context>
 <context>
@@ -11035,7 +11035,7 @@ to load</source>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Немає увімкнених провайдерів</translation>
     </message>
     <message>
         <source>Swap</source>
@@ -13498,7 +13498,7 @@ to load</source>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Немає увімкнених провайдерів</translation>
     </message>
 </context>
 <context>
@@ -13754,11 +13754,11 @@ to load</source>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>Пов’язаний обліковий запис</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">Перенесено з %1</translation>
+        <translation>Перенесено з %1</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -18939,7 +18939,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Немає увімкнених провайдерів</translation>
     </message>
     <message>
         <source>Swap</source>

@@ -6325,11 +6325,11 @@ Keycard bude vyžadována pro podepisování</translation>
     </message>
     <message>
         <source>Clear from bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrat z lišty</translation>
     </message>
     <message>
         <source>Show in Downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit ve Stažených souborech</translation>
     </message>
 </context>
 <context>
@@ -11034,7 +11034,7 @@ selhalo</translation>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
     </message>
     <message>
         <source>Swap</source>
@@ -13497,7 +13497,7 @@ selhalo</translation>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
     </message>
 </context>
 <context>
@@ -13753,11 +13753,11 @@ selhalo</translation>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>Propojený účet</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">Přemostěno z %1</translation>
+        <translation>Přemostěno z %1</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -18934,7 +18934,7 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
     </message>
     <message>
         <source>Swap</source>
