@@ -106,6 +106,7 @@ StatusDialog {
 
                     rootStore: root.store
                     messageStore: root.messageStore
+                    chatId: root.chatId
 
                     joined: root.joined
                     messageId: model.id

@@ -17626,6 +17626,65 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThreadContextMenu</name>
+    <message>
+        <source>Edit name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unfollow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Follow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mute thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unmute thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mark as read</source>
+        <translation type="unfinished">Прочитане</translation>
+    </message>
+    <message>
+        <source>Share link</source>
+        <translation type="unfinished">Поділитися</translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation type="unfinished">Копіювати посилання</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation type="unfinished">Скопійовано</translation>
+    </message>
+    <message>
+        <source>Unpin from list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pin to list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">Видалити</translation>
+    </message>
+    <message>
+        <source>Delete this thread?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete this thread? It may remain visible on other participants&apos; devices.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ThumbnailsDropdownContent</name>
     <message>
         <source>No results</source>

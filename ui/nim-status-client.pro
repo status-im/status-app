@@ -21,7 +21,7 @@ OTHER_FILES += $$files("$$PWD/../monitoring/*.qml", true)
 OTHER_FILES += $$files("$$PWD/../vendor/SortFilterProxyModel/*.cpp", true)
 OTHER_FILES += $$files("$$PWD/../vendor/SortFilterProxyModel/*.h", true)
 
-OTHER_FILES += $$files("$$PWD/../vendor/nimqml/src/*.nim", true)
+OTHER_FILES += $$files("$$PWD/../vendor/nimqml-seaqt/src/*.nim", true)
 
 OTHER_FILES += $$files("$$PWD/../Makefile")
 
@@ -43,6 +43,5 @@ RESOURCES += resources.qrc \
             StatusQ/src/assets/png/png-desktop.qrc \
             StatusQ/src/assets/png/png-mobile.qrc \
             StatusQ/src/assets/twemoji/twemoji.qrc \
-            StatusQ/src/assets/twemoji/twemoji-big.qrc \
             StatusQ/src/assets/twemoji/twemoji-svg.qrc \
             StatusQ/src/statusq.qrc
