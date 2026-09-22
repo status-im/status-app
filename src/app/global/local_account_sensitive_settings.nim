@@ -27,6 +27,8 @@ const LSS_KEY_QUITE_ON_CLOSE* = "quitOnClose"
 const DEFAULT_QUITE_ON_CLOSE = false
 const LSS_KEY_SHOW_DELETE_MESSAGE_WARNING* = "showDeleteMessageWarning"
 const DEFAULT_SHOW_DELETE_MESSAGE_WARNING = true
+const LSS_KEY_SHOW_DELETE_THREAD_WARNING* = "showDeleteThreadWarning"
+const DEFAULT_SHOW_DELETE_THREAD_WARNING = true
 const LSS_KEY_ACTIVE_SECTION* = "activeSection"
 const DEFAULT_ACTIVE_SECTION = ""
 const LAST_SECTION_CHAT = "LastSectionChat"
@@ -285,6 +287,18 @@ QtObject:
     read = getShowDeleteMessageWarning
     write = setShowDeleteMessageWarning
     notify = showDeleteMessageWarningChanged
+
+  proc showDeleteThreadWarningChanged*(self: LocalAccountSensitiveSettings) {.signal.}
+  proc getShowDeleteThreadWarning*(self: LocalAccountSensitiveSettings): bool {.slot.} =
+    getSettingsProp[bool](self, LSS_KEY_SHOW_DELETE_THREAD_WARNING, newQVariant(DEFAULT_SHOW_DELETE_THREAD_WARNING))
+  proc setShowDeleteThreadWarning*(self: LocalAccountSensitiveSettings, value: bool) {.slot.} =
+    setSettingsProp(self, LSS_KEY_SHOW_DELETE_THREAD_WARNING, newQVariant(value)):
+      self.showDeleteThreadWarningChanged()
+
+  QtProperty[bool] showDeleteThreadWarning:
+    read = getShowDeleteThreadWarning
+    write = setShowDeleteThreadWarning
+    notify = showDeleteThreadWarningChanged
 
   proc activeSectionChanged*(self: LocalAccountSensitiveSettings) {.signal.}
   proc getActiveSection*(self: LocalAccountSensitiveSettings): string {.slot.} =
@@ -601,6 +615,7 @@ QtObject:
       of LSS_KEY_HIDE_CHANNEL_SUGGESTIONS: self.hideChannelSuggestionsChanged()
       of LSS_KEY_QUITE_ON_CLOSE: self.quitOnCloseChanged()
       of LSS_KEY_SHOW_DELETE_MESSAGE_WARNING: self.showDeleteMessageWarningChanged()
+      of LSS_KEY_SHOW_DELETE_THREAD_WARNING: self.showDeleteThreadWarningChanged()
       of LSS_KEY_ACTIVE_SECTION: self.activeSectionChanged()
       of LSS_KEY_OPEN_LINKS_IN_STATUS: self.openLinksInStatusChanged()
       of LSS_KEY_SHOULD_SHOW_FAVORITES_BAR: self.shouldShowFavoritesBarChanged()

@@ -75,7 +75,7 @@ Row {
         icon: root.isBlocked ? "cancel" : ""
         width: d.currentSize
         height: width
-        color: Theme.palette.directColor1
+        color: Theme.palette.dangerColor1
     }
 
     // (un)trusted

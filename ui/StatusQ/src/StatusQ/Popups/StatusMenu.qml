@@ -57,7 +57,7 @@ Menu {
                 return root.Theme.palette.dangerColor1
             if (root.type === StatusAction.Type.Success)
                 return root.Theme.palette.successColor1
-            return root.Theme.palette.primaryColor1
+            return root.defaultIconColor
         }
     }
 

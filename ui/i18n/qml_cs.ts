@@ -3004,7 +3004,7 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Biometrické přihlášení zakázáno - povolte jej v Nastavení</translation>
     </message>
     <message>
         <source>Change</source>
@@ -13270,7 +13270,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Please enter your password — biometrics cannot be used for this action</source>
-        <translation type="unfinished"></translation>
+        <translation>Prosím zadejte své heslo — biometriku pro tuto akci nelze použít</translation>
     </message>
     <message>
         <source>Failed to update stored credentials</source>
@@ -13761,11 +13761,11 @@ selhalo</translation>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>Přemostěný účet</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">Přemostěno z %1</translation>
+        <translation>Přemostěno z %1</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -17613,15 +17613,74 @@ Tuto akci nelze vzít zpět.</translation>
     <name>ThreadCard</name>
     <message>
         <source>deleted this thread</source>
-        <translation type="unfinished"></translation>
+        <translation>smazal(a) toto vlákno</translation>
     </message>
     <message numerus="yes">
         <source>%n message(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n zpráva</numerusform>
             <numerusform>%n zprávy</numerusform>
             <numerusform>%n zpráv</numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>ThreadContextMenu</name>
+    <message>
+        <source>Edit name</source>
+        <translation>Upravit název</translation>
+    </message>
+    <message>
+        <source>Unfollow</source>
+        <translation>Přestat sledovat</translation>
+    </message>
+    <message>
+        <source>Follow</source>
+        <translation>Sledovat</translation>
+    </message>
+    <message>
+        <source>Mute thread</source>
+        <translation>Ztlumit vlákno</translation>
+    </message>
+    <message>
+        <source>Unmute thread</source>
+        <translation>Zrušit ztlumení vlákna</translation>
+    </message>
+    <message>
+        <source>Mark as read</source>
+        <translation>Označit jako přečtené</translation>
+    </message>
+    <message>
+        <source>Share link</source>
+        <translation>Sdílet odkaz</translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation>Kopírovat odkaz</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>Zkopírováno</translation>
+    </message>
+    <message>
+        <source>Unpin from list</source>
+        <translation>Odepnout ze seznamu</translation>
+    </message>
+    <message>
+        <source>Pin to list</source>
+        <translation>Připnout na seznam</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Smazat</translation>
+    </message>
+    <message>
+        <source>Delete this thread?</source>
+        <translation>Smazat toto vlákno?</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete this thread? It may remain visible on other participants&apos; devices.</source>
+        <translation>Opravdu chcete smazat toto vlákno? Může i tak zůstat viditelné na zařízeních ostatních účastníků.</translation>
     </message>
 </context>
 <context>
