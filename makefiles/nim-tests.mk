@@ -49,15 +49,22 @@ NIM_TESTS_MODEL_SPY := \
 	token_selector_model_test \
 	token_selector_producer_view_test
 
-$(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_MODEL_SPY)): NIM_PARAMS += -d:QT_MODEL_SPY
+NIM_MODEL_SPY_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_MODEL_SPY))
+$(NIM_MODEL_SPY_TARGETS): NIM_PARAMS += -d:QT_MODEL_SPY
 
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
 
-# Use per-test nimcache to avoid race conditions when tests build in parallel
+# Per-test nimcache by default so parallel test builds don't race.
+# NIM_TESTS_SHARED_CACHE=1 shares one cache.
 NIMCACHE_BASE ?= $(or $(WORKSPACE_TMP),build)/nimcache
-nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(notdir $(basename $@))
+ifeq ($(NIM_TESTS_SHARED_CACHE),1)
+ nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)
+else
+ nim_test_cache = $(notdir $(basename $1))
+endif
+nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,$@)
 
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
@@ -73,6 +80,8 @@ benches-nim: $(NIM_BENCHES)
 # executors, so BENCH_ASSERTS=0 downgrades them to report-only, and BENCH_QUICK=1
 # trims the size sweeps to the assert-relevant sizes (see
 # test/nim/benchmarks/perf_gate.nim).
+# -j1 sub-make with shared nimcache: one test at a time, reusing C objects across tests.
 tests-nim-linux: export BENCH_ASSERTS := 0
 tests-nim-linux: export BENCH_QUICK := 1
-tests-nim-linux: tests-nim benches-nim
+tests-nim-linux:
+	+ "$(MAKE)" --no-print-directory -j1 NIM_TESTS_SHARED_CACHE=1 tests-nim benches-nim
