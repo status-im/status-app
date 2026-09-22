@@ -357,7 +357,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG f12c462e0821af072ff4ae6614eaa6da24cecb12
+      GIT_TAG 3b507db858176eb5b125b745cd7242ed7169bb3b
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)
