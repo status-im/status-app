@@ -65,6 +65,9 @@ type
     chatId*: string
     error*: string
 
+  ChatThreadsUpdatedArgs* = ref object of Args
+    threads*: seq[ThreadDto]
+
   MessageArgs* = ref object of Args
     id*: string
     channel*: string
@@ -122,6 +125,7 @@ const SIGNAL_SENDING_FAILED* = "messageSendingFailed"
 const SIGNAL_SENDING_SUCCESS* = "messageSendingSuccess"
 const SIGNAL_SENDING_STARTED* = "sendingStarted"
 const SIGNAL_SENDING_FINISHED* = "sendingFinished"
+const SIGNAL_CHAT_THREADS_UPDATED* = "chatThreadsUpdated"
 const SIGNAL_MESSAGE_REMOVE* = "messageRemove"
 const SIGNAL_CHAT_MUTED* = "chatMuted"
 const SIGNAL_CHAT_UNMUTED* = "chatUnmuted"
@@ -336,10 +340,21 @@ QtObject:
         let chat = chatMap[msg.chatId]
         self.events.emit(SIGNAL_SENDING_SUCCESS, MessageSendingSuccess(message: msg, chat: chat))
 
+  proc signalThreadUpdates(self: Service, response: RpcResponse[JsonNode]) =
+    if response.result{"threads"} == nil:
+      return
+
+    var threads: seq[ThreadDto]
+    for jsonThread in response.result["threads"]:
+      threads.add(jsonThread.toThreadDto)
+    if threads.len > 0:
+      self.events.emit(SIGNAL_CHAT_THREADS_UPDATED, ChatThreadsUpdatedArgs(threads: threads))
+
   proc processMessengerResponse*(self: Service, response: RpcResponse[JsonNode]): (seq[ChatDto], seq[MessageDto]) =
     result = self.parseChatResponse(response)
     var (chats, messages) = result
     self.signalChatsAndMessagesUpdates(chats, messages)
+    self.signalThreadUpdates(response)
 
   proc processGroupChatResponse*(self: Service, response: RpcResponse[JsonNode]) =
     proc parseGroupChatResponse(response: RpcResponse[JsonNode]): (ChatDto, seq[MessageDto], string) =
@@ -361,6 +376,7 @@ QtObject:
     else:
       self.updateOrAddChat(chat)
       self.signalChatsAndMessagesUpdates(@[chat], messages)
+      self.signalThreadUpdates(response)
 
   proc parseChatResponseAndEmit*(self: Service, response: RpcResponse[JsonNode]) =
     var (chats, _) = self.parseChatResponse(response)

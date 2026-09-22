@@ -4,6 +4,7 @@ import ../io_interface as delegate_interface
 import view, controller
 import ../../../../shared_models/[message_model, message_item]
 import ../../../../shared_models/link_preview_model
+import ../../../../shared_models/thread_participant_model
 import ../../../../../global/global_singleton
 import ../../../../../global/feature_flags
 import ../../../../../core/eventemitter
@@ -71,6 +72,7 @@ proc updateLinkPreviewsContacts(self: Module, item: Item, requestFromMailserver:
 proc updateLinkPreviewsCommunities(self: Module, item: Item, requestFromMailserver: bool)
 proc currentUserWalletContainsAddress(self: Module, address: string): bool
 proc updateQuotedImages(self: Module, items: var seq[Item], message: MessageDto)
+proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary
 
 method delete*(self: Module) =
   self.controller.delete
@@ -89,7 +91,6 @@ method isLoaded*(self: Module): bool =
 
 method viewDidLoad*(self: Module) =
   if THREADS_ENABLED:
-    self.controller.loadChatThreadsIfNeeded()
     self.view.setThreadId(self.controller.getMyThreadId())
 
     if self.controller.getMyThreadId().len > 0:
@@ -173,6 +174,10 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
     )
 
     item.hasThread = self.controller.hasThreadForParentMessage(message.id)
+    if item.hasThread:
+      let thread = self.controller.getThreadForParentMessage(message.id)
+      if thread.threadId.len > 0:
+        item.threadSummary = self.threadSummary(thread)
 
     self.updateLinkPreviewsContacts(item, requestFromMailserver = item.seen)
     self.updateLinkPreviewsCommunities(item, requestFromMailserver = item.seen)
@@ -474,12 +479,10 @@ method setThreadId*(self: Module, threadId: string) =
 
 method createThread*(self: Module, parentMessageId: string) =
   if self.controller.hasThreadForParentMessage(parentMessageId):
-    # TODO get thread name from service
-    # threadId == parentMessageId; open the existing thread as a sub-channel chat
-    # Note: threadName would ideally come from ThreadDto, but for existing threads
-    # the module should already be loaded, so threadName is not used
-    self.delegate.openThreadAsChat(parentMessageId, "", parentMessageId)
-    return
+    let thread = self.controller.getThreadForParentMessage(parentMessageId)
+    if thread.threadId.len > 0:
+      self.delegate.openThreadAsChat(thread.threadId, thread.name, thread.parentMessageId)
+      return
 
   self.controller.createThread(parentMessageId)
 
@@ -496,6 +499,7 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
 
   if selectedThread.parentMessageId.len > 0:
     self.view.model().setHasThread(selectedThread.parentMessageId, true)
+    self.view.model().setThreadSummary(selectedThread.parentMessageId, self.threadSummary(selectedThread))
 
   # Open the freshly created thread as a sub-channel chat
   self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId,
@@ -508,12 +512,41 @@ method onChatThreadsLoadingFailed*(self: Module) =
 method onThreadCreationFailed*(self: Module) =
   self.view.emitThreadCreationFailedSignal()
 
+proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
+  result.threadId = thread.threadId
+  result.originalMessageId = thread.parentMessageId
+  result.title = thread.name
+  result.messagesCount = thread.messagesCount
+  # Mentions and replies are messages, so adding their counters would count
+  # the same unseen activity more than once.
+  result.notificationCount = thread.unviewedMessagesCount
+  result.participantsCount = thread.participantsCount
+
+  for participantId in thread.participantsPreviewIds:
+    let contact = self.controller.getContactDetails(participantId)
+    result.participants.add(thread_participant_model.Participant(
+      id: participantId,
+      name: contact.defaultDisplayName,
+      image: contact.icon,
+      colorId: contact.colorId,
+    ))
+
+  if thread.lastMessage.`from`.len > 0:
+    let sender = self.controller.getContactDetails(thread.lastMessage.`from`)
+    result.lastMessageSenderName = sender.defaultDisplayName
+    result.lastMessageSenderImage = sender.icon
+    result.lastMessageSenderColorId = sender.colorId
+    result.lastMessageText = thread.lastMessage.text
+    result.lastMessageTimestamp = thread.lastMessage.timestamp
+
 method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
   # Adding the thread rows is the chat section's job; this only back-fills the flag for
   # messages that were already rendered when the fetch landed.
   for thread in threads:
     if thread.parentMessageId.len > 0:
       self.view.model().setHasThread(thread.parentMessageId, true)
+      if thread.messagesCount > 0:
+        self.view.model().setThreadSummary(thread.parentMessageId, self.threadSummary(thread))
 
 method getChatType*(self: Module): int =
   let chatDto = self.controller.getChatDetails()
@@ -808,4 +841,3 @@ proc updateLinkPreviewsCommunities(self: Module, item: Item, requestFromMailserv
     let urlData = self.controller.parseSharedUrl(url)
     item.linkPreviewModel.onCommunityInfoRequested(communityId)
     self.controller.requestCommunityInfo(communityId, useDatabase = false, initDuration(minutes = 10))
-
