@@ -583,8 +583,6 @@ Item {
                                  && root.rootStore.isUserAllowedToSendMessage
                     }
 
-                    textInput.readOnly: d.sendingInProgress
-
                     usersModel: root.usersModel
                     usersModelIncludeAtEveryone: root.activeChatType !== Constants.chatType.oneToOne
                     linkPreviewModel: !!d.activeChatContentModule ? d.activeChatContentModule.inputAreaModule.linkPreviewModel : null
