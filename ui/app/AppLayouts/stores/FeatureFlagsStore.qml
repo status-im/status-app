@@ -17,5 +17,6 @@ QtObject {
     property bool buyEnabled
     property bool paraswapEnabled
     property bool lifiEnabled
+    property bool relayEnabled
     property bool swapProvidersEnabled
 }

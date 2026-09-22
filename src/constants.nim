@@ -75,6 +75,7 @@ let
   INFURA_TOKEN_SECRET_RESOLVED* = desktopConfig.infuraTokenSecret
   ALCHEMY_API_KEY_RESOLVED* = desktopConfig.alchemyApiKey
   LIFI_API_KEY_RESOLVED* = desktopConfig.lifiApiKey
+  RELAY_API_KEY_RESOLVED* = desktopConfig.relayApiKey
   OPENSEA_API_KEY_RESOLVED* = desktopConfig.openseaApiKey
   RARIBLE_MAINNET_API_KEY_RESOLVED* = desktopConfig.raribleMainnetApiKey
   RARIBLE_TESTNET_API_KEY_RESOLVED* = desktopConfig.raribleTestnetApiKey
