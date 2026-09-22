@@ -794,7 +794,7 @@ else
 APPIMAGE_TOOL := tmp/linux/tools/appimagetool
 endif
 
-_APPIMAGE_TOOL := appimagetool-x86_64.AppImage
+_APPIMAGE_TOOL := appimagetool-$(shell uname -m).AppImage
 $(APPIMAGE_TOOL):
 ifndef IN_NIX_SHELL
 	echo -e "\033[92mFetching:\033[39m appimagetool"
