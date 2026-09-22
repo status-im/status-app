@@ -34,10 +34,21 @@ public class NativeSwipeHandlerHelper {
 
     // Buffered-tap disambiguation: the initial DOWN is not forwarded to the
     // content immediately. We keep a copy and only replay it once the gesture is known to be a
-    // tap (on release) or a vertical scroll (on first vertical move). A potential drawer swipe
-    // never forwards it, so the content below cannot arm a long-press during the open gesture.
+    // tap (on release), a vertical scroll (on first vertical move) or a stationary hold (see
+    // holdCommitRunnable). A potential drawer swipe never forwards it, so the content below cannot
+    // arm a long-press during the open gesture (#22380).
     private MotionEvent bufferedDown;
     private boolean passthroughStarted = false;
+
+    // Stationary-hold disambiguation (issue #22490): a finger that rests in the edge strip without
+    // becoming a horizontal swipe is an intentional long-press (e.g. the chat input paste menu).
+    // Once the settle delay elapses without a swipe, replay the buffered DOWN so the content can arm
+    // its own long-press. A real drawer swipe crosses the touch slop before this fires, cancelling
+    // the timer, so the DOWN is still never forwarded during an open gesture. NOTE: we can't rely on
+    // dispatching ACTION_CANCEL on swipe start instead - a QML TapHandler.onLongPressed (message
+    // context menu) ignores it and still fires, so withholding the DOWN is the only robust option.
+    private Runnable holdCommitRunnable;
+    private final int holdCommitDelayMs = ViewConfiguration.getTapTimeout();
 
     // Handler rect in parent pixels (contentView coordinates).
     private float handlerX = 0.0f;
@@ -77,6 +88,13 @@ public class NativeSwipeHandlerHelper {
             touchOverlayView.setClickable(true);
             touchOverlayView.setLongClickable(false);
             touchOverlayView.setElevation(1f);
+
+            holdCommitRunnable = () -> {
+                // The finger rested in the edge strip without turning into a swipe or scroll:
+                // hand the gesture to the content so it can arm its own long-press (#22490).
+                if (active && !swiping && !passthroughStarted)
+                    startPassthrough();
+            };
 
             touchOverlayView.setOnTouchListener((v, event) -> {
                 final int action = event.getActionMasked();
@@ -118,6 +136,10 @@ public class NativeSwipeHandlerHelper {
                     }
                     if (passthroughTarget != null) {
                         bufferedDown = MotionEvent.obtain(event);
+                        // Arm the stationary-hold fallback so a long-press that never swipes still
+                        // reaches the content (issue #22490).
+                        if (holdCommitRunnable != null)
+                            touchOverlayView.postDelayed(holdCommitRunnable, holdCommitDelayMs);
                     }
                     return true;
                 }
@@ -150,6 +172,7 @@ public class NativeSwipeHandlerHelper {
                             // Horizontal drag -> drawer swipe. The buffered DOWN is discarded
                             // (never forwarded), so no long-press can fire on the content.
                             swiping = true;
+                            cancelHoldTimer();
                             if (bufferedDown != null) {
                                 bufferedDown.recycle();
                                 bufferedDown = null;
@@ -276,8 +299,15 @@ public class NativeSwipeHandlerHelper {
         if (swiping) nativeOnSwipeEnded(nativePtr, 0f, 0f, true);
     }
 
+    /** Cancels a pending stationary-hold commit. UI-thread only. */
+    private void cancelHoldTimer() {
+        if (touchOverlayView != null && holdCommitRunnable != null)
+            touchOverlayView.removeCallbacks(holdCommitRunnable);
+    }
+
     /** Replays the buffered DOWN to the content view, committing to passthrough. UI-thread only. */
     private void startPassthrough() {
+        cancelHoldTimer();
         if (passthroughStarted || passthroughTarget == null)
             return;
         if (bufferedDown != null) {
@@ -290,6 +320,7 @@ public class NativeSwipeHandlerHelper {
 
     /** Releases per-gesture resources and resets flags. UI-thread only. */
     private void resetGestureState() {
+        cancelHoldTimer();
         if (velocityTracker != null) {
             velocityTracker.recycle();
             velocityTracker = null;
