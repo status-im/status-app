@@ -2,25 +2,19 @@
 library 'status-jenkins-lib@v1.9.50'
 
 pipeline {
-  agent {
-    dockerfile {
-      label 'linuxcontainer'
-      filename 'tests.Dockerfile'
-      dir 'ci'
-      /* The messaging tests' second participant is a status-go container the
-       * suite starts and stops itself, reached on 127.0.0.1 at the port the
-       * daemon published. status-go's own functional job runs this way on the
-       * same agent label (_assets/ci/Jenkinsfile.tests-rpc). */
-      args '--volume=/var/run/docker.sock:/var/run/docker.sock ' +
-           '--network=host ' +
-           '--user jenkins'
-    }
-  }
+  /* The agent is allocated inside the lane stage, after the lock, so a waiting
+   * build holds no executor. */
+  agent none
 
   parameters {
     string(
       name: 'CHANGE_ID',
       description: 'Passed from PR CI Job, optional',
+      defaultValue: ''
+    )
+    string(
+      name: 'GIT_COMMIT',
+      description: 'Commit the status is reported on. Set by the build job; needed because a build aborted while waiting for a lane has not checked out.',
       defaultValue: ''
     )
     string(
@@ -50,14 +44,15 @@ pipeline {
     )
     string(
       name: 'PYTEST_ARGS',
-      description: 'Pytest flags. Default runs the PR gate on one phone plus a peer. Use "-n=2 -m smoke tests" for nightly/full runs.',
-      defaultValue: '-n=5 -m "(gate and not two_phone) or backend_peer" tests'
+      description: 'Pytest flags. Default runs the PR gate on one phone plus a peer at 2 workers, so two jobs can share one BrowserStack account. Use "-n=2 -m smoke tests" for nightly/full runs.',
+      defaultValue: '-n=2 -m "(gate and not two_phone) or backend_peer" tests'
     )
   }
 
   options {
     timestamps()
-    timeout(time: 120, unit: 'MINUTES')
+    /* Spent waiting for a lane. The run budget is the timeout around pytest. */
+    timeout(time: 4, unit: 'HOURS')
     buildDiscarder(logRotator(
       daysToKeepStr: '30',
       numToKeepStr: '30',
@@ -68,7 +63,7 @@ pipeline {
 
   environment {
     PLATFORM = 'tests/e2e-android'
-    VIRTUAL_ENV = "${env.WORKSPACE_TMP}/venv-appium"
+    /* VIRTUAL_ENV is set in the lane stage; there is no node here yet. */
     PYTHONUNBUFFERED = "1"
     CHANGE_ID = "${params.CHANGE_ID}"
     TEST_DEVICE_ID = "${params.TEST_DEVICE_ID}"
@@ -78,7 +73,9 @@ pipeline {
   }
 
   stages {
-    stage('Prep') {
+    /* No agent: runs on the controller before the lane wait, so a queued rerun
+     * of the same commit shows pending rather than its earlier result. */
+    stage('Status') {
       steps {
         script {
           setNewBuildName()
@@ -87,143 +84,311 @@ pipeline {
       }
     }
 
-    stage('Setup Python environment') {
-      steps {
-        dir('test/e2e_appium') {
-          sh """#!/bin/bash
-            set -euo pipefail
-            python3 -m venv ${VIRTUAL_ENV}
-            source ${VIRTUAL_ENV}/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
-            pip install -r requirements-backend-peer.txt
-          """
+    /* Lockable resources: label `browserstack-android-lane`, names
+     * browserstack-android-account-<N>-lane-<a|b>. Declare them in the order
+     * 1-a, 2-a, 1-b, 2-b: the plugin hands them out in declaration order.
+     * Disable an account's resources to take it out of service. */
+    stage('E2E lane') {
+      options {
+        lock(label: 'browserstack-android-lane', quantity: 1, variable: 'BROWSERSTACK_LANE')
+      }
+      environment {
+        VIRTUAL_ENV = "${env.WORKSPACE_TMP}/venv-appium"
+      }
+      agent {
+        dockerfile {
+          label 'linuxcontainer'
+          filename 'tests.Dockerfile'
+          dir 'ci'
+          /* The messaging tests' second participant is a status-go container the
+           * suite starts and stops itself, reached on 127.0.0.1 at the port the
+           * daemon published. status-go's own functional job runs this way on the
+           * same agent label (_assets/ci/Jenkinsfile.tests-rpc). */
+          args '--volume=/var/run/docker.sock:/var/run/docker.sock ' +
+               '--network=host ' +
+               '--user jenkins'
         }
       }
-    }
-
-    stage('Peer image') {
-      when { expression { params.BACKEND_PEER } }
-      steps { timeout(30) { script {
-        env.STATUS_BACKEND_IMAGE = sh(
-          script: "./test/e2e_appium/scripts/peer_image.sh '${env.STATUS_BACKEND_DOCKER_PROJECT}'",
-          returnStdout: true
-        ).trim()
-        if (!env.STATUS_BACKEND_IMAGE) {
-          error('Peer image stage produced no image')
-        }
-      } } }
-    }
-
-    /* Copies APK from Jenkins build job (skipped when BUILD_SOURCE is a URL) */
-    stage('Fetch APK from Build') {
-      when {
-        allOf {
-          expression { !params.BROWSERSTACK_APP_ID?.trim() }
-          expression { !params.BUILD_SOURCE?.startsWith('http') }
-        }
-      }
-      steps { timeout(5) { script { dir('test/e2e_appium') {
-        copyArtifacts(
-          projectName: params.BUILD_SOURCE,
-          filter:      'pkg/*.apk',
-          selector:    lastWithArtifacts(),
-          target:      './pkg/',
-          flatten:     true
-        )
-      } } } }
-    }
-
-    /* Uploads local APK or passes URL for BrowserStack to download */
-    stage('Provide APK to BrowserStack') {
-      when {
-        expression { !params.BROWSERSTACK_APP_ID?.trim() }
-      }
-      steps {
-        script {
-          def autSource = params.BUILD_SOURCE?.startsWith('http') ? 
-            params.BUILD_SOURCE : utils.findFile('test/e2e_appium/pkg/*.apk')
-          withCredentials([
-            usernamePassword(
-              credentialsId: 'browserstack-status-mobile-android',
-              usernameVariable: 'BROWSERSTACK_USERNAME',
-              passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
-            )
-          ]) {
-            def response = sh(
-              script: "./scripts/upload_browserstack_apk.sh '${autSource}'",
-              returnStdout: true
-            ).trim()
-            def result = readJSON text: response
-            if (!result?.app_url) {
-              error("BrowserStack upload failed: ${response}")
+      stages {
+        stage('Prep') {
+          steps {
+            script {
+              /* Fail closed: a default would send unknown lanes to one account. */
+              def lane = env.BROWSERSTACK_LANE
+              def account = accountOfLane(lane)
+              if (!account) {
+                error("Unrecognised BrowserStack lane: '${lane}'\n" +
+                      "Lane resources must be named browserstack-android-account-<N>-lane-<a|b>\n" +
+                      "and carry the label browserstack-android-lane. Fix the resource name in\n" +
+                      "Manage Jenkins > Lockable Resources.")
+              }
+              def credentialsId = credentialsForAccount(account)
+              if (!credentialsId) {
+                error("No BrowserStack credential configured for account ${account} (lane '${lane}').\n" +
+                      "Either add it to credentialsForAccount() in this file, or disable the\n" +
+                      "browserstack-android-account-${account}-lane-* resources so builds stop\n" +
+                      "being handed a lane this job cannot use.")
+              }
+              env.BROWSERSTACK_ACCOUNT = account
+              env.BROWSERSTACK_CREDENTIALS = credentialsId
+              echo "BrowserStack lane ${lane} -> account ${account} -> credentials ${credentialsId}"
             }
-            env.UPLOADED_BROWSERSTACK_APP_ID = result.app_url
-            env.BROWSERSTACK_BUILD_NAME = result.custom_id
-            env.BROWSERSTACK_BUILD_IDENTIFIER = env.BUILD_NUMBER
           }
         }
-      }
-    }
 
-    stage('Run pytest suite') {
-      steps{
-        script {
-          if (params.PYTEST_ARGS?.contains('backend_peer') && !env.STATUS_BACKEND_IMAGE) {
-            error('PYTEST_ARGS selects peer tests but no peer image was built. Set BACKEND_PEER.')
-          }
-        }
-        lock(resource: 'e2e-android') {
-          script {
-            env.E2E_RUN_ID = env.BUILD_TAG
-            def appId = env.UPLOADED_BROWSERSTACK_APP_ID ?: params.BROWSERSTACK_APP_ID
-            dir('test/e2e_appium') {
+        stage('Lane preflight') {
+          steps {
+            script {
+              def workers = workersRequested(params.PYTEST_ARGS)
               withCredentials([
                 usernamePassword(
-                  credentialsId: 'browserstack-status-mobile-android',
+                  credentialsId: env.BROWSERSTACK_CREDENTIALS,
                   usernameVariable: 'BROWSERSTACK_USERNAME',
                   passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
-                ),
-                string(
-                  credentialsId: 'wallet-test-user-seed',
-                  variable: 'WALLET_TEST_USER_SEED'
                 )
               ]) {
-                sh "TMPDIR=${env.WORKSPACE_TMP} BROWSERSTACK_APP_ID=${appId} ${VIRTUAL_ENV}/bin/python -m pytest --env browserstack ${params.PYTEST_ARGS?.trim() ?: ''}"
+                /* Credentials reach curl as a config line on stdin, not in argv, which
+                 * other processes on the agent can read. */
+                def probe = sh(
+                  script: 'printf \'user = "%s:%s"\\n\' "$BROWSERSTACK_USERNAME" "$BROWSERSTACK_ACCESS_KEY" | ' +
+                          'curl -sS --max-time 30 -K - -w "\\n%{http_code}" ' +
+                          'https://api-cloud.browserstack.com/app-automate/plan.json || true',
+                  returnStdout: true
+                ).trim()
+                def lines = probe.tokenize('\n')
+                def code = lines ? lines[-1] : ''
+                if (code != '200') {
+                  error("BrowserStack account ${env.BROWSERSTACK_ACCOUNT} did not answer (HTTP ${code ?: 'no response'}).\n" +
+                        "The credential may be revoked, or the account may be down. Disable the\n" +
+                        "browserstack-android-account-${env.BROWSERSTACK_ACCOUNT}-lane-* resources to take it\n" +
+                        "out of service; builds will queue on the remaining lanes.")
+                }
+                def plan = readJSON text: lines.size() > 1 ? lines[0..-2].join('\n') : '{}'
+                int allowed = (plan.parallel_sessions_max_allowed ?: 0) as int
+                int running = (plan.parallel_sessions_running ?: 0) as int
+                int free = allowed - running
+                echo "Account ${env.BROWSERSTACK_ACCOUNT}: ${running}/${allowed} sessions in use, " +
+                     "${free} free; this run starts ${workers} workers. A multi-device test holds up to three sessions per worker."
+                /* Not fatal: BrowserStack queues sessions past the plan. The warning is
+                 * the signal that a run is slower than its worker count suggests. */
+                if (allowed > 0 && workers > free) {
+                  echo "WARNING: ${workers} workers but only ${free} of ${allowed} sessions are free on " +
+                       "account ${env.BROWSERSTACK_ACCOUNT}; the suite will queue for the rest."
+                }
+
+                if (params.BROWSERSTACK_APP_ID?.trim()) {
+                  def wanted = params.BROWSERSTACK_APP_ID.trim()
+                  def apps = sh(
+                    script: 'printf \'user = "%s:%s"\\n\' "$BROWSERSTACK_USERNAME" "$BROWSERSTACK_ACCESS_KEY" | ' +
+                            'curl -sS --max-time 30 -K - ' +
+                            'https://api-cloud.browserstack.com/app-automate/recent_apps || true',
+                    returnStdout: true
+                  ).trim()
+                  /* recent_apps lists only the latest uploads and BrowserStack has no
+                   * per-app lookup, so absence is a warning. A wrong-account id fails
+                   * at session start with INVALID_APP_URL. */
+                  if (!apps.contains(wanted)) {
+                    echo "WARNING: BROWSERSTACK_APP_ID '${wanted}' is not among the recent uploads on " +
+                         "account ${env.BROWSERSTACK_ACCOUNT}. A bs:// id only works on the account that " +
+                         "uploaded it; if the run fails with INVALID_APP_URL, leave BROWSERSTACK_APP_ID " +
+                         "empty so the build uploads to its own account."
+                  }
+                }
               }
             }
           }
         }
+
+        stage('Setup Python environment') {
+          steps { timeout(10) {
+            dir('test/e2e_appium') {
+              sh """#!/bin/bash
+                set -euo pipefail
+                python3 -m venv ${VIRTUAL_ENV}
+                source ${VIRTUAL_ENV}/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                pip install -r requirements-backend-peer.txt
+              """
+            }
+          } }
+        }
+
+        stage('Peer image') {
+          when { expression { params.BACKEND_PEER } }
+          steps { timeout(30) { script {
+            env.STATUS_BACKEND_IMAGE = sh(
+              script: "./test/e2e_appium/scripts/peer_image.sh '${env.STATUS_BACKEND_DOCKER_PROJECT}'",
+              returnStdout: true
+            ).trim()
+            if (!env.STATUS_BACKEND_IMAGE) {
+              error('Peer image stage produced no image')
+            }
+          } } }
+        }
+
+        /* Copies APK from Jenkins build job (skipped when BUILD_SOURCE is a URL) */
+        stage('Fetch APK from Build') {
+          when {
+            allOf {
+              expression { !params.BROWSERSTACK_APP_ID?.trim() }
+              expression { !params.BUILD_SOURCE?.startsWith('http') }
+            }
+          }
+          steps { timeout(5) { script { dir('test/e2e_appium') {
+            copyArtifacts(
+              projectName: params.BUILD_SOURCE,
+              filter:      'pkg/*.apk',
+              selector:    lastWithArtifacts(),
+              target:      './pkg/',
+              flatten:     true
+            )
+          } } } }
+        }
+
+        /* Uploads local APK or passes URL for BrowserStack to download */
+        stage('Provide APK to BrowserStack') {
+          when {
+            expression { !params.BROWSERSTACK_APP_ID?.trim() }
+          }
+          steps { timeout(15) {
+            script {
+              def autSource = params.BUILD_SOURCE?.startsWith('http') ? 
+                params.BUILD_SOURCE : utils.findFile('test/e2e_appium/pkg/*.apk')
+              withCredentials([
+                usernamePassword(
+                  credentialsId: env.BROWSERSTACK_CREDENTIALS,
+                  usernameVariable: 'BROWSERSTACK_USERNAME',
+                  passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
+                )
+              ]) {
+                def response = sh(
+                  script: "./scripts/upload_browserstack_apk.sh '${autSource}'",
+                  returnStdout: true
+                ).trim()
+                def result = readJSON text: response
+                if (!result?.app_url) {
+                  error("BrowserStack upload failed: ${response}")
+                }
+                env.UPLOADED_BROWSERSTACK_APP_ID = result.app_url
+                env.BROWSERSTACK_BUILD_NAME = result.custom_id
+                env.BROWSERSTACK_BUILD_IDENTIFIER = env.BUILD_NUMBER
+              }
+            }
+          } }
+        }
+
+        stage('Run pytest suite') {
+          steps{
+            script {
+              if (params.PYTEST_ARGS?.contains('backend_peer') && !env.STATUS_BACKEND_IMAGE) {
+                error('PYTEST_ARGS selects peer tests but no peer image was built. Set BACKEND_PEER.')
+              }
+            }
+            script {
+              env.E2E_RUN_ID = env.BUILD_TAG
+              def appId = env.UPLOADED_BROWSERSTACK_APP_ID ?: params.BROWSERSTACK_APP_ID
+              dir('test/e2e_appium') {
+                withCredentials([
+                  usernamePassword(
+                    credentialsId: env.BROWSERSTACK_CREDENTIALS,
+                    usernameVariable: 'BROWSERSTACK_USERNAME',
+                    passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
+                  ),
+                  string(
+                    credentialsId: 'wallet-test-user-seed',
+                    variable: 'WALLET_TEST_USER_SEED'
+                  )
+                ]) {
+                  /* The run budget, as a step wrapper: a stage option would also
+                   * cover the lane wait, and Jenkins does not fix that order. */
+                  timeout(time: 90, unit: 'MINUTES') {
+                    sh "TMPDIR=${env.WORKSPACE_TMP} BROWSERSTACK_APP_ID=${appId} ${VIRTUAL_ENV}/bin/python -m pytest --env browserstack ${params.PYTEST_ARGS?.trim() ?: ''}"
+                  }
+                }
+              }
+            }
+          }
+        }
+
       }
-    }
-
-  }
-
-  post {
-    always { script {
-      junit allowEmptyResults: true, testResults: "test/e2e_appium/reports/${env.BUILD_TAG}/pytest_results_*.xml"
-      archiveArtifacts artifacts: "test/e2e_appium/reports/${env.BUILD_TAG}/**/*", allowEmptyArchive: true
-      env.PKG_URL = "${env.BUILD_URL}testReport/"
-      updateGitHubStatus()
-    } }
-    success { script { github.notifyPR(true) } }
-    failure { script { github.notifyPR(false) } }
-    cleanup {
-      script {
-        if (params.BACKEND_PEER) {
-          sh '''
-            # By label, not name: a name filter is a substring match and one
-            # BUILD_TAG can prefix another's.
-            docker ps -aq --filter "label=com.docker.compose.project=${STATUS_BACKEND_DOCKER_PROJECT}" | xargs -r docker rm -f
-            docker network rm "${STATUS_BACKEND_DOCKER_PROJECT}_default" || true
-            docker volume rm "${STATUS_BACKEND_DOCKER_PROJECT}_wakufleetconfig" || true
-          '''
+      post {
+        always { script {
+          junit allowEmptyResults: true, testResults: "test/e2e_appium/reports/${env.BUILD_TAG}/pytest_results_*.xml"
+          archiveArtifacts artifacts: "test/e2e_appium/reports/${env.BUILD_TAG}/**/*", allowEmptyArchive: true
+          /* Read by notifyPR in the success and failure conditions below. */
+          env.PKG_URL = "${env.BUILD_URL}testReport/"
+        } }
+        success { script { github.notifyPR(true) } }
+        failure { script { github.notifyPR(false) } }
+        cleanup {
+          script {
+            if (params.BACKEND_PEER) {
+              sh '''
+                # By label, not name: a name filter is a substring match and one
+                # BUILD_TAG can prefix another's.
+                docker ps -aq --filter "label=com.docker.compose.project=${STATUS_BACKEND_DOCKER_PROJECT}" | xargs -r docker rm -f
+                docker network rm "${STATUS_BACKEND_DOCKER_PROJECT}_default" || true
+                docker volume rm "${STATUS_BACKEND_DOCKER_PROJECT}_wakufleetconfig" || true
+              '''
+            }
+          }
+          cleanWs(disableDeferredWipeout: true)
+          dir(env.WORKSPACE_TMP) { deleteDir() }
         }
       }
-      cleanWs(disableDeferredWipeout: true)
-      dir(env.WORKSPACE_TMP) { deleteDir() }
     }
   }
+  /* Pipeline-level, not stage-level: a stage post does not run when the build
+   * is aborted while waiting for the lane. */
+  post {
+    always { script { updateGitHubStatus() } }
+  }
+}
+
+/* Tokens, not a regex: a Matcher is not serializable across a CPS step. */
+def accountOfLane(String lane) {
+  def parts = (lane ?: '').tokenize('-')
+  if (parts.size() != 6) { return null }
+  if (parts[0] != 'browserstack' || parts[1] != 'android') { return null }
+  if (parts[2] != 'account' || parts[4] != 'lane') { return null }
+  if (!parts[3].isInteger()) { return null }
+  if (!(parts[5] in ['a', 'b'])) { return null }
+  return parts[3]
+}
+
+/* One row per account: a lane whose account is not here fails in Prep. Adding an
+ * account is its two lane resources plus a row here. */
+def credentialsForAccount(String account) {
+  def byAccount = [
+    '1': 'browserstack-status-mobile-android',
+  ]
+  return byAccount[account]
+}
+
+/* Worker count from PYTEST_ARGS, every xdist spelling, last one wins as pytest
+ * does. No -n, or -n 0, is one worker. "auto" cannot be sized, so it is refused before any
+ * session opens. Sessions per worker are not estimated: a multi-device test holds
+ * up to three, and which tests a marker expression reaches is only known at collection. */
+def workersRequested(String pytestArgs) {
+  def tokens = (pytestArgs ?: '').tokenize(' ')
+  String count = null
+  for (int i = 0; i < tokens.size(); i++) {
+    def t = tokens[i]
+    if (t == '-n' || t == '--numprocesses') {
+      if (i + 1 < tokens.size()) { count = tokens[i + 1] }
+    } else if (t.startsWith('-n=') || t.startsWith('--numprocesses=')) {
+      count = t.substring(t.indexOf('=') + 1)
+    } else if (t.startsWith('-n') && t.length() > 2 && !t.startsWith('-no')) {
+      count = t.substring(2)
+    }
+  }
+  if (count == null) { return 1 }
+  if (!count.isInteger() || count.toInteger() < 0) {
+    error("PYTEST_ARGS worker count '${count}' must be a whole number so the lane preflight can report it against the plan.")
+  }
+  /* -n 0 is xdist's in-process mode: one worker. */
+  return Math.max(count.toInteger(), 1)
 }
 
 def setNewBuildName() {
@@ -235,7 +400,7 @@ def updateGitHubStatus() {
   if (utils.isPRBuild()) {
     github.statusUpdate(
       context: 'jenkins/prs/tests/e2e-android',
-      commit: env.GIT_COMMIT,
+      commit: params.GIT_COMMIT?.trim() ?: env.GIT_COMMIT,
       repo_url: 'https://github.com/status-im/status-app'
     )
   }
