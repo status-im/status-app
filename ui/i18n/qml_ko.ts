@@ -6272,11 +6272,11 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Clear from bar</source>
-        <translation type="unfinished"></translation>
+        <translation>표시줄에서 지우기</translation>
     </message>
     <message>
         <source>Show in Downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>다운로드에서 보기</translation>
     </message>
 </context>
 <context>
@@ -10926,7 +10926,7 @@ to load</source>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>활성화된 제공자가 없습니다</translation>
     </message>
     <message>
         <source>Swap</source>
@@ -13367,7 +13367,7 @@ to load</source>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>활성화된 제공자가 없습니다</translation>
     </message>
 </context>
 <context>
@@ -13621,11 +13621,11 @@ to load</source>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>연결된 계정</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">%1에서 브리지됨</translation>
+        <translation>%1에서 브리지됨</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -18768,7 +18768,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>활성화된 제공자가 없습니다</translation>
     </message>
     <message>
         <source>Swap</source>
