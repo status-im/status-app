@@ -14,6 +14,7 @@ ARG CCID_SHA256="4abe76010a72944e02e8d5d4d60ba665f941891eee2a35f77fd35cebc095e14
 FROM ubuntu:22.04 AS arch-amd64
 
 ENV ARCH_UNAME=x86_64 \
+    ARCH_PKGS="fuse" \
     ARCH_TRIPLET=x86_64-linux-gnu \
     QT_HOST=linux \
     QT_ARCH=linux_gcc_64 \
@@ -23,9 +24,10 @@ ENV ARCH_UNAME=x86_64 \
     PROTOC_ARCH=x86_64 \
     PROTOC_SHA256=bc8211ce760bd43ee21ddc145d6d9dbaeeabae205267a79d9054a240e367d4b4
 
-FROM ubuntu:22.04 AS arch-arm64
+FROM ubuntu:24.04 AS arch-arm64
 
 ENV ARCH_UNAME=aarch64 \
+    ARCH_PKGS="fuse3 libfuse2t64 libminizip1t64" \
     ARCH_TRIPLET=aarch64-linux-gnu \
     QT_HOST=linux_arm64 \
     QT_ARCH=linux_gcc_arm64 \
@@ -43,16 +45,16 @@ FROM arch AS qt-install
 ARG QT_VERSION QT_MODULES
 
 RUN apt update && apt full-upgrade -y \
- && apt install -y --no-install-recommends sudo python3 python3-pip python3-dev build-essential \
+ && apt install -y --no-install-recommends sudo python3 python3-venv \
  && apt-get -qq clean
 
 RUN chmod -R 777 /opt
 
 # Install QT
-RUN python3 -m pip install setuptools \
- && python3 -m pip install -U pip \
- && python3 -m pip install aqtinstall \
- && python3 -m aqt install-qt ${QT_HOST} desktop ${QT_VERSION} ${QT_ARCH} -m ${QT_MODULES} -O /opt/qt --timeout 3000
+# aqtinstall goes into a venv: pip refuses to touch the system Python on Ubuntu 24.04 (PEP 668).
+RUN python3 -m venv /opt/aqt \
+ && /opt/aqt/bin/pip install aqtinstall \
+ && /opt/aqt/bin/aqt install-qt ${QT_HOST} desktop ${QT_VERSION} ${QT_ARCH} -m ${QT_MODULES} -O /opt/qt --timeout 3000
 
 # PCSC Lite Build Image --------------------------------------------------------
 FROM arch AS pcsc-build
@@ -113,7 +115,7 @@ RUN apt update -yq && apt install -yq software-properties-common \
  && add-apt-repository -y ppa:git-core/ppa \
  && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
  && apt update -yq && apt full-upgrade -yq && apt install -yq --no-install-recommends --fix-missing  \
-    gnupg2 openssh-client ca-certificates locales sudo jq curl wget fuse s3cmd file unzip llvm tk-dev xz-utils netbase \
+    gnupg2 openssh-client ca-certificates locales sudo jq curl wget ${ARCH_PKGS} s3cmd file unzip llvm tk-dev xz-utils netbase \
     git make build-essential pkg-config extra-cmake-modules \
     flatpak flatpak-builder elfutils appstream \
     libgl1-mesa-dev libsm6 libice6 libfontconfig1 libdbus-1-3 libssl-dev libz-dev \
