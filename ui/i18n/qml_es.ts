@@ -6315,11 +6315,11 @@ par de claves. Se requerirá Keycard para firmar</translation>
     </message>
     <message>
         <source>Clear from bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitar de la barra</translation>
     </message>
     <message>
         <source>Show in Downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar en Descargas</translation>
     </message>
 </context>
 <context>
@@ -11001,7 +11001,7 @@ al cargar</translation>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>No hay proveedores habilitados</translation>
     </message>
     <message>
         <source>Swap</source>
@@ -13460,7 +13460,7 @@ al cargar</translation>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>No hay proveedores habilitados</translation>
     </message>
 </context>
 <context>
@@ -13715,11 +13715,11 @@ al cargar</translation>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuenta vinculada</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">Conectado desde %1</translation>
+        <translation>Conectado desde %1</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -19099,7 +19099,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>No hay proveedores habilitados</translation>
     </message>
     <message>
         <source>Swap</source>
