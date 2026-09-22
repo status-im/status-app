@@ -65,6 +65,7 @@ Item {
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
+    property bool isThreadView
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -440,6 +441,19 @@ Item {
             quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
             bridgeName: model.bridgeName
             hasThread: model.hasThread
+            isThreadView: root.isThreadView
+            threadId: model.threadId
+            threadOriginalMessageId: model.threadOriginalMessageId
+            threadTitle: model.threadTitle
+            threadMessagesCount: model.threadMessagesCount
+            threadNotificationCount: model.threadNotificationCount
+            threadParticipantsModel: model.threadParticipantsModel
+            threadParticipantsCount: model.threadParticipantsCount
+            threadLastMessageSenderName: model.threadLastMessageSenderName
+            threadLastMessageSenderImage: model.threadLastMessageSenderImage
+            threadLastMessageSenderColorId: model.threadLastMessageSenderColorId
+            threadLastMessageText: model.threadLastMessageText
+            threadLastMessageTimestamp: model.threadLastMessageTimestamp
 
             gapFrom: model.gapFrom
             gapTo: model.gapTo

@@ -337,11 +337,10 @@ StatusMenu {
     MsgCtxAction {
         id: openThreadAction
         objectName: "messageContextMenu_openThread"
-        text: root.hasThread ? qsTr("Open Thread") : qsTr("Create Thread")
+        text: qsTr("Create Thread")
         icon.name: "chat"
         onTriggered: root.openThread()
-        enabled: !root.disabledForChat &&
-                root.threadsFeatureEnabled &&
+        enabled: root.threadsFeatureEnabled && !root.hasThread && !root.disabledForChat &&
                 Utils.isThreadSupportedChatType(root.chatType)
     }
 
