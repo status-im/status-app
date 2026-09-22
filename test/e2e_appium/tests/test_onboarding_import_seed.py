@@ -127,6 +127,7 @@ class TestOnboardingImportSeed(StepMixin):
     @pytest.mark.smoke
     @pytest.mark.onboarding
     @pytest.mark.raw_devices
+    @pytest.mark.spec("SC-SEED-01")
     async def test_import_seed_phrase(self):
         """First-time seed-phrase import: onboard + verify wallet address.
 

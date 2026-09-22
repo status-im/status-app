@@ -30,6 +30,7 @@ class TestWalletAccountFromSettings(StepMixin):
     @pytest.mark.wallet
     @pytest.mark.critical
     @pytest.mark.smoke
+    @pytest.mark.spec("EC-WACC-04")
     async def test_add_view_delete_account_from_settings(self):
         """Add account via settings, verify details, then delete.
         
