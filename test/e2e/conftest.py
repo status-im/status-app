@@ -43,6 +43,9 @@ pytest_plugins = [
     'fixtures.squish',
 ]
 
+# Squish IDE suite for the Object Inspector — not a pytest test.
+collect_ignore_glob = ['suite_status/**']
+
 
 def get_git_commit():
     """Get git commit hash from parent repository"""
