@@ -3,7 +3,7 @@ library 'status-jenkins-lib@v1.9.52'
 
 pipeline {
   agent {
-    label 'linux && x86_64 && qt-builder'
+    label "linux && qt-builder-${params.ARCH}"
   }
 
   options {
@@ -13,6 +13,11 @@ pipeline {
   }
 
   parameters {
+    choice(
+      name: 'ARCH',
+      choices: ['x86_64', 'aarch64'],
+      description: 'Host architecture to build on, also used as the Linux image tag suffix'
+    )
     string(
       name: 'QT_VERSION',
       defaultValue: '6.11.0',
@@ -25,8 +30,8 @@ pipeline {
     )
     string(
       name: 'DOCKER_TAG_LINUX',
-      defaultValue: '20260901-qt6.11.0',
-      description: 'Docker image tag for the Linux image'
+      defaultValue: '20260922-qt6.11.0',
+      description: 'Docker image tag for the Linux image, suffixed with -${ARCH}'
     )
     string(
       name: 'DOCKER_REGISTRY',
@@ -77,6 +82,8 @@ pipeline {
 
   environment {
     DOCKER_IMAGE = 'status-im/status-desktop-build'
+    DOCKER_TAG_LINUX_ARCH = "${params.DOCKER_TAG_LINUX}-${params.ARCH}"
+    TARGETARCH = "${params.ARCH == 'aarch64' ? 'arm64' : 'amd64'}"
     ANDROID_BUILD_DIR = "${WORKSPACE}/mobile/docker"
     LINUX_BUILD_DIR = "${WORKSPACE}/ci"
   }
@@ -88,7 +95,8 @@ pipeline {
         script {
           dir("${LINUX_BUILD_DIR}") {
             image = docker.build(
-              "${params.DOCKER_REGISTRY}/${DOCKER_IMAGE}:${params.DOCKER_TAG_LINUX}",
+              "${params.DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG_LINUX_ARCH}",
+              "--build-arg TARGETARCH=${TARGETARCH} " +
               "--build-arg QT_VERSION=${params.QT_VERSION} " +
               "--build-arg LINUXDEPLOYQT_VERSION=${params.LINUXDEPLOYQT_VERSION} " +
               "--build-arg PCSCLITE_VERSION=${params.PCSCLITE_VERSION} " +
@@ -103,7 +111,9 @@ pipeline {
       steps {
         script {
           image.inside('--entrypoint=""') {
+            sh "uname -m"
             sh "qmake --version"
+            sh "nim --version"
             sh "ls -la /opt/qt/${params.QT_VERSION}/"
           }
         }
@@ -114,13 +124,14 @@ pipeline {
       steps {
         script {
           withDockerRegistry([credentialsId: 'harbor-status-im-status-desktop-build-robot', url: "https://${params.DOCKER_REGISTRY}"]) {
-            image.push(params.DOCKER_TAG_LINUX)
+            image.push(DOCKER_TAG_LINUX_ARCH)
           }
         }
       }
     }
 
     stage('Build Docker Image for Android') {
+      when { expression { params.ARCH == 'x86_64' } }
       steps {
         script {
           dir("${ANDROID_BUILD_DIR}") {
@@ -141,6 +152,7 @@ pipeline {
     }
 
     stage('Test Image for Android') {
+      when { expression { params.ARCH == 'x86_64' } }
       steps {
         script {
           image.inside('--entrypoint=""') {
@@ -156,6 +168,7 @@ pipeline {
     }
 
     stage('Push Android image to Docker registry') {
+      when { expression { params.ARCH == 'x86_64' } }
       steps {
         script {
           withDockerRegistry([credentialsId: 'harbor-status-im-status-desktop-build-robot', url: "https://${params.DOCKER_REGISTRY}"]) {
