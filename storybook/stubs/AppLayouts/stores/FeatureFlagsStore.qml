@@ -9,5 +9,6 @@ QtObject {
     property bool keycardEnabled: false
     property bool paraswapEnabled: false
     property bool lifiEnabled: false
+    property bool relayEnabled: false
     property bool swapProvidersEnabled: false
 }

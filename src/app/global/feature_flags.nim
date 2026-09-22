@@ -37,6 +37,7 @@ const DEFAULT_FLAG_SWAP_ENABLED = true
 # Swap providers are opt-in; Swap itself is only usable when at least one is enabled.
 const DEFAULT_FLAG_PARASWAP_ENABLED = false
 const DEFAULT_FLAG_LIFI_ENABLED = false
+const DEFAULT_FLAG_RELAY_ENABLED = true
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
@@ -58,6 +59,7 @@ featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
 featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
 featureFlag("PARASWAP_ENABLED",               DEFAULT_FLAG_PARASWAP_ENABLED, true)
 featureFlag("LIFI_ENABLED",                   DEFAULT_FLAG_LIFI_ENABLED, true)
+featureFlag("RELAY_ENABLED",                  DEFAULT_FLAG_RELAY_ENABLED, true)
 
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
@@ -107,6 +109,7 @@ QtObject:
     buyEnabled: bool
     paraswapEnabled: bool
     lifiEnabled: bool
+    relayEnabled: bool
     swapProvidersEnabled: bool
 
   proc setup(self: FeatureFlags) =
@@ -127,7 +130,8 @@ QtObject:
     self.buyEnabled = BUY_ENABLED
     self.paraswapEnabled = PARASWAP_ENABLED
     self.lifiEnabled = LIFI_ENABLED
-    self.swapProvidersEnabled = LIFI_ENABLED or PARASWAP_ENABLED
+    self.relayEnabled = RELAY_ENABLED
+    self.swapProvidersEnabled = LIFI_ENABLED or PARASWAP_ENABLED or RELAY_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -231,6 +235,12 @@ QtObject:
 
   QtProperty[bool] lifiEnabled:
     read = getLifiEnabled
+
+  proc getRelayEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.relayEnabled
+
+  QtProperty[bool] relayEnabled:
+    read = getRelayEnabled
 
   proc getSwapProvidersEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.swapProvidersEnabled
