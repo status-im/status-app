@@ -6312,11 +6312,11 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Clear from bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Retirer de la barre</translation>
     </message>
     <message>
         <source>Show in Downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher dans Téléchargements</translation>
     </message>
 </context>
 <context>
@@ -10990,7 +10990,7 @@ chargement</translation>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun fournisseur n’est activé</translation>
     </message>
     <message>
         <source>Swap</source>
@@ -13456,7 +13456,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun fournisseur n’est activé</translation>
     </message>
 </context>
 <context>
@@ -13711,11 +13711,11 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>Compte relié</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">Transmis depuis %1</translation>
+        <translation>Transmis depuis %1</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -19094,7 +19094,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun fournisseur n’est activé</translation>
     </message>
     <message>
         <source>Swap</source>

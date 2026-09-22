@@ -5817,7 +5817,7 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>In case you lost Keycard, want to create a backup or import a
 key pair. Keycard will be required for signing</source>
-        <translation>V případě, že jste Keycard ztratili, chcete vytvořit zálohu nebo importovat pár klíčů. 
+        <translation>V případě, že jste Keycard ztratili, chcete vytvořit zálohu nebo importovat pár klíčů.
 Keycard bude vyžadována pro podepisování</translation>
     </message>
     <message>
@@ -6341,11 +6341,11 @@ Keycard bude vyžadována pro podepisování</translation>
     </message>
     <message>
         <source>Clear from bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Odebrat z lišty</translation>
     </message>
     <message>
         <source>Show in Downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit ve Stažených souborech</translation>
     </message>
 </context>
 <context>
@@ -11050,7 +11050,7 @@ selhalo</translation>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
     </message>
     <message>
         <source>Swap</source>
@@ -13525,7 +13525,7 @@ selhalo</translation>
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
     </message>
 </context>
 <context>
@@ -18563,7 +18563,7 @@ The higher the tip, the faster your transaction is likely to be processed, espec
         <source>AKA gas limit. Refers to the maximum number of computational steps (or units of gas) that a transaction can consume. It represents the complexity or amount of work required to execute a transaction or smart contract.
 
 The gas limit is a cap on how much work the transaction can do on the blockchain. If the gas limit is set too low, the transaction may fail due to insufficient gas.</source>
-        <translation>Také známé jako limit gasu. Označuje maximální počet výpočetních kroků (nebo jednotek gasu), které může transakce spotřebovat. Představuje složitost nebo množství práce potřebné k provedení transakce nebo chytré smlouvy. 
+        <translation>Také známé jako limit gasu. Označuje maximální počet výpočetních kroků (nebo jednotek gasu), které může transakce spotřebovat. Představuje složitost nebo množství práce potřebné k provedení transakce nebo chytré smlouvy.
 
 Limit gasu je strop pro množství práce, kterou může transakce na blockchainu vykonat. Pokud je limit gasu nastaven příliš nízko, transakce může selhat kvůli nedostatečnému množství gasu.</translation>
     </message>
@@ -18583,7 +18583,7 @@ Limit gasu je strop pro množství práce, kterou může transakce na blockchain
         <source>Transaction counter ensuring transactions from your account are processed in the correct order and can’t be replayed. Each new transaction increments the nonce by 1, ensuring uniqueness and preventing double-spending.
 
 If a transaction with a lower nonce is pending, higher nonce transactions will remain in the queue until the earlier one is confirmed.</source>
-        <translation>Čítač transakcí, který zajišťuje, že transakce z vašeho účtu budou zpracovány ve správném pořadí a nebudou opakovaně odeslány. Každá nová transakce zvýší nonce o 1, čímž zajistí jedinečnost a zabrání dvojímu utrácení. 
+        <translation>Čítač transakcí, který zajišťuje, že transakce z vašeho účtu budou zpracovány ve správném pořadí a nebudou opakovaně odeslány. Každá nová transakce zvýší nonce o 1, čímž zajistí jedinečnost a zabrání dvojímu utrácení.
 
 Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zůstanou ve frontě, dokud se dřívější nepotvrdí.</translation>
     </message>
@@ -19182,7 +19182,7 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     </message>
     <message>
         <source>There are no enabled providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
     </message>
     <message>
         <source>Swap</source>
