@@ -13,22 +13,38 @@ SplitView {
 
     readonly property bool deletedState: stateCombo.currentText === "deleted"
     readonly property var participants: [
-        { id: "you", name: "You", color: "#4360DF" },
-        { id: "volo", name: "Volo", color: "#D37EF4" },
-        { id: "alisher", name: "Alisher", image: "https://i.pravatar.cc/128?img=32", color: "#4360DF" },
-        { id: "tina", name: "Tina", color: "#E95460" },
-        { id: "ship", name: "Captain", image: "https://i.pravatar.cc/128?img=12", color: "#26A69A" },
-        { id: "marcus", name: "Marcus", color: "#4360DF" },
-        { id: "sara", name: "Sara", color: "#4B6BFB" },
-        { id: "nina", name: "Nina", color: "#FF7A7A" },
-        { id: "kai", name: "Kai", color: "#8B5CF6" },
-        { id: "leo", name: "Leo", image: "https://i.pravatar.cc/128?img=15", color: "#2A9D8F" },
-        { id: "maya", name: "Maya", color: "#F59E0B" },
-        { id: "omar", name: "Omar", color: "#0EA5E9" },
-        { id: "ivy", name: "Ivy", image: "https://i.pravatar.cc/128?img=47", color: "#EC4899" },
-        { id: "ren", name: "Ren", color: "#22C55E" },
-        { id: "zoe", name: "Zoe", color: "#64748B" }
+        { id: "you", name: "You", colorId: 0 },
+        { id: "volo", name: "Volo", colorId: 1 },
+        { id: "alisher", name: "Alisher", image: "https://i.pravatar.cc/128?img=32", colorId: 2 },
+        { id: "tina", name: "Tina", colorId: 3 },
+        { id: "ship", name: "Captain", image: "https://i.pravatar.cc/128?img=12", colorId: 4 },
+        { id: "marcus", name: "Marcus", colorId: 5 },
+        { id: "sara", name: "Sara", colorId: 6 },
+        { id: "nina", name: "Nina", colorId: 7 },
+        { id: "kai", name: "Kai", colorId: 8 },
+        { id: "leo", name: "Leo", image: "https://i.pravatar.cc/128?img=15", colorId: 9 },
+        { id: "maya", name: "Maya", colorId: 10 },
+        { id: "omar", name: "Omar", colorId: 11 },
+        { id: "ivy", name: "Ivy", image: "https://i.pravatar.cc/128?img=47", colorId: 0 },
+        { id: "ren", name: "Ren", colorId: 1 },
+        { id: "zoe", name: "Zoe", colorId: 2 }
     ]
+
+    ListModel {
+        id: participantsListModel
+
+        Component.onCompleted: {
+            for (let i = 0; i < root.participants.length; ++i) {
+                const participant = root.participants[i]
+                append({
+                    id: participant.id,
+                    name: participant.name,
+                    image: participant.image || "",
+                    colorId: participant.colorId
+                })
+            }
+        }
+    }
     property int previewWidth: 402
 
     orientation: Qt.Horizontal
@@ -52,9 +68,10 @@ SplitView {
             originalMessageId: "m1"
             threadState: root.deletedState ? ThreadCard.State.Deleted : ThreadCard.State.Active
             title: titleField.text
-            messageCount: messageCount.value
+            messagesCount: messagesCount.value
             notificationCount: notificationCount.value
-            participants: root.participants.slice(0, participantsCount.value)
+            participantsModel: participantsListModel
+            participantsCount: participantsCount.value
             lastMessage: ({
                 sender: { name: "You", color: "#4360DF" },
                 text: lastMessageField.text,
@@ -162,11 +179,11 @@ SplitView {
                         spacing: 8
 
                         Label {
-                            width: parent.width - messageCount.width - parent.spacing
+                            width: parent.width - messagesCount.width - parent.spacing
                             text: "Messages"
                         }
                         SpinBox {
-                            id: messageCount
+                            id: messagesCount
                             width: 120
                             from: 1
                             to: 999
