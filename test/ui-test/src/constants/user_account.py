@@ -1,2 +1,0 @@
-LOGIN = ''
-PASSWORD = 'TesTEr16843/!@00'

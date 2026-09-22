@@ -212,6 +212,12 @@ PYTHONPATH=/Applications/Squish_9_2_2/lib:/Applications/Squish_9_2_2/lib/python
 
 ---
 
+## Squish Object Inspector
+
+Open `test/e2e/suite_status` in Squish IDE, set the AUT ([Which app to use](#which-app-to-use)), then **Launch AUT** and use **Pick**. Put new locators in `gui/objects_map/`. Do not commit local `suite.conf` or `envvars` changes.
+
+---
+
 ## Which app to use
 
 | Source | Linux | Windows | macOS |
