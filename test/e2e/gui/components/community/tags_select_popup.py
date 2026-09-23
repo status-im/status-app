@@ -52,8 +52,7 @@ class TagsSelectPopup(StatusStackModal):
     def select_tags(self, values: typing.List[str]):
         selected = []
         for name in values:
-            self._search_field.clear(verify=False)
-            self._search_field.type_text(name)
+            self._search_field.search(name)
             if not driver.waitFor(
                     lambda: self._filtered_tag(name, selected) is not None,
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC):

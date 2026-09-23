@@ -48,8 +48,7 @@ class HoldingsPopup(QObject):
 
     @allure.step('Set holdings search text')
     def set_search_text(self, text: str):
-        self._search_edit.wait_until_appears()
-        self._search_edit.set_text_property(text)
+        self._search_edit.search(text)
         return self
 
     @allure.step('Wait until list search field is hidden (token selected, amount panel)')
