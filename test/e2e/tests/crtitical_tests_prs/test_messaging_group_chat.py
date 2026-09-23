@@ -18,6 +18,7 @@ from helpers.multiple_instances_helper import (
 from gui.main_window import MainWindow
 from gui.screens.messages import MessagesScreen
 from scripts.utils.generators import random_text_message
+from tests.benchmark_tests.send_timing_helpers import GIF_URL
 
 
 @pytest.mark.critical
@@ -134,6 +135,13 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                     messages_screen.chat.messages(0)[0].image_message is not None and
                     messages_screen.chat.messages(0)[0].image_message.visible
                 ), timeout), f"Local image is not found in the last message"
+
+            with step('Send GIF to group chat and verify it was sent'):
+                gif_url = GIF_URL
+                messages_screen.group_chat.send_gif_to_chat(gif_url)
+                assert driver.waitFor(
+                    lambda: chat_contains_message_text(messages_screen.chat, gif_url), timeout), \
+                    f"GIF '{gif_url}' not found in group chat messages"
 
             with step(f'Remove {user_three.name} from group'):
                 messages_screen.group_chat.remove_member_from_chat(user_three.name)
