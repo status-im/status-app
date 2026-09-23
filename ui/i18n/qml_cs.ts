@@ -1651,10 +1651,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Limit útraty nastaven: %1 v %2 pro %3</translation>
     </message>
     <message>
-        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
-        <translation>Přemostěno %1 na %2 za %3 na %4 v %5</translation>
-    </message>
-    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>Vyraženo nekonečné množství tokenů %1 pro %2 pomocí %3</translation>
     </message>
@@ -1973,6 +1969,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT &amp; Infura mimo provoz pro %1. Zůstatky tokenů %1 nelze načíst.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>Přemostění potvrzeno na %2: %1 za %3 na %4 v %5</translation>
     </message>
     <message>
         <source>How to fix</source>
