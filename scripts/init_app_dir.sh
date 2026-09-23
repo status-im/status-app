@@ -24,7 +24,8 @@ copy_system_libs() {
   echo "Bundling system libraries..."
   cp -P /usr/lib/${MULTIARCH}/libgst*.so* "$dest/"
   cp -r /usr/lib/${MULTIARCH}/gstreamer-1.0 "$dest/"
-  cp -r /usr/lib/${MULTIARCH}/nss "$dest/"
+  mkdir -p "$dest/nss"
+  cp /usr/lib/${MULTIARCH}/lib{freebl3,freeblpriv3,nssckbi,nssdbm3,softokn3}.so "$dest/nss/"
   cp -P /usr/local/lib/${MULTIARCH}/libpcsclite*.so* "$dest/"
   cp -P /usr/lib/${MULTIARCH}/libusb-1.0.so* "$dest/"
 }
