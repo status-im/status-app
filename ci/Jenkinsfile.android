@@ -83,7 +83,7 @@ pipeline {
     /* Enable test mode (hooks for e2e) for PR/nightly builds, but NOT for releases */
     STATUSQ_TESTMODE = "${!utils.isReleaseBuild()}"
     /* Swap ships in PR/nightly builds via LiFi only; release builds have no Swap. */
-    FLAG_SWAP_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+    FLAG_SWAP_ENABLED = 1
     FLAG_LIFI_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
     FLAG_PARASWAP_ENABLED = 0
   }
