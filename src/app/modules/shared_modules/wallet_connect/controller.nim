@@ -29,24 +29,60 @@ type
     kind: WcSignKind
     txData: JsonNode
 
+  WcTxWorkKind* = enum
+    wtwBuild = "build"        # wallet_buildTransaction
+    wtwBuildRaw = "buildRaw"  # wallet_buildRawTransaction
+    wtwSend = "send"          # wallet_sendTransactionWithSignature
+
+  WcTxWork* = object
+    key*: string              # "<topic>|<id>"
+    kind*: WcTxWorkKind
+    chainId*: int
+    txJson*: string
+    signature*: string
+
+  WcTxCalls* = object
+    ## Seam over account lookup and off-thread transaction work, injectable for tests.
+    resolveSigningParams*: proc(address: string): tuple[keyUid: string, path: string, ok: bool]
+    startTxWork*: proc(work: WcTxWork)   # result comes back through Controller.onTxWorkDone
+
 QtObject:
   type
     Controller* = ref object of QObject
       service: wallet_connect_service.Service
       walletAccountService: wallet_account_service.Service
       events: EventEmitter
+      calls: WcTxCalls
       pendingSignRequests: Table[string, PendingWcSign]
 
   proc delete*(self: Controller)
+
+  proc defaultResolveSigningParams(walletAccountService: wallet_account_service.Service, address: string): tuple[keyUid: string, path: string, ok: bool] =
+    let acc = walletAccountService.getAccountByAddress(address)
+    if acc.isNil:
+      return ("", "", false)
+    let keypair = walletAccountService.getKeypairByAccountAddress(address)
+    if keypair.isNil:
+      return ("", "", false)
+    var keyUid = singletonInstance.userProfile.getKeyUid()
+    if keypair.migratedToColdWallet():
+      keyUid = keypair.keyUid
+    return (keyUid, acc.path, true)
+
   proc newController*(
     service: wallet_connect_service.Service,
     walletAccountService: wallet_account_service.Service,
-    events: EventEmitter): Controller =
+    events: EventEmitter,
+    calls = WcTxCalls()): Controller =
     new(result, delete)
 
     result.service = service
     result.walletAccountService = walletAccountService
     result.events = events
+    result.calls = calls
+    if result.calls.resolveSigningParams.isNil:
+      result.calls.resolveSigningParams = proc(address: string): tuple[keyUid: string, path: string, ok: bool] =
+        defaultResolveSigningParams(walletAccountService, address)
 
     result.QObject.setup
 
@@ -69,24 +105,12 @@ QtObject:
       let args = EstimatedGasArgs(e)
       self.estimatedGasResponse(args.topic, args.estimatedGas)
 
-  proc resolveSigningParams(self: Controller, address: string): tuple[keyUid: string, path: string, ok: bool] =
-    let acc = self.walletAccountService.getAccountByAddress(address)
-    if acc.isNil:
-      return ("", "", false)
-    let keypair = self.walletAccountService.getKeypairByAccountAddress(address)
-    if keypair.isNil:
-      return ("", "", false)
-    var keyUid = singletonInstance.userProfile.getKeyUid()
-    if keypair.migratedToColdWallet():
-      keyUid = keypair.keyUid
-    return (keyUid, acc.path, true)
-
   proc requestSignature(self: Controller, topic, id, address: string, chainId: int, kind: WcSignKind, hash: string, txData: JsonNode = nil) =
     if hash.len == 0:
       error "wallet connect: empty hash to sign", topic=topic, id=id
       self.signingResultReceived(topic, id, "")
       return
-    let (keyUid, path, ok) = self.resolveSigningParams(address)
+    let (keyUid, path, ok) = self.calls.resolveSigningParams(address)
     if not ok:
       error "wallet connect: cannot resolve signing params", address=address
       self.signingResultReceived(topic, id, "")
@@ -149,8 +173,13 @@ QtObject:
       error "safeSignTypedData failed: ", msg=e.msg
       self.signingResultReceived(topic, id, "")
 
+  proc onTxWorkDone*(self: Controller, key: string, resultJson: string) {.slot.} =
+    discard
+
   proc signTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string) {.slot.} =
     try:
+      if self.service.isNil:
+        raise newException(CatchableError, "no service")
       let (txHash, txData) = self.service.buildTransaction(chainId, txJson)
       if txHash.len == 0 or txData.isNil:
         raise newException(CatchableError, "building transaction failed")
@@ -161,6 +190,8 @@ QtObject:
 
   proc sendTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string) {.slot.} =
     try:
+      if self.service.isNil:
+        raise newException(CatchableError, "no service")
       let (txHash, txData) = self.service.buildTransaction(chainId, txJson)
       if txHash.len == 0 or txData.isNil:
         raise newException(CatchableError, "building transaction failed")
