@@ -3,7 +3,7 @@
 This test ports the desktop test that manages wallet accounts through the Settings
 path rather than the wallet left panel context menu.
 
-Reference: test/e2e/tests/crtitical_tests_prs/test_add_delete_account_from_settings.py
+Reference: test/e2e/tests/critical_tests_prs/test_add_delete_account_from_settings.py
 """
 
 import pytest

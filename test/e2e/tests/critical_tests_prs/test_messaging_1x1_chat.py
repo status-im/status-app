@@ -50,8 +50,8 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step('Verify that contact request was sent and is in pending requests'):
             contacts_settings.open_pending_requests()
-            assert Messaging.CONTACT_REQUEST_SENT.value == contacts_settings.contact_items[0].object.contactText
-            assert str(contacts_settings.section_header.object.text) == 'Sent'
+            assert Messaging.CONTACT_REQUEST_SENT.value == contacts_settings.contact_items[0].contact_request_text
+            assert contacts_settings.section_title == 'Sent'
             main_window.minimize()
 
         with step(f'Verify that contact request was received by {user_two.name}'):
@@ -60,7 +60,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             messaging_settings = settings.left_panel.open_messaging_settings()
             contacts_settings = messaging_settings.open_contacts_settings()
             contacts_settings.open_pending_requests()
-            assert str(contacts_settings.section_header.object.text) == 'Received'
+            assert contacts_settings.section_title == 'Received'
             assert user_one.name == contacts_settings.contact_items[0].contact
 
         with step(f'User {user_two.name}, accept contact request from {user_one.name}'):
@@ -71,7 +71,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step(f'Verify that contact appeared in contacts list of {user_two.name} in messaging settings'):
             contacts_settings = main_window.left_panel.open_settings().left_panel.open_messaging_settings().open_contacts_settings()
             contacts_settings.open_contacts()
-            assert str(contacts_settings.section_header.object.text) == 'Contacts'
+            assert contacts_settings.section_title == 'Contacts'
             assert user_one.name == contacts_settings.contact_items[0].contact
             assert len(contacts_settings.contact_items) == 1
             main_window.minimize()
@@ -80,7 +80,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             switch_to_aut(aut_one, main_window)
             contacts_settings = main_window.left_panel.open_settings().left_panel.open_messaging_settings().open_contacts_settings()
             contacts_settings.open_contacts()
-            assert str(contacts_settings.section_header.object.text) == 'Contacts'
+            assert contacts_settings.section_title == 'Contacts'
             assert user_two.name == contacts_settings.contact_items[0].contact
             assert len(contacts_settings.contact_items) == 1
 
@@ -110,7 +110,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_one.name}, click address / ens link in message and verify send modal appears'):
             send_modal = chat.open_send_modal_from_link(chat_message1)
-            assert str(send_modal.send_modal_recipient_panel.object.selectedRecipientAddress) == chat_message1
+            assert send_modal.selected_recipient_address == chat_message1
             left_panel_chat.click()
 
         with step(f'User {user_one.name}, edit message and verify it was changed'):
@@ -156,7 +156,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             assert driver.waitFor(
                 lambda: (
                     len(messages_screen.chat.messages(0)) > 0 and
-                    '😎' in str(messages_screen.chat.messages(0)[0].object.unparsedText)
+                    '😎' in str(messages_screen.chat.messages(0)[0].text)
                 ),
                 timeout
             ), f"Emoji not found in message text"
@@ -174,7 +174,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             assert driver.waitFor(
                 lambda: (
                     len(messages_screen.chat.messages(2)) > 0 and
-                    chat_message2 in str(messages_screen.chat.messages(2)[0].object.unparsedText)
+                    chat_message2 in str(messages_screen.chat.messages(2)[0].text)
                 ),
                 timeout
             ), f"Message text is not found in the last message"
@@ -183,7 +183,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             assert driver.waitFor(
                 lambda: (
                     len(messages_screen.chat.messages(1)) > 0 and
-                    '😎' in str(messages_screen.chat.messages(1)[0].object.unparsedText)
+                    '😎' in str(messages_screen.chat.messages(1)[0].text)
                 ),
                 timeout
             ), f"Emoji not found in message text"
