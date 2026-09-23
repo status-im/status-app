@@ -42,8 +42,12 @@ Item {
         function authenticateAndTransfer(uuid, accountFrom, accountTo, tokenFrom,
                                          tokenTo, sendType, tokenName, tokenIsOwnerToken, paths) {}
         function resetData() {}
+        function reevaluateSwap(uuid, pathName, chainId, isApprovalTx) {
+            swapStore.reevaluateSwapCalled(pathName)
+        }
         // local signals for testing function calls
         signal fetchSuggestedRoutesCalled()
+        signal reevaluateSwapCalled(string pathName)
     }
 
     readonly property SwapModalAdaptor swapAdaptor: SwapModalAdaptor {
@@ -96,6 +100,7 @@ Item {
             swapInputParamsForm: root.swapFormData
             swapAdaptor: root.swapAdaptor
             buyEnabled: true
+            routeOrderEnabled: true
         }
     }
 
@@ -109,6 +114,12 @@ Item {
         id: fetchSuggestedRoutesCalled
         target: root.swapStore
         signalName: "fetchSuggestedRoutesCalled"
+    }
+
+    SignalSpy {
+        id: reevaluateSwapCalled
+        target: root.swapStore
+        signalName: "reevaluateSwapCalled"
     }
 
     TestCase {
@@ -130,6 +141,7 @@ Item {
             root.swapAdaptor.reset()
             root.swapFormData.resetFormData()
             formValuesChanged.clear()
+            reevaluateSwapCalled.clear()
         }
 
         function approx(formatted) {
@@ -1533,6 +1545,11 @@ Item {
             compare(root.swapAdaptor.swapOutputData.totalFees, totalFees)
             compare(root.swapAdaptor.swapOutputData.hasError, false)
             compare(root.swapAdaptor.swapOutputData.estimatedTime, bestPath.estimatedTime)
+            compare(root.swapAdaptor.swapOutputData.estimatedTimeSeconds, bestPath.estimatedTimeSeconds)
+            const strategyTime = findChild(controlUnderTest, "strategyTime")
+            verify(!!strategyTime)
+            compare(bestPath.estimatedTimeSeconds, 135)
+            compare(strategyTime.text, qsTr("~%1m %2s").arg(2).arg(15))
             compare(root.swapAdaptor.swapOutputData.txProviderName, bestPath.bridgeName)
             compare(root.swapAdaptor.swapOutputData.approvalNeeded, true)
             compare(root.swapAdaptor.swapOutputData.approvalGasFees, bestPath.approvalGasFees.toString())
@@ -1564,6 +1581,10 @@ Item {
 
             // simulate approval tx was unsuccessful
             root.swapStore.transactionSendingComplete("0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a", "Failed")
+
+            // the route is re-evaluated for the processor that produced it, not a hardcoded one
+            compare(reevaluateSwapCalled.count, 1)
+            compare(reevaluateSwapCalled.signalArguments[0][0], bestPath.bridgeName)
 
             verify(!root.swapAdaptor.approvalPending)
             verify(!root.swapAdaptor.approvalSuccessful)
@@ -1988,6 +2009,79 @@ Item {
         // Reported against BSC, where it bites hardest: USDC has its own group key
         // there (usd-coin-bsc), so a receive token carried over from another chain
         // has no counterpart row in the BSC catalog to be found under.
+        function test_serviceProviderFollowsTheRouteProcessor() {
+            root.swapAdaptor.reset()
+            launchAndVerfyModal()
+
+            // set input values in the form so a proposal is requested
+            root.swapFormData.fromGroupKey = sttGroupKey
+            formValuesChanged.wait()
+            root.swapFormData.toGroupKey = root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel.get(1).key
+            root.swapFormData.fromTokenAmount = "0.001"
+            formValuesChanged.wait()
+            root.swapFormData.selectedNetworkChainId = 11155420
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            formValuesChanged.wait()
+            root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
+            formValuesChanged.wait()
+            fetchSuggestedRoutesCalled.wait()
+
+            let txRoutes = root.dummySwapTransactionRoutes.txHasRoutesApprovalNeededViaRelay
+            compare(txRoutes.suggestedRoutes.count, 1)
+            compare(SQUtils.ModelUtils.get(txRoutes.suggestedRoutes, 0, "route").bridgeName, "Relay")
+            txRoutes.uuid = root.swapAdaptor.uuid
+            root.swapStore.suggestedRoutesReady(txRoutes, "", "")
+
+            verify(root.swapAdaptor.validSwapProposalReceived)
+            compare(root.swapAdaptor.swapOutputData.txProviderName, Constants.swap.relayProcessorName)
+
+            const providerInfo = findChild(controlUnderTest, "routeProviderInfoIcon")
+            verify(!!providerInfo)
+            compare(providerInfo.tooltip.text, qsTr("by %1").arg(Constants.swap.relayName))
+            compare(Constants.swap.relayName, "Relay")
+
+            closeAndVerfyModal()
+        }
+
+        function test_relayRouteErrorsHaveDistinctMessages_data() {
+            return [
+                { tag: "no route", code: Constants.routerErrorCodes.processor.errNoRoutesFound,
+                  message: qsTr("No route. Try other tokens or networks") },
+                { tag: "no quotes", code: Constants.routerErrorCodes.processor.errNoQuotesAvailable,
+                  message: qsTr("No quotes available right now. Try again later.") },
+                { tag: "not enough liquidity", code: Constants.routerErrorCodes.processor.errNotEnoughLiquidity,
+                  message: qsTr("Low liquidity. Lower amount or retry later") },
+                { tag: "slippage exceeded", code: Constants.routerErrorCodes.processor.errSlippageExceeded,
+                  message: qsTr("Slippage exceeded. Increase slippage or retry later") },
+                { tag: "amount too low", code: Constants.routerErrorCodes.processor.errAmountTooLow,
+                  message: qsTr("Amount too low. Increase amount") },
+                { tag: "amount too high", code: Constants.routerErrorCodes.processor.errAmountTooHigh,
+                  message: qsTr("Amount too high. Lower amount") },
+            ]
+        }
+
+        function test_relayRouteErrorsHaveDistinctMessages(data) {
+            verify(!!data.code) // the code must exist in Constants
+            root.swapAdaptor.swapOutputData.reset()
+            root.swapAdaptor.swapOutputData.hasError = true
+            root.swapAdaptor.swapOutputData.errCode = data.code
+            compare(root.swapAdaptor.errorMessage, data.message)
+            root.swapAdaptor.swapOutputData.reset()
+        }
+
+        function test_routeOrderButtonHiddenWhenDisabled() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     { swapInputParamsForm: root.swapFormData, routeOrderEnabled: false })
+            launchAndVerfyModal()
+            root.swapAdaptor.validSwapProposalReceived = true
+
+            const trigger = findChild(controlUnderTest, "routeOrderButton")
+            verify(!!trigger)
+            verify(!trigger.visible)
+
+            closeAndVerfyModal()
+        }
+
         function test_routeOrderPickerDrivesTheRouterParam() {
             launchAndVerfyModal()
 

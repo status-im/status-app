@@ -21,6 +21,7 @@ StatusCenteredFlow {
         text: qsTr("Powered by")
     }
     StatusLinkText {
+        objectName: "serviceProviderLink"
         text: "%1.".arg(root.serviceProviderName)
         font.weight: Font.Normal
         textFormat: Text.PlainText

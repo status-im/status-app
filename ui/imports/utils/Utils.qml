@@ -1149,7 +1149,41 @@ QtObject {
                     "swapContractAddress": Constants.swap.lifiContractAddress,
                 }
         }
+        if (!!contractAddress && Constants.swap.relayContractAddresses.includes(contractAddress.toLowerCase())) {
+            return {
+                "icon": Assets.png("swap/%1".arg(Constants.swap.relayIcon)),
+                "url": Constants.swap.relayUrl,
+                "name": Constants.swap.relayName,
+                "approvalContractAddress": contractAddress,
+                "swapContractAddress": contractAddress,
+            }
+        }
         return undefined
+    }
+
+    function getSwapProviderDetails(processorName) {
+        switch (processorName) {
+            case Constants.swap.lifiProcessorName:
+                return {
+                    "name": Constants.swap.lifiName,
+                    "url": Constants.swap.lifiUrl,
+                    "hostname": Constants.swap.lifiHostname,
+                    "icon": Constants.swap.lifiIcon,
+                }
+            case Constants.swap.relayProcessorName:
+                return {
+                    "name": Constants.swap.relayName,
+                    "url": Constants.swap.relayUrl,
+                    "hostname": Constants.swap.relayHostname,
+                    "icon": Constants.swap.relayIcon,
+                }
+        }
+        return {
+            "name": Constants.swap.paraswapName,
+            "url": Constants.swap.paraswapUrl,
+            "hostname": Constants.swap.paraswapHostname,
+            "icon": Constants.swap.paraswapIcon,
+        }
     }
 
     // Leave this function at the bottom of the file as QT Creator messes up the code color after this

@@ -346,3 +346,31 @@ proc prefetchLiFiSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
       "chainId": arg.chainId,
       "error": e.msg,
     })
+
+type
+  PrefetchRelaySupportTaskArg = ref object of QObjectTaskArg
+    chainId: int
+
+proc prefetchRelaySupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[PrefetchRelaySupportTaskArg](argEncoded)
+  if arg.chainId <= 0:
+    arg.finish(%*{"chainId": 0, "error": "invalid chainId"})
+    return
+  try:
+    var response: JsonNode
+    var err = status_go_tokens.isChainSupportedForSwapViaRelay(response, arg.chainId)
+    if err.len > 0:
+      raise newException(CatchableError, "failed" & err)
+    if response.isNil or response.kind != JsonNodeKind.JBool:
+      raise newException(CatchableError, "unexpected response")
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "supported": response.getBool(),
+      "error": "",
+    })
+  except Exception as e:
+    error "prefetch relay chain support failed", chainId = arg.chainId, err = e.msg
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "error": e.msg,
+    })
