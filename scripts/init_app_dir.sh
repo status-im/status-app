@@ -73,6 +73,10 @@ if [[ -z "${IN_NIX_SHELL:-}" ]]; then
 
   copy_qt_webengine "${DEST}/libexec"
 
+  # linuxdeployqt -unsupported-allow-new-glibc exits silently unless this file is in the AppDir.
+  mkdir -p "${DEST}/share/doc/libc6"
+  cp /usr/share/doc/libc6/copyright "${DEST}/share/doc/libc6/"
+
   # Extra pcsc files not covered by copy_system_libs
   echo "Bundling pcsc-lite extras..."
   cp -L /usr/local/lib/${MULTIARCH}/libpcsclite_real.so* "${DEST}/lib/"
