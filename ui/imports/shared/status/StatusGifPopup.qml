@@ -80,9 +80,6 @@ StatusDropdown {
     onClosed: {
         root.currentCategory = GifPopupDefinitions.Category.Trending
         root.previousCategory = GifPopupDefinitions.Category.Trending
-
-        if (confirmationPopupLoader.item)
-            confirmationPopupLoader.item.close()
     }
 
     QtObject {
@@ -223,19 +220,19 @@ StatusDropdown {
         }
 
         Loader {
-            id: confirmationPopupLoader
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: Theme.defaultPadding
 
-            anchors.centerIn: parent
-
-            sourceComponent: ConfirmationPopup {
-                visible: true
-
+            sourceComponent: GifEnableOverlay {
                 onEnableGifsRequested: {
                     root.setGifUnfurlingEnabled(true)
                     root.getTrendingsGifs()
                 }
             }
             active: !root.gifUnfurlingEnabled
+            visible: active
         }
     }
 
