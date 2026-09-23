@@ -1639,10 +1639,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1959,6 +1955,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

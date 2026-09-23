@@ -1484,11 +1484,6 @@ QtObject {
         readonly property string relayHostname: "relay.link"
         readonly property string relayUrl: "https://relay.link/"
         readonly property string relayTermsAndConditionUrl: "https://relay.link/terms"
-        readonly property var relayContractAddresses: [
-            "0xa5f565650890fba1824ee0f21ebbbf660a179934",
-            "0xb92fe925dc43a0ecde6c8b1a2709c170ec4fff4f",
-            "0xccc88a9d1b4ed6b0eaba998850414b24f1c315be"
-        ]
 
         readonly property string paraswapProcessorName: "Paraswap"
         readonly property string lifiProcessorName: "LiFi"
