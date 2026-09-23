@@ -29,7 +29,7 @@ proc applyAllTokenListsResult(self: Service, res: AllTokenListsApplyResult) =
   self.allTokenLists = move res.allTokenLists
 
 proc prefetchParaswapSupport(self: Service) =
-  if not PARASWAP_ENABLED:
+  if not PARASWAP_PROVIDER_ENABLED:
     return
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
@@ -64,7 +64,7 @@ proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} 
     error "prefetchParaswapSupportRetrieved", err = ex.msg
 
 proc prefetchLiFiSupport(self: Service) =
-  if not LIFI_ENABLED:
+  if not LIFI_PROVIDER_ENABLED:
     return
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
@@ -97,6 +97,40 @@ proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.} =
     self.chainsSupportedForSwapViaLiFi[chainId] = supported
   except Exception as ex:
     error "prefetchLiFiSupportRetrieved", err = ex.msg
+
+proc prefetchRelaySupport(self: Service) =
+  if not RELAY_PROVIDER_ENABLED:
+    return
+  let chainIds = self.networkService.getEnabledChainIds()
+  if chainIds.len == 0:
+    return
+  for chainId in chainIds:
+    if chainId <= 0:
+      continue
+    let arg = PrefetchRelaySupportTaskArg(
+      tptr: prefetchRelaySupportTask,
+      vptr: cast[uint](self.vptr),
+      slot: "prefetchRelaySupportRetrieved",
+      chainId: chainId,
+    )
+    self.threadpool.start(arg)
+
+proc prefetchRelaySupportRetrieved(self: Service, response: string) {.slot.} =
+  try:
+    let parsedJson = response.parseJson
+    var errorString: string
+    discard parsedJson.getProp("error", errorString)
+    if errorString.len > 0:
+      return
+    if not parsedJson.hasKey("chainId") or not parsedJson.hasKey("supported"):
+      return
+    let chainId = parsedJson["chainId"].getInt()
+    if chainId <= 0:
+      return
+    let supported = parsedJson["supported"].getBool()
+    self.chainsSupportedForSwapViaRelay[chainId] = supported
+  except Exception as ex:
+    error "prefetchRelaySupportRetrieved", err = ex.msg
 
 proc applyRefreshTokensResult(self: Service, res: RefreshTokensApplyResult) =
   # Slim GUI-thread apply: swap in the structures the worker already built
@@ -320,6 +354,7 @@ proc init*(self: Service) =
     self.asyncRefreshTokens()
     self.prefetchParaswapSupport()
     self.prefetchLiFiSupport()
+    self.prefetchRelaySupport()
 
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
     self.resetMarketValuesCache()
@@ -328,6 +363,7 @@ proc init*(self: Service) =
   self.asyncRefreshTokens(fetchAllTokens = true)
   self.prefetchParaswapSupport()
   self.prefetchLiFiSupport()
+  self.prefetchRelaySupport()
 
 proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
   let tokenKeys = getMandatoryTokenKeys()
@@ -576,7 +612,7 @@ proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int
 
 ## Checks if the chain is supported for swap via Paraswap
 proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
-  if not PARASWAP_ENABLED:
+  if not PARASWAP_PROVIDER_ENABLED:
     return false
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
@@ -589,7 +625,7 @@ proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
 
 ## Checks if the chain is supported for swap via LI.FI
 proc isChainSupportedForSwapViaLiFi*(self: Service, chainId: int): bool =
-  if not LIFI_ENABLED:
+  if not LIFI_PROVIDER_ENABLED:
     return false
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
@@ -600,9 +636,21 @@ proc isChainSupportedForSwapViaLiFi*(self: Service, chainId: int): bool =
   self.chainsSupportedForSwapViaLiFi[chainId] = supported
   return supported
 
+proc isChainSupportedForSwapViaRelay*(self: Service, chainId: int): bool =
+  if not RELAY_PROVIDER_ENABLED:
+    return false
+  if chainId <= 0:
+    warn "invalid chainId", chainId = chainId
+    return false
+  if self.chainsSupportedForSwapViaRelay.hasKey(chainId):
+    return self.chainsSupportedForSwapViaRelay[chainId]
+  let supported = isChainSupportedForSwapViaRelay(chainId)
+  self.chainsSupportedForSwapViaRelay[chainId] = supported
+  return supported
+
 proc isChainSupportedForSwap*(self: Service, chainId: int): bool =
-  # Add further providers here (e.g. Rekey) as they are introduced.
-  return self.isChainSupportedForSwapViaLiFi(chainId) or
+  return self.isChainSupportedForSwapViaRelay(chainId) or
+    self.isChainSupportedForSwapViaLiFi(chainId) or
     self.isChainSupportedForSwapViaParaswap(chainId)
 
 proc getTokenListUpdatedAt*(self: Service): int64 =

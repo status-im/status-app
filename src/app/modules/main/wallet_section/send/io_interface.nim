@@ -79,5 +79,5 @@ method transactionSendingComplete*(self: AccessInterface, txHash: string, status
 method getNetworkChainId*(self: AccessInterface, shortName: string): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method reevaluateSwap*(self: AccessInterface, uuid: string, chainId: int, isApprovalTx: bool) {.base.} =
+method reevaluateSwap*(self: AccessInterface, uuid: string, pathName: string, chainId: int, isApprovalTx: bool) {.base.} =
   raise newException(ValueError, "No implementation available")

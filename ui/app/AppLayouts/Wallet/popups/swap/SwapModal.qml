@@ -33,6 +33,8 @@ StatusDialog {
 
     /** input property to indicate if buy action is enabled **/
     property bool buyEnabled
+    /** input property to indicate if the user can select the route (best return / fastest / cheapest), Li.Fi supports this **/
+    required property bool routeOrderEnabled
 
     /** recipient source models for the "Send to" (receive) account selector **/
     property var savedAddressesModel
@@ -58,6 +60,7 @@ StatusDialog {
     fullScreenSheet: true
     padding: Theme.smallPadding
     topPadding: Theme.bigPadding + (bottomSheet ? (parent?.SafeArea.margins.top ?? 0) : 0)
+    bottomPadding: Theme.bigPadding + (bottomSheet ? (parent?.SafeArea.margins.bottom ?? 0) : 0)
     backgroundColor: Theme.palette.baseColor3
     footer: null
 
@@ -176,11 +179,11 @@ StatusDialog {
             }
         }
 
-        readonly property bool swapViaLiFi: root.swapAdaptor.swapOutputData.txProviderName === Constants.swap.lifiProcessorName
-        readonly property string serviceProviderName: d.swapViaLiFi ? Constants.swap.lifiName : Constants.swap.paraswapName
-        readonly property string serviceProviderUrl: d.swapViaLiFi ? Constants.swap.lifiUrl : Constants.swap.paraswapUrl
-        readonly property string serviceProviderHostname: d.swapViaLiFi ? Constants.swap.lifiHostname : Constants.swap.paraswapHostname
-        readonly property string serviceProviderIconName: d.swapViaLiFi ? Constants.swap.lifiIcon : Constants.swap.paraswapIcon
+        readonly property var serviceProvider: Utils.getSwapProviderDetails(root.swapAdaptor.swapOutputData.txProviderName)
+        readonly property string serviceProviderName: d.serviceProvider.name
+        readonly property string serviceProviderUrl: d.serviceProvider.url
+        readonly property string serviceProviderHostname: d.serviceProvider.hostname
+        readonly property string serviceProviderIconName: d.serviceProvider.icon
 
         function rebuildGroupsForChain(chainId, isToSide = false) {
             if (chainId <= 0) {
@@ -719,9 +722,11 @@ StatusDialog {
                                 width: 16; height: 16
                                 icon: "filter"
                                 color: Theme.palette.directColor4
+                                visible: root.routeOrderEnabled
                             }
                             StatusBaseText {
                                 objectName: "routeOrderButton"
+                                visible: root.routeOrderEnabled
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: d.routeOrderName
                                 font.weight: Font.Medium

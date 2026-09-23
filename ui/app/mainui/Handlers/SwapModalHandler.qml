@@ -22,6 +22,7 @@ QtObject {
     required property var recentRecipientsModel
 
     required property bool swapEnabled
+    required property bool routeOrderEnabled
 
     function openSendModal(params = {}, callback = null) {
         if (!root.swapEnabled) {
@@ -124,6 +125,7 @@ QtObject {
                 }
             }
             swapInputParamsForm: d.swapInputParams
+            routeOrderEnabled: root.routeOrderEnabled
 
             savedAddressesModel: root.savedAddressesModel
             recentRecipientsModel: root.recentRecipientsModel

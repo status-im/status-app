@@ -172,6 +172,7 @@ SplitView {
                 destroyOnClose: true
                 swapInputParamsForm: adaptor.swapFormData
                 swapAdaptor: adaptor
+                routeOrderEnabled: routeOrderEnabledCheckbox.checked
                 savedAddressesModel: ListModel {}
                 recentRecipientsModel: WalletTransactionsModel {}
                 Binding {
@@ -224,6 +225,12 @@ SplitView {
                 text: "areTestNetworksEnabled"
                 checked: true
                 onToggled: networksComboBox.currentIndex = 0
+            }
+
+            CheckBox {
+                id: routeOrderEnabledCheckbox
+                text: "routeOrderEnabled (LI.FI only)"
+                checked: true
             }
 
             StatusBaseText {
@@ -294,6 +301,18 @@ SplitView {
                     fetchSuggestedRoutesSpy.wait()
                     Backpressure.debounce(this, 250, () => {
                                               dSwapStore.suggestedRoutesReady(d.dummySwapTransactionRoutes.txHasRouteNoApproval, "", "")
+                                          })()
+                }
+            }
+            Button {
+                text: "simulate happy path approval needed (via Relay)"
+                onClicked: {
+                    d.resetValues()
+                    fromTokenComboBox.currentIndex = 0
+                    swapInput.text = "0.2"
+                    fetchSuggestedRoutesSpy.wait()
+                    Backpressure.debounce(this, 250, () => {
+                                              dSwapStore.suggestedRoutesReady(d.dummySwapTransactionRoutes.txHasRoutesApprovalNeededViaRelay, "", "")
                                           })()
                 }
             }

@@ -194,10 +194,9 @@ QtObject:
       tokensListsAutoRefreshCheckInterval: 0,
       marketDataFullDataRefreshInterval: toInt(MARKET_DATA_FULL_REFRESH_INTERVAL, 0),
       marketDataPriceRefreshInterval: toInt(MARKET_DATA_PRICE_REFRESH_INTERVAL, 0),
-      # no fallback support for more than one swap/bridge provider
-      enableParaswapProvider: false, # currently the UI doesn't support Paraswap due to a single chain swap only
-      enableLiFiProvider: LIFI_ENABLED and not RELAY_ENABLED,
-      enableRelayProvider: RELAY_ENABLED,
+      enableParaswapProvider: PARASWAP_PROVIDER_ENABLED,
+      enableLiFiProvider: LIFI_PROVIDER_ENABLED,
+      enableRelayProvider: RELAY_PROVIDER_ENABLED,
     )
 
   proc defaultCreateAccountRequest*(): CreateAccountRequest =
