@@ -849,6 +849,7 @@ endif
 		-no-copy-copyright-files \
 		-qmldir=ui -qmlimport=$(QT_QMLDIR) \
 		-bundle-non-qt-libs \
+		-unsupported-allow-new-glibc \
 		-exclude-libs=libgmodule-2.0.so.0,libgthread-2.0.so.0,libqsqlmimer,libqsqlmysql,libqsqlibase,libqsqloci \
 		-verbose=1 \
 		-executable=$(APP_DIR)/usr/bin/pcscd \
