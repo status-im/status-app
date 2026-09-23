@@ -48,6 +48,7 @@ Item {
             savedAddressesModel: ListModel {}
             recentRecipientsModel: ListModel {}
             swapEnabled: true
+            routeOrderEnabled: true
         }
     }
 

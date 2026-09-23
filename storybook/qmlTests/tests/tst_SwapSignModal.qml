@@ -231,6 +231,15 @@ Item {
             compare(footerFiatFeesText.loading, true)
         }
 
+        function test_serviceProviderLink() {
+            verify(!!controlUnderTest)
+            controlUnderTest.serviceProviderName = Constants.swap.relayName
+
+            const link = findChild(controlUnderTest.contentItem, "serviceProviderLink")
+            verify(!!link)
+            compare(link.text, "Relay.")
+        }
+
         function test_footerInfo() {
             verify(!!controlUnderTest)
 

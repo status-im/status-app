@@ -16923,32 +16923,48 @@ avec un retour à la ligne</translation>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>Fonds insuffisants pour l’échange</translation>
+        <source>Insufficient funds</source>
+        <translation>Fonds insuffisants</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>Pas assez d’ETH pour payer les frais de transaction</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>Pas assez d’ETH pour payer les frais</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>Le chargement du prix a pris plus de temps que prévu. Veuillez réessayer plus tard.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>La demande de cotation a expiré. Réessayer ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>Liquidité insuffisante. Diminuez le montant des jetons ou réessayez plus tard.</translation>
+        <source>Low liquidity. Lower amount or try later</source>
+        <translation>Liquidité faible. Diminuez le montant ou réessayez plus tard</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>L’impact sur le prix est trop élevé. Diminuez le montant des jetons ou réessayez plus tard.</translation>
+        <source>No quotes right now. Try later</source>
+        <translation>Aucune cotation pour le moment. Réessayez plus tard</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>Aucune route n’a été trouvée avec une liquidité suffisante</translation>
+        <source>Slippage exceeded. Increase or try later</source>
+        <translation>Slippage dépassé. Augmentez-le ou réessayez plus tard</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Une erreur s’est produite. Modifiez le montant, le jeton ou réessayez plus tard.</translation>
+        <source>High price impact. Lower amount or try later</source>
+        <translation>Impact sur le prix élevé. Diminuez le montant ou réessayez plus tard</translation>
+    </message>
+    <message>
+        <source>No route. Try other tokens or networks</source>
+        <translation>Aucune route. Essayez d’autres tokens ou réseaux</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>Montant trop faible. Augmentez le montant</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>Montant trop élevé. Diminuez le montant</translation>
+    </message>
+    <message>
+        <source>Couldn’t get a quote. Retry ↺</source>
+        <translation>Impossible d’obtenir une cotation. Réessayer ↺</translation>
     </message>
 </context>
 <context>
@@ -19043,6 +19059,14 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <message>
         <source>~%1s</source>
         <translation>~ %1 s</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1m</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1m %2s</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

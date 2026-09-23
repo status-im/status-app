@@ -181,6 +181,7 @@ Window {
             }
             swapInputParamsForm: root.swapFormData
             buyEnabled: true
+            routeOrderEnabled: true
         }
     }
 
