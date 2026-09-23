@@ -57,6 +57,7 @@ QtObject {
     /// - sharePaths([path]) — mobile share sheet for files
     /// - shareText(text) — mobile share sheet for text/URL
     /// - copyText(text) — desktop Copy file path / Copy URL
+    /// - openFile(url) → bool — hand a file to the OS; false when no app took it
     /// - showInFolder(path) — desktop reveals file; Android opens system Downloads UI
     /// - preferShareSheet: bool — mobile → share sheet; desktop → copy
     /// - showInFolderSupported: bool — Desktop + Android; hidden on iOS
@@ -67,6 +68,7 @@ QtObject {
         sharePaths: function(paths) { SystemUtils.sharePaths(paths) },
         shareText: function(text) { ShareUtils.shareText(text) },
         copyText: function(text) { ClipboardUtils.setText(text) },
+        openFile: function(url) { return Qt.openUrlExternally(url) },
         showInFolder: function(path) { SystemUtils.showInFolder(path) },
         preferShareSheet: SQUtils.Utils.isMobile,
         showInFolderSupported: !SQUtils.Utils.isIOS
@@ -338,7 +340,11 @@ QtObject {
     function openRecord(record) {
         if (!record || record.missingFile)
             return
-        Qt.openUrlExternally(UrlUtils.urlFromUserInput(record.targetPath))
+        if (root.platform.openFile(UrlUtils.urlFromUserInput(record.targetPath)))
+            return
+        // No app took the file: show it in the system Downloads instead.
+        if (root.platform.showInFolderSupported)
+            root.platform.showInFolder(record.targetPath)
     }
 
     function openDirectoryForRecord(record) {
