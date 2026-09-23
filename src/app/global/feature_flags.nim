@@ -33,7 +33,7 @@ const DEFAULT_FLAG_KEYCARD_ENABLED = true
 const DEFAULT_FLAG_THREADPOOL_ENABLED = true
 const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
 const DEFAULT_FLAG_BUY_ENABLED = true
-const DEFAULT_FLAG_SWAP_ENABLED = false
+const DEFAULT_FLAG_SWAP_ENABLED = true
 # Swap providers are opt-in; Swap itself is only usable when at least one is enabled.
 const DEFAULT_FLAG_PARASWAP_ENABLED = false
 const DEFAULT_FLAG_LIFI_ENABLED = false
