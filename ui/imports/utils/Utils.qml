@@ -1149,20 +1149,18 @@ QtObject {
                     "swapContractAddress": Constants.swap.lifiContractAddress,
                 }
         }
-        if (!!contractAddress && Constants.swap.relayContractAddresses.includes(contractAddress.toLowerCase())) {
-            return {
-                "icon": Assets.png("swap/%1".arg(Constants.swap.relayIcon)),
-                "url": Constants.swap.relayUrl,
-                "name": Constants.swap.relayName,
-                "approvalContractAddress": contractAddress,
-                "swapContractAddress": contractAddress,
-            }
-        }
         return undefined
     }
 
     function getSwapProviderDetails(processorName) {
         switch (processorName) {
+            case Constants.swap.paraswapProcessorName:
+                return {
+                    "name": Constants.swap.paraswapName,
+                    "url": Constants.swap.paraswapUrl,
+                    "hostname": Constants.swap.paraswapHostname,
+                    "icon": Constants.swap.paraswapIcon,
+                }
             case Constants.swap.lifiProcessorName:
                 return {
                     "name": Constants.swap.lifiName,
@@ -1178,11 +1176,17 @@ QtObject {
                     "icon": Constants.swap.relayIcon,
                 }
         }
+        return undefined
+    }
+
+    function getSwapProviderDappDetails(processorName) {
+        const details = getSwapProviderDetails(processorName)
+        if (!details)
+            return undefined
         return {
-            "name": Constants.swap.paraswapName,
-            "url": Constants.swap.paraswapUrl,
-            "hostname": Constants.swap.paraswapHostname,
-            "icon": Constants.swap.paraswapIcon,
+            "icon": Assets.png("swap/%1".arg(details.icon)),
+            "url": details.url,
+            "name": details.name,
         }
     }
 
