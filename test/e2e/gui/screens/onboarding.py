@@ -36,7 +36,7 @@ class OnboardingWelcomeToStatusView(QObject):
         self.create_profile_button = Button(onboarding_names.startupCreateProfileButton)
         self.log_in_button = Button(onboarding_names.startupLoginButton)
         self.approval_links = QObject(onboarding_names.startupApprovalLinks)
-        self.language_selector = QObject(onboarding_names.startupLanguageSelector)
+        self.language_selector = TextLabel(onboarding_names.startupLanguageSelector)
 
     @allure.step('Open language selector')
     def open_language_selector(self):
@@ -173,7 +173,7 @@ class OnboardingProfileSyncedView(QObject):
         super().__init__(onboarding_names.profileSyncedView)
         self.profile_synced_view = QObject(onboarding_names.profileSyncedView)
         self.log_in_button = Button(onboarding_names.startupLoginButton)
-        self.profile_synced_view_header = QObject(onboarding_names.profileSyncedViewHeader)
+        self.profile_synced_view_header = TextLabel(onboarding_names.profileSyncedViewHeader)
 
 
 class SyncDeviceFoundView(OnboardingView):
@@ -705,6 +705,11 @@ class ReturningLoginView(QObject):
         self._add_existing_user_item = QObject(onboarding_names.loginView_addExistingUserItem_AccountMenuItemPanel)
         self._use_password_instead = QObject(onboarding_names.mainWindowUsePasswordInsteadStatusBaseText)
         self.password_box = QObject(onboarding_names.loginView_passwordBox)
+
+    @property
+    @allure.step('Get password validation error')
+    def password_validation_error(self) -> str:
+        return str(self.password_box.object.validationError)
 
     @allure.step('Log in user')
     def log_in(self, account):

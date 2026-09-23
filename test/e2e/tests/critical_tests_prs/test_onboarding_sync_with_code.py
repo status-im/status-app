@@ -60,8 +60,7 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             profile_syncing_view = OnboardingProfileSyncedView().wait_until_appears()
             assert profile_syncing_view.log_in_button.wait_until_appears(timeout_msec=15000), \
                 f'Log in button is not shown within 15 seconds'
-            assert 'Profile synced' in str(
-                profile_syncing_view.profile_synced_view_header.wait_until_appears().object.text), \
+            assert 'Profile synced' in profile_syncing_view.profile_synced_view_header.wait_until_appears().text, \
                 f'Device is not synced'
 
         with step('Sign in to synced account'):
@@ -91,15 +90,15 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             messaging_settings.switch_allow_contact_requests_toggle(False)
             time.sleep(2)  # wait for animation of the toggle to finish
             assert driver.waitFor(
-                lambda: not messaging_settings.allow_contact_requests_toggle.object.checked,
-                3000), f'Toggle did not change to OFF. Current state: {messaging_settings.allow_contact_requests_toggle.object.checked}'
+                lambda: not messaging_settings.allow_contact_requests_toggle.is_checked,
+                3000), f'Toggle did not change to OFF. Current state: {messaging_settings.allow_contact_requests_toggle.is_checked}'
 
         with step(f'Check that settings changes are reflected in second instance {aut_two.aut_id}'):
             aut_two.attach()
             main_window.prepare()
             msg_stngs = main_window.left_panel.open_settings().left_panel.open_messaging_settings()
             assert driver.waitFor(
-                lambda: not msg_stngs.allow_contact_requests_toggle.object.checked, 15000), \
+                lambda: not msg_stngs.allow_contact_requests_toggle.is_checked, 15000), \
                 f'Toggle changes are not synced'
 
         with step(f'Unpair the device from first instance {aut_one.aut_id}'):
@@ -112,7 +111,7 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             home = main_window.left_panel.open_home_screen()
             messaging_settings = home.open_messaging_settings_from_grid()
             messaging_settings.switch_allow_contact_requests_toggle(True)
-            assert messaging_settings.allow_contact_requests_toggle.object.checked
+            assert messaging_settings.allow_contact_requests_toggle.is_checked
 
         with step(f'Check that changes for toggle are not reflected in second instance {aut_two.aut_id}'):
             aut_two.attach()
@@ -120,5 +119,5 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             home = main_window.left_panel.open_home_screen()
             msg_stngs = home.open_messaging_settings_from_grid()
             assert driver.waitFor(
-                lambda: not msg_stngs.allow_contact_requests_toggle.object.checked, 15000), \
+                lambda: not msg_stngs.allow_contact_requests_toggle.is_checked, 15000), \
                 f'Toggle state should remain unchecked becase devices are not paired'

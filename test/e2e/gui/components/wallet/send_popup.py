@@ -23,7 +23,7 @@ class SendPopup(QObject):
         super().__init__(names.simpleSendModal)
         self.send_modal_header = QObject(names.sendModalHeader)
         self.send_modal_title = TextLabel(names.sendModalTitle)
-        self.send_modal_recipient_panel = QObject(names.sendModalRecipientPanel)
+        self._send_modal_recipient_panel = QObject(names.sendModalRecipientPanel)
         self.send_modal_recipient_delegate = QObject(names.sendModalRecipientViewDelegate)
         self.send_modal_token_selector = Button(names.sendModalTokenSelector)
         self.send_modal_network_filter = QObject(names.sendModalNetworkFilter)
@@ -37,6 +37,11 @@ class SendPopup(QObject):
         self.asset_list_item = QObject(names.o_TokenBalancePerChainDelegate_template)
         self.ens_address_text_input = TextEdit(names.ens_or_address_text_input)
         self.ens_address_paste_button = Button(names.ens_or_address_paste_button)
+
+    @property
+    @allure.step('Get selected recipient address')
+    def selected_recipient_address(self) -> str:
+        return str(self._send_modal_recipient_panel.object.selectedRecipientAddress)
 
     @allure.step('Get assets or collectibles list')
     def get_assets_or_collectibles_list(self, tab: str) -> typing.List[str]:
@@ -90,7 +95,7 @@ class SendPopup(QObject):
         """Check if recipient suggestions panel appears and select the matching address if it does"""
         try:
             # Check if suggestions panel is visible with a short timeout
-            if self.send_modal_recipient_panel.is_visible:
+            if self._send_modal_recipient_panel.is_visible:
                 # Find all recipient delegates
                 delegates = driver.findAllObjects(self.send_modal_recipient_delegate.real_name)
                 if delegates:

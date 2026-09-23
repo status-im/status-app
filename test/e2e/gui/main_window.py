@@ -134,6 +134,11 @@ class MainLeftPanel(QObject):
     def user_badge_color(self) -> str:
         return str(self.profile_button.object.badge.color.name)
 
+    @property
+    @allure.step('Get avatar background color')
+    def avatar_background_color(self) -> str:
+        return str(self.profile_button.object.identicon.asset.bgColor.name).upper()
+
     @allure.step('Verify: User is online')
     def user_is_online(self) -> bool:
         return self.user_badge_color == constants.ColorCodes.GREEN.value

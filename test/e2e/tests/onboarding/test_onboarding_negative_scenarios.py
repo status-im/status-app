@@ -33,4 +33,4 @@ def test_login_with_wrong_password(aut: AUT, main_screen: MainWindow, user_accou
         ))
 
     with step('Verify that user cannot log in and the error appears'):
-        assert error in str(login_view.password_box.object.validationError)
+        assert error in login_view.password_validation_error

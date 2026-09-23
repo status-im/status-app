@@ -62,6 +62,11 @@ class ContactItem:
     def __repr__(self):
         return self.contact
 
+    @property
+    @allure.step('Get contact request text')
+    def contact_request_text(self) -> str:
+        return str(self.object.contactText)
+
     def init_ui(self):
         self.contact = str(self.object.userName)
         for child in walk_children(self.object):
@@ -113,7 +118,7 @@ class ContactsSettingsView(QObject):
         self.contact_item = QObject(settings_names.contactRequestItemSettings)
         self._pending_request_sent_panel = QObject(
             settings_names.settingsContentBaseScrollView_sentRequests_ContactsListPanel)
-        self.section_header = QObject(settings_names.settingsContentBaseScrollView_ContactListPanel_Header)
+        self._section_header = QObject(settings_names.settingsContentBaseScrollView_ContactListPanel_Header)
         self._pending_request_received_panel = QObject(
             settings_names.settingsContentBaseScrollView_receivedRequests_ContactsListPanel)
         self._contacts_panel = QObject(settings_names.settingsContentBaseScrollView_mutualContacts_ContactsListPanel)
@@ -146,6 +151,11 @@ class ContactsSettingsView(QObject):
             return [str(contact) for contact in self.contact_items]
         except LookupError:
             return []
+
+    @property
+    @allure.step('Get section header')
+    def section_title(self) -> str:
+        return str(self._section_header.object.text)
 
     @property
     @allure.step('Get title of list with sent pending requests')

@@ -19,7 +19,7 @@ def test_back_up_recovery_phrase_sign_out(
             f'Display name in online identifier is wrong, current: {online_identifier.get_user_name}, expected: {user_account.name}'
 
     with step('Verify that user avatar background color'):
-        avatar_color = str(main_screen.left_panel.profile_button.object.identicon.asset.bgColor.name).upper()
+        avatar_color = main_screen.left_panel.avatar_background_color
         assert avatar_color in constants.UserPictureColors.profile_colors(), \
             f'Avatar color should be one of the allowed colors but is {avatar_color}'
 
