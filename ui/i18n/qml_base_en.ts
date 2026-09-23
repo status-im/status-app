@@ -1555,6 +1555,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1635,6 +1639,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1712,6 +1720,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16841,6 +16853,14 @@ to load</source>
     </message>
     <message>
         <source>Bridge</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>By %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

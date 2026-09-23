@@ -1556,6 +1556,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>Échange de %1 contre %2 dans %3</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>Bridge de %1 sur %2 vers %3 sur %4 dans %5</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>Création d’un nombre infini de jetons %1 pour %2 à l’aide de %3</translation>
     </message>
@@ -1636,6 +1640,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>Limite de dépenses définie&#xa0;: %1 dans %2 pour %3</translation>
     </message>
     <message>
+        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
+        <translation>Bridge effectué&#xa0;: %1 sur %2 vers %3 sur %4 dans %5</translation>
+    </message>
+    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>Nombre infini de jetons  créé %1 pour %2 en utilisant %3</translation>
     </message>
@@ -1714,6 +1722,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>Dépassement du plafond de dépenses&#xa0;: %1 dans %2 pour %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>Bridge échoué&#xa0;: %1 sur %2 vers %3 sur %4 dans %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -16870,6 +16882,14 @@ avec un retour à la ligne</translation>
     <message>
         <source>Choose route</source>
         <translation>Choisir une route</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>Par %1 via %2</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Par %1</translation>
     </message>
     <message>
         <source>by %1 via %2</source>

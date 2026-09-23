@@ -1567,6 +1567,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Směna %1 za %2 v %3</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>Přemostění %1 na %2 za %3 na %4 v %5</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>Ražba nekonečného množství tokenů %1 pro %2 pomocí %3</translation>
     </message>
@@ -1647,6 +1651,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Limit útraty nastaven: %1 v %2 pro %3</translation>
     </message>
     <message>
+        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
+        <translation>Přemostěno %1 na %2 za %3 na %4 v %5</translation>
+    </message>
+    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>Vyraženo nekonečné množství tokenů %1 pro %2 pomocí %3</translation>
     </message>
@@ -1725,6 +1733,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>Limit útraty selhal: %1 v %2 pro %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>Přemostění selhalo: %1 na %2 za %3 na %4 v %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -16941,6 +16953,14 @@ selhalo</translation>
     <message>
         <source>Bridge</source>
         <translation>Most</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>Od %1 přes %2</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Od %1</translation>
     </message>
     <message>
         <source>by %1 via %2</source>

@@ -28,6 +28,7 @@ StatusCenteredFlow {
         onClicked: root.linkClicked()
     }
     StatusBaseText {
+        visible: !!root.txProviderTool
         font.pixelSize: Theme.additionalTextSize
         text: qsTr("via %1").arg(root.txProviderTool)
     }

@@ -1556,6 +1556,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Swapping %1 por %2 en %3</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>Bridging %1 en %2 por %3 en %4 en %5</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>Acuñando tokens %1 infinitos para %2 usando %3</translation>
     </message>
@@ -1636,6 +1640,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Límite de gasto establecido: %1 en %2 para %3</translation>
     </message>
     <message>
+        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
+        <translation>Se hizo bridge de %1 en %2 por %3 en %4 en %5</translation>
+    </message>
+    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>Acuñados tokens %1 infinitos para %2 usando %3</translation>
     </message>
@@ -1714,6 +1722,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>Límite de gasto fallido: %1 en %2 para %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>Bridge fallido: %1 en %2 por %3 en %4 en %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -16874,6 +16886,14 @@ al cargar</translation>
     <message>
         <source>Choose route</source>
         <translation>Elegir ruta</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>Por %1 vía %2</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Por %1</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
