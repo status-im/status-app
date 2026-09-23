@@ -144,6 +144,7 @@ Item {
                 shareText: function(text) {},
                 copyText: function(text) {},
                 showInFolder: function(path) {},
+                openFile: function(url) { return true },
                 preferShareSheet: false,
                 showInFolderSupported: true
             }
@@ -934,6 +935,48 @@ Item {
             store.platform.showInFolderSupported = true
             record.missingFile = true
             verify(!store.canShowInFolder(record))
+        }
+
+        // A file no app can open (an APK the installer refuses to take, a type
+        // with no viewer) is shown in the system Downloads instead.
+        function test_openRecord_fallsBackToTheFolder_whenNoAppTakesTheFile() {
+            const store = createStore()
+            store.platform.fileExists = function(path) { return true }
+            let opened = 0
+            let shownPath = ""
+            store.platform.openFile = function(url) { opened += 1; return false }
+            store.platform.showInFolder = function(path) { shownPath = path }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            store.openRecord(record)
+            compare(opened, 1)
+            compare(shownPath, record.targetPath)
+
+            // Where there is no folder to show (iOS), nothing else happens.
+            shownPath = "unchanged"
+            store.platform.showInFolderSupported = false
+            store.openRecord(record)
+            compare(shownPath, "unchanged")
+        }
+
+        function test_openRecord_doesNotShowTheFolder_whenAnAppTakesTheFile() {
+            const store = createStore()
+            store.platform.fileExists = function(path) { return true }
+            let shownPath = ""
+            store.platform.openFile = function(url) { return true }
+            store.platform.showInFolder = function(path) { shownPath = path }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            store.openRecord(record)
+            compare(shownPath, "")
         }
 
         function test_openDirectoryForRecord_callsPlatformShowInFolder_withTargetPath() {
