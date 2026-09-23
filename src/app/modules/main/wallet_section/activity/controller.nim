@@ -122,7 +122,10 @@ QtObject:
     defer: self.status.setErrorCode(res.errorCode.int)
 
     if res.errorCode != ErrorCodeSuccess:
-      error "error fetching activity entries: ",code = res.errorCode
+      if res.errorCode == ErrorCodeTaskCanceled:
+        debug "activity entries request canceled"
+      else:
+        error "error fetching activity entries: ",code = res.errorCode
       return
 
     let entries = self.backendToPresentation(res.activities)

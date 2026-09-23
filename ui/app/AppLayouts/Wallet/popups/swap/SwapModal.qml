@@ -179,7 +179,9 @@ StatusDialog {
             }
         }
 
+        readonly property bool swapViaRelay: root.swapAdaptor.swapOutputData.txProviderName === Constants.swap.relayProcessorName
         readonly property var serviceProvider: Utils.getSwapProviderDetails(root.swapAdaptor.swapOutputData.txProviderName)
+                                               ?? Utils.getSwapProviderDetails(Constants.swap.paraswapProcessorName)
         readonly property string serviceProviderName: d.serviceProvider.name
         readonly property string serviceProviderUrl: d.serviceProvider.url
         readonly property string serviceProviderHostname: d.serviceProvider.hostname
@@ -746,9 +748,21 @@ StatusDialog {
                                     onClicked: swapRoutePopupComponent.createObject(root).open()
                                 }
                             }
+                            StatusBaseText {
+                                objectName: "routeProviderText"
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: d.swapViaRelay
+                                text: !!root.swapAdaptor.swapOutputData.txProviderTool
+                                      ? qsTr("By %1 via %2").arg(d.serviceProviderName)
+                                        .arg(root.swapAdaptor.swapOutputData.txProviderTool)
+                                      : qsTr("By %1").arg(d.serviceProviderName)
+                                font.weight: Font.Medium
+                                color: Theme.palette.directColor1
+                            }
                             StatusFlatRoundButton {
                                 objectName: "routeProviderInfoIcon"
                                 anchors.verticalCenter: parent.verticalCenter
+                                visible: !d.swapViaRelay
                                 width: 20
                                 height: 20
                                 radius: width/2

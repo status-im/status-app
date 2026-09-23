@@ -2035,9 +2035,15 @@ Item {
             verify(root.swapAdaptor.validSwapProposalReceived)
             compare(root.swapAdaptor.swapOutputData.txProviderName, Constants.swap.relayProcessorName)
 
+            // Relay spells the provider out as text instead of the info icon + tooltip
+            compare(root.swapAdaptor.swapOutputData.txProviderTool, "kyberswap")
+            const providerText = findChild(controlUnderTest, "routeProviderText")
+            verify(!!providerText)
+            verify(providerText.visible)
+            compare(providerText.text, qsTr("By %1 via %2").arg(Constants.swap.relayName).arg("kyberswap"))
             const providerInfo = findChild(controlUnderTest, "routeProviderInfoIcon")
             verify(!!providerInfo)
-            compare(providerInfo.tooltip.text, qsTr("by %1").arg(Constants.swap.relayName))
+            verify(!providerInfo.visible)
             compare(Constants.swap.relayName, "Relay")
 
             closeAndVerfyModal()

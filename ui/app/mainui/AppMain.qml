@@ -581,6 +581,13 @@ Item {
                     }
                     break
                 }
+                case Constants.SendType.Bridge: {
+                    toastTitle = qsTr("Bridging %1 on %2 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
+                    if (approvalTx) {
+                        toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                    }
+                    break
+                }
                 case Constants.SendType.CommunityDeployAssets: {
                     if (communityAmountInfinite1) {
                         toastTitle = qsTr("Minting infinite %1 tokens for %2 using %3").arg(communityDeployedTokenName).arg(communityName).arg(sender)
@@ -692,6 +699,13 @@ Item {
                     }
                     break
                 }
+                case Constants.SendType.Bridge: {
+                    toastTitle = qsTr("Bridged %1 on %2 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
+                    if (approvalTx) {
+                        toastTitle = qsTr("Spending cap set: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                    }
+                    break
+                }
                 case Constants.SendType.CommunityDeployAssets: {
                     if (communityAmountInfinite1){
                         toastTitle = qsTr("Minted infinite %1 tokens for %2 using %3").arg(communityDeployedTokenName).arg(communityName).arg(sender)
@@ -796,6 +810,13 @@ Item {
                 }
                 case Constants.SendType.Swap: {
                     toastTitle = qsTr("Swap failed: %1 to %2 in %3").arg(sentAmount).arg(receivedAmount).arg(sender)
+                    if (approvalTx) {
+                        toastTitle = qsTr("Spending cap failed: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                    }
+                    break
+                }
+                case Constants.SendType.Bridge: {
+                    toastTitle = qsTr("Bridge failed: %1 on %2 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
                     if (approvalTx) {
                         toastTitle = qsTr("Spending cap failed: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
                     }

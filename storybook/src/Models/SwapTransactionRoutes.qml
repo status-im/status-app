@@ -142,7 +142,7 @@ QtObject {
     }
     property ListModel goodRouteApprovalNeededViaRelay: ListModel {
         Component.onCompleted: append([{
-            route: Object.assign({}, root.goodRouteApprovalNeeded.suggestesRoutes[0].route, { bridgeName: "Relay" })
+            route: Object.assign({}, root.goodRouteApprovalNeeded.suggestesRoutes[0].route, { bridgeName: "Relay", tool: "kyberswap" })
         }])
     }
     property ListModel goodRouteApprovalNeeded: ListModel {
