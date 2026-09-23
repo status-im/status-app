@@ -38,3 +38,10 @@ class TextEdit(QObject):
                 f'Clear text field failed, value in field: "{self.text}"'
         LOG.info('%s: cleared', self)
         return self
+
+    @allure.step('Search: {1} in {0}')
+    def search(self, query: str):
+        self.wait_until_appears()
+        self.set_text_property(query)
+        LOG.info('%s: search query set to "%s"', self, query)
+        return self

@@ -32,8 +32,7 @@ class HomeScreen(QObject):
     @allure.step('Search in Home')
     def search(self, query: str):
         """Enter search query in the home search field"""
-        self.search_field.clear()
-        self.search_field.type_text(query)
+        self.search_field.search(query)
 
     @allure.step('Clear Home search')
     def clear_search(self):
