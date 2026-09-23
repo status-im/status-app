@@ -34,11 +34,12 @@ def _album_image_paths(tmp_path, count: int = ALBUM_IMAGE_COUNT):
 
 
 def _until_label(include_delivered: bool) -> str:
-    return 'Sent and Delivered' if include_delivered else 'Sent'
+    return 'Visible, Sent and Delivered' if include_delivered else 'Visible and Sent'
 
 
 def _record_send(
         aut: AUT,
+        visible_samples: BenchmarkScenarioSamples,
         sent_samples: BenchmarkScenarioSamples,
         delivered_samples: BenchmarkScenarioSamples,
         send_action,
@@ -50,6 +51,12 @@ def _record_send(
 ) -> str:
     started_at = time.perf_counter()
     send_action()
+
+    _, _, visible_stats = monitored_timed_call(
+        aut,
+        lambda: chat.wait_until_outgoing_visible(message_text, after_message_id=after_message_id),
+    )
+    visible_samples.record(time.perf_counter() - started_at, visible_stats)
 
     message, _, sent_stats = monitored_timed_call(
         aut,
@@ -74,10 +81,14 @@ def _attach_reports(
         tmp_path,
         subject: str,
         slug: str,
+        visible_samples: BenchmarkScenarioSamples,
         sent_samples: BenchmarkScenarioSamples,
         delivered_samples: BenchmarkScenarioSamples,
         include_delivered: bool = True,
 ) -> None:
+    attach_scenario_reports(
+        tmp_path, subject=f'{subject} Visible', slug=f'{slug}_visible', samples=visible_samples,
+    )
     attach_scenario_reports(
         tmp_path, subject=f'{subject} Sent', slug=f'{slug}_sent', samples=sent_samples,
     )
@@ -101,10 +112,12 @@ def _measure_send(
         after_sent=None,
         **wait_kwargs,
 ) -> str:
+    visible_samples = BenchmarkScenarioSamples()
     sent_samples = BenchmarkScenarioSamples()
     delivered_samples = BenchmarkScenarioSamples()
     message_id = _record_send(
         aut,
+        visible_samples,
         sent_samples,
         delivered_samples,
         send_action,
@@ -113,7 +126,9 @@ def _measure_send(
         after_sent=after_sent,
         **wait_kwargs,
     )
-    _attach_reports(tmp_path, subject, slug, sent_samples, delivered_samples, include_delivered)
+    _attach_reports(
+        tmp_path, subject, slug, visible_samples, sent_samples, delivered_samples, include_delivered,
+    )
     return message_id
 
 
@@ -175,6 +190,7 @@ def run_send_timing_scenarios(
             f'Send {BATCH_MESSAGE_COUNT} texts with {BATCH_DELAY_SEC}s delay '
             f'and measure each until {until}'
     ):
+        visible_samples = BenchmarkScenarioSamples()
         sent_samples = BenchmarkScenarioSamples()
         delivered_samples = BenchmarkScenarioSamples()
         for index in range(BATCH_MESSAGE_COUNT):
@@ -182,6 +198,7 @@ def run_send_timing_scenarios(
             composer.type_message(payload)
             _record_send(
                 aut,
+                visible_samples,
                 sent_samples,
                 delivered_samples,
                 composer.confirm_sending_message,
@@ -196,6 +213,7 @@ def run_send_timing_scenarios(
             tmp_path,
             f'{subject_prefix} 10-message burst',
             f'{slug_prefix}_burst',
+            visible_samples,
             sent_samples,
             delivered_samples,
             include_delivered,

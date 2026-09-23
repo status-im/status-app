@@ -756,6 +756,12 @@ class ChatView(QObject):
         )
         return found
 
+    @allure.step('Wait until outgoing message appears in the chat view')
+    def wait_until_outgoing_visible(self, message_text=None, **kwargs) -> Message:
+        return self._wait_until_outgoing(
+            'visible in the chat', lambda message: True, message_text, **kwargs,
+        )
+
     @allure.step('Wait until outgoing message is marked Sent')
     def wait_until_outgoing_sent(self, message_text=None, **kwargs) -> Message:
         return self._wait_until_outgoing(
