@@ -1,10 +1,10 @@
+import pathlib
 import time
 from collections import namedtuple
 
 import allure
 
 import driver.mouse
-from gui.components.status_modals import StatusModal
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.slider import Slider
@@ -13,15 +13,22 @@ from gui.objects_map import names
 shift_image = namedtuple('Shift', ['left', 'right', 'top', 'bottom'])
 
 
-class PictureEditPopup(StatusModal):
+def open_picture_edit_without_file_dialog(crop_host: QObject, path) -> 'PictureEditPopup':
+    fileuri = pathlib.Path(str(path)).as_uri()
+    crop_host.object.cropImageDeferred(fileuri)
+    return PictureEditPopup()
+
+
+class PictureEditPopup(QObject):
 
     def __init__(self):
-        super().__init__()
+        super().__init__(names.make_picture_StatusButton)
         self.make_picture_header = QObject(names.make_picture_Header)
         self._zoom_slider = Slider(names.o_StatusSlider)
         self._view = QObject(names.cropSpaceItem_Item)
         self.make_picture_button = Button(names.make_picture_StatusButton)
         self._slider_handler = QObject(names.o_DropShadow)
+        self.wait_until_enabled()
 
     @allure.step('Set zoom shift for picture and make picture')
     def set_zoom_shift_for_picture(
@@ -55,5 +62,3 @@ class PictureEditPopup(StatusModal):
     def make_picture(self):
         self.make_picture_button.click()
         return self
-
-
