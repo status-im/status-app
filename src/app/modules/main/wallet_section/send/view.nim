@@ -162,8 +162,8 @@ QtObject:
   proc onSigningResult*(self: View, signature: string) {.slot.} =
     self.delegate.onSigningResult(signature)
 
-  proc reevaluateSwap*(self: View, uuid: string, chainId: int, isApprovalTx: bool) {.slot.} =
-    self.delegate.reevaluateSwap(uuid, chainId, isApprovalTx)
+  proc reevaluateSwap*(self: View, uuid: string, pathName: string, chainId: int, isApprovalTx: bool) {.slot.} =
+    self.delegate.reevaluateSwap(uuid, pathName, chainId, isApprovalTx)
 
   proc suggestedRoutesReady*(self: View, suggestedRoutes: QVariant, errCode: string, errDescription: string) {.signal.}
   proc setTransactionRoute*(self: View, routes: TransactionRoutes, errCode: string, errDescription: string) =

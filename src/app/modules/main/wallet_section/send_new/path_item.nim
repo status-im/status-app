@@ -458,7 +458,9 @@ QtObject:
     return self.approvalL1Fee
 
   proc estimatedTime*(self: PathItem): int =
-    if self.processorName == wallet_constants.PROCESSOR_NAME_SWAP_PARASWAP:
+    if self.processorName in [wallet_constants.PROCESSOR_NAME_SWAP_PARASWAP,
+                              wallet_constants.PROCESSOR_NAME_SWAP_LIFI,
+                              wallet_constants.PROCESSOR_NAME_SWAP_RELAY]:
       return self.txEstimatedTime + self.approvalEstimatedTime
     if self.processorName == wallet_constants.PROCESSOR_NAME_BRIDGE_HOP:
       return self.txEstimatedTime + 1

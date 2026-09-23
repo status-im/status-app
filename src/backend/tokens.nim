@@ -37,6 +37,9 @@ rpc(isChainSupportedForSwapViaParaswap, "wallet"):
 rpc(isChainSupportedForSwapViaLiFi, "wallet"):
   chainId: int
 
+rpc(isChainSupportedForSwapViaRelay, "wallet"):
+  chainId: int
+
 
 ## Gets all mandatory token keys
 ## `resultOut` represents a json object that contains the mandatory token keys if the call was successful, or `nil`
@@ -68,6 +71,14 @@ proc isChainSupportedForSwapViaLiFi*(resultOut: var JsonNode, chainId: int): str
     return prepareResponse(resultOut, response)
   except Exception as e:
     warn "error checking if chain is supported for swap via LI.FI", err = e.msg
+    return e.msg
+
+proc isChainSupportedForSwapViaRelay*(resultOut: var JsonNode, chainId: int): string =
+  try:
+    let response = isChainSupportedForSwapViaRelay(chainId)
+    return prepareResponse(resultOut, response)
+  except Exception as e:
+    warn "error checking if chain is supported for swap via Relay", err = e.msg
     return e.msg
 
 ## Gets all token lists

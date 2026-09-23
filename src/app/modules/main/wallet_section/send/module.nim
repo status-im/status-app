@@ -417,8 +417,7 @@ method splitAndFormatAddressPrefix*(self: Module, text : string, updateInStore: 
 method transactionSendingComplete*(self: Module, txHash: string, status: string) =
   self.view.sendtransactionSendingCompleteSignal(txHash, status)
 
-method reevaluateSwap*(self: Module, uuid: string, chainId: int, isApprovalTx: bool) =
-  const pathName = "Paraswap"
+method reevaluateSwap*(self: Module, uuid: string, pathName: string, chainId: int, isApprovalTx: bool) =
   let err = self.controller.reevaluateRouterPath(uuid, pathName, chainId, isApprovalTx)
   if err.len > 0:
     error "reevaluateRouterPath failed: ", err=err
