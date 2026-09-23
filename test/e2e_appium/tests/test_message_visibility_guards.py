@@ -33,18 +33,25 @@ def _rect(y, height, x=138, width=924):
 
 INSIDE = _rect(1500, 57)
 BELOW_COMPOSER = _rect(2092, 57)
+OFF_DISPLAY = _rect(0, 0, x=0, width=0)
 
 
 class _Node(WebElement):
-    """A WebElement whose rect is whatever the test set, live."""
+    """A WebElement whose rect is whatever the test set, live. A list moving
+    under it is modelled by ``frames``: each read takes the next one, and the
+    last one holds."""
 
     def __init__(self, driver, rect, resource_id):
         super().__init__(driver, f"node-{resource_id}")
         self.rect_value = dict(rect)
         self.resource_id = resource_id
+        self.frames = []
 
     @property
     def rect(self):
+        if self.frames:
+            self.rect_value = dict(self.frames.pop(0))
+        self._parent.events.append(("rect", self.id, self.rect_value["y"]))
         return dict(self.rect_value)
 
     def is_displayed(self):
@@ -262,4 +269,49 @@ def test_long_press_presses_a_visible_target_without_scrolling(tmp_path, monkeyp
     assert page.long_press_message("ctx_menu_test_3103bc46", timeout=2) is True
 
     assert driver.swipes == []
+    assert len(driver.presses) == 1
+
+
+def test_long_press_waits_for_the_pressed_delegate_to_stop_moving(tmp_path, monkeypatch):
+    """Appium returns when the swipe ends and the list flings on. The first match
+    in the tree is off the display with a zero rect that does not change while
+    the list moves, so only the delegate about to be pressed shows the motion."""
+    monkeypatch.chdir(tmp_path)
+    driver = _ChatDriver("fling_4c1d", OFF_DISPLAY, also=[BELOW_COMPOSER])
+    moving = driver.messages[1]
+
+    def list_flings_through_the_band(d):
+        moving.frames = [_rect(y, 57) for y in (1700, 1400, 1100, 800)]
+
+    driver.on_swipe = list_flings_through_the_band
+    page = MessageContextMenuPage(driver)
+    monkeypatch.setattr(page, "is_displayed", lambda timeout=5: True)
+
+    assert page.long_press_message("fling_4c1d", timeout=2) is True
+
+    assert driver.pressed_ids() == [moving.id]
+    first_press = next(i for i, e in enumerate(driver.events) if e[0] in ("w3c", "gesture"))
+    seen = [e[2] for e in driver.events[:first_press] if e[0] == "rect" and e[1] == moving.id]
+    assert seen[-2:] == [800, 800], f"pressed while the delegate was still moving: {seen}"
+
+
+def test_long_press_reads_the_list_after_a_fling_stops(tmp_path, monkeypatch):
+    """A fling that crosses the band and comes to rest under the toolbar: a
+    check made mid-fling sees the message on screen and stops swiping, then
+    finds it gone. Checked after the fling, it needs a swipe back."""
+    monkeypatch.chdir(tmp_path)
+    driver = _ChatDriver("overshoot_9a2e", BELOW_COMPOSER)
+    flings = iter([
+        [_rect(y, 57) for y in (1700, 1000, 150)],
+        [_rect(y, 57) for y in (600, 900)],
+    ])
+    driver.on_swipe = lambda d: setattr(d.message, "frames", next(flings))
+    page = MessageContextMenuPage(driver)
+    monkeypatch.setattr(page, "is_displayed", lambda timeout=5: True)
+
+    assert page.long_press_message("overshoot_9a2e", timeout=2) is True
+
+    assert len(driver.swipes) == 2, driver.swipes
+    _, _, start_y, _, end_y = driver.swipes[1]
+    assert end_y > start_y, "the second swipe must drag towards older content"
     assert len(driver.presses) == 1

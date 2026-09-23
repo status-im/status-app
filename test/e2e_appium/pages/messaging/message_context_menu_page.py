@@ -72,8 +72,8 @@ class MessageContextMenuPage(BasePage):
         The message must be on screen, not merely in the accessibility tree: a
         delegate the ListView keeps in its cache buffer reports a rect the list
         has not scrolled to, and a press there lands on whatever is painted at
-        that point. A present but off-screen message is swiped towards, left
-        to settle, and re-checked before the press.
+        that point. A present but off-screen message is swiped towards, and the
+        delegate pressed must be on screen and no longer moving.
         """
         # An open keyboard halves the sheet: actions past the first fold get
         # clipped behind it and in-menu swipes land on the keys.
@@ -102,24 +102,18 @@ class MessageContextMenuPage(BasePage):
                 return False
             settled = self._wait_until_settled(element)
         if not settled:
-            # MessageView refuses press-and-hold while the log is moving, so this
-            # press will probably be ignored. Attempted anyway: the menu check
-            # below is the real gate, and the list often settles under the press.
             self.logger.warning(
-                f"Message '{message_content}' never stopped moving; pressing anyway"
+                f"Message '{message_content}' never stopped moving; checking again before the press"
             )
         chat = ChatPage(self.driver)
         bounds = chat.chat_bounds()
         scrolled = 0
         if bounds is not None and not chat.message_on_screen(message_content, bounds):
             scrolled = self._scroll_message_into_view(chat, message_content, element, bounds)
-            self._wait_until_settled(element)
-        visible = chat.visible_message(
-            message_content, timeout=timeout, scrolled=bool(scrolled), bounds=bounds,
-        )
+        visible = self._settled_on_screen(chat, message_content, timeout, bool(scrolled), bounds)
         if visible is None:
             self.logger.error(
-                "Message '%s' is in the tree but not on screen after %s swipe(s); "
+                "Message '%s' is in the tree but not on screen, or still moving, after %s swipe(s); "
                 "last rect %s, list band %s",
                 message_content, scrolled, _rect_of(element), bounds,
             )
@@ -193,9 +187,36 @@ class MessageContextMenuPage(BasePage):
                 self.logger.debug("Swipe towards '%s' failed: %s", message_content, exc)
                 return swiped
             swiped += 1
+            # Appium returns when the gesture ends; the list flings on after it.
+            self._wait_until_settled(element)
             if chat.message_on_screen(message_content, bounds):
                 break
         return swiped
+
+    def _settled_on_screen(
+        self, chat: ChatPage, message_content: str, timeout, scrolled: bool, bounds,
+        attempts: int = 2,
+    ):
+        """The on-screen delegate carrying ``message_content`` once it has stopped
+        moving, or None.
+
+        Settling is read on that delegate, not on the first match: a match off
+        the display has a zero rect that stays the same while the list moves.
+        """
+        bounds = bounds or chat.chat_bounds()
+        if bounds is None:
+            return None
+        for _ in range(attempts):
+            visible = chat.visible_message(
+                message_content, timeout=timeout, scrolled=scrolled, bounds=bounds,
+            )
+            if visible is None:
+                return None
+            if self._wait_until_settled(visible) and chat.rect_within_list(
+                visible.rect, *bounds
+            ):
+                return visible
+        return None
 
     def _find_message(self, locators, timeout):
         for locator in locators:
