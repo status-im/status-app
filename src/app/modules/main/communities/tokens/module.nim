@@ -219,6 +219,9 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
 
 method onTransactionSent*(self: Module, uuid: string, sendType: SendType, chainId: int, approvalTx: bool, txHash: string,
   toAddress: string, error: string) =
+  # the signal is emitted for every wallet transaction; only react to the one this module started
+  if uuid != self.tempUuid:
+    return
   if error.len > 0:
     error "Error sending transaction", error = error
     self.view.emitTransactionError(TxErrorFailedToSend)

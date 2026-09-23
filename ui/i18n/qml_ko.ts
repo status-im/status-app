@@ -1544,6 +1544,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>%3에서 %1을(를) %2로 스왑하는 중</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>%5에서 %2의 %1을(를) %4의 %3(으)로 브리징하는 중</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>%3을(를) 사용해 %2에 무한 %1 토큰 발행</translation>
     </message>
@@ -1624,6 +1628,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>지출 한도 설정됨: %3의 %2에서 %1</translation>
     </message>
     <message>
+        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
+        <translation>%5에서 %2의 %1을(를) %4의 %3(으)로 브리징했어요</translation>
+    </message>
+    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>%3를 사용해 %2에 무한 %1 토큰을 민팅했습니다</translation>
     </message>
@@ -1702,6 +1710,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>지출 한도 실패: %2에서 %1, 대상 %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>브리징 실패: %2의 %1 → %4의 %3, %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -16783,6 +16795,14 @@ to load</source>
     <message>
         <source>Bridge</source>
         <translation>브리지</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>%2 경유, %1 제공</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>%1 제공</translation>
     </message>
     <message>
         <source>by %1 via %2</source>

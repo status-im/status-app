@@ -1567,6 +1567,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Обмін %1 на %2 у %3</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>Бриджинг %1 у %2 на %3 у %4 в %5</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>Випуск необмеженої кількості токенів %1 для %2 через %3</translation>
     </message>
@@ -1647,6 +1651,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Установлено ліміт витрат: %1 у %2 для %3</translation>
     </message>
     <message>
+        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
+        <translation>Бриджинг завершено: %1 у %2 на %3 у %4 в %5</translation>
+    </message>
+    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>Випущено необмежену кількість токенів %1 для %2 через %3</translation>
     </message>
@@ -1725,6 +1733,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>Не вдалося встановити ліміт витрат: %1 у %2 для %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>Бриджинг не вдався: %1 у %2 на %3 у %4 в %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -16954,6 +16966,14 @@ to load</source>
     <message>
         <source>Choose route</source>
         <translation>Вибрати маршрут</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>Від %1 через %2</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Від %1</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
