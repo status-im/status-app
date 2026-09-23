@@ -17007,32 +17007,48 @@ to load</source>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>Недостатньо коштів для обміну</translation>
+        <source>Insufficient funds</source>
+        <translation>Недостатньо коштів</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>Недостатньо ETH для сплати комісій за газ</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>Недостатньо ETH для сплати комісій</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>Отримання ціни триває довше, ніж очікувалося. Спробуйте пізніше.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>Час очікування котирування вичерпано. Повторити ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>Недостатньо ліквідності. Зменште кількість токенів або спробуйте пізніше.</translation>
+        <source>Low liquidity. Lower amount or retry later</source>
+        <translation>Низька ліквідність. Зменште суму або спробуйте пізніше</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>Завеликий вплив на ціну. Зменште кількість токенів або спробуйте пізніше.</translation>
+        <source>No route. Try other tokens or networks</source>
+        <translation>Маршруту немає. Спробуйте інші токени або мережі</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>Не знайдено маршрутів із достатньою ліквідністю</translation>
+        <source>No quotes available right now. Try again later.</source>
+        <translation>Наразі немає доступних котирувань. Спробуйте пізніше.</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Сталася помилка. Змініть суму чи токен або спробуйте пізніше.</translation>
+        <source>Slippage exceeded. Increase slippage or retry later</source>
+        <translation>Перевищено прослизання. Збільште прослизання або спробуйте пізніше</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>Сума занадто мала. Збільште суму</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>Сума занадто велика. Зменште суму</translation>
+    </message>
+    <message>
+        <source>High price impact. Lower amount or retry later</source>
+        <translation>Великий вплив на ціну. Зменште суму або спробуйте пізніше</translation>
+    </message>
+    <message>
+        <source>Couldn’t get a quote. Retry ↺</source>
+        <translation>Не вдалося отримати котирування. Повторити ↺</translation>
     </message>
 </context>
 <context>
@@ -19133,7 +19149,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>~%1s</source>
-        <translation>~%1 с</translation>
+        <translation>~%1с</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1хв</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1хв %2с</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

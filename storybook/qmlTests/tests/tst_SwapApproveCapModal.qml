@@ -172,6 +172,20 @@ Item {
             compare(smartContractBox.icon, Assets.png("swap/paraswap"))
         }
 
+        function test_relayProviderInfo() {
+            verify(!!controlUnderTest)
+            controlUnderTest.serviceProviderName = Constants.swap.relayName
+            controlUnderTest.serviceProviderHostname = Constants.swap.relayHostname
+            controlUnderTest.serviceProviderIcon = Assets.png("swap/%1".arg(Constants.swap.relayIcon))
+
+            compare(controlUnderTest.subtitle, "relay.link")
+
+            const smartContractBox = findChild(controlUnderTest.contentItem, "smartContractBox")
+            verify(!!smartContractBox)
+            compare(smartContractBox.primaryText, "Relay")
+            compare(smartContractBox.icon, Assets.png("swap/relay"))
+        }
+
         function test_networkInfo() {
             verify(!!controlUnderTest)
 

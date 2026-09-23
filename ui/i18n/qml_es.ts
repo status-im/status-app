@@ -16927,32 +16927,48 @@ al cargar</translation>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>Fondos insuficientes para el swap</translation>
+        <source>Insufficient funds</source>
+        <translation>Fondos insuficientes</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>No hay suficiente ETH para pagar las comisiones de gas</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>No hay suficiente ETH para pagar las comisiones</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>Obtener el precio tomó más tiempo del esperado. Por favor, inténtalo de nuevo más tarde.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>La cotización tardó demasiado. Reintentar ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>No hay suficiente liquidez. Reduce la cantidad de tokens o inténtalo de nuevo más tarde.</translation>
+        <source>Low liquidity. Lower amount or retry later</source>
+        <translation>Poca liquidez. Reduce la cantidad o reintenta más tarde</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>El impacto en el precio es demasiado alto. Reduce la cantidad de tokens o inténtalo de nuevo más tarde.</translation>
+        <source>No route. Try other tokens or networks</source>
+        <translation>Sin ruta. Prueba con otros tokens o redes</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>No se encontraron rutas con suficiente liquidez</translation>
+        <source>No quotes available right now. Try again later.</source>
+        <translation>No hay cotizaciones disponibles en este momento. Inténtalo de nuevo más tarde.</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Algo salió mal. Cambia la cantidad, el token o inténtalo de nuevo más tarde.</translation>
+        <source>Slippage exceeded. Increase slippage or retry later</source>
+        <translation>Slippage superado. Aumenta el slippage o reintenta más tarde</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>Cantidad demasiado baja. Aumenta la cantidad</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>Cantidad demasiado alta. Reduce la cantidad</translation>
+    </message>
+    <message>
+        <source>High price impact. Lower amount or retry later</source>
+        <translation>Impacto en el precio alto. Reduce la cantidad o reintenta más tarde</translation>
+    </message>
+    <message>
+        <source>Couldn’t get a quote. Retry ↺</source>
+        <translation>No se pudo obtener la cotización. Reintentar ↺</translation>
     </message>
 </context>
 <context>
@@ -19048,6 +19064,14 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>~%1s</source>
         <translation>~%1s</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1m</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1m %2s</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

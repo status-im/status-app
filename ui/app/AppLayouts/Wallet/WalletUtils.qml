@@ -96,6 +96,19 @@ QtObject {
         }
     }
 
+    // Total estimate in seconds, compact so it fits narrow rows (e.g. "~45s", "~2m 15s"); 0 means unknown.
+    function formatEstimatedTimeInSeconds(seconds) {
+        if (!seconds || seconds <= 0)
+            return qsTr("~ Unknown")
+        if (seconds < 60)
+            return qsTr("~%1s").arg(seconds)
+        const minutes = Math.floor(seconds / 60)
+        const rest = seconds % 60
+        if (rest === 0)
+            return qsTr("~%1m").arg(minutes)
+        return qsTr("~%1m %2s").arg(minutes).arg(rest)
+    }
+
     function formatEstimatedTime(estimatedTime) {
         if (estimatedTime === 0 ) {
             return qsTr("Unknown")

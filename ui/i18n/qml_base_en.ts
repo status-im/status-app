@@ -16907,31 +16907,47 @@ to load</source>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
+        <source>Insufficient funds</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
+        <source>Not enough ETH to pay fees</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
+        <source>Getting a quote timed out. Retry ↺</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
+        <source>Low liquidity. Lower amount or retry later</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
+        <source>No route. Try other tokens or networks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
+        <source>No quotes available right now. Try again later.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
+        <source>Slippage exceeded. Increase slippage or retry later</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>High price impact. Lower amount or retry later</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn’t get a quote. Retry ↺</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19014,6 +19030,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>~%1s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -16848,32 +16848,48 @@ to load</source>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>스왑에 필요한 자금이 부족합니다</translation>
+        <source>Insufficient funds</source>
+        <translation>자금이 부족합니다</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>가스 요금을 지불할 ETH가 부족합니다</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>수수료를 지불할 ETH가 부족합니다</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>가격 정보를 가져오는 데 예상보다 시간이 걸리고 있어요. 잠시 후 다시 시도해 주세요.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>견적 요청 시간이 초과됐어요. 다시 시도 ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>유동성이 부족합니다. 토큰 수량을 줄이거나 나중에 다시 시도하세요.</translation>
+        <source>Low liquidity. Lower amount or retry later</source>
+        <translation>유동성이 부족해요. 수량을 줄이거나 나중에 다시 시도하세요</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>가격 영향이 너무 큽니다. 토큰 수량을 줄이거나 나중에 다시 시도하세요.</translation>
+        <source>No route. Try other tokens or networks</source>
+        <translation>경로가 없어요. 다른 토큰이나 네트워크를 시도해 보세요</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>충분한 유동성을 가진 경로를 찾을 수 없습니다</translation>
+        <source>No quotes available right now. Try again later.</source>
+        <translation>지금은 이용 가능한 견적이 없어요. 나중에 다시 시도해 주세요.</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>문제가 발생했습니다. 수량이나 토큰을 변경하거나 나중에 다시 시도하세요.</translation>
+        <source>Slippage exceeded. Increase slippage or retry later</source>
+        <translation>슬리피지를 초과했어요. 슬리피지를 높이거나 나중에 다시 시도하세요</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>금액이 너무 적어요. 금액을 늘려 주세요</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>금액이 너무 많아요. 금액을 줄여 주세요</translation>
+    </message>
+    <message>
+        <source>High price impact. Lower amount or retry later</source>
+        <translation>가격 영향이 커요. 수량을 줄이거나 나중에 다시 시도하세요</translation>
+    </message>
+    <message>
+        <source>Couldn’t get a quote. Retry ↺</source>
+        <translation>견적을 가져올 수 없어요. 다시 시도 ↺</translation>
     </message>
 </context>
 <context>
@@ -18963,6 +18979,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>~%1s</source>
         <translation>~%1s</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1분</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1분 %2초</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

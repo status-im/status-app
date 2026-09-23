@@ -61,6 +61,14 @@ featureFlag("PARASWAP_ENABLED",               DEFAULT_FLAG_PARASWAP_ENABLED, tru
 featureFlag("LIFI_ENABLED",                   DEFAULT_FLAG_LIFI_ENABLED, true)
 featureFlag("RELAY_ENABLED",                  DEFAULT_FLAG_RELAY_ENABLED, true)
 
+# There is no fallback support for more than one swap/bridge provider.
+# The app uses Relay (if enabled), then LI.FI (if enabled), Paraswap is not an option for now, since the UI doesn't
+# support Paraswap due to a single chain swap only
+const RELAY_PROVIDER_ENABLED* = RELAY_ENABLED
+const LIFI_PROVIDER_ENABLED* = LIFI_ENABLED and not RELAY_ENABLED
+# const PARASWAP_PROVIDER_ENABLED* = PARASWAP_ENABLED and not RELAY_ENABLED and not LIFI_ENABLED
+const PARASWAP_PROVIDER_ENABLED* = false
+
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
 # 1. With a statement list:
@@ -128,9 +136,9 @@ QtObject:
     self.messageLinkSharingEnabled = MESSAGE_LINK_SHARING_ENABLED
     self.statusSupportBotEnabled = STATUS_SUPPORT_BOT_ENABLED
     self.buyEnabled = BUY_ENABLED
-    self.paraswapEnabled = PARASWAP_ENABLED
-    self.lifiEnabled = LIFI_ENABLED
-    self.relayEnabled = RELAY_ENABLED
+    self.paraswapEnabled = PARASWAP_PROVIDER_ENABLED
+    self.lifiEnabled = LIFI_PROVIDER_ENABLED
+    self.relayEnabled = RELAY_PROVIDER_ENABLED
     self.swapProvidersEnabled = LIFI_ENABLED or PARASWAP_ENABLED or RELAY_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =

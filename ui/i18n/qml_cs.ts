@@ -17006,32 +17006,48 @@ selhalo</translation>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>Nedostatek prostředků pro swap</translation>
+        <source>Insufficient funds</source>
+        <translation>Nedostatek prostředků</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>Nedostatek ETH na zaplacení poplatků za plyn</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>Nedostatek ETH na zaplacení poplatků</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>Získání ceny trvalo déle, než se očekávalo. Zkuste to prosím později.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>Získání nabídky vypršelo. Zkusit znovu ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>Nedostatek likvidity. Snižte množství tokenů nebo to zkuste později.</translation>
+        <source>Low liquidity. Lower amount or retry later</source>
+        <translation>Nízká likvidita. Snižte částku nebo to zkuste později</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>Dopad na cenu je příliš vysoký. Snižte množství tokenů nebo to zkuste později.</translation>
+        <source>No route. Try other tokens or networks</source>
+        <translation>Žádná trasa. Zkuste jiné tokeny nebo sítě</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>Nenalezeny žádné trasy s dostatečnou likviditou</translation>
+        <source>No quotes available right now. Try again later.</source>
+        <translation>Momentálně nejsou k dispozici žádné nabídky. Zkuste to později.</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Něco se pokazilo. Změňte částku, token nebo to zkuste později.</translation>
+        <source>Slippage exceeded. Increase slippage or retry later</source>
+        <translation>Překročen skluz. Zvyšte skluz nebo to zkuste později</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>Částka je příliš nízká. Zvyšte částku</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>Částka je příliš vysoká. Snižte částku</translation>
+    </message>
+    <message>
+        <source>High price impact. Lower amount or retry later</source>
+        <translation>Vysoký dopad na cenu. Snižte částku nebo to zkuste později</translation>
+    </message>
+    <message>
+        <source>Couldn’t get a quote. Retry ↺</source>
+        <translation>Nabídku se nepodařilo získat. Zkusit znovu ↺</translation>
     </message>
 </context>
 <context>
@@ -19129,6 +19145,14 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <message>
         <source>~%1s</source>
         <translation>~%1s</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1m</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1m %2s</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

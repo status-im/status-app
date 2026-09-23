@@ -52,6 +52,28 @@ QtObject {
                                             toNetworksModel: root.toModel
                                         })
 
+    // same route as txHasRoutesApprovalNeeded, served by the Relay processor
+    property var txHasRoutesApprovalNeededViaRelay: ({
+                                                    suggestedRoutes: root.goodRouteApprovalNeededViaRelay,
+                                                    gasTimeEstimate:{
+                                                        totalFeesInNativeCrypto:0.0005032000000000001,
+                                                        totalTokenFees:-0.004508663259772343,
+                                                        totalTime:2
+                                                    },
+                                                    gasFees:{
+                                                        gasPrice:0.061734012,
+                                                        baseFee:0.055187939,
+                                                        maxPriorityFeePerGas:0.001,
+                                                        maxFeePerGasL:0.059980417,
+                                                        maxFeePerGasM:0.060071775,
+                                                        maxFeePerGasH:0.110375878,
+                                                        l1GasFee:318800.0,
+                                                        eip1559Enabled:true
+                                                    },
+                                                    amountToReceive: "379295138519599728000",
+                                                    toNetworksModel: root.toModel
+                                                })
+
     property var txHasRoutesApprovalNeeded: ({
                                                  suggestedRoutes: root.goodRouteApprovalNeeded,
                                                  gasTimeEstimate:{
@@ -117,6 +139,11 @@ QtObject {
                 }
             }
         ]
+    }
+    property ListModel goodRouteApprovalNeededViaRelay: ListModel {
+        Component.onCompleted: append([{
+            route: Object.assign({}, root.goodRouteApprovalNeeded.suggestesRoutes[0].route, { bridgeName: "Relay" })
+        }])
     }
     property ListModel goodRouteApprovalNeeded: ListModel {
         Component.onCompleted: append(suggestesRoutes)

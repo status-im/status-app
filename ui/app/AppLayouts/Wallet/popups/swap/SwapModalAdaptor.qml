@@ -94,25 +94,36 @@ QObject {
 
         property string errorMessage: {
             if (isBalanceInsufficientForSwap) {
-                return qsTr("Insufficient funds for swap")
+                return qsTr("Insufficient funds")
             } else if (isBalanceInsufficientForFees) {
-                return qsTr("Not enough ETH to pay gas fees")
+                return qsTr("Not enough ETH to pay fees")
             } else if (root.swapOutputData.hasError) {
                 // TOOD #15874: Unify with WalletUtils router error code handling
                 switch (root.swapOutputData.errCode) {
                     case Constants.routerErrorCodes.processor.errPriceTimeout:
-                        return qsTr("Fetching the price took longer than expected. Please, try again later.")
+                        return qsTr("Getting a quote timed out. Retry ↺")
                     case Constants.routerErrorCodes.processor.errNotEnoughLiquidity:
-                        return qsTr("Not enough liquidity. Lower token amount or try again later.")
+                        return qsTr("Low liquidity. Lower amount or retry later")
+                    case Constants.routerErrorCodes.processor.errNoRoutesFound:
+                        return qsTr("No route. Try other tokens or networks")
+                    case Constants.routerErrorCodes.processor.errNoQuotesAvailable:
+                        return qsTr("No quotes available right now. Try again later.")
+                    case Constants.routerErrorCodes.processor.errSlippageExceeded:
+                        return qsTr("Slippage exceeded. Increase slippage or retry later")
+                    case Constants.routerErrorCodes.processor.errAmountTooLow:
+                        return qsTr("Amount too low. Increase amount")
+                    case Constants.routerErrorCodes.processor.errAmountTooHigh:
+                        return qsTr("Amount too high. Lower amount")
                     case Constants.routerErrorCodes.processor.errPriceImpactTooHigh:
-                        return qsTr("Price impact too high. Lower token amount or try again later.")
+                        return qsTr("High price impact. Lower amount or retry later")
                     case Constants.routerErrorCodes.processor.errSwapParaswapCustomError:
-                        const errMsg = qsTr("No routes found with enough liquidity")
+                        // matched against the backend's (English) Paraswap error text, so not translated
+                        const errMsg = "No routes found with enough liquidity"
                         if (root.swapOutputData.errDescription.indexOf(errMsg) !== -1) {
-                            return qsTr("Not enough liquidity. Lower token amount or try again later.")
+                            return qsTr("Low liquidity. Lower amount or retry later")
                         }
                 }
-                return qsTr("Something went wrong. Change amount, token or try again later.")
+                return qsTr("Couldn’t get a quote. Retry ↺")
             }
             return ""
         }
@@ -204,7 +215,8 @@ QObject {
                 root.approvalSuccessful = status == "Success" // TODO: make a all tx statuses Constants (success, pending, failed)
                 d.txHash = ""
 
-                root.swapStore.reevaluateSwap(d.uuid, root.swapFormData.selectedNetworkChainId, true)
+                root.swapStore.reevaluateSwap(d.uuid, root.swapOutputData.txProviderName,
+                                              root.swapFormData.selectedNetworkChainId, true)
             }
         }
     }
