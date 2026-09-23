@@ -18,7 +18,7 @@ PLAIN_TEXT_MARKER = 'e2e-bench-plain-'
 ALBUM_IMAGE_COUNT = 5
 BATCH_MESSAGE_COUNT = 10
 BATCH_DELAY_SEC = 0.5
-GIF_URL = 'https://example.com/status-e2e-benchmark.gif'
+GIF_URL = 'https://media1.giphy.com/media/lcG3qwtTKSNI2i5vst/giphy.gif'
 
 
 def _plain_text_payload(length: int = PLAIN_TEXT_LENGTH) -> str:
