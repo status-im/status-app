@@ -353,6 +353,14 @@ QtObject:
   QtProperty[string] interactedContractAddress:
     read = getInteractedContractAddress
 
+  proc getSwapProvider*(self: ActivityEntry): string {.slot.} =
+    if self.metadata.swapProvider.isSome():
+      return self.metadata.swapProvider.unsafeGet()
+    return ""
+
+  QtProperty[string] swapProvider:
+    read = getSwapProvider
+
   proc highlightChanged*(self: ActivityEntry) {.signal.}
 
   proc getHighlight*(self: ActivityEntry): bool {.slot.} =

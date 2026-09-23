@@ -1640,10 +1640,6 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>Limite de dépenses définie&#xa0;: %1 dans %2 pour %3</translation>
     </message>
     <message>
-        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
-        <translation>Bridge effectué&#xa0;: %1 sur %2 vers %3 sur %4 dans %5</translation>
-    </message>
-    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>Nombre infini de jetons  créé %1 pour %2 en utilisant %3</translation>
     </message>
@@ -1961,6 +1957,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT et Infura sont hors service pour %1. Impossible de récupérer les soldes des jetons %1.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>Bridge confirmé sur %2&#xa0;: %1 vers %3 sur %4 dans %5</translation>
     </message>
     <message>
         <source>How to fix</source>

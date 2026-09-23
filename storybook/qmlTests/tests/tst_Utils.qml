@@ -3,6 +3,7 @@ import QtQuick
 import QtTest
 
 import utils
+import StatusQ.Core.Theme
 
 Item {
     id: root
@@ -142,6 +143,27 @@ Item {
 
         function test_isGifOnlyText(data) {
             compare(Utils.isGifOnlyText(data.text), data.expected)
+        }
+    }
+
+    TestCase {
+        name: "Utils_swapProviderDappDetails"
+
+        function test_knownProviderIsResolvedByProcessorName() {
+            const details = Utils.getSwapProviderDappDetails(Constants.swap.relayProcessorName)
+            verify(!!details)
+            compare(details.name, Constants.swap.relayName)
+            compare(details.url, Constants.swap.relayUrl)
+            compare(details.icon, Assets.png("swap/%1".arg(Constants.swap.relayIcon)))
+
+            compare(Utils.getSwapProviderDappDetails(Constants.swap.lifiProcessorName).name, Constants.swap.lifiName)
+            compare(Utils.getSwapProviderDappDetails(Constants.swap.paraswapProcessorName).name, Constants.swap.paraswapName)
+        }
+
+        function test_unknownOrEmptyProviderYieldsNothing() {
+            compare(Utils.getSwapProviderDappDetails("SomethingElse"), undefined)
+            compare(Utils.getSwapProviderDappDetails(""), undefined)
+            compare(Utils.getSwapProviderDappDetails(undefined), undefined)
         }
     }
 }

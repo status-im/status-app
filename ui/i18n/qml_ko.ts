@@ -1628,10 +1628,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>지출 한도 설정됨: %3의 %2에서 %1</translation>
     </message>
     <message>
-        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
-        <translation>%5에서 %2의 %1을(를) %4의 %3(으)로 브리징했어요</translation>
-    </message>
-    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>%3를 사용해 %2에 무한 %1 토큰을 민팅했습니다</translation>
     </message>
@@ -1944,6 +1940,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>%1에 대해 POKT 및 Infura가 중단됨. %1 토큰 잔액을 가져올 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>%2에서 브리징 확인됨: %5에서 %1을(를) %4의 %3(으)로</translation>
     </message>
     <message>
         <source>How to fix</source>

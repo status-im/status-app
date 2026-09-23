@@ -1651,10 +1651,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Установлено ліміт витрат: %1 у %2 для %3</translation>
     </message>
     <message>
-        <source>Bridged %1 on %2 to %3 on %4 in %5</source>
-        <translation>Бриджинг завершено: %1 у %2 на %3 у %4 в %5</translation>
-    </message>
-    <message>
         <source>Minted infinite %1 tokens for %2 using %3</source>
         <translation>Випущено необмежену кількість токенів %1 для %2 через %3</translation>
     </message>
@@ -1973,6 +1969,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT та Infura недоступні для %1. Не вдалося отримати баланси токенів %1.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>Бриджинг підтверджено в %2: %1 на %3 у %4 в %5</translation>
     </message>
     <message>
         <source>How to fix</source>

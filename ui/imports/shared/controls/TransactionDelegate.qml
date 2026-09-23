@@ -85,6 +85,9 @@ StatusListItem {
         if (!isModelDataValid) {
             return null
         }
+        if (!!modelData.swapProvider) {
+            return Utils.getSwapProviderDappDetails(modelData.swapProvider)
+        }
         if (modelData.txType === Constants.TransactionType.Approve) {
             return activityStore.getDappDetails(modelData.chainId, modelData.approvalSpender)
         }
