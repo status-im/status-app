@@ -3,6 +3,7 @@ import nimqml
 
 import app/core/eventemitter
 import app/modules/shared_modules/wallet_connect/controller
+import app_service/service/wallet_connect/service as wallet_connect_service
 
 QtObject:
   type Receiver = ref object of QObject
@@ -39,7 +40,8 @@ let buildOk = $(%*{"txToSign": TxHash, "txData": {"nonce": "0x1", "gas": "0x5208
 suite "wallet connect controller transactions":
   setup:
     var works: seq[WcTxWork] = @[]
-    let ctrl = newController(nil, nil, createEventEmitter(), WcTxCalls(
+    let events = createEventEmitter()
+    let ctrl = newController(nil, nil, events, WcTxCalls(
       resolveSigningParams: proc(address: string): tuple[keyUid: string, path: string, ok: bool] =
         ("uid", "m/44'/60'/0'/0/0", true),
       startTxWork: proc(work: WcTxWork) =
@@ -133,3 +135,12 @@ suite "wallet connect controller transactions":
     ctrl.onTxWorkDone("other|1", $(%*{"data": SentTxHash}))
 
     check receiver.results.len == 0
+
+  test "service tx work results reach the controller after init":
+    ctrl.init()
+    ctrl.sendTransaction(Topic, Id, Address, ChainId, TxJson)
+    check works.len == 1
+
+    events.emit(SIGNAL_WC_TX_WORK_DONE, WcTxWorkDoneArgs(key: works[0].key, resultJson: buildOk))
+
+    check receiver.requestedReasons.len == 1

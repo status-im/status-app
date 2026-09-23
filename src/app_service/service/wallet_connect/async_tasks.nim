@@ -21,6 +21,85 @@ type
     chainId: int
     txJson: JsonNode
 
+  AsyncTxWorkArgs = ref object of QObjectTaskArg
+    key: string
+    kind: string
+    chainId: int
+    txJson: string
+    signature: string
+
+proc buildTransaction(chainId: int, txJson: string): tuple[txToSign: string, txData: JsonNode] =
+  var buildTxResponse: JsonNode
+  let err = wallet.buildTransaction(buildTxResponse, chainId, txJson)
+  if err.len > 0:
+    error "status-go - wallet_buildTransaction failed", err=err
+    return
+  if buildTxResponse.isNil or buildTxResponse.kind != JsonNodeKind.JObject or
+    not buildTxResponse.hasKey("txArgs") or not buildTxResponse.hasKey("messageToSign"):
+      error "unexpected wallet_buildTransaction response"
+      return
+  let txToSign = buildTxResponse["messageToSign"].getStr
+  if txToSign.len != wallet_constants.TX_HASH_LEN_WITH_PREFIX:
+    error "unexpected tx hash length"
+    return
+  return (txToSign, buildTxResponse["txArgs"])
+
+proc buildRawTransaction(chainId: int, txData: string, signature: string): string =
+  var txResponse: JsonNode
+  let err = wallet.buildRawTransaction(txResponse, chainId, txData, signature)
+  if err.len > 0:
+    error "status-go - wallet_buildRawTransaction failed", err=err
+    return
+  if txResponse.isNil or txResponse.kind != JsonNodeKind.JObject or not txResponse.hasKey("rawTx"):
+    error "unexpected wallet_buildRawTransaction response"
+    return
+  return txResponse["rawTx"].getStr
+
+proc sendTransactionWithSignature(chainId: int, txData: string, signature: string): string =
+  var txResponse: JsonNode
+  let err = wallet.sendTransactionWithSignature(txResponse,
+    chainId,
+    $PendingTransactionTypeDto.WalletConnectTransfer,
+    txData,
+    if signature.startsWith("0x"): signature[2..^1] else: signature)
+  if err.len > 0:
+    error "status-go - sendTransactionWithSignature failed", err=err
+    return ""
+  if txResponse.isNil or txResponse.kind != JsonNodeKind.JString:
+    error "unexpected sendTransactionWithSignature response"
+    return ""
+  return txResponse.getStr
+
+proc asyncTxWorkTask(argsEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncTxWorkArgs](argsEncoded)
+  let result = %*{
+    "key": arg.key,
+    "kind": arg.kind,
+    "txToSign": "",
+    "txData": newJNull(),
+    "data": "",
+    "error": "",
+  }
+  try:
+    case arg.kind
+    of "build":
+      let (txToSign, txData) = buildTransaction(arg.chainId, arg.txJson)
+      if txToSign.len == 0 or txData.isNil:
+        result["error"] = %"building transaction failed"
+      else:
+        result["txToSign"] = %txToSign
+        result["txData"] = txData
+    of "buildRaw":
+      result["data"] = %buildRawTransaction(arg.chainId, arg.txJson, arg.signature)
+    of "send":
+      result["data"] = %sendTransactionWithSignature(arg.chainId, arg.txJson, arg.signature)
+    else:
+      result["error"] = %("unknown tx work kind: " & arg.kind)
+  except Exception as e:
+    error "asyncTxWorkTask failed: ", kind=arg.kind, msg=e.msg
+    result["error"] = %e.msg
+  arg.finish(result)
+
 proc asyncGetEstimatedTimeTask(argsEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncGetEstimatedTimeArgs](argsEncoded)
   let result = %*{

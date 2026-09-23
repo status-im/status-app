@@ -28,6 +28,7 @@ type
     chainId: int
     kind: WcSignKind
     txData: JsonNode
+    work: WcTxWorkKind
 
   WcTxWorkKind* = enum
     wtwBuild = "build"        # wallet_buildTransaction
@@ -54,6 +55,7 @@ QtObject:
       events: EventEmitter
       calls: WcTxCalls
       pendingSignRequests: Table[string, PendingWcSign]
+      inFlightTx: Table[string, PendingWcSign]
 
   proc delete*(self: Controller)
 
@@ -83,6 +85,9 @@ QtObject:
     if result.calls.resolveSigningParams.isNil:
       result.calls.resolveSigningParams = proc(address: string): tuple[keyUid: string, path: string, ok: bool] =
         defaultResolveSigningParams(walletAccountService, address)
+    if result.calls.startTxWork.isNil:
+      result.calls.startTxWork = proc(work: WcTxWork) =
+        service.startTxWork(work.key, $work.kind, work.chainId, work.txJson, work.signature)
 
     result.QObject.setup
 
@@ -92,7 +97,90 @@ QtObject:
   proc signingRequested*(self: Controller, reason: string, keyUid: string, hash: string, path: string, address: string) {.signal.}
   proc signingResultReceived*(self: Controller, topic: string, id: string, data: string) {.signal.}
 
+  proc txKey(topic, id: string): string =
+    topic & "|" & id
+
+  proc finish(self: Controller, topic, id, data: string) =
+    self.inFlightTx.del(txKey(topic, id))
+    self.signingResultReceived(topic, id, data)
+
+  proc startTxWork(self: Controller, req: var PendingWcSign, work: WcTxWorkKind, txJson: string, signature = "") =
+    let key = txKey(req.topic, req.id)
+    req.work = work
+    self.inFlightTx[key] = req
+    try:
+      self.calls.startTxWork(WcTxWork(key: key, kind: work, chainId: req.chainId, txJson: txJson, signature: signature))
+    except Exception as e:
+      error "wallet connect: cannot start tx work", key=key, work=work, msg=e.msg
+      self.finish(req.topic, req.id, "")
+
+  proc requestSignature(self: Controller, topic, id, address: string, chainId: int, kind: WcSignKind, hash: string, txData: JsonNode = nil) =
+    if hash.len == 0:
+      error "wallet connect: empty hash to sign", topic=topic, id=id
+      self.finish(topic, id, "")
+      return
+    let (keyUid, path, ok) = self.calls.resolveSigningParams(address)
+    if not ok:
+      error "wallet connect: cannot resolve signing params", address=address
+      self.finish(topic, id, "")
+      return
+    let reason = WC_SIGNING_REASON_PREFIX & "-" & id
+    self.pendingSignRequests[reason] = PendingWcSign(topic: topic, id: id, address: address, chainId: chainId, kind: kind, txData: txData)
+    self.signingRequested(reason, keyUid, hash, path, address)
+
+  proc onSigningResult*(self: Controller, reason: string, signature: string) {.slot.} =
+    if not self.pendingSignRequests.hasKey(reason):
+      return
+    var req = self.pendingSignRequests[reason]
+    self.pendingSignRequests.del(reason)
+    if signature.len == 0:
+      error "wallet connect: signing cancelled or failed", topic=req.topic, id=req.id
+      self.finish(req.topic, req.id, "")
+      return
+    case req.kind
+    of wskMessage:
+      # personal_sign / typed data expect the canonical (yellow-paper, 1b/1c) signature
+      self.finish(req.topic, req.id, signature)
+    of wskSignTx, wskSendTx:
+      # transaction signing expects r+s+v with v as the recovery id (00/01)
+      let (r, s, v) = getRSVFromSignature(signature)
+      if r.len == 0 or s.len == 0 or v.len == 0:
+        error "wallet connect: invalid signature", topic=req.topic, id=req.id
+        self.finish(req.topic, req.id, "")
+        return
+      let work = if req.kind == wskSignTx: wtwBuildRaw else: wtwSend
+      self.startTxWork(req, work, $req.txData, r & s & v)
+
+  proc onTxWorkDone*(self: Controller, key: string, resultJson: string) {.slot.} =
+    if not self.inFlightTx.hasKey(key):
+      return
+    let req = self.inFlightTx[key]
+    var response: JsonNode
+    try:
+      response = parseJson(resultJson)
+    except Exception as e:
+      error "wallet connect: invalid tx work result", key=key, msg=e.msg
+      self.finish(req.topic, req.id, "")
+      return
+    let err = response{"error"}.getStr
+    if err.len > 0:
+      error "wallet connect: tx work failed", key=key, work=req.work, err=err
+    case req.work
+    of wtwBuild:
+      let txToSign = response{"txToSign"}.getStr
+      let txData = response{"txData"}
+      if err.len > 0 or txToSign.len == 0 or txData.isNil or txData.kind == JNull:
+        self.finish(req.topic, req.id, "")
+        return
+      self.requestSignature(req.topic, req.id, req.address, req.chainId, req.kind, txToSign, txData)
+    of wtwBuildRaw, wtwSend:
+      self.finish(req.topic, req.id, response{"data"}.getStr)
+
   proc init*(self: Controller) =
+    self.events.on(SIGNAL_WC_TX_WORK_DONE) do(e: Args):
+      let args = WcTxWorkDoneArgs(e)
+      self.onTxWorkDone(args.key, args.resultJson)
+
     self.events.on(SIGNAL_ESTIMATED_TIME_RESPONSE) do(e: Args):
       let args = EstimatedTimeArgs(e)
       self.estimatedTimeResponse(args.topic, args.estimatedTime)
@@ -104,48 +192,6 @@ QtObject:
     self.events.on(SIGNAL_ESTIMATED_GAS_RESPONSE) do(e: Args):
       let args = EstimatedGasArgs(e)
       self.estimatedGasResponse(args.topic, args.estimatedGas)
-
-  proc requestSignature(self: Controller, topic, id, address: string, chainId: int, kind: WcSignKind, hash: string, txData: JsonNode = nil) =
-    if hash.len == 0:
-      error "wallet connect: empty hash to sign", topic=topic, id=id
-      self.signingResultReceived(topic, id, "")
-      return
-    let (keyUid, path, ok) = self.calls.resolveSigningParams(address)
-    if not ok:
-      error "wallet connect: cannot resolve signing params", address=address
-      self.signingResultReceived(topic, id, "")
-      return
-    let reason = WC_SIGNING_REASON_PREFIX & "-" & id
-    self.pendingSignRequests[reason] = PendingWcSign(topic: topic, id: id, address: address, chainId: chainId, kind: kind, txData: txData)
-    self.signingRequested(reason, keyUid, hash, path, address)
-
-  proc onSigningResult*(self: Controller, reason: string, signature: string) {.slot.} =
-    if not self.pendingSignRequests.hasKey(reason):
-      return
-    let req = self.pendingSignRequests[reason]
-    self.pendingSignRequests.del(reason)
-    var data = ""
-    try:
-      if signature.len == 0:
-        raise newException(CatchableError, "signing cancelled or failed")
-      case req.kind
-      of wskMessage:
-        # personal_sign / typed data expect the canonical (yellow-paper, 1b/1c) signature
-        data = signature
-      of wskSignTx, wskSendTx:
-        # transaction signing expects r+s+v with v as the recovery id (00/01)
-        let (r, s, v) = getRSVFromSignature(signature)
-        if r.len == 0 or s.len == 0 or v.len == 0:
-          raise newException(CatchableError, "invalid signature")
-        let recidSignature = r & s & v
-        if req.kind == wskSignTx:
-          data = self.service.buildRawTransaction(req.chainId, $req.txData, recidSignature)
-        else:
-          data = self.service.sendTransactionWithSignature(req.chainId, $req.txData, recidSignature)
-    except Exception as e:
-      error "wallet connect: onSigningResult failed", msg=e.msg
-      data = ""
-    self.signingResultReceived(req.topic, req.id, data)
 
   proc signMessage*(self: Controller, topic: string, id: string, address: string, message: string) {.slot.} =
     try:
@@ -173,32 +219,18 @@ QtObject:
       error "safeSignTypedData failed: ", msg=e.msg
       self.signingResultReceived(topic, id, "")
 
-  proc onTxWorkDone*(self: Controller, key: string, resultJson: string) {.slot.} =
-    discard
+  proc startTransaction(self: Controller, topic, id, address: string, chainId: int, kind: WcSignKind, txJson: string) =
+    if self.inFlightTx.hasKey(txKey(topic, id)):
+      warn "wallet connect: transaction request already in flight", topic=topic, id=id
+      return
+    var req = PendingWcSign(topic: topic, id: id, address: address, chainId: chainId, kind: kind)
+    self.startTxWork(req, wtwBuild, txJson)
 
   proc signTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string) {.slot.} =
-    try:
-      if self.service.isNil:
-        raise newException(CatchableError, "no service")
-      let (txHash, txData) = self.service.buildTransaction(chainId, txJson)
-      if txHash.len == 0 or txData.isNil:
-        raise newException(CatchableError, "building transaction failed")
-      self.requestSignature(topic, id, address, chainId, wskSignTx, txHash, txData)
-    except Exception as e:
-      error "signTransaction failed: ", msg=e.msg
-      self.signingResultReceived(topic, id, "")
+    self.startTransaction(topic, id, address, chainId, wskSignTx, txJson)
 
   proc sendTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string) {.slot.} =
-    try:
-      if self.service.isNil:
-        raise newException(CatchableError, "no service")
-      let (txHash, txData) = self.service.buildTransaction(chainId, txJson)
-      if txHash.len == 0 or txData.isNil:
-        raise newException(CatchableError, "building transaction failed")
-      self.requestSignature(topic, id, address, chainId, wskSendTx, txHash, txData)
-    except Exception as e:
-      error "sendTransaction failed: ", msg=e.msg
-      self.signingResultReceived(topic, id, "")
+    self.startTransaction(topic, id, address, chainId, wskSendTx, txJson)
 
   proc requestEstimatedTime(self: Controller, topic: string, chainId: int, maxFeePerGasHex: string) {.slot.} =
     self.service.getEstimatedTime(topic, chainId, maxFeePerGasHex)
