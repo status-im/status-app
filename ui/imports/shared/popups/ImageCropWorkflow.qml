@@ -107,6 +107,8 @@ Item {
     StatusModal {
         id: imageCropperModal
 
+        // Workflow overlay is already in the parent popup; the modal's Overlay.overlay is null at open().
+        parent: root.Overlay.overlay
         headerSettings.title: root.title
         fullScreenSheet: false
 
