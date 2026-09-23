@@ -4217,21 +4217,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
 </context>
 <context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation>¿Habilitar los GIFs de KLIPY?</translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation>Una vez habilitado, los GIFs publicados en el chat pueden compartir tus metadatos con KLIPY.</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Habilitar</translation>
-    </message>
-</context>
-<context>
     <name>ConnectDAppModal</name>
     <message>
         <source>dApp connected</source>
@@ -8349,6 +8334,21 @@ Are you sure you want to do this?</source>
     <message>
         <source>%1 %2 %3</source>
         <translation>%1 %2 %3</translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation>¿Habilitar los GIFs de KLIPY?</translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation>Una vez habilitado, los GIFs publicados en el chat pueden compartir tus metadatos con KLIPY.</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>Habilitar</translation>
     </message>
 </context>
 <context>

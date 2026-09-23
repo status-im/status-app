@@ -4198,21 +4198,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
 </context>
 <context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation>KLIPY GIF를 활성화하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation>활성화하면 채팅에 게시된 GIF가 회원님의 메타데이터를 KLIPY와 공유할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>사용</translation>
-    </message>
-</context>
-<context>
     <name>ConnectDAppModal</name>
     <message>
         <source>dApp connected</source>
@@ -8316,6 +8301,21 @@ Are you sure you want to do this?</source>
     <message>
         <source>%1 %2 %3</source>
         <translation>%1 %2 %3</translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation>KLIPY GIF를 활성화하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation>활성화하면 채팅에 게시된 GIF가 회원님의 메타데이터를 KLIPY와 공유할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>활성화</translation>
     </message>
 </context>
 <context>

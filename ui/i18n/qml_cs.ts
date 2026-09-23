@@ -4235,21 +4235,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     </message>
 </context>
 <context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation>Povolit GIFy z KLIPY?</translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation>Po povolení mohou animované obrázky odeslané v chatu sdílet vaše metadata se službou KLIPY.</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Povolit</translation>
-    </message>
-</context>
-<context>
     <name>ConnectDAppModal</name>
     <message>
         <source>dApp connected</source>
@@ -8383,6 +8368,21 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>%1 %2 %3</source>
         <translation>%1 %2 %3</translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation>Povolit GIFy z KLIPY?</translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation>Po povolení mohou animované obrázky odeslané v chatu sdílet vaše metadata se službou KLIPY.</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>Povolit</translation>
     </message>
 </context>
 <context>
