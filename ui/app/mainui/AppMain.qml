@@ -700,7 +700,7 @@ Item {
                     break
                 }
                 case Constants.SendType.Bridge: {
-                    toastTitle = qsTr("Bridged %1 on %2 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
+                    toastTitle = qsTr("Bridge confirmed on %2: %1 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
                     if (approvalTx) {
                         toastTitle = qsTr("Spending cap set: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
                     }
