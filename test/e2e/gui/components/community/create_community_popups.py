@@ -1,5 +1,4 @@
 import logging
-import pathlib
 import typing
 
 import allure
@@ -10,7 +9,7 @@ from constants import CommunityData
 from gui.components.community.color_select_popup import ColorSelectPopup
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from gui.components.community.tags_select_popup import TagsSelectPopup
-from gui.components.picture_edit_popup import PictureEditPopup
+from gui.components.picture_edit_popup import open_picture_edit_without_file_dialog
 from gui.elements.button import Button
 from gui.elements.check_box import CheckBox
 from gui.elements.object import QObject
@@ -87,16 +86,14 @@ class CreateNewCommunityPopup(QObject):
     @allure.step('Set community logo without file upload dialog')
     def set_logo_without_file_upload_dialog(self, path):
         self._scroll.vertical_scroll_down(self._add_logo_button)
-        fileuri = pathlib.Path(str(path)).as_uri()
-        self._cropped_image_logo_item.object.cropImage(fileuri)
-        return PictureEditPopup()
+        self.wait_until_stable()
+        return open_picture_edit_without_file_dialog(self._cropped_image_logo_item, path)
 
     @allure.step('Set community banner without file upload dialog')
     def set_banner_without_file_upload_dialog(self, path):
         self._scroll.vertical_scroll_down(self._add_banner_button)
-        fileuri = pathlib.Path(str(path)).as_uri()
-        self._cropped_image_banner_item.object.cropImage(fileuri)
-        return PictureEditPopup()
+        self.wait_until_stable()
+        return open_picture_edit_without_file_dialog(self._cropped_image_banner_item, path)
 
     @allure.step('Get community color')
     def get_color(self):

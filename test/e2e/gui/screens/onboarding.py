@@ -1,5 +1,4 @@
 import logging
-import pathlib
 import time
 import typing
 
@@ -15,7 +14,7 @@ from gui.components.onboarding.language_selector import LanguageSelector
 from gui.components.onboarding.login_by_syncing_checklist import LogInBySyncingDialog
 from gui.components.onboarding.login_users_list_popup import OnboardingLoginUsersPopup
 from gui.components.os.open_file_dialogs import OpenFileDialog
-from gui.components.picture_edit_popup import PictureEditPopup
+from gui.components.picture_edit_popup import PictureEditPopup, open_picture_edit_without_file_dialog
 from gui.components.splash_screen import SplashScreen
 from gui.elements.button import Button
 from gui.elements.object import QObject
@@ -364,10 +363,7 @@ class YourProfileView(OnboardingView):
 
     @allure.step('Set profile picture without file upload dialog')
     def set_profile_picture(self, path) -> PictureEditPopup:
-        image_cropper = driver.waitForObjectExists(self._image_crop_workflow.real_name)
-        fileuri = pathlib.Path(str(path)).as_uri()
-        image_cropper.cropImage(fileuri)
-        return PictureEditPopup()
+        return open_picture_edit_without_file_dialog(self._image_crop_workflow, path)
 
     @allure.step('Set profile picture with file dialog upload')
     def set_user_image(self, fp: SystemPath) -> PictureEditPopup:
