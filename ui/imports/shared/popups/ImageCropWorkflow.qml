@@ -39,6 +39,12 @@ Item {
         imageCropperModal.open()
     }
 
+    // Squish: open from this Item so the cropper is not a native window.
+    function cropImageDeferred(imageUrl) {
+        openCropperTimer.pendingImage = imageUrl
+        openCropperTimer.restart()
+    }
+
     // Native FileDialog is still closing; opening a Popup here becomes a new window on Linux.
     Timer {
         id: openCropperTimer
@@ -67,8 +73,7 @@ Item {
             if (fileDialog.selectedFiles.length > 0) {
                 const url = fileDialog.selectedFile
                 if (Utils.isValidDragNDropImage(url)) {
-                    openCropperTimer.pendingImage = url
-                    openCropperTimer.restart()
+                    root.cropImageDeferred(url)
                 } else {
                     errorDialog.fileOpened = url
                     errorDialog.open()

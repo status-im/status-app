@@ -41,6 +41,10 @@ Item {
         imageCropWorkflow.cropImage(file);
     }
 
+    function cropImageDeferred(file) {
+        imageCropWorkflow.cropImageDeferred(file);
+    }
+
     function chooseImageToCrop() {
         imageCropWorkflow.chooseImageToCrop()
     }
