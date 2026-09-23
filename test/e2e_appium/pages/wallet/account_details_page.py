@@ -20,11 +20,7 @@ class AccountDetailsPage(BasePage):
         Checks multiple indicators to determine if the view is loaded.
         Uses multiple locator strategies for robustness.
         """
-        # Primary check: Edit account button by content-desc (most reliable)
-        if self.is_element_visible(self.locators.EDIT_BUTTON_ALT, timeout=timeout):
-            return True
-        # Alternative: Edit button by resource-id
-        if self.is_element_visible(self.locators.EDIT_BUTTON, timeout=3):
+        if self.is_element_visible(self.locators.EDIT_BUTTON, timeout=timeout):
             return True
         # Fallback: delete/remove button (visible for non-default accounts)
         if self.is_element_visible(self.locators.DELETE_BUTTON, timeout=3):
