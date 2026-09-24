@@ -845,7 +845,7 @@ StatusDialog {
                             }
                             StatusBaseText {
                                 objectName: "strategyTime"
-                                text: WalletUtils.getLabelForEstimatedTxTime(root.swapAdaptor.swapOutputData.estimatedTime, true)
+                                text: WalletUtils.formatEstimatedTimeInSeconds(root.swapAdaptor.swapOutputData.estimatedTimeSeconds)
                                 color: Theme.palette.directColor1
                             }
                         }

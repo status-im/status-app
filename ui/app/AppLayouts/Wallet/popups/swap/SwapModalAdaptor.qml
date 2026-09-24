@@ -204,6 +204,7 @@ QObject {
                 root.swapOutputData.approvalAmountRequired = !!bestPath ? bestPath.approvalAmountRequired: ""
                 root.swapOutputData.approvalContractAddress = !!bestPath ? bestPath.approvalContractAddress: ""
                 root.swapOutputData.estimatedTime = !!bestPath ? bestPath.estimatedTime: Constants.TransactionEstimatedTime.Unknown
+                root.swapOutputData.estimatedTimeSeconds = !!bestPath && !!bestPath.estimatedTimeSeconds ? bestPath.estimatedTimeSeconds : 0
                 root.swapOutputData.txProviderName = !!bestPath ? bestPath.bridgeName: ""
                 root.swapOutputData.txProviderTool = !!bestPath ? bestPath.tool: ""
                 // TODO: should approval fees be included in maxFeesToReserveRaw?
