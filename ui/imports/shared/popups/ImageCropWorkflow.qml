@@ -39,21 +39,6 @@ Item {
         imageCropperModal.open()
     }
 
-    // Squish: open from this Item so the cropper is not a native window.
-    function cropImageDeferred(imageUrl) {
-        openCropperTimer.pendingImage = imageUrl
-        openCropperTimer.restart()
-    }
-
-    // Native FileDialog is still closing; opening a Popup here becomes a new window on Linux.
-    Timer {
-        id: openCropperTimer
-        interval: 1
-        repeat: false
-        property url pendingImage
-        onTriggered: root.cropImage(pendingImage)
-    }
-
     QtObject {
         id: d
 
@@ -73,7 +58,7 @@ Item {
             if (fileDialog.selectedFiles.length > 0) {
                 const url = fileDialog.selectedFile
                 if (Utils.isValidDragNDropImage(url)) {
-                    root.cropImageDeferred(url)
+                    root.cropImage(url)
                 } else {
                     errorDialog.fileOpened = url
                     errorDialog.open()
@@ -107,8 +92,6 @@ Item {
     StatusModal {
         id: imageCropperModal
 
-        // Workflow overlay is already in the parent popup; the modal's Overlay.overlay is null at open().
-        parent: root.Overlay.overlay
         headerSettings.title: root.title
         fullScreenSheet: false
 
