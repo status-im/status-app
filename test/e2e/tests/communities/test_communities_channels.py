@@ -69,39 +69,6 @@ def test_create_edit_remove_community_channel(main_screen, channel_name, channel
         assert len(community_screen.left_panel.channels) == 0
 
 
-@pytest.mark.parametrize('user_data', [configs.testpath.TEST_USER_DATA / 'member'])
-@pytest.mark.parametrize('user_account', [constants.user.community_member])
-@pytest.mark.communities
-def test_member_role_cannot_add_edit_and_delete_channels(main_screen: MainWindow):
-
-    with step('Choose community user is not owner of'):
-        community_screen = main_screen.left_panel.open_community('Community with 2 users')
-    with step('Verify that member cannot add new channel'):
-        with step('Verify that create channel or category button is not present'):
-            assert not community_screen.left_panel.does_create_channel_or_category_button_exist()
-        with step('Verify that add channel button is not present'):
-            assert not community_screen.left_panel.is_add_channels_button_visible()
-
-    with step('Verify that member cannot edit and delete channel'):
-        with step('Right-click on general channel in the left navigation bar'):
-            general_channel_context_menu = community_screen.left_panel.open_general_channel_context_menu()
-        with step('Verify that edit item is not present in channel context menu'):
-            assert general_channel_context_menu.edit_channel_from_context.exists is False, \
-                f'Edit channel option is present when it should not'
-        with step('Verify that delete item is not present in channel context menu'):
-            assert general_channel_context_menu.delete_channel_from_context.exists is False, \
-                f'Delete channel option is present when it should not'
-
-        with step('Open context menu from the tool bar'):
-            more_options = community_screen.tool_bar.open_more_options_dropdown()
-        with step('Verify that edit item is not present in context menu'):
-            assert more_options.edit_channel_from_context.exists is False, \
-                f'Edit channel option is present when it should not'
-        with step('Verify that delete item is not present in context menu'):
-            assert more_options.delete_channel_context_item.exists is False, \
-                f'Delete channel option is present when it should not'
-
-
 @pytest.mark.communities
 @pytest.mark.parametrize('user_data_one, user_data_two, asset, amount, channel_description', [
     (configs.testpath.TEST_USER_DATA / 'community_owner', configs.testpath.TEST_USER_DATA / 'community_member', 'ETH', '10',

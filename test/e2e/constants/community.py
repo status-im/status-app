@@ -79,67 +79,8 @@ permission_data = [
     )
 ]
 
-permission_data_member = [
-    PermissionData(
-        checkbox_state=True,
-        first_asset='Status',
-        amount='1',
-        allowed_to='becomeMember',
-        asset_title='1 SNT',
-        allowed_to_title='Become member'
-    ),
-    PermissionData(
-        checkbox_state=True,
-        first_asset='Aragon',
-        amount='2',
-        allowed_to='becomeMember',
-        asset_title='2 ANT',
-        allowed_to_title='Become member'
-    ),
-    PermissionData(
-        checkbox_state=True,
-        first_asset='1inch',
-        amount='3',
-        allowed_to='becomeMember',
-        asset_title='3 1INCH',
-        allowed_to_title='Become member'
-    ),
-    PermissionData(
-        checkbox_state=True,
-        first_asset='ABYSS',
-        amount='4',
-        allowed_to='becomeMember',
-        asset_title='4 ABYSS',
-        allowed_to_title='Become member'
-    ),
-    PermissionData(
-        checkbox_state=True,
-        first_asset='0x Protocol',
-        amount='50',
-        allowed_to='becomeMember',
-        asset_title='50 ZRX',
-        allowed_to_title='Become member'
-    ),
-]
-
-
 class PermissionsElements(Enum):
-    WELCOME_TITLE = "Permissions"
-    WELCOME_SUBTITLE = 'You can manage your community by creating and issuing membership and access permissions'
-    WELCOME_CHECKLIST_ELEMENT_1 = 'Give individual members access to private channels'
-    WELCOME_CHECKLIST_ELEMENT_2 = 'Monetise your community with subscriptions and fees'
-    WELCOME_CHECKLIST_ELEMENT_3 = 'Require holding a token or NFT to obtain exclusive membership rights'
     DUPLICATE_WARNING = 'Permission with same properties is already active, edit properties to create a new permission.'
-
-
-class TokensElements(Enum):
-    WELCOME_TITLE = "Community tokens"
-    WELCOME_SUBTITLE = 'You can mint custom tokens and import tokens for your community'
-    WELCOME_CHECKLIST_ELEMENT_1 = 'Create remotely destructible soulbound tokens for admin permissions'
-    WELCOME_CHECKLIST_ELEMENT_2 = 'Reward individual members with custom tokens for their contribution'
-    WELCOME_CHECKLIST_ELEMENT_3 = 'Mint tokens for use with community and channel permissions'
-    INFOBOX_TITLE = 'Get started'
-    INFOBOX_TEXT = 'In order to Mint, Import and Airdrop community tokens, you first need to mint your Owner token which will give you permissions to access the token management features for your community.'
 
 
 class MintOwnerTokensElements(Enum):
@@ -163,16 +104,6 @@ class MintOwnerTokensElements(Enum):
     TOAST_MINTING_TOKENS = 'Minting'
 
 
-class AirdropsElements(Enum):
-    WELCOME_TITLE = "Airdrop community tokens"
-    WELCOME_SUBTITLE = 'You can mint custom tokens and collectibles for your community'
-    WELCOME_CHECKLIST_ELEMENT_1 = 'Reward individual members with custom tokens for their contribution'
-    WELCOME_CHECKLIST_ELEMENT_2 = 'Incentivise joining, retention, moderation and desired behaviour'
-    WELCOME_CHECKLIST_ELEMENT_3 = 'Require holding a token or NFT to obtain exclusive membership rights'
-    INFOBOX_TITLE = 'Get started'
-    INFOBOX_TEXT = 'In order to Mint, Import and Airdrop community tokens, you first need to mint your Owner token which will give you permissions to access the token management features for your community.'
-
-
 class ToastMessages(Enum):
     CREATE_PERMISSION_TOAST = 'Community permission created'
     UPDATE_PERMISSION_TOAST = 'Community permission updated'
@@ -184,10 +115,6 @@ class ToastMessages(Enum):
     BANNED_USER_TOAST = ' was banned from '
     UNBANNED_USER_TOAST = ' unbanned from '
     UNBANNED_USER_CONFIRM = 'You were unbanned from '
-
-
-class LimitWarnings(Enum):
-    MEMBER_ROLE_LIMIT_WARNING = 'Max of 5 ‘become member’ permissions for this Community has been reached. You will need to delete an existing ‘become member’ permission before you can add a new one.'
 
 
 class BlockPopupWarnings(Enum):
