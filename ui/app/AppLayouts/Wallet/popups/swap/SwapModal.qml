@@ -97,6 +97,12 @@ StatusDialog {
             receivePanel.reset()
         }
 
+        function snugTextWidth(text) {
+            return text.truncated ? Number.POSITIVE_INFINITY : Math.ceil(text.contentWidth) + 2
+        }
+
+        readonly property real invertButtonRoom: invertQuoteButton.visible ? invertQuoteButton.width + quoteRow.spacing : 0
+
         property var debounceFetchSuggestedRoutes: Backpressure.debounce(root, 1000, function() {
             root.swapAdaptor.fetchSuggestedRoutes(payPanel.rawValue)
         })
@@ -578,6 +584,7 @@ StatusDialog {
 
             Control {
                 id: swapFooter
+                objectName: "swapFooter"
 
                 Layout.fillWidth: true
                 // align with the panels' edges
@@ -601,15 +608,39 @@ StatusDialog {
                 readonly property string toSym: !!root.swapAdaptor.toToken ? (root.swapAdaptor.toToken.symbol ?? "") : ""
                 readonly property double fromAmt: parseFloat(root.swapInputParamsForm.fromTokenAmount) || 0
                 readonly property double toAmt: parseFloat(root.swapAdaptor.swapOutputData.toTokenAmount) || 0
-                readonly property string quoteText: {
-                    if (!fromAmt || !toAmt || !fromSym || !toSym)
-                        return ""
+                readonly property double fromPrice: !!root.swapAdaptor.fromToken && !!root.swapAdaptor.fromToken.marketDetails
+                                                    && !!root.swapAdaptor.fromToken.marketDetails.currencyPrice
+                                                    ? (root.swapAdaptor.fromToken.marketDetails.currencyPrice.amount ?? 0) : 0
+                readonly property double toPrice: !!root.swapAdaptor.toToken && !!root.swapAdaptor.toToken.marketDetails
+                                                  && !!root.swapAdaptor.toToken.marketDetails.currencyPrice
+                                                  ? (root.swapAdaptor.toToken.marketDetails.currencyPrice.amount ?? 0) : 0
+
+                function formatQuote(rate) {
                     const cs = root.swapAdaptor.currencyStore
-                    const rate = quoteInverted ? fromAmt / toAmt : toAmt / fromAmt
                     const baseSym = quoteInverted ? toSym : fromSym
                     const quoteSym = quoteInverted ? fromSym : toSym
                     return "1 %1 ≈ %2".arg(baseSym).arg(cs.formatCurrencyAmount(rate, quoteSym))
                 }
+                readonly property string routeQuoteText: !fromAmt || !toAmt || !fromSym || !toSym
+                                                         ? "" : formatQuote(quoteInverted ? fromAmt / toAmt : toAmt / fromAmt)
+                // no market rate for the same token on both sides (e.g. bridging ETH to ETH): it is 1:1 by definition
+                readonly property bool sameToken: root.swapInputParamsForm.fromGroupKey === root.swapInputParamsForm.toGroupKey
+                readonly property string marketQuoteText: sameToken || !(fromPrice > 0) || !(toPrice > 0) || !fromSym || !toSym
+                                                          ? "" : formatQuote(quoteInverted ? toPrice / fromPrice : fromPrice / toPrice)
+                // the route's own rate once it is in; otherwise the market rate, which needs no
+                // route at all, so the row never shows a stale route rate nor stays empty
+                readonly property string quoteText: hasProposal && !loading ? (routeQuoteText || marketQuoteText)
+                                                                            : marketQuoteText
+                // a rate is expected once both tokens are chosen (a same-token bridge is 1:1, nothing to show)
+                readonly property bool bothTokensChosen: !!root.swapInputParamsForm.fromGroupKey
+                                                         && !!root.swapInputParamsForm.toGroupKey && !sameToken
+                // a rate is only on its way while a route request is in flight; without an amount
+                // nothing is requested, so a token with no market price would otherwise load forever
+                readonly property bool ratePending: !quoteText && bothTokensChosen && loading
+                // nothing in flight and neither the route nor the market gave a rate
+                readonly property bool rateUnavailable: !quoteText && bothTokensChosen && !loading
+                // never visible, the text is transparent while loading
+                readonly property string ratePlaceholder: "1 XXX ≈ 0.0000 XXXX"
 
                 function refresh() {
                     secondsLeft = refreshSeconds
@@ -642,16 +673,17 @@ StatusDialog {
 
                     RowLayout {
                         id: quoteRow
+                        objectName: "quoteRow"
 
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
                         spacing: Theme.halfPadding
-                        visible: swapFooter.hasProposal || swapFooter.loading
 
                         Item {
+                            objectName: "quoteCountdown"
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
-                            visible: !swapFooter.loading // counts against a quote being replaced
+                            visible: swapFooter.hasProposal && !swapFooter.loading
 
                             StatusCircularProgressBar {
                                 anchors.fill: parent
@@ -669,32 +701,46 @@ StatusDialog {
                             }
                         }
 
-                        StatusTextWithLoadingState {
-                            objectName: "swapQuoteText"
+                        Item {
+                            id: quoteArea
+                            objectName: "quoteArea"
                             Layout.fillWidth: true
-                            Layout.maximumWidth: loading ? 120 : implicitWidth
                             Layout.minimumWidth: 0
-                            elide: Text.ElideRight
-                            text: swapFooter.quoteText
-                            customColor: Theme.palette.directColor1
-                            font.weight: Font.Medium
-                            font.pixelSize: Theme.additionalTextSize
-                            loading: swapFooter.loading
-                        }
+                            implicitWidth: swapQuoteText.implicitWidth + d.invertButtonRoom
+                            implicitHeight: invertQuoteButton.height
 
-                        StatusFlatRoundButton {
-                            objectName: "invertQuoteButton"
-                            Layout.preferredWidth: 28
-                            Layout.preferredHeight: 28
-                            icon.name: "swap"
-                            icon.width: 20
-                            icon.height: 20
-                            type: StatusFlatRoundButton.Type.Tertiary
-                            visible: !swapFooter.loading && !!swapFooter.quoteText
-                            onClicked: swapFooter.quoteInverted = !swapFooter.quoteInverted
-                        }
+                            StatusTextWithLoadingState {
+                                id: swapQuoteText
+                                objectName: "swapQuoteText"
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: loading ? parent.width
+                                               : Math.max(0, Math.min(Math.ceil(implicitWidth), parent.width - d.invertButtonRoom))
+                                elide: Text.ElideRight
+                                text: swapFooter.quoteText || (loading ? swapFooter.ratePlaceholder
+                                                                : (swapFooter.rateUnavailable ? qsTr("Rate unavailable") : ""))
+                                customColor: swapFooter.rateUnavailable ? Theme.palette.baseColor1 : Theme.palette.directColor1
+                                font.weight: Font.Medium
+                                font.pixelSize: Theme.additionalTextSize
+                                loading: swapFooter.ratePending
+                                maximumLoadingStateWidth: Math.round(width)
+                            }
 
-                        Item { Layout.fillWidth: true }
+                            StatusFlatRoundButton {
+                                id: invertQuoteButton
+                                objectName: "invertQuoteButton"
+                                anchors.left: swapQuoteText.right
+                                anchors.leftMargin: quoteRow.spacing
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 28
+                                height: 28
+                                icon.name: "swap"
+                                icon.width: 20
+                                icon.height: 20
+                                type: StatusFlatRoundButton.Type.Tertiary
+                                visible: !!swapFooter.quoteText
+                                onClicked: swapFooter.quoteInverted = !swapFooter.quoteInverted
+                            }
+                        }
 
                         StatusFlatButton {
                             id: slippageButton
@@ -702,6 +748,7 @@ StatusDialog {
                             icon.name: "filter"
                             size: StatusBaseButton.Size.Small
                             rightPadding: 0
+                            horizontalPadding: 0
                             text: "%1%".arg(LocaleUtils.numberToLocaleString(root.swapInputParamsForm.selectedSlippage))
                             textColor: Theme.palette.directColor1
                             hoverColor: StatusColors.transparent
@@ -710,26 +757,36 @@ StatusDialog {
                     }
 
                     RowLayout {
+                        objectName: "routeMetricsRow"
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 0
                         spacing: Theme.padding
-                        visible: swapFooter.hasProposal
+                        // a route can come back with an error (e.g. insufficient funds): its
+                        // fees and time mean nothing next to the error tag
+                        visible: swapFooter.hasProposal && !root.swapAdaptor.swapOutputData.hasError
 
                         component MetricRow: Row {
                             spacing: Theme.halfPadding
+                            Layout.minimumWidth: implicitWidth
                         }
 
-                        MetricRow {
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.minimumWidth: 0
+                            spacing: Theme.halfPadding
+
                             StatusIcon {
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 16; height: 16
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredWidth: 16
+                                Layout.preferredHeight: 16
                                 icon: "filter"
-                                color: Theme.palette.directColor4
+                                color: Theme.palette.directColor1
                                 visible: root.routeOrderEnabled
                             }
                             StatusBaseText {
                                 objectName: "routeOrderButton"
                                 visible: root.routeOrderEnabled
-                                anchors.verticalCenter: parent.verticalCenter
+                                Layout.alignment: Qt.AlignVCenter
                                 text: d.routeOrderName
                                 font.weight: Font.Medium
                                 color: Theme.palette.directColor1
@@ -749,28 +806,49 @@ StatusDialog {
                                 }
                             }
                             StatusBaseText {
+                                id: routeProviderText
                                 objectName: "routeProviderText"
-                                anchors.verticalCenter: parent.verticalCenter
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                Layout.maximumWidth: d.snugTextWidth(routeProviderText)
+                                elide: Text.ElideRight
                                 visible: d.swapViaRelay
                                 text: !!root.swapAdaptor.swapOutputData.txProviderTool
-                                      ? qsTr("By %1 via %2").arg(d.serviceProviderName)
+                                      ? qsTr("%1 → %2").arg(d.serviceProviderName)
                                         .arg(root.swapAdaptor.swapOutputData.txProviderTool)
-                                      : qsTr("By %1").arg(d.serviceProviderName)
+                                      : qsTr("%1").arg(d.serviceProviderName)
                                 font.weight: Font.Medium
                                 color: Theme.palette.directColor1
+
+                                StatusToolTip {
+                                    visible: routeProviderMouseArea.containsMouse
+                                    text: !!root.swapAdaptor.swapOutputData.txProviderTool
+                                          ? qsTr("By %1 via %2").arg(d.serviceProviderName)
+                                            .arg(root.swapAdaptor.swapOutputData.txProviderTool)
+                                          : qsTr("By %1").arg(d.serviceProviderName)
+                                }
+
+                                StatusMouseArea {
+                                    id: routeProviderMouseArea
+                                    objectName: "routeProviderMouseArea"
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                }
+
                             }
                             StatusFlatRoundButton {
                                 objectName: "routeProviderInfoIcon"
-                                anchors.verticalCenter: parent.verticalCenter
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
                                 visible: !d.swapViaRelay
-                                width: 20
-                                height: 20
                                 radius: width/2
                                 type: StatusFlatRoundButton.Type.Tertiary
                                 icon.name: "info"
                                 icon.width: 16
                                 icon.height: 16
-                                icon.color: Theme.palette.directColor4
+                                icon.color: Theme.palette.directColor1
                                 tooltip.text: !!root.swapAdaptor.swapOutputData.txProviderTool
                                               ? qsTr("by %1 via %2").arg(d.serviceProviderName)
                                                 .arg(root.swapAdaptor.swapOutputData.txProviderTool)
@@ -778,20 +856,20 @@ StatusDialog {
                             }
                         }
 
-                        Item { Layout.fillWidth: true }
+                        Item { objectName: "routeMetricsSpacer"; Layout.fillWidth: !routeProviderText.truncated }
 
                         MetricRow {
                             StatusIcon {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: 16; height: 16
                                 icon: "gas"
-                                color: Theme.palette.directColor4
+                                color: Theme.palette.directColor1
                             }
                             StatusBaseText {
                                 objectName: "strategyFees"
                                 text: root.swapAdaptor.currencyStore.formatCurrencyAmount(
                                           root.swapAdaptor.swapOutputData.txFeesInFiat, root.swapAdaptor.currencyStore.currentCurrency)
-                                color: Theme.palette.directColor4
+                                color: Theme.palette.directColor1
                             }
                         }
 
@@ -800,21 +878,22 @@ StatusDialog {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: 16; height: 16
                                 icon: "time"
-                                color: Theme.palette.directColor4
+                                color: Theme.palette.directColor1
                             }
                             StatusBaseText {
                                 objectName: "strategyTime"
                                 text: WalletUtils.getLabelForEstimatedTxTime(root.swapAdaptor.swapOutputData.estimatedTime, true)
-                                color: Theme.palette.directColor4
+                                color: Theme.palette.directColor1
                             }
                         }
                     }
 
                     RowLayout {
+                        objectName: "amountSliderRow"
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
                         spacing: Theme.padding
-                        visible: !!root.swapInputParamsForm.fromGroupKey
+                        visible: !!root.swapInputParamsForm.fromGroupKey // stays on errors: it is how the amount gets corrected
 
                         StatusSlider {
                             id: amountSlider
