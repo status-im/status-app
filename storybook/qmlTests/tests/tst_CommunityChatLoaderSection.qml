@@ -515,6 +515,103 @@ Item {
             tryVerify(() => lv.count > 0, 10000)
             verify(!lv.footerItem, "members must not get the admin banner footer")
         }
+
+        function categoryRow(loader) {
+            const lv = findChild(loader, "chatListItems")
+            verify(!!lv)
+            tryVerify(() => lv.count > 0, 10000)
+            waitForRendering(lv)
+            const row = placedRows(lv).find(r => r.isCategory)
+            verify(!!row, "a category row must exist")
+            verify(!!row.item)
+            row.item.highlighted = true
+            return row
+        }
+
+        function chatList(loader) {
+            const list = findChild(loader, "statusChatListAndCategoriesChatList")
+            verify(!!list, "the community chat list must be built")
+            return list
+        }
+
+        function verifyCategoryAdminActions(loader, admin) {
+            const menu = chatList(loader).categoryPopupMenu.createObject(loader)
+            verify(!!menu)
+            const editItem = findChild(menu, "editCategoryMenuItem")
+            const deleteItem = findChild(menu, "deleteCategoryMenuItem")
+            verify(!!editItem)
+            verify(!!deleteItem)
+            compare(editItem.enabled, admin)
+            compare(deleteItem.enabled, admin)
+            compare(menu.opened, false)
+            menu.destroy()
+        }
+
+        function verifyChannelListAdminActions(loader, admin) {
+            const lv = findChild(loader, "chatListItems")
+            const channel = placedRows(lv).find(row => !row.isCategory)
+            verify(!!channel, "a channel row must exist")
+            const menu = chatList(loader).popupMenu.createObject(loader)
+            verify(!!menu)
+            menu.openHandler(channel.chatId)
+            compare(menu.isCommunityChat, true)
+            compare(menu.amIChatAdmin, admin)
+            compare(findChild(menu, "editChannelMenuItem").enabled, admin)
+            compare(findChild(menu, "deleteOrLeaveMenuItem").enabled, admin)
+            compare(menu.opened, false)
+            menu.destroy()
+        }
+
+        // Create and "add channel" are the admin gates. The category more
+        // button stays for members: it opens mute, while Edit/Delete Category
+        // are disabled on that menu. Channel Edit/Delete use the same admin
+        // flag via verifyChannelListAdminActions below.
+        function test_memberCannotCreateChannelsOrCategories() {
+            const loader = loadSection()
+            tryVerify(() => loader.item.leftPanel !== null, 10000)
+
+            verify(!findChild(loader, "createChannelOrCategoryBtn"),
+                   "a member must not get Create channel or category")
+
+            const row = categoryRow(loader)
+            const addButton = findChild(row.item, "categoryItemButtonAdd")
+            const moreButton = findChild(row.item, "categoryItemButtonMore")
+            verify(!!addButton)
+            verify(!!moreButton)
+            compare(addButton.visible, false)
+            tryCompare(moreButton, "visible", true)
+
+            compare(chatList(loader).showCategoryActionButtons, false)
+            mouseClick(row, row.width / 2, row.height / 2, Qt.RightButton)
+            verify(!findChild(loader, "editCategoryMenuItem"),
+                   "a member right-click must not build the category menu")
+            verifyCategoryAdminActions(loader, false)
+            verifyChannelListAdminActions(loader, false)
+        }
+
+        function test_ownerSeesChannelAndCategoryActions() {
+            mock.memberRole = Constants.memberRole.owner
+            mock.install()
+
+            const loader = loadSection()
+            tryVerify(() => loader.item.leftPanel !== null, 10000)
+
+            const createButton = findChild(loader, "createChannelOrCategoryBtn")
+            verify(!!createButton, "an owner must get Create channel or category")
+            tryCompare(createButton, "visible", true)
+
+            const row = categoryRow(loader)
+            const addButton = findChild(row.item, "categoryItemButtonAdd")
+            const moreButton = findChild(row.item, "categoryItemButtonMore")
+            verify(!!addButton)
+            verify(!!moreButton)
+            tryCompare(addButton, "visible", true)
+            tryCompare(moreButton, "visible", true)
+
+            compare(chatList(loader).showCategoryActionButtons, true)
+            verifyCategoryAdminActions(loader, true)
+            verifyChannelListAdminActions(loader, true)
+        }
         function test_sectionLoadCostBoundedWithScale() {
             function measureSectionLoad() {
                 mock.install()

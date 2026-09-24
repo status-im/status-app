@@ -353,8 +353,18 @@ QtObject {
             })
             if (!isCategory) {
                 d.chatInfo[itemId] = {
+                    itemId: itemId,
                     name: chatName,
                     description: "Description of " + chatName,
+                    icon: "",
+                    emoji: "",
+                    color: root.color,
+                    type: Constants.chatType.communityChat,
+                    muted: false,
+                    position: position,
+                    categoryId: categoryId,
+                    viewersCanPostReactions: true,
+                    hideIfPermissionsNotMet: false,
                     requiresPermissions: isPrivate,
                     canView: !isPrivate || root.canViewPrivateChannels,
                     canPost: !isPrivate || root.canPostInPrivateChannels
