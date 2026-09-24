@@ -80,6 +80,10 @@ suite "route estimated time bucketing":
     # same inclusion estimate, but a 7-minute bridge on top
     check timeBucket(72, 0, 420) == EstimatedTime.MoreThanFiveMins
 
+  test "raw seconds are exposed next to the bucket":
+    let converted = convertToOldRoute(@[parsePath(50, 40, 100)])
+    check converted[0].estimatedTimeSeconds == 190
+
   test "all three components are summed":
     # 50 + 40 + 100 = 190s; each alone would bucket lower
     check timeBucket(50, 40, 100) == EstimatedTime.LessThanFourMins
