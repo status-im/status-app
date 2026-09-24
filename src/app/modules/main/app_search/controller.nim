@@ -60,6 +60,12 @@ proc init*(self: Controller) =
     let args = MessagesArgs(e)
     self.delegate.onSearchMessagesDone(args.messages)
 
+  # The bulk chat load lands after login; a consumer that pulled the search
+  # model before it (e.g. the share destinations adaptor) would otherwise keep
+  # the empty first build.
+  self.events.on(chat_service.SIGNAL_ACTIVE_CHATS_LOADED) do(e: Args):
+    self.delegate.buildChatSearchModel()
+
   self.events.on(SIGNAL_CHAT_UPDATE) do(e: Args):
     var args = ChatUpdateArgs(e)
     self.delegate.updateChatItems(args.chats)
