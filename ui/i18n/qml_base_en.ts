@@ -15408,15 +15408,7 @@ to load</source>
 <context>
     <name>SharePreviewPanel</name>
     <message>
-        <source>Share to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
