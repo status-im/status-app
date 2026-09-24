@@ -14,6 +14,8 @@ class TestWalletAccountsBasic(StepMixin):
     @pytest.mark.wallet
     @pytest.mark.smoke
     @pytest.mark.timeout(900)
+    @pytest.mark.spec("SC-WACC-06")
+    @pytest.mark.spec("SC-WACC-12")
     async def test_add_and_delete_generated_account(self):
         async with self.step(self.device, "Verify wallet panel loaded"):
             panel = WalletLeftPanel(self.device.driver)
