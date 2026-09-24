@@ -188,7 +188,7 @@ StatusDialog {
         target: root.keychain
 
         function onGetCredentialRequestCompleted(status, secret) {
-            if (!d.biometricsInProgress || !root.opened) {
+            if (!d.biometricsInProgress || !root.visible) {
                 return
             }
             if (status !== Keychain.StatusSuccess || secret.length === 0) {
