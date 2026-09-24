@@ -54,6 +54,9 @@ RUN python3 -m venv /opt/aqt \
  && /opt/aqt/bin/pip install aqtinstall \
  && /opt/aqt/bin/aqt install-qt ${QT_HOST} desktop ${QT_VERSION} ${QT_ARCH} -m ${QT_MODULES} -O /opt/qt --timeout 3000
 
+RUN rm /opt/qt/${QT_VERSION}/${QT_PLATFORM}/plugins/imageformats/libqtiff.so \
+       /opt/qt/${QT_VERSION}/${QT_PLATFORM}/lib/cmake/Qt6Gui/Qt6QTiffPlugin*
+
 # PCSC Lite Build Image --------------------------------------------------------
 FROM arch AS pcsc-build
 
