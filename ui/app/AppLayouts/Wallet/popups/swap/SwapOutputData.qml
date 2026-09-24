@@ -24,6 +24,8 @@ QtObject {
     property var rawPaths: []
     // need to check how this is done in new router v2, right now it is Enum type
     property int estimatedTime
+    // total (approval + tx + route execution) in seconds, 0 when unknown
+    property int estimatedTimeSeconds: 0
     property string txProviderName
     property string txProviderTool
     property bool approvalNeeded
@@ -44,6 +46,7 @@ QtObject {
         root.txProviderName = ""
         root.txProviderTool = ""
         root.estimatedTime = Constants.TransactionEstimatedTime.Unknown
+        root.estimatedTimeSeconds = 0
         root.totalFees = 0
         root.maxFeesToReserveRaw = 0
         root.approvalNeeded = false
