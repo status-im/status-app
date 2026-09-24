@@ -31,6 +31,8 @@ Item {
     signal backBtnClicked()
     signal registerUsername()
 
+    readonly property bool showDepositInFooter: root.width >= 440
+
     StatusBaseText {
         id: sectionTitle
         text: qsTr("ENS usernames")
@@ -55,7 +57,7 @@ Item {
         id: sview
         anchors.top: sectionTitle.bottom
         anchors.topMargin: Theme.padding
-        anchors.bottom: bottomLayout.top
+        anchors.bottom: footerRow.top
         anchors.bottomMargin: Theme.padding
         anchors.left: parent.left
         anchors.right: parent.right
@@ -181,9 +183,8 @@ Item {
         }
     }
 
-    ColumnLayout {
-        id: bottomLayout
-        spacing: Theme.padding
+    RowLayout {
+        id: footerRow
 
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Theme.padding
@@ -192,13 +193,29 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: Theme.padding
 
+        spacing: Theme.padding
+
+        StatusButton {
+            id: backButton
+            objectName: "ensBackButton"
+
+            text: qsTr("Back")
+            onClicked: backBtnClicked()
+        }
+
+        Item {
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+        }
+
         RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            spacing: Theme.padding
+            id: depositRow
+            spacing: 5
+
+            visible: root.showDepositInFooter
+            Layout.alignment: Qt.AlignVCenter
 
             Image {
-                id: image1
-
                 Layout.preferredWidth: 50
                 Layout.preferredHeight: 50
                 Layout.alignment: Qt.AlignVCenter
@@ -209,10 +226,8 @@ Item {
             }
 
             ColumnLayout {
-                spacing: 5
-
-                Layout.fillHeight: false
                 Layout.alignment: Qt.AlignVCenter
+                spacing: 5
 
                 StatusBaseText {
                     text: qsTr("10 SNT")
@@ -226,25 +241,17 @@ Item {
                     font.pixelSize: Theme.secondaryTextFontSize
                 }
             }
-
-            StatusButton {
-                objectName: "ensStartTransaction"
-
-                Layout.alignment: Qt.AlignVCenter
-
-                text: root.sntBalance < 10 ?
-                  qsTr("Not enough SNT") :
-                  qsTr("Register")
-                enabled: root.sntBalance >= 10 && termsAndConditionsCheckbox.checked
-                onClicked: root.registerUsername()
-            }
         }
 
         StatusButton {
-            Layout.alignment: Qt.AlignHCenter
+            id: startBtn
+            objectName: "ensStartTransaction"
 
-            text: qsTr("Back")
-            onClicked: backBtnClicked()
+            text: root.sntBalance < 10 ?
+              qsTr("Not enough SNT") :
+              qsTr("Register")
+            enabled: root.sntBalance >= 10 && termsAndConditionsCheckbox.checked
+            onClicked: root.registerUsername()
         }
     }
 }
