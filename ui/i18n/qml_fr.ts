@@ -15423,16 +15423,8 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
 <context>
     <name>SharePreviewPanel</name>
     <message>
-        <source>Share to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Message</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation type="unfinished">Envoyer</translation>
     </message>
 </context>
 <context>
