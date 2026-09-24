@@ -139,8 +139,8 @@ StatusSectionLayout {
     QtObject {
         id: d
 
-        readonly property int contentWidth: Math.min(root.centerPanel.width, 560)
-        readonly property int rightPanelWidth: Math.min(root.centerPanel.height, 768)
+        readonly property int contentWidth: Math.min(profileContainer.width, 560)
+        readonly property int rightPanelWidth: Math.min(profileContainer.height, 768)
 
         readonly property bool isProfilePanelActive: root.settingsSubsection === Constants.settingsSubsection.profile
         readonly property bool sideBySidePreviewAvailable: root.Window.width >= 1840 // design
@@ -280,12 +280,13 @@ StatusSectionLayout {
         }
     }
 
-    centerPanel: StackView {
-        id: profileContainer
+    centerPanel: Item {
+        StackView {
+            id: profileContainer
 
-        anchors.fill: parent
-        anchors.leftMargin: root.Theme.xlPadding * 2
-        anchors.rightMargin: root.Theme.xlPadding * 2
+            anchors.fill: parent
+            anchors.leftMargin: root.Theme.xlPadding * 2
+            anchors.rightMargin: root.Theme.xlPadding * 2
 
         Component {
             id: myProfileViewComp
@@ -659,6 +660,7 @@ StatusSectionLayout {
                 pollingActive: StackView.visible
                 onRefreshPeerCountRequested: root.logosNetworkStore.refreshPeerCount()
             }
+        }
         }
     }
 
