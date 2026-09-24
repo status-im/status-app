@@ -57,6 +57,7 @@
       in
         {
           inherit (pkgs) jdk; # keycard simulator precompile (USE_SIMULATED_KEYCARD packages)
+          inherit (pkgs) nimble; # 0.24.1
         }
         // nixpkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
           inherit (pkgs) fileicon;

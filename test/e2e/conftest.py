@@ -70,14 +70,13 @@ def get_git_commit():
 
 
 def get_status_go_commit():
-    """Get git commit hash from status-go repository"""
-    # Try to get git commit from status-go repository (vendor/status-go)
+    """The status-go commit the app pins: the manifest's requires line, read by
+    scripts/status-go-pin.sh (nothing to report under a file:// flip)"""
     try:
-        # Get status-go directory (vendor/status-go)
-        status_go_repo = configs.testpath.ROOT.parent.parent / 'vendor' / 'status-go'
+        parent_repo = configs.testpath.ROOT.parent.parent
         result = subprocess.run(
-            ['git', 'rev-parse', 'HEAD'],
-            cwd=str(status_go_repo),
+            ['sh', str(parent_repo / 'scripts' / 'status-go-pin.sh')],
+            cwd=str(parent_repo),
             capture_output=True,
             text=True,
             timeout=5

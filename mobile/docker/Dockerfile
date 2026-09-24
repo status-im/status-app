@@ -9,7 +9,8 @@ ARG JAVA_VERSION=17
 ARG ANDROID_API_LEVEL=36
 ARG ANDROID_NDK_VERSION=27.2.12479018
 ARG GOLANG_VERSION="1.24.7"
-ARG NIM_VERSION="2.2.10"
+ARG NIMBLE_VERSION="0.24.1"
+ARG NIMBLE_SHA256="5bbcea2999f79b7a5aff1409fa28ffead5954e5aa4a87a5055a53530d0d615de"
 ARG NIX_VERSION="2.24.11"
 
 # =============================================================================
@@ -61,7 +62,8 @@ ARG JAVA_VERSION
 ARG ANDROID_API_LEVEL
 ARG ANDROID_NDK_VERSION
 ARG GOLANG_VERSION
-ARG NIM_VERSION
+ARG NIMBLE_VERSION
+ARG NIMBLE_SHA256
 ARG NIX_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -214,11 +216,6 @@ RUN set -e \
 ENV OPENSSL_LIB_DIR="/home/jenkins/openssl-output/arm64-v8a/lib"
 ENV OPENSSL_INC_DIR="/home/jenkins/openssl-output/arm64-v8a/include"
 
-# Install Nim and clean up choosenim downloads
-RUN curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y \
- && /home/jenkins/.nimble/bin/choosenim ${NIM_VERSION} \
- && rm -rf /home/jenkins/.choosenim/downloads
-
 # Install Nix and clean up Nix store cache
 RUN curl -s https://nixos.org/releases/nix/nix-${NIX_VERSION}/install | sh -s -- --no-daemon \
  && rm -rf /home/jenkins/.cache/nix
@@ -228,12 +225,13 @@ RUN curl -s https://nixos.org/releases/nix/nix-${NIX_VERSION}/install | sh -s --
 # =============================================================================
 USER root
 
-# Create symlinks for Nim tools
-RUN ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nim /usr/local/bin/nim \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nimble /usr/local/bin/nimble \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/choosenim /usr/local/bin/choosenim \
- && chmod 755 /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/* \
- && chown -R root:root /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin
+# Nimble only: a nim beside it would shadow the pinned compiler.
+RUN curl -fsSLo /tmp/nimble.tar.gz "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-linux_x64.tar.gz" \
+ && echo "${NIMBLE_SHA256}  /tmp/nimble.tar.gz" | sha256sum -c \
+ && mkdir -p /opt/nimble \
+ && tar -xzf /tmp/nimble.tar.gz -C /opt/nimble \
+ && rm -f /tmp/nimble.tar.gz \
+ && chmod 755 /opt/nimble/nimble
 
 # Set GCC alternatives
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
@@ -242,7 +240,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
 # =============================================================================
 # Final PATH and environment
 # =============================================================================
-ENV PATH="/opt/qt/${QT_VERSION}/android_arm64_v8a/bin:/opt/qt/${QT_VERSION}/gcc_64/bin:/opt/qt/${QT_VERSION}/gcc_64/libexec:/usr/local/go/bin:/home/jenkins/go/bin:/home/jenkins/.nimble/bin:/home/jenkins/.nix-profile/bin:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/usr/local/bin:${PATH}"
+ENV PATH="/opt/qt/${QT_VERSION}/android_arm64_v8a/bin:/opt/qt/${QT_VERSION}/gcc_64/bin:/opt/qt/${QT_VERSION}/gcc_64/libexec:/usr/local/go/bin:/home/jenkins/go/bin:/opt/nimble:/home/jenkins/.nix-profile/bin:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/usr/local/bin:${PATH}"
 ENV PKG_CONFIG_PATH="/opt/qt/${QT_VERSION}/android_arm64_v8a/lib/pkgconfig"
 ENV ARCH=arm64
 

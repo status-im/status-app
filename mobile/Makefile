@@ -36,8 +36,41 @@ status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
 nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
 status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
 
-# Always delegate to status-go's PHONY sub-make (it owns incremental rebuild, see issue #18377), then copy only on change.
-$(STATUS_GO_LIB): FORCE | platform-cleanup
+NIMSDS_BUILD_ROOT := $(STATUS_GO_OUT)/.sds-build
+NIMSDS_LIBDIR := $(NIMSDS_BUILD_ROOT)/build
+NIMSDS_INCDIR := $(NIMSDS_BUILD_ROOT)/library
+STATUSGO_TASK_ENV := STATUSGO_BUILD_DIR="$(STATUS_GO_OUT)" STATUSGO_NIMBLE_PATHS="$(STATUS_DESKTOP)/nimble.paths"
+# `?=`: the desktop Makefile exports NIM; resolved here only for a direct `make -C mobile`.
+NIM ?= $(shell $(STATUS_DESKTOP)/scripts/resolve-nim.sh)
+
+$(STATUS_DESKTOP)/nimble.paths:
+	$(error $(STATUS_DESKTOP)/nimble.paths missing: run 'make nimble-deps' at the repo root first)
+
+# The key files of the desktop Makefile's status-go section: rewritten only on a
+# content change; they must be normal prerequisites of the library.
+STATUSGO_BUILD_KEY := $(OS)-$(ARCH)-api$(ANDROID_API)-sdk$(IPHONE_SDK)$(IOS_TARGET)
+STATUSGO_KEYS := $(STATUS_GO_OUT)/.source-root $(STATUS_GO_OUT)/.build-key
+$(STATUS_GO_OUT)/.source-root: FORCE | platform-cleanup
+	@test -n "$(STATUS_GO)" || { echo "ERROR: STATUS_GO is empty: run 'make nimble-deps' at the repo root first" >&2; exit 1; }
+	@if [ "$$(cat $@ 2>/dev/null)" != "$(STATUS_GO)" ]; then \
+		rm -rf $(STATUS_GO_OUT) && mkdir -p $(STATUS_GO_OUT) && printf '%s\n' "$(STATUS_GO)" > $@; \
+	fi
+$(STATUS_GO_OUT)/.build-key: $(STATUS_GO_OUT)/.source-root FORCE
+	@if [ "$$(cat $@ 2>/dev/null)" != "$(STATUSGO_BUILD_KEY)" ]; then \
+		rm -rf $(STATUS_GO_OUT)/build $(NIMSDS_BUILD_ROOT) && printf '%s\n' "$(STATUSGO_BUILD_KEY)" > $@; \
+	fi
+
+# A checkout (STATUSGO_SRC overridden) delegates to status-go's PHONY sub-make every
+# build (it owns incremental rebuild, issue #18377); the store copy cannot change
+# under an unchanged pin, so it is stamp-driven.
+STATUS_GO_FORCE := $(if $(findstring /pkgs2/,$(STATUS_GO)),,FORCE)
+$(STATUS_GO_LIB): $(STATUS_GO_FORCE) $(STATUSGO_KEYS) $(STATUS_DESKTOP)/nimble.paths | platform-cleanup
+	@echo "Building libsds mobile library"
+ifeq ($(OS),android)
+	$(STATUSGO_TASK_ENV) ARCH=$(ARCH) ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" "$(NIM)" libsdsAndroid "$(STATUS_GO)/statusgo.nims"
+else ifeq ($(OS),ios)
+	$(STATUSGO_TASK_ENV) "$(NIM)" libsdsIos "$(STATUS_GO)/statusgo.nims"
+endif
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
@@ -48,35 +81,42 @@ ifeq ($(OS),android)
 	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_LDFLAGS="-Wl,--build-id=none" \
-	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
+	  CC="$(CC)" $(MAKE) -C "$(STATUS_GO)" statusgo-android-library \
+		STATUS_GO_BUILD_DIR="$(STATUS_GO_OUT)/build" \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
-		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" \
+		NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)" \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
 	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
 		--remove-section=.note.gnu.build-id \
 		--remove-section=.note.go.buildid \
-		../vendor/status-go/build/bin/libstatus$(LIB_EXT)
+		$(STATUS_GO_OUT)/build/bin/libstatus$(LIB_EXT)
 else ifeq ($(OS),ios)
 	GOFLAGS="-trimpath -buildvcs=false" \
 	GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
 	CGO_CFLAGS="-ffile-prefix-map=$(HOME)=." \
 	CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
-	$(MAKE) -C ../vendor/status-go statusgo-ios-library \
+	$(MAKE) -C "$(STATUS_GO)" statusgo-ios-library \
+		STATUS_GO_BUILD_DIR="$(STATUS_GO_OUT)/build" \
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
-		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" \
+		NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)" \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"
-	@cmp -s $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
-	@cmp -s ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
+	@cmp -s $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
+	@cmp -s $(STATUS_GO_OUT)/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp $(STATUS_GO_OUT)/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
+ifeq ($(STATUS_GO_FORCE),)
+	@# Store copy only: a checkout's cmp-skipped copy must keep its old mtime, or
+	@# byte-identical rebuilds cascade.
+	@touch $@
+endif
 
 $(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB) $(STATUS_GO_STUB_GEN) $(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp
 	@echo "Building status-go stub library (UI process)"
@@ -98,7 +138,7 @@ $(STATUS_GO_SERVICE_LIB): $(STATUS_GO_LIB) $(STATUS_GO_SERVICE_GEN) $(STATUS_DES
 
 # Regenerate stubs when libstatus changes.
 $(STATUS_GO_STUB_GEN): $(STATUS_GO_LIB)
-	@$(MAKE) -C $(STATUS_DESKTOP)/vendor/status-go statusgo-stub-bindings
+	@$(MAKE) -C "$(STATUS_GO)" statusgo-stub-bindings STATUS_GO_BUILD_DIR="$(STATUS_GO_OUT)/build"
 
 # statusgo-stub-bindings emits BOTH generated files in a single run; depending on the stub
 # output both orders this after that run and rebuilds it whenever the stub bindings rebuild.
@@ -133,7 +173,7 @@ ifeq ($(OS),android)
 $(NIM_STATUS_CLIENT_LIB): $(STATUS_GO_STUB_LIB) $(STATUS_GO_SERVICE_LIB)
 endif
 
-$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB)
+$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(STATUS_DESKTOP)/nimble.paths $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB)
 	@echo "Building Status Desktop Lib"
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
 	LIB_SUFFIX=$(LIB_SUFFIX) \

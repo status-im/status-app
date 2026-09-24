@@ -28,12 +28,11 @@ APP_ID="app.status.desktop"
 mkdir -p "$(dirname "${STATUS_CLIENT_FLATPAK}")"
 rm -rf "${FLATPAK_BUILD_DIR}" "${FLATPAK_REPO_DIR}"
 
-# libsds.so is built outside the workspace tree (at $NIM_SDS_SOURCE_DIR);
-# bring it into a known relative path so the manifest can reference it as
-# a regular `type: file` source instead of needing host access.
-: "${NIM_SDS_SOURCE_DIR:?NIM_SDS_SOURCE_DIR must be set}"
+# Copy libsds.so (NIMSDS_LIBDIR, exported by the Makefile) to a known relative
+# path so the manifest can reference it as a regular `type: file` source.
+: "${NIMSDS_LIBDIR:?NIMSDS_LIBDIR must be set}"
 mkdir -p tmp/linux/flatpak/in
-cp -P "${NIM_SDS_SOURCE_DIR}/build/libsds.so" tmp/linux/flatpak/in/
+cp -P "${NIMSDS_LIBDIR}/libsds.so" tmp/linux/flatpak/in/
 
 # Qt location for the in-sandbox copy step, handed across via qt.env (the
 # sandbox can't read our env). Override: QT_DIR=/path/to/Qt/6.x/gcc_64 make flatpak

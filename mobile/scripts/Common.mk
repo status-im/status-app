@@ -29,11 +29,15 @@ export LIB_DIR=$(LIB_PATH)
 WRAPPER_APP?=$(ROOT_DIR)/wrapperApp
 STATUS_DESKTOP?=$(ROOT_DIR)/vendors/status-desktop
 STATUSQ?=$(STATUS_DESKTOP)/ui/StatusQ
-STATUS_GO?=$(STATUS_DESKTOP)/vendor/status-go
+# STATUS_GO (the resolved status-go tree) is never written to; every artifact goes
+# under STATUS_GO_OUT. The resolution file exists after `make nimble-deps` at the repo root.
+-include $(STATUS_DESKTOP)/.nimble-resolution.mk
+export STATUSGO_SRC
+STATUS_GO?=$(STATUSGO_SRC)
+STATUS_GO_OUT?=$(STATUS_DESKTOP)/.statusgo-build
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
 STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
-NIM_SDS_SOURCE_DIR ?= $(STATUS_DESKTOP)/vendor/nim-sds
 
 # compile macros: pr -> StatusPR, release -> Status
 ifeq ($(BUILD_VARIANT),pr)
@@ -66,8 +70,8 @@ OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h'
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
 STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
-STATUS_GO_STUB_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_stub_exports.cpp
-STATUS_GO_SERVICE_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_service_dispatch.cpp
+STATUS_GO_STUB_GEN := $(STATUS_GO_OUT)/build/bin/statusgo_stub_exports.cpp
+STATUS_GO_SERVICE_GEN := $(STATUS_GO_OUT)/build/bin/statusgo_service_dispatch.cpp
 
 # script files
 STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh

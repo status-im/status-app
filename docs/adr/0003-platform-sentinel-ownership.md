@@ -13,7 +13,7 @@ Two platform-target-specific concerns that compose without overlap:
 
 ### Context
 
-Some `vendor/` libraries write to **shared output paths** reused across desktop macOS, iOS, and Android builds in the same tree (`vendor/QR-Code-generator/c/`, `vendor/nim-sds/build/`, `vendor/status-go/build/`). Switching between `make run` (desktop) and `make mobile-run` (mobile) without cleaning them leaves stale platform-specific objects, so the link fails (`ld: building for 'iOS', but linking in object file … built for 'macOS'`) or the app crashes on mixed artifacts.
+Some dependencies write to **shared output paths** reused across desktop macOS, iOS, and Android builds in the same tree (`vendor/QR-Code-generator/c/`, and the libsds and libstatus outputs under `.statusgo-build/`, the status-go build root). Switching between `make run` (desktop) and `make mobile-run` (mobile) without cleaning them leaves stale platform-specific objects, so the link fails (`ld: building for 'iOS', but linking in object file … built for 'macOS'`) or the app crashes on mixed artifacts.
 
 Issue [#18377](https://github.com/status-im/status-desktop/issues/18377) moved the status-go/nim-sds mobile build into the **status-go repo** (`.PHONY` targets `statusgo-{ios,android}-library`, which own `NIM_SDS_VERSION` and the incremental-rebuild decision). status-desktop must therefore not re-introduce knowledge of status-go/nim-sds sources (e.g. `find`-based prerequisites), or it reverts #18377. But `$(STATUS_GO_LIB)` was a file target with **no prerequisites**: once it existed Make never re-ran the delegated sub-make, so stale copies linked against a fresh `libnim_status_client` and crashed.
 
@@ -43,8 +43,10 @@ Currently cleaned on platform switch:
 | Path | Action |
 |------|--------|
 | `vendor/QR-Code-generator/c/` | `make clean` (artifacts in the source tree, not `build/`) |
-| `vendor/nim-sds/build/` | `rm -rf` |
-| `vendor/status-go/build/` | `rm -rf` (whole tree) |
+| `.statusgo-build/.sds-build/` | `rm -rf` (libsds artifacts, header copy, nimcache) |
+| `.statusgo-build/build/` | `rm -rf` (whole tree) |
+
+status-go and nim-sds are read-only copies in nimble's store, built in place with every output under `.statusgo-build/` (the desktop Makefile's status-go section); the sentinel only ever touches that directory, never a source tree.
 
 When adding a new shared-artifact vendor dependency: add `| platform-cleanup` on its build target, add a cleanup step to the script (prefer wiping a whole `build/` dir), and update the table above. Vendors with separate desktop/mobile output dirs (DOtherSide, status-keycard-qt) do not belong here.
 

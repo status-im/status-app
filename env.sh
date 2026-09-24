@@ -1,8 +1,14 @@
-#!/bin/bash
-
-# We use ${BASH_SOURCE[0]} instead of $0 to allow sourcing this file
-# and we fall back to a Zsh-specific special var to also support Zsh.
-REL_PATH="$(dirname ${BASH_SOURCE[0]:-${(%):-%x}})"
-ABS_PATH="$(cd ${REL_PATH}; pwd)"
-source ${ABS_PATH}/vendor/nimbus-build-system/scripts/env.sh
-
+#!/usr/bin/env bash
+# The pinned Nim on PATH for editor tools (nimsuggest, nimlangserver); no build needs it.
+# Usage: `./env.sh code .`, `./env.sh bash`, `source ./env.sh` (bash or zsh).
+nim=$("$(dirname "${BASH_SOURCE[0]:-${(%):-%x}}")/scripts/resolve-nim.sh") || { return 1 2>/dev/null || exit 1; }
+nim_bin=$(dirname "$nim")
+case ":$PATH:" in
+	*":$nim_bin:"*) ;;
+	*) export PATH="$nim_bin:$PATH" ;;
+esac
+unset nim nim_bin
+# exec only when executed, never when sourced.
+if [ "${BASH_SOURCE[0]:-}" = "$0" ] && [ "$#" -gt 0 ]; then
+	exec "$@"
+fi
