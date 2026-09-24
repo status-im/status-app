@@ -1,5 +1,7 @@
 import app/modules/shared_models/model_utils
 import nimqml, tables
+when defined(QT_MODEL_SPY):
+  import app/modules/shared/qt_model_spy
 import chat_search_item
 import ../io_interface
 
@@ -39,8 +41,20 @@ QtObject:
     return -1
 
   proc setItems*(self: Model, items: seq[ChatSearchItem]) =
-    # No reset since the model build is called from the first time `rowCount` is called
-    self.items = items
+    # Chats hydrate asynchronously, so a view may have pulled `rowCount` before
+    # they existed: a later bulk build must reset the attached views. The first
+    # build (from `rowCount` itself) needs no reset.
+    if self.built:
+      when defined(QT_MODEL_SPY):
+        recordBeginResetModel()
+      self.beginResetModel()
+      self.items = items
+      self.endResetModel()
+      when defined(QT_MODEL_SPY):
+        recordEndResetModel()
+    else:
+      self.items = items
+      self.built = true
 
   proc addItem*(self: Model, item: ChatSearchItem) =
     if self.getItemIndexById(item.chatId) != -1:
