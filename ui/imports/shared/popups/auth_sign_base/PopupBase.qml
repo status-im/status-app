@@ -227,8 +227,10 @@ StatusDialog {
         property bool constructionDone: false
         property bool autoBiometricsAttempted: false
 
+        // Waits for the popup to be opened: the credential handler drops results that
+        // arrive before that, and the Face ID sheet stalls the enter transition on iOS.
         function tryAutoStartBiometrics() {
-            if (!d.constructionDone || !d.usingBiometrics || d.autoBiometricsAttempted)
+            if (!d.constructionDone || !root.opened || !d.usingBiometrics || d.autoBiometricsAttempted)
                 return
             d.autoBiometricsAttempted = true
             if (d.biometricsInProgress || d.verifying || d.success)
@@ -419,6 +421,8 @@ StatusDialog {
         d.constructionDone = true
         d.tryAutoStartBiometrics()
     }
+
+    onOpened: d.tryAutoStartBiometrics()
 
     onClosed: {
         // Cancel the keychain request started from this popup, because the keychain is shared, and on success another flow
