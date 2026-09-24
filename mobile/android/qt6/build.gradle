@@ -81,6 +81,7 @@ android {
         main {
             manifest.srcFile 'AndroidManifest.xml'
             java.srcDirs = [qtDir + '/src', 'src', 'java']
+            java.exclude 'androidTest/**'
             aidl.srcDirs = [qtDir + '/src', 'src', 'aidl']
             res.srcDirs = [qtDir + '/res', 'res']
             resources.srcDirs = ['resources']

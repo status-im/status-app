@@ -3,11 +3,13 @@ package app.status.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,38 +18,33 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * RED test — pins the share-intake stream-validation gap (PR #21769).
+ * Share-intake stream vetting: StatusQtActivity.handleShareIntake opens every
+ * EXTRA_STREAM as Status itself, so a zero-permission app could otherwise hand
+ * us a file:// path or a content:// URI on our own FileProvider and have
+ * private storage staged as a sendable image. Only foreign content:// streams
+ * may pass.
  *
- * StatusQtActivity.handleShareIntake copies every EXTRA_STREAM into the
- * app-private share-intake cache with the app's own UID, without validating
- * the URI scheme or authority. Any installed app with zero permissions can
- * send an ACTION_SEND with type "image/png" and a `file://` URI (or a
- * `content://` URI pointing at Status's own FileProvider authority); the file
- * is read as Status and staged as a sendable "image", so private
- * keystore/DB/log content can be exfiltrated into a chat.
- *
- * The intake must accept only foreign `content://` streams: reject the
- * `file://` scheme and reject our own `${applicationId}.qtprovider` authority.
- * There is no such vetting today, so the assertions below FAIL (RED). They go
- * GREEN once handleShareIntake vets every extracted stream before copying it.
- *
- * Note: this exercises the pure static extraction seam via reflection, so it
- * does not boot Qt/status-go. It still runs as an instrumentation test because
- * android.net.Uri scheme/authority parsing needs the real framework.
+ * Exercises the static extraction seam by reflection; no Qt/status-go boot.
+ * Runs under instrumentation because android.net.Uri parsing and the
+ * PackageManager provider lookup need the real framework.
  */
 @RunWith(AndroidJUnit4.class)
 @SmallTest
 public class ShareIntakeSecurityTest {
 
+    private static final Context CTX =
+            InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+    // Carries applicationIdSuffix (".debug"), same as the manifest authority.
     private static final String OWN_FILEPROVIDER_AUTHORITY =
-            "app.status.mobile.qtprovider";
+            CTX.getPackageName() + ".qtprovider";
 
     @SuppressWarnings("unchecked")
     private static List<Uri> extractStreams(Intent intent, boolean multiple) throws Exception {
         Method m = StatusQtActivity.class.getDeclaredMethod(
-                "extractStreamUris", Intent.class, boolean.class);
+                "extractStreamUris", Context.class, Intent.class, boolean.class);
         m.setAccessible(true);
-        return (List<Uri>) m.invoke(null, intent, multiple);
+        return (List<Uri>) m.invoke(null, CTX, intent, multiple);
     }
 
     /** A share stream is safe only if it is a foreign content:// URI. */
@@ -91,8 +88,8 @@ public class ShareIntakeSecurityTest {
 
     @Test
     public void foreignContentStreamIsAccepted() throws Exception {
-        // The legitimate case (e.g. Google Photos) must still pass — this
-        // assertion is already GREEN and guards against an over-broad fix.
+        // The legitimate case (e.g. Google Photos) must still pass — guards
+        // against an over-broad fix.
         Uri legit = Uri.parse("content://com.google.android.apps.photos.contentprovider/1/2/img");
         Intent intent = new Intent(Intent.ACTION_SEND)
                 .setType("image/png")
