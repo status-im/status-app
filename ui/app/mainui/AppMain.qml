@@ -2980,6 +2980,7 @@ Item {
 
         readonly property bool needed: shareFlowLoader.active
                                        || shortcutsPublisherLoader.active
+                                       || intentDonorLoader.active
 
         sourceModel: {
             if (!needed || !appMain.rootStore.sectionsLoaded)
@@ -3015,7 +3016,7 @@ Item {
     Loader {
         id: intentDonorLoader
 
-        active: SQUtils.Utils.isIOS
+        active: SQUtils.Utils.isIOS && appMain.rootStore.sectionsLoaded
 
         sourceComponent: SendMessageIntentDonor {
             model: shareDestinationsAdaptor.model
