@@ -1,38 +1,29 @@
 # Share-intake instrumentation tests
 
-## `ShareIntakeSecurityTest` — RED (expected to fail)
+## `ShareIntakeSecurityTest`
 
-Pins the critical finding on PR #21769: `StatusQtActivity.handleShareIntake`
-copies every `EXTRA_STREAM` into the app-private `share-intake` cache with the
-app's own UID, **without validating the URI scheme or authority**.
-
-A zero-permission app can send `ACTION_SEND` with type `image/png` and a
+Regression guard for the share-intake stream vetting in
+`StatusQtActivity.handleShareIntake`: every `EXTRA_STREAM` is opened as Status
+itself, so without vetting a zero-permission app could send `ACTION_SEND` with a
 `file:///data/user/0/app.status.mobile/...` URI (or a `content://` URI on
-Status's own `${applicationId}.qtprovider` authority). The stream is read as
-Status and staged as a sendable image, exfiltrating private keystore/DB/log
-content into a chat.
+Status's own `${applicationId}.qtprovider` authority) and have private
+keystore/DB/log content staged as a sendable image.
 
-The test asserts the intended contract: **only foreign `content://` streams are
-accepted**. `fileSchemeStreamIsRejected` and `ownFileProviderAuthorityIsRejected`
-fail today; `foreignContentStreamIsAccepted` already passes and guards against an
+Contract under test: **only foreign `content://` streams are accepted**.
+`fileSchemeStreamIsRejected` and `ownFileProviderAuthorityIsRejected` pin the
+two rejection paths; `foreignContentStreamIsAccepted` guards against an
 over-broad fix.
-
-### Fix that turns it GREEN
-
-Vet each extracted stream in `handleShareIntake` before `copySharedImagesToCache`:
-reject any URI whose scheme is not `content`, and reject `content://` URIs whose
-authority equals `${applicationId}.qtprovider`.
 
 ### Running
 
 Needs a booted emulator/device and the app built with the Qt Android toolchain
-(`QT_ANDROID_DIR`, status-go libs, NDK):
+(`QT_ANDROID_DIR`, status-go libs, NDK). Gradle runs from the androiddeployqt
+output dir, so go through the mobile build:
 
 ```bash
-cd mobile/android/qt6
-./gradlew connectedAndroidTest
+GRADLE_TARGETS="assembleDebug connectedDebugAndroidTest" make mobile-build
 ```
 
-The test itself does not boot Qt — it invokes the pure static `extractStreamUris`
+The test itself does not boot Qt — it invokes the static `extractStreamUris`
 seam by reflection — but it runs under instrumentation because `android.net.Uri`
-scheme/authority parsing needs the real framework.
+parsing and the `PackageManager` provider lookup need the real framework.
