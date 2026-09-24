@@ -140,6 +140,7 @@ proc convertTransactionPathDtoToSuggestedRouteItem(self: Module, pathOld: Transa
     approvalAmountRequired = $pathOld.approvalAmountRequired,
     approvalContractAddress = pathOld.approvalContractAddress,
     slippagePercentage = pathOld.slippagePercentage,
+    estimatedTimeSeconds = pathOld.estimatedTimeSeconds,
     txFeeInWei = pathNew.txFee.toString(),
     txL1FeeInWei = pathNew.txL1Fee.toString(),
     approvalFeeInWei = pathNew.approvalFee.toString(),
