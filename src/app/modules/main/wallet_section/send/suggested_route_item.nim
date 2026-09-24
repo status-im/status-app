@@ -25,6 +25,7 @@ QtObject:
     approvalContractAddress: string
     slippagePercentage: float
 
+    estimatedTimeSeconds: int
     txFeeInWei: string
     txL1FeeInWei: string
     approvalFeeInWei: string
@@ -50,6 +51,7 @@ QtObject:
     approvalAmountRequired: string,
     approvalContractAddress: string,
     slippagePercentage: float,
+    estimatedTimeSeconds: int,
     txFeeInWei: string,
     txL1FeeInWei: string,
     approvalFeeInWei: string,
@@ -77,6 +79,7 @@ QtObject:
     approvalAmountRequired: string = "",
     approvalContractAddress: string = "",
     slippagePercentage: float = 0.0,
+    estimatedTimeSeconds: int = 0,
     txFeeInWei: string = "",
     txL1FeeInWei: string = "",
     approvalFeeInWei: string = "",
@@ -86,7 +89,7 @@ QtObject:
       new(result, delete)
       result.setup(bridgeName, fromNetwork, toNetwork, maxAmountIn, amountIn, amountOut, gasAmount, gasFees, tokenFees,
         cost, estimatedTime, amountInLocked, isFirstSimpleTx, isFirstBridgeTx, approvalRequired, approvalGasFees,
-        approvalAmountRequired, approvalContractAddress, slippagePercentage, txFeeInWei, txL1FeeInWei, approvalFeeInWei,
+        approvalAmountRequired, approvalContractAddress, slippagePercentage, estimatedTimeSeconds, txFeeInWei, txL1FeeInWei, approvalFeeInWei,
         approvalL1FeeInWei, tool)
 
   proc `$`*(self: SuggestedRouteItem): string =
@@ -111,6 +114,7 @@ QtObject:
     result = result & "\napprovalAmountRequired: " & $self.approvalAmountRequired
     result = result & "\napprovalContractAddress: " & $self.approvalContractAddress
     result = result & "\nslippagePercentage: " & $self.slippagePercentage
+    result = result & "\nestimatedTimeSeconds: " & $self.estimatedTimeSeconds
     result = result & "\ntxFeeInWei: " & $self.txFeeInWei
     result = result & "\ntxL1FeeInWei: " & $self.txL1FeeInWei
     result = result & "\napprovalFeeInWei: " & $self.approvalFeeInWei
@@ -257,6 +261,13 @@ QtObject:
     read = getSlippagePercentage
     notify = slippagePercentageChanged
 
+  proc estimatedTimeSecondsChanged*(self: SuggestedRouteItem) {.signal.}
+  proc getEstimatedTimeSeconds*(self: SuggestedRouteItem): int {.slot.} =
+    return self.estimatedTimeSeconds
+  QtProperty[int] estimatedTimeSeconds:
+    read = getEstimatedTimeSeconds
+    notify = estimatedTimeSecondsChanged
+
   proc txFeeInWeiChanged*(self: SuggestedRouteItem) {.signal.}
   proc getTxFeeInWei*(self: SuggestedRouteItem): string {.slot.} =
     return self.txFeeInWei
@@ -308,6 +319,7 @@ QtObject:
     approvalAmountRequired: string,
     approvalContractAddress: string,
     slippagePercentage: float,
+    estimatedTimeSeconds: int,
     txFeeInWei: string,
     txL1FeeInWei: string,
     approvalFeeInWei: string,
@@ -335,6 +347,7 @@ QtObject:
     self.approvalAmountRequired = approvalAmountRequired
     self.approvalContractAddress = approvalContractAddress
     self.slippagePercentage = slippagePercentage
+    self.estimatedTimeSeconds = estimatedTimeSeconds
     self.txFeeInWei = txFeeInWei
     self.txL1FeeInWei = txL1FeeInWei
     self.approvalFeeInWei = approvalFeeInWei

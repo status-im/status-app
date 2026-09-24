@@ -85,7 +85,8 @@ proc convertToOldRoute*(route: seq[TransactionPathDtoV2]): seq[TransactionPathDt
       # sequentially, so sum their (seconds) estimates before bucketing.
       # approvalEstimatedTime is 0 when no approval is needed and
       # routeExecutionDuration is 0 when the provider reports none.
-      trPath.estimatedTime = estimatedTimeFlagFromSeconds(p.txEstimatedTime + p.approvalEstimatedTime + p.routeExecutionDuration).int
+      trPath.estimatedTimeSeconds = p.txEstimatedTime + p.approvalEstimatedTime + p.routeExecutionDuration
+      trPath.estimatedTime = estimatedTimeFlagFromSeconds(trPath.estimatedTimeSeconds).int
 
       value = conversion.wei2Eth(p.suggestedLevelsForMaxFeesPerGas.medium,  decimals = ethDecimals)
       trPath.approvalGasFees = parseFloat(value) * float64(p.approvalGasAmount)
