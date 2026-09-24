@@ -770,6 +770,34 @@ Item {
             compare(controlUnderTest.amountEnteredGreaterThanBalance, false)
         }
 
+        // a token outside the wallet's own list has no cached currency format, and the
+        // backend then echoes the key as the symbol; the line must still show the symbol
+        function test_cryptoAmountLineShowsTheHoldingSymbolNotItsKey() {
+            const tokenKey = "11155420-0x6b175474e89094c44da98b954eedeac495271e0f" // ZRX, chain-scoped key
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: tokenKey})
+            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            verify(!!controlUnderTest)
+            tryCompare(controlUnderTest, "selectedHoldingId", tokenKey)
+
+            const holdingSelector = findChild(controlUnderTest, "holdingSelector")
+            verify(!!holdingSelector)
+            const symbol = ModelUtils.getByKey(holdingSelector.model, "key", tokenKey).symbol
+            compare(symbol, "ZRX")
+
+            const amountToSendInput = findChild(controlUnderTest, "amountToSendInput")
+            verify(!!amountToSendInput)
+            const mouseArea = findChild(amountToSendInput, "amountToSend_mouseArea")
+            verify(!!mouseArea)
+            waitForRendering(controlUnderTest)
+            mouseClick(mouseArea)
+            compare(amountToSendInput.fiatMode, true) // the bottom line now shows the crypto amount
+
+            const bottomItemText = findChild(amountToSendInput, "bottomItemText")
+            verify(!!bottomItemText)
+            tryVerify(() => bottomItemText.text.endsWith(symbol), 1000, bottomItemText.text)
+            verify(!bottomItemText.text.includes(tokenKey))
+        }
+
         function test_if_values_not_reset_on_modelReset() {
             const tokenKeyToTest = ethGroupKey
             let numberTestedString = "1.0001"

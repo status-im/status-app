@@ -16927,12 +16927,16 @@ to load</source>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>Обмін + бридж</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Обмін</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>Обмін + бридж</translation>
+        <source>Bridge</source>
+        <translation>Бридж</translation>
     </message>
     <message>
         <source>Fastest</source>
@@ -16943,6 +16947,18 @@ to load</source>
         <translation>Мін. комісія</translation>
     </message>
     <message>
+        <source>Best return</source>
+        <translation>Макс. сума</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>Інформація</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>Обмін у %1 незабаром стане доступним.</translation>
+    </message>
+    <message>
         <source>Add assets</source>
         <translation>Додати активи</translation>
     </message>
@@ -16951,21 +16967,25 @@ to load</source>
         <translation>Додати %1</translation>
     </message>
     <message>
-        <source>Best return</source>
-        <translation>Макс. сума</translation>
-    </message>
-    <message>
-        <source>Bridge</source>
-        <translation>Бридж</translation>
-    </message>
-    <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
         <translation>%1 с</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Курс недоступний</translation>
+    </message>
+    <message>
         <source>Choose route</source>
         <translation>Вибрати маршрут</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
     </message>
     <message>
         <source>By %1 via %2</source>
@@ -17015,14 +17035,6 @@ to load</source>
         <source>Sign</source>
         <translation>Підписати</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>Інформація</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>Обмін у %1 незабаром стане доступним.</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
@@ -17055,6 +17067,10 @@ to load</source>
         <translation>Великий вплив на ціну. Зменште суму або спробуйте пізніше</translation>
     </message>
     <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>Виникла проблема. Змініть суму, токен або повторіть спробу ↺</translation>
+    </message>
+    <message>
         <source>No route. Try other tokens or networks</source>
         <translation>Маршруту немає. Спробуйте інші токени або мережі</translation>
     </message>
@@ -17065,10 +17081,6 @@ to load</source>
     <message>
         <source>Amount too high. Lower amount</source>
         <translation>Сума занадто велика. Зменште суму</translation>
-    </message>
-    <message>
-        <source>Couldn’t get a quote. Retry ↺</source>
-        <translation>Не вдалося отримати котирування. Повторити ↺</translation>
     </message>
 </context>
 <context>

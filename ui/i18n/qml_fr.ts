@@ -16843,12 +16843,16 @@ avec un retour à la ligne</translation>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>Échange + Bridge</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Échange</translation>
     </message>
     <message>
-        <source>Add assets</source>
-        <translation>Ajouter des actifs</translation>
+        <source>Bridge</source>
+        <translation>Bridge</translation>
     </message>
     <message>
         <source>Fastest</source>
@@ -16859,20 +16863,24 @@ avec un retour à la ligne</translation>
         <translation>Frais les plus bas</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>Échange + Bridge</translation>
-    </message>
-    <message>
-        <source>Add %1</source>
-        <translation>Ajouter %1</translation>
-    </message>
-    <message>
         <source>Best return</source>
         <translation>Meilleur rendement</translation>
     </message>
     <message>
-        <source>Bridge</source>
-        <translation>Bridge</translation>
+        <source>Info</source>
+        <translation>Infos</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>Les échanges sur %1 seront bientôt disponibles.</translation>
+    </message>
+    <message>
+        <source>Add assets</source>
+        <translation>Ajouter des actifs</translation>
+    </message>
+    <message>
+        <source>Add %1</source>
+        <translation>Ajouter %1</translation>
     </message>
     <message>
         <source>%1s</source>
@@ -16880,8 +16888,20 @@ avec un retour à la ligne</translation>
         <translation>%1&#xa0;s</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Taux indisponible</translation>
+    </message>
+    <message>
         <source>Choose route</source>
         <translation>Choisir une route</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
     </message>
     <message>
         <source>By %1 via %2</source>
@@ -16931,14 +16951,6 @@ avec un retour à la ligne</translation>
         <source>Sign</source>
         <translation>Signer</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>Infos</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>Les échanges sur %1 seront bientôt disponibles.</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
@@ -16971,6 +16983,10 @@ avec un retour à la ligne</translation>
         <translation>Impact sur le prix élevé. Diminuez le montant ou réessayez plus tard</translation>
     </message>
     <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>Un problème est survenu. Modifiez le montant, le jeton ou réessayez ↺</translation>
+    </message>
+    <message>
         <source>No route. Try other tokens or networks</source>
         <translation>Aucune route. Essayez d’autres tokens ou réseaux</translation>
     </message>
@@ -16981,10 +16997,6 @@ avec un retour à la ligne</translation>
     <message>
         <source>Amount too high. Lower amount</source>
         <translation>Montant trop élevé. Diminuez le montant</translation>
-    </message>
-    <message>
-        <source>Couldn’t get a quote. Retry ↺</source>
-        <translation>Impossible d’obtenir une cotation. Réessayer ↺</translation>
     </message>
 </context>
 <context>

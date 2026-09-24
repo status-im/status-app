@@ -33,8 +33,10 @@ QObject {
     property bool amountEnteredGreaterThanBalance: false
 
     // To expose the selected from and to Token from the SwapModal
-    readonly property var fromToken: fromTokenEntry.item
-    readonly property var toToken: toTokenEntry.item
+    readonly property var fromToken: fromTokenEntry.available ? fromTokenEntry.item
+                                                              : (fromTokenCatalogEntry.available ? fromTokenCatalogEntry.item : null)
+    readonly property var toToken: toTokenEntry.available ? toTokenEntry.item
+                                                          : (toTokenCatalogEntry.available ? toTokenCatalogEntry.item : null)
 
     /** the user's own wallet accounts, usable as sender or recipient **/
     readonly property var accountsModel: root.swapStore.accounts
@@ -123,7 +125,7 @@ QObject {
                             return qsTr("Low liquidity. Lower amount or try later")
                         }
                 }
-                return qsTr("Couldn’t get a quote. Retry ↺")
+                return qsTr("Hit an issue. Change amount, token, or retry ↺")
             }
             return ""
         }
@@ -139,6 +141,20 @@ QObject {
     ModelEntry {
         id: toTokenEntry
         sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsModel
+        key: "key"
+        value: root.swapFormData.toGroupKey
+    }
+
+    ModelEntry {
+        id: fromTokenCatalogEntry
+        sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
+        key: "key"
+        value: root.swapFormData.fromGroupKey
+    }
+
+    ModelEntry {
+        id: toTokenCatalogEntry
+        sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsForChainToModel
         key: "key"
         value: root.swapFormData.toGroupKey
     }

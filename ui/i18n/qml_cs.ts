@@ -16926,12 +16926,36 @@ selhalo</translation>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>Směna + Most</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Směnit</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>Směna + Most</translation>
+        <source>Bridge</source>
+        <translation>Most</translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation>Nejrychlejší</translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation>Nejnižší poplatek</translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation>Nejlepší výnos</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>Info</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>Směny na %1 budou brzy dostupné.</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16947,12 +16971,20 @@ selhalo</translation>
         <translation>%1 s</translation>
     </message>
     <message>
-        <source>Best return</source>
-        <translation>Nejlepší výnos</translation>
+        <source>Rate unavailable</source>
+        <translation>Kurz není k dispozici</translation>
     </message>
     <message>
-        <source>Bridge</source>
-        <translation>Most</translation>
+        <source>Choose route</source>
+        <translation>Vyberte trasu</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
     </message>
     <message>
         <source>By %1 via %2</source>
@@ -17002,26 +17034,6 @@ selhalo</translation>
         <source>Sign</source>
         <translation>Podepsat</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>Info</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>Směny na %1 budou brzy dostupné.</translation>
-    </message>
-    <message>
-        <source>Fastest</source>
-        <translation>Nejrychlejší</translation>
-    </message>
-    <message>
-        <source>Lowest fee</source>
-        <translation>Nejnižší poplatek</translation>
-    </message>
-    <message>
-        <source>Choose route</source>
-        <translation>Vyberte trasu</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
@@ -17054,6 +17066,10 @@ selhalo</translation>
         <translation>Vysoký dopad na cenu. Snižte částku nebo to zkuste později</translation>
     </message>
     <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>Nastal problém. Změňte částku, token nebo to zkuste znovu ↺</translation>
+    </message>
+    <message>
         <source>No route. Try other tokens or networks</source>
         <translation>Žádná trasa. Zkuste jiné tokeny nebo sítě</translation>
     </message>
@@ -17064,10 +17080,6 @@ selhalo</translation>
     <message>
         <source>Amount too high. Lower amount</source>
         <translation>Částka je příliš vysoká. Snižte částku</translation>
-    </message>
-    <message>
-        <source>Couldn’t get a quote. Retry ↺</source>
-        <translation>Nabídku se nepodařilo získat. Zkusit znovu ↺</translation>
     </message>
 </context>
 <context>

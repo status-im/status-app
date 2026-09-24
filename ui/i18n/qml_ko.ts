@@ -16768,12 +16768,36 @@ to load</source>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>스왑 + 브리지</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>스왑</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>스왑 + 브리지</translation>
+        <source>Bridge</source>
+        <translation>브리지</translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation>가장 빠름</translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation>최저 수수료</translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation>최고 수익률</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>정보</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>%1에서의 스왑은 곧 제공될 예정입니다.</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16789,12 +16813,20 @@ to load</source>
         <translation>%1초</translation>
     </message>
     <message>
-        <source>Best return</source>
-        <translation>최고 수익률</translation>
+        <source>Rate unavailable</source>
+        <translation>환율을 알 수 없어요</translation>
     </message>
     <message>
-        <source>Bridge</source>
-        <translation>브리지</translation>
+        <source>Choose route</source>
+        <translation>경로 선택</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
     </message>
     <message>
         <source>By %1 via %2</source>
@@ -16844,26 +16876,6 @@ to load</source>
         <source>Sign</source>
         <translation>서명</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>정보</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>%1에서의 스왑은 곧 제공될 예정입니다.</translation>
-    </message>
-    <message>
-        <source>Fastest</source>
-        <translation>가장 빠름</translation>
-    </message>
-    <message>
-        <source>Lowest fee</source>
-        <translation>최저 수수료</translation>
-    </message>
-    <message>
-        <source>Choose route</source>
-        <translation>경로 선택</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
@@ -16896,6 +16908,10 @@ to load</source>
         <translation>가격 영향이 커요. 수량을 줄이거나 나중에 다시 시도하세요</translation>
     </message>
     <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>문제가 발생했어요. 수량이나 토큰을 변경하거나 다시 시도하세요 ↺</translation>
+    </message>
+    <message>
         <source>No route. Try other tokens or networks</source>
         <translation>경로가 없어요. 다른 토큰이나 네트워크를 시도해 보세요</translation>
     </message>
@@ -16906,10 +16922,6 @@ to load</source>
     <message>
         <source>Amount too high. Lower amount</source>
         <translation>금액이 너무 많아요. 금액을 줄여 주세요</translation>
-    </message>
-    <message>
-        <source>Couldn’t get a quote. Retry ↺</source>
-        <translation>견적을 가져올 수 없어요. 다시 시도 ↺</translation>
     </message>
 </context>
 <context>
