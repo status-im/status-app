@@ -295,6 +295,17 @@ proc mainProc() =
   let app = newQGuiApplication()
   singletonInstance.setApplication(app)
 
+  # The only hook every exit path reaches
+  QCoreApplication.instance().onAboutToQuit(proc() =
+    markShuttingDown()
+
+    when defined(ios):
+      # iOS answers UIApplicationWillTerminateNotification with qApp->exit(),
+      # unwinding main() into the ORC teardown that mobile otherwise refuses.
+      info "iOS termination requested, leaving without teardown"
+      terminateWithoutCascade()
+  )
+
   when defined(qmldebug):
     const qmlDebugPort {.intdefine: "qmlDebugPort".} = 49152
     discard QQmlDebuggingEnabler.startTcpDebugServer(qmlDebugPort.cint,
@@ -379,6 +390,10 @@ proc mainProc() =
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
     signalsManagerQVariant.delete()
+
+    # Drain before the services are destroyed
+    statusFoundation.threadpool.teardown()
+
     appController.delete()
     statusFoundation.delete()
     when defined(ios):
