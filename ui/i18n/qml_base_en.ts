@@ -17000,11 +17000,35 @@ to load</source>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
+        <source>Bridge</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17021,11 +17045,19 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Best return</source>
+        <source>Rate unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Bridge</source>
+        <source>Choose route</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17076,26 +17108,6 @@ to load</source>
         <source>Sign</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Fastest</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Choose route</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
@@ -17128,6 +17140,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>No route. Try other tokens or networks</source>
         <translation type="unfinished"></translation>
     </message>
@@ -17137,10 +17153,6 @@ to load</source>
     </message>
     <message>
         <source>Amount too high. Lower amount</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Couldn’t get a quote. Retry ↺</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

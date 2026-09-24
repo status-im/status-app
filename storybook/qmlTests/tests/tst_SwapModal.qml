@@ -94,6 +94,28 @@ Item {
         }
     }
 
+    // an adaptor whose wallet token list lacks a token that the destination-chain catalog has
+    Component {
+        id: catalogAdaptorComponent
+        SwapModalAdaptor {
+            currencyStore: CurrenciesStore {}
+            walletAssetsStore: WalletAssetsStoreMock {
+                walletTokensStore: TokensStoreMock {
+                    tokenGroupsModel: TokenGroupsModel {}
+                    tokenGroupsForChainModel: TokenGroupsModel { skipInitialLoad: true }
+                    tokenGroupsForChainToModel: TokenGroupsModel {} // the full list stands in for the catalog
+                    searchResultModel: TokenGroupsModel { skipInitialLoad: true }
+                    _displayAssetsBelowBalanceThresholdDisplayAmountFunc: () => 0
+                }
+                readonly property var baseGroupedAccountAssetModel: GroupedAccountsAssetsModel {}
+            }
+            swapStore: root.swapStore
+            swapFormData: SwapInputParamsForm {}
+            swapOutputData: SwapOutputData {}
+            networksStore: NetworksStore { areTestNetworksEnabled: true }
+        }
+    }
+
     Component {
         id: componentUnderTest
         SwapModal {
@@ -173,6 +195,36 @@ Item {
             formValuesChanged.clear()
             root.swapAdaptor.reset()
             root.swapFormData.resetFormData()
+        }
+
+        // Opens the modal, fills the form the way a user would (so a route fetch is really
+        // triggered) and answers it with the Relay route; returns the modal.
+        function openWithRelayRoute(props, errCode) {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     Object.assign({ swapInputParamsForm: root.swapFormData }, props ?? {}))
+            launchAndVerfyModal()
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            verify(!!receivePanel)
+
+            root.swapFormData.fromGroupKey = sttGroupKey
+            formValuesChanged.wait()
+            root.swapFormData.toGroupKey = root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel.get(1).key
+            root.swapFormData.fromTokenAmount = "0.001"
+            waitForRendering(receivePanel)
+            formValuesChanged.wait()
+            root.swapFormData.selectedNetworkChainId = 11155420
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            formValuesChanged.wait()
+            root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
+            formValuesChanged.wait()
+            fetchSuggestedRoutesCalled.wait()
+
+            let txRoutes = root.dummySwapTransactionRoutes.txHasRoutesApprovalNeededViaRelay
+            txRoutes.uuid = root.swapAdaptor.uuid
+            root.swapStore.suggestedRoutesReady(txRoutes, errCode ?? "", errCode ?? "")
+            verify(root.swapAdaptor.validSwapProposalReceived)
+            waitForRendering(controlUnderTest.contentItem)
+            return controlUnderTest
         }
 
         function getProcessedAccountsModel() {
@@ -769,6 +821,15 @@ Item {
             compare(root.swapAdaptor.swapOutputData.totalFees, 0)
             compare(root.swapAdaptor.swapOutputData.approvalNeeded, false)
             compare(root.swapAdaptor.swapOutputData.hasError, true)
+            // a failed route leaves nothing to price: that row goes, the rest stays
+            const metricsRow = findChild(controlUnderTest, "routeMetricsRow")
+            verify(!!metricsRow)
+            verify(!metricsRow.visible, "routeMetricsRow must be hidden on a route error")
+            for (const name of ["quoteRow", "slippageButton", "amountSliderRow"]) {
+                const shownItem = findChild(controlUnderTest, name)
+                verify(!!shownItem, name)
+                verify(shownItem.visible, name + " must stay on a route error")
+            }
             verify(errorTag.visible)
             verify(errorTag.text, qsTr("Not enough liquidity. Lower token amount or try again later."))
             verify(!signButton.interactive)
@@ -1915,15 +1976,38 @@ Item {
             const invertQuoteButton = findChild(controlUnderTest, "invertQuoteButton")
             verify(!!invertQuoteButton)
 
-            compare(quoteText.text, "")
+            // no rate before a receive token is chosen (the element may show its loading
+            // placeholder if the panel briefly remapped a token and a fetch started)
+            const footer = findChild(controlUnderTest, "swapFooter")
+            verify(!!footer)
+            compare(footer.quoteText, "")
             verify(!invertQuoteButton.visible)
+
+            // the rate row and the slippage input are there from the start, before any route request:
+            // the rate is a market one and the slippage is an input for the request itself
+            const quoteRow = findChild(controlUnderTest, "quoteRow")
+            verify(!!quoteRow)
+            verify(quoteRow.visible)
+            verify(quoteText.visible)
+            const slippageButton = findChild(controlUnderTest, "slippageButton")
+            verify(!!slippageButton)
+            verify(slippageButton.visible)
+            const countdown = findChild(controlUnderTest, "quoteCountdown")
+            verify(!!countdown)
+            verify(!countdown.visible) // nothing to count down without a proposal
 
             fetchSuggestedRoutesCalled.clear()
             root.swapFormData.toGroupKey = sttGroupKey
 
             tryCompare(fetchSuggestedRoutesCalled, "count", 1)
-            tryVerify(() => quoteText.loading)
-            verify(!invertQuoteButton.visible)
+            // both tokens have a market price, so an indicative rate is shown while the
+            // route is being fetched instead of a loading placeholder
+            const ethPrice = root.swapAdaptor.fromToken.marketDetails.currencyPrice.amount
+            const sttPrice = root.swapAdaptor.toToken.marketDetails.currencyPrice.amount
+            verify(ethPrice > 0 && sttPrice > 0)
+            tryVerify(() => !quoteText.loading)
+            compare(quoteText.text, "1 ETH ≈ %1".arg(cs.formatCurrencyAmount(ethPrice / sttPrice, "STT")))
+            verify(invertQuoteButton.visible)
 
             // emit routes ready
             let txHasRouteNoApproval = root.dummySwapTransactionRoutes.txHasRouteNoApproval
@@ -1934,13 +2018,16 @@ Item {
             tryVerify(() => !quoteText.loading)
             tryCompare(quoteText, "text", "1 ETH ≈ %1".arg(cs.formatCurrencyAmount(1, "STT")))
             verify(invertQuoteButton.visible)
+            verify(countdown.visible)
 
             fetchSuggestedRoutesCalled.clear()
             root.swapFormData.fromTokenAmount = "2"
 
             tryCompare(fetchSuggestedRoutesCalled, "count", 1)
-            tryVerify(() => quoteText.loading)
-            verify(!invertQuoteButton.visible)
+            // a refresh falls back to the market rate, not the stale route rate
+            tryCompare(quoteText, "text", "1 ETH ≈ %1".arg(cs.formatCurrencyAmount(ethPrice / sttPrice, "STT")))
+            verify(!quoteText.loading)
+            verify(invertQuoteButton.visible)
 
             // emit routes ready
             txHasRouteNoApproval = root.dummySwapTransactionRoutes.txHasRouteNoApproval
@@ -1953,6 +2040,207 @@ Item {
 
             mouseClick(invertQuoteButton)
             tryCompare(quoteText, "text", "1 STT ≈ %1".arg(cs.formatCurrencyAmount(0.5, "ETH")))
+        }
+
+        function test_exchange_rate_loading_without_prices() {
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(11155420)
+
+            const zrxKey = "11155420-0x6b175474e89094c44da98b954eedeac495271e0f"
+            const omgKey = "11155420-0x6b175474e89094c44da98b954eedeac495271p0f" // no market price
+
+            root.swapFormData.fromTokenAmount = "1"
+            root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
+            root.swapFormData.selectedNetworkChainId = 11155420
+            root.swapFormData.fromGroupKey = zrxKey
+            root.swapFormData.toGroupKey = ""
+
+            launchAndVerfyModal()
+
+            const quoteText = findChild(controlUnderTest, "swapQuoteText")
+            verify(!!quoteText)
+            const invertQuoteButton = findChild(controlUnderTest, "invertQuoteButton")
+            verify(!!invertQuoteButton)
+
+            fetchSuggestedRoutesCalled.clear()
+            root.swapFormData.toGroupKey = omgKey
+            tryCompare(fetchSuggestedRoutesCalled, "count", 1)
+
+            // no rate can be shown yet, so the very first request must still show a
+            // loading placeholder, and a wide one
+            tryVerify(() => quoteText.loading)
+            verify(quoteText.visible)
+            // the placeholder only renders over a non-empty text, and takes its height from the
+            // text's tight bounding rect, so blank text (spaces) gives a zero-height skeleton
+            verify(quoteText.text.trim().length > 0, "placeholder text must have glyphs: '%1'".arg(quoteText.text))
+            // the placeholder takes all the room the row leaves between the countdown and the slippage button
+            const quoteRow = findChild(controlUnderTest, "quoteRow")
+            const slippageButton = findChild(controlUnderTest, "slippageButton")
+            tryVerify(() => quoteText.width >= quoteRow.width - slippageButton.width - 3 * 28 - 4 * quoteRow.spacing, 1000,
+                      "placeholder width %1 of row %2".arg(quoteText.width).arg(quoteRow.width))
+            compare(quoteText.maximumLoadingStateWidth, Math.round(quoteText.width))
+            verify(!invertQuoteButton.visible)
+
+            // the request fails and there is no market price either: say so instead of leaving a gap
+            const failedRoutes = root.dummySwapTransactionRoutes.txNoRoutes
+            failedRoutes.uuid = root.swapAdaptor.uuid
+            root.swapStore.suggestedRoutesReady(failedRoutes, Constants.routerErrorCodes.processor.errNotEnoughLiquidity, "")
+            tryVerify(() => !quoteText.loading)
+            compare(quoteText.text, qsTr("Rate unavailable"))
+            verify(!invertQuoteButton.visible)
+        }
+
+        // Without an amount no route is requested, so a token without a market price has no
+        // rate on its way: say so instead of loading forever.
+        function test_exchange_rate_unavailable_without_amount() {
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(11155420)
+
+            const zrxKey = "11155420-0x6b175474e89094c44da98b954eedeac495271e0f"
+            const omgKey = "11155420-0x6b175474e89094c44da98b954eedeac495271p0f" // no market price
+
+            root.swapFormData.fromTokenAmount = ""
+            root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
+            root.swapFormData.selectedNetworkChainId = 11155420
+            root.swapFormData.fromGroupKey = zrxKey
+            launchAndVerfyModal()
+
+            fetchSuggestedRoutesCalled.clear()
+            root.swapFormData.toGroupKey = omgKey
+            wait(1500) // longer than the route request debounce: nothing may be requested
+            compare(fetchSuggestedRoutesCalled.count, 0)
+
+            const quoteText = findChild(controlUnderTest, "swapQuoteText")
+            verify(!!quoteText)
+            tryVerify(() => !quoteText.loading)
+            compare(quoteText.text, qsTr("Rate unavailable"))
+            const slippageButton = findChild(controlUnderTest, "slippageButton")
+            verify(!!slippageButton)
+            verify(slippageButton.visible)
+        }
+
+        // On narrow (mobile) widths every footer row must fit; nothing may be clipped
+        function test_footerFitsNarrowWidth() {
+            // a Relay route with a tool gives the longest provider text
+            openWithRelayRoute({ width: 360 })
+
+            const footer = findChild(controlUnderTest, "swapFooter")
+            verify(!!footer)
+            tryVerify(() => footer.width > 0 && footer.width < 360)
+            tryVerify(() => footer.contentItem.width <= footer.availableWidth)
+
+            for (const name of ["slippageButton", "strategyTime", "amountPercent", "refreshQuoteButton"]) {
+                const item = findChild(controlUnderTest, name)
+                verify(!!item, name)
+                verify(item.visible, name + " visible")
+                const rightEdge = item.mapToItem(footer, item.width, 0).x
+                verify(rightEdge <= footer.width + 0.5, "%1 right edge %2 exceeds footer width %3".arg(name).arg(rightEdge).arg(footer.width))
+            }
+
+            closeAndVerfyModal()
+        }
+
+        // The footer texts elide only when the row is really out of space. A text capped at
+        // its own implicit width must not lose its tail while the row still has room.
+        function test_footerTextsAreNotElidedWithFreeSpace() {
+            openWithRelayRoute({ width: 520, routeOrderEnabled: false }) // as with Relay: no route order in the row
+
+            const quoteText = findChild(controlUnderTest, "swapQuoteText")
+            const providerText = findChild(controlUnderTest, "routeProviderText")
+            const quoteArea = findChild(controlUnderTest, "quoteArea")
+            const metricsSpacer = findChild(controlUnderTest, "routeMetricsSpacer")
+            verify(!!quoteText && !!providerText && !!quoteArea && !!metricsSpacer)
+            // the room the quote area leaves unused
+            const quoteFree = () => quoteArea.width - quoteArea.implicitWidth
+            verify(!!quoteText.text)
+            compare(providerText.text, qsTr("%1 → %2").arg("Relay").arg("kyberswap"))
+
+            // wide enough for everything: nothing may be elided
+            tryVerify(() => quoteFree() > 20 && metricsSpacer.width > 20)
+            verify(!quoteText.truncated, "quote text elided at width 520: " + quoteText.text)
+            verify(!providerText.truncated, "provider text elided at width 520")
+            // and the texts keep just their content, so what follows them sits one row spacing away
+            const quoteRow = findChild(controlUnderTest, "quoteRow")
+            const invertQuoteButton = findChild(controlUnderTest, "invertQuoteButton")
+            verify(!!quoteRow && !!invertQuoteButton && invertQuoteButton.visible)
+            tryVerify(() => quoteText.width <= Math.ceil(quoteText.implicitWidth), 5000,
+                      "quote text width %1 for implicit %2".arg(quoteText.width).arg(quoteText.implicitWidth))
+            fuzzyCompare(invertQuoteButton.x - (quoteText.x + quoteText.width), quoteRow.spacing, 1)
+
+            // shrinking: a text may only elide once its row has no free space left
+            for (let width = 520; width >= 340; width -= 3) {
+                controlUnderTest.width = width
+                waitForRendering(controlUnderTest.contentItem)
+                if (quoteText.truncated)
+                    verify(quoteFree() < 1, "quote text elided with %1px free at width %2".arg(quoteFree()).arg(width))
+                if (providerText.truncated)
+                    verify(metricsSpacer.width < 1, "provider text elided with %1px free at width %2".arg(metricsSpacer.width).arg(width))
+            }
+
+            closeAndVerfyModal()
+        }
+
+        // Insufficient funds comes with a valid proposal (the router still found a route), but
+        // the route's fees and time are meaningless next to an error; the rest stays.
+        function test_routeMetricsHiddenOnErrorWithProposal() {
+            // paying with an ERC20, so a token balance error reads "Insufficient funds"
+            openWithRelayRoute({}, Constants.routerErrorCodes.router.errNotEnoughTokenBalance)
+            verify(root.swapAdaptor.swapOutputData.hasError)
+
+            const errorTag = findChild(controlUnderTest, "errorTag")
+            verify(!!errorTag)
+            tryVerify(() => errorTag.visible)
+            compare(errorTag.text, qsTr("Insufficient funds"))
+            const metricsRow = findChild(controlUnderTest, "routeMetricsRow")
+            verify(!!metricsRow)
+            verify(!metricsRow.visible, "routeMetricsRow must be hidden on an error")
+            for (const name of ["quoteRow", "slippageButton", "amountSliderRow"]) {
+                const shownItem = findChild(controlUnderTest, name)
+                verify(!!shownItem, name)
+                verify(shownItem.visible, name + " must stay on an error")
+            }
+
+            closeAndVerfyModal()
+        }
+
+        // A receive token picked from the cross-chain catalog is not in the wallet's own token
+        // list; the adaptor must still resolve it (symbol, decimals, price) or the received
+        // amount is never scaled by the decimals and no rate can be shown.
+        function test_receiveTokenResolvedFromTheDestinationCatalog() {
+            const adaptor = createTemporaryObject(catalogAdaptorComponent, root)
+            verify(!!adaptor)
+            const tokensStore = adaptor.walletAssetsStore.walletTokensStore
+            const idx = SQUtils.ModelUtils.indexOf(tokensStore.tokenGroupsModel, "key", sttGroupKey)
+            verify(idx >= 0)
+            tokensStore.tokenGroupsModel.remove(idx) // now catalog-only
+            compare(SQUtils.ModelUtils.indexOf(tokensStore.tokenGroupsModel, "key", sttGroupKey), -1)
+            verify(SQUtils.ModelUtils.indexOf(tokensStore.tokenGroupsForChainToModel, "key", sttGroupKey) >= 0)
+
+            adaptor.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
+            adaptor.swapFormData.selectedNetworkChainId = 11155111
+            adaptor.swapFormData.toNetworkChainId = 11155111
+            adaptor.swapFormData.fromGroupKey = ethGroupKey
+            adaptor.swapFormData.toGroupKey = sttGroupKey
+            adaptor.swapFormData.fromTokenAmount = "1"
+
+            verify(!!adaptor.toToken)
+            compare(adaptor.toToken.symbol, "STT")
+            verify(adaptor.toToken.decimals > 0)
+
+            // an unknown receive token must resolve to null, not to an empty entry
+            adaptor.swapFormData.toGroupKey = "no-such-token"
+            compare(adaptor.toToken, null)
+            adaptor.swapFormData.toGroupKey = sttGroupKey
+
+            fetchSuggestedRoutesCalled.clear()
+            adaptor.fetchSuggestedRoutes("1000000000000000000")
+            tryCompare(fetchSuggestedRoutesCalled, "count", 1)
+
+            const txRoutes = root.dummySwapTransactionRoutes.txHasRouteNoApproval
+            txRoutes.uuid = adaptor.uuid
+            txRoutes.amountToReceive = "2500000000000000000" // 2.5 STT in wei
+            root.swapStore.suggestedRoutesReady(txRoutes, "", "")
+
+            verify(adaptor.validSwapProposalReceived)
+            compare(adaptor.swapOutputData.toTokenAmount, "2.5")
         }
 
         // The handler destroys the modal and then resets the form, and the reset
@@ -2040,7 +2328,7 @@ Item {
             const providerText = findChild(controlUnderTest, "routeProviderText")
             verify(!!providerText)
             verify(providerText.visible)
-            compare(providerText.text, qsTr("By %1 via %2").arg(Constants.swap.relayName).arg("kyberswap"))
+            compare(providerText.text, qsTr("%1 → %2").arg(Constants.swap.relayName).arg("kyberswap"))
             const providerInfo = findChild(controlUnderTest, "routeProviderInfoIcon")
             verify(!!providerInfo)
             verify(!providerInfo.visible)
@@ -2054,11 +2342,11 @@ Item {
                 { tag: "no route", code: Constants.routerErrorCodes.processor.errNoRoutesFound,
                   message: qsTr("No route. Try other tokens or networks") },
                 { tag: "no quotes", code: Constants.routerErrorCodes.processor.errNoQuotesAvailable,
-                  message: qsTr("No quotes available right now. Try again later.") },
+                  message: qsTr("No quotes right now. Try later") },
                 { tag: "not enough liquidity", code: Constants.routerErrorCodes.processor.errNotEnoughLiquidity,
-                  message: qsTr("Low liquidity. Lower amount or retry later") },
+                  message: qsTr("Low liquidity. Lower amount or try later") },
                 { tag: "slippage exceeded", code: Constants.routerErrorCodes.processor.errSlippageExceeded,
-                  message: qsTr("Slippage exceeded. Increase slippage or retry later") },
+                  message: qsTr("Slippage exceeded. Increase or try later") },
                 { tag: "amount too low", code: Constants.routerErrorCodes.processor.errAmountTooLow,
                   message: qsTr("Amount too low. Increase amount") },
                 { tag: "amount too high", code: Constants.routerErrorCodes.processor.errAmountTooHigh,
