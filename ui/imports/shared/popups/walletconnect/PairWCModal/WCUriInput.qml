@@ -17,7 +17,7 @@ ColumnLayout {
 
     readonly property bool valid: input.valid && input.text.length > 0
     readonly property alias text: input.text
-    property alias pending: input.pending
+    property bool pending: false
     property int errorState: Pairing.errors.notChecked
 
     // Computed error message - separate from valid to avoid binding loop
@@ -34,7 +34,7 @@ ColumnLayout {
         }
     }
 
-    StatusBaseInput {
+    StatusTextArea {
         id: input
 
         Component.onCompleted: {
@@ -45,11 +45,17 @@ ColumnLayout {
         Layout.preferredHeight: 132
 
         placeholderText: qsTr("Paste URI")
-        verticalAlignment: TextInput.AlignTop
+        wrapMode: TextEdit.WrapAnywhere
+        rightPadding: Theme.padding + statusArea.width + Theme.halfPadding
 
         valid: root.computedErrorText.length === 0
 
-        rightComponent: Item {
+        Item {
+            id: statusArea
+
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.halfPadding
+            anchors.verticalCenter: parent.verticalCenter
             width: pasteButton.implicitWidth
             height: pasteButton.implicitHeight
 
@@ -58,7 +64,7 @@ ColumnLayout {
             StatusLoadingIndicator {
                 anchors.centerIn: parent
                 color: StatusColors.getColor("blue")
-                visible: showIcon && input.pending
+                visible: statusArea.showIcon && root.pending
             }
 
             StatusIcon {
@@ -66,26 +72,23 @@ ColumnLayout {
 
                 icon: "tiny/tiny-checkmark"
                 color: Theme.palette.green
-                visible: showIcon && !input.pending
+                visible: statusArea.showIcon && !root.pending
             }
 
             StatusPasteButton {
                 id: pasteButton
 
-                visible: !showIcon
+                visible: !statusArea.showIcon
                 size: StatusBaseButton.Size.Small
                 borderWidth: pasteButton.canPaste ? 1 : 0
                 borderColor: Theme.palette.primaryColor1
 
                 onPasted: (text) => {
-                    // insert at the caret, as edit.paste() did
-                    input.edit.insert(input.edit.cursorPosition, text)
-                    input.edit.focus = !SQUtils.Utils.isMobile
+                    input.insert(input.cursorPosition, text)
+                    input.focus = !SQUtils.Utils.isMobile
                 }
             }
         }
-
-        multiline: true
     }
 
     StatusBaseText {
