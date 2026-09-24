@@ -2972,19 +2972,32 @@ Item {
     // Recent postable destinations (recency-sorted, postable-only), shared by
     // the share flow's destination picker and the direct-share shortcut
     // publisher — single recency source, no duplicated logic.
+    // Connected only while a consumer exists and the sections are loaded: the
+    // chat search model builds itself on the first rowCount, so wiring it
+    // before the bulk chat load would pull an empty build.
     RecentPostableDestinationsAdaptor {
         id: shareDestinationsAdaptor
-        sourceModel: rootStore.chatSearchModel
+
+        readonly property bool needed: shareFlowLoader.active
+                                       || shortcutsPublisherLoader.active
+
+        sourceModel: {
+            if (!needed || !appMain.rootStore.sectionsLoaded)
+                return null
+            return rootStore.chatSearchModel
+        }
     }
 
     // Android direct-share shortcuts: the top recent postable destinations
     // are published as one-tap targets in the OS share sheet. Event-driven:
     // successful sends reorder the recency model, which republishes. Living
-    // inside AppMain, the publisher only exists while a profile is logged in;
-    // logout clears the published set unconditionally on the Nim side
-    // (main module signOutAndQuit).
+    // inside AppMain, the publisher only exists while a profile is logged in
+    // and the sections are loaded; logout clears the published set
+    // unconditionally on the Nim side (main module signOutAndQuit).
     Loader {
-        active: SQUtils.Utils.isAndroid
+        id: shortcutsPublisherLoader
+
+        active: SQUtils.Utils.isAndroid && appMain.rootStore.sectionsLoaded
 
         sourceComponent: ShareShortcutsPublisher {
             model: shareDestinationsAdaptor.model
