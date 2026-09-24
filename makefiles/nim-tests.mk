@@ -25,7 +25,8 @@ NIM_TESTS_LINK_STATUSQ := \
 	swap_key_harvest_bench \
 	swap_modal_instantiation_bench \
 	typed_completion_test \
-	url_scheme_event_test
+	url_scheme_event_test \
+	wallet_connect_controller_test
 
 NIM_STATUSQ_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_LINK_STATUSQ))
 $(NIM_STATUSQ_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
