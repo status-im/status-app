@@ -61,7 +61,6 @@ class TestEmojiAndMedia:
         assert chat_page.wait_for_message_input(timeout=10), "Message input not ready"
         return chat_page
 
-    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     async def test_send_emoji_via_picker(self) -> None:
         chat_page = self._ensure_in_chat()
 
@@ -146,7 +145,6 @@ class TestEmojiAndMedia:
             timeout=self.CROSS_DEVICE_TIMEOUT,
         ), "Secondary: Emoji message should be delivered (cross-device sync)"
 
-    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     async def test_reply_shows_corner_indicator(self) -> None:
         chat_page = self._ensure_in_chat()
         context_menu = MessageContextMenuPage(self.driver)
