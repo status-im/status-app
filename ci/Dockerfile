@@ -1,7 +1,5 @@
 ARG QT_VERSION="6.11.0"
 ARG QT_MODULES="qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtwebengine qtpositioning qtserialport qtshadertools qtimageformats qtscxml qthttpserver"
-ARG LINUXDEPLOYQT_VERSION="20250615-0393b84"
-ARG LINUXDEPLOYQT_AARCH64_SHA256="986d52d855a8c0ea8c51564807e8fb6af3466426d29224093c040b56ba244df3"
 ARG PCSCLITE_VERSION="2.2.3"
 ARG PCSCLITE_SHA256="6e0205a47ec0dd10c000965ee88e08e60c2f7f3ce7280ce0e624915821ea2402"
 ARG NIM_VERSION="2.2.10"
@@ -11,10 +9,9 @@ ARG CCID_SHA256="4abe76010a72944e02e8d5d4d60ba665f941891eee2a35f77fd35cebc095e14
 
 # Architecture specific values -------------------------------------------------
 # TARGETARCH is set by BuildKit, the matching stage is selected below.
-FROM ubuntu:22.04 AS arch-amd64
+FROM ubuntu:24.04 AS arch-amd64
 
 ENV ARCH_UNAME=x86_64 \
-    ARCH_PKGS="fuse" \
     ARCH_TRIPLET=x86_64-linux-gnu \
     QT_HOST=linux \
     QT_ARCH=linux_gcc_64 \
@@ -22,12 +19,12 @@ ENV ARCH_UNAME=x86_64 \
     GOLANG_ARCH=amd64 \
     GOLANG_SHA256=da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c43f \
     PROTOC_ARCH=x86_64 \
-    PROTOC_SHA256=bc8211ce760bd43ee21ddc145d6d9dbaeeabae205267a79d9054a240e367d4b4
+    PROTOC_SHA256=bc8211ce760bd43ee21ddc145d6d9dbaeeabae205267a79d9054a240e367d4b4 \
+    LINUXDEPLOYQT_SHA256=974a87457ed26241b793bed7841978fcdf84158d13220e53833a06515f173b0b
 
 FROM ubuntu:24.04 AS arch-arm64
 
 ENV ARCH_UNAME=aarch64 \
-    ARCH_PKGS="fuse3 libfuse2t64 libminizip1t64" \
     ARCH_TRIPLET=aarch64-linux-gnu \
     QT_HOST=linux_arm64 \
     QT_ARCH=linux_gcc_arm64 \
@@ -35,7 +32,8 @@ ENV ARCH_UNAME=aarch64 \
     GOLANG_ARCH=arm64 \
     GOLANG_SHA256=fd2bccce882e29369f56c86487663bb78ba7ea9e02188a5b0269303a0c3d33ab \
     PROTOC_ARCH=aarch_64 \
-    PROTOC_SHA256=4a00ec5e256d20a3deadd9e77d56da0ac04c72367c3c959f6d08e110a368400a
+    PROTOC_SHA256=4a00ec5e256d20a3deadd9e77d56da0ac04c72367c3c959f6d08e110a368400a \
+    LINUXDEPLOYQT_SHA256=986d52d855a8c0ea8c51564807e8fb6af3466426d29224093c040b56ba244df3
 
 FROM arch-${TARGETARCH} AS arch
 
@@ -95,7 +93,7 @@ RUN cd builddir && ninja && ninja install
 # Build Image ------------------------------------------------------------------
 FROM arch
 
-ARG QT_VERSION LINUXDEPLOYQT_VERSION LINUXDEPLOYQT_AARCH64_SHA256 PCSCLITE_VERSION NIM_VERSION NIM_SRC_SHA256
+ARG QT_VERSION PCSCLITE_VERSION NIM_VERSION NIM_SRC_SHA256
 
 # Adapted from a12e/docker-qt by Aurélien Brooke
 
@@ -115,7 +113,7 @@ RUN apt update -yq && apt install -yq software-properties-common \
  && add-apt-repository -y ppa:git-core/ppa \
  && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
  && apt update -yq && apt full-upgrade -yq && apt install -yq --no-install-recommends --fix-missing  \
-    gnupg2 openssh-client ca-certificates locales sudo jq curl wget ${ARCH_PKGS} s3cmd file unzip llvm tk-dev xz-utils netbase \
+    gnupg2 openssh-client ca-certificates locales sudo jq curl wget fuse3 libfuse2t64 libminizip1t64 s3cmd file unzip llvm tk-dev xz-utils netbase \
     git make build-essential pkg-config extra-cmake-modules \
     flatpak flatpak-builder elfutils appstream \
     libgl1-mesa-dev libsm6 libice6 libfontconfig1 libdbus-1-3 libssl-dev libz-dev \
@@ -148,16 +146,9 @@ COPY --from=pcsc-build /pcsc/builddir/libpcsclite_real.so.1 /pcsc/builddir/libpc
 COPY --from=pcsc-build /tmp/pcscd/drivers /usr/local/lib/pcsc/drivers
 
 # Install linuxdeployqt
-# built from https://github.com/probonopd/linuxdeployqt/commit/0393b84
-# FIXME: no aarch64 build is mirrored, the upstream continuous release is used
-# instead and pinned by checksum, which fails the build once upstream moves.
 RUN mkdir -p /usr/local/bin \
- && if [ "${ARCH_UNAME}" = "x86_64" ]; then \
-      curl -Lo/usr/local/bin/linuxdeployqt "https://status-misc.ams3.digitaloceanspaces.com/desktop/linuxdeployqt-${LINUXDEPLOYQT_VERSION}-x86_64.AppImage"; \
-    else \
-      curl -Lo/usr/local/bin/linuxdeployqt "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-aarch64.AppImage" \
-      && echo "${LINUXDEPLOYQT_AARCH64_SHA256} /usr/local/bin/linuxdeployqt" | sha256sum -c; \
-    fi \
+ && curl -Lo/usr/local/bin/linuxdeployqt "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-${ARCH_UNAME}.AppImage" \
+ && echo "${LINUXDEPLOYQT_SHA256} /usr/local/bin/linuxdeployqt" | sha256sum -c \
  && chmod a+x /usr/local/bin/linuxdeployqt
 
 # Reconfigure locale
