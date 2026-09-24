@@ -13,8 +13,10 @@ type
     lastMessageTimestamp: int
     lastOwnMessageTimestamp: int
     canPost: bool
+    membersCount: int
+    onlineStatus: int
 
-proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageText: string, lastMessageTimestamp: int, lastOwnMessageTimestamp: int, canPost: bool): ChatSearchItem =
+proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageText: string, lastMessageTimestamp: int, lastOwnMessageTimestamp: int, canPost: bool, membersCount: int, onlineStatus: int): ChatSearchItem =
   result = ChatSearchItem()
   result.chatId = chatId
   result.name = name
@@ -29,6 +31,8 @@ proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, secti
   result.lastMessageTimestamp = lastMessageTimestamp
   result.lastOwnMessageTimestamp = lastOwnMessageTimestamp
   result.canPost = canPost
+  result.membersCount = membersCount
+  result.onlineStatus = onlineStatus
 
 proc chatId*(self: ChatSearchItem): string =
   self.chatId
@@ -95,3 +99,15 @@ proc `canPost=`*(self: ChatSearchItem, value: bool) =
 
 proc chatType*(self: ChatSearchItem): int =
   self.chatType
+
+proc membersCount*(self: ChatSearchItem): int =
+  self.membersCount
+
+proc `membersCount=`*(self: ChatSearchItem, value: int) =
+  self.membersCount = value
+
+proc onlineStatus*(self: ChatSearchItem): int =
+  self.onlineStatus
+
+proc `onlineStatus=`*(self: ChatSearchItem, value: int) =
+  self.onlineStatus = value

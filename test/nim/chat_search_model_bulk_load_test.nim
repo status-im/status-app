@@ -33,6 +33,8 @@ proc createTestItem(chatId: string): ChatSearchItem =
     lastMessageTimestamp = 1,
     lastOwnMessageTimestamp = 1,
     canPost = true,
+    membersCount = 0,
+    onlineStatus = 0,
   )
 
 suite "chat search model - bulk chat load after an early first rowCount":

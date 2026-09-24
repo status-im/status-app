@@ -3,6 +3,7 @@ import nimqml
 import app_service/service/message/dto/message
 import app_service/service/chat/service
 import app_service/service/community/service
+import app_service/service/contacts/dto/status_update
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -53,6 +54,9 @@ method updateChatItems*(self: AccessInterface, updatedChats: seq[ChatDto]) {.bas
   raise newException(ValueError, "No implementation available")
 
 method contactUpdated*(self: AccessInterface, contactId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method contactsStatusUpdated*(self: AccessInterface, statusUpdates: seq[StatusUpdateDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method communityEdited*(self: AccessInterface, community: CommunityDto) {.base.} =
