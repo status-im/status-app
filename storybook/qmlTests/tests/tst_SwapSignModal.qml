@@ -237,7 +237,7 @@ Item {
 
             const link = findChild(controlUnderTest.contentItem, "serviceProviderLink")
             verify(!!link)
-            compare(link.text, "Relay.")
+            compare(link.text, "Relay")
         }
 
         function test_footerInfo() {

@@ -16880,6 +16880,10 @@ avec un retour à la ligne</translation>
         <translation>%1&#xa0;s</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Taux indisponible</translation>
+    </message>
+    <message>
         <source>Choose route</source>
         <translation>Choisir une route</translation>
     </message>

@@ -16964,6 +16964,10 @@ to load</source>
         <translation>%1 с</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Курс недоступний</translation>
+    </message>
+    <message>
         <source>Choose route</source>
         <translation>Вибрати маршрут</translation>
     </message>

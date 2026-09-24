@@ -16856,6 +16856,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>By %1 via %2</source>
         <translation type="unfinished"></translation>
     </message>

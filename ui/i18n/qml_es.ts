@@ -16884,6 +16884,10 @@ al cargar</translation>
         <translation>%1s</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Tasa no disponible</translation>
+    </message>
+    <message>
         <source>Choose route</source>
         <translation>Elegir ruta</translation>
     </message>

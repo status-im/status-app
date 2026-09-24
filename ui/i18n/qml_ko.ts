@@ -16797,6 +16797,10 @@ to load</source>
         <translation>브리지</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>환율을 알 수 없어요</translation>
+    </message>
+    <message>
         <source>By %1 via %2</source>
         <translation>%2 경유, %1 제공</translation>
     </message>

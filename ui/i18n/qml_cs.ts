@@ -16955,6 +16955,10 @@ selhalo</translation>
         <translation>Most</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Kurz není k dispozici</translation>
+    </message>
+    <message>
         <source>By %1 via %2</source>
         <translation>Od %1 přes %2</translation>
     </message>
