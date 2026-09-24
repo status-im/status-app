@@ -38,9 +38,5 @@ class SavedAddressesLocators(BaseLocators):
     )
     SAVE_BUTTON = BaseLocators.tid("addSavedAddress")
 
-    DELETE_SAVED_ADDRESS_ACTION = BaseLocators.xpath(
-        "//*[contains(@content-desc,'Remove saved address') or contains(@resource-id,'deleteSavedAddress')]"
-    )
-    CONFIRM_DELETE_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc,'Remove saved address') or contains(@resource-id,'RemoveSavedAddressPopup-ConfirmButton')]"
-    )
+    DELETE_SAVED_ADDRESS_ACTION = BaseLocators.tid("deleteSavedAddress")
+    CONFIRM_DELETE_BUTTON = BaseLocators.tid("RemoveSavedAddressPopup-ConfirmButton")
