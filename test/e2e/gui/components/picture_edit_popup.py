@@ -15,7 +15,7 @@ shift_image = namedtuple('Shift', ['left', 'right', 'top', 'bottom'])
 
 def open_picture_edit_without_file_dialog(crop_host: QObject, path) -> 'PictureEditPopup':
     fileuri = pathlib.Path(str(path)).as_uri()
-    crop_host.object.cropImageDeferred(fileuri)
+    crop_host.object.cropImage(fileuri)
     return PictureEditPopup()
 
 
