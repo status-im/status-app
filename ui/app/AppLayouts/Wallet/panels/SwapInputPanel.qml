@@ -320,6 +320,14 @@ Control {
         readonly property string inputSymbol: amountToSendInput.fiatMode ? root.currencyStore.currentCurrency
                                                                          : (!!isSelectedHoldingValidAsset ? selectedHolding.item.symbol : "")
         readonly property string balanceSymbol: isSelectedHoldingValidAsset ? selectedHolding.item.symbol : ""
+
+        function cryptoCurrencyAmount(amount) {
+            const currencyAmount = root.currencyStore.getCurrencyAmount(amount, isSelectedHoldingValidAsset ? selectedHolding.item.key : "")
+            if (isSelectedHoldingValidAsset)
+                currencyAmount.symbol = selectedHolding.item.symbol
+            return currencyAmount
+        }
+
         readonly property double maxSafeCryptoValue: WalletUtils.calculateMaxSafeSendAmount(maxCryptoBalance, balanceSymbol, root.selectedNetworkChainId, root.cryptoFeesToReserve)
 
 
@@ -528,7 +536,7 @@ Control {
             multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
             cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
             formatFiat: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency))
-            formatBalance: amount => qsTr("≈ %1").arg(LocaleUtils.currencyAmountToLocaleString(root.currencyStore.getCurrencyAmount(amount, d.selectedHolding.item.key)))
+            formatBalance: amount => qsTr("≈ %1").arg(LocaleUtils.currencyAmountToLocaleString(d.cryptoCurrencyAmount(amount)))
 
             mainInputLoading: root.mainInputLoading
             bottomTextLoading: root.bottomTextLoading
