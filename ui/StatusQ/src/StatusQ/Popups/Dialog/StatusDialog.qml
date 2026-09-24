@@ -42,14 +42,11 @@ Dialog {
     readonly property bool bottomSheet: d.windowHeight > d.windowWidth
                                         && d.windowWidth <= ThemeUtils.portraitBreakpoint.width // The max width of a phone in portrait mode
 
-    readonly property real desiredY: {
-        if (root.bottomSheet)
-            return d.windowHeight - root.height
-        const overlay = Overlay.overlay
-        if (!overlay)
-            return 0
-        return (overlay.height - root.height) / 2
-    }
+    readonly property real overlayHeight: Overlay.overlay ? Overlay.overlay.height
+                                                          : (contentItem && contentItem.Window ? contentItem.Window.height : Screen.height)
+
+    readonly property real desiredY: root.bottomSheet ? d.windowHeight - root.height
+                                                      : (overlayHeight - root.height) / 2
 
     /*!
        \qmlproperty bool fillHeightOnBottomSheet
