@@ -9,6 +9,7 @@ from ../../shared_models/section_item import SectionType
 
 import ../../../global/global_singleton
 import app/core/eventemitter
+import app_service/common/types
 import app_service/service/contacts/service as contact_service
 import app_service/service/chat/service as chat_service
 import app_service/service/community/service as community_service
@@ -360,6 +361,11 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
   elif chat.chatType == ChatType.CommunityChat:
     sectionId = chat.communityId
     sectionName = self.delegate.getSectionName(sectionId)
+
+  var onlineStatus = OnlineStatus.Inactive.int
+  if chat.chatType == ChatType.OneToOne:
+    onlineStatus = toOnlineStatus(self.controller.getStatusForContactWithId(chat.id).statusType).int
+
   return chat_search_item.initItem(
     chat.id,
     chatName,
@@ -386,6 +392,8 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
       else:
         0,
     canPost = chat.canPost,
+    membersCount = chat.members.len,
+    onlineStatus = onlineStatus,
   )
 
 method buildChatSearchModel*(self: Module) =
@@ -429,6 +437,11 @@ method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
       continue
     self.view.chatSearchModel().updateChatItem(chat.id, chat.name, chat.color, chat.icon, chat.emoji)
     self.view.chatSearchModel().updateCanPostOnChatItem(chat.id, chat.canPost)
+    self.view.chatSearchModel().updateMembersCountOnChatItem(chat.id, chat.members.len)
+
+method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto]) =
+  for s in statusUpdates:
+    self.view.chatSearchModel().updateOnlineStatusOnChatItem(s.publicKey, toOnlineStatus(s.statusType).int)
 
 method contactUpdated*(self: Module, contactId: string) =
   let contactDetails = self.controller.getContactDetails(contactId)

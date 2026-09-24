@@ -14,7 +14,8 @@ method buildChatSearchModel(self: StubDelegate) =
   discard
 
 proc createTestItem(chatId: string, lastMessageTimestamp: int,
-    lastOwnMessageTimestamp: int, canPost: bool = true): ChatSearchItem =
+    lastOwnMessageTimestamp: int, canPost: bool = true,
+    membersCount: int = 0, onlineStatus: int = 0): ChatSearchItem =
   return chat_search_item.initItem(
     chatId,
     name = "name-" & chatId,
@@ -29,6 +30,8 @@ proc createTestItem(chatId: string, lastMessageTimestamp: int,
     lastMessageTimestamp = lastMessageTimestamp,
     lastOwnMessageTimestamp = lastOwnMessageTimestamp,
     canPost = canPost,
+    membersCount = membersCount,
+    onlineStatus = onlineStatus,
   )
 
 proc roleForName(model: chat_search_model.Model, name: string): int =
@@ -72,3 +75,31 @@ suite "chat search model - own message recency role":
     check(intData(model, 0, "lastOwnMessageTimestamp") == 400)
     check(intData(model, 1, "lastOwnMessageTimestamp") == 100)
     check(intData(model, 2, "lastOwnMessageTimestamp") == 0)
+
+suite "chat search model - share picker roles":
+  setup:
+    let delegate = StubDelegate()
+    let model = chat_search_model.newModel(delegate)
+    model.setItems(@[
+      createTestItem("chat-a", lastMessageTimestamp = 400, lastOwnMessageTimestamp = 400,
+        membersCount = 0, onlineStatus = 1),
+      createTestItem("group-b", lastMessageTimestamp = 900, lastOwnMessageTimestamp = 100,
+        membersCount = 25, onlineStatus = 0),
+    ])
+
+  test "exposes membersCount and onlineStatus roles":
+    check(roleForName(model, "membersCount") != -1)
+    check(roleForName(model, "onlineStatus") != -1)
+
+  test "item data reports the members count and online status":
+    check(intData(model, 0, "onlineStatus") == 1)
+    check(intData(model, 1, "membersCount") == 25)
+
+  test "updateOnlineStatusOnChatItem changes the role for that chat only":
+    model.updateOnlineStatusOnChatItem("chat-a", 0)
+    check(intData(model, 0, "onlineStatus") == 0)
+    check(intData(model, 1, "onlineStatus") == 0)
+
+  test "updateMembersCountOnChatItem changes the role":
+    model.updateMembersCountOnChatItem("group-b", 26)
+    check(intData(model, 1, "membersCount") == 26)

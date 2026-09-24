@@ -20,6 +20,8 @@ type
     LastMessageTimestamp
     LastOwnMessageTimestamp
     CanPost
+    MembersCount
+    OnlineStatus
 
 QtObject:
   type Model* = ref object of QAbstractListModel
@@ -103,6 +105,8 @@ QtObject:
       ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
       ModelRole.LastOwnMessageTimestamp.int:"lastOwnMessageTimestamp",
       ModelRole.CanPost.int:"canPost",
+      ModelRole.MembersCount.int:"membersCount",
+      ModelRole.OnlineStatus.int:"onlineStatus",
     }.toTable
 
   method data*(self: Model, index: QModelIndex, role: int): QVariant =
@@ -139,6 +143,10 @@ QtObject:
         result = newQVariant(item.lastOwnMessageTimestamp)
       of ModelRole.CanPost:
         result = newQVariant(item.canPost)
+      of ModelRole.MembersCount:
+        result = newQVariant(item.membersCount)
+      of ModelRole.OnlineStatus:
+        result = newQVariant(item.onlineStatus)
 
   proc updateChatItem*(self:Model, chatId, name, color, icon, emoji: string) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
@@ -166,6 +174,14 @@ QtObject:
   proc updateCanPostOnChatItem*(self:Model, chatId: string, canPost: bool) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
       updateRole(canPost)
+
+  proc updateMembersCountOnChatItem*(self: Model, chatId: string, membersCount: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(membersCount)
+
+  proc updateOnlineStatusOnChatItem*(self: Model, chatId: string, onlineStatus: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(onlineStatus)
 
   proc updateSectionNameOnChats*(self:Model, sectionId, sectionName: string) =
     for item in self.items:

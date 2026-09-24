@@ -4,6 +4,7 @@ import io_interface
 import ../../../global/app_signals
 import ../../../global/global_singleton
 import ../../../../app_service/service/contacts/service as contact_service
+import ../../../../app_service/service/contacts/dto/status_update
 import ../../../../app_service/service/chat/service as chat_service
 import ../../../../app_service/service/community/service as community_service
 import ../../../../app_service/service/message/service as message_service
@@ -77,6 +78,10 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_CONTACT_UPDATED) do(e: Args):
     let args = ContactArgs(e)
     self.delegate.contactUpdated(args.contactId)
+
+  self.events.on(SIGNAL_CONTACTS_STATUS_UPDATED) do(e: Args):
+    let args = ContactsStatusUpdatedArgs(e)
+    self.delegate.contactsStatusUpdated(args.statusUpdates)
 
   self.events.on(SIGNAL_COMMUNITIES_UPDATE) do(e:Args):
     let args = CommunitiesArgs(e)
@@ -222,6 +227,9 @@ proc getAllChats*(self: Controller): seq[ChatDto] =
 
 proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactsService.getContactDetails(contactId)
+
+proc getStatusForContactWithId*(self: Controller, publicKey: string): StatusUpdateDto =
+  self.contactsService.getStatusForContactWithId(publicKey)
 
 proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
   return self.messageService.getMessagesParsedPlainText(message, communityChats)
