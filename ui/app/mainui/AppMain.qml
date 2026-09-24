@@ -2997,9 +2997,12 @@ Item {
                 sharePreviewPanel.text = shareFlowLoader.sharedText
             }
 
+            // Only once the sections are loaded: the chat search model builds
+            // itself on the first rowCount, so wiring it before the bulk chat
+            // load would pull an empty build.
             RecentPostableDestinationsAdaptor {
                 id: shareDestinationsAdaptor
-                sourceModel: rootStore.chatSearchModel
+                sourceModel: appMain.rootStore.sectionsLoaded ? rootStore.chatSearchModel : null
             }
 
             StackLayout {
