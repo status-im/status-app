@@ -38,6 +38,11 @@ class OnboardingWelcomeToStatusView(QObject):
         self.approval_links = QObject(onboarding_names.startupApprovalLinks)
         self.language_selector = TextLabel(onboarding_names.startupLanguageSelector)
 
+    @allure.step('Wait until Welcome to Status appears')
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        self.create_profile_button.wait_until_appears(timeout_msec)
+        return self
+
     @allure.step('Open language selector')
     def open_language_selector(self):
         self.language_selector.click()
@@ -733,6 +738,12 @@ class ReturningLoginView(QObject):
         popup = OnboardingLoginUsersPopup().wait_until_appears()
         popup.create_profile_button.wait_until_stable().click()
         return CreateYourProfileViewOnboarding().wait_until_appears()
+
+    @allure.step('Open Manage profiles')
+    def open_manage_profiles(self):
+        self.user_selector_button.click()
+        popup = OnboardingLoginUsersPopup().wait_until_appears()
+        return popup.open_manage_profiles()
 
     @allure.step('Select user by name')
     def select_user_by_name(self, user_name):
