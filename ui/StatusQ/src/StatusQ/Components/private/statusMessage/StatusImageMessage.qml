@@ -139,9 +139,9 @@ Item {
         id: stillComponent
 
         Image {
-            id: stillImage
+            id: imageMessage
             width: Math.min(implicitWidth, imageContainer.imageWidth)
-            height: _internal.boxHeight(stillImage)
+            height: _internal.boxHeight(imageMessage)
             fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
             sourceSize.width: Math.ceil(imageContainer.imageWidth * Screen.devicePixelRatio)
             asynchronous: true
@@ -154,9 +154,9 @@ Item {
         id: animatedComponent
 
         AnimatedImage {
-            id: animatedImage
+            id: imageMessage
             width: Math.min(implicitWidth, imageContainer.imageWidth)
-            height: _internal.boxHeight(animatedImage)
+            height: _internal.boxHeight(imageMessage)
             fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
             source: imageContainer.source
             playing: isAppWindowActive && !_internal.pausePlaying
