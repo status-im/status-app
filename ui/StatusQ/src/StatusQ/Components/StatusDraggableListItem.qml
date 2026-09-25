@@ -327,6 +327,10 @@ AbstractButton {
 
     TapHandler {
         acceptedDevices: PointerDevice.TouchScreen
+        onTapped: (eventPoint, button) => {
+                      const pos = eventPoint.position
+                      root.clicked({button: Qt.LeftButton, x: pos.x, y: pos.y, modifiers: point.modifiers})
+                  }
         onLongPressed: {
             const pos = point.position
             root.clicked({button: Qt.RightButton, x: pos.x, y: pos.y, modifiers: point.modifiers})

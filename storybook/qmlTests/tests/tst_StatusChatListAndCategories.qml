@@ -221,6 +221,16 @@ Item {
         signalName: "categoryAddButtonClicked"
     }
 
+    SignalSpy {
+        id: chatItemSelectedSpy
+        signalName: "chatItemSelected"
+    }
+
+    SignalSpy {
+        id: chatItemClickedSpy
+        signalName: "chatItemClicked"
+    }
+
     property StatusChatListAndCategories controlUnderTest: null
 
     TestCase {
@@ -233,6 +243,8 @@ Item {
             verify(!!controlUnderTest)
             toggleCollapsedSpy.target = controlUnderTest
             categoryAddButtonSpy.target = controlUnderTest
+            chatItemSelectedSpy.target = controlUnderTest
+            chatItemClickedSpy.target = controlUnderTest
             toggleCollapsedSpy.clear()
             categoryAddButtonSpy.clear()
             waitForRendering(controlUnderTest)
@@ -241,6 +253,8 @@ Item {
         function cleanup() {
             toggleCollapsedSpy.clear()
             categoryAddButtonSpy.clear()
+            chatItemSelectedSpy.clear()
+            chatItemClickedSpy.clear()
             resetModel()
         }
 
@@ -443,6 +457,42 @@ Item {
             compare(root.findCategoryModelIndex(root.testCategoryId), -1)
             verify(!findChild(controlUnderTest, root.testCategoryName))
             verifyChannelVisible(root.testChannelName, true)
+        }
+
+        function test_chatListItem_emitsClicked_data() {
+            return [
+                { tag: "mouse", withMouse: true },
+                { tag: "touch", withMouse: false },
+            ]
+        }
+
+        function test_chatListItem_emitsClicked(data) {
+            const withMouse = data.withMouse
+
+            const chatList = findChild(controlUnderTest, "chatListItems")
+            verify(!!chatList)
+
+            const firstChatItem = findChild(chatList, "general") // "General" channel list item
+            verify(!!firstChatItem)
+            tryCompare(firstChatItem, "visible", true)
+
+            if (withMouse) {
+                mouseClick(firstChatItem)
+            } else {
+                let touch = touchEvent(firstChatItem);
+                touch.press(0)
+                touch.commit()
+                wait(100)
+                touch.release(0)
+                touch.commit()
+            }
+
+            tryCompare(chatItemClickedSpy, "count", 1)
+            compare(chatItemClickedSpy.signalArguments[0][0], firstChatItem.chatId)
+
+            tryCompare(chatItemSelectedSpy, "count", 1)
+            compare(chatItemSelectedSpy.signalArguments[0][0], firstChatItem.categoryId)
+            compare(chatItemSelectedSpy.signalArguments[0][1], firstChatItem.chatId)
         }
 
         // A collapsed category must not cost delegates: its rows carry the
