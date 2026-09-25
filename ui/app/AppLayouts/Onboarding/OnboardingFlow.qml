@@ -620,6 +620,7 @@ OnboardingStackView {
                         required property var model
 
                         objectName: "manageProfilesDelegate-" + profileDelegate.model.keyUid
+                        keyUid: profileDelegate.model.keyUid
                         width: ListView.view.width
                         height: d.delegateHeight
                         label: profileDelegate.model.username

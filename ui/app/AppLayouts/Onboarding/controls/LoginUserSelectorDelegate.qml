@@ -25,6 +25,7 @@ ItemDelegate {
     property bool keycardEnabled
     property bool isAction
     property bool managementMode
+    property string keyUid: ""
 
     signal deleteProfileRequested()
 
@@ -98,7 +99,7 @@ ItemDelegate {
         Loader {
             active: root.managementMode
             sourceComponent: StatusFlatButton {
-                objectName: "deleteProfileButton"
+                objectName: root.keyUid.length ? ("deleteProfileButton-" + root.keyUid) : "deleteProfileButton"
                 size: StatusBaseButton.Size.Large
                 icon.name: "delete"
                 onClicked: root.deleteProfileRequested()
