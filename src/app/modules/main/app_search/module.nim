@@ -391,7 +391,12 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
         chat.timestamp.int
       else:
         0,
-    canPost = chat.canPost,
+    # Post rights for channels live on the community's own chat record
+    canPost =
+      if isCommunity:
+        self.controller.getCommunityById(chat.communityId).getCommunityChat(chat.id).canPost
+      else:
+        chat.canPost,
     membersCount = chat.members.len,
     onlineStatus = onlineStatus,
   )
@@ -402,12 +407,17 @@ method buildChatSearchModel*(self: Module) =
   let personalChatSectionId = self.delegate.getSectionId(SectionType.Chat)
   let personalChatSectionName = self.delegate.getSectionName(personalChatSectionId)
 
+  var skippedChannels = 0
   for chat in self.controller.getAllChats():
     let item = self.createChatSearchItem(chat, personalChatSectionId, personalChatSectionName)
     if item == nil:
+      if chat.chatType == ChatType.CommunityChat:
+        inc skippedChannels
       continue
     items.add(item)
 
+  debug "chat search model built", items = items.len, skippedChannels,
+    communities = self.controller.getCommunityIds().len
   self.view.chatSearchModel().setItems(items)
 
 method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
