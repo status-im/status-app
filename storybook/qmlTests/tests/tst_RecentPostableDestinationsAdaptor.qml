@@ -25,6 +25,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 400,
+                    lastOwnMessageTimestamp: 400,
                     canPost: true
                 },
                 {
@@ -33,6 +34,7 @@ Item {
                     sectionId: "personal-section",
                     sectionName: "Chat",
                     lastMessageTimestamp: 900,
+                    lastOwnMessageTimestamp: 100,
                     canPost: true
                 },
                 {
@@ -41,6 +43,7 @@ Item {
                     sectionId: "community-1",
                     sectionName: "CryptoKitties",
                     lastMessageTimestamp: 1000,
+                    lastOwnMessageTimestamp: 0,
                     canPost: false
                 },
                 {
@@ -49,6 +52,7 @@ Item {
                     sectionId: "community-1",
                     sectionName: "CryptoKitties",
                     lastMessageTimestamp: 700,
+                    lastOwnMessageTimestamp: 0,
                     canPost: true
                 }
             ]
@@ -70,15 +74,31 @@ Item {
             compare(ModelUtils.indexOf(model, "chatId", "channel-announcements"), -1)
         }
 
-        function test_sortsByRecencyMostRecentFirst() {
+        function test_ranksByOwnSendRecencyNotAnyMessageRecency() {
             const sourceModel = createTemporaryObject(destinationsModelComponent, root)
             const adaptor = createTemporaryObject(testComponent, root,
                                                   { sourceModel: sourceModel })
             const model = adaptor.model
 
-            compare(ModelUtils.get(model, 0).chatId, "chat-design-group")
-            compare(ModelUtils.get(model, 1).chatId, "channel-general")
-            compare(ModelUtils.get(model, 2).chatId, "chat-alice")
+            // the busy channel-general (lastMessageTimestamp 700, never sent
+            // to) must not outrank the chats the user actually sent to
+            compare(ModelUtils.get(model, 0).chatId, "chat-alice")
+            compare(ModelUtils.get(model, 1).chatId, "chat-design-group")
+            compare(ModelUtils.get(model, 2).chatId, "channel-general")
+        }
+
+        function test_neverSentToChatsFallBackToAnyMessageRecency() {
+            const sourceModel = createTemporaryObject(destinationsModelComponent, root)
+            const adaptor = createTemporaryObject(testComponent, root,
+                                                  { sourceModel: sourceModel })
+            const model = adaptor.model
+
+            // both community channels have no own sends; once postable they
+            // rank after all sent-to chats, ordered by any-message recency
+            sourceModel.setProperty(2, "canPost", true)
+            compare(model.rowCount(), 4)
+            compare(ModelUtils.get(model, 2).chatId, "channel-announcements")
+            compare(ModelUtils.get(model, 3).chatId, "channel-general")
         }
 
         function test_reactsToPostRightsChanges() {
@@ -90,7 +110,6 @@ Item {
             // gaining post rights adds the destination
             sourceModel.setProperty(2, "canPost", true)
             compare(model.rowCount(), 4)
-            compare(ModelUtils.get(model, 0).chatId, "channel-announcements")
 
             // losing post rights removes it
             sourceModel.setProperty(2, "canPost", false)
@@ -98,14 +117,30 @@ Item {
             compare(ModelUtils.indexOf(model, "chatId", "channel-announcements"), -1)
         }
 
-        function test_reactsToRecencyChanges() {
+        function test_ownSendBumpsChatToTop() {
             const sourceModel = createTemporaryObject(destinationsModelComponent, root)
             const adaptor = createTemporaryObject(testComponent, root,
                                                   { sourceModel: sourceModel })
             const model = adaptor.model
 
-            sourceModel.setProperty(0, "lastMessageTimestamp", 2000)
+            // a successful send updates both recency roles on the source model
+            sourceModel.setProperty(3, "lastMessageTimestamp", 2000)
+            sourceModel.setProperty(3, "lastOwnMessageTimestamp", 2000)
+            compare(ModelUtils.get(model, 0).chatId, "channel-general")
+            compare(ModelUtils.get(model, 1).chatId, "chat-alice")
+        }
+
+        function test_anyMessageRecencyChangeDoesNotOutrankSentToChats() {
+            const sourceModel = createTemporaryObject(destinationsModelComponent, root)
+            const adaptor = createTemporaryObject(testComponent, root,
+                                                  { sourceModel: sourceModel })
+            const model = adaptor.model
+
+            // someone else posting in the busy channel must not promote it
+            sourceModel.setProperty(3, "lastMessageTimestamp", 5000)
             compare(ModelUtils.get(model, 0).chatId, "chat-alice")
+            compare(ModelUtils.get(model, 1).chatId, "chat-design-group")
+            compare(ModelUtils.get(model, 2).chatId, "channel-general")
         }
     }
 }
