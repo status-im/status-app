@@ -1,5 +1,6 @@
 ChannelIdentifierView 1.0 ChannelIdentifierView.qml
 ChatContextMenuView 1.0 ChatContextMenuView.qml
+ChatMessagesFlickable 1.0 ChatMessagesFlickable.qml
 CompactMessageView 1.0 CompactMessageView.qml
 InvitationBubbleView 1.0 InvitationBubbleView.qml
 LinksMessageView 1.0 LinksMessageView.qml
