@@ -257,14 +257,17 @@ proc init*(self: Controller) =
       return
     self.delegate.onThreadCreationFailed()
 
-  self.events.on(SIGNAL_CHAT_THREADS_LOADED) do(e: Args):
-    let args = ChatThreadsLoadedArgs(e)
-    if self.chatId != args.chatId:
-      return
-    self.delegate.onChatThreadsLoaded(args.threads)
+  self.events.on(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
+    let args = ChatThreadsForChatsLoadedArgs(e)
+    var chatThreads: seq[ThreadDto] = @[]
+    for thread in args.threads:
+      if thread.chatId == self.chatId:
+        chatThreads.add(thread)
+    if chatThreads.len > 0:
+      self.delegate.onChatThreadsLoaded(chatThreads)
 
   self.events.on(SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
-    let args = ChatThreadsLoadedArgs(e)
+    let args = ChatThreadsLoadingFailedArgs(e)
     if self.chatId != args.chatId:
       return
     self.delegate.onChatThreadsLoadingFailed()
