@@ -1,5 +1,6 @@
 import tables, chronicles
 import io_interface
+import own_send_recency
 
 import ../../../global/app_signals
 import ../../../global/global_singleton
@@ -110,14 +111,16 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
     self.delegate.updateLastMessage(args.chat.id, args.chat.communityId, args.chat.chatType, args.chat.lastMessage,
-      args.chat.timestamp.int)
+      args.chat.timestamp.int,
+      latestOwnSendTimestamp([args.message], singletonInstance.userProfile.getPubKey()))
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
     let args = MessagesArgs(e)
     if args.messages.len == 0:
       return
-    self.delegate.updateLastMessage(args.chatId, args.sectionId, args.chatType, args.messages[0],
-      args.lastMessageTimestamp)
+    self.delegate.updateLastMessage(args.chatId, args.sectionId, args.chatType, newestMessage(args.messages),
+      args.lastMessageTimestamp,
+      latestOwnSendTimestamp(args.messages, singletonInstance.userProfile.getPubKey()))
 
 proc activeSectionId*(self: Controller): string =
   return self.activeSectionId

@@ -383,14 +383,11 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
       else:
         self.controller.getMessagesParsedPlainText(chat.lastMessage, []),
     lastMessageTimestamp = chat.timestamp.int,
-    # Own-send recency survives restarts by deriving from the persisted last
-    # message; when someone else posted last, the live bump on sending success
-    # (updateLastMessage) is the only source, so it starts unset.
-    lastOwnMessageTimestamp =
-      if chat.lastMessage.`from` == singletonInstance.userProfile.getPubKey():
-        chat.timestamp.int
-      else:
-        0,
+    # Own-send recency: the persisted last own send (kept up to date by
+    # updateLastMessage) or, if newer, the chat's last message when it is ours.
+    lastOwnMessageTimestamp = max(
+      if chat.lastMessage.`from` == singletonInstance.userProfile.getPubKey(): chat.timestamp.int else: 0,
+      singletonInstance.localAccountSensitiveSettings.getChatLastOwnSend(chat.id)),
     # Post rights for channels live on the community's own chat record
     canPost =
       if isCommunity:
@@ -473,7 +470,7 @@ method chatAdded*(self: Module, chat: ChatDto) =
 method chatRemoved*(self: Module, chatId: string) =
   self.view.chatSearchModel().removeItemById(chatId)
 
-method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto, lastMessageTimestamp: int) =
+method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto, lastMessageTimestamp: int, ownSendTimestamp: int) =
   self.view.chatSearchModel().updateLastMessageTextOnChatItem(
     chatId,
     if chatType == ChatType.CommunityChat and communityId != "":
@@ -484,5 +481,6 @@ method updateLastMessage*(self: Module, chatId, communityId: string, chatType: C
   )
   if lastMessageTimestamp > 0:
     self.view.chatSearchModel().updateLastMessageTimestampOnChatItem(chatId, lastMessageTimestamp)
-    if lastMessage.`from` == singletonInstance.userProfile.getPubKey():
-      self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chatId, lastMessageTimestamp)
+  if ownSendTimestamp > 0:
+    self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chatId, ownSendTimestamp)
+    singletonInstance.localAccountSensitiveSettings.setChatLastOwnSend(chatId, ownSendTimestamp)
