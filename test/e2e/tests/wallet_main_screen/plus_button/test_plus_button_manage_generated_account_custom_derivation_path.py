@@ -10,8 +10,6 @@ from constants.wallet import DerivationPathName
 from gui.main_window import MainWindow
 from helpers.wallet_helper import assert_authenticate_popup_not_appears
 
-
-@pytest.mark.case(703028)
 @pytest.mark.parametrize('path_name', [pytest.param(DerivationPathName.select_random_path_name().value)])
 def test_plus_button_manage_generated_account_custom_derivation_path(main_screen: MainWindow, user_account, path_name):
     with step('Create generated wallet account'):

@@ -16,8 +16,6 @@ from constants.community import MintOwnerTokensElements
 from constants.wallet import WalletHistoryTitles, WalletNetworkNaming
 from gui.screens.community_settings_tokens import MintedTokensView
 
-
-@pytest.mark.case(727245)
 @pytest.mark.transaction
 @pytest.mark.parametrize('network_name', [
     pytest.param(WalletNetworkNaming.LAYER1_ETHEREUM_HOODI.value, id='hoodi'),

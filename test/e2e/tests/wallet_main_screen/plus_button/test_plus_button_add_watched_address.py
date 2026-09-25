@@ -9,8 +9,6 @@ from gui.main_window import MainWindow
 
 pytestmark = marks
 
-
-@pytest.mark.case(703026, 738788, 738815)
 @pytest.mark.smoke
 # TODO: to add a step of account removal
 @pytest.mark.parametrize('address', [

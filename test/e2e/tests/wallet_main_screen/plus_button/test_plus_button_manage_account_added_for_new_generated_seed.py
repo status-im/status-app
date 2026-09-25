@@ -9,9 +9,6 @@ from scripts.utils.generators import random_wallet_acc_keypair_name
 
 from gui.main_window import MainWindow
 
-
-
-@pytest.mark.case(703036)
 def test_plus_button_manage_account_added_for_new_seed(main_screen: MainWindow, user_account):
     wallet_account = RandomWalletAccount()
     keypair_name = random_wallet_acc_keypair_name()

@@ -13,8 +13,6 @@ from gui.main_window import MainWindow
 from scripts.utils.generators import get_wallet_address_from_mnemonic
 from web3 import Web3
 
-
-@pytest.mark.case(703030)
 def test_plus_button_manage_account_from_seed_phrase(main_screen: MainWindow, user_account):
 
     wallet_account = RandomWalletAccount()

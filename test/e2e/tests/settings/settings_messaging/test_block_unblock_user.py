@@ -12,8 +12,6 @@ import configs
 from gui.screens.messages import ToolBar
 from helpers.multiple_instances_helper import authorize_user_in_aut, get_chat_key, switch_to_aut
 
-
-@pytest.mark.case(738772, 738772)
 @pytest.mark.smoke
 @pytest.mark.settings_messaging
 # TODO: add step when blocked user sends a message

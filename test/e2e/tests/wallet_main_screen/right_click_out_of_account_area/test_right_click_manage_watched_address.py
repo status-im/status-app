@@ -7,8 +7,6 @@ from constants import RandomWalletAccount
 from scripts.utils.generators import random_wallet_acc_keypair_name
 from gui.main_window import MainWindow
 
-
-@pytest.mark.case(703100)
 @pytest.mark.parametrize('address', [
     pytest.param('0xea123F7beFF45E3C9fdF54B324c29DBdA14a639A')
 ])

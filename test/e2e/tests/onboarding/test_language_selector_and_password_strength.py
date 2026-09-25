@@ -10,8 +10,6 @@ from constants.onboarding import LanguageCodes
 
 pytestmark = marks
 
-
-@pytest.mark.case(702989)
 def test_check_language_selector(main_window, user_account):
 
     with step('Verify user can change language on onboarding screen'):

@@ -11,8 +11,6 @@ from driver.aut import AUT
 from gui.components.changes_detected_popup import ChangesDetectedToastMessage
 from gui.main_window import MainWindow
 
-
-@pytest.mark.case(703006, 738755)
 @pytest.mark.parametrize('bio, links', [pytest.param('This is my bio', constants.social_links)])
 @pytest.mark.smoke
 # TODO: add clicking Preview button and check data there
