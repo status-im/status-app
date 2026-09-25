@@ -43,6 +43,11 @@ Item {
     }
 
     Component {
+        id: profilesListModelComponent
+        ListModel {}
+    }
+
+    Component {
         id: componentUnderTest
 
         OnboardingLayout {
@@ -97,6 +102,18 @@ Item {
                     return !Number.isNaN(parseInt(connectionString))
                 }
                 function inputConnectionStringForBootstrapping(connectionString: string) {}
+
+                function deleteMultiaccountRequested(keyUid: string) {
+                    const model = loginAccountsModel
+                    if (!model || typeof model.get !== "function" || typeof model.remove !== "function")
+                        return
+                    for (let i = 0; i < model.count; i++) {
+                        if (model.get(i).keyUid === keyUid) {
+                            model.remove(i)
+                            return
+                        }
+                    }
+                }
 
                 // password signals
                 signal accountLoginError(string error, bool wrongPassword)
@@ -190,6 +207,78 @@ Item {
 
             verify(stack.topLevelItem instanceof pageClass)
             return stack.topLevelItem
+        }
+
+        function createProfilesModel(entries) {
+            const model = createTemporaryObject(profilesListModelComponent, root)
+            verify(!!model)
+            for (let i = 0; i < entries.length; i++)
+                model.append(entries[i])
+            return model
+        }
+
+        function profileEntry(keyUid, username, order) {
+            return {
+                order: order,
+                keycardCreatedAccount: false,
+                colorId: 1,
+                username: username,
+                thumbnailImage: "",
+                keyUid: keyUid
+            }
+        }
+
+        function setupLoginWithProfiles(entries) {
+            const model = createProfilesModel(entries)
+            controlUnderTest.onboardingStore.loginAccountsModel = model
+            controlUnderTest.restartFlow()
+            return model
+        }
+
+        function openManageProfilesDialog() {
+            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+            verify(!!page)
+
+            const loginUserSelector = findChild(page, "loginUserSelector")
+            verify(!!loginUserSelector)
+            mouseClick(loginUserSelector)
+
+            const dropdown = findChild(loginUserSelector, "dropdown")
+            verify(!!dropdown)
+            tryCompare(dropdown, "opened", true)
+
+            const menuDelegate = findChild(dropdown, "manageProfilesDelegate")
+            verify(!!menuDelegate)
+            mouseClick(menuDelegate)
+
+            const manageProfilesDialog = findChild(controlUnderTest, "manageProfilesDialog")
+            verify(!!manageProfilesDialog)
+            tryVerify(() => manageProfilesDialog.opened)
+            return manageProfilesDialog
+        }
+
+        function openDeleteConfirmation(manageProfilesDialog, keyUid) {
+            const manageProfilesListView = findChild(manageProfilesDialog, "manageProfilesListView")
+            verify(!!manageProfilesListView)
+
+            const profileDelegate = findChild(manageProfilesListView, "manageProfilesDelegate-" + keyUid)
+            verify(!!profileDelegate)
+
+            const deleteButton = findChild(profileDelegate, "deleteProfileButton-" + keyUid)
+            verify(!!deleteButton)
+            mouseClick(deleteButton)
+
+            const confirmDialog = findChild(controlUnderTest, "deleteMultiaccountConfirmationDialog")
+            verify(!!confirmDialog)
+            tryVerify(() => confirmDialog.opened)
+            return confirmDialog
+        }
+
+        function confirmDeleteProfile(keyUid) {
+            const confirmDialog = openDeleteConfirmation(openManageProfilesDialog(), keyUid)
+            const confirmDeleteButton = findChild(confirmDialog, "confirmDeleteMultiaccountBtn")
+            verify(!!confirmDeleteButton)
+            mouseClick(confirmDeleteButton)
         }
 
         // common variant data for all flow related TDD tests
@@ -999,8 +1088,7 @@ Item {
 
         function test_loginScreen_deleteProfile(data) {
             verify(!!controlUnderTest)
-            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
-            controlUnderTest.restartFlow()
+            setupLoginWithProfiles(loginAccountsModel.data)
 
             const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
             verify(!!page)
@@ -1033,7 +1121,7 @@ Item {
             const profileDelegate = findChild(manageProfilesListView, "manageProfilesDelegate-uid_3")
             verify(!!profileDelegate)
 
-            const deleteButton = findChild(profileDelegate, "deleteProfileButton")
+            const deleteButton = findChild(profileDelegate, "deleteProfileButton-uid_3")
             verify(!!deleteButton)
             dynamicSpy.setup(profileDelegate, "deleteProfileRequested")
             mouseClick(deleteButton)
@@ -1049,6 +1137,85 @@ Item {
             dynamicSpy.setup(onboardingFlow, "deleteMultiaccountRequested")
             mouseClick(confirmDeleteButton)
             tryCompare(dynamicSpy, "count", 1)
+        }
+
+        function test_loginScreen_deleteLastProfile_showsWelcome_data() {
+            return [{ tag: "delete last profile" }]
+        }
+
+        function test_loginScreen_deleteLastProfile_showsWelcome(data) {
+            verify(!!controlUnderTest)
+            setupLoginWithProfiles([profileEntry("uid_only", "Alice", 1)])
+            confirmDeleteProfile("uid_only")
+
+            tryVerify(() => {
+                const dlg = findChild(controlUnderTest, "manageProfilesDialog")
+                return !dlg || !dlg.opened
+            })
+
+            const welcome = getCurrentPage(controlUnderTest.stack, WelcomePage)
+            verify(!!welcome)
+
+            const createBtn = findChild(welcome, "btnCreateProfile")
+            const loginBtn = findChild(welcome, "btnLogin")
+            verify(!!createBtn)
+            verify(!!loginBtn)
+            tryCompare(createBtn, "visible", true)
+            tryCompare(loginBtn, "visible", true)
+        }
+
+        function test_loginScreen_deleteOneOfManyProfiles_staysOnLogin_data() {
+            return [{ tag: "delete one of many" }]
+        }
+
+        function test_loginScreen_deleteOneOfManyProfiles_staysOnLogin(data) {
+            verify(!!controlUnderTest)
+            const model = setupLoginWithProfiles([
+                profileEntry("uid_1", "Alice", 1),
+                profileEntry("uid_2", "Bob", 2)
+            ])
+
+            confirmDeleteProfile("uid_1")
+
+            const manageProfilesDialog = findChild(controlUnderTest, "manageProfilesDialog")
+            verify(!!manageProfilesDialog)
+            tryCompare(model, "count", 1)
+            tryVerify(() => manageProfilesDialog.opened)
+            getCurrentPage(controlUnderTest.stack, LoginScreen)
+
+            const manageProfilesListView = findChild(manageProfilesDialog, "manageProfilesListView")
+            verify(!!manageProfilesListView)
+            tryVerify(() => !findChild(manageProfilesListView, "manageProfilesDelegate-uid_1"))
+            verify(!!findChild(manageProfilesListView, "manageProfilesDelegate-uid_2"))
+        }
+
+        function test_loginScreen_deleteProfile_cancelKeepsLogin_data() {
+            return [{ tag: "cancel delete profile" }]
+        }
+
+        function test_loginScreen_deleteProfile_cancelKeepsLogin(data) {
+            verify(!!controlUnderTest)
+            const model = setupLoginWithProfiles([profileEntry("uid_only", "Alice", 1)])
+
+            const onboardingFlow = findChild(controlUnderTest, "onboardingFlow")
+            verify(!!onboardingFlow)
+
+            const manageProfilesDialog = openManageProfilesDialog()
+            const confirmDialog = openDeleteConfirmation(manageProfilesDialog, "uid_only")
+
+            dynamicSpy.setup(onboardingFlow, "deleteMultiaccountRequested")
+            const cancelButton = findChild(confirmDialog, "confirmationDialogCancelButton")
+            verify(!!cancelButton)
+            mouseClick(cancelButton)
+
+            tryCompare(dynamicSpy, "count", 0)
+            tryCompare(model, "count", 1)
+            tryVerify(() => {
+                const dlg = findChild(controlUnderTest, "deleteMultiaccountConfirmationDialog")
+                return !dlg || !dlg.opened
+            })
+            tryVerify(() => manageProfilesDialog.opened)
+            getCurrentPage(controlUnderTest.stack, LoginScreen)
         }
 
         function test_welcomePage_languageSelectorEmitsChangeLanguageRequested() {
