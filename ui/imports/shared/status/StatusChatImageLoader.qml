@@ -48,6 +48,9 @@ Item {
         id: d
 
         readonly property int imageStatus: root.imageAlias ? root.imageAlias.status : Image.Loading
+        // Decode width in 128px steps so a layout-driven imageWidth doesn't
+        // re-decode every visible image on rotation.
+        readonly property int decodeWidth: Math.ceil(root.imageWidth * Screen.devicePixelRatio / 128) * 128
 
         function scheduleRetry(status) {
             if (status === Image.Error && !retryTimer.running) {
@@ -131,8 +134,8 @@ Item {
             id: imageMessage
             width: Math.min(implicitWidth, root.imageWidth)
             fillMode: Image.PreserveAspectFit
-            sourceSize.width: Math.ceil(root.imageWidth * Screen.devicePixelRatio)
-            asynchronous: true
+            sourceSize.width: d.decodeWidth
+            asynchronous: root.asynchronous
             mipmap: true
             cache: root.cacheImage
             source: root.source
@@ -155,6 +158,8 @@ Item {
             id: imageMessage
             width: Math.min(implicitWidth, root.imageWidth)
             fillMode: Image.PreserveAspectFit
+            sourceSize.width: d.decodeWidth
+            asynchronous: root.asynchronous
             source: root.source
             playing: root.playing
             mipmap: true

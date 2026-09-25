@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Window
 import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
@@ -53,6 +52,12 @@ Item {
         id: _internal
         readonly property bool isAnimated: !!source && source.toString().endsWith('.gif')
         readonly property int imageStatus: imageContainer.imageAlias ? imageContainer.imageAlias.status : Image.Loading
+        // Decode width in 128px steps so a layout-driven imageWidth (albums on
+        // narrow screens, rotation) doesn't re-decode every visible image.
+        readonly property int decodeWidth: Math.ceil(imageContainer.imageWidth * Screen.devicePixelRatio / 128) * 128
+        // Crop mode fills a square box, so bound both sides or landscape
+        // photos decode too short and get upscaled.
+        readonly property int decodeHeight: imageContainer.isFillCropMode ? decodeWidth : 0
         property bool pausePlaying: false
 
         function boxHeight(image) {
@@ -143,7 +148,8 @@ Item {
             width: Math.min(implicitWidth, imageContainer.imageWidth)
             height: _internal.boxHeight(imageMessage)
             fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
-            sourceSize.width: Math.ceil(imageContainer.imageWidth * Screen.devicePixelRatio)
+            sourceSize.width: _internal.decodeWidth
+            sourceSize.height: _internal.decodeHeight
             asynchronous: true
             source: imageContainer.source
             cache: false
@@ -158,6 +164,9 @@ Item {
             width: Math.min(implicitWidth, imageContainer.imageWidth)
             height: _internal.boxHeight(imageMessage)
             fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+            sourceSize.width: _internal.decodeWidth
+            sourceSize.height: _internal.decodeHeight
+            asynchronous: true
             source: imageContainer.source
             playing: isAppWindowActive && !_internal.pausePlaying
             cache: false
