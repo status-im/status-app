@@ -303,7 +303,7 @@ proc mainProc() =
       # iOS answers UIApplicationWillTerminateNotification with qApp->exit(),
       # unwinding main() into the ORC teardown that mobile otherwise refuses.
       info "iOS termination requested, leaving without teardown"
-      terminateWithoutCascade()
+      tryTerminateWithoutCascade()
   )
 
   when defined(qmldebug):
