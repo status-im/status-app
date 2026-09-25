@@ -794,7 +794,7 @@ else
 APPIMAGE_TOOL := tmp/linux/tools/appimagetool
 endif
 
-_APPIMAGE_TOOL := appimagetool-x86_64.AppImage
+_APPIMAGE_TOOL := appimagetool-$(shell uname -m).AppImage
 $(APPIMAGE_TOOL):
 ifndef IN_NIX_SHELL
 	echo -e "\033[92mFetching:\033[39m appimagetool"
@@ -849,6 +849,7 @@ endif
 		-no-copy-copyright-files \
 		-qmldir=ui -qmlimport=$(QT_QMLDIR) \
 		-bundle-non-qt-libs \
+		-unsupported-allow-new-glibc \
 		-exclude-libs=libgmodule-2.0.so.0,libgthread-2.0.so.0,libqsqlmimer,libqsqlmysql,libqsqlibase,libqsqloci \
 		-verbose=1 \
 		-executable=$(APP_DIR)/usr/bin/pcscd \

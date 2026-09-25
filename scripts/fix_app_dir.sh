@@ -2,6 +2,12 @@
 
 set -e pipefail
 
+# Dynamic linker path differs per architecture
+case "$(uname -m)" in
+	aarch64) INTERPRETER='/lib/ld-linux-aarch64.so.1' ;;
+	*)       INTERPRETER='/lib64/ld-linux-x86-64.so.2' ;;
+esac
+
 # Fix rpath and interpreter not fixed by linuxdeployqt
 if [[ ! -z "${IN_NIX_SHELL}" ]]; then
 	patchelf --set-rpath '$ORIGIN/../../lib' \
@@ -20,7 +26,7 @@ if [[ ! -z "${IN_NIX_SHELL}" ]]; then
 
 	patchelf --set-rpath '$ORIGIN/../lib' "${APP_DIR}/usr/libexec/QtWebEngineProcess"
 
-	patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 \
+	patchelf --set-interpreter "${INTERPRETER}" \
 		"${APP_DIR}/usr/bin/nim_status_client" \
 		"${APP_DIR}/usr/libexec/QtWebEngineProcess" \
 		"${APP_DIR}/usr/lib/libQt5Core.so.5" \

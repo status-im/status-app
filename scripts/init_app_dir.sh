@@ -15,15 +15,19 @@ copy_native_libs() {
   fi
 }
 
+# Debian multiarch library directory name, e.g. x86_64-linux-gnu or aarch64-linux-gnu.
+MULTIARCH="$(uname -m)-linux-gnu"
+
 # System libraries from the Ubuntu build image: GStreamer, NSS, PC/SC.
 copy_system_libs() {
   local dest="$1"
   echo "Bundling system libraries..."
-  cp -P /usr/lib/x86_64-linux-gnu/libgst*.so* "$dest/"
-  cp -r /usr/lib/x86_64-linux-gnu/gstreamer-1.0 "$dest/"
-  cp -r /usr/lib/x86_64-linux-gnu/nss "$dest/"
-  cp -P /usr/local/lib/x86_64-linux-gnu/libpcsclite*.so* "$dest/"
-  cp -P /usr/lib/x86_64-linux-gnu/libusb-1.0.so* "$dest/"
+  cp -P /usr/lib/${MULTIARCH}/libgst*.so* "$dest/"
+  cp -r /usr/lib/${MULTIARCH}/gstreamer-1.0 "$dest/"
+  mkdir -p "$dest/nss"
+  cp /usr/lib/${MULTIARCH}/lib{freebl3,freeblpriv3,nssckbi,nssdbm3,softokn3}.so "$dest/nss/"
+  cp -P /usr/local/lib/${MULTIARCH}/libpcsclite*.so* "$dest/"
+  cp -P /usr/lib/${MULTIARCH}/libusb-1.0.so* "$dest/"
 }
 
 DEST="${APP_DIR:?APP_DIR must be set}/usr"
@@ -65,14 +69,18 @@ if [[ -z "${IN_NIX_SHELL:-}" ]]; then
   copy_system_libs "${DEST}/lib"
 
   # gstreamer1.0 (note: distinct from gstreamer-1.0 copied by copy_system_libs)
-  cp -r /usr/lib/x86_64-linux-gnu/gstreamer1.0 "${DEST}/lib/"
+  cp -r /usr/lib/${MULTIARCH}/gstreamer1.0 "${DEST}/lib/"
 
   copy_qt_webengine "${DEST}/libexec"
 
+  # linuxdeployqt -unsupported-allow-new-glibc exits silently unless this file is in the AppDir.
+  mkdir -p "${DEST}/share/doc/libc6"
+  cp /usr/share/doc/libc6/copyright "${DEST}/share/doc/libc6/"
+
   # Extra pcsc files not covered by copy_system_libs
   echo "Bundling pcsc-lite extras..."
-  cp -L /usr/local/lib/x86_64-linux-gnu/libpcsclite_real.so* "${DEST}/lib/"
-  cp -L /usr/local/lib/x86_64-linux-gnu/pkgconfig/libpcsclite.pc "${DEST}/lib/"
+  cp -L /usr/local/lib/${MULTIARCH}/libpcsclite_real.so* "${DEST}/lib/"
+  cp -L /usr/local/lib/${MULTIARCH}/pkgconfig/libpcsclite.pc "${DEST}/lib/"
 
   chmod 755 "${DEST}/lib/libpcsclite.so"*
   chmod 755 "${DEST}/lib/libpcsclite_real.so"*
