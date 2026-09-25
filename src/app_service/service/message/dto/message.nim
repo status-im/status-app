@@ -111,6 +111,7 @@ type MessageDto* = object
   text*: string
   chatId*: string
   localChatId*: string
+  threadId*: string
   clock*: int64
   replace*: string
   responseTo*: string
@@ -259,6 +260,7 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
   discard jsonObj.getProp("text", result.text)
   discard jsonObj.getProp("chatId", result.chatId)
   discard jsonObj.getProp("localChatId", result.localChatId)
+  discard jsonObj.getProp("threadId", result.threadId)
   discard jsonObj.getProp("clock", result.clock)
   discard jsonObj.getProp("replace", result.replace)
   discard jsonObj.getProp("responseTo", result.responseTo)

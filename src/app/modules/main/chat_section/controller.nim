@@ -169,7 +169,7 @@ proc init*(self: Controller) =
       self.contactService, self.chatService, self.communityService, self.messageService,
       self.mailserversService, self.sharedUrlsService, setChatAsActive = true)
 
-  if (self.isCommunitySection):
+  if self.isCommunitySection:
     self.events.on(SIGNAL_COMMUNITY_CHANNEL_CREATED) do(e:Args):
       let args = CommunityChatArgs(e)
       let belongsToCommunity = args.chat.communityId.len > 0
@@ -488,7 +488,8 @@ proc setActiveItem*(self: Controller, itemId: string) =
   self.delegate.activeItemSet(self.activeItemId)
 
   if self.activeItemId != "":
-    self.messageService.asyncLoadInitialMessagesForChat(self.activeItemId)
+    if not self.delegate.isChatThread(self.activeItemId):
+      self.messageService.asyncLoadInitialMessagesForChat(self.activeItemId)
 
 proc removeCommunityChat*(self: Controller, itemId: string) =
   self.communityService.deleteCommunityChat(self.getMySectionId(), itemId)

@@ -20,10 +20,15 @@ method isLoaded*(self: AccessInterface): bool {.base.} =
 method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method sendChatMessage*(self: AccessInterface, msg: string, replyTo: string, contentType: int, linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]) {.base.} =
+method sendChatMessage*(self: AccessInterface, msg: string, replyTo: string, contentType: int,
+  linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method sendImages*(self: AccessInterface, imagePathsJson: string, msg: string, replyTo: string, linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]) {.base.} =
+method sendImages*(self: AccessInterface, imagePathsJson: string, msg: string, replyTo: string,
+  linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getThreadId*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method searchGifs*(self: AccessInterface, query: string) {.base.} =
@@ -56,7 +61,7 @@ method searchGifsStarted*(self: AccessInterface) {.base.} =
 method searchGifsError*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method serachGifsDone*(self: AccessInterface, gifs: seq[GifDto]) {.base.} =
+method searchGifsDone*(self: AccessInterface, gifs: seq[GifDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getFavoritesGifs*(self: AccessInterface): seq[GifDto] {.base.} =

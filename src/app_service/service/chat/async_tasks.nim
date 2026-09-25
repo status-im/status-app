@@ -68,6 +68,7 @@ type
     chatId: string
     processedMsg: string
     replyTo: string
+    threadId: string
     contentType: int
     preferredUsername: string
     communityId: string
@@ -84,6 +85,7 @@ const asyncSendMessageTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
       arg.processedMsg,
       arg.replyTo,
       arg.contentType,
+      arg.threadId,
       arg.preferredUsername,
       arg.standardLinkPreviews,
       arg.statusLinkPreviews,
@@ -107,6 +109,7 @@ type
     imagePathsJson: string
     msg: string
     replyTo: string
+    threadId: string
     preferredUsername: string
     standardLinkPreviews: JsonNode
     statusLinkPreviews: JsonNode
@@ -138,6 +141,7 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
       arg.msg,
       arg.replyTo,
       arg.preferredUsername,
+      arg.threadId,
       arg.standardLinkPreviews,
       arg.statusLinkPreviews,
       arg.paymentRequests

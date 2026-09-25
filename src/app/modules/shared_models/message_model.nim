@@ -75,6 +75,7 @@ type
     BridgeName
     PaymentRequestModel
     CompressedKey
+    HasThread
 
 QtObject:
   type
@@ -185,6 +186,7 @@ QtObject:
       ModelRole.BridgeName.int: "bridgeName",
       ModelRole.PaymentRequestModel.int: "paymentRequestModel",
       ModelRole.CompressedKey.int: "compressedKey",
+      ModelRole.HasThread.int: "hasThread",
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -356,6 +358,8 @@ QtObject:
       result = newQVariant(item.paymentRequestModel)
     of ModelRole.CompressedKey:
       result = newQVariant(item.compressedKey)
+    of ModelRole.HasThread:
+      result = newQVariant(item.hasThread)
 
   proc updateAdjacentMessageRolesAtIndex(self: Model, row: int) =
     if row < 0 or row >= self.items.len:
@@ -627,6 +631,20 @@ QtObject:
         return
       updateRole(pinned)
       updateRoleWithValue(pinnedBy, targetPinnedBy)
+
+  proc setHasThread*(self: Model, messageId: string, hasThread: bool) =
+    let ind = self.findIndexForMessageId(messageId)
+    if ind == -1:
+      return
+
+    if self.items[ind].hasThread == hasThread:
+      return
+
+    self.items[ind].hasThread = hasThread
+
+    let index = self.createIndex(ind, 0, nil)
+    defer: index.delete
+    self.dataChanged(index, index, @[ModelRole.HasThread.int])
 
   proc getMessageByIdAsJson*(self: Model, messageId: string): JsonNode =
     for it in self.items:
@@ -1002,4 +1020,5 @@ QtObject:
       message.bridgeMessage,
       message.quotedMessage.bridgeMessage,
       message.paymentRequests,
+      hasThread = false,
     )
