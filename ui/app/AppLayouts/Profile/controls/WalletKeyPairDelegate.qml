@@ -130,6 +130,7 @@ Rectangle {
                         color: Theme.palette.baseColor1
                     }
                     StatusBaseText {
+                        objectName: "watchAccountInclusionLabel"
                         text: model.account.hideFromTotalBalance ? qsTr("Excluded") : qsTr("Included")
                         color: Theme.palette.baseColor1
                     }

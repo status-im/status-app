@@ -3,6 +3,8 @@ import QtTest
 
 import AppLayouts.Wallet.views
 
+import StatusQ.Core
+
 import utils
 
 Item {
@@ -19,14 +21,18 @@ Item {
         id: leftTabViewState
 
         accountsModel: accountsModel
-        totalCurrencyBalance: ({
-            amount: 0,
+        totalCurrencyBalance: root.usdAmount(0)
+        balanceLoading: false
+        selectedAddress: ""
+    }
+
+    function usdAmount(amount) {
+        return {
+            amount: amount,
             symbol: "USD",
             displayDecimals: 2,
             stripTrailingZeroes: false
-        })
-        balanceLoading: false
-        selectedAddress: ""
+        }
     }
 
     Component {
@@ -44,26 +50,30 @@ Item {
         name: "LeftTabView"
         when: windowShown
 
-        property var controlUnderTest: null
+        property LeftTabView controlUnderTest: null
 
-        function account(name, emoji, colorId, position) {
+        function account(name, emoji, colorId, position, extra) {
+            extra = extra || {}
             return {
                 name,
-                address: "0x%1".arg(position.toString().padStart(40, "0")),
+                address: extra.address || "0x%1".arg(position.toString().padStart(40, "0")),
                 emoji,
                 colorId,
                 position,
-                walletType: "",
+                walletType: extra.walletType || "",
                 migratedToColdWallet: false,
-                currencyBalance: ({
-                    amount: 0,
-                    symbol: "USD",
-                    displayDecimals: 2,
-                    stripTrailingZeroes: false
-                }),
+                currencyBalance: extra.currencyBalance || root.usdAmount(0),
                 assetsLoading: false,
-                hideFromTotalBalance: false
+                hideFromTotalBalance: extra.hideFromTotalBalance || false
             }
+        }
+
+        function watchedAccount(hideFromTotalBalance, balance) {
+            return account("Watched", "👀", Constants.walletAccountColors.primary, 0, {
+                walletType: Constants.watchWalletType,
+                hideFromTotalBalance: hideFromTotalBalance,
+                currencyBalance: balance
+            })
         }
 
         function cleanup() {
@@ -79,7 +89,6 @@ Item {
         }
 
         function verifyWalletOrder(expectedTitles) {
-            // the accounts list builds behind an asynchronous Loader
             tryVerify(() => !!findChild(controlUnderTest, "walletAccountsListView"))
             const listView = findChild(controlUnderTest, "walletAccountsListView")
             waitForRendering(listView)
@@ -87,7 +96,6 @@ Item {
                 if (listView.count !== expectedTitles.length)
                     return false
                 for (let i = 0; i < expectedTitles.length; ++i) {
-                    // the delegate root is a shell; the title is on the row it incubates
                     const row = listView.itemAtIndex(i)?.contentItem
                     if (!row || row.title !== expectedTitles[i])
                         return false
@@ -96,16 +104,26 @@ Item {
             })
         }
 
-        function createView(accountData) {
+        function createView(accountData, totalBalance) {
             cleanup()
 
             accountsModel.clear()
             for (let i = 0; i < accountData.length; ++i)
                 accountsModel.append(accountData[i])
 
+            leftTabViewState.totalCurrencyBalance = totalBalance || root.usdAmount(0)
+
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
+        }
+
+        function accountRow(index) {
+            tryVerify(() => !!findChild(controlUnderTest, "walletAccountsListView"))
+            const listView = findChild(controlUnderTest, "walletAccountsListView")
+            waitForRendering(listView)
+            tryVerify(() => !!listView.itemAtIndex(index)?.contentItem)
+            return listView.itemAtIndex(index).contentItem
         }
 
         function test_reflectsAccountsModelOrder() {
@@ -124,6 +142,28 @@ Item {
             accountsModel.move(1, 0, 1)
             syncPositions()
             verifyWalletOrder(["Generated 2", "Generated 1", "Account 1"])
+        }
+
+        function test_watchAccountSubtitleRespectsHideFromTotalBalance() {
+            const balance = root.usdAmount(12.5)
+
+            createView([watchedAccount(true, balance)])
+            compare(accountRow(0).subTitle, "")
+
+            createView([watchedAccount(false, balance)])
+            compare(accountRow(0).subTitle, LocaleUtils.currencyAmountToLocaleString(balance))
+        }
+
+        function test_allAccountsHeaderShowsTotalCurrencyBalance() {
+            const total = root.usdAmount(99.5)
+            createView([
+                account("Account 1", "😀", Constants.walletAccountColors.primary, 0)
+            ], total)
+
+            tryVerify(() => !!findChild(controlUnderTest, "walletLeftListAmountValue"))
+            const amountLabel = findChild(controlUnderTest, "walletLeftListAmountValue")
+            compare(amountLabel.text,
+                    LocaleUtils.currencyAmountToLocaleString(total, {noSymbol: true}))
         }
     }
 }
