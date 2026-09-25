@@ -35,15 +35,13 @@
                  text, at most one web URL (#14), and images (#15) up to the
                  in-app per-message limit (Constants.maxUploadFiles = 6 in
                  ui/imports/utils/Constants.qml). No video/arbitrary files. -->
+            <!-- Predicate form: the extension is offered when at least one
+                 attachment is an image, a URL or plain text. The dictionary
+                 form required every attachment to match, which hid Status
+                 for hosts that add extra representations (e.g. a Notes link).
+                 The image cap lives in ShareViewController. -->
             <key>NSExtensionActivationRule</key>
-            <dict>
-                <key>NSExtensionActivationSupportsText</key>
-                <true/>
-                <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-                <integer>1</integer>
-                <key>NSExtensionActivationSupportsImageWithMaxCount</key>
-                <integer>6</integer>
-            </dict>
+            <string>SUBQUERY(extensionItems, $item, SUBQUERY($item.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text").@count &gt; 0).@count &gt; 0</string>
         </dict>
     </dict>
 </dict>
