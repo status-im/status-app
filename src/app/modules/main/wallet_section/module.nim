@@ -1,4 +1,4 @@
-import nimqml, json, chronicles, sequtils, strutils, sugar
+import nimqml, json, chronicles, strutils, sequtils
 
 import ./controller, ./view, ./filter
 import ./io_interface as io_interface
@@ -50,6 +50,8 @@ import app_service/service/connector/service as connector_service
 import backend/collectibles as backend_collectibles
 
 import app/core/tasks/threadpool
+
+import ../../shared/wallet_utils
 
 logScope:
   topics = "wallet-section-module"
@@ -229,8 +231,7 @@ method getCurrentCurrency*(self: Module): string =
   self.controller.getCurrency()
 
 proc getWalletAddressesNotHidden(self: Module): seq[string] =
-  let walletAccounts = self.controller.getWalletAccounts()
-  return walletAccounts.filter(a => not a.hideFromTotalBalance).map(a => a.address)
+  addressesNotHiddenFromTotalBalance(self.controller.getWalletAccounts())
 
 method setTotalCurrencyBalance*(self: Module) =
   let addresses = self.getWalletAddressesNotHidden()

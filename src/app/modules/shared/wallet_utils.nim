@@ -1,8 +1,13 @@
+import sequtils
+
 import ../shared_models/[currency_amount, wallet_account_item]
 
 import app_service/service/currency/dto as currency_dto
 
 import ../main/wallet_section/accounts/item as wallet_accounts_item
+
+proc addressesNotHiddenFromTotalBalance*(accounts: seq[WalletAccountDto]): seq[string] =
+  accounts.filterIt(not it.hideFromTotalBalance).mapIt(it.address)
 
 proc currencyAmountToItem*(amount: float64, format: CurrencyFormatDto) : CurrencyAmount =
   return newCurrencyAmount(
