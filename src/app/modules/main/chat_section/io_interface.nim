@@ -220,7 +220,7 @@ method onCategoryMuted*(self: AccessInterface, categoryId: string) {.base.} =
 method onCategoryUnmuted*(self: AccessInterface, categoryId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method markAllMessagesRead*(self: AccessInterface, chatId: string) {.base.} =
+method markAllMessagesRead*(self: AccessInterface, chatId: string, threadId: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method clearChatHistory*(self: AccessInterface, chatId: string) {.base.} =

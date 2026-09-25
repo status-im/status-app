@@ -516,7 +516,7 @@ Item {
                         }
                         onOpenThread: (messageId) => {
                             if (root.threadsFeatureEnabled
-                                    && root.activeChatType === Constants.chatType.communityChat
+                                    && Utils.isThreadSupportedChatType(root.activeChatType)
                                     && !d.activeMessagesStore.threadId) {
                                 d.activeMessagesStore.createThread(messageId)
                             }

@@ -519,8 +519,8 @@ proc muteChat*(self: Controller, chatId: string, interval: int) =
 proc unmuteChat*(self: Controller, chatId: string) =
   self.chatService.unmuteChat(chatId)
 
-proc markAllMessagesRead*(self: Controller, chatId: string) =
-  self.messageService.markAllMessagesRead(chatId)
+proc markAllMessagesRead*(self: Controller, chatId: string, threadId: string = "") =
+  self.messageService.markAllMessagesRead(chatId, threadId)
 
 proc clearChatHistory*(self: Controller, chatId: string) =
   self.chatService.clearChatHistory(chatId)

@@ -17,6 +17,7 @@ StatusMenu {
     property bool isCommunityChat: false
     property bool amIChatAdmin: false
     property string chatId: ""
+    property string threadId: ""
     property string chatName: ""
     property string chatDescription: ""
     property string chatEmoji: ""
@@ -30,12 +31,13 @@ StatusMenu {
     property bool showDebugOptions: false
     property alias deleteChatConfirmationDialog: deleteChatConfirmationDialogComponent
     property bool hideIfPermissionsNotMet: false
+    property bool isThread: false
 
     signal displayProfilePopup(string publicKey)
     signal displayEditChannelPopup(string chatId)
     signal unmuteChat(string chatId)
     signal muteChat(string chatId, int interval)
-    signal markAllMessagesRead(string chatId)
+    signal markAllMessagesRead(string chatId, string threadId)
     signal clearChatHistory(string chatId)
     signal deleteCommunityChat(string chatId)
     signal leaveChat(string chatId)
@@ -46,7 +48,7 @@ StatusMenu {
     width: root.amIChatAdmin && (root.chatType === Constants.chatType.privateGroupChat) ? 207 : implicitWidth
 
     ViewProfileMenuItem {
-        enabled: root.chatType === Constants.chatType.oneToOne
+        enabled: !root.isThread && root.chatType === Constants.chatType.oneToOne
         onTriggered: root.displayProfilePopup(root.chatId)
     }
 
@@ -54,7 +56,7 @@ StatusMenu {
         objectName: "addRemoveFromGroupStatusAction"
         text: root.amIChatAdmin ? qsTr("Add / remove from group") : qsTr("Add to group")
         icon.name: "add-to-dm"
-        enabled: (root.chatType === Constants.chatType.privateGroupChat)
+        enabled: !root.isThread && root.chatType === Constants.chatType.privateGroupChat
         onTriggered: { root.addRemoveGroupMember() }
     }
 
@@ -62,7 +64,7 @@ StatusMenu {
         objectName: "copyChannelLinkStatusAction"
         text: qsTr("Copy channel link")
         icon.name: "copy"
-        enabled: root.isCommunityChat
+        enabled: !root.isThread && root.isCommunityChat
         onTriggered: {
             const link = Utils.getCommunityChannelShareLinkWithChatId(root.chatId)
             ClipboardUtils.setText(link)
@@ -70,14 +72,14 @@ StatusMenu {
     }
 
     StatusMenuSeparator {
-        visible: root.chatType === Constants.chatType.oneToOne || root.chatType === Constants.chatType.privateGroupChat || root.isCommunityChat
+        visible: !root.isThread && (root.chatType === Constants.chatType.oneToOne || root.chatType === Constants.chatType.privateGroupChat || root.isCommunityChat)
     }
 
     StatusAction {
         objectName: "editNameAndImageMenuItem"
         text: qsTr("Edit name and image")
         icon.name: "edit_pencil"
-        enabled: root.chatType === Constants.chatType.privateGroupChat
+        enabled: !root.isThread && root.chatType === Constants.chatType.privateGroupChat
         onTriggered: {
             Global.openPopup(renameGroupPopupComponent, {
                 activeGroupName: root.chatName,
@@ -99,7 +101,7 @@ StatusMenu {
     }
 
     MuteChatMenuItem {
-        enabled: !root.chatMuted
+        enabled: !root.isThread && !root.chatMuted
         isCommunityChat: root.isCommunityChat
 
         onMuteTriggered: {
@@ -109,7 +111,7 @@ StatusMenu {
 
     StatusAction {
         objectName: "muteChatStatusAction"
-        enabled: root.chatMuted
+        enabled: !root.isThread && root.chatMuted
         text: root.isCommunityChat ? qsTr("Unmute Channel") : qsTr("Unmute Chat")
         icon.name: "notification"
         onTriggered: {
@@ -122,7 +124,7 @@ StatusMenu {
         text: qsTr("Mark as Read")
         icon.name: "checkmark-circle"
         onTriggered: {
-            root.markAllMessagesRead(root.chatId)
+            root.markAllMessagesRead(root.chatId, root.threadId)
         }
     }
 
@@ -130,7 +132,7 @@ StatusMenu {
         objectName: "editChannelMenuItem"
         text: qsTr("Edit Channel")
         icon.name: "edit"
-        enabled: root.isCommunityChat && root.amIChatAdmin
+        enabled: root.isCommunityChat && root.amIChatAdmin && !root.isThread
         onTriggered: {
             root.displayEditChannelPopup(root.chatId);
         }
@@ -141,9 +143,10 @@ StatusMenu {
         enabled: root.showDebugOptions
 
         StatusAction {
-            text: root.isCommunityChat ? qsTr("Copy channel ID") : qsTr("Copy chat ID")
+            text: root.isThread ? qsTr("Copy thread ID") :
+                                  root.isCommunityChat ? qsTr("Copy channel ID") : qsTr("Copy chat ID")
             icon.name: "copy"
-            onTriggered: ClipboardUtils.setText(root.chatId)
+            onTriggered: ClipboardUtils.setText(root.isThread ? root.threadId : root.chatId)
         }
     }
 
@@ -154,7 +157,7 @@ StatusMenu {
     StatusAction {
         id: clearHistoryGroupMenuItem
         objectName: "clearHistoryGroupMenuItem"
-        enabled: (root.chatType !== Constants.chatType.oneToOne)
+        enabled: !root.isThread && (root.chatType !== Constants.chatType.oneToOne)
         text: qsTr("Clear History")
         icon.name: "delete"
         type: StatusAction.Type.Danger
@@ -189,13 +192,13 @@ StatusMenu {
             }
         }
 
-        enabled: !root.isCommunityChat || root.amIChatAdmin
+        enabled: !root.isThread && (!root.isCommunityChat || root.amIChatAdmin)
     }
 
     StatusAction {
         id: clearHistoryMenuItem
         objectName: "clearHistoryMenuItem"
-        enabled: (root.chatType === Constants.chatType.oneToOne)
+        enabled: !root.isThread && (root.chatType === Constants.chatType.oneToOne)
         text: qsTr("Clear History")
         icon.name: "delete"
         type: StatusAction.Type.Danger

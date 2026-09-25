@@ -18,6 +18,7 @@ type
     emoji: string
     description: string
     lastMessageTimestamp: int
+    sortTimestamp: int
     hasUnreadMessages: bool
     lastMessageText: string
     notificationsCount: int
@@ -43,6 +44,7 @@ type
     permissionsCheckOngoing: bool
     hidden: bool # cached: row hidden by its collapsed category (see recomputeHidden)
     isThread: bool
+    parentChatId: string
 
 # Row is hidden by its collapsed category. Active, unmuted-unread and
 # notification-carrying chats stay visible so the list can surface them.
@@ -90,6 +92,8 @@ proc initChatItem*(
     missingEncryptionKey: bool = false,
     permissionsCheckOngoing: bool = false,
     isThread: bool = false,
+    parentChatId: string = "",
+    sortTimestamp: int = -1,
     ): ChatItem =
   result = ChatItem()
   result.id = id
@@ -103,6 +107,7 @@ proc initChatItem*(
   result.description = description
   result.`type` = `type`
   result.lastMessageTimestamp = lastMessageTimestamp
+  result.sortTimestamp = if sortTimestamp == -1: lastMessageTimestamp else: sortTimestamp
   result.lastMessageText = lastMessageText
   result.hasUnreadMessages = hasUnreadMessages
   result.notificationsCount = notificationsCount
@@ -128,6 +133,7 @@ proc initChatItem*(
   result.permissionsCheckOngoing = permissionsCheckOngoing
   result.recomputeHidden()
   result.isThread = isThread
+  result.parentChatId = parentChatId
 
 proc `$`*(self: ChatItem): string =
   result = fmt"""chat_section/ChatItem(
@@ -200,6 +206,8 @@ proc toJsonNode*(self: ChatItem): JsonNode =
     "viewersCanPostReactions": self.viewersCanPostReactions,
     "hideIfPermissionsNotMet": self.hideIfPermissionsNotMet,
     "permissionsCheckOngoing": self.permissionsCheckOngoing,
+    "isThread": self.isThread,
+    "parentChatId": self.parentChatId,
   }
 
 proc delete*(self: ChatItem) =
@@ -265,6 +273,12 @@ proc lastMessageTimestamp*(self: ChatItem): int =
 
 proc `lastMessageTimestamp=`*(self: var ChatItem, value: int) =
   self.lastMessageTimestamp = value
+
+proc sortTimestamp*(self: ChatItem): int =
+  self.sortTimestamp
+
+proc `sortTimestamp=`*(self: var ChatItem, value: int) =
+  self.sortTimestamp = value
 
 proc lastMessageText*(self: ChatItem): string =
   self.lastMessageText
@@ -416,3 +430,6 @@ proc `permissionsCheckOngoing=`*(self: var ChatItem, value: bool) =
 
 proc isThread*(self: ChatItem): bool =
   self.isThread
+
+proc parentChatId*(self: ChatItem): string =
+  self.parentChatId

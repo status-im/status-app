@@ -115,6 +115,36 @@ suite "updating chat items":
     let chat = model.getItemById("0xc")
     check(chat.categoryOpened == false)
 
+  test "parent timestamp updates thread sort timestamps":
+    let parent = createTestChatItem("0xparent")
+    let thread = initChatItem(
+      id = "0xthread",
+      name = "",
+      usesDefaultName = true,
+      icon = "",
+      color = "",
+      emoji = "",
+      description = "",
+      `type` = 0,
+      memberRole = MemberRole.None,
+      lastMessageTimestamp = 0,
+      lastMessageText = "",
+      hasUnreadMessages = false,
+      notificationsCount = 0,
+      muted = false,
+      blocked = false,
+      active = false,
+      position = 0,
+      isThread = true,
+      parentChatId = parent.id,
+    )
+    model.setData(@[parent, thread])
+
+    model.updateLastMessageOnItemById("0xparent", "new message", 123)
+
+    check(parent.sortTimestamp == 123)
+    check(thread.sortTimestamp == 123)
+
 suite "hidden role (chat list virtualization)":
   setup:
     # fresh items per test — ChatItem is a ref, shared globals leak state
