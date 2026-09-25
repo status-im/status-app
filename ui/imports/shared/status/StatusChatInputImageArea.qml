@@ -35,6 +35,10 @@ Row {
                 width: 64
                 height: 64
                 fillMode: Image.PreserveAspectCrop
+                // Decode a thumbnail, not the full photo: a share can attach
+                // dozens of camera images and full decodes exhaust memory.
+                sourceSize: Qt.size(256, 256)
+                asynchronous: true
                 mipmap: true
                 smooth: false
                 antialiasing: true

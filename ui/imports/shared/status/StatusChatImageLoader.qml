@@ -18,24 +18,45 @@ Item {
     property bool playing: Window.window.active
 
     property bool isAnimated: !!source && source.toString().endsWith('.gif')
-    property alias imageAlias: imageMessage
+    // Only the needed kind is built: stills decode at a bounded size (a chat
+    // can hold dozens of photos and a full decode of each exhausts memory);
+    // gifs need AnimatedImage, which cannot bound its decode.
+    readonly property Item imageAlias: imageLoader.item
     property bool allCornersRounded: false
     property bool isOnline: true // TODO: mark as required when migrating to 5.15 or above
-    property bool imageLoaded: (imageMessage.status === Image.Ready)
-    property alias asynchronous: imageMessage.asynchronous
+    property bool imageLoaded: d.imageStatus === Image.Ready
+    property bool asynchronous: true
+    // GIFs only loop properly with the frame cache on
+    property bool cacheImage: false
     property bool leftTail: true
 
     signal clicked(var image, var mouse)
 
-    width: loadingImageLoader.active ? loadingImageLoader.width : imageMessage.width
-    height: loadingImageLoader.active ? loadingImageLoader.height : imageMessage.paintedHeight
+    width: loadingImageLoader.active ? loadingImageLoader.width : imageBox.width
+    height: loadingImageLoader.active ? loadingImageLoader.height : imageBox.height
 
     onIsOnlineChanged: {
         if (!isOnline)
             return
 
-        if (imageMessage.status === Image.Error) {
-            imageMessage.reloadImage()
+        if (d.imageStatus === Image.Error) {
+            root.imageAlias.reloadImage()
+        }
+    }
+
+    QtObject {
+        id: d
+
+        readonly property int imageStatus: root.imageAlias ? root.imageAlias.status : Image.Loading
+        // Decode width in 128px steps so a layout-driven imageWidth doesn't
+        // re-decode every visible image on rotation.
+        readonly property int decodeWidth: Math.ceil(root.imageWidth * Screen.devicePixelRatio / 128) * 128
+
+        function scheduleRetry(status) {
+            if (status === Image.Error && !retryTimer.running) {
+                retryTimer.interval = retryTimer.initialInterval
+                retryTimer.start()
+            }
         }
     }
 
@@ -45,46 +66,31 @@ Item {
         readonly property int initialInterval: 10 * 1000 // 10s
 
         onTriggered: {
-            if (imageMessage.status === Image.Error && root.isOnline) {
-                imageMessage.reloadImage()
+            if (d.imageStatus === Image.Error && root.isOnline) {
+                root.imageAlias.reloadImage()
                 interval *= 2
                 restart()
             }
         }
     }
 
-    AnimatedImage {
-        id: imageMessage
-        width: sourceSize.width > imageWidth ? imageWidth : sourceSize.width
-        fillMode: Image.PreserveAspectFit
-        source: root.source
-        playing: root.isAnimated && root.playing
-        mipmap: true
-        cache: false
+    Item {
+        id: imageBox
 
-        onStatusChanged: {
-            if (imageMessage.status === Image.Error && !retryTimer.running) {
-                retryTimer.interval = retryTimer.initialInterval
-                retryTimer.start()
-            }
-        }
-
-        function reloadImage() {
-            imageMessage.source = ""
-            imageMessage.source = Qt.binding(() => root.source)
-        }
+        width: root.imageAlias ? root.imageAlias.width : 0
+        height: root.imageAlias ? root.imageAlias.paintedHeight : 0
 
         layer.enabled: true
         layer.effect: OpacityMask {
             maskSource: Item {
-                width: imageMessage.width
-                height: imageMessage.height
+                width: imageBox.width
+                height: imageBox.height
 
                 Rectangle {
                     anchors.top: parent.top
                     anchors.left: parent.left
-                    width: imageMessage.width
-                    height: imageMessage.height
+                    width: imageBox.width
+                    height: imageBox.height
                     radius: 16
                 }
 
@@ -107,20 +113,72 @@ Item {
             }
         }
 
+        Loader {
+            id: imageLoader
+            asynchronous: root.asynchronous
+            sourceComponent: root.isAnimated ? animatedComponent : stillComponent
+        }
+
         StatusMouseArea {
             cursorShape: Qt.PointingHandCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             anchors.fill: parent
-            onClicked: (mouse) => root.clicked(imageMessage, mouse)
+            onClicked: (mouse) => root.clicked(root.imageAlias, mouse)
         }
+    }
 
-        Component.onDestruction: imageMessage.source = ""
+    Component {
+        id: stillComponent
+
+        Image {
+            id: imageMessage
+            width: Math.min(implicitWidth, root.imageWidth)
+            fillMode: Image.PreserveAspectFit
+            sourceSize.width: d.decodeWidth
+            asynchronous: root.asynchronous
+            mipmap: true
+            cache: root.cacheImage
+            source: root.source
+
+            onStatusChanged: d.scheduleRetry(status)
+
+            function reloadImage() {
+                imageMessage.source = ""
+                imageMessage.source = Qt.binding(() => root.source)
+            }
+
+            Component.onDestruction: imageMessage.source = ""
+        }
+    }
+
+    Component {
+        id: animatedComponent
+
+        AnimatedImage {
+            id: imageMessage
+            width: Math.min(implicitWidth, root.imageWidth)
+            fillMode: Image.PreserveAspectFit
+            sourceSize.width: d.decodeWidth
+            asynchronous: root.asynchronous
+            source: root.source
+            playing: root.playing
+            mipmap: true
+            cache: root.cacheImage
+
+            onStatusChanged: d.scheduleRetry(status)
+
+            function reloadImage() {
+                imageMessage.source = ""
+                imageMessage.source = Qt.binding(() => root.source)
+            }
+
+            Component.onDestruction: imageMessage.source = ""
+        }
     }
 
     Loader {
         id: loadingImageLoader
-        active: imageMessage.status === Image.Loading
-             || imageMessage.status === Image.Error
+        active: d.imageStatus === Image.Loading || d.imageStatus === Image.Error
         visible: active
         width: active ? 300 : 0
         height: width
@@ -133,10 +191,10 @@ Item {
 
             StyledText {
                 anchors.centerIn: parent
-                text: imageMessage.status === Image.Error?
+                text: d.imageStatus === Image.Error?
                         qsTr("Error loading the image") :
                         qsTr("Loading image...")
-                color: imageMessage.status === Image.Error?
+                color: d.imageStatus === Image.Error?
                         Theme.palette.dangerColor1 :
                         Theme.palette.textColor
                 font.pixelSize: Theme.primaryTextFontSize
