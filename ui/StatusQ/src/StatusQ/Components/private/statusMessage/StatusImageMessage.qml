@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
@@ -13,7 +14,10 @@ Item {
         RIGHT_ROUNDED = 2
     }
 
-    property alias imageAlias: imageMessage
+    // Only the needed kind is built: stills decode at a bounded size (an
+    // album can hold dozens of photos and a full decode of each exhausts
+    // memory); gifs need AnimatedImage, which cannot bound its decode.
+    readonly property Item imageAlias: imageLoader.item
 
     property bool isAppWindowActive: false
     property url source: ""
@@ -22,7 +26,7 @@ Item {
     property int imageWidth: 350
     property int shapeType: -1
 
-    // Switches scaling mode for AnimatedImage:
+    // Switches scaling mode:
     // - false (default): PreserveAspectFit → full image visible, may letterbox.
     // - true: PreserveAspectCrop → fills container, may crop edges.
     property bool isFillCropMode: false
@@ -42,39 +46,41 @@ Item {
 
     signal clicked(var image, var mouse, var imageSource, point pos)
 
-    implicitWidth: imageMessage.width
-    implicitHeight: imageMessage.paintedHeight
+    implicitWidth: imageBox.width
+    implicitHeight: imageBox.height
 
     QtObject {
         id: _internal
         readonly property bool isAnimated: !!source && source.toString().endsWith('.gif')
+        readonly property int imageStatus: imageContainer.imageAlias ? imageContainer.imageAlias.status : Image.Loading
         property bool pausePlaying: false
+
+        function boxHeight(image) {
+            if (imageContainer.isFillCropMode)
+                return image.width // Fixed box for crop
+            if (image.implicitWidth > 0)
+                return Math.round(image.width * image.implicitHeight / image.implicitWidth) // Fit by width / Preserve aspect ratio
+            return image.implicitHeight // Before image is loaded
+        }
     }
 
-    AnimatedImage {
-        id: imageMessage
-        width: Math.min(sourceSize.width, imageWidth)
-        height: imageContainer.isFillCropMode
-                   ? width // Fixed box for crop
-                   : (sourceSize.width > 0
-                      ? Math.round(width * sourceSize.height / sourceSize.width) // Fit by width / Preserve aspect ratio
-                      : implicitHeight) // Before image is loaded
-        fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
-        source: imageContainer.source
-        playing: _internal.isAnimated && isAppWindowActive && !_internal.pausePlaying
-        cache: false
+    Item {
+        id: imageBox
+
+        width: imageContainer.imageAlias ? imageContainer.imageAlias.width : 0
+        height: imageContainer.imageAlias ? imageContainer.imageAlias.height : 0
 
         layer.enabled: true
         layer.effect: OpacityMask {
             maskSource: Item {
-                width: imageMessage.width
-                height: imageMessage.height
+                width: imageBox.width
+                height: imageBox.height
 
                 Rectangle {
                     anchors.top: parent.top
                     anchors.left: parent.left
-                    width: imageMessage.width
-                    height: imageMessage.height
+                    width: imageBox.width
+                    height: imageBox.height
                     radius: 16
                 }
                 Rectangle {
@@ -96,6 +102,12 @@ Item {
             }
         }
 
+        Loader {
+            id: imageLoader
+            asynchronous: true
+            sourceComponent: _internal.isAnimated ? animatedComponent : stillComponent
+        }
+
         HoverHandler {
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
             enabled: imageContainer.imageClickable
@@ -113,20 +125,48 @@ Item {
                     _internal.pausePlaying = !_internal.pausePlaying
                     return
                 }
-                imageContainer.clicked(imageMessage, { button }, imageMessage.source, eventPoint.position)
+                imageContainer.clicked(imageContainer.imageAlias, { button }, imageContainer.source, eventPoint.position)
             }
             onLongPressed: {
                 if (point.device.type !== PointerDevice.TouchScreen)
                     return
-                imageContainer.clicked(imageMessage, { button: Qt.RightButton }, imageMessage.source, point.position)
+                imageContainer.clicked(imageContainer.imageAlias, { button: Qt.RightButton }, imageContainer.source, point.position)
             }
+        }
+    }
+
+    Component {
+        id: stillComponent
+
+        Image {
+            id: stillImage
+            width: Math.min(implicitWidth, imageContainer.imageWidth)
+            height: _internal.boxHeight(stillImage)
+            fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+            sourceSize.width: Math.ceil(imageContainer.imageWidth * Screen.devicePixelRatio)
+            asynchronous: true
+            source: imageContainer.source
+            cache: false
+        }
+    }
+
+    Component {
+        id: animatedComponent
+
+        AnimatedImage {
+            id: animatedImage
+            width: Math.min(implicitWidth, imageContainer.imageWidth)
+            height: _internal.boxHeight(animatedImage)
+            fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+            source: imageContainer.source
+            playing: isAppWindowActive && !_internal.pausePlaying
+            cache: false
         }
     }
 
     Rectangle {
         id: loadingImage
-        visible: imageMessage.status === Image.Loading
-                 || imageMessage.status === Image.Error
+        visible: _internal.imageStatus === Image.Loading || _internal.imageStatus === Image.Error
         width: parent.width
         height: width
         border.width: 1
@@ -135,8 +175,8 @@ Item {
 
         StatusBaseText {
             anchors.centerIn: parent
-            text: imageMessage.status === Image.Error ? errorLoadingImageText: loadingImageText
-            color: imageMessage.status === Image.Error?
+            text: _internal.imageStatus === Image.Error ? errorLoadingImageText: loadingImageText
+            color: _internal.imageStatus === Image.Error?
                        Theme.palette.dangerColor1 :
                        Theme.palette.directColor1
             font.pixelSize: Theme.primaryTextFontSize
