@@ -435,6 +435,10 @@ QtObject:
   proc emitOpenUrlSignal*(self: View, url: string) =
     self.openUrl(url)
 
+  proc openUrlInNewBrowserTab*(self: View, url: string) {.signal.}
+  proc emitOpenUrlInNewBrowserTabSignal*(self: View, url: string) =
+    self.openUrlInNewBrowserTab(url)
+
   proc navigateToMessageDetails*(self: View) {.signal.}
   proc emitNavigateToMessageDetailsSignal*(self: View) =
     self.navigateToMessageDetails()

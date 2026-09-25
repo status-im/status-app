@@ -41,6 +41,15 @@ type
 
 const SIGNAL_STATUS_URL_ACTIVATED* = "statusUrlActivated"
 
+type
+  ExternalUrlIntakeArgs* = ref object of Args
+    url*: string
+
+const SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB* = "externalUrlIntakeBrowserTab"
+## Emitted for an externally received web URL that is not a Status link
+## (browser candidacy): it must open as a new tab in the in-app browser with
+## the browser section foregrounded.
+
 const SIGNAL_MAIN_LOADED* = "signalMainLoaded"
 
 type
