@@ -33,7 +33,6 @@ STATUS_GO?=$(STATUS_DESKTOP)/vendor/status-go
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
 STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
-NIM_SDS_SOURCE_DIR ?= $(STATUS_DESKTOP)/vendor/nim-sds
 
 # compile macros: pr -> StatusPR, release -> Status
 ifeq ($(BUILD_VARIANT),pr)

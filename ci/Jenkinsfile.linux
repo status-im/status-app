@@ -97,8 +97,6 @@ pipeline {
     QML_DISABLE_DISK_CACHE = "true"
     /* Needed for QGuiApplication in the UI tests. */
     QT_QPA_PLATFORM = "offscreen"
-    /* nim-sds source directory */
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* sets App Version in Settings */
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */

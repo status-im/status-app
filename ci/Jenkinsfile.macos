@@ -104,8 +104,6 @@ pipeline {
     GOTMPDIR = "${env.WORKSPACE_TMP}"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
-    /* nim-sds source directory */
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Controls the App version in Settings */
     VERSION = "${utils.getVersion()}"
     /* Control output the filename */

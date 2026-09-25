@@ -53,7 +53,6 @@ ifeq ($(OS),android)
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
-		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
@@ -70,12 +69,11 @@ else ifeq ($(OS),ios)
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
-		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"
-	@cmp -s $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
+	@cmp -s ../vendor/status-go/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp ../vendor/status-go/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
 	@cmp -s ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
 
 $(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB) $(STATUS_GO_STUB_GEN) $(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp
