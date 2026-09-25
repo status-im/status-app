@@ -240,6 +240,7 @@ ColumnLayout {
         color: StatusColors.transparent
         components: [
             StatusSwitch {
+                objectName: "includeTotalBalanceSwitch"
                 checked: !!root.account && !account.hideFromTotalBalance
                 onToggled: root.updateWatchAccountHiddenFromTotalBalance(account.address, !checked)
             }
