@@ -562,10 +562,6 @@ Item {
             menu.destroy()
         }
 
-        // Create and "add channel" are the admin gates. The category more
-        // button stays for members: it opens mute, while Edit/Delete Category
-        // are disabled on that menu. Channel Edit/Delete use the same admin
-        // flag via verifyChannelListAdminActions below.
         function test_memberCannotCreateChannelsOrCategories() {
             const loader = loadSection()
             tryVerify(() => loader.item.leftPanel !== null, 10000)
@@ -583,8 +579,12 @@ Item {
 
             compare(chatList(loader).showCategoryActionButtons, false)
             mouseClick(row, row.width / 2, row.height / 2, Qt.RightButton)
-            verify(!findChild(loader, "editCategoryMenuItem"),
-                   "a member right-click must not build the category menu")
+            tryVerify(() => !!findChild(loader, "editCategoryMenuItem"), 2000,
+                      "member right-click must open the category menu")
+            const editFromClick = findChild(loader, "editCategoryMenuItem")
+            const deleteFromClick = findChild(loader, "deleteCategoryMenuItem")
+            compare(editFromClick.enabled, false)
+            compare(deleteFromClick.enabled, false)
             verifyCategoryAdminActions(loader, false)
             verifyChannelListAdminActions(loader, false)
         }
