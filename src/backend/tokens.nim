@@ -31,14 +31,8 @@ rpc(getTokensByChain, "wallet"):
 rpc(getTokensByKeys, "wallet"):
   keys: seq[string]
 
-rpc(isChainSupportedForSwapViaParaswap, "wallet"):
-  chainId: int
-
-rpc(isChainSupportedForSwapViaLiFi, "wallet"):
-  chainId: int
-
-rpc(isChainSupportedForSwapViaRelay, "wallet"):
-  chainId: int
+rpc(getChainsSupportedForSwap, "wallet"):
+  chainIds: seq[int]
 
 
 ## Gets all mandatory token keys
@@ -53,32 +47,14 @@ proc getMandatoryTokenKeys*(resultOut: var JsonNode): string =
     return e.msg
 
 
-## Checks if the chain is supported for swap via Paraswap
-## `resultOut` represents a json object that contains the bool if the call was successful, or `nil`
-## `chainId` is the chain id of the chain the tokens are on
+## Checks which of the given chains the active swap provider supports
 ## returns the error message if any, or an empty string
-proc isChainSupportedForSwapViaParaswap*(resultOut: var JsonNode, chainId: int): string =
+proc getChainsSupportedForSwap*(resultOut: var JsonNode, chainIds: seq[int]): string =
   try:
-    let response = isChainSupportedForSwapViaParaswap(chainId)
+    let response = getChainsSupportedForSwap(chainIds)
     return prepareResponse(resultOut, response)
   except Exception as e:
-    warn "error checking if chain is supported for swap via Paraswap", err = e.msg
-    return e.msg
-
-proc isChainSupportedForSwapViaLiFi*(resultOut: var JsonNode, chainId: int): string =
-  try:
-    let response = isChainSupportedForSwapViaLiFi(chainId)
-    return prepareResponse(resultOut, response)
-  except Exception as e:
-    warn "error checking if chain is supported for swap via LI.FI", err = e.msg
-    return e.msg
-
-proc isChainSupportedForSwapViaRelay*(resultOut: var JsonNode, chainId: int): string =
-  try:
-    let response = isChainSupportedForSwapViaRelay(chainId)
-    return prepareResponse(resultOut, response)
-  except Exception as e:
-    warn "error checking if chain is supported for swap via Relay", err = e.msg
+    warn "error checking which chains are supported for swap", err = e.msg
     return e.msg
 
 ## Gets all token lists

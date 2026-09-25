@@ -69,6 +69,9 @@ const LIFI_PROVIDER_ENABLED* = LIFI_ENABLED and not RELAY_ENABLED
 # const PARASWAP_PROVIDER_ENABLED* = PARASWAP_ENABLED and not RELAY_ENABLED and not LIFI_ENABLED
 const PARASWAP_PROVIDER_ENABLED* = false
 
+# Only one provider at a time.
+const SWAP_PROVIDER_ENABLED* = RELAY_PROVIDER_ENABLED or LIFI_PROVIDER_ENABLED or PARASWAP_PROVIDER_ENABLED
+
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
 # 1. With a statement list:
@@ -139,7 +142,7 @@ QtObject:
     self.paraswapEnabled = PARASWAP_PROVIDER_ENABLED
     self.lifiEnabled = LIFI_PROVIDER_ENABLED
     self.relayEnabled = RELAY_PROVIDER_ENABLED
-    self.swapProvidersEnabled = LIFI_ENABLED or PARASWAP_ENABLED or RELAY_ENABLED
+    self.swapProvidersEnabled = SWAP_PROVIDER_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
