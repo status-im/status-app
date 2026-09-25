@@ -45,8 +45,6 @@ const MESSAGES_PER_PAGE_MAX* = 40
 const SIGNAL_MESSAGES_LOADED* = "messagesLoaded"
 const SIGNAL_CHAT_THREADS_LOADED* = "chatThreadsLoaded"
 const SIGNAL_CHAT_THREADS_LOADING_FAILED* = "chatThreadsLoadingFailed"
-const SIGNAL_THREAD_MESSAGES_LOADED* = "threadMessagesLoaded"
-const SIGNAL_THREAD_MESSAGES_LOADING_FAILED* = "threadMessagesLoadingFailed"
 const SIGNAL_THREAD_CREATED* = "threadCreated"
 const SIGNAL_THREAD_CREATION_FAILED* = "threadCreationFailed"
 const SIGNAL_PINNED_MESSAGES_LOADED* = "pinnedMessagesLoaded"
@@ -80,6 +78,7 @@ type
   MessagesArgs* = ref object of Args
     sectionId*: string
     chatId*: string
+    threadId*: string
     chatType*: ChatType
     lastMessageTimestamp*: int
     unviewedMessagesCount*: int
@@ -88,6 +87,7 @@ type
 
   MessagesLoadedArgs* = ref object of Args
     chatId*: string
+    threadId*: string
     messages*: seq[MessageDto]
     reactions*: seq[ReactionDto]
 
@@ -99,11 +99,6 @@ type
     chatId*: string
     parentMessageId*: string
     threads*: seq[ThreadDto]
-
-  ThreadMessagesLoadedArgs* = ref object of Args
-    chatId*: string
-    threadId*: string
-    messages*: seq[MessageDto]
 
   PinnedMessagesLoadedArgs* = ref object of Args
     chatId*: string
@@ -128,6 +123,7 @@ type
 
   MessagesMarkedAsReadArgs* = ref object of Args
     chatId*: string
+    threadId*: string
     allMessagesMarked*: bool
     messagesIds*: seq[string]
     messagesCount*: int
@@ -282,6 +278,20 @@ QtObject:
       return false
 
     return self.chatThreadsParentIdsByChat[chatId].contains(parentMessageId)
+
+  proc handleThreadsUpdate(self: Service, threads: seq[ThreadDto]) =
+    var threadsByChat = initTable[string, seq[ThreadDto]]()
+    for thread in threads:
+      if thread.chatId.len == 0:
+        continue
+
+      if not threadsByChat.hasKey(thread.chatId):
+        threadsByChat[thread.chatId] = @[]
+      threadsByChat[thread.chatId].add(thread)
+
+    for chatId, chatThreads in threadsByChat:
+      self.cacheCreatedThreads(chatId, chatThreads)
+      self.events.emit(SIGNAL_CHAT_THREADS_LOADED, ChatThreadsLoadedArgs(chatId: chatId, threads: chatThreads))
 
   proc isChatCursorInitialized(self: Service, chatId: string): bool =
     return self.msgCursor.hasKey(chatId)
@@ -504,6 +514,7 @@ QtObject:
   proc asyncLoadInitialMessagesForChat*(self: Service, chatId: string) =
     if self.isChatCursorInitialized(chatId):
       let data = MessagesLoadedArgs(chatId: chatId,
+        threadId: "",
         messages: @[],
         reactions: @[])
 
@@ -549,6 +560,7 @@ QtObject:
         self.events.emit(SIGNAL_CHAT_UPDATE, ChatUpdateArgs(chats: chats))
 
       var chatMessages: seq[MessageDto]
+      var threadMessagesByThread = initTable[string, seq[MessageDto]]()
       for msg in messages:
         if(msg.localChatId != chatId):
           continue
@@ -564,12 +576,17 @@ QtObject:
         if msg.editedAt > 0:
           let data = MessageEditedArgs(chatId: msg.localChatId, message: msg)
           self.events.emit(SIGNAL_MESSAGE_EDITED, data)
+        elif msg.threadId.len > 0:
+          if not threadMessagesByThread.hasKey(msg.threadId):
+            threadMessagesByThread[msg.threadId] = @[]
+          threadMessagesByThread[msg.threadId].add(msg)
         else:
           chatMessages.add(msg)
 
       let data = MessagesArgs(
         sectionId: if chats[i].communityId.len != 0: chats[i].communityId else: singletonInstance.userProfile.getPubKey(),
         chatId: chatId,
+        threadId: "",
         chatType: chats[i].chatType,
         lastMessageTimestamp: chats[i].timestamp.int,
         unviewedMessagesCount: chats[i].unviewedMessagesCount,
@@ -577,6 +594,19 @@ QtObject:
         messages: chatMessages
       )
       self.events.emit(SIGNAL_NEW_MESSAGE_RECEIVED, data)
+
+      for threadId, threadMessages in threadMessagesByThread:
+        let threadData = MessagesArgs(
+          sectionId: if chats[i].communityId.len != 0: chats[i].communityId else: singletonInstance.userProfile.getPubKey(),
+          chatId: chatId,
+          threadId: threadId,
+          chatType: chats[i].chatType,
+          lastMessageTimestamp: chats[i].timestamp.int,
+          unviewedMessagesCount: chats[i].unviewedMessagesCount,
+          unviewedMentionsCount: chats[i].unviewedMentionsCount,
+          messages: threadMessages
+        )
+        self.events.emit(SIGNAL_NEW_MESSAGE_RECEIVED, threadData)
 
   proc getNumOfPinnedMessages*(self: Service, chatId: string): int =
     if(self.numOfPinnedMessagesPerChat.hasKey(chatId)):
@@ -675,6 +705,7 @@ QtObject:
 
         self.events.emit(SIGNAL_MESSAGES_LOADED, MessagesLoadedArgs(
           chatId: args.chatId,
+          threadId: "",
           messages: messages,
           reactions: @[],
         ))
@@ -682,6 +713,9 @@ QtObject:
     self.events.on(SignalType.Message.event) do(e: Args):
       var receivedData = MessageSignal(e)
 
+      # Handling thread updates
+      if (receivedData.threads.len > 0):
+        self.handleThreadsUpdate(receivedData.threads)
       # Handling messages updates
       if (receivedData.messages.len > 0 and receivedData.chats.len > 0):
         self.handleMessagesUpdate(receivedData.chats, receivedData.messages)
@@ -792,6 +826,7 @@ QtObject:
       self.events.emit(SIGNAL_PINNED_MESSAGES_LOADED, PinnedMessagesLoadedArgs())
 
   proc onAsyncLoadMoreMessagesForChat*(self: Service, response: string) {.slot.} =
+    var chatId: string = ""
     try:
       let responseObj = response.parseJson
       if responseObj.kind != JObject:
@@ -801,7 +836,6 @@ QtObject:
       if errorString != "":
         raise newException(CatchableError, errorString)
 
-      var chatId: string
       discard responseObj.getProp("chatId", chatId)
 
       let msgCursor = self.initOrGetMessageCursor(chatId)
@@ -834,6 +868,7 @@ QtObject:
 
       let data = MessagesLoadedArgs(
         chatId: chatId,
+        threadId: "",
         messages: messages,
         reactions: reactions,
       )
@@ -842,7 +877,8 @@ QtObject:
     except Exception as e:
       error "Erorr load more messages for chat async", msg = e.msg
       # notify view, this is important
-      self.events.emit(SIGNAL_MESSAGES_LOADED, MessagesLoadedArgs())
+      self.events.emit(SIGNAL_MESSAGES_LOADED,
+        MessagesLoadedArgs(chatId: chatId, threadId: "", messages: @[], reactions: @[]))
 
   proc onAsyncLoadChatThreads*(self: Service, response: string) {.slot.} =
     var chatId = ""
@@ -901,8 +937,8 @@ QtObject:
 
       self.checkPaymentRequestsInMessages(messages)
 
-      self.events.emit(SIGNAL_THREAD_MESSAGES_LOADED,
-        ThreadMessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: messages))
+      self.events.emit(SIGNAL_MESSAGES_LOADED,
+        MessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: messages, reactions: @[]))
     except Exception as e:
       error "error loading thread messages", msg = e.msg
       if chatId.len > 0 and threadId.len > 0:
@@ -910,8 +946,8 @@ QtObject:
         if self.threadMsgCursor.hasKey(key):
           # Clear the cursor for this thread so that we can try to load it again later
           self.threadMsgCursor.del(key)
-        self.events.emit(SIGNAL_THREAD_MESSAGES_LOADING_FAILED,
-          ThreadMessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: @[]))
+        self.events.emit(SIGNAL_MESSAGES_LOADED,
+          MessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: @[], reactions: @[]))
 
   proc onAsyncCreateThread*(self: Service, response: string) {.slot.} =
     var chatId: string = ""
@@ -1275,13 +1311,16 @@ QtObject:
       var chatId: string
       discard responseObj.getProp("chatId", chatId)
 
-      let data = MessagesMarkedAsReadArgs(chatId: chatId, allMessagesMarked: true)
+      var threadId: string
+      discard responseObj.getProp("threadId", threadId)
+
+      let data = MessagesMarkedAsReadArgs(chatId: chatId, threadId: threadId, allMessagesMarked: true)
       self.events.emit(SIGNAL_MESSAGES_MARKED_AS_READ, data)
       checkAndEmitACNotificationsFromResponse(self.events, responseObj{"activityCenterNotifications"})
     except Exception as e:
       error "error: ", procName="onMarkAllMessagesRead", errDesription = e.msg
 
-  proc markAllMessagesRead*(self: Service, chatId: string) =
+  proc markAllMessagesRead*(self: Service, chatId: string, threadId: string = "") =
     if (chatId.len == 0):
       error "empty chat id", procName="markAllMessagesRead"
       return
@@ -1290,7 +1329,8 @@ QtObject:
       tptr: asyncMarkAllMessagesReadTask,
       vptr: cast[uint](self.vptr),
       slot: "onMarkAllMessagesRead",
-      chatId: chatId
+      chatId: chatId,
+      threadId: threadId
     )
 
     self.threadpool.start(arg)

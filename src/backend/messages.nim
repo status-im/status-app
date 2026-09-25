@@ -58,6 +58,10 @@ proc markAllMessagesFromChatWithIdAsRead*(chatId: string): RpcResponse[JsonNode]
   let payload = %* [chatId]
   result = callPrivateRPC("markAllRead".prefix, payload)
 
+proc markAllMessagesFromThreadWithIdAsRead*(chatId: string, threadId: string): RpcResponse[JsonNode] =
+  let payload = %* [chatId, threadId]
+  result = callPrivateRPC("markThreadRead".prefix, payload)
+
 proc markCertainMessagesFromChatWithIdAsRead*(chatId: string, messageIds: seq[string]):
   RpcResponse[JsonNode] =
   let payload = %* [chatId, messageIds]
