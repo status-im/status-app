@@ -128,7 +128,7 @@ Item {
         id: stillComponent
 
         Image {
-            id: stillImage
+            id: imageMessage
             width: Math.min(implicitWidth, root.imageWidth)
             fillMode: Image.PreserveAspectFit
             sourceSize.width: Math.ceil(root.imageWidth * Screen.devicePixelRatio)
@@ -140,11 +140,11 @@ Item {
             onStatusChanged: d.scheduleRetry(status)
 
             function reloadImage() {
-                stillImage.source = ""
-                stillImage.source = Qt.binding(() => root.source)
+                imageMessage.source = ""
+                imageMessage.source = Qt.binding(() => root.source)
             }
 
-            Component.onDestruction: stillImage.source = ""
+            Component.onDestruction: imageMessage.source = ""
         }
     }
 
@@ -152,7 +152,7 @@ Item {
         id: animatedComponent
 
         AnimatedImage {
-            id: animatedImage
+            id: imageMessage
             width: Math.min(implicitWidth, root.imageWidth)
             fillMode: Image.PreserveAspectFit
             source: root.source
@@ -163,11 +163,11 @@ Item {
             onStatusChanged: d.scheduleRetry(status)
 
             function reloadImage() {
-                animatedImage.source = ""
-                animatedImage.source = Qt.binding(() => root.source)
+                imageMessage.source = ""
+                imageMessage.source = Qt.binding(() => root.source)
             }
 
-            Component.onDestruction: animatedImage.source = ""
+            Component.onDestruction: imageMessage.source = ""
         }
     }
 
