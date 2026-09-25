@@ -48,9 +48,8 @@ QtObject:
     rebuildMarketDataDebouncer: debouncer_service.Debouncer
 
     # local storage, fulfilled by need, empty at the start
-    chainsSupportedForSwapViaParaswap: Table[int, bool] # [chainId, bool]
-    chainsSupportedForSwapViaLiFi: Table[int, bool] # [chainId, bool]
-    chainsSupportedForSwapViaRelay: Table[int, bool] # [chainId, bool]
+    chainsSupportedForSwap: Table[int, bool] # [chainId, bool], refers to the active swap provider
+    swapSupportChainIdsInFlight: HashSet[int] # chains used for a prefetch check
     # local storage
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]
     knownMissingKeys: HashSet[string] # keys the backend confirmed as "not found"; skip re-fetching until a refresh applies
@@ -111,9 +110,7 @@ QtObject:
   proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.}
   proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.}
-  proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.}
-  proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.}
-  proc prefetchRelaySupportRetrieved(self: Service, response: string) {.slot.}
+  proc prefetchSwapSupportRetrieved(self: Service, response: string) {.slot.}
 
 
   proc delete*(self: Service)
