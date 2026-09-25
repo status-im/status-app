@@ -93,8 +93,6 @@ settingsWalletAccountDelegate = {"container": settingsContentBase_ScrollView, "i
 settingsWalletKeyPairDelegate = {"container": settingsContentBase_ScrollView, "objectName": "walletKeyPairDelegate", "type": "StatusListItem", "visible": True}
 settingsWalletKeyPairMoreButton = {"container": settingsContentBase_ScrollView, "objectName": "walletKeyPairDelegateMoreButton", "type": "StatusFlatRoundButton", "visible": True}
 settingsWalletKeypairMenuKeycardAction = {"container": statusDesktop_mainWindow_overlay, "objectName": "walletKeypairMenuKeycardAction", "type": "StatusMenuItem", "visible": True}
-settingsWalletAccountTotalBalance = {"container": settingsContentBase_ScrollView, "objectName": "includeTotalBalanceListItem", "type": "StatusListItem", "visible": True}
-settingsWalletAccountTotalBalanceToggle = {"checkable": True, "container": settingsWalletAccountTotalBalance, "type": "StatusSwitch", "visible": True}
 settingsContentBaseScrollView_StatusFlatRoundButton = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "type": "StatusFlatRoundButton", "unnamed": 1, "visible": True}
 
 # Wallet Account Details view

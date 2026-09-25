@@ -19,7 +19,6 @@ from gui.components.wallet.testnet_mode_popup import TestnetModePopup
 from gui.components.keycard.management_popup import KeycardManagementPopup
 from gui.components.wallet.wallet_account_popups import AccountPopup, EditAccountFromSettingsPopup
 from gui.elements.button import Button
-from gui.elements.check_box import CheckBox
 from gui.elements.object import QObject
 from gui.elements.scroll import Scroll
 from gui.elements.text_label import TextLabel
@@ -44,8 +43,6 @@ class WalletSettingsView(QObject):
         self.wallet_settings_keypair_item = QObject(settings_names.settingsWalletKeyPairDelegate)
         self.wallet_settings_keycard_menu_action = Button(
             settings_names.settingsWalletKeypairMenuKeycardAction)
-        self.wallet_settings_total_balance_item = QObject(settings_names.settingsWalletAccountTotalBalance)
-        self.wallet_settings_total_balance_toggle = CheckBox(settings_names.settingsWalletAccountTotalBalanceToggle)
 
     @allure.step('Open add account pop up in wallet settings')
     def open_add_account_pop_up(self, attempts: int = 3) -> 'AccountPopup':
@@ -153,10 +150,6 @@ class WalletSettingsView(QObject):
             except Exception:
                 pass
         raise LookupError(f'Account details view did not show up with {attempts} retries')
-
-    @allure.step('Interact with the total balance toggle')
-    def toggle_total_balance(self, value: bool):
-        self.wallet_settings_total_balance_toggle.set(value)
 
 
 class AccountDetailsView(QObject):

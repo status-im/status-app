@@ -169,10 +169,6 @@ class WalletLeftPanel(QObject):
                 pass  # Retry one more time
         raise LookupError(f'Could not open context menu for "{account_name}" after {attempts} attempts')
 
-    @allure.step("Select Hide/Include in total balance from context menu for account")
-    def hide_include_in_total_balance_from_context_menu(self, account_name: str):
-        self._open_context_menu_for_account(account_name).hide_include_in_total_balance.click()
-
     @allure.step('Open account popup for editing from context menu')
     def open_edit_account_popup_from_context_menu(self, account_name: str, attempts = 3) -> AccountPopup:
         for _ in range(attempts):
