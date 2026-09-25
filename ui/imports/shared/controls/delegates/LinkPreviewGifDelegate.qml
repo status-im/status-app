@@ -48,7 +48,7 @@ CalloutCard {
             else
                 root.clicked(mouse)
         }
-        imageAlias.cache: localAnimationEnabled // GIFs can only loop/play properly with cache enabled
+        cacheImage: localAnimationEnabled // GIFs can only loop/play properly with cache enabled
         Loader {
             width: 45
             height: 38
