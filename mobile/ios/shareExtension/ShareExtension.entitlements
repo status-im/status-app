@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Hand-off channel to the host app (pending intake slot). Must match the
+         group in mobile/ios/Status.entitlements, Status-NoKeycard.entitlements,
+         ShareViewController.m and ui/StatusQ/src/shareintake_ios.mm. -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.app.status.mobile</string>
+    </array>
+</dict>
+</plist>

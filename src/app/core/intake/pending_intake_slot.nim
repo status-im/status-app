@@ -13,14 +13,36 @@
 ## comes from StatusQ (statusq_shareintake_pending_dir); on platforms without an
 ## App Group container the dir is empty and the slot is inactive.
 
-import std/os
+import std/[os, strutils]
 
 const
   PendingIntakeFileName* = "share.json"
-  ShareIntakeWakeUrl* = "status-app://share-intake"
-    ## Wake ping sent by the share extension via openURL. Carries no data — the
-    ## payload travels through the slot file. Must match kWakeUrl in
+  ShareIntakeWakeHost* = "share-intake"
+    ## Authority of the wake ping URL. Must match kWakeHost in
     ## mobile/ios/shareExtension/ShareViewController.m.
+  ShareIntakeWakeUrl* = "status-app://" & ShareIntakeWakeHost
+    ## Canonical wake ping form. The ping carries no data — the payload
+    ## travels through the slot file. On device the scheme is variant-unique
+    ## (the app's bundle id, e.g. `app.status.mobile.pr`): iOS keeps one
+    ## global handler per URL scheme, so a shared scheme would let a
+    ## co-installed variant hijack the wake (issue #48). Recognition
+    ## therefore goes through isShareIntakeWakeUrl, not this constant.
+
+proc isShareIntakeWakeUrl*(url: string): bool =
+  ## True for a `<scheme>://share-intake` wake ping from the share extension,
+  ## whatever the scheme: each app variant wakes itself through its own
+  ## bundle-id-derived scheme (mobile/ios/Info.plist.template registers it;
+  ## ShareViewController.m derives it), so the wake is identified by its
+  ## authority alone.
+  let url = url.strip()
+  let sep = url.find("://")
+  if sep < 1:
+    return false
+  let rest = url[sep + 3 .. ^1]
+  if not rest.startsWith(ShareIntakeWakeHost):
+    return false
+  rest.len == ShareIntakeWakeHost.len or
+    rest[ShareIntakeWakeHost.len] in {'/', '?', '#'}
 
 type PendingIntakeSlot* = ref object
   slotDir: string
@@ -50,6 +72,18 @@ proc write*(self: PendingIntakeSlot, payload: string) =
     writeFile(self.filePath(), payload)
   except CatchableError:
     discard
+
+proc peek*(self: PendingIntakeSlot): string =
+  ## Reads the pending payload without clearing it; "" when there is none.
+  ## Used by the fresh-launch cache sweep to learn which cached image copies
+  ## the still-pending payload references before delivery.
+  let path = self.filePath()
+  if not self.isActive() or not fileExists(path):
+    return ""
+  try:
+    result = readFile(path)
+  except CatchableError:
+    result = ""
 
 proc take*(self: PendingIntakeSlot): string =
   ## Reads and clears the pending payload; "" when there is none.
