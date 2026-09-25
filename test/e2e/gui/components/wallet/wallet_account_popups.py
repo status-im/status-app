@@ -1,5 +1,3 @@
-import time
-
 import squish
 
 from constants.wallet import *
@@ -188,7 +186,7 @@ class AccountPopup(QObject):
             self._address_combobox_button.hover().click()
             try:
                 return addresses_list.wait_until_appears()
-            except LookupError:
+            except (LookupError, TimeoutError):
                 pass
         raise LookupError('Generated addresses list did not open')
 
@@ -372,19 +370,17 @@ class GeneratedAddressesList(QObject):
     def __init__(self):
         super().__init__(names.accountAddressSelectionModal)
         self.address_list_item = QObject(names.addAccountPopup_GeneratedAddress)
+        self._page_indicator = QObject(
+            names.addAccountPopup_GeneratedAddressesListPageIndicatior_StatusPageIndicator)
+        self._page_button = Button(dict(names.page_StatusBaseButton))
 
+    @allure.step('Select page {1}')
     def _select_page(self, page_number: int):
-        locator = dict(names.page_StatusBaseButton)
-        locator['text'] = str(page_number)
-        page = driver.waitForObject(locator)
-        driver.mouseClick(page, page.width / 2, page.height / 2, driver.Qt.LeftButton)
-        time.sleep(0.5)
+        self._page_button.real_name['text'] = str(page_number)
+        self._page_button.wait_until_stable().click()
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        driver.waitForObjectExists(
-            names.addAccountPopup_GeneratedAddressesListPageIndicatior_StatusPageIndicator,
-            timeout_msec,
-        )
+        self._page_indicator.wait_until_appears(timeout_msec)
         return self
 
     @allure.step('Select address in list')
