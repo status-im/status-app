@@ -11,6 +11,5 @@ class WalletAccountContextMenu(QObject):
         self.delete_from_wallet_account_context = QObject(wallet_names.contextMenuItem_Delete)
         self.edit_from_wallet_account_context = QObject(wallet_names.contextMenuItem_Edit)
         self.copy_address_from_wallet_account_context = QObject(wallet_names.contextMenuItem_Copy_Address)
-        self.hide_include_in_total_balance = QObject(wallet_names.contextMenuItem_HideInclude)
         self.add_watched_address = QObject(wallet_names.addWatchedAddress)
         self.add_new_account = QObject(wallet_names.addNewAccount)

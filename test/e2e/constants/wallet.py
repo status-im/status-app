@@ -120,9 +120,7 @@ class WalletNetworkSettings(Enum):
 
 class WalletAccountSettings(Enum):
     STATUS_ACCOUNT_ORIGIN = 'Derived from your default Status key pair'
-    WATCHED_ADDRESS_ORIGIN = 'Watched address'
     STORED_ON_DEVICE = 'On device'
-    WATCHED_ADDRESSES_KEYPAIR_LABEL = 'Watched addresses'
 
 
 class WalletOrigin(Enum):
