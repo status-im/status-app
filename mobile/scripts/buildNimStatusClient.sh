@@ -76,6 +76,8 @@ NIM_FLAGS=(
     # std/json %* JObject construction (CreateAccountRequest.toJson() -> empty {},
     # breaking account creation). LTO is re-added for Android below, where it works.
     --opt:size
+    --passC:-fno-omit-frame-pointer
+    --passL:-fno-omit-frame-pointer
     --cc:clang
     --cpu:"$CARCH"
     --noMain:on

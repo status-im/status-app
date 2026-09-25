@@ -129,7 +129,13 @@ android {
         release {
             debuggable = false
             minifyEnabled = false
+            profileable = true
             signingConfig signingConfigs.release
+            packaging {
+                jniLibs {
+                    keepDebugSymbols += ['**/libnim_status_client.so', '**/libstatus.so', '**/libStatusQ.so', '**/libStatus*.so']
+                }
+            }
         }
         fdroid {
             debuggable = false
