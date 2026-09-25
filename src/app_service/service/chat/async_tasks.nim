@@ -114,9 +114,11 @@ type
 
 const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncSendImagesTaskArg](argEncoded)
+  var imagePaths: seq[string] = @[]
   try:
     var images = Json.decode(arg.imagePathsJson, seq[string])
-    var imagePaths: seq[string] = @[]
+    # imagePaths is declared above the try: the finally below releases the
+    # share-intake cached copies and needs it in scope.
     var temporaryImagePaths: seq[string] = @[]
     defer:
       for imagePath in temporaryImagePaths:
@@ -153,3 +155,11 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
       "error": e.msg,
       "chatId": arg.chatId,
     })
+  finally:
+    # Release the app-private cached copies now the shared images have been
+    # consumed (or the send failed for good). Mobile only: this list is
+    # whatever the user picked, and the guard inside only matches on the
+    # parent directory name — on desktop, where there is no share-intake
+    # cache at all, a match could only ever be a user-owned file.
+    when defined(android) or defined(ios):
+      releaseCachedShareFiles(imagePaths)

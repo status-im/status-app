@@ -1,5 +1,7 @@
 import app/modules/shared_models/model_utils
 import nimqml, tables
+when defined(QT_MODEL_SPY):
+  import app/modules/shared/qt_model_spy
 import chat_search_item
 import ../io_interface
 
@@ -15,6 +17,8 @@ type
     Emoji
     ChatType
     LastMessageText
+    LastMessageTimestamp
+    CanPost
 
 QtObject:
   type Model* = ref object of QAbstractListModel
@@ -37,8 +41,20 @@ QtObject:
     return -1
 
   proc setItems*(self: Model, items: seq[ChatSearchItem]) =
-    # No reset since the model build is called from the first time `rowCount` is called
-    self.items = items
+    # Chats hydrate asynchronously, so a view may have pulled `rowCount` before
+    # they existed: a later bulk build must reset the attached views. The first
+    # build (from `rowCount` itself) needs no reset.
+    if self.built:
+      when defined(QT_MODEL_SPY):
+        recordBeginResetModel()
+      self.beginResetModel()
+      self.items = items
+      self.endResetModel()
+      when defined(QT_MODEL_SPY):
+        recordEndResetModel()
+    else:
+      self.items = items
+      self.built = true
 
   proc addItem*(self: Model, item: ChatSearchItem) =
     if self.getItemIndexById(item.chatId) != -1:
@@ -83,6 +99,8 @@ QtObject:
       ModelRole.Emoji.int:"emoji",
       ModelRole.ChatType.int:"chatType",
       ModelRole.LastMessageText.int:"lastMessageText",
+      ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
+      ModelRole.CanPost.int:"canPost",
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -113,6 +131,10 @@ QtObject:
         result = newQVariant(item.chatType)
       of ModelRole.LastMessageText:
         result = newQVariant(item.lastMessageText)
+      of ModelRole.LastMessageTimestamp:
+        result = newQVariant(item.lastMessageTimestamp)
+      of ModelRole.CanPost:
+        result = newQVariant(item.canPost)
 
   proc updateChatItem*(self:Model, chatId, name, color, icon, emoji: string) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
@@ -128,6 +150,14 @@ QtObject:
   proc updateLastMessageTextOnChatItem*(self:Model, chatId, lastMessageText: string) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
       updateRole(lastMessageText)
+
+  proc updateLastMessageTimestampOnChatItem*(self:Model, chatId: string, lastMessageTimestamp: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(lastMessageTimestamp)
+
+  proc updateCanPostOnChatItem*(self:Model, chatId: string, canPost: bool) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(canPost)
 
   proc updateSectionNameOnChats*(self:Model, sectionId, sectionName: string) =
     for item in self.items:
