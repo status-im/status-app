@@ -12,8 +12,6 @@ from constants.wallet import WalletAccountPopup
 
 from gui.main_window import MainWindow
 
-
-@pytest.mark.case(703598)
 @pytest.mark.parametrize('account_name, color, emoji, emoji_unicode',
                          [
                              pytest.param(''.join(random.choices(string.ascii_letters +

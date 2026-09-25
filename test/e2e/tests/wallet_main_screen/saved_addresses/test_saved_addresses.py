@@ -11,8 +11,6 @@ from tests.wallet_main_screen import marks
 
 pytestmark = marks
 
-
-@pytest.mark.case(703021, 704987, 704988)
 @pytest.mark.parametrize('address', [pytest.param('0x8397bc3c5a60a1883174f722403d63a8833312b7',)])
 def test_manage_saved_address(main_screen: MainWindow, address: str):
     name = random_wallet_acc_keypair_name()

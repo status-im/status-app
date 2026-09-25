@@ -5,8 +5,6 @@ from allure_commons._allure import step
 from constants import RandomCommunity
 from gui.main_window import MainWindow
 
-
-@pytest.mark.case(703226, 703233, 703234, 703235, 703227)
 @pytest.mark.parametrize(
     'category_name, general_checkbox, channel_name, channel_description, channel_emoji, second_channel_name, '
     'second_channel_description, second_channel_emoji',

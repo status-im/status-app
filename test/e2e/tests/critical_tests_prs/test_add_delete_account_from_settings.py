@@ -14,7 +14,6 @@ from helpers.settings_helper import open_wallet_settings
 
 
 @pytest.mark.critical
-@pytest.mark.case(704454)
 @pytest.mark.parametrize('account_name, color, emoji, emoji_unicode',
                          [
                              pytest.param(''.join(random.choices(string.ascii_letters +

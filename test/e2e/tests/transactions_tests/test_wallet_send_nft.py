@@ -13,8 +13,6 @@ from helpers.wallet_helper import (
     wallet_send_returning_user,
 )
 
-
-@pytest.mark.case(704602)
 @pytest.mark.transaction
 @pytest.mark.parametrize('receiver_account_address, network_name', [
     pytest.param(

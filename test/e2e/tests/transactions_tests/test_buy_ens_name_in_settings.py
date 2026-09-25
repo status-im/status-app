@@ -15,8 +15,6 @@ from scripts.utils.generators import random_ens_string
 from constants.wallet import WalletHistoryTitles, WalletNetworkNaming
 from gui.screens.settings_ens_usernames import ENSRegisteredView
 
-
-@pytest.mark.case(704597)
 @pytest.mark.transaction
 @pytest.mark.parametrize('ens_name', [pytest.param(random_ens_string())])
 def test_ens_name_purchase(main_window, user_account, ens_name):

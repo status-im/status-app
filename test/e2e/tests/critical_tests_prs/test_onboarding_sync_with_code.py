@@ -15,8 +15,6 @@ from gui.main_window import MainWindow
 from gui.screens.onboarding import OnboardingWelcomeToStatusView, SyncResultView, OnboardingProfileSyncedView
 from helpers.onboarding_helper import skip_biometrics_popup_if_visible
 
-
-@pytest.mark.case(703592, 738760)
 @pytest.mark.critical
 @pytest.mark.smoke
 def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instances):

@@ -8,8 +8,6 @@ from scripts.utils.generators import random_password_string
 from driver.aut import AUT
 from gui.main_window import MainWindow
 
-
-@pytest.mark.case(703005)
 @pytest.mark.critical
 def test_change_password_and_login(aut: AUT, main_screen: MainWindow, user_account):
     with step('Open change password view'):

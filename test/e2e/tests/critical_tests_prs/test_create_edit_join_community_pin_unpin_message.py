@@ -17,8 +17,6 @@ from constants import ColorCodes, UserAccount, RandomUser, RandomCommunity
 from gui.screens.community_settings import CommunitySettingsScreen
 from gui.screens.messages import MessagesScreen
 
-
-@pytest.mark.case(703255, 703256, 703510, 738743, 738754, 738798, 738799)
 @pytest.mark.communities
 @pytest.mark.smoke
 @pytest.mark.critical

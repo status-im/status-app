@@ -9,8 +9,6 @@ from constants.wallet import WalletNetworkSettings, WalletAccountSettings, Deriv
 from gui.main_window import MainWindow
 from gui.screens.settings_wallet import AccountDetailsView
 
-
-@pytest.mark.case(704433, 738789)
 @pytest.mark.smoke
 @pytest.mark.parametrize('new_name', [
     pytest.param(''.join(random.choices(string.ascii_letters +

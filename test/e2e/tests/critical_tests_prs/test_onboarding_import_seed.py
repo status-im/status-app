@@ -14,8 +14,6 @@ from gui.main_window import MainWindow
 from gui.screens.onboarding import ReturningLoginView
 from helpers.settings_helper import open_wallet_settings, open_profile_settings
 
-
-@pytest.mark.case(703040, 736372, 738726)
 @pytest.mark.critical
 @pytest.mark.smoke
 def test_import_and_reimport_random_seed(

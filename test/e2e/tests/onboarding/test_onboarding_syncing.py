@@ -9,8 +9,6 @@ from gui.main_window import MainWindow
 
 pytestmark = marks
 
-
-@pytest.mark.case(703591)
 def test_cancel_setup_syncing(main_screen: MainWindow, user_account):
     with step('Open syncing settings'):
         sync_settings_view = main_screen.left_panel.open_settings().left_panel.open_syncing_settings()

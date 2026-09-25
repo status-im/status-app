@@ -13,8 +13,6 @@ from gui.components.changes_detected_popup import PermissionsChangesDetectedToas
 from gui.main_window import MainWindow
 from gui.screens.community_settings import PermissionsIntroView
 
-
-@pytest.mark.case(703632, 705014, 705016)
 @pytest.mark.critical
 # TODO: https://github.com/status-im/status-desktop/issues/19285
 def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):

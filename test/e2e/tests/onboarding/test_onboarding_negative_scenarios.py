@@ -12,8 +12,6 @@ from gui.screens.onboarding import ReturningLoginView
 
 pytestmark = marks
 
-
-@pytest.mark.case(702991)
 @pytest.mark.parametrize('error', [OnboardingMessages.PASSWORD_INCORRECT.value
                                    ])
 def test_login_with_wrong_password(aut: AUT, main_screen: MainWindow, user_account, error: str):

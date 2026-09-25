@@ -18,7 +18,6 @@ from helpers.settings_helper import open_wallet_settings
                                  ''.join(random.choices(string.ascii_letters, k=24)),
                                  '0x8397bc3c5a60a1883174f722403d63a8833312b7')
                          ])
-@pytest.mark.case(704620, 738787)
 @pytest.mark.critical
 @pytest.mark.smoke
 def test_wallet_settings_add_saved_address(main_screen: MainWindow, address: str, name: str):
