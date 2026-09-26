@@ -15,6 +15,10 @@ import app_service/service/network/service as network_service
 
 const FETCH_BATCH_COUNT_DEFAULT = 50
 
+# AutoLoadSingleUpdate reads the IDs of the whole list in one request, so the
+# list can't shift between batches while ownership is being written.
+const ID_SNAPSHOT_LIMIT = 1_000_000
+
 # Ownership changes are reported by status-go per address and per chain, so a
 # single sync produces a burst of "something changed" events. Wait for the burst
 # to settle before refetching the list instead of refetching once per event.
@@ -25,6 +29,27 @@ type
     AutoLoadSingleUpdate, # load all items and update the model once with full list
     AutoLoadPaginated,    # load items in batches (keep loading until the end of the list) and update the model appending each batch.
     OnDemand              # load items in batches (on demand when loadMoreItems is called) and update the model appending each batch.
+
+type
+  CollectiblesCalls* = object
+    ## Seam over the collectibles requests, injectable for tests.
+    fetchOwned*: proc(requestId: int32, chainIds: seq[int], addresses: seq[string],
+      filter: backend_collectibles.CollectibleFilter, offset: int, limit: int,
+      dataType: backend_collectibles.CollectibleDataType,
+      fetchCriteria: backend_collectibles.FetchCriteria): RpcResponse[JsonNode]
+    fetchByUniqueId*: proc(requestId: int32, uniqueIds: seq[backend_collectibles.CollectibleUniqueID],
+      dataType: backend_collectibles.CollectibleDataType): RpcResponse[JsonNode]
+
+proc defaultCollectiblesCalls(): CollectiblesCalls =
+  CollectiblesCalls(
+    fetchOwned: proc(requestId: int32, chainIds: seq[int], addresses: seq[string],
+        filter: backend_collectibles.CollectibleFilter, offset: int, limit: int,
+        dataType: backend_collectibles.CollectibleDataType,
+        fetchCriteria: backend_collectibles.FetchCriteria): RpcResponse[JsonNode] =
+      backend_collectibles.getOwnedCollectiblesAsync(requestId, chainIds, addresses, filter, offset, limit, dataType, fetchCriteria),
+    fetchByUniqueId: proc(requestId: int32, uniqueIds: seq[backend_collectibles.CollectibleUniqueID],
+        dataType: backend_collectibles.CollectibleDataType): RpcResponse[JsonNode] =
+      backend_collectibles.getCollectiblesByUniqueIDAsync(requestId, uniqueIds, dataType))
 
 proc isAutoLoad(self: LoadType): bool =
   return self == LoadType.AutoLoadSingleUpdate or self == LoadType.AutoLoadPaginated
@@ -55,9 +80,15 @@ QtObject:
 
       dataType: backend_collectibles.CollectibleDataType
       fetchCriteria: backend_collectibles.FetchCriteria
+      calls: CollectiblesCalls
+
+      # AutoLoadSingleUpdate: the IDs of the list being read, and where the next
+      # details batch starts.
+      snapshotIds: seq[backend_collectibles.CollectibleUniqueID]
+      snapshotPos: int
 
       # A (re)fetch was requested while one was already in flight. It is executed
-      # once the in-flight one completes, so bursts of triggers result in a
+      # once the in-flight scan completes, so bursts of triggers result in a
       # single trailing refetch instead of one reload each.
       pendingReset: bool
       # The in-flight fetch was made obsolete by a filter change: its results
@@ -79,15 +110,20 @@ QtObject:
     self.model.setIsFetching(true)
     self.model.setIsError(false)
 
-    var offset = 0
-    if not self.fetchFromStart:
-      if self.loadType.isPaginated():
-        offset = self.model.getCount()
-      else:
-        offset = self.tempItems.len
-    self.fetchFromStart = false
     try:
-      let response = backend_collectibles.getOwnedCollectiblesAsync(self.requestId, self.chainIds, self.addresses, self.filter, offset, FETCH_BATCH_COUNT_DEFAULT, self.dataType, self.fetchCriteria)
+      var response: RpcResponse[JsonNode]
+      if self.loadType != LoadType.AutoLoadSingleUpdate:
+        let offset = if self.fetchFromStart: 0 else: self.model.getCount()
+        response = self.calls.fetchOwned(self.requestId, self.chainIds, self.addresses, self.filter, offset, FETCH_BATCH_COUNT_DEFAULT, self.dataType, self.fetchCriteria)
+      elif self.fetchFromStart:
+        response = self.calls.fetchOwned(self.requestId, self.chainIds, self.addresses, self.filter, 0, ID_SNAPSHOT_LIMIT,
+          backend_collectibles.CollectibleDataType.UniqueID, self.fetchCriteria)
+      else:
+        let batchEnd = min(self.snapshotPos + FETCH_BATCH_COUNT_DEFAULT, self.snapshotIds.len)
+        let batch = self.snapshotIds[self.snapshotPos ..< batchEnd]
+        self.snapshotPos = batchEnd
+        response = self.calls.fetchByUniqueId(self.requestId, batch, self.dataType)
+      self.fetchFromStart = false
       if response.error != nil:
         self.model.setIsFetching(false)
         self.model.setIsError(true)
@@ -112,13 +148,15 @@ QtObject:
     dataType: backend_collectibles.CollectibleDataType = backend_collectibles.CollectibleDataType.Header,
     fetchCriteria: backend_collectibles.FetchCriteria = backend_collectibles.FetchCriteria(
       fetchType: backend_collectibles.FetchType.NeverFetch,
-    )): Controller =
+    ),
+    calls: CollectiblesCalls = defaultCollectiblesCalls()): Controller =
     new(result, delete)
 
     result.requestId = requestId
     result.loadType = loadType
     result.dataType = dataType
     result.fetchCriteria = fetchCriteria
+    result.calls = calls
 
     result.networkService = networkService
 
@@ -221,68 +259,102 @@ QtObject:
     self.checkModelState()
 
   proc getExtraData(self: Controller, chainID: int): ExtraData =
+    if self.networkService.isNil:
+      return
     let network = self.networkService.getNetworkByChainId(chainID)
     if not network.isNil:
       return getExtraData(network)
 
-  proc setTempItems(self: Controller, newItems: seq[CollectiblesEntry], offset: int) =
-    if offset == 0:
-      self.tempItems = @[]
-    elif offset != self.tempItems.len:
-      error "invalid offset"
+  proc toEntries(self: Controller, collectibles: seq[backend_collectibles.Collectible]): seq[CollectiblesEntry] =
+    return collectibles.map(header => (block:
+      let extradata = self.getExtraData(header.id.contractID.chainID)
+      newCollectibleDetailsFullEntry(header, extradata)
+    ))
+
+  proc discardResponse(self: Controller) =
+    # The filter changed after this fetch was started, its results don't match
+    # what has to be displayed anymore.
+    self.discardInFlightResponse = false
+    self.model.setIsFetching(false)
+    if self.pendingReset:
+      self.requestReset(clearItems = false)
+
+  proc failFetch(self: Controller) =
+    self.tempItems = @[]
+    self.snapshotIds = @[]
+    self.model.setIsError(true)
+    self.model.setIsFetching(false)
+    if self.pendingReset:
+      self.requestReset(clearItems = false)
+
+  proc continueSnapshotScan(self: Controller) =
+    if self.snapshotPos < self.snapshotIds.len:
+      self.doLoadMore()
       return
-    self.tempItems.add(newItems)
+
+    self.model.updateItems(self.tempItems)
+    self.tempItems = @[]
+    self.snapshotIds = @[]
+    if self.pendingReset:
+      # Triggers received while this scan was running, collapsed into a
+      # single refetch.
+      self.requestReset(clearItems = false)
 
   proc processGetOwnedCollectiblesResponse(self: Controller, response: JsonNode) =
     if self.discardInFlightResponse:
-      # The filter changed after this fetch was started, its results don't match
-      # what has to be displayed anymore.
-      self.discardInFlightResponse = false
-      self.model.setIsFetching(false)
-      if self.pendingReset:
-        self.requestReset(clearItems = false)
+      self.discardResponse()
       return
 
     try:
       let res = fromJson(response, backend_collectibles.GetOwnedCollectiblesResponse)
-
-      let isError = res.errorCode != backend_collectibles.ErrorCodeSuccess
-
-      if isError:
+      if res.errorCode != backend_collectibles.ErrorCodeSuccess:
         error "error fetching collectibles entries: ", code = res.errorCode
-        self.model.setIsError(true)
-        self.model.setIsFetching(false)
-        if self.pendingReset:
-          self.requestReset(clearItems = false)
+        self.failFetch()
         return
 
-      let items = res.collectibles.map(header => (block:
-        let extradata = self.getExtraData(header.id.contractID.chainID)
-        newCollectibleDetailsFullEntry(header, extradata)
-      ))
-      
-      if self.loadType.isPaginated():
-        self.model.setItems(items, res.offset, res.hasMore)
-      else:
-        self.setTempItems(items, res.offset)
-        if not res.hasMore:
-          self.model.updateItems(self.tempItems)
-          self.tempItems = @[]
+      if self.loadType == LoadType.AutoLoadSingleUpdate:
+        self.snapshotIds = res.collectibles.mapIt(it.id)
+        self.snapshotPos = 0
+        self.tempItems = @[]
+        self.model.setIsFetching(false)
+        self.setOwnershipStatus(res.ownershipStatus)
+        self.continueSnapshotScan()
+        return
 
+      self.model.setItems(self.toEntries(res.collectibles), res.offset, res.hasMore)
       self.model.setIsFetching(false)
       self.setOwnershipStatus(res.ownershipStatus)
-
       if self.pendingReset:
-        # Triggers received while this fetch was running, collapsed into a
-        # single refetch.
         self.requestReset(clearItems = false)
         return
-
       if self.loadType.isAutoLoad() and res.hasMore:
         self.doLoadMore()
 
     except Exception as e:
-      error "Error converting activity entries: ", error = e.msg
+      error "error processing collectibles entries: ", error = e.msg
+      self.failFetch()
+
+  proc processGetCollectiblesDetailsResponse(self: Controller, response: JsonNode) =
+    if self.loadType != LoadType.AutoLoadSingleUpdate:
+      return
+    if self.discardInFlightResponse:
+      self.discardResponse()
+      return
+
+    try:
+      let res = fromJson(response, backend_collectibles.GetCollectiblesByUniqueIDResponse)
+      if res.errorCode != backend_collectibles.ErrorCodeSuccess:
+        error "error fetching collectibles details: ", code = res.errorCode
+        self.failFetch()
+        return
+
+      self.tempItems.add(self.toEntries(res.collectibles))
+      self.model.setIsFetching(false)
+      self.continueSnapshotScan()
+
+    except Exception as e:
+      error "error processing collectibles details: ", error = e.msg
+      self.failFetch()
 
   proc updateTempItems(self: Controller, updates: seq[backend_collectibles.Collectible]) =
     for i in countdown(self.tempItems.high, 0):
@@ -310,9 +382,10 @@ QtObject:
   # changed). Results of a fetch that is already in flight are discarded too.
   #
   # `clearItems` == false keeps the current items visible while the refetch runs.
-  # AutoLoadSingleUpdate accumulates the batches privately and applies them with
-  # a single diff update at the end, so only the collectibles that actually
-  # appeared/disappeared are touched — no flicker, no delegate rebuild.
+  # AutoLoadSingleUpdate reads a snapshot of the IDs, then their details in
+  # batches, and applies the result with a single diff update at the end, so
+  # only the collectibles that actually appeared/disappeared are touched — no
+  # flicker, no delegate rebuild.
   # Paginated load types append every batch straight to the model, so for those
   # the visible list still has to be dropped before restarting.
   proc requestReset(self: Controller, clearItems: bool) =
@@ -331,6 +404,7 @@ QtObject:
     self.pendingReset = false
     self.discardInFlightResponse = false
     self.tempItems = @[]
+    self.snapshotIds = @[]
     self.fetchFromStart = true
     if self.loadType.isAutoLoad():
       self.doLoadMore()
@@ -348,6 +422,10 @@ QtObject:
   proc setupEventHandlers(self: Controller) =
     self.eventsHandler.onOwnedCollectiblesFilteringDone(proc (jsonObj: JsonNode) =
       self.processGetOwnedCollectiblesResponse(jsonObj)
+    )
+
+    self.eventsHandler.onGetCollectiblesDetailsDone(proc (jsonObj: JsonNode) =
+      self.processGetCollectiblesDetailsResponse(jsonObj)
     )
 
     self.eventsHandler.onCollectiblesDataUpdate(proc (jsonObj: JsonNode) =
