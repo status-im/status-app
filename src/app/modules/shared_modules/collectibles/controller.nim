@@ -309,7 +309,13 @@ QtObject:
         self.requestReset(clearItems = false)
 
     except Exception as e:
-      error "Error converting activity entries: ", error = e.msg
+      error "error processing collectibles entries: ", error = e.msg
+      self.tempItems = @[]
+      self.fetchFromStart = true
+      self.model.setIsError(true)
+      self.model.setIsFetching(false)
+      if self.pendingReset:
+        self.requestReset(clearItems = false)
 
   proc updateTempItems(self: Controller, updates: seq[backend_collectibles.Collectible]) =
     for i in countdown(self.tempItems.high, 0):
