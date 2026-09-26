@@ -158,6 +158,31 @@ Item {
             return store
         }
 
+        // A shared or copied link is the URL itself: QML's url-to-string decodes
+        // %20 into a space, and a chat app ends the link there.
+        function test_shareUrl_keepsTheSourceUrlEncoded() {
+            const signed = "https://example.com/a.exe?rscd=attachment%3B+filename%3Da.exe"
+                         + "&rcd=attachment%3B%20filename%3Da.exe"
+            const store = createStore()
+            let shared = ""
+            let copied = ""
+            store.platform.shareText = function(text) { shared = text }
+            store.platform.copyText = function(text) { copied = text }
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.url = signed
+            const record = store.addDownload(live)
+
+            compare(store.sourceUrlString(record), signed)
+
+            store.platform.preferShareSheet = true
+            verify(store.shareUrl(record))
+            compare(shared, signed)
+
+            store.platform.preferShareSheet = false
+            verify(store.shareUrl(record))
+            compare(copied, signed)
+        }
+
         function test_createRecord_fromLiveDownload() {
             const store = createStore()
             const live = createTemporaryObject(fakeDownloadComponent, root)
@@ -280,6 +305,22 @@ Item {
             const live = createTemporaryObject(fakeDownloadComponent, root)
             compare(store.acceptLiveDownload(live, null),
                     "/tmp/status-downloads/report.pdf")
+        }
+
+        function test_defaultDownloadsDirectory_isLocalPath() {
+            const store = createStore()
+            verify(!store.downloadsDirectory.startsWith("file:"), store.downloadsDirectory)
+            verify(!/^\/[A-Za-z]:/.test(store.downloadsDirectory), store.downloadsDirectory)
+        }
+
+        function test_downloadTarget_windowsDriveDirectory() {
+            const store = createStore()
+            store.downloadsDirectory = "C:/Users/x/Downloads"
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            compare(store.acceptLiveDownload(live, null), "C:/Users/x/Downloads/report.pdf")
+            compare(live.downloadDirectory, "C:/Users/x/Downloads")
+            compare(live.downloadFileName, "report.pdf")
         }
 
         function test_downloadTarget_addsCollisionSuffixes() {
@@ -831,6 +872,32 @@ Item {
             verify(store.shareFile(record))
             compare(copied, "/tmp/downloads/report.pdf")
             compare(shared.length, 0)
+        }
+
+        function test_canShareUrl_refusesPageLocalUrls() {
+            const store = createStore()
+            const http = createTemporaryObject(fakeDownloadComponent, root)
+            http.url = "https://example.com/photo.png"
+            verify(store.canShareUrl(store.addDownload(http)))
+
+            const blob = createTemporaryObject(fakeDownloadComponent, root)
+            blob.url = "blob:https://example.com/f1e65319-142c-47cf-ac82-79bc2a65e458"
+            verify(!store.canShareUrl(store.addDownload(blob)))
+
+            const data = createTemporaryObject(fakeDownloadComponent, root)
+            data.url = "data:image/png;base64,iVBORw0KGgo="
+            verify(!store.canShareUrl(store.addDownload(data)))
+
+            // The link menu shares a raw URL through the same policy.
+            verify(store.canShareUrlString("https://example.com/photo.png"))
+            verify(!store.canShareUrlString("blob:https://example.com/f1e65319"))
+
+            store.platform.preferShareSheet = true
+            let shared = ""
+            store.platform.shareText = function(text) { shared = text }
+            verify(!store.shareUrl(store.addDownload(blob)))
+            verify(!store.shareUrlString("blob:https://example.com/f1e65319"))
+            compare(shared, "")
         }
 
         function test_shareUrl_mobile_usesShareText_desktop_copies() {

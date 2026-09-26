@@ -21,6 +21,10 @@ public:
 
     Q_INVOKABLE QUrl urlFromUserInput(const QString& input) const;
 
+    // True for input addressing the device rather than the network: file: and,
+    // on Android, content:. A scheme test only — nothing is resolved or opened.
+    Q_INVOKABLE static bool isLocalUrl(const QString& input);
+
     // Returns a user-friendly label to show for a backup location.
     // On Android for SAF tree URIs (content://) this will map to a readable form like
     // "Internal storage/Documents/...". Otherwise returns a local path if applicable.

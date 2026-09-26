@@ -2812,10 +2812,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Najít na stránce</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>Režim kompatibility</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>Vývojářské nástroje</translation>
     </message>
@@ -6308,10 +6304,6 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Kopírovat URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Stažené soubory</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Pozastavit</translation>
     </message>
@@ -6336,8 +6328,12 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Zrušit</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Zavřít</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11041,6 +11037,10 @@ selhalo</translation>
         <translation>Trh</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Směnit</translation>
     </message>
@@ -11719,10 +11719,6 @@ selhalo</translation>
     <message>
         <source>Zoom Fit</source>
         <translation>Přizpůsobit velikost</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Režim kompatibility</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13506,6 +13502,10 @@ selhalo</translation>
     <message>
         <source>Activity Center</source>
         <translation>Centrum aktivit</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19013,6 +19013,10 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <message>
         <source>Buy</source>
         <translation>Koupit</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

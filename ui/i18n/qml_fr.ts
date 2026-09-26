@@ -2799,10 +2799,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Rechercher dans la page</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>Mode de compatibilité</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>Outils de développement</translation>
     </message>
@@ -6279,10 +6275,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Copier l’URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Téléchargements</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Mettre en pause</translation>
     </message>
@@ -6307,8 +6299,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Annuler</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Fermer</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -10981,6 +10977,10 @@ chargement</translation>
         <translation>Marché</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Échange</translation>
     </message>
@@ -11655,10 +11655,6 @@ chargement</translation>
     <message>
         <source>Zoom Fit</source>
         <translation>Ajuster le zoom à la fenêtre</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Mode de compatibilité</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13437,6 +13433,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Activity Center</source>
         <translation>Centre d’activité</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18926,6 +18926,10 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <message>
         <source>Buy</source>
         <translation>Acheter</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

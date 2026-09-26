@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import QtQml
 
 import StatusQ
-import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -82,7 +81,6 @@ SplitView {
             }
         }
 
-        platformOS: ctrlPlatformOS.currentValue
         leftPortraitPadding: 0
 
         bookmarksStore: BrowserStores.BookmarksStore {}
@@ -247,7 +245,6 @@ SplitView {
 
         readonly property var localAccountSensitiveSettings: Settings {
             property bool devToolsEnabled
-            property bool compatibilityMode: true
             property alias shouldShowFavoritesBar: ctrlShowFavoritesBar.checked
             property int useBrowserEthereumExplorer: Constants.browserEthereumExplorerEtherscan
             property int selectedBrowserSearchEngineId: SearchEnginesConfig.browserSearchEngineDuckDuckGo
@@ -269,32 +266,6 @@ SplitView {
     ColumnLayout {
         SplitView.fillWidth: true
         SplitView.preferredHeight: 200
-
-        RowLayout {
-            Layout.fillWidth: true
-            Label { text: "Spoof platform OS:" }
-            ComboBox {
-                id: ctrlPlatformOS
-                textRole: "text"
-                valueRole: "value"
-                model: [
-                    { value: SQUtils.Utils.linux, text: "Linux" },
-                    { value: SQUtils.Utils.mac, text: "MacOS" },
-                    { value: SQUtils.Utils.windows, text: "Windows" },
-                    { value: SQUtils.Utils.android, text: "Android" },
-                    { value: SQUtils.Utils.ios, text: "iOS" }
-                ]
-                onCurrentValueChanged: browserLayout.reloadCurrentTab()
-            }
-            Label {
-                id: userAgentString
-                text: browserLayout.userAgent
-            }
-            Button {
-                icon.name: "edit-copy"
-                onClicked: ClipboardUtils.setText(userAgentString.text)
-            }
-        }
 
         Switch {
             id: ctrlIsMobile

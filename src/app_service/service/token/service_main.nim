@@ -29,6 +29,8 @@ proc applyAllTokenListsResult(self: Service, res: AllTokenListsApplyResult) =
   self.allTokenLists = move res.allTokenLists
 
 proc prefetchParaswapSupport(self: Service) =
+  if not PARASWAP_ENABLED:
+    return
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
     return
@@ -62,6 +64,8 @@ proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} 
     error "prefetchParaswapSupportRetrieved", err = ex.msg
 
 proc prefetchLiFiSupport(self: Service) =
+  if not LIFI_ENABLED:
+    return
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
     return
@@ -318,6 +322,7 @@ proc init*(self: Service) =
     self.prefetchLiFiSupport()
 
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
+    self.resetMarketValuesCache()
     self.rebuildMarketData()
 
   self.asyncRefreshTokens(fetchAllTokens = true)
@@ -571,6 +576,8 @@ proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int
 
 ## Checks if the chain is supported for swap via Paraswap
 proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
+  if not PARASWAP_ENABLED:
+    return false
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
     return false
@@ -582,6 +589,8 @@ proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
 
 ## Checks if the chain is supported for swap via LI.FI
 proc isChainSupportedForSwapViaLiFi*(self: Service, chainId: int): bool =
+  if not LIFI_ENABLED:
+    return false
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
     return false
@@ -590,6 +599,11 @@ proc isChainSupportedForSwapViaLiFi*(self: Service, chainId: int): bool =
   let supported = isChainSupportedForSwapViaLiFi(chainId)
   self.chainsSupportedForSwapViaLiFi[chainId] = supported
   return supported
+
+proc isChainSupportedForSwap*(self: Service, chainId: int): bool =
+  # Add further providers here (e.g. Rekey) as they are introduced.
+  return self.isChainSupportedForSwapViaLiFi(chainId) or
+    self.isChainSupportedForSwapViaParaswap(chainId)
 
 proc getTokenListUpdatedAt*(self: Service): int64 =
   return self.tokenListUpdatedAt

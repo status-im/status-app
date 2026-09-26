@@ -2783,10 +2783,6 @@ Do you wish to override the security check and continue?</source>
         <translation>페이지에서 찾기</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>호환 모드</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>개발자 도구</translation>
     </message>
@@ -6255,10 +6251,6 @@ key pair. Keycard will be required for signing</source>
         <translation>URL 복사</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>다운로드</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>일시 중지</translation>
     </message>
@@ -6283,8 +6275,12 @@ key pair. Keycard will be required for signing</source>
         <translation>취소</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>닫기</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -10933,6 +10929,10 @@ to load</source>
         <translation>마켓</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>스왑</translation>
     </message>
@@ -11603,10 +11603,6 @@ to load</source>
     <message>
         <source>Zoom Fit</source>
         <translation>맞춤 확대</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>호환 모드</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13376,6 +13372,10 @@ to load</source>
     <message>
         <source>Activity Center</source>
         <translation>활동 센터</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18845,6 +18845,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Buy</source>
         <translation>구매</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

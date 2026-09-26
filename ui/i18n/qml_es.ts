@@ -2804,10 +2804,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Buscar en la página</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>Modo de compatibilidad</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>Herramientas de desarrollo</translation>
     </message>
@@ -6282,10 +6278,6 @@ par de claves. Se requerirá Keycard para firmar</translation>
         <translation>Copiar URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Descargas</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Pausar</translation>
     </message>
@@ -6310,8 +6302,12 @@ par de claves. Se requerirá Keycard para firmar</translation>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Descartar</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -10992,6 +10988,10 @@ al cargar</translation>
         <translation>Mercado</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Swap</translation>
     </message>
@@ -11661,10 +11661,6 @@ al cargar</translation>
     <message>
         <source>Zoom Fit</source>
         <translation>Ajustar zoom</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Modo de compatibilidad</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13441,6 +13437,10 @@ al cargar</translation>
     <message>
         <source>Activity Center</source>
         <translation>Centro de actividad</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18931,6 +18931,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Buy</source>
         <translation>Comprar</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

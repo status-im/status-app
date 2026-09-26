@@ -2812,10 +2812,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Знайти на сторінці</translation>
     </message>
     <message>
-        <source>Compatibility mode</source>
-        <translation>Режим сумісності</translation>
-    </message>
-    <message>
         <source>Developer Tools</source>
         <translation>Інструменти розробника</translation>
     </message>
@@ -6308,10 +6304,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Копіювати URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Завантаження</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Призупинити</translation>
     </message>
@@ -6336,8 +6328,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Скасувати</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Закрити</translation>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11042,6 +11038,10 @@ to load</source>
         <translation>Ринок</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Обмін</translation>
     </message>
@@ -11720,10 +11720,6 @@ to load</source>
     <message>
         <source>Zoom Fit</source>
         <translation>Підігнати масштаб</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Режим сумісності</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13507,6 +13503,10 @@ to load</source>
     <message>
         <source>Activity Center</source>
         <translation>Центр активності</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19018,6 +19018,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Buy</source>
         <translation>Купити</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Swap</source>

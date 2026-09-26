@@ -30,6 +30,10 @@ cd "$BUILD_DIR"
 
 ulimit -n 65536 || true
 export USE_SYSTEM_NIM=1
+# F-Droid builds are release builds: no Swap, no swap providers (compile-time flags).
+export FLAG_SWAP_ENABLED=0
+export FLAG_LIFI_ENABLED=0
+export FLAG_PARASWAP_ENABLED=0
 export NIM_SDS_SOURCE_DIR="$BUILD_DIR/vendor/nim-sds"
 
 make deps

@@ -1,6 +1,60 @@
 #!/bin/bash
 APPDIR="$(dirname "$(readlink -f "${0}")")"
 export PATH="${APPDIR}/usr/bin:${PATH}"
+
+# Install a launcher into the user's applications directory so the desktop
+# shell can associate our window with an app entry and offer "Add to
+# Favorites"/pinning. An AppImage installs nothing on its own, so without this
+# there is no entry to pin and the shell falls back to a window-backed app:
+# generic icon, no launcher actions.
+#
+# Two details are load-bearing:
+#  * Exec= must be an absolute, resolvable path. GLib silently discards any
+#    entry whose Exec program is not found in $PATH, so the bundled desktop
+#    file's `Exec=nim_status_client` is rewritten to point at the AppImage.
+#  * StartupWMClass (shipped in nim-status.desktop) must match the WM_CLASS
+#    instance name Qt sets, so the shell can map a running window back here.
+#
+# Rewritten on every run, which keeps the entry correct when the AppImage is
+# moved or replaced by a newer version.
+install_desktop_entry() {
+  [[ -n "${APPIMAGE:-}" ]] || return 0  # not running as an AppImage
+  [[ "${STATUS_NO_DESKTOP_INTEGRATION:-}" == "1" ]] && return 0
+
+  local data_dir="${XDG_DATA_HOME:-${HOME}/.local/share}"
+  local apps_dir="${data_dir}/applications"
+  local icons_dir="${data_dir}/icons/hicolor/512x512/apps"
+  local entry="${apps_dir}/nim-status.desktop"
+  local template="${APPDIR}/nim-status.desktop"
+
+  [[ -f "${template}" ]] || return 0
+  mkdir -p "${apps_dir}" "${icons_dir}" || return 0
+  cp -f "${APPDIR}/status.png" "${icons_dir}/status.png" 2>/dev/null
+
+  local line contents=""
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    [[ "${line}" == Exec=* ]] && continue
+    contents+="${line}"$'\n'
+  done <"${template}"
+  contents+="Exec=\"${APPIMAGE}\""$'\n'
+
+  # Only write when the entry would actually change; every write wakes the
+  # desktop shell's file monitor.
+  [[ "$(cat "${entry}" 2>/dev/null)" == "${contents%$'\n'}" ]] && return 0
+
+  # Write via a temp file: the destination may be a symlink (developers often
+  # link it at a checkout), and redirecting into it would clobber the target.
+  local tmp="${entry}.tmp.$$"
+  printf '%s' "${contents}" >"${tmp}" 2>/dev/null || { rm -f "${tmp}"; return 0; }
+  mv -f "${tmp}" "${entry}" 2>/dev/null || { rm -f "${tmp}"; return 0; }
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "${apps_dir}" 2>/dev/null
+  fi
+  return 0
+}
+
+install_desktop_entry
+
 export GST_PLUGIN_SCANNER="${APPDIR}/usr/lib/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner"
 export GST_PLUGIN_PATH="${APPDIR}/usr/lib/gstreamer-1.0"
 export GST_PLUGIN_PATH_1_0="${APPDIR}/usr/lib/gstreamer-1.0"

@@ -74,7 +74,7 @@ QtObject {
     // policy — keep in sync with kMediaPlayerDirName in browserprofileutils.cpp.
     property string mediaPlayerDirectory: {
         const loc = StandardPaths.writableLocation(StandardPaths.TempLocation)
-        return loc ? String(loc).replace("file://", "").replace(/[/\\]+$/, "") + "/status-browser-player" : ""
+        return loc ? UrlUtils.convertUrlToLocalPath(loc) + "/status-browser-player" : ""
     }
 
     // Player page assets, substituted and inlined by d.mediaPlayerHtml.

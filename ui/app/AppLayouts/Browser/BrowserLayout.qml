@@ -5,6 +5,7 @@ import QtQuick.Layouts
 
 import QtModelsToolkit
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
@@ -52,10 +53,6 @@ StatusSectionLayout {
     required property var connectorController
 
     property bool isDebugEnabled: false
-    property string platformOS: Qt.platform.os
-
-    readonly property string userAgent: browserConfig.httpUserAgent
-
     signal sendToRecipientRequested(string address)
 
     function openUrlInNewTab(url, initialTitle, activate=false) {
@@ -77,10 +74,6 @@ StatusSectionLayout {
             if (tab)
                 tab.loadFileUrl(fileUrl, readAccessUrl || "")
         })
-    }
-
-    function reloadCurrentTab() {
-        webViewContext.reloadCurrent()
     }
 
     // Drive the current tab from Storybook / automation (web content is not in AX).
@@ -298,6 +291,11 @@ StatusSectionLayout {
                 webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
                 return
             }
+            // A local path dead-ends here (ADR 0006 §8) rather than becoming
+            // a query, which would leak it to the search engine.
+            if (UrlUtils.isLocalUrl(url))
+                return
+
             // An explicit scheme is an address, never a query: chrome://crash,
             // view-source://…, about:blank. isURL() only knows http(s). file://
             // is left out: browsing tabs never reach it (ADR 0006 §8).
@@ -355,6 +353,8 @@ StatusSectionLayout {
         }
 
         onCurrentWebViewChanged: {
+            // A hovered link belongs to the page it was hovered on.
+            statusBubble.hide()
             findBar.reset()
             // MobileWebView has no native-find dismiss signal; clear Find XOR on tab change.
             if (root.isMobile)
@@ -709,6 +709,9 @@ StatusSectionLayout {
         z: centerPanel.z + 1
         anchors.left: parent.left
         anchors.bottom: parent.bottom
+        // Sits above the desktop Download Pill strip; an inverted portrait layout puts the strip on top.
+        anchors.bottomMargin: root.showFooter && footerLoader.item
+                              && !(root.isPortrait && root.invertedLayout) ? footerLoader.height : 0
     }
 
     Connections {
@@ -826,7 +829,6 @@ StatusSectionLayout {
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
         onLaunchFindBar: _internal.showFindBar()
-        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
         onLaunchBrowserSettings: {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
         }
@@ -849,11 +851,9 @@ StatusSectionLayout {
 
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? false
         clearing: _internal.currentWebView?.clearing ?? false
-        compatibilityMode: localAccountSensitiveSettings.compatibilityMode
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
         onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
-        onToggleCompatibilityMode: (checked) => webViewContext.setCompatibilityMode(checked)
 
         onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSupportedFormatsRequested: _internal.openSupportedFormats()
@@ -976,6 +976,8 @@ StatusSectionLayout {
     BrowserLinkContextMenu {
         id: linkContextMenuInst
 
+        canShareLink: root.downloadsStore.canShareUrlString(linkUrl)
+
         onOpenInNewTabRequested: targetUrl => root.openUrlInNewTab(targetUrl)
         onShareUrlRequested: targetUrl => root.downloadsStore.shareUrlString(targetUrl)
         onDownloadRequested: function (targetUrl) {
@@ -993,8 +995,10 @@ StatusSectionLayout {
     DownloadRecordMenu {
         id: downloadRecordMenuInst
 
-        capabilities: downloadsContext.capabilitiesFor(record, { showDismiss: forStrip, showDownloadsEntry: forStrip })
+        capabilities: downloadsContext.capabilitiesFor(
+                          record, { showDismiss: forStrip, showDownloadsEntry: forStrip })
 
+        onDismissRequested: root.downloadsStore.dismissRecordFromStrip(record)
         onDownloadsRequested: _internal.openDownloadsOverview()
         onShowInFolderRequested: root.downloadsStore.openDirectoryForRecord(record)
         onShareFileRequested: downloadsContext.shareFileRecord(record)
@@ -1002,7 +1006,6 @@ StatusSectionLayout {
         onOpenInBrowserRequested: downloadsContext.openInBrowserRecord(record)
         onRetryRequested: downloadsContext.retryRecord(record)
         // stripVisible observes strip-model emptiness — no visibility sync call.
-        onDismissRequested: root.downloadsStore.dismissRecordFromStrip(record)
     }
 
     Component {
@@ -1020,28 +1023,6 @@ StatusSectionLayout {
 
         userUID: root.userUID
         featureEnabled: root.dappsEnabled
-        httpUserAgent: {
-            if (localAccountSensitiveSettings.compatibilityMode) {
-                // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement
-                const os = root.platformOS
-                let platform = "X11; Linux x86_64" // default Linux
-                let mobile = ""
-                if (os === SQUtils.Utils.windows)
-                    platform = "Windows NT 11.0; Win64; x64"
-                else if (os === SQUtils.Utils.mac)
-                    platform = "Macintosh; Intel Mac OS X 10_15_7"
-                else if (os === SQUtils.Utils.android) {
-                    platform = "Linux; Android 10; K"
-                    mobile = "Mobile"
-                } else if (os === SQUtils.Utils.ios) {
-                    platform = "iPhone; CPU iPhone OS 18_6 like Mac OS X"
-                    mobile = "Mobile/15E148"
-                }
-
-                return "Mozilla/5.0 (%1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 %2 Safari/604.1".arg(platform).arg(mobile)
-            }
-            return ""
-        }
     }
 
     BCBrowserDappsProvider {

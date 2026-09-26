@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import StatusQ
+
 import AppLayouts.Browser.adapters
 import AppLayouts.Browser.webview
 
@@ -147,6 +149,16 @@ Item {
         }
 
         // A preview keeps nothing on disk whatever tab it was opened from.
+        function test_localPath_typedInTheAddressBar_deadEnds() {
+            verify(UrlUtils.isLocalUrl("file:///Users/me/secret.pdf"))
+            verify(UrlUtils.isLocalUrl("  FILE:///sdcard/Download/x.jpg"))
+            verify(UrlUtils.isLocalUrl("content://media/external/downloads/1"))
+
+            verify(!UrlUtils.isLocalUrl("https://status.app"))
+            verify(!UrlUtils.isLocalUrl("about:blank"))
+            verify(!UrlUtils.isLocalUrl("how to open a file"))
+        }
+
         function test_previewParams_areNeverNamedStorage() {
             const preview = createTemporaryObject(previewParamsComponent, root)
             compare(preview.storageName, "")

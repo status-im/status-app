@@ -15,6 +15,9 @@ import android.util.Log;
 import im.status.mobileui.PushNotificationHelper;
 import android.content.ActivityNotFoundException;
 import android.widget.Toast;
+import android.os.Environment;
+import android.provider.DocumentsContract;
+import java.io.File;
 
 public class StatusQtActivity extends QtActivity {
     private static final String TAG = "StatusQtActivity";
@@ -148,33 +151,58 @@ public class StatusQtActivity extends QtActivity {
         }
     }
 
+    private static final String EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents";
+
     /**
-     * Opens the system Downloads UI (Show in folder for browser downloads).
-     * Called from Qt via JNI. Standard-mode completed files are registered by
-     * MobileWebView; Incognito downloads are not (ADR 0006).
+     * Shows a completed download in the system file UI. Called from Qt via JNI.
+     * MobileWebView publishes it into the public Download folder (ADR 0006), so
+     * aim at the file there; a file UI given the document URI opens its folder.
      */
-    public static void openDownloadsUi() {
+    public static void showDownload(String path) {
         if (sInstance == null) return;
+
+        final String name = path == null ? "" : new File(path).getName();
+        final String documentId = "primary:" + Environment.DIRECTORY_DOWNLOADS
+                + (name.isEmpty() ? "" : "/" + name);
+        final Intent inFolder = new Intent(Intent.ACTION_VIEW)
+                .setDataAndType(
+                        DocumentsContract.buildDocumentUri(EXTERNAL_STORAGE_AUTHORITY, documentId),
+                        DocumentsContract.Document.MIME_TYPE_DIR)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (startActivityOrLog(inFolder)) return;
+
+        final Intent downloadsList = new Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (startActivityOrLog(downloadsList)) return;
+
+        toastOnUiThread("No app can show the Downloads folder");
+    }
+
+    /// Vendor ROMs drop or restrict these activities; a refusal is expected.
+    private static boolean startActivityOrLog(Intent intent) {
         try {
-            Intent intent = new Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             sInstance.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            Log.e(TAG, "openDownloadsUi failed", e);
+            return true;
+        } catch (ActivityNotFoundException | SecurityException e) {
+            Log.w(TAG, "activity refused: " + intent.getAction(), e);
+            return false;
         }
+    }
+
+    /// JNI calls arrive on Qt's thread, which has no Looper to post a Toast from.
+    private static void toastOnUiThread(String text) {
+        final StatusQtActivity activity = sInstance;
+        if (activity == null) return;
+        activity.runOnUiThread(() -> Toast.makeText(activity, text, Toast.LENGTH_SHORT).show());
     }
 
     // Opens the system Accessibility Settings screen. Called from Qt via JNI.
     public static void openAccessibilitySettings() {
         if (sInstance == null) return;
-        try {
-            Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            sInstance.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            // Handle the rare case where the settings activity doesn't exist
-            Toast.makeText(sInstance, "Unable to open Accessibility Settings", Toast.LENGTH_SHORT).show();
-        }
+        final Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (!startActivityOrLog(intent))
+            toastOnUiThread("Unable to open Accessibility Settings");
     }
 
     /**
