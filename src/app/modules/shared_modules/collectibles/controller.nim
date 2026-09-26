@@ -1,5 +1,5 @@
 import nimqml, std/json, sequtils, sugar, strutils, algorithm
-import stint, chronicles, tables
+import stint, chronicles, tables, sets
 from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop,
     setInterval, isActive
 
@@ -25,6 +25,19 @@ type
     AutoLoadSingleUpdate, # load all items and update the model once with full list
     AutoLoadPaginated,    # load items in batches (keep loading until the end of the list) and update the model appending each batch.
     OnDemand              # load items in batches (on demand when loadMoreItems is called) and update the model appending each batch.
+
+type
+  FetchOwnedCollectibles* = proc(requestId: int32, chainIds: seq[int], addresses: seq[string],
+    filter: backend_collectibles.CollectibleFilter, offset: int, limit: int,
+    dataType: backend_collectibles.CollectibleDataType,
+    fetchCriteria: backend_collectibles.FetchCriteria): RpcResponse[JsonNode]
+    ## Seam over the owned collectibles request, injectable for tests.
+
+proc defaultFetchOwnedCollectibles(requestId: int32, chainIds: seq[int], addresses: seq[string],
+    filter: backend_collectibles.CollectibleFilter, offset: int, limit: int,
+    dataType: backend_collectibles.CollectibleDataType,
+    fetchCriteria: backend_collectibles.FetchCriteria): RpcResponse[JsonNode] =
+  backend_collectibles.getOwnedCollectiblesAsync(requestId, chainIds, addresses, filter, offset, limit, dataType, fetchCriteria)
 
 proc isAutoLoad(self: LoadType): bool =
   return self == LoadType.AutoLoadSingleUpdate or self == LoadType.AutoLoadPaginated
@@ -55,9 +68,10 @@ QtObject:
 
       dataType: backend_collectibles.CollectibleDataType
       fetchCriteria: backend_collectibles.FetchCriteria
+      fetchOwnedCollectibles: FetchOwnedCollectibles
 
       # A (re)fetch was requested while one was already in flight. It is executed
-      # once the in-flight one completes, so bursts of triggers result in a
+      # once the in-flight scan completes, so bursts of triggers result in a
       # single trailing refetch instead of one reload each.
       pendingReset: bool
       # The in-flight fetch was made obsolete by a filter change: its results
@@ -87,7 +101,7 @@ QtObject:
         offset = self.tempItems.len
     self.fetchFromStart = false
     try:
-      let response = backend_collectibles.getOwnedCollectiblesAsync(self.requestId, self.chainIds, self.addresses, self.filter, offset, FETCH_BATCH_COUNT_DEFAULT, self.dataType, self.fetchCriteria)
+      let response = self.fetchOwnedCollectibles(self.requestId, self.chainIds, self.addresses, self.filter, offset, FETCH_BATCH_COUNT_DEFAULT, self.dataType, self.fetchCriteria)
       if response.error != nil:
         self.model.setIsFetching(false)
         self.model.setIsError(true)
@@ -112,13 +126,15 @@ QtObject:
     dataType: backend_collectibles.CollectibleDataType = backend_collectibles.CollectibleDataType.Header,
     fetchCriteria: backend_collectibles.FetchCriteria = backend_collectibles.FetchCriteria(
       fetchType: backend_collectibles.FetchType.NeverFetch,
-    )): Controller =
+    ),
+    fetchOwnedCollectibles: FetchOwnedCollectibles = defaultFetchOwnedCollectibles): Controller =
     new(result, delete)
 
     result.requestId = requestId
     result.loadType = loadType
     result.dataType = dataType
     result.fetchCriteria = fetchCriteria
+    result.fetchOwnedCollectibles = fetchOwnedCollectibles
 
     result.networkService = networkService
 
@@ -221,6 +237,8 @@ QtObject:
     self.checkModelState()
 
   proc getExtraData(self: Controller, chainID: int): ExtraData =
+    if self.networkService.isNil:
+      return
     let network = self.networkService.getNetworkByChainId(chainID)
     if not network.isNil:
       return getExtraData(network)
@@ -232,6 +250,12 @@ QtObject:
       error "invalid offset"
       return
     self.tempItems.add(newItems)
+
+  proc uniqueById(items: seq[CollectiblesEntry]): seq[CollectiblesEntry] =
+    var seen = initHashSet[string]()
+    for item in items:
+      if not seen.containsOrIncl(item.getIDAsString()):
+        result.add(item)
 
   proc processGetOwnedCollectiblesResponse(self: Controller, response: JsonNode) =
     if self.discardInFlightResponse:
@@ -266,20 +290,23 @@ QtObject:
       else:
         self.setTempItems(items, res.offset)
         if not res.hasMore:
-          self.model.updateItems(self.tempItems)
+          # A list that changed during the scan can repeat an entry across batches.
+          self.model.updateItems(uniqueById(self.tempItems))
           self.tempItems = @[]
 
       self.model.setIsFetching(false)
       self.setOwnershipStatus(res.ownershipStatus)
 
-      if self.pendingReset:
-        # Triggers received while this fetch was running, collapsed into a
-        # single refetch.
-        self.requestReset(clearItems = false)
+      if self.loadType.isAutoLoad() and res.hasMore:
+        # Finish the scan before a pending refetch: restarting it on every
+        # trigger never lets a long list reach the model.
+        self.doLoadMore()
         return
 
-      if self.loadType.isAutoLoad() and res.hasMore:
-        self.doLoadMore()
+      if self.pendingReset:
+        # Triggers received while this scan was running, collapsed into a
+        # single refetch.
+        self.requestReset(clearItems = false)
 
     except Exception as e:
       error "Error converting activity entries: ", error = e.msg
