@@ -69,6 +69,13 @@ suite "collectibles controller single update load":
     # the refresh requested during the scan runs once the scan is applied
     check requestedOffsets == @[0, 50, 100, 0]
 
+  test "a response that fails to parse doesn't block later fetches":
+    events.emitWalletEvent(eventOwnedCollectiblesFilteringDone, %*{"collectibles": [], "hasMore": false},
+      requestId = some(RequestId.int))
+    ctrl.setFilterAddressesAndChains(@[Address], @[ChainId, 1])
+
+    check requestedOffsets == @[0, 0]
+
   test "a collectible repeated by a shifted list is shown once":
     events.answerBatch(0, toSeq(1..50), hasMore = true)
     events.answerBatch(50, toSeq(46..95), hasMore = false)
