@@ -54,6 +54,9 @@ QtObject:
   proc onOwnedCollectiblesFilteringDone*(self: EventsHandler, handler: EventCallbackProc) =
     self.eventHandlers[backend_collectibles.eventOwnedCollectiblesFilteringDone] = handler
 
+  proc onGetCollectiblesDetailsDone*(self: EventsHandler, handler: EventCallbackProc) =
+    self.eventHandlers[backend_collectibles.eventGetCollectiblesDetailsDone] = handler
+
   proc onCollectiblesDataUpdate*(self: EventsHandler, handler: EventCallbackProc) =
     self.eventHandlers[backend_collectibles.eventCollectiblesDataUpdated] = handler
 
