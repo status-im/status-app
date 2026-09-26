@@ -19,8 +19,11 @@ else
   FORM_KEY="file=@"
 fi
 
+# Credentials reach curl as a config line on stdin, not in argv, which other
+# processes on the agent can read.
+printf 'user = "%s:%s"\n' "${BROWSERSTACK_USERNAME}" "${BROWSERSTACK_ACCESS_KEY}" | \
 curl --request POST "https://api-cloud.browserstack.com/app-automate/upload" \
   --silent --show-error --fail-with-body \
-  --user "${BROWSERSTACK_USERNAME}:${BROWSERSTACK_ACCESS_KEY}" \
+  --config - \
   --form "${FORM_KEY}${APK_SOURCE}" \
   --form "custom_id=${CUSTOM_ID}"
