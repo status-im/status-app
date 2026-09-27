@@ -13,7 +13,7 @@ BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 # Nimble that resolves status-go's libsds; older ones pick the wrong Nim.
-export NIMBLE_COMMIT := 68ba20e753ba63d11fb8b60974e981afca376f97
+export NIMBLE_COMMIT := v0.26.0
 # we don't want an error here, so we can handle things later, in the ".DEFAULT" target
 -include $(BUILD_SYSTEM_DIR)/makefiles/variables.mk
 
