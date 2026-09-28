@@ -212,7 +212,7 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
         dispatch_group_enter(group);
         [provider loadItemForTypeIdentifier:kTypeUrl
                                     options:nil
-                          completionHandler:^(id<NSSecureCoding> loaded, NSError *error) {
+                          completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
             NSString *url = nil;
             if ([(NSObject *)loaded isKindOfClass:[NSURL class]]) {
                 NSURL *u = (NSURL *)loaded;
@@ -235,7 +235,7 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
         dispatch_group_enter(group);
         [provider loadItemForTypeIdentifier:kTypePlainText
                                     options:nil
-                          completionHandler:^(id<NSSecureCoding> loaded, NSError *error) {
+                          completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
             NSString *text = nil;
             if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
                 text = (NSString *)loaded;
@@ -263,14 +263,17 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     if (imageProviders.count > 0)
         dispatch_group_enter(group);
     __block BOOL finished = NO;
-    // MRC: the recursive block is copied to the heap once; the extension is
-    // short-lived, so the block/self cycle is not worth breaking.
+    // The block references itself through the __block variable; the cycle is
+    // broken once the chain ends or the deadline fires.
     __block void (^loadImage)(NSUInteger) = nil;
-    loadImage = [^(NSUInteger index) {
-        if (finished)
+    loadImage = ^(NSUInteger index) {
+        if (finished) {
+            loadImage = nil;
             return;
+        }
         if (index >= imageProviders.count) {
             finished = YES;
+            loadImage = nil;
             dispatch_group_leave(group);
             return;
         }
@@ -293,9 +296,12 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
                           (unsigned long)index, error);
                 }
             }
-            dispatch_async(dispatch_get_main_queue(), ^{ loadImage(index + 1); });
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (loadImage != nil)
+                    loadImage(index + 1);
+            });
         }];
-    } copy];
+    };
     if (imageProviders.count > 0) {
         loadImage(0);
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kImageLoadDeadlineSeconds * NSEC_PER_SEC)),
@@ -305,6 +311,7 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
             NSLog(@"StatusShareExtension: image loads exceeded %.0fs; handing off the copies made so far",
                   kImageLoadDeadlineSeconds);
             finished = YES;
+            loadImage = nil;
             dispatch_group_leave(group);
         });
     }
@@ -351,7 +358,6 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
         label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
         [self.view addSubview:spinner];
         [self.view addSubview:label];
-        [spinner release];
         [NSLayoutConstraint activateConstraints:@[
             [spinner.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
             [spinner.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-16],
@@ -359,7 +365,6 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
             [label.topAnchor constraintEqualToAnchor:spinner.bottomAnchor constant:12],
         ]];
         self.progressLabel = label;
-        [label release];
     }
     self.progressLabel.text = [NSString stringWithFormat:@"Preparing %lu of %lu\u2026",
                                (unsigned long)current, (unsigned long)total];
@@ -372,19 +377,19 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     static NSSet<NSString *> *photoExtensions;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        photoExtensions = [[NSSet alloc] initWithArray:@[@"jpg", @"jpeg", @"heic", @"heif"]];  // MRC: owned by the static
+        photoExtensions = [NSSet setWithArray:@[@"jpg", @"jpeg", @"heic", @"heif"]];
     });
     if (![photoExtensions containsObject:fileUrl.pathExtension.lowercaseString])
         return NO;
-    CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)fileUrl, NULL);
+    CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)fileUrl, NULL);
     if (source == NULL)
         return NO;
     CFDictionaryRef props = CGImageSourceCopyPropertiesAtIndex(source, 0, NULL);
     CFRelease(source);
     if (props == NULL)
         return NO;
-    CGFloat width = [((NSDictionary *)props)[(id)kCGImagePropertyPixelWidth] doubleValue];
-    CGFloat height = [((NSDictionary *)props)[(id)kCGImagePropertyPixelHeight] doubleValue];
+    CGFloat width = [((__bridge NSDictionary *)props)[(id)kCGImagePropertyPixelWidth] doubleValue];
+    CGFloat height = [((__bridge NSDictionary *)props)[(id)kCGImagePropertyPixelHeight] doubleValue];
     CFRelease(props);
     return MAX(width, height) > kMaxImageEdgePx;
 }
@@ -393,7 +398,7 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
 {
     BOOL wrote = NO;
     @autoreleasepool {
-        CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)fileUrl, NULL);
+        CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)fileUrl, NULL);
         if (source == NULL)
             return NO;
         NSDictionary *options = @{
@@ -401,14 +406,14 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
             (id)kCGImageSourceThumbnailMaxPixelSize : @(kMaxImageEdgePx),
             (id)kCGImageSourceCreateThumbnailWithTransform : @YES,
         };
-        CGImageRef scaled = CGImageSourceCreateThumbnailAtIndex(source, 0, (CFDictionaryRef)options);
+        CGImageRef scaled = CGImageSourceCreateThumbnailAtIndex(source, 0, (__bridge CFDictionaryRef)options);
         CFRelease(source);
         if (scaled == NULL)
             return NO;
-        CGImageDestinationRef out = CGImageDestinationCreateWithURL((CFURLRef)dest, CFSTR("public.jpeg"), 1, NULL);
+        CGImageDestinationRef out = CGImageDestinationCreateWithURL((__bridge CFURLRef)dest, CFSTR("public.jpeg"), 1, NULL);
         if (out != NULL) {
             CGImageDestinationAddImage(out, scaled,
-                (CFDictionaryRef)@{ (id)kCGImageDestinationLossyCompressionQuality : @0.85 });
+                (__bridge CFDictionaryRef)@{ (id)kCGImageDestinationLossyCompressionQuality : @0.85 });
             wrote = CGImageDestinationFinalize(out);
             CFRelease(out);
         }
