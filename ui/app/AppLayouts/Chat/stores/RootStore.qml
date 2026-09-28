@@ -278,7 +278,7 @@ QtObject {
         return StatusQUtils.StringUtils.expandAsciiEmoticonShortcuts(text)
     }
 
-    function sendMessage(chatId, text, replyMessageId, fileUrlsAndSources) {
+    function sendMessage(chatId, text, replyMessageId, fileUrlsAndSources, startNewThread, newThreadName = "") {
         chatCommunitySectionModule.prepareChatContentModuleForChatId(chatId)
         const chatContentModule = chatCommunitySectionModule.getChatContentModule()
         var result = false
@@ -303,7 +303,9 @@ QtObject {
             result = chatContentModule.inputAreaModule.sendMessage(
                         textMsg,
                         replyMessageId,
-                        Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType : Constants.messageContentType.messageType)
+                        Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType : Constants.messageContentType.messageType,
+                        startNewThread,
+                        newThreadName)
         }
 
         return result
