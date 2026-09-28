@@ -1,8 +1,6 @@
 #!/usr/bin/env groovy
 library 'status-jenkins-lib@v1.9.52'
 
-// TEMPORARY CI validation. Restore this file from master before merging.
-
 pipeline {
   agent {
     dockerfile {
@@ -21,9 +19,8 @@ pipeline {
     }
   }
 
-  // Keep the existing job's PR checkout parameter, but do not install a timer.
-  parameters {
-    string(name: 'GIT_REF', description: 'Git branch to checkout.', defaultValue: 'master')
+  triggers {
+    cron('TZ=Etc/UTC\nH 4 * * *')
   }
 
   options {
@@ -183,8 +180,6 @@ pipeline {
                     ]) {
                       sh """
                         python3 -m pytest -m "not (keycard or benchmark)" -v --reruns=1 --timeout=300 \
-                          tests/test_intentional_nightly_reporting.py \
-                          tests/critical_tests_prs/test_messaging_1x1_chat.py::test_1x1_chat_add_contact_in_settings \
                           --log-level=INFO --log-cli-level=INFO \
                           --disable-warnings \
                           --alluredir=./allure-results \
