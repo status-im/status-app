@@ -84,6 +84,18 @@ proc init*(self: Controller) =
       return
     self.delegate.onSendingMessageSuccess(args.message)
 
+  self.events.on(SIGNAL_SENDING_STARTED) do(e: Args):
+    let args = SendingStartedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType)
+
+  self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
+    let args = SendingFinishedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onSendingFinished(args.sendToken)
+
   self.events.on(SIGNAL_SENDING_FAILED) do(e:Args):
     let args = MessageSendingFailure(e)
     if self.chatId != args.chatId:
@@ -291,6 +303,9 @@ proc loadChatThreadsIfNeeded*(self: Controller) =
 
 proc hasThreadForParentMessage*(self: Controller, parentMessageId: string): bool =
   return self.messageService.chatHasThreadForParentMessage(self.chatId, parentMessageId)
+
+proc pendingSends*(self: Controller): seq[SendingStartedArgs] =
+  return self.chatService.pendingSendsForChat(self.chatId)
 
 proc getChatDetails*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)
