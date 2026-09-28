@@ -272,7 +272,6 @@ pipeline {
                     ]) {
                       sh """
                         python3 -m pytest -m "${getPytestMarkerExpr()}" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
-                          tests/test_intentional_nightly_reporting.py \
                           tests/critical_tests_prs/test_messaging_1x1_chat.py::test_1x1_chat_add_contact_in_settings \
                           --disable-warnings \
                           --alluredir=./allure-results \
