@@ -1,7 +1,8 @@
 import io_interface, tables, sets
-import std/strutils
+import std/[strutils, json, options], uuids
 
-
+import ../../../../../global/feature_flags
+import ../../../../../../app_service/service/chat/image_batches
 import ../../../../../../app_service/service/settings/service as settings_service
 import ../../../../../../app_service/service/message/service as message_service
 import ../../../../../../app_service/service/contacts/service as contact_service
@@ -18,6 +19,13 @@ import ./link_preview_cache
 const MESSAGE_LINK_PREVIEWS_LIMIT = 5
 
 type
+  ImageBatchPayload = object
+    msg: string
+    replyTo: string
+    preferredUsername: string
+    linkPreviews: seq[LinkPreview]
+    paymentRequests: seq[PaymentRequest]
+
   Controller* = ref object of RootObj
     delegate: io_interface.AccessInterface
     sectionId: string
@@ -36,6 +44,8 @@ type
     unfurlingPlanActiveRequest: string
     unfurlingPlanActiveRequestUnfurlAfter: bool
     unfurlingPlan: UrlsUnfurlingPlan
+    imageBatches: ImageBatchQueue
+    imageBatchPayloads: Table[string, ImageBatchPayload]
 
 proc newController*(
     delegate: io_interface.AccessInterface,
@@ -66,8 +76,10 @@ proc newController*(
   result.unfurlRequests = initHashSet[string]()
   result.unfurlingPlanActiveRequest = ""
   result.unfurlingPlan = initUrlsUnfurlingPlan()
+  result.imageBatchPayloads = initTable[string, ImageBatchPayload]()
 
 proc onUnfurlingModeChanged(self: Controller, value: UrlUnfurlingMode)
+proc dispatchNextImageBatch(self: Controller)
 proc onUrlsUnfurled(self: Controller, args: LinkPreviewDataArgs)
 proc clearLinkPreviewCache*(self: Controller)
 proc asyncUnfurlUrls(self: Controller, urls: seq[string])
@@ -109,6 +121,14 @@ proc init*(self: Controller) =
       return
     self.delegate.onSendingMessageFailure()
 
+  when UNLIMITED_CHAT_IMAGES_ENABLED:
+    self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
+      let args = SendingFinishedArgs(e)
+      if self.chatId != args.chatId:
+        return
+      if finishBatch(self.imageBatches, args.sendToken):
+        self.dispatchNextImageBatch()
+
 proc getChatId*(self: Controller): string =
   return self.chatId
 
@@ -125,6 +145,41 @@ proc resetLinkPreviews(self: Controller) =
   self.linkPreviewCurrentMessageSetting = self.linkPreviewPersistentSetting
   self.delegate.setAskToEnableLinkPreview(false)
 
+proc dispatchNextImageBatch(self: Controller) =
+  let next = takeNextBatch(self.imageBatches)
+  if next.isNone:
+    return
+  let batch = next.get()
+  var payload: ImageBatchPayload
+  discard self.imageBatchPayloads.pop(batch.token, payload)
+  self.chatService.asyncSendImages(self.chatId, $(%batch.imagePaths), payload.msg, payload.replyTo,
+    payload.preferredUsername, payload.linkPreviews, payload.paymentRequests, sendToken = batch.token)
+
+proc enqueueImageBatches(self: Controller, imagePathsJson, msg, replyTo, preferredUsername: string,
+    linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]): bool =
+  ## Splits the send into messages of IMAGES_PER_MESSAGE images; the text,
+  ## reply and previews ride on the first one. The batches go out one at a
+  ## time. False when there is nothing to split.
+  var imagePaths: seq[string] = @[]
+  try:
+    imagePaths = parseJson(imagePathsJson).to(seq[string])
+  except CatchableError:
+    return false
+  let batches = imageBatches(imagePaths, $genUUID())
+  if batches.len == 0:
+    return false
+  for batch in batches:
+    var payload = ImageBatchPayload(preferredUsername: preferredUsername)
+    if batch.withText:
+      payload.msg = msg
+      payload.replyTo = replyTo
+      payload.linkPreviews = linkPreviews
+      payload.paymentRequests = paymentRequests
+    self.imageBatchPayloads[batch.token] = payload
+  enqueueBatches(self.imageBatches, batches)
+  self.dispatchNextImageBatch()
+  result = true
+
 proc sendImages*(self: Controller,
                  imagePathsJson: string,
                  msg: string,
@@ -134,6 +189,9 @@ proc sendImages*(self: Controller,
                  paymentRequests: seq[PaymentRequest],
                  threadId: string = "") =
   self.resetLinkPreviews()
+  when UNLIMITED_CHAT_IMAGES_ENABLED:
+    if self.enqueueImageBatches(imagePathsJson, msg, replyTo, preferredUsername, linkPreviews, paymentRequests):
+      return
   self.chatService.asyncSendImages(
     self.chatId,
     imagePathsJson,
