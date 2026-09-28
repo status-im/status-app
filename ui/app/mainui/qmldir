@@ -6,6 +6,7 @@ ToastsManager 1.0 ToastsManager.qml
 StatusTrayIcon 1.0 StatusTrayIcon.qml
 DropAreaPanel 1.0 panels/DropAreaPanel.qml
 PrimaryNavSidebar 1.0 panels/PrimaryNavSidebar.qml
+ShareComposer 1.0 panels/ShareComposer.qml
 ShareDestinationDelegate 1.0 panels/ShareDestinationDelegate.qml
 ShareDestinationList 1.0 panels/ShareDestinationList.qml
 ShareDestinationPickerPanel 1.0 panels/ShareDestinationPickerPanel.qml
