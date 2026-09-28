@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class StatusQtActivity extends QtActivity {
     private static final String TAG = "StatusQtActivity";
@@ -60,6 +62,26 @@ public class StatusQtActivity extends QtActivity {
     private static String pendingIntakeUrl = null;
     private static String pendingIntakeShareText = null;
     private static String[] pendingIntakeShareImagePaths = null;
+    // Bumped (under intakeLock) by every intake, URL or share. A share whose
+    // streams finish copying after a newer intake arrived is stale: its copies
+    // are deleted, never delivered — last-wins across kinds, like the slot.
+    private static int intakeSerial = 0;
+
+    // Shared streams are vetted, type-resolved and copied off the Android UI
+    // thread: the copy reads provider-backed (possibly network-backed)
+    // streams and a multi-image share would ANR onCreate/onNewIntent. One
+    // thread keeps shares in arrival order; the result hops back to the UI
+    // thread for the deliver-or-park decision, so Qt is only ever called from
+    // the threads that called it before. Tasks capture the application
+    // context, not the activity: a recreated activity is fine, and a
+    // finishing one kills the process (onDestroy), so the executor is never
+    // shut down.
+    private static final ExecutorService shareIntakeExecutor =
+            Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "status-share-intake");
+                t.setDaemon(true);
+                return t;
+            });
 
     // JNI hooks: implemented in native code (StatusQ urlschemeevent.cpp) to
     // forward external intake to Qt — URLs (deep links and arbitrary web
@@ -208,6 +230,7 @@ public class StatusQtActivity extends QtActivity {
         Uri data = intent.getData();
         if (Intent.ACTION_VIEW.equals(action) && data != null) {
             synchronized (intakeLock) {
+                intakeSerial++;
                 if (!userLoggedIn) {
                     pendingIntakeUrl = data.toString();
                     clearPendingShareLocked();
@@ -220,7 +243,7 @@ public class StatusQtActivity extends QtActivity {
 
     // Thin, decision-free platform layer: extract the shared payload from the
     // SEND/SEND_MULTIPLE intent — copying image streams to app-private cache
-    // immediately, before any read grant can expire — and forward it to the
+    // right away, before any read grant can expire — and forward it to the
     // external-intake seam.
     private void handleShareIntake(Intent intent) {
         if (intent == null) return;
@@ -242,25 +265,45 @@ public class StatusQtActivity extends QtActivity {
         }
         if (text == null) text = "";
 
-        String[] imagePaths = isImageShare
-                ? copySharedImagesToCache(imagesOnly(extractStreamUris(this, intent, isSendMultiple)))
-                : new String[0];
-        if (text.isEmpty() && imagePaths.length == 0) {
-            if (isImageShare) {
-                Toast.makeText(this, "Only images and text can be shared to Status",
-                        Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
-
+        final String shareText = text;
+        final int serial;
         synchronized (intakeLock) {
-            if (!userLoggedIn) {
+            serial = ++intakeSerial;
+        }
+        final Context app = getApplicationContext();
+        final Handler ui = new Handler(Looper.getMainLooper());
+        shareIntakeExecutor.execute(() -> {
+            final String[] imagePaths = isImageShare
+                    ? copySharedImagesToCache(app, extractStreamUris(app, intent, isSendMultiple))
+                    : new String[0];
+            ui.post(() -> deliverShare(app, serial, isImageShare, shareText, imagePaths));
+        });
+    }
+
+    // UI thread. The decision the synchronous path used to make, now applied
+    // to the copied result: pass to Qt when logged in, else park.
+    private static void deliverShare(Context ctx, int serial, boolean isImageShare,
+                                     String text, String[] imagePaths) {
+        final boolean usable = !text.isEmpty() || imagePaths.length > 0;
+        synchronized (intakeLock) {
+            if (serial != intakeSerial) {
+                deleteFiles(imagePaths);
+                return;
+            }
+            if (usable && !userLoggedIn) {
                 clearPendingShareLocked();
                 pendingIntakeShareText = text;
                 pendingIntakeShareImagePaths = imagePaths;
                 pendingIntakeUrl = null;
                 return;
             }
+        }
+        if (!usable) {
+            if (isImageShare) {
+                Toast.makeText(ctx, "Only images and text can be shared to Status",
+                        Toast.LENGTH_LONG).show();
+            }
+            return;
         }
         passShareToQt(text, imagePaths);
     }
@@ -329,37 +372,31 @@ public class StatusQtActivity extends QtActivity {
         return ctx.getPackageName().equals(info.packageName);
     }
 
-    // The intent's declared type is the sender's claim about the share as a
+    // Background thread. Copies each shared image stream into the
+    // share-intake cache dir and returns the copies' absolute paths. The
+    // intent's declared type is the sender's claim about the share as a
     // whole; only the provider's per-stream answer is authoritative, so every
-    // stream is resolved regardless of what the intent said.
-    private List<Uri> imagesOnly(List<Uri> uris) {
-        ArrayList<Uri> images = new ArrayList<>();
-        for (Uri uri : uris) {
-            String mime = getContentResolver().getType(uri);
-            if (mime != null && mime.startsWith("image/")) {
-                images.add(uri);
-            } else {
-                Log.w(TAG, "share intake: dropping non-image stream (" + mime + ")");
-            }
-        }
-        return images;
-    }
-
-    // Copies each shared stream into the share-intake cache dir and returns
-    // the copies' absolute paths. Streams that fail to copy are skipped (the
-    // rest of the share still goes through).
-    private String[] copySharedImagesToCache(List<Uri> uris) {
+    // stream is resolved and anything not image/* is dropped. Streams that
+    // fail to copy are skipped (the rest of the share still goes through).
+    private static String[] copySharedImagesToCache(Context ctx, List<Uri> uris) {
+        if (uris.isEmpty()) return new String[0];
         ArrayList<String> paths = new ArrayList<>();
-        File dir = new File(getCacheDir(), SHARE_INTAKE_CACHE_DIR);
+        File dir = new File(ctx.getCacheDir(), SHARE_INTAKE_CACHE_DIR);
         if (!dir.exists() && !dir.mkdirs()) {
             Log.w(TAG, "share intake: cannot create cache dir " + dir);
             return new String[0];
         }
+        ContentResolver resolver = ctx.getContentResolver();
         int index = 0;
         for (Uri uri : uris) {
+            String mime = resolver.getType(uri);
+            if (mime == null || !mime.startsWith("image/")) {
+                Log.w(TAG, "share intake: dropping non-image stream (" + mime + ")");
+                continue;
+            }
             File out = new File(dir,
-                    "share-" + System.currentTimeMillis() + "-" + (index++) + extensionForUri(uri));
-            try (InputStream in = getContentResolver().openInputStream(uri);
+                    "share-" + System.currentTimeMillis() + "-" + (index++) + extensionForMime(mime));
+            try (InputStream in = resolver.openInputStream(uri);
                  OutputStream os = new FileOutputStream(out)) {
                 if (in == null) {
                     out.delete();
@@ -379,11 +416,8 @@ public class StatusQtActivity extends QtActivity {
         return paths.toArray(new String[0]);
     }
 
-    private String extensionForUri(Uri uri) {
-        String mime = getContentResolver().getType(uri);
-        String ext = mime != null
-                ? MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
-                : null;
+    private static String extensionForMime(String mime) {
+        String ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime);
         return ext != null ? "." + ext : "";
     }
 
