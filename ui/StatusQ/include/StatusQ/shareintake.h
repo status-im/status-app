@@ -6,16 +6,18 @@
 namespace Status::ShareIntake
 {
     // Directory of the pending intake slot shared with the iOS share extension
-    // (a subdirectory of the App Group container). Empty on platforms without
-    // an App Group container, or when the container cannot be resolved (e.g.
-    // the app-groups entitlement is missing) — an empty dir means the slot is
-    // inactive on the Nim side (src/app/core/intake/pending_intake_slot.nim).
+    // (`<App Group container>/<host bundle id>/pending-intake`; the App Group
+    // is shared by the app variants, the bundle-id root keeps their slots
+    // apart). Empty on platforms without an App Group container, or when the
+    // container cannot be resolved (e.g. the app-groups entitlement is
+    // missing) — an empty dir means the slot is inactive on the Nim side
+    // (src/app/core/intake/pending_intake_slot.nim).
     QString pendingIntakeDir();
 
-    // Directory holding the extension-made copies of shared images (the
-    // `share-intake` subdirectory of the App Group container — same name as
-    // the Android app-private cache dir, so the Nim cache-lifecycle guard in
-    // src/app/core/intake/share_intake_cache.nim covers both). Empty on
+    // Directory holding the extension-made copies of shared images
+    // (`<App Group container>/<host bundle id>/share-intake` — same leaf name
+    // as the Android app-private cache dir, so the Nim cache-lifecycle guard
+    // in src/app/core/intake/share_intake_cache.nim covers both). Empty on
     // platforms without an App Group container; there the platform layer owns
     // its own cache dir (Android) or no share cache exists.
     QString shareIntakeCacheDir();

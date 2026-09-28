@@ -10,8 +10,11 @@
 ##
 ## Kept free of Qt/chronicles imports so the semantics are unit-testable on any
 ## platform (test/nim/pending_intake_slot_test.nim). The iOS-only slot directory
-## comes from StatusQ (statusq_shareintake_pending_dir); on platforms without an
-## App Group container the dir is empty and the slot is inactive.
+## comes from StatusQ (statusq_shareintake_pending_dir): a per-variant root
+## inside the App Group container, named after the host bundle id, so a
+## co-installed variant (Status / Status PR) never takes this app's slot. On
+## platforms without an App Group container the dir is empty and the slot is
+## inactive.
 
 import std/[os, strutils]
 
