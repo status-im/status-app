@@ -35,6 +35,7 @@
 //   - deletion only ever touches files directly inside a `share-intake`
 //     directory, mirroring the host-side guard (share_intake_cache.nim).
 
+#import <ImageIO/ImageIO.h>
 #import <UIKit/UIKit.h>
 #import <objc/message.h>
 
@@ -113,8 +114,15 @@ static NSURL *VariantRootUrl(void)
 static NSString *const kTypeImage = @"public.image";
 static NSString *const kTypeUrl = @"public.url";
 static NSString *const kTypePlainText = @"public.plain-text";
+// Per-share ceiling on preparing image copies; past it the share goes out with what was copied.
+static const NSTimeInterval kImageLoadDeadlineSeconds = 120.0;
+// Camera originals (12 MP+) are downscaled to this longest edge on copy: the
+// chat compresses image messages to ~350 KB anyway, so nothing visible is
+// lost and the host is spared decoding full-size photos.
+static const CGFloat kMaxImageEdgePx = 2048.0;
 
 @interface ShareViewController : UIViewController
+@property (nonatomic, retain) UILabel *progressLabel;
 @end
 
 @implementation ShareViewController {
@@ -172,88 +180,133 @@ static NSString *const kTypePlainText = @"public.plain-text";
 - (void)extractSharedContentWithCompletion:(void (^)(NSString *text,
                                                      NSArray<NSString *> *imagePaths))completion
 {
-    dispatch_group_t group = dispatch_group_create();
-    NSMutableArray<NSString *> *texts = [NSMutableArray array];
-    NSMutableArray<NSString *> *urls = [NSMutableArray array];
-    // One pre-claimed slot per image attachment (filled by index, compacted
-    // at the end) so the copies keep the share's order even though the async
-    // loads complete in any order.
-    NSMutableArray *orderedImagePaths = [NSMutableArray array];
-
+    NSMutableArray<NSItemProvider *> *imageProviders = [NSMutableArray array];
+    NSMutableArray<NSItemProvider *> *urlProviders = [NSMutableArray array];
+    NSMutableArray<NSItemProvider *> *textProviders = [NSMutableArray array];
     for (NSExtensionItem *item in self.extensionContext.inputItems) {
         for (NSItemProvider *provider in item.attachments) {
             // Image first: an image attachment commonly also advertises URL
             // (its file location) or text representations, but the image is
-            // the content being shared.
-            if ([provider hasItemConformingToTypeIdentifier:kTypeImage]) {
-                NSUInteger index = orderedImagePaths.count;
-                [orderedImagePaths addObject:[NSNull null]];
-                dispatch_group_enter(group);
-                [provider loadFileRepresentationForTypeIdentifier:kTypeImage
-                                                completionHandler:^(NSURL *fileUrl, NSError *error) {
-                    // fileUrl is only valid during this handler: copy now.
-                    NSString *copied = fileUrl != nil
-                        ? [self copyImageToCache:fileUrl index:index]
-                        : nil;
-                    if (copied != nil) {
-                        @synchronized (orderedImagePaths) {
-                            orderedImagePaths[index] = copied;
-                        }
-                    } else {
-                        // Skip this attachment; the rest of the share still
-                        // goes through (mirrors the Android copy loop).
-                        NSLog(@"StatusShareExtension: cannot copy shared image %lu: %@",
-                              (unsigned long)index, error);
-                    }
-                    dispatch_group_leave(group);
-                }];
-            } else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl]) {
-                // URL before plain-text: a URL provider may also advertise
-                // plain-text, and the link (with scheme intact) is the
-                // content the user is sharing.
-                dispatch_group_enter(group);
-                [provider loadItemForTypeIdentifier:kTypeUrl
-                                            options:nil
-                                  completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
-                    NSString *url = nil;
-                    if ([(NSObject *)loaded isKindOfClass:[NSURL class]]) {
-                        NSURL *u = (NSURL *)loaded;
-                        // File URLs are not shareable text; non-image files
-                        // are not accepted by this extension.
-                        url = u.isFileURL ? nil : u.absoluteString;
-                    } else if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
-                        url = (NSString *)loaded;
-                    }
-                    if (url.length > 0) {
-                        @synchronized (urls) {
-                            [urls addObject:url];
-                        }
-                    }
-                    dispatch_group_leave(group);
-                }];
-            } else if ([provider hasItemConformingToTypeIdentifier:kTypePlainText]) {
-                dispatch_group_enter(group);
-                [provider loadItemForTypeIdentifier:kTypePlainText
-                                            options:nil
-                                  completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
-                    NSString *text = nil;
-                    if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
-                        text = (NSString *)loaded;
-                    } else if ([(NSObject *)loaded isKindOfClass:[NSAttributedString class]]) {
-                        text = ((NSAttributedString *)loaded).string;
-                    } else if ([(NSObject *)loaded isKindOfClass:[NSData class]]) {
-                        text = [[NSString alloc] initWithData:(NSData *)loaded
-                                                     encoding:NSUTF8StringEncoding];
-                    }
-                    if (text.length > 0) {
-                        @synchronized (texts) {
-                            [texts addObject:text];
-                        }
-                    }
-                    dispatch_group_leave(group);
-                }];
-            }
+            // the content being shared. URL before plain-text: a URL provider
+            // may also advertise plain-text, and the link (with scheme
+            // intact) is the content the user is sharing.
+            if ([provider hasItemConformingToTypeIdentifier:kTypeImage])
+                [imageProviders addObject:provider];
+            else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl])
+                [urlProviders addObject:provider];
+            else if ([provider hasItemConformingToTypeIdentifier:kTypePlainText])
+                [textProviders addObject:provider];
         }
+    }
+
+    dispatch_group_t group = dispatch_group_create();
+    NSMutableArray<NSString *> *texts = [NSMutableArray array];
+    NSMutableArray<NSString *> *urls = [NSMutableArray array];
+    // One pre-claimed slot per image attachment (filled by index, compacted
+    // at the end) so the copies keep the share's order.
+    NSMutableArray *orderedImagePaths = [NSMutableArray array];
+    for (NSUInteger i = 0; i < imageProviders.count; i++)
+        [orderedImagePaths addObject:[NSNull null]];
+
+    for (NSItemProvider *provider in urlProviders) {
+        dispatch_group_enter(group);
+        [provider loadItemForTypeIdentifier:kTypeUrl
+                                    options:nil
+                          completionHandler:^(id<NSSecureCoding> loaded, NSError *error) {
+            NSString *url = nil;
+            if ([(NSObject *)loaded isKindOfClass:[NSURL class]]) {
+                NSURL *u = (NSURL *)loaded;
+                // File URLs are not shareable text; non-image files
+                // are not accepted by this extension.
+                url = u.isFileURL ? nil : u.absoluteString;
+            } else if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
+                url = (NSString *)loaded;
+            }
+            if (url.length > 0) {
+                @synchronized (urls) {
+                    [urls addObject:url];
+                }
+            }
+            dispatch_group_leave(group);
+        }];
+    }
+
+    for (NSItemProvider *provider in textProviders) {
+        dispatch_group_enter(group);
+        [provider loadItemForTypeIdentifier:kTypePlainText
+                                    options:nil
+                          completionHandler:^(id<NSSecureCoding> loaded, NSError *error) {
+            NSString *text = nil;
+            if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
+                text = (NSString *)loaded;
+            } else if ([(NSObject *)loaded isKindOfClass:[NSAttributedString class]]) {
+                text = ((NSAttributedString *)loaded).string;
+            } else if ([(NSObject *)loaded isKindOfClass:[NSData class]]) {
+                text = [[NSString alloc] initWithData:(NSData *)loaded
+                                             encoding:NSUTF8StringEncoding];
+            }
+            if (text.length > 0) {
+                @synchronized (texts) {
+                    [texts addObject:text];
+                }
+            }
+            dispatch_group_leave(group);
+        }];
+    }
+
+    // Images load one after another: the host materializes each file
+    // representation (often a HEIC->JPEG transcode) and an extension has a
+    // small memory ceiling, so dozens of concurrent loads get it killed.
+    // Chained through completions rather than a blocked thread, so a load
+    // that never calls back can't wedge the extension: the deadline below
+    // hands off whatever was copied by then.
+    if (imageProviders.count > 0)
+        dispatch_group_enter(group);
+    __block BOOL finished = NO;
+    // MRC: the recursive block is copied to the heap once; the extension is
+    // short-lived, so the block/self cycle is not worth breaking.
+    __block void (^loadImage)(NSUInteger) = nil;
+    loadImage = [^(NSUInteger index) {
+        if (finished)
+            return;
+        if (index >= imageProviders.count) {
+            finished = YES;
+            dispatch_group_leave(group);
+            return;
+        }
+        [self showProgress:index + 1 of:imageProviders.count];
+        [imageProviders[index] loadFileRepresentationForTypeIdentifier:kTypeImage
+                                                    completionHandler:^(NSURL *fileUrl, NSError *error) {
+            @autoreleasepool {
+                // fileUrl is only valid during this handler: copy now.
+                NSString *copied = fileUrl != nil
+                    ? [self copyImageToCache:fileUrl index:index]
+                    : nil;
+                if (copied != nil) {
+                    @synchronized (orderedImagePaths) {
+                        orderedImagePaths[index] = copied;
+                    }
+                } else {
+                    // Skip this attachment; the rest of the share still
+                    // goes through (mirrors the Android copy loop).
+                    NSLog(@"StatusShareExtension: cannot copy shared image %lu: %@",
+                          (unsigned long)index, error);
+                }
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{ loadImage(index + 1); });
+        }];
+    } copy];
+    if (imageProviders.count > 0) {
+        loadImage(0);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kImageLoadDeadlineSeconds * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            if (finished)
+                return;
+            NSLog(@"StatusShareExtension: image loads exceeded %.0fs; handing off the copies made so far",
+                  kImageLoadDeadlineSeconds);
+            finished = YES;
+            dispatch_group_leave(group);
+        });
     }
 
     dispatch_group_notify(group, dispatch_get_main_queue(), ^{
@@ -283,6 +336,87 @@ static NSString *const kTypePlainText = @"public.plain-text";
     });
 }
 
+// The sheet would otherwise stay blank while a large share is copied.
+- (void)showProgress:(NSUInteger)current of:(NSUInteger)total
+{
+    if (self.progressLabel == nil) {
+        self.view.backgroundColor = [UIColor systemBackgroundColor];
+        UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
+            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+        spinner.translatesAutoresizingMaskIntoConstraints = NO;
+        [spinner startAnimating];
+        UILabel *label = [[UILabel alloc] init];
+        label.translatesAutoresizingMaskIntoConstraints = NO;
+        label.textColor = [UIColor secondaryLabelColor];
+        label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+        [self.view addSubview:spinner];
+        [self.view addSubview:label];
+        [spinner release];
+        [NSLayoutConstraint activateConstraints:@[
+            [spinner.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+            [spinner.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-16],
+            [label.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+            [label.topAnchor constraintEqualToAnchor:spinner.bottomAnchor constant:12],
+        ]];
+        self.progressLabel = label;
+        [label release];
+    }
+    self.progressLabel.text = [NSString stringWithFormat:@"Preparing %lu of %lu\u2026",
+                               (unsigned long)current, (unsigned long)total];
+}
+
+// Only photo formats larger than the cap are downscaled; gif/png/webp keep
+// their bytes (animation, transparency).
++ (BOOL)shouldDownscale:(NSURL *)fileUrl
+{
+    static NSSet<NSString *> *photoExtensions;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        photoExtensions = [[NSSet alloc] initWithArray:@[@"jpg", @"jpeg", @"heic", @"heif"]];  // MRC: owned by the static
+    });
+    if (![photoExtensions containsObject:fileUrl.pathExtension.lowercaseString])
+        return NO;
+    CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)fileUrl, NULL);
+    if (source == NULL)
+        return NO;
+    CFDictionaryRef props = CGImageSourceCopyPropertiesAtIndex(source, 0, NULL);
+    CFRelease(source);
+    if (props == NULL)
+        return NO;
+    CGFloat width = [((NSDictionary *)props)[(id)kCGImagePropertyPixelWidth] doubleValue];
+    CGFloat height = [((NSDictionary *)props)[(id)kCGImagePropertyPixelHeight] doubleValue];
+    CFRelease(props);
+    return MAX(width, height) > kMaxImageEdgePx;
+}
+
++ (BOOL)writeDownscaledJpegFrom:(NSURL *)fileUrl to:(NSURL *)dest
+{
+    BOOL wrote = NO;
+    @autoreleasepool {
+        CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)fileUrl, NULL);
+        if (source == NULL)
+            return NO;
+        NSDictionary *options = @{
+            (id)kCGImageSourceCreateThumbnailFromImageAlways : @YES,
+            (id)kCGImageSourceThumbnailMaxPixelSize : @(kMaxImageEdgePx),
+            (id)kCGImageSourceCreateThumbnailWithTransform : @YES,
+        };
+        CGImageRef scaled = CGImageSourceCreateThumbnailAtIndex(source, 0, (CFDictionaryRef)options);
+        CFRelease(source);
+        if (scaled == NULL)
+            return NO;
+        CGImageDestinationRef out = CGImageDestinationCreateWithURL((CFURLRef)dest, CFSTR("public.jpeg"), 1, NULL);
+        if (out != NULL) {
+            CGImageDestinationAddImage(out, scaled,
+                (CFDictionaryRef)@{ (id)kCGImageDestinationLossyCompressionQuality : @0.85 });
+            wrote = CGImageDestinationFinalize(out);
+            CFRelease(out);
+        }
+        CGImageRelease(scaled);
+    }
+    return wrote;
+}
+
 // Copies one shared image file into the App Group `share-intake` cache and
 // returns the copy's absolute path (nil on failure). Names are unique per
 // receipt (epoch-ms + attachment index, extension preserved) so a new share's
@@ -303,14 +437,25 @@ static NSString *const kTypePlainText = @"public.plain-text";
         return nil;
     }
 
-    NSString *ext = fileUrl.pathExtension;
     long long epochMs = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
-    NSString *name = [NSString stringWithFormat:@"share-%lld-%lu%@", epochMs, (unsigned long)index,
-                      ext.length > 0 ? [@"." stringByAppendingString:ext] : @""];
-    NSURL *dest = [dir URLByAppendingPathComponent:name];
-    if (![fm copyItemAtURL:fileUrl toURL:dest error:&error]) {
-        NSLog(@"StatusShareExtension: cannot copy shared image into the cache: %@", error);
-        return nil;
+    NSString *base = [NSString stringWithFormat:@"share-%lld-%lu", epochMs, (unsigned long)index];
+    NSURL *dest = nil;
+    if ([ShareViewController shouldDownscale:fileUrl]) {
+        dest = [dir URLByAppendingPathComponent:[base stringByAppendingString:@".jpg"]];
+        if (![ShareViewController writeDownscaledJpegFrom:fileUrl to:dest]) {
+            NSLog(@"StatusShareExtension: downscale failed for image %lu; copying the original", (unsigned long)index);
+            [fm removeItemAtURL:dest error:nil];
+            dest = nil;
+        }
+    }
+    if (dest == nil) {
+        NSString *ext = fileUrl.pathExtension;
+        dest = [dir URLByAppendingPathComponent:
+                [base stringByAppendingString:ext.length > 0 ? [@"." stringByAppendingString:ext] : @""]];
+        if (![fm copyItemAtURL:fileUrl toURL:dest error:&error]) {
+            NSLog(@"StatusShareExtension: cannot copy shared image into the cache: %@", error);
+            return nil;
+        }
     }
     // Same protection class as the slot file: the host must be able to read
     // the copy shortly after a reboot-while-locked (fork issue #12, downside 5).
