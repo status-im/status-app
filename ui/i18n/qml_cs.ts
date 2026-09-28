@@ -15525,15 +15525,11 @@ selhalo</translation>
 <context>
     <name>ShareDestinationPickerPanel</name>
     <message>
-        <source>Share to</source>
+        <source>Share</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Search chats and channels</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>No destinations found</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15554,21 +15550,6 @@ selhalo</translation>
     <message>
         <source>Communities</source>
         <translation type="unfinished">Komunity</translation>
-    </message>
-</context>
-<context>
-    <name>SharePreviewPanel</name>
-    <message>
-        <source>Share to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation type="unfinished">Zpráva</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation type="unfinished">Odeslat</translation>
     </message>
 </context>
 <context>

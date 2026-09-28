@@ -15452,15 +15452,11 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
 <context>
     <name>ShareDestinationPickerPanel</name>
     <message>
-        <source>Share to</source>
+        <source>Share</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Search chats and channels</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>No destinations found</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15481,21 +15477,6 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Communities</source>
         <translation type="unfinished">Communautés</translation>
-    </message>
-</context>
-<context>
-    <name>SharePreviewPanel</name>
-    <message>
-        <source>Share to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation type="unfinished">Envoyer</translation>
     </message>
 </context>
 <context>
