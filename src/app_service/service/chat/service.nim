@@ -476,7 +476,9 @@ QtObject:
                    linkPreviews: seq[LinkPreview] = @[],
                    paymentRequests: seq[PaymentRequest] = @[],
                    threadId: string = "",
-                   sendToken: string = "") =
+                   releaseCachedFiles: bool = true,
+                   sendToken: string = "",
+                   releasePaths: seq[string] = @[]) =
     let token = if sendToken == "": $genUUID() else: sendToken
     try:
       let (standardLinkPreviews, statusLinkPreviews) = extractLinkPreviewsLists(linkPreviews)
@@ -494,7 +496,9 @@ QtObject:
         standardLinkPreviews: %standardLinkPreviews,
         statusLinkPreviews: %statusLinkPreviews,
         paymentRequests: %paymentRequests,
+        releaseCachedFiles: releaseCachedFiles,
         sendToken: token,
+        releasePathsJson: $(%releasePaths),
       )
 
       self.threadpool.start(arg)
