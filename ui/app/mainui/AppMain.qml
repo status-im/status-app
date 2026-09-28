@@ -512,8 +512,7 @@ Item {
             }
 
             if (txType === Constants.SendType.ERC721Transfer || txType === Constants.SendType.ERC1155Transfer) {
-                const key = "%1+%2+%3".arg(fromChainId).arg(txToAddr).arg(fromAsset)
-                const entry = SQUtils.ModelUtils.getByKey(appMain.walletCollectiblesStore.allCollectiblesModel, "symbol", key)
+                const entry = SQUtils.ModelUtils.getByKey(appMain.walletCollectiblesStore.allCollectiblesModel, "key", fromAsset)
                 if (!!entry) {
                     assetName = entry.name
                 }
