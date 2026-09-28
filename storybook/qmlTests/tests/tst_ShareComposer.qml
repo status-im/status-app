@@ -130,6 +130,15 @@ Item {
             tryCompare(chatInput.fileUrlsAndSources, "length", Constants.maxUploadFiles)
         }
 
+        function test_plainPathsAreAttachedAsFileUrls() {
+            const plainPath = Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/status-logo.png")
+                                .toString().slice("file://".length)
+            const drawer = create({ text: "", imagePaths: [plainPath] })
+            const chatInput = findChild(drawer, "statusChatInput")
+            tryCompare(chatInput.fileUrlsAndSources, "length", 1)
+            compare(chatInput.fileUrlsAndSources[0].toString(), "file://" + plainPath)
+        }
+
         function test_sendEnabledFalseDisablesSendButton() {
             const drawer = create({ sendEnabled: false })
             const sendButton = findChild(drawer, "statusChatInputSendButton")

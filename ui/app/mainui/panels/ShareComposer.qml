@@ -49,13 +49,9 @@ Control {
         id: d
 
         // Nim hands over plain absolute file paths; the input's image area
-        // needs URLs. Already-formed URLs (file:, data:, qrc:, image:) pass
-        // through, which keeps the component previewable with self-contained
-        // test data.
+        // needs URLs. Already-formed URLs (file:, data:, qrc:, image:) pass through.
         function toImageSource(path) {
-            if (/^(file|data|qrc|image|https?):/.test(path))
-                return path
-            return "file://" + path
+            return UrlUtils.urlFromUserInput(path).toString()
         }
 
         // Inverse mapping: the host consumes plain paths (send + cache
