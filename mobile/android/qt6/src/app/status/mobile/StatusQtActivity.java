@@ -224,8 +224,7 @@ public class StatusQtActivity extends QtActivity {
         if (text == null) text = "";
 
         String[] imagePaths = isImageShare
-                ? copySharedImagesToCache(
-                        imagesOnly(extractStreamUris(this, intent, isSendMultiple), isWildcard))
+                ? copySharedImagesToCache(imagesOnly(extractStreamUris(this, intent, isSendMultiple)))
                 : new String[0];
         if (text.isEmpty() && imagePaths.length == 0) {
             if (isImageShare) {
@@ -304,10 +303,10 @@ public class StatusQtActivity extends QtActivity {
         return ctx.getPackageName().equals(info.packageName);
     }
 
-    // Resolved before copying: the copy loop runs on the UI thread, so a
-    // wildcard share's video or archive would block it.
-    private List<Uri> imagesOnly(List<Uri> uris, boolean resolveTypes) {
-        if (!resolveTypes) return uris;
+    // The intent's declared type is the sender's claim about the share as a
+    // whole; only the provider's per-stream answer is authoritative, so every
+    // stream is resolved regardless of what the intent said.
+    private List<Uri> imagesOnly(List<Uri> uris) {
         ArrayList<Uri> images = new ArrayList<>();
         for (Uri uri : uris) {
             String mime = getContentResolver().getType(uri);
