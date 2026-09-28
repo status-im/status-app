@@ -69,6 +69,8 @@ const SIGNAL_RELOAD_MESSAGES* = "reloadMessages"
 const SIGNAL_URLS_UNFURLED* = "urlsUnfurled"
 const SIGNAL_GET_MESSAGE_FINISHED* = "getMessageFinished"
 const SIGNAL_URLS_UNFURLING_PLAN_READY* = "urlsUnfurlingPlanReady"
+const SIGNAL_URLS_UNFURLING_PLAN_FAILED* = "urlsUnfurlingPlanFailed"
+const SIGNAL_URLS_UNFURL_FAILED* = "urlsUnfurlFailed"
 const SIGNAL_MESSAGE_MARKED_AS_UNREAD* = "messageMarkedAsUnread"
 const SIGNAL_COMMUNITY_MEMBER_ALL_MESSAGES* = "communityMemberAllMessages"
 
@@ -173,6 +175,9 @@ type
 
   LinkPreviewDataArgs* = ref object of Args
     linkPreviews*: Table[string, LinkPreview]
+    requestUuid*: string
+
+  UrlsUnfurlingFailedArgs* = ref object of Args
     requestUuid*: string
 
   ReloadMessagesArgs* = ref object of Args
@@ -1453,10 +1458,12 @@ QtObject:
     let response = responseString.parseJson()
     if response.kind != JObject:
       warn "expected response is not a json object", methodName = "onAsyncGetTextURLsToUnfurl"
+      self.events.emit(SIGNAL_URLS_UNFURLING_PLAN_FAILED, UrlsUnfurlingFailedArgs(requestUuid: ""))
       return
     let errMessage = response{"error"}.getStr()
     if errMessage != "":
       error "asyncGetTextURLsToUnfurl failed", errMessage
+      self.events.emit(SIGNAL_URLS_UNFURLING_PLAN_FAILED, UrlsUnfurlingFailedArgs(requestUuid: response{"requestUuid"}.getStr))
       return
 
     let args = UrlsUnfurlingPlanDataArgs(
@@ -1481,11 +1488,13 @@ QtObject:
     let responseObj = response.parseJson
     if responseObj.kind != JObject:
       warn "expected response is not a json object", methodName = "onAsyncUnfurlUrlsFinished"
+      self.events.emit(SIGNAL_URLS_UNFURL_FAILED, UrlsUnfurlingFailedArgs(requestUuid: ""))
       return
 
     let errMessage = responseObj{"error"}.getStr
     if errMessage != "":
       error "asyncUnfurlUrls failed", errMessage
+      self.events.emit(SIGNAL_URLS_UNFURL_FAILED, UrlsUnfurlingFailedArgs(requestUuid: responseObj{"requestUuid"}.getStr))
       return
 
     var requestedUrlsArr: JsonNode
