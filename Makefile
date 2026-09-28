@@ -193,12 +193,14 @@ BOTTLES := $(addprefix $(BOTTLES_DIR)/,openssl@3)
 ifeq ($(QT_ARCH),arm64)
 # keep in sync with MACOSX_DEPLOYMENT_TARGET
 	BOTTLE_MACOS_VERSION := 'arm64_sonoma'
+# Homebrew no longer builds Sonoma bottles; this is the openssl@3 3.6.4 one.
+	BOTTLE_SHA256 := 01887accd1964e9940ba516509e948eed9850d58d55cc02ca52c503435750685
 else
 	BOTTLE_MACOS_VERSION := 'sonoma'
 endif
 $(BOTTLES):
 	echo -e "\033[92mFetching:\033[39m $(notdir $@) bottle arch $(QT_ARCH) $(BOTTLE_MACOS_VERSION)"
-	./scripts/fetch-brew-bottle.sh $(notdir $@) $(BOTTLE_MACOS_VERSION) $(HANDLE_OUTPUT)
+	./scripts/fetch-brew-bottle.sh $(notdir $@) $(BOTTLE_MACOS_VERSION) $(BOTTLE_SHA256) $(HANDLE_OUTPUT)
 
 bottles: $(BOTTLES)
 endif
