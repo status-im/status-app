@@ -512,8 +512,7 @@ proc sendNotification[T](self: Module[T], status: string, sendDetails: SendDetai
         fromAmount = txAmountIn
       if txAmountOut != "0":
         toAmount = txAmountOut
-      if sentTransaction.fromToken.len > 0:
-        fromAsset = sentTransaction.fromToken
+      fromAsset = toastAssetKey(SendType(sendDetails.sendType), fromAsset, sentTransaction.fromToken)
       if sentTransaction.toToken.len > 0:
         toAsset = sentTransaction.toToken
       txHash = sentTransaction.hash
