@@ -6,7 +6,7 @@ library 'status-jenkins-lib@v1.9.52'
 pipeline {
   agent {
     dockerfile {
-      label 'linuxcontainer'
+      label getAgentLabel()
       filename 'tests.Dockerfile'
       dir 'ci'
       args '--network=host ' +
@@ -21,14 +21,61 @@ pipeline {
     }
   }
 
-  // Keep the existing job's PR checkout parameter, but do not install a timer.
   parameters {
-    string(name: 'GIT_REF', description: 'Git branch to checkout.', defaultValue: 'master')
+    string(
+      name: 'GIT_REF',
+      description: 'Git branch to checkout.',
+      defaultValue: 'master'
+    )
+    string(
+      name: 'BUILD_SOURCE',
+      description: 'URL to tar.gz file OR path to Jenkins build.',
+      defaultValue: getDefaultBuildSource()
+    )
+    string(
+      name: 'SOURCE_BUILD_NUMBER',
+      description: 'Build number of BUILD_SOURCE to copy from. Empty picks the latest.',
+      defaultValue: ''
+    )
+    string(
+      name: 'TEST_NAME',
+      description: 'Paste test name/part of test name to run specific test.',
+      defaultValue: ''
+    )
+    string(
+      name: 'TEST_SCOPE_FLAG',
+      description: 'Paste a known mark to run tests labeled with this mark (ignored when KEYCARD_TESTS is enabled)',
+      defaultValue: getDefaultTestScopeFlag()
+    )
+    booleanParam(
+      name: 'KEYCARD_TESTS',
+      description: 'Run @pytest.mark.keycard tests. Requires a build with USE_SIMULATED_KEYCARD=true.',
+      defaultValue: false
+    )
+    string(
+      name: 'TESTRAIL_RUN_NAME',
+      description: 'Test run name in Test Rail.',
+      defaultValue: ''
+    )
+    choice(
+      name: 'LOG_LEVEL',
+      description: 'Log level for pytest.',
+      choices: ['INFO', 'DEBUG', 'TRACE', 'WARNING', 'CRITICAL']
+    )
+    choice(
+      name: 'AGENT_NODE',
+      description: 'Which Linux worker to run on (leave default for random selection)',
+      choices: [
+        '',
+        'linux-01',
+        'linux-02',
+        'linux-03'
+      ],
+    )
   }
 
   options {
     timestamps()
-    disableConcurrentBuilds()
     /* Prevent Jenkins jobs from running forever */
     timeout(time: 180, unit: 'MINUTES')
     /* manage how many builds we keep */
@@ -62,6 +109,9 @@ pipeline {
     /* To remove QML cache */
     QML_DISABLE_CACHE = 1
 
+    TESTRAIL_URL = 'https://ethstatus.testrail.net'
+    TESTRAIL_PROJECT_ID = 18
+
     /* Override QT xcb plugin with linux to avoid errors like:
      * "Could not load the Qt platform plugin "xcb" in "" even though it was found." */
     QT_QPA_PLATFORM = "linuxfb"
@@ -81,7 +131,12 @@ pipeline {
     STATUS_FLEET = 'status-app.test'
     STATUS_FLEET_CONFIG_FILE = "${WORKSPACE}/assets/local-waku-fleets-config.json"
 
-    LOG_LEVEL = 'INFO'
+    /* Hack fix for params not being set in job on first run */
+    BUILD_SOURCE =      "${params.BUILD_SOURCE}"
+    TEST_NAME =         "${params.TEST_NAME}"
+    TEST_SCOPE_FLAG =   "${params.TEST_SCOPE_FLAG}"
+    TESTRAIL_RUN_NAME = "${params.TESTRAIL_RUN_NAME}"
+    LOG_LEVEL =         "${params.LOG_LEVEL}"
 
   }
 
@@ -96,6 +151,13 @@ pipeline {
         sh './scripts/ci-fetch-submodules.sh'
       }
     }
+    stage('Prep') {
+      steps { script {
+        setNewBuildName()
+        updateGitHubStatus()
+      } }
+    }
+
     stage('Deps') {
       steps {
         script { dir('test/e2e') {
@@ -108,14 +170,33 @@ pipeline {
       }
     }
 
+    stage('Download') {
+      when { expression { params.BUILD_SOURCE.startsWith('http') } }
+      steps { timeout(5) { script { dir('test/e2e') {
+        sh 'mkdir -p ./pkg/'
+        setBuildDescFromFile(params.BUILD_SOURCE)
+        fileOperations([
+          fileDownloadOperation(
+            url:            params.BUILD_SOURCE,
+            targetFileName: 'StatusIm-Desktop.tar.gz',
+            targetLocation: './pkg/',
+            userName:       '',
+            password:       '',
+          )
+        ])
+      } } } }
+    }
+
     stage('Copy') {
+      when { expression { ! params.BUILD_SOURCE.startsWith('http') } }
       steps { timeout(5) { script { dir('test/e2e') {
         copyArtifacts(
-          projectName: 'status-app/nightly',
+          projectName: params.BUILD_SOURCE,
           filter:      'pkg/*-x86_64.tar.gz',
-          selector:    lastSuccessful(),
+          selector:    params.SOURCE_BUILD_NUMBER ? specific(params.SOURCE_BUILD_NUMBER) : lastWithArtifacts(),
           target:      './'
         )
+        setBuildDescFromFile(utils.findFile('pkg/*tar.gz'))
       } } } }
     }
 
@@ -125,7 +206,6 @@ pipeline {
         sh "tar -zxvf '${utils.findFile('pkg/*tar.gz')}' -C './aut'"
         env.AUT_PATH = utils.findFile('aut/*.AppImage')
         env.TESTED_APP = utils.baseName(env.AUT_PATH)
-        currentBuild.description = "App: ${env.TESTED_APP}"
       } } } }
     }
 
@@ -167,8 +247,12 @@ pipeline {
                 sh 'cp "$STATUS_FLEET_CONFIG_FILE" nightly-report/local-waku-fleets-config.json'
                 echo "LOCAL WAKU FLEET: ${env.STATUS_FLEET}; config: ${env.STATUS_FLEET_CONFIG_FILE}"
               }
-              timeout(time: 120, unit: 'MINUTES') {
+              timeout(time: getTestStageTimeout(), unit: 'MINUTES') {
                 dir('test/e2e') {
+                  def flags = []
+                  if (params.TEST_NAME)  { flags.add("-k=${params.TEST_NAME}") }
+                  if (!params.KEYCARD_TESTS && params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
+                  if (params.LOG_LEVEL)  { flags.addAll(["--log-level=${params.LOG_LEVEL}", "--log-cli-level=${params.LOG_LEVEL}"]) }
                   dir ('configs') { sh 'ln -s _local.ci.py _local.py' }
                   wrap([
                     $class:            'Xvfb',
@@ -179,13 +263,17 @@ pipeline {
                   ]) {
                     sh 'fluxbox &'
                     withCredentials([
+                      usernamePassword(
+                        credentialsId: 'test-rail-api-devops',
+                        usernameVariable: 'TESTRAIL_USR',
+                        passwordVariable: 'TESTRAIL_PSW'
+                      ),
                       string(credentialsId: 'wallet-test-user-seed', variable: 'WALLET_TEST_USER_SEED')
                     ]) {
                       sh """
-                        python3 -m pytest -m "not (keycard or benchmark)" -v --reruns=1 --timeout=300 \
+                        python3 -m pytest -m "${getPytestMarkerExpr()}" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
                           tests/test_intentional_nightly_reporting.py \
                           tests/critical_tests_prs/test_messaging_1x1_chat.py::test_1x1_chat_add_contact_in_settings \
-                          --log-level=INFO --log-cli-level=INFO \
                           --disable-warnings \
                           --alluredir=./allure-results \
                           --junitxml=./reports/junit.xml \
@@ -235,7 +323,20 @@ pipeline {
           properties: [],
           jdk: '',
         ])
+        /* Link for Jenkins Builds GitHub comment. */
+        env.PKG_URL = "${env.BUILD_URL}allure/"
+        updateGitHubStatus()
       }
+    } }
+    success { script {
+      github.notifyPR(true)
+    } }
+    failure { script {
+      github.notifyPR(false)
+      discord.send(
+        header: '**Desktop E2E test failure!**',
+        cred: 'discord-status-desktop-e2e-webhook',
+      )
     } }
     cleanup {
       cleanWs(disableDeferredWipeout: true)
@@ -270,4 +371,72 @@ def reportGithubIssues() {
 
 def fleetProject() {
   return "logos-delivery-e2e-${env.BUILD_NUMBER}-${env.EXECUTOR_NUMBER}".toLowerCase()
+}
+
+def setNewBuildName() {
+  if (currentBuild.upstreamBuilds) {
+    def parent = utils.parentOrCurrentBuild()
+    currentBuild.displayName = parent.getFullDisplayName().minus('status-app » ')
+  }
+}
+
+def setBuildDescFromFile(fileNameOrPath) {
+  def tokens = utils.parseFilename(utils.baseName(fileNameOrPath))
+  if (tokens == null) { /* Fallback for regex fail. */
+    currentBuild.description = utils.baseName(fileNameOrPath)
+    return
+  }
+  if (tokens.build && tokens.build.startsWith('pr')) {
+    currentBuild.displayName = tokens.build.replace(/^pr/, 'PR-')
+  }
+  currentBuild.description = formatMap([
+    Node: NODE_NAME,
+    Build: tokens.build,
+    Commit: tokens.commit,
+    Version: (tokens.tstamp ?: tokens.version),
+  ])
+}
+
+def updateGitHubStatus() {
+  /* For PR builds update check status. */
+  if (params.BUILD_SOURCE ==~ /.*\/PR-[0-9]+\/?$/) {
+    github.statusUpdate(
+      context: 'jenkins/prs/tests/e2e-new',
+      commit: jenkins.getJobCommitByPath(params.BUILD_SOURCE),
+      repo_url: 'https://github.com/status-im/status-app'
+    )
+  }
+}
+
+def formatMap(Map data=[:]) {
+  def text = ''
+  data.each { key, val -> text += "<b>${key}</b>: ${val}</a><br>\n" }
+  return text
+}
+
+def getDefaultBuildSource() {
+  return ''
+}
+
+def getDefaultTestScopeFlag() {
+  if (JOB_NAME == "status-app/systems/linux/x86_64/tests-e2e") {
+    return ''
+  } else {
+    return '-m=critical'
+  }
+}
+
+def getPytestMarkerExpr() {
+  return params.KEYCARD_TESTS ? 'keycard' : 'not (keycard or benchmark)'
+}
+
+def getTestStageTimeout() {
+  return (params.KEYCARD_TESTS || params.TEST_SCOPE_FLAG == '-m=critical') ? 30 : 120
+}
+
+def getAgentLabel() {
+  if (params.AGENT_NODE && params.AGENT_NODE != '') {
+    return "linuxcontainer && ${params.AGENT_NODE}"
+  }
+  return 'linuxcontainer'
 }
