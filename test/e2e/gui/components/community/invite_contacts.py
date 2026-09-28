@@ -59,6 +59,11 @@ class InviteContactsPopup(QObject):
 
         self.send_button.click()
 
+    @allure.step('Close invite contacts popup')
+    def close(self):
+        self.close_button.click()
+        self.wait_until_hidden()
+
     @allure.step('Copy community link')
     def copy_community_link(self):
         self.copy_button.click()

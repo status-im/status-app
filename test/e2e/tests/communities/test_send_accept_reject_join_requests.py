@@ -7,6 +7,7 @@ import driver
 from gui.components.profile_popup import ProfilePopupFromMembers
 from gui.components.remove_contact_popup import RemoveContactPopup
 from gui.main_window import MainWindow
+from gui.screens.community_settings import CommunitySettingsScreen
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from helpers.multiple_instances_helper import authorize_user_in_aut, get_chat_key, switch_to_aut
 from scripts.utils.generators import random_text_message
@@ -137,6 +138,20 @@ def test_send_accept_reject_join_requests(multiple_instances):
             members_view.open_all_members_tab()
             assert user_one.name in members_view.members_names, \
                 f'{user_one.name} should be in community members after accept'
+
+        with step(f'User {user_two.name}, invite list hides members already in the community'):
+            CommunitySettingsScreen().left_panel.back_to_community()
+            community_screen = main_screen.left_panel.open_community(community.name)
+            add_popup = community_screen.left_panel.open_add_members_popup()
+            assert driver.waitFor(
+                lambda: user_three.name in add_popup.contacts,
+                configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
+            ), f'{user_three.name} should stay in invite list as a contact who is not a member, got {add_popup.contacts}'
+            assert driver.waitFor(
+                lambda: user_one.name not in add_popup.contacts,
+                configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
+            ), f'{user_one.name} should not be in invite list after joining, got {add_popup.contacts}'
+            add_popup.close()
             main_screen.minimize()
 
         with step(f'User {user_one.name}, verify that community appeared and user is a member'):
