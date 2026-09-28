@@ -75,6 +75,7 @@ type
     standardLinkPreviews: JsonNode
     statusLinkPreviews: JsonNode
     paymentRequests: JsonNode
+    sendToken: string
 
 const asyncSendMessageTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncSendMessageTaskArg](argEncoded)
@@ -95,12 +96,14 @@ const asyncSendMessageTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
     arg.finish(%* {
       "response": response,
       "chatId": arg.chatId,
+      "sendToken": arg.sendToken,
       "error": "",
     })
   except Exception as e:
     arg.finish(%* {
       "error": e.msg,
       "chatId": arg.chatId,
+      "sendToken": arg.sendToken,
     })
 
 type
@@ -114,6 +117,7 @@ type
     standardLinkPreviews: JsonNode
     statusLinkPreviews: JsonNode
     paymentRequests: JsonNode
+    sendToken: string
 
 const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncSendImagesTaskArg](argEncoded)
@@ -152,12 +156,14 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
     arg.finish(%* {
       "response": response,
       "chatId": arg.chatId,
+      "sendToken": arg.sendToken,
       "error": "",
     })
   except Exception as e:
     arg.finish(%* {
       "error": e.msg,
       "chatId": arg.chatId,
+      "sendToken": arg.sendToken,
     })
   finally:
     # Release the app-private cached copies now the shared images have been
