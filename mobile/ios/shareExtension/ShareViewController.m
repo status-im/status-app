@@ -14,6 +14,15 @@
 //   3. wake the host app via the responder-chain openURL workaround;
 //   4. complete the extension request.
 //
+// App Group layout (one team-scoped group shared by the Status / Status PR
+// variants, so everything is scoped under a per-variant root named after the
+// HOST bundle id — the host resolves the same root from its own bundle id in
+// ui/StatusQ/src/shareintake_ios.mm; without it the other variant would
+// consume the slot on foreground and its launch sweep would delete this
+// variant's in-flight copies):
+//   <container>/<host bundle id>/pending-intake/share.json   the slot
+//   <container>/<host bundle id>/share-intake/share-*.<ext>  image copies
+//
 // The wake in step 3 is UNSUPPORTED API (extensions officially cannot launch
 // their host app). Ordering encodes the required fallback: the payload is on
 // disk before the wake is attempted, so if the wake fails or is killed the
@@ -32,7 +41,8 @@
 
 // Must match ui/StatusQ/src/shareintake_ios.mm and the entitlements files
 // (mobile/ios/*.entitlements, ShareExtension.entitlements). One team-scoped
-// group id serves both bundle-id variants.
+// group id serves both bundle-id variants; see the layout above for how the
+// variants are kept apart inside it.
 static NSString *const kAppGroupId = @"group.app.status.mobile";
 static NSString *const kPendingIntakeDirName = @"pending-intake";
 static NSString *const kPendingIntakeFileName = @"share.json";
@@ -46,27 +56,57 @@ static NSString *const kShareIntakeCacheDirName = @"share-intake";
 // this authority, whatever the scheme.
 static NSString *const kWakeHost = @"share-intake";
 
+// The HOST app's bundle id, recovered from this extension's: the extension's
+// bundle id is forced to `<host>.ShareExtension` (buildShareExtension.sh), so
+// stripping the last component yields the host's — one derivation, nothing to
+// keep in sync at build time. It names both the wake scheme and the
+// per-variant root inside the App Group container. nil only for an unsigned
+// bundle without an identifier, which can't happen for a real extension.
+static NSString *HostBundleId(void)
+{
+    NSString *extensionBundleId = NSBundle.mainBundle.bundleIdentifier;
+    if (extensionBundleId.length == 0)
+        return nil;
+    NSRange lastDot = [extensionBundleId rangeOfString:@"." options:NSBackwardsSearch];
+    return lastDot.location != NSNotFound
+        ? [extensionBundleId substringToIndex:lastDot.location]
+        : extensionBundleId;
+}
+
 // The wake URL's scheme is the HOST app's bundle id — variant-unique, so a
 // co-installed variant (Status / Status PR) can't hijack the wake; iOS keeps
 // ONE global handler per URL scheme, which is why the shared status-app
 // scheme couldn't be used (fork issue #48). Each variant registers its bundle
-// id as a scheme (mobile/ios/Info.plist.template) and this extension's bundle
-// id is forced to `<host>.ShareExtension` (buildShareExtension.sh), so
-// stripping the last component recovers the host's — one derivation, nothing
-// to keep in sync at build time.
+// id as a scheme (mobile/ios/Info.plist.template).
 static NSString *WakeUrlString(void)
 {
-    NSString *extensionBundleId = NSBundle.mainBundle.bundleIdentifier;
-    if (extensionBundleId.length == 0) {
-        // Can't happen for a real signed extension; degrade to the legacy
-        // shared scheme rather than an unparseable nil-scheme URL.
+    NSString *hostBundleId = HostBundleId();
+    if (hostBundleId == nil) {
+        // Degrade to the legacy shared scheme rather than an unparseable
+        // nil-scheme URL.
         return [NSString stringWithFormat:@"status-app://%@", kWakeHost];
     }
-    NSRange lastDot = [extensionBundleId rangeOfString:@"." options:NSBackwardsSearch];
-    NSString *hostBundleId = lastDot.location != NSNotFound
-        ? [extensionBundleId substringToIndex:lastDot.location]
-        : extensionBundleId;
     return [NSString stringWithFormat:@"%@://%@", hostBundleId, kWakeHost];
+}
+
+// `<App Group container>/<host bundle id>` — the root both the slot and the
+// image cache live under (must mirror variantRootUrl() in
+// ui/StatusQ/src/shareintake_ios.mm). nil when the container can't be
+// resolved (entitlement missing) or the host id is unknown.
+static NSURL *VariantRootUrl(void)
+{
+    NSURL *container = [[NSFileManager defaultManager]
+        containerURLForSecurityApplicationGroupIdentifier:kAppGroupId];
+    if (container == nil) {
+        NSLog(@"StatusShareExtension: no App Group container for %@ (entitlement missing?)", kAppGroupId);
+        return nil;
+    }
+    NSString *hostBundleId = HostBundleId();
+    if (hostBundleId == nil) {
+        NSLog(@"StatusShareExtension: extension bundle has no identifier; cannot scope the hand-off");
+        return nil;
+    }
+    return [container URLByAppendingPathComponent:hostBundleId isDirectory:YES];
 }
 
 // Attachment types accepted (matches the activation rule in Info.plist:
@@ -251,12 +291,10 @@ static NSString *const kTypePlainText = @"public.plain-text";
 - (NSString *)copyImageToCache:(NSURL *)fileUrl index:(NSUInteger)index
 {
     NSFileManager *fm = [NSFileManager defaultManager];
-    NSURL *container = [fm containerURLForSecurityApplicationGroupIdentifier:kAppGroupId];
-    if (container == nil) {
-        NSLog(@"StatusShareExtension: no App Group container for %@ (entitlement missing?)", kAppGroupId);
+    NSURL *root = VariantRootUrl();
+    if (root == nil)
         return nil;
-    }
-    NSURL *dir = [container URLByAppendingPathComponent:kShareIntakeCacheDirName isDirectory:YES];
+    NSURL *dir = [root URLByAppendingPathComponent:kShareIntakeCacheDirName isDirectory:YES];
     NSError *error = nil;
     if (![fm createDirectoryAtURL:dir
         withIntermediateDirectories:YES
@@ -291,13 +329,11 @@ static NSString *const kTypePlainText = @"public.plain-text";
 - (BOOL)writePendingIntakeWithText:(NSString *)text imagePaths:(NSArray<NSString *> *)imagePaths
 {
     NSFileManager *fm = [NSFileManager defaultManager];
-    NSURL *container = [fm containerURLForSecurityApplicationGroupIdentifier:kAppGroupId];
-    if (container == nil) {
-        NSLog(@"StatusShareExtension: no App Group container for %@ (entitlement missing?)", kAppGroupId);
+    NSURL *root = VariantRootUrl();
+    if (root == nil)
         return NO;
-    }
 
-    NSURL *dir = [container URLByAppendingPathComponent:kPendingIntakeDirName isDirectory:YES];
+    NSURL *dir = [root URLByAppendingPathComponent:kPendingIntakeDirName isDirectory:YES];
     NSError *error = nil;
     if (![fm createDirectoryAtURL:dir
         withIntermediateDirectories:YES
