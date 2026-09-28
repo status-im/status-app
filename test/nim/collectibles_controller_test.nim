@@ -92,7 +92,6 @@ suite "collectibles controller single update load":
       check detailsRequests[^1] == toSeq(51..100)
       events.answerDetails(toSeq(51..100))
       check detailsRequests[^1] == toSeq(101..120)
-      check ctrl.getModel().getCount() == 0   # applied once, at the end
       events.answerDetails(toSeq(101..120))
 
       check ctrl.getModel().getCount() == 120
@@ -112,6 +111,30 @@ suite "collectibles controller single update load":
       check detailsRequests.len == 3
       # the refresh requested during the scan runs once, after the scan is applied
       check ownedRequests.len == 2
+
+  test "a first load shows each batch as it arrives":
+    withController(LoadType.AutoLoadSingleUpdate):
+      events.answerSnapshot(toSeq(1..120))
+      events.answerDetails(toSeq(1..50))
+      check ctrl.getModel().getCount() == 50
+      events.answerDetails(toSeq(51..100))
+      check ctrl.getModel().getCount() == 100
+      events.answerDetails(toSeq(101..120))
+      check ctrl.getModel().getCount() == 120
+
+  test "a refetch of a shown list is applied once, at the end":
+    withController(LoadType.AutoLoadSingleUpdate):
+      events.answerSnapshot(toSeq(1..60))
+      events.answerDetails(toSeq(1..50))
+      events.answerDetails(toSeq(51..60))
+      check ctrl.getModel().getCount() == 60
+
+      events.ownershipChangedWhileLoading(61)
+      events.answerSnapshot(toSeq(1..61))
+      events.answerDetails(toSeq(1..50))
+      check ctrl.getModel().getCount() == 60   # partial batch doesn't replace the shown list
+      events.answerDetails(toSeq(51..61))
+      check ctrl.getModel().getCount() == 61
 
   test "an empty snapshot empties the list without reading details":
     withController(LoadType.AutoLoadSingleUpdate):
