@@ -263,6 +263,7 @@ StatusSectionLoader {
                                                    && root.advancedStore.copyMessageLinksEnabled),
             threadsFeatureEnabled:          Qt.binding(() => root.featureFlagsStore.threadsEnabled),
             paymentRequestFeatureEnabled:   Qt.binding(() => root.featureFlagsStore.paymentRequestEnabled),
+            unlimitedChatImagesEnabled:     Qt.binding(() => root.featureFlagsStore.unlimitedChatImagesEnabled),
             extraLeftPadding:               Qt.binding(() => root.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0),
             isPortraitMode:                 Qt.binding(() => root.isPortraitMode),
             mutualContactsModel:            Qt.binding(() => root.contactsAdaptor.mutualContacts),

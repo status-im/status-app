@@ -2718,6 +2718,7 @@ Item {
                             isChatSectionModule: true
                         }
                         createChatPropertiesStore: appMain.createChatPropertiesStore
+                        unlimitedChatImagesEnabled: appMain.featureFlagsStore.unlimitedChatImagesEnabled
 
                         mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
                         allContactsModel: appMain.contactsStore.contactsModel

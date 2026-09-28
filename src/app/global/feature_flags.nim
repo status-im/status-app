@@ -35,6 +35,7 @@ const DEFAULT_FLAG_THREADPOOL_ENABLED = true
 const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
 const DEFAULT_FLAG_BUY_ENABLED = true
 const DEFAULT_FLAG_SWAP_ENABLED = true
+const DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED = true
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
@@ -55,6 +56,7 @@ featureFlag("THREADPOOL_ENABLED",             DEFAULT_FLAG_THREADPOOL_ENABLED, t
 featureFlag("SINGLE_STATUS_INSTANCE_ENABLED", DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED, true)
 featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
 featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
+featureFlag("UNLIMITED_CHAT_IMAGES_ENABLED",  DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED, true)
 
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
@@ -104,6 +106,8 @@ QtObject:
     buyEnabled: bool
     threadsEnabled: bool
 
+    unlimitedChatImagesEnabled: bool
+
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
     self.dappsEnabled = DAPPS_ENABLED
@@ -121,6 +125,8 @@ QtObject:
     self.statusSupportBotEnabled = STATUS_SUPPORT_BOT_ENABLED
     self.buyEnabled = BUY_ENABLED
     self.threadsEnabled = THREADS_ENABLED
+
+    self.unlimitedChatImagesEnabled = UNLIMITED_CHAT_IMAGES_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -218,3 +224,9 @@ QtObject:
 
   proc getThreadsEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.threadsEnabled
+
+  proc getUnlimitedChatImagesEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.unlimitedChatImagesEnabled
+
+  QtProperty[bool] unlimitedChatImagesEnabled:
+    read = getUnlimitedChatImagesEnabled

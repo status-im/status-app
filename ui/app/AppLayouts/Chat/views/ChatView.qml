@@ -110,6 +110,7 @@ Item {
     property bool threadsFeatureEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
+    property bool unlimitedChatImagesEnabled
 
     property int extraLeftPadding: 0
     property bool isPortraitMode: false
@@ -508,6 +509,7 @@ Item {
             threadsFeatureEnabled: root.threadsFeatureEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
+            unlimitedChatImagesEnabled: root.unlimitedChatImagesEnabled
             extraLeftPadding: root.extraLeftPadding
             joined: root.joined
 

@@ -27,6 +27,7 @@ Page {
 
     property var mutualContactsModel
     property var allContactsModel
+    property bool unlimitedChatImagesEnabled
 
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
@@ -177,6 +178,7 @@ Page {
                 closeGifPopupAfterSelection: true
                 usersModel: membersSelector.selectedContactsModel
                 paymentRequestFeatureEnabled: false
+                maxImages: root.unlimitedChatImagesEnabled ? 0 : Constants.maxUploadFiles
                 onStickerSelected: (hashId, packId, url) => {
                     root.createChatPropertiesStore.createChatStickerHashId = hashId;
                     root.createChatPropertiesStore.createChatStickerPackId = packId;

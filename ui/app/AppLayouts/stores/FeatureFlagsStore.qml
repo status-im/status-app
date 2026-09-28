@@ -16,4 +16,6 @@ QtObject {
     property bool statusSupportBotEnabled
     property bool buyEnabled
     property bool threadsEnabled
+
+    property bool unlimitedChatImagesEnabled
 }

@@ -56,6 +56,8 @@ Window {
         statusSupportBotEnabled: featureFlags ? featureFlags.statusSupportBotEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
         threadsEnabled: featureFlags ? featureFlags.threadsEnabled : false
+
+        unlimitedChatImagesEnabled: featureFlags ? featureFlags.unlimitedChatImagesEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}
