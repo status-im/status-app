@@ -377,6 +377,14 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
       else:
         self.controller.getMessagesParsedPlainText(chat.lastMessage, []),
     lastMessageTimestamp = chat.timestamp.int,
+    # Own-send recency survives restarts by deriving from the persisted last
+    # message; when someone else posted last, the live bump on sending success
+    # (updateLastMessage) is the only source, so it starts unset.
+    lastOwnMessageTimestamp =
+      if chat.lastMessage.`from` == singletonInstance.userProfile.getPubKey():
+        chat.timestamp.int
+      else:
+        0,
     canPost = chat.canPost,
   )
 
@@ -453,3 +461,5 @@ method updateLastMessage*(self: Module, chatId, communityId: string, chatType: C
   )
   if lastMessageTimestamp > 0:
     self.view.chatSearchModel().updateLastMessageTimestampOnChatItem(chatId, lastMessageTimestamp)
+    if lastMessage.`from` == singletonInstance.userProfile.getPubKey():
+      self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chatId, lastMessageTimestamp)
