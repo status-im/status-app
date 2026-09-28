@@ -15387,15 +15387,11 @@ to load</source>
 <context>
     <name>ShareDestinationPickerPanel</name>
     <message>
-        <source>Share to</source>
+        <source>Share</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Search chats and channels</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>No destinations found</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15416,21 +15412,6 @@ to load</source>
     <message>
         <source>Communities</source>
         <translation type="unfinished">커뮤니티</translation>
-    </message>
-</context>
-<context>
-    <name>SharePreviewPanel</name>
-    <message>
-        <source>Share to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation type="unfinished">메시지</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation type="unfinished">보내기</translation>
     </message>
 </context>
 <context>
