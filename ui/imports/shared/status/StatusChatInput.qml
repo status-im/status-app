@@ -104,6 +104,10 @@ Control {
     property bool isThread       // is this chat an existing thread inside a different `chatName`?
     property string threadName   // (an existing) thread name
 
+    property bool sendEnabled: true
+    // Attachment cap; 0 = no limit (the host splits the send)
+    property int maxImages: Constants.maxUploadFiles
+
     onEnabledChanged: {
         if (enabled)
             return
@@ -389,6 +393,8 @@ Control {
         - hides extended area
       */
     function tryFinalizeMessage() {
+        if (!root.sendEnabled)
+            return
         // Convert a trailing ASCII emoticon ("hello :)") that was never completed with a space.
         messageInputField.convertAsciiEmoji()
 
@@ -780,6 +786,7 @@ Control {
                 StatusChatImageQtyValidator {
                     id: imageQtyValidator
                     Layout.alignment: Qt.AlignHCenter
+                    maxImages: root.maxImages
                 }
 
                 Timer {
@@ -1090,9 +1097,10 @@ Control {
                 imageDialog.open()
             }
 
-            sendButton.enabled: messageInputField.length > 0 || messageInputField.preeditText
-                               || root.fileUrlsAndSources.length > 0
-                               || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0)
+            sendButton.enabled: root.sendEnabled
+                               && (messageInputField.length > 0 || messageInputField.preeditText
+                                   || root.fileUrlsAndSources.length > 0
+                                   || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0))
 
             sendButton.limitText: messageInputField.length >= root.messageLimit - root.messageLimitSoft
                                   ? (root.messageLimit - messageInputField.length).toString()

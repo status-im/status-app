@@ -5,6 +5,7 @@ import QtTest
 import StatusQ.Core.Utils as SQUtils
 
 import shared.status
+import utils
 
 Item {
     id: root
@@ -102,6 +103,15 @@ Item {
     Component {
         id: contactsModelComponent
         ListModel {}
+    }
+
+    Component {
+        id: imageInputComponent
+
+        StatusChatInput {
+            width: 700
+            usersModel: ListModel {}
+        }
     }
 
     TestCase {
@@ -762,6 +772,33 @@ Item {
             compare(signalSpy.signalArguments[0][0], "hash-abc")
             compare(signalSpy.signalArguments[0][1], "pack-1")
             compare(signalSpy.signalArguments[0][2], "https://example.com/sticker.png")
+        }
+
+        // ── Attachment cap
+        //
+        // Seven distinct PNGs: one over the default per-message cap.
+        function sevenImagePaths() {
+            const names = ["backup-popup", "qr-scan-success", "status-gradient-dot", "status-logo-circle",
+                           "status-logo-dev-circle", "status-logo-icon", "status-logo"]
+            return names.map(n => Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/" + n + ".png")
+                                    .toString().slice("file://".length))
+        }
+
+        function test_imageCap_defaultKeepsMaxUploadFiles() {
+            const input = createTemporaryObject(imageInputComponent, root)
+            waitForRendering(input)
+            compare(input.maxImages, Constants.maxUploadFiles)
+
+            input.validateImagesAndShowImageArea(sevenImagePaths())
+            tryCompare(input.fileUrlsAndSources, "length", Constants.maxUploadFiles)
+        }
+
+        function test_imageCap_zeroMeansUnlimited() {
+            const input = createTemporaryObject(imageInputComponent, root, { maxImages: 0 })
+            waitForRendering(input)
+
+            input.validateImagesAndShowImageArea(sevenImagePaths())
+            tryCompare(input.fileUrlsAndSources, "length", 7)
         }
     }
 }
