@@ -117,7 +117,9 @@ type
     standardLinkPreviews: JsonNode
     statusLinkPreviews: JsonNode
     paymentRequests: JsonNode
+    releaseCachedFiles: bool
     sendToken: string
+    releasePathsJson: string
 
 const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncSendImagesTaskArg](argEncoded)
@@ -172,4 +174,11 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
     # parent directory name — on desktop, where there is no share-intake
     # cache at all, a match could only ever be a user-owned file.
     when defined(android) or defined(ios):
-      releaseCachedShareFiles(imagePaths)
+      if arg.releaseCachedFiles:
+        # A chunked share releases every cached copy from its last chunk.
+        var toRelease = imagePaths
+        try:
+          toRelease.add(Json.decode(arg.releasePathsJson, seq[string]))
+        except CatchableError:
+          discard
+        releaseCachedShareFiles(toRelease)
