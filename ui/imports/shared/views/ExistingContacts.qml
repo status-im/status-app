@@ -58,6 +58,7 @@ Item {
                         root.filterText
                         root.hideCommunityMembers
                         root.communityId
+                        root.membersModel ? root.membersModel.count : 0
 
                         if (!model.isContact || model.isBlocked)
                             return false
