@@ -137,3 +137,14 @@ suite "collectibles controller paginated load":
       check ctrl.getModel().getCount() == 50
       check ownedRequests[^1] == (50, BatchSize, CollectibleDataType.Header)
       check detailsRequests.len == 0
+
+suite "collectibles controller request id":
+  test "a request id can't be shared by two live controllers":
+    let events = createEventEmitter()
+    let first = newController(RequestId, nil, events, LoadType.AutoLoadSingleUpdate)
+    expect AssertionDefect:
+      discard newController(RequestId, nil, events, LoadType.AutoLoadSingleUpdate)
+    first.delete()
+
+    let reused = newController(RequestId, nil, events, LoadType.AutoLoadSingleUpdate)
+    reused.delete()
