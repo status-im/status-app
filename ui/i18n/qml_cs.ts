@@ -15494,6 +15494,35 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>ShareComposer</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Zpráva</translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationDelegate</name>
+    <message numerus="yes">
+        <source>%n member(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n člen</numerusform>
+            <numerusform>%n členové</numerusform>
+            <numerusform>%n členů</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationList</name>
+    <message>
+        <source>No destinations found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing selected yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ShareDestinationPickerPanel</name>
     <message>
         <source>Share to</source>
@@ -15506,6 +15535,13 @@ selhalo</translation>
     <message>
         <source>No destinations found</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationTabBar</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">Všechny</translation>
     </message>
 </context>
 <context>
