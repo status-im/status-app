@@ -69,6 +69,8 @@ type
     processedMsg: string
     replyTo: string
     threadId: string
+    startNewThread: bool
+    newThreadName: string
     contentType: int
     preferredUsername: string
     communityId: string
@@ -80,18 +82,27 @@ type
 const asyncSendMessageTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncSendMessageTaskArg](argEncoded)
   try:
-    
-    let response = status_chat.sendChatMessage(
-      arg.chatId,
-      arg.processedMsg,
-      arg.replyTo,
-      arg.contentType,
-      arg.threadId,
-      arg.preferredUsername,
-      arg.standardLinkPreviews,
-      arg.statusLinkPreviews,
-      arg.paymentRequests,
-      arg.communityId)
+    let response = if arg.startNewThread:
+      status_chat.startThreadFromNewMessage(
+        arg.chatId,
+        arg.processedMsg,
+        arg.contentType,
+        arg.preferredUsername,
+        arg.standardLinkPreviews,
+        arg.statusLinkPreviews,
+        arg.newThreadName)
+    else:
+      status_chat.sendChatMessage(
+        arg.chatId,
+        arg.processedMsg,
+        arg.replyTo,
+        arg.contentType,
+        arg.threadId,
+        arg.preferredUsername,
+        arg.standardLinkPreviews,
+        arg.statusLinkPreviews,
+        arg.paymentRequests,
+        arg.communityId)
 
     arg.finish(%* {
       "response": response,

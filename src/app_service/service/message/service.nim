@@ -718,6 +718,17 @@ QtObject:
     self.events.emit(SIGNAL_RELOAD_MESSAGES, ReloadMessagesArgs(communityId: communityId))
 
   proc init*(self: Service) =
+    self.events.on(chat_service.SIGNAL_THREAD_METADATA_RECEIVED) do(e: Args):
+      let args = chat_service.ThreadMetadataArgs(e)
+      for thread in args.threads:
+        if thread.chatId.len == 0 or thread.threadId.len == 0:
+          continue
+        self.cacheCreatedThreads(thread.chatId, @[thread])
+        self.events.emit(SIGNAL_THREAD_CREATED, ThreadCreatedArgs(
+          chatId: thread.chatId,
+          parentMessageId: thread.parentMessageId,
+          threads: @[thread]))
+
     self.events.on(SignalType.MessageDelivered.event) do(e: Args):
       let receivedData = MessageDeliveredSignal(e)
       let data = MessageDeliveredArgs(chatId: receivedData.chatId, messageId: receivedData.messageId)

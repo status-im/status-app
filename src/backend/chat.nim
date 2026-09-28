@@ -83,6 +83,29 @@ proc sendChatMessage*(
     }
   ])
 
+proc startThreadFromNewMessage*(
+    chatId: string,
+    msg: string,
+    contentType: int,
+    preferredUsername: string,
+    standardLinkPreviews: JsonNode,
+    statusLinkPreviews: JsonNode,
+    threadName: string,
+    ): RpcResponse[JsonNode] =
+  result = callPrivateRPC("startThreadFromNewMessage".prefix, %* [
+    {
+      "message": {
+        "chatId": chatId,
+        "text": msg,
+        "contentType": contentType,
+        "ensName": preferredUsername,
+        "linkPreviews": standardLinkPreviews,
+        "statusLinkPreviews": statusLinkPreviews,
+      },
+      "threadName": threadName,
+    }
+  ])
+
 proc sendImages*(chatId: string,
                  images: var seq[string],
                  msg: string,

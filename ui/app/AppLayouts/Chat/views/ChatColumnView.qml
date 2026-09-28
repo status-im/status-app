@@ -118,7 +118,7 @@ Item {
                  || root.createChatPropertiesStore.createChatFileUrls.length > 0) {
             root.rootStore.sendMessage(
                         chatId, root.createChatPropertiesStore.createChatInitMessage,
-                        "", root.createChatPropertiesStore.createChatFileUrls)
+                        "", root.createChatPropertiesStore.createChatFileUrls, false)
         }
 
         root.createChatPropertiesStore.resetProperties()
@@ -628,8 +628,8 @@ Item {
                         value: chatInput.chatInputPlaceholderOverride
                     }
 
-                    //threadsEnabled: true // TODO featureFlag && chatTypeSupportsThreads
-                    //isThread: d.activeChatContentModule.chatDetails.isThread // TODO
+                    threadsEnabled: root.threadsFeatureEnabled
+                    isThread: d.activeMessagesStore.threadId !== ""
                     chatName: d.activeChatContentModule?.chatDetails?.name || ""
                     //threadName: isThread ? d.activeChatContentModule.chatDetails.threadName : "" // TODO
 
@@ -690,7 +690,9 @@ Item {
                         if (root.rootStore.sendMessage(root.activeChatId,
                                                     chatInput.getTextWithPublicKeys(),
                                                     chatInput.isReply? chatInput.replyMessageId : "",
-                                                    chatInput.fileUrlsAndSources
+                                                    chatInput.fileUrlsAndSources,
+                                                    startNewThread,
+                                                    newThreadName
                                                     ))
                         {
                             Global.playSendMessageSound()
