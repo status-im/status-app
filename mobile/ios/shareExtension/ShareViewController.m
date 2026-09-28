@@ -215,7 +215,7 @@ static NSString *const kTypePlainText = @"public.plain-text";
                 dispatch_group_enter(group);
                 [provider loadItemForTypeIdentifier:kTypeUrl
                                             options:nil
-                                  completionHandler:^(id<NSSecureCoding> loaded, NSError *error) {
+                                  completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
                     NSString *url = nil;
                     if ([(NSObject *)loaded isKindOfClass:[NSURL class]]) {
                         NSURL *u = (NSURL *)loaded;
@@ -236,7 +236,7 @@ static NSString *const kTypePlainText = @"public.plain-text";
                 dispatch_group_enter(group);
                 [provider loadItemForTypeIdentifier:kTypePlainText
                                             options:nil
-                                  completionHandler:^(id<NSSecureCoding> loaded, NSError *error) {
+                                  completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
                     NSString *text = nil;
                     if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
                         text = (NSString *)loaded;
