@@ -37,7 +37,6 @@ public class StatusQtActivity extends QtActivity {
     private static final AtomicBoolean splashShouldHide = new AtomicBoolean(false);
     private static StatusQtActivity sInstance = null;
 
-    private static final AtomicBoolean userLoggedIn = new AtomicBoolean(false);
     // App-private cache subdirectory holding copies of shared image streams.
     // Copies are made immediately at receipt (OS read grants on content URIs
     // expire once the source activity result is consumed); the Nim side owns
@@ -50,6 +49,14 @@ public class StatusQtActivity extends QtActivity {
     // since on a cold start the native side isn't up yet to receive it.
     // Setting one clears the other; a replaced share's cached image copies are
     // deleted. No routing here — that lives at the Nim external-intake seam.
+    //
+    // Written from the Android UI thread, taken from the Qt thread: everything
+    // below is guarded by intakeLock. userLoggedIn lives under the same lock so
+    // "park because not logged in" and "mainWindowReady takes the slot" cannot
+    // interleave — otherwise a share parked just after the one-shot take would
+    // never be delivered.
+    private static final Object intakeLock = new Object();
+    private static boolean userLoggedIn = false;
     private static String pendingIntakeUrl = null;
     private static String pendingIntakeShareText = null;
     private static String[] pendingIntakeShareImagePaths = null;
@@ -167,19 +174,29 @@ public class StatusQtActivity extends QtActivity {
         }
     }
 
-    // Called from Qt via JNI when main window is visible
+    // Called from Qt via JNI when main window is visible. Takes the pending
+    // slot atomically: once the fields are nulled under the lock, a later
+    // clearPendingShare() cannot delete the files being forwarded.
     public static void mainWindowReady() {
         splashShouldHide.set(true);
-        userLoggedIn.set(true);
-        if (pendingIntakeUrl != null) {
-            passDeepLinkToQt(pendingIntakeUrl);
+        final String url;
+        final String shareText;
+        final String[] shareImagePaths;
+        synchronized (intakeLock) {
+            userLoggedIn = true;
+            url = pendingIntakeUrl;
+            shareText = pendingIntakeShareText;
+            shareImagePaths = pendingIntakeShareImagePaths;
             pendingIntakeUrl = null;
-        }
-        // Text and image paths are always set (non-null) and cleared together.
-        if (pendingIntakeShareText != null) {
-            passShareToQt(pendingIntakeShareText, pendingIntakeShareImagePaths);
             pendingIntakeShareText = null;
             pendingIntakeShareImagePaths = null;
+        }
+        if (url != null) {
+            passDeepLinkToQt(url);
+        }
+        // Text and image paths are always set (non-null) and cleared together.
+        if (shareText != null) {
+            passShareToQt(shareText, shareImagePaths);
         }
     }
 
@@ -190,10 +207,12 @@ public class StatusQtActivity extends QtActivity {
         String action = intent.getAction();
         Uri data = intent.getData();
         if (Intent.ACTION_VIEW.equals(action) && data != null) {
-            if (!userLoggedIn.get()) {
-                pendingIntakeUrl = data.toString();
-                clearPendingShare();
-                return;
+            synchronized (intakeLock) {
+                if (!userLoggedIn) {
+                    pendingIntakeUrl = data.toString();
+                    clearPendingShareLocked();
+                    return;
+                }
             }
             passDeepLinkToQt(data.toString());
         }
@@ -234,25 +253,32 @@ public class StatusQtActivity extends QtActivity {
             return;
         }
 
-        if (!userLoggedIn.get()) {
-            clearPendingShare();
-            pendingIntakeShareText = text;
-            pendingIntakeShareImagePaths = imagePaths;
-            pendingIntakeUrl = null;
-            return;
+        synchronized (intakeLock) {
+            if (!userLoggedIn) {
+                clearPendingShareLocked();
+                pendingIntakeShareText = text;
+                pendingIntakeShareImagePaths = imagePaths;
+                pendingIntakeUrl = null;
+                return;
+            }
         }
         passShareToQt(text, imagePaths);
     }
 
     // Last-wins: a replaced pending share must not leak its cached copies.
-    private static void clearPendingShare() {
+    // Caller holds intakeLock.
+    private static void clearPendingShareLocked() {
         if (pendingIntakeShareImagePaths != null) {
-            for (String path : pendingIntakeShareImagePaths) {
-                new File(path).delete();
-            }
+            deleteFiles(pendingIntakeShareImagePaths);
         }
         pendingIntakeShareImagePaths = null;
         pendingIntakeShareText = null;
+    }
+
+    private static void deleteFiles(String[] paths) {
+        for (String path : paths) {
+            new File(path).delete();
+        }
     }
 
     private static List<Uri> extractStreamUris(Context ctx, Intent intent, boolean multiple) {
