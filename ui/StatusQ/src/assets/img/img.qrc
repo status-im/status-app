@@ -333,6 +333,8 @@
         <file>icons/check-2.svg</file>
         <file>icons/check-activity.svg</file>
         <file>icons/check-circle.svg</file>
+        <file>icons/check-round-rect.svg</file>
+        <file>icons/check-round-rect-cut.svg</file>
         <file>icons/icon-pause.svg</file>
         <file>icons/icon-play.svg</file>
         <file>icons/leave_chat.svg</file>
