@@ -79,6 +79,9 @@ method delete*(self: Module) =
 
 method load*(self: Module) =
   self.controller.init()
+  # Sends announced before this chat loaded (a share landing here) are echoed now.
+  for args in self.controller.pendingSends():
+    self.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType)
   self.view.load()
 
 method isLoaded*(self: Module): bool =
@@ -323,6 +326,38 @@ method onSendingMessageSuccess*(self: Module, message: MessageDto) =
   self.messagesAdded(@[message])
   self.view.emitSendingMessageSuccessSignal()
   self.removeNewMessagesMarker()
+
+const PENDING_MESSAGE_ID_PREFIX = "pending-"
+
+proc pendingMessageId(sendToken: string): string =
+  PENDING_MESSAGE_ID_PREFIX & sendToken
+
+# Optimistic echo: the text message shows as "sending" from local data before
+# status-go has stored it; onSendingFinished drops it in the same call chain
+# that inserts the real one (send success), or on failure.
+method onSendingStarted*(self: Module, sendToken, text, replyTo: string, contentType: int) =
+  let chatDto = self.controller.getChatDetails()
+  let now = int64(epochTime() * 1000)
+  var dto = MessageDto(
+    id: pendingMessageId(sendToken),
+    chatId: chatDto.id,
+    localChatId: chatDto.id,
+    communityId: chatDto.communityId,
+    `from`: singletonInstance.userProfile.getPubKey(),
+    text: text,
+    clock: now,
+    timestamp: now,
+    seen: true,
+    outgoingStatus: PARSED_TEXT_OUTGOING_STATUS_SENDING,
+    responseTo: replyTo,
+    contentType: toContentType(contentType),
+  )
+  if text != "":
+    dto.parsedText = @[ParsedText(`type`: PARSED_TEXT_TYPE_PARAGRAPH, children: @[ParsedText(literal: text)])]
+  self.messagesAdded(@[dto])
+
+method onSendingFinished*(self: Module, sendToken: string) =
+  self.view.model().removeItem(pendingMessageId(sendToken))
 
 method onSendingMessageError*(self: Module, error: string) =
   self.view.emitSendingMessageErrorSignal(error)

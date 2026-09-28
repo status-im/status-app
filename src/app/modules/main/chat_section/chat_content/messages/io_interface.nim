@@ -61,6 +61,12 @@ method messagesAdded*(self: AccessInterface, messages: seq[MessageDto]) {.base.}
 method onSendingMessageSuccess*(self: AccessInterface, message: MessageDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onSendingStarted*(self: AccessInterface, sendToken, text, replyTo: string, contentType: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onSendingFinished*(self: AccessInterface, sendToken: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onSendingMessageError*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

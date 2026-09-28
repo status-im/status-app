@@ -43,7 +43,16 @@ type
   ChatExtArgs* = ref object of ChatArgs
     ensName*: string
 
-  # Every send, text or image, is closed when its task ends, success or failure.
+  # Optimistic echo (see CONTEXT.md): a text send is announced before status-go
+  # stores it. Every send, text or image, is closed when its task ends, success
+  # or failure.
+  SendingStartedArgs* = ref object of Args
+    chatId*: string
+    sendToken*: string
+    text*: string
+    replyTo*: string
+    contentType*: int
+
   SendingFinishedArgs* = ref object of Args
     chatId*: string
     sendToken*: string
@@ -108,6 +117,7 @@ const SIGNAL_CHAT_UPDATE* = "chatUpdate"
 const SIGNAL_CHAT_LEFT* = "channelLeft"
 const SIGNAL_SENDING_FAILED* = "messageSendingFailed"
 const SIGNAL_SENDING_SUCCESS* = "messageSendingSuccess"
+const SIGNAL_SENDING_STARTED* = "sendingStarted"
 const SIGNAL_SENDING_FINISHED* = "sendingFinished"
 const SIGNAL_MESSAGE_REMOVE* = "messageRemove"
 const SIGNAL_CHAT_MUTED* = "chatMuted"
@@ -132,6 +142,9 @@ QtObject:
     events: EventEmitter
     chats: Table[string, ChatDto] # [chat_id, ChatDto]
     contactService: contact_service.Service
+    # In-flight sends by token, so a chat that loads after the announcement
+    # can still echo them.
+    pendingSends: OrderedTable[string, SendingStartedArgs]
     # Read-only sentinel returned via `lent` borrow when a lookup misses.
     # Mutation is observable across all callers and will corrupt subsequent
     # miss results — never pass to procs that take `var T`.
@@ -437,7 +450,22 @@ QtObject:
       error "Error deleting channel", chatId, msg = e.msg
       return
 
+  proc announceSending*(self: Service, args: SendingStartedArgs) =
+    ## Idempotent per token: a send pre-announced by its planner is not
+    ## announced again when it is actually dispatched.
+    if self.pendingSends.hasKey(args.sendToken):
+      return
+    self.pendingSends[args.sendToken] = args
+    self.events.emit(SIGNAL_SENDING_STARTED, args)
+
+  proc pendingSendsForChat*(self: Service, chatId: string): seq[SendingStartedArgs] =
+    result = @[]
+    for args in self.pendingSends.values:
+      if args.chatId == chatId:
+        result.add(args)
+
   proc finishSending(self: Service, chatId, sendToken: string) =
+    self.pendingSends.del(sendToken)
     self.events.emit(SIGNAL_SENDING_FINISHED, SendingFinishedArgs(chatId: chatId, sendToken: sendToken))
 
   proc asyncSendImages*(self: Service,
@@ -514,6 +542,8 @@ QtObject:
       let processedMsg = message_common.replaceMentionsWithPubKeys(allKnownContacts, msg)
 
       let (standardLinkPreviews, statusLinkPreviews) = extractLinkPreviewsLists(linkPreviews)
+      self.announceSending(SendingStartedArgs(chatId: chatId, sendToken: token, text: processedMsg,
+        replyTo: replyTo, contentType: contentType))
 
       let arg = AsyncSendMessageTaskArg(
         tptr: asyncSendMessageTask,
