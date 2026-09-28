@@ -76,6 +76,26 @@ SplitView {
         d.instantLoading = false
     }
 
+    // Removes `count` messages starting at `index`. Mirrors insertMessages:
+    // an index past the end means "from the end", so the same panel controls
+    // drive both, and both clamp to what the model actually has.
+    function removeMessages(count, index) {
+        const total = messagesModel.count
+
+        if (total === 0)
+            return 0
+
+        const first = index >= total ? Math.max(0, total - count)
+                                     : Math.max(0, index)
+        const n = Math.min(count, total - first)
+
+        if (n <= 0)
+            return 0
+
+        messagesModel.remove(first, n)
+        return n
+    }
+
     QtObject {
         id: d
 
@@ -685,7 +705,7 @@ SplitView {
             Item { Layout.preferredHeight: 8 }
 
             Label {
-                text: "Insert messages"
+                text: "Model operations"
                 font.bold: true
             }
 
@@ -764,6 +784,17 @@ SplitView {
                     onClicked: root.insertMessages(
                                    countSpinBox.value, d.panelInsertIndex(), true)
                 }
+            }
+
+            Button {
+                Layout.fillWidth: true
+
+                text: "Remove"
+
+                enabled: messagesModel.count > 0
+
+                onClicked: root.removeMessages(
+                               countSpinBox.value, d.panelInsertIndex())
             }
 
             Item { Layout.preferredHeight: 16 }
