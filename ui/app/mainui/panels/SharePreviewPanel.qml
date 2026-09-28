@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -32,12 +33,9 @@ Control {
         id: d
 
         // Nim hands over plain absolute file paths; QML Image needs a URL.
-        // Already-formed URLs (file:, data:, qrc:, image:) pass through, which
-        // keeps the component previewable with self-contained test data.
+        // Already-formed URLs (file:, data:, qrc:, image:) pass through.
         function toImageSource(path) {
-            if (/^(file|data|qrc|image|https?):/.test(path))
-                return path
-            return "file://" + path
+            return UrlUtils.urlFromUserInput(path)
         }
     }
 

@@ -135,6 +135,21 @@ Item {
             tryCompare(thumbnail, "status", Image.Ready)
         }
 
+        function test_plainPathsBecomeFileUrlsAndUrlsPassThrough() {
+            const preview = createPreview()
+            const thumbnails = findChild(preview, "sharePreviewThumbnailsList")
+            const plainPath = Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/status-logo.png")
+                                .toString().slice("file://".length)
+            preview.imagePaths = [plainPath, root.sampleImage]
+            waitForRendering(preview)
+            tryCompare(thumbnails, "count", 2)
+
+            const first = findChild(thumbnails.itemAtIndex(0), "sharePreviewThumbnail")
+            const second = findChild(thumbnails.itemAtIndex(1), "sharePreviewThumbnail")
+            compare(first.source.toString(), "file://" + plainPath)
+            compare(second.source.toString(), root.sampleImage)
+        }
+
         function test_sendEnabledWithImagesAndBlankCaption() {
             const preview = createPreview()
             const textArea = findChild(preview, "sharePreviewTextArea")
