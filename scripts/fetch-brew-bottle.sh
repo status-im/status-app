@@ -29,12 +29,13 @@ if [[ $(uname) != "Darwin" ]]; then
     exit 1
 fi
 
-if [[ $# -ne 2 ]]; then
-    echo "usage: $0 <bottle_name> <bottle_filter1|bottle_filter2>" >&2
+if [[ $# -lt 2 ]] || [[ $# -gt 3 ]]; then
+    echo "usage: $0 <bottle_name> <bottle_filter1|bottle_filter2> [bottle_sha256]" >&2
     exit 1
 fi
 BOTTLE_NAME="${1}"
 BOTTLE_FILTER="${2}"
+BOTTLE_PINNED_SHA="${3:-}"
 BOTTLE_PATH="/tmp/${BOTTLE_NAME}.tar.gz"
 
 # GitHub Packages requires authentication.
@@ -48,12 +49,19 @@ else
     BEARER_TOKEN=$(get_gh_pkgs_token)
 fi
 
-echo "${BOTTLE_NAME} - Finding bottle URL"
-echo "${BOTTLE_NAME} - Selecting: ${BOTTLE_FILTER}"
+if [[ -n "${BOTTLE_PINNED_SHA}" ]]; then
+    # A pinned bottle is fetched by digest, so it outlives its formula version.
+    echo "${BOTTLE_NAME} - Using pinned bottle for: ${BOTTLE_FILTER}"
+    BOTTLE_SHA="${BOTTLE_PINNED_SHA}"
+    BOTTLE_URL="https://ghcr.io/v2/homebrew/core/${BOTTLE_NAME/@//}/blobs/sha256:${BOTTLE_SHA}"
+else
+    echo "${BOTTLE_NAME} - Finding bottle URL"
+    echo "${BOTTLE_NAME} - Selecting: ${BOTTLE_FILTER}"
 
-BOTTLE_JSON=$(get_bottle_json "${BOTTLE_NAME}" "${BOTTLE_FILTER}")
-BOTTLE_URL=$(echo "${BOTTLE_JSON}" | jq -r .url)
-BOTTLE_SHA=$(echo "${BOTTLE_JSON}" | jq -r .sha256)
+    BOTTLE_JSON=$(get_bottle_json "${BOTTLE_NAME}" "${BOTTLE_FILTER}")
+    BOTTLE_URL=$(echo "${BOTTLE_JSON}" | jq -r .url)
+    BOTTLE_SHA=$(echo "${BOTTLE_JSON}" | jq -r .sha256)
+fi
 
 if [[ "${BOTTLE_URL}" == "null" ]] || [[ "${BOTTLE_SHA}" == "null" ]]; then
     echo "Failed to identify bottle URL or SHA256! Bottle dropped from Homebrew?" >&2
