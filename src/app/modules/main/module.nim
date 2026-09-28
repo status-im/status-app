@@ -1,7 +1,11 @@
 import nimqml
-import std/[strformat, strutils, tables, json, sequtils, marshal, times], chronicles, stint
+import std/[strformat, strutils, tables, json, sequtils, marshal, times, options], chronicles, stint, uuids
 
 import io_interface, view, controller
+import share_send
+import app_service/service/message/dto/link_preview
+import app_service/service/message/dto/urls_unfurling_plan
+import app_service/service/settings/dto/settings
 import ephemeral_notification_item, ephemeral_notification_model
 import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details]
 import app/modules/shared_modules/authentication/module as authentication_module
@@ -154,6 +158,7 @@ type
     shareTextToDeliver: string
     shareImagePathsToDeliver: seq[string]
     shareToDeliverPending: bool
+    shareQueue: seq[PendingShare]
 
 {.push warning[Deprecated]: off.}
 
@@ -166,6 +171,10 @@ proc checkIfWeHaveNotifications[T](self: Module[T])
 proc updateIconBadgeNumber[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
 proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): seq[MemberItem]
+proc dispatchNextShareImageSend[T](self: Module[T])
+proc dispatchShareSend[T](self: Module[T])
+proc startActiveShare[T](self: Module[T])
+proc finishActiveShare[T](self: Module[T])
 
 proc clearPendingSpectateRequest[T](self: Module[T]) =
   self.pendingSpectateRequest = SpectateRequest()
@@ -2239,6 +2248,79 @@ method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
   ## (The send path releases them in the image-send task, after the files
   ## have been consumed.)
   releaseCachedShareFiles(parseImagePathsJson(imagePathsJson))
+
+proc dispatchNextShareImageSend[T](self: Module[T]) =
+  let share = self.shareQueue[0]
+  let dispatch = takeNextImageDispatch(self.shareQueue)
+  if dispatch.isNone:
+    self.finishActiveShare()
+    return
+  let d = dispatch.get()
+  self.controller.sendSharedImages(d.chatId, d.imagePaths,
+    text = if d.withText: share.text else: "",
+    linkPreviews = if d.withText: share.linkPreviews else: @[],
+    releaseCachedFiles = d.releaseCachedFiles, sendToken = d.token,
+    releasePaths = if d.releaseCachedFiles: share.imagePaths else: @[])
+
+proc dispatchShareSend[T](self: Module[T]) =
+  let share = self.shareQueue[0]
+  if share.imagePaths.len > 0:
+    self.shareQueue[0].imageSends = imageSendPlan(share.destinations, share.imagePaths, share.token)
+    self.shareQueue[0].nextImageSend = 0
+    self.dispatchNextShareImageSend()
+    return
+  for dest in share.destinations:
+    self.controller.sendSharedText(dest.chatId, share.text, share.contentType, share.linkPreviews)
+  self.finishActiveShare()
+
+proc startActiveShare[T](self: Module[T]) =
+  let share = self.shareQueue[0]
+  if not needsUnfurl(self.controller.urlUnfurlingMode(), share.text):
+    self.dispatchShareSend()
+    return
+  self.shareQueue[0].planRequestUuid = self.controller.requestTextUrlsToUnfurl(share.text)
+
+proc finishActiveShare[T](self: Module[T]) =
+  if finishActiveShare(self.shareQueue):
+    self.startActiveShare()
+
+method sendSharedContent*[T](self: Module[T], destinationsJson, text, imagePathsJson: string, contentType: int) =
+  let destinations = parseShareDestinations(destinationsJson)
+  if destinations.len == 0:
+    return
+  let share = PendingShare(token: $genUUID(), destinations: destinations, text: text,
+    imagePaths: parseImagePathsJson(imagePathsJson), contentType: contentType)
+  if enqueueShare(self.shareQueue, share):
+    self.startActiveShare()
+
+method onShareUnfurlingPlanReady*[T](self: Module[T], requestUuid: string, plan: UrlsUnfurlingPlan) =
+  if self.shareQueue.len == 0 or requestUuid != self.shareQueue[0].planRequestUuid:
+    return
+  self.shareQueue[0].planRequestUuid = ""
+  self.shareQueue[0].urls = unfurlableUrls(plan, SHARE_LINK_PREVIEWS_LIMIT)
+  if self.shareQueue[0].urls.len == 0:
+    self.dispatchShareSend()
+    return
+  self.shareQueue[0].unfurlRequestUuid = self.controller.requestUnfurlUrls(self.shareQueue[0].urls)
+
+method onShareUrlsUnfurled*[T](self: Module[T], requestUuid: string, linkPreviews: Table[string, LinkPreview]) =
+  if self.shareQueue.len == 0 or requestUuid != self.shareQueue[0].unfurlRequestUuid:
+    return
+  self.shareQueue[0].unfurlRequestUuid = ""
+  self.shareQueue[0].linkPreviews = orderedLinkPreviews(self.shareQueue[0].urls, linkPreviews)
+  self.dispatchShareSend()
+
+method onShareUnfurlFailed*[T](self: Module[T], requestUuid: string) =
+  if not unfurlFailureMatchesActive(self.shareQueue, requestUuid):
+    return
+  self.shareQueue[0].planRequestUuid = ""
+  self.shareQueue[0].unfurlRequestUuid = ""
+  self.dispatchShareSend()
+
+method onShareImagesSendFinished*[T](self: Module[T], chatId: string, sendToken: string) =
+  if not matchesActiveImageSend(self.shareQueue, chatId, sendToken):
+    return
+  self.dispatchNextShareImageSend()
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
   if (sectionId.len > 0 and self.chatSectionModules.contains(sectionId)):

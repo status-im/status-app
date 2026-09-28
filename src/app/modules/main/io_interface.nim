@@ -1,4 +1,4 @@
-import nimqml, stint, json
+import nimqml, stint, json, tables
 
 import app_service/service/settings/service as settings_service
 import app_service/service/node_configuration/service as node_configuration_service
@@ -15,6 +15,8 @@ import app_service/service/community_tokens/community_collectible_owner
 import app_service/service/shared_urls/service as urls_service
 import app_service/service/network/service as network_service
 import app_service/service/network/network_item
+import app_service/service/message/dto/link_preview
+import app_service/service/message/dto/urls_unfurling_plan
 from app_service/common/types import StatusType, ContractTransactionStatus, MembershipRequestState, RequestToJoinState
 
 import app/global/app_signals
@@ -358,6 +360,21 @@ method launchShareFlow*(self: AccessInterface, text: string, imagePaths: seq[str
   raise newException(ValueError, "No implementation available")
 
 method releaseShareIntakeFiles*(self: AccessInterface, imagePathsJson: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method sendSharedContent*(self: AccessInterface, destinationsJson, text, imagePathsJson: string, contentType: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onShareUnfurlingPlanReady*(self: AccessInterface, requestUuid: string, plan: UrlsUnfurlingPlan) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onShareUrlsUnfurled*(self: AccessInterface, requestUuid: string, linkPreviews: Table[string, LinkPreview]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onShareUnfurlFailed*(self: AccessInterface, requestUuid: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onShareImagesSendFinished*(self: AccessInterface, chatId: string, sendToken: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method setCommunityIdToSpectate*(self: AccessInterface, commnityId: string, channelUuid: string = "") {.base.} =
