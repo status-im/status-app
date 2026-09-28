@@ -96,6 +96,8 @@ QtObject:
       # details batch starts.
       snapshotIds: seq[backend_collectibles.CollectibleUniqueID]
       snapshotPos: int
+      # The scan started on an empty list, so each batch is shown as it arrives.
+      showEachBatch: bool
 
       # A (re)fetch was requested while one was already in flight. It is executed
       # once the in-flight scan completes, so bursts of triggers result in a
@@ -327,6 +329,7 @@ QtObject:
         self.snapshotIds = res.collectibles.mapIt(it.id)
         self.snapshotPos = 0
         self.tempItems = @[]
+        self.showEachBatch = self.model.getCount() == 0
         self.model.setIsFetching(false)
         self.setOwnershipStatus(res.ownershipStatus)
         self.continueSnapshotScan()
@@ -360,6 +363,8 @@ QtObject:
         return
 
       self.tempItems.add(self.toEntries(res.collectibles))
+      if self.showEachBatch and self.snapshotPos < self.snapshotIds.len:
+        self.model.updateItems(self.tempItems)
       self.model.setIsFetching(false)
       self.continueSnapshotScan()
 
