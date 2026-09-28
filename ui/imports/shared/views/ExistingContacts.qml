@@ -8,6 +8,8 @@ import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Core.Theme
 
+import QtModelsToolkit
+
 import utils
 import shared.status
 import shared.stores
@@ -58,7 +60,8 @@ Item {
                         root.filterText
                         root.hideCommunityMembers
                         root.communityId
-                        root.membersModel ? root.membersModel.count : 0
+                        root.membersModel && root.membersModel.ModelCount
+                            ? root.membersModel.ModelCount.count : 0
 
                         if (!model.isContact || model.isBlocked)
                             return false
