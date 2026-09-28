@@ -44,6 +44,13 @@ type
     CommunitySetSignerPubKey
     Approve
 
+# A sent collectible transaction reports only chain and contract as its token
+# key; the requested key also carries the token id.
+proc toastAssetKey*(sendType: SendType, requestedKey: string, sentKey: string): string =
+  if sentKey.len == 0 or sendType in {SendType.ERC721Transfer, SendType.ERC1155Transfer}:
+    return requestedKey
+  return sentKey
+
 type
   PendingTransactionTypeDto* {.pure.} = enum
     Unknown = "Unknown"
