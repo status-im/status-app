@@ -47,13 +47,15 @@ QtObject:
       self: View,
       msg: string,
       replyTo: string,
-      contentType: int): bool {.slot.} =
+      contentType: int,
+      startNewThread: bool,
+      newThreadName: string): bool {.slot.} =
     # FIXME: Update this when `setText` is async.
     if msg.strip().len == 0 and self.paymentRequestModel.isEmpty():
       return false
     self.setSendingInProgress(true)
     self.delegate.setText(msg, false)
-    self.delegate.sendChatMessage(msg, replyTo, contentType, self.linkPreviewModel.getUnfuledLinkPreviews(), self.payment_request_model.getPaymentRequests())
+    self.delegate.sendChatMessage(msg, replyTo, contentType, self.linkPreviewModel.getUnfuledLinkPreviews(), self.payment_request_model.getPaymentRequests(), startNewThread, newThreadName)
     return true
 
   proc sendImages*(self: View, imagePathsJson: string, msg: string, replyTo: string) {.slot.} =
