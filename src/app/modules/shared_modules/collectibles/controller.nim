@@ -1,5 +1,5 @@
 import nimqml, std/json, sequtils, sugar, strutils, algorithm
-import stint, chronicles, tables
+import stint, chronicles, tables, sets
 from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop,
     setInterval, isActive
 
@@ -50,6 +50,16 @@ proc defaultCollectiblesCalls(): CollectiblesCalls =
     fetchByUniqueId: proc(requestId: int32, uniqueIds: seq[backend_collectibles.CollectibleUniqueID],
         dataType: backend_collectibles.CollectibleDataType): RpcResponse[JsonNode] =
       backend_collectibles.getCollectiblesByUniqueIDAsync(requestId, uniqueIds, dataType))
+
+# status-go matches responses and cancels superseded tasks by request id, so two
+# controllers sharing one would receive and cancel each other's requests.
+var liveRequestIds {.threadvar.}: HashSet[int32]
+
+proc claimRequestId(requestId: int32) =
+  if liveRequestIds.containsOrIncl(requestId):
+    error "collectibles request id already used by a live controller", requestId
+    when not defined(production):
+      doAssert false, "collectibles request id " & $requestId & " is already in use"
 
 proc isAutoLoad(self: LoadType): bool =
   return self == LoadType.AutoLoadSingleUpdate or self == LoadType.AutoLoadPaginated
@@ -150,6 +160,7 @@ QtObject:
       fetchType: backend_collectibles.FetchType.NeverFetch,
     ),
     calls: CollectiblesCalls = defaultCollectiblesCalls()): Controller =
+    claimRequestId(requestId)
     new(result, delete)
 
     result.requestId = requestId
@@ -488,6 +499,7 @@ QtObject:
     self.QObject.setup
 
   proc delete*(self: Controller) =
+    liveRequestIds.excl(self.requestId)
     if not self.refreshTimer.h.isNil:
       self.refreshTimer.stop()
     self.QObject.delete

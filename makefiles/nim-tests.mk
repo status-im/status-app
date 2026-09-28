@@ -17,6 +17,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	asset_proxy_chain_bench \
 	chat_search_model_bulk_load_test \
 	chat_search_model_test \
+	collectibles_request_ids_test \
 	collectibles_selector_bench \
 	collectibles_selector_model_bench \
 	send_handler_adaptors_bench \
