@@ -139,6 +139,10 @@ SplitView {
             isEdit: editModeCheckBox.checked
             imageFeaturesEnabled: !isEdit
             stickersButtonVisible: !isEdit
+            threadsEnabled: ctrlThreadsEnabled.checked
+            isThread: ctrlIsThread.checked
+            threadName: ctrlThreadName.text
+            chatName: ctrlChannelName.text
             paymentRequestButtonVisible: !isEdit && !areTestNetworksEnabled && paymentRequestFeatureEnabled
 
             onAskToEnableLinkPreviewChanged: {
@@ -148,14 +152,18 @@ SplitView {
                 }
             }
 
-            onSendMessageRequested: {
-                console.log()
+            onSendMessageRequested: function(startNewThread, newThreadName, alsoReplyToParentChat) {
+                console.log("Send message (text):", chatInput.textInput.text)
+                console.log("Send message (startNewThread/newThreadName):", startNewThread, newThreadName)
+                console.log("Send message (alsoReplyToParentChat):", alsoReplyToParentChat)
 
                 logs.logEvent("StatusChatInput::sendMessage", ["MessageWithPk"], [chatInput.getTextWithPublicKeys()])
                 logs.logEvent("StatusChatInput::sendMessage", ["PlainText"], [SQUtils.StringUtils.plainText(chatInput.getTextWithPublicKeys())])
                 logs.logEvent("StatusChatInput::sendMessage", ["RawText"], [chatInput.textInput.text])
+                logs.logEvent("StatusChatInput::sendMessage", ["startNewThread", "newThreadName", "alsoReplyToParentChat"], arguments)
                 imageNb.currentIndex = 0 // images cleared
                 linksNb.currentIndex = 0 // links cleared
+                clear()
             }
             onEnableLinkPreviewForThisMessage: {
                 linkPreviewSwitch.checked = true
@@ -191,8 +199,8 @@ SplitView {
     LogsAndControlsPanel {
         id: logsAndControlsPanel
 
-        SplitView.minimumHeight: 300
-        SplitView.preferredHeight: 300
+        SplitView.minimumHeight: 330
+        SplitView.preferredHeight: 330
 
         logsView.logText: logs.logText
 
@@ -200,6 +208,7 @@ SplitView {
             anchors.fill: parent
 
             RowLayout {
+                Layout.fillWidth: true
                 CheckBox {
                     id: enabledCheckBox
                     text: "enabled"
@@ -222,6 +231,43 @@ SplitView {
                     id: editModeCheckBox
                     text: "edit mode"
                     checked: false
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+                CheckBox {
+                    id: ctrlThreadsEnabled
+                    text: "threads enabled"
+                    checked: true
+                }
+
+                CheckBox {
+                    id: ctrlIsThread
+                    text: "is thread"
+                    enabled: ctrlThreadsEnabled.checked
+                }
+
+                TextField {
+                    Layout.preferredWidth: 150
+                    id: ctrlThreadName
+                    enabled: ctrlThreadsEnabled.checked && ctrlIsThread.checked
+                    placeholderText: "thread name"
+                    text: ctrlIsThread.checked ? "coolThread" : ""
+                }
+
+                Label {
+                    text: "(in #"
+                }
+                TextField {
+                    Layout.preferredWidth: 150
+                    id: ctrlChannelName
+                    placeholderText: "channel name"
+                    text: "general"
+                }
+                Label {
+                    text: "channel)"
                 }
             }
 
@@ -303,7 +349,7 @@ SplitView {
                 TextField {
                     id: paymentRequestAsset
 
-                    text: "1"
+                    text: "SNT"
                 }
             }
 

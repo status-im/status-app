@@ -998,6 +998,8 @@ QtObject {
 
     readonly property int maxNumberOfPins: 3
 
+    readonly property int maxThreadNameLength: 50
+
     readonly property string dataImagePrefix: "data:image"
 
     readonly property string ens_taken: "taken"

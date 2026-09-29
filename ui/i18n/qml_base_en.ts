@@ -14656,10 +14656,6 @@ to load</source>
         <source>Add %1 as a contact to send a message</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Type something</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>RouterErrorTag</name>
@@ -15959,6 +15955,14 @@ to load</source>
 <context>
     <name>StatusChatInput</name>
     <message>
+        <source>Reply in %1, also send to %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Type something</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15999,6 +16003,89 @@ to load</source>
     </message>
     <message>
         <source>Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add a thread name (optional)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also send to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputToolBar</name>
+    <message>
+        <source>Formatting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Italics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Strike through</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start a new thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Payment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mention</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Emojis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stickers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIFs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

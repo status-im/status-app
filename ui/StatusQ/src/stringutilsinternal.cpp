@@ -81,6 +81,11 @@ QString StringUtilsInternal::plainText(const QString& htmlFragment) const
     return QTextDocumentFragment::fromHtml(htmlFragment).toPlainText();
 }
 
+QString StringUtilsInternal::plainTextSingleLine(const QString &htmlFragment, qsizetype totalLength) const
+{
+    return plainText(htmlFragment).replace(QChar::ObjectReplacementCharacter, QChar::Space).simplified().left(totalLength);
+}
+
 static QKeySequence variantToKeySequence(const QVariant &var)
 {
     if (var.metaType().id() == QMetaType::Int)

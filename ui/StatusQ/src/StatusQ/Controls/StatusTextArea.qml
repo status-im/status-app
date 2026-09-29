@@ -89,7 +89,7 @@ TextArea {
 
     background: Rectangle {
         radius: Theme.radius
-        color: root.readOnly ? "transparent" : root.enabled ? Theme.palette.baseColor2 : Theme.palette.baseColor4
+        color: root.readOnly ? StatusColors.transparent : root.enabled ? Theme.palette.baseColor2 : Theme.palette.baseColor4
         border.width: 1
         border.color: {
             if (!root.valid)
@@ -100,7 +100,7 @@ TextArea {
                 return Theme.palette.primaryColor1
             if (root.hovered)
                 return Theme.palette.primaryColor2
-            return "transparent"
+            return StatusColors.transparent
         }
     }
 
