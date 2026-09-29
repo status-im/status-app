@@ -81,6 +81,27 @@ TokensStore {
     // The real store triggers the on-demand cross-chain catalog fetch here;
     // in storybook the mock models are static, so this only records the call.
     property int fetchAllChainsTokenGroupsCallCount: 0
+    // Tokens outside every model, keyed by token or group key, that the last-resort
+    // lookup below can still resolve (the real store asks the backend's full list).
+    property var allTokensByKey: ({})
+
+    function getTokenByKeyOrGroupKeyFromAllTokens(key) {
+        if (!!root.allTokensByKey[key])
+            return root.allTokensByKey[key]
+        const count = !!root.tokenGroupsModel ? root.tokenGroupsModel.ModelCount.count : 0
+        for (let i = 0; i < count; i++) {
+            const group = ModelUtils.get(root.tokenGroupsModel, i)
+            if (!group.tokens)
+                continue
+            for (let j = 0; j < group.tokens.ModelCount.count; j++) {
+                const token = ModelUtils.get(group.tokens, j)
+                if (token.key === key || token.groupKey === key)
+                    return token
+            }
+        }
+        return { key: "", groupKey: "", symbol: "", name: "", decimals: 0, chainId: 0 }
+    }
+
     function fetchAllChainsTokenGroups(mandatoryKeys) {
         root.fetchAllChainsTokenGroupsCallCount++
     }

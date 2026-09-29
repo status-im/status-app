@@ -544,6 +544,9 @@ Control {
 
             mainInputLoading: root.mainInputLoading
             bottomTextLoading: root.bottomTextLoading
+            // the unit shown can change under a set amount: fiat only while the
+            // holding has a price, crypto otherwise
+            onFiatModeChanged: Qt.callLater(d.updateInputText)
             selectedSymbol: amountToSendInput.fiatMode ? d.inputSymbol : ""
 
             amountInputRightPadding: holdingSelector.width + Theme.padding
