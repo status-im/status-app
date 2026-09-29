@@ -32,11 +32,17 @@ QObject {
     // the below property holds internal checks done by the SwapModal
     property bool amountEnteredGreaterThanBalance: false
 
-    // To expose the selected from and to Token from the SwapModal
+    // To expose the selected from and to Token from the SwapModal. The entries cover
+    // the wallet's tokens of interest and the lazily loaded window of each side's
+    // chain catalog; a token outside both (not held, and past the first rows of a
+    // chain's catalog) is looked up in the full token list, so a route to it can
+    // still be converted with its decimals and named by its symbol.
     readonly property var fromToken: fromTokenEntry.available ? fromTokenEntry.item
-                                                              : (fromTokenCatalogEntry.available ? fromTokenCatalogEntry.item : null)
+                                                              : (fromTokenCatalogEntry.available ? fromTokenCatalogEntry.item
+                                                                                                 : d.tokenFromAllTokens(root.swapFormData.fromGroupKey))
     readonly property var toToken: toTokenEntry.available ? toTokenEntry.item
-                                                          : (toTokenCatalogEntry.available ? toTokenCatalogEntry.item : null)
+                                                          : (toTokenCatalogEntry.available ? toTokenCatalogEntry.item
+                                                                                           : d.tokenFromAllTokens(root.swapFormData.toGroupKey))
 
     /** the user's own wallet accounts, usable as sender or recipient **/
     readonly property var accountsModel: root.swapStore.accounts
@@ -58,6 +64,15 @@ QObject {
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapFormData.selectedNetworkChainId)
         readonly property string nativeTokenKey: Utils.getNativeTokenKey(root.swapFormData.selectedNetworkChainId)
+
+        // last resort for a token no loaded model carries: symbol and decimals only,
+        // no market details (the store's lookup is a synchronous backend call)
+        function tokenFromAllTokens(key) {
+            if (!key)
+                return null
+            const token = root.walletAssetsStore.walletTokensStore.getTokenByKeyOrGroupKeyFromAllTokens(key)
+            return !!token && !!token.symbol ? token : null
+        }
 
         // Properties to handle error states
         readonly property bool isRouteEthBalanceInsufficient: root.validSwapProposalReceived && root.swapOutputData.errCode === Constants.routerErrorCodes.router.errNotEnoughNativeBalance

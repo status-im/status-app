@@ -22,8 +22,10 @@ Control {
     readonly property alias amount: d.amountBaseUnit
 
     /* In fiat mode the input value is meant to be a fiat value, conversely,
-     * crypto value otherwise. */
-    readonly property alias fiatMode: d.fiatMode
+     * crypto value otherwise. Fiat needs a price to convert with, so a requested
+     * fiat mode shows crypto while cryptoPrice is 0 and switches back to fiat as
+     * soon as a price arrives; this is the unit actually shown. */
+    readonly property bool fiatMode: d.fiatShown
 
     /* Indicates whether toggling the fiatMode is enabled for the user */
     property bool fiatInputInteractive: interactive
@@ -104,13 +106,13 @@ Control {
         if (!valueString)
             valueString = "0"
 
-        const decimalPlaces = d.fiatMode ? root.fiatDecimalPlaces
-                                         : root.multiplierIndex
+        const decimalPlaces = d.fiatShown ? root.fiatDecimalPlaces
+                                          : root.multiplierIndex
 
         const stringNumber = SQUtils.AmountsArithmetic.fromString(
                                valueString).toFixed(decimalPlaces)
 
-        const trimmed = d.fiatMode
+        const trimmed = d.fiatShown
                       ? stringNumber
                       : d.removeDecimalTrailingZeros(stringNumber)
 
@@ -127,7 +129,7 @@ Control {
                          SQUtils.AmountsArithmetic.fromString(valueString || "0"),
                          SQUtils.AmountsArithmetic.fromExponent(root.multiplierIndex))
 
-        if (!d.fiatMode) {
+        if (!d.fiatShown) {
             setValue(crypto.toFixed(root.multiplierIndex))
             return
         }
@@ -168,7 +170,9 @@ Control {
     QtObject {
         id: d
 
+        // the requested mode; see fiatShown for the unit on display
         property bool fiatMode: false
+        readonly property bool fiatShown: d.fiatMode && root.cryptoPrice > 0
 
         // Entering fiat mode needs a price to convert with; leaving it never does,
         // so a token whose price disappears can still be switched back.
@@ -200,7 +204,7 @@ Control {
         }
 
         readonly property string amountBaseUnit: {
-            if (d.fiatMode)
+            if (d.fiatShown)
                 return secondaryValue
 
             const multiplier = SQUtils.AmountsArithmetic.fromExponent(
@@ -214,7 +218,7 @@ Control {
         readonly property string secondaryValue: {
             const price = isNaN(root.cryptoPrice) ? 0 : root.cryptoPrice
 
-            if (!d.fiatMode)
+            if (!d.fiatShown)
                 return SQUtils.AmountsArithmetic.times(
                             SQUtils.AmountsArithmetic.fromString(inputDelocalized),
                             SQUtils.AmountsArithmetic.fromNumber(
@@ -278,7 +282,7 @@ Control {
                        : Theme.palette.dangerColor1
 
                 placeholderText: {
-                    if (!d.fiatMode || root.fiatDecimalPlaces === 0 || !!text)
+                    if (!d.fiatShown || root.fiatDecimalPlaces === 0 || !!text)
                         return "0"
 
                     return "0" + root.decimalPoint
@@ -325,8 +329,8 @@ Control {
                     id: validator
 
                     maxIntegralDigits: 100
-                    maxDecimalDigits: d.fiatMode ? root.fiatDecimalPlaces
-                                                 : root.multiplierIndex
+                    maxDecimalDigits: d.fiatShown ? root.fiatDecimalPlaces
+                                                  : root.multiplierIndex
                     decimalPoint: root.decimalPoint
                 }
                 visible: !root.mainInputLoading
@@ -409,8 +413,8 @@ Control {
                         if (textField.length === 0)
                             return
 
-                        const decimalPlaces = d.fiatMode ? root.fiatDecimalPlaces
-                                                        : root.multiplierIndex
+                        const decimalPlaces = d.fiatShown ? root.fiatDecimalPlaces
+                                                          : root.multiplierIndex
                         const divisor = SQUtils.AmountsArithmetic.fromExponent(
                                         decimalPlaces)
 
@@ -418,7 +422,7 @@ Control {
                                             SQUtils.AmountsArithmetic.fromString(secondaryValue),
                                             divisor).toFixed(decimalPlaces)
 
-                        const trimmed = d.fiatMode
+                        const trimmed = d.fiatShown
                                     ? stringNumber
                                     : d.removeDecimalTrailingZeros(stringNumber)
 
@@ -432,19 +436,19 @@ Control {
                     objectName: "bottomItemText"
 
                     text: {
-                        if (!d.fiatMode && root.cryptoPrice === 0) {
+                        if (!d.fiatShown && root.cryptoPrice === 0) {
                             return ""
                         }
                         const divisor = SQUtils.AmountsArithmetic.fromExponent(
-                                        d.fiatMode ? root.multiplierIndex
+                                        d.fiatShown ? root.multiplierIndex
                                                     : root.fiatDecimalPlaces)
                         const divided = SQUtils.AmountsArithmetic.div(
                                         SQUtils.AmountsArithmetic.fromString(
                                             d.secondaryValue), divisor)
                         const asNumber = SQUtils.AmountsArithmetic.toNumber(divided)
 
-                        return d.fiatMode ? root.formatBalance(asNumber)
-                                        : root.formatFiat(asNumber)
+                        return d.fiatShown ? root.formatBalance(asNumber)
+                                           : root.formatFiat(asNumber)
                     }
                     
                     width: Math.min(implicitWidth, parent.width - swapIcon.width - Theme.halfPadding)
