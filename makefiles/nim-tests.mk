@@ -85,6 +85,7 @@ ifneq ($(mkspecs),win32)
 tests-nim-token-catalogue: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
 tests-nim-token-catalogue: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
+	bash scripts/test_status_go_has_tkl.sh
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc \
 		--passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" \
 		-o:$(TOKEN_CATALOGUE_TEST) test/nim/token_catalogue_runtime_config_test.nim

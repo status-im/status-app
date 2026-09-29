@@ -121,6 +121,13 @@ To roll back using the same binary, fully quit the client, set both options to
 These development controls do not enable the new catalogue in release builds;
 live parity verification and cross-platform packaging remain pending.
 
+When launching through `make run`, `STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true`
+also selects the tagged backend build. Status-go checks both the native archive
+and backend cache, reusing matching artifacts and rebuilding only when needed.
+No library path setting is required. For CLI-only selection, pass
+`USE_NIM_TOKEN_LISTS=true` to Make as well. An environment flag alone cannot add
+Nim catalogue support to an already-built untagged library launched directly.
+
 Run `make tests-nim-token-catalogue` in the configured desktop build environment
 to compile the runtime-control test with Qt and check defaults, environment
 opt-in, CLI opt-in, and explicit CLI rollback overriding enabled environment

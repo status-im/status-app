@@ -515,6 +515,15 @@ STATUSGO := vendor/status-go/build/bin/libstatus.$(LIB_EXT)
 STATUSGO_LIBDIR := $(shell pwd)/$(shell dirname "$(STATUSGO)")
 export STATUSGO_LIBDIR
 
+# Runtime opt-in via make run must survive the normal/24-hour backend rebuild.
+# CLI-only users can select this build explicitly with USE_NIM_TOKEN_LISTS=true.
+USE_NIM_TOKEN_LISTS ?= $(if $(filter true 1,$(STATUS_RUNTIME_TOKEN_LISTS_USE_NIM)),true,false)
+ifeq ($(USE_NIM_TOKEN_LISTS),true)
+.PHONY: check-status-go-tkl
+check-status-go-tkl:
+$(STATUSGO): check-status-go-tkl | force-rebuild-status-go
+endif
+
 # Rebuild libsds independently after platform switch cleanup deletes vendor/nim-sds/build.
 $(NIMSDS_LIBFILE): | platform-cleanup
 	echo -e $(BUILD_MSG) "nim-sds"
@@ -523,10 +532,17 @@ $(NIMSDS_LIBFILE): | platform-cleanup
 $(STATUSGO): | deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
+ifeq ($(USE_NIM_TOKEN_LISTS),true)
+	# This target checks both caches and compiles only when inputs or outputs changed.
+	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library-tkl SHELL=/bin/sh \
+		SENTRY_CONTEXT_NAME="status-desktop" SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)"
+	@bash scripts/status_go_has_tkl.sh "$(STATUSGO)"
+else
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library SHELL=/bin/sh \
 		SENTRY_CONTEXT_NAME="status-desktop" \
 		SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)" \
 		 $(HANDLE_OUTPUT)
+endif
 
 status-go: $(STATUSGO)
 
@@ -540,7 +556,7 @@ status-go-tkl:
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"
 	$(MAKE) -C vendor/status-go clean-libtkl SHELL=/bin/sh
-	rm -f $(STATUSGO)
+	rm -f $(STATUSGO) $(STATUSGO).tkl-inputs
 
 
 ##
