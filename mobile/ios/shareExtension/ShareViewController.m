@@ -297,13 +297,17 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
                 }
             }
             dispatch_async(dispatch_get_main_queue(), ^{
-                if (loadImage != nil)
-                    loadImage(index + 1);
+                // A strong local keeps the block alive while it runs: the
+                // terminating call clears loadImage from inside itself.
+                void (^next)(NSUInteger) = loadImage;
+                if (next != nil)
+                    next(index + 1);
             });
         }];
     };
     if (imageProviders.count > 0) {
-        loadImage(0);
+        void (^first)(NSUInteger) = loadImage;
+        first(0);
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kImageLoadDeadlineSeconds * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
             if (finished)
