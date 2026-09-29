@@ -125,12 +125,21 @@ platform :ios do
     UI.message("Signing identity: #{signing_identity}")
     UI.message("Provisioning profile: #{provisioning_profile}")
 
+    # The embedded share extension is re-signed too and needs its own profile.
+    ext_identifier = "#{app_identifier}.ShareExtension"
+    ext_profile = ENV["sigh_#{ext_identifier}_#{profile_type}_profile-path"]
+    ext_embedded = File.exist?(File.join(app_path, "PlugIns", "StatusShareExtension.appex"))
+    UI.message("Share extension profile: #{ext_profile || 'n/a'} (embedded: #{ext_embedded})")
+
     unless provisioning_profile && File.exist?(provisioning_profile)
       UI.user_error!("Provisioning profile not found!")
     end
 
     unless signing_identity
       UI.user_error!("Signing identity not found!")
+    end
+    if ext_embedded && !(ext_profile && File.exist?(ext_profile))
+      UI.user_error!("Provisioning profile for #{ext_identifier} not found (run match for it)!")
     end
 
     UI.message("Creating unsigned IPA...")
@@ -184,6 +193,7 @@ platform :ios do
       ipa_path.shellescape,
       signing_identity.shellescape,
       "-p", "#{app_identifier}=#{provisioning_profile}".shellescape,
+      *(ext_embedded ? ["-p", "#{ext_identifier}=#{ext_profile}".shellescape] : []),
       "-e", entitlements_file.path.shellescape,
       "-d", display_name.shellescape,
       "-b", app_identifier.shellescape,

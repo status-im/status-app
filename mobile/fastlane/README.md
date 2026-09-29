@@ -11,6 +11,13 @@ iOS builds use **fastlane** with **match** for code signing management. This pro
 | PR builds  | `app.status.mobile.pr` | `pr`          |
 | Release    | `app.status.mobile`    | `release`     |
 
+The share extension embedded in `PlugIns/` is a nested bundle with its own
+identifier, `<host id>.ShareExtension`, and is re-signed with its own profile.
+Its App IDs (`app.status.mobile.ShareExtension`, `app.status.mobile.pr.ShareExtension`)
+need the App Groups capability with `group.app.status.mobile`; match creates
+their profiles like the host's (they are listed in `Matchfile`). Set
+`FLAG_SHARE_EXTENSION_ENABLED=0` to build without the extension.
+
 ## Certificate Types
 
 | Build Type | Certificate Type   | Match Type  | Purpose                       |
@@ -70,7 +77,7 @@ cd mobile/fastlane
 bundle exec fastlane match nuke development
 bundle exec fastlane match nuke distribution
 
-# Regenerate
-bundle exec fastlane match development --app_identifier "app.status.mobile.pr"
-bundle exec fastlane match appstore --app_identifier "app.status.mobile"
+# Regenerate (the extension identifiers are covered by the Matchfile defaults)
+bundle exec fastlane match adhoc
+bundle exec fastlane match appstore
 ```
