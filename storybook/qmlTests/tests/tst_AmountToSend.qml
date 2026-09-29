@@ -254,6 +254,37 @@ Item {
             compare(amountToSend.fiatMode, false)
         }
 
+        // A caller can request fiat mode for an input whose token has no price (the
+        // swap's receive side mirrors the pay side's mode). Nothing can be converted
+        // then, so the amount is shown in crypto, and in fiat once a price exists.
+        function test_requestedFiatModeShowsCryptoUntilAPriceExists() {
+            const textField = findChild(amountToSend, "amountToSend_textField")
+            const bottomItemText = findChild(amountToSend, "bottomItemText")
+
+            amountToSend.cryptoPrice = 0
+            amountToSend.multiplierIndex = 18
+            amountToSend.setFiatMode(true)
+            compare(amountToSend.fiatMode, false)
+
+            amountToSend.setRawValue("46005000000000000000")
+            compare(textField.text, "46.005")
+            compare(amountToSend.amount, "46005000000000000000")
+            compare(bottomItemText.text, "") // no price, no conversion to show
+
+            // the request holds: a price switches the display to fiat
+            amountToSend.cryptoPrice = 2
+            compare(amountToSend.fiatMode, true)
+            amountToSend.setRawValue("46005000000000000000")
+            compare(textField.text, "92.01")
+            compare(amountToSend.amount, "46005000000000000000")
+
+            // ...and losing it falls back to crypto again
+            amountToSend.cryptoPrice = 0
+            compare(amountToSend.fiatMode, false)
+            amountToSend.setRawValue("46005000000000000000")
+            compare(textField.text, "46.005")
+        }
+
         function test_clear() {
             const textField = findChild(amountToSend, "amountToSend_textField")
 
