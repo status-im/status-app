@@ -127,7 +127,7 @@ pipeline {
 
     /* Use local waku fleet */
     E2E_LOCAL_WAKU_FLEET = '1'
-    WAKU_IMAGE = 'quay.io/wakuorg/nwaku-pr:nightly-logosdeliverynode'
+    WAKU_IMAGE = 'quay.io/wakuorg/nwaku-pr:nightly'
     STATUS_FLEET = 'status-app.test'
     STATUS_FLEET_CONFIG_FILE = "${WORKSPACE}/assets/local-waku-fleets-config.json"
 
@@ -272,7 +272,6 @@ pipeline {
                     ]) {
                       sh """
                         python3 -m pytest -m "${getPytestMarkerExpr()}" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
-                          tests/critical_tests_prs/test_messaging_1x1_chat.py::test_1x1_chat_add_contact_in_settings \
                           --disable-warnings \
                           --alluredir=./allure-results \
                           --junitxml=./reports/junit.xml \
