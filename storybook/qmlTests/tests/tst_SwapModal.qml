@@ -164,6 +164,11 @@ Item {
             root.swapFormData.resetFormData()
             formValuesChanged.clear()
             reevaluateSwapCalled.clear()
+            // per-test store stubs must not leak into the next test, even after a failure
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            store.tokenSelectorStubData = []
+            store.allTokensByKey = {}
+            store.tokenSelectorEmptyAccounts = []
         }
 
         function approx(formatted) {
@@ -2517,6 +2522,69 @@ Item {
             compare(payPanel.rawValue, "0")
 
             store.tokenSelectorEmptyAccounts = []
+            closeAndVerfyModal()
+        }
+
+        // A receive token the wallet doesn't hold and that sits past the loaded window of
+        // its chain's catalog is in neither model the adaptor resolves tokens from. The
+        // route still has to be converted with that token's decimals and named by its
+        // symbol; the adaptor falls back to the full token list.
+        function test_receiveTokenOutsideTheLoadedModelsStillGetsItsAmount() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const rhtKey = "4663-0x000000000000000000000000000000000000r0b1"
+            const rht = { key: rhtKey, groupKey: rhtKey, symbol: "RHT", name: "Robin Token", decimals: 18, chainId: 4663 }
+            store.allTokensByKey = { [rhtKey]: rht }
+            const row = (key, symbol, decimals, chainId, price) => ({
+                key: key, groupKey: key, name: symbol, symbol: symbol, logoUri: "", decimals: decimals,
+                cryptoPrice: price, currentBalance: 5, currencyBalance: 5 * price, sectionName: "",
+                balances: [{ chainId: chainId, iconUrl: "", chainName: "", balance: 5, rawBalance: "5000000" }],
+                tokens: [{ key: key, chainId: chainId }]
+            })
+            // the pickers list what the pay side holds and what the receive catalog
+            // has loaded; RHT is in neither of the adaptor's models, and has no price
+            store.tokenSelectorStubData = [row(sttGroupKey, "STT", 18, 11155420, 1), row(ethGroupKey, "ETH", 18, 11155420, 1), row(rhtKey, "RHT", 18, 4663, 0)]
+            verify(!SQUtils.ModelUtils.getByKey(store.tokenGroupsModel, "key", rhtKey))
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, { swapInputParamsForm: root.swapFormData })
+            launchAndVerfyModal()
+            root.swapFormData.fromGroupKey = sttGroupKey
+            formValuesChanged.wait()
+            root.swapFormData.toGroupKey = rhtKey
+            root.swapFormData.fromTokenAmount = "0.001"
+            formValuesChanged.wait()
+            root.swapFormData.selectedNetworkChainId = 11155420
+            formValuesChanged.wait()
+            fetchSuggestedRoutesCalled.wait()
+            compare(root.swapFormData.toGroupKey, rhtKey, "the receive selection held")
+
+            verify(!!root.swapAdaptor.toToken, "receive token resolved through the full token list")
+            compare(root.swapAdaptor.toToken.symbol, "RHT")
+            compare(root.swapAdaptor.toToken.decimals, 18)
+
+            // the pay side is in fiat mode, mirrored onto the receive side; with no
+            // price for RHT the receive side has to show the crypto amount
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            payPanel.setFiatMode(true)
+            tryCompare(payPanel, "fiatMode", true)
+            compare(receivePanel.fiatMode, false)
+
+            const txRoutes = root.dummySwapTransactionRoutes.txHasRouteNoApproval
+            txRoutes.uuid = root.swapAdaptor.uuid
+            root.swapStore.suggestedRoutesReady(txRoutes, "", "")
+            verify(root.swapAdaptor.validSwapProposalReceived)
+            compare(root.swapAdaptor.swapOutputData.hasError, false)
+            const expectedAmount = SQUtils.AmountsArithmetic.div(SQUtils.AmountsArithmetic.fromString(txRoutes.amountToReceive),
+                                                                 SQUtils.AmountsArithmetic.fromNumber(1, 18))
+            compare(root.swapAdaptor.swapOutputData.toTokenAmount, expectedAmount.toString())
+            // shown in crypto: the mirrored fiat mode has no price to convert with
+            tryVerify(() => receivePanel.value > 0, 2000, "the receive amount is shown")
+            fuzzyCompare(receivePanel.value, SQUtils.AmountsArithmetic.toNumber(expectedAmount), 1e-9)
+            compare(receivePanel.fiatMode, false)
+            const receiveText = findChild(receivePanel, "amountToSend_textField")
+            verify(!!receiveText)
+            verify(receiveText.text !== "", "receive input text is empty")
+
             closeAndVerfyModal()
         }
 
