@@ -530,8 +530,16 @@ $(STATUSGO): | deps $(NIMSDS_LIBFILE) platform-cleanup
 
 status-go: $(STATUSGO)
 
+.PHONY: status-go-tkl
+# Explicit opt-in build using status-go's pinned token-library dependency.
+status-go-tkl:
+	@test -n "$(PLATFORM_TARGET)" && test "$$(cat .platform-target 2>/dev/null)" = "$(PLATFORM_TARGET)" || \
+		{ echo "Prepare this platform with make platform-cleanup, then build libsds before status-go-tkl." >&2; exit 1; }
+	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library-tkl SHELL=/bin/sh
+
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"
+	$(MAKE) -C vendor/status-go clean-libtkl SHELL=/bin/sh
 	rm -f $(STATUSGO)
 
 

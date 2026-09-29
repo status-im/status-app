@@ -197,6 +197,8 @@ QtObject:
       enableParaswapProvider: PARASWAP_PROVIDER_ENABLED,
       enableLiFiProvider: LIFI_PROVIDER_ENABLED,
       enableRelayProvider: RELAY_PROVIDER_ENABLED,
+      tokenListsUseNim: TOKEN_LISTS_USE_NIM,
+      tokenListsShadow: TOKEN_LISTS_SHADOW,
     )
 
   proc defaultCreateAccountRequest*(): CreateAccountRequest =

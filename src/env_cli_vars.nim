@@ -212,6 +212,16 @@ type StatusDesktopConfig = object
     desc: "Sets market data full refresh interval"
     name: $BASE_NAME_MARKET_DATA_FULL_REFRESH_INTERVAL
     abbr: "market-data-full-refresh-interval" .}: string
+  tokenListsUseNim* {.
+    defaultValue: false
+    desc: "Use the Nim token catalogue (requires a tkl-enabled backend)"
+    name: "TOKEN_LISTS_USE_NIM"
+    abbr: "token-lists-use-nim" .}: bool
+  tokenListsShadow* {.
+    defaultValue: false
+    desc: "Compare token catalogues in the background (requires token-lists-use-nim)"
+    name: "TOKEN_LISTS_SHADOW"
+    abbr: "token-lists-shadow" .}: bool
   marketDataPricesRefreshInterval* {.
     defaultValue: BUILD_MARKET_DATA_PRICES_REFRESH_INTERVAL
     desc: "Sets market data prices refresh interval"

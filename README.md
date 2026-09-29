@@ -97,6 +97,30 @@ To build Status from source, follow the instructions specific to your operating 
 
 We welcome contributions from the community! To get started:
 
+### Nim token catalogue
+
+With the development environment configured, prepare the current platform with
+`make platform-cleanup` and build libsds, then run
+`make status-go-tkl`, then build the desktop client normally. Status-go pins the
+public Go wrapper and native library to the same revision. Its build prepares
+one checkout at `vendor/status-go/build/deps/nim-token-lists` and reuses the
+compiled library on subsequent builds. No separate library checkout or path
+setting is needed. `make clean` removes this managed checkout and its artifacts;
+the next tagged build prepares them again. If the dependency pin changes, clean
+before rebuilding. Existing nim-sds setup is unchanged.
+
+Before launching the rebuilt client, set
+`STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true` and, for comparison logs,
+`STATUS_RUNTIME_TOKEN_LISTS_SHADOW=true`. Both default to false. The command-line
+equivalents are `--token-lists-use-nim=true` and `--token-lists-shadow=true`.
+Shadow comparison requires the Nim catalogue. The choices apply to login and
+account creation.
+
+To roll back using the same binary, fully quit the client, set both options to
+`false`, restart and log in again. Remove any conflicting command-line overrides.
+These development controls do not enable the new catalogue in release builds;
+live parity verification and cross-platform packaging remain pending.
+
 <!-- TODO Improve the contributing guide to be more about how to contribute -->
 <!-- TODO add guide on how to translate -->
 <!-- TODO Create a guide per persona in the contributing guide -->
