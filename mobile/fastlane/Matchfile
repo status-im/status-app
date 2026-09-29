@@ -6,9 +6,13 @@ git_url("git@github.com:status-im/status-app-ios-certs.git")
 
 storage_mode("git")
 
+# The share extension is a nested bundle signed with its own profile
+# (<host id>.ShareExtension); resign.sh needs one per nested .appex.
 app_identifier([
   "app.status.mobile",
-  "app.status.mobile.pr"
+  "app.status.mobile.pr",
+  "app.status.mobile.ShareExtension",
+  "app.status.mobile.pr.ShareExtension"
 ])
 
 # App Store Connect API Key
