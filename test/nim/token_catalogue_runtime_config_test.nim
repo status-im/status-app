@@ -3,8 +3,8 @@ import ../../src/constants
 import ../../src/app_service/service/accounts/dto/[wallet_config, login_request,
   create_account_request]
 
-# Run this binary with the real CLI/environment options and matching expected
-# values to cover defaults, opt-in, and explicit false rollback.
+# Build and run all four CLI/environment cases with make tests-nim-token-catalogue.
+# This uses the repository's Qt/pkg-config environment and is part of tests-nim.
 # Do not use unittest here: it treats CLI configuration flags as test filters
 # and can silently skip assertions in precisely the rollback case being tested.
 let

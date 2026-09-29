@@ -121,6 +121,11 @@ To roll back using the same binary, fully quit the client, set both options to
 These development controls do not enable the new catalogue in release builds;
 live parity verification and cross-platform packaging remain pending.
 
+Run `make tests-nim-token-catalogue` in the configured desktop build environment
+to compile the runtime-control test with Qt and check defaults, environment
+opt-in, CLI opt-in, and explicit CLI rollback overriding enabled environment
+flags. This target also runs as part of `make tests-nim` and its Linux CI target.
+
 <!-- TODO Improve the contributing guide to be more about how to contribute -->
 <!-- TODO add guide on how to translate -->
 <!-- TODO Create a guide per persona in the contributing guide -->
