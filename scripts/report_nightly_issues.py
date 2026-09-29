@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 REPOSITORY = "status-im/status-app"
 API = f"https://api.github.com/repos/{REPOSITORY}"
 TITLE_PREFIX = "[Status UI tests using Logos Delivery nightly] - Failing tests"
-ASSIGNEES = ["fbarbu15"]
+ASSIGNEES = ["Ivansete-status"]
 
 
 def failed_tests(report_dir):
