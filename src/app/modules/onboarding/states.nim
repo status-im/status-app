@@ -17,6 +17,16 @@ type OnboardingFlow* {.pure} = enum
   OnboardingImportNewKeyPair,
   OnboardingImportSeedPhrase
 
+proc createsFreshProfile*(flow: OnboardingFlow): bool =
+  case flow:
+  of OnboardingFlow.CreateProfileWithPassword,
+     OnboardingFlow.CreateProfileWithSeedphrase,
+     OnboardingFlow.CreateProfileWithKeycardNewSeedphrase,
+     OnboardingFlow.CreateProfileWithKeycardExistingSeedphrase:
+    true
+  else:
+    false
+
 type LoginMethod* {.pure} = enum
   Unknown = 0,
   Password,
