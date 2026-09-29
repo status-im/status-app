@@ -11,7 +11,6 @@ noBackup/
 *.code-workspace
 .tours
 bin/
-/bottles/
 pkg/
 vendor/.nimble
 # nim-sds is vendored from status-go. Remove this when we support Nimble

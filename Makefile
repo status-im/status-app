@@ -18,7 +18,8 @@ LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 .PHONY: \
 	all \
 	fix-wallet-migrations \
-	bottles \
+	openssl \
+	openssl-clean \
 	check-qt-dir \
 	check-pkg-target-linux \
 	check-pkg-target-macos \
@@ -127,7 +128,6 @@ ifeq ($(mkspecs),macx)
  CGO_CFLAGS := -mmacosx-version-min=14.0
  export CGO_CFLAGS
  LIB_EXT := dylib
-  # keep in sync with BOTTLE_MACOS_VERSION
  MACOSX_DEPLOYMENT_TARGET := 14.0
  export MACOSX_DEPLOYMENT_TARGET
  PKG_TARGET := pkg-macos
@@ -188,22 +188,29 @@ ifneq ($(mkspecs),win32)
 endif
 
 ifeq ($(mkspecs),macx)
-BOTTLES_DIR := $(shell pwd)/bottles
-BOTTLES := $(addprefix $(BOTTLES_DIR)/,openssl@3)
-ifeq ($(QT_ARCH),arm64)
-# keep in sync with MACOSX_DEPLOYMENT_TARGET
-	BOTTLE_MACOS_VERSION := 'arm64_sonoma'
+OPENSSL_SOURCE_DIR := $(shell pwd)/mobile/vendors/openssl
+OPENSSL_BUILD_DIR := $(shell pwd)/tmp/openssl
+export OPENSSL_ROOT_DIR := $(OPENSSL_BUILD_DIR)/macos-$(QT_ARCH)
+OPENSSL_CRYPTO_LIB := $(OPENSSL_ROOT_DIR)/lib/libcrypto.a
+
+$(OPENSSL_CRYPTO_LIB):
+	test -f $(OPENSSL_SOURCE_DIR)/Configure || \
+		{ echo "OpenSSL sources missing in $(OPENSSL_SOURCE_DIR); run 'make update'" >&2; exit 1; }
+	echo -e "\033[92mBuilding:\033[39m OpenSSL $(QT_ARCH) (macOS >= $(MACOSX_DEPLOYMENT_TARGET))"
+	OS=macos ARCH=$(QT_ARCH) OPENSSL=$(OPENSSL_SOURCE_DIR) BUILD_DIR=$(OPENSSL_BUILD_DIR) \
+		INSTALL_DIR=$(OPENSSL_ROOT_DIR) mobile/scripts/buildOpenSSL.sh $(HANDLE_OUTPUT)
+
+openssl: $(OPENSSL_CRYPTO_LIB)
+
+openssl-clean:
+	echo -e "\033[92mCleaning:\033[39m OpenSSL"
+	rm -rf $(OPENSSL_BUILD_DIR)
 else
-	BOTTLE_MACOS_VERSION := 'sonoma'
-endif
-$(BOTTLES):
-	echo -e "\033[92mFetching:\033[39m $(notdir $@) bottle arch $(QT_ARCH) $(BOTTLE_MACOS_VERSION)"
-	./scripts/fetch-brew-bottle.sh $(notdir $@) $(BOTTLE_MACOS_VERSION) $(HANDLE_OUTPUT)
-
-bottles: $(BOTTLES)
+openssl:
+openssl-clean:
 endif
 
-deps: | check-qt-dir deps-common bottles
+deps: | check-qt-dir deps-common openssl
 
 update: | check-qt-dir update-common
 # Build the pkg-config wrapper (and generate this kit's Qt .pc if missing)
@@ -539,7 +546,7 @@ KEYCARD_QT_SOURCE_DIR ?= ""
 # Determine build directory based on platform
 ifeq ($(mkspecs),macx)
 STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/macos
-STATUS_KEYCARD_QT_CMAKE_PARAMS += -DOPENSSL_ROOT_DIR=$(BOTTLES_DIR)/openssl@3 -DOPENSSL_USE_STATIC_LIBS=ON
+STATUS_KEYCARD_QT_CMAKE_PARAMS += -DOPENSSL_ROOT_DIR=$(OPENSSL_ROOT_DIR) -DOPENSSL_USE_STATIC_LIBS=ON
 else ifeq ($(mkspecs),win32)
 STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/windows
 WIN_OPENSSL_ROOT ?= C:/ProgramData/scoop/apps/openssl-lts/current
@@ -1052,7 +1059,7 @@ clean-destdir:
 	rm -rf bin/*
 
 clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
-	rm -rf bottles/* pkg/* tmp/*
+	rm -rf pkg/* tmp/*
 	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 
 clean-git:
