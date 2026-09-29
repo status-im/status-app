@@ -3,8 +3,9 @@ pragma ComponentBehavior: Bound
 import QtQuick
 
 /*
-  A reservoir of pre-built row items. Storage and construction only: it knows
-  nothing about model roles, and binding an item to a row is the caller's job.
+  A reservoir of pre-built delegate items. Storage and construction only: it
+  knows nothing about model roles, and binding an item to a row is the
+  caller's job.
 
   `acquire` answers through a callback rather than a return value, which is what
   lets it answer *late* - after a simulated dress delay, or after an
@@ -27,7 +28,9 @@ Item {
     // Incubate rather than construct when the pool has to grow.
     property bool asynchronous: true
 
-    // Simulated cost of dressing a row, drawn per acquire. Requests wait
+    // Artificial delay before an acquire is answered, drawn per acquire. Not
+    // a cost the pool has: it exists so a harness can stand in for a slow
+    // delegate, and so callers are exercised against a late answer. Requests wait
     // concurrently - each has its own due time - so a window's worth of rows
     // takes about maxDelay in total rather than maxDelay each. Zero means
     // answer synchronously, which is the case worth testing: it makes the
@@ -46,7 +49,7 @@ Item {
     // `immediate` skips the simulated delay for this one acquire.
     function acquire(parent, callback, immediate) {
         if (!root.delegate) {
-            console.warn("RowPool: no delegate set; cannot acquire")
+            console.warn("DelegatePool: no delegate set; cannot acquire")
             return
         }
 
@@ -72,7 +75,7 @@ Item {
             return      // double release
 
         if (!d.owned(obj)) {
-            console.warn("RowPool: released an item this pool did not build")
+            console.warn("DelegatePool: released an item this pool did not build")
             return
         }
 
@@ -151,7 +154,7 @@ Item {
                 const obj = root.delegate.createObject(root)
 
                 if (!obj) {
-                    console.warn("RowPool: building the delegate failed")
+                    console.warn("DelegatePool: building the delegate failed")
                     return
                 }
 
@@ -167,7 +170,7 @@ Item {
 
             function settle(status) {
                 if (status === Component.Error) {
-                    console.warn("RowPool: incubating the delegate failed:",
+                    console.warn("DelegatePool: incubating the delegate failed:",
                                  incubator.errorString())
                     return
                 }

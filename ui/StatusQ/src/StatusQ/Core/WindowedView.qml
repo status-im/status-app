@@ -2,6 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 
+import StatusQ.Core.Utils as SQUtils
+
 /*
   A view that renders the rows of whatever model it is given, stages what it is
   told to wait for, and holds the viewport still.
@@ -21,10 +23,18 @@ import QtQuick
   defers removals (an index window trimming its far end) must do them there, or
   the two ends change in different frames and the content height moves twice.
 
+  Position is held in one of two ways, and they do not compete. While a slide is
+  in flight a surviving row is anchored and its offset re-applied whenever it
+  moves, which is what keeps the content still to the pixel. Outside a slide,
+  and only with stickToEnd set, a viewport already at the bottom edge is kept
+  there as the content grows. The anchor wins wherever both could apply.
+
   Row contract: the item handed back must have an intrinsic implicitHeight and
   must not size itself to its parent - a row that does collapses to zero height
   with no warning.
-*/Flickable {
+*/
+
+Flickable {
     id: root
 
     // The rows to render. Whoever owns it also owns what "more" means.
@@ -45,6 +55,12 @@ import QtQuick
     // Set by whoever owns the data: is there anything beyond each end?
     property bool moreAvailableStart: false
     property bool moreAvailableEnd: false
+
+    // Keep the viewport at the bottom edge while it is already there, so the
+    // last row stays visible as content grows and the initial fill lands
+    // showing the newest row rather than the oldest. Off by default: for a
+    // top-down list a short model growing past the viewport should stay put.
+    property bool stickToEnd: false
 
     readonly property int rowCount: rowsRepeater.count
 
@@ -146,6 +162,9 @@ import QtQuick
         // The rows staged for the current reveal. Membership is the single
         // source of truth - "waiting" and "arrived" are derived from whether a
         // shell has content yet, so there is no counter to fall out of step.
+        //
+        // Always *reassigned*, never mutated in place to properly propagate
+        // changes.
         property var wave: []
 
         function waveArrived() {
@@ -198,9 +217,14 @@ import QtQuick
             }
         }
 
-        // Load-bearing: completion is synchronous, so without this the first
-        // row to answer finishes the slide from inside the Repeater's creation
-        // pass and the far end is trimmed against a half-built window.
+        // Belt and braces, and no longer load-bearing on its own: completion
+        // used to be synchronous, and without this the first row to answer
+        // finished the slide from inside the Repeater's creation pass, trimming
+        // the far end against a half-built window. The settle wait now defers
+        // completion to a timer, and rows admitted before moreLoaded*() arrive
+        // while `loading` is still true, so either check alone suffices.
+        // Removing it is measurably safe today; it is kept because it states
+        // the intent, and because a future synchronous reveal path would need it.
         property bool admitting: false
 
         property var wiredModel: null
@@ -231,11 +255,35 @@ import QtQuick
         }
 
         function applyContentHeight() {
+            // Sampled before the write, while contentHeight still describes the
+            // bottom the viewport was actually sitting at.
+            const wasAtEnd = d.atEndOfContent()
             const was = d.applyingPosition
 
             d.applyingPosition = true
             root.contentHeight = Math.max(root.height, rowsColumn.height)
+
+            // Not while a slide holds a row - that anchor is the exact
+            // guarantee, and the rows a slide adds at the end belong below the
+            // viewport, not pulled into it - and not while the user has hold of
+            // the view, where snapping to the bottom would fight the drag.
+            //
+            // The anchor clause is redundant as things stand: every caller
+            // re-applies the anchor immediately after this returns, so it wins
+            // by running last. It is kept so the rule holds on its own rather
+            // than by call-site ordering.
+            if (root.stickToEnd && wasAtEnd && !d.anchorItem && !root.moving)
+                root.contentY = d.bottomY()      // guard already held
+
             d.applyingPosition = was
+        }
+
+        // Whether the viewport is at the bottom of the content as contentHeight
+        // currently describes it. Not Flickable.atYEnd: this is read inside a
+        // height handler, where contentHeight still holds the pre-change value -
+        // which is the point - and a sub-pixel gap must still count as the end.
+        function atEndOfContent() {
+            return root.contentY >= Math.max(0, root.contentHeight - root.height) - 1
         }
 
         // Live values, not the contentHeight property: inside a height handler
@@ -318,7 +366,12 @@ import QtQuick
         // later from a backend. Either way every row that arrives before
         // moreLoaded*() is one batch.
         function request(atStart) {
-            if (d.loading)
+            // Not just "not loading": a batch that has been admitted but not yet
+            // revealed is still outstanding, and starting a second request there
+            // would reset the wave and orphan the first batch's staged rows -
+            // they would stay hidden for good. One batch at a time is what the
+            // single wave, single anchor and single requested-edge assume.
+            if (d.loading || d.wave.length > 0)
                 return false
 
             if (atStart ? !root.moreAvailableStart : !root.moreAvailableEnd)
@@ -412,11 +465,14 @@ import QtQuick
         // the batch, which the row remembers so it reports back exactly once.
         // Called from the proxy as rows enter, before the Repeater has built
         // anything for them.
-        // SortFilterProxyModel exposes get(row, role); a bare QAbstractItemModel
-        // does not, and then only the shell-side claim stages a row.
+        // Through ModelUtils, so any QAbstractItemModel works. Reading
+        // model.get(row, role) directly only works for SortFilterProxyModel: a
+        // plain ListModel ignores the second argument and hands back the whole
+        // row object, which then never matches a shell's key and silently
+        // demotes staging to the loading-flag fallback.
         function keyAt(row) {
-            return root.model && root.model.get
-                 ? root.model.get(row, root.keyRole) : undefined
+            return root.model ? SQUtils.ModelUtils.get(root.model, row, root.keyRole)
+                              : undefined
         }
 
         // Rows entering while a request is outstanding are that request's batch.
@@ -477,17 +533,16 @@ import QtQuick
             if (!d.stagedKeys.delete(shell.rowKey))
                 return false
 
-            d.wave.push(shell)
+            d.wave = d.wave.concat([shell])
             return true
         }
 
         function forgetRow(shell) {
-            const i = d.wave.indexOf(shell)
+            if (d.wave.indexOf(shell) === -1)
+                return
 
-            if (i !== -1) {
-                d.wave.splice(i, 1)
-                d.checkWaveComplete()
-            }
+            d.wave = d.wave.filter(row => row !== shell)
+            d.checkWaveComplete()
         }
 
         // One row got its content: progress, so the stall detector re-arms.
@@ -510,8 +565,17 @@ import QtQuick
             if (d.finishing || d.admitting)
                 return
 
-            if (d.wave.length === 0)
+            if (d.wave.length === 0) {
+                // Nothing is owed - the batch was revealed, or every row of it
+                // left the window again before it arrived. A detector left armed
+                // here fires against an empty wave. While a request is still
+                // outstanding something *is* owed, so it keeps running for an
+                // owner that never answers at all.
+                if (!d.loading && d.stagedKeys.size === 0)
+                    acquireTimer.stop()
+
                 return
+            }
 
             if (d.loading)
                 return      // the owner has not finished admitting rows
@@ -532,6 +596,10 @@ import QtQuick
         function abandonWait() {
             const arrived = d.waveArrived().length
             const waiting = d.waveWaiting().length
+
+            if (arrived === 0 && waiting === 0 && d.stagedKeys.size === 0)
+                return      // nothing was owed after all
+
 
             if (arrived === 0 && ++d.noProgressIntervals < d.maxWaitIntervals) {
                 // Nothing to reveal yet: keep waiting rather than trim against

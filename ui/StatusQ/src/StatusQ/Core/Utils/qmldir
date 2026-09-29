@@ -1,6 +1,7 @@
 module StatusQ.Core.Utils
 
 ClippingWrapper 0.1 ClippingWrapper.qml
+DelegatePool 0.1 DelegatePool.qml
 DoubleFlickable 0.1 DoubleFlickable.qml
 DoubleFlickableWithFolding 0.1 DoubleFlickableWithFolding.qml
 EmojiJSON 1.0 emojiList.js

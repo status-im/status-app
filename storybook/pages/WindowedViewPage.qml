@@ -9,19 +9,19 @@ import QtQuick.Layouts
 import Models
 import Storybook
 
+import StatusQ.Core
 import StatusQ.Core.Utils
 
 import "ChatViewPocComponents"
-import "WindowedViewComponents"
 
 /*
-  Harness for WindowedView and RowPool. Three layers, each ignorant of the next
-  but one:
+  Harness for WindowedView and DelegatePool. Three layers, each ignorant of the
+  next but one:
 
     WindowedView   windowing, slides, batch reveal, anchoring. No roles, no
                    delegate type, no cache.
     this page      the binding policy - which role goes to which property.
-    RowPool        storage and construction of items. No roles.
+    DelegatePool   storage and construction of items. No roles.
 
   The middle layer is the point: role knowledge lives in exactly one place, and
   it is neither the view nor the cache.
@@ -31,9 +31,6 @@ SplitView {
 
     readonly property int initialMessageCount: 200
 
-    // Exposed for the tests: the data owner is a QtObject, so it is not
-    // reachable by walking the item tree.
-    readonly property var dataSource: windowSource
 
     // Settings restores this from a C++ componentComplete, which runs before any
     // Component.onCompleted - so it is already correct when the window is placed.
@@ -87,6 +84,10 @@ SplitView {
         readonly property int defaultWindowSize: 60
         readonly property int defaultSlideStep: 10
 
+        // On by default here, where the harness is chat-shaped and the newest
+        // message belongs at the bottom. The component itself defaults to off.
+        readonly property bool defaultStickToEnd: true
+
         readonly property int defaultPoolTarget: 80
         readonly property bool defaultAsynchronous: true
         readonly property int defaultMinDelay: 0
@@ -102,6 +103,7 @@ SplitView {
             windowSizeSpinBox.value = d.defaultWindowSize
             windowSource.moveTo(d.defaultWindowFirst)
             slideStepSpinBox.value = d.defaultSlideStep
+            stickToEndSwitch.checked = d.defaultStickToEnd
             poolTargetSpinBox.value = d.defaultPoolTarget
             asyncSwitch.checked = d.defaultAsynchronous
             minDelaySpinBox.value = d.defaultMinDelay
@@ -222,10 +224,10 @@ SplitView {
 
         color: "#1b1b1f"
 
-        // Declared here rather than directly under the SplitView: RowPool is an
+        // Declared here rather than directly under the SplitView: DelegatePool is an
         // Item, and every Item in a SplitView is a candidate pane.
-        RowPool {
-            id: rowPool
+        DelegatePool {
+            id: delegatePool
 
             delegate: messageComponent
 
@@ -244,6 +246,8 @@ SplitView {
 
             moreAvailableStart: windowSource.moreAvailableStart
             moreAvailableEnd: windowSource.moreAvailableEnd
+
+            stickToEnd: stickToEndSwitch.checked
 
             // Answered synchronously here; a fetch-more owner would call
             // moreLoaded*() much later instead, and the view cannot tell.
@@ -264,7 +268,7 @@ SplitView {
             ScrollBar.vertical: ScrollBar {}
 
             // The binding policy, and the only place that knows the roles.
-            acquireDelegate: (parent, modelRow, cb) => rowPool.acquire(parent, (obj) => {
+            acquireDelegate: (parent, modelRow, cb) => delegatePool.acquire(parent, (obj) => {
                 // Every role binding is guarded twice over, because a row on
                 // its way out fails in two different ways: the row object is
                 // destroyed before the shell that holds these bindings, and
@@ -283,7 +287,7 @@ SplitView {
             // The page installed the bindings, so the page drops them. Left in
             // place they keep evaluating against a row object that no longer
             // exists, which is where the undefined-role warnings come from -
-            // and RowPool cannot do it, since it does not know the roles.
+            // and DelegatePool cannot do it, since it does not know the roles.
             releaseDelegate: (obj) => {
                 obj.text = ""
                 obj.images = []
@@ -291,7 +295,7 @@ SplitView {
                 obj.avatar = ""
                 obj.width = 0
 
-                rowPool.release(obj)
+                delegatePool.release(obj)
             }
         }
     }
@@ -322,9 +326,9 @@ SplitView {
             }
 
             Label {
-                text: "built " + rowPool.builtCount
-                      + "  |  in use " + rowPool.acquiredCount
-                      + "  |  parked " + rowPool.availableCount
+                text: "built " + delegatePool.builtCount
+                      + "  |  in use " + delegatePool.acquiredCount
+                      + "  |  parked " + delegatePool.availableCount
             }
 
             RowLayout {
@@ -469,6 +473,15 @@ SplitView {
                     value: d.defaultSlideStep
                     editable: true
                 }
+            }
+
+            Switch {
+                id: stickToEndSwitch
+
+                Layout.fillWidth: true
+
+                text: "Stick to end"
+                checked: d.defaultStickToEnd
             }
 
             RowLayout {
@@ -686,6 +699,7 @@ SplitView {
 
         property alias windowFirst: root.restoredFirst
         property alias slideStep: slideStepSpinBox.value
+        property alias stickToEnd: stickToEndSwitch.checked
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked
         property alias minDelay: minDelaySpinBox.value
