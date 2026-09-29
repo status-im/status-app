@@ -343,9 +343,10 @@ QtObject {
         }, cb)
     }
 
-    function openContactRequestPopup(publicKey, cb, defaultMessage = "") {
+    function openContactRequestPopup(publicKey, cb, defaultMessage = "", messageEditable = true) {
         openContactAdaptivePopup(sendContactRequestPopupComponent, publicKey, {
-            defaultMessage: defaultMessage || ""
+            defaultMessage: defaultMessage || "",
+            messageEditable: messageEditable
         }, cb)
     }
 
