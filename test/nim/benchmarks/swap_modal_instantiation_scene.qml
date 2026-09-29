@@ -44,8 +44,8 @@ Window {
     property bool suppressSwapTo: false
 
     // Picker-model creation counters for the last run (attribution). kind1 = the
-    // two source-chain pickers (pay + same-chain receive); kind3 = the eager
-    // KIND_SWAP_TO destination picker.
+    // pay side's owned picker (kind 0; the column keeps its historical name);
+    // kind3 = the KIND_SWAP_TO destination picker of the receive side.
     property int kind1Count: 0
     property int kind3Count: 0
     property int lastModelCount: 0
@@ -83,7 +83,12 @@ Window {
     }
 
     function buildSelectorModel(n) {
-        const m = Qt.createQmlObject('import QtQuick; ListModel {}', root)
+        // the picker surface the panels drive: the per-modal params (SwapModal sets
+        // the account before exposing a picker), the lazy read props and the slots
+        const m = Qt.createQmlObject('import QtQuick; ListModel {'
+            + ' property string accountAddress; property int enabledChainId: -1;'
+            + ' property bool hasMoreItems: false; property bool isLoadingMore: false; property string searchString: "";'
+            + ' function setSectionNames(owned, popular) {} function search(keyword) { searchString = keyword } function fetchMore() {} }', root)
         if (n > 0)
             m.append(root.buildSelectorRows(n))
         return m
@@ -118,12 +123,11 @@ Window {
         // (onPickerBuilt) on each real build so the driver can detect readiness.
         // Suppress kind 3 when the scene asks (retained for attribution).
         //
-        // Production SwapModal now builds the pickers LAZILY in createPickers,
-        // driven from onOpened (off the createObject path): 2x kind 1 (pay + same-
-        // chain receive) on any open, plus 1x kind 3 (KIND_SWAP_TO) only when a
-        // bridge is selected. So during `create` this override is NOT called; it is
-        // called post-open. We still cache per slot (2 kind1 slots + 1 kind3 slot)
-        // so the size-N seed is paid once per distinct picker.
+        // Production SwapModal builds the pickers LAZILY in createPickers, driven
+        // from onOpened (off the createObject path) once the form names the paying
+        // account: 1x kind 0 (pay, owned) + 1x kind 3 (KIND_SWAP_TO, receive). So
+        // during `create` this override is NOT called; it is called post-open. We
+        // still cache per slot so the size-N seed is paid once per distinct picker.
         function createTokenSelectorModel(kind) {
             if (kind === 3) {
                 if (root.suppressSwapTo)
@@ -195,6 +199,9 @@ Window {
         root.swapFormData.resetFormData()
         if (root.swapFormData.selectedNetworkChainId === -1)
             root.swapFormData.selectedNetworkChainId = 1
+        // a launch always names the paying account, and the pickers wait for it
+        if (root.swapFormData.selectedAccountAddress === "")
+            root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
 
         // Reset the picker counters + per-slot cache AFTER the form writes above:
         // a not-yet-destroyed modal from the previous scenario (opened, so its

@@ -23,6 +23,8 @@ TokensStore {
     // configurable TokenSelectorModelMock instances instead. Callers override
     // tokenSelectorStubData to seed the rows they need.
     property var tokenSelectorStubData: []
+    // accounts the handed-out pickers treat as holding nothing
+    property var tokenSelectorEmptyAccounts: []
     property int _tokenSelectorIdCounter: 0
     readonly property Component _tokenSelectorModelMockComponent: Component { TokenSelectorModelMock {} }
 
@@ -32,21 +34,19 @@ TokensStore {
 
     function createTokenSelectorModel(kind) {
         root.createdKinds = root.createdKinds.concat([kind])
-        // Mirror the producer's per-kind source: swap pay (1) uses the
-        // source-chain groups, swap receive (3) the destination-chain groups,
-        // send (0) / buy (2) the full groups. (The real producer additionally
+        // Mirror the producer's per-kind source: swap receive (3) uses the
+        // destination-chain groups, owned (0: send, swap pay) / buy (2) the full
+        // groups. (The real producer additionally
         // swaps in the cross-chain groups while no chain filter is set — the
         // "All" chip; that path is covered by the Nim model tests.) If a caller
         // pre-seeded tokenSelectorStubData, use that static set instead.
-        let props = {}
+        let props = { ownedOnly: kind === 0, emptyAccounts: root.tokenSelectorEmptyAccounts }
         if (!!root.tokenSelectorStubData && root.tokenSelectorStubData.length > 0)
-            props = { sourceData: root.tokenSelectorStubData }
-        else if (kind === 1)
-            props = { sourceModel: root.tokenGroupsForChainModel }
+            props.sourceData = root.tokenSelectorStubData
         else if (kind === 3)
-            props = { sourceModel: root.tokenGroupsForChainToModel }
+            props.sourceModel = root.tokenGroupsForChainToModel
         else
-            props = { sourceModel: root.tokenGroupsModel }
+            props.sourceModel = root.tokenGroupsModel
         const model = _tokenSelectorModelMockComponent.createObject(root, props)
         return { model: model, id: root._tokenSelectorIdCounter++ }
     }
