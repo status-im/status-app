@@ -637,8 +637,7 @@ QtObject {
             } else if(!d.isUserAllowedToSendMessage && d.activeChatType === Constants.chatType.oneToOne) {
                 return qsTr("Add %1 as a contact to send a message").arg(d.oneToOneChatContactName)
             }
-
-            return qsTr("Type something")
+            return ""
         }
     }
 

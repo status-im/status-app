@@ -42,13 +42,13 @@ TextField {
 
     background: Rectangle {
         implicitHeight: 44
-        color: root.showBackground ? Theme.palette.statusAppNavBar.backgroundColor : "transparent"
+        color: root.showBackground ? Theme.palette.statusAppNavBar.backgroundColor : StatusColors.transparent
         radius: Theme.radius
 
         border.width: 1
         border.color: {
             if (!root.showBackground)
-                return "transparent"
+                return StatusColors.transparent
             if (root.cursorVisible)
                 return Theme.palette.primaryColor1
             return hoverHandler.hovered ? Theme.palette.primaryColor2 : Theme.palette.primaryColor3

@@ -5,8 +5,10 @@ import QtQuick.Layouts
 Rectangle {
     id: root
 
+    property bool randomColor
+
     z: 1000
-    border.color: 'red'
+    border.color: randomColor ? Qt.rgba(Math.random(), Math.random(), Math.random(), 1) : 'red'
     color: 'transparent'
 
     QtObject {

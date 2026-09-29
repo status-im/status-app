@@ -19,5 +19,8 @@ public:
 
     Q_INVOKABLE QString plainText(const QString& htmlFragment) const;
 
+    ///< same as above but with any whitespace (including linebreaks) reduced and cut to optional totalLength
+    Q_INVOKABLE QString plainTextSingleLine(const QString& htmlFragment, qsizetype totalLength = -1) const;
+
     Q_INVOKABLE QString shortcutToText(const QVariant &shortcut);
 };

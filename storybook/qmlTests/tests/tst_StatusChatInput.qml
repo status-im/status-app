@@ -73,7 +73,6 @@ Item {
 
                 width: parent.width
                 usersModel: ListModel {}
-                isEdit: true
                 imageFeaturesEnabled: false
                 stickersButtonVisible: false
                 paymentRequestButtonVisible: false
@@ -192,6 +191,8 @@ Item {
         }
 
         function test_editMode_toolbarButtons() {
+            controlUnderTest.isEdit = true
+
             const toolBar = getToolBar()
             const acceptButton = findChild(controlUnderTest, "statusChatInputEditAcceptButton")
             const cancelButton = findChild(controlUnderTest, "statusChatInputEditCancelButton")
@@ -219,6 +220,10 @@ Item {
             verify(!toolBar.stickersButton.visible)
             verify(!toolBar.tokenButton.visible)
             verify(!toolBar.cameraButton.visible)
+
+            verify(!toolBar.threadButton.visible)
+            verify(!toolBar.threadReplyButton.visible)
+
             verify(sendButton.visible)
             compare(toolBar.sendButton.iconName, "checkmark")
         }
@@ -351,6 +356,8 @@ Item {
         }
 
         function test_editMode_gifSelection_doesNotSendMessage() {
+            controlUnderTest.isEdit = true
+
             const toolBar = getToolBar()
             verify(!!toolBar)
 
@@ -366,6 +373,97 @@ Item {
 
             verify(controlUnderTest.getPlainText().includes("https://example.com/test.gif"))
             compare(signalSpy.count, 0)
+        }
+
+        function test_threads_threadButton_send_emitsSendMessageRequestedWithParams_data() {
+            return [
+                { tag: "empty (default) thread name", explicitThreadName: "" },
+                { tag: "explicit thread name", explicitThreadName: "coolThread" },
+            ]
+        }
+
+        function test_threads_threadButton_send_emitsSendMessageRequestedWithParams() {
+            const explicitThreadName = data.explicitThreadName
+            controlUnderTest.threadsEnabled = true
+            controlUnderTest.isThread = false
+            controlUnderTest.chatName = "general"
+
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+            waitForRendering(toolBar)
+
+            verify(toolBar.threadButton.visible)
+            verify(!toolBar.threadReplyButton.visible)
+            mouseClick(toolBar.threadButton)
+            tryCompare(toolBar.threadButton, "checked", true)
+
+            const threadNameInput = findChild(controlUnderTest, "threadNameInput")
+            verify(!!threadNameInput)
+            if (explicitThreadName) {
+                mouseClick(threadNameInput)
+                verify(threadNameInput.activeFocus)
+                typeText(explicitThreadName)
+                keyClick(Qt.Key_Tab) // move focus back to the main textInput
+            }
+
+            tryCompare(controlUnderTest.textInput, "activeFocus", true)
+            const msg = "a new thread starts here"
+            typeText(msg)
+            waitForRendering(controlUnderTest)
+
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+
+            const sendButton = findChild(controlUnderTest, "statusChatInputSendButton")
+            verify(!!sendButton)
+            mouseClick(sendButton)
+
+            compare(signalSpy.count, 1)
+            compare(signalSpy.signalArguments[0][0], true) // startNewThread
+            compare(signalSpy.signalArguments[0][1], explicitThreadName ? explicitThreadName : msg) // newThreadName (either explicit or deduced from the chat msg)
+            compare(signalSpy.signalArguments[0][2], false) // alsoReplyToParentChat
+        }
+
+        function test_threads_threadReplyButton_send_emitsSendMessageRequestedWithParams() {
+            const threadName = "coolThread"
+            const chatName = "general"
+            controlUnderTest.threadsEnabled = true
+            controlUnderTest.isThread = true
+            controlUnderTest.threadName = threadName
+            controlUnderTest.chatName = chatName
+
+            const toolBar = getToolBar()
+            verify(!!toolBar)
+
+            const threadReplyToChannelInfo = findChild(controlUnderTest, "threadReplyToChannelInfo")
+            verify(!!threadReplyToChannelInfo)
+            compare(threadReplyToChannelInfo.visible, false)
+
+            // Placeholder be like: Reply in Ξ coolThread
+            tryVerify(() => controlUnderTest.chatInputPlaceholder.includes(threadName) && !controlUnderTest.chatInputPlaceholder.includes(chatName))
+
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+
+            verify(!toolBar.threadButton.visible)
+            verify(toolBar.threadReplyButton.visible)
+            mouseClick(toolBar.threadReplyButton)
+            compare(toolBar.threadReplyButton.checked, true)
+
+            // Placeholder be like: Reply in Ξ coolThread, also send to #general
+            tryVerify(() => controlUnderTest.chatInputPlaceholder.includes(threadName) && controlUnderTest.chatInputPlaceholder.includes(chatName))
+
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("this is a reply in a thread")
+            waitForRendering(controlUnderTest)
+            compare(threadReplyToChannelInfo.visible, true)
+
+            const sendButton = findChild(controlUnderTest, "statusChatInputSendButton")
+            verify(!!sendButton)
+            mouseClick(sendButton)
+
+            compare(signalSpy.count, 1)
+            compare(signalSpy.signalArguments[0][0], false) // startNewThread
+            compare(signalSpy.signalArguments[0][1], "") // newThreadName
+            compare(signalSpy.signalArguments[0][2], true) // alsoReplyToParentChat
         }
 
         function test_editMode_sendButton_emitsSendMessageRequested() {
@@ -484,6 +582,9 @@ Item {
         }
 
         function test_editCancel_emitsSignal() {
+            controlUnderTest.isEdit = true
+            waitForRendering(controlUnderTest)
+
             const cancelButton = findChild(controlUnderTest, "statusChatInputEditCloseButton")
             verify(!!cancelButton)
 

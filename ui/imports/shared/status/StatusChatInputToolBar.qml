@@ -20,6 +20,7 @@ Control {
     readonly property alias quoteButton: quoteButton
     readonly property alias codeButton: codeButton
 
+    readonly property alias threadButton: threadButton
     readonly property alias cameraButton: cameraButton
     readonly property alias imageButton: imageButton
     readonly property alias tokenButton: tokenButton
@@ -27,6 +28,7 @@ Control {
     readonly property alias emojiButton: emojiButton
     readonly property alias stickersButton: stickersButton
     readonly property alias gifButton: gifButton
+    readonly property alias threadReplyButton: threadReplyButton
 
     readonly property alias sendButton: sendButton
 
@@ -42,6 +44,11 @@ Control {
     component ChatIcon: AbstractButton {
         id: chatIconRoot
 
+        property string tooltipText
+
+        icon.width: 28 + Math.max(0, Theme.fontSizeOffset * 2)
+        icon.height: 28 + Math.max(0, Theme.fontSizeOffset * 2)
+
         focusPolicy: Qt.NoFocus
 
         checkable: true
@@ -50,25 +57,18 @@ Control {
         background: Rectangle {
             radius: Theme.radius
 
-            color: checked ? Theme.palette.baseColor5
-                           : StatusColors.transparent
+            color: chatIconRoot.checked ? Theme.palette.baseColor5
+                                        : StatusColors.transparent
         }
 
-        contentItem: Item {
-            implicitWidth: icon.width
-            implicitHeight: icon.height
+        contentItem: StatusIcon {
+            icon: chatIconRoot.icon.name
+            width: chatIconRoot.icon.width
+            height: chatIconRoot.icon.height
 
-            StatusIcon {
-                id: icon
-
-                icon: chatIconRoot.icon.name
-                width: 28 + Math.max(0, Theme.fontSizeOffset * 2)
-                height: width
-
-                color: chatIconRoot.checked || hoverHandler.hovered
-                       ? Theme.palette.primaryColor1
-                       : Theme.palette.directColor4
-            }
+            color: chatIconRoot.checked || hoverHandler.hovered
+                   ? Theme.palette.primaryColor1
+                   : Theme.palette.directColor4
         }
 
         HoverHandler {
@@ -76,6 +76,10 @@ Control {
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
             enabled: root.hoverEnabled
             cursorShape: Qt.PointingHandCursor
+        }
+
+        StatusLazyToolTip {
+            text: chatIconRoot.tooltipText
         }
     }
 
@@ -157,6 +161,7 @@ Control {
                         width: root.styleButtonVisible ? implicitWidth : 0
                         anchors.verticalCenter: parent.verticalCenter
                         icon.name: "chat/style"
+                        tooltipText: qsTr("Formatting")
                     }
 
                     state: (root.showFormatting || styleButton.checked) ? "formatting" : "noformatting"
@@ -223,30 +228,35 @@ Control {
                             id: boldButton
 
                             icon.name: "chat/bold"
+                            tooltipText: qsTr("Bold")
                         }
 
                         ChatIcon {
                             id: italicButton
 
                             icon.name: "chat/italic"
+                            tooltipText: qsTr("Italics")
                         }
 
                         ChatIcon {
                             id: strikeThroughButton
 
                             icon.name: "chat/strikethrough"
+                            tooltipText: qsTr("Strike through")
                         }
 
                         ChatIcon {
                             id: quoteButton
 
                             icon.name: "chat/quote"
+                            tooltipText: qsTr("Quote")
                         }
 
                         ChatIcon {
                             id: codeButton
 
                             icon.name: "chat/code"
+                            tooltipText: qsTr("Code")
                         }
                     }
 
@@ -259,27 +269,39 @@ Control {
                         anchors.verticalCenter: parent.verticalCenter
 
                         ChatIcon {
+                            id: threadButton
+                            icon.name: "thread"
+                            icon.width: 24
+                            icon.height: 24
+                            tooltipText: qsTr("Start a new thread")
+                        }
+
+                        ChatIcon {
                             id: cameraButton
 
                             icon.name: "chat/camera"
+                            tooltipText: qsTr("Camera")
                         }
 
                         ChatIcon {
                             id: imageButton
 
                             icon.name: "chat/image"
+                            tooltipText: qsTr("Image")
                         }
 
                         ChatIcon {
                             id: tokenButton
 
                             icon.name: "chat/token"
+                            tooltipText: qsTr("Payment")
                         }
 
                         ChatIcon {
                             id: mentionButton
 
                             icon.name: "chat/mention"
+                            tooltipText: qsTr("Mention")
                         }
 
                         ChatIcon {
@@ -287,18 +309,28 @@ Control {
 
                             objectName: "statusChatInputEmojiButton"
                             icon.name: "chat/smile"
+                            tooltipText: qsTr("Emojis")
                         }
 
                         ChatIcon {
                             id: stickersButton
 
                             icon.name: "chat/sticker"
+                            tooltipText: qsTr("Stickers")
                         }
 
                         ChatIcon {
                             id: gifButton
 
                             icon.name: "chat/gif"
+                            tooltipText: qsTr("GIFs")
+                        }
+
+                        ChatIcon {
+                            id: threadReplyButton
+
+                            icon.name: "channel"
+                            tooltipText: qsTr("Reply in thread")
                         }
                     }
                 }

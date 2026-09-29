@@ -23,6 +23,8 @@ Item {
         editAcceptButtonEnabled: editAcceptEnabledCheckBox.checked
         showFormatting: showFormattingCheckBox.checked
         styleButtonVisible: styleButtonVisibleCheckBox.checked
+        threadButton.visible: ctrlThreadsEnabledButton.checked
+        threadReplyButton.visible: ctrlThreadsEnabledButton.checked
 
         sendButton.enabled: enabledCheckBox.checked
         sendButton.limitText: limitSlider.value > 0 ? limitSlider.value.toString() : ""
@@ -59,6 +61,13 @@ Item {
             id: sendButtonVisibleCheckBox
 
             text: "send button visible"
+            checked: true
+        }
+
+        CheckBox {
+            id: ctrlThreadsEnabledButton
+
+            text: "threads enabled"
             checked: true
         }
 

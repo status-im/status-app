@@ -25,7 +25,7 @@ Control {
     objectName: "statusChatInput"
 
     signal stickerSelected(string hashId, string packId, string url)
-    signal sendMessageRequested()
+    signal sendMessageRequested(bool startNewThread, string newThreadName, bool alsoReplyToParentChat)
     signal editRequested()
     signal linkPreviewReloaded(string link)
     signal enableLinkPreview()
@@ -70,7 +70,16 @@ Control {
     readonly property int messageLimitSoft: 200 // we start showing a char counter when this no. of chars left in the message
     readonly property int messageLimitHard: 20000 // still cut-off attempts to paste beyond this limit, for app usability reasons
 
-    property string chatInputPlaceholder: qsTr("Type something")
+    property string chatInputPlaceholder: defaultChatInputPlaceholder
+    readonly property string defaultChatInputPlaceholder: {
+        if (threadsEnabled && isThread && !isEdit) {
+            if (toolBar.threadReplyButton.checked)
+                return qsTr("Reply in %1, also send to %2").arg(d.inlineThreadIcon + threadName + "<font color='%1'>".arg(Theme.palette.primaryColor1))
+                                                           .arg('#' + chatName + "</font>")
+            return qsTr("Reply in %1").arg(d.inlineThreadIcon + threadName)
+        }
+        return qsTr("Type something")
+    }
 
     property alias textInput: messageInputField
 
@@ -88,6 +97,12 @@ Control {
     property var urlsList: []
 
     property bool askToEnableLinkPreview: false
+
+    property string chatName    // chat or channel name (if `isThread`, this is the name of the parent chat)
+
+    property bool threadsEnabled // feature flag
+    property bool isThread       // is this chat an existing thread inside a different `chatName`?
+    property string threadName   // (an existing) thread name
 
     onEnabledChanged: {
         if (enabled)
@@ -133,6 +148,10 @@ Control {
         readonly property bool hasSelection: messageInputField.selectionStart !== messageInputField.selectionEnd
         readonly property var selDelim: messageInputField.delimitersAtSelection(
                                             messageInputField.selectionStart, messageInputField.selectionEnd)
+
+        // NB: Greek uppercase Xi letter instead of an inline SVG which we can't recolor
+        readonly property string inlineThreadIcon: 'Ξ '
+        readonly property string newThreadName: toolBar.threadButton.checked ? (threadNameInput.item?.text || StatusQUtils.StringUtils.plainTextSingleLine(messageInputField.text, Constants.maxThreadNameLength)) : ""
 
         // Code state driving the tri-state code button (none → span → block → none). At the caret it
         // comes from the AST node or the raw delimiter run; across a selection from selDelim.
@@ -321,7 +340,9 @@ Control {
             if (event.key === Qt.Key_Tab) {
                 if (checkTextInsert()) {
                     event.accepted = true
-                    return
+                } else if (threadNameInput.visible) {
+                    event.accepted = true
+                    threadNameInput.item?.forceActiveFocus()
                 }
             }
 
@@ -384,7 +405,7 @@ Control {
             return
         }
 
-        root.sendMessageRequested()
+        root.sendMessageRequested(toolBar.threadButton.checked, d.newThreadName, toolBar.threadReplyButton.checked)
         if (!wasEdit)
             root.hideExtendedArea()
     }
@@ -417,9 +438,16 @@ Control {
         isReply = false
     }
 
+    function resetThreadArea() {
+        toolBar.threadButton.checked = false
+        toolBar.threadReplyButton.checked = false
+        threadNameInput.item?.clear()
+    }
+
     function hideExtendedArea() {
         resetImageArea()
         resetReplyArea()
+        resetThreadArea()
     }
 
     function validateImages(imagePaths = []) {
@@ -523,7 +551,7 @@ Control {
             messageInputField.forceActiveFocus()
             return
         }
-        root.sendMessageRequested()
+        root.sendMessageRequested(toolBar.threadButton.checked, d.newThreadName, toolBar.threadReplyButton.checked)
         root.isReply = false
         messageInputField.forceActiveFocus()
     }
@@ -837,6 +865,50 @@ Control {
                     onRemovePaymentRequestPreview: (index) => root.removePaymentRequestPreview(index)
                 }
 
+                Loader {
+                    id: threadNameInput
+                    Layout.fillWidth: true
+                    objectName: "threadNameInput"
+                    active: toolBar.threadButton.visible && toolBar.threadButton.checked
+                    visible: active
+
+                    sourceComponent: StatusQ.StatusTextField {
+                        readonly property int spacing: Theme.smallPadding
+                        leftPadding: messageInputField.leftPadding + threadNameIcon.width + spacing
+                        rightPadding: messageInputField.rightPadding + threadNameClearButton.width + spacing
+
+                        background: null
+                        font.pixelSize: Theme.secondaryTextFontSize
+
+                        // 50 (Constants.maxThreadNameLength) characters of the text message or default placeholder
+                        placeholderText: messageInputField.length > 0 ? StatusQUtils.StringUtils.plainTextSingleLine(messageInputField.text, Constants.maxThreadNameLength)
+                                                                      : qsTr("Add a thread name (optional)")
+                        maximumLength: 100
+
+                        StatusIcon {
+                            id: threadNameIcon
+                            icon: "thread"
+                            width: 16
+                            height: 16
+                            color: Theme.palette.primaryColor1
+                            anchors.left: parent.left
+                            anchors.leftMargin: messageInputField.leftPadding
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        StatusQ.StatusClearButton {
+                            id: threadNameClearButton
+                            width: 16
+                            height: 16
+                            visible: parent.length > 0
+                            anchors.right: parent.right
+                            anchors.rightMargin: messageInputField.rightPadding
+                            anchors.verticalCenter: parent.verticalCenter
+                            onClicked: parent.clear()
+                        }
+                    }
+                }
+
                 StatusScrollView {
                     id: inputScrollView
 
@@ -857,7 +929,7 @@ Control {
                     padding: 0
                     contentWidth: availableWidth
 
-                    flickable.topMargin: messageInputField.effectiveTextMargin
+                    flickable.topMargin: threadNameInput.visible ? 0 : messageInputField.effectiveTextMargin
                     flickable.bottomMargin: messageInputField.effectiveTextMargin - Theme.padding
 
                     ChatTextArea {
@@ -974,6 +1046,17 @@ Control {
                         }
                     }
                 }
+
+                StatusBaseText {
+                    objectName: "threadReplyToChannelInfo"
+                    Layout.fillWidth: true
+                    Layout.leftMargin: messageInputField.leftPadding
+                    text: "#  " + qsTr("Also send to %1").arg('#' + root.chatName)
+                    color: Theme.palette.primaryColor1
+                    font.pixelSize: Theme.tertiaryTextFontSize
+                    visible: root.threadsEnabled && root.isThread && !root.isEdit && toolBar.threadReplyButton.checked && messageInputField.length !== 0
+                    elide: Text.ElideRight
+                }
             }
         }
 
@@ -1015,6 +1098,7 @@ Control {
                                   ? (root.messageLimit - messageInputField.length).toString()
                                   : ""
             sendButton.iconName: root.isEdit ? "checkmark" : "arrow-up"
+            sendButton.tooltipText: root.isEdit ? qsTr("Confirm") : root.isReply ? qsTr("Reply") : qsTr("Send")
 
             sendButton.onClicked: {
                 InputMethod.commit()
@@ -1136,7 +1220,7 @@ Control {
                         return
                     }
 
-                    root.sendMessageRequested()
+                    root.sendMessageRequested(toolBar.threadButton.checked, d.newThreadName, toolBar.threadReplyButton.checked)
                     root.isReply = false
                     messageInputField.forceActiveFocus()
                 }
@@ -1173,6 +1257,18 @@ Control {
                     if (!messageInputField.enteringSuggestion)
                         messageInputField.insert(messageInputField.cursorPosition, "@")
                 }
+            }
+
+            threadButton {
+                visible: root.threadsEnabled && !root.isThread && !root.isEdit
+                onVisibleChanged: if (!visible) checked = false
+                onToggled: threadButton.checked && messageInputField.length > 0 ? threadNameInput.item?.forceActiveFocus() : messageInputField.forceActiveFocus()
+            }
+
+            threadReplyButton {
+                visible: root.threadsEnabled && root.isThread && !root.isEdit
+                onVisibleChanged: if (!visible) checked = false
+                tooltipText: qsTr("Also send to %1").arg('#' + root.chatName)
             }
         }
     }
