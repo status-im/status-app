@@ -187,6 +187,11 @@ platform :ios do
       UI.message("Modified NFC entitlements: removed NDEF, keeping TAG and PACE")
     end
 
+    # No -e here: resign.sh applies one entitlements file to every bundle it
+    # signs, nested extension included, which would give the extension the
+    # host's application-identifier. Default mode derives each bundle's
+    # entitlements from its own profile; the host is re-sealed below with the
+    # patched entitlements.
     UI.message("Resigning IPA with resign.sh directly via bash...")
     command = [
       resign_sh.shellescape,
@@ -194,7 +199,6 @@ platform :ios do
       signing_identity.shellescape,
       "-p", "#{app_identifier}=#{provisioning_profile}".shellescape,
       *(ext_embedded ? ["-p", "#{ext_identifier}=#{ext_profile}".shellescape] : []),
-      "-e", entitlements_file.path.shellescape,
       "-d", display_name.shellescape,
       "-b", app_identifier.shellescape,
       "-v",
@@ -205,6 +209,19 @@ platform :ios do
 
     # Use sh() which properly executes via the shell, wrapped in bash -c
     sh("/bin/bash", "-c", command)
+
+    UI.message("Re-sealing #{app_name} with the patched entitlements...")
+    Dir.mktmpdir do |tmpdir|
+      Dir.chdir(tmpdir) do
+        sh("unzip -q #{ipa_path.shellescape}")
+        app_in_payload = File.join("Payload", app_name).shellescape
+        sh("codesign --force --sign #{signing_identity.shellescape} --generate-entitlement-der " \
+           "--entitlements #{entitlements_file.path.shellescape} #{app_in_payload}")
+        sh("codesign --verify --deep --strict #{app_in_payload}")
+        FileUtils.rm_f(ipa_path)
+        sh("zip -qr #{ipa_path.shellescape} Payload")
+      end
+    end
 
     UI.success("Signed and packaged: #{ipa_path}")
   end
