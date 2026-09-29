@@ -986,6 +986,8 @@ Item {
             verify(!!holdingSelector)
             const balanceLine = findChild(payPanel, "balanceLine")
             verify(!!balanceLine)
+            // the button loads another content item once selected: wait for it
+            tryCompare(holdingSelector, "isSelected", true)
             const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
             const payTokenModel = payPanel.tokenSelectorModel
@@ -1042,6 +1044,8 @@ Item {
             verify(!!balanceLine)
             const balanceCryptoText = findChild(payPanel, "balanceCryptoText")
             verify(!!balanceCryptoText)
+            // the button loads another content item once selected: wait for it
+            tryCompare(holdingSelector, "isSelected", true)
             const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
             const tokenSelectorIcon = findChild(payPanel, "tokenSelectorIcon")
@@ -1104,9 +1108,11 @@ Item {
                 compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
                 verify(amountToSendInput.cursorVisible)
                 compare(bottomItemText.text, approx(root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency)))
+                const defaultTokenEntry = SQUtils.ModelUtils.getByKey(payTokenModel, "key", root.swapFormData.defaultFromGroupKey)
+                // the button loads another content item once selected: wait for the right one
+                tryCompare(holdingSelector, "isSelected", !!defaultTokenEntry)
                 const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
                 verify(!!tokenSelectorContentItemText)
-                const defaultTokenEntry = SQUtils.ModelUtils.getByKey(payTokenModel, "key", root.swapFormData.defaultFromGroupKey)
                 compare(tokenSelectorContentItemText.text, defaultTokenEntry ? defaultTokenEntry.symbol : "")
                 verify(balanceLine.visible)
                 compare(payPanel.selectedHoldingId, root.swapFormData.defaultFromGroupKey)
@@ -1148,6 +1154,8 @@ Item {
             verify(!!balanceLine)
             const balanceCryptoText = findChild(payPanel, "balanceCryptoText")
             verify(!!balanceCryptoText)
+            // the button loads another content item once selected: wait for it
+            tryCompare(holdingSelector, "isSelected", true)
             const tokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!tokenSelectorContentItemText)
             const tokenSelectorIcon = findChild(payPanel, "tokenSelectorIcon")
@@ -2451,14 +2459,11 @@ Item {
             closeAndVerfyModal()
         }
 
-        // The receive side always gets its own destination picker on open (so
-        // browsing either side's list can't disturb the other), seeded like the
-        // pay one; switching to a bridge afterwards must not build anything new.
-        // The handler fills the form only after the modal has opened, so the pickers
-        // must not be seeded before the paying account is known: with no account the
-        // owned source spans every account, and the pay side would show a token some
-        // other account holds, with that account's balance.
-        function test_payPickerWaitsForTheAccountAndListsOnlyItsHoldings() {
+        // The handler fills the form only after the modal has opened, so the pay picker
+        // is attached before the paying account is known. Until the account is applied
+        // its rows are every account's holdings, and the pay side must not read them:
+        // it would select a token another account holds and show that account's balance.
+        function test_payPanelIgnoresThePickerUntilItIsScopedToTheAccount() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
             const accounts = root.swapAdaptor.swapStore.accounts
             const emptyAccount = SQUtils.ModelUtils.get(accounts, 1, "address")
@@ -2476,15 +2481,16 @@ Item {
             const balanceLine = findChild(payPanel, "balanceLine")
             verify(!!balanceLine)
 
-            // no account yet: no list to pick from, nothing selected
-            wait(100) // the deferred picker creation has run by now
-            verify(!payPanel.tokenSelectorModel, "pay picker attached before the account is known")
+            // no account yet: the picker is attached and holds other accounts' rows,
+            // none of which may count — nothing selected, no balance
+            tryVerify(() => !!payPanel.tokenSelectorModel, 2000, "deferred picker creation")
+            verify(payPanel.tokenSelectorModel.count > 0, "other accounts' rows are present, to be ignored")
             compare(holdingSelector.isSelected, false)
+            verify(!balanceLine.visible)
+            compare(payPanel.rawValue, "0")
 
             root.swapFormData.selectedAccountAddress = emptyAccount
-            tryVerify(() => !!payPanel.tokenSelectorModel)
-            // filtered to the account before any panel could resolve a selection from it
-            compare(payPanel.tokenSelectorModel.accountAddress, emptyAccount)
+            tryCompare(payPanel.tokenSelectorModel, "accountAddress", emptyAccount)
             compare(payPanel.tokenSelectorModel.count, 0)
             tryCompare(holdingSelector, "isSelected", false)
             verify(!balanceLine.visible)
@@ -2588,6 +2594,9 @@ Item {
             closeAndVerfyModal()
         }
 
+        // The receive side always gets its own destination picker on open (so
+        // browsing either side's list can't disturb the other), seeded like the
+        // pay one; switching to a bridge afterwards must not build anything new.
         function test_receivePickerIsBuiltAndSeededOnOpen() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
             store.createdKinds = []

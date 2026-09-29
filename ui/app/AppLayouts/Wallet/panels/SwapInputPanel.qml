@@ -218,10 +218,22 @@ Control {
         }
 
 
-        // Only a settled list answers "is this token available here?": it is empty
-        // while the catalog is (re)built, holds search results while searching, and
-        // may hold another side's chain while a shared picker is scoped to it.
-        readonly property bool listSettled: !!root.tokenSelectorModel
+        // Whether the picker model is filtered to this panel's account. The owner may
+        // attach the model before the form names the account, and the Binding below
+        // applies the account only afterwards; until it has, the rows are every
+        // account's holdings and must not be read, or the panel would select a token
+        // another account holds and show that account's balance.
+        readonly property bool pickerScopedToAccount: !!root.tokenSelectorModel
+                                                      && root.selectedAccountAddress !== ""
+                                                      && root.tokenSelectorModel.accountAddress === root.selectedAccountAddress
+        // re-apply the selection once the rows may be read (or may no longer be)
+        onPickerScopedToAccountChanged: d.setHoldingToSelector()
+
+        // Only a settled list answers "is this token available here?": the rows
+        // must be this account's, the list is empty while the catalog is (re)built,
+        // holds search results while searching, and may hold another side's chain
+        // while a shared picker is scoped to it.
+        readonly property bool listSettled: d.pickerScopedToAccount
                                             && !root.tokenSelectorLoading
                                             && (root.ownedTokensOnly || root.tokenSelectorModel.count > 0)
                                             && root.tokenSelectorModel.searchString === ""
@@ -277,7 +289,7 @@ Control {
         function setHoldingToSelector() {
             if (!root.tokenSelectorModel)
                 return
-            if (selectedHolding.available && !!selectedHolding.item) {
+            if (d.isSelectedHoldingValidAsset) {
                 const tokens = selectedHolding.item.tokens
                 const tokensCount = !!tokens ? tokens.ModelCount.count : 0
                 let tokenKey = ""
@@ -303,7 +315,9 @@ Control {
                 holdingSelector.reset()
         }
 
-        readonly property bool isSelectedHoldingValidAsset: selectedHolding.available && !!selectedHolding.item
+        // the selected group's row, but only from rows that are this account's
+        readonly property bool isSelectedHoldingValidAsset: d.pickerScopedToAccount
+                                                            && selectedHolding.available && !!selectedHolding.item
 
         readonly property SQUtils.ModelChangeTracker selectedBalancesTracker: SQUtils.ModelChangeTracker {
             model: d.selectedHolding.available && !!d.selectedHolding.item
