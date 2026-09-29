@@ -46,6 +46,7 @@ Item {
         function test_contactSubtitleIsElidedCompressedPubkeyWithOnlineDot() {
             const item = create()
             compare(item.subTitle, Utils.getElidedCompressedPk("0x04abc"))
+            compare(item.statusListItemTitle.font.weight, Font.DemiBold)
             verify(item.statusListItemIcon.badge.visible)
             compare(item.statusListItemIcon.badge.color, Theme.palette.successColor1)
         }
@@ -53,6 +54,7 @@ Item {
         function test_groupSubtitleIsMembersCount() {
             const item = create({ chatType: Constants.chatType.privateGroupChat, membersCount: 25, name: "Travel Days" })
             compare(item.title, "Travel Days")
+            compare(item.statusListItemTitle.font.weight, Font.DemiBold)
             compare(item.subTitle, qsTr("%n member(s)", "", 25))
             verify(!item.statusListItemIcon.badge.visible)
         }
@@ -60,6 +62,7 @@ Item {
         function test_communityChannelTitleHasHashAndSectionSubtitle() {
             const item = create({ chatType: Constants.chatType.communityChat, name: "pets", sectionName: "Status" })
             compare(item.title, "#pets")
+            compare(item.statusListItemTitle.font.weight, Font.Normal)
             compare(item.subTitle, "Status")
         }
 
