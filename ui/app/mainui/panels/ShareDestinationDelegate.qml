@@ -47,6 +47,8 @@ StatusListItem {
     rightPadding: 12
 
     title: d.isChannel ? "#" + root.name : root.name
+    // People and groups read as names; channels (and threads later) don't.
+    statusListItemTitle.font.weight: d.isContact || d.isGroup ? Font.DemiBold : Font.Normal
     subTitle: {
         if (d.isContact)
             return Utils.getElidedCompressedPk(root.chatId)
