@@ -9,6 +9,8 @@ import QtQuick.Layouts
 import Models
 import Storybook
 
+import StatusQ.Core.Utils
+
 import "ChatViewPocComponents"
 import "WindowedViewComponents"
 
@@ -28,6 +30,14 @@ SplitView {
     id: root
 
     readonly property int initialMessageCount: 200
+
+    // Exposed for the tests: the data owner is a QtObject, so it is not
+    // reachable by walking the item tree.
+    readonly property var dataSource: windowSource
+
+    // Settings restores this from a C++ componentComplete, which runs before any
+    // Component.onCompleted - so it is already correct when the window is placed.
+    property int restoredFirst: 0
 
     readonly property int buildComplexity: buildSpinBox.value
     readonly property int paintComplexity: paintSpinBox.value
@@ -89,8 +99,8 @@ SplitView {
         readonly property int defaultInsertIndex: 0
 
         function restoreDefaults() {
-            windowedView.windowFirst = d.defaultWindowFirst
-            windowedView.windowLast = d.defaultWindowFirst + d.defaultWindowSize - 1
+            windowSizeSpinBox.value = d.defaultWindowSize
+            windowSource.moveTo(d.defaultWindowFirst)
             slideStepSpinBox.value = d.defaultSlideStep
             poolTargetSpinBox.value = d.defaultPoolTarget
             asyncSwitch.checked = d.defaultAsynchronous
@@ -169,6 +179,18 @@ SplitView {
         }
     }
 
+    // The data owner: it decides what "more" means, and answers the view's
+    // requests by moving an index window's bounds.
+    IndexWindowSource {
+        id: windowSource
+
+        sourceModel: messagesModel
+
+        // The control owns the steady size; the position is set through
+        // moveTo(), since first/last are read-only by design.
+        size: windowSizeSpinBox.value
+    }
+
     ListModel {
         id: messagesModel
 
@@ -218,10 +240,26 @@ SplitView {
 
             anchors.fill: parent
 
-            sourceModel: messagesModel
+            model: windowSource.model
 
-            windowFirst: d.defaultWindowFirst
-            windowLast: d.defaultWindowFirst + d.defaultWindowSize - 1
+            moreAvailableStart: windowSource.moreAvailableStart
+            moreAvailableEnd: windowSource.moreAvailableEnd
+
+            // Answered synchronously here; a fetch-more owner would call
+            // moreLoaded*() much later instead, and the view cannot tell.
+            onMoreRequestedStart: {
+                windowSource.growStart(slideStepSpinBox.value)
+                windowedView.moreLoadedStart()
+            }
+
+            onMoreRequestedEnd: {
+                windowSource.growEnd(slideStepSpinBox.value)
+                windowedView.moreLoadedEnd()
+            }
+
+            // Deferred removals happen here, in the reveal's own turn, so both
+            // ends of the window change together.
+            onBatchRevealed: windowSource.trim()
 
             ScrollBar.vertical: ScrollBar {}
 
@@ -273,6 +311,7 @@ SplitView {
             }
 
             Label { text: "Rows in the window: " + windowedView.rowCount }
+            Label { text: "Window: " + windowSource.first + "-" + windowSource.last }
             Label { text: "Rows in the model: " + messagesModel.count }
 
             Item { Layout.preferredHeight: 8 }
@@ -379,21 +418,17 @@ SplitView {
 
                     Layout.fillWidth: true
 
-                    enabled: !windowedView.movingUp && !windowedView.movingDown
+                    enabled: !windowedView.busy
 
                     from: 0
                     to: Math.max(messagesModel.count, root.initialMessageCount) - 1
                     stepSize: 10
                     editable: true
 
-                    value: windowedView.windowFirst
+                    value: windowSource.first
 
-                    onValueModified: {
-                        const size = windowedView.windowSize
-
-                        windowedView.windowFirst = value
-                        windowedView.windowLast = value + size - 1
-                    }
+                    onValueModified: windowSource.moveTo(value)
+                    // read-only on the source, so nothing else can desync it
                 }
             }
 
@@ -407,17 +442,14 @@ SplitView {
 
                     Layout.fillWidth: true
 
-                    enabled: !windowedView.movingUp && !windowedView.movingDown
+                    enabled: !windowedView.busy
 
                     from: 1
                     to: 1000
                     stepSize: 10
                     editable: true
 
-                    value: windowedView.windowSize
-
-                    onValueModified:
-                        windowedView.windowLast = windowedView.windowFirst + value - 1
+                    value: d.defaultWindowSize
                 }
             }
 
@@ -446,18 +478,18 @@ SplitView {
                     Layout.fillWidth: true
 
                     text: "Slide up"
-                    enabled: !windowedView.movingUp && !windowedView.movingDown
+                    enabled: !windowedView.busy && windowSource.moreAvailableStart
 
-                    onClicked: windowedView.slideWindowUp(slideStepSpinBox.value)
+                    onClicked: windowedView.requestMoreStart()
                 }
 
                 Button {
                     Layout.fillWidth: true
 
                     text: "Slide down"
-                    enabled: !windowedView.movingUp && !windowedView.movingDown
+                    enabled: !windowedView.busy && windowSource.moreAvailableEnd
 
-                    onClicked: windowedView.slideWindowDown(slideStepSpinBox.value)
+                    onClicked: windowedView.requestMoreEnd()
                 }
             }
 
@@ -474,10 +506,10 @@ SplitView {
                         Layout.preferredHeight: 10
 
                         radius: width / 2
-                        color: windowedView.movingUp ? "#2ecc71" : "#bdbdbd"
+                        color: windowedView.loadingStart ? "#2ecc71" : "#bdbdbd"
                     }
 
-                    Label { text: "Moving up" }
+                    Label { text: "Loading start" }
                 }
 
                 RowLayout {
@@ -488,10 +520,10 @@ SplitView {
                         Layout.preferredHeight: 10
 
                         radius: width / 2
-                        color: windowedView.movingDown ? "#2ecc71" : "#bdbdbd"
+                        color: windowedView.loadingEnd ? "#2ecc71" : "#bdbdbd"
                     }
 
-                    Label { text: "Moving down" }
+                    Label { text: "Loading end" }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -647,11 +679,12 @@ SplitView {
 
     // Kept across reloads, so a hot reload does not silently drop the view back
     // to whatever the default happened to be mid-experiment.
+    Component.onCompleted: windowSource.moveTo(root.restoredFirst)
+
     Settings {
         category: "WindowedViewPage"
 
-        property alias windowFirst: windowedView.windowFirst
-        property alias windowLast: windowedView.windowLast
+        property alias windowFirst: root.restoredFirst
         property alias slideStep: slideStepSpinBox.value
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked

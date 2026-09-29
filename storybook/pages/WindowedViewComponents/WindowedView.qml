@@ -2,39 +2,33 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 
-import SortFilterProxyModel
-import QtModelsToolkit
-
 /*
-  A view that renders only a window of its source model, and asks someone else
-  for the row content.
+  A view that renders the rows of whatever model it is given, stages what it is
+  told to wait for, and holds the viewport still.
 
-  It owns three things and nothing more:
+  It owns no window, no proxy and no fetch. When a placeholder edge comes into
+  reach it asks - moreRequestedStart/End - and whoever owns the data answers
+  however it likes: by moving an index window's bounds, or by calling a backend
+  that replies much later. Everything that arrives between the request and
+  moreLoadedStart/End() is one batch, revealed in a single frame once every row
+  of it has content and the heights have stopped moving.
 
-    the window   an IndexFilter slice [windowFirst, windowLast] of sourceModel.
-    the slide    moving that window by N rows in two phases - grow one end,
-                 and trim the other only once every incoming row is ready, so
-                 the two ends never change in the same frame.
-    the position the viewport is held still across a slide.
+  loadingStart/End belong to the view, set the moment it asks, because the view
+  is the only party that knows a request exists. The owner's obligation is one
+  call to moreLoadedStart/End() per request - whatever arrived, even nothing.
 
-  It knows no model roles, no delegate type and no cache. Row content arrives
-  through `acquireDelegate` and goes back through `releaseDelegate`; whoever
-  supplies those decides what a row looks like and whether items are recycled.
+  batchRevealed() fires inside the reveal, in the same turn: an owner that
+  defers removals (an index window trimming its far end) must do them there, or
+  the two ends change in different frames and the content height moves twice.
 
   Row contract: the item handed back must have an intrinsic implicitHeight and
   must not size itself to its parent - a row that does collapses to zero height
   with no warning.
-
-  Known limitation: which rows belong to a slide's batch is decided by when
-  their shells are created. Under an asynchronous ancestor - Storybook's "Load
-  pages asynchronously" setting, for instance - shells are created after the
-  slide has returned and the batch mis-counts. Capturing membership by row key
-  at mutation time is the fix, and is not done here.
-*/
-Flickable {
+*/Flickable {
     id: root
 
-    property var sourceModel: null
+    // The rows to render. Whoever owns it also owns what "more" means.
+    property var model: null
 
     // function(parent, modelRow, cb) - hand a row item back through cb(obj).
     // May answer synchronously or later; both are supported.
@@ -42,37 +36,52 @@ Flickable {
     // function(obj) - the item is no longer needed.
     property var releaseDelegate
 
-    // Written by the slide, so a caller must not bind these - assign them, and
-    // read them back through the change signal.
-    // The role that identifies a row. Batch membership is captured by key, not
-    // by when a shell happened to be created, so it survives an asynchronous
-    // ancestor and an insertion landing mid-slide. A model without this role
-    // still works - those rows simply reveal themselves individually instead of
-    // joining a batch.
+    // The role that identifies a row. A fetch admits an unknown number of rows,
+    // so membership in a batch is a set of keys rather than a count. A model
+    // without this role still works - those rows reveal themselves individually
+    // instead of joining a batch.
     property string keyRole: "key"
 
-    property int windowFirst: 0
-    property int windowLast: 59
+    // Set by whoever owns the data: is there anything beyond each end?
+    property bool moreAvailableStart: false
+    property bool moreAvailableEnd: false
 
-    readonly property int windowSize: root.windowLast - root.windowFirst + 1
     readonly property int rowCount: rowsRepeater.count
 
-    readonly property int sourceRowCount:
-        root.sourceModel ? root.sourceModel.ModelCount.count : 0
+    // A request is outstanding in that direction. The view owns these because
+    // it is the only party that knows it asked.
+    readonly property bool loadingStart: d.loadingStart
+    readonly property bool loadingEnd: d.loadingEnd
 
-    // True while a slide in that direction is waiting for its rows. "Up" means
-    // toward the beginning of the model.
-    readonly property bool movingUp: d.movingUp
-    readonly property bool movingDown: d.movingDown
+    // Either a request is outstanding or a batch is staged and unrevealed.
+    readonly property bool busy: d.loadingStart || d.loadingEnd || d.wave.length > 0
 
-    // Move the window, clamped to what the model has left. Returns how far it
-    // actually went; 0 if it could not move or a slide is already running.
-    function slideWindowUp(count) {
-        return d.startSlide(-count)
+    // "I would like more rows at this end." Nothing is promised.
+    signal moreRequestedStart()
+    signal moreRequestedEnd()
+
+    // Fired inside the reveal, in the same turn. An owner deferring removals
+    // must perform them in this handler.
+    signal batchRevealed()
+
+    // Asks for more at one end, once. Ignored while that end is loading or has
+    // nothing more to give.
+    function requestMoreStart() {
+        return d.request(true)
     }
 
-    function slideWindowDown(count) {
-        return d.startSlide(count)
+    function requestMoreEnd() {
+        return d.request(false)
+    }
+
+    // The owner's answer: whatever arrived, that is the batch. Called exactly
+    // once per request, even when nothing arrived.
+    function moreLoadedStart() {
+        d.loaded(true)
+    }
+
+    function moreLoadedEnd() {
+        d.loaded(false)
     }
 
     function itemAtRow(row) {
@@ -89,14 +98,16 @@ Flickable {
     QtObject {
         id: d
 
-        property bool movingUp: false
-        property bool movingDown: false
+        property bool loadingStart: false
+        property bool loadingEnd: false
 
-        readonly property bool moving: d.movingUp || d.movingDown
+        readonly property bool loading: d.loadingStart || d.loadingEnd
 
         // How far this slide is going, and how many of the rows it added are
         // still waiting for content. Rows count themselves in and out.
-        property int slideAmount: 0
+        // Which end the outstanding request was made at, so the anchor and the
+        // reveal know which side is growing.
+        property bool requestedAtStart: false
         // Keys admitted by the slide whose shells do not exist yet, and the
         // shells that have claimed one. A batch is complete when no key is
         // outstanding and every claimed shell has content.
@@ -248,28 +259,23 @@ Flickable {
             d.apply(Math.max(0, Math.min(d.bottomY(), target)))
         }
 
-        // Picks the row nearest the viewport top that will survive the trim.
-        // Returns whether it found one; a failure leaves any existing anchor
-        // alone rather than dropping it.
-        //
-        // Index-based on the *current* window, so it is equally valid before
-        // the bound moves and while a slide is in flight: sliding down the trim
-        // takes the first n rows, sliding up the last n, either way.
-        function armAnchor(delta, n) {
-            const count = rowsRepeater.count
-            const firstSurvivor = delta > 0 ? n : 0
-            const lastSurvivor = delta > 0 ? count - 1 : count - 1 - n
+        // Picks the visible row nearest the viewport edge that will survive.
+        // Growing at the start trims at the end, so a row at the top is safe;
+        // growing at the end trims at the start, so it is the bottom. Returns
+        // whether it found one; a failure leaves any existing anchor alone.
+        function armAnchor(atStart) {
+            const edge = atStart ? root.contentY : root.contentY + root.height
 
             let best = null
             let bestDistance = Number.MAX_VALUE
 
-            for (let i = firstSurvivor; i <= lastSurvivor; ++i) {
+            for (let i = 0; i < rowsRepeater.count; ++i) {
                 const item = rowsRepeater.itemAt(i)
 
                 if (!item || !item.visible)
                     continue
 
-                const distance = Math.abs(item.y - root.contentY)
+                const distance = Math.abs(item.y - edge)
 
                 if (distance < bestDistance) {
                     bestDistance = distance
@@ -291,12 +297,12 @@ Flickable {
         // user has just put the view instead. Outside a slide the anchor has no
         // work to do.
         function userMoved() {
-            if (!d.moving) {
+            if (!d.loading && d.wave.length === 0) {
                 d.releaseAnchor()
                 return
             }
 
-            if (d.armAnchor(d.movingDown ? 1 : -1, d.slideAmount))
+            if (d.armAnchor(d.requestedAtStart))
                 return
 
             // Nothing that survives is on screen: the user has scrolled into
@@ -307,80 +313,64 @@ Flickable {
                 d.anchorOffset = d.anchorItem.y - root.contentY
         }
 
-        // IndexFilter judges a row by its position, and QSortFilterProxyModel
-        // never re-tests a row it has already judged: an insertion renumbers
-        // the rows after it, so accepted rows stay accepted past maximumIndex
-        // and rejected rows never come back into range.
-        //
-        // Wired from the proxy's own sourceModelChanged rather than from a
-        // handler on the model, because the order matters: re-filtering from a
-        // slot that runs before the proxy has processed the same change is at
-        // best undone, and on a removal leaves empty rows behind.
-        // QAbstractProxyModel emits sourceModelChanged after wiring its
-        // internal connections, so this lands after the proxy's own handler.
-        function rewireInvalidation() {
-            if (d.wiredModel) {
-                d.wiredModel.rowsInserted.disconnect(windowFilter.invalidated)
-                d.wiredModel.rowsRemoved.disconnect(windowFilter.invalidated)
-            }
+        // Asks the owner for more at one end. Nothing is admitted here - the
+        // owner may answer inside this call by moving a window's bounds, or much
+        // later from a backend. Either way every row that arrives before
+        // moreLoaded*() is one batch.
+        function request(atStart) {
+            if (d.loading)
+                return false
 
-            d.wiredModel = windowModel.sourceModel
+            if (atStart ? !root.moreAvailableStart : !root.moreAvailableEnd)
+                return false
 
-            if (d.wiredModel) {
-                d.wiredModel.rowsInserted.connect(windowFilter.invalidated)
-                d.wiredModel.rowsRemoved.connect(windowFilter.invalidated)
-            }
-        }
-
-        // Grows the window at one end and leaves the other alone. The opposite
-        // end is trimmed in completeWave(), once every row added here has
-        // content.
-        function startSlide(delta) {
-            if (d.moving)
-                return 0
-
-            const room = delta > 0 ? root.sourceRowCount - 1 - root.windowLast
-                                   : root.windowFirst
-            const n = Math.min(Math.abs(delta), room)
-
-            if (n <= 0)
-                return 0
-
-            d.slideAmount = n
-            d.stagedKeys = new Set()
             d.wave = []
+            d.stagedKeys = new Set()
             d.noProgressIntervals = 0
 
-            // Before anything moves, while the geometry is still settled.
+            // Armed before anything can arrive, while the geometry is settled.
+            // Requesting at the start grows above and trims below, so a row at
+            // the viewport top survives; at the end it is the other way round.
             d.releaseAnchor()
-            d.armAnchor(delta, n)
+            d.armAnchor(atStart)
 
+            d.requestedAtStart = atStart
+
+            if (atStart)
+                d.loadingStart = true
+            else
+                d.loadingEnd = true
+
+            // Rows admitted synchronously inside the signal are captured by the
+            // model connection below, and shells built inside it stage
+            // themselves because loading is already true.
             d.admitting = true
 
-            if (delta > 0) {
-                d.movingDown = true
-                root.windowLast += n
-            } else {
-                d.movingUp = true
-                root.windowFirst -= n
-            }
+            if (atStart)
+                root.moreRequestedStart()
+            else
+                root.moreRequestedEnd()
 
             d.admitting = false
 
-            // Nothing outstanding means a warm cache answered every row inside
-            // the bound assignment; otherwise the stall detector guards the wait.
-            if (d.stagedKeys.size === 0 && d.waveWaiting().length === 0)
-                d.beginSettling()
-            else
-                acquireTimer.restart()
-
-            return n
+            acquireTimer.restart()
+            d.checkWaveComplete()
+            return true
         }
 
-        // Reveals the batch, drops the far end, and puts the viewport back
-        // where it was. Only the change *above* the viewport moves anything on
-        // screen, and every surviving row shifts by the same amount, so any one
-        // of them serves as the reference.
+        // The owner is done. Whatever arrived is the batch; it may be nothing.
+        function loaded(atStart) {
+            if (atStart ? !d.loadingStart : !d.loadingEnd)
+                return      // no request outstanding at that end
+
+            if (atStart)
+                d.loadingStart = false
+            else
+                d.loadingEnd = false
+
+            d.checkWaveComplete()
+        }
+
         // Reveals the rows of the current wave that have arrived, and - on the
         // first wave of a slide - drops the far end. Rows still waiting stay
         // staged and become the next wave, so a slow row delays its own reveal
@@ -401,18 +391,9 @@ Flickable {
 
             d.wave = d.waveWaiting()
 
-            // The trim belongs to the slide and happens once, with the first
-            // wave: that is what makes the two ends change together.
-            if (d.slideAmount > 0) {
-                if (d.movingDown)
-                    root.windowFirst += d.slideAmount
-                else
-                    root.windowLast -= d.slideAmount
-
-                d.slideAmount = 0
-                d.movingUp = false
-                d.movingDown = false
-            }
+            // In this same turn, so rows leaving and rows appearing change the
+            // content together. An owner that defers removals trims here.
+            root.batchRevealed()
 
             // The heights are final by now, so this pass is exact rather than
             // provisional - no late correction is needed.
@@ -431,12 +412,20 @@ Flickable {
         // the batch, which the row remembers so it reports back exactly once.
         // Called from the proxy as rows enter, before the Repeater has built
         // anything for them.
+        // SortFilterProxyModel exposes get(row, role); a bare QAbstractItemModel
+        // does not, and then only the shell-side claim stages a row.
+        function keyAt(row) {
+            return root.model && root.model.get
+                 ? root.model.get(row, root.keyRole) : undefined
+        }
+
+        // Rows entering while a request is outstanding are that request's batch.
         function captureStagedRows(first, last) {
-            if (!d.admitting)
+            if (!d.loading)
                 return
 
             for (let i = first; i <= last; ++i) {
-                const key = windowModel.get(i, root.keyRole)
+                const key = d.keyAt(i)
 
                 if (key === undefined || key === null) {
                     if (!d.keyWarningShown) {
@@ -462,7 +451,7 @@ Flickable {
             let dropped = false
 
             for (let i = first; i <= last; ++i) {
-                const key = windowModel.get(i, root.keyRole)
+                const key = d.keyAt(i)
 
                 if (key !== undefined && key !== null && d.stagedKeys.delete(key))
                     dropped = true
@@ -516,13 +505,16 @@ Flickable {
             d.checkWaveComplete()
         }
 
-        // Not gated on d.moving: a wave can outlive the slide that created it.
+        // Not gated on loading: a wave can outlive the request that created it.
         function checkWaveComplete() {
             if (d.finishing || d.admitting)
                 return
 
             if (d.wave.length === 0)
                 return
+
+            if (d.loading)
+                return      // the owner has not finished admitting rows
 
             if (d.stagedKeys.size > 0 || d.waveWaiting().length > 0)
                 return
@@ -564,31 +556,27 @@ Flickable {
 
     }
 
-    SortFilterProxyModel {
-        id: windowModel
+    // The view does not own the model, so the staging handlers live here.
+    // Ordering against the Repeater's own connection is deliberately not relied
+    // on: a shell built before its key was captured stages itself because a
+    // request is outstanding, and one built afterwards claims the key.
+    Connections {
+        target: root.model
 
-        sourceModel: root.sourceModel
-
-        filters: IndexFilter {
-            id: windowFilter
-
-            minimumIndex: root.windowFirst
-            maximumIndex: root.windowLast
+        function onRowsInserted(parent, first, last) {
+            d.captureStagedRows(first, last)
         }
 
-        onSourceModelChanged: d.rewireInvalidation()
-
-        // Declared on the proxy itself so these run before the Repeater's: a
-        // shell built synchronously must already find its key captured.
-        onRowsInserted: (parent, first, last) => d.captureStagedRows(first, last)
         // aboutToBeRemoved, while the key is still readable
-        onRowsAboutToBeRemoved: (parent, first, last) => d.dropStagedRows(first, last)
-        // a reset removes every row with no per-row signal
-        onModelAboutToBeReset: {
-            d.clearStaging()
+        function onRowsAboutToBeRemoved(parent, first, last) {
+            d.dropStagedRows(first, last)
+        }
 
-            if (d.moving)
-                d.completeWave()
+        // a reset removes every row with no per-row signal
+        function onModelAboutToBeReset() {
+            d.clearStaging()
+            d.loadingStart = false
+            d.loadingEnd = false
         }
     }
 
@@ -656,7 +644,7 @@ Flickable {
         Repeater {
             id: rowsRepeater
 
-            model: windowModel
+            model: root.model
 
             // A shell: it holds the row's place and its content, and knows
             // nothing about what the content is.
@@ -696,7 +684,10 @@ Flickable {
                     if (!root.acquireDelegate)
                         return
 
-                    shell.staged = d.claimStagedRow(shell)
+                    // Either its key was captured before the Repeater built it,
+                    // or the Repeater won the race and the outstanding request
+                    // is what tells it to wait. Both mean the same thing.
+                    shell.staged = d.claimStagedRow(shell) || d.loading
 
                     root.acquireDelegate(shell, shell.model, (obj) => {
                         // The row can be gone by the time a deferred answer

@@ -4,6 +4,7 @@ ClippingWrapper 0.1 ClippingWrapper.qml
 DoubleFlickable 0.1 DoubleFlickable.qml
 DoubleFlickableWithFolding 0.1 DoubleFlickableWithFolding.qml
 EmojiJSON 1.0 emojiList.js
+IndexWindowSource 0.1 IndexWindowSource.qml
 JSONListModel 0.1 JSONListModel.qml
 LazyStackLayout 0.1 LazyStackLayout.qml
 ModelChangeGuard 0.1 ModelChangeGuard.qml
