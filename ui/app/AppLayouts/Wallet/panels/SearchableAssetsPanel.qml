@@ -29,7 +29,22 @@ Control {
     /**
         Expected model structure:
 
-        key                     [string] - refers to token group key
+        key                     [string] - unique row key. For an ordinary row this is the token
+                                           group key. Only the split-off row described under
+                                           groupKey has a different key (the group key plus a suffix).
+        groupKey (optional)     [string] - token group the row belongs to; when absent, key is used.
+                                           The panel selects, highlights and excludes rows by groupKey,
+                                           so a click on any row of a group reports that group.
+
+                                           Why two rows can share a groupKey: with no chain filter
+                                           ("All") the list shows a holding once per chain. A token
+                                           the account holds on some chains is listed by those
+                                           chains under "Your assets". The chains it is deployed on
+                                           but not held on would otherwise vanish, so the model adds
+                                           a second row for them: its own key, the same groupKey,
+                                           no balances, and tokens = the unheld chains. It sorts
+                                           into "Popular assets" and renders one zero-balance row
+                                           per deployed chain.
         name                    [string] - name
         symbol                  [string] - symbol
         decimals                [int] - decimals
@@ -44,6 +59,9 @@ Control {
             chainName       [string] - network name
             balance         [double] - balance in logical units (already divided by decimals)
             rawBalance      [string] - raw on-chain wei as a BigInt string
+        tokens (optional)   [model]  - one entry per chain the token is deployed on
+            chainId         [int]    - token's chain id
+            key             [string] - token key on that chain
     **/
     property var model
     property string highlightedKey
@@ -74,7 +92,8 @@ Control {
     property bool hasMoreItems: false
     property bool isLoadingMore: false
 
-    /** with no chain filter, list a holding once per chain it sits on **/
+    /** with no chain filter, list a holding once per chain it sits on: per chain
+        held, or, with nothing held, per chain deployed **/
     readonly property bool expandPerChain: !!root.flatNetworksModel && root.selectedChainId === -1
 
     signal search(string keyword)
@@ -229,13 +248,30 @@ Control {
                 readonly property ModelChangeTracker balancesTracker: ModelChangeTracker {
                     model: holdingRows.model.balances
                 }
+                readonly property ModelChangeTracker tokensTracker: ModelChangeTracker {
+                    model: holdingRows.model.tokens
+                }
+
+                /** the group the rows select; the zero-balance row split off a held token has its own key **/
+                readonly property string groupKey: holdingRows.model.groupKey || holdingRows.model.key
 
                 readonly property var chainRows: {
                     holdingRows.balancesTracker.revision
-                    const balances = holdingRows.model.balances
-                    if (!root.expandPerChain || !balances || balances.count < 2)
+                    holdingRows.tokensTracker.revision
+                    if (!root.expandPerChain)
                         return [null]
-                    return ModelUtils.modelToArray(balances, ["chainId", "balance"])
+                    const balances = holdingRows.model.balances
+                    if (!!balances && balances.ModelCount.count > 0) {
+                        if (balances.ModelCount.count < 2)
+                            return [null]
+                        return ModelUtils.modelToArray(balances, ["chainId", "balance"])
+                    }
+                    // nothing held: one row per chain the token is deployed on, at zero
+                    const tokens = holdingRows.model.tokens
+                    if (!tokens || tokens.ModelCount.count === 0)
+                        return [null]
+                    return ModelUtils.modelToArray(tokens, ["chainId"])
+                                     .map(t => ({ chainId: t.chainId, balance: 0 }))
                 }
 
                 /** the rendered rows for this holding; 1 unless split per chain **/
@@ -271,8 +307,12 @@ Control {
                         width: holdingRows.width
 
                         chainId: rowChainId
-                        highlighted: holding.key === root.highlightedKey
-                                     && (rowChainId === -1 || rowChainId === root.highlightedChainId)
+                        // an aggregate row stands for the chain it resolves to, so a held
+                        // token's row and its unheld-chains rows never light up together
+                        readonly property int rowChain: rowChainId !== -1 ? rowChainId : assetDelegate.resolvedChainId
+                        highlighted: holdingRows.groupKey === root.highlightedKey
+                                     && (root.highlightedChainId === -1 || rowChain === -1
+                                         || rowChain === root.highlightedChainId)
                         readonly property int effectiveChainId: rowChainId !== -1 ? rowChainId
                                                                                   : root.selectedChainId
                         readonly property bool selectableOnAnotherChain: {
@@ -287,7 +327,7 @@ Control {
                                     return true
                             return false
                         }
-                        enabled: holding.key !== root.nonInteractiveKey
+                        enabled: holdingRows.groupKey !== root.nonInteractiveKey
                                  || (root.nonInteractiveChainId !== -1
                                      && ((effectiveChainId !== -1
                                           && effectiveChainId !== root.nonInteractiveChainId)
@@ -310,7 +350,7 @@ Control {
                         defaultNetworkIcon: root.defaultNetworkIcon
                         flatNetworksModel: root.flatNetworksModel
 
-                        onClicked: root.selected(holding.key, rowChainId)
+                        onClicked: root.selected(holdingRows.groupKey, rowChainId)
 
                         onContractAddressClicked: {
                             const explorerUrl = ModelUtils.getByKey(root.flatNetworksModel, "chainId", resolvedChainId, "blockExplorerURL")
