@@ -55,6 +55,10 @@ Control {
     onSelectedAccountAddressChanged: {
         reevaluateSelectedId()
     }
+
+    // the list holds only what the account owns (no catalog behind it), so an empty
+    // list is a settled answer, not a catalog still being built
+    property bool ownedTokensOnly: false
     property string nonInteractiveGroupKey
     property int nonInteractiveChainId: -1
 
@@ -219,7 +223,7 @@ Control {
         // may hold another side's chain while a shared picker is scoped to it.
         readonly property bool listSettled: !!root.tokenSelectorModel
                                             && !root.tokenSelectorLoading
-                                            && root.tokenSelectorModel.count > 0
+                                            && (root.ownedTokensOnly || root.tokenSelectorModel.count > 0)
                                             && root.tokenSelectorModel.searchString === ""
                                             && (root.catalogChainId === -1
                                                 || root.catalogChainId === root.listCatalogChainId)

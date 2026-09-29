@@ -31,6 +31,7 @@ when defined(QT_MODEL_SPY):
 type
   ModelRole {.pure.} = enum
     Key = UserRole + 1
+    GroupKey
     Name
     Symbol
     LogoUri
@@ -103,6 +104,7 @@ QtObject:
   method roleNames(self: TokenSelectorModel): Table[int, string] =
     {
       ModelRole.Key.int: "key",
+      ModelRole.GroupKey.int: "groupKey",
       ModelRole.Name.int: "name",
       ModelRole.Symbol.int: "symbol",
       ModelRole.LogoUri.int: "logoUri",
@@ -123,6 +125,7 @@ QtObject:
     let item = self.items[index.row]
     case role.ModelRole:
     of ModelRole.Key: return newQVariant(item.key)
+    of ModelRole.GroupKey: return newQVariant(item.groupKey)
     of ModelRole.Name: return newQVariant(item.name)
     of ModelRole.Symbol: return newQVariant(item.symbol)
     of ModelRole.LogoUri: return newQVariant(item.logoUri)
@@ -239,7 +242,7 @@ QtObject:
         popularGroups = self.source.getPopular()
     self.setSourceItems(buildDisplayItems(
       self.ownedGroups, self.networks, self.params, self.mode, searching,
-      popularGroups, searchGroups))
+      popularGroups, searchGroups, self.searchKeyword))
 
   proc setOwnedSource*(self: TokenSelectorModel, groups: seq[AggTokenGroup],
       networks: seq[NetworkInfo]) =
@@ -387,6 +390,8 @@ QtObject:
       self.items.mapIt(it.key)
     proc sectionNameAtForTest*(self: TokenSelectorModel, i: int): string =
       self.sectionNameFor(self.items[i])
+    proc groupKeyAtForTest*(self: TokenSelectorModel, i: int): string =
+      self.items[i].groupKey
     proc decimalsAtForTest*(self: TokenSelectorModel, i: int): int =
       self.items[i].decimals
     proc cryptoPriceAtForTest*(self: TokenSelectorModel, i: int): float =

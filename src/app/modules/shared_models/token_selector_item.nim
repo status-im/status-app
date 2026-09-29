@@ -23,7 +23,8 @@ type
     chainId*: int
 
   TokenSelectorItem* = object
-    key*: string
+    key*: string             ## row key: the group key, or unheldRowKey(groupKey) for the split-off row
+    groupKey*: string        ## token group the row stands for; the pickers select and highlight by it
     name*: string
     symbol*: string
     logoUri*: string

@@ -177,6 +177,10 @@ Item {
             if (root.swapFormData.selectedNetworkChainId === -1) {
                 root.swapFormData.selectedNetworkChainId = 1
             }
+            // a launch always names the paying account; the pickers wait for it
+            if (root.swapFormData.selectedAccountAddress === "") {
+                root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
+            }
 
             controlUnderTest.open()
             tryVerify(() => controlUnderTest.opened)
@@ -2445,6 +2449,77 @@ Item {
         // The receive side always gets its own destination picker on open (so
         // browsing either side's list can't disturb the other), seeded like the
         // pay one; switching to a bridge afterwards must not build anything new.
+        // The handler fills the form only after the modal has opened, so the pickers
+        // must not be seeded before the paying account is known: with no account the
+        // owned source spans every account, and the pay side would show a token some
+        // other account holds, with that account's balance.
+        function test_payPickerWaitsForTheAccountAndListsOnlyItsHoldings() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const accounts = root.swapAdaptor.swapStore.accounts
+            const emptyAccount = SQUtils.ModelUtils.get(accounts, 1, "address")
+            const fundedAccount = SQUtils.ModelUtils.get(accounts, 0, "address")
+            verify(!!emptyAccount && !!fundedAccount && emptyAccount !== fundedAccount)
+            store.tokenSelectorEmptyAccounts = [emptyAccount]
+
+            root.swapFormData.selectedNetworkChainId = 1
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            verify(!!payPanel)
+            const holdingSelector = findChild(payPanel, "holdingSelector")
+            verify(!!holdingSelector)
+            const balanceLine = findChild(payPanel, "balanceLine")
+            verify(!!balanceLine)
+
+            // no account yet: no list to pick from, nothing selected
+            wait(100) // the deferred picker creation has run by now
+            verify(!payPanel.tokenSelectorModel, "pay picker attached before the account is known")
+            compare(holdingSelector.isSelected, false)
+
+            root.swapFormData.selectedAccountAddress = emptyAccount
+            tryVerify(() => !!payPanel.tokenSelectorModel)
+            // filtered to the account before any panel could resolve a selection from it
+            compare(payPanel.tokenSelectorModel.accountAddress, emptyAccount)
+            compare(payPanel.tokenSelectorModel.count, 0)
+            tryCompare(holdingSelector, "isSelected", false)
+            verify(!balanceLine.visible)
+            compare(payPanel.rawValue, "0")
+
+            // an account with holdings gets its list and the default selection
+            root.swapFormData.selectedAccountAddress = fundedAccount
+            tryVerify(() => payPanel.tokenSelectorModel.count > 0)
+            tryCompare(holdingSelector, "isSelected", true)
+            tryVerify(() => balanceLine.visible)
+
+            store.tokenSelectorEmptyAccounts = []
+            closeAndVerfyModal()
+        }
+
+        // Switching to an account that holds nothing empties the owned list; that is
+        // a settled state, so the stale selection and its balance must go.
+        function test_switchingToAnAccountWithNoHoldingsClearsThePaySelection() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const accounts = root.swapAdaptor.swapStore.accounts
+            const emptyAccount = SQUtils.ModelUtils.get(accounts, 1, "address")
+            store.tokenSelectorEmptyAccounts = [emptyAccount]
+
+            launchAndVerfyModal()
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            const holdingSelector = findChild(payPanel, "holdingSelector")
+            const balanceLine = findChild(payPanel, "balanceLine")
+            tryCompare(holdingSelector, "isSelected", true)
+            tryVerify(() => balanceLine.visible)
+
+            root.swapFormData.selectedAccountAddress = emptyAccount
+            tryCompare(payPanel.tokenSelectorModel, "count", 0)
+            tryCompare(holdingSelector, "isSelected", false)
+            verify(!balanceLine.visible)
+            compare(payPanel.rawValue, "0")
+
+            store.tokenSelectorEmptyAccounts = []
+            closeAndVerfyModal()
+        }
+
         function test_receivePickerIsBuiltAndSeededOnOpen() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
             store.createdKinds = []

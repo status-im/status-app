@@ -18,12 +18,12 @@ import ./io_interface, ./view, ./controller
 export io_interface
 
 # Picker kinds the createModel factory understands (mirrors the retired
-# TokenSelectorViewAdaptor configurations at the three call sites).
+# TokenSelectorViewAdaptor configurations at the call sites).
 const
-  KIND_SEND = 0      # owned-only list; search filtered to owned
-  KIND_SWAP = 1      # all-tokens (lazy tokenGroupsForChainModel, source chain) + search
+  KIND_SEND = 0      # owned-only list (send, swap pay side); search filtered to owned
+  KIND_SWAP = 1      # all-tokens (lazy tokenGroupsForChainModel, source chain) + search (unused)
   KIND_BUY  = 2      # all-tokens (non-lazy tokenGroupsModel), no search
-  KIND_SWAP_TO = 3   # bridge receive: all-tokens on the destination (tokenGroupsForChainToModel) + search
+  KIND_SWAP_TO = 3   # swap receive: all-tokens on the destination (tokenGroupsForChainToModel) + search
 
 type
   Module* = ref object of io_interface.AccessInterface
@@ -139,20 +139,16 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
   let searchModel = atm.getSearchResultModelObj()
 
   var source: TokenSelectorSource
-  # Search source (send + swap + bridge receive): snapshot the lazy search-result model.
-  if kind == KIND_SEND or kind == KIND_SWAP or kind == KIND_SWAP_TO:
-    source.getSearch = proc(): seq[PopularGroup] = self.toPopularGroups(searchModel.getLoadedGroups())
-    source.doSearch = proc(keyword: string) = searchModel.search(keyword)
-
   var mode = TokenSelectorMode.Owned
   case kind:
-  of KIND_SWAP, KIND_SWAP_TO:
+  of KIND_SWAP_TO:
     mode = TokenSelectorMode.AllTokens
-    # Swap pay side + same-chain receive draw the source-chain catalog; the bridge
-    # receive side draws the destination-chain catalog. Both drive lazy loading
-    # against their own popular model, and search against the shared search model.
-    let popularModel = if kind == KIND_SWAP_TO: atm.getTokenGroupsForChainToModelObj()
-                       else: atm.getTokenGroupsForChainModelObj()
+    # search against the shared, lazily paged search-result model
+    source.getSearch = proc(): seq[PopularGroup] = self.toPopularGroups(searchModel.getLoadedGroups())
+    source.doSearch = proc(keyword: string) = searchModel.search(keyword)
+    # The receive side draws the destination-chain catalog: lazy loading against
+    # its popular model, search against the shared search model.
+    let popularModel = atm.getTokenGroupsForChainToModelObj()
     source.getPopular = proc(): seq[PopularGroup] = self.toPopularGroups(popularModel.getLoadedGroups())
     let allChainsModel = atm.getTokenGroupsAllChainsModelObj()
     source.getPopularAllChains = proc(): seq[PopularGroup] = self.toPopularGroups(allChainsModel.getLoadedGroups())
@@ -173,14 +169,11 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
     source.getPopular = proc(): seq[PopularGroup] = self.toPopularGroups(popularModel.getLoadedGroups())
     # tokenGroupsModel is non-lazy: no fetchMore / hasMore.
   else:
-    # KIND_SEND: owned list; search results filtered to owned. Lazy loading on the
-    # search source only.
-    source.fetchMore = proc(searching: bool) =
-      if searching: searchModel.fetchMore()
-    source.hasMore = proc(searching: bool): bool =
-      if searching: searchModel.hasMoreItemsForSource() else: false
-    source.isLoadingMore = proc(searching: bool): bool =
-      if searching: searchModel.isLoadingMoreForSource() else: false
+    # KIND_SEND: the owned list, searched in place by the model (searchOwned): the
+    # holdings are in memory, so no catalog source and nothing to page. Paging the
+    # catalog and keeping the held hits showed "Loading more tokens..." for as
+    # long as the catalog had matches, over a list of a few rows.
+    discard
 
   let model = newTokenSelectorModel(mode)
   model.setSource(source)
@@ -190,7 +183,7 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
   # Seed with the current owned source so the model is populated immediately.
   let (groups, networks) = self.buildOwnedSource()
   model.setOwnedSource(groups, networks)
-  if kind == KIND_SEND or kind == KIND_SWAP or kind == KIND_SWAP_TO:
+  if kind == KIND_SWAP_TO:
     atm.fetchAllChainsTokenGroupsForKeys(groups.mapIt(it.key))
   return (id, model)
 
@@ -210,8 +203,6 @@ method load*(self: Module) =
     self.pushOwnedSource()
   self.events.on(SIGNAL_TOKEN_PREFERENCES_UPDATED) do(e: Args):
     self.pushOwnedSource()
-  self.events.on(SIGNAL_GROUPS_FOR_CHAIN_LOADED) do(e: Args):
-    self.refreshModels()
   self.events.on(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED) do(e: Args):
     self.refreshModels()
   self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):

@@ -542,18 +542,21 @@ proc setItemsWithSync*[T](
       countChanged()
     return
 
-  # Fast path: full clear (N -> empty).
+  # Fast path: full clear (N -> empty), as ONE removal, not a reset. A reset
+  # invalidates every persistent index, and a key-bound tracker (ModelEntry)
+  # compares its now-invalid index with the invalid "not found" one, sees no
+  # change and keeps the vanished row as available; a removal tells it plainly.
   if items.len > 0 and newItems.len == 0:
     let parentIndex = newQModelIndex()
     defer: parentIndex.delete
-    when defined(QT_MODEL_SPY):
-      recordBeginResetModel()
-    model.beginResetModel()
     let oldLen = items.len
-    items.setLen(0)
-    model.endResetModel()
     when defined(QT_MODEL_SPY):
-      recordEndResetModel()
+      recordBeginRemoveRows(0, oldLen - 1)
+    model.beginRemoveRows(parentIndex, 0, oldLen - 1)
+    items.setLen(0)
+    model.endRemoveRows()
+    when defined(QT_MODEL_SPY):
+      recordEndRemoveRows()
     if not onRemove.isNil:
       for i in countdown(oldLen - 1, 0):
         onRemove(i)

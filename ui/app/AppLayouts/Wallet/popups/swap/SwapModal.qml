@@ -87,11 +87,27 @@ StatusDialog {
         property var payTokenSelector: null
         property var receiveTokenSelector: null
 
+        // The handler fills the form after the modal has opened, so the paying account
+        // may not be known yet: wait for it, and filter each picker to its account
+        // before a panel can see it. A picker without an account spans every account,
+        // and the panels resolve their selection the moment one is attached, before
+        // their own account binding lands.
         function createPickers() {
+            const form = root.swapInputParamsForm
+            if (!form.selectedAccountAddress)
+                return
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
             if (!d.payTokenSelector) {
-                d.payTokenSelector = store.createTokenSelectorModel(1)
-                d.receiveTokenSelector = store.createTokenSelectorModel(3)
+                // the pay side offers what the account holds; the receive side the
+                // destination chain's catalog
+                const pay = store.createTokenSelectorModel(0)
+                const receive = store.createTokenSelectorModel(3)
+                if (pay.model)
+                    pay.model.accountAddress = form.selectedAccountAddress
+                if (receive.model)
+                    receive.model.accountAddress = form.toAccountAddress || form.selectedAccountAddress
+                d.payTokenSelector = pay
+                d.receiveTokenSelector = receive
             }
             payPanel.reset()
             receivePanel.reset()
@@ -293,6 +309,12 @@ StatusDialog {
             d.fetchSuggestedRoutes()
         }
 
+        function onSelectedAccountAddressChanged() {
+            // the pickers were waiting for the account
+            if (root.opened && !d.payTokenSelector)
+                d.createPickers()
+        }
+
 
         function onFromGroupKeyChanged() {
             payPanel.groupKey = root.swapInputParamsForm.fromGroupKey
@@ -435,8 +457,12 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    // null until the deferred createPickers runs post-open
-                    tokenSelectorModel: d.payTokenSelector ? d.payTokenSelector.model : null
+                    // null until the deferred createPickers runs post-open, and until
+                    // the paying account is known (the handler fills the form after the
+                    // open): without an account the owned source spans every account
+                    tokenSelectorModel: d.payTokenSelector && !!root.swapInputParamsForm.selectedAccountAddress
+                                        ? d.payTokenSelector.model : null
+                    ownedTokensOnly: true
 
                     groupKey: root.swapInputParamsForm.fromGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultFromGroupKey
@@ -498,7 +524,9 @@ StatusDialog {
 
                     currencyStore: root.swapAdaptor.currencyStore
                     flatNetworksModel: root.swapAdaptor.networksStore.activeNetworks
-                    tokenSelectorModel: d.receiveTokenSelector ? d.receiveTokenSelector.model : null
+                    // see the pay side: balances need the receiving account first
+                    tokenSelectorModel: d.receiveTokenSelector && !!receivePanel.selectedAccountAddress
+                                        ? d.receiveTokenSelector.model : null
 
                     groupKey: root.swapInputParamsForm.toGroupKey
                     defaultGroupKey: root.swapInputParamsForm.defaultToGroupKey
