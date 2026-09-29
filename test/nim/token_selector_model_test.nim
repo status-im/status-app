@@ -154,6 +154,15 @@ suite "TokenSelectorModel - sort and sections":
     check spy.countInserts() == 0
     check spy.countResets() == 0
 
+  test "clearing every row is one removal, not a reset (a key-bound ModelEntry must see its row go)":
+    let m = newTokenSelectorModel()
+    m.setSourceItems(@[mkItem("a", currencyBalance = 3.0), mkItem("b", currencyBalance = 2.0)])
+    spy.clear()
+    m.setSourceItems(@[])
+    check m.keysInOrder().len == 0
+    check spy.countRemoves() == 1
+    check spy.countResets() == 0
+
   test "setSectionNames re-emits sectionName for all rows without a reset":
     let m = newTokenSelectorModel()
     m.setSectionNames("Owned", "Popular")
@@ -423,6 +432,36 @@ suite "TokenSelectorModel - producer-driven recompute":
     m.fetchMore()
     check fetchMoreCalls == 1
     check fetchMoreAllCalls == 1
+
+  test "\"All\": the unheld chains of a held token surface as a popular row of the same group":
+    let m = newTokenSelectorModel(TokenSelectorMode.AllTokens)
+    var source: TokenSelectorSource
+    source.getPopularAllChains = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "SNT", name: "SNT", symbol: "SNT",
+                     tokens: @[(key: "snt:1", chainId: 1), (key: "snt:10", chainId: 10)]),
+        PopularGroup(key: "DAI", name: "DAI", symbol: "DAI",
+                     tokens: @[(key: "dai:1", chainId: 1)])]
+    # the chain-1 catalog, drawn once a chain filter is set
+    source.getPopular = proc(): seq[PopularGroup] =
+      @[PopularGroup(key: "SNT", name: "SNT", symbol: "SNT",
+                     tokens: @[(key: "snt:1", chainId: 1)])]
+    m.setSource(source)
+    m.setSectionNames("Your assets", "Popular assets")
+    var g = AggTokenGroup(key: "SNT", name: "SNT", symbol: "SNT", decimals: 18,
+      marketPrice: 1.0,
+      balances: @[AggBalance(account: "0xA", chainId: 1, balance: parse("1000000000000000000", UInt256))])
+    g.tokens = @[(key: "snt:1", chainId: 1), (key: "snt:10", chainId: 10)]
+    m.setOwnedSource(@[g], networks)
+    check m.keysInOrder() == @["SNT", unheldRowKey("SNT"), "DAI"]
+    check m.groupKeyAtForTest(1) == "SNT"
+    check m.sectionNameAtForTest(0) == "Your assets"
+    check m.sectionNameAtForTest(1) == "Popular assets"
+    let tm = m.tokensModelForKey(unheldRowKey("SNT"))
+    check tm != nil
+    check tm.tokenRefs() == @[TokenSelectorTokenRef(key: "snt:10", chainId: 10)]
+    # a chain filter folds it back into the one row
+    m.setEnabledChainId(1)
+    check m.keysInOrder() == @["SNT"]
 
   test "tokens submodel exposes per-chain token refs for a row":
     let m = newTokenSelectorModel(TokenSelectorMode.Owned)

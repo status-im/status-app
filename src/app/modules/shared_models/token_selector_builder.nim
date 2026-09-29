@@ -93,6 +93,7 @@ proc buildTokenSelectorItems*(groups: seq[AggTokenGroup],
     let currentBalance = toFloatUnits(total, g.decimals)
     result.add(TokenSelectorItem(
       key: g.key,
+      groupKey: g.key,
       name: g.name,
       symbol: g.symbol,
       logoUri: g.logoUri,
@@ -129,7 +130,7 @@ proc mergePopularWithOwned*(popular: seq[PopularGroup],
     if p.communityId.len > 0 and not showCommunityAssets:
       continue
     var item = TokenSelectorItem(
-      key: p.key, name: p.name, symbol: p.symbol, logoUri: p.logoUri,
+      key: p.key, groupKey: p.key, name: p.name, symbol: p.symbol, logoUri: p.logoUri,
       communityId: p.communityId, decimals: p.decimals, marketPrice: p.marketPrice,
       tokens: p.tokens.mapIt(TokenSelectorTokenRef(key: it.key, chainId: it.chainId)))
     if ownedByKey.hasKey(p.key):
@@ -170,31 +171,121 @@ proc filterToEnabledChains(items: seq[TokenSelectorItem],
         return true
     false)
 
+const UNHELD_ROW_KEY_SUFFIX = "#unheld"
+
+proc unheldRowKey*(groupKey: string): string =
+  ## Key of the row listing the chains a held token is deployed on but not held on.
+  groupKey & UNHELD_ROW_KEY_SUFFIX
+
+proc splitOffUnheldChains(items: seq[TokenSelectorItem]): seq[TokenSelectorItem] =
+  ## "All" lists a holding once per chain, and the section tells held from not held.
+  ## A held token's other deployments are neither: the rows follow the chips, so
+  ## they would vanish, or sit under "Your assets" at zero. They get a row of their
+  ## own that sorts into the popular section. It keeps the group key, so picking it
+  ## picks the token; the held row keeps every deployment, since a selection
+  ## resolves its token against that row whatever chain it is on.
+  result = newSeqOfCap[TokenSelectorItem](items.len)
+  for item in items:
+    result.add(item)
+    if not item.hasBalance:
+      continue
+    let held = item.chips.mapIt(it.chainId).toHashSet
+    let unheld = item.tokens.filterIt(it.chainId notin held)
+    if unheld.len == 0:
+      continue
+    var rest = item
+    rest.key = unheldRowKey(item.groupKey)
+    rest.chips = @[]
+    rest.tokens = unheld
+    rest.currentBalance = 0.0
+    rest.currencyBalance = 0.0
+    rest.hasBalance = false
+    result.add(rest)
+
+proc addressNeedle(keywordLower: string): string =
+  ## The keyword as a contract-address fragment, or "" when it isn't one. Same
+  ## rule as the catalog search: hex only, and at least 4 digits unless 0x-prefixed.
+  var needle = keywordLower
+  let prefixed = needle.startsWith("0x")
+  if prefixed:
+    needle = needle[2 .. ^1]
+  if needle.len == 0 or (not prefixed and needle.len < 4):
+    return ""
+  for c in needle:
+    if c notin HexDigits:
+      return ""
+  needle
+
+proc tokenAddress(key: string): string =
+  ## "<chainId>-<address>" -> address without 0x, lowercase
+  let dash = key.find('-')
+  result = if dash >= 0: key[dash + 1 .. ^1] else: key
+  result = result.toLowerAscii
+  if result.startsWith("0x"):
+    result = result[2 .. ^1]
+
+proc searchOwned*(owned: seq[TokenSelectorItem], keyword: string): seq[TokenSelectorItem] =
+  ## Owned-mode search: the holdings are all in memory, so match them here instead
+  ## of paging the cross-chain catalog and keeping the few hits the account holds.
+  ## Text matches symbol, name and group key; an address fragment matches a token
+  ## ref's contract address and scopes the row to the chains it matched, so a
+  ## deployment the account doesn't hold never surfaces.
+  let kw = keyword.strip.toLowerAscii
+  if kw.len == 0:
+    return owned
+  let needle = addressNeedle(kw)
+  result = @[]
+  for item in owned:
+    if item.symbol.toLowerAscii.contains(kw) or item.name.toLowerAscii.contains(kw) or
+        item.key.toLowerAscii.contains(kw):
+      result.add(item)
+      continue
+    if needle.len == 0:
+      continue
+    let matchedChains = item.tokens.filterIt(tokenAddress(it.key).contains(needle)).mapIt(it.chainId).toHashSet
+    if matchedChains.len == 0:
+      continue
+    var scoped = item
+    scoped.chips = item.chips.filterIt(it.chainId in matchedChains)
+    if scoped.chips.len == 0:
+      continue
+    scoped.tokens = item.tokens.filterIt(it.chainId in matchedChains)
+    var total = 0.0
+    for chip in scoped.chips:
+      total += chip.balance
+    scoped.currentBalance = total
+    scoped.currencyBalance = total * item.marketPrice
+    scoped.hasBalance = total != 0.0
+    result.add(scoped)
+
 proc buildDisplayItems*(
     ownedGroups: seq[AggTokenGroup], networks: seq[NetworkInfo],
     params: TokenSelectorParams, mode: TokenSelectorMode, searchActive: bool,
-    popularGroups: seq[PopularGroup], searchGroups: seq[PopularGroup]): seq[TokenSelectorItem] =
+    popularGroups: seq[PopularGroup], searchGroups: seq[PopularGroup],
+    searchKeyword = ""): seq[TokenSelectorItem] =
   ## Single entry point the terminal model calls to (re)derive its display rows.
   ## Selects the path the retired TokenSelectorViewAdaptor branched on:
-  ##   - a search is active  -> merge the backend search rows with the owned balances;
-  ##     Owned mode (send) then narrows to the rows already in the owned list
-  ##     (the adaptor's `UndefinedFilter currentBalance` when !showAllTokens —
-  ##     membership, not a non-zero balance, so showZeroBalanceForDefaultTokens
-  ##     rows stay searchable).
+  ##   - a search is active  -> AllTokens merges the backend search rows with the
+  ##     owned balances; Owned mode (send, swap pay side) matches `searchKeyword`
+  ##     against its own rows instead (see searchOwned), so a
+  ##     showZeroBalanceForDefaultTokens row stays searchable and nothing pages.
   ##   - AllTokens (swap/buy) -> merge the lazily-loaded popular list with owned.
-  ##   - Owned (send), no search -> just the owned tokens.
+  ##   - Owned (send, swap pay side), no search -> just the owned tokens.
+  ## AllTokens with no chain filter ("All") also splits a held token's unheld
+  ## chains into a popular row, see splitOffUnheldChains.
   let owned = buildTokenSelectorItems(ownedGroups, networks, params)
+  let allScope = mode == TokenSelectorMode.AllTokens and params.enabledChainIds.len == 0
   if searchActive:
+    if mode == TokenSelectorMode.Owned:
+      return searchOwned(owned, searchKeyword)
     let merged = filterToEnabledChains(
       mergePopularWithOwned(searchGroups, owned, params.showCommunityAssets, widenTokenRefsFromOwned = false),
       params.enabledChainIds
     )
-    if mode == TokenSelectorMode.Owned:
-      let ownedKeys = owned.mapIt(it.key).toHashSet
-      return merged.filterIt(it.key in ownedKeys and it.chips.len > 0)
-    return merged
+    return if allScope: splitOffUnheldChains(merged) else: merged
   if mode == TokenSelectorMode.AllTokens:
-    return filterToEnabledChains(
+    let merged = filterToEnabledChains(
       mergePopularWithOwned(popularGroups, owned, params.showCommunityAssets),
       params.enabledChainIds)
+    return if allScope: splitOffUnheldChains(merged) else: merged
   return owned

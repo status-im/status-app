@@ -69,7 +69,7 @@ Item {
 
             currencyStore: d.adaptor.currencyStore
             flatNetworksModel: d.adaptor.networksStore.activeNetworks
-            tokenSelectorModel: d.adaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(1).model
+            tokenSelectorModel: d.adaptor.walletAssetsStore.walletTokensStore.createTokenSelectorModel(0).model
             selectedAccountAddress: d.adaptor.swapFormData.selectedAccountAddress
             selectedNetworkChainId: d.goOptChainId
             defaultGroupKey: ethGroupKey
@@ -413,7 +413,7 @@ Item {
             verify(!!chainName)
 
             const store = d.adaptor.walletAssetsStore.walletTokensStore
-            const initial = store.createTokenSelectorModel(1).model
+            const initial = store.createTokenSelectorModel(0).model
             controlUnderTest = createTemporaryObject(componentUnderTest, root,
                                                      {tokenSelectorModel: initial,
                                                       selectedNetworkChainId: chainId,

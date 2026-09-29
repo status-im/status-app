@@ -405,11 +405,11 @@ Item {
             compare(sttBridge.rowAt(0).enabled, true)
         }
 
-        // On "All" (no chain filter) the other side's token collapses into one
-        // aggregate row; it must stay selectable when the token also lives on
-        // other chains — only a token locked to the excluded chain (or excluded
+        // On "All" (no chain filter) a token nothing is held of is listed per chain
+        // it is deployed on; the other side's token stays selectable on its other
+        // chains — only a token locked to the excluded chain (or excluded
         // everywhere via -1) is blocked.
-        function test_nonInteractiveAggregateRowSelectableOnAnotherChain() {
+        function test_nonInteractiveUnheldTokenSelectableOnAnotherChain() {
             const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
             networks.append(networksData)
 
@@ -431,8 +431,7 @@ Item {
                 sectionName: "Popular assets"
             })
 
-            const control = createTemporaryObject(panelCmp, root, { networksModel: networks })
-            control.sourceModel = data
+            const control = createTemporaryObject(panelCmp, root, { networksModel: networks, sourceModel: data })
             control.panel.nonInteractiveKey = "usdc_key"
             control.panel.nonInteractiveChainId = 1
 
@@ -440,14 +439,27 @@ Item {
             waitForRendering(listView)
             compare(listView.count, 2)
 
+            // nothing held -> one row per deployment, each at zero
             const usdc = listView.itemAtIndex(0)
             verify(usdc)
-            compare(usdc.rowCount, 1)          // no balances -> one aggregate row
-            compare(usdc.rowAt(0).enabled, true)   // chain 10 is a legal pick
+            compare(usdc.rowCount, 2)
+            compare(usdc.rowAt(0).chainId, 1)
+            compare(usdc.rowAt(1).chainId, 10)
+            compare(usdc.rowAt(0).currentBalance, 0)
+            compare(usdc.rowAt(0).enabled, false)  // the excluded chain
+            compare(usdc.rowAt(1).enabled, true)   // chain 10 is a legal pick
+
+            // ...and picking it names that chain (clicked near the icon: the row's
+            // centre may land on its contract-address chip, which opens the explorer)
+            mouseClick(usdc.rowAt(1), 20, 20)
+            compare(control.panel.selectedSpy.count, 1)
+            compare(control.panel.selectedSpy.signalArguments[0][0], "usdc_key")
+            compare(control.panel.selectedSpy.signalArguments[0][1], 10)
 
             control.panel.nonInteractiveKey = "only1_key"
             const only1 = listView.itemAtIndex(1)
             verify(only1)
+            compare(only1.rowCount, 1)
             compare(only1.rowAt(0).enabled, false) // no other chain to pick
             compare(usdc.rowAt(0).enabled, true)   // no longer the excluded key
 
@@ -455,6 +467,75 @@ Item {
             control.panel.nonInteractiveKey = "usdc_key"
             control.panel.nonInteractiveChainId = -1
             compare(usdc.rowAt(0).enabled, false)
+            compare(usdc.rowAt(1).enabled, false)
+        }
+
+        // A held token's chains without a balance arrive as a row of their own
+        // (own key, the group's groupKey): listed per chain at zero, selecting one
+        // selects the group on that chain, and the highlight follows the chain.
+        function test_unheldChainsRowSelectsItsGroup() {
+            const networks = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            networks.append(networksData)
+
+            const data = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
+            data.append({
+                key: "snt_key", groupKey: "snt_key", communityId: "", name: "Status",
+                currencyBalance: 5, currentBalance: 5, cryptoPrice: 1, symbol: "SNT",
+                logoUri: Constants.tokenIcon("SNT"),
+                balances: [ { chainId: 1, balance: 5, iconUrl: "network/ethereum" } ],
+                tokens: [ { chainId: 1, key: "1-0xsnt" }, { chainId: 10, key: "10-0xsnt" },
+                          { chainId: 42161, key: "42161-0xsnt" } ],
+                sectionName: "Your assets"
+            })
+            data.append({
+                key: "snt_key#unheld", groupKey: "snt_key", communityId: "", name: "Status",
+                currencyBalance: 0, currentBalance: 0, cryptoPrice: 1, symbol: "SNT",
+                logoUri: Constants.tokenIcon("SNT"),
+                balances: [],
+                tokens: [ { chainId: 10, key: "10-0xsnt" }, { chainId: 42161, key: "42161-0xsnt" } ],
+                sectionName: "Popular assets"
+            })
+
+            const control = createTemporaryObject(panelCmp, root, { networksModel: networks, sourceModel: data })
+
+            const listView = findChild(control, "assetsListView")
+            waitForRendering(listView)
+            compare(listView.count, 2)
+
+            const held = listView.itemAtIndex(0)
+            const unheld = listView.itemAtIndex(1)
+            verify(held)
+            verify(unheld)
+            compare(held.rowCount, 1)              // one chain held -> its aggregate row
+            compare(held.rowAt(0).currentBalance, 5)
+            compare(unheld.rowCount, 2)
+            compare(unheld.rowAt(0).chainId, 10)
+            compare(unheld.rowAt(1).chainId, 42161)
+            compare(unheld.rowAt(0).currentBalance, 0)
+
+            // the selection is the group on the row's chain
+            mouseClick(unheld.rowAt(1), 20, 20)
+            compare(control.panel.selectedSpy.count, 1)
+            compare(control.panel.selectedSpy.signalArguments[0][0], "snt_key")
+            compare(control.panel.selectedSpy.signalArguments[0][1], 42161)
+
+            // the highlight lands on the row of the selected chain only
+            control.panel.highlightedKey = "snt_key"
+            control.panel.highlightedChainId = 10
+            compare(held.rowAt(0).highlighted, false)
+            compare(unheld.rowAt(0).highlighted, true)
+            compare(unheld.rowAt(1).highlighted, false)
+
+            control.panel.highlightedChainId = 1
+            compare(held.rowAt(0).highlighted, true)
+            compare(unheld.rowAt(0).highlighted, false)
+
+            // the other side holding the group on chain 10 blocks that row alone
+            control.panel.nonInteractiveKey = "snt_key"
+            control.panel.nonInteractiveChainId = 10
+            compare(held.rowAt(0).enabled, true)
+            compare(unheld.rowAt(0).enabled, false)
+            compare(unheld.rowAt(1).enabled, true)
         }
 
         // nonInteractiveChainId === -1 excludes the holding on EVERY chain —

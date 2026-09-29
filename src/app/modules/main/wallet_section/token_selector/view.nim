@@ -25,8 +25,8 @@ QtObject:
   proc load*(self: View) =
     self.delegate.viewDidLoad()
 
-  # Factory: QML asks for a picker model of a given kind (0=send/owned,
-  # 1=swap/all-tokens+search, 2=buy/all-tokens). nimqml cannot return a QVariant
+  # Factory: QML asks for a picker model of a given kind (0=owned, 2=buy/all-tokens,
+  # 3=swap receive/all-tokens+search). nimqml cannot return a QVariant
   # from a slot that takes arguments, so this is the prepare-then-get pair (as in
   # main/view.nim getCommunitySectionModule). A QML store wraps the two calls.
   proc prepareModel*(self: View, kind: int) {.slot.} =

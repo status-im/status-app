@@ -18,9 +18,20 @@ import QtModelsToolkit
 ListModel {
     id: root
 
-    // Per-modal params driven by the consuming panel via Binding.
+    // Per-modal params driven by the consuming panel via Binding. The chain
+    // filter is honoured like the real builder does: a group is listed while it
+    // has a token on that chain, and its balances narrow to that chain.
     property int enabledChainId: -1
+    onEnabledChainIdChanged: _reload()
     property string accountAddress: ""
+    onAccountAddressChanged: _reload()
+
+    // Accounts holding nothing (the stub has no per-account balances otherwise):
+    // for them no row carries a balance, and an owned-only picker lists nothing.
+    property var emptyAccounts: []
+    onEmptyAccountsChanged: _reload()
+    // kind 0: the real model lists only what the account holds
+    property bool ownedOnly: false
     property bool showZeroBalanceForDefaultTokens: false
     property bool showCommunityAssets: false
 
@@ -64,15 +75,22 @@ ListModel {
     // valueValid / max / fiat wiring has something to compute against.
     property real syntheticBalance: 5000000000.0
 
+    // null when the group has nothing on the filtered chain, or nothing the
+    // account holds while only holdings are listed
     function _mapGroup(group) {
         let tokens = []
         let balances = []
         const price = (!!group.marketDetails && !!group.marketDetails.currencyPrice)
                       ? group.marketDetails.currencyPrice.amount : 0
+        const held = root.emptyAccounts.indexOf(root.accountAddress) === -1
         if (!!group.tokens) {
             for (let i = 0; i < group.tokens.ModelCount.count; i++) {
                 const t = ModelUtils.get(group.tokens, i)
                 tokens.push({ key: t.key, chainId: t.chainId })
+                if (root.enabledChainId !== -1 && t.chainId !== root.enabledChainId)
+                    continue
+                if (!held)
+                    continue
                 balances.push({
                     chainId: t.chainId,
                     iconUrl: "",
@@ -82,42 +100,58 @@ ListModel {
                 })
             }
         }
+        if ((root.enabledChainId !== -1 || root.ownedOnly) && balances.length === 0)
+            return null
+        const balance = held ? root.syntheticBalance : 0
         return {
             key: group.key,
+            groupKey: group.key,
             name: group.name,
             symbol: group.symbol,
             logoUri: group.logoUri || "",
             decimals: group.decimals || 18,
             cryptoPrice: price,
-            currentBalance: root.syntheticBalance,
-            currencyBalance: root.syntheticBalance * price,
+            currentBalance: balance,
+            currencyBalance: balance * price,
             sectionName: group.sectionName || "",
             balances: balances,
             tokens: tokens
         }
     }
 
-    // Sync rows IN PLACE — replace existing rows (dataChanged), append new tail
-    // rows (insert), drop the surplus (remove) — instead of clear()+append. The
-    // real terminal model never resets, so neither does the stub: keys stay
-    // present, so a selection bound by key survives a source change.
+    // Reconcile by key, like the real terminal model: a row that stays keeps its
+    // identity (dataChanged), one whose key is gone is removed, a new key is
+    // appended. Rows are never rewritten under another key, so a selection bound
+    // by key (ModelEntry) survives a source or chain-filter change.
+    function _indexOfKey(key) {
+        for (let i = 0; i < count; i++)
+            if (get(i).key === key)
+                return i
+        return -1
+    }
+
     function _syncRows(newRows) {
-        const n = newRows.length
-        for (let i = 0; i < n; i++) {
-            if (i < count)
-                set(i, newRows[i])
+        const newKeys = new Set(newRows.map(r => r.key))
+        for (let i = count - 1; i >= 0; i--)
+            if (!newKeys.has(get(i).key))
+                remove(i, 1)
+        for (const row of newRows) {
+            const idx = _indexOfKey(row.key)
+            if (idx === -1)
+                append(row)
             else
-                append(newRows[i])
+                set(idx, row)
         }
-        if (count > n)
-            remove(n, count - n)
     }
 
     function _reload() {
         let newRows = []
         if (!!sourceModel) {
-            for (let i = 0; i < sourceModel.ModelCount.count; i++)
-                newRows.push(_mapGroup(ModelUtils.get(sourceModel, i)))
+            for (let i = 0; i < sourceModel.ModelCount.count; i++) {
+                const row = _mapGroup(ModelUtils.get(sourceModel, i))
+                if (!!row)
+                    newRows.push(row)
+            }
         } else if (!!sourceData && sourceData.length > 0) {
             newRows = sourceData
         }

@@ -33,7 +33,9 @@ proc prefetchSwapSupport(self: Service, chainIds: seq[int] = @[]) =
     return
   var ids = chainIds
   if ids.len == 0:
-    ids = self.networkService.getEnabledChainIds()
+    # every active chain, not just the ones enabled in the wallet's network filter:
+    # the swap can be pointed at any active chain
+    ids = self.networkService.getCurrentNetworksChainIds()
   ids = ids.filterIt(it > 0 and it notin self.swapSupportChainIdsInFlight)
   if ids.len == 0:
     return
@@ -550,8 +552,11 @@ proc isChainSupportedForSwap*(self: Service, chainId: int): bool =
     return false
   if self.chainsSupportedForSwap.hasKey(chainId):
     return self.chainsSupportedForSwap[chainId]
+  # not answered yet (a chain activated after the startup prefetch, or a failed
+  # fetch): ask, and don't block meanwhile. Only a provider's "no" blocks a chain;
+  # an unsupported one still fails at the route request.
   self.prefetchSwapSupport(@[chainId])
-  return false
+  return true
 
 proc getTokenListUpdatedAt*(self: Service): int64 =
   return self.tokenListUpdatedAt
