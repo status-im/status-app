@@ -264,16 +264,23 @@ QtObject:
 
   # The params are exposed as read+write QtProperties so the QML sites can drive
   # them declaratively (Binding onto the picker model); the write setters guard
-  # and recompute. No notify is needed — the binding is one-way QML -> model.
+  # and recompute. The bindings are one-way QML -> model, so the params need no
+  # notify, with one exception: accountAddress. A panel compares it with its own
+  # account to know when the rows are filtered to that account (an empty address
+  # means every account), and a binding on a property without notify would never
+  # re-evaluate after the write.
+  proc accountAddressChanged*(self: TokenSelectorModel) {.signal.}
   proc setAccountAddress*(self: TokenSelectorModel, address: string) {.slot.} =
     if address == self.params.accountAddress: return
     self.params.accountAddress = address
     self.recompute()
+    self.accountAddressChanged()
   proc getAccountAddress(self: TokenSelectorModel): string {.slot.} =
     self.params.accountAddress
   QtProperty[string] accountAddress:
     read = getAccountAddress
     write = setAccountAddress
+    notify = accountAddressChanged
 
   proc setEnabledChainId*(self: TokenSelectorModel, chainId: int) {.slot.} =
     ## -1 means "no chain filter". The pickers only ever scope to a single chain
