@@ -504,6 +504,10 @@ QtObject:
       self.threadpool.start(arg)
     except Exception as e:
       error "Error sending images", msg = e.msg
+      # The task's finally never ran; release the cached copies here instead.
+      when defined(android) or defined(ios):
+        if releaseCachedFiles:
+          releaseCachedShareFiles(parseImagePathsJson(imagePathsJson) & releasePaths)
       self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: chatId, error: e.msg))
       self.finishSending(chatId, token)
 
