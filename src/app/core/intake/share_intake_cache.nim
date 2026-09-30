@@ -1,4 +1,4 @@
-## Cache lifecycle for shared media (see CONTEXT.md -> "External intake").
+## Cache lifecycle for shared media.
 ##
 ## The platform layer copies shared image streams into an app-private cache
 ## directory named `share-intake` immediately at receipt (OS read grants on
