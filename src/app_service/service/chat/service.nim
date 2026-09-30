@@ -43,9 +43,8 @@ type
   ChatExtArgs* = ref object of ChatArgs
     ensName*: string
 
-  # Optimistic echo (see CONTEXT.md): a text send is announced before status-go
-  # stores it. Every send, text or image, is closed when its task ends, success
-  # or failure.
+  # Optimistic echo: a text send is announced before status-go stores it.
+  # Every send, text or image, is closed when its task ends, success or failure.
   SendingStartedArgs* = ref object of Args
     chatId*: string
     sendToken*: string
@@ -542,8 +541,10 @@ QtObject:
       let processedMsg = message_common.replaceMentionsWithPubKeys(allKnownContacts, msg)
 
       let (standardLinkPreviews, statusLinkPreviews) = extractLinkPreviewsLists(linkPreviews)
-      self.announceSending(SendingStartedArgs(chatId: chatId, sendToken: token, text: processedMsg,
-        replyTo: replyTo, contentType: contentType))
+      # A payment request may ride on an empty message; nothing to echo then.
+      if processedMsg.strip() != "":
+        self.announceSending(SendingStartedArgs(chatId: chatId, sendToken: token, text: processedMsg,
+          replyTo: replyTo, contentType: contentType))
 
       let arg = AsyncSendMessageTaskArg(
         tptr: asyncSendMessageTask,
