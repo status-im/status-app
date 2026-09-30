@@ -69,8 +69,17 @@ Flickable {
     readonly property bool loadingStart: d.loadingStart
     readonly property bool loadingEnd: d.loadingEnd
 
-    // Either a request is outstanding or a batch is staged and unrevealed.
-    readonly property bool busy: d.loadingStart || d.loadingEnd || d.wave.length > 0
+    // Either a request is outstanding, a batch is staged and unrevealed, or a
+    // fresh population is still being gathered.
+    readonly property bool busy: d.loadingStart || d.loadingEnd
+                                 || d.wave.length > 0 || d.initialLoading
+
+    // A fresh population - a first load, or a jump that replaced every row - is
+    // being staged and has not been revealed yet: the view is showing nothing
+    // and will show all of it at once. Distinct from busy, which is equally
+    // true while paging over content that is already on screen, so this is the
+    // one to hang a skeleton on.
+    readonly property bool initialLoading: d.initialLoading
 
     // "I would like more rows at this end." Nothing is promised.
     signal moreRequestedStart()
@@ -129,6 +138,10 @@ Flickable {
         // outstanding and every claimed shell has content.
         property var stagedKeys: new Set()
         property bool keyWarningShown: false
+
+        // Set when rows arrive into a view that is showing nothing, cleared
+        // when they are revealed.
+        property bool initialLoading: false
 
         // Guards completeWave() against being re-entered by the destruction of
         // the rows it is itself trimming.
@@ -371,7 +384,14 @@ Flickable {
             // would reset the wave and orphan the first batch's staged rows -
             // they would stay hidden for good. One batch at a time is what the
             // single wave, single anchor and single requested-edge assume.
-            if (d.loading || d.wave.length > 0)
+            //
+            // initialLoading covers the window between capturing a fresh
+            // population's keys and the first shell claiming one, where the
+            // wave is still empty. No caller can observe that window while the
+            // Repeater builds its items synchronously inside the insert, so the
+            // clause is belt and braces; it is here so the rule does not rest
+            // on that being true.
+            if (d.loading || d.wave.length > 0 || d.initialLoading)
                 return false
 
             if (atStart ? !root.moreAvailableStart : !root.moreAvailableEnd)
@@ -458,6 +478,7 @@ Flickable {
             // rows gets a fresh interval each time one lands, and a provider
             // gone silent for good just leaves its rows hidden.
             acquireTimer.stop()
+            d.initialLoading = false
             d.finishing = false
         }
 
@@ -476,9 +497,69 @@ Flickable {
         }
 
         // Rows entering while a request is outstanding are that request's batch.
+        // How many rows are on screen. Maintained from the shells' own
+        // revealed-property change rather than counted from the Repeater: its
+        // items type as plain QQuickItem, and a row's own `visible` would also
+        // read false whenever the view itself is hidden, which is not the same
+        // question at all.
+        property int revealedCount: 0
+
+        // A population arriving into a view showing nothing is a fresh one,
+        // however it came about - a first load, or a jump that removed every
+        // row before inserting the replacements.
+        function showingNothing() {
+            return d.revealedCount === 0
+        }
+
+        // Rows entering a batch that is already open: the one a request
+        // admitted, or a fresh population still being gathered. Anything else
+        // is a live row and shows itself.
         function captureStagedRows(first, last) {
-            if (!d.loading)
+            if (!d.loading && !d.initialLoading)
                 return
+
+            d.captureKeys(first, last)
+        }
+
+        // Every row the model currently holds, as one batch.
+        //
+        // Started by the first shell built into a view that is showing nothing,
+        // not by a model signal, because no signal reliably marks a fresh
+        // population: a proxy windowing a large model delivers its first page
+        // as a reset, and the Repeater answers a reset by destroying whatever
+        // it built and regenerating - a second generation of rows that arrives
+        // with no signal of its own at all. A shell asking on its own behalf is
+        // indifferent to all of that.
+        function beginFreshFill() {
+            // rowCount() rather than root.rowCount: the Repeater is mid-build,
+            // so its count does not describe the model yet. Reading it in a
+            // handler, which is where rowCount() belongs.
+            const rows = root.model ? root.model.rowCount() : 0
+
+            if (rows <= 0)
+                return
+
+            const had = d.stagedKeys.size
+
+            d.captureKeys(0, rows - 1)
+
+            // Not one key between them: the model has no key role, so these
+            // rows reveal one by one as documented. Announcing a fill that
+            // nothing will ever complete would leave the view busy - and
+            // paging refused - for good.
+            if (d.stagedKeys.size === had)
+                return
+
+            d.initialLoading = true
+            d.noProgressIntervals = 0
+
+            // Nothing else arms it here: contentArrived() is what normally
+            // re-arms the detector, and a provider that never answers produces
+            // no arrival to do it.
+            acquireTimer.restart()
+        }
+
+        function captureKeys(first, last) {
 
             for (let i = first; i <= last; ++i) {
                 const key = d.keyAt(i)
@@ -519,6 +600,7 @@ Flickable {
 
         function clearStaging() {
             d.stagedKeys = new Set()
+            d.initialLoading = false
 
             for (let i = 0; i < d.wave.length; ++i)
                 d.wave[i].staged = false
@@ -571,8 +653,15 @@ Flickable {
                 // here fires against an empty wave. While a request is still
                 // outstanding something *is* owed, so it keeps running for an
                 // owner that never answers at all.
-                if (!d.loading && d.stagedKeys.size === 0)
+                if (!d.loading && d.stagedKeys.size === 0) {
                     acquireTimer.stop()
+
+                    // Nothing is owed, so no fill is outstanding either. A fill
+                    // whose rows all left the window before they arrived
+                    // completes no wave, and without this its flag - and the
+                    // refusal to page that hangs off it - would never lift.
+                    d.initialLoading = false
+                }
 
                 return
             }
@@ -748,9 +837,17 @@ Flickable {
                         ? shell.content.implicitHeight : 0
                 visible: shell.revealed
 
+                onRevealedChanged: d.revealedCount += shell.revealed ? 1 : -1
+
                 Component.onCompleted: {
                     if (!root.acquireDelegate)
                         return
+
+                    // Nothing on screen and nothing asked for: this row is
+                    // the first of a fresh population, so it opens the batch
+                    // its siblings will claim from.
+                    if (!d.loading && !d.initialLoading && d.showingNothing())
+                        d.beginFreshFill()
 
                     // Either its key was captured before the Repeater built it,
                     // or the Repeater won the race and the outstanding request
@@ -786,6 +883,11 @@ Flickable {
                 // can reach it first, and an exception thrown here disappears
                 // without trace.
                 Component.onDestruction: {
+                    // A destroyed row fires no property change, so the count
+                    // it contributed is given back here.
+                    if (shell.revealed)
+                        --d.revealedCount
+
                     d.forgetRow(shell)
 
                     if (d.anchorItem === shell)

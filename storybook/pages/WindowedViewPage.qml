@@ -539,6 +539,22 @@ SplitView {
                     Label { text: "Loading end" }
                 }
 
+                // Lit while a fresh population - the first load, or a jump from
+                // the First control - is staged and showing nothing yet.
+                RowLayout {
+                    spacing: 4
+
+                    Rectangle {
+                        Layout.preferredWidth: 10
+                        Layout.preferredHeight: 10
+
+                        radius: width / 2
+                        color: windowedView.initialLoading ? "#2ecc71" : "#bdbdbd"
+                    }
+
+                    Label { text: "Initial load" }
+                }
+
                 Item { Layout.fillWidth: true }
             }
 
