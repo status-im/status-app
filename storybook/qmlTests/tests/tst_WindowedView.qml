@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -110,6 +112,36 @@ Item {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    QtObject {
+        id: placeholderProbe
+
+        property int created: 0
+        property int reparents: 0
+        property Item item: null
+    }
+
+    Component {
+        id: skeletonPlaceholder
+
+        Item {
+            id: skeletonRoot
+
+            Component.onCompleted: {
+                placeholderProbe.created++
+                placeholderProbe.item = skeletonRoot
+            }
+
+            // Counted here rather than in the view: moving between placements is
+            // the one cost this design has to keep down.
+            onParentChanged: placeholderProbe.reparents++
+
+            Rectangle {
+                anchors.fill: parent
+                color: "#eeeeee"
             }
         }
     }
@@ -273,6 +305,34 @@ Item {
         // a row nobody asked for, as an external insert would be
         readonly property int liveValue: 9000
 
+        // Two shapes of a late owner. holdAnswer admits at once and confirms
+        // later - an index window that has the rows already. holdAdmit does
+        // neither until answer() is called - a backend fetch, where nothing
+        // exists until the reply lands.
+        property bool holdAnswer: false
+        property bool holdAdmit: false
+        property bool answerOwedAtStart: false
+        property bool answerOwed: false
+
+        function answer() {
+            if (!owner.answerOwed)
+                return
+
+            owner.answerOwed = false
+
+            if (owner.answerOwedAtStart) {
+                if (owner.holdAdmit)
+                    owner.admitStart(root.chunk)
+
+                view.moreLoadedStart()
+            } else {
+                if (owner.holdAdmit)
+                    owner.admitEnd(root.chunk)
+
+                view.moreLoadedEnd()
+            }
+        }
+
         // The heights the view revealed the batch at. Sampled inside the reveal,
         // because that is the only moment a stale height is observable - the
         // held anchor corrects the position a frame later, and by the time
@@ -288,6 +348,9 @@ Item {
             owner.revealCount = 0
             owner.removeOnReveal = true
             owner.sumAtReveal = -1
+            owner.holdAnswer = false
+            owner.holdAdmit = false
+            owner.answerOwed = false
 
             if (initial > 0)
                 rows.append(rows.make(0, initial))
@@ -341,13 +404,27 @@ Item {
         releaseDelegate: (item) => provider.release(item)
 
         onMoreRequestedStart: {
-            owner.admitStart(root.chunk)
-            view.moreLoadedStart()
+            if (!owner.holdAdmit)
+                owner.admitStart(root.chunk)
+
+            if (owner.holdAnswer || owner.holdAdmit) {
+                owner.answerOwed = true
+                owner.answerOwedAtStart = true
+            } else {
+                view.moreLoadedStart()
+            }
         }
 
         onMoreRequestedEnd: {
-            owner.admitEnd(root.chunk)
-            view.moreLoadedEnd()
+            if (!owner.holdAdmit)
+                owner.admitEnd(root.chunk)
+
+            if (owner.holdAnswer || owner.holdAdmit) {
+                owner.answerOwed = true
+                owner.answerOwedAtStart = false
+            } else {
+                view.moreLoadedEnd()
+            }
         }
 
         onBatchRevealed: {
@@ -589,6 +666,15 @@ Item {
             tryVerify(() => settled(root.windowSize), 5000, "rows laid out")
         }
 
+        // A held answer outlives a failing test, and nothing else ever clears
+        // loading* - so without this one failure here wedges every group that
+        // runs after it, and the real cause is buried.
+        function cleanup() {
+            owner.holdAnswer = false
+            owner.holdAdmit = false
+            owner.answer()
+        }
+
         function test_rendersTheWholeModel() {
             compare(view.rowCount, root.windowSize)
             compare(values()[0], 0)
@@ -634,6 +720,103 @@ Item {
             compare(view.requestMoreStart(), false, "and the other end too")
 
             tryVerify(() => !view.busy, 5000)
+        }
+
+        // Two phases, not one: waiting for the owner to answer, and then making
+        // the batch it admitted ready to show. A synchronous owner skips the
+        // first entirely, which is why they are reported separately.
+        function test_stagingAndLoadingAreSeparatePhases() {
+            provider.delay = 60
+            owner.holdAnswer = true
+
+            verify(view.requestMoreEnd())
+            compare(view.loadingEnd, true, "the owner has not answered yet")
+            compare(view.staging, true, "though the rows it admitted are staged")
+
+            owner.answer()
+            compare(view.loadingEnd, false, "the owner is done")
+            compare(view.staging, true, "but the batch is still not on screen")
+
+            tryVerify(() => !view.busy, 5000)
+            compare(view.staging, false, "cleared by the reveal")
+            compare(view.loadingEnd, false)
+        }
+
+        // The stall detector watches the provider. Once every admitted row has
+        // its content there is nothing left for it to watch, and an owner that
+        // takes its time is not a stall - firing there would reveal a batch the
+        // owner is still entitled to add to.
+        function test_aCompleteBatchWaitsForTheOwnerPastTheStallInterval() {
+            provider.delay = 40
+            owner.holdAnswer = true
+
+            const reveals = owner.revealCount
+
+            verify(view.requestMoreEnd())
+            tryVerify(() => view.rowCount === root.windowSize + root.chunk, 2000)
+
+            // Well past the detector's 1000 ms, asserted continuously rather
+            // than waited out: the claim is that nothing happens in here.
+            const deadline = Date.now() + 1500
+
+            while (Date.now() < deadline) {
+                compare(view.staging, true, "the batch is still staged")
+                compare(view.loadingEnd, true, "the owner still owes an answer")
+                compare(owner.revealCount, reveals, "and nothing was revealed")
+                waitForRendering(view)
+            }
+
+            owner.answer()
+            tryVerify(() => !view.busy, 5000)
+
+            compare(owner.revealCount, reveals + 1, "revealed once, on the answer")
+            compare(view.rowCount, root.windowSize)
+            compare(hiddenShells().length, 0)
+        }
+
+        // An owner that goes away to fetch has nothing to stage yet, so the two
+        // phases follow one another instead of overlapping: waiting for the
+        // reply, then making what it brought ready to show.
+        function test_theTwoPhasesAreSequentialForAFetchingOwner() {
+            provider.delay = 40
+            owner.holdAdmit = true
+
+            verify(view.requestMoreEnd())
+            compare(view.loadingEnd, true, "waiting on the owner")
+            compare(view.staging, false, "with nothing admitted to stage")
+            compare(view.rowCount, root.windowSize, "and no rows yet")
+
+            owner.answer()
+            compare(view.loadingEnd, false, "the reply landed")
+            compare(view.staging, true, "and what it brought is now staging")
+
+            tryVerify(() => !view.busy, 5000)
+            compare(view.staging, false)
+            compare(view.rowCount, root.windowSize)
+        }
+
+        // The detector must still be watching after a late admission: it had
+        // nothing to watch while the owner was away.
+        function test_aSilentProviderAfterALateAdmitIsStillCaught() {
+            ignoreWarning(/WindowedView: nothing arrived in/)
+            owner.holdAdmit = true
+
+            const reveals = owner.revealCount
+
+            verify(view.requestMoreEnd())
+
+            // let the detector lapse over the fetch, then admit into silence
+            const deadline = Date.now() + 1400
+
+            while (Date.now() < deadline)
+                waitForRendering(view)
+
+            provider.mute = true
+            owner.answer()
+
+            tryVerify(() => owner.revealCount === reveals + 1, 10000,
+                      "the watchdog ended the wait")
+            compare(view.loadingEnd, false)
         }
 
         function test_aRefusedRequestSetsNoState() {
@@ -1316,6 +1499,336 @@ Item {
             compare(owner.revealCount, 1, "the fill completed, with nothing to show")
             compare(hiddenShells().length, 20,
                     "and the rows that never arrived are still staged")
+        }
+    }
+
+    TestCase {
+        id: placeholderTests
+
+        name: "WindowedView.Placeholder"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+
+            // Before any placement has wanted one. The instance is kept for the
+            // view's life once built, so this is the only moment the claim can
+            // be made.
+            compare(placeholderProbe.created, 0,
+                    "nothing is built until a placement wants it")
+        }
+
+        function init() {
+            provider.reset()
+            view.placeholder = skeletonPlaceholder
+            view.placeholderHeight = 100
+        }
+
+        function cleanup() {
+            view.placeholder = null
+            view.moreAvailableStart = true
+            view.moreAvailableEnd = true
+            owner.holdAnswer = false
+        }
+
+        function freshFill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            owner.reset(count)
+        }
+
+        // The Column only collapses the old content on a polish, so the viewport
+        // placeholder standing alone is a state to wait for, not to assume.
+        function fillingAlone() {
+            tryVerify(() => view.initialLoading
+                            && view.contentHeight === view.height, 3000,
+                      "the placeholder is the only content")
+        }
+
+        function finishFill(count) {
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        // settled() wants content taller than the viewport, which short content
+        // never is.
+        function finishShortFill(count) {
+            tryVerify(() => !view.busy && view.rowCount === count
+                            && hiddenShells().length === 0, 8000, "rows laid out")
+            waitForRendering(view)
+        }
+
+        function host() {
+            const item = placeholderProbe.item
+
+            return item && item.parent ? item.parent.objectName : ""
+        }
+
+        function rowsHeight() {
+            let sum = 0
+
+            for (const shell of shells())
+                sum += shell.height
+
+            return sum
+        }
+
+        function test_theViewportIsFilledWhileTheFirstPopulationLoads() {
+            provider.delay = 60
+            freshFill(40)
+            fillingAlone()
+
+            compare(host(), "fillPlaceholder")
+
+            const item = placeholderProbe.item
+            verify(item.visible, "and it is shown")
+            verify(item.parent.clip,
+                   "the band clips, so an oversized placeholder cannot draw"
+                   + " over the rows")
+            compare(item.height, view.height, "covering the viewport")
+            compare(item.width, view.width)
+            compare(view.contentHeight, view.height,
+                    "so there is nothing to scroll while it fills")
+            compare(view.initialLoading, true)
+            compare(hiddenShells().length, view.rowCount, "no row is shown yet")
+
+            finishFill(40)
+        }
+
+        // The collapse of the viewport placeholder and the rows appearing are one
+        // layout pass, so contentHeight goes straight from the viewport to the
+        // content with nothing in between.
+        function test_theHandoverToRealContentIsOneStep() {
+            provider.delay = 60
+            freshFill(40)
+            fillingAlone()
+
+            const heights = new Set()
+            let frames = 0
+
+            // Sampling has to span the handover itself: stop at it and an extra
+            // step taken *during* the reveal - the placeholder coming down after
+            // the rows went up - is never seen.
+            while (frames < 400 && (view.initialLoading || view.busy
+                                    || hiddenShells().length > 0)) {
+                heights.add(view.contentHeight)
+                ++frames
+                waitForRendering(view)
+            }
+
+            verify(frames >= 2, "sampled more than once: " + frames)
+            verify(frames < 400, "the fill finished")
+
+            for (let i = 0; i < 3; ++i) {
+                heights.add(view.contentHeight)
+                waitForRendering(view)
+            }
+
+            compare(heights.size, 2,
+                    "the viewport, then the content, and nothing in between: "
+                    + Array.from(heights))
+            verify(heights.has(view.height), "one of them is the bare viewport")
+            compare(view.initialLoading, false)
+            verify(host() !== "fillPlaceholder", "the viewport placement is empty")
+        }
+
+        function test_spaceIsReservedAtBothEnds() {
+            provider.delay = 0
+            freshFill(10)
+            finishFill(10)
+
+            compare(view.contentHeight, rowsHeight() + 2 * view.placeholderHeight,
+                    "a band's worth at each end")
+        }
+
+        function test_theInstanceFollowsTheViewportBetweenEnds() {
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            view.contentY = 0
+            waitForRendering(view)
+            compare(host(), "startPlaceholder", "at the top it sits at the start")
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+            compare(host(), "endPlaceholder", "at the bottom, at the end")
+
+            compare(placeholderProbe.created, 1, "and it was never rebuilt")
+        }
+
+        function test_itIsParkedWhenNeitherEndIsOnScreen() {
+            view.moreAvailableStart = false
+            view.moreAvailableEnd = false
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            compare(host(), "", "no placement wants it")
+            compare(placeholderProbe.item.visible, false, "so it is not drawn")
+            compare(view.contentHeight, rowsHeight(), "and reserves no space")
+        }
+
+        // Availability and loading are separate reasons to show a band: the last
+        // batch can be in flight with nothing left beyond it.
+        function test_loadingAtAnEndShowsItWithNothingAvailable() {
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            owner.holdAnswer = true
+            view.contentY = 0
+            verify(view.requestMoreStart(), "a request is outstanding")
+            compare(view.loadingStart, true)
+
+            view.moreAvailableStart = false      // that was the last of it
+            waitForRendering(view)
+
+            compare(host(), "startPlaceholder",
+                    "still shown, because a batch is on its way")
+
+            owner.answer()
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        function test_oneEndHoldsItWhenBothAreOnScreen() {
+            view.placeholderHeight = 40
+            provider.delay = 0
+            freshFill(2)            // short enough that both bands fit on screen
+            finishShortFill(2)
+
+            verify(view.contentHeight <= view.height,
+                   "the whole window is on screen: " + view.contentHeight)
+
+            const where = host()
+            verify(where === "startPlaceholder" || where === "endPlaceholder",
+                   "exactly one band holds it, not both: " + where)
+            compare(placeholderProbe.created, 1, "and no second instance was made")
+        }
+
+        // The start band sits above every row, so it appearing has to be paid for
+        // out of contentY or the rows all shift under the user.
+        function test_theStartBandAppearingDoesNotMoveTheContent() {
+            view.moreAvailableStart = false
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            verify(view.contentY > 50, "there is room to scroll")
+
+            const before = topRow()
+
+            view.moreAvailableStart = true
+            waitForRendering(view)
+
+            const after = offsetOf(before.value)
+            verify(!isNaN(after), "the row is still there")
+            fuzzyCompare(after, before.offset, 0.5, "and did not move")
+        }
+
+        function test_theStartBandDisappearingDoesNotMoveTheContent() {
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            const before = topRow()
+
+            view.moreAvailableStart = false
+            waitForRendering(view)
+
+            const after = offsetOf(before.value)
+            verify(!isNaN(after), "the row is still there")
+            fuzzyCompare(after, before.offset, 0.5, "and did not move")
+        }
+
+        // Scrolling the length of the content must not make the placeholder bounce
+        // between the two ends: the host is chosen once per crossing, not per
+        // frame. (This cannot pin the early return in applyPlaceholder itself -
+        // Qt ignores a reparent to the same parent, so a missing guard costs
+        // binding churn rather than a move.)
+        function test_scrollingDoesNotBounceItBetweenEnds() {
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            view.contentY = 0
+            waitForRendering(view)
+
+            const before = placeholderProbe.reparents
+            const bottom = view.contentHeight - view.height
+
+            // twenty steps from one end to the other: two host changes at most,
+            // start -> parked -> end
+            for (let i = 1; i <= 20; ++i) {
+                view.contentY = Math.round(bottom * i / 20)
+                waitForRendering(view)
+            }
+
+            compare(host(), "endPlaceholder")
+            verify(placeholderProbe.reparents - before <= 3,
+                   "moved at most once per host change, not per frame: "
+                   + (placeholderProbe.reparents - before))
+        }
+
+        // The last batch at an end is the awkward one: the owner answers inside
+        // the signal, so loading* is already false again, and "nothing more
+        // beyond this" lands at the same moment. The band still has to stand
+        // until the rows that replace it are on screen, and then go in the same
+        // step as they appear.
+        function slideOutTheLastBatch(atStart) {
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            view.contentY = atStart ? 0 : view.contentHeight - view.height
+            waitForRendering(view)
+
+            const band = atStart ? "startPlaceholder" : "endPlaceholder"
+            compare(host(), band)
+
+            const heightBefore = view.contentHeight
+
+            provider.delay = 60     // long enough for the batch to stay staged
+            verify(atStart ? view.requestMoreStart() : view.requestMoreEnd())
+
+            // that was the last of it
+            if (atStart)
+                view.moreAvailableStart = false
+            else
+                view.moreAvailableEnd = false
+
+            let frames = 0
+
+            while (view.busy && frames < 300) {
+                compare(host(), band, "the band still stands")
+                compare(view.contentHeight, heightBefore,
+                        "and still occupies exactly its space")
+                ++frames
+                waitForRendering(view)
+            }
+
+            verify(frames >= 2, "sampled more than once: " + frames)
+            verify(frames < 300, "the batch was revealed")
+            verify(host() !== band, "and it went when the rows replaced it")
+        }
+
+        function test_theStartBandStandsUntilItsReplacementIsRevealed() {
+            slideOutTheLastBatch(true)
+        }
+
+        function test_theEndBandStandsUntilItsReplacementIsRevealed() {
+            slideOutTheLastBatch(false)
+        }
+
+        function test_noPlaceholderMeansNoReservedSpace() {
+            view.placeholder = null
+            provider.delay = 0
+            freshFill(10)
+            finishFill(10)
+
+            compare(view.contentHeight, rowsHeight(), "exactly the rows")
+            compare(view.initialLoading, false)
         }
     }
 

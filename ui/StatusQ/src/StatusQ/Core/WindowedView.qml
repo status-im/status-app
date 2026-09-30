@@ -56,6 +56,19 @@ Flickable {
     property bool moreAvailableStart: false
     property bool moreAvailableEnd: false
 
+    // Stands in for content that is not there yet: the whole viewport while the
+    // first population is being gathered, and a band at either end while more is
+    // available there or on its way. Instantiated once, on first need, and moved
+    // between those placements - so it must fill whatever space it is given. The
+    // view sets its width and height; an intrinsic height of its own is
+    // overridden.
+    property Component placeholder: null
+
+    // Space each end reserves for the placeholder. The single instance only ever
+    // occupies the end nearer the viewport, so the other end reserves this much
+    // blank.
+    property real placeholderHeight: root.height
+
     // Keep the viewport at the bottom edge while it is already there, so the
     // last row stays visible as content grows and the initial fill lands
     // showing the newest row rather than the oldest. Off by default: for a
@@ -69,10 +82,17 @@ Flickable {
     readonly property bool loadingStart: d.loadingStart
     readonly property bool loadingEnd: d.loadingEnd
 
+    // A batch has been admitted and is being made ready - shells built, content
+    // acquired, heights settling - but is not on screen yet. The phase after the
+    // owner has answered, and separate from loadingStart/End, which cover only
+    // the wait for that answer. A synchronous owner has no loading phase worth
+    // seeing at all, and all of the time goes here.
+    readonly property bool staging: d.wave.length > 0
+
     // Either a request is outstanding, a batch is staged and unrevealed, or a
     // fresh population is still being gathered.
     readonly property bool busy: d.loadingStart || d.loadingEnd
-                                 || d.wave.length > 0 || d.initialLoading
+                                 || root.staging || d.initialLoading
 
     // A fresh population - a first load, or a jump that replaced every row - is
     // being staged and has not been revealed yet: the view is showing nothing
@@ -128,6 +148,17 @@ Flickable {
 
         readonly property bool loading: d.loadingStart || d.loadingEnd
 
+        // A batch asked for at this end has been admitted but not revealed yet.
+        // The band has to stand for all of it: an owner that answers inside the
+        // signal clears loading* immediately, and "nothing more beyond this"
+        // arrives at the same moment - so without this the placeholder comes
+        // down at request time and the rows that replace it appear separately,
+        // which is the two-step change everything else here works to avoid.
+        readonly property bool pendingStart: d.loadingStart
+                                             || (d.wave.length > 0 && d.requestedAtStart)
+        readonly property bool pendingEnd: d.loadingEnd
+                                           || (d.wave.length > 0 && !d.requestedAtStart)
+
         // How far this slide is going, and how many of the rows it added are
         // still waiting for content. Rows count themselves in and out.
         // Which end the outstanding request was made at, so the anchor and the
@@ -142,6 +173,98 @@ Flickable {
         // Set when rows arrive into a view that is showing nothing, cleared
         // when they are revealed.
         property bool initialLoading: false
+
+        // Placeholder /////////////////////////////////////////////////////
+        //
+        // One object for all three placements, built the first time any of them
+        // wants it and kept for the view's life: the content of a skeleton is
+        // not cheap, and availability at an end toggles constantly.
+        property Item placeholderItem: null
+        property Item placeholderHost: null
+
+        function ensurePlaceholder() {
+            if (d.placeholderItem || !root.placeholder)
+                return
+
+            d.placeholderItem = root.placeholder.createObject(placeholderPark)
+
+            if (!d.placeholderItem) {
+                console.warn("WindowedView: creating the placeholder failed")
+                return
+            }
+
+            d.placeholderItem.visible = false
+        }
+
+        // Whether a band overlaps what the user can see. Both ends can be on
+        // screen at once when the whole window fits with room to spare.
+        function bandInViewport(band) {
+            return band.visible && band.y < root.contentY + root.height
+                    && band.y + band.height > root.contentY
+        }
+
+        // How far a band's nearest edge is from the viewport, for picking
+        // between two that are both on screen.
+        function bandDistance(band) {
+            const middle = root.contentY + root.height / 2
+
+            return Math.abs(band.y + band.height / 2 - middle)
+        }
+
+        function chooseHost() {
+            if (!root.placeholder)
+                return null
+
+            if (fillBand.visible)
+                return fillBand
+
+            const start = d.bandInViewport(startBand)
+            const end = d.bandInViewport(endBand)
+
+            if (start && end)
+                return d.bandDistance(startBand) <= d.bandDistance(endBand)
+                        ? startBand : endBand
+
+            if (start)
+                return startBand
+
+            if (end)
+                return endBand
+
+            return null
+        }
+
+        // Runs on every contentY change, so it returns early when the host has
+        // not changed. Qt already ignores a reparent to the same parent, so what
+        // this saves is the rest: two fresh Qt.bindings and a visible write per
+        // scroll frame. Not observable in behaviour, only in churn.
+        function applyPlaceholder() {
+            const host = d.chooseHost()
+
+            if (host === d.placeholderHost)
+                return
+
+            if (host)
+                d.ensurePlaceholder()
+
+            if (!d.placeholderItem) {
+                d.placeholderHost = null
+                return
+            }
+
+            d.placeholderHost = host
+
+            if (!host) {
+                d.placeholderItem.visible = false
+                d.placeholderItem.parent = placeholderPark
+                return
+            }
+
+            d.placeholderItem.parent = host
+            d.placeholderItem.width = Qt.binding(() => host.width)
+            d.placeholderItem.height = Qt.binding(() => host.height)
+            d.placeholderItem.visible = true
+        }
 
         // Guards completeWave() against being re-entered by the destruction of
         // the rows it is itself trimming.
@@ -267,14 +390,41 @@ Flickable {
             d.applyingPosition = was
         }
 
+        // What the start band contributes above the rows, as the current
+        // contentY already accounts for it. Its `height` is a constant, so what
+        // actually changes is whether it is shown at all - a Column drops an
+        // invisible child from its layout entirely.
+        property real appliedStartBand: 0
+
+        function startBandExtent() {
+            return startBand.visible ? startBand.height : 0
+        }
+
         function applyContentHeight() {
             // Sampled before the write, while contentHeight still describes the
             // bottom the viewport was actually sitting at.
             const wasAtEnd = d.atEndOfContent()
+            const startBandDelta = d.startBandExtent() - d.appliedStartBand
             const was = d.applyingPosition
+
+            d.appliedStartBand = d.startBandExtent()
 
             d.applyingPosition = true
             root.contentHeight = Math.max(root.height, rowsColumn.height)
+
+            // The start band grew or shrank above the rows, so without this
+            // every one of them shifts by that much - visibly, since outside a
+            // slide no anchor is armed to absorb it. The end band needs nothing:
+            // it is below the viewport. Applied before the stickToEnd pin, and
+            // restorePosition() still runs after this and wins whenever an
+            // anchor is armed.
+            // Not during a reveal: there the band's appearing is part of content
+            // arriving all at once, and the anchor - or the stickToEnd pin - owns
+            // where that lands. Paying for it here as well would scroll a first
+            // paint past the very band it just put up.
+            if (startBandDelta !== 0 && !d.finishing)
+                root.contentY = Math.max(0, Math.min(d.bottomY(),
+                                                     root.contentY + startBandDelta))
 
             // Not while a slide holds a row - that anchor is the exact
             // guarantee, and the rows a slide adds at the end belong below the
@@ -468,6 +618,13 @@ Flickable {
             // content together. An owner that defers removals trims here.
             root.batchRevealed()
 
+            // Cleared here, not at the end: it collapses the viewport-filling
+            // placeholder, and that has to happen in the same layout pass as the
+            // rows appearing. Cleared after the height was applied and the
+            // placeholder would come down in a second step - the two-stage jump
+            // the batched reveal exists to remove.
+            d.initialLoading = false
+
             // The heights are final by now, so this pass is exact rather than
             // provisional - no late correction is needed.
             rowsColumn.forceLayout()
@@ -478,7 +635,6 @@ Flickable {
             // rows gets a fresh interval each time one lands, and a provider
             // gone silent for good just leaves its rows hidden.
             acquireTimer.stop()
-            d.initialLoading = false
             d.finishing = false
         }
 
@@ -666,13 +822,24 @@ Flickable {
                 return
             }
 
+            // Nothing more is owed by the *provider*: every admitted row has
+            // its content and no key is left to claim. The detector watches the
+            // provider, so it comes down here even while the owner is still
+            // loading - waiting for an answer is not a stall, and letting it
+            // fire there would reveal a batch the owner may still be adding to,
+            // splitting the very thing this reveals in one shot.
+            const providerDone = d.stagedKeys.size === 0
+                                 && d.waveWaiting().length === 0
+
+            if (providerDone)
+                acquireTimer.stop()
+
             if (d.loading)
                 return      // the owner has not finished admitting rows
 
-            if (d.stagedKeys.size > 0 || d.waveWaiting().length > 0)
+            if (!providerDone)
                 return
 
-            acquireTimer.stop()
             d.beginSettling()
         }
 
@@ -686,8 +853,16 @@ Flickable {
             const arrived = d.waveArrived().length
             const waiting = d.waveWaiting().length
 
-            if (arrived === 0 && waiting === 0 && d.stagedKeys.size === 0)
-                return      // nothing was owed after all
+            if (arrived === 0 && waiting === 0 && d.stagedKeys.size === 0) {
+                // Nothing is owed yet. An owner that fetches before it admits
+                // has a request outstanding here and rows still to come, so
+                // keep watching - let the detector lapse and a provider that
+                // goes silent after that admission is never caught.
+                if (d.loading)
+                    acquireTimer.restart()
+
+                return
+            }
 
 
             if (arrived === 0 && ++d.noProgressIntervals < d.maxWaitIntervals) {
@@ -774,6 +949,8 @@ Flickable {
     onContentYChanged: {
         if (!d.applyingPosition)
             d.userMoved()
+
+        d.applyPlaceholder()
     }
 
     onHeightChanged: {
@@ -796,6 +973,55 @@ Flickable {
         onHeightChanged: {
             d.applyContentHeight()
             d.restorePosition()
+        }
+
+        // Where the placeholder waits when no placement wants it. Outside the
+        // column, so a parked placeholder reserves no space.
+        Item {
+            id: placeholderPark
+
+            parent: root
+            visible: false
+            width: 0
+            height: 0
+        }
+
+        // The three placements. Each reserves its own space and is empty until
+        // the one instance is moved into it. Invisible children leave a Column's
+        // layout entirely, so a band that is not wanted costs nothing.
+        Item {
+            id: fillBand
+
+            // The band owns the space it reserved: a placeholder whose content
+            // is taller than the band it is put in must not draw over the rows.
+            clip: true
+
+            // named so a test can tell which placement holds the instance
+            objectName: "fillPlaceholder"
+
+            width: rowsColumn.width
+            height: root.height
+            visible: root.initialLoading && !!root.placeholder
+
+            onVisibleChanged: d.applyPlaceholder()
+        }
+
+        Item {
+            id: startBand
+
+            // The band owns the space it reserved: a placeholder whose content
+            // is taller than the band it is put in must not draw over the rows.
+            clip: true
+
+            // named so a test can tell which placement holds the instance
+            objectName: "startPlaceholder"
+
+            width: rowsColumn.width
+            height: root.placeholderHeight
+            visible: !root.initialLoading && !!root.placeholder
+                     && (root.moreAvailableStart || d.pendingStart)
+
+            onVisibleChanged: d.applyPlaceholder()
         }
 
         Repeater {
@@ -905,7 +1131,27 @@ Flickable {
                 }
             }
         }
+
+        Item {
+            id: endBand
+
+            // The band owns the space it reserved: a placeholder whose content
+            // is taller than the band it is put in must not draw over the rows.
+            clip: true
+
+            // named so a test can tell which placement holds the instance
+            objectName: "endPlaceholder"
+
+            width: rowsColumn.width
+            height: root.placeholderHeight
+            visible: !root.initialLoading && !!root.placeholder
+                     && (root.moreAvailableEnd || d.pendingEnd)
+
+            onVisibleChanged: d.applyPlaceholder()
+        }
     }
+
+    onInitialLoadingChanged: d.applyPlaceholder()
 
     Component.onCompleted: {
         if (!root.acquireDelegate || !root.releaseDelegate)
