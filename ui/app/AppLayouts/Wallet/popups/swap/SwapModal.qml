@@ -916,7 +916,7 @@ StatusDialog {
                             Binding {
                                 target: amountSlider
                                 property: "value"
-                                value: payPanel.value
+                                value: Math.min(payPanel.value, amountSlider.to)
                                 when: !amountSlider.pressed
                                 restoreMode: Binding.RestoreBindingOrValue
                             }
