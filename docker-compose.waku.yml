@@ -1,6 +1,6 @@
 services:
   boot-1:
-    image: ${WAKU_IMAGE:-harbor.status.im/wakuorg/nwaku:v0.39.0-rc.2}
+    image: ${WAKU_IMAGE:-harbor.status.im/wakuorg/nwaku:v0.39.0}
     ports:
       - "39001"
       - "8645"
