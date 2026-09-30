@@ -1,6 +1,6 @@
 services:
   boot-1:
-    image: quay.io/wakuorg/nwaku-pr:v0.39.0-rc.4
+    image: harbor.status.im/wakuorg/nwaku:v0.39.0
     ports:
       - "39001"
       - "8645"
@@ -43,7 +43,7 @@ services:
       retries: 10
 
   store:
-    image: quay.io/wakuorg/nwaku-pr:v0.39.0-rc.4
+    image: harbor.status.im/wakuorg/nwaku:v0.39.0
     ports:
       - "39002"
       - "8646"
@@ -88,7 +88,7 @@ services:
       retries: 10
 
   store-2:
-    image: quay.io/wakuorg/nwaku-pr:v0.39.0-rc.4
+    image: harbor.status.im/wakuorg/nwaku:v0.39.0
     ports:
       - "39003"
       - "8647"
