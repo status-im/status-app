@@ -39,6 +39,13 @@ Item {
 
     default property alias contentData: shapesContainer.data
 
+    // The effect is backed by FBOs the size of the whole group; beyond GPU
+    // texture limits it silently paints nothing (a very tall group — e.g. a
+    // paging placeholder — would white out entirely). Past this height the
+    // tiles render plain, without the sweep.
+    readonly property bool shimmerEnabled: root.visible && root.height > 0
+                                           && root.height <= 6000
+
     Item {
         id: shapesContainer
         anchors.fill: parent
@@ -53,7 +60,7 @@ Item {
 
         Loader {
             anchors.fill: parent
-            active: root.visible
+            active: root.shimmerEnabled
             sourceComponent: Rectangle {
                 id: sweep
 
@@ -88,10 +95,15 @@ Item {
         }
     }
 
-    OpacityMask {
+    // Loader-gated, not just hidden: the mask's source bindings keep its
+    // layer textures alive even while the effect item is invisible.
+    Loader {
         anchors.fill: parent
-        source: sweepContainer
-        maskSource: shapesContainer
-        visible: root.visible
+        active: root.shimmerEnabled
+
+        sourceComponent: OpacityMask {
+            source: sweepContainer
+            maskSource: shapesContainer
+        }
     }
 }

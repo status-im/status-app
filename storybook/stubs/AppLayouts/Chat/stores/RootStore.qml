@@ -9,6 +9,9 @@ QtObject {
     // store is created internally by a component under test (section loaders)
     property var chatCommunitySectionModule: ChatStoresConfig.chatSectionModule
     property var contactsStore
+
+    // MessageView senders resolve through this model; null is a valid empty source
+    property var contactsModel: null
     property bool isChatSectionModule
     property var communityId
 
