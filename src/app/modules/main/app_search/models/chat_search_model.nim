@@ -27,6 +27,8 @@ QtObject:
   type Model* = ref object of QAbstractListModel
     items: seq[ChatSearchItem]
     delegate: io_interface.AccessInterface
+    ready: bool
+    rowCountRequested: bool
     built: bool
 
   proc setup(self: Model)
@@ -35,6 +37,8 @@ QtObject:
     new(result, delete)
     result.setup
     result.delegate = delegate
+    result.ready = false
+    result.rowCountRequested = false
     result.built = false
 
   proc getItemIndexById*(self: Model, chatId: string): int =
@@ -44,9 +48,9 @@ QtObject:
     return -1
 
   proc setItems*(self: Model, items: seq[ChatSearchItem]) =
-    # Chats hydrate asynchronously, so a view may have pulled `rowCount` before
-    # they existed: a later bulk build must reset the attached views. The first
-    # build (from `rowCount` itself) needs no reset.
+    # A view may have pulled `rowCount` before the chats were loaded: a build
+    # after that must reset the attached views. A build from the first
+    # `rowCount` needs no reset.
     if self.built:
       when defined(QT_MODEL_SPY):
         recordBeginResetModel()
@@ -85,10 +89,19 @@ QtObject:
     self.removeItemByIndex(index)
 
   method rowCount*(self: Model, index: QModelIndex = nil): int =
-    if not self.built:
+    if not self.ready:
+      self.rowCountRequested = true
+    elif not self.built:
       self.delegate.buildChatSearchModel()
       self.built = true
     return self.items.len
+
+  proc onEverythingLoaded*(self: Model) =
+    self.ready = true
+    if self.rowCountRequested and not self.built:
+      # views already attached to the empty model; setItems must reset them
+      self.built = true
+      self.delegate.buildChatSearchModel()
 
   method roleNames*(self: Model): Table[int, string] =
     {

@@ -402,18 +402,16 @@ method buildChatSearchModel*(self: Module) =
   let personalChatSectionId = self.delegate.getSectionId(SectionType.Chat)
   let personalChatSectionName = self.delegate.getSectionName(personalChatSectionId)
 
-  var skippedChannels = 0
   for chat in self.controller.getAllChats():
     let item = self.createChatSearchItem(chat, personalChatSectionId, personalChatSectionName)
     if item == nil:
-      if chat.chatType == ChatType.CommunityChat:
-        inc skippedChannels
       continue
     items.add(item)
 
-  debug "chat search model built", items = items.len, skippedChannels,
-    communities = self.controller.getCommunityIds().len
   self.view.chatSearchModel().setItems(items)
+
+method onEverythingLoaded*(self: Module) =
+  self.view.chatSearchModel().onEverythingLoaded()
 
 method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
   for chat in updatedChats:
