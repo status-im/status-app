@@ -16908,6 +16908,10 @@ to load</source>
         <translation>가격 영향이 커요. 수량을 줄이거나 나중에 다시 시도하세요</translation>
     </message>
     <message>
+        <source>Unsupported token. Try others</source>
+        <translation>지원하지 않는 토큰이에요. 다른 토큰을 시도해 보세요</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>문제가 발생했어요. 수량이나 토큰을 변경하거나 다시 시도하세요 ↺</translation>
     </message>
