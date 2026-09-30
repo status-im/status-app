@@ -188,6 +188,9 @@ proc fetchAllChainsTokenGroupsForKeys*(self: Module, mandatoryGroupKeys: seq[str
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)
 
+method ensurePricesForGroup*(self: Module, key: string) =
+  self.controller.ensurePricesForGroup(key)
+
 method filterChanged*(self: Module, addresses: seq[string]) =
   if addresses == self.addresses:
       return

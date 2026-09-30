@@ -232,6 +232,7 @@ proc fetchTokensPricesTask*(argEncoded: string) {.gcsafe, nimcall.} =
   var output = %*{
     "tokensPrices": newJNull(),
     "currency": arg.currency,
+    "requestedKeys": arg.tokensKeys,
     "error": ""
   }
   try:

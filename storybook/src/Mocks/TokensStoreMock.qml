@@ -85,6 +85,13 @@ TokensStore {
     // lookup below can still resolve (the real store asks the backend's full list).
     property var allTokensByKey: ({})
 
+    // The real store asks the backend for the price of an unpriced token or group;
+    // the mock only reports the request.
+    signal pricesForGroupRequested(string key)
+    function ensurePricesForGroup(key) {
+        root.pricesForGroupRequested(key)
+    }
+
     function getTokenByKeyOrGroupKeyFromAllTokens(key) {
         if (!!root.allTokensByKey[key])
             return root.allTokensByKey[key]
