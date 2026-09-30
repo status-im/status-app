@@ -68,5 +68,8 @@ method chatAdded*(self: AccessInterface, chat: ChatDto) {.base.} =
 method chatRemoved*(self: AccessInterface, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method updateLastMessage*(self: AccessInterface, chatId, communityId: string, chatType: ChatType, lastmessage: MessageDto, lastMessageTimestamp: int, ownSendTimestamp: int) {.base.} =
+method updateLastMessage*(self: AccessInterface, chatId, communityId: string, chatType: ChatType, lastmessage: MessageDto, lastMessageTimestamp: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method updateLastOwnMessageTimestamp*(self: AccessInterface, chatId: string, lastOwnMessageTimestamp: int) {.base.} =
   raise newException(ValueError, "No implementation available")

@@ -1,6 +1,5 @@
 import tables, chronicles
 import io_interface
-import own_send_recency
 
 import ../../../global/app_signals
 import ../../../global/global_singleton
@@ -57,6 +56,12 @@ proc newController*(delegate: io_interface.AccessInterface, events: EventEmitter
 proc delete*(self: Controller) =
   self.resultItems.clear
 
+proc newestMessage(messages: openArray[MessageDto]): MessageDto =
+  result = messages[0]
+  for m in messages:
+    if m.timestamp > result.timestamp:
+      result = m
+
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SEARCH_MESSAGES_LOADED) do(e:Args):
     let args = MessagesArgs(e)
@@ -111,16 +116,15 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
     self.delegate.updateLastMessage(args.chat.id, args.chat.communityId, args.chat.chatType, args.chat.lastMessage,
-      args.chat.timestamp.int,
-      latestOwnSendTimestamp([args.message], singletonInstance.userProfile.getPubKey()))
+      args.chat.timestamp.int)
+    self.delegate.updateLastOwnMessageTimestamp(args.chat.id, args.chat.lastOwnMessageTimestamp.int)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
     let args = MessagesArgs(e)
     if args.messages.len == 0:
       return
     self.delegate.updateLastMessage(args.chatId, args.sectionId, args.chatType, newestMessage(args.messages),
-      args.lastMessageTimestamp,
-      latestOwnSendTimestamp(args.messages, singletonInstance.userProfile.getPubKey()))
+      args.lastMessageTimestamp)
 
 proc activeSectionId*(self: Controller): string =
   return self.activeSectionId
