@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 
 import StatusQ.Core.Utils as SQUtils
 
@@ -63,6 +64,11 @@ Flickable {
     // view sets its width and height; an intrinsic height of its own is
     // overridden.
     property Component placeholder: null
+
+    // Ask for more by itself when a band the user can see still has content
+    // behind it. The band is the trigger area, so a view with no placeholder
+    // reserves nothing and pages only when told to.
+    property bool autoRequest: true
 
     // Space each end reserves for the placeholder. The single instance only ever
     // occupies the end nearer the viewport, so the other end reserves this much
@@ -194,6 +200,54 @@ Flickable {
             }
 
             d.placeholderItem.visible = false
+        }
+
+        // Auto-request ///////////////////////////////////////////////////
+        //
+        // Held while the user has hold of the view. `moving` covers a content
+        // drag and a flick still decelerating; the scrollbar needs a term of
+        // its own because a handle drag writes contentY directly and emits no
+        // movement signals at all.
+        readonly property bool scrollBarHeld: {
+            const bar = root.ScrollBar.vertical
+
+            return !!bar && bar.pressed
+        }
+
+        readonly property bool userHolding: root.moving || d.scrollBarHeld
+
+        // Load more condition: `busy` is part of the condition, so
+        // a request takes it down and the reveal brings it back up - and if the
+        // band is still on screen by then, that rise is the next request. A
+        // handle released, a drag ended and a flick settling are edges too.
+        readonly property bool shouldRequestMore:
+                root.autoRequest && !root.busy && !d.finishing && !d.userHolding
+                && ((root.moreAvailableStart && d.bandInViewport(startBand))
+                    || (root.moreAvailableEnd && d.bandInViewport(endBand)))
+
+        // Deferred by one turn, not polled: requesting writes `d.wave`, which
+        // feeds `staging`, which feeds `busy`, which this condition reads - so
+        // doing it here, inside the notification, is a binding loop. callLater
+        // runs in this same event-loop iteration, before anything is rendered,
+        // so nothing is actually delayed.
+        onShouldRequestMoreChanged: {
+            if (d.shouldRequestMore)
+                Qt.callLater(d.requestForVisibleBand)
+        }
+
+        function requestForVisibleBand() {
+            // Re-checked rather than trusted from the edge that scheduled it:
+            // the view may have moved, stopped being idle, or had the request
+            // answered by other means in between.
+            if (!d.shouldRequestMore)
+                return
+
+            // The start end first, so a view short enough to show both bands
+            // walks back through the history rather than fighting itself.
+            if (root.moreAvailableStart && d.bandInViewport(startBand))
+                d.request(true)
+            else if (root.moreAvailableEnd && d.bandInViewport(endBand))
+                d.request(false)
         }
 
         // Whether a band overlaps what the user can see. Both ends can be on

@@ -305,6 +305,11 @@ Item {
         // a row nobody asked for, as an external insert would be
         readonly property int liveValue: 9000
 
+        // How many more chunks each end is willing to give. Large by default, so
+        // availability is effectively infinite unless a test says otherwise.
+        property int startBudget: 1000
+        property int endBudget: 1000
+
         // Two shapes of a late owner. holdAnswer admits at once and confirms
         // later - an index window that has the rows already. holdAdmit does
         // neither until answer() is called - a backend fetch, where nothing
@@ -351,6 +356,8 @@ Item {
             owner.holdAnswer = false
             owner.holdAdmit = false
             owner.answerOwed = false
+            owner.startBudget = 1000
+            owner.endBudget = 1000
 
             if (initial > 0)
                 rows.append(rows.make(0, initial))
@@ -358,6 +365,8 @@ Item {
         }
 
         function admitEnd(count) {
+            owner.endBudget = Math.max(0, owner.endBudget - 1)
+
             rows.append(rows.make(owner.nextEnd, count))
             owner.nextEnd += count
             owner.admitted = count
@@ -365,6 +374,8 @@ Item {
         }
 
         function admitStart(count) {
+            owner.startBudget = Math.max(0, owner.startBudget - 1)
+
             const first = owner.nextStart - count + 1
             rows.insert(0, rows.make(first, count))
             owner.nextStart = first - 1
@@ -399,6 +410,11 @@ Item {
 
         moreAvailableStart: true
         moreAvailableEnd: true
+
+        // Off by default here: this owner never runs out, so a view that paged
+        // itself would page forever. The AutoRequest group turns it on against
+        // a budgeted owner.
+        autoRequest: false
 
         acquireDelegate: (parent, modelRow, cb) => provider.acquire(parent, modelRow, cb)
         releaseDelegate: (item) => provider.release(item)
@@ -1503,6 +1519,235 @@ Item {
     }
 
     TestCase {
+        id: autoRequestTests
+
+        name: "WindowedView.AutoRequest"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            view.placeholder = skeletonPlaceholder
+            view.placeholderHeight = 100
+
+            // Off while filling: the start band lands in the viewport the
+            // moment the rows do, so a view that paged itself would never
+            // settle at the count the fill asked for.
+            view.autoRequest = false
+        }
+
+        function cleanup() {
+            view.autoRequest = false
+            view.placeholder = null
+            view.moreAvailableStart = true
+            view.moreAvailableEnd = true
+        }
+
+        function freshFill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        // A budgeted owner: without one, an end that is always available pages
+        // for ever. Armed after the fill, because owner.reset() restores the
+        // budgets along with everything else.
+        function arm(chunks) {
+            owner.startBudget = chunks
+            owner.endBudget = chunks
+            view.moreAvailableStart = Qt.binding(() => owner.startBudget > 0)
+            view.moreAvailableEnd = Qt.binding(() => owner.endBudget > 0)
+            view.autoRequest = true
+        }
+
+        function toStartBand() {
+            view.contentY = 0
+            waitForRendering(view)
+        }
+
+        function quiet(frames) {
+            for (let i = 0; i < frames; ++i)
+                waitForRendering(view)
+        }
+
+        function test_aBandInTheViewportAsksForMore() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+
+            const before = values()[0]
+
+            toStartBand()
+
+            tryVerify(() => owner.startBudget < 3, 3000, "it asked")
+            tryVerify(() => !view.busy, 8000)
+            verify(values()[0] < before, "and older rows arrived")
+        }
+
+        function test_nothingIsAskedWhileTheHandleIsHeld() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+
+            // Start at the bottom, with the handle under the cursor, and drag
+            // it all the way up - letting the scrollbar drive contentY, as a
+            // real drag does, rather than jumping the view underneath it.
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+
+            const x = scrollBar.width / 2
+
+            mousePress(scrollBar, x, scrollBar.height - 4)
+            verify(scrollBar.pressed, "the handle is held")
+
+            for (let i = 5; i >= 0; --i) {
+                mouseMove(scrollBar, x, scrollBar.height * i / 6)
+                waitForRendering(view)
+                compare(owner.startBudget, 3, "held: nothing asked")
+            }
+
+            verify(view.contentY < view.placeholderHeight,
+                   "the drag reached the start band: " + view.contentY)
+
+            mouseRelease(scrollBar, x, 0)
+
+            tryVerify(() => owner.startBudget < 3, 3000, "asked on release")
+            tryVerify(() => !view.busy, 8000)
+        }
+
+        function test_nothingIsAskedWhileTheViewIsMoving() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+
+            // Dragged by the content rather than flicked: the direction is then
+            // ours to choose, and a drag is what `moving` mostly means anyway.
+            view.contentY = view.placeholderHeight * 3
+            waitForRendering(view)
+
+            const x = view.width / 2
+
+            mousePress(view, x, 20)
+
+            // The first move only crosses the drag threshold; the Flickable is
+            // not dragging until the one after it.
+            mouseMove(view, x, 60, 16, Qt.LeftButton)
+            waitForRendering(view)
+
+            let frames = 0
+
+            for (let i = 2; i <= 8; ++i) {
+                // the button has to be named: mouseMove() holds none by default,
+                // and a Flickable only drags for a held button
+                mouseMove(view, x, 20 + i * 40, 16, Qt.LeftButton)
+                waitForRendering(view)
+                verify(view.moving, "still in motion")
+                compare(owner.startBudget, 3, "moving: nothing asked")
+                ++frames
+            }
+
+            verify(view.contentY < view.placeholderHeight,
+                   "the drag reached the start band: " + view.contentY)
+
+            mouseRelease(view, x, 20 + 8 * 40, Qt.LeftButton)
+            verify(frames >= 2, "sampled more than once: " + frames)
+            tryVerify(() => owner.startBudget < 3, 3000, "asked once at rest")
+            tryVerify(() => !view.busy, 8000)
+        }
+
+        // One batch per reveal, however many times the condition rises.
+        function test_requestsDoNotStack() {
+            provider.delay = 40
+            freshFill(40)
+            arm(3)
+
+            toStartBand()
+
+            let frames = 0
+
+            while (owner.startBudget > 0 && frames < 900) {
+                verify(view.rowCount <= 40 + root.chunk,
+                       "never more than one chunk over the window: "
+                       + view.rowCount)
+                ++frames
+                waitForRendering(view)
+            }
+
+            tryVerify(() => !view.busy, 8000)
+            compare(owner.startBudget, 0, "spent one chunk at a time")
+        }
+
+        function test_itStopsWhenNothingIsLeft() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+
+            toStartBand()
+
+            tryVerify(() => owner.startBudget === 0 && !view.busy, 10000,
+                      "walked to the end of what the owner had")
+            compare(view.moreAvailableStart, false)
+
+            const rows = view.rowCount
+
+            quiet(6)
+
+            compare(view.rowCount, rows, "nothing more was asked for")
+            compare(view.busy, false)
+        }
+
+        function test_nothingIsAskedDuringTheInitialFill() {
+            provider.delay = 60
+
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            arm(3)
+            owner.reset(40)         // resets the budgets, hence arm() again
+            arm(3)
+
+            let frames = 0
+
+            while (view.initialLoading && frames < 600) {
+                compare(view.rowCount, 40, "the first paint is never disturbed")
+                compare(owner.startBudget, 3)
+                ++frames
+                waitForRendering(view)
+            }
+
+            verify(frames >= 2, "sampled more than once: " + frames)
+            tryVerify(() => !view.busy, 10000)
+        }
+
+        function test_autoRequestOffAsksForNothing() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+            view.autoRequest = false
+
+            toStartBand()
+            quiet(6)
+
+            compare(owner.startBudget, 3, "the flag gates it")
+        }
+
+        function test_noPlaceholderMeansNoAutoRequest() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+            view.placeholder = null
+
+            toStartBand()
+            quiet(6)
+
+            compare(owner.startBudget, 3, "no band, no trigger area")
+        }
+    }
+
+    TestCase {
         id: placeholderTests
 
         name: "WindowedView.Placeholder"
@@ -1915,6 +2160,9 @@ Item {
 
         moreAvailableStart: windowSource.moreAvailableStart
         moreAvailableEnd: windowSource.moreAvailableEnd
+
+        // The integration case is about the seams, not about paging policy.
+        autoRequest: false
 
         acquireDelegate: (parent, modelRow, cb) => delegatePool.acquire(parent, (obj) => {
             obj.width = Qt.binding(() => (parent ? parent.width : undefined) ?? 0)
