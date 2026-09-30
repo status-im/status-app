@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
@@ -54,9 +55,10 @@ Control {
                     value: root.chatTypeFilter
                     enabled: root.chatTypeFilter !== -1
                 },
-                ExpressionFilter {
+                FastExpressionFilter {
                     enabled: root.selectedOnly
                     expression: !!root.selection && root.selection.chatIds.indexOf(model.chatId) !== -1
+                    expectedRoles: ["chatId"]
                 },
                 AnyOf {
                     enabled: !!root.searchPhrase
