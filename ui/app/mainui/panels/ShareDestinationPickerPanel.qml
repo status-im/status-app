@@ -14,7 +14,7 @@ import shared.controls
 import utils
 
 /**
-  * The share picker (see CONTEXT.md "Destination picker" / "Share selection"):
+  * The share picker:
   * header, swipeable tab pages (optionally narrowed to the selection), and
   * the composer.
   * Store-free: model + payload in, sendRequested/cancelRequested out.
