@@ -67,15 +67,6 @@ proc init*(self: Controller) =
     let args = MessagesArgs(e)
     self.delegate.onSearchMessagesDone(args.messages)
 
-  # The bulk chat load and the community data load land independently after
-  # login; community channels are only known once both are in, so the model
-  # is (re)built on each.
-  self.events.on(chat_service.SIGNAL_ACTIVE_CHATS_LOADED) do(e: Args):
-    self.delegate.buildChatSearchModel()
-
-  self.events.on(SIGNAL_COMMUNITY_DATA_LOADED) do(e: Args):
-    self.delegate.buildChatSearchModel()
-
   self.events.on(SIGNAL_CHAT_UPDATE) do(e: Args):
     var args = ChatUpdateArgs(e)
     self.delegate.updateChatItems(args.chats)

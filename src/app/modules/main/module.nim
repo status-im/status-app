@@ -1040,6 +1040,7 @@ method onChatsLoaded*[T](
 
   self.view.model().removeItem(LOADING_SECTION_ID)
 
+  self.appSearchModule.onEverythingLoaded()
   self.view.sectionsLoaded()
 
   self.events.emit(SIGNAL_MAIN_LOADED, Args())
