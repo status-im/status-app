@@ -1403,6 +1403,74 @@ Item {
             }
         }
 
+        // the slider tracks the pay amount within the pay token's range: the
+        // exchange button keeps the entered amount but swaps in a token with a
+        // different balance, and an amount above that balance parks the slider
+        // at 100% rather than at whatever position the old range left it in
+        function test_slider_follows_pay_amount_across_exchange() {
+            const walletAccounts = getProcessedAccountsModel()
+            root.swapAdaptor.reset()
+            root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
+            root.swapFormData.fromGroupKey = sttGroupKey
+            root.swapFormData.toGroupKey = ethGroupKey
+
+            launchAndVerfyModal()
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            verify(!!payPanel)
+            const amountSlider = findChild(controlUnderTest, "amountSlider")
+            verify(!!amountSlider)
+            const amountPercent = findChild(controlUnderTest, "amountPercent")
+            verify(!!amountPercent)
+            const swapExchangeButton = findChild(controlUnderTest, "swapExchangeButton")
+            verify(!!swapExchangeButton)
+            waitForRendering(payPanel)
+
+            tryVerify(() => payPanel.maxSafeCryptoValue > 0)
+            const sttMax = payPanel.maxSafeCryptoValue
+            payPanel.setAmount(sttMax)
+            tryCompare(amountSlider, "value", sttMax)
+            compare(amountPercent.text, "100%")
+
+            swapExchangeButton.clicked()
+            waitForRendering(payPanel)
+
+            // the amount is kept, the range is now the ETH balance
+            tryVerify(() => payPanel.maxSafeCryptoValue > 0 && payPanel.maxSafeCryptoValue !== sttMax)
+            fuzzyCompare(payPanel.value, sttMax, 1e-9)
+            tryCompare(amountSlider, "to", payPanel.maxSafeCryptoValue)
+            tryCompare(amountSlider, "value", Math.min(sttMax, payPanel.maxSafeCryptoValue))
+
+            // an amount above the balance: "Insufficient funds", slider at 100%
+            payPanel.setAmount(payPanel.maxSafeCryptoValue * 2)
+            tryVerify(() => payPanel.amountEnteredGreaterThanBalance)
+            tryCompare(amountSlider, "value", amountSlider.to)
+            compare(amountPercent.text, "100%")
+
+            // the range shrinks while a quote is pending (fees reserved from
+            // the old route, balance not resolved yet) and grows back: the
+            // slider must follow the range back up, not stay where the
+            // shrunken range clamped it
+            const fullRange = payPanel.maxSafeCryptoValue
+            payPanel.cryptoFeesToReserve = payPanel.maxCryptoBalance * 1e18 // raw wei, the whole balance
+            tryVerify(() => payPanel.maxSafeCryptoValue < fullRange)
+            tryCompare(amountSlider, "value", amountSlider.to)
+            payPanel.cryptoFeesToReserve = 0
+            tryCompare(payPanel, "maxSafeCryptoValue", fullRange)
+            tryCompare(amountSlider, "to", fullRange)
+            tryCompare(amountSlider, "value", fullRange)
+            compare(amountPercent.text, "100%")
+
+            // back within range: the slider follows the amount again
+            payPanel.setAmount(payPanel.maxSafeCryptoValue / 2)
+            tryCompare(amountSlider, "value", payPanel.maxSafeCryptoValue / 2)
+            compare(amountPercent.text, "50%")
+
+            closeAndVerfyModal()
+        }
+
         function test_modal_exchange_button_enabled_state_data() {
             return [
                         {fromToken: "", fromTokenAmount: "", toToken: "", toTokenAmount: ""},
