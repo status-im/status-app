@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Shapes
 import QtQuick.Layouts
 
 import StatusQ
@@ -30,7 +29,7 @@ Item {
         anchors.rightMargin: 16
         spacing: 8
 
-        Shape {
+        StatusMessageConnector {
             id: replyCorner
             objectName: "statusMessageReplyCorner"
             Layout.alignment: Qt.AlignTop
@@ -38,31 +37,7 @@ Item {
             Layout.topMargin: profileImage.height/2
             Layout.preferredWidth: 20
             Layout.preferredHeight: messageLayout.height - replyCorner.Layout.topMargin
-            asynchronous: true
-            antialiasing: true
-
-            ShapePath {
-                strokeColor: {
-                    const base = root.Theme.palette.baseColor1
-                    return Qt.hsla(base.hslHue,
-                                   base.hslSaturation,
-                                   base.hslLightness, 0.4)
-                }
-                strokeWidth: 3
-                fillColor: "transparent"
-                capStyle: ShapePath.RoundCap
-                joinStyle: ShapePath.RoundJoin
-                startX: 20
-                startY: 0
-                PathLine { x: 10; y: 0 }
-                PathArc {
-                    x: 0; y: 10
-                    radiusX: 13
-                    radiusY: 13
-                    direction: PathArc.Counterclockwise
-                }
-                PathLine { x: 0; y: messageLayout.height}
-            }
+            pathHeight: messageLayout.height
         }
 
         Item {
@@ -172,4 +147,3 @@ Item {
         }
     }
 }
-
