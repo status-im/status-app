@@ -1,31 +1,64 @@
 ARG QT_VERSION="6.11.0"
 ARG QT_MODULES="qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtwebengine qtpositioning qtserialport qtshadertools qtimageformats qtscxml qthttpserver"
-ARG LINUXDEPLOYQT_VERSION="20250615-0393b84"
 ARG PCSCLITE_VERSION="2.2.3"
 ARG PCSCLITE_SHA256="6e0205a47ec0dd10c000965ee88e08e60c2f7f3ce7280ce0e624915821ea2402"
 ARG NIM_VERSION="2.2.10"
+ARG NIM_SRC_SHA256="7957b7ed004206bcf10bcc4f3b4744153878e62f2431552a9a8e9d3f40e8d5d5"
 ARG CCID_VERSION="1.7.0"
 ARG CCID_SHA256="4abe76010a72944e02e8d5d4d60ba665f941891eee2a35f77fd35cebc095e14b"
 
+# Architecture specific values -------------------------------------------------
+# TARGETARCH is set by BuildKit, the matching stage is selected below.
+FROM ubuntu:24.04 AS arch-amd64
+
+ENV ARCH_UNAME=x86_64 \
+    ARCH_TRIPLET=x86_64-linux-gnu \
+    QT_HOST=linux \
+    QT_ARCH=linux_gcc_64 \
+    QT_PLATFORM=gcc_64 \
+    GOLANG_ARCH=amd64 \
+    GOLANG_SHA256=da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c43f \
+    PROTOC_ARCH=x86_64 \
+    PROTOC_SHA256=bc8211ce760bd43ee21ddc145d6d9dbaeeabae205267a79d9054a240e367d4b4 \
+    LINUXDEPLOYQT_SHA256=974a87457ed26241b793bed7841978fcdf84158d13220e53833a06515f173b0b
+
+FROM ubuntu:24.04 AS arch-arm64
+
+ENV ARCH_UNAME=aarch64 \
+    ARCH_TRIPLET=aarch64-linux-gnu \
+    QT_HOST=linux_arm64 \
+    QT_ARCH=linux_gcc_arm64 \
+    QT_PLATFORM=gcc_arm64 \
+    GOLANG_ARCH=arm64 \
+    GOLANG_SHA256=fd2bccce882e29369f56c86487663bb78ba7ea9e02188a5b0269303a0c3d33ab \
+    PROTOC_ARCH=aarch_64 \
+    PROTOC_SHA256=4a00ec5e256d20a3deadd9e77d56da0ac04c72367c3c959f6d08e110a368400a \
+    LINUXDEPLOYQT_SHA256=986d52d855a8c0ea8c51564807e8fb6af3466426d29224093c040b56ba244df3
+
+FROM arch-${TARGETARCH} AS arch
+
 # QT Installation Image --------------------------------------------------------
-FROM ubuntu:22.04 AS qt-install
+FROM arch AS qt-install
 
 ARG QT_VERSION QT_MODULES
 
 RUN apt update && apt full-upgrade -y \
- && apt install -y --no-install-recommends sudo python3 python3-pip python3-dev build-essential \
+ && apt install -y --no-install-recommends sudo python3 python3-venv \
  && apt-get -qq clean
 
 RUN chmod -R 777 /opt
 
 # Install QT
-RUN python3 -m pip install setuptools \
- && python3 -m pip install -U pip \
- && python3 -m pip install aqtinstall \
- && python3 -m aqt install-qt linux desktop ${QT_VERSION} linux_gcc_64 -m ${QT_MODULES} -O /opt/qt --timeout 3000
+# aqtinstall goes into a venv: pip refuses to touch the system Python on Ubuntu 24.04 (PEP 668).
+RUN python3 -m venv /opt/aqt \
+ && /opt/aqt/bin/pip install aqtinstall \
+ && /opt/aqt/bin/aqt install-qt ${QT_HOST} desktop ${QT_VERSION} ${QT_ARCH} -m ${QT_MODULES} -O /opt/qt --timeout 3000
+
+RUN rm /opt/qt/${QT_VERSION}/${QT_PLATFORM}/plugins/imageformats/libqtiff.so \
+       /opt/qt/${QT_VERSION}/${QT_PLATFORM}/lib/cmake/Qt6Gui/Qt6QTiffPlugin*
 
 # PCSC Lite Build Image --------------------------------------------------------
-FROM ubuntu:22.04 AS pcsc-build
+FROM arch AS pcsc-build
 
 ARG PCSCLITE_VERSION PCSCLITE_SHA256 CCID_VERSION CCID_SHA256
 
@@ -46,7 +79,7 @@ WORKDIR /pcsc
 
 RUN meson setup builddir -Dpolkit=false -Dlibsystemd=false -Dserial=false \
     -Dipcdir=/tmp/pcscd/run -Dusbdropdir=/tmp/pcscd/drivers \
-    -Dlibdir=lib/x86_64-linux-gnu
+    -Dlibdir=lib/${ARCH_TRIPLET}
 RUN cd builddir && ninja && ninja install
 RUN cp builddir/pcsclite.h src/PCSC
 
@@ -56,21 +89,20 @@ RUN wget -q "https://github.com/LudovicRousseau/CCID/archive/refs/tags/${CCID_VE
  && tar -xzf /tmp/ccid.tar.gz -C /ccid --strip-components=1
 
 WORKDIR /ccid
-ENV PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig
+ENV PKG_CONFIG_PATH=/usr/local/lib/${ARCH_TRIPLET}/pkgconfig:/usr/local/lib/pkgconfig
 RUN meson setup builddir -Dserial=false -Dudev-rules=false
 RUN cd builddir && ninja && ninja install
 
 # Build Image ------------------------------------------------------------------
-FROM ubuntu:22.04
+FROM arch
 
-ARG QT_VERSION LINUXDEPLOYQT_VERSION PCSCLITE_VERSION NIM_VERSION
+ARG QT_VERSION PCSCLITE_VERSION NIM_VERSION NIM_SRC_SHA256
 
 # Adapted from a12e/docker-qt by Aurélien Brooke
 
 ENV DEBIAN_FRONTEND=noninteractive \
     QMAKESPEC=linux-g++ \
     QT_PATH=/opt/qt \
-    QT_PLATFORM=gcc_64 \
     QT_VERSION=$QT_VERSION
 
 ENV QTDIR=${QT_PATH}/${QT_VERSION}/${QT_PLATFORM}
@@ -84,7 +116,7 @@ RUN apt update -yq && apt install -yq software-properties-common \
  && add-apt-repository -y ppa:git-core/ppa \
  && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
  && apt update -yq && apt full-upgrade -yq && apt install -yq --no-install-recommends --fix-missing  \
-    gnupg2 openssh-client ca-certificates locales sudo jq curl wget fuse s3cmd file unzip llvm tk-dev xz-utils netbase \
+    gnupg2 openssh-client ca-certificates locales sudo jq curl wget fuse3 libfuse2t64 libminizip1t64 s3cmd file unzip llvm tk-dev xz-utils netbase \
     git make build-essential pkg-config extra-cmake-modules \
     flatpak flatpak-builder elfutils appstream \
     libgl1-mesa-dev libsm6 libice6 libfontconfig1 libdbus-1-3 libssl-dev libz-dev \
@@ -109,17 +141,17 @@ RUN apt update -yq && apt install -yq software-properties-common \
 # Install PCSC Lite
 COPY --from=pcsc-build /pcsc/builddir/pcscd   /usr/local/sbin/
 COPY --from=pcsc-build /pcsc/src/PCSC /usr/local/include/PCSC/
-COPY --from=pcsc-build /pcsc/builddir/meson-private/libpcsclite.pc /usr/local/lib/x86_64-linux-gnu/pkgconfig/
+COPY --from=pcsc-build /pcsc/builddir/meson-private/libpcsclite.pc /usr/local/lib/${ARCH_TRIPLET}/pkgconfig/
 COPY --from=pcsc-build /pcsc/builddir/libpcsclite_real.so.1 /pcsc/builddir/libpcsclite_real.so \
                        /pcsc/builddir/libpcsclite.so.1      /pcsc/builddir/libpcsclite.so \
                        /pcsc/builddir/libpcscspy.so.0       /pcsc/builddir/libpcscspy.so \
-                       /usr/local/lib/x86_64-linux-gnu/
+                       /usr/local/lib/${ARCH_TRIPLET}/
 COPY --from=pcsc-build /tmp/pcscd/drivers /usr/local/lib/pcsc/drivers
 
 # Install linuxdeployqt
-# built from https://github.com/probonopd/linuxdeployqt/commit/0393b84
 RUN mkdir -p /usr/local/bin \
- && curl -Lo/usr/local/bin/linuxdeployqt "https://status-misc.ams3.digitaloceanspaces.com/desktop/linuxdeployqt-${LINUXDEPLOYQT_VERSION}-x86_64.AppImage" \
+ && curl -Lo/usr/local/bin/linuxdeployqt "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-${ARCH_UNAME}.AppImage" \
+ && echo "${LINUXDEPLOYQT_SHA256} /usr/local/bin/linuxdeployqt" | sha256sum -c \
  && chmod a+x /usr/local/bin/linuxdeployqt
 
 # Reconfigure locale
@@ -137,16 +169,16 @@ RUN sudo sed -i 's#\(mozilla/DST_Root_CA_X3.crt\)#!\1#' /etc/ca-certificates.con
  && sudo dpkg-reconfigure -fnoninteractive ca-certificates
 
 # CMake 3.16 or higher is required
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.sh \
- && chmod +x cmake-3.22.1-linux-x86_64.sh \
+RUN CMAKE_INSTALLER="cmake-3.22.1-linux-${ARCH_UNAME}.sh" \
+ && wget "https://github.com/Kitware/CMake/releases/download/v3.22.1/${CMAKE_INSTALLER}" \
+ && chmod +x "${CMAKE_INSTALLER}" \
  && sudo mkdir /opt/cmake \
- && sudo sh cmake-3.22.1-linux-x86_64.sh --prefix=/opt/cmake --exclude-subdir --skip-license \
- && rm -f cmake-3.22.1-linux-x86_64.sh
+ && sudo sh "${CMAKE_INSTALLER}" --prefix=/opt/cmake --exclude-subdir --skip-license \
+ && rm -f "${CMAKE_INSTALLER}"
 ENV PATH="/opt/cmake/bin:${PATH}"
 
 # Installing Golang
-RUN GOLANG_SHA256="da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c43f" \
- && GOLANG_TARBALL="go1.24.7.linux-amd64.tar.gz" \
+RUN GOLANG_TARBALL="go1.24.7.linux-${GOLANG_ARCH}.tar.gz" \
  && wget -q "https://dl.google.com/go/${GOLANG_TARBALL}" \
  && echo "${GOLANG_SHA256} ${GOLANG_TARBALL}" | sha256sum -c \
  && sudo tar -C /usr/local -xzf "${GOLANG_TARBALL}" \
@@ -154,8 +186,7 @@ RUN GOLANG_SHA256="da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c
  && sudo ln -s /usr/local/go/bin/go /usr/local/bin
 
 # Install Protoc
-RUN PROTOC_SHA256="bc8211ce760bd43ee21ddc145d6d9dbaeeabae205267a79d9054a240e367d4b4" \
- && PROTOC_TARBALL="protoc-36.0-linux-x86_64.zip" \
+RUN PROTOC_TARBALL="protoc-36.0-linux-${PROTOC_ARCH}.zip" \
  && wget -q -L  "https://github.com/protocolbuffers/protobuf/releases/download/v36.0/${PROTOC_TARBALL}" \
  && echo "${PROTOC_SHA256} ${PROTOC_TARBALL}" | sha256sum -c \
  && sudo unzip -d /usr/local "${PROTOC_TARBALL}" \
@@ -187,21 +218,26 @@ RUN curl -s https://nixos.org/releases/nix/nix-2.24.11/install | sh -s -- --no-d
 # for nix-shell to work
 ENV PATH="/home/jenkins/.nix-profile/bin:${PATH}"
 
-# Nim
-RUN curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y \
- && /home/jenkins/.nimble/bin/choosenim ${NIM_VERSION}
-ENV PATH="/home/jenkins/.nimble/bin:${PATH}"
-
-# Switch to root to create system-wide symlinks for Nim tools
+# Nim is built from the source tarball, there are no official aarch64 binaries.
 USER root
 
-RUN ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nim /usr/local/bin/nim \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nimble /usr/local/bin/nimble \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/choosenim /usr/local/bin/choosenim \
- && chmod 755 /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/* \
- && chown -R root:root /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin
+RUN wget -q "https://nim-lang.org/download/nim-${NIM_VERSION}.tar.xz" -O /tmp/nim.tar.xz \
+ && echo "${NIM_SRC_SHA256} /tmp/nim.tar.xz" | sha256sum -c \
+ && mkdir -p /opt/nim \
+ && tar -xJf /tmp/nim.tar.xz -C /opt/nim --strip-components=1 \
+ && rm /tmp/nim.tar.xz \
+ && cd /opt/nim \
+ && sh build.sh \
+ && bin/nim c --noNimblePath --skipUserCfg --skipParentCfg --hints:off koch \
+ && ./koch boot -d:release --skipUserCfg --skipParentCfg --hints:off \
+ && ./koch nimble \
+ && ln -sf /opt/nim/bin/nim /usr/local/bin/nim \
+ && ln -sf /opt/nim/bin/nimble /usr/local/bin/nimble
 
 USER jenkins
+
+# Access to tools installed by Nimble.
+ENV PATH="/home/jenkins/.nimble/bin:${PATH}"
 
 LABEL maintainer="jakub@status.im"
 LABEL source="https://github.com/status-im/status-app"
