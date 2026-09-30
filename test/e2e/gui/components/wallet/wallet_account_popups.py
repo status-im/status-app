@@ -162,6 +162,8 @@ class AccountPopup(QObject):
 
     @allure.step('Select predefined derivation path {1}')
     def _select_predefined_derivation_path(self, path_name: str):
+        if self._path_selection_applied(path_name):
+            return self
         for attempt in range(2):
             self._derivation_path_combobox_button.hover().click()
             self._derivation_path_list_item.real_name[
