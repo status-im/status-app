@@ -17241,6 +17241,10 @@ to load</source>
         <translation>Великий вплив на ціну. Зменште суму або спробуйте пізніше</translation>
     </message>
     <message>
+        <source>Unsupported token. Try others</source>
+        <translation>Токен не підтримується. Спробуйте інші</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Виникла проблема. Змініть суму, токен або повторіть спробу ↺</translation>
     </message>
