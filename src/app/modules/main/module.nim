@@ -2286,10 +2286,12 @@ proc finishActiveShare[T](self: Module[T]) =
 
 method sendSharedContent*[T](self: Module[T], destinationsJson, text, imagePathsJson: string, contentType: int) =
   let destinations = parseShareDestinations(destinationsJson)
+  let imagePaths = parseImagePathsJson(imagePathsJson)
   if destinations.len == 0:
+    releaseCachedShareFiles(imagePaths)
     return
   let share = PendingShare(token: $genUUID(), destinations: destinations, text: text,
-    imagePaths: parseImagePathsJson(imagePathsJson), contentType: contentType)
+    imagePaths: imagePaths, contentType: contentType)
   if enqueueShare(self.shareQueue, share):
     self.startActiveShare()
 
