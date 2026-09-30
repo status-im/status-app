@@ -383,16 +383,15 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
                                (unsigned long)current, (unsigned long)total];
 }
 
-// Only photo formats larger than the cap are downscaled; gif/png/webp keep
-// their bytes (animation, transparency).
-+ (BOOL)shouldDownscale:(NSURL *)fileUrl
+// Re-encoded as JPEG: HEIC/HEIF always (the app and status-go do not decode
+// them), JPEG only when larger than the cap. gif/png/webp keep their bytes
+// (animation, transparency).
++ (BOOL)shouldTranscodeToJpeg:(NSURL *)fileUrl
 {
-    static NSSet<NSString *> *photoExtensions;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        photoExtensions = [NSSet setWithArray:@[@"jpg", @"jpeg", @"heic", @"heif"]];
-    });
-    if (![photoExtensions containsObject:fileUrl.pathExtension.lowercaseString])
+    NSString *ext = fileUrl.pathExtension.lowercaseString;
+    if ([ext isEqualToString:@"heic"] || [ext isEqualToString:@"heif"])
+        return YES;
+    if (![ext isEqualToString:@"jpg"] && ![ext isEqualToString:@"jpeg"])
         return NO;
     CGImageSourceRef source = CGImageSourceCreateWithURL((__bridge CFURLRef)fileUrl, NULL);
     if (source == NULL)
@@ -458,10 +457,10 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     long long epochMs = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
     NSString *base = [NSString stringWithFormat:@"share-%lld-%lu", epochMs, (unsigned long)index];
     NSURL *dest = nil;
-    if ([ShareViewController shouldDownscale:fileUrl]) {
+    if ([ShareViewController shouldTranscodeToJpeg:fileUrl]) {
         dest = [dir URLByAppendingPathComponent:[base stringByAppendingString:@".jpg"]];
         if (![ShareViewController writeDownscaledJpegFrom:fileUrl to:dest]) {
-            NSLog(@"StatusShareExtension: downscale failed for image %lu; copying the original", (unsigned long)index);
+            NSLog(@"StatusShareExtension: JPEG transcode failed for image %lu; copying the original", (unsigned long)index);
             [fm removeItemAtURL:dest error:nil];
             dest = nil;
         }
