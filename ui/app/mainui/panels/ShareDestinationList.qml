@@ -80,7 +80,8 @@ Control {
             anchors.top: parent.top
             anchors.topMargin: Theme.padding * 2
             visible: listView.count === 0
-            text: root.selectedOnly ? qsTr("Nothing selected yet") : root.emptyText
+            text: root.selectedOnly && (!root.selection || root.selection.count === 0)
+                  ? qsTr("Nothing selected yet") : root.emptyText
             font.pixelSize: Theme.additionalTextSize
             color: Theme.palette.baseColor1
         }

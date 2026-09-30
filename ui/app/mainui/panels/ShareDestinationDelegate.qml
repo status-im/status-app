@@ -84,6 +84,7 @@ StatusListItem {
     components: [
         StatusCheckBox {
             objectName: "shareDestinationCheckBox"
+            Accessible.name: root.name
             checkable: false
             checked: root.checked
             leftSide: false

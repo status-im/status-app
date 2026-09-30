@@ -79,8 +79,8 @@ Control {
         }
 
         TabItem { objectName: "shareTabAll"; index: 0; text: qsTr("All") }
-        TabItem { objectName: "shareTabContacts"; index: 1; iconName: "contact" }
-        TabItem { objectName: "shareTabGroups"; index: 2; iconName: "group-chat" }
-        TabItem { objectName: "shareTabCommunities"; index: 3; iconName: "communities" }
+        TabItem { objectName: "shareTabContacts"; index: 1; iconName: "contact"; text: qsTr("Contacts") }
+        TabItem { objectName: "shareTabGroups"; index: 2; iconName: "group-chat"; text: qsTr("Groups") }
+        TabItem { objectName: "shareTabCommunities"; index: 3; iconName: "communities"; text: qsTr("Communities") }
     }
 }

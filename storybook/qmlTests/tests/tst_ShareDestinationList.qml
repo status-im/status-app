@@ -93,6 +93,18 @@ Item {
             tryCompare(list, "count", 1)
         }
 
+        function test_selectedOnlyEmptyTextTellsSelectionFromFilter() {
+            const list = create({ selectedOnly: true })
+            const emptyText = findChild(list, "shareDestinationListEmptyText")
+            verify(emptyText.visible)
+            compare(emptyText.text, "Nothing selected yet")
+            list.selection.toggle("channel-pets")
+            list.searchPhrase = "zzz"
+            tryCompare(list, "count", 0)
+            verify(emptyText.visible)
+            compare(emptyText.text, list.emptyText)
+        }
+
         function test_delegateCheckedReflectsSelection() {
             const list = create()
             const delegate = findChild(list, "shareDestinationDelegate_group-travel")
