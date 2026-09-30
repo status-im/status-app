@@ -15405,6 +15405,18 @@ to load</source>
         <source>All</source>
         <translation type="unfinished">전체</translation>
     </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished">연락처</translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">커뮤니티</translation>
+    </message>
 </context>
 <context>
     <name>SharePreviewPanel</name>

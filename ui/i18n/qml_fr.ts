@@ -15470,6 +15470,18 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <source>All</source>
         <translation type="unfinished">Tout</translation>
     </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished">Contacts</translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Communautés</translation>
+    </message>
 </context>
 <context>
     <name>SharePreviewPanel</name>

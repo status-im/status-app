@@ -15474,6 +15474,18 @@ al cargar</translation>
         <source>All</source>
         <translation type="unfinished">Todos</translation>
     </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished">Contactos</translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Comunidades</translation>
+    </message>
 </context>
 <context>
     <name>SharePreviewPanel</name>

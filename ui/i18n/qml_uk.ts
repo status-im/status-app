@@ -15544,6 +15544,18 @@ to load</source>
         <source>All</source>
         <translation type="unfinished">Усі</translation>
     </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Спільноти</translation>
+    </message>
 </context>
 <context>
     <name>SharePreviewPanel</name>
