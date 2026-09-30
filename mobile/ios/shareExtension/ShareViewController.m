@@ -9,8 +9,7 @@
 //      expiring-access rule as Android's content-URI read grants;
 //   2. write a {"type":"share","text":...,"imagePaths":[...]} payload into
 //      the App Group container (the pending intake slot — see
-//      src/app/core/intake/pending_intake_slot.nim for the host side and
-//      CONTEXT.md for the vocabulary);
+//      src/app/core/intake/pending_intake_slot.nim for the host side);
 //   3. wake the host app via the responder-chain openURL workaround;
 //   4. complete the extension request.
 //
