@@ -32,7 +32,6 @@ const DEFAULT_SHOW_DELETE_THREAD_WARNING = true
 const LSS_KEY_ACTIVE_SECTION* = "activeSection"
 const DEFAULT_ACTIVE_SECTION = ""
 const LAST_SECTION_CHAT = "LastSectionChat"
-const LAST_OWN_SEND = "LastOwnSend"
 const DEFAULT_ACTIVE_CHAT = ""
 const DEFAULT_SHOW_BROWSER_SELECTOR = true
 const LSS_KEY_OPEN_LINKS_IN_STATUS* = "openLinksInStatus"
@@ -163,14 +162,6 @@ QtObject:
     
   proc removeSectionChatRecord*(self: LocalAccountSensitiveSettings, sectionId: string) =
     self.removeSettingsGroupKey(LAST_SECTION_CHAT, sectionId)
-
-  # Timestamp of the user's last own message per chat; feeds the share
-  # picker's own-send ranking across restarts.
-  proc getChatLastOwnSend*(self: LocalAccountSensitiveSettings, chatId: string): int =
-    getSettingsGroupProp[int](self, LAST_OWN_SEND, chatId, newQVariant(0))
-
-  proc setChatLastOwnSend*(self: LocalAccountSensitiveSettings, chatId: string, value: int) =
-    self.setSettingsGroupProp(LAST_OWN_SEND, chatId, newQVariant(value))
 
   proc chatSplitViewChanged*(self: LocalAccountSensitiveSettings) {.signal.}
   proc getChatSplitView*(self: LocalAccountSensitiveSettings): QVariant {.slot.} =

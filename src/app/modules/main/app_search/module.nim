@@ -383,11 +383,9 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
       else:
         self.controller.getMessagesParsedPlainText(chat.lastMessage, []),
     lastMessageTimestamp = chat.timestamp.int,
-    # Own-send recency: the persisted last own send (kept up to date by
-    # updateLastMessage) or, if newer, the chat's last message when it is ours.
-    lastOwnMessageTimestamp = max(
-      if chat.lastMessage.`from` == singletonInstance.userProfile.getPubKey(): chat.timestamp.int else: 0,
-      singletonInstance.localAccountSensitiveSettings.getChatLastOwnSend(chat.id)),
+    # Fallback for chats that predate the lastOwnMessageTimestamp column
+    lastOwnMessageTimestamp = max(chat.lastOwnMessageTimestamp.int,
+      if chat.lastMessage.`from` == singletonInstance.userProfile.getPubKey(): chat.timestamp.int else: 0),
     # Post rights for channels live on the community's own chat record
     canPost =
       if isCommunity:
@@ -439,6 +437,8 @@ method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
       self.view.chatSearchModel().removeItemByIndex(index)
       continue
 
+    if chat.lastOwnMessageTimestamp > 0:
+      self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chat.id, chat.lastOwnMessageTimestamp.int)
     if chat.chatType == ChatType.OneToOne:
       # 1-1 chat properties are updated when a contact is updated, so we can skip it here
       continue
@@ -470,7 +470,11 @@ method chatAdded*(self: Module, chat: ChatDto) =
 method chatRemoved*(self: Module, chatId: string) =
   self.view.chatSearchModel().removeItemById(chatId)
 
-method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto, lastMessageTimestamp: int, ownSendTimestamp: int) =
+method updateLastOwnMessageTimestamp*(self: Module, chatId: string, lastOwnMessageTimestamp: int) =
+  if lastOwnMessageTimestamp > 0:
+    self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chatId, lastOwnMessageTimestamp)
+
+method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto, lastMessageTimestamp: int) =
   self.view.chatSearchModel().updateLastMessageTextOnChatItem(
     chatId,
     if chatType == ChatType.CommunityChat and communityId != "":
@@ -481,6 +485,3 @@ method updateLastMessage*(self: Module, chatId, communityId: string, chatType: C
   )
   if lastMessageTimestamp > 0:
     self.view.chatSearchModel().updateLastMessageTimestampOnChatItem(chatId, lastMessageTimestamp)
-  if ownSendTimestamp > 0:
-    self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chatId, ownSendTimestamp)
-    singletonInstance.localAccountSensitiveSettings.setChatLastOwnSend(chatId, ownSendTimestamp)
