@@ -15543,6 +15543,18 @@ selhalo</translation>
         <source>All</source>
         <translation type="unfinished">Všechny</translation>
     </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished">Kontakty</translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Komunity</translation>
+    </message>
 </context>
 <context>
     <name>SharePreviewPanel</name>
