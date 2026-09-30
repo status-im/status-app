@@ -1,6 +1,7 @@
 proc rebuildMarketDataInternal(self: Service) =
   self.fetchTokensMarketValues() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
   self.fetchTokensPrices()
+  self.refetchOnDemandPrices()
 
 proc rebuildMarketData*(self: Service) =
   self.rebuildMarketDataDebouncer.call()
@@ -278,6 +279,12 @@ proc init*(self: Service) =
     checkIntervalMs = 100)
   self.missingTokenKeysFetchDebouncer.registerCall0(callback = proc() = self.fetchPendingMissingTokenKeys())
 
+  self.onDemandPricesDebouncer = debouncer_service.newDebouncer(
+    self.threadpool,
+    delayMs = 200,
+    checkIntervalMs = 100)
+  self.onDemandPricesDebouncer.registerCall0(callback = proc() = self.fetchPendingOnDemandPrices())
+
   self.events.on(SignalType.Wallet.event) do(e:Args):
     var data = WalletSignal(e)
     case data.eventType:
@@ -491,21 +498,30 @@ proc getTokensByGroupKey*(self: Service, groupKey: string): seq[TokenItem] =
 
 ## Note: use this function in a very rare case, when you're sure the token is not present in the models.
 ## Returns a token that matches the key, or the first token in the group that matches the key.
-proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenItem =
+# Every deployment of a token by its key or group key: the tokens of interest
+# first, then the indexed all-tokens cache, then the full token list.
+proc getTokensByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): seq[TokenItem] =
   if common_utils.isTokenKey(key):
-    return self.getTokenByKey(key)
-  var tokens = self.getTokensByGroupKey(key)
-  if tokens.len > 0:
-    return tokens[0]
+    let token = self.getTokenByKey(key)
+    return if token.isNil: @[] else: @[token]
+  result = self.getTokensByGroupKey(key)
+  if result.len > 0:
+    return
   if self.allTokensByGroupKey.hasKey(key):
-    let indexed = self.allTokensByGroupKey[key]
-    if indexed.len > 0:
-      return indexed[0]
-  tokens = getAllTokens()
-  let matchedTokens = tokens.filter(t => t.groupKey == key)
-  if matchedTokens.len > 0:
-    return matchedTokens[0]
-  return nil
+    result = self.allTokensByGroupKey[key]
+    if result.len > 0:
+      return
+  return getAllTokens().filter(t => t.groupKey == key)
+
+proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenItem =
+  let tokens = self.getTokensByKeyOrGroupKeyFromAllTokens(key)
+  return if tokens.len > 0: tokens[0] else: nil
+
+proc ensurePricesForGroup*(self: Service, key: string) =
+  let keys = if common_utils.isTokenKey(key): @[key]
+             else: self.getTokensByKeyOrGroupKeyFromAllTokens(key).mapIt(it.key)
+  if keys.len > 0:
+    self.ensurePricesForTokens(keys)
 
 proc findTokenByGroupKeyAndChainIdInTable(
     tokensByGroupKey: Table[string, seq[TokenItem]],

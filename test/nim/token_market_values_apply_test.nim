@@ -1,4 +1,4 @@
-import unittest, json, tables
+import unittest, json, tables, sets
 
 import app_service/service/token/token_market_values_apply
 import app_service/service/token/items/market_values
@@ -55,3 +55,25 @@ suite "applyMarketValuesResponse":
     check not applyMarketValuesResponse(values, hasCache, marketValuesResponse("usd", 5.0), "eur")
     check not hasCache
     check values.len == 0
+
+suite "pricedKeysInResponse":
+  # the on-demand fetch answers for the keys it asked; a key the provider doesn't
+  # list comes back absent or at zero and must count as unpriced (it gets backed off)
+  proc byKeyResponse(currency: string, prices: JsonNode, requested: seq[string]): TokensPricesSlotResponse =
+    TokensPricesSlotResponse(currency: currency, requestedKeys: requested, tokensPrices: %*{"result": prices})
+
+  test "requested keys with a positive price for the currency are priced":
+    let env = byKeyResponse("usd", %*{"4663-0x1inch": {"usd": 0.31}, "10-0x1inch": {"usd": 0}}, @["4663-0x1inch", "10-0x1inch"])
+    check pricedKeysInResponse(env, "usd") == ["4663-0x1inch"].toHashSet
+
+  test "a key the provider left out is unpriced":
+    let env = byKeyResponse("usd", %*{"4663-0x1inch": {"usd": 0.31}}, @["4663-0x1inch", "10-0xdust"])
+    check pricedKeysInResponse(env, "usd") == ["4663-0x1inch"].toHashSet
+
+  test "the currency comparison ignores case and other currencies":
+    let env = byKeyResponse("usd", %*{"4663-0x1inch": {"USD": 0.31}, "10-0x1inch": {"eur": 0.3}}, @["4663-0x1inch", "10-0x1inch"])
+    check pricedKeysInResponse(env, "usd") == ["4663-0x1inch"].toHashSet
+
+  test "a missing result yields no priced keys":
+    let env = TokensPricesSlotResponse(currency: "usd", requestedKeys: @["4663-0x1inch"], tokensPrices: newJNull())
+    check pricedKeysInResponse(env, "usd").len == 0

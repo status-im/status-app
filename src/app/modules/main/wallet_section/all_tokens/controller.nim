@@ -79,6 +79,9 @@ proc buildGroupsForChainTo*(self: Controller, chainId: int) =
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): TokenItem =
   return self.tokenService.getTokenByKeyOrGroupKeyFromAllTokens(key)
 
+proc ensurePricesForGroup*(self: Controller, key: string) =
+  self.tokenService.ensurePricesForGroup(key)
+
 proc getGroupsForChain*(self: Controller): var seq[TokenGroupItem] =
   return self.tokenService.getGroupsForChain()
 

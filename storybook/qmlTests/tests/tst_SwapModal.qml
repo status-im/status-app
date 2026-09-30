@@ -139,6 +139,12 @@ Item {
     }
 
     SignalSpy {
+        id: pricesForGroupRequested
+        target: root.swapAdaptor.walletAssetsStore.walletTokensStore
+        signalName: "pricesForGroupRequested"
+    }
+
+    SignalSpy {
         id: reevaluateSwapCalled
         target: root.swapStore
         signalName: "reevaluateSwapCalled"
@@ -2590,6 +2596,50 @@ Item {
             const receiveText = findChild(receivePanel, "amountToSend_textField")
             verify(!!receiveText)
             verify(receiveText.text !== "", "receive input text is empty")
+
+            closeAndVerfyModal()
+        }
+
+        // A token no account holds is outside the periodic price refresh, so the
+        // side that settles on it asks the store for its price; once the price
+        // lands in the picker rows the receive side turns to fiat like the pay side.
+        function test_receiveTokenWithoutAPriceGetsItsPriceRequested() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const rhtKey = "11155420-0x000000000000000000000000000000000000r0b1"
+            // on the receive chain, so the receive picker lists it and its row's price is what the panel reads
+            const rht = { key: rhtKey, groupKey: rhtKey, symbol: "RHT", name: "Robin Token", decimals: 18, chainId: 11155420 }
+            store.allTokensByKey = { [rhtKey]: rht }
+            const row = (key, symbol, decimals, chainId, price) => ({
+                key: key, groupKey: key, name: symbol, symbol: symbol, logoUri: "", decimals: decimals,
+                cryptoPrice: price, currentBalance: 5, currencyBalance: 5 * price, sectionName: "",
+                balances: [{ chainId: chainId, iconUrl: "", chainName: "", balance: 5, rawBalance: "5000000" }],
+                tokens: [{ key: key, chainId: chainId }]
+            })
+            store.tokenSelectorStubData = [row(sttGroupKey, "STT", 18, 11155420, 1), row(ethGroupKey, "ETH", 18, 11155420, 1), row(rhtKey, "RHT", 18, 11155420, 0)]
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, { swapInputParamsForm: root.swapFormData })
+            launchAndVerfyModal()
+            root.swapFormData.fromGroupKey = sttGroupKey
+            formValuesChanged.wait()
+            pricesForGroupRequested.clear()
+            root.swapFormData.toGroupKey = rhtKey
+            formValuesChanged.wait()
+            tryVerify(() => pricesForGroupRequested.count > 0, 2000, "the receive token's price was asked for")
+            const requested = []
+            for (let i = 0; i < pricesForGroupRequested.count; i++)
+                requested.push(pricesForGroupRequested.signalArguments[i][0])
+            verify(requested.includes(rhtKey), "asked for the receive group, got " + requested.join(","))
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            payPanel.setFiatMode(true)
+            tryCompare(payPanel, "fiatMode", true)
+            compare(receivePanel.fiatMode, false, "no price yet, so the receive side stays in crypto")
+
+            // the price lands in the picker rows through the market-values update
+            // (the mock picker copies the stub rows on creation, so re-seed it directly)
+            receivePanel.tokenSelectorModel.sourceData = [row(sttGroupKey, "STT", 18, 11155420, 1), row(ethGroupKey, "ETH", 18, 11155420, 1), row(rhtKey, "RHT", 18, 11155420, 0.5)]
+            tryCompare(receivePanel, "fiatMode", true)
 
             closeAndVerfyModal()
         }

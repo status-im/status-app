@@ -44,6 +44,9 @@ QObject {
                                                           : (toTokenCatalogEntry.available ? toTokenCatalogEntry.item
                                                                                            : d.tokenFromAllTokens(root.swapFormData.toGroupKey))
 
+    onFromTokenChanged: d.ensurePriced(root.fromToken, root.swapFormData.fromGroupKey)
+    onToTokenChanged: d.ensurePriced(root.toToken, root.swapFormData.toGroupKey)
+
     /** the user's own wallet accounts, usable as sender or recipient **/
     readonly property var accountsModel: root.swapStore.accounts
 
@@ -64,6 +67,15 @@ QObject {
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapFormData.selectedNetworkChainId)
         readonly property string nativeTokenKey: Utils.getNativeTokenKey(root.swapFormData.selectedNetworkChainId)
+
+        function ensurePriced(token, groupKey) {
+            if (!token || !groupKey)
+                return
+            if (!!token.marketDetails && !!token.marketDetails.currencyPrice
+                    && token.marketDetails.currencyPrice.amount > 0)
+                return
+            root.walletAssetsStore.walletTokensStore.ensurePricesForGroup(groupKey)
+        }
 
         // last resort for a token no loaded model carries: symbol and decimals only,
         // no market details (the store's lookup is a synchronous backend call)

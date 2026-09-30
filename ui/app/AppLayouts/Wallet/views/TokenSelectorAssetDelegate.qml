@@ -58,7 +58,7 @@ ItemDelegate {
             return -1
         let chain = root.chainId
         if (chain < 0 && !!balancesModel && balancesModel.ModelCount.count > 0)
-            chain = SQUtils.ModelUtils.get(root.balancesModel, 0, "chainId")
+            chain = SQUtils.ModelUtils.get(root.balancesModel, 0, "chainId") ?? -1
         if (chain < 0 && root.fallbackChainId >= 0 && SQUtils.ModelUtils.contains(tokensModel, "chainId", root.fallbackChainId))
             chain = root.fallbackChainId
         if (chain < 0)

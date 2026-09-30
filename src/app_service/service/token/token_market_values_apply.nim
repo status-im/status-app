@@ -1,4 +1,4 @@
-import json, tables, strutils
+import json, tables, strutils, sets
 import json_serialization
 
 import dto/market_data
@@ -14,6 +14,7 @@ type
     tokensPrices*: JsonNode
     currency*: string
     error*: string
+    requestedKeys*: seq[string] ## the keys the fetch was asked for; empty for the tokens-of-interest refresh
 
 proc resultOf(node: JsonNode): JsonNode =
   if node.isNil or node.kind != JObject:
@@ -38,6 +39,19 @@ proc applyPricesResponse*(prices: var Table[string, float64], hasCache: var bool
       if cmpIgnoreCase(priceCurrency, currency) == 0:
         prices[tokenKey] = price.getFloat
   hasCache = true
+
+proc pricedKeysInResponse*(env: TokensPricesSlotResponse, currency: string): HashSet[string] =
+  result = initHashSet[string]()
+  let tokens = resultOf(env.tokensPrices)
+  if tokens.isNil:
+    return
+  for key in env.requestedKeys:
+    let byCurrency = tokens{key}
+    if byCurrency.isNil or byCurrency.kind != JObject:
+      continue
+    for (priceCurrency, price) in byCurrency.pairs:
+      if cmpIgnoreCase(priceCurrency, currency) == 0 and price.kind in {JFloat, JInt} and price.getFloat > 0:
+        result.incl(key)
 
 # Applies market values fetched for `currency`; returns false for a response fetched for another currency.
 proc applyMarketValuesResponse*(values: var Table[string, TokenMarketValuesItem], hasCache: var bool,
