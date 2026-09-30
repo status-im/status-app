@@ -3,21 +3,26 @@ import QtQml
 import StatusQ.Core.Utils
 
 /**
-  * The share selection (see CONTEXT.md): the set of destination chat ids the
-  * user ticked. Unordered; consumers order it by their own model. State
-  * changes only through the methods. Holds at most maxCount ids: toggling a
-  * new one in while full is refused.
+  * The share selection: the set of destination chat ids the user ticked.
+  * Unordered; consumers order it by their own model. State changes only
+  * through the methods. Holds at most maxCount ids: toggling a new one in
+  * while full is refused.
   */
 QtObject {
     id: root
 
-    property var chatIds: []
+    readonly property var chatIds: d.ids
     property int maxCount: 5
 
     readonly property int count: root.chatIds.length
     readonly property bool isFull: root.count >= root.maxCount
 
     signal changed()
+
+    readonly property QtObject d: QtObject {
+        id: d
+        property var ids: []
+    }
 
     function contains(chatId) {
         return root.chatIds.indexOf(chatId) !== -1
@@ -33,14 +38,14 @@ QtObject {
         } else {
             ids.splice(index, 1)
         }
-        root.chatIds = ids
+        d.ids = ids
         root.changed()
     }
 
     function clear() {
         if (root.chatIds.length === 0)
             return
-        root.chatIds = []
+        d.ids = []
         root.changed()
     }
 
@@ -48,7 +53,7 @@ QtObject {
         const kept = root.chatIds.filter(id => ModelUtils.contains(model, "chatId", id))
         if (kept.length === root.chatIds.length)
             return
-        root.chatIds = kept
+        d.ids = kept
         root.changed()
     }
 }

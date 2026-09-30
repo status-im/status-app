@@ -622,7 +622,7 @@
     <name>ShareDestinationDelegate</name>
     <message numerus="yes">
         <source>%n member(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n member</numerusform>
             <numerusform>%n members</numerusform>
         </translation>
