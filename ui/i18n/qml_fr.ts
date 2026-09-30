@@ -17156,6 +17156,10 @@ avec un retour à la ligne</translation>
         <translation>Impact sur le prix élevé. Diminuez le montant ou réessayez plus tard</translation>
     </message>
     <message>
+        <source>Unsupported token. Try others</source>
+        <translation>Token non pris en charge. Essayez-en d’autres</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Un problème est survenu. Modifiez le montant, le jeton ou réessayez ↺</translation>
     </message>
