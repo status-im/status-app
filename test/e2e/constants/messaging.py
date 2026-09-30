@@ -14,6 +14,7 @@ class Messaging(Enum):
     ID_VERIFICATION_REPLY_SENT = 'ID verification reply sent'
     SHOW_PREVIEWS_TITLE = 'Show link previews?'
     SHOW_PREVIEWS_TEXT = 'A preview of your link will be shown here before you send it'
+    PAYMENT_REQUEST_AMOUNT = '1'
 
 
 class Sticker(NamedTuple):
