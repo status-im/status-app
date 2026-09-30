@@ -133,7 +133,10 @@ GridLayout {
         border.width: 1
         border.color: Theme.palette.baseColor2
         enabled: root.store.derivedAddressModel.count > 1
-        statusListItemTitle.elide: Qt.ElideMiddle
+        clip: true
+        statusListItemTitle.wrapMode: Text.NoWrap
+        statusListItemTitle.maximumLineCount: 1
+        statusListItemTitle.elide: Text.ElideMiddle
         loading: root.store.derivedAddressModel.count === 0
 
         title: {
