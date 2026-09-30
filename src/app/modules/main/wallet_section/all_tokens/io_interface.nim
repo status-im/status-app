@@ -99,6 +99,9 @@ method buildGroupsForChainTo*(self: AccessInterface, chainId: int) {.base.} =
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: AccessInterface, key: string): TokenItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method ensurePricesForGroup*(self: AccessInterface, key: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method filterChanged*(self: AccessInterface, addresses: seq[string]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
