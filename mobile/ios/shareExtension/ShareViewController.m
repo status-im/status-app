@@ -286,8 +286,13 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
                     ? [self copyImageToCache:fileUrl index:index]
                     : nil;
                 if (copied != nil) {
+                    // A copy that lands after the deadline handed off is
+                    // dropped, so the hand-off never races this write.
                     @synchronized (orderedImagePaths) {
-                        orderedImagePaths[index] = copied;
+                        if (finished)
+                            [[NSFileManager defaultManager] removeItemAtPath:copied error:nil];
+                        else
+                            orderedImagePaths[index] = copied;
                     }
                 } else {
                     // Skip this attachment; the rest of the share still
@@ -314,7 +319,9 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
                 return;
             NSLog(@"StatusShareExtension: image loads exceeded %.0fs; handing off the copies made so far",
                   kImageLoadDeadlineSeconds);
-            finished = YES;
+            @synchronized (orderedImagePaths) {
+                finished = YES;
+            }
             loadImage = nil;
             dispatch_group_leave(group);
         });
@@ -339,9 +346,11 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
             text = text.length > 0 ? [NSString stringWithFormat:@"%@\n%@", text, url] : url;
         }
         NSMutableArray<NSString *> *imagePaths = [NSMutableArray array];
-        for (id path in orderedImagePaths) {
-            if ([path isKindOfClass:[NSString class]])
-                [imagePaths addObject:path];
+        @synchronized (orderedImagePaths) {
+            for (id path in orderedImagePaths) {
+                if ([path isKindOfClass:[NSString class]])
+                    [imagePaths addObject:path];
+            }
         }
         completion(text, imagePaths);
     });
