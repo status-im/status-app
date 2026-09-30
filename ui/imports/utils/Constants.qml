@@ -1123,6 +1123,7 @@ QtObject {
             readonly property string errSlippageExceeded               : "WPP-048"
             readonly property string errAmountTooLow                   : "WPP-049"
             readonly property string errAmountTooHigh                  : "WPP-050"
+            readonly property string errUnsupportedCurrency            : "WPP-051"
         }
 
         readonly property QtObject router: QtObject {

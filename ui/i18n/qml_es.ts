@@ -16987,6 +16987,10 @@ al cargar</translation>
         <translation>Impacto en el precio alto. Reduce la cantidad o inténtalo más tarde</translation>
     </message>
     <message>
+        <source>Unsupported token. Try others</source>
+        <translation>Token no compatible. Prueba con otros</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Hubo un problema. Cambia la cantidad o el token, o reintenta ↺</translation>
     </message>

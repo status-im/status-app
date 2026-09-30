@@ -17066,6 +17066,10 @@ selhalo</translation>
         <translation>Vysoký dopad na cenu. Snižte částku nebo to zkuste později</translation>
     </message>
     <message>
+        <source>Unsupported token. Try others</source>
+        <translation>Nepodporovaný token. Zkuste jiné</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Nastal problém. Změňte částku, token nebo to zkuste znovu ↺</translation>
     </message>
