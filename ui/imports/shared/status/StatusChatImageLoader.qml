@@ -159,6 +159,7 @@ Item {
             width: Math.min(implicitWidth, root.imageWidth)
             fillMode: Image.PreserveAspectFit
             sourceSize.width: d.decodeWidth
+            sourceSize.height: d.decodeWidth
             asynchronous: root.asynchronous
             source: root.source
             playing: root.playing

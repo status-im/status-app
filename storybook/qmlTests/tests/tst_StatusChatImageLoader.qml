@@ -47,8 +47,13 @@ Item {
             tryVerify(() => control.imageAlias !== null)
             verify(control.imageAlias instanceof AnimatedImage)
             compare(control.imageAlias.sourceSize.width, decodeWidthFor(300))
+            compare(control.imageAlias.sourceSize.height, decodeWidthFor(300))
             compare(control.imageAlias.cache, true)
             tryCompare(control, "imageLoaded", true)
+            verify(control.imageAlias.width > 0)
+            verify(control.imageAlias.paintedHeight > 0)
+            verify(control.width > 0)
+            verify(control.height > 0)
         }
 
         function test_decodeWidthIsSteppedAndFollowsAsynchronous() {
