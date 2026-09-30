@@ -211,6 +211,9 @@ QtObject:
       return ""
     return $(%* token)
 
+  proc ensurePricesForGroup*(self: View, key: string) {.slot.} =
+    self.delegate.ensurePricesForGroup(key)
+
   proc getTokenGroupsModelObj*(self: View): TokenGroupsModel =
     ## Non-QML accessor: the raw model instances, so a sibling producer can
     ## snapshot their loaded rows and drive their lazy loading directly.

@@ -152,6 +152,11 @@ QtObject {
         root._allTokensModule.fetchAllChainsTokenGroups(mandatoryKeys)
     }
 
+    function ensurePricesForGroup(key) {
+        if (!!root._allTokensModule)
+            root._allTokensModule.ensurePricesForGroup(key)
+    }
+
     // Due to performance reasons, use this function as the last option, when you're sure the token is not present in the models.
     function getTokenByKeyOrGroupKeyFromAllTokens(key) {
 
@@ -171,6 +176,8 @@ QtObject {
         }
 
         const jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
+        if (!jsonToken)
+            return defaultValue
 
         try {
             return JSON.parse(jsonToken)
