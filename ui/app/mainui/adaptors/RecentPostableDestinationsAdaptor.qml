@@ -6,7 +6,7 @@ import SortFilterProxyModel
 
 /**
   * Data-oriented adaptor producing the "recent postable destinations" model
-  * (see CONTEXT.md): from a plain model of chats/channels it keeps only the
+  * from a plain model of chats/channels: it keeps only the
   * destinations the user can post to (1-1 chats, group chats, community
   * channels with post rights) and orders them by recency of the last message.
   *
