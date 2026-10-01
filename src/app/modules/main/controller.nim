@@ -633,4 +633,4 @@ proc sendSharedText*(self: Controller, chatId, text: string, contentType: int, l
 proc sendSharedImages*(self: Controller, chatId: string, imagePaths: seq[string], text: string,
     linkPreviews: seq[LinkPreview], releaseCachedFiles: bool, sendToken: string, releasePaths: seq[string]) =
   self.chatService.asyncSendImages(chatId, $(%imagePaths), text, "", singletonInstance.userProfile.getPreferredName(),
-    linkPreviews, @[], releaseCachedFiles, sendToken, releasePaths)
+    linkPreviews, @[], releaseCachedFiles = releaseCachedFiles, sendToken = sendToken, releasePaths = releasePaths)
