@@ -41,7 +41,7 @@
 ##
 
 type
-  qrcodegen_Ecc* = enum ##  Must be declared in ascending order of error protection
+  qrcodegen_Ecc* {.size: sizeof(cint).} = enum ##  Must be declared in ascending order of error protection
                      ##  so that an internal qrcodegen function works properly
     qrcodegen_Ecc_LOW = 0,      ##  The QR Code can tolerate about  7% erroneous codewords
     qrcodegen_Ecc_MEDIUM,     ##  The QR Code can tolerate about 15% erroneous codewords
@@ -54,7 +54,7 @@ type
 ##
 
 type
-  qrcodegen_Mask* = enum        ##  A special value to tell the QR Code encoder to
+  qrcodegen_Mask* {.size: sizeof(cint).} = enum        ##  A special value to tell the QR Code encoder to
                       ##  automatically select an appropriate mask pattern
     qrcodegen_Mask_AUTO = -1,   ##  The eight actual mask patterns
     qrcodegen_Mask_0 = 0, qrcodegen_Mask_1, qrcodegen_Mask_2, qrcodegen_Mask_3,
@@ -66,7 +66,7 @@ type
 ##
 
 type
-  qrcodegen_Mode* = enum
+  qrcodegen_Mode* {.size: sizeof(cint).} = enum
     qrcodegen_Mode_NUMERIC = 0x00000001, qrcodegen_Mode_ALPHANUMERIC = 0x00000002,
     qrcodegen_Mode_BYTE = 0x00000004, qrcodegen_Mode_ECI = 0x00000007,
     qrcodegen_Mode_KANJI = 0x00000008
