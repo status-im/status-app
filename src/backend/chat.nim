@@ -55,6 +55,7 @@ proc sendChatMessage*(
     msg: string,
     replyTo: string,
     contentType: int,
+  threadId: string = "",
     preferredUsername: string = "",
     standardLinkPreviews: JsonNode,
     statusLinkPreviews: JsonNode,
@@ -68,6 +69,7 @@ proc sendChatMessage*(
       "chatId": chatId,
       "text": msg,
       "responseTo": replyTo,
+      "threadId": threadId,
       "ensName": preferredUsername,
       "sticker": {
         "hash": stickerHash,
@@ -86,6 +88,7 @@ proc sendImages*(chatId: string,
                  msg: string,
                  replyTo: string,
                  preferredUsername: string,
+                 threadId: string = "",
                  standardLinkPreviews: JsonNode,
                  statusLinkPreviews: JsonNode,
                  paymentRequests: JsonNode,
@@ -98,12 +101,21 @@ proc sendImages*(chatId: string,
         "ensName": preferredUsername,
         "text": msg,
         "responseTo": replyTo,
+        "threadId": threadId,
         "linkPreviews": standardLinkPreviews,
         "statusLinkPreviews": statusLinkPreviews,
         "paymentRequests": paymentRequests,
       }
     )
   callPrivateRPC("sendChatMessages".prefix, %* [imagesJson])
+
+proc createThread*(chatId: string, parentMessageId: string): RpcResponse[JsonNode] =
+  let payload = %* [chatId, parentMessageId]
+  result = callPrivateRPC("createThread".prefix, payload)
+
+proc fetchChatThreads*(chatId: string): RpcResponse[JsonNode] =
+  let payload = %* [chatId]
+  result = callPrivateRPC("chatThreads".prefix, payload)
 
 proc muteChat*(chatId: string, interval: int): RpcResponse[JsonNode] =
   result = callPrivateRPC("muteChatV2".prefix, %* [

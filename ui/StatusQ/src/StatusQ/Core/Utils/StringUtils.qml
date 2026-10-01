@@ -25,6 +25,10 @@ QtObject {
         return Internal.StringUtils.plainText(htmlFragment)
     }
 
+    function plainTextSingleLine(htmlFragment, totalLength = -1) {
+        return Internal.StringUtils.plainTextSingleLine(htmlFragment, totalLength)
+    }
+
     function shortcutToText(shortcut) {
         return Internal.StringUtils.shortcutToText(shortcut)
     }

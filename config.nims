@@ -31,9 +31,11 @@ if hostOS == "macosx":
   let statusqInstallPath = getEnv("STATUSQ_INSTALL_PATH")
   if statusqInstallPath.len > 0:
     switch("passL", "-rpath " & statusqInstallPath & "/StatusQ")
-  # statically link these libs
-  switch("passL", "bottles/openssl@3/lib/libcrypto.a")
-  switch("passL", "bottles/openssl@3/lib/libssl.a")
+  # statically link OpenSSL built from mobile/vendors/openssl (see `make openssl`)
+  let opensslRoot = getEnv("OPENSSL_ROOT_DIR",
+    "tmp/openssl/macos-" & (if hostCPU == "arm64": "arm64" else: "x86_64"))
+  switch("passL", opensslRoot & "/lib/libcrypto.a")
+  switch("passL", opensslRoot & "/lib/libssl.a")
   # https://code.videolan.org/videolan/VLCKit/-/issues/232
   switch("passL", "-Wl,-no_compact_unwind")
   # set the minimum supported macOS version to 14.0

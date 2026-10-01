@@ -4,9 +4,9 @@ import response_type
 
 export response_type
 
-proc fetchMessages*(chatId: string, cursorVal: string, limit: int): RpcResponse[JsonNode] =
-  let payload = %* [chatId, cursorVal, limit]
-  result = callPrivateRPC("chatMessages".prefix, payload)
+proc fetchMessages*(chatId: string, threadId: string = "", cursorVal: string, limit: int): RpcResponse[JsonNode] =
+  let payload = %* [chatId, threadId, cursorVal, limit]
+  result = callPrivateRPC("chatMessagesV2".prefix, payload)
 
 proc fetchPinnedMessages*(chatId: string, cursorVal: string, limit: int): RpcResponse[JsonNode] =
   let payload = %* [chatId, cursorVal, limit]
@@ -57,6 +57,10 @@ proc fetchAllMessagesFromChatsAndCommunitiesWhichMatchTerm*(communityIds: seq[st
 proc markAllMessagesFromChatWithIdAsRead*(chatId: string): RpcResponse[JsonNode] =
   let payload = %* [chatId]
   result = callPrivateRPC("markAllRead".prefix, payload)
+
+proc markAllMessagesFromThreadWithIdAsRead*(chatId: string, threadId: string): RpcResponse[JsonNode] =
+  let payload = %* [chatId, threadId]
+  result = callPrivateRPC("markThreadRead".prefix, payload)
 
 proc markCertainMessagesFromChatWithIdAsRead*(chatId: string, messageIds: seq[string]):
   RpcResponse[JsonNode] =

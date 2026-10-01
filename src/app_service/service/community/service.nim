@@ -2104,8 +2104,12 @@ QtObject:
       if awaitingRequestToJoin.publicKey == myPublicKey:
         self.events.emit(SIGNAL_WAITING_ON_NEW_COMMUNITY_OWNER_TO_CONFIRM_REQUEST_TO_REJOIN, CommunityIdArgs(communityId: communityId))
 
+    let membersChanged = community.members != updatedCommunity.members
     community.members = updatedCommunity.members
     self.communities[communityId] = community
+    if membersChanged:
+      self.events.emit(SIGNAL_COMMUNITY_MEMBERS_CHANGED,
+        CommunityMembersArgs(communityId: communityId, members: community.members))
     result = true
 
   proc cancelRequestToJoinCommunity*(self: Service, communityId: string) =

@@ -3140,6 +3140,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Actions de débogage</translation>
     </message>
     <message>
+        <source>Copy thread ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copy channel ID</source>
         <translation>Copier l’ID du canal</translation>
     </message>
@@ -3247,6 +3251,14 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Please try again later</source>
         <translation>Veuillez réessayer plus tard</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -11224,6 +11236,14 @@ chargement</translation>
         <translation>Répondre</translation>
     </message>
     <message>
+        <source>Open Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit</source>
         <translation>Modifier</translation>
     </message>
@@ -14651,10 +14671,6 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <source>Add %1 as a contact to send a message</source>
         <translation>Ajoutez %1 comme contact pour envoyer un message</translation>
     </message>
-    <message>
-        <source>Type something</source>
-        <translation>Tapez quelque chose</translation>
-    </message>
 </context>
 <context>
     <name>RouterErrorTag</name>
@@ -15954,6 +15970,14 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
 <context>
     <name>StatusChatInput</name>
     <message>
+        <source>Reply in %1, also send to %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Type something</source>
         <translation>Tapez quelque chose</translation>
     </message>
@@ -15995,6 +16019,89 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Edit</source>
         <translation>Modifier</translation>
+    </message>
+    <message>
+        <source>Add a thread name (optional)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Also send to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm</source>
+        <translation type="unfinished">Confirmer</translation>
+    </message>
+    <message>
+        <source>Reply</source>
+        <translation type="unfinished">Répondre</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Envoyer</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputToolBar</name>
+    <message>
+        <source>Formatting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Italics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Strike through</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quote</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start a new thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Payment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mention</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Emojis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stickers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIFs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

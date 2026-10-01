@@ -1,4 +1,4 @@
-import nimqml, tables, chronicles, json, sequtils, std/strformat, sugar, marshal
+import nimqml, tables, chronicles, json, sequtils, std/strformat, sugar, marshal, std/sets
 from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop, isActive
 
 import io_interface
@@ -56,6 +56,17 @@ type
     # defers the first-activation model build off the tap handler (seaqt
     # QTimer, auto-destroyed via =destroy)
     initialBuildTimer: QTimer
+    # services retained so thread sub-channels can be created on demand
+    events: EventEmitter
+    settingsService: settings_service.Service
+    nodeConfigurationService: node_configuration_service.Service
+    contactService: contact_service.Service
+    chatService: chat_service.Service
+    communityService: community_service.Service
+    messageService: message_service.Service
+    mailserversService: mailservers_service.Service
+    sharedUrlsService: shared_urls_service.Service
+    threadChatIds: HashSet[string]
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -123,6 +134,17 @@ proc newModule*(
   result.viewVariant = newQVariant(result.view)
   result.moduleLoaded = false
   result.chatsLoaded = false
+
+  result.events = events
+  result.settingsService = settingsService
+  result.nodeConfigurationService = nodeConfigurationService
+  result.contactService = contactService
+  result.chatService = chatService
+  result.communityService = communityService
+  result.messageService = messageService
+  result.mailserversService = mailserversService
+  result.sharedUrlsService = sharedUrlsService
+  result.threadChatIds = initHashSet[string]()
 
   result.chatContentModules = initOrderedTable[string, chat_content_module.AccessInterface]()
   if isCommunity:
@@ -451,9 +473,85 @@ method chatContentDidLoad*(self: Module) =
 method setActiveItem*(self: Module, itemId: string) =
   self.controller.setActiveItem(itemId)
 
+method isChatThread*(self: Module, chatId: string): bool =
+  return self.threadChatIds.contains(chatId)
+
+method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, threadName: string, parentMessageId: string,
+    setActive: bool = false, hasUnreadMessages: bool = false, notificationsCount: int = 0) =
+  if threadId.len == 0:
+    return
+
+  # If the thread sub-channel already exists, just activate it if needed.
+  if self.chatContentModules.contains(threadId):
+    self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages, notificationsCount)
+    self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages, notificationsCount)
+    if setActive:
+      self.setActiveItem(threadId)
+    return
+
+  let parentItem = self.view.chatsModel().getItemById(parentChatId)
+  if parentItem.isNil:
+    error "openThreadAsChat: unknown parent chat", parentChatId, methodName="openThreadAsChat"
+    return
+
+  let parentIndex = self.view.chatsModel().getItemIdxById(parentChatId)
+  if parentIndex == -1:
+    error "openThreadAsChat: unknown parent chat index", parentChatId, methodName="openThreadAsChat"
+    return
+
+  let belongsToCommunity = self.controller.isCommunity()
+  let isUsersListAvailable = parentItem.`type` != ChatType.OneToOne.int
+
+  # The thread content module is keyed in the chat list by the threadId, but it
+  # loads/sends messages against the parent chat id together with the threadId.
+  self.chatContentModules[threadId] = chat_content_module.newModule(
+    self, self.events, self.controller.getMySectionId(), parentChatId,
+    belongsToCommunity, isUsersListAvailable, self.settingsService, self.nodeConfigurationService,
+    self.contactService, self.chatService, self.communityService, self.messageService,
+    self.mailserversService, self.sharedUrlsService, threadId = threadId)
+
+  self.threadChatIds.incl(threadId)
+
+  let threadItem = chat_item.initChatItem(
+    id = threadId,
+    name = "🧵 " & threadName,
+    usesDefaultName = false,
+    icon = parentItem.icon,
+    color = parentItem.color,
+    emoji = parentItem.emoji,
+    description = "",
+    `type` = parentItem.`type`,
+    parentItem.memberRole,
+    lastMessageTimestamp = 0,
+    lastMessageText = "",
+    hasUnreadMessages = hasUnreadMessages,
+    notificationsCount = notificationsCount,
+    muted = false,
+    blocked = false,
+    active = false,
+    position = parentItem.position,
+    categoryId = parentItem.categoryId,
+    categoryPosition = parentItem.categoryPosition,
+    canPost = parentItem.canPost,
+    canView = parentItem.canView,
+    canPostReactions = parentItem.canPostReactions,
+    isThread = true,
+    parentChatId = parentChatId,
+    sortTimestamp = parentItem.lastMessageTimestamp,
+  )
+
+  self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
+  if setActive:
+    self.setActiveItem(threadId)
+
 proc updateActiveChatMembership*(self: Module) =
   let activeChatId = self.controller.getActiveChatId()
-  let chat = self.controller.getChatDetails(activeChatId)
+  let activeChatItem = self.view.chatsModel().getItemById(activeChatId)
+  let membershipChatId = if not activeChatItem.isNil and activeChatItem.isThread:
+      activeChatItem.parentChatId
+    else:
+      activeChatId
+  let chat = self.controller.getChatDetails(membershipChatId)
 
   if chat.chatType == ChatType.PrivateGroupChat:
     let amIMember = any(chat.members, proc (member: ChatMember): bool = member.id == singletonInstance.userProfile.getPubKey())
@@ -895,14 +993,29 @@ method onReorderCategory*(self: Module, catId: string, position: int) =
 method onCategoryNameChanged*(self: Module, category: Category) =
   self.view.chatsModel().renameCategory(category.id, category.name)
 
+proc removeThreadsForParent(self: Module, parentChatId: string) =
+  var threadIds: seq[string]
+  for item in self.view.chatsModel().items:
+    if item.isThread and item.parentChatId == parentChatId:
+      threadIds.add(item.id)
+
+  for threadId in threadIds:
+    self.view.chatsModel().removeItemById(threadId)
+    self.removeSubmodule(threadId)
+    self.threadChatIds.excl(threadId)
+
 method onCommunityChannelDeletedOrChatLeft*(self: Module, chatId: string) =
   if not self.chatContentModules.contains(chatId):
     return
+  if self.isChatThread(chatId):
+    self.threadChatIds.excl(chatId)
+  else:
+    self.removeThreadsForParent(chatId)
   self.view.chatsModel().removeItemById(chatId)
   self.removeSubmodule(chatId)
 
   let activeChatId = self.controller.getActiveChatId()
-  if chatId == activeChatId:
+  if self.view.chatsModel().getItemById(activeChatId).isNil:
     self.setFirstChannelAsActive()
 
   self.updateParentBadgeNotifications()
@@ -1162,7 +1275,14 @@ method onJoinedCommunity*(self: Module) =
   self.view.setWaitingOnNewCommunityOwnerToConfirmRequestToRejoin(false)
   self.view.setRequestToJoinState(RequestToJoinState.None)
 
-method onMarkAllMessagesRead*(self: Module, chat: ChatDto) =
+method onMarkAllMessagesRead*(self: Module, chat: ChatDto, threadId: string = "") =
+  if threadId.len > 0:
+    self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages=false, notificationsCount=0)
+    if self.chatContentModules.contains(threadId):
+      self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages=false, notificationCount=0)
+    self.updateParentBadgeNotifications()
+    return
+
   self.updateBadgeNotifications(chat, hasUnreadMessages=false, unviewedMentionsCount=0)
 
 method onMarkMessageAsUnread*(self: Module, chat: ChatDto) =
@@ -1171,8 +1291,8 @@ method onMarkMessageAsUnread*(self: Module, chat: ChatDto) =
 method onSectionMutedChanged*(self: Module) =
   self.updateParentBadgeNotifications()
 
-method markAllMessagesRead*(self: Module, chatId: string) =
-  self.controller.markAllMessagesRead(chatId)
+method markAllMessagesRead*(self: Module, chatId: string, threadId: string = "") =
+  self.controller.markAllMessagesRead(chatId, threadId)
 
 method clearChatHistory*(self: Module, chatId: string) =
   self.controller.clearChatHistory(chatId)
@@ -1239,10 +1359,10 @@ method onContactDetailsUpdated*(self: Module, publicKey: string) =
   )
   self.view.chatsModel().updateUserItemDetailsById(publicKey, chatName, usesUsedDefaultName, chatImage, trustStatus)
 
-method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string,
+method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatIdMsgBelongsTo: string, displayChatId: string,
     chatTypeMsgBelongsTo: ChatType, lastMessageTimestamp: int, unviewedMessagesCount: int, unviewedMentionsCount: int,
     message: MessageDto) =
-  self.updateLastMessage(chatIdMsgBelongsTo, lastMessageTimestamp, message)
+  self.updateLastMessage(displayChatId, lastMessageTimestamp, message)
 
   # Any type of message coming from ourselves should never be shown as notification
   # and no need in badge notification update
@@ -1258,6 +1378,11 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
 
   if chatDetails.categoryId != "":
     self.view.chatsModel().setCategoryHasUnreadMessages(chatDetails.categoryId, true)
+
+  if displayChatId == chatIdMsgBelongsTo:
+    self.view.chatsModel().updateNotificationsForItemById(displayChatId, unviewedMessagesCount > 0, unviewedMentionsCount)
+    if self.chatContentModules.contains(displayChatId):
+      self.chatContentModules[displayChatId].onNotificationsUpdated(unviewedMessagesCount > 0, unviewedMentionsCount)
 
   # Prepare notification
   var notificationType = notification_details.NotificationType.NewMessage

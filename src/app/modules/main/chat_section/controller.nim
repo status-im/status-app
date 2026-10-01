@@ -105,7 +105,8 @@ proc init*(self: Controller) =
     let args = MessagesArgs(e)
     if (self.sectionId != args.sectionId or args.messages.len == 0):
       return
-    self.delegate.onNewMessagesReceived(args.sectionId, args.chatId, args.chatType, args.lastMessageTimestamp,
+    let displayChatId = if args.threadId.len > 0: args.threadId else: args.chatId
+    self.delegate.onNewMessagesReceived(args.sectionId, args.chatId, displayChatId, args.chatType, args.lastMessageTimestamp,
       args.unviewedMessagesCount, args.unviewedMentionsCount, args.messages[0])
 
   self.events.on(chat_service.SIGNAL_CHAT_MUTED) do(e:Args):
@@ -123,8 +124,9 @@ proc init*(self: Controller) =
     if ((self.isCommunitySection and chat.communityId != self.sectionId) or
         (not self.isCommunitySection and chat.communityId != "")):
       return
-    self.chatService.updateUnreadMessagesAndMentions(args.chatId, args.allMessagesMarked, args.messagesCount, args.messagesWithMentionsCount)
-    self.delegate.onMarkAllMessagesRead(chat)
+    if args.threadId.len == 0:
+      self.chatService.updateUnreadMessagesAndMentions(args.chatId, args.allMessagesMarked, args.messagesCount, args.messagesWithMentionsCount)
+    self.delegate.onMarkAllMessagesRead(chat, args.threadId)
 
   self.events.on(message_service.SIGNAL_MESSAGE_MARKED_AS_UNREAD) do(e:Args):
     let args = message_service.MessageMarkMessageAsUnreadArgs(e)
@@ -169,7 +171,7 @@ proc init*(self: Controller) =
       self.contactService, self.chatService, self.communityService, self.messageService,
       self.mailserversService, self.sharedUrlsService, setChatAsActive = true)
 
-  if (self.isCommunitySection):
+  if self.isCommunitySection:
     self.events.on(SIGNAL_COMMUNITY_CHANNEL_CREATED) do(e:Args):
       let args = CommunityChatArgs(e)
       let belongsToCommunity = args.chat.communityId.len > 0
@@ -488,7 +490,8 @@ proc setActiveItem*(self: Controller, itemId: string) =
   self.delegate.activeItemSet(self.activeItemId)
 
   if self.activeItemId != "":
-    self.messageService.asyncLoadInitialMessagesForChat(self.activeItemId)
+    if not self.delegate.isChatThread(self.activeItemId):
+      self.messageService.asyncLoadInitialMessagesForChat(self.activeItemId)
 
 proc removeCommunityChat*(self: Controller, itemId: string) =
   self.communityService.deleteCommunityChat(self.getMySectionId(), itemId)
@@ -516,8 +519,8 @@ proc muteChat*(self: Controller, chatId: string, interval: int) =
 proc unmuteChat*(self: Controller, chatId: string) =
   self.chatService.unmuteChat(chatId)
 
-proc markAllMessagesRead*(self: Controller, chatId: string) =
-  self.messageService.markAllMessagesRead(chatId)
+proc markAllMessagesRead*(self: Controller, chatId: string, threadId: string = "") =
+  self.messageService.markAllMessagesRead(chatId, threadId)
 
 proc clearChatHistory*(self: Controller, chatId: string) =
   self.chatService.clearChatHistory(chatId)

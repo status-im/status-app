@@ -10,6 +10,7 @@ Control {
 
     property string limitText
     property string iconName: "arrow-up"
+    property string tooltipText
     property alias interactive: mouseArea.enabled
 
     signal clicked
@@ -120,6 +121,11 @@ Control {
 
                 icon: root.iconName
                 color: Theme.palette.white
+            }
+
+            StatusToolTip {
+                text: root.tooltipText
+                visible: !!text && mouseArea.containsMouse
             }
 
             MouseArea {

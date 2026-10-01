@@ -294,7 +294,10 @@ QtObject {
                     return UrlUtils.convertUrlToLocalPath(file)
                 }
             })
-            chatContentModule.inputAreaModule.sendImages(JSON.stringify(convertedImagePaths), textMsg.trim(), replyMessageId)
+            chatContentModule.inputAreaModule.sendImages(
+                        JSON.stringify(convertedImagePaths),
+                        textMsg.trim(),
+                        replyMessageId)
             result = true
         } else {
             result = chatContentModule.inputAreaModule.sendMessage(
@@ -344,8 +347,8 @@ QtObject {
         stickersModule: stickersModuleInst
     }
 
-    function sendSticker(channelId, hash, replyTo, pack, url) {
-        stickersModuleInst.send(channelId, hash, replyTo, pack, url)
+    function sendSticker(channelId, hash, replyTo, pack, url, threadId = "") {
+        stickersModuleInst.send(channelId, hash, replyTo, pack, url, threadId || "")
     }
 
     function isCurrentUser(pubkey) {
@@ -598,19 +601,22 @@ QtObject {
         }
 
         property var oneToOneContactModelEntryLoader: Loader {
-            active: d.activeChatId && d.activeChatType === Constants.chatType.oneToOne
+            active: d.activeContactId && d.activeChatType === Constants.chatType.oneToOne
 
             sourceComponent: ContactModelEntry {
-                publicKey: d.activeChatId
+                publicKey: d.activeContactId
                 contactsModel: root.contactsModel
                 onPopulateContactDetailsRequested: {
-                    root.populateContactDetailsRequested(d.activeChatId)
+                    root.populateContactDetailsRequested(d.activeContactId)
                 }
             }
         }
 
         readonly property string activeChatId: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ? chatCommunitySectionModule.activeItem.id : ""
         readonly property int activeChatType: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ? chatCommunitySectionModule.activeItem.type : -1
+        readonly property bool activeIsThread: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ? chatCommunitySectionModule.activeItem.isThread : false
+        readonly property string activeContactId: chatCommunitySectionModule && chatCommunitySectionModule.activeItem ?
+                                                     (d.activeIsThread ? chatCommunitySectionModule.activeItem.parentChatId : d.activeChatId) : ""
         readonly property bool amIMember: chatCommunitySectionModule ? chatCommunitySectionModule.amIMember : false
 
         property var oneToOneChatContact: oneToOneContactModelEntryLoader.active ? d.oneToOneContactModelEntryLoader.item.contactDetails : undefined
@@ -637,8 +643,7 @@ QtObject {
             } else if(!d.isUserAllowedToSendMessage && d.activeChatType === Constants.chatType.oneToOne) {
                 return qsTr("Add %1 as a contact to send a message").arg(d.oneToOneChatContactName)
             }
-
-            return qsTr("Type something")
+            return ""
         }
     }
 

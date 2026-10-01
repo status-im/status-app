@@ -4,6 +4,7 @@ set -ef pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 OPENSSL=${OPENSSL:-"../vendors/openssl"}
+# OS: ios | android | macos
 OS=${OS:-"ios"}
 ARCH=${ARCH:-"x86_64"}
 SDK=${SDK:-"iphonesimulator"}
@@ -38,6 +39,21 @@ if [[ "$OS" == "ios" ]]; then
   fi
 fi
 
+if [[ "$OS" == "macos" ]]; then
+  INSTALL_DIR=${INSTALL_DIR:?"INSTALL_DIR is required for macos builds"}
+  MACOS_MIN_VERSION=${MACOSX_DEPLOYMENT_TARGET:-14.0}
+  case ${ARCH} in
+  "arm64") TARGET="darwin64-arm64-cc" ;;
+  "x86_64") TARGET="darwin64-x86_64-cc" ;;
+  *) echo "Unsupported macOS ARCH: ${ARCH}" >&2; exit 1 ;;
+  esac
+  PLATFORM_CONFIG_ARGS=(
+    "--prefix=${INSTALL_DIR}"
+    "--libdir=lib"
+    "-mmacosx-version-min=${MACOS_MIN_VERSION}"
+  )
+fi
+
 if [[ "$OS" == "android" ]]; then
   PLATFORM_CONFIG_ARGS=("-U__ANDROID_API__" "-D__ANDROID_API__=${ANDROID_API}")
   PLATFORM_BUILD_ARGS=("SHLIB_VERSION_NUMBER=")
@@ -62,8 +78,8 @@ mkdir -p "${SSL_BUILD_DIR}"
   # Reference: https://github.com/openssl/openssl/discussions/25793
 
   # Platform-specific config
-  if [[ "$OS" == "ios" ]]; then
-    # iOS uses static libraries (.a files)
+  if [[ "$OS" == "ios" || "$OS" == "macos" ]]; then
+    # iOS and macOS use static libraries (.a files)
     SHARED_FLAG="no-shared"
   else
     # Android uses shared libraries (.so files)
@@ -82,7 +98,17 @@ mkdir -p "${SSL_BUILD_DIR}"
   # Rebuilding isn't working with the default target, so we need to clean and build again
   make clean
   make -j$(sysctl -n hw.ncpu) $PLATFORM_BUILD_ARGS build_libs
+
+  if [[ "$OS" == "macos" ]]; then
+    # Headers + static libs only (no apps, docs or openssl.cnf)
+    make install_dev
+  fi
 )
+
+if [[ "$OS" == "macos" ]]; then
+  echo "OpenSSL installed to ${INSTALL_DIR}"
+  exit 0
+fi
 
 mkdir -p "$LIB_PATH"
 

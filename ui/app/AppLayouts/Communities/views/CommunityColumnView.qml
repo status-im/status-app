@@ -318,7 +318,7 @@ Item {
 
                             isCommunityChat = root.communitySectionModule.isCommunity()
                             amIChatAdmin = root.isSectionAdmin
-                            chatId = obj.itemId
+                            chatId = obj.isThread ? obj.parentChatId : obj.itemId
                             chatName = obj.name
                             chatDescription = obj.description
                             chatIcon = obj.icon
@@ -326,6 +326,8 @@ Item {
                             chatColor = obj.color
                             chatType = obj.type
                             chatMuted = obj.muted
+                            isThread = obj.isThread
+                            threadId = obj.isThread ? obj.itemId : ""
                             channelPosition = obj.position
                             chatCategoryId = obj.categoryId
                             viewersCanPostReactions = obj.viewersCanPostReactions
@@ -345,8 +347,8 @@ Item {
                         root.communitySectionModule.unmuteChat(chatId)
                     }
 
-                    onMarkAllMessagesRead: (chatId) => {
-                        root.communitySectionModule.markAllMessagesRead(chatId)
+                    onMarkAllMessagesRead: (chatId, threadId) => {
+                        root.communitySectionModule.markAllMessagesRead(chatId, threadId)
                     }
 
                     onClearChatHistory: (chatId) => {

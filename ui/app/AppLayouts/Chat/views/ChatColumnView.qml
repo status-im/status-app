@@ -65,6 +65,7 @@ Item {
     property bool amIBanned: false
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
+    property bool threadsFeatureEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
     property bool joined
@@ -490,6 +491,7 @@ Item {
                         isBlocked: model.blocked
                         sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
                         messageLinkSharingEnabled: root.messageLinkSharingEnabled
+                        threadsFeatureEnabled: root.threadsFeatureEnabled
                         disabledTooltipText: root.disabledTooltipText
                         areTestNetworksEnabled: root.areTestNetworksEnabled
                         extraLeftPadding: root.extraLeftPadding
@@ -511,6 +513,13 @@ Item {
                                         }
                         onEditMessageRequested: (messageId) => {
                             d.startEditMessage(messageId)
+                        }
+                        onOpenThread: (messageId) => {
+                            if (root.threadsFeatureEnabled
+                                    && Utils.isThreadSupportedChatType(root.activeChatType)
+                                    && !d.activeMessagesStore.threadId) {
+                                d.activeMessagesStore.createThread(messageId)
+                            }
                         }
                         onForceInputFocus: {
                             chatInput.forceInputActiveFocus()
@@ -594,7 +603,8 @@ Item {
 
                         return d.activeChatContentModule.inputAreaModule.askToEnableLinkPreview
                     }
-                    chatInputPlaceholder: {
+
+                    readonly property string chatInputPlaceholderOverride: {
                         if (!channelPostRestrictions.visible) {
                             if (d.activeChatContentModule && d.activeChatContentModule.chatDetails.blocked)
                                 return qsTr("This user has been blocked.")
@@ -607,19 +617,26 @@ Item {
                             if (d.sendingInProgress) {
                                 return qsTr("Sending...")
                             }
-                            return root.rootStore.chatInputPlaceHolderText
-                        } else {
-                            return "";
+                            const storePlaceholderText = root.rootStore.chatInputPlaceHolderText
+                            if (!!storePlaceholderText)
+                                return storePlaceholderText
+                            return ""
                         }
                     }
+                    Binding on chatInputPlaceholder {
+                        when: channelPostRestrictions.visible || !!chatInput.chatInputPlaceholderOverride
+                        value: chatInput.chatInputPlaceholderOverride
+                    }
+
+                    //threadsEnabled: true // TODO featureFlag && chatTypeSupportsThreads
+                    //isThread: d.activeChatContentModule.chatDetails.isThread // TODO
+                    chatName: d.activeChatContentModule?.chatDetails?.name || ""
+                    //threadName: isThread ? d.activeChatContentModule.chatDetails.threadName : "" // TODO
 
                     emojiPopup: root.emojiPopup
                     stickersPopup: root.stickersPopup
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
-                    imageFeaturesEnabled: !isEdit
-                    stickersButtonVisible: !isEdit
-                    paymentRequestButtonVisible: !isEdit && !areTestNetworksEnabled && paymentRequestFeatureEnabled
 
                     textInput.onTextChanged: {
                         if (chatInput.isEdit || !d.activeChatContentModule)
@@ -644,7 +661,8 @@ Item {
                                                    hashId,
                                                    chatInput.isReply ? chatInput.replyMessageId : "",
                                                    packId,
-                                                   url)
+                                                   url,
+                                                   d.activeMessagesStore.threadId)
                     }
 
                     onIsReplyChanged: {
@@ -657,7 +675,7 @@ Item {
                             d.activeChatContentModule.inputAreaModule.preservedProperties.replyMessageId = ""
                     }
 
-                    onSendMessageRequested: {
+                    onSendMessageRequested: function(startNewThread, newThreadName, alsoReplyToParentChat) { // TODO handle thread params
                         if (!d.activeChatContentModule) {
                             console.debug("error on sending message - chat content module is not set")
                             return
@@ -668,7 +686,7 @@ Item {
                             return
                         }
 
-                        if (root.rootStore.sendMessage(d.activeChatContentModule.getMyChatId(),
+                        if (root.rootStore.sendMessage(root.activeChatId,
                                                     chatInput.getTextWithPublicKeys(),
                                                     chatInput.isReply? chatInput.replyMessageId : "",
                                                     chatInput.fileUrlsAndSources
@@ -693,15 +711,15 @@ Item {
                         d.activeChatContentModule.inputAreaModule.enableLinkPreview()
                         Global.displayToastMessage(d.linkPreviewEnabledNotification, "", "show", false, Constants.ephemeralNotificationType.success, "")
                     }
-                    onDisableLinkPreview: () => {
+                    onDisableLinkPreview: {
                         d.activeChatContentModule.inputAreaModule.disableLinkPreview()
                         Global.displayToastMessage(d.linkPreviewDisabledNotification, "", "hide", false, Constants.ephemeralNotificationType.danger, "")
                     }
-                    onEnableLinkPreviewForThisMessage: () => {
+                    onEnableLinkPreviewForThisMessage: {
                         d.activeChatContentModule.inputAreaModule.setLinkPreviewEnabledForCurrentMessage(true)
                         Global.displayToastMessage(d.linkPreviewEnabledForMessageNotification, "", "show", false, Constants.ephemeralNotificationType.success, "")
                     }
-                    onDismissLinkPreviewSettings: () => {
+                    onDismissLinkPreviewSettings: {
                         d.activeChatContentModule.inputAreaModule.setLinkPreviewEnabledForCurrentMessage(false)
                     }
                     onDismissLinkPreview: (index) => d.activeChatContentModule.inputAreaModule.removeLinkPreviewData(index)
