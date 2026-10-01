@@ -222,8 +222,8 @@ private slots:
         remaining.sort();
         QCOMPARE(remaining, expected);
 
-        QVERIFY2(regularReset.count() <= 1, qPrintable(QString("regular model reset %1 times").arg(regularReset.count())));
-        QVERIFY2(communityReset.count() <= 1, qPrintable(QString("community model reset %1 times").arg(communityReset.count())));
+        QVERIFY2(regularReset.size() <= 1, qPrintable(QString("regular model reset %1 times").arg(regularReset.size())));
+        QVERIFY2(communityReset.size() <= 1, qPrintable(QString("community model reset %1 times").arg(communityReset.size())));
     }
 
     void removingACommunityTokenUpdatesItsGroupCount()
@@ -269,7 +269,7 @@ private slots:
         auto keys = keysOf(regular);
         keys.sort();
         QCOMPARE(keys, (QStringList{"c", "d"}));
-        QCOMPARE(resetSpy.count(), 0);
+        QCOMPARE(resetSpy.size(), 0);
     }
 
     void removalAfterQueuedCellUpdateFallsBackToOneFullReparse()
@@ -290,7 +290,7 @@ private slots:
         keys.sort();
         QCOMPARE(keys, (QStringList{"b", "c"}));
         QCOMPARE(dataForKey(regular, "c", "enabledNetworkBalance").toString(), QString("9"));
-        QCOMPARE(resetSpy.count(), 1);
+        QCOMPARE(resetSpy.size(), 1);
     }
 
     void initialParsePartitionsByCommunity()
