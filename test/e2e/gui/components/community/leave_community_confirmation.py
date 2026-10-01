@@ -11,4 +11,5 @@ class LeaveCommunityConfirmationPopup(QObject):
 
     def confirm_action(self):
         self.leave_button.click()
+        self.leave_button.wait_until_hidden()
 
