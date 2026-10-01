@@ -96,4 +96,7 @@ def test_join_leave_profile_showcase_community(multiple_instances):
             confirmation.confirm_action()
 
         with step('Invitee: community no longer in left panel'):
-            assert not main_screen.left_panel.communities(), 'Communities list should be empty after leave'
+            assert driver.waitFor(
+                lambda: not main_screen.left_panel.communities(),
+                configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+            ), 'Communities list should be empty after leave'
