@@ -353,12 +353,14 @@ QtObject:
       # Descending so the ranges still to be removed keep their indices.
       for i in countdown(ranges.high, 0):
         self.removeCollectibleItems(ranges[i].first, ranges[i].last)
-      self.countChanged()
 
     var newItemsToAdd: seq[CollectiblesEntry] = @[]
     for uid, idx in newTable:
       newItemsToAdd.add(newItems[idx])
-    self.appendCollectibleItems(newItemsToAdd)
+    if newItemsToAdd.len > 0:
+      self.appendCollectibleItems(newItemsToAdd)   # emits countChanged itself
+    elif len(oldIndicesToRemove) > 0:
+      self.countChanged()
 
     if anyKeptItemUpdated:
       self.itemsDataUpdated()

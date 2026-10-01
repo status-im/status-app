@@ -26,6 +26,22 @@ QtObject:
   proc delete(self: ItemsDataUpdatedSpy) =
     self.QObject.delete
 
+QtObject:
+  type CountChangedSpy = ref object of QObject
+    count: int
+
+  proc delete(self: CountChangedSpy)
+
+  proc onCountChanged*(self: CountChangedSpy) {.slot.} =
+    inc self.count
+
+  proc newCountChangedSpy(): CountChangedSpy =
+    new(result, delete)
+    result.QObject.setup
+
+  proc delete(self: CountChangedSpy) =
+    self.QObject.delete
+
 proc createTestCollectible(seed: int): CollectiblesEntry =
     let data = Collectible(
         dataType: UniqueID,
@@ -232,28 +248,36 @@ when defined(QT_MODEL_SPY):
       let removes = spy.getRemoves()
       check(removes.len == 1 and removes[0].first == 3 and removes[0].last == 5)
 
-    test "a refetch that drops most of the list resets instead of removing row by row":
+    test "a refetch that drops every other row emits one range per hole, one countChanged, no reset":
       let model = newModel()
-      let items = createTestCollectibles(0, 3000)
-      model.updateItems(items)
+      var original: seq[CollectiblesEntry] = @[]
+      for i in 0 ..< 3000:
+        original.add(createOwnedCollectible(1000 + i, balances(("0xAAA", 1, 10))))
+      model.updateItems(original)
 
       let spy = newQtModelSpy()
       spy.enable()
       defer: spy.disable()
+      let countSpy = newCountChangedSpy()
+      discard QObject.connect(model, countChanged, countSpy, onCountChanged)
 
-      # Every other collectible is gone: 1500 single-row ranges if announced one
-      # at a time. This is the shape of the refetch that froze Android for 29 min.
-      var kept: seq[CollectiblesEntry] = @[]
-      for i in 0 ..< items.len:
+      var refreshed: seq[CollectiblesEntry] = @[]
+      for i in 0 ..< 3000:
         if i mod 2 == 0:
-          kept.add(items[i])
-      model.updateItems(kept)
+          refreshed.add(createOwnedCollectible(1000 + i, balances(("0xAAA", 5, 50))))
+      model.updateItems(refreshed)
 
-      check(model.getItems().len == kept.len)
-      for c in kept:
-        check(model.getItemById(c.getIDAsString()) != nil)
-      check(spy.countRemoves == 0)
-      check(spy.countResets == 1)
+      check(spy.countResets == 0)
+      check(spy.countRemoves == 1500)
+      # pushSelectorSource rebuilds every open picker per countChanged: once, not 1500 times.
+      check(countSpy.count == 1)
+      check(model.getItems().len == 1500)
+      for i in 0 ..< 3000:
+        if i mod 2 == 0:
+          let kept = model.getItemById(original[i].getIDAsString())
+          # Same object as before the refetch, carrying the refreshed balance.
+          check(kept == original[i])
+          check(kept.getOwnership().mapIt(it.balance) == @[u256(5)])
 
     test "scattered dropped rows are removed from the highest range down":
       let model = newModel()
