@@ -302,6 +302,7 @@ Loader {
             pinMessageAllowedForMembers: messageStore.isPinMessageAllowedForMembers,
             threadsFeatureEnabled: root.threadsFeatureEnabled,
             hasThread: root.hasThread,
+            isThreadView: root.isThreadView,
             chatType: messageStore.chatType,
 
             messageId: root.messageId,
@@ -381,7 +382,7 @@ Loader {
     }
 
     signal showReplyArea(string messageId, string author)
-    signal openThread(string messageId)
+    signal openThread(string threadId, string threadName, string parentMessageId)
 
 
     function startMessageFoundAnimation() {
@@ -1288,7 +1289,8 @@ Loader {
                             text: root.threadLastMessageText,
                             timestamp: root.threadLastMessageTimestamp
                         })
-                        onClicked: (threadId, originalMessageId) => root.openThread(originalMessageId)
+                        onClicked: (threadId, originalMessageId) =>
+                            root.openThread(threadId, root.threadTitle, originalMessageId)
                     }
                 }
             }
@@ -1379,7 +1381,7 @@ Loader {
                 root.showReplyArea(messageContextMenuView.messageId, senderId)
             }
             onOpenThread: {
-                root.openThread(messageContextMenuView.messageId)
+                root.openThread("", "", messageContextMenuView.messageId)
             }
             onCopyToClipboard: (text) => {
                 ClipboardUtils.setText(text)

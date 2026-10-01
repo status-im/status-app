@@ -32,6 +32,7 @@ StatusMenu {
     property bool pinMessageAllowedForMembers: false
     property bool threadsFeatureEnabled: false
     property bool hasThread: false
+    property bool isThreadView: false
     property bool editRestricted: false
     property bool pinnedMessage: false
     property bool canPin: false
@@ -340,7 +341,7 @@ StatusMenu {
         text: qsTr("Create Thread")
         icon.name: "chat"
         onTriggered: root.openThread()
-        enabled: root.threadsFeatureEnabled && !root.hasThread && !root.disabledForChat &&
+        enabled: root.threadsFeatureEnabled && !root.hasThread && !root.isThreadView && !root.disabledForChat &&
                 Utils.isThreadSupportedChatType(root.chatType)
     }
 

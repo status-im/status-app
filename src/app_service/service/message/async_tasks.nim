@@ -24,6 +24,7 @@ type
   AsyncFetchChatMessagesTaskArg = ref object of QObjectTaskArg
     chatId: string
     threadId: string
+    parentMessageId: string
     msgCursor: string
     limit: int
 
@@ -52,6 +53,21 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
 
     discard msgsResponse.result.getProp("cursor", messagesCursor)
     discard msgsResponse.result.getProp("messages", messagesArr)
+    # A thread without replies comes back with `messages: null`
+    if messagesArr.isNil or messagesArr.kind != JArray:
+      messagesArr = newJArray()
+
+    # Thread pagination only returns replies. Include the parent on the first page;
+    # threadId is set on this response copy so the thread view accepts the row.
+    if arg.threadId.len > 0 and arg.parentMessageId.len > 0 and arg.msgCursor.len == 0:
+      let parentResponse = status_go.getMessageByMessageId(arg.parentMessageId)
+      if not parentResponse.error.isNil:
+        raise newException(CatchableError, parentResponse.error.message)
+      if parentResponse.result.kind == JObject:
+        var parentMessage = parentResponse.result
+        parentMessage["threadId"] = %arg.threadId
+        messagesArr.add(parentMessage)
+
     responseJson["messages"] = messagesArr
     responseJson["messagesCursor"] = messagesCursor
 
@@ -85,7 +101,13 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     let rResponse = status_go.fetchReactions(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
     if not rResponse.error.isNil:
       raise newException(CatchableError, rResponse.error.message)
-    responseJson["reactions"] = rResponse.result
+    var reactions = rResponse.result.getElems()
+    if arg.threadId.len > 0 and arg.parentMessageId.len > 0 and arg.msgCursor.len == 0:
+      let parentReactionsResponse = status_go.fetchReactionsForMessageWithId(arg.chatId, arg.parentMessageId)
+      if not parentReactionsResponse.error.isNil:
+        raise newException(CatchableError, parentReactionsResponse.error.message)
+      reactions = concat(reactions, parentReactionsResponse.result.getElems())
+    responseJson["reactions"] = %reactions
 
     arg.finish(responseJson)
 
