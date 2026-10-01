@@ -1479,7 +1479,7 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
 
   let messageBelongsToActiveSection = sectionIdMsgBelongsTo == self.controller.getMySectionId() and
     self.controller.getMySectionId() == self.delegate.getActiveSectionId()
-  let messageBelongsToActiveChat = self.controller.getActiveChatId() == chatIdMsgBelongsTo
+  let messageBelongsToActiveChat = self.controller.getActiveChatId() == displayChatId
 
   singletonInstance.globalEvents.showMessageNotification(notificationTitle, plainText, sectionIdMsgBelongsTo,
     self.controller.isCommunity(), messageBelongsToActiveSection, chatIdMsgBelongsTo, messageBelongsToActiveChat,
