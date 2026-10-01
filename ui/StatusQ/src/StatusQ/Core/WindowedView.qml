@@ -204,24 +204,19 @@ Flickable {
 
         // Auto-request ///////////////////////////////////////////////////
         //
-        // Held while the user has hold of the view. `moving` covers a content
-        // drag and a flick still decelerating; the scrollbar needs a term of
-        // its own because a handle drag writes contentY directly and emits no
-        // movement signals at all.
+        // Holding the scroll bar defers a request.
         readonly property bool scrollBarHeld: {
             const bar = root.ScrollBar.vertical
 
             return !!bar && bar.pressed
         }
 
-        readonly property bool userHolding: root.moving || d.scrollBarHeld
-
         // Load more condition: `busy` is part of the condition, so
         // a request takes it down and the reveal brings it back up - and if the
-        // band is still on screen by then, that rise is the next request. A
-        // handle released, a drag ended and a flick settling are edges too.
+        // band is still on screen by then, that rise is the next request.
+        // Releasing the handle is an edge too.
         readonly property bool shouldRequestMore:
-                root.autoRequest && !root.busy && !d.finishing && !d.userHolding
+                root.autoRequest && !root.busy && !d.finishing && !d.scrollBarHeld
                 && ((root.moreAvailableStart && d.bandInViewport(startBand))
                     || (root.moreAvailableEnd && d.bandInViewport(endBand)))
 
@@ -436,12 +431,59 @@ Flickable {
         // scrollbar drags, which emit no movement signals at all.
         property bool applyingPosition: false
 
-        function apply(y) {
-            const was = d.applyingPosition
+        // Writing contentY cancels an in-flight flick: setContentY() resets the
+        // timeline and ends the movement. So the velocity is taken before the
+        // write and the flick started again after it. Under Qt's constant
+        // deceleration the distance still to travel is v^2/2a, which depends on
+        // nothing but the current velocity - so resuming from it continues the
+        // same trajectory rather than approximating it.
+        property real heldFlickVelocity: 0
+        property bool flickHoldActive: false
 
-            d.applyingPosition = true
-            root.contentY = y
-            d.applyingPosition = was
+        function preservingFlick(write) {
+            // The velocity is taken once, on the first write of a turn, and put
+            // back after every write of that turn - completeWave() moves the
+            // position several times over (applyContentHeight(), then
+            // restorePosition(), then again as the layout settles) and each one
+            // cancels the flick afresh. Re-reading the velocity per write
+            // instead would pick up the flick this just restarted, whose
+            // smoothed value has had no frame to update and reads as nothing,
+            // so the second write would kill the flick for good.
+            // Not while the view is out of bounds. An overshoot past either
+            // end reports as flicking, but what is running then is Qt's own
+            // rebound back into bounds - re-flicking there fights the bounce
+            // instead of preserving anything.
+            if (!d.flickHoldActive && root.flickingVertically
+                    && root.verticalOvershoot === 0
+                    && root.verticalVelocity !== 0) {
+                d.heldFlickVelocity = -root.verticalVelocity
+                d.flickHoldActive = true
+
+                // Releases the hold at the end of this turn. It only ever
+                // clears - a restore deferred to here could land in a quite
+                // different situation and start a flick nobody asked for.
+                Qt.callLater(d.endFlickHold)
+            }
+
+            write()
+
+            if (d.flickHoldActive && d.heldFlickVelocity !== 0)
+                root.flick(0, d.heldFlickVelocity)
+        }
+
+        function endFlickHold() {
+            d.flickHoldActive = false
+            d.heldFlickVelocity = 0
+        }
+
+        function apply(y) {
+            d.preservingFlick(() => {
+                const was = d.applyingPosition
+
+                d.applyingPosition = true
+                root.contentY = y
+                d.applyingPosition = was
+            })
         }
 
         // What the start band contributes above the rows, as the current
@@ -455,6 +497,10 @@ Flickable {
         }
 
         function applyContentHeight() {
+            d.preservingFlick(d.applyContentHeightNow)
+        }
+
+        function applyContentHeightNow() {
             // Sampled before the write, while contentHeight still describes the
             // bottom the viewport was actually sitting at.
             const wasAtEnd = d.atEndOfContent()
@@ -515,6 +561,16 @@ Flickable {
 
         function restorePosition() {
             if (!d.anchorItem)
+                return
+
+            // A row the Column has not placed yet. Positioners lay their
+            // children out one at a time, and a correction can be asked for
+            // from the middle of that pass - the anchor's own y change is what
+            // asks for it. No child of a Column ever legitimately sits above
+            // its origin, so this is a position the layout cannot have
+            // produced, and a target computed from it clamps the viewport to
+            // the top and loses where the content was.
+            if (d.anchorItem.y < 0)
                 return
 
             // Absolute, not relative, so re-applying it converges instead of

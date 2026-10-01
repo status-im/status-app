@@ -35,7 +35,8 @@ SplitView {
 
     // Settings restores this from a C++ componentComplete, which runs before any
     // Component.onCompleted - so it is already correct when the window is placed.
-    property int restoredFirst: 0
+    property int restoredFirst: Math.max(0, root.initialMessageCount
+                                            - d.defaultWindowSize)
 
     readonly property int buildComplexity: buildSpinBox.value
     readonly property int paintComplexity: paintSpinBox.value
@@ -130,7 +131,11 @@ SplitView {
 
         // Control defaults, named so a control's initial value and what
         // "Restore defaults" puts back cannot drift apart.
-        readonly property int defaultWindowFirst: 0
+        // The tail of the model, so the page opens with nothing more beyond the
+        // bottom. Start at the head instead and the end band is on screen from
+        // the first frame, and the window pages itself to the end on load.
+        readonly property int defaultWindowFirst:
+                Math.max(0, root.initialMessageCount - d.defaultWindowSize)
         readonly property int defaultWindowSize: 60
         readonly property int defaultSlideStep: 10
 
@@ -143,11 +148,12 @@ SplitView {
         // On by default here, where the harness is chat-shaped and the newest
         // message belongs at the bottom. The component itself defaults to off.
         readonly property bool defaultStickToEnd: true
+        readonly property bool defaultAutoRequest: true
         readonly property bool defaultPlaceholder: true
         // The band is measured in placeholder rows rather than pixels, so it
         // always comes out a whole number of them.
         readonly property int placeholderRowHeight: 72
-        readonly property int defaultPlaceholderRows: 2
+        readonly property int defaultPlaceholderRows: 10
 
         readonly property int defaultPoolTarget: 80
         readonly property bool defaultAsynchronous: true
@@ -191,6 +197,7 @@ SplitView {
             slideStepSpinBox.value = d.defaultSlideStep
             answerDelaySpinBox.value = d.defaultAnswerDelay
             stickToEndSwitch.checked = d.defaultStickToEnd
+            autoRequestSwitch.checked = d.defaultAutoRequest
             placeholderSwitch.checked = d.defaultPlaceholder
             placeholderRowsSpinBox.value = d.defaultPlaceholderRows
             poolTargetSpinBox.value = d.defaultPoolTarget
@@ -337,6 +344,8 @@ SplitView {
             moreAvailableEnd: windowSource.moreAvailableEnd
 
             stickToEnd: stickToEndSwitch.checked
+
+            autoRequest: autoRequestSwitch.checked
 
             placeholder: placeholderSwitch.checked ? messageSkeleton : null
             placeholderHeight: placeholderRowsSpinBox.value
@@ -589,6 +598,15 @@ SplitView {
 
                 text: "Stick to end"
                 checked: d.defaultStickToEnd
+            }
+
+            Switch {
+                id: autoRequestSwitch
+
+                Layout.fillWidth: true
+
+                text: "Auto request"
+                checked: d.defaultAutoRequest
             }
 
             Switch {
@@ -869,11 +887,12 @@ SplitView {
     Settings {
         category: "WindowedViewPage"
 
-        property alias windowFirst: root.restoredFirst
+        property alias windowStart: root.restoredFirst
         property alias slideStep: slideStepSpinBox.value
         property alias answerDelay: answerDelaySpinBox.value
         property alias stickToEnd: stickToEndSwitch.checked
         property alias placeholder: placeholderSwitch.checked
+        property alias autoRequest: autoRequestSwitch.checked
         property alias placeholderRows: placeholderRowsSpinBox.value
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked
