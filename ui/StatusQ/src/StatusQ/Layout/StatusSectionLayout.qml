@@ -84,6 +84,11 @@ LayoutChooser {
     */
     property Item rightPanel
     /*!
+        \qmlproperty Item StatusSectionLayout::rightPanelHeaderContent
+        This property holds optional header content for the right panel.
+    */
+    property Item rightPanelHeaderContent
+    /*!
         \qmlproperty Item StatusSectionLayout::footer
         This property holds the footer of the component.
     */
@@ -102,9 +107,9 @@ LayoutChooser {
     /*!
         \qmlproperty int StatusSectionLayout::rightPanelWidth
         This property sets the right panel component's width.
-        Default value is 250.
+        Default value is 300.
     */
-    property int rightPanelWidth: 250
+    property int rightPanelWidth: 300
     /*!
         \qmlproperty bool StatusSectionLayout::showHeader
         This property sets the header component's visibility to true/false.
@@ -420,6 +425,7 @@ LayoutChooser {
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel
+        rightPanelHeaderContent: root.rightPanelHeaderContent
         footer: root.footer
         headerBackground: root.headerBackground
         showRightPanel: root.showRightPanel

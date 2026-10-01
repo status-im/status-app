@@ -300,7 +300,9 @@ method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: se
 
     if self.controller.getMyThreadId().len == 0 and self.controller.getChatDetails().hasMoreMessagesToRequest():
       viewItems.add(self.createFetchMoreMessagesItem())
-    viewItems.add(self.createChatIdentifierItem())
+    # A thread starts directly with its parent message, no channel welcome header
+    if threadId.len == 0:
+      viewItems.add(self.createChatIdentifierItem())
     self.view.model().removeItem(FETCH_MORE_MESSAGES_MESSAGE_ID)
     self.view.model().removeItem(CHAT_IDENTIFIER_MESSAGE_ID)
     # Add new loaded messages
@@ -658,11 +660,14 @@ method onMessageEdited*(self: Module, message: MessageDto) =
 method onHistoryCleared*(self: Module) =
   self.view.model().clear()
   # Add ChatIdentifier back after model is cleared, so that the chat screen is not blank
-  self.view.model().insertItemBasedOnClock(self.createChatIdentifierItem())
+  if self.controller.getMyThreadId().len == 0:
+    self.view.model().insertItemBasedOnClock(self.createChatIdentifierItem())
 
 method updateChatIdentifier*(self: Module) =
   let chatDto = self.controller.getChatDetails()
   self.setChatDetails(chatDto)
+  if self.controller.getMyThreadId().len > 0:
+    return
   let item = self.createChatIdentifierItem()
   if not self.view.model().updateChatIdentifier(item):
     self.view.model().insertItemBasedOnClock(item)

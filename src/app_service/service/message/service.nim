@@ -321,6 +321,13 @@ QtObject:
       return
     return self.chatThreadsByParentIdByChat[chatId].getOrDefault(parentMessageId)
 
+  proc getParentMessageIdForThread(self: Service, chatId: string, threadId: string): string =
+    if not self.chatThreadsByParentIdByChat.hasKey(chatId):
+      return
+    for parentMessageId, thread in self.chatThreadsByParentIdByChat[chatId]:
+      if thread.threadId == threadId:
+        return parentMessageId
+
   proc handleThreadsUpdate(self: Service, threads: seq[ThreadDto]) =
     var mergedThreads: seq[ThreadDto]
     for thread in threads:
@@ -463,6 +470,7 @@ QtObject:
       slot: "onAsyncLoadMoreMessagesForThread",
       chatId: chatId,
       threadId: threadId,
+      parentMessageId: self.getParentMessageIdForThread(chatId, threadId),
       msgCursor: msgCursorValue,
       limit: if(limit <= MESSAGES_PER_PAGE_MAX): limit else: MESSAGES_PER_PAGE_MAX,
     )
