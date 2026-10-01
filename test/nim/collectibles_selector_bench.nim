@@ -127,7 +127,7 @@ proc formatTable(rows: seq[Row]): string =
   for r in rows:
     result.add(&"{r.size}\t{r.scenario}\t{r.wallMs:.4f}\t{r.maxStallMs:.4f}\t{r.resetsG}\t{r.resetsF}\t{r.insertsG}\t{r.insertsF}\t{r.dcRowsG}\t{r.dcRowsF}\t{r.delCreatedG}\t{r.delDestroyedG}\t{r.delCreatedF}\t{r.delDestroyedF}\t{r.countFlat}\t{r.countGrouped}\t{r.error}\n")
 
-const scenarioNames = ["build", "account_switch", "chain_filter", "append_50", "balance_update"]
+const scenarioNames = ["build", "account_switch", "chain_filter", "append_50", "balance_update", "remove_every_other", "reset_half"]
 let sizes = benchSizes([200, 1000, 3000], [3000])
 
 when isMainModule:
@@ -199,6 +199,11 @@ when isMainModule:
       r = runScenario(size, kind, 0)
       rows.add(r)
       stderr.writeLine(&"[bench] size={size} {scenarioNames[kind]} wall={r.wallMs:.1f}ms stall={r.maxStallMs:.1f} resetsF={r.resetsF} dcRowsF={r.dcRowsF} delCreF={r.delCreatedF} delDelF={r.delDestroyedF}")
+    for kind in 5 .. 6:
+      discard runScenario(size, 0, size)   # refill, not recorded
+      r = runScenario(size, kind, 0)
+      rows.add(r)
+      stderr.writeLine(&"[bench] size={size} {scenarioNames[kind]} wall={r.wallMs:.1f}ms stall={r.maxStallMs:.1f} resetsF={r.resetsF} delDelF={r.delDestroyedF}")
     stderr.flushFile()
 
   let table = formatTable(rows)
