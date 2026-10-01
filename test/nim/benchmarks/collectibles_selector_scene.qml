@@ -205,9 +205,11 @@ Window {
             break
         }
         case 6: { // same end state as case 5, announced as one reset
+            // ListModel.get() handles die on clear(); regenerate the kept rows instead.
+            const n = collectiblesSrc.count
             const keep = []
-            for (let i = 0; i < collectiblesSrc.count; i += 2)
-                keep.push(collectiblesSrc.get(i))
+            for (let i = 0; i < n; i += 2)
+                keep.push(root.makeRow(i))
             collectiblesSrc.clear()
             collectiblesSrc.append(keep)
             break
