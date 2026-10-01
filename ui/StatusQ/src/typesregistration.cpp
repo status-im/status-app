@@ -233,6 +233,8 @@ void registerStatusQTypes() {
 #endif
 #endif
 
+    Q_INIT_RESOURCE(emojiList);
+
     qtmt::registerQmlTypes();
     qqsfpm::registerTypes();
     MobileUI::registerQML();

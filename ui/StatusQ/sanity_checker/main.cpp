@@ -81,7 +81,10 @@ int main(int argc, char *argv[]) {
 
         QString filePath = it.filePath();
         QFile file(filePath);
-        file.open(QIODevice::ReadOnly);
+        if (!file.open(QIODevice::ReadOnly)) {
+            qWarning() << "!!! Failed to open" << filePath;
+            return EXIT_FAILURE;
+        }
 
         QTextStream in(&file);
         QString line = in.readLine();
