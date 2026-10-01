@@ -453,11 +453,6 @@ void ManageTokensController::parseSourceModel()
     emit sourceModelChanged();
 }
 
-bool ManageTokensController::hasPendingSourceUpdates() const
-{
-    return m_pendingFullReparse || !m_pendingChangedRows.isEmpty() || !m_pendingRemovedKeys.isEmpty();
-}
-
 void ManageTokensController::cancelPendingSourceUpdates()
 {
     if (m_sourceUpdateBatchTimer)
