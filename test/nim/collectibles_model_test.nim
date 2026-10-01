@@ -204,3 +204,73 @@ suite "collectibles model - ownership refresh of kept entries":
     check(model.getItemById(a.getIDAsString()).getOwnership().mapIt(it.balance) == @[u256(9)])
     check(model.getItemById(c.getIDAsString()).getOwnership().mapIt(it.address) == @["0xBBB"])
     check(spy.count == 1)
+
+when defined(QT_MODEL_SPY):
+  import app/modules/shared/qt_model_spy
+
+  # Every structural notification of this model is amplified downstream: the
+  # wallet's ManageTokensController re-reads the whole source on each rowsRemoved,
+  # through a LeftJoinModel that scans the communities model per row. A refetch
+  # that drops many rows must therefore not be announced row by row.
+  suite "collectibles model - structural notifications on refetch":
+    test "a contiguous run of dropped rows is announced as one range":
+      let model = newModel()
+      let items = createTestCollectibles(0, 10)
+      model.updateItems(items)
+
+      let spy = newQtModelSpy()
+      spy.enable()
+      defer: spy.disable()
+
+      var kept = items
+      kept.delete(3..5)
+      model.updateItems(kept)
+
+      check(model.getItems().mapIt(it.getIDAsString()) == kept.mapIt(it.getIDAsString()))
+      check(spy.countResets == 0)
+      check(spy.countRemoves == 1)
+      let removes = spy.getRemoves()
+      check(removes.len == 1 and removes[0].first == 3 and removes[0].last == 5)
+
+    test "a refetch that drops most of the list resets instead of removing row by row":
+      let model = newModel()
+      let items = createTestCollectibles(0, 3000)
+      model.updateItems(items)
+
+      let spy = newQtModelSpy()
+      spy.enable()
+      defer: spy.disable()
+
+      # Every other collectible is gone: 1500 single-row ranges if announced one
+      # at a time. This is the shape of the refetch that froze Android for 29 min.
+      var kept: seq[CollectiblesEntry] = @[]
+      for i in 0 ..< items.len:
+        if i mod 2 == 0:
+          kept.add(items[i])
+      model.updateItems(kept)
+
+      check(model.getItems().len == kept.len)
+      for c in kept:
+        check(model.getItemById(c.getIDAsString()) != nil)
+      check(spy.countRemoves == 0)
+      check(spy.countResets == 1)
+
+    test "scattered dropped rows are removed from the highest range down":
+      let model = newModel()
+      let items = createTestCollectibles(0, 10)
+      model.updateItems(items)
+
+      let spy = newQtModelSpy()
+      spy.enable()
+      defer: spy.disable()
+
+      var kept = items
+      kept.delete(8)
+      kept.delete(1)
+      model.updateItems(kept)
+
+      check(model.getItems().mapIt(it.getIDAsString()) == kept.mapIt(it.getIDAsString()))
+      let removes = spy.getRemoves()
+      check(removes.len == 2)
+      check(removes[0].first == 8 and removes[0].last == 8)
+      check(removes[1].first == 1 and removes[1].last == 1)
