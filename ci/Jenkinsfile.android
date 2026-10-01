@@ -19,7 +19,7 @@ pipeline {
       args '--entrypoint="" ' +
            '--volume=/nix:/nix ' +
            '--volume=/etc/nix:/etc/nix '
-      customWorkspace "/home/jenkins/workspace/status-app-android/${env.BUILD_NUMBER}"
+      customWorkspace "/home/jenkins/workspace/status-app-android/${env.JOB_NAME}/${env.BUILD_NUMBER}"
     }
   }
 
