@@ -39,6 +39,7 @@ $(NIM_STATUSQ_TARGETS): | statusq
 # per-file, NOT globally
 NIM_TESTS_MODEL_SPY := \
 	assets_adaptor_model_test \
+	collectibles_model_test \
 	collectibles_selector_model_test \
 	grouped_account_assets_model_test \
 	market_leaderboard_model_test \
