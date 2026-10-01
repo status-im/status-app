@@ -311,11 +311,13 @@ QtObject:
     if errDesription != "":
       error "Error in parseGroupChatResponse: ", errDesription
     else:
-      if response.result{"messages"} != nil:
-        for jsonMsg in response.result["messages"]:
+      let messagesNode = response.result{"messages"}
+      if messagesNode != nil and messagesNode.kind == JArray:
+        for jsonMsg in messagesNode:
           messages.add(jsonMsg.toMessageDto)
-      if response.result{"chats"} != nil:
-        for jsonChat in response.result["chats"]:
+      let chatsNode = response.result{"chats"}
+      if chatsNode != nil and chatsNode.kind == JArray:
+        for jsonChat in chatsNode:
           let chat = chat_dto.toChatDto(jsonChat)
           # TODO add the channel back to `chat` when it is refactored
           self.updateOrAddChat(chat)
@@ -341,11 +343,11 @@ QtObject:
         self.events.emit(SIGNAL_SENDING_SUCCESS, MessageSendingSuccess(message: msg, chat: chat))
 
   proc signalThreadUpdates(self: Service, response: RpcResponse[JsonNode]) =
-    if response.result{"threads"} == nil:
+    let threadsNode = response.result{"threads"}
+    if threadsNode == nil or threadsNode.kind != JArray:
       return
-
     var threads: seq[ThreadDto]
-    for jsonThread in response.result["threads"]:
+    for jsonThread in threadsNode:
       threads.add(jsonThread.toThreadDto)
     if threads.len > 0:
       self.events.emit(SIGNAL_CHAT_THREADS_UPDATED, ChatThreadsUpdatedArgs(threads: threads))
@@ -363,10 +365,12 @@ QtObject:
 
       let errorDescription = response.result{"error"}.getStr
 
-      if response.result{"chat"} != nil:
-        chat = chat_dto.toChatDto(response.result["chat"])
-      if response.result{"messages"} != nil:
-        for jsonMsg in response.result["messages"]:
+      let chatNode = response.result{"chat"}
+      if chatNode != nil and chatNode.kind != JNull:
+        chat = chat_dto.toChatDto(chatNode)
+      let messagesNode = response.result{"messages"}
+      if messagesNode != nil and messagesNode.kind == JArray:
+        for jsonMsg in messagesNode:
           messages.add(jsonMsg.toMessageDto)
       return (chat, messages, errorDescription)
 
@@ -381,6 +385,7 @@ QtObject:
   proc parseChatResponseAndEmit*(self: Service, response: RpcResponse[JsonNode]) =
     var (chats, _) = self.parseChatResponse(response)
     self.events.emit(SIGNAL_CHAT_UPDATE, ChatUpdateArgs(chats: chats))
+    self.signalThreadUpdates(response)
 
   proc getAllChats*(self: Service): seq[ChatDto] =
     return toSeq(self.chats.values)

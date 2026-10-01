@@ -31,7 +31,7 @@ proc toThreadDto*(jsonObj: JsonNode): ThreadDto =
   discard jsonObj.getProp("messagesCount", result.messagesCount)
   discard jsonObj.getProp("participantsCount", result.participantsCount)
   var participantsPreviewIds: JsonNode
-  if jsonObj.getProp("participantsPreviewIds", participantsPreviewIds):
+  if jsonObj.getProp("participantsPreviewIds", participantsPreviewIds) and participantsPreviewIds.kind == JArray:
     for participantId in participantsPreviewIds:
       result.participantsPreviewIds.add(participantId.getStr())
   if result.participantsCount == 0:
