@@ -99,6 +99,7 @@ StatusSectionLoader {
         centerPanel: centerPanelGate.up ? root.item.centerPanel : chatSkeleton
         rightPanel: rightPanelGate.up ? root.item.rightPanel : membersSkeleton
         showRightPanel: root.showRightPanel
+        rightPanelHeaderContent: root.item?.rightPanelHeaderContent ?? null
         subsectionHistory: root.item?.viewSubsectionHistory ?? null
 
         leftPanelWidthOverride: root.leftPanelWidthOverride
