@@ -41,21 +41,22 @@ type
     releaseCachedFiles*: bool
 
 proc parseShareDestinations*(destinationsJson: string): seq[ShareDestination] =
-  result = @[]
   var node: JsonNode
   try:
     node = parseJson(destinationsJson)
   except CatchableError:
-    return
+    return @[]
   if node.kind != JArray:
-    return
+    return @[]
+  var destinations: seq[ShareDestination] = @[]
   for entry in node:
-    if result.len >= SHARE_MAX_DESTINATIONS:
+    if destinations.len >= SHARE_MAX_DESTINATIONS:
       break
     let chatId = entry{"chatId"}.getStr()
     if chatId == "":
       continue
-    result.add(ShareDestination(sectionId: entry{"sectionId"}.getStr(), chatId: chatId))
+    destinations.add(ShareDestination(sectionId: entry{"sectionId"}.getStr(), chatId: chatId))
+  return destinations
 
 proc isStatusMessageUrl(url: string): bool =
   url.startsWith("https://status.app/m/") or url.startsWith("http://status.app/m/") or
@@ -63,30 +64,33 @@ proc isStatusMessageUrl(url: string): bool =
 
 # Share sends never prompt: only urls the plan already allows are unfurled.
 proc unfurlableUrls*(plan: UrlsUnfurlingPlan, limit: int): seq[string] =
-  result = @[]
+  var urls: seq[string] = @[]
   for metadata in plan.urls:
-    if result.len >= limit:
+    if urls.len >= limit:
       break
     if metadata.permission != UrlUnfurlingAllowed or isStatusMessageUrl(metadata.url):
       continue
-    result.add(metadata.url)
+    urls.add(metadata.url)
+  return urls
 
 proc orderedLinkPreviews*(urls: seq[string], previews: Table[string, LinkPreview]): seq[LinkPreview] =
-  result = @[]
+  var ordered: seq[LinkPreview] = @[]
   for url in urls:
     if previews.hasKey(url):
-      result.add(previews[url])
+      ordered.add(previews[url])
+  return ordered
 
 proc imageSendPlan*(destinations: seq[ShareDestination], imagePaths: seq[string], shareToken: string,
     perMessage = SHARE_IMAGES_PER_MESSAGE): seq[ImageSend] =
   ## One message per destination per chunk of `perMessage` images, in
   ## destination order; the text rides on each destination's first chunk.
   ## Each send gets its own token so it can be dispatched and finished on its own.
-  result = @[]
+  var sends: seq[ImageSend] = @[]
   for dest in destinations:
-    for batch in imageBatches(imagePaths, shareToken, perMessage, firstIndex = result.len):
-      result.add(ImageSend(token: batch.token, chatId: dest.chatId, imagePaths: batch.imagePaths,
+    for batch in imageBatches(imagePaths, shareToken, perMessage, firstIndex = sends.len):
+      sends.add(ImageSend(token: batch.token, chatId: dest.chatId, imagePaths: batch.imagePaths,
         withText: batch.withText))
+  return sends
 
 proc needsUnfurl*(mode: UrlUnfurlingMode, text: string): bool =
   mode == UrlUnfurlingMode.Enabled and text.strip() != ""
@@ -94,14 +98,14 @@ proc needsUnfurl*(mode: UrlUnfurlingMode, text: string): bool =
 proc enqueueShare*(queue: var seq[PendingShare], share: PendingShare): bool =
   ## Appends to the queue; returns true iff it became the active share (index 0).
   queue.add(share)
-  result = queue.len == 1
+  return queue.len == 1
 
 proc finishActiveShare*(queue: var seq[PendingShare]): bool =
   ## Drops the active share (index 0); returns true iff another share is now active.
   if queue.len == 0:
     return false
   queue = queue[1..^1]
-  result = queue.len > 0
+  return queue.len > 0
 
 proc takeNextImageDispatch*(queue: var seq[PendingShare]): Option[ImageDispatch] =
   ## Advances queue[0].nextImageSend BEFORE returning, so a finished signal
@@ -115,7 +119,7 @@ proc takeNextImageDispatch*(queue: var seq[PendingShare]): Option[ImageDispatch]
     return none(ImageDispatch)
   queue[0].nextImageSend = i + 1
   let send = active.imageSends[i]
-  result = some(ImageDispatch(token: send.token, chatId: send.chatId, imagePaths: send.imagePaths,
+  return some(ImageDispatch(token: send.token, chatId: send.chatId, imagePaths: send.imagePaths,
     withText: send.withText, releaseCachedFiles: i == active.imageSends.len - 1))
 
 proc matchesActiveImageSend*(queue: seq[PendingShare], chatId, sendToken: string): bool =
@@ -128,7 +132,7 @@ proc matchesActiveImageSend*(queue: seq[PendingShare], chatId, sendToken: string
   if sentIndex < 0 or sentIndex >= active.imageSends.len:
     return false
   let send = active.imageSends[sentIndex]
-  result = send.token == sendToken and send.chatId == chatId
+  return send.token == sendToken and send.chatId == chatId
 
 proc unfurlFailureMatchesActive*(queue: seq[PendingShare], requestUuid: string): bool =
   ## True iff a failed unfurl hop (plan request or urls request) belongs to the active share.
@@ -138,4 +142,4 @@ proc unfurlFailureMatchesActive*(queue: seq[PendingShare], requestUuid: string):
   let active = queue[0]
   if requestUuid == "":
     return active.planRequestUuid != "" or active.unfurlRequestUuid != ""
-  result = requestUuid == active.planRequestUuid or requestUuid == active.unfurlRequestUuid
+  return requestUuid == active.planRequestUuid or requestUuid == active.unfurlRequestUuid
