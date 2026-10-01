@@ -284,6 +284,11 @@ SplitView {
 
         sourceModel: messagesModel
 
+        // A row arriving at the end while the user is already there should just
+        // appear; one arriving while they are reading further up should be
+        // announced by the placeholder instead.
+        followsEnd: windowedView.atEnd
+
         // The control owns the steady size; the position is set through
         // moveTo(), since first/last are read-only by design.
         size: windowSizeSpinBox.value

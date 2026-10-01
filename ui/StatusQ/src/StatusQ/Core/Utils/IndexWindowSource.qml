@@ -22,11 +22,24 @@ import QtModelsToolkit
   owed trim pointing at bounds that had moved underneath it, and the next
   trim() would silently shrink the window. Position changes go through
   moveTo(), which clears what is owed; the steady size is `size`.
+
+  The window is defined by the rows it holds, not by arithmetic against a
+  moving count. A change made to the source from outside never changes which
+  rows the window shows - the bounds move with them - except at the end the
+  view is actively following, where the window keeps its end on the source's
+  end so a row arriving there is shown rather than announced.
 */
 QObject {
     id: root
 
     property var sourceModel: null
+
+    // Keep the window's end on the source's end, so a row arriving there lands
+    // inside the window and is simply shown, instead of falling beyond it and
+    // being announced by a placeholder. Set from the view's own at-end state:
+    // following while the user is reading older rows would slide content out
+    // from under them.
+    property bool followsEnd: false
 
     // The size the window returns to once a batch has been revealed. Writing it
     // while a trim is owed takes effect at the trim rather than immediately, so
@@ -125,6 +138,70 @@ QObject {
         d.last = d.first + Math.max(1, root.size) - 1
     }
 
+    // Nothing here changes what the source holds - it reacts to someone else
+    // changing it. The window is positional, so rows inserted before it
+    // renumber its contents, and rows appended past it put the newest row out
+    // of reach behind a placeholder.
+    Connections {
+        target: root.sourceModel
+
+        // Asked before the insert lands, while the counts still describe the
+        // world the window was placed in.
+        function onRowsAboutToBeInserted(parent, first, last) {
+            d.wasAtSourceEnd = d.last >= root.sourceRowCount - 1
+
+            // Whether the window was over anything at all. Filling an empty
+            // model is not a change to rows the window was showing - there were
+            // none - and treating it as one walks the window off its position
+            // by the size of the population.
+            d.wasOverRows = root.sourceRowCount > d.first
+        }
+
+        function onRowsInserted(parent, first, last) {
+            // Mid-batch the bounds belong to the owed trim, and re-pinning them
+            // would leave it pointing at bounds that had moved. The next insert
+            // picks this up.
+            if (!d.wasOverRows)
+                return
+
+            const inserted = last - first + 1
+
+            // The window covered the source's last row, so it still should:
+            // whatever was inserted, the last index moved by exactly this much.
+            // Counted from the signal rather than read back from the model -
+            // sourceRowCount follows ModelCount, which has not necessarily
+            // caught up by the time this runs.
+            //
+            // Both bounds move, so the window slides rather than grows and the
+            // size is kept. Doing it for any insert at or before the end, not
+            // just an append, is what covers a row landing *inside* the window:
+            // that pushes the newest one out past `last` just the same.
+            if (root.followsEnd && d.wasAtSourceEnd && !root.growing) {
+                d.first += inserted
+                d.last += inserted
+                return
+            }
+
+            if (first <= d.first) {
+                d.first += inserted
+                d.last += inserted
+            }
+        }
+
+        // The mirror. Nothing is done about the window hanging past a source
+        // that just got shorter: overhanging the end is allowed by design, and
+        // the filter simply yields the rows that are left.
+        function onRowsRemoved(parent, first, last) {
+            const removedBefore = Math.min(last, d.first - 1) - first + 1
+
+            if (removedBefore <= 0)
+                return
+
+            d.first -= removedBefore
+            d.last -= removedBefore
+        }
+    }
+
     onSizeChanged: {
         // Mid-batch the bounds belong to the owed trim; trim() applies this.
         if (root.growing)
@@ -138,6 +215,11 @@ QObject {
 
         property int first: 0
         property int last: 59
+
+        // Sampled before an insert moves the count: whether the window covered
+        // the source's last row, and whether it was over any rows at all.
+        property bool wasAtSourceEnd: false
+        property bool wasOverRows: false
 
         // How many rows each end owes once the view has revealed the batch.
         property int owedStart: 0
