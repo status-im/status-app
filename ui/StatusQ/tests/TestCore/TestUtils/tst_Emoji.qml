@@ -9,7 +9,8 @@ TestCase {
 
     // Test if the knowledge of the first and last index of the flags is still valid or need to be updated
     function test_flags_indexes_are_valid() {
-        let emojis = Emoji.emojiJSON.emoji_json
+        tryVerify(() => Emoji.emojiJSON.length > 0)
+        let emojis = Emoji.emojiJSON
         let firstIndex = emojis.findIndex(function(emoji) {
             return (emoji.category === "flags")
         })
@@ -26,10 +27,13 @@ TestCase {
     }
 
     function test_ascii_emoticons_are_resolved() {
-        compare(Emoji.getAsciiEmoji(":)"), "\u{1F642}")
+        tryVerify(() => Emoji.getAsciiEmoji(":)") === "\u{1F642}")
         compare(Emoji.getAsciiEmoji(">:)"), "\u{1F608}")
         compare(Emoji.getAsciiEmoji("not-an-emoticon"), "")
         compare(Emoji.maxAsciiEmojiLength(), 3)
     }
-}
 
+    function test_random_emoji() {
+        tryVerify(() => Emoji.getRandomEmoji().trim() !== "", 5000, "Random emoji is empty")
+    }
+}

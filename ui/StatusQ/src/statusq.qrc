@@ -226,7 +226,6 @@
         <file>StatusQ/Core/Utils/TextDocumentUtils.qml</file>
         <file>StatusQ/Core/Utils/Utils.qml</file>
         <file>StatusQ/Core/Utils/big.min.mjs</file>
-        <file>StatusQ/Core/Utils/emojiList.js</file>
         <file>StatusQ/Core/Utils/internal/HeaderWrapper.qml</file>
         <file>StatusQ/Core/Utils/qmldir</file>
         <file>StatusQ/Core/Utils/xss.js</file>
