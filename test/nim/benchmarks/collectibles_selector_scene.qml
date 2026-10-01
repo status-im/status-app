@@ -199,6 +199,19 @@ Window {
             collectiblesSrc.append(rows)
             break
         }
+        case 5: { // remove every other row, one rowsRemoved range per hole (descending)
+            for (let i = collectiblesSrc.count - 1; i >= 0; i -= 2)
+                collectiblesSrc.remove(i, 1)
+            break
+        }
+        case 6: { // same end state as case 5, announced as one reset
+            const keep = []
+            for (let i = 0; i < collectiblesSrc.count; i += 2)
+                keep.push(collectiblesSrc.get(i))
+            collectiblesSrc.clear()
+            collectiblesSrc.append(keep)
+            break
+        }
         case 4: { // single ownership balance update on a displayed collectible
             // bump the ERC-1155 balance of the first item owned by the current
             // account -> its SumAggregator recomputes and fans through the chain
