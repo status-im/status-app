@@ -118,7 +118,7 @@ Item {
                     expectedRoles: ["sortTimestamp", "isThread", "position"]
                     expression: {
                         if (modelLeft.sortTimestamp !== modelRight.sortTimestamp)
-                            return modelRight.sortTimestamp - modelLeft.sortTimestamp
+                            return modelLeft.sortTimestamp > modelRight.sortTimestamp ? -1 : 1
 
                         if (modelLeft.isThread !== modelRight.isThread)
                             return modelLeft.isThread ? 1 : -1
