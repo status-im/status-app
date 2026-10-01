@@ -128,7 +128,6 @@ private:
     void flushPendingSourceUpdates();
     void applyIncrementalDataUpdate(int sourceRow);
     void cancelPendingSourceUpdates();
-    bool hasPendingSourceUpdates() const;
     void onSourceRowsAboutToBeRemoved(const QModelIndex& parent, int first, int last);
     void applyPendingRemovals();
 
