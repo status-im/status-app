@@ -126,9 +126,9 @@ static const NSTimeInterval kNoticeSeconds = 1.5;
 static const CGFloat kMaxImageEdgePx = 2048.0;
 
 // Strict Unicode decode of a text document: BOM-sniffed UTF-16, otherwise
-// UTF-8. nil when the bytes are not text in either (a binary file behind a
-// text type). A read cut at the memory guard may end mid-character; up to
-// three trailing bytes are dropped before giving up on it.
+// UTF-8; a NUL anywhere means binary. nil when the bytes are not text (a
+// binary file behind a text type). A read cut at the memory guard may end
+// mid-character; up to three trailing bytes are dropped before giving up.
 static NSString *DecodeTextDocument(NSData *data, BOOL truncated)
 {
     NSDictionary *options = @{
@@ -147,7 +147,7 @@ static NSString *DecodeTextDocument(NSData *data, BOOL truncated)
                                                     convertedString:&text
                                                 usedLossyConversion:NULL];
         if (encoding != 0 && text != nil)
-            return text;
+            return [text rangeOfString:@"\0"].location == NSNotFound ? text : nil;
     }
     return nil;
 }
@@ -622,6 +622,11 @@ static NSString *RenderTextDocument(NSString *text)
     NSMutableArray<NSItemProvider *> *imageProviders = [NSMutableArray array];
     NSMutableArray<NSItemProvider *> *urlProviders = [NSMutableArray array];
     NSMutableArray<NSItemProvider *> *textProviders = [NSMutableArray array];
+    // Text slot of each URL/text provider in the share's attachment order,
+    // so a mix of file-URL-backed and text attachments keeps that order.
+    NSMutableArray<NSNumber *> *urlSlots = [NSMutableArray array];
+    NSMutableArray<NSNumber *> *textSlots = [NSMutableArray array];
+    NSUInteger textSlotCount = 0;
     for (NSExtensionItem *item in self.extensionContext.inputItems) {
         for (NSItemProvider *provider in item.attachments) {
             // Image first: an image attachment commonly also advertises URL
@@ -630,12 +635,15 @@ static NSString *RenderTextDocument(NSString *text)
             // also advertise text, and the link (with scheme intact) is the
             // content the user is sharing. A URL that turns out to be a file
             // location of a text attachment is read as a text document below.
-            if ([provider hasItemConformingToTypeIdentifier:kTypeImage])
+            if ([provider hasItemConformingToTypeIdentifier:kTypeImage]) {
                 [imageProviders addObject:provider];
-            else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl])
+            } else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl]) {
                 [urlProviders addObject:provider];
-            else if ([provider hasItemConformingToTypeIdentifier:kTypeText])
+                [urlSlots addObject:@(textSlotCount++)];
+            } else if ([provider hasItemConformingToTypeIdentifier:kTypeText]) {
                 [textProviders addObject:provider];
+                [textSlots addObject:@(textSlotCount++)];
+            }
         }
     }
 
@@ -646,7 +654,7 @@ static NSString *RenderTextDocument(NSString *text)
     // text slot too: a file URL of a text attachment yields a document.
     NSMutableArray *orderedInlineTexts = [NSMutableArray array];
     NSMutableArray *orderedDocuments = [NSMutableArray array];
-    for (NSUInteger i = 0; i < urlProviders.count + textProviders.count; i++) {
+    for (NSUInteger i = 0; i < textSlotCount; i++) {
         [orderedInlineTexts addObject:[NSNull null]];
         [orderedDocuments addObject:[NSNull null]];
     }
@@ -683,9 +691,9 @@ static NSString *RenderTextDocument(NSString *text)
         }
     };
 
-    NSUInteger slot = 0;
-    for (NSItemProvider *provider in urlProviders) {
-        const NSUInteger textSlot = slot++;
+    for (NSUInteger i = 0; i < urlProviders.count; i++) {
+        NSItemProvider *provider = urlProviders[i];
+        const NSUInteger textSlot = urlSlots[i].unsignedIntegerValue;
         dispatch_group_enter(group);
         [provider loadItemForTypeIdentifier:kTypeUrl
                                     options:nil
@@ -714,8 +722,9 @@ static NSString *RenderTextDocument(NSString *text)
         }];
     }
 
-    for (NSItemProvider *provider in textProviders) {
-        const NSUInteger textSlot = slot++;
+    for (NSUInteger i = 0; i < textProviders.count; i++) {
+        NSItemProvider *provider = textProviders[i];
+        const NSUInteger textSlot = textSlots[i].unsignedIntegerValue;
         dispatch_group_enter(group);
         [provider loadItemForTypeIdentifier:kTypeText
                                     options:nil

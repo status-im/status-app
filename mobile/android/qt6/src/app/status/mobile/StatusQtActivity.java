@@ -264,13 +264,13 @@ public class StatusQtActivity extends QtActivity {
         if (!isImageShare && !isTextShare) return;
 
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (text == null || text.isEmpty()) {
-            text = intent.getStringExtra(Intent.EXTRA_SUBJECT);
-        }
         if (text == null) text = "";
         // Inline text wins over text documents in the same intent: senders
-        // that offer both carry the same content twice.
+        // that offer both carry the same content twice. The subject is a
+        // title, not content; it stands in only when there is nothing else.
         final boolean readTextDocuments = isTextShare && text.isEmpty();
+        String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+        final String fallbackText = subject != null ? subject : "";
 
         final String shareText = text;
         final int serial;
@@ -284,10 +284,12 @@ public class StatusQtActivity extends QtActivity {
             final String[] imagePaths = isImageShare
                     ? copySharedImagesToCache(app, streams)
                     : new String[0];
-            final String body = readTextDocuments
+            String body = readTextDocuments
                     ? ShareTextDocuments.read(app, streams, type)
                     : shareText;
-            ui.post(() -> deliverShare(app, serial, isImageShare, body, imagePaths));
+            if (body.isEmpty()) body = fallbackText;
+            final String delivered = body;
+            ui.post(() -> deliverShare(app, serial, isImageShare, delivered, imagePaths));
         });
     }
 
