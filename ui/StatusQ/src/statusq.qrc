@@ -203,6 +203,7 @@
         <file>StatusQ/Core/Utils/DoubleFlickable.qml</file>
         <file>StatusQ/Core/Utils/DoubleFlickableWithFolding.qml</file>
         <file>StatusQ/Core/Utils/Emoji.qml</file>
+        <file>StatusQ/Core/Utils/IndexWindowSource.qml</file>
         <file>StatusQ/Core/Utils/JSONListModel.qml</file>
         <file>StatusQ/Core/Utils/LazyStackLayout.qml</file>
         <file>StatusQ/Core/Utils/ModelChangeGuard.qml</file>
