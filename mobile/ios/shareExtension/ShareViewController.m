@@ -113,13 +113,64 @@ static NSURL *VariantRootUrl(void)
 // text, at most one web URL, and images up to the in-app send limit).
 static NSString *const kTypeImage = @"public.image";
 static NSString *const kTypeUrl = @"public.url";
-static NSString *const kTypePlainText = @"public.plain-text";
+static NSString *const kTypeText = @"public.text";
+// Memory guard on reading a text document; the composer cuts the text far below this.
+static const NSUInteger kMaxTextDocumentBytes = 1 << 20;
 // Per-share ceiling on preparing image copies; past it the share goes out with what was copied.
 static const NSTimeInterval kImageLoadDeadlineSeconds = 120.0;
 // Camera originals (12 MP+) are downscaled to this longest edge on copy: the
 // chat compresses image messages to ~350 KB anyway, so nothing visible is
 // lost and the host is spared decoding full-size photos.
 static const CGFloat kMaxImageEdgePx = 2048.0;
+
+// Strict Unicode decode of a text document: BOM-sniffed UTF-16, otherwise
+// UTF-8. nil when the bytes are not text in either (a binary file behind a
+// text type). A read cut at the memory guard may end mid-character; up to
+// three trailing bytes are dropped before giving up on it.
+static NSString *DecodeTextDocument(NSData *data, BOOL truncated)
+{
+    NSDictionary *options = @{
+        NSStringEncodingDetectionSuggestedEncodingsKey: @[
+            @(NSUTF8StringEncoding), @(NSUTF16StringEncoding),
+            @(NSUTF16BigEndianStringEncoding), @(NSUTF16LittleEndianStringEncoding)
+        ],
+        NSStringEncodingDetectionUseOnlySuggestedEncodingsKey: @YES,
+        NSStringEncodingDetectionAllowLossyKey: @NO,
+    };
+    NSUInteger maxCut = truncated ? 3 : 0;
+    for (NSUInteger cut = 0; cut <= maxCut && cut <= data.length; cut++) {
+        NSString *text = nil;
+        NSStringEncoding encoding = [NSString stringEncodingForData:[data subdataWithRange:NSMakeRange(0, data.length - cut)]
+                                                    encodingOptions:options
+                                                    convertedString:&text
+                                                usedLossyConversion:NULL];
+        if (encoding != 0 && text != nil)
+            return text;
+    }
+    return nil;
+}
+
+static NSString *ReadTextDocument(NSURL *fileUrl)
+{
+    NSError *error = nil;
+    NSFileHandle *handle = [NSFileHandle fileHandleForReadingFromURL:fileUrl error:&error];
+    if (handle == nil) {
+        NSLog(@"StatusShareExtension: cannot open shared text document: %@", error);
+        return nil;
+    }
+    NSData *data = [handle readDataOfLength:kMaxTextDocumentBytes];
+    [handle closeFile];
+    return DecodeTextDocument(data, data.length == kMaxTextDocumentBytes);
+}
+
+static NSString *TrimTrailingWhitespace(NSString *text)
+{
+    NSUInteger end = text.length;
+    NSCharacterSet *ws = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+    while (end > 0 && [ws characterIsMember:[text characterAtIndex:end - 1]])
+        end--;
+    return [text substringToIndex:end];
+}
 
 @interface ShareViewController : UIViewController
 @property (nonatomic, retain) UILabel *progressLabel;
@@ -167,13 +218,16 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     }];
 }
 
-// Collects the image, plain-text and web-URL attachments across all input
-// items — the iOS counterpart of the Android layer's decision-free intent
-// extraction (StatusQtActivity.java). Shared links travel as text too,
-// matching the seam's share{text, imagePaths} payload: text parts are joined,
-// the URL is appended unless the text already contains it (apps commonly put
-// the link inside the shared text themselves). Image data is copied into the
-// App Group cache inside the load handler — the provided file URL expires
+// Collects the image, text and web-URL attachments across all input items —
+// the iOS counterpart of the Android layer's decision-free intent extraction
+// (StatusQtActivity.java). Shared links travel as text too, matching the
+// seam's share{text, imagePaths} payload: text parts are joined, the URL is
+// appended unless the text already contains it (apps commonly put the link
+// inside the shared text themselves). Text documents (file-backed text
+// attachments: .txt, .md, .html, vCard, ...) are read and pasted as text, in
+// attachment order; inline text wins over them when a share offers both,
+// since such senders carry the same content twice. Image data is copied into
+// the App Group cache inside the load handler — the provided file URL expires
 // with the handler. Attachment loads are asynchronous; the completion runs
 // once, on the main queue, with the composed text ("" when nothing usable was
 // shared) and the cached copies' paths in the share's attachment order.
@@ -187,28 +241,65 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
         for (NSItemProvider *provider in item.attachments) {
             // Image first: an image attachment commonly also advertises URL
             // (its file location) or text representations, but the image is
-            // the content being shared. URL before plain-text: a URL provider
-            // may also advertise plain-text, and the link (with scheme
-            // intact) is the content the user is sharing.
+            // the content being shared. URL before text: a URL provider may
+            // also advertise text, and the link (with scheme intact) is the
+            // content the user is sharing. A URL that turns out to be a file
+            // location of a text attachment is read as a text document below.
             if ([provider hasItemConformingToTypeIdentifier:kTypeImage])
                 [imageProviders addObject:provider];
             else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl])
                 [urlProviders addObject:provider];
-            else if ([provider hasItemConformingToTypeIdentifier:kTypePlainText])
+            else if ([provider hasItemConformingToTypeIdentifier:kTypeText])
                 [textProviders addObject:provider];
         }
     }
 
     dispatch_group_t group = dispatch_group_create();
-    NSMutableArray<NSString *> *texts = [NSMutableArray array];
     NSMutableArray<NSString *> *urls = [NSMutableArray array];
-    // One pre-claimed slot per image attachment (filled by index, compacted
-    // at the end) so the copies keep the share's order.
+    // One pre-claimed slot per attachment (filled by index, compacted at the
+    // end) so copies and texts keep the share's order. URL attachments get a
+    // text slot too: a file URL of a text attachment yields a document.
+    NSMutableArray *orderedInlineTexts = [NSMutableArray array];
+    NSMutableArray *orderedDocuments = [NSMutableArray array];
+    for (NSUInteger i = 0; i < urlProviders.count + textProviders.count; i++) {
+        [orderedInlineTexts addObject:[NSNull null]];
+        [orderedDocuments addObject:[NSNull null]];
+    }
     NSMutableArray *orderedImagePaths = [NSMutableArray array];
     for (NSUInteger i = 0; i < imageProviders.count; i++)
         [orderedImagePaths addObject:[NSNull null]];
 
+    // Sorts a loaded text representation into its slot: strings are inline
+    // text, a file URL is a text document (read now: the URL expires with the
+    // handler).
+    void (^storeText)(id, NSUInteger) = ^(id loaded, NSUInteger slot) {
+        NSString *inlineText = nil;
+        NSString *document = nil;
+        if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
+            inlineText = (NSString *)loaded;
+        } else if ([(NSObject *)loaded isKindOfClass:[NSAttributedString class]]) {
+            inlineText = ((NSAttributedString *)loaded).string;
+        } else if ([(NSObject *)loaded isKindOfClass:[NSData class]]) {
+            NSData *data = (NSData *)loaded;
+            inlineText = DecodeTextDocument(data, NO);
+        } else if ([(NSObject *)loaded isKindOfClass:[NSURL class]] && ((NSURL *)loaded).isFileURL) {
+            document = ReadTextDocument((NSURL *)loaded);
+            if (document == nil)
+                NSLog(@"StatusShareExtension: dropping undecodable text document %lu", (unsigned long)slot);
+            else
+                document = TrimTrailingWhitespace(document);
+        }
+        @synchronized (orderedInlineTexts) {
+            if (inlineText.length > 0)
+                orderedInlineTexts[slot] = inlineText;
+            if (document.length > 0)
+                orderedDocuments[slot] = document;
+        }
+    };
+
+    NSUInteger slot = 0;
     for (NSItemProvider *provider in urlProviders) {
+        const NSUInteger textSlot = slot++;
         dispatch_group_enter(group);
         [provider loadItemForTypeIdentifier:kTypeUrl
                                     options:nil
@@ -216,9 +307,15 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
             NSString *url = nil;
             if ([(NSObject *)loaded isKindOfClass:[NSURL class]]) {
                 NSURL *u = (NSURL *)loaded;
-                // File URLs are not shareable text; non-image files
-                // are not accepted by this extension.
-                url = u.isFileURL ? nil : u.absoluteString;
+                if (u.isFileURL) {
+                    // Not a shareable link: a text file shared from Files
+                    // arrives this way, so read it as a document. Other
+                    // files are not accepted by this extension.
+                    if ([provider hasItemConformingToTypeIdentifier:kTypeText])
+                        storeText(u, textSlot);
+                } else {
+                    url = u.absoluteString;
+                }
             } else if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
                 url = (NSString *)loaded;
             }
@@ -232,24 +329,12 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     }
 
     for (NSItemProvider *provider in textProviders) {
+        const NSUInteger textSlot = slot++;
         dispatch_group_enter(group);
-        [provider loadItemForTypeIdentifier:kTypePlainText
+        [provider loadItemForTypeIdentifier:kTypeText
                                     options:nil
                           completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
-            NSString *text = nil;
-            if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
-                text = (NSString *)loaded;
-            } else if ([(NSObject *)loaded isKindOfClass:[NSAttributedString class]]) {
-                text = ((NSAttributedString *)loaded).string;
-            } else if ([(NSObject *)loaded isKindOfClass:[NSData class]]) {
-                text = [[NSString alloc] initWithData:(NSData *)loaded
-                                             encoding:NSUTF8StringEncoding];
-            }
-            if (text.length > 0) {
-                @synchronized (texts) {
-                    [texts addObject:text];
-                }
-            }
+            storeText(loaded, textSlot);
             dispatch_group_leave(group);
         }];
     }
@@ -328,10 +413,24 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     }
 
     dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-        NSString *text = [texts componentsJoinedByString:@"\n"];
+        NSMutableArray<NSString *> *inlineTexts = [NSMutableArray array];
+        NSMutableArray<NSString *> *documents = [NSMutableArray array];
+        @synchronized (orderedInlineTexts) {
+            for (id t in orderedInlineTexts) {
+                if ([t isKindOfClass:[NSString class]])
+                    [inlineTexts addObject:t];
+            }
+            for (id t in orderedDocuments) {
+                if ([t isKindOfClass:[NSString class]])
+                    [documents addObject:t];
+            }
+        }
+        NSString *text = inlineTexts.count > 0
+            ? [inlineTexts componentsJoinedByString:@"\n"]
+            : [documents componentsJoinedByString:@"\n\n"];
         if (text.length == 0) {
             // Some apps put the shared text only in the item body, not in a
-            // plain-text attachment.
+            // text attachment.
             for (NSExtensionItem *item in self.extensionContext.inputItems) {
                 NSString *body = item.attributedContentText.string;
                 if (body.length > 0) {

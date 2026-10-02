@@ -243,8 +243,8 @@ public class StatusQtActivity extends QtActivity {
 
     // Thin, decision-free platform layer: extract the shared payload from the
     // SEND/SEND_MULTIPLE intent — copying image streams to app-private cache
-    // right away, before any read grant can expire — and forward it to the
-    // external-intake seam.
+    // and reading text documents right away, before any read grant can
+    // expire — and forward it to the external-intake seam.
     private void handleShareIntake(Intent intent) {
         if (intent == null) return;
         String action = intent.getAction();
@@ -253,17 +253,21 @@ public class StatusQtActivity extends QtActivity {
         if (!isSend && !isSendMultiple) return;
         String type = intent.getType();
         if (type == null) return;
-        // Android matches "text/*" and "*/*" intents against our concrete
-        // text/plain and image/* filters, so the type can be a wildcard.
+        // Android matches "*/*" intents against our text/* and image/*
+        // filters, so the type can be a wildcard.
         boolean isWildcard = "*/*".equals(type);
         boolean isImageShare = type.startsWith("image/") || isWildcard;
-        if (!isImageShare && !(isSend && type.startsWith("text/"))) return;
+        boolean isTextShare = type.startsWith("text/") || isWildcard;
+        if (!isImageShare && !isTextShare) return;
 
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
         if (text == null || text.isEmpty()) {
             text = intent.getStringExtra(Intent.EXTRA_SUBJECT);
         }
         if (text == null) text = "";
+        // Inline text wins over text documents in the same intent: senders
+        // that offer both carry the same content twice.
+        final boolean readTextDocuments = isTextShare && text.isEmpty();
 
         final String shareText = text;
         final int serial;
@@ -273,10 +277,14 @@ public class StatusQtActivity extends QtActivity {
         final Context app = getApplicationContext();
         final Handler ui = new Handler(Looper.getMainLooper());
         shareIntakeExecutor.execute(() -> {
+            final List<Uri> streams = extractStreamUris(app, intent, isSendMultiple);
             final String[] imagePaths = isImageShare
-                    ? copySharedImagesToCache(app, extractStreamUris(app, intent, isSendMultiple))
+                    ? copySharedImagesToCache(app, streams)
                     : new String[0];
-            ui.post(() -> deliverShare(app, serial, isImageShare, shareText, imagePaths));
+            final String body = readTextDocuments
+                    ? ShareTextDocuments.read(app, streams)
+                    : shareText;
+            ui.post(() -> deliverShare(app, serial, isImageShare, body, imagePaths));
         });
     }
 

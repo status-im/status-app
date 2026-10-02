@@ -14,6 +14,13 @@ Contract under test: **only foreign `content://` streams are accepted**.
 two rejection paths; `foreignContentStreamIsAccepted` guards against an
 over-broad fix.
 
+## `ShareTextDocumentsTest`
+
+Decoding of text document shares (`text/*` streams with no inline text, pasted
+as message text): BOM-sniffed UTF-16, strict UTF-8, binary behind a text claim
+rejected, and a read cut at the memory guard still decoding. Pure Java; lives
+here because the module has no JVM test source set.
+
 ### Running
 
 Needs a booted emulator/device and the app built with the Qt Android toolchain
