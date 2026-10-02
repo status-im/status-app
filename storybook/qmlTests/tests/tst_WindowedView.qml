@@ -37,6 +37,53 @@ Item {
         }
     }
 
+    // Height that grows as the row narrows, the way wrapped text does. The
+    // plain row above is width-independent, so a resize changes nothing about it
+    // and there is nothing to hold still.
+    Component {
+        id: reflowDelegate
+
+        Item {
+            id: reflowRow
+
+            property int value: 0
+
+            implicitHeight: 40 + (reflowRow.value % 5) * 20
+                            + Math.ceil(30000 / Math.max(1, reflowRow.width))
+        }
+    }
+
+    // Reports no height at all when there is no room to lay anything out, the
+    // way wrapped text does at zero width.
+    Component {
+        id: collapsingDelegate
+
+        Item {
+            id: collapsingRow
+
+            property int value: 0
+
+            implicitHeight: collapsingRow.width <= 0
+                            ? 0
+                            : 40 + (collapsingRow.value % 5) * 20
+                              + Math.ceil(30000 / collapsingRow.width)
+        }
+    }
+
+    // One row taller than the whole viewport, and still re-flowing: the case
+    // where nothing on screen starts on screen.
+    Component {
+        id: giantReflowDelegate
+
+        Item {
+            id: giantRow
+
+            property int value: 0
+
+            implicitHeight: 200 + Math.ceil(300000 / Math.max(1, giantRow.width))
+        }
+    }
+
     // Tall rows, so the content is long enough for a flick to still be running
     // when it reaches a band. With the short rows above, a flick across the whole
     // window is over in a few frames.
@@ -1583,6 +1630,363 @@ Item {
             compare(owner.revealCount, 1, "the fill completed, with nothing to show")
             compare(hiddenShells().length, 20,
                     "and the rows that never arrived are still staged")
+        }
+    }
+
+    TestCase {
+        id: resizeTests
+
+        name: "WindowedView.Resize"
+        when: windowShown
+
+        readonly property int wide: 500
+        readonly property int narrow: 320
+        readonly property int tall: 400
+        readonly property int short: 260
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            provider.delegate = reflowDelegate
+
+            // The view fills the root, so the root is what gets resized -
+            // assigning view.width directly is simply overridden by the anchor.
+            root.width = resizeTests.wide
+        }
+
+        function cleanup() {
+            view.stickToBottom = false
+            view.autoRequest = false
+            view.placeholder = null
+            view.moreAvailableTop = true
+            root.width = resizeTests.wide
+            root.height = resizeTests.tall
+            provider.delegate = plainDelegate
+        }
+
+        function fill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        function narrowIt() {
+            root.width = resizeTests.narrow
+            waitForRendering(view)
+            waitForRendering(view)
+
+            compare(view.width, resizeTests.narrow, "the view really narrowed")
+        }
+
+        // The topmost row the reader can see the start of.
+        function topVisible() {
+            for (const shell of shells()) {
+                if (!shell.visible || !shell.content)
+                    continue
+
+                if (shell.y >= view.contentY + view.height)
+                    break           // below the viewport entirely
+
+                if (shell.y >= view.contentY - 0.5)
+                    return { value: shell.content.value,
+                             offset: shell.y - view.contentY }
+            }
+
+            return { value: -9999, offset: 0 }
+        }
+
+        function test_theTopVisibleRowKeepsItsPlace() {
+            fill(40)
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            waitForRendering(view)
+
+            const before = topVisible()
+            verify(before.value !== -9999, "there is a row to hold")
+
+            narrowIt()
+
+            verify(view.contentHeight > 0)
+            const after = offsetOf(before.value)
+
+            verify(!isNaN(after), "the row is still there")
+            fuzzyCompare(after, before.offset, 0.5,
+                         "and sits where it sat: " + after + " vs " + before.offset)
+        }
+
+        // Positioned so a row is half above the viewport top: the one below it
+        // is what the reader is reading from the start.
+        function test_aRowClippedAtTheTopIsNotTheAnchor() {
+            fill(40)
+
+            const third = view.itemAtRow(3)
+
+            verify(!!third)
+            view.contentY = third.y + third.height / 2
+            waitForRendering(view)
+
+            const before = topVisible()
+
+            compare(before.value, view.itemAtRow(4).content.value,
+                    "the clipped row is not the one held")
+            verify(before.offset >= -0.5, "its top edge is visible")
+
+            narrowIt()
+
+            fuzzyCompare(offsetOf(before.value), before.offset, 0.5,
+                         "and it is what stayed put")
+        }
+
+        function test_atTheEndItStaysAtTheEnd() {
+            view.stickToBottom = true
+            fill(40)
+
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "parked at the bottom to begin with")
+
+            narrowIt()
+
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "and still parked there once it re-wrapped")
+        }
+
+        function test_atTheEndWithoutStickToEndItHoldsTheRow() {
+            fill(40)
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+
+            const before = topVisible()
+
+            verify(before.value !== -9999)
+
+            narrowIt()
+
+            fuzzyCompare(offsetOf(before.value), before.offset, 0.5,
+                         "the row rule applies at the bottom too")
+        }
+
+        function test_aSingleTallRowHoldsItsOffset() {
+            provider.delegate = giantReflowDelegate
+            fill(10)
+
+            const covering = view.itemAtRow(1)
+
+            verify(!!covering)
+            verify(covering.height > view.height,
+                   "the row covers the viewport: " + covering.height)
+
+            view.contentY = covering.y + 40       // nothing starts on screen
+            waitForRendering(view)
+            compare(topVisible().value, -9999, "no row has its top edge visible")
+
+            const offsetBefore = covering.y - view.contentY
+
+            narrowIt()
+
+            fuzzyCompare(covering.y - view.contentY, offsetBefore, 0.5,
+                         "the covering row holds its offset")
+        }
+
+        // What a slide anchors is the row nearest the *bottom* edge - growing at
+        // the end trims at the start, so that is the row it guarantees. The top
+        // row is not it, and is free to move as the rows between them re-wrap.
+        function nearestToBottomEdge() {
+            const edge = view.contentY + view.height
+
+            let best = null
+            let bestDistance = Number.MAX_VALUE
+
+            for (const shell of shells()) {
+                if (!shell.visible || !shell.content)
+                    continue
+
+                const distance = Math.abs(shell.y - edge)
+
+                if (distance < bestDistance) {
+                    bestDistance = distance
+                    best = shell
+                }
+            }
+
+            return best ? { value: best.content.value,
+                            offset: best.y - view.contentY }
+                        : { value: -9999, offset: 0 }
+        }
+
+        // Shrinking moves the bottom *down*, so asking whether the view was at
+        // the end against the height it has already been given reads false and
+        // the pin never fires. Growing moves the bottom up and hides the bug,
+        // which is why only one direction broke.
+        function test_shrinkingTheViewportStaysAtTheEnd() {
+            view.stickToBottom = true
+            fill(40)
+
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "at the bottom to begin with")
+
+            root.height = resizeTests.short
+            waitForRendering(view)
+            waitForRendering(view)
+
+            compare(view.height, resizeTests.short, "the view really shrank")
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "and is still at the bottom")
+        }
+
+        function test_growingTheViewportStaysAtTheEnd() {
+            view.stickToBottom = true
+            root.height = resizeTests.short
+            fill(40)
+
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "at the bottom to begin with")
+
+            root.height = resizeTests.tall
+            waitForRendering(view)
+            waitForRendering(view)
+
+            compare(view.height, resizeTests.tall, "the view really grew")
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "and is still at the bottom")
+        }
+
+        // Widening shortens every row, so a viewport near the end is carried
+        // into it by the content shrinking under it. Landing there is not
+        // enough - it has to be *following* the end again, or the next row to
+        // arrive leaves it behind.
+        function test_wideningIntoTheEndStartsFollowingItAgain() {
+            view.stickToBottom = true
+            root.width = resizeTests.narrow
+            fill(40)
+
+            view.contentY = view.contentHeight - view.height - 20
+            waitForRendering(view)
+            compare(view.atBottom, false, "near the end, but not at it")
+
+            root.width = resizeTests.wide
+            waitForRendering(view)
+            waitForRendering(view)
+
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "the shrinking content carried it to the end")
+
+            // The real question: is it stuck there, or just sitting there?
+            //
+            // Enough rows that the end moves past the position the stale anchor
+            // was holding. One row is not enough: the clamp keeps the view at
+            // the bottom anyway, and the test would pass with or without the
+            // anchor being handed back.
+            const endBefore = view.contentHeight - view.height
+
+            rows.append(rows.make(9000, 4))
+
+            // Waited for by the end actually moving. settled() only wants the
+            // rows present and laid out at all - the Column's height catches up
+            // a polish later, and comparing against it too early compares two
+            // stale numbers that trivially agree.
+            tryVerify(() => settled(44)
+                            && view.contentHeight - view.height > endBefore + 100,
+                      5000, "the rows landed and the end moved past the anchor")
+
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "new rows keep it at the end")
+        }
+
+        // At zero width the rows report no height, the content shrinks to
+        // nothing and every band reads as on screen - which walked the window to
+        // the far end one batch at a time, and left the view somewhere else
+        // entirely once the width came back.
+        function test_collapsingToZeroWidthKeepsThePosition() {
+            provider.delegate = collapsingDelegate
+            fill(40)
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            waitForRendering(view)
+
+            const before = topVisible()
+
+            verify(before.value !== -9999, "there is a row to hold")
+
+            // Auto-paging armed against a budget, so a walking window shows up
+            // as the budget being spent. The placeholder matters: without one
+            // there are no bands at all, and nothing could be asked for however
+            // broken the collapse is.
+            view.placeholder = skeletonPlaceholder
+            view.placeholderHeight = 100
+            owner.startBudget = 5
+            view.moreAvailableTop = Qt.binding(() => owner.startBudget > 0)
+            view.autoRequest = true
+
+            root.width = 0
+
+            for (let i = 0; i < 6; ++i)
+                waitForRendering(view)
+
+            compare(view.width, 0, "the view really collapsed")
+            compare(view.contentHeight, view.height, "and the rows with it")
+            compare(owner.startBudget, 5, "nothing was asked for meanwhile")
+
+            root.width = resizeTests.wide
+            waitForRendering(view)
+            waitForRendering(view)
+
+            const after = offsetOf(before.value)
+
+            verify(!isNaN(after), "the row is still there")
+            fuzzyCompare(after, before.offset, 0.5,
+                         "and back where it was: " + after + " vs " + before.offset)
+        }
+
+        function test_aResizeDoesNotDisturbASlide() {
+            fill(40)
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            waitForRendering(view)
+
+            provider.delay = 60
+
+            const anchored = nearestToBottomEdge()
+
+            verify(anchored.value !== -9999, "there is a row for it to anchor")
+
+            verify(view.requestMoreBottom())
+            verify(view.busy, "the batch is in flight")
+
+            narrowIt()
+
+            tryVerify(() => !view.busy, 8000)
+
+            const after = offsetOf(anchored.value)
+
+            verify(!isNaN(after), "the slide's anchor row survived")
+            fuzzyCompare(after, anchored.offset, 0.5,
+                         "and the slide kept it where it was")
+        }
+
+        // The anchor suppresses the stickToBottom pin, so it must not outlive the
+        // reader's next move.
+        function test_scrollingAfterAResizeReleasesTheAnchor() {
+            view.stickToBottom = true
+            fill(40)
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            waitForRendering(view)
+
+            narrowIt()
+
+            view.contentY = view.contentHeight - view.height   // a user move
+            waitForRendering(view)
+
+            owner.appendLive()
+            tryVerify(() => settled(41), 5000, "the live row landed")
+
+            fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
+                         "stickToBottom follows again")
         }
     }
 

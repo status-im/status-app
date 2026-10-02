@@ -228,8 +228,12 @@ Flickable {
         // a request takes it down and the reveal brings it back up - and if the
         // band is still on screen by then, that rise is the next request.
         // Releasing the handle is an edge too.
+        readonly property bool hasViewport: root.width > 0 && root.height > 0
+                                            && rowsColumn.height > 0
+
         readonly property bool shouldRequestMore:
-                root.autoRequest && !root.busy && !d.finishing && !d.scrollBarHeld
+                root.autoRequest && d.hasViewport
+                && !root.busy && !d.finishing && !d.scrollBarHeld
                 && ((root.moreAvailableTop && d.bandInViewport(topBand))
                     || (root.moreAvailableBottom && d.bandInViewport(bottomBand)))
 
@@ -515,8 +519,9 @@ Flickable {
 
         function applyContentHeightNow() {
             // Sampled before the write, while contentHeight still describes the
-            // bottom the viewport was actually sitting at.
-            const wasAtBottom = d.atBottomOfContent()
+            // bottom the viewport was actually sitting at - and against the
+            // height it was sitting in, which a resize has already changed.
+            const wasAtBottom = d.wasAtBottomOfContent()
             const topBandDelta = d.topBandExtent() - d.appliedTopBand
             const was = d.applyingPosition
 
@@ -551,6 +556,7 @@ Flickable {
             if (root.stickToBottom && wasAtBottom && !d.anchorItem && !root.moving)
                 root.contentY = d.bottomY()      // guard already held
 
+            d.appliedHeight = root.height
             d.applyingPosition = was
         }
 
@@ -560,6 +566,19 @@ Flickable {
         // which is the point - and a sub-pixel gap must still count as the end.
         function atBottomOfContent() {
             return root.contentY >= Math.max(0, root.contentHeight - root.height) - 1
+        }
+
+        // The viewport height the current contentY was last reconciled against.
+        // A resize changes `height` before this runs, so asking whether the view
+        // *was* at the end has to be asked of the geometry it was placed in:
+        // shrinking moves the bottom down, and measured against the new height a
+        // viewport sitting exactly at the old bottom reads as no longer there -
+        // which is how shrinking lost stickToBottom while growing kept it.
+        property real appliedHeight: 0
+
+        function wasAtBottomOfContent() {
+            return root.contentY >= Math.max(0, root.contentHeight
+                                                - d.appliedHeight) - 1
         }
 
         // Live values, not the contentHeight property: inside a height handler
@@ -589,8 +608,78 @@ Flickable {
             // Absolute, not relative, so re-applying it converges instead of
             // drifting - which is what makes holding the anchor safe.
             const target = d.anchorItem.y - d.anchorOffset
+            const bottom = d.bottomY()
 
-            d.apply(Math.max(0, Math.min(d.bottomY(), target)))
+            d.apply(Math.max(0, Math.min(bottom, target)))
+
+            // The correction ran into the end and stopped there, so holding a
+            // row no longer describes where the view is - the bottom does. A
+            // view told to follow the end has to go back to following it, or it
+            // sits at the bottom without being stuck to it and the next row to
+            // arrive leaves it behind. Not while a slide is in flight: there the
+            // anchor is the guarantee, and the far end has yet to be trimmed.
+            if (root.stickToBottom && !root.busy && target >= bottom
+                    && root.contentY >= bottom - 0.5)
+                d.releaseAnchor()
+        }
+
+        function holdAnchor(item) {
+            d.anchorItem = item
+            d.anchorOffset = item.y - root.contentY
+        }
+
+        // A resize re-wraps every row, so every height changes at once - the
+        // ones above the viewport included, which is what moves the content out
+        // from under the reader. The row held still is the topmost one whose top
+        // edge they can actually see: a row clipped by the viewport top is not
+        // the message they are reading from its beginning.
+        //
+        // Different from armAnchor(), which wants the row nearest an edge
+        // because a slide is about to trim the other one.
+        function anchorForResize() {
+            // Nothing laid out to anchor to - the rows have collapsed, and
+            // anchoring to that would record the collapse as the place to come
+            // back to. The width being restored arrives here before the rows
+            // have re-expanded, which is exactly this case.
+            if (rowsColumn.height <= 0)
+                return
+
+            // At the end and asked to stay there, the bottom *is* the position,
+            // and the pin in applyContentHeight() keeps it. Arming here would
+            // suppress that pin, which is conditioned on there being no anchor.
+            if (root.stickToBottom && d.atBottomOfContent())
+                return
+
+            // A slide owns the position while it is in flight, and its anchor is
+            // the exact guarantee; it must not be swapped mid-reveal.
+            if (root.busy)
+                return
+
+            let covering = null
+
+            for (let i = 0; i < rowsRepeater.count; ++i) {
+                const item = rowsRepeater.itemAt(i)
+
+                if (!item || !item.visible)
+                    continue
+
+                // Past the bottom of the viewport, and the rows are ordered,
+                // so there is nothing visible left to find.
+                if (item.y >= root.contentY + root.height)
+                    break
+
+                if (item.y >= root.contentY - 0.5) {
+                    d.holdAnchor(item)
+                    return
+                }
+
+                covering = item
+            }
+
+            // Nothing starts on screen - one row is taller than the viewport -
+            // so hold the row that covers the top, offset and all.
+            if (covering)
+                d.holdAnchor(covering)
         }
 
         // Picks the visible row nearest the viewport edge that will survive.
@@ -620,8 +709,7 @@ Flickable {
             if (!best)
                 return false
 
-            d.anchorItem = best
-            d.anchorOffset = best.y - root.contentY
+            d.holdAnchor(best)
             return true
         }
 
@@ -1080,6 +1168,14 @@ Flickable {
         d.applyContentHeight()
         d.restorePosition()
     }
+
+    // Caught here rather than from the heights that follow: the re-wrap lands on
+    // the next polish, so this handler still sees the geometry the reader was
+    // looking at, which is the only moment the offset to hold can be read.
+    //
+    // A height change needs none of this - it moves the viewport, not the rows,
+    // so the top-visible row keeps its offset by itself.
+    onWidthChanged: d.anchorForResize()
 
     Column {
         id: rowsColumn
