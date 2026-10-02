@@ -6,6 +6,7 @@
 #include "StatusQ/fastexpressionfilter.h"
 #include "StatusQ/fastexpressionrole.h"
 #include "StatusQ/fastexpressionsorter.h"
+#include "StatusQ/fonts.h"
 #include "StatusQ/formatteddoubleproperty.h"
 #include "StatusQ/genericvalidator.h"
 #include "StatusQ/httpstats.h"
@@ -168,6 +169,11 @@ void registerStatusQTypes() {
                                                return new StatusColors;
                                            });
 
+    qmlRegisterSingletonType<Fonts>("StatusQ.Core.Theme", 0, 1, "Fonts",
+                                           [](QQmlEngine*, QJSEngine*) {
+                                               return new Fonts;
+                                           });
+
     qmlRegisterUncreatableType<Theme>("StatusQ.Core.Theme", 0, 1,
                                       "Theme", QStringLiteral("This is attached type, cannot be created directly."));
 
@@ -220,7 +226,6 @@ void registerStatusQTypes() {
 #endif
 #ifdef BUNDLE_STATUSQ_QML
     Q_INIT_RESOURCE(statusq);
-    Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(img);
     Q_INIT_RESOURCE(png);
 #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
@@ -234,6 +239,7 @@ void registerStatusQTypes() {
 #endif
 
     Q_INIT_RESOURCE(emojiList);
+    Q_INIT_RESOURCE(fonts);
 
     qtmt::registerQmlTypes();
     qqsfpm::registerTypes();
