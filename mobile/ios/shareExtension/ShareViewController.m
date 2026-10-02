@@ -118,6 +118,8 @@ static NSString *const kTypeText = @"public.text";
 static const NSUInteger kMaxTextDocumentBytes = 1 << 20;
 // Per-share ceiling on preparing image copies; past it the share goes out with what was copied.
 static const NSTimeInterval kImageLoadDeadlineSeconds = 120.0;
+// How long a notice stays up before the sheet closes on its own.
+static const NSTimeInterval kNoticeSeconds = 1.5;
 // Camera originals (12 MP+) are downscaled to this longest edge on copy: the
 // chat compresses image messages to ~350 KB anyway, so nothing visible is
 // lost and the host is spared decoding full-size photos.
@@ -358,6 +360,7 @@ static NSString *RenderTextDocument(NSString *text)
 
 
 @interface ShareViewController : UIViewController
+@property (nonatomic, retain) UIActivityIndicatorView *spinner;
 @property (nonatomic, retain) UILabel *progressLabel;
 @end
 
@@ -382,7 +385,12 @@ static NSString *RenderTextDocument(NSString *text)
         // Status for nothing.
         if (!hasText && imagePaths.count == 0) {
             NSLog(@"StatusShareExtension: nothing extractable was shared; no hand-off");
-            [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+            // Closing silently reads as a failed tap; say why, then close.
+            [self showNotice:@"Nothing to share from this content"];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kNoticeSeconds * NSEC_PER_SEC)),
+                           dispatch_get_main_queue(), ^{
+                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+            });
             return;
         }
         if (![self writePendingIntakeWithText:text imagePaths:imagePaths]) {
@@ -642,31 +650,49 @@ static NSString *RenderTextDocument(NSString *text)
     });
 }
 
+- (void)ensureStatusViews
+{
+    if (self.progressLabel != nil)
+        return;
+    self.view.backgroundColor = [UIColor systemBackgroundColor];
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
+        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+    spinner.translatesAutoresizingMaskIntoConstraints = NO;
+    [spinner startAnimating];
+    UILabel *label = [[UILabel alloc] init];
+    label.translatesAutoresizingMaskIntoConstraints = NO;
+    label.textColor = [UIColor secondaryLabelColor];
+    label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.numberOfLines = 0;
+    [self.view addSubview:spinner];
+    [self.view addSubview:label];
+    [NSLayoutConstraint activateConstraints:@[
+        [spinner.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+        [spinner.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-16],
+        [label.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+        [label.topAnchor constraintEqualToAnchor:spinner.bottomAnchor constant:12],
+        [label.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.view.leadingAnchor constant:24],
+        [label.trailingAnchor constraintLessThanOrEqualToAnchor:self.view.trailingAnchor constant:-24],
+    ]];
+    self.spinner = spinner;
+    self.progressLabel = label;
+}
+
 // The sheet would otherwise stay blank while a large share is copied.
 - (void)showProgress:(NSUInteger)current of:(NSUInteger)total
 {
-    if (self.progressLabel == nil) {
-        self.view.backgroundColor = [UIColor systemBackgroundColor];
-        UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
-            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
-        spinner.translatesAutoresizingMaskIntoConstraints = NO;
-        [spinner startAnimating];
-        UILabel *label = [[UILabel alloc] init];
-        label.translatesAutoresizingMaskIntoConstraints = NO;
-        label.textColor = [UIColor secondaryLabelColor];
-        label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
-        [self.view addSubview:spinner];
-        [self.view addSubview:label];
-        [NSLayoutConstraint activateConstraints:@[
-            [spinner.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
-            [spinner.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-16],
-            [label.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
-            [label.topAnchor constraintEqualToAnchor:spinner.bottomAnchor constant:12],
-        ]];
-        self.progressLabel = label;
-    }
+    [self ensureStatusViews];
+    self.spinner.hidden = NO;
     self.progressLabel.text = [NSString stringWithFormat:@"Preparing %lu of %lu\u2026",
                                (unsigned long)current, (unsigned long)total];
+}
+
+- (void)showNotice:(NSString *)text
+{
+    [self ensureStatusViews];
+    self.spinner.hidden = YES;
+    self.progressLabel.text = text;
 }
 
 // Re-encoded as JPEG: HEIC/HEIF always (the app and status-go do not decode

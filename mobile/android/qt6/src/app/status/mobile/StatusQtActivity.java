@@ -307,10 +307,10 @@ public class StatusQtActivity extends QtActivity {
             }
         }
         if (!usable) {
-            if (isImageShare) {
-                Toast.makeText(ctx, "Only images and text can be shared to Status",
-                        Toast.LENGTH_LONG).show();
-            }
+            // A silent no-op reads as a failed tap; say why.
+            Toast.makeText(ctx, isImageShare
+                    ? "Only images and text can be shared to Status"
+                    : "Nothing to share from this content", Toast.LENGTH_LONG).show();
             return;
         }
         passShareToQt(text, imagePaths);
