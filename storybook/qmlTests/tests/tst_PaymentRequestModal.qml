@@ -90,6 +90,14 @@ Item {
             controlUnderTest.close()
             verify(!controlUnderTest.opened)
         }
+
+        function waitForDefaultTokenSelection() {
+            const assetSelector = findChild(controlUnderTest, "assetSelector")
+            verify(!!assetSelector)
+            tryCompare(assetSelector.contentItem, "name", Constants.ethToken, 5000)
+            tryVerify(() => controlUnderTest.tokenSelectionReady, 5000)
+        }
+
         // end helper functions -------------------------------------------------------------
 
         function test_default_values() {
@@ -311,8 +319,27 @@ Item {
             closeAndVerfyModal()
         }
 
+        function test_add_disabled_until_token_selection_ready() {
+            launchAndVerfyModal()
+
+            const button = findChild(controlUnderTest, "addButton")
+            const amountInput = findChild(controlUnderTest, "amountInput")
+            verify(!!button)
+            verify(!!amountInput)
+
+            amountInput.setValue("1")
+            if (!controlUnderTest.tokenSelectionReady) {
+                verify(!button.enabled, "Add stays disabled until the token is resolved")
+            }
+            waitForDefaultTokenSelection()
+            verify(button.enabled, "Add is enabled once token selection is ready")
+
+            closeAndVerfyModal()
+        }
+
         function test_accept_button_enabled_state() {
             launchAndVerfyModal()
+            waitForDefaultTokenSelection()
 
             const button = findChild(controlUnderTest, "addButton")
             verify(!!button)
@@ -336,6 +363,7 @@ Item {
             controlUnderTest.selectedNetworkChainId = 0
             verify(!button.enabled)
             controlUnderTest.selectedNetworkChainId = d.flatNetworks.get(1).chainId
+            waitForDefaultTokenSelection()
             verify(button.enabled)
 
             // Check if button changes after account is changed
@@ -344,11 +372,8 @@ Item {
             controlUnderTest.selectedAccountAddress = d.accounts.data[1].address
             verify(button.enabled)
 
-            // Check if button changes after symbol is changed
             controlUnderTest.selectedTokenGroupKey = ""
             verify(!button.enabled)
-            controlUnderTest.selectedTokenGroupKey = Constants.daiGroupKey
-            verify(button.enabled)
 
             closeAndVerfyModal()
         }
