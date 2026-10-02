@@ -88,6 +88,8 @@ method sendChatMessage*(
     contentType: int,
     linkPreviews: seq[LinkPreview],
     paymentRequests: seq[PaymentRequest],
+    startNewThread: bool,
+    newThreadName: string,
   ) =
   self.controller.sendChatMessage(
     msg = msg,
@@ -96,7 +98,9 @@ method sendChatMessage*(
     preferredUsername = singletonInstance.userProfile.getPreferredName(),
     linkPreviews,
     paymentRequests,
-    self.threadId,
+    threadId = self.threadId,
+    startNewThread = startNewThread,
+    newThreadName = newThreadName,
   )
 
 method getThreadId*(self: Module): string =

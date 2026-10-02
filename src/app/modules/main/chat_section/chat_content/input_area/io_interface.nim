@@ -21,7 +21,8 @@ method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method sendChatMessage*(self: AccessInterface, msg: string, replyTo: string, contentType: int,
-  linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]) {.base.} =
+  linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest], startNewThread: bool,
+  newThreadName: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method sendImages*(self: AccessInterface, imagePathsJson: string, msg: string, replyTo: string,

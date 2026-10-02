@@ -5,6 +5,7 @@ import ../../common/utils as common_utils
 import app/core/tasks/[qt, threadpool]
 import ./dto/chat as chat_dto
 import ../message/dto/message as message_dto
+import ../message/dto/thread as thread_dto
 import ../message/dto/[link_preview, standard_link_preview, status_link_preview]
 import ../message/dto/payment_request
 import ../activity_center/dto/notification as notification_dto
@@ -109,6 +110,9 @@ type
     communityId*: string
     error*: string
 
+  ThreadMetadataArgs* = ref object of Args
+    threads*: seq[thread_dto.ThreadDto]
+
 # Signals which may be emitted by this service:
 const SIGNAL_ACTIVE_CHATS_LOADED* = "activeChatsLoaded"
 const SIGNAL_CHATS_LOADING_FAILED* = "chatsLoadingFailed"
@@ -134,6 +138,7 @@ const SIGNAL_CHAT_CREATED* = "chatCreated"
 const SIGNAL_CHECK_CHANNEL_PERMISSIONS_RESPONSE* = "checkChannelPermissionsResponse"
 const SIGNAL_CHECK_ALL_CHANNELS_PERMISSIONS_RESPONSE* = "checkAllChannelsPermissionsResponse"
 const SIGNAL_CHECK_ALL_CHANNELS_PERMISSIONS_FAILED* = "checkAllChannelsPermissionsFailed"
+const SIGNAL_THREAD_METADATA_RECEIVED* = "threadMetadataReceived"
 
 QtObject:
   type Service* = ref object of QObject
@@ -542,6 +547,8 @@ QtObject:
       paymentRequests: seq[PaymentRequest] = @[],
       communityId: string = "",
       threadId: string = "",
+      startNewThread: bool = false,
+      newThreadName: string = "",
       sendToken: string = "") =
     let token = if sendToken == "": $genUUID() else: sendToken
     try:
@@ -562,6 +569,8 @@ QtObject:
         processedMsg: processedMsg,
         replyTo: replyTo,
         threadId: threadId,
+        startNewThread: startNewThread,
+        newThreadName: if startNewThread: newThreadName else: "",
         contentType: contentType,
         preferredUsername: preferredUsername,
         communityId: communityId, # Only send a community ID for the community invites
@@ -591,6 +600,11 @@ QtObject:
       let (chats, messages) = self.processMessengerResponse(rpcResponse)
       if chats.len == 0 or messages.len == 0:
         raise newException(CatchableError, "no chat or message returned")
+
+      let threads = rpcResponse.result{"threads"}
+      if threads != nil and threads.kind == JArray and threads.len > 0:
+        let threadDtos = map(threads.getElems(), proc(x: JsonNode): thread_dto.ThreadDto = x.toThreadDto())
+        self.events.emit(SIGNAL_THREAD_METADATA_RECEIVED, ThreadMetadataArgs(threads: threadDtos))
     except Exception as e:
       error "Error sending message", msg = e.msg
       self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: rpcResponseObj{"chatId"}.getStr, error: e.msg))
