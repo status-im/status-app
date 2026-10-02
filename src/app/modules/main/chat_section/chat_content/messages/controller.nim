@@ -6,6 +6,7 @@ import ../../../../../../app_service/service/contacts/service as contact_service
 import ../../../../../../app_service/service/community/service as community_service
 import ../../../../../../app_service/service/chat/service as chat_service
 import ../../../../../../app_service/service/message/service as message_service
+import ../../../../../../app_service/service/message/dto/thread
 import ../../../../../../app_service/service/mailservers/service as mailservers_service
 import ../../../../../../app_service/service/wallet_account/service as wallet_account_service
 import ../../../../../../app_service/service/shared_urls/service as shared_urls_service
@@ -301,14 +302,14 @@ proc createThread*(self: Controller, parentMessageId: string) =
     return
   self.messageService.asyncCreateThread(self.chatId, parentMessageId)
 
-proc loadChatThreadsIfNeeded*(self: Controller) =
-  self.messageService.loadChatThreadsIfNeeded(self.chatId)
-
 proc hasThreadForParentMessage*(self: Controller, parentMessageId: string): bool =
   return self.messageService.chatHasThreadForParentMessage(self.chatId, parentMessageId)
 
 proc pendingSends*(self: Controller): seq[SendingStartedArgs] =
   return self.chatService.pendingSendsForChat(self.chatId)
+
+proc getThreadForParentMessage*(self: Controller, parentMessageId: string): ThreadDto =
+  return self.messageService.getThreadForParentMessage(self.chatId, parentMessageId)
 
 proc getChatDetails*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)
