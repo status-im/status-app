@@ -1,7 +1,11 @@
 package app.status.mobile;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import android.net.Uri;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
@@ -59,6 +63,39 @@ public class ShareTextDocumentsTest {
         byte[] cut = Arrays.copyOf(whole, whole.length - 1);
         assertNull(ShareTextDocuments.decode(cut, false));
         assertEquals("ab", ShareTextDocuments.decode(cut, true));
+    }
+
+    @Test
+    public void providerWithoutTypeFallsBackToIntentThenExtension() {
+        Uri txt = Uri.parse("content://media/external/file/42");
+        Uri md = Uri.parse("content://com.example.files/docs/notes.md");
+        Uri bare = Uri.parse("content://com.example.files/docs/1234");
+        assertEquals("text/plain", ShareTextDocuments.fallbackType(bare, "text/plain"));
+        assertEquals("text/markdown", ShareTextDocuments.fallbackType(md, "text/*"));
+        assertEquals("text/plain", ShareTextDocuments.fallbackType(bare, "text/*"));
+        assertNull(ShareTextDocuments.fallbackType(bare, "*/*"));
+        assertEquals("text/plain", ShareTextDocuments.fallbackType(Uri.parse(txt + "/a.txt"), "*/*"));
+        // Samsung My Files shares .txt as octet-stream: no information either.
+        assertEquals("text/plain", ShareTextDocuments.fallbackType(Uri.parse(txt + "/a.txt"),
+                "application/octet-stream"));
+        assertNull(ShareTextDocuments.fallbackType(bare, "application/octet-stream"));
+    }
+
+    @Test
+    public void samsungMyFilesTypesCountAsText() {
+        assertTrue(ShareTextDocuments.isTextType("application/txt"));
+        assertTrue(ShareTextDocuments.isTextType("application/json"));
+        assertTrue(ShareTextDocuments.isTextType("text/comma-separated-values"));
+        assertFalse(ShareTextDocuments.isTextType("application/pdf"));
+        assertTrue(ShareTextDocuments.isOpaqueType("application/octet-stream"));
+        assertTrue(ShareTextDocuments.isOpaqueType(null));
+        assertFalse(ShareTextDocuments.isOpaqueType("text/plain"));
+    }
+
+    @Test
+    public void nulByteMeansBinary() {
+        byte[] bytes = {'a', 'b', 0, 'c'};
+        assertNull(ShareTextDocuments.decode(bytes, false));
     }
 
     @Test

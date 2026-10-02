@@ -28,6 +28,13 @@ A shared contact (vCard) is rendered as a readable card: name (`FN`, else
 lines, `item1.` groups, escapes and vCard 2.1 bare type words handled; `PHOTO`
 and unknown fields dropped. Pure Java, same reason as above.
 
+## `ICalendarTextTest`
+
+A shared calendar file (.ics) is rendered as readable events: summary, when
+(TZID or UTC shown, all-day ranges with the exclusive end folded back),
+location, description, URL; nested alarms and unknown fields dropped. Pure
+Java, same reason as above.
+
 ### Running
 
 Needs a booted emulator/device and the app built with the Qt Android toolchain

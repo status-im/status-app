@@ -132,10 +132,14 @@
             </intent-filter>
             <!--
               Share target: text, links and images shared from other apps
-              (share sheet). Only text/* and image/* are declared - exactly
-              what chat can send today; video/audio/arbitrary files are not.
-              Any text document (.txt, .md, .html, vCard, ...) is sent as
-              message text, never as a file. Extraction is decision-free
+              (share sheet). text/* and image/* are what chat can send today;
+              video/audio/arbitrary files are not. Any text document (.txt,
+              .md, .html, vCard, ...) is sent as message text, never as a
+              file. The application/* entries are what Samsung My Files
+              declares for .txt (application/txt), .md (octet-stream) and
+              .json, plus the standard .rtf type; the intake then decides by
+              extension and content, and rejects what is not text.
+              Extraction is decision-free
               (StatusQtActivity.handleShareIntake): image streams are copied
               to app-private cache and text documents are read at receipt (OS
               read grants expire); the share flow launches at the Nim
@@ -145,12 +149,20 @@
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/*" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/txt" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/rtf" />
                 <data android:mimeType="image/*" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/*" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="application/txt" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/rtf" />
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>

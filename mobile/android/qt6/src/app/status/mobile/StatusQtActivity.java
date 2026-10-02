@@ -252,12 +252,15 @@ public class StatusQtActivity extends QtActivity {
         boolean isSendMultiple = Intent.ACTION_SEND_MULTIPLE.equals(action);
         if (!isSend && !isSendMultiple) return;
         String type = intent.getType();
+        Log.i(TAG, "share intake: " + action + " type=" + type + " clip="
+                + (intent.getClipData() != null ? intent.getClipData().getDescription() : null));
         if (type == null) return;
         // Android matches "*/*" intents against our text/* and image/*
         // filters, so the type can be a wildcard.
         boolean isWildcard = "*/*".equals(type);
         boolean isImageShare = type.startsWith("image/") || isWildcard;
-        boolean isTextShare = type.startsWith("text/") || isWildcard;
+        boolean isTextShare = ShareTextDocuments.isTextType(type) || isWildcard
+                || ShareTextDocuments.isOpaqueType(type);
         if (!isImageShare && !isTextShare) return;
 
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -282,7 +285,7 @@ public class StatusQtActivity extends QtActivity {
                     ? copySharedImagesToCache(app, streams)
                     : new String[0];
             final String body = readTextDocuments
-                    ? ShareTextDocuments.read(app, streams)
+                    ? ShareTextDocuments.read(app, streams, type)
                     : shareText;
             ui.post(() -> deliverShare(app, serial, isImageShare, body, imagePaths));
         });

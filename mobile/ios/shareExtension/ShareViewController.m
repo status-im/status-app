@@ -353,9 +353,200 @@ static NSString *FormatVCard(NSString *text)
     return [cards componentsJoinedByString:@"\n\n"];
 }
 
+// iCalendar rendering: a shared .ics becomes readable events (summary, when,
+// location, description, URL). Alarms, attendees, recurrence rules and
+// anything else are dropped; chat has no event message, so it travels as text.
+static BOOL IsICalendar(NSString *text)
+{
+    NSString *t = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [t.uppercaseString hasPrefix:@"BEGIN:VCALENDAR"];
+}
+
+typedef struct {
+    BOOL valid;
+    int year, month, day, hour, minute;
+    BOOL allDay;
+} ICalMoment;
+
+// "20261005T090000Z", "20261005T090000" (floating or TZID) or "20261005".
+// zone receives "UTC", the TZID, or "" for floating.
+static ICalMoment ICalParseMoment(NSString *value, NSArray<NSString *> *params, NSString **zone)
+{
+    ICalMoment m = {NO, 0, 0, 0, 0, 0, NO};
+    NSString *v = [value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *tzid = @"";
+    BOOL dateOnly = NO;
+    for (NSString *p in params) {
+        NSString *u = p.uppercaseString;
+        if ([u hasPrefix:@"TZID="])
+            tzid = [[p substringFromIndex:5] stringByReplacingOccurrencesOfString:@"\"" withString:@""];
+        if ([u isEqualToString:@"VALUE=DATE"])
+            dateOnly = YES;
+    }
+    if (v.length < 8)
+        return m;
+    NSCharacterSet *digits = [NSCharacterSet decimalDigitCharacterSet];
+    for (NSUInteger i = 0; i < 8; i++) {
+        if (![digits characterIsMember:[v characterAtIndex:i]])
+            return m;
+    }
+    m.year = [v substringWithRange:NSMakeRange(0, 4)].intValue;
+    m.month = [v substringWithRange:NSMakeRange(4, 2)].intValue;
+    m.day = [v substringWithRange:NSMakeRange(6, 2)].intValue;
+    if (m.month < 1 || m.month > 12 || m.day < 1 || m.day > 31)
+        return m;
+    *zone = @"";
+    if (dateOnly || v.length == 8) {
+        m.allDay = YES;
+        m.valid = YES;
+        return m;
+    }
+    if ([v characterAtIndex:8] != 'T' || v.length < 13)
+        return m;
+    m.hour = [v substringWithRange:NSMakeRange(9, 2)].intValue;
+    m.minute = [v substringWithRange:NSMakeRange(11, 2)].intValue;
+    *zone = [v hasSuffix:@"Z"] ? @"UTC" : tzid;
+    m.valid = YES;
+    return m;
+}
+
+static int ICalDaysIn(int y, int mo)
+{
+    static const int n[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    BOOL leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+    return mo == 2 && leap ? 29 : n[mo - 1];
+}
+
+// DTEND of an all-day event is exclusive; show the last day instead.
+static ICalMoment ICalPreviousDay(ICalMoment m)
+{
+    m.day--;
+    if (m.day < 1) {
+        m.month--;
+        if (m.month < 1) {
+            m.month = 12;
+            m.year--;
+        }
+        m.day = ICalDaysIn(m.year, m.month);
+    }
+    return m;
+}
+
+static NSComparisonResult ICalCompareDay(ICalMoment a, ICalMoment b)
+{
+    if (a.year != b.year) return a.year < b.year ? NSOrderedAscending : NSOrderedDescending;
+    if (a.month != b.month) return a.month < b.month ? NSOrderedAscending : NSOrderedDescending;
+    if (a.day != b.day) return a.day < b.day ? NSOrderedAscending : NSOrderedDescending;
+    return NSOrderedSame;
+}
+
+static NSString *ICalDate(ICalMoment m)
+{
+    static NSString *const months[] = {@"Jan", @"Feb", @"Mar", @"Apr", @"May", @"Jun",
+                                       @"Jul", @"Aug", @"Sep", @"Oct", @"Nov", @"Dec"};
+    return [NSString stringWithFormat:@"%d %@ %d", m.day, months[m.month - 1], m.year];
+}
+
+static NSString *ICalTime(ICalMoment m)
+{
+    return [NSString stringWithFormat:@"%02d:%02d", m.hour, m.minute];
+}
+
+static NSString *ICalWhen(ICalMoment start, ICalMoment end, NSString *zone)
+{
+    if (!start.valid)
+        return @"";
+    if (start.allDay) {
+        if (end.valid && end.allDay) {
+            ICalMoment last = ICalPreviousDay(end);
+            if (ICalCompareDay(last, start) == NSOrderedDescending)
+                return [NSString stringWithFormat:@"%@ – %@", ICalDate(start), ICalDate(last)];
+        }
+        return ICalDate(start);
+    }
+    NSString *z = zone.length > 0 ? [@" " stringByAppendingString:zone] : @"";
+    if (!end.valid || end.allDay)
+        return [NSString stringWithFormat:@"%@, %@%@", ICalDate(start), ICalTime(start), z];
+    if (ICalCompareDay(start, end) == NSOrderedSame)
+        return [NSString stringWithFormat:@"%@, %@ – %@%@", ICalDate(start), ICalTime(start), ICalTime(end), z];
+    return [NSString stringWithFormat:@"%@, %@ – %@, %@%@", ICalDate(start), ICalTime(start),
+            ICalDate(end), ICalTime(end), z];
+}
+
+// Every event in the text, blank-line separated. Falls back to the raw text
+// when no event was found.
+static NSString *FormatICalendar(NSString *text)
+{
+    NSMutableArray<NSString *> *events = [NSMutableArray array];
+    NSMutableDictionary<NSString *, NSString *> *event = nil;
+    ICalMoment start = {NO}, end = {NO};
+    NSString *zone = @"";
+    NSUInteger nested = 0;
+    for (NSString *line in VCardUnfold(text)) {
+        NSRange colon = [line rangeOfString:@":"];
+        if (colon.location == NSNotFound || colon.location == 0)
+            continue;
+        NSArray<NSString *> *head = VCardSplitUnescaped([line substringToIndex:colon.location], ';');
+        NSString *name = head[0].uppercaseString;
+        NSArray<NSString *> *params = [head subarrayWithRange:NSMakeRange(1, head.count - 1)];
+        NSString *value = [line substringFromIndex:colon.location + 1];
+
+        if ([name isEqualToString:@"BEGIN"]) {
+            if ([value.uppercaseString isEqualToString:@"VEVENT"] && event == nil) {
+                event = [NSMutableDictionary dictionary];
+                start.valid = NO;
+                end.valid = NO;
+                zone = @"";
+            } else if (event != nil) {
+                nested++;
+            }
+        } else if ([name isEqualToString:@"END"]) {
+            if (nested > 0) {
+                nested--;
+            } else if (event != nil && [value.uppercaseString isEqualToString:@"VEVENT"]) {
+                NSMutableArray<NSString *> *lines = [NSMutableArray array];
+                VCardAppend(lines, event[@"summary"]);
+                VCardAppend(lines, ICalWhen(start, end, zone));
+                VCardAppend(lines, event[@"location"]);
+                VCardAppend(lines, event[@"description"]);
+                VCardAppend(lines, event[@"url"]);
+                if (lines.count > 0)
+                    [events addObject:[lines componentsJoinedByString:@"\n"]];
+                event = nil;
+            }
+        } else if (event != nil && nested == 0) {
+            if ([name isEqualToString:@"SUMMARY"]) {
+                event[@"summary"] = VCardUnescape(value);
+            } else if ([name isEqualToString:@"LOCATION"]) {
+                event[@"location"] = VCardUnescape(value);
+            } else if ([name isEqualToString:@"DESCRIPTION"]) {
+                event[@"description"] = VCardUnescape(value);
+            } else if ([name isEqualToString:@"URL"]) {
+                event[@"url"] = [value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            } else if ([name isEqualToString:@"DTSTART"]) {
+                NSString *z = @"";
+                start = ICalParseMoment(value, params, &z);
+                zone = z;
+            } else if ([name isEqualToString:@"DTEND"]) {
+                NSString *z = @"";
+                end = ICalParseMoment(value, params, &z);
+            }
+        }
+    }
+    if (events.count == 0)
+        return [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [events componentsJoinedByString:@"\n\n"];
+}
+
+// Contact and calendar files become readable cards; everything else is
+// pasted as is.
 static NSString *RenderTextDocument(NSString *text)
 {
-    return TrimTrailingWhitespace(IsVCard(text) ? FormatVCard(text) : text);
+    if (IsVCard(text))
+        return TrimTrailingWhitespace(FormatVCard(text));
+    if (IsICalendar(text))
+        return TrimTrailingWhitespace(FormatICalendar(text));
+    return TrimTrailingWhitespace(text);
 }
 
 
@@ -418,7 +609,7 @@ static NSString *RenderTextDocument(NSString *text)
 // appended unless the text already contains it (apps commonly put the link
 // inside the shared text themselves). Text documents (file-backed text
 // attachments: .txt, .md, .html, vCard, ...) are read and pasted as text, in
-// attachment order, vCards rendered as readable contact cards; inline text
+// attachment order, vCards and calendars rendered readably; inline text
 // wins over them when a share offers both, since such senders carry the same
 // content twice. Image data is copied into
 // the App Group cache inside the load handler — the provided file URL expires
