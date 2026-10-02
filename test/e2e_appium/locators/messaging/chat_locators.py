@@ -63,6 +63,10 @@ class ChatLocators(BaseLocators):
     )
     ADD_IMAGE_ACTION = BaseLocators.tid("chatCommandMenu_addImage")
     CHAT_LOG_VIEW = BaseLocators.xpath("//*[contains(@resource-id,'chatLogView')]")
+    # The chat log's ListView has no accessibility node; its viewport is the
+    # band between the toolbar's bottom edge and the composer panel's top edge.
+    CHAT_TOOLBAR = BaseLocators.tid("statusToolBar")
+    CHAT_INPUT_PANEL = BaseLocators.tid("statusChatInput")
     INTRODUCE_SKIP_BUTTON = BaseLocators.tid("introduceSkipStatusFlatButton")
     BACKUP_SKIP_BUTTON = BaseLocators.tid("backupMessageSkipStatusFlatButton")
     # QML: EnablePushNotificationsPopup.qml — "Maybe later" left footer button

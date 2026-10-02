@@ -127,13 +127,13 @@ class TestChatManagement:
                 "Failed to send marker message"
             )
             assert chat_page.message_exists(marker_msg, timeout=self.UI_TIMEOUT), (
-                "Marker message not visible on primary"
+                "Marker message not present on primary after sending"
             )
 
         async with self.step("Verify marker message on secondary"):
             secondary_chat = await self._ensure_secondary_in_chat()
             assert secondary_chat.message_exists(marker_msg, timeout=self.CROSS_DEVICE_TIMEOUT), (
-                "Secondary should see marker message before clear"
+                "Secondary: marker message not received before clear"
             )
 
         async with self.step("Clear history on primary"):
@@ -179,7 +179,7 @@ class TestChatManagement:
             # Re-enter secondary's chat to confirm messages survived
             secondary_chat = await self._ensure_secondary_in_chat()
             assert secondary_chat.message_exists(marker_msg, timeout=self.CROSS_DEVICE_TIMEOUT), (
-                "Secondary: Marker message should still be visible — "
+                "Secondary: marker message should still be present — "
                 "clear history must be local only"
             )
 

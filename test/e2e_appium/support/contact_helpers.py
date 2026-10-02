@@ -269,7 +269,7 @@ async def establish_contact(
     if verify_delivery:
         # Direction 1: receiver → sender (setup message already sent above)
         assert sender_chat.message_exists(setup_msg, timeout=CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS), (
-            "Delivery gate failed: setup message from receiver not visible on sender. "
+            "Delivery gate failed: setup message from receiver not received on sender. "
             "Waku filter subscription may not have propagated yet."
         )
 
@@ -279,7 +279,7 @@ async def establish_contact(
             "Delivery gate failed: sender could not send ping message"
         )
         assert receiver_chat.message_exists(ping_msg, timeout=CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS), (
-            "Delivery gate failed: ping from sender not visible on receiver. "
+            "Delivery gate failed: ping from sender not received on receiver. "
             "Waku filter subscription may not have propagated yet."
         )
     else:
