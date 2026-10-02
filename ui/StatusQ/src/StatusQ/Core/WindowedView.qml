@@ -3,6 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 
+import QtModelsToolkit
+
 import StatusQ.Core.Utils as SQUtils
 
 /*
@@ -29,6 +31,13 @@ import StatusQ.Core.Utils as SQUtils
   moves, which is what keeps the content still to the pixel. Outside a slide,
   and only with stickToBottom set, a viewport already at the bottom edge is kept
   there as the content grows. The anchor wins wherever both could apply.
+
+  verticalLayoutDirection renders the rows bottom-up, which is how a chat shows
+  a newest-first model. It is done by turning the model upside down on the way
+  to the rows and nothing else: the rows arrive in the order they are drawn, so
+  no position, band or edge in here is mirrored, and every "top" and "bottom"
+  below is the screen's throughout. Only itemAtRow() converts, because it is
+  public and speaks the caller's model.
 
   Row contract: the item handed back must have an intrinsic implicitHeight and
   must not size itself to its parent - a row that does collapses to zero height
@@ -60,12 +69,15 @@ Flickable {
     // instead of joining a batch.
     property string keyRole: "key"
 
-    // Set by whoever owns the data: is there anything beyond each end?
+    // Set by whoever owns the data: is there anything beyond each edge? Top
+    // and bottom are the screen's, so an owner whose model runs the other way
+    // round - a newest-first chat model rendered BottomToTop - crosses its own
+    // ends here.
     property bool moreAvailableTop: false
     property bool moreAvailableBottom: false
 
     // Stands in for content that is not there yet: the whole viewport while the
-    // first population is being gathered, and a band at either end while more is
+    // first population is being gathered, and a band at either edge while more is
     // available there or on its way. Instantiated once, on first need, and moved
     // between those placements - so it must fill whatever space it is given. The
     // view sets its width and height; an intrinsic height of its own is
@@ -77,8 +89,8 @@ Flickable {
     // reserves nothing and pages only when told to.
     property bool autoRequest: true
 
-    // Space each end reserves for the placeholder. The single instance only ever
-    // occupies the end nearer the viewport, so the other end reserves this much
+    // Space each edge reserves for the placeholder. The single instance only ever
+    // occupies the edge nearer the viewport, so the other reserves this much
     // blank.
     property real placeholderHeight: root.height
 
@@ -88,11 +100,33 @@ Flickable {
     // top-down list a short model growing past the viewport should stay put.
     property bool stickToBottom: false
 
+    enum VerticalLayoutDirection { TopToBottom, BottomToTop }
+
+    // Which way rows are laid out, with Qt's meaning: BottomToTop lays them out
+    // from the bottom of the view up to the top, so model row 0 is the bottom
+    // one. For a newest-first model - which is how a chat backend hands messages
+    // over - that puts the newest message at the bottom with nobody reversing
+    // anything, and itemAtRow() still takes a model row, as ListView's
+    // itemAtIndex() does.
+    //
+    // Only the order rows are rendered in changes. Top and bottom everywhere
+    // else mean the screen, so whoever owns the data crosses its own ends when
+    // this is set: the band at the top asks for more, and with a newest-first
+    // model what belongs above is the model's *end*.
+    //
+    // Meant to be set once. Changing it swaps the model the rows are built
+    // from, which destroys and rebuilds every one of them, so the view treats it
+    // as a fresh population - the same path as a jump.
+    property int verticalLayoutDirection:
+            WindowedView.VerticalLayoutDirection.TopToBottom
+
+    // How many rows the view holds. Not the model's total when something is
+    // windowing it - that belongs to whoever owns the window.
     readonly property int rowCount: rowsRepeater.count
 
     // The viewport is at the bottom of the content. Whoever owns the data needs
     // this to tell a row that should simply be shown from one that should be
-    // announced: arriving at the end while the user is already there is the
+    // announced: arriving at the bottom while the user is already there is the
     // first, and arriving while they are reading further up is the second.
     readonly property bool atBottom: d.atBottomOfContent()
 
@@ -120,7 +154,7 @@ Flickable {
     // one to hang a skeleton on.
     readonly property bool initialLoading: d.initialLoading
 
-    // "I would like more rows at this end." Nothing is promised.
+    // "I would like more rows at this edge." Nothing is promised.
     signal moreRequestedTop()
     signal moreRequestedBottom()
 
@@ -128,7 +162,7 @@ Flickable {
     // must perform them in this handler.
     signal batchRevealed()
 
-    // Asks for more at one end, once. Ignored while that end is loading or has
+    // Asks for more at one edge, once. Ignored while that edge is loading or has
     // nothing more to give.
     function requestMoreTop() {
         return d.request(true)
@@ -148,8 +182,10 @@ Flickable {
         d.loaded(false)
     }
 
+    // The row item for a *model* row, as ListView.itemAtIndex() is: rendering
+    // bottom-up moves row 0 to the bottom, it does not renumber it.
     function itemAtRow(row) {
-        return rowsRepeater.itemAt(row)
+        return rowsRepeater.itemAt(d.bottomUp ? root.rowCount - 1 - row : row)
     }
 
     contentWidth: width
@@ -162,12 +198,40 @@ Flickable {
     QtObject {
         id: d
 
+        readonly property bool bottomUp: root.verticalLayoutDirection
+                === WindowedView.VerticalLayoutDirection.BottomToTop
+
+        // How many rows the model has, asked of the model itself. The argument
+        // is only a dependency: rowCount() tells QML nothing about when its
+        // answer changes, so callers read the Repeater's count - which moves
+        // with every model change - to make their binding re-evaluate with it.
+        //
+        // Needed because the Repeater reports the *old* count while it creates
+        // the items for the new one, and a shell is created in exactly that
+        // window - a binding on rowsRepeater.count there is one insert behind.
+        function modelRowsFor(repeaterCount) {
+            return d.effectiveModel ? d.effectiveModel.rowCount() : 0
+        }
+
+        // The model the rows are actually built from, which is the given one
+        // turned upside down when rendering bottom-up. Null for a null model
+        // rather than an empty proxy, so every `root.model ? ...` guard in here
+        // keeps answering the way it did.
+        //
+        // Everything internal counts in this model's rows: the Repeater's
+        // indexes, the staging ranges, the anchor loops. That is the whole
+        // reason this is cheap - the rows arrive already in the order they are
+        // drawn, so no position, band or edge has to be mirrored. Only
+        // itemAtRow(), which is public and speaks the caller's model, converts.
+        readonly property var effectiveModel:
+                root.model && d.bottomUp ? reverser : root.model
+
         property bool loadingTop: false
         property bool loadingBottom: false
 
         readonly property bool loading: d.loadingTop || d.loadingBottom
 
-        // A batch asked for at this end has been admitted but not revealed yet.
+        // A batch asked for at this edge has been admitted but not revealed yet.
         // The band has to stand for all of it: an owner that answers inside the
         // signal clears loading* immediately, and "nothing more beyond this"
         // arrives at the same moment - so without this the placeholder comes
@@ -180,7 +244,7 @@ Flickable {
 
         // How far this slide is going, and how many of the rows it added are
         // still waiting for content. Rows count themselves in and out.
-        // Which end the outstanding request was made at, so the anchor and the
+        // Which edge the outstanding request was made at, so the anchor and the
         // reveal know which side is growing.
         property bool requestedAtTop: false
         // Keys admitted by the slide whose shells do not exist yet, and the
@@ -197,7 +261,7 @@ Flickable {
         //
         // One object for all three placements, built the first time any of them
         // wants it and kept for the view's life: the content of a skeleton is
-        // not cheap, and availability at an end toggles constantly.
+        // not cheap, and availability at an edge toggles constantly.
         property Item placeholderItem: null
         property Item placeholderHost: null
 
@@ -254,19 +318,28 @@ Flickable {
             if (!d.shouldRequestMore)
                 return
 
-            // The start end first, so a view short enough to show both bands
-            // walks back through the history rather than fighting itself.
+            // The top first, so a view short enough to show both bands walks
+            // back through the history rather than fighting itself.
             if (root.moreAvailableTop && d.bandInViewport(topBand))
                 d.request(true)
             else if (root.moreAvailableBottom && d.bandInViewport(bottomBand))
                 d.request(false)
         }
 
+        // Where a row or a band sits in the same space contentY is measured
+        // in. The Column is normally at the origin and the two agree; rendering
+        // bottom-up with less content than viewport pushes it down so the rows
+        // rest on the bottom edge, and then they do not.
+        function rowTop(item) {
+            return item.y + rowsColumn.y
+        }
+
         // Whether a band overlaps what the user can see. Both ends can be on
         // screen at once when the whole window fits with room to spare.
         function bandInViewport(band) {
-            return band.visible && band.y < root.contentY + root.height
-                    && band.y + band.height > root.contentY
+            return band.visible
+                    && d.rowTop(band) < root.contentY + root.height
+                    && d.rowTop(band) + band.height > root.contentY
         }
 
         // How far a band's nearest edge is from the viewport, for picking
@@ -274,7 +347,7 @@ Flickable {
         function bandDistance(band) {
             const middle = root.contentY + root.height / 2
 
-            return Math.abs(band.y + band.height / 2 - middle)
+            return Math.abs(d.rowTop(band) + band.height / 2 - middle)
         }
 
         function chooseHost() {
@@ -521,8 +594,8 @@ Flickable {
             // Sampled before the write, while contentHeight still describes the
             // bottom the viewport was actually sitting at - and against the
             // height it was sitting in, which a resize has already changed.
-            const wasAtBottom = d.wasAtBottomOfContent()
-            const topBandDelta = d.topBandExtent() - d.appliedTopBand
+            const wasAtEnd = d.wasAtBottomOfContent()
+            const startBandDelta = d.topBandExtent() - d.appliedTopBand
             const was = d.applyingPosition
 
             d.appliedTopBand = d.topBandExtent()
@@ -530,30 +603,30 @@ Flickable {
             d.applyingPosition = true
             root.contentHeight = Math.max(root.height, rowsColumn.height)
 
-            // The top band grew or shrank above the rows, so without this every
-            // one of them shifts by that much - visibly, since outside a slide
-            // no anchor is armed to absorb it. The bottom band needs nothing: it
-            // is below the viewport. Applied before the stickToBottom pin, and
+            // The start band grew or shrank above the rows, so without this
+            // every one of them shifts by that much - visibly, since outside a
+            // slide no anchor is armed to absorb it. The bottom band needs nothing:
+            // it is below the viewport. Applied before the stickToBottom pin, and
             // restorePosition() still runs after this and wins whenever an
             // anchor is armed.
             // Not during a reveal: there the band's appearing is part of content
-            // arriving all at once, and the anchor - or the stickToBottom pin -
-            // owns where that lands. Paying for it here as well would scroll a
-            // first paint past the very band it just put up.
-            if (topBandDelta !== 0 && !d.finishing)
+            // arriving all at once, and the anchor - or the stickToBottom pin - owns
+            // where that lands. Paying for it here as well would scroll a first
+            // paint past the very band it just put up.
+            if (startBandDelta !== 0 && !d.finishing)
                 root.contentY = Math.max(0, Math.min(d.bottomY(),
-                                                     root.contentY + topBandDelta))
+                                                     root.contentY + startBandDelta))
 
             // Not while a slide holds a row - that anchor is the exact
-            // guarantee, and the rows a slide adds at the bottom belong below
-            // the viewport, not pulled into it - and not while the user has hold
-            // of the view, where snapping to the bottom would fight the drag.
+            // guarantee, and the rows a slide adds at the end belong below the
+            // viewport, not pulled into it - and not while the user has hold of
+            // the view, where snapping to the bottom would fight the drag.
             //
             // The anchor clause is redundant as things stand: every caller
             // re-applies the anchor immediately after this returns, so it wins
             // by running last. It is kept so the rule holds on its own rather
             // than by call-site ordering.
-            if (root.stickToBottom && wasAtBottom && !d.anchorItem && !root.moving)
+            if (root.stickToBottom && wasAtEnd && !d.anchorItem && !root.moving)
                 root.contentY = d.bottomY()      // guard already held
 
             d.appliedHeight = root.height
@@ -602,19 +675,22 @@ Flickable {
             // its origin, so this is a position the layout cannot have
             // produced, and a target computed from it clamps the viewport to
             // the top and loses where the content was.
+            // Deliberately the raw Column coordinate rather than rowTop(): this
+            // asks whether the Column has placed the item at all, which is a
+            // question about its own origin.
             if (d.anchorItem.y < 0)
                 return
 
             // Absolute, not relative, so re-applying it converges instead of
             // drifting - which is what makes holding the anchor safe.
-            const target = d.anchorItem.y - d.anchorOffset
+            const target = d.rowTop(d.anchorItem) - d.anchorOffset
             const bottom = d.bottomY()
 
             d.apply(Math.max(0, Math.min(bottom, target)))
 
-            // The correction ran into the end and stopped there, so holding a
+            // The correction ran into the bottom and stopped there, so holding a
             // row no longer describes where the view is - the bottom does. A
-            // view told to follow the end has to go back to following it, or it
+            // view told to stay there has to go back to doing so, or it
             // sits at the bottom without being stuck to it and the next row to
             // arrive leaves it behind. Not while a slide is in flight: there the
             // anchor is the guarantee, and the far end has yet to be trimmed.
@@ -625,7 +701,7 @@ Flickable {
 
         function holdAnchor(item) {
             d.anchorItem = item
-            d.anchorOffset = item.y - root.contentY
+            d.anchorOffset = d.rowTop(item) - root.contentY
         }
 
         // A resize re-wraps every row, so every height changes at once - the
@@ -665,10 +741,10 @@ Flickable {
 
                 // Past the bottom of the viewport, and the rows are ordered,
                 // so there is nothing visible left to find.
-                if (item.y >= root.contentY + root.height)
+                if (d.rowTop(item) >= root.contentY + root.height)
                     break
 
-                if (item.y >= root.contentY - 0.5) {
+                if (d.rowTop(item) >= root.contentY - 0.5) {
                     d.holdAnchor(item)
                     return
                 }
@@ -683,8 +759,8 @@ Flickable {
         }
 
         // Picks the visible row nearest the viewport edge that will survive.
-        // Growing at the start trims at the end, so a row at the top is safe;
-        // growing at the end trims at the start, so it is the bottom. Returns
+        // Growing at the top trims at the bottom, so a row at the top is safe;
+        // growing at the bottom trims at the top, so it is the bottom one. Returns
         // whether it found one; a failure leaves any existing anchor alone.
         function armAnchor(atTop) {
             const edge = atTop ? root.contentY : root.contentY + root.height
@@ -698,7 +774,7 @@ Flickable {
                 if (!item || !item.visible)
                     continue
 
-                const distance = Math.abs(item.y - edge)
+                const distance = Math.abs(d.rowTop(item) - edge)
 
                 if (distance < bestDistance) {
                     bestDistance = distance
@@ -732,7 +808,7 @@ Flickable {
             // is impossible. Hold what we have and re-measure it, so the
             // content that does survive still lands where it belongs.
             if (d.anchorItem)
-                d.anchorOffset = d.anchorItem.y - root.contentY
+                d.anchorOffset = d.rowTop(d.anchorItem) - root.contentY
         }
 
         // Asks the owner for more at one end. Nothing is admitted here - the
@@ -763,8 +839,8 @@ Flickable {
             d.noProgressIntervals = 0
 
             // Armed before anything can arrive, while the geometry is settled.
-            // Requesting at the start grows above and trims below, so a row at
-            // the viewport top survives; at the end it is the other way round.
+            // Requesting at the top grows above and trims below, so a row at
+            // the viewport top survives; at the bottom it is the other way round.
             d.releaseAnchor()
             d.armAnchor(atTop)
 
@@ -795,7 +871,7 @@ Flickable {
         // The owner is done. Whatever arrived is the batch; it may be nothing.
         function loaded(atTop) {
             if (atTop ? !d.loadingTop : !d.loadingBottom)
-                return      // no request outstanding at that end
+                return      // no request outstanding at that edge
 
             if (atTop)
                 d.loadingTop = false
@@ -859,8 +935,9 @@ Flickable {
         // row object, which then never matches a shell's key and silently
         // demotes staging to the loading-flag fallback.
         function keyAt(row) {
-            return root.model ? SQUtils.ModelUtils.get(root.model, row, root.keyRole)
-                              : undefined
+            return d.effectiveModel
+                    ? SQUtils.ModelUtils.get(d.effectiveModel, row, root.keyRole)
+                    : undefined
         }
 
         // Rows entering while a request is outstanding are that request's batch.
@@ -901,7 +978,7 @@ Flickable {
             // rowCount() rather than root.rowCount: the Repeater is mid-build,
             // so its count does not describe the model yet. Reading it in a
             // handler, which is where rowCount() belongs.
-            const rows = root.model ? root.model.rowCount() : 0
+            const rows = d.effectiveModel ? d.effectiveModel.rowCount() : 0
 
             if (rows <= 0)
                 return
@@ -1099,12 +1176,25 @@ Flickable {
 
     }
 
+    // Turns the given model upside down for BottomToTop, and sits idle
+    // otherwise. A reversal and nothing else: the row count is the same, the
+    // roles are the same, and every structural change is translated into its
+    // exact counterpart rather than a reset - a row inserted at the model's
+    // front arrives here as an append, ranges stay contiguous, and persistent
+    // indexes survive. That translation is what lets the staging handlers below
+    // take the ranges as they come.
+    ReverseProxyModel {
+        id: reverser
+
+        sourceModel: d.bottomUp ? root.model : null
+    }
+
     // The view does not own the model, so the staging handlers live here.
     // Ordering against the Repeater's own connection is deliberately not relied
     // on: a shell built before its key was captured stages itself because a
     // request is outstanding, and one built afterwards claims the key.
     Connections {
-        target: root.model
+        target: d.effectiveModel
 
         function onRowsInserted(parent, first, last) {
             d.captureStagedRows(first, last)
@@ -1182,6 +1272,16 @@ Flickable {
 
         width: root.width
 
+        // Rendering bottom-up, rows too few to fill the viewport rest on its
+        // bottom edge rather than hanging from the top - a chat with three
+        // messages shows them above the composer, not under the header. Qt's
+        // ListView does the same thing by moving originY.
+        //
+        // Nothing has to be corrected when this moves: it is only ever non-zero
+        // while the content is shorter than the viewport, where contentY is
+        // pinned at nought and there is nothing to hold.
+        y: d.bottomUp ? Math.max(0, root.height - rowsColumn.height) : 0
+
         // forceLayout() only lays out with the heights known at that instant,
         // and a recycled row's real height arrives at the next polish. So the
         // content height that completeWave wrote is provisional, and so was the
@@ -1246,7 +1346,7 @@ Flickable {
         Repeater {
             id: rowsRepeater
 
-            model: root.model
+            model: d.effectiveModel
 
             // A shell: it holds the row's place and its content, and knows
             // nothing about what the content is.
@@ -1259,7 +1359,9 @@ Flickable {
                 // The row this shell holds, in the model's numbering - the
                 // space every public function speaks, and the one the provider
                 // is handed. Live, so it stays right while an answer is owed.
-                readonly property int row: shell.index
+                readonly property int row: d.bottomUp
+                        ? d.modelRowsFor(root.rowCount) - 1 - shell.index
+                        : shell.index
 
                 property Item content: null
 

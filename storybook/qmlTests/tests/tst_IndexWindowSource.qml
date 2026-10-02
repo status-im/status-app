@@ -258,6 +258,99 @@ Item {
             compare(values(source).indexOf(888) !== -1, true, "and it is shown")
         }
 
+        // The mirror, for a newest-first model: the rows arrive at the source's
+        // start, so that is the end to follow. Row 0 does not move, so the
+        // window follows it by holding still.
+        function test_followingTheStartAbsorbsANewFirstRow() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(0)
+            source.followsStart = true
+
+            source.sourceModel.insert(0, [{ key: "newest", value: 999 }])
+
+            compare(source.moreAvailableStart, false, "nothing is before it")
+            compare(source.model.count, 10, "and it kept its size")
+            compare(source.first, 0, "by standing still, not sliding")
+            compare(source.last, 9)
+            compare(values(source)[0], 999, "the new row is the first shown")
+            compare(values(source)[9], 8,
+                    "and the oldest row it held fell off the far end")
+        }
+
+        // True whether or not the start is being followed - an insert after
+        // `first` renumbers nothing the window holds - but worth pinning: it is
+        // the case a newest-first model hits when a message arrives out of
+        // order.
+        function test_anInsertInsideAWindowAtTheStartIsSimplyShown() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(0)
+            source.followsStart = true
+
+            source.sourceModel.insert(5, [{ key: "mid", value: 888 }])
+
+            compare(source.moreAvailableStart, false)
+            compare(source.model.count, 10)
+            compare(source.first, 0)
+            compare(values(source).indexOf(888) !== -1, true, "and it is shown")
+        }
+
+        // Away from the source's start the user is reading older rows, so the
+        // window holds its own rows and the new one is announced instead.
+        function test_followingTheStartDoesNothingAwayFromIt() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(20)
+            source.followsStart = true
+
+            source.sourceModel.insert(0, [{ key: "newest", value: 999 }])
+
+            compare(source.first, 21, "the window kept its rows")
+            compare(source.last, 30)
+            compare(source.moreAvailableStart, true, "and says so")
+            compare(values(source).indexOf(999), -1, "the new row is not shown")
+        }
+
+        function test_followingTheStartIsSkippedWhileABatchIsInFlight() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(0)
+            source.followsStart = true
+            source.growEnd(4)
+            compare(source.growing, true)
+            compare(source.first, 0)
+            compare(source.last, 13)
+
+            source.sourceModel.insert(0, [{ key: "newest", value: 999 }])
+
+            // The default branch owns it mid-batch: first <= 0, so both bounds
+            // move and the grow is left pointing where it was put.
+            compare(source.first, 1, "the grow is untouched")
+            compare(source.last, 14)
+
+            source.trim()
+            compare(source.first, 5, "and the owed trim still lands")
+            compare(source.last, 14)
+            compare(source.model.count, 10)
+        }
+
+        // Both set, and the window covering the whole source: the start wins,
+        // which is the one that needs no arithmetic.
+        function test_followingBothEndsPrefersTheStart() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.size = 60           // wider than the 50-row source
+            source.moveTo(0)
+            source.followsStart = true
+            source.followsEnd = true
+
+            source.sourceModel.insert(0, [{ key: "newest", value: 999 }])
+
+            compare(source.first, 0)
+            compare(values(source)[0], 999)
+        }
+
         // Mid-batch the bounds belong to the owed trim; re-pinning them would
         // leave it pointing at bounds that had moved underneath it.
         function test_followingIsSkippedWhileABatchIsInFlight() {

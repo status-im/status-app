@@ -8,9 +8,14 @@ import QtModelsToolkit
 /*
   A window over a large model, shaped for WindowedView's data contract.
 
-  The view never sees the window: it renders `model`, learns from
-  moreAvailableStart/End whether anything lies beyond it, and asks for more.
-  This answers by moving the window's bounds.
+  The view never sees the window: it renders `model`, learns whether anything
+  lies beyond it, and asks for more. This answers by moving the window's
+  bounds.
+
+  Start and end here are the *model's*, and they stay that way whichever way
+  the view renders. A view rendering BottomToTop names its own edges by the
+  screen, so binding the two together crosses them - moreAvailableTop reads
+  moreAvailableEnd - and that crossing is deliberate, not a typo.
 
   The two ends deliberately do not move together here. Growing admits rows the
   view stages and holds hidden; the opposite end is only trimmed when the view
@@ -25,9 +30,11 @@ import QtModelsToolkit
 
   The window is defined by the rows it holds, not by arithmetic against a
   moving count. A change made to the source from outside never changes which
-  rows the window shows - the bounds move with them - except at the end the
-  view is actively following, where the window keeps its end on the source's
-  end so a row arriving there is shown rather than announced.
+  rows the window shows - the bounds move with them - except at an end the view
+  is actively following, where the window keeps its own end on the source's so a
+  row arriving there is shown rather than announced. Which end that is depends
+  on where the model grows: an oldest-first model gains rows at its end, a
+  newest-first one at its start.
 */
 QObject {
     id: root
@@ -36,10 +43,18 @@ QObject {
 
     // Keep the window's end on the source's end, so a row arriving there lands
     // inside the window and is simply shown, instead of falling beyond it and
-    // being announced by a placeholder. Set from the view's own at-end state:
+    // being announced by a placeholder. Set from the view's own at-bottom state:
     // following while the user is reading older rows would slide content out
     // from under them.
     property bool followsEnd: false
+
+    // The same for the source's start, which is where a newest-first model -
+    // the shape a chat backend hands over - puts a row that has just arrived.
+    // Indexes being anchored at nought, keeping the window's start on the
+    // source's start means holding both bounds still rather than moving them:
+    // the window keeps its size, the new row is inside it, and the oldest row
+    // it held falls off the far end.
+    property bool followsStart: false
 
     // The size the window returns to once a batch has been revealed. Writing it
     // while a trim is owed takes effect at the trim rather than immediately, so
@@ -149,6 +164,7 @@ QObject {
         // world the window was placed in.
         function onRowsAboutToBeInserted(parent, first, last) {
             d.wasAtSourceEnd = d.last >= root.sourceRowCount - 1
+            d.wasAtSourceStart = d.first <= 0
 
             // Whether the window was over anything at all. Filling an empty
             // model is not a change to rows the window was showing - there were
@@ -165,6 +181,14 @@ QObject {
                 return
 
             const inserted = last - first + 1
+
+            // The window already covered the source's row 0, so it still does:
+            // row 0 does not move, so there is no arithmetic to do. Returning
+            // here is what stops the default branch below from sliding the
+            // window off the rows that have just arrived - and the row falling
+            // off the far end is the oldest one it held, which is right.
+            if (root.followsStart && d.wasAtSourceStart && !root.growing)
+                return
 
             // The window covered the source's last row, so it still should:
             // whatever was inserted, the last index moved by exactly this much.
@@ -217,8 +241,10 @@ QObject {
         property int last: 59
 
         // Sampled before an insert moves the count: whether the window covered
-        // the source's last row, and whether it was over any rows at all.
+        // the source's last row, its first row, and whether it was over any
+        // rows at all.
         property bool wasAtSourceEnd: false
+        property bool wasAtSourceStart: false
         property bool wasOverRows: false
 
         // How many rows each end owes once the view has revealed the batch.
