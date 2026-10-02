@@ -9,6 +9,7 @@ import QtQuick.Layouts
 import Models
 import Storybook
 
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Utils
 
@@ -71,6 +72,55 @@ SplitView {
         return n
     }
 
+    // Repeats a message-row shape down whatever space it is given, so the one
+    // instance works both as a full-viewport screen and as a band at an end.
+    Component {
+        id: messageSkeleton
+
+        LoadingSkeletonGroup {
+            id: skeletonRoot
+
+            Column {
+                spacing: 0
+
+                // As many whole rows as fit. At an end that divides exactly,
+                // because the band is sized in rows; filling the viewport it
+                // does not, and the band's clip takes the last one short.
+                Repeater {
+                    model: Math.max(1, Math.ceil(skeletonRoot.height
+                                                 / d.placeholderRowHeight))
+
+                    Item {
+                        width: skeletonRoot.width
+                        height: d.placeholderRowHeight
+
+                        Row {
+                            x: 16
+                            y: 16
+                            spacing: 16
+
+                            LoadingSkeletonTile {
+                                width: 40
+                                height: 40
+                                radius: 20
+                            }
+
+                            Column {
+                                spacing: 8
+
+                                LoadingSkeletonTile { width: 120; height: 12 }
+                                LoadingSkeletonTile {
+                                    width: Math.max(40, skeletonRoot.width - 220)
+                                    height: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     QtObject {
         id: d
 
@@ -80,9 +130,20 @@ SplitView {
         readonly property int defaultWindowSize: 60
         readonly property int defaultSlideStep: 10
 
+        // 0 keeps the owner synchronous, which is what an index window really
+        // is. Anything above zero stands in for a backend that answers later,
+        // and is the only way the loading lights are on screen long enough to
+        // see: a synchronous answer clears them inside the request call.
+        readonly property int defaultAnswerDelay: 0
+
         // On by default here, where the harness is chat-shaped and the newest
         // message belongs at the bottom. The component itself defaults to off.
         readonly property bool defaultStickToBottom: true
+        readonly property bool defaultPlaceholder: true
+        // The band is measured in placeholder rows rather than pixels, so it
+        // always comes out a whole number of them.
+        readonly property int placeholderRowHeight: 72
+        readonly property int defaultPlaceholderRows: 2
 
         readonly property int defaultPoolTarget: 80
         readonly property bool defaultAsynchronous: true
@@ -93,11 +154,39 @@ SplitView {
         readonly property int defaultInsertPosition: 0   // "End"
         readonly property int defaultInsertIndex: 0
 
+        property bool answerAtTop: false
+
+        function fetch(atTop) {
+            if (answerDelaySpinBox.value <= 0) {
+                d.deliver(atTop)
+                return
+            }
+
+            d.answerAtTop = atTop
+            answerTimer.interval = answerDelaySpinBox.value
+            answerTimer.restart()
+        }
+
+        // Admitting and answering together: the rows and the "that is all" come
+        // from the same reply.
+        function deliver(atTop) {
+            if (atTop) {
+                windowSource.growStart(slideStepSpinBox.value)
+                windowedView.moreLoadedTop()
+            } else {
+                windowSource.growEnd(slideStepSpinBox.value)
+                windowedView.moreLoadedBottom()
+            }
+        }
+
         function restoreDefaults() {
             windowSizeSpinBox.value = d.defaultWindowSize
             windowSource.moveTo(d.defaultWindowFirst)
             slideStepSpinBox.value = d.defaultSlideStep
+            answerDelaySpinBox.value = d.defaultAnswerDelay
             stickToBottomSwitch.checked = d.defaultStickToBottom
+            placeholderSwitch.checked = d.defaultPlaceholder
+            placeholderRowsSpinBox.value = d.defaultPlaceholderRows
             poolTargetSpinBox.value = d.defaultPoolTarget
             asyncSwitch.checked = d.defaultAsynchronous
             minDelaySpinBox.value = d.defaultMinDelay
@@ -238,17 +327,17 @@ SplitView {
 
             stickToBottom: stickToBottomSwitch.checked
 
-            // Answered synchronously here; a fetch-more owner would call
-            // moreLoaded*() much later instead, and the view cannot tell.
-            onMoreRequestedTop: {
-                windowSource.growStart(slideStepSpinBox.value)
-                windowedView.moreLoadedTop()
-            }
+            placeholder: placeholderSwitch.checked ? messageSkeleton : null
+            placeholderHeight: placeholderRowsSpinBox.value
+                               * d.placeholderRowHeight
 
-            onMoreRequestedBottom: {
-                windowSource.growEnd(slideStepSpinBox.value)
-                windowedView.moreLoadedBottom()
-            }
+            // With no delay this answers inside the signal, which is what an
+            // index window really is - it has the rows already. With one, the
+            // rows are admitted only when the delay is up, the way an owner
+            // talking to a backend behaves: nothing exists until the reply
+            // lands. The view cannot tell the difference either way.
+            onMoreRequestedTop: d.fetch(true)
+            onMoreRequestedBottom: d.fetch(false)
 
             // Deferred removals happen here, in the reveal's own turn, so both
             // ends of the window change together.
@@ -290,8 +379,8 @@ SplitView {
     }
 
     LogsAndControlsPanel {
-        SplitView.minimumWidth: 300
-        SplitView.preferredWidth: 340
+        SplitView.minimumWidth: 420
+        SplitView.preferredWidth: 420
 
         ColumnLayout {
             Layout.fillWidth: true
@@ -464,6 +553,24 @@ SplitView {
                 }
             }
 
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label { text: "Answer delay" }
+
+                SpinBox {
+                    id: answerDelaySpinBox
+
+                    Layout.fillWidth: true
+
+                    from: 0
+                    to: 5000
+                    stepSize: 100
+                    value: d.defaultAnswerDelay
+                    editable: true
+                }
+            }
+
             Switch {
                 id: stickToBottomSwitch
 
@@ -471,6 +578,32 @@ SplitView {
 
                 text: "Stick to bottom"
                 checked: d.defaultStickToBottom
+            }
+
+            Switch {
+                id: placeholderSwitch
+
+                Layout.fillWidth: true
+
+                text: "Placeholder"
+                checked: d.defaultPlaceholder
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label { text: "Placeholder rows" }
+
+                SpinBox {
+                    id: placeholderRowsSpinBox
+
+                    Layout.fillWidth: true
+
+                    from: 1
+                    to: 20
+                    value: d.defaultPlaceholderRows
+                    editable: true
+                }
             }
 
             RowLayout {
@@ -526,6 +659,23 @@ SplitView {
                     }
 
                     Label { text: "Loading bottom" }
+                }
+
+                // Lit while an admitted batch is being made ready: shells built,
+                // content acquired, heights settling. With a zero answer delay
+                // this is where a slide spends all of its time.
+                RowLayout {
+                    spacing: 4
+
+                    Rectangle {
+                        Layout.preferredWidth: 10
+                        Layout.preferredHeight: 10
+
+                        radius: width / 2
+                        color: windowedView.staging ? "#2ecc71" : "#bdbdbd"
+                    }
+
+                    Label { text: "Staging batch" }
                 }
 
                 // Lit while a fresh population - the first load, or a jump from
@@ -655,11 +805,20 @@ SplitView {
 
     Component.onCompleted: windowSource.moveTo(d.defaultWindowFirst)
 
+    Timer {
+        id: answerTimer
+
+        onTriggered: d.deliver(d.answerAtTop)
+    }
+
     Settings {
         category: "WindowedViewPage"
 
         property alias slideStep: slideStepSpinBox.value
+        property alias answerDelay: answerDelaySpinBox.value
         property alias stickToBottom: stickToBottomSwitch.checked
+        property alias placeholder: placeholderSwitch.checked
+        property alias placeholderRows: placeholderRowsSpinBox.value
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked
         property alias minDelay: minDelaySpinBox.value
