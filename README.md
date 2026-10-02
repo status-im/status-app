@@ -97,7 +97,7 @@ To build Status from source, follow the instructions specific to your operating 
 
 We welcome contributions from the community! To get started:
 
-<!-- TODO Improve the contributing guide to be more about how to contribute -->
+<!-- TODO Improve the contributing guide to be more about how to contribute  -->
 <!-- TODO add guide on how to translate -->
 <!-- TODO Create a guide per persona in the contributing guide -->
 
