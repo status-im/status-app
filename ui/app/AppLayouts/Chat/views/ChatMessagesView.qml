@@ -97,7 +97,16 @@ Item {
         id: d
 
         readonly property real scrollY: chatLogView.visibleArea.yPosition * chatLogView.contentHeight
-        readonly property bool isMostRecentMessageInViewport: chatLogView.visibleArea.yPosition >= 0.99 - chatLogView.visibleArea.heightRatio
+        readonly property bool isMostRecentMessageInViewport: {
+            const viewHeight = chatLogView.height
+            if (chatLogView.visibleArea.heightRatio >= 0.99)
+                return true
+            if (chatLogView.count === 0 || viewHeight <= 0)
+                return false
+            // BottomToTop: index 0 is the newest row; 1 may be the unread marker above it.
+            const indexAtBottom = chatLogView.indexAt(1, viewHeight - 1)
+            return indexAtBottom >= 0 && indexAtBottom <= 1
+        }
         readonly property var chatDetails: chatContentModule && chatContentModule.chatDetails || null
         readonly property bool keepUnread: messageStore.keepUnread
 
@@ -224,7 +233,7 @@ Item {
 
             // HACK: we call `addNewMessagesMarker` later because messages model
             // may not be yet propagated with unread messages when this signal is emitted
-            if (chatLogView.visible && (Qt.application.state != Qt.ApplicationActive || !d.isMostRecentMessageInViewport)) {
+            if (chatLogView.visible && !d.isMostRecentMessageInViewport) {
                 Qt.callLater(() => messageStore.addNewMessagesMarker())
             }
         }
@@ -294,7 +303,12 @@ Item {
 
         model: messageStore.messagesModel
 
-        onContentYChanged: d.loadMoreMessagesIfScrollBelowThreshold()
+        onContentYChanged: {
+            d.loadMoreMessagesIfScrollBelowThreshold()
+            d.markAllMessagesReadIfMostRecentMessageIsInViewport()
+        }
+
+        onContentHeightChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
 
         onMovementEnded: {
             d.isAtBottom = d.isMostRecentMessageInViewport
