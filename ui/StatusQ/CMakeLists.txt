@@ -168,6 +168,13 @@ if (${STATUSQ_SHADOW_BUILD})
     endif()
 endif()
 
+if (ANDROID OR IOS)
+    # qt_add_big_resources() not supported on iOS
+    qt_add_resources(STATUSQ_QRC_COMPILED src/StatusQ/Core/Utils/emojiList.qrc)
+else()
+    qt_add_big_resources(STATUSQ_QRC_COMPILED src/StatusQ/Core/Utils/emojiList.qrc)
+endif()
+
 add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
         ${STATUSQ_TESTCONFIG_RCC}

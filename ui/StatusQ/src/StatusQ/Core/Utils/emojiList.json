@@ -1,6 +1,3 @@
-.pragma library
-
-const emoji_json =
 [
     {
         "aliases": [
