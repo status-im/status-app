@@ -210,7 +210,9 @@ proc sendChatMessage*(self: Controller,
                       preferredUsername: string = "",
                       linkPreviews: seq[LinkPreview],
                       paymentRequests: seq[PaymentRequest],
-                      threadId: string) =
+                      threadId: string,
+                      startNewThread: bool,
+                      newThreadName: string) =
   self.resetLinkPreviews()
   self.chatService.asyncSendChatMessage(self.chatId,
     msg,
@@ -219,7 +221,9 @@ proc sendChatMessage*(self: Controller,
     preferredUsername,
     linkPreviews,
     paymentRequests,
-    threadId = threadId
+    threadId = threadId,
+    startNewThread = startNewThread,
+    newThreadName = newThreadName
   )
 
 proc getLinkPreviewEnabled*(self: Controller): bool =
