@@ -269,6 +269,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     canPost = parentItem.canPost,
     canView = parentItem.canView,
     canPostReactions = parentItem.canPostReactions,
+    viewersCanPostReactions = parentItem.viewersCanPostReactions,
     isThread = true,
     parentChatId = parentChatId,
     sortTimestamp = parentItem.lastMessageTimestamp,
@@ -1147,6 +1148,9 @@ method changeMutedOnChat*(self: Module, chatId: string, muted: bool) =
 
 proc changeCanPostValues*(self: Module, chatId: string, canPost, canView, canPostReactions, viewersCanPostReactions: bool) =
   discard self.view.chatsModel().changeCanPostValues(chatId, canPost, canView, canPostReactions, viewersCanPostReactions)
+  for threadItem in self.view.chatsModel().items:
+    if threadItem.isThread and threadItem.parentChatId == chatId and self.chatContentModules.contains(threadItem.id):
+      self.chatContentModules[threadItem.id].onParentChatPermissionsUpdated(canPost, canView, canPostReactions)
 
 proc updateChatsRequiredPermissions(self: Module, communityChats: seq[ChatDto]) =
   for communityChat in communityChats:
