@@ -59,6 +59,61 @@ Item {
         }
     }
 
+    Component {
+        id: messageShapedDelegate
+
+        MouseArea {
+            id: msg
+
+            property int value: 0
+
+            implicitHeight: msgColumn.height + msgColumn.y + 16
+
+            Image {
+                id: msgAvatar
+                x: 16; y: 16
+                width: 40; height: 40
+                layer.enabled: true
+            }
+
+            ColumnLayout {
+                id: msgColumn
+
+                anchors.top: msgAvatar.top
+                anchors.left: msgAvatar.right
+                anchors.right: parent.right
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+
+                RowLayout {
+                    Text { text: "michalc"; font.bold: true; wrapMode: Text.Wrap }
+                    Text { Layout.fillWidth: true; font.pixelSize: 12
+                           text: "12/03/2026, 10:44"; wrapMode: Text.Wrap }
+                }
+
+                TextEdit {
+                    Layout.fillWidth: true
+                    readOnly: true
+                    wrapMode: Text.Wrap
+                    textFormat: Text.MarkdownText
+                    text: "message " + msg.value + " with enough words in it to "
+                          + "wrap onto a second line at this width, **bold** too"
+                }
+
+                GridLayout {
+                    columns: 2
+                    Repeater {
+                        model: msg.value % 11 === 0 ? 2 : 0
+                        delegate: Item {
+                            Layout.preferredWidth: 300
+                            Layout.preferredHeight: 300
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // ------------------------------------------------------------------
     // The provider: where rows come from, and how slowly.
     // ------------------------------------------------------------------
@@ -108,6 +163,10 @@ Item {
 
                 item.value = modelRow.value
                 item.parent = parent
+                // Bound at acquire, exactly as a real consumer does it: the item
+                // goes from its parked width to the row width here, which is what
+                // makes wrapped text and nested layouts recompute.
+                item.width = Qt.binding(() => (parent ? parent.width : undefined) ?? 0)
                 item.visible = true
                 provider.acquiredCount++
                 callback(item)
@@ -130,6 +189,7 @@ Item {
                 return
             }
 
+            item.width = 0
             item.parent = parkingLot
             item.visible = false
             provider.parked.push(item)
@@ -894,6 +954,10 @@ Item {
             provider.reset()
             owner.reset(root.windowSize)
             tryVerify(() => settled(root.windowSize), 5000, "rows laid out")
+
+            // The initial fill is a reveal of its own; these tests count the
+            // slide's, so the baseline is taken once the view is settled.
+            owner.revealCount = 0
         }
 
         // Slower than the stall detector's interval is not the same as stalled.
@@ -1058,6 +1122,236 @@ Item {
     }
 
 
+    TestCase {
+        id: initialLoadTests
+
+        name: "WindowedView.InitialLoad"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+        }
+
+        function cleanup() {
+            view.keyRole = "key"
+            view.model = rows       // a test may have re-pointed it
+        }
+
+        // owner.reset() clears and refills in one turn, which from a populated
+        // view is exactly a jump: every row removed, every row replaced.
+        function startFill(count) {
+            owner.reset(count)
+        }
+
+        // A first load proper. Emptying is waited for, because the Column only
+        // collapses on a polish: fill straight from a populated view and the
+        // old content height is still standing when the new rows arrive.
+        function freshFill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0
+                            && view.contentHeight === view.height, 2000,
+                      "starting from an empty view")
+            startFill(count)
+        }
+
+        function finishFill(count) {
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        function test_theWholeFillIsRevealedAtOnce() {
+            provider.delay = 40
+            freshFill(40)
+            finishFill(40)
+
+            compare(owner.revealCount, 1, "one reveal for the whole population")
+            compare(values().length, 40, "and every row is in it")
+            compare(hiddenShells().length, 0)
+        }
+
+        function test_nothingIsVisibleUntilTheFillCompletes() {
+            provider.delay = 60         // several frames to sample across
+            freshFill(40)
+
+            const heights = new Set()
+            let frames = 0
+
+            while (view.initialLoading && frames < 300) {
+                compare(hiddenShells().length, view.rowCount, "nothing shown yet")
+
+                for (const shell of shells())
+                    compare(shell.height, 0, "and nothing takes up space")
+
+                heights.add(view.contentHeight)
+                ++frames
+                waitForRendering(view)
+            }
+
+            verify(frames >= 2, "sampled more than once: " + frames)
+            verify(frames < 300, "the fill finished")
+            finishFill(40)
+
+            compare(heights.size, 1,
+                    "contentHeight never moved: " + Array.from(heights))
+        }
+
+        function test_initialLoadingIsSetForTheWholeFill() {
+            provider.delay = 60
+            freshFill(40)
+
+            compare(view.initialLoading, true, "set by the first row arriving")
+            compare(view.busy, true)
+
+            let frames = 0
+
+            while (view.initialLoading && frames < 300) {
+                compare(view.busy, true, "busy for as long as the fill runs")
+                ++frames
+                waitForRendering(view)
+            }
+
+            verify(frames >= 2, "the flag outlived more than one frame: " + frames)
+            verify(frames < 300, "the fill finished")
+            finishFill(40)
+            compare(view.initialLoading, false, "cleared by the reveal")
+            compare(view.busy, false)
+        }
+
+        function test_moreCannotBeRequestedDuringTheFill() {
+            provider.delay = 60
+            freshFill(40)
+
+            // Sampled here on purpose: the keys are captured but no shell has
+            // claimed one yet, so the wave is empty and only initialLoading
+            // stands between this and a request that would orphan the batch.
+            compare(view.requestMoreTop(), false, "refused before the wave exists")
+            compare(view.requestMoreBottom(), false)
+
+            let frames = 0
+
+            while (view.initialLoading && frames < 300) {
+                compare(view.requestMoreBottom(), false, "still refused mid-fill")
+                ++frames
+                waitForRendering(view)
+            }
+
+            finishFill(40)
+            verify(view.requestMoreBottom(), "and accepted once the fill is done")
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        // The rule is "showing nothing", not "has never shown anything": a jump
+        // that replaces every row has to look like a first load again.
+        function test_aJumpReplacingEveryRowBehavesLikeAFirstLoad() {
+            provider.delay = 20
+            freshFill(40)
+            finishFill(40)
+            compare(owner.revealCount, 1)
+
+            // Straight from the populated view, with no emptying in between:
+            // that is what a jump is.
+            startFill(30)
+            compare(view.initialLoading, true,
+                    "a wholesale replacement is a fresh population too")
+
+            finishFill(30)
+            compare(owner.revealCount, 1, "revealed in one shot as well")
+            compare(values().length, 30)
+        }
+
+        function test_aLiveRowAfterTheFillStillRevealsAlone() {
+            provider.delay = 20
+            freshFill(40)
+            finishFill(40)
+
+            const reveals = owner.revealCount
+
+            owner.appendLive()
+            tryVerify(() => settled(41), 5000, "the live row landed")
+
+            compare(view.initialLoading, false, "a live row is no fresh population")
+            compare(owner.revealCount, reveals, "and it is not a batch")
+            verify(values().indexOf(owner.liveValue) !== -1)
+        }
+
+        // The documented degradation: without the key role there is no batch to
+        // gather, so rows reveal one by one. What must not happen is the view
+        // announcing a fill that nothing can ever complete and refusing to page
+        // from then on.
+        function test_aModelWithoutTheKeyRoleStillRevealsAndStillPages() {
+            ignoreWarning(/WindowedView: no "absent" role on the model/)
+            view.keyRole = "absent"
+            provider.delay = 20
+
+            freshFill(20)
+            compare(view.initialLoading, false, "no batch was ever claimed")
+
+            tryVerify(() => settled(20), 8000, "the rows revealed anyway")
+            compare(view.busy, false)
+            verify(view.requestMoreBottom(), "and paging still works")
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        // Every staged row leaving before it arrives completes no wave, so
+        // nothing would clear the flag through the reveal.
+        function test_rowsRemovedMidFillDoNotWedgeTheView() {
+            provider.mute = true
+
+            freshFill(20)
+            compare(view.initialLoading, true)
+
+            rows.remove(0, rows.count)
+            provider.mute = false
+
+            tryVerify(() => !view.initialLoading && !view.busy, 5000,
+                      "the fill ended with the rows")
+            verify(view.requestMoreBottom(), "and paging works again")
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        // The case no model signal can catch, and the one the real page hits on
+        // open: the rows are already in the model and the shells are built from
+        // scratch. A proxy windowing a large model delivers its first page as a
+        // reset, and a Repeater answers a reset by destroying what it built and
+        // regenerating - so the rows that end up on screen arrive with no signal
+        // of their own. Only a shell asking on its own behalf notices.
+        function test_aPopulationRebuiltWithNoSignalIsStillStaged() {
+            provider.delay = 40
+            freshFill(40)
+            finishFill(40)
+
+            view.model = null
+            tryVerify(() => view.rowCount === 0, 2000, "torn down")
+            owner.revealCount = 0
+
+            // The rows never left the model; only the shells did.
+            view.model = rows
+            compare(view.initialLoading, true, "the first shell opened a batch")
+
+            finishFill(40)
+            compare(owner.revealCount, 1, "revealed in one shot")
+            compare(values().length, 40)
+            compare(hiddenShells().length, 0)
+        }
+
+        function test_aProviderThatNeverAnswersStillEndsTheFill() {
+            ignoreWarning(/WindowedView: nothing arrived in/)
+            provider.mute = true
+            provider.delay = 0
+
+            freshFill(20)
+            compare(view.initialLoading, true)
+
+            tryVerify(() => !view.initialLoading, 8000, "the watchdog ended it")
+            compare(owner.revealCount, 1, "the fill completed, with nothing to show")
+            compare(hiddenShells().length, 20,
+                    "and the rows that never arrived are still staged")
+        }
+    }
+
     // ------------------------------------------------------------------
     // The one integration case: the real IndexWindowSource and the real
     // ItemPool, wired to the view the way the page wires them. Everything
@@ -1189,6 +1483,25 @@ Item {
             }
 
             return NaN
+        }
+
+        // moveTo() replaces every row in the window. Whether the view sees that
+        // as a removal followed by an insertion - which is what makes it look
+        // like a fresh population - is SortFilterProxyModel's business, so it
+        // is asserted here rather than assumed.
+        function test_aJumpThroughTheRealSourceLooksLikeAFreshPopulation() {
+            const firstBefore = windowSource.first
+
+            windowSource.moveTo(firstBefore + 90)
+
+            compare(smokeView.initialLoading, true, "staged as one population")
+
+            tryVerify(() => !smokeView.busy && smokeView.rowCount === 30
+                            && smokeView.contentHeight > smokeView.height, 10000,
+                      "and revealed")
+
+            compare(windowSource.first, firstBefore + 90)
+            compare(smokeView.initialLoading, false)
         }
 
         function test_oneRoundTripThroughTheRealStack() {
