@@ -80,6 +80,10 @@ SplitView {
         readonly property int defaultWindowSize: 60
         readonly property int defaultSlideStep: 10
 
+        // On by default here, where the harness is chat-shaped and the newest
+        // message belongs at the bottom. The component itself defaults to off.
+        readonly property bool defaultStickToBottom: true
+
         readonly property int defaultPoolTarget: 80
         readonly property bool defaultAsynchronous: true
         readonly property int defaultMinDelay: 0
@@ -93,6 +97,7 @@ SplitView {
             windowSizeSpinBox.value = d.defaultWindowSize
             windowSource.moveTo(d.defaultWindowFirst)
             slideStepSpinBox.value = d.defaultSlideStep
+            stickToBottomSwitch.checked = d.defaultStickToBottom
             poolTargetSpinBox.value = d.defaultPoolTarget
             asyncSwitch.checked = d.defaultAsynchronous
             minDelaySpinBox.value = d.defaultMinDelay
@@ -230,6 +235,8 @@ SplitView {
 
             moreAvailableTop: windowSource.moreAvailableStart
             moreAvailableBottom: windowSource.moreAvailableEnd
+
+            stickToBottom: stickToBottomSwitch.checked
 
             // Answered synchronously here; a fetch-more owner would call
             // moreLoaded*() much later instead, and the view cannot tell.
@@ -457,6 +464,15 @@ SplitView {
                 }
             }
 
+            Switch {
+                id: stickToBottomSwitch
+
+                Layout.fillWidth: true
+
+                text: "Stick to bottom"
+                checked: d.defaultStickToBottom
+            }
+
             RowLayout {
                 Layout.fillWidth: true
 
@@ -627,6 +643,7 @@ SplitView {
         category: "WindowedViewPage"
 
         property alias slideStep: slideStepSpinBox.value
+        property alias stickToBottom: stickToBottomSwitch.checked
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked
         property alias minDelay: minDelaySpinBox.value
