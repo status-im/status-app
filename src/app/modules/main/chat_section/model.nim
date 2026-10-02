@@ -301,6 +301,29 @@ QtObject:
 
     self.countChanged()
 
+  proc appendItemsAfterParent*(self: Model, items: seq[ChatItem], parentId: string) =
+    if items.len == 0:
+      return
+
+    let parentIndex = self.getItemIdxById(parentId)
+    if parentIndex == -1:
+      return
+
+    var indexToInsertTo = parentIndex + 1
+    while indexToInsertTo < self.items.len and self.items[indexToInsertTo].isThread and
+        self.items[indexToInsertTo].parentChatId == parentId:
+      inc indexToInsertTo
+
+    let parentModelIndex = newQModelIndex()
+    defer: parentModelIndex.delete
+
+    self.beginInsertRows(parentModelIndex, indexToInsertTo, indexToInsertTo + items.len - 1)
+    for offset, item in items:
+      self.items.insert(item, indexToInsertTo + offset)
+    self.endInsertRows()
+
+    self.countChanged()
+
   proc changeCategoryOpened*(self: Model, categoryId: string, opened: bool) {.slot.} =
     for ind in 0 ..< self.items.len:
       if self.items[ind].categoryId == categoryId:
