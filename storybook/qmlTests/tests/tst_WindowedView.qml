@@ -14,6 +14,9 @@ Item {
     width: 500
     height: 400
 
+    // Every flick the view starts, its own restores included.
+    property int flickStarts: 0
+
     readonly property int chunk: 10
     readonly property int windowSize: 20
 
@@ -31,6 +34,19 @@ Item {
 
             // varies with the row, so the suite has tall and short rows
             implicitHeight: 20 + (value % 5) * 30
+        }
+    }
+
+    // Tall rows, so the content is long enough for a flick to still be running
+    // when it reaches a band. With the short rows above, a flick across the whole
+    // window is over in a few frames.
+    Component {
+        id: tallDelegate
+
+        Item {
+            property int value: 0
+
+            implicitHeight: 300 + (value % 5) * 100
         }
     }
 
@@ -429,6 +445,8 @@ Item {
         // itself would page forever. The AutoRequest group turns it on against
         // a budgeted owner.
         autoRequest: false
+
+        onFlickStarted: root.flickStarts++
 
         acquireDelegate: (parent, row, modelRow, cb) =>
                 provider.acquire(parent, row, modelRow, cb)
@@ -1573,8 +1591,17 @@ Item {
         }
 
         function cleanup() {
+            // A test that fails mid-drag never reaches its own release, and a
+            // button left held breaks every later test that uses the mouse.
+            mouseRelease(view, 0, 0, Qt.LeftButton)
+            mouseRelease(scrollBar, 0, 0, Qt.LeftButton)
+
+            // A release leaves the view flicking, which outlives the test.
+            view.cancelFlick()
+
             view.autoRequest = false
             view.placeholder = null
+            view.placeholderHeight = 100
             view.moreAvailableTop = true
             view.moreAvailableBottom = true
         }
@@ -1652,13 +1679,14 @@ Item {
             tryVerify(() => !view.busy, 8000)
         }
 
-        function test_nothingIsAskedWhileTheViewIsMoving() {
+        // A content drag no longer defers anything: Qt shifts the drag's origin
+        // by whatever the position was moved by underneath it, so the batch can
+        // land mid-gesture without the content snapping back on the next move.
+        function test_theRequestGoesOutWhileDragging() {
             provider.delay = 0
             freshFill(40)
             arm(3)
 
-            // Dragged by the content rather than flicked: the direction is then
-            // ours to choose, and a drag is what `moving` mostly means anyway.
             view.contentY = view.placeholderHeight * 3
             waitForRendering(view)
 
@@ -1667,29 +1695,169 @@ Item {
             mousePress(view, x, 20)
 
             // The first move only crosses the drag threshold; the Flickable is
-            // not dragging until the one after it.
+            // not dragging until the one after it. The button has to be named:
+            // mouseMove() holds none by default, and a Flickable only drags for
+            // a held button.
             mouseMove(view, x, 60, 16, Qt.LeftButton)
             waitForRendering(view)
 
-            let frames = 0
+            let askedWhileDragging = false
 
             for (let i = 2; i <= 8; ++i) {
-                // the button has to be named: mouseMove() holds none by default,
-                // and a Flickable only drags for a held button
                 mouseMove(view, x, 20 + i * 40, 16, Qt.LeftButton)
                 waitForRendering(view)
-                verify(view.moving, "still in motion")
-                compare(owner.startBudget, 3, "moving: nothing asked")
-                ++frames
+
+                if (view.dragging && owner.startBudget < 3)
+                    askedWhileDragging = true
             }
 
             verify(view.contentY < view.placeholderHeight,
                    "the drag reached the start band: " + view.contentY)
+            verify(askedWhileDragging, "asked without waiting for the release")
 
             mouseRelease(view, x, 20 + 8 * 40, Qt.LeftButton)
-            verify(frames >= 2, "sampled more than once: " + frames)
-            tryVerify(() => owner.startBudget < 3, 3000, "asked once at rest")
             tryVerify(() => !view.busy, 8000)
+        }
+
+        // Qt's own compensation, asserted rather than assumed: the row under the
+        // cursor must not move when rows are inserted above it mid-drag.
+        function test_aDragIsNotDisturbedByTheReveal() {
+            provider.delay = 40
+            freshFill(40)
+            arm(3)
+
+            view.contentY = view.placeholderHeight * 3
+            waitForRendering(view)
+
+            const x = view.width / 2
+
+            mousePress(view, x, 20)
+            mouseMove(view, x, 60, 16, Qt.LeftButton)
+            waitForRendering(view)
+
+            const anchor = topRow()
+
+            let jump = NaN
+
+            for (let i = 2; i <= 8; ++i) {
+                const budget = owner.startBudget
+                const before = offsetOf(anchor.value)
+
+                mouseMove(view, x, 20 + i * 40, 16, Qt.LeftButton)
+                waitForRendering(view)
+
+                // the step the batch landed on is the only one that can show a
+                // discontinuity, and comparing across it alone keeps the drag's
+                // own resistance near the boundary out of the measurement
+                if (owner.startBudget < budget)
+                    jump = offsetOf(anchor.value) - before
+            }
+
+            verify(!isNaN(jump), "a batch landed during the drag")
+
+            // one 40 px step, give or take; without the compensation it would be
+            // the height of the ten rows that arrived above - hundreds of px
+            verify(Math.abs(jump) < 120,
+                   "the row moved with the cursor, not with the batch: " + jump)
+
+            mouseRelease(view, x, 20 + 8 * 40, Qt.LeftButton)
+            tryVerify(() => !view.busy, 8000)
+        }
+
+        function test_theRequestGoesOutWhileFlicking() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+
+            // positive velocity scrolls toward the top, so toward the start band
+            view.contentY = view.placeholderHeight * 4
+            waitForRendering(view)
+            view.flick(0, 2000)
+            verify(view.flickingVertically, "flicking")
+
+            let askedWhileFlicking = false
+            let frames = 0
+
+            while (view.flickingVertically && frames < 300) {
+                if (owner.startBudget < 3)
+                    askedWhileFlicking = true
+
+                ++frames
+                waitForRendering(view)
+            }
+
+            verify(askedWhileFlicking, "asked without waiting for the flick to end")
+            tryVerify(() => !view.busy, 8000)
+        }
+
+        // The reveal writes contentY, which cancels the flick outright, and the
+        // view has to be moving still once it has landed - not merely restarted
+        // once. completeWave() writes the position several times over, and an
+        // earlier version restored after the first write and was killed by the
+        // next; counting restarts alone did not notice, so what is checked here
+        // is the motion itself.
+        //
+        // Tall rows on purpose: with the short ones a flick across the whole
+        // window is over in a few frames, and the batch lands after the view has
+        // already stopped.
+        function test_aFlickSurvivesTheReveal() {
+            provider.delay = 40
+            provider.delegate = tallDelegate
+            view.placeholderHeight = 300
+            freshFill(40)
+            arm(3)
+
+            // flickDeceleration's default is platform-dependent - measured at
+            // about 2700 px/s^2 here, so v=3000 carries roughly 1700 px. Start
+            // inside that, and the band is still reached at some speed.
+            view.contentY = 1200
+            waitForRendering(view)
+
+            view.flick(0, 3000)             // positive scrolls toward the top
+            verify(view.flickingVertically, "flicking")
+
+            tryVerify(() => owner.startBudget < 3, 6000,
+                      "a batch was asked for during the flick")
+            verify(view.flickingVertically,
+                   "and the view was still flicking when it asked")
+
+            tryVerify(() => !view.busy, 8000, "the batch landed")
+
+            verify(view.flickingVertically,
+                   "still flicking after the reveal, not stopped by it")
+
+            // Movement rather than verticalVelocity: that is smoothed, and
+            // immediately after a restore it has had no frame to catch up and
+            // reads as nothing - which is the very effect that made the naive
+            // implementation lose the flick.
+            const at = view.contentY
+
+            waitForRendering(view)
+            waitForRendering(view)
+
+            verify(view.contentY < at,
+                   "and still travelling the same way: " + view.contentY
+                   + " from " + at)
+        }
+
+        // Counted rather than read off `flickingVertically`: a correction can
+        // leave the view slightly out of bounds, and the rebound Qt animates
+        // back reports as flicking too. What must not happen is this view
+        // starting one.
+        function test_aFlickIsNotStartedWhenTheViewWasAtRest() {
+            provider.delay = 0
+            freshFill(40)
+            arm(3)
+
+            compare(view.flickingVertically, false)
+            root.flickStarts = 0
+
+            toStartBand()
+            tryVerify(() => owner.startBudget < 3, 3000, "it asked")
+            tryVerify(() => !view.busy, 8000)
+
+            compare(root.flickStarts, 0,
+                    "a correction at rest starts no flick of its own")
         }
 
         // One batch per reveal, however many times the condition rises.
