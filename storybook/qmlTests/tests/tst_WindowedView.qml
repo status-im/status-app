@@ -1277,6 +1277,23 @@ Item {
             verifyLastRowSitsOnTheBottomEdge()
         }
 
+        // Whoever owns the data reads this to tell a row that should simply be
+        // shown from one that should be announced.
+        function test_atEndReportsWhereTheViewportIs() {
+            view.stickToBottom = true
+            fill(60)
+
+            compare(view.atBottom, true, "parked at the bottom")
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            waitForRendering(view)
+            compare(view.atBottom, false, "and not once scrolled away")
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+            compare(view.atBottom, true, "back again")
+        }
+
         function test_withoutTheFlagTheFillStaysAtTheTop() {
             fill(60)
 
