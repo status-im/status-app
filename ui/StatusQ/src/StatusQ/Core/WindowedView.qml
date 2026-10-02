@@ -90,6 +90,12 @@ Flickable {
 
     readonly property int rowCount: rowsRepeater.count
 
+    // The viewport is at the bottom of the content. Whoever owns the data needs
+    // this to tell a row that should simply be shown from one that should be
+    // announced: arriving at the end while the user is already there is the
+    // first, and arriving while they are reading further up is the second.
+    readonly property bool atBottom: d.atBottomOfContent()
+
     // A request is outstanding in that direction. The view owns these because
     // it is the only party that knows it asked.
     readonly property bool loadingTop: d.loadingTop

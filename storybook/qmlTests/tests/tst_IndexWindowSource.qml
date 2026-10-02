@@ -181,40 +181,109 @@ Item {
         // never re-tests a row it has already judged, so without the source's
         // re-filtering an insertion would leave the window permanently
         // oversized and a removal permanently short.
-        function test_windowKeepsItsSizeAcrossSourceInsertions() {
+        // The window is positional, so rows inserted before it renumber its
+        // contents. Moving the bounds with them is what keeps it on the same
+        // rows - and is this component's job, since it is the only thing that
+        // knows what the indices mean.
+        function test_insertsBeforeTheWindowKeepItOnTheSameRows() {
             const source = createTemporaryObject(componentUnderTest, root)
 
             source.moveTo(10)
-            compare(source.model.count, 10)
-
             compare(values(source)[0], 10)
 
             source.sourceModel.insert(0, [{ key: "new0", value: -1 },
                                           { key: "new1", value: -2 }])
+
+            compare(source.first, 12, "the bounds moved with the rows")
+            compare(source.last, 21)
             compare(source.model.count, 10, "still exactly the window size")
-
-            source.sourceModel.insert(12, [{ key: "mid", value: -3 }])
-            compare(source.model.count, 10)
-
-            // The window is defined by index, so rows inserted before it shift
-            // which rows it shows. Pinning it to the same rows is the
-            // consumer's business, not this component's - but the size is this
-            // component's, and re-filtering is what keeps it.
-            compare(source.first, 10, "the bounds themselves do not move")
-            // two of the three inserts landed before the window, one inside it
-            compare(values(source)[0], 8, "but the rows behind them did")
+            compare(values(source)[0], 10, "and it shows what it showed before")
         }
 
-        function test_windowKeepsItsSizeAcrossSourceRemovals() {
+        function test_removalsBeforeTheWindowKeepItOnTheSameRows() {
             const source = createTemporaryObject(componentUnderTest, root)
 
             source.moveTo(10)
             source.sourceModel.remove(0, 3)
-            compare(source.model.count, 10, "refilled from the rows that shifted in")
 
-            // near the end there is simply less to show
+            compare(source.first, 7, "the bounds moved with the rows")
+            compare(source.model.count, 10, "still exactly the window size")
+            compare(values(source)[0], 10, "and it shows what it showed before")
+        }
+
+        // Not following: a row past the end is something to announce, which is
+        // what moreAvailableEnd is for.
+        function test_insertsAfterTheWindowAreAnnounced() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(40)       // 50 rows, so the window ends at the source
+            compare(source.moreAvailableEnd, false)
+
+            source.sourceModel.append([{ key: "newest", value: 999 }])
+
+            compare(source.moreAvailableEnd, true, "there is now more beyond it")
+            compare(source.first, 40, "and the window did not move")
+            compare(values(source).indexOf(999), -1, "the new row is outside it")
+        }
+
+        // Following: the same insert lands inside the window instead, so the
+        // view shows it rather than putting a placeholder where it should be.
+        function test_followingTheEndAbsorbsANewLastRow() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
             source.moveTo(40)
-            compare(source.model.count, 7, "47 rows left, window starts at 40")
+            source.followsEnd = true
+
+            source.sourceModel.append([{ key: "newest", value: 999 }])
+
+            compare(source.moreAvailableEnd, false, "nothing is beyond it")
+            compare(source.model.count, 10, "and it kept its size")
+            compare(source.first, 41, "by sliding, not growing")
+            compare(values(source)[9], 999, "the new row is the last one shown")
+        }
+
+        // An insert anywhere at or before the end pushes the newest row out past
+        // the window just as an append does, so following has to cover it too.
+        function test_followingTheEndAbsorbsAnInsertInsideTheWindow() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(40)
+            source.followsEnd = true
+
+            source.sourceModel.insert(45, [{ key: "mid", value: 888 }])
+
+            compare(source.moreAvailableEnd, false, "nothing is beyond it")
+            compare(source.model.count, 10)
+            compare(source.first, 41)
+            compare(values(source).indexOf(888) !== -1, true, "and it is shown")
+        }
+
+        // Mid-batch the bounds belong to the owed trim; re-pinning them would
+        // leave it pointing at bounds that had moved underneath it.
+        function test_followingIsSkippedWhileABatchIsInFlight() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            // At the source end, so following would otherwise fire, and growing
+            // at the same time.
+            source.moveTo(40)
+            source.followsEnd = true
+            source.growStart(4)
+            compare(source.growing, true)
+            compare(source.first, 36)
+            compare(source.last, 49)
+
+            source.sourceModel.append([{ key: "newest", value: 999 }])
+
+            compare(source.first, 36, "the grow is untouched")
+            compare(source.last, 49)
+
+            // growStart moved the window toward the start; the trim collects
+            // the four it owes from the far end, leaving it where the grow put
+            // it and exactly `size` rows long.
+            source.trim()
+            compare(source.first, 36, "and the owed trim still lands")
+            compare(source.last, 45)
+            compare(source.model.count, 10)
         }
 
         function test_withoutASourceModelItStaysInert() {
