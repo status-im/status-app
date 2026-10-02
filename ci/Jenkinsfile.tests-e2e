@@ -72,6 +72,11 @@ pipeline {
     )
   }
 
+  triggers {
+    // This Jenkinsfile is shared; schedule only the existing Linux E2E job.
+    cron(env.JOB_NAME == 'status-app/e2e/prs' ? 'TZ=Etc/UTC\nH 4 * * *' : '')
+  }
+
   options {
     timestamps()
     /* Prevent Jenkins jobs from running forever */
@@ -128,9 +133,9 @@ pipeline {
     STATUS_FLEET_CONFIG_FILE = "${WORKSPACE}/assets/local-waku-fleets-config.json"
 
     /* Hack fix for params not being set in job on first run */
-    BUILD_SOURCE =      "${params.BUILD_SOURCE}"
-    TEST_NAME =         "${params.TEST_NAME}"
-    TEST_SCOPE_FLAG =   "${params.TEST_SCOPE_FLAG}"
+    BUILD_SOURCE =      "${isNightly() ? 'status-app/nightly' : params.BUILD_SOURCE}"
+    TEST_NAME =         "${isNightly() ? '' : params.TEST_NAME}"
+    TEST_SCOPE_FLAG =   "${isNightly() ? '' : params.TEST_SCOPE_FLAG}"
     TESTRAIL_RUN_NAME = "${params.TESTRAIL_RUN_NAME}"
     LOG_LEVEL =         "${params.LOG_LEVEL}"
 
@@ -149,6 +154,9 @@ pipeline {
     }
     stage('Prep') {
       steps { script {
+        if (isNightly()) {
+          env.WAKU_IMAGE = 'quay.io/wakuorg/nwaku-pr:nightly'
+        }
         setNewBuildName()
         updateGitHubStatus()
       } }
@@ -167,13 +175,13 @@ pipeline {
     }
 
     stage('Download') {
-      when { expression { params.BUILD_SOURCE.startsWith('http') } }
+      when { expression { env.BUILD_SOURCE.startsWith('http') } }
       steps { timeout(5) { script { dir('test/e2e') {
         sh 'mkdir -p ./pkg/'
-        setBuildDescFromFile(params.BUILD_SOURCE)
+        setBuildDescFromFile(env.BUILD_SOURCE)
         fileOperations([
           fileDownloadOperation(
-            url:            params.BUILD_SOURCE,
+            url:            env.BUILD_SOURCE,
             targetFileName: 'StatusIm-Desktop.tar.gz',
             targetLocation: './pkg/',
             userName:       '',
@@ -184,12 +192,12 @@ pipeline {
     }
 
     stage('Copy') {
-      when { expression { ! params.BUILD_SOURCE.startsWith('http') } }
+      when { expression { ! env.BUILD_SOURCE.startsWith('http') } }
       steps { timeout(5) { script { dir('test/e2e') {
         copyArtifacts(
-          projectName: params.BUILD_SOURCE,
+          projectName: env.BUILD_SOURCE,
           filter:      'pkg/*-x86_64.tar.gz',
-          selector:    params.SOURCE_BUILD_NUMBER ? specific(params.SOURCE_BUILD_NUMBER) : lastWithArtifacts(),
+          selector:    isNightly() ? lastSuccessful() : (params.SOURCE_BUILD_NUMBER ? specific(params.SOURCE_BUILD_NUMBER) : lastWithArtifacts()),
           target:      './'
         )
         setBuildDescFromFile(utils.findFile('pkg/*tar.gz'))
@@ -201,6 +209,7 @@ pipeline {
         sh 'mkdir aut'
         sh "tar -zxvf '${utils.findFile('pkg/*tar.gz')}' -C './aut'"
         env.AUT_PATH = utils.findFile('aut/*.AppImage')
+        if (isNightly()) { env.TESTED_APP = utils.baseName(env.AUT_PATH) }
       } } } }
     }
 
@@ -208,6 +217,10 @@ pipeline {
       steps {
           script {
             try {
+              if (isNightly()) {
+                sh 'docker pull "$WAKU_IMAGE"'
+                env.WAKU_IMAGE_ID = sh(script: 'docker image inspect --format "{{.Id}}" "$WAKU_IMAGE"', returnStdout: true).trim()
+              }
               timeout(2) {
                 /* Clean up any leftover containers from a previous aborted run */
                 sh "docker compose -p ${fleetProject()} -f docker-compose.waku.yml down --remove-orphans || true"
@@ -218,8 +231,9 @@ pipeline {
               timeout(time: getTestStageTimeout()) {
                 dir('test/e2e') {
                   def flags = []
-                  if (params.TEST_NAME)  { flags.add("-k=${params.TEST_NAME}") }
-                  if (!params.KEYCARD_TESTS && params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
+                  if (env.TEST_NAME)  { flags.add("-k=${env.TEST_NAME}") }
+                  if (!params.KEYCARD_TESTS && env.TEST_SCOPE_FLAG) { flags.add(env.TEST_SCOPE_FLAG) }
+                  if (isNightly()) { flags.add('--junitxml=./reports/junit.xml') }
                   if (params.LOG_LEVEL)  { flags.addAll(["--log-level=${params.LOG_LEVEL}", "--log-cli-level=${params.LOG_LEVEL}"]) }
                   dir ('configs') { sh 'ln -s _local.ci.py _local.py' }
                   wrap([
@@ -259,6 +273,12 @@ pipeline {
 
   post {
     always { script {
+      if (isNightly()) {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') { reportGithubIssues() }
+        archiveArtifacts(artifacts: 'nightly-report/**, test/e2e/reports/*.xml', allowEmptyArchive: true)
+        junit(testResults: 'test/e2e/reports/*.xml', allowEmptyResults: true,
+              skipOldReports: true, skipPublishingChecks: true, skipMarkingBuildUnstable: true)
+      }
       dir('test/e2e') {
         archiveArtifacts(
           artifacts: 'local_run_results/*.log',
@@ -281,14 +301,16 @@ pipeline {
       }
     } }
     success { script {
-      github.notifyPR(true)
+      if (!isNightly()) { github.notifyPR(true) }
     } }
     failure { script {
-      github.notifyPR(false)
-      discord.send(
-        header: '**Desktop E2E test failure!**',
-        cred: 'discord-status-desktop-e2e-webhook',
-      )
+      if (!isNightly()) {
+        github.notifyPR(false)
+        discord.send(
+          header: '**Desktop E2E test failure!**',
+          cred: 'discord-status-desktop-e2e-webhook',
+        )
+      }
     } }
     cleanup {
       cleanWs(disableDeferredWipeout: true)
@@ -327,7 +349,7 @@ def setBuildDescFromFile(fileNameOrPath) {
 
 def updateGitHubStatus() {
   /* For PR builds update check status. */
-  if (params.BUILD_SOURCE ==~ /.*\/PR-[0-9]+\/?$/) {
+  if (!isNightly() && params.BUILD_SOURCE ==~ /.*\/PR-[0-9]+\/?$/) {
     github.statusUpdate(
       context: 'jenkins/prs/tests/e2e-new',
       commit: jenkins.getJobCommitByPath(params.BUILD_SOURCE),
@@ -355,10 +377,11 @@ def getDefaultTestScopeFlag() {
 }
 
 def getPytestMarkerExpr() {
-  return params.KEYCARD_TESTS ? 'keycard' : 'not (keycard or benchmark)'
+  return !isNightly() && params.KEYCARD_TESTS ? 'keycard' : 'not (keycard or benchmark)'
 }
 
 def getTestStageTimeout() {
+  if (isNightly()) { return 120 }
   return (params.KEYCARD_TESTS || params.TEST_SCOPE_FLAG == '-m=critical') ? 30 : 120
 }
 
@@ -367,4 +390,18 @@ def getAgentLabel() {
     return "linuxcontainer && ${params.AGENT_NODE}"
   }
   return 'linuxcontainer'
+}
+
+def isNightly() {
+  return env.JOB_NAME == 'status-app/e2e/prs' &&
+    !currentBuild.getBuildCauses('hudson.triggers.TimerTrigger$TimerTriggerCause').isEmpty()
+}
+
+def reportGithubIssues() {
+  withEnv(["NIGHTLY_BUILD_RESULT=${currentBuild.currentResult}"]) {
+    withCredentials([usernamePassword(credentialsId: 'status-im-auto',
+      usernameVariable: 'GH_USERNAME', passwordVariable: 'GH_TOKEN')]) {
+      sh 'python3 scripts/report_nightly_issues.py'
+    }
+  }
 }
