@@ -431,6 +431,17 @@ QtObject:
         roles.add(ModelRole.ShouldBeHiddenBecausePermissionsAreNotMet.int) # depends on hideIfPermissionsNotMet
         result = roles # return roles so that we can use it in tests
 
+    for ind in 0 ..< self.items.len:
+      if self.items[ind].isThread and self.items[ind].parentChatId == id:
+        updateRolesAndNotify:
+          updateRoleWithValue(canView, canView)
+          updateRoleWithValue(canPost, canPost)
+          updateRoleWithValue(canPostReactions, canPostReactions)
+          updateRoleWithValue(viewersCanPostReactions, viewersCanPostReactions)
+          if roles.len > 0:
+            roles.add(ModelRole.HideIfPermissionsNotMet.int) # depends on canPost, canView
+            roles.add(ModelRole.ShouldBeHiddenBecausePermissionsAreNotMet.int) # depends on hideIfPermissionsNotMet
+
   proc changeMutedOnItemByCategoryId*(self: Model, categoryId: string, muted: bool) =
     for ind in 0 ..< self.items.len:
       if self.items[ind].categoryId == categoryId and self.items[ind].muted != muted:
