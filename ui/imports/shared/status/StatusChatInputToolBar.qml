@@ -293,6 +293,7 @@ Control {
                         ChatIcon {
                             id: tokenButton
 
+                            objectName: "statusChatInputTokenButton"
                             icon.name: "chat/token"
                             tooltipText: qsTr("Payment")
                         }

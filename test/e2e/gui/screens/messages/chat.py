@@ -16,6 +16,7 @@ from gui.components.messaging.edit_group_name_and_image_popup import EditGroupNa
 from gui.components.messaging.leave_group_popup import LeaveGroupPopup
 from gui.components.messaging.link_preview_options_popup import LinkPreviewOptionsPopup
 from gui.components.messaging.message_context_menu_popup import MessageContextMenuPopup
+from gui.components.messaging.payment_request_popup import PaymentRequestPopup
 from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
 from gui.components.wallet.send_popup import SendPopup
 from gui.elements.button import Button
@@ -36,6 +37,7 @@ class ChatView(QObject):
         self._message_list_item = QObject(messaging_names.chatLogView_chatMessageViewDelegate_MessageView)
         self._deleted_message = QObject(messaging_names.chatMessageViewDelegate_deletedMessage_RowLayout)
         self._recent_messages_button = QObject(messaging_names.layout_recentMessagesButton_AnchorButton)
+        self._payment_request_card = QObject(dict(messaging_names.paymentRequestCard))
 
     def _iter_message_objects(self, index: typing.Optional[int], scroll_to_recent: bool = True):
         # message_list_item has different indexes if we run multiple instances, so we pass index
@@ -69,6 +71,16 @@ class ChatView(QObject):
         message = self.find_message_by_text(text, index)
         message.activate_link(f'//send-via-personal-chat//{text}')
         return SendPopup().wait_until_appears()
+
+    @allure.step('Get payment request card')
+    def payment_request_card(self, index: int = 0) -> QObject:
+        self._payment_request_card.real_name['objectName'] = f'PaymentRequestDelegate_{index}'
+        return self._payment_request_card.wait_until_appears(configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000)
+
+    @allure.step('Open send modal from payment request card')
+    def open_send_modal_from_payment_request(self, index: int = 0) -> SendPopup:
+        self.payment_request_card(index).click()
+        return SendPopup().wait_until_appears(configs.timeouts.ROUTES_TIMEOUT_MSEC)
 
     @allure.step('Get deleted message state')
     def get_deleted_message_state(self):
@@ -406,6 +418,8 @@ class ChatMessagesView(QObject):
         self._message_input_area = QObject(messaging_names.inputScrollView_messageInputField_TextArea)
         self._message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._emoji_button = Button(messaging_names.mainWindow_statusChatInputEmojiButton_StatusFlatRoundButton)
+        self._token_button = Button(messaging_names.mainWindow_statusChatInputTokenButton)
+        self._payment_request_preview = QObject(messaging_names.paymentRequestMiniCard)
         self._image_button = Button(messaging_names.mainWindow_imageBtn_StatusFlatRoundButton)
         self._link_preview_title = QObject(messaging_names.mainWindow_linkPreviewTitleText_StatusBaseText)
         self._link_preview_preview_subtitle = QObject(messaging_names.mainWindow_linkPreviewSubtitleText_StatusBaseText)
@@ -464,6 +478,15 @@ class ChatMessagesView(QObject):
         self.open_more_options()
         self._leave_group_item.wait_until_appears().click()
         return LeaveGroupPopup().wait_until_appears()
+
+    @allure.step('Open payment request modal')
+    def open_payment_request_modal(self) -> PaymentRequestPopup:
+        self._token_button.click()
+        return PaymentRequestPopup().wait_until_appears()
+
+    @allure.step('Wait for payment request preview in composer')
+    def wait_for_payment_request_preview(self) -> QObject:
+        return self._payment_request_preview.wait_until_appears()
 
     @allure.step('Send message to group chat')
     def send_message_to_group_chat(self, message: str):
