@@ -23,9 +23,11 @@ import StatusQ.Core.Utils as SQUtils
   defers removals (an index window trimming its far end) must do them there, or
   the two ends change in different frames and the content height moves twice.
 
-  While a slide is in flight a surviving row is anchored and its offset
-  re-applied whenever it moves, which is what keeps the content still to the
-  pixel.
+  Position is held in one of two ways, and they do not compete. While a slide is
+  in flight a surviving row is anchored and its offset re-applied whenever it
+  moves, which is what keeps the content still to the pixel. Outside a slide,
+  and only with stickToBottom set, a viewport already at the bottom edge is kept
+  there as the content grows. The anchor wins wherever both could apply.
 
   Row contract: the item handed back must have an intrinsic implicitHeight and
   must not size itself to its parent - a row that does collapses to zero height
@@ -60,6 +62,12 @@ Flickable {
     // Set by whoever owns the data: is there anything beyond each end?
     property bool moreAvailableTop: false
     property bool moreAvailableBottom: false
+
+    // Keep the viewport at the bottom edge while it is already there, so the
+    // last row stays visible as content grows and the initial fill lands
+    // showing the newest row rather than the oldest. Off by default: for a
+    // top-down list a short model growing past the viewport should stay put.
+    property bool stickToBottom: false
 
     readonly property int rowCount: rowsRepeater.count
 
@@ -254,12 +262,35 @@ Flickable {
         }
 
         function applyContentHeight() {
+            // Sampled before the write, while contentHeight still describes the
+            // bottom the viewport was actually sitting at.
+            const wasAtBottom = d.atBottomOfContent()
             const was = d.applyingPosition
 
             d.applyingPosition = true
             root.contentHeight = Math.max(root.height, rowsColumn.height)
 
+            // Not while a slide holds a row - that anchor is the exact
+            // guarantee, and the rows a slide adds at the bottom belong below
+            // the viewport, not pulled into it - and not while the user has hold
+            // of the view, where snapping to the bottom would fight the drag.
+            //
+            // The anchor clause is redundant as things stand: every caller
+            // re-applies the anchor immediately after this returns, so it wins
+            // by running last. It is kept so the rule holds on its own rather
+            // than by call-site ordering.
+            if (root.stickToBottom && wasAtBottom && !d.anchorItem && !root.moving)
+                root.contentY = d.bottomY()      // guard already held
+
             d.applyingPosition = was
+        }
+
+        // Whether the viewport is at the bottom of the content as contentHeight
+        // currently describes it. Not Flickable.atYEnd: this is read inside a
+        // height handler, where contentHeight still holds the pre-change value -
+        // which is the point - and a sub-pixel gap must still count as the end.
+        function atBottomOfContent() {
+            return root.contentY >= Math.max(0, root.contentHeight - root.height) - 1
         }
 
         // Live values, not the contentHeight property: inside a height handler

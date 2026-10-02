@@ -929,6 +929,135 @@ Item {
         }
     }
 
+    TestCase {
+        id: stickToBottomTests
+
+        name: "WindowedView.StickToBottom"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+        }
+
+        // The groups share one view, so the flag has to be handed back or it
+        // leaks into everything that runs after this.
+        function cleanup() {
+            view.stickToBottom = false
+        }
+
+        // Emptied first, and waited for: refilling 60 rows with 60 rows leaves
+        // the Column exactly as tall as it was, so no height change fires and
+        // contentY keeps whatever the previous test left it at. Each of these
+        // tests is about a *first* load, so it has to start from nothing.
+        function fill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0 && view.contentY === 0, 2000,
+                      "starting from an empty view at the top")
+
+            owner.reset(count)
+            tryVerify(() => settled(count), 5000, "rows laid out")
+        }
+
+        // Present is not the same as positioned: a Column places its children on
+        // a polish, so the row has to be waited for by the space it takes up.
+        function appendLiveRow() {
+            const before = view.contentHeight
+
+            owner.appendLive()
+            tryVerify(() => settled(view.rowCount) && view.contentHeight > before,
+                      5000, "the live row landed and was laid out")
+        }
+
+        function bottomY() {
+            return view.contentHeight - view.height
+        }
+
+        function lastShell() {
+            return view.itemAtRow(view.rowCount - 1)
+        }
+
+        function verifyLastRowSitsOnTheBottomEdge() {
+            const last = lastShell()
+
+            verify(!!last && last.visible, "the last row is shown")
+            fuzzyCompare(last.y + last.height - view.contentY, view.height, 0.5,
+                         "its bottom edge is the viewport's bottom edge")
+        }
+
+        function test_theInitialFillEndsAtTheBottom() {
+            view.stickToBottom = true
+            fill(60)
+
+            fuzzyCompare(view.contentY, bottomY(), 0.5, "parked at the bottom")
+            verifyLastRowSitsOnTheBottomEdge()
+        }
+
+        function test_withoutTheFlagTheFillStaysAtTheTop() {
+            fill(60)
+
+            compare(view.stickToBottom, false, "off unless asked for")
+            compare(view.contentY, 0, "still top-anchored")
+        }
+
+        function test_aLiveRowAtTheEndKeepsTheViewAtTheBottom() {
+            view.stickToBottom = true
+            fill(60)
+
+            appendLiveRow()
+
+            compare(view.rowCount, 61)
+            fuzzyCompare(view.contentY, bottomY(), 0.5, "followed it down")
+            compare(lastShell().model.value, owner.liveValue,
+                    "and it is the row at the bottom")
+            verifyLastRowSitsOnTheBottomEdge()
+        }
+
+        function test_aLiveRowDoesNotPullTheViewDownWhenScrolledUp() {
+            view.stickToBottom = true
+            fill(60)
+
+            view.contentY = Math.round((view.contentHeight - view.height) / 2)
+            verify(view.contentY > 50, "there is room to scroll")
+
+            const before = topRow()
+            const contentY = view.contentY
+
+            appendLiveRow()
+
+            compare(view.rowCount, 61)
+            fuzzyCompare(view.contentY, contentY, 0.5,
+                         "the user's position stays the user's")
+            fuzzyCompare(offsetOf(before.value), before.offset, 0.5,
+                         "and nothing moved under them")
+        }
+
+        // Both rules could apply here and they disagree: the slide puts ten
+        // rows below the viewport and takes ten from above it. The anchor wins,
+        // so the new rows wait below rather than dragging the viewport onto
+        // themselves.
+        function test_aSlideAtTheEndIsGovernedByTheAnchorNotTheEnd() {
+            view.stickToBottom = true
+            fill(60)
+
+            const before = topRow()
+
+            verify(view.requestMoreBottom())
+            tryVerify(() => !view.busy, 5000)
+
+            const after = offsetOf(before.value)
+            verify(!isNaN(after), "the anchor row survived")
+            fuzzyCompare(after, before.offset, 0.5, "content stayed still")
+            verify(view.contentY < bottomY() - 1,
+                   "and the view did not jump to the new bottom: "
+                   + view.contentY + " of " + bottomY())
+        }
+    }
+
+
     // ------------------------------------------------------------------
     // The one integration case: the real IndexWindowSource and the real
     // ItemPool, wired to the view the way the page wires them. Everything
