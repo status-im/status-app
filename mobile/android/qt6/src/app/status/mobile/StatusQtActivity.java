@@ -243,8 +243,8 @@ public class StatusQtActivity extends QtActivity {
 
     // Thin, decision-free platform layer: extract the shared payload from the
     // SEND/SEND_MULTIPLE intent — copying image streams to app-private cache
-    // right away, before any read grant can expire — and forward it to the
-    // external-intake seam.
+    // and reading text documents right away, before any read grant can
+    // expire — and forward it to the external-intake seam.
     private void handleShareIntake(Intent intent) {
         if (intent == null) return;
         String action = intent.getAction();
@@ -252,18 +252,25 @@ public class StatusQtActivity extends QtActivity {
         boolean isSendMultiple = Intent.ACTION_SEND_MULTIPLE.equals(action);
         if (!isSend && !isSendMultiple) return;
         String type = intent.getType();
+        Log.i(TAG, "share intake: " + action + " type=" + type + " clip="
+                + (intent.getClipData() != null ? intent.getClipData().getDescription() : null));
         if (type == null) return;
-        // Android matches "text/*" and "*/*" intents against our concrete
-        // text/plain and image/* filters, so the type can be a wildcard.
+        // Android matches "*/*" intents against our text/* and image/*
+        // filters, so the type can be a wildcard.
         boolean isWildcard = "*/*".equals(type);
         boolean isImageShare = type.startsWith("image/") || isWildcard;
-        if (!isImageShare && !(isSend && type.startsWith("text/"))) return;
+        boolean isTextShare = ShareTextDocuments.isTextType(type) || isWildcard
+                || ShareTextDocuments.isOpaqueType(type);
+        if (!isImageShare && !isTextShare) return;
 
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (text == null || text.isEmpty()) {
-            text = intent.getStringExtra(Intent.EXTRA_SUBJECT);
-        }
         if (text == null) text = "";
+        // Inline text wins over text documents in the same intent: senders
+        // that offer both carry the same content twice. The subject is a
+        // title, not content; it stands in only when there is nothing else.
+        final boolean readTextDocuments = isTextShare && text.isEmpty();
+        String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+        final String fallbackText = subject != null ? subject : "";
 
         final String shareText = text;
         final int serial;
@@ -273,10 +280,16 @@ public class StatusQtActivity extends QtActivity {
         final Context app = getApplicationContext();
         final Handler ui = new Handler(Looper.getMainLooper());
         shareIntakeExecutor.execute(() -> {
+            final List<Uri> streams = extractStreamUris(app, intent, isSendMultiple);
             final String[] imagePaths = isImageShare
-                    ? copySharedImagesToCache(app, extractStreamUris(app, intent, isSendMultiple))
+                    ? copySharedImagesToCache(app, streams)
                     : new String[0];
-            ui.post(() -> deliverShare(app, serial, isImageShare, shareText, imagePaths));
+            String body = readTextDocuments
+                    ? ShareTextDocuments.read(app, streams, type)
+                    : shareText;
+            if (body.isEmpty()) body = fallbackText;
+            final String delivered = body;
+            ui.post(() -> deliverShare(app, serial, isImageShare, delivered, imagePaths));
         });
     }
 
@@ -299,10 +312,10 @@ public class StatusQtActivity extends QtActivity {
             }
         }
         if (!usable) {
-            if (isImageShare) {
-                Toast.makeText(ctx, "Only images and text can be shared to Status",
-                        Toast.LENGTH_LONG).show();
-            }
+            // A silent no-op reads as a failed tap; say why.
+            Toast.makeText(ctx, isImageShare
+                    ? "Only images and text can be shared to Status"
+                    : "Nothing to share from this content", Toast.LENGTH_LONG).show();
             return;
         }
         passShareToQt(text, imagePaths);

@@ -113,15 +113,445 @@ static NSURL *VariantRootUrl(void)
 // text, at most one web URL, and images up to the in-app send limit).
 static NSString *const kTypeImage = @"public.image";
 static NSString *const kTypeUrl = @"public.url";
-static NSString *const kTypePlainText = @"public.plain-text";
+static NSString *const kTypeText = @"public.text";
+// Memory guard on reading a text document; the composer cuts the text far below this.
+static const NSUInteger kMaxTextDocumentBytes = 1 << 20;
 // Per-share ceiling on preparing image copies; past it the share goes out with what was copied.
 static const NSTimeInterval kImageLoadDeadlineSeconds = 120.0;
+// How long a notice stays up before the sheet closes on its own.
+static const NSTimeInterval kNoticeSeconds = 1.5;
 // Camera originals (12 MP+) are downscaled to this longest edge on copy: the
 // chat compresses image messages to ~350 KB anyway, so nothing visible is
 // lost and the host is spared decoding full-size photos.
 static const CGFloat kMaxImageEdgePx = 2048.0;
 
+// Strict Unicode decode of a text document: BOM-sniffed UTF-16, otherwise
+// UTF-8; a NUL anywhere means binary. nil when the bytes are not text (a
+// binary file behind a text type). A read cut at the memory guard may end
+// mid-character; up to three trailing bytes are dropped before giving up.
+static NSString *DecodeTextDocument(NSData *data, BOOL truncated)
+{
+    NSDictionary *options = @{
+        NSStringEncodingDetectionSuggestedEncodingsKey: @[
+            @(NSUTF8StringEncoding), @(NSUTF16StringEncoding),
+            @(NSUTF16BigEndianStringEncoding), @(NSUTF16LittleEndianStringEncoding)
+        ],
+        NSStringEncodingDetectionUseOnlySuggestedEncodingsKey: @YES,
+        NSStringEncodingDetectionAllowLossyKey: @NO,
+    };
+    NSUInteger maxCut = truncated ? 3 : 0;
+    for (NSUInteger cut = 0; cut <= maxCut && cut <= data.length; cut++) {
+        NSString *text = nil;
+        NSStringEncoding encoding = [NSString stringEncodingForData:[data subdataWithRange:NSMakeRange(0, data.length - cut)]
+                                                    encodingOptions:options
+                                                    convertedString:&text
+                                                usedLossyConversion:NULL];
+        if (encoding != 0 && text != nil)
+            return [text rangeOfString:@"\0"].location == NSNotFound ? text : nil;
+    }
+    return nil;
+}
+
+static NSString *ReadTextDocument(NSURL *fileUrl)
+{
+    NSError *error = nil;
+    NSFileHandle *handle = [NSFileHandle fileHandleForReadingFromURL:fileUrl error:&error];
+    if (handle == nil) {
+        NSLog(@"StatusShareExtension: cannot open shared text document: %@", error);
+        return nil;
+    }
+    NSData *data = [handle readDataOfLength:kMaxTextDocumentBytes];
+    [handle closeFile];
+    return DecodeTextDocument(data, data.length == kMaxTextDocumentBytes);
+}
+
+static NSString *TrimTrailingWhitespace(NSString *text)
+{
+    NSUInteger end = text.length;
+    NSCharacterSet *ws = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+    while (end > 0 && [ws characterIsMember:[text characterAtIndex:end - 1]])
+        end--;
+    return [text substringToIndex:end];
+}
+
+// vCard rendering: a shared contact becomes a readable card (name, title,
+// organisation, phones, emails, URLs, addresses, note). Photos and anything
+// else are dropped; chat has no contact message, so the card travels as text.
+static BOOL IsVCard(NSString *text)
+{
+    NSString *t = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [t.uppercaseString hasPrefix:@"BEGIN:VCARD"];
+}
+
+// Continuation lines (leading space or tab) belong to the previous line.
+static NSArray<NSString *> *VCardUnfold(NSString *text)
+{
+    NSString *normalized = [[text stringByReplacingOccurrencesOfString:@"\r\n" withString:@"\n"]
+                            stringByReplacingOccurrencesOfString:@"\r" withString:@"\n"];
+    NSMutableArray<NSString *> *lines = [NSMutableArray array];
+    for (NSString *raw in [normalized componentsSeparatedByString:@"\n"]) {
+        if (raw.length > 0 && ([raw characterAtIndex:0] == ' ' || [raw characterAtIndex:0] == '\t') && lines.count > 0)
+            lines[lines.count - 1] = [lines.lastObject stringByAppendingString:[raw substringFromIndex:1]];
+        else
+            [lines addObject:raw];
+    }
+    return lines;
+}
+
+// Splits on an unescaped separator; backslash escapes stay in the parts.
+static NSArray<NSString *> *VCardSplitUnescaped(NSString *s, unichar sep)
+{
+    NSMutableArray<NSString *> *parts = [NSMutableArray array];
+    NSMutableString *cur = [NSMutableString string];
+    BOOL escaped = NO;
+    for (NSUInteger i = 0; i < s.length; i++) {
+        unichar c = [s characterAtIndex:i];
+        if (escaped) {
+            [cur appendFormat:@"%C", c];
+            escaped = NO;
+        } else if (c == '\\') {
+            [cur appendFormat:@"%C", c];
+            escaped = YES;
+        } else if (c == sep) {
+            [parts addObject:[cur copy]];
+            [cur setString:@""];
+        } else {
+            [cur appendFormat:@"%C", c];
+        }
+    }
+    [parts addObject:[cur copy]];
+    return parts;
+}
+
+static NSString *VCardUnescape(NSString *s)
+{
+    NSMutableString *out = [NSMutableString string];
+    for (NSUInteger i = 0; i < s.length; i++) {
+        unichar c = [s characterAtIndex:i];
+        if (c == '\\' && i + 1 < s.length) {
+            unichar n = [s characterAtIndex:++i];
+            [out appendFormat:@"%C", (unichar)((n == 'n' || n == 'N') ? '\n' : n)];
+        } else {
+            [out appendFormat:@"%C", c];
+        }
+    }
+    return [out stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
+static NSString *VCardJoinNonEmpty(NSArray<NSString *> *parts, NSString *sep)
+{
+    NSMutableArray<NSString *> *kept = [NSMutableArray array];
+    for (NSString *part in parts) {
+        NSString *p = VCardUnescape(part);
+        if (p.length > 0)
+            [kept addObject:p];
+    }
+    return [kept componentsJoinedByString:sep];
+}
+
+// "(mobile)", "(work)" ... from the TYPE parameters; vCard 2.1 writes the
+// type words as bare parameters.
+static NSString *VCardLabel(NSArray<NSString *> *params)
+{
+    NSDictionary<NSString *, NSString *> *labels = @{
+        @"CELL": @"mobile", @"IPHONE": @"iPhone", @"HOME": @"home", @"WORK": @"work",
+        @"MAIN": @"main", @"FAX": @"fax", @"PAGER": @"pager",
+    };
+    for (NSString *param in params) {
+        NSString *p = param.uppercaseString;
+        NSString *types = [p hasPrefix:@"TYPE="] ? [p substringFromIndex:5]
+                        : [p containsString:@"="] ? @"" : p;
+        for (NSString *type in [types componentsSeparatedByString:@","]) {
+            NSString *label = labels[[type stringByReplacingOccurrencesOfString:@"\"" withString:@""]];
+            if (label != nil)
+                return label;
+        }
+    }
+    return @"";
+}
+
+static NSString *VCardLabelled(NSString *rendered, NSArray<NSString *> *params)
+{
+    if (rendered.length == 0)
+        return @"";
+    NSString *label = VCardLabel(params);
+    return label.length == 0 ? rendered : [NSString stringWithFormat:@"%@ (%@)", rendered, label];
+}
+
+static void VCardAppend(NSMutableArray<NSString *> *list, NSString *s)
+{
+    if (s.length > 0)
+        [list addObject:s];
+}
+
+// Every card in the text, blank-line separated. Falls back to the raw text
+// when nothing readable was found.
+static NSString *FormatVCard(NSString *text)
+{
+    NSMutableArray<NSString *> *cards = [NSMutableArray array];
+    NSMutableDictionary<NSString *, id> *card = nil;
+    for (NSString *line in VCardUnfold(text)) {
+        NSRange colon = [line rangeOfString:@":"];
+        if (colon.location == NSNotFound || colon.location == 0)
+            continue;
+        NSArray<NSString *> *head = VCardSplitUnescaped([line substringToIndex:colon.location], ';');
+        NSString *name = head[0].uppercaseString;
+        NSRange group = [name rangeOfString:@"."];
+        if (group.location != NSNotFound)
+            name = [name substringFromIndex:group.location + 1];
+        NSArray<NSString *> *params = [head subarrayWithRange:NSMakeRange(1, head.count - 1)];
+        NSString *value = [line substringFromIndex:colon.location + 1];
+
+        if ([name isEqualToString:@"BEGIN"] && [value.uppercaseString isEqualToString:@"VCARD"]) {
+            card = [NSMutableDictionary dictionaryWithDictionary:@{
+                @"tels": [NSMutableArray array], @"emails": [NSMutableArray array],
+                @"urls": [NSMutableArray array], @"adrs": [NSMutableArray array],
+            }];
+            continue;
+        }
+        if (card == nil)
+            continue;
+        if ([name isEqualToString:@"END"]) {
+            NSMutableArray<NSString *> *lines = [NSMutableArray array];
+            VCardAppend(lines, card[@"fn"] ?: card[@"n"]);
+            VCardAppend(lines, card[@"title"]);
+            VCardAppend(lines, card[@"org"]);
+            [lines addObjectsFromArray:card[@"tels"]];
+            [lines addObjectsFromArray:card[@"emails"]];
+            [lines addObjectsFromArray:card[@"urls"]];
+            [lines addObjectsFromArray:card[@"adrs"]];
+            VCardAppend(lines, card[@"note"]);
+            if (lines.count > 0)
+                [cards addObject:[lines componentsJoinedByString:@"\n"]];
+            card = nil;
+        } else if ([name isEqualToString:@"FN"]) {
+            card[@"fn"] = VCardUnescape(value);
+        } else if ([name isEqualToString:@"N"]) {
+            // Family;Given;Additional;Prefix;Suffix
+            NSMutableArray<NSString *> *c = [VCardSplitUnescaped(value, ';') mutableCopy];
+            while (c.count < 5)
+                [c addObject:@""];
+            card[@"n"] = VCardJoinNonEmpty(@[c[3], c[1], c[2], c[0], c[4]], @" ");
+        } else if ([name isEqualToString:@"TITLE"]) {
+            card[@"title"] = VCardUnescape(value);
+        } else if ([name isEqualToString:@"ORG"]) {
+            card[@"org"] = VCardJoinNonEmpty(VCardSplitUnescaped(value, ';'), @", ");
+        } else if ([name isEqualToString:@"NOTE"]) {
+            card[@"note"] = VCardUnescape(value);
+        } else if ([name isEqualToString:@"TEL"]) {
+            VCardAppend(card[@"tels"], VCardLabelled(VCardUnescape(value), params));
+        } else if ([name isEqualToString:@"EMAIL"]) {
+            VCardAppend(card[@"emails"], VCardLabelled(VCardUnescape(value), params));
+        } else if ([name isEqualToString:@"URL"]) {
+            VCardAppend(card[@"urls"], VCardLabelled(VCardUnescape(value), params));
+        } else if ([name isEqualToString:@"ADR"]) {
+            VCardAppend(card[@"adrs"], VCardLabelled(VCardJoinNonEmpty(VCardSplitUnescaped(value, ';'), @", "), params));
+        }
+    }
+    if (cards.count == 0)
+        return [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [cards componentsJoinedByString:@"\n\n"];
+}
+
+// iCalendar rendering: a shared .ics becomes readable events (summary, when,
+// location, description, URL). Alarms, attendees, recurrence rules and
+// anything else are dropped; chat has no event message, so it travels as text.
+static BOOL IsICalendar(NSString *text)
+{
+    NSString *t = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [t.uppercaseString hasPrefix:@"BEGIN:VCALENDAR"];
+}
+
+typedef struct {
+    BOOL valid;
+    int year, month, day, hour, minute;
+    BOOL allDay;
+} ICalMoment;
+
+// "20261005T090000Z", "20261005T090000" (floating or TZID) or "20261005".
+// zone receives "UTC", the TZID, or "" for floating.
+static ICalMoment ICalParseMoment(NSString *value, NSArray<NSString *> *params, NSString **zone)
+{
+    ICalMoment m = {NO, 0, 0, 0, 0, 0, NO};
+    NSString *v = [value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *tzid = @"";
+    BOOL dateOnly = NO;
+    for (NSString *p in params) {
+        NSString *u = p.uppercaseString;
+        if ([u hasPrefix:@"TZID="])
+            tzid = [[p substringFromIndex:5] stringByReplacingOccurrencesOfString:@"\"" withString:@""];
+        if ([u isEqualToString:@"VALUE=DATE"])
+            dateOnly = YES;
+    }
+    if (v.length < 8)
+        return m;
+    NSCharacterSet *digits = [NSCharacterSet decimalDigitCharacterSet];
+    for (NSUInteger i = 0; i < 8; i++) {
+        if (![digits characterIsMember:[v characterAtIndex:i]])
+            return m;
+    }
+    m.year = [v substringWithRange:NSMakeRange(0, 4)].intValue;
+    m.month = [v substringWithRange:NSMakeRange(4, 2)].intValue;
+    m.day = [v substringWithRange:NSMakeRange(6, 2)].intValue;
+    if (m.month < 1 || m.month > 12 || m.day < 1 || m.day > 31)
+        return m;
+    *zone = @"";
+    if (dateOnly || v.length == 8) {
+        m.allDay = YES;
+        m.valid = YES;
+        return m;
+    }
+    if ([v characterAtIndex:8] != 'T' || v.length < 13)
+        return m;
+    m.hour = [v substringWithRange:NSMakeRange(9, 2)].intValue;
+    m.minute = [v substringWithRange:NSMakeRange(11, 2)].intValue;
+    *zone = [v hasSuffix:@"Z"] ? @"UTC" : tzid;
+    m.valid = YES;
+    return m;
+}
+
+static int ICalDaysIn(int y, int mo)
+{
+    static const int n[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    BOOL leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+    return mo == 2 && leap ? 29 : n[mo - 1];
+}
+
+// DTEND of an all-day event is exclusive; show the last day instead.
+static ICalMoment ICalPreviousDay(ICalMoment m)
+{
+    m.day--;
+    if (m.day < 1) {
+        m.month--;
+        if (m.month < 1) {
+            m.month = 12;
+            m.year--;
+        }
+        m.day = ICalDaysIn(m.year, m.month);
+    }
+    return m;
+}
+
+static NSComparisonResult ICalCompareDay(ICalMoment a, ICalMoment b)
+{
+    if (a.year != b.year) return a.year < b.year ? NSOrderedAscending : NSOrderedDescending;
+    if (a.month != b.month) return a.month < b.month ? NSOrderedAscending : NSOrderedDescending;
+    if (a.day != b.day) return a.day < b.day ? NSOrderedAscending : NSOrderedDescending;
+    return NSOrderedSame;
+}
+
+static NSString *ICalDate(ICalMoment m)
+{
+    static NSString *const months[] = {@"Jan", @"Feb", @"Mar", @"Apr", @"May", @"Jun",
+                                       @"Jul", @"Aug", @"Sep", @"Oct", @"Nov", @"Dec"};
+    return [NSString stringWithFormat:@"%d %@ %d", m.day, months[m.month - 1], m.year];
+}
+
+static NSString *ICalTime(ICalMoment m)
+{
+    return [NSString stringWithFormat:@"%02d:%02d", m.hour, m.minute];
+}
+
+static NSString *ICalWhen(ICalMoment start, ICalMoment end, NSString *zone)
+{
+    if (!start.valid)
+        return @"";
+    if (start.allDay) {
+        if (end.valid && end.allDay) {
+            ICalMoment last = ICalPreviousDay(end);
+            if (ICalCompareDay(last, start) == NSOrderedDescending)
+                return [NSString stringWithFormat:@"%@ – %@", ICalDate(start), ICalDate(last)];
+        }
+        return ICalDate(start);
+    }
+    NSString *z = zone.length > 0 ? [@" " stringByAppendingString:zone] : @"";
+    if (!end.valid || end.allDay)
+        return [NSString stringWithFormat:@"%@, %@%@", ICalDate(start), ICalTime(start), z];
+    if (ICalCompareDay(start, end) == NSOrderedSame)
+        return [NSString stringWithFormat:@"%@, %@ – %@%@", ICalDate(start), ICalTime(start), ICalTime(end), z];
+    return [NSString stringWithFormat:@"%@, %@ – %@, %@%@", ICalDate(start), ICalTime(start),
+            ICalDate(end), ICalTime(end), z];
+}
+
+// Every event in the text, blank-line separated. Falls back to the raw text
+// when no event was found.
+static NSString *FormatICalendar(NSString *text)
+{
+    NSMutableArray<NSString *> *events = [NSMutableArray array];
+    NSMutableDictionary<NSString *, NSString *> *event = nil;
+    ICalMoment start = {NO}, end = {NO};
+    NSString *zone = @"";
+    NSUInteger nested = 0;
+    for (NSString *line in VCardUnfold(text)) {
+        NSRange colon = [line rangeOfString:@":"];
+        if (colon.location == NSNotFound || colon.location == 0)
+            continue;
+        NSArray<NSString *> *head = VCardSplitUnescaped([line substringToIndex:colon.location], ';');
+        NSString *name = head[0].uppercaseString;
+        NSArray<NSString *> *params = [head subarrayWithRange:NSMakeRange(1, head.count - 1)];
+        NSString *value = [line substringFromIndex:colon.location + 1];
+
+        if ([name isEqualToString:@"BEGIN"]) {
+            if ([value.uppercaseString isEqualToString:@"VEVENT"] && event == nil) {
+                event = [NSMutableDictionary dictionary];
+                start.valid = NO;
+                end.valid = NO;
+                zone = @"";
+            } else if (event != nil) {
+                nested++;
+            }
+        } else if ([name isEqualToString:@"END"]) {
+            if (nested > 0) {
+                nested--;
+            } else if (event != nil && [value.uppercaseString isEqualToString:@"VEVENT"]) {
+                NSMutableArray<NSString *> *lines = [NSMutableArray array];
+                VCardAppend(lines, event[@"summary"]);
+                VCardAppend(lines, ICalWhen(start, end, zone));
+                VCardAppend(lines, event[@"location"]);
+                VCardAppend(lines, event[@"description"]);
+                VCardAppend(lines, event[@"url"]);
+                if (lines.count > 0)
+                    [events addObject:[lines componentsJoinedByString:@"\n"]];
+                event = nil;
+            }
+        } else if (event != nil && nested == 0) {
+            if ([name isEqualToString:@"SUMMARY"]) {
+                event[@"summary"] = VCardUnescape(value);
+            } else if ([name isEqualToString:@"LOCATION"]) {
+                event[@"location"] = VCardUnescape(value);
+            } else if ([name isEqualToString:@"DESCRIPTION"]) {
+                event[@"description"] = VCardUnescape(value);
+            } else if ([name isEqualToString:@"URL"]) {
+                event[@"url"] = [value stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            } else if ([name isEqualToString:@"DTSTART"]) {
+                NSString *z = @"";
+                start = ICalParseMoment(value, params, &z);
+                zone = z;
+            } else if ([name isEqualToString:@"DTEND"]) {
+                NSString *z = @"";
+                end = ICalParseMoment(value, params, &z);
+            }
+        }
+    }
+    if (events.count == 0)
+        return [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [events componentsJoinedByString:@"\n\n"];
+}
+
+// Contact and calendar files become readable cards; everything else is
+// pasted as is.
+static NSString *RenderTextDocument(NSString *text)
+{
+    if (IsVCard(text))
+        return TrimTrailingWhitespace(FormatVCard(text));
+    if (IsICalendar(text))
+        return TrimTrailingWhitespace(FormatICalendar(text));
+    return TrimTrailingWhitespace(text);
+}
+
+
 @interface ShareViewController : UIViewController
+@property (nonatomic, retain) UIActivityIndicatorView *spinner;
 @property (nonatomic, retain) UILabel *progressLabel;
 @end
 
@@ -146,7 +576,12 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
         // Status for nothing.
         if (!hasText && imagePaths.count == 0) {
             NSLog(@"StatusShareExtension: nothing extractable was shared; no hand-off");
-            [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+            // Closing silently reads as a failed tap; say why, then close.
+            [self showNotice:@"Nothing to share from this content"];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kNoticeSeconds * NSEC_PER_SEC)),
+                           dispatch_get_main_queue(), ^{
+                [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
+            });
             return;
         }
         if (![self writePendingIntakeWithText:text imagePaths:imagePaths]) {
@@ -167,13 +602,17 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     }];
 }
 
-// Collects the image, plain-text and web-URL attachments across all input
-// items — the iOS counterpart of the Android layer's decision-free intent
-// extraction (StatusQtActivity.java). Shared links travel as text too,
-// matching the seam's share{text, imagePaths} payload: text parts are joined,
-// the URL is appended unless the text already contains it (apps commonly put
-// the link inside the shared text themselves). Image data is copied into the
-// App Group cache inside the load handler — the provided file URL expires
+// Collects the image, text and web-URL attachments across all input items —
+// the iOS counterpart of the Android layer's decision-free intent extraction
+// (StatusQtActivity.java). Shared links travel as text too, matching the
+// seam's share{text, imagePaths} payload: text parts are joined, the URL is
+// appended unless the text already contains it (apps commonly put the link
+// inside the shared text themselves). Text documents (file-backed text
+// attachments: .txt, .md, .html, vCard, ...) are read and pasted as text, in
+// attachment order, vCards and calendars rendered readably; inline text
+// wins over them when a share offers both, since such senders carry the same
+// content twice. Image data is copied into
+// the App Group cache inside the load handler — the provided file URL expires
 // with the handler. Attachment loads are asynchronous; the completion runs
 // once, on the main queue, with the composed text ("" when nothing usable was
 // shared) and the cached copies' paths in the share's attachment order.
@@ -183,32 +622,78 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     NSMutableArray<NSItemProvider *> *imageProviders = [NSMutableArray array];
     NSMutableArray<NSItemProvider *> *urlProviders = [NSMutableArray array];
     NSMutableArray<NSItemProvider *> *textProviders = [NSMutableArray array];
+    // Text slot of each URL/text provider in the share's attachment order,
+    // so a mix of file-URL-backed and text attachments keeps that order.
+    NSMutableArray<NSNumber *> *urlSlots = [NSMutableArray array];
+    NSMutableArray<NSNumber *> *textSlots = [NSMutableArray array];
+    NSUInteger textSlotCount = 0;
     for (NSExtensionItem *item in self.extensionContext.inputItems) {
         for (NSItemProvider *provider in item.attachments) {
             // Image first: an image attachment commonly also advertises URL
             // (its file location) or text representations, but the image is
-            // the content being shared. URL before plain-text: a URL provider
-            // may also advertise plain-text, and the link (with scheme
-            // intact) is the content the user is sharing.
-            if ([provider hasItemConformingToTypeIdentifier:kTypeImage])
+            // the content being shared. URL before text: a URL provider may
+            // also advertise text, and the link (with scheme intact) is the
+            // content the user is sharing. A URL that turns out to be a file
+            // location of a text attachment is read as a text document below.
+            if ([provider hasItemConformingToTypeIdentifier:kTypeImage]) {
                 [imageProviders addObject:provider];
-            else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl])
+            } else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl]) {
                 [urlProviders addObject:provider];
-            else if ([provider hasItemConformingToTypeIdentifier:kTypePlainText])
+                [urlSlots addObject:@(textSlotCount++)];
+            } else if ([provider hasItemConformingToTypeIdentifier:kTypeText]) {
                 [textProviders addObject:provider];
+                [textSlots addObject:@(textSlotCount++)];
+            }
         }
     }
 
     dispatch_group_t group = dispatch_group_create();
-    NSMutableArray<NSString *> *texts = [NSMutableArray array];
     NSMutableArray<NSString *> *urls = [NSMutableArray array];
-    // One pre-claimed slot per image attachment (filled by index, compacted
-    // at the end) so the copies keep the share's order.
+    // One pre-claimed slot per attachment (filled by index, compacted at the
+    // end) so copies and texts keep the share's order. URL attachments get a
+    // text slot too: a file URL of a text attachment yields a document.
+    NSMutableArray *orderedInlineTexts = [NSMutableArray array];
+    NSMutableArray *orderedDocuments = [NSMutableArray array];
+    for (NSUInteger i = 0; i < textSlotCount; i++) {
+        [orderedInlineTexts addObject:[NSNull null]];
+        [orderedDocuments addObject:[NSNull null]];
+    }
     NSMutableArray *orderedImagePaths = [NSMutableArray array];
     for (NSUInteger i = 0; i < imageProviders.count; i++)
         [orderedImagePaths addObject:[NSNull null]];
 
-    for (NSItemProvider *provider in urlProviders) {
+    // Sorts a loaded text representation into its slot: strings are inline
+    // text, a file URL is a text document (read now: the URL expires with the
+    // handler).
+    void (^storeText)(id, NSUInteger) = ^(id loaded, NSUInteger slot) {
+        NSString *inlineText = nil;
+        NSString *document = nil;
+        if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
+            inlineText = (NSString *)loaded;
+        } else if ([(NSObject *)loaded isKindOfClass:[NSAttributedString class]]) {
+            inlineText = ((NSAttributedString *)loaded).string;
+        } else if ([(NSObject *)loaded isKindOfClass:[NSData class]]) {
+            // Contacts hands the vCard over as data.
+            NSString *decoded = DecodeTextDocument((NSData *)loaded, NO);
+            inlineText = decoded != nil ? RenderTextDocument(decoded) : nil;
+        } else if ([(NSObject *)loaded isKindOfClass:[NSURL class]] && ((NSURL *)loaded).isFileURL) {
+            document = ReadTextDocument((NSURL *)loaded);
+            if (document == nil)
+                NSLog(@"StatusShareExtension: dropping undecodable text document %lu", (unsigned long)slot);
+            else
+                document = RenderTextDocument(document);
+        }
+        @synchronized (orderedInlineTexts) {
+            if (inlineText.length > 0)
+                orderedInlineTexts[slot] = inlineText;
+            if (document.length > 0)
+                orderedDocuments[slot] = document;
+        }
+    };
+
+    for (NSUInteger i = 0; i < urlProviders.count; i++) {
+        NSItemProvider *provider = urlProviders[i];
+        const NSUInteger textSlot = urlSlots[i].unsignedIntegerValue;
         dispatch_group_enter(group);
         [provider loadItemForTypeIdentifier:kTypeUrl
                                     options:nil
@@ -216,9 +701,15 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
             NSString *url = nil;
             if ([(NSObject *)loaded isKindOfClass:[NSURL class]]) {
                 NSURL *u = (NSURL *)loaded;
-                // File URLs are not shareable text; non-image files
-                // are not accepted by this extension.
-                url = u.isFileURL ? nil : u.absoluteString;
+                if (u.isFileURL) {
+                    // Not a shareable link: a text file shared from Files
+                    // arrives this way, so read it as a document. Other
+                    // files are not accepted by this extension.
+                    if ([provider hasItemConformingToTypeIdentifier:kTypeText])
+                        storeText(u, textSlot);
+                } else {
+                    url = u.absoluteString;
+                }
             } else if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
                 url = (NSString *)loaded;
             }
@@ -231,25 +722,14 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
         }];
     }
 
-    for (NSItemProvider *provider in textProviders) {
+    for (NSUInteger i = 0; i < textProviders.count; i++) {
+        NSItemProvider *provider = textProviders[i];
+        const NSUInteger textSlot = textSlots[i].unsignedIntegerValue;
         dispatch_group_enter(group);
-        [provider loadItemForTypeIdentifier:kTypePlainText
+        [provider loadItemForTypeIdentifier:kTypeText
                                     options:nil
                           completionHandler:^(id<NSSecureCoding> loaded, NSError *__unused error) {
-            NSString *text = nil;
-            if ([(NSObject *)loaded isKindOfClass:[NSString class]]) {
-                text = (NSString *)loaded;
-            } else if ([(NSObject *)loaded isKindOfClass:[NSAttributedString class]]) {
-                text = ((NSAttributedString *)loaded).string;
-            } else if ([(NSObject *)loaded isKindOfClass:[NSData class]]) {
-                text = [[NSString alloc] initWithData:(NSData *)loaded
-                                             encoding:NSUTF8StringEncoding];
-            }
-            if (text.length > 0) {
-                @synchronized (texts) {
-                    [texts addObject:text];
-                }
-            }
+            storeText(loaded, textSlot);
             dispatch_group_leave(group);
         }];
     }
@@ -328,10 +808,24 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     }
 
     dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-        NSString *text = [texts componentsJoinedByString:@"\n"];
+        NSMutableArray<NSString *> *inlineTexts = [NSMutableArray array];
+        NSMutableArray<NSString *> *documents = [NSMutableArray array];
+        @synchronized (orderedInlineTexts) {
+            for (id t in orderedInlineTexts) {
+                if ([t isKindOfClass:[NSString class]])
+                    [inlineTexts addObject:t];
+            }
+            for (id t in orderedDocuments) {
+                if ([t isKindOfClass:[NSString class]])
+                    [documents addObject:t];
+            }
+        }
+        NSString *text = inlineTexts.count > 0
+            ? [inlineTexts componentsJoinedByString:@"\n"]
+            : [documents componentsJoinedByString:@"\n\n"];
         if (text.length == 0) {
             // Some apps put the shared text only in the item body, not in a
-            // plain-text attachment.
+            // text attachment.
             for (NSExtensionItem *item in self.extensionContext.inputItems) {
                 NSString *body = item.attributedContentText.string;
                 if (body.length > 0) {
@@ -356,31 +850,49 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
     });
 }
 
+- (void)ensureStatusViews
+{
+    if (self.progressLabel != nil)
+        return;
+    self.view.backgroundColor = [UIColor systemBackgroundColor];
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
+        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+    spinner.translatesAutoresizingMaskIntoConstraints = NO;
+    [spinner startAnimating];
+    UILabel *label = [[UILabel alloc] init];
+    label.translatesAutoresizingMaskIntoConstraints = NO;
+    label.textColor = [UIColor secondaryLabelColor];
+    label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.numberOfLines = 0;
+    [self.view addSubview:spinner];
+    [self.view addSubview:label];
+    [NSLayoutConstraint activateConstraints:@[
+        [spinner.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+        [spinner.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-16],
+        [label.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
+        [label.topAnchor constraintEqualToAnchor:spinner.bottomAnchor constant:12],
+        [label.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.view.leadingAnchor constant:24],
+        [label.trailingAnchor constraintLessThanOrEqualToAnchor:self.view.trailingAnchor constant:-24],
+    ]];
+    self.spinner = spinner;
+    self.progressLabel = label;
+}
+
 // The sheet would otherwise stay blank while a large share is copied.
 - (void)showProgress:(NSUInteger)current of:(NSUInteger)total
 {
-    if (self.progressLabel == nil) {
-        self.view.backgroundColor = [UIColor systemBackgroundColor];
-        UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
-            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
-        spinner.translatesAutoresizingMaskIntoConstraints = NO;
-        [spinner startAnimating];
-        UILabel *label = [[UILabel alloc] init];
-        label.translatesAutoresizingMaskIntoConstraints = NO;
-        label.textColor = [UIColor secondaryLabelColor];
-        label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
-        [self.view addSubview:spinner];
-        [self.view addSubview:label];
-        [NSLayoutConstraint activateConstraints:@[
-            [spinner.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
-            [spinner.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-16],
-            [label.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
-            [label.topAnchor constraintEqualToAnchor:spinner.bottomAnchor constant:12],
-        ]];
-        self.progressLabel = label;
-    }
+    [self ensureStatusViews];
+    self.spinner.hidden = NO;
     self.progressLabel.text = [NSString stringWithFormat:@"Preparing %lu of %lu\u2026",
                                (unsigned long)current, (unsigned long)total];
+}
+
+- (void)showNotice:(NSString *)text
+{
+    [self ensureStatusViews];
+    self.spinner.hidden = YES;
+    self.progressLabel.text = text;
 }
 
 // Re-encoded as JPEG: HEIC/HEIF always (the app and status-go do not decode

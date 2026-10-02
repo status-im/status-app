@@ -14,6 +14,27 @@ Contract under test: **only foreign `content://` streams are accepted**.
 two rejection paths; `foreignContentStreamIsAccepted` guards against an
 over-broad fix.
 
+## `ShareTextDocumentsTest`
+
+Decoding of text document shares (`text/*` streams with no inline text, pasted
+as message text): BOM-sniffed UTF-16, strict UTF-8, binary behind a text claim
+rejected, and a read cut at the memory guard still decoding. Pure Java; lives
+here because the module has no JVM test source set.
+
+## `VCardTextTest`
+
+A shared contact (vCard) is rendered as a readable card: name (`FN`, else
+`N`), title, organisation, labelled phones/emails/URLs/addresses, note; folded
+lines, `item1.` groups, escapes and vCard 2.1 bare type words handled; `PHOTO`
+and unknown fields dropped. Pure Java, same reason as above.
+
+## `ICalendarTextTest`
+
+A shared calendar file (.ics) is rendered as readable events: summary, when
+(TZID or UTC shown, all-day ranges with the exclusive end folded back),
+location, description, URL; nested alarms and unknown fields dropped. Pure
+Java, same reason as above.
+
 ### Running
 
 Needs a booted emulator/device and the app built with the Qt Android toolchain
