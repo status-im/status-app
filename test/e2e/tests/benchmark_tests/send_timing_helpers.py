@@ -37,6 +37,21 @@ def _until_label(include_delivered: bool) -> str:
     return 'Visible, Sent and Delivered' if include_delivered else 'Visible and Sent'
 
 
+def complete_community_outgoing_delivery(
+        chat,
+        wake_member_on_general,
+        send_action,
+        *,
+        message_text=None,
+        after_message_id=None,
+):
+    send_action()
+    chat.wait_until_outgoing_visible(message_text, after_message_id=after_message_id)
+    chat.wait_until_outgoing_sent(message_text, after_message_id=after_message_id)
+    wake_member_on_general(message_text)
+    return chat.wait_until_outgoing_delivered(message_text, after_message_id=after_message_id)
+
+
 def _record_send(
         aut: AUT,
         visible_samples: BenchmarkScenarioSamples,
