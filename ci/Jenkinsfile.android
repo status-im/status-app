@@ -187,6 +187,7 @@ pipeline {
           wait: false,
           parameters: jenkins.mapToParams([
             CHANGE_ID: env.CHANGE_ID,
+            GIT_COMMIT: env.GIT_COMMIT,
             GIT_REF: env.CHANGE_BRANCH ?: env.BRANCH_NAME,
             BUILD_SOURCE: env.PKG_URL,
           ]),
