@@ -22,6 +22,9 @@ method isLoaded*(self: AccessInterface): bool {.base.} =
 method onChatUpdated*(self: AccessInterface, chatItem: ChatItem) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onParentChatPermissionsUpdated*(self: AccessInterface, canPost, canView, canPostReactions: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 

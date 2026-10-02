@@ -363,6 +363,11 @@ method onChatUpdated*(self: Module, chatItem: ChatItem) =
   self.messagesModule.updateChatFetchMoreMessages()
   self.messagesModule.updateChatIdentifier()
 
+method onParentChatPermissionsUpdated*(self: Module, canPost, canView, canPostReactions: bool) =
+  self.view.chatDetails.setCanPost(canPost)
+  self.view.chatDetails.setCanView(canView)
+  self.view.chatDetails.setCanPostReactions(canPostReactions)
+
 method onCommunityChannelEdited*(self: Module, chatDto: ChatDto) =
   # This is CommunityChat ChatDto
   self.view.chatDetails.setDescription(chatDto.description)
