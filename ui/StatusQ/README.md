@@ -30,6 +30,15 @@ StatusInput {
 }
 ```
 
+### Font loading
+
+The C++ `Fonts` singleton registers the bundled fonts using non-owning views of
+the compiled resource data, avoiding the resource-read heap copy retained by Qt's
+font database. FreeType also shares these bytes; other platform font backends may
+make additional copies. Keep all entries in `src/assets/fonts/fonts.qrc` uncompressed
+(`compression-algorithm="none"`); the loader rejects compressed resources.
+The resource bytes must remain available for the lifetime of the font database.
+
 ## Viewing and testing components
 
 To make viewing and testing components easy, we've added a sandbox application to this repository in which StatusQ components are being build. This is the first place where components see the light of the world and can be run in a proper application environment.

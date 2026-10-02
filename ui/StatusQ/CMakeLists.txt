@@ -142,7 +142,6 @@ if (${STATUSQ_SHADOW_BUILD})
         add_definitions(-DBUNDLE_STATUSQ_QML)
         list(APPEND STATUSQ_QRC_FILES
             src/statusq.qrc
-            src/assets/fonts/fonts.qrc
             src/assets/img/img.qrc
             src/assets/png/png.qrc
             src/assets/twemoji/twemoji.qrc
@@ -168,11 +167,14 @@ if (${STATUSQ_SHADOW_BUILD})
     endif()
 endif()
 
+# static resources (emojis, fonts, ...)
+list(APPEND STATUSQ_QRC_STATIC "src/StatusQ/Core/Utils/emojiList.qrc")
+list(APPEND STATUSQ_QRC_STATIC "src/assets/fonts/fonts.qrc")
 if (ANDROID OR IOS)
-    # qt_add_big_resources() not supported on iOS
-    qt_add_resources(STATUSQ_QRC_COMPILED src/StatusQ/Core/Utils/emojiList.qrc)
+    # qt_add_big_resources() not supported on iOS/Android
+    qt_add_resources(STATUSQ_QRC_COMPILED ${STATUSQ_QRC_STATIC})
 else()
-    qt_add_big_resources(STATUSQ_QRC_COMPILED src/StatusQ/Core/Utils/emojiList.qrc)
+    qt_add_big_resources(STATUSQ_QRC_COMPILED ${STATUSQ_QRC_STATIC})
 endif()
 
 add_library(StatusQ ${LIB_TYPE}
@@ -187,6 +189,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/fastexpressionfilter.h
         include/StatusQ/fastexpressionrole.h
         include/StatusQ/fastexpressionsorter.h
+        include/StatusQ/fonts.h
         include/StatusQ/formatteddoubleproperty.h
         include/StatusQ/genericvalidator.h
         include/StatusQ/httpstats.h
@@ -232,6 +235,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/fastexpressionfilter.cpp
         src/fastexpressionrole.cpp
         src/fastexpressionsorter.cpp
+        src/fonts.cpp
         src/formatteddoubleproperty.cpp
         src/genericvalidator.cpp
         src/httpstats.cpp

@@ -46,7 +46,6 @@ QTQUICK_COMPILER_SKIPPED_RESOURCES += $$WEBSCRIPTS_QRC
 RESOURCES += \
     $$PWD/../../ui/resources.qrc \
     $$PWD/../../ui/StatusQ/src/statusq.qrc \
-    $$PWD/../../ui/StatusQ/src/assets/fonts/fonts.qrc \
     $$PWD/../../ui/StatusQ/src/assets/img/img.qrc \
     $$PWD/../../ui/StatusQ/src/assets/png/png.qrc \
     $$PWD/../../ui/StatusQ/src/assets/png/png-mobile.qrc \
