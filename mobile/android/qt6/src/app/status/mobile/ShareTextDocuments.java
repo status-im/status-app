@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,29 +14,51 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 // Text document shares: text/* streams shared without inline text. Their
 // contents are pasted as message text, like a clipboard paste; the composer
-// applies the message limits. vCards are rendered as readable contact cards.
+// applies the message limits. vCards and calendars are rendered readably.
 final class ShareTextDocuments {
     private static final String TAG = "ShareTextDocuments";
     // Memory guard only; the composer cuts the text far below this.
     static final int MAX_BYTES_PER_DOCUMENT = 1 << 20;
     static final String SEPARATOR = "\n\n";
+    static final String OCTET_STREAM = "application/octet-stream";
+    // application/* types that are text files: the standard rtf type and the
+    // types Samsung My Files declares for .txt and .json.
+    private static final List<String> TEXT_APPLICATION_TYPES =
+            Arrays.asList("application/txt", "application/json", "application/rtf");
+
+    static boolean isTextType(String mime) {
+        return mime != null && (mime.startsWith("text/") || TEXT_APPLICATION_TYPES.contains(mime));
+    }
+
+    // Says nothing about the content (Samsung My Files uses octet-stream for .md).
+    static boolean isOpaqueType(String mime) {
+        return mime == null || OCTET_STREAM.equals(mime);
+    }
 
     private ShareTextDocuments() {}
 
-    // Background thread. Reads every text/* stream (the provider's per-stream
-    // type is authoritative, as for images) and joins them in share order.
-    // Streams that are not text, fail to read or are not decodable are
-    // skipped; the rest of the share still goes through.
-    static String read(Context ctx, List<Uri> uris) {
+    // Background thread. Reads every text stream and joins them in share
+    // order. The provider's per-stream type is authoritative when it names
+    // one; null (MediaStore, some file providers) and octet-stream (Samsung
+    // My Files for .txt) say nothing, then the intent's declared type and
+    // the file extension are tried, and failing those the content decides:
+    // a stream that decodes as text is text. Streams of another concrete
+    // type, that fail to read or that are not decodable are skipped; the
+    // rest of the share still goes through.
+    static String read(Context ctx, List<Uri> uris, String intentType) {
         ContentResolver resolver = ctx.getContentResolver();
         StringBuilder joined = new StringBuilder();
         for (Uri uri : uris) {
             String mime = resolver.getType(uri);
-            if (mime == null || !mime.startsWith("text/")) {
+            if (isOpaqueType(mime)) mime = fallbackType(uri, intentType);
+            boolean unknown = isOpaqueType(mime);
+            if (!unknown && !isTextType(mime)) {
                 Log.w(TAG, "share intake: dropping non-text stream (" + mime + ")");
                 continue;
             }
@@ -49,15 +72,37 @@ final class ShareTextDocuments {
                 continue;
             }
             if (text == null) {
-                Log.w(TAG, "share intake: dropping undecodable text stream (" + mime + ")");
+                Log.w(TAG, "share intake: dropping undecodable " + (unknown ? "untyped" : "text")
+                        + " stream (" + mime + ")");
                 continue;
             }
-            text = trimTrailing(VCardText.isVCard(text) ? VCardText.format(text) : text);
+            text = trimTrailing(render(text));
             if (text.isEmpty()) continue;
             if (joined.length() > 0) joined.append(SEPARATOR);
             joined.append(text);
         }
         return joined.toString();
+    }
+
+    // Wildcards ("text/*", "*/*") and octet-stream name no concrete type;
+    // the extension may. Null means unknown.
+    static String fallbackType(Uri uri, String intentType) {
+        boolean concrete = intentType != null && !intentType.endsWith("/*")
+                && !isOpaqueType(intentType);
+        if (concrete) return intentType;
+        String ext = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+        String byExt = ext.isEmpty() ? null
+                : MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext.toLowerCase(Locale.ROOT));
+        if (byExt == null && "text/*".equals(intentType)) return "text/plain";
+        return byExt;
+    }
+
+    // Contact and calendar files become readable cards; everything else is
+    // pasted as is.
+    static String render(String text) {
+        if (VCardText.isVCard(text)) return VCardText.format(text);
+        if (ICalendarText.isICalendar(text)) return ICalendarText.format(text);
+        return text;
     }
 
     static byte[] readUpTo(InputStream in, int max) throws IOException {
@@ -73,10 +118,10 @@ final class ShareTextDocuments {
         return out.toByteArray();
     }
 
-    // BOM-sniffed UTF-16, otherwise strict UTF-8. Null when the bytes are not
-    // text in either (a binary file behind a text/* claim). A read cut at the
-    // memory guard may end mid-character; up to three trailing bytes are
-    // dropped before giving up on it.
+    // BOM-sniffed UTF-16, otherwise strict UTF-8; a NUL anywhere means binary.
+    // Null when the bytes are not text (a binary file behind a text claim or
+    // an untyped stream). A read cut at the memory guard may end
+    // mid-character; up to three trailing bytes are dropped before giving up.
     static String decode(byte[] bytes, boolean truncated) {
         Charset cs = StandardCharsets.UTF_8;
         int offset = 0;
@@ -95,11 +140,12 @@ final class ShareTextDocuments {
             int length = bytes.length - offset - cut;
             if (length < 0) break;
             try {
-                return cs.newDecoder()
+                String text = cs.newDecoder()
                         .onMalformedInput(CodingErrorAction.REPORT)
                         .onUnmappableCharacter(CodingErrorAction.REPORT)
                         .decode(ByteBuffer.wrap(bytes, offset, length))
                         .toString();
+                return text.indexOf('\0') >= 0 ? null : text;
             } catch (CharacterCodingException ignored) {
                 // try the next cut
             }

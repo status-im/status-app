@@ -40,7 +40,7 @@ final class VCardText {
     }
 
     // Continuation lines (leading space or tab) belong to the previous line.
-    private static List<String> unfold(String text) {
+    static List<String> unfold(String text) {
         List<String> lines = new ArrayList<>();
         for (String raw : text.split("\r\n|\r|\n")) {
             if (!raw.isEmpty() && (raw.charAt(0) == ' ' || raw.charAt(0) == '\t') && !lines.isEmpty()) {
@@ -54,7 +54,7 @@ final class VCardText {
     }
 
     // Splits on an unescaped separator; backslash escapes stay in the parts.
-    private static List<String> splitUnescaped(String s, char sep) {
+    static List<String> splitUnescaped(String s, char sep) {
         List<String> parts = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
         boolean escaped = false;
@@ -77,7 +77,7 @@ final class VCardText {
         return parts;
     }
 
-    private static String unescape(String s) {
+    static String unescape(String s) {
         StringBuilder out = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
