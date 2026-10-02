@@ -393,8 +393,24 @@ Item {
         // exists until the reply lands.
         property bool holdAnswer: false
         property bool holdAdmit: false
-        property bool answerOwedAtStart: false
+
+        // Which screen edge the view is owed an answer at.
+        property bool answerOwedAtTop: false
         property bool answerOwed: false
+
+        function bottomUp() {
+            return view.verticalLayoutDirection
+                    === WindowedView.VerticalLayoutDirection.BottomToTop
+        }
+
+        // Rows into the model at one of its ends. Everything below counts in
+        // model rows; only the two request handlers translate.
+        function admit(atModelStart, count) {
+            if (atModelStart)
+                owner.admitStart(count)
+            else
+                owner.admitEnd(count)
+        }
 
         function answer() {
             if (!owner.answerOwed)
@@ -402,14 +418,14 @@ Item {
 
             owner.answerOwed = false
 
-            if (owner.answerOwedAtStart) {
+            if (owner.answerOwedAtTop) {
                 if (owner.holdAdmit)
-                    owner.admitStart(root.chunk)
+                    owner.admit(!owner.bottomUp(), root.chunk)
 
                 view.moreLoadedTop()
             } else {
                 if (owner.holdAdmit)
-                    owner.admitEnd(root.chunk)
+                    owner.admit(owner.bottomUp(), root.chunk)
 
                 view.moreLoadedBottom()
             }
@@ -499,25 +515,32 @@ Item {
                 provider.acquire(parent, row, modelRow, cb)
         releaseDelegate: (item) => provider.release(item)
 
+        // The view asks by screen edge, the owner hands rows over by model end.
+        // Which of the two lines up with which depends on the layout direction:
+        // rendered bottom-up, what belongs above the top row is the model's end.
         onMoreRequestedTop: {
+            const atModelStart = !owner.bottomUp()
+
             if (!owner.holdAdmit)
-                owner.admitStart(root.chunk)
+                owner.admit(atModelStart, root.chunk)
 
             if (owner.holdAnswer || owner.holdAdmit) {
                 owner.answerOwed = true
-                owner.answerOwedAtStart = true
+                owner.answerOwedAtTop = true
             } else {
                 view.moreLoadedTop()
             }
         }
 
         onMoreRequestedBottom: {
+            const atModelStart = owner.bottomUp()
+
             if (!owner.holdAdmit)
-                owner.admitEnd(root.chunk)
+                owner.admit(atModelStart, root.chunk)
 
             if (owner.holdAnswer || owner.holdAdmit) {
                 owner.answerOwed = true
-                owner.answerOwedAtStart = false
+                owner.answerOwedAtTop = false
             } else {
                 view.moreLoadedBottom()
             }
@@ -589,12 +612,36 @@ Item {
                 && view.contentHeight > view.height
     }
 
+    // The topmost visible row not entirely above the viewport. Picked by
+    // position rather than by order: shells() walks model rows, and rendering
+    // bottom-up makes those run up the screen instead of down it. Identical
+    // either way while the two agree.
     function topRow() {
-        for (const shell of shells())
-            if (shell.visible && shell.content && shell.y + shell.height > view.contentY + 0.01)
-                return { value: shell.content.value, offset: shell.y - view.contentY }
+        let best = null
 
-        return { value: -9999, offset: 0 }
+        for (const shell of shells())
+            if (shell.visible && shell.content
+                    && shell.y + shell.height > view.contentY + 0.01
+                    && (!best || shell.y < best.y))
+                best = shell
+
+        return best ? { value: best.content.value, offset: best.y - view.contentY }
+                    : { value: -9999, offset: 0 }
+    }
+
+    // Which placement currently holds the one placeholder instance, by
+    // objectName; "" when it is parked or has never been built.
+    function host() {
+        const item = placeholderProbe.item
+
+        return item && item.parent ? item.parent.objectName : ""
+    }
+
+    // The values the rows carry, in the order they are drawn down the screen.
+    function renderedValues() {
+        return shells().filter(shell => shell.visible && shell.content)
+                       .sort((a, b) => a.y - b.y)
+                       .map(shell => shell.content.value)
     }
 
     TestCase {
@@ -1401,7 +1448,6 @@ Item {
                    + view.contentY + " of " + bottomY())
         }
     }
-
 
     TestCase {
         id: initialLoadTests
@@ -2395,7 +2441,15 @@ Item {
             view.placeholder = null
             view.moreAvailableTop = true
             view.moreAvailableBottom = true
+            view.stickToBottom = false
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
             owner.holdAnswer = false
+        }
+
+        function renderBottomUp() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
         }
 
         function freshFill(count) {
@@ -2422,12 +2476,6 @@ Item {
             tryVerify(() => !view.busy && view.rowCount === count
                             && hiddenShells().length === 0, 8000, "rows laid out")
             waitForRendering(view)
-        }
-
-        function host() {
-            const item = placeholderProbe.item
-
-            return item && item.parent ? item.parent.objectName : ""
         }
 
         function rowsHeight() {
@@ -2514,11 +2562,11 @@ Item {
 
             view.contentY = 0
             waitForRendering(view)
-            compare(host(), "topPlaceholder", "at the top it sits at the start")
+            compare(host(), "topPlaceholder", "at the top it takes the top band")
 
             view.contentY = view.contentHeight - view.height
             waitForRendering(view)
-            compare(host(), "bottomPlaceholder", "at the bottom, at the end")
+            compare(host(), "bottomPlaceholder", "at the bottom, the bottom one")
 
             compare(placeholderProbe.created, 1, "and it was never rebuilt")
         }
@@ -2696,6 +2744,56 @@ Item {
 
             compare(view.contentHeight, rowsHeight(), "exactly the rows")
             compare(view.initialLoading, false)
+        }
+
+        // The bands are the screen's in both directions: moreAvailableTop puts
+        // one above the first row drawn, whichever model end the owner means by
+        // it.
+        function test_bottomUpTheTopBandIsStillAtTheTop() {
+            renderBottomUp()
+            view.moreAvailableTop = true
+            view.moreAvailableBottom = false
+            provider.delay = 0
+            freshFill(30)
+            finishFill(30)
+
+            view.contentY = 0
+            waitForRendering(view)
+
+            compare(host(), "topPlaceholder")
+
+            // bottom-up the first row drawn is the model's last
+            const firstDrawn = view.itemAtRow(rows.count - 1)
+
+            compare(firstDrawn.content.value, renderedValues()[0])
+            verify(firstDrawn.y >= view.placeholderHeight - 0.5,
+                   "the band reserved space above it")
+        }
+
+        // The chat case: a message arriving at model row 0 lands at the bottom,
+        // inside the content, so there is nothing to announce.
+        function test_bottomUpARowAtModelRowZeroPutsUpNoBand() {
+            renderBottomUp()
+            view.stickToBottom = true
+            view.moreAvailableTop = false
+            view.moreAvailableBottom = false
+            provider.delay = 0
+            freshFill(30)
+            finishFill(30)
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+            verify(view.atBottom, "parked at the newest row")
+
+            const before = view.contentHeight
+
+            rows.insert(0, rows.make(owner.liveValue, 1))
+            tryVerify(() => settled(31) && view.contentHeight > before, 5000,
+                      "the row landed and was laid out")
+
+            compare(host(), "", "no band was put up for it")
+            compare(renderedValues()[30], owner.liveValue,
+                    "it is simply drawn at the bottom")
         }
     }
 
@@ -2882,4 +2980,257 @@ Item {
                          "and stayed where the user was looking")
         }
     }
+
+    TestCase {
+        id: bottomUpTests
+
+        name: "WindowedView.BottomToTop"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+        }
+
+        // The groups share one view, so the direction has to be handed back or
+        // it leaks into everything that runs after this.
+        function cleanup() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+            view.stickToBottom = false
+            view.moreAvailableTop = true
+            view.moreAvailableBottom = true
+            owner.answerOwed = false
+        }
+
+        function fill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0 && view.contentY === 0, 2000,
+                      "starting from an empty view at the top")
+
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        function test_modelRowZeroIsDrawnAtTheBottom() {
+            fill(20)
+
+            const first = view.itemAtRow(0)
+            const last = view.itemAtRow(19)
+
+            verify(first && last)
+            compare(first.content.value, 0, "itemAtRow(0) is still model row 0")
+            compare(last.content.value, 19)
+            verify(first.y > last.y,
+                   "and model row 0 is drawn below the last row")
+        }
+
+        function test_theRowsRunUpTheScreen() {
+            fill(20)
+
+            const drawn = renderedValues()
+
+            compare(drawn.length, 20)
+            compare(drawn[0], 19, "the last model row is drawn first")
+            compare(drawn[19], 0, "and model row 0 last")
+
+            for (let i = 1; i < drawn.length; ++i)
+                compare(drawn[i], drawn[i - 1] - 1,
+                        "the order is exactly reversed, with no gaps")
+        }
+
+        function test_theRowCountIsStillTheModelsOwn() {
+            fill(20)
+
+            compare(view.rowCount, 20)
+            compare(view.rowCount, rows.count)
+        }
+
+        function test_itemAtRowOutsideTheModelIsNull() {
+            fill(10)
+
+            verify(!view.itemAtRow(10))
+            verify(!view.itemAtRow(-1))
+        }
+
+        // The chat case: a message arrives at model row 0, which bottom-up is
+        // the bottom of the screen. The user is already there, so it should
+        // simply appear. (That no band goes up for it is checked in the
+        // Placeholder group, which owns the one placeholder instance.)
+        function test_aRowAtModelRowZeroJoinsTheBottom() {
+            view.stickToBottom = true
+            view.moreAvailableTop = false
+            view.moreAvailableBottom = false
+
+            fill(30)
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+            verify(view.atBottom, "parked at the newest row")
+
+            const before = view.contentHeight
+
+            rows.insert(0, rows.make(owner.liveValue, 1))
+            tryVerify(() => settled(31) && view.contentHeight > before, 5000,
+                      "the row landed and was laid out")
+
+            compare(view.itemAtRow(0).content.value, owner.liveValue,
+                    "the new row is model row 0")
+            compare(renderedValues()[30], owner.liveValue,
+                    "and it is drawn last, at the bottom")
+            verify(view.atBottom, "the viewport followed it")
+        }
+
+        // The mirror: a request at the top has to be answered from the
+        // model's end, because bottom-up that is what lies above the viewport.
+        function test_aRequestAtTheTopIsAnsweredFromTheModelsEnd() {
+            fill(30)
+
+            view.contentY = 0
+            waitForRendering(view)
+
+            const before = topRow()
+
+            provider.delay = 30
+            owner.revealCount = 0
+            owner.removeOnReveal = false
+
+            verify(view.requestMoreTop(), "the request was taken")
+            tryVerify(() => settled(40), 8000, "the batch was revealed")
+
+            compare(owner.revealCount, 1, "one reveal for the whole batch")
+            compare(owner.admittedAtStart, false,
+                    "the harness crossed: admitted at the model's end")
+            compare(renderedValues()[0], 39,
+                    "and the newest of them is drawn at the very top")
+
+            const offsetAfter = offsetOf(before.value)
+
+            verify(!isNaN(offsetAfter), "the row the user was reading survived")
+            fuzzyCompare(offsetAfter, before.offset, 0.5, "and did not move")
+
+            owner.removeOnReveal = true
+        }
+
+        function test_aRemovalTranslates() {
+            fill(20)
+
+            rows.remove(0, 1)       // model row 0: the bottom row
+            tryVerify(() => settled(19), 5000, "the row went away")
+
+            compare(view.itemAtRow(0).content.value, 1,
+                    "model row 0 is now what was row 1")
+            compare(renderedValues()[18], 1, "drawn at the bottom")
+            verify(renderedValues().indexOf(0) === -1, "and 0 is gone")
+        }
+
+        // atBottom and stickToBottom are the screen's, in both directions.
+        function test_atBottomStillMeansTheBottomOfTheScreen() {
+            fill(40)
+
+            view.contentY = 0
+            waitForRendering(view)
+            verify(!view.atBottom, "at the top of the content")
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+            verify(view.atBottom)
+        }
+
+        // settled() insists the content overflows the viewport, which is the one
+        // thing the two tests below are about it not doing.
+        function shortFill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0 && view.contentY === 0, 2000,
+                      "starting from an empty view at the top")
+
+            owner.reset(count)
+            tryVerify(() => !view.busy && view.rowCount === count
+                            && hiddenShells().length === 0
+                            && view.itemAtRow(0).height > 0, 5000,
+                      "rows laid out")
+        }
+
+        // Where a row sits in the viewport, which is not its y: the Column is
+        // offset when it holds less than a screenful of bottom-up rows.
+        function viewportTopOf(shell) {
+            return shell.mapToItem(view, 0, 0).y
+        }
+
+        // Qt's BottomToTop rests short content on the bottom edge rather than
+        // hanging it from the top, and a chat wants exactly that.
+        function test_contentShorterThanTheViewportSitsAtTheBottom() {
+            shortFill(2)
+
+            compare(view.contentHeight, view.height,
+                    "nothing to scroll: the content is the viewport")
+
+            const bottomRow = view.itemAtRow(0)      // model row 0, drawn last
+            const topRow = view.itemAtRow(1)
+
+            verify(bottomRow.height + topRow.height < view.height,
+                   "and the rows are genuinely shorter than it")
+
+            fuzzyCompare(viewportTopOf(bottomRow) + bottomRow.height,
+                         view.height, 0.5,
+                         "the last row drawn ends on the bottom edge")
+            verify(viewportTopOf(topRow) > 0,
+                   "and the first one starts below the top edge")
+            compare(renderedValues(), [1, 0], "still drawn bottom-up")
+        }
+
+        function test_shortContentTopDownStillSitsAtTheTop() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+            shortFill(2)
+
+            compare(view.contentHeight, view.height)
+            fuzzyCompare(viewportTopOf(view.itemAtRow(0)), 0, 0.5,
+                         "the first row starts at the top edge")
+            compare(renderedValues(), [0, 1])
+        }
+
+        function test_switchingDirectionReplacesTheContent() {
+            fill(20)
+
+            compare(renderedValues()[0], 19)
+
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+            tryVerify(() => settled(20), 8000, "the rows were rebuilt")
+
+            verify(!view.busy, "and the view is idle again, not wedged")
+            compare(renderedValues()[0], 0, "now drawn the other way up")
+            compare(view.itemAtRow(0).content.value, 0,
+                    "and itemAtRow still answers in model rows")
+        }
+
+        // The number is the *model* row, not the rendered one: rendering
+        // bottom-up moves row 0 to the bottom, it does not renumber it.
+        function test_theProviderIsToldTheModelRow() {
+            provider.forgetDressing()
+            fill(20)
+
+            compare(provider.dressedCount, 20, "one acquire per row")
+
+            for (let row = 0; row < 20; ++row) {
+                const shell = view.itemAtRow(row)
+
+                compare(provider.dressedAt[row], shell,
+                        "row " + row + " was dressed as row " + row)
+                compare(shell.row, row, "and the shell says the same")
+            }
+
+            compare(provider.dressedAt[0].content.value, 0,
+                    "row 0 is the model's first row")
+            verify(provider.dressedAt[0].y > provider.dressedAt[19].y,
+                   "and it is the one drawn at the bottom")
+        }
+    }
+
 }
