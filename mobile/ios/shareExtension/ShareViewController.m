@@ -172,6 +172,191 @@ static NSString *TrimTrailingWhitespace(NSString *text)
     return [text substringToIndex:end];
 }
 
+// vCard rendering: a shared contact becomes a readable card (name, title,
+// organisation, phones, emails, URLs, addresses, note). Photos and anything
+// else are dropped; chat has no contact message, so the card travels as text.
+static BOOL IsVCard(NSString *text)
+{
+    NSString *t = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [t.uppercaseString hasPrefix:@"BEGIN:VCARD"];
+}
+
+// Continuation lines (leading space or tab) belong to the previous line.
+static NSArray<NSString *> *VCardUnfold(NSString *text)
+{
+    NSString *normalized = [[text stringByReplacingOccurrencesOfString:@"\r\n" withString:@"\n"]
+                            stringByReplacingOccurrencesOfString:@"\r" withString:@"\n"];
+    NSMutableArray<NSString *> *lines = [NSMutableArray array];
+    for (NSString *raw in [normalized componentsSeparatedByString:@"\n"]) {
+        if (raw.length > 0 && ([raw characterAtIndex:0] == ' ' || [raw characterAtIndex:0] == '\t') && lines.count > 0)
+            lines[lines.count - 1] = [lines.lastObject stringByAppendingString:[raw substringFromIndex:1]];
+        else
+            [lines addObject:raw];
+    }
+    return lines;
+}
+
+// Splits on an unescaped separator; backslash escapes stay in the parts.
+static NSArray<NSString *> *VCardSplitUnescaped(NSString *s, unichar sep)
+{
+    NSMutableArray<NSString *> *parts = [NSMutableArray array];
+    NSMutableString *cur = [NSMutableString string];
+    BOOL escaped = NO;
+    for (NSUInteger i = 0; i < s.length; i++) {
+        unichar c = [s characterAtIndex:i];
+        if (escaped) {
+            [cur appendFormat:@"%C", c];
+            escaped = NO;
+        } else if (c == '\\') {
+            [cur appendFormat:@"%C", c];
+            escaped = YES;
+        } else if (c == sep) {
+            [parts addObject:[cur copy]];
+            [cur setString:@""];
+        } else {
+            [cur appendFormat:@"%C", c];
+        }
+    }
+    [parts addObject:[cur copy]];
+    return parts;
+}
+
+static NSString *VCardUnescape(NSString *s)
+{
+    NSMutableString *out = [NSMutableString string];
+    for (NSUInteger i = 0; i < s.length; i++) {
+        unichar c = [s characterAtIndex:i];
+        if (c == '\\' && i + 1 < s.length) {
+            unichar n = [s characterAtIndex:++i];
+            [out appendFormat:@"%C", (unichar)((n == 'n' || n == 'N') ? '\n' : n)];
+        } else {
+            [out appendFormat:@"%C", c];
+        }
+    }
+    return [out stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
+static NSString *VCardJoinNonEmpty(NSArray<NSString *> *parts, NSString *sep)
+{
+    NSMutableArray<NSString *> *kept = [NSMutableArray array];
+    for (NSString *part in parts) {
+        NSString *p = VCardUnescape(part);
+        if (p.length > 0)
+            [kept addObject:p];
+    }
+    return [kept componentsJoinedByString:sep];
+}
+
+// "(mobile)", "(work)" ... from the TYPE parameters; vCard 2.1 writes the
+// type words as bare parameters.
+static NSString *VCardLabel(NSArray<NSString *> *params)
+{
+    NSDictionary<NSString *, NSString *> *labels = @{
+        @"CELL": @"mobile", @"IPHONE": @"iPhone", @"HOME": @"home", @"WORK": @"work",
+        @"MAIN": @"main", @"FAX": @"fax", @"PAGER": @"pager",
+    };
+    for (NSString *param in params) {
+        NSString *p = param.uppercaseString;
+        NSString *types = [p hasPrefix:@"TYPE="] ? [p substringFromIndex:5]
+                        : [p containsString:@"="] ? @"" : p;
+        for (NSString *type in [types componentsSeparatedByString:@","]) {
+            NSString *label = labels[[type stringByReplacingOccurrencesOfString:@"\"" withString:@""]];
+            if (label != nil)
+                return label;
+        }
+    }
+    return @"";
+}
+
+static NSString *VCardLabelled(NSString *rendered, NSArray<NSString *> *params)
+{
+    if (rendered.length == 0)
+        return @"";
+    NSString *label = VCardLabel(params);
+    return label.length == 0 ? rendered : [NSString stringWithFormat:@"%@ (%@)", rendered, label];
+}
+
+static void VCardAppend(NSMutableArray<NSString *> *list, NSString *s)
+{
+    if (s.length > 0)
+        [list addObject:s];
+}
+
+// Every card in the text, blank-line separated. Falls back to the raw text
+// when nothing readable was found.
+static NSString *FormatVCard(NSString *text)
+{
+    NSMutableArray<NSString *> *cards = [NSMutableArray array];
+    NSMutableDictionary<NSString *, id> *card = nil;
+    for (NSString *line in VCardUnfold(text)) {
+        NSRange colon = [line rangeOfString:@":"];
+        if (colon.location == NSNotFound || colon.location == 0)
+            continue;
+        NSArray<NSString *> *head = VCardSplitUnescaped([line substringToIndex:colon.location], ';');
+        NSString *name = head[0].uppercaseString;
+        NSRange group = [name rangeOfString:@"."];
+        if (group.location != NSNotFound)
+            name = [name substringFromIndex:group.location + 1];
+        NSArray<NSString *> *params = [head subarrayWithRange:NSMakeRange(1, head.count - 1)];
+        NSString *value = [line substringFromIndex:colon.location + 1];
+
+        if ([name isEqualToString:@"BEGIN"] && [value.uppercaseString isEqualToString:@"VCARD"]) {
+            card = [NSMutableDictionary dictionaryWithDictionary:@{
+                @"tels": [NSMutableArray array], @"emails": [NSMutableArray array],
+                @"urls": [NSMutableArray array], @"adrs": [NSMutableArray array],
+            }];
+            continue;
+        }
+        if (card == nil)
+            continue;
+        if ([name isEqualToString:@"END"]) {
+            NSMutableArray<NSString *> *lines = [NSMutableArray array];
+            VCardAppend(lines, card[@"fn"] ?: card[@"n"]);
+            VCardAppend(lines, card[@"title"]);
+            VCardAppend(lines, card[@"org"]);
+            [lines addObjectsFromArray:card[@"tels"]];
+            [lines addObjectsFromArray:card[@"emails"]];
+            [lines addObjectsFromArray:card[@"urls"]];
+            [lines addObjectsFromArray:card[@"adrs"]];
+            VCardAppend(lines, card[@"note"]);
+            if (lines.count > 0)
+                [cards addObject:[lines componentsJoinedByString:@"\n"]];
+            card = nil;
+        } else if ([name isEqualToString:@"FN"]) {
+            card[@"fn"] = VCardUnescape(value);
+        } else if ([name isEqualToString:@"N"]) {
+            // Family;Given;Additional;Prefix;Suffix
+            NSMutableArray<NSString *> *c = [VCardSplitUnescaped(value, ';') mutableCopy];
+            while (c.count < 5)
+                [c addObject:@""];
+            card[@"n"] = VCardJoinNonEmpty(@[c[3], c[1], c[2], c[0], c[4]], @" ");
+        } else if ([name isEqualToString:@"TITLE"]) {
+            card[@"title"] = VCardUnescape(value);
+        } else if ([name isEqualToString:@"ORG"]) {
+            card[@"org"] = VCardJoinNonEmpty(VCardSplitUnescaped(value, ';'), @", ");
+        } else if ([name isEqualToString:@"NOTE"]) {
+            card[@"note"] = VCardUnescape(value);
+        } else if ([name isEqualToString:@"TEL"]) {
+            VCardAppend(card[@"tels"], VCardLabelled(VCardUnescape(value), params));
+        } else if ([name isEqualToString:@"EMAIL"]) {
+            VCardAppend(card[@"emails"], VCardLabelled(VCardUnescape(value), params));
+        } else if ([name isEqualToString:@"URL"]) {
+            VCardAppend(card[@"urls"], VCardLabelled(VCardUnescape(value), params));
+        } else if ([name isEqualToString:@"ADR"]) {
+            VCardAppend(card[@"adrs"], VCardLabelled(VCardJoinNonEmpty(VCardSplitUnescaped(value, ';'), @", "), params));
+        }
+    }
+    if (cards.count == 0)
+        return [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    return [cards componentsJoinedByString:@"\n\n"];
+}
+
+static NSString *RenderTextDocument(NSString *text)
+{
+    return TrimTrailingWhitespace(IsVCard(text) ? FormatVCard(text) : text);
+}
+
+
 @interface ShareViewController : UIViewController
 @property (nonatomic, retain) UILabel *progressLabel;
 @end
@@ -225,8 +410,9 @@ static NSString *TrimTrailingWhitespace(NSString *text)
 // appended unless the text already contains it (apps commonly put the link
 // inside the shared text themselves). Text documents (file-backed text
 // attachments: .txt, .md, .html, vCard, ...) are read and pasted as text, in
-// attachment order; inline text wins over them when a share offers both,
-// since such senders carry the same content twice. Image data is copied into
+// attachment order, vCards rendered as readable contact cards; inline text
+// wins over them when a share offers both, since such senders carry the same
+// content twice. Image data is copied into
 // the App Group cache inside the load handler — the provided file URL expires
 // with the handler. Attachment loads are asynchronous; the completion runs
 // once, on the main queue, with the composed text ("" when nothing usable was
@@ -280,14 +466,15 @@ static NSString *TrimTrailingWhitespace(NSString *text)
         } else if ([(NSObject *)loaded isKindOfClass:[NSAttributedString class]]) {
             inlineText = ((NSAttributedString *)loaded).string;
         } else if ([(NSObject *)loaded isKindOfClass:[NSData class]]) {
-            NSData *data = (NSData *)loaded;
-            inlineText = DecodeTextDocument(data, NO);
+            // Contacts hands the vCard over as data.
+            NSString *decoded = DecodeTextDocument((NSData *)loaded, NO);
+            inlineText = decoded != nil ? RenderTextDocument(decoded) : nil;
         } else if ([(NSObject *)loaded isKindOfClass:[NSURL class]] && ((NSURL *)loaded).isFileURL) {
             document = ReadTextDocument((NSURL *)loaded);
             if (document == nil)
                 NSLog(@"StatusShareExtension: dropping undecodable text document %lu", (unsigned long)slot);
             else
-                document = TrimTrailingWhitespace(document);
+                document = RenderTextDocument(document);
         }
         @synchronized (orderedInlineTexts) {
             if (inlineText.length > 0)

@@ -17,7 +17,7 @@ import java.util.List;
 
 // Text document shares: text/* streams shared without inline text. Their
 // contents are pasted as message text, like a clipboard paste; the composer
-// applies the message limits.
+// applies the message limits. vCards are rendered as readable contact cards.
 final class ShareTextDocuments {
     private static final String TAG = "ShareTextDocuments";
     // Memory guard only; the composer cuts the text far below this.
@@ -52,7 +52,7 @@ final class ShareTextDocuments {
                 Log.w(TAG, "share intake: dropping undecodable text stream (" + mime + ")");
                 continue;
             }
-            text = trimTrailing(text);
+            text = trimTrailing(VCardText.isVCard(text) ? VCardText.format(text) : text);
             if (text.isEmpty()) continue;
             if (joined.length() > 0) joined.append(SEPARATOR);
             joined.append(text);
