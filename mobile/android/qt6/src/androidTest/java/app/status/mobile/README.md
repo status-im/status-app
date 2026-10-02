@@ -31,6 +31,13 @@ set's `AndroidManifest.xml`: it lives in the test APK, so to the intake it is a
 foreign sender serving images and videos (videos are dropped and must not use
 up the slots).
 
+## `ShareTextDocumentsTest`
+
+Decoding of text document shares (`text/*` streams with no inline text, pasted
+as message text): BOM-sniffed UTF-16, strict UTF-8, binary behind a text claim
+rejected, and a read cut at the memory guard still decoding. Pure Java; lives
+here because the module has no JVM test source set.
+
 ## Running
 
 Needs a booted emulator/device and the app built with the Qt Android toolchain
