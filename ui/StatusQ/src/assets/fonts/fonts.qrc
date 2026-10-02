@@ -1,27 +1,27 @@
 <RCC>
     <qresource prefix="/assets/fonts">
-        <file>Inter/Inter-Black.otf</file>
-        <file>Inter/Inter-Bold.otf</file>
-        <file>Inter/Inter-ExtraBold.otf</file>
-        <file>Inter/Inter-ExtraLight.otf</file>
-        <file>Inter/Inter-Light.otf</file>
-        <file>Inter/Inter-Medium.otf</file>
-        <file>Inter/Inter-Regular.otf</file>
-        <file>Inter/Inter-Thin.otf</file>
-        <file>InterStatus/InterStatus-Black.otf</file>
-        <file>InterStatus/InterStatus-Bold.otf</file>
-        <file>InterStatus/InterStatus-ExtraBold.otf</file>
-        <file>InterStatus/InterStatus-ExtraBoldItalic.otf</file>
-        <file>InterStatus/InterStatus-ExtraLight.otf</file>
-        <file>InterStatus/InterStatus-Light.otf</file>
-        <file>InterStatus/InterStatus-Medium.otf</file>
-        <file>InterStatus/InterStatus-Regular.otf</file>
-        <file>InterStatus/InterStatus-Thin.otf</file>
-        <file>RobotoMono/RobotoMono-Bold.ttf</file>
-        <file>RobotoMono/RobotoMono-ExtraLight.ttf</file>
-        <file>RobotoMono/RobotoMono-Light.ttf</file>
-        <file>RobotoMono/RobotoMono-Medium.ttf</file>
-        <file>RobotoMono/RobotoMono-Regular.ttf</file>
-        <file>RobotoMono/RobotoMono-Thin.ttf</file>
+        <file compression-algorithm="none">Inter/Inter-Black.otf</file>
+        <file compression-algorithm="none">Inter/Inter-Bold.otf</file>
+        <file compression-algorithm="none">Inter/Inter-ExtraBold.otf</file>
+        <file compression-algorithm="none">Inter/Inter-ExtraLight.otf</file>
+        <file compression-algorithm="none">Inter/Inter-Light.otf</file>
+        <file compression-algorithm="none">Inter/Inter-Medium.otf</file>
+        <file compression-algorithm="none">Inter/Inter-Regular.otf</file>
+        <file compression-algorithm="none">Inter/Inter-Thin.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-Black.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-Bold.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-ExtraBold.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-ExtraBoldItalic.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-ExtraLight.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-Light.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-Medium.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-Regular.otf</file>
+        <file compression-algorithm="none">InterStatus/InterStatus-Thin.otf</file>
+        <file compression-algorithm="none">RobotoMono/RobotoMono-Bold.ttf</file>
+        <file compression-algorithm="none">RobotoMono/RobotoMono-ExtraLight.ttf</file>
+        <file compression-algorithm="none">RobotoMono/RobotoMono-Light.ttf</file>
+        <file compression-algorithm="none">RobotoMono/RobotoMono-Medium.ttf</file>
+        <file compression-algorithm="none">RobotoMono/RobotoMono-Regular.ttf</file>
+        <file compression-algorithm="none">RobotoMono/RobotoMono-Thin.ttf</file>
     </qresource>
 </RCC>
