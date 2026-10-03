@@ -2982,6 +2982,106 @@ Item {
     }
 
     TestCase {
+        id: addressingTests
+
+        name: "WindowedView.Addressing"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+        }
+
+        function cleanup() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+        }
+
+        function fill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+
+            owner.reset(count)
+            tryVerify(() => settled(count), 5000, "rows laid out")
+        }
+
+        function test_rowForKeyAndKeyAtRowAreInverses() {
+            fill(20)
+
+            for (let row = 0; row < view.rowCount; ++row) {
+                const key = view.keyAtRow(row)
+
+                compare(key, "k" + row, "the harness stamps keys from the value")
+                compare(view.rowForKey(key), row, "and the lookup comes back")
+            }
+        }
+
+        // Model rows, like itemAtRow(): rendering bottom-up moves row 0 to the
+        // bottom, it does not renumber it.
+        function test_bothAnswerInModelRowsWhenRenderingBottomUp() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+            fill(20)
+
+            compare(view.rowForKey("k0"), 0)
+            compare(view.keyAtRow(0), "k0")
+            compare(view.itemAtRow(0).content.value, 0,
+                    "and all three agree on which row that is")
+
+            const first = view.itemAtRow(0)
+            const last = view.itemAtRow(19)
+
+            verify(first.y > last.y, "while row 0 is the one drawn lowest")
+        }
+
+        function test_aRowTheViewDoesNotHold() {
+            fill(10)
+
+            compare(view.rowForKey("k99"), -1)
+            compare(view.rowForKey(""), -1)
+            compare(view.keyAtRow(10), undefined)
+            compare(view.keyAtRow(-1), undefined)
+        }
+
+        // Held is not the same as visible: a staged row has no content and no
+        // height yet, and must still be addressable - that is what lets an
+        // owner resolve a jump target in the frame a batch is revealed.
+        function test_aStagedRowIsStillFound() {
+            provider.delay = 60
+            fill(20)
+
+            owner.removeOnReveal = false
+            verify(view.requestMoreBottom(), "the request was taken")
+            tryVerify(() => view.staging, 2000, "a batch is staged")
+
+            // the owner admits values 20.. at the model's end, so k20 is the
+            // first row of the batch
+            compare(view.rowForKey("k20"), 20, "the staged row answers")
+            compare(view.keyAtRow(20), "k20")
+
+            const shell = view.itemAtRow(20)
+
+            verify(shell, "its shell exists")
+            verify(!shell.visible, "and is not on screen yet")
+
+            tryVerify(() => !view.busy, 8000, "the batch was revealed")
+            compare(view.rowForKey("k20"), 20, "and still answers after it")
+            owner.removeOnReveal = true
+        }
+
+        function test_withoutAModel() {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+
+            compare(view.rowForKey("k0"), -1)
+            compare(view.keyAtRow(0), undefined)
+        }
+    }
+
+    TestCase {
         id: bottomUpTests
 
         name: "WindowedView.BottomToTop"

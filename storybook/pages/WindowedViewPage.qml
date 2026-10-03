@@ -9,6 +9,8 @@ import QtQuick.Layouts
 import Models
 import Storybook
 
+import QtModelsToolkit
+
 import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Utils
@@ -179,6 +181,39 @@ SplitView {
         onBottomUpChanged: d.openAtTheStart()
 
         property bool answerAtTop: false
+
+        // rowForKey() is a linear scan, so nothing inside it tells QML when its
+        // answer can change - and its two paths do not even read the same
+        // properties: the one that finds a row reads the view's rowCount, the
+        // one that finds nothing reads neither that nor anything else that ever
+        // moves. A binding calling it directly therefore latches on its first
+        // answer and never asks again.
+        //
+        // So the things that can change the answer are passed in. They are
+        // unused here on purpose: being read in the binding expression is what
+        // makes them dependencies, whichever path the scan then takes.
+        function viewRowForKey(key, first, last, rows) {
+            return windowedView.rowForKey(key)
+        }
+
+        function windowRowForKey(key, first, last, count) {
+            return windowSource.rowForKey(key)
+        }
+
+        readonly property int trackedViewRow:
+                d.viewRowForKey(trackedEntry.value, windowSource.first,
+                                windowSource.last, windowedView.rowCount)
+
+        readonly property int trackedWindowRow:
+                d.windowRowForKey(trackedEntry.value, windowSource.first,
+                                  windowSource.last, messagesModel.count)
+
+        function keyAtSourceRow(row) {
+            if (row < 0 || row >= messagesModel.count)
+                return ""
+
+            return ModelUtils.get(messagesModel, row, "key") ?? ""
+        }
 
         // The page opens on the newest content, which is where reading starts
         // in both directions - the bottom of the screen rendering bottom-up,
@@ -843,6 +878,62 @@ SplitView {
                     }
 
                     Item { Layout.fillWidth: true }
+                }
+
+                Item { Layout.preferredHeight: 8 }
+
+                Label {
+                    text: "Addressing"
+                    font.bold: true
+                }
+
+                // A row of the source model, and where it has got to. Every
+                // number below is derived from that row's key rather than kept
+                // as a number, because a number is only right until the next
+                // prepend.
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label { text: "Source row" }
+
+                    SpinBox {
+                        id: jumpIndexSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: Math.max(0, messagesModel.count - 1)
+                        stepSize: 10
+                        value: 100
+                        editable: true
+                    }
+                }
+
+                // The key is the identity. ModelEntry holds a persistent index,
+                // so this follows the message as the model changes underneath
+                // it.
+                ModelEntry {
+                    id: trackedEntry
+
+                    sourceModel: messagesModel
+                    key: "key"
+                    value: d.keyAtSourceRow(jumpIndexSpinBox.value)
+                }
+
+                Label {
+                    text: "That row is " + (trackedEntry.available
+                                            ? trackedEntry.value
+                                              + ", now at model row "
+                                              + trackedEntry.row
+                                            : "not in the model")
+                }
+
+                Label {
+                    text: "Window says: " + (d.trackedWindowRow < 0
+                                             ? "-" : d.trackedWindowRow)
+                          + "   |   view holds: "
+                          + (d.trackedViewRow < 0 ? "- (outside the window)"
+                                           : "model row " + d.trackedViewRow)
                 }
 
                 Item { Layout.preferredHeight: 8 }

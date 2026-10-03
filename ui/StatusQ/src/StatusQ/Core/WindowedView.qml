@@ -185,7 +185,34 @@ Flickable {
     // The row item for a *model* row, as ListView.itemAtIndex() is: rendering
     // bottom-up moves row 0 to the bottom, it does not renumber it.
     function itemAtRow(row) {
-        return rowsRepeater.itemAt(d.bottomUp ? root.rowCount - 1 - row : row)
+        return rowsRepeater.itemAt(d.renderRow(row))
+    }
+
+    // The model row `key` occupies among the rows this view holds, or -1 when it
+    // holds no such row - which is the signal to move the window and ask again.
+    //
+    // A row that is staged and not yet revealed is held, and so is found:
+    // addressable and visible are different things. Row numbers are coordinates
+    // valid for the turn they were asked in, so hold the key and ask again
+    // rather than keeping the number.
+    function rowForKey(key) {
+        if (!d.effectiveModel)
+            return -1
+
+        const rendered = SQUtils.ModelUtils.indexOf(d.effectiveModel,
+                                                    root.keyRole, key)
+
+        return rendered < 0 ? -1 : d.modelRow(rendered)
+    }
+
+    // The key of a model row this view holds, or undefined. The inverse of
+    // rowForKey(), for remembering a position as an identity rather than as a
+    // number.
+    function keyAtRow(row) {
+        if (row < 0 || row >= root.rowCount)
+            return undefined
+
+        return d.keyAt(d.renderRow(row))
     }
 
     contentWidth: width
@@ -211,6 +238,19 @@ Flickable {
         // window - a binding on rowsRepeater.count there is one insert behind.
         function modelRowsFor(repeaterCount) {
             return d.effectiveModel ? d.effectiveModel.rowCount() : 0
+        }
+
+        // The two row spaces, and the only places they are converted. Public
+        // functions take and return *model* rows, like ListView's do; the
+        // Repeater, the staging ranges and the anchor loops all count in the
+        // order the rows are rendered, which bottom-up is the other way up.
+        // Both are their own inverse, and both are the identity top-down.
+        function renderRow(modelRow) {
+            return d.bottomUp ? root.rowCount - 1 - modelRow : modelRow
+        }
+
+        function modelRow(renderedRow) {
+            return d.bottomUp ? root.rowCount - 1 - renderedRow : renderedRow
         }
 
         // The model the rows are actually built from, which is the given one
