@@ -10,6 +10,7 @@ ARG ANDROID_API_LEVEL=36
 ARG ANDROID_NDK_VERSION=27.2.12479018
 ARG GOLANG_VERSION="1.24.7"
 ARG NIM_VERSION="2.2.10"
+ARG NIMBLE_VERSION="0.26.0"
 ARG NIX_VERSION="2.24.11"
 
 # =============================================================================
@@ -62,6 +63,7 @@ ARG ANDROID_API_LEVEL
 ARG ANDROID_NDK_VERSION
 ARG GOLANG_VERSION
 ARG NIM_VERSION
+ARG NIMBLE_VERSION
 ARG NIX_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -218,6 +220,19 @@ ENV OPENSSL_INC_DIR="/home/jenkins/openssl-output/arm64-v8a/include"
 RUN curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y \
  && /home/jenkins/.nimble/bin/choosenim ${NIM_VERSION} \
  && rm -rf /home/jenkins/.choosenim/downloads
+
+# The Nimble bundled with Nim installs nim-sds without library/, so libsds
+# cannot be built with it.
+RUN set -eu; \
+    case "$(dpkg --print-architecture)" in \
+    amd64) NIMBLE_ARCH="linux_x64" ;; \
+    arm64) NIMBLE_ARCH="linux_aarch64" ;; \
+    *) echo "ERROR: unsupported architecture" >&2; exit 1 ;; \
+    esac; \
+    curl -sSfL -o /tmp/nimble.tar.gz \
+      "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-${NIMBLE_ARCH}.tar.gz" \
+ && tar -xzf /tmp/nimble.tar.gz -C /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin \
+ && rm /tmp/nimble.tar.gz
 
 # Install Nix and clean up Nix store cache
 RUN curl -s https://nixos.org/releases/nix/nix-${NIX_VERSION}/install | sh -s -- --no-daemon \
