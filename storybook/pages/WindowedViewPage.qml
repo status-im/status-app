@@ -187,6 +187,23 @@ SplitView {
         property string capturedKey: ""
         property real capturedOffset: NaN
 
+        // ---- Jumping to a row of the source model ----------------------
+        //
+        // The view can only position a row it holds, so a jump is up to two
+        // steps: move the window onto the row, then position it. What keeps
+        // that from showing as a two-step on screen is where the second step is
+        // asked for - from batchRevealed(), which fires inside the reveal,
+        // before the view has laid the batch out or corrected its position. The
+        // request is pending for the rest of that turn and honoured by the same
+        // reveal, so the rows appear already in the right place.
+        //
+        // Carried across as a key, never as a row number: moving the window
+        // re-indexes everything the view holds.
+        property string jumpKey: ""
+        property int jumpMode: -1
+        property real jumpOffset: NaN
+        property int jumpAttempts: 0
+
         // rowForKey() is a linear scan, so nothing inside it tells QML when its
         // answer can change - and its two paths do not even read the same
         // properties: the one that finds a row reads the view's rowCount, the
@@ -249,6 +266,65 @@ SplitView {
                 return ""
 
             return ModelUtils.get(messagesModel, row, "key") ?? ""
+        }
+
+        function jumpToSourceRow(row, mode) {
+            d.jumpToKey(d.keyAtSourceRow(row), mode, NaN)
+        }
+
+        function jumpToKey(key, mode, offset) {
+            if (!key)
+                return
+
+            d.jumpKey = key
+            d.jumpMode = mode
+            d.jumpOffset = offset
+            d.jumpAttempts = 0
+
+            // Already on screen: no window move, nothing to wait for.
+            if (d.applyJump())
+                return
+
+            // Otherwise bring it into the window.
+            if (!windowSource.moveToKey(key)) {
+                d.clearJump()
+                return
+            }
+
+            // A move that replaces every row reaches the view as a fresh
+            // population, and batchRevealed() completes the jump inside it.
+            // A move that only slides the window does not: some rows survive,
+            // so the view has nothing to stage and reveals the new ones one by
+            // one, with no batch and no signal. This covers that - it retries
+            // until the row turns up, and finds the work already done whenever
+            // the reveal got there first.
+            jumpTimer.restart()
+        }
+
+        function applyJump() {
+            if (!d.jumpKey)
+                return false
+
+            const row = windowedView.rowForKey(d.jumpKey)
+
+            if (row < 0)
+                return false
+
+            const accepted = isNaN(d.jumpOffset)
+                           ? windowedView.positionViewAtRow(row, d.jumpMode)
+                           : windowedView.positionViewAtRowOffset(
+                                 row, d.jumpOffset)
+
+            d.clearJump()
+            return accepted
+        }
+
+        function clearJump() {
+            jumpTimer.stop()
+            d.jumpKey = ""
+            d.jumpMode = -1
+            d.jumpOffset = NaN
+            d.jumpAttempts = 0
         }
 
         // The page opens on the newest content, which is where reading starts
@@ -516,8 +592,13 @@ SplitView {
             onMoreRequestedBottom: d.fetch(false)
 
             // Deferred removals happen here, in the reveal's own turn, so both
-            // ends of the window change together.
-            onBatchRevealed: windowSource.trim()
+            // ends of the window change together - and a jump waiting for its
+            // row is positioned from here for the same reason: the view has not
+            // laid this batch out yet, so the request lands in this turn.
+            onBatchRevealed: {
+                windowSource.trim()
+                d.applyJump()
+            }
 
             ScrollBar.vertical: ScrollBar {}
 
@@ -923,14 +1004,16 @@ SplitView {
                     font.bold: true
                 }
 
-                // A row of the source model, and where it has got to. Every
-                // number below is derived from that row's key rather than kept
-                // as a number, because a number is only right until the next
-                // prepend.
+                // The whole jump, as the app will have to do it: a row of the
+                // *source* model goes in, and whatever has to happen for it to
+                // end up on screen happens - the window moves when the row is
+                // outside it, and the position is applied inside the reveal
+                // that brings the row in, so there is one frame rather than a
+                // visible two-step.
                 RowLayout {
                     Layout.fillWidth: true
 
-                    Label { text: "Source row" }
+                    Label { text: "Go to source row" }
 
                     SpinBox {
                         id: jumpIndexSpinBox
@@ -945,9 +1028,6 @@ SplitView {
                     }
                 }
 
-                // Where the view puts it, for a row the view holds: that is
-                // all positioning is, and the box above can point at a row
-                // outside the window.
                 RowLayout {
                     Layout.fillWidth: true
 
@@ -963,18 +1043,17 @@ SplitView {
                     Button {
                         Layout.fillWidth: true
 
-                        text: "Position"
-                        enabled: !windowedView.busy && d.trackedViewRow >= 0
+                        text: "Go"
+                        enabled: !windowedView.busy && messagesModel.count > 0
 
-                        onClicked: windowedView.positionViewAtRow(
-                                       d.trackedViewRow,
-                                       jumpModeComboBox.currentIndex)
+                        onClicked: d.jumpToSourceRow(jumpIndexSpinBox.value,
+                                                     jumpModeComboBox.currentIndex)
                     }
                 }
 
-                // The key is the identity. ModelEntry holds a persistent index,
-                // so this follows the message as the model changes underneath
-                // it.
+                // What the jump works with. The key is the identity; every row
+                // number below is derived from it, and re-derived whenever
+                // anything moves.
                 ModelEntry {
                     id: trackedEntry
 
@@ -1017,10 +1096,10 @@ SplitView {
                     }
                 }
 
-                // The window record in miniature: capture where the reader is
-                // sitting, lose the position, put it back exactly. While the
-                // view still holds the row - getting back to one it does not is
-                // the owner's job, not the view's.
+                // The window record in miniature: capture where the tracked row
+                // sits in the viewport, lose the position, put it back exactly -
+                // through the same jump, so it works from outside the window
+                // too.
                 RowLayout {
                     Layout.fillWidth: true
 
@@ -1043,14 +1122,9 @@ SplitView {
                         text: "Restore"
                         enabled: !isNaN(d.capturedOffset)
                                  && !windowedView.busy
-                                 && d.viewRowForKey(d.capturedKey,
-                                                    windowSource.first,
-                                                    windowSource.last,
-                                                    windowedView.rowCount) >= 0
 
-                        onClicked: windowedView.positionViewAtRowOffset(
-                                       windowedView.rowForKey(d.capturedKey),
-                                       d.capturedOffset)
+                        onClicked: d.jumpToKey(d.capturedKey, -1,
+                                               d.capturedOffset)
                     }
                 }
 
@@ -1228,6 +1302,30 @@ SplitView {
         id: answerTimer
 
         onTriggered: d.deliver(d.answerAtTop)
+    }
+
+    // Waits for a jump's row to turn up when the window move did not produce a
+    // batch to complete it in. Bounded: a row that never arrives gives up
+    // rather than leaving the view pinned to a request for ever.
+    //
+    // A Timer rather than Qt.callLater, like landTimer below: the storybook
+    // destroys and rebuilds a page on a hot reload, and a callLater still
+    // pending across that fires into a context that no longer exists.
+    Timer {
+        id: jumpTimer
+
+        interval: 16
+        repeat: true
+
+        onTriggered: {
+            if (!d.jumpKey || d.applyJump()) {
+                stop()
+                return
+            }
+
+            if (++d.jumpAttempts > 60)
+                d.clearJump()
+        }
     }
 
     // A Timer rather than Qt.callLater: the storybook destroys and rebuilds a
