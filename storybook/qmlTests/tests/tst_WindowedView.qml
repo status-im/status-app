@@ -555,6 +555,13 @@ Item {
         ScrollBar.vertical: ScrollBar { id: scrollBar }
     }
 
+    SignalSpy {
+        id: positionedSpy
+
+        target: view
+        signalName: "rowPositioned"
+    }
+
     // ------------------------------------------------------------------
     // Shared helpers
     // ------------------------------------------------------------------
@@ -3078,6 +3085,367 @@ Item {
 
             compare(view.rowForKey("k0"), -1)
             compare(view.keyAtRow(0), undefined)
+        }
+    }
+
+    TestCase {
+        id: positioningTests
+
+        name: "WindowedView.Positioning"
+        when: windowShown
+
+        readonly property int beginning: WindowedView.PositionMode.Beginning
+        readonly property int centre: WindowedView.PositionMode.Center
+        readonly property int atEnd: WindowedView.PositionMode.End
+        readonly property int contain: WindowedView.PositionMode.Contain
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            positionedSpy.clear()
+        }
+
+        function cleanup() {
+            view.stickToBottom = false
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+            owner.removeOnReveal = true
+            owner.answerOwed = false
+        }
+
+        function fill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        function bottomY() {
+            return view.contentHeight - view.height
+        }
+
+        // Where a row's top sits in the viewport, which is what every mode here
+        // is expressed in.
+        function topOf(row) {
+            const item = view.itemAtRow(row)
+
+            return item.mapToItem(view, 0, 0).y
+        }
+
+        function test_beginningPutsTheRowsTopAtTheViewportTop() {
+            fill(40)
+
+            verify(view.positionViewAtRow(20, beginning))
+            waitForRendering(view)
+
+            fuzzyCompare(topOf(20), 0, 0.5)
+        }
+
+        function test_centreCentresIt() {
+            fill(40)
+
+            verify(view.positionViewAtRow(20, centre))
+            waitForRendering(view)
+
+            const item = view.itemAtRow(20)
+
+            fuzzyCompare(topOf(20) + item.height / 2, view.height / 2, 0.5)
+        }
+
+        function test_endPutsItsBottomAtTheViewportBottom() {
+            fill(40)
+
+            verify(view.positionViewAtRow(20, atEnd))
+            waitForRendering(view)
+
+            const item = view.itemAtRow(20)
+
+            fuzzyCompare(topOf(20) + item.height, view.height, 0.5)
+        }
+
+        // The point of Contain is to leave a reader where they are.
+        function test_containLeavesAWhollyVisibleRowAlone() {
+            fill(40)
+
+            verify(view.positionViewAtRow(20, centre))
+            waitForRendering(view)
+
+            const before = view.contentY
+            const offset = topOf(20)
+
+            verify(view.positionViewAtRow(20, contain))
+            waitForRendering(view)
+
+            compare(view.contentY, before, "the view did not move")
+            fuzzyCompare(topOf(20), offset, 0.5)
+        }
+
+        function test_containScrollsARowThatIsNotWhollyVisible() {
+            fill(40)
+
+            verify(view.positionViewAtRow(20, beginning))
+            waitForRendering(view)
+
+            // one row further down is partly or wholly below the viewport
+            const far = 20 + Math.max(1, Math.floor(view.height / 60))
+
+            verify(view.positionViewAtRow(far, contain))
+            waitForRendering(view)
+
+            const item = view.itemAtRow(far)
+
+            verify(topOf(far) >= -0.5, "it is on screen")
+            verify(topOf(far) + item.height <= view.height + 0.5,
+                   "and wholly so")
+        }
+
+        function test_aRowTheViewDoesNotHoldIsRefused() {
+            fill(20)
+
+            const before = view.contentY
+
+            compare(view.positionViewAtRow(20, centre), false)
+            compare(view.positionViewAtRow(-1, centre), false)
+            compare(view.positionViewAtRowOffset(99, 10), false)
+            compare(view.contentY, before, "and nothing moved")
+        }
+
+        function test_rowPositionedFiresOnceForAJump() {
+            fill(40)
+
+            verify(view.positionViewAtRow(20, centre))
+            tryVerify(() => positionedSpy.count === 1, 2000, "it reported")
+            compare(positionedSpy.signalArguments[0][0], 20,
+                    "in model rows, like the request")
+
+            wait(50)
+            compare(positionedSpy.count, 1, "and only once")
+        }
+
+        // The restore primitive must pass unnoticed, so it does not report.
+        function test_theOffsetFormDoesNotReport() {
+            fill(40)
+
+            verify(view.positionViewAtRowOffset(20, 30))
+            waitForRendering(view)
+
+            fuzzyCompare(topOf(20), -30, 0.5, "the viewport top is 30px into it")
+            compare(positionedSpy.count, 0)
+        }
+
+        function test_viewportOffsetToRowIsNaNWithoutGeometry() {
+            fill(20)
+
+            verify(isNaN(view.viewportOffsetToRow(20)), "no such row")
+            verify(!isNaN(view.viewportOffsetToRow(0)), "but this one has it")
+        }
+
+        // The window record in miniature: capture an offset, lose the position,
+        // put it back.
+        function test_captureAndRestoreHoldToThePixel() {
+            fill(60)
+
+            verify(view.positionViewAtRow(30, centre))
+            waitForRendering(view)
+
+            const key = view.keyAtRow(30)
+            const captured = view.viewportOffsetToRow(30)
+
+            verify(!isNaN(captured))
+
+            // somewhere else entirely
+            view.contentY = 0
+            waitForRendering(view)
+            verify(Math.abs(view.viewportOffsetToRow(30) - captured) > 10,
+                   "the position is genuinely lost")
+
+            const row = view.rowForKey(key)
+
+            compare(row, 30, "found again by key")
+            verify(view.positionViewAtRowOffset(row, captured))
+            waitForRendering(view)
+
+            fuzzyCompare(view.viewportOffsetToRow(30), captured, 0.5,
+                         "and back to the pixel")
+        }
+
+        function test_bothEndsInBothDirections() {
+            fill(40)
+
+            view.positionViewAtBeginning()
+            waitForRendering(view)
+            fuzzyCompare(view.contentY, 0, 0.5, "top-down the model starts up")
+
+            view.positionViewAtEnd()
+            waitForRendering(view)
+            fuzzyCompare(view.contentY, bottomY(), 0.5)
+
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+            tryVerify(() => settled(40), 8000, "rebuilt bottom-up")
+
+            view.positionViewAtBeginning()
+            waitForRendering(view)
+            fuzzyCompare(view.contentY, bottomY(), 0.5,
+                         "bottom-up the model starts at the bottom")
+
+            view.positionViewAtEnd()
+            waitForRendering(view)
+            fuzzyCompare(view.contentY, 0, 0.5)
+        }
+
+        // Accepted is not done: a staged row has no geometry, and the request
+        // is honoured when the reveal gives it some.
+        function test_aRequestForAStagedRowWaitsForTheReveal() {
+            provider.delay = 60
+            fill(30)
+
+            owner.removeOnReveal = false
+            verify(view.requestMoreBottom())
+            tryVerify(() => view.staging, 2000, "a batch is staged")
+
+            const shell = view.itemAtRow(30)
+
+            verify(shell && !shell.visible, "its row is held but not shown")
+            verify(view.positionViewAtRow(30, beginning), "accepted anyway")
+            compare(positionedSpy.count, 0, "but not yet honoured")
+
+            tryVerify(() => positionedSpy.count === 1, 8000,
+                      "the reveal honoured it")
+            waitForRendering(view)
+            fuzzyCompare(topOf(30), 0, 0.5)
+        }
+
+        // A jump wins over stick-to-bottom: asked for a row while parked at
+        // the bottom with the pin on, the view ends up at the row.
+        function test_aJumpWinsOverStickToBottom() {
+            provider.delay = 60
+            view.stickToBottom = true
+            fill(30)
+
+            view.contentY = bottomY()
+            waitForRendering(view)
+            verify(view.atBottom)
+
+            owner.removeOnReveal = false
+            verify(view.requestMoreBottom())
+            tryVerify(() => view.staging, 2000, "a batch is staged")
+            verify(view.positionViewAtRow(5, beginning))
+
+            tryVerify(() => positionedSpy.count === 1, 8000, "honoured")
+            waitForRendering(view)
+
+            fuzzyCompare(topOf(5), 0, 0.5, "where it was asked for")
+            verify(!view.atBottom, "not dragged back to the bottom")
+        }
+
+        // Handed to the anchor afterwards, so later content changes hold the row
+        // where the jump put it.
+        function test_theAnchorHoldsTheRowAfterwards() {
+            fill(40)
+
+            verify(view.positionViewAtRow(20, centre))
+            waitForRendering(view)
+
+            const offset = view.viewportOffsetToRow(20)
+
+            owner.removeOnReveal = false
+            provider.delay = 0
+            rows.insert(0, rows.make(500, 5))
+            tryVerify(() => settled(45), 8000, "rows went in above")
+
+            const row = view.rowForKey("k20")
+
+            fuzzyCompare(view.viewportOffsetToRow(row), offset, 0.5,
+                         "the row the jump chose stayed put")
+        }
+
+        // What the clamp-retry is for: an exact offset the content is currently
+        // too short to honour is kept, not spent landing at the clamp, and is
+        // honoured once there is content enough.
+        function test_anUnsatisfiableOffsetWaitsForTheContentToGrow() {
+            fill(20)
+
+            const last = view.rowCount - 1
+            const far = 400
+
+            verify(view.positionViewAtRowOffset(last, far), "accepted")
+            waitForRendering(view)
+
+            verify(Math.abs(view.viewportOffsetToRow(last) - far) > 1,
+                   "it cannot be honoured yet")
+            fuzzyCompare(view.contentY, bottomY(), 1.0,
+                         "so the view sits at the clamp meanwhile")
+
+            provider.delay = 0
+            rows.append(rows.make(100, 20))
+            tryVerify(() => settled(40), 8000, "the content grew")
+
+            // the retry lands on the relayout that follows, so the outcome is
+            // the thing to wait for
+            tryVerify(() => Math.abs(view.viewportOffsetToRow(last) - far) < 0.5,
+                      5000, "and the offset is honoured exactly")
+        }
+
+        // Where an owner that had to move its window resolves a jump: inside
+        // the reveal, which fires before the batch is laid out. The request has
+        // to be positioned against the new layout, not the previous one - the
+        // rows have heights by then but the Column has not placed them.
+        function test_aRequestMadeFromTheRevealUsesTheNewLayout() {
+            provider.delay = 30
+            fill(30)
+
+            let asked = false
+
+            function onRevealed() {
+                if (asked)
+                    return
+
+                asked = true
+
+                const row = view.rowForKey("k35")
+
+                if (row >= 0)
+                    view.positionViewAtRow(row,
+                                           WindowedView.PositionMode.Center)
+            }
+
+            view.batchRevealed.connect(onRevealed)
+            owner.removeOnReveal = false
+            verify(view.requestMoreBottom(), "the request was taken")
+            tryVerify(() => !view.busy && positionedSpy.count === 1, 8000,
+                      "the jump was honoured")
+            view.batchRevealed.disconnect(onRevealed)
+            waitForRendering(view)
+
+            verify(asked, "the reveal is where the jump was asked for")
+
+            const item = view.itemAtRow(35)
+
+            verify(item, "the row arrived with the batch")
+            fuzzyCompare(topOf(35) + item.height / 2, view.height / 2, 1.0,
+                         "and is centred against the laid-out batch")
+        }
+
+        function test_aUserScrollAbandonsAPendingRequest() {
+            provider.delay = 60
+            fill(30)
+
+            owner.removeOnReveal = false
+            verify(view.requestMoreBottom())
+            tryVerify(() => view.staging, 2000, "a batch is staged")
+            verify(view.positionViewAtRow(30, beginning))
+
+            // the user has other ideas
+            view.contentY = 40
+            waitForRendering(view)
+
+            tryVerify(() => !view.busy, 8000, "the batch was revealed")
+            compare(positionedSpy.count, 0, "the jump was abandoned")
         }
     }
 

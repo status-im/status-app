@@ -102,6 +102,11 @@ Flickable {
 
     enum VerticalLayoutDirection { TopToBottom, BottomToTop }
 
+    // Where positionViewAtRow() puts the row it is given. ListView's
+    // vocabulary, minus the modes a windowed view has no use for: Contain
+    // leaves a row that is already wholly on screen exactly where it is.
+    enum PositionMode { Beginning, Center, End, Contain }
+
     // Which way rows are laid out, with Qt's meaning: BottomToTop lays them out
     // from the bottom of the view up to the top, so model row 0 is the bottom
     // one. For a newest-first model - which is how a chat backend hands messages
@@ -162,6 +167,12 @@ Flickable {
     // must perform them in this handler.
     signal batchRevealed()
 
+    // A positionViewAtRow() request has been honoured and the row is where it
+    // was asked to be - the moment to flash a jumped-to row. Deliberately not
+    // fired for positionViewAtRowOffset(): that one restores a position the
+    // reader already had, and should pass unnoticed.
+    signal rowPositioned(int row)
+
     // Asks for more at one edge, once. Ignored while that edge is loading or has
     // nothing more to give.
     function requestMoreTop() {
@@ -213,6 +224,65 @@ Flickable {
             return undefined
 
         return d.keyAt(d.renderRow(row))
+    }
+
+    // Puts a model row where `mode` says. Returns whether the request was
+    // accepted: a row this view does not hold is refused and nothing is
+    // recorded - move the window first and ask again.
+    //
+    // Accepted is not the same as done. A row the Column has not laid out yet -
+    // the ordinary case in the frame a batch is revealed - is remembered and
+    // positioned as soon as it has geometry, and rowPositioned() says when.
+    // The request is then handed to the anchor, so later content changes hold
+    // the row where it was put, and it is abandoned as soon as the user
+    // scrolls: a jump must not outlive their next move.
+    function positionViewAtRow(row, mode) {
+        return d.requestPosition(row, mode, NaN)
+    }
+
+    // Places the viewport top `offset` px below the top of a model row - the
+    // restore primitive, and the counterpart of viewportOffsetToRow(). Exact
+    // where the mode above is relative: the same rows at the same width lay out
+    // the same way, so the offset reproduces the position they were captured
+    // from.
+    function positionViewAtRowOffset(row, offset) {
+        return d.requestPosition(row, WindowedView.PositionMode.Beginning,
+                                 offset)
+    }
+
+    // The content edge the model's first and last row sit at - the bottom and
+    // the top rendering bottom-up, the other way round otherwise. Exact, and
+    // needing no row geometry, because the edge is the edge whether or not the
+    // row that belongs there is in the window; when it is not, that edge is the
+    // placeholder band, so an owner who means the row itself moves the window
+    // there first.
+    function positionViewAtBeginning() {
+        d.cancelPosition()
+        d.releaseAnchor()
+        d.apply(d.bottomUp ? d.bottomY() : 0)
+    }
+
+    function positionViewAtEnd() {
+        d.cancelPosition()
+        d.releaseAnchor()
+        d.apply(d.bottomUp ? 0 : d.bottomY())
+    }
+
+    // How far the viewport top sits below the top of a model row, or NaN while
+    // that row has no measurable geometry - never 0, which is a position rather
+    // than an absence, and a caller recording a position must be able to tell
+    // the difference.
+    //
+    // Visibility is deliberately not required: measured geometry outlives an
+    // ancestor's hide until the next layout polish, and capturing as a view is
+    // hidden is what this is for.
+    function viewportOffsetToRow(row) {
+        const item = root.itemAtRow(row)
+
+        if (!item || item.height <= 0)
+            return NaN
+
+        return root.contentY - d.rowTop(item)
     }
 
     contentWidth: width
@@ -634,7 +704,7 @@ Flickable {
             // Sampled before the write, while contentHeight still describes the
             // bottom the viewport was actually sitting at - and against the
             // height it was sitting in, which a resize has already changed.
-            const wasAtEnd = d.wasAtBottomOfContent()
+            const wasAtBottom = d.wasAtBottomOfContent()
             const startBandDelta = d.topBandExtent() - d.appliedTopBand
             const was = d.applyingPosition
 
@@ -666,7 +736,13 @@ Flickable {
             // re-applies the anchor immediately after this returns, so it wins
             // by running last. It is kept so the rule holds on its own rather
             // than by call-site ordering.
-            if (root.stickToBottom && wasAtEnd && !d.anchorItem && !root.moving)
+            // The pending clause is redundant for the same reason as the
+            // anchor one: restorePosition() runs after every caller of this and
+            // honours the request, so a pin here is corrected in the same turn.
+            // Kept so the rule holds on its own rather than by call-site
+            // ordering.
+            if (root.stickToBottom && wasAtBottom && !d.anchorItem
+                    && d.pendingRow < 0 && !root.moving)
                 root.contentY = d.bottomY()      // guard already held
 
             d.appliedHeight = root.height
@@ -704,7 +780,116 @@ Flickable {
             d.anchorItem = null
         }
 
+        // A positioning request that cannot be honoured yet, in rendered rows.
+        // -1 is no request; pendingOffset NaN means use pendingMode.
+        property int pendingRow: -1
+        property real pendingOffset: NaN
+        property int pendingMode: WindowedView.PositionMode.Beginning
+
+        function cancelPosition() {
+            d.pendingRow = -1
+            d.pendingOffset = NaN
+        }
+
+        function requestPosition(row, mode, offset) {
+            if (row < 0 || row >= root.rowCount)
+                return false
+
+            // A deliberate position replaces whatever was holding the view,
+            // including a slide's anchor: the request is the guarantee now.
+            d.releaseAnchor()
+
+            d.pendingRow = d.renderRow(row)
+            d.pendingMode = mode
+            d.pendingOffset = offset
+
+            // Asked from inside a reveal - batchRevealed() is where an owner
+            // resolves a jump, and it fires before the batch is laid out - the
+            // request is only recorded. The rows have heights by then but the
+            // Column has not placed them, so the geometry this would compute
+            // from is the previous layout's. completeWave() lays the batch out
+            // and calls restorePosition() itself, which honours the request
+            // against the real thing, in the same turn and so in the same
+            // frame.
+            if (!d.finishing)
+                d.restorePosition()
+
+            return true
+        }
+
+        // Honours a pending request once its row has geometry, and says whether
+        // it dealt with the position. A request still waiting answers false, so
+        // the anchor keeps the content still in the meantime rather than the
+        // view sitting wherever the pending row happens to be.
+        function applyPendingPosition() {
+            if (d.pendingRow < 0)
+                return false
+
+            const target = rowsRepeater.itemAt(d.pendingRow)
+
+            // A staged row has no content and no height; a revealed one can
+            // still be pre-polish. Either way its geometry is not yet the
+            // geometry the request was about.
+            if (!target || !target.visible || target.height <= 0)
+                return false
+
+            const exact = !isNaN(d.pendingOffset)
+            const top = d.rowTop(target)
+            const bottom = d.bottomY()
+            let wanted = top
+
+            if (exact)
+                wanted = top + d.pendingOffset
+            else if (d.pendingMode === WindowedView.PositionMode.Center)
+                wanted = top + target.height / 2 - root.height / 2
+            else if (d.pendingMode === WindowedView.PositionMode.End)
+                wanted = top + target.height - root.height
+            else if (d.pendingMode === WindowedView.PositionMode.Contain) {
+                const above = top < root.contentY
+                const below = top + target.height > root.contentY + root.height
+
+                // Already wholly on screen: the point of this mode is to leave
+                // a reader where they are.
+                if (!above && !below)
+                    wanted = root.contentY
+                else if (above)
+                    wanted = top
+                else
+                    wanted = top + target.height - root.height
+            }
+
+            const applied = Math.max(0, Math.min(bottom, wanted))
+
+            d.apply(applied)
+
+            // An exact request that had to be clamped was asked in a frame
+            // whose layout has not absorbed the revealed rows yet, so the
+            // content is still too short to honour it. Keep the request and
+            // retry when the heights settle - landing at the clamp would put a
+            // restore at the bottom instead of where it was captured. A mode
+            // request does not retry: a row near an end legitimately clamps.
+            if (exact && Math.abs(applied - wanted) > 0.01)
+                return true
+
+            // Handed to the anchor, by item rather than by row: the window may
+            // slide underneath, which would make the same row a different
+            // message.
+            const row = d.modelRow(d.pendingRow)
+
+            d.anchorItem = target
+            d.anchorOffset = d.rowTop(target) - root.contentY
+            d.cancelPosition()
+
+            if (!exact)
+                root.rowPositioned(row)
+
+            return true
+        }
+
         function restorePosition() {
+            if (d.applyPendingPosition())
+                return
+
             if (!d.anchorItem)
                 return
 
@@ -835,6 +1020,10 @@ Flickable {
         // user has just put the view instead. Outside a slide the anchor has no
         // work to do.
         function userMoved() {
+            // A jump must not outlive the user's next move - the same lifetime
+            // the resize anchor has.
+            d.cancelPosition()
+
             if (!d.loading && d.wave.length === 0) {
                 d.releaseAnchor()
                 return

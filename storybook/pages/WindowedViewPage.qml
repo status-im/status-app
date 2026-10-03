@@ -182,6 +182,11 @@ SplitView {
 
         property bool answerAtTop: false
 
+        // What "Capture position" stored, for "Restore" to put back. The key,
+        // not the row: the row number would be wrong after the next prepend.
+        property string capturedKey: ""
+        property real capturedOffset: NaN
+
         // rowForKey() is a linear scan, so nothing inside it tells QML when its
         // answer can change - and its two paths do not even read the same
         // properties: the one that finds a row reads the view's rowCount, the
@@ -207,6 +212,37 @@ SplitView {
         readonly property int trackedWindowRow:
                 d.windowRowForKey(trackedEntry.value, windowSource.first,
                                   windowSource.last, messagesModel.count)
+
+        // The row the viewport top falls inside - the reading position, and so
+        // what a window record stores. Found by position rather than by number,
+        // because which row that is changes with every scroll.
+        function rowAtViewportTop() {
+            let best = -1
+            let bestOffset = Number.MAX_VALUE
+
+            for (let row = 0; row < windowedView.rowCount; ++row) {
+                const offset = windowedView.viewportOffsetToRow(row)
+
+                // positive means the viewport top is below this row's top, so
+                // the smallest such offset is the row it sits in
+                if (!isNaN(offset) && offset >= 0 && offset < bestOffset) {
+                    bestOffset = offset
+                    best = row
+                }
+            }
+
+            return best
+        }
+
+        function captureReadingPosition() {
+            const row = d.rowAtViewportTop()
+
+            if (row < 0)
+                return
+
+            d.capturedKey = windowedView.keyAtRow(row) ?? ""
+            d.capturedOffset = windowedView.viewportOffsetToRow(row)
+        }
 
         function keyAtSourceRow(row) {
             if (row < 0 || row >= messagesModel.count)
@@ -909,6 +945,33 @@ SplitView {
                     }
                 }
 
+                // Where the view puts it, for a row the view holds: that is
+                // all positioning is, and the box above can point at a row
+                // outside the window.
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    ComboBox {
+                        id: jumpModeComboBox
+
+                        Layout.fillWidth: true
+
+                        model: ["Beginning", "Center", "End", "Contain"]
+                        currentIndex: 1
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        text: "Position"
+                        enabled: !windowedView.busy && d.trackedViewRow >= 0
+
+                        onClicked: windowedView.positionViewAtRow(
+                                       d.trackedViewRow,
+                                       jumpModeComboBox.currentIndex)
+                    }
+                }
+
                 // The key is the identity. ModelEntry holds a persistent index,
                 // so this follows the message as the model changes underneath
                 // it.
@@ -934,6 +997,82 @@ SplitView {
                           + "   |   view holds: "
                           + (d.trackedViewRow < 0 ? "- (outside the window)"
                                            : "model row " + d.trackedViewRow)
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        text: "Model start"
+                        onClicked: windowedView.positionViewAtBeginning()
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        text: "Model end"
+                        onClicked: windowedView.positionViewAtEnd()
+                    }
+                }
+
+                // The window record in miniature: capture where the reader is
+                // sitting, lose the position, put it back exactly. While the
+                // view still holds the row - getting back to one it does not is
+                // the owner's job, not the view's.
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        // Captures where the reader is, not where the
+                        // source-row box points: the row at the viewport top.
+                        // So it keeps working however far the window has been
+                        // scrolled from whatever is selected above.
+                        text: "Capture position"
+                        enabled: windowedView.rowCount > 0 && !windowedView.busy
+
+                        onClicked: d.captureReadingPosition()
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+
+                        text: "Restore"
+                        enabled: !isNaN(d.capturedOffset)
+                                 && !windowedView.busy
+                                 && d.viewRowForKey(d.capturedKey,
+                                                    windowSource.first,
+                                                    windowSource.last,
+                                                    windowedView.rowCount) >= 0
+
+                        onClicked: windowedView.positionViewAtRowOffset(
+                                       windowedView.rowForKey(d.capturedKey),
+                                       d.capturedOffset)
+                    }
+                }
+
+                Label {
+                    text: isNaN(d.capturedOffset)
+                          ? "nothing captured"
+                          : "captured " + d.capturedKey + " at "
+                            + Math.round(d.capturedOffset) + "px"
+                }
+
+                RowLayout {
+                    spacing: 4
+
+                    Rectangle {
+                        Layout.preferredWidth: 10
+                        Layout.preferredHeight: 10
+
+                        radius: width / 2
+                        color: positionedFlash.running ? "#2ecc71" : "#bdbdbd"
+                    }
+
+                    Label { text: "Row positioned" }
                 }
 
                 Item { Layout.preferredHeight: 8 }
@@ -1067,6 +1206,21 @@ SplitView {
         function onInitialLoadingChanged() {
             if (!windowedView.initialLoading)
                 landTimer.restart()
+        }
+    }
+
+    // Lit briefly when the view reports a jump honoured.
+    Timer {
+        id: positionedFlash
+
+        interval: 400
+    }
+
+    Connections {
+        target: windowedView
+
+        function onRowPositioned(row) {
+            positionedFlash.restart()
         }
     }
 
