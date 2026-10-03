@@ -56,6 +56,9 @@ QObject {
     // it held falls off the far end.
     property bool followsStart: false
 
+    // The role that identifies a row, for rowForKey() and moveToKey().
+    property string keyRole: "key"
+
     // The size the window returns to once a batch has been revealed. Writing it
     // while a trim is owed takes effect at the trim rather than immediately, so
     // a resize mid-batch is deferred, never lost and never half-applied.
@@ -151,6 +154,34 @@ QObject {
         d.owedEnd = 0
         d.first = Math.max(0, first)
         d.last = d.first + Math.max(1, root.size) - 1
+    }
+
+    // The row `key` occupies in the source model, or -1 when the model does not
+    // hold it - which is not the same answer as "it does not exist": a row that
+    // has not been fetched yet is simply not here.
+    //
+    // A linear scan, so this is for a one-off - a jump, a restore - and not for
+    // a binding. What it returns is a coordinate valid in the turn it was asked
+    // for: any insertion before it moves it. Hold the key, not the number.
+    function rowForKey(key) {
+        if (!root.sourceModel)
+            return -1
+
+        return ModelUtils.indexOf(root.sourceModel, root.keyRole, key)
+    }
+
+    // Places the window so `key` sits in the middle of it, leaving loaded rows
+    // on both sides to scroll into. Through moveTo(), so it forgets what the
+    // ends owed. Returns false, and leaves the window alone, for a key the
+    // model does not hold.
+    function moveToKey(key) {
+        const row = root.rowForKey(key)
+
+        if (row < 0)
+            return false
+
+        root.moveTo(row - Math.floor(Math.max(1, root.size) / 2))
+        return true
     }
 
     // Nothing here changes what the source holds - it reacts to someone else

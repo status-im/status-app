@@ -351,6 +351,92 @@ Item {
             compare(values(source)[0], 999)
         }
 
+        // ---- Addressing by key -----------------------------------------
+
+        function test_rowForKeyFindsARowAnywhereInTheSource() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            compare(source.rowForKey("k7"), 7, "inside the window")
+            compare(source.rowForKey("k40"), 40,
+                    "and beyond it - this searches the source, not the window")
+        }
+
+        function test_rowForKeyReportsMinusOneForWhatTheModelDoesNotHold() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            compare(source.rowForKey("nope"), -1)
+            compare(source.rowForKey(""), -1)
+            compare(source.rowForKey(undefined), -1)
+        }
+
+        function test_rowForKeyWithoutASourceModel() {
+            const source = createTemporaryObject(emptyComponent, root)
+
+            compare(source.rowForKey("k1"), -1)
+            compare(source.moveToKey("k1"), false)
+        }
+
+        function test_rowForKeyHonoursKeyRole() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.keyRole = "value"
+            compare(source.rowForKey(12), 12)
+            compare(source.rowForKey("k12"), -1, "the old role no longer matches")
+        }
+
+        // The number it returns is a coordinate, not an identity: an insertion
+        // before the row moves it, which is the whole reason to hold the key.
+        function test_rowForKeyFollowsAnInsertion() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            compare(source.rowForKey("k7"), 7)
+
+            source.sourceModel.insert(0, [{ key: "new0", value: -1 },
+                                          { key: "new1", value: -2 }])
+
+            compare(source.rowForKey("k7"), 9, "the same message, two rows down")
+        }
+
+        function test_moveToKeyCentresTheWindowOnIt() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            compare(source.moveToKey("k30"), true)
+            compare(source.first, 25, "centred, for content on both sides")
+            compare(source.last, 34)
+            compare(values(source).indexOf(30) !== -1, true, "and it is shown")
+        }
+
+        function test_moveToKeyClampsAtTheStart() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(30)
+            compare(source.moveToKey("k1"), true)
+            compare(source.first, 0, "clamped rather than negative")
+            compare(source.model.count, 10, "and still the steady size")
+        }
+
+        function test_moveToKeyLeavesTheWindowAloneForAnUnknownKey() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(20)
+            compare(source.moveToKey("nope"), false)
+            compare(source.first, 20)
+            compare(source.last, 29)
+        }
+
+        function test_moveToKeyForgetsWhatWasOwed() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(20)
+            source.growStart(4)
+            compare(source.growing, true)
+
+            compare(source.moveToKey("k30"), true)
+            compare(source.growing, false, "a jump is not a paged move")
+            compare(source.first, 25)
+            compare(source.model.count, 10)
+        }
+
         // Mid-batch the bounds belong to the owed trim; re-pinning them would
         // leave it pointing at bounds that had moved underneath it.
         function test_followingIsSkippedWhileABatchIsInFlight() {
