@@ -42,7 +42,7 @@ public class StatusApplication extends QtApplication {
                 final String key = line.substring(0, eq).trim();
                 final String value = line.substring(eq + 1).trim();
                 Os.setenv(key, value, true);
-                Log.i(TAG, "env " + key + "=" + value);
+                Log.i(TAG, "env " + key);
             }
         } catch (Exception e) {
             Log.w(TAG, "failed to apply " + file, e);
