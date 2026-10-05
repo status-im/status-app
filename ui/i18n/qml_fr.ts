@@ -16987,6 +16987,10 @@ avec un retour à la ligne</translation>
         <translation>Token non pris en charge. Essayez-en d’autres</translation>
     </message>
     <message>
+        <source>Unsupported network. Try another</source>
+        <translation>Réseau non pris en charge. Essayez-en un autre</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Un problème est survenu. Modifiez le montant, le jeton ou réessayez ↺</translation>
     </message>

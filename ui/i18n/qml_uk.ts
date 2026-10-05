@@ -17071,6 +17071,10 @@ to load</source>
         <translation>Токен не підтримується. Спробуйте інші</translation>
     </message>
     <message>
+        <source>Unsupported network. Try another</source>
+        <translation>Мережа не підтримується. Спробуйте іншу</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Виникла проблема. Змініть суму, токен або повторіть спробу ↺</translation>
     </message>
