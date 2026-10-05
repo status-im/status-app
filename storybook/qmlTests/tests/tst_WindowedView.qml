@@ -3680,6 +3680,39 @@ Item {
 
         // The number is the *model* row, not the rendered one: rendering
         // bottom-up moves row 0 to the bottom, it does not renumber it.
+        // How much a model arriving costs, in acquires per row.
+        function remodelAcquires(bottomUp) {
+            view.verticalLayoutDirection = bottomUp
+                    ? WindowedView.VerticalLayoutDirection.BottomToTop
+                    : WindowedView.VerticalLayoutDirection.TopToBottom
+            owner.reset(20)
+            tryVerify(() => !view.busy && view.rowCount === 20, 8000, "filled")
+
+            view.model = null
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            provider.forgetDressing()
+
+            view.model = rows
+            tryVerify(() => !view.busy && view.rowCount === 20, 8000,
+                      "filled again")
+
+            return provider.dressedCount
+        }
+
+        // A Repeater handed a proxy that has no source yet builds every row
+        // against its empty shape, throws them away and builds them all again
+        // when the source lands. Rendering bottom-up puts such a proxy between
+        // the model and the rows, so the view has to keep it to itself until it
+        // has a source - and a model arriving then costs what it costs
+        // top-down, where there is no proxy at all.
+        function test_aModelArrivingBuildsEachRowOnce() {
+            const bottomUp = remodelAcquires(true)
+            const topDown = remodelAcquires(false)
+
+            compare(topDown, 20, "top-down: one acquire per row")
+            compare(bottomUp, topDown, "bottom-up: the same, not twice over")
+        }
+
         function test_theProviderIsToldTheModelRow() {
             provider.forgetDressing()
             fill(20)
