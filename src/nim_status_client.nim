@@ -85,6 +85,23 @@ var signalsManagerQObjPointer: pointer
 proc isExperimental(): string =
   result = if getEnv("EXPERIMENTAL") == "1": "1" else: "0" # value explicity passed to avoid trusting input
 
+# STATUS_PPROF=1 serves net/http/pprof on 127.0.0.1:6060, any other value is the address.
+# On Android it runs in the :statusgo process; status-go rejects non-loopback addresses.
+proc startPprofFromEnv() =
+  let value = getEnv("STATUS_PPROF")
+  if value.len == 0:
+    return
+  let address = if value == "1": "127.0.0.1:6060" else: value
+  let response = status_go.startPprof(address)
+  try:
+    let err = parseJson(response){"error"}.getStr
+    if err.len == 0:
+      info "pprof listening", address
+    else:
+      error "pprof failed to start", address, err
+  except CatchableError as e:
+    error "pprof failed to start", address, response, err = e.msg
+
 proc determineResourcePath(): string =
   result = if defined(windows) and defined(production): "/../resources/resources.rcc" else: "/../resources.rcc"
 
@@ -430,6 +447,8 @@ proc mainProc() =
     keycardServiceV2QObjPointer = cast[pointer](appController.keycardServiceV2.vptr)
 
   setupRemoteSignalsHandling()
+
+  startPprofFromEnv()
 
   info "app info", version=APP_VERSION, commit=GIT_COMMIT, currentDateTime=now()
 
