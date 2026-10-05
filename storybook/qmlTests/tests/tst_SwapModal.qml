@@ -2444,6 +2444,8 @@ Item {
                   message: qsTr("Amount too high. Lower amount") },
                 { tag: "unsupported currency", code: Constants.routerErrorCodes.processor.errUnsupportedCurrency,
                   message: qsTr("Unsupported token. Try others") },
+                { tag: "unsupported chain", code: Constants.routerErrorCodes.processor.errUnsupportedChain,
+                  message: qsTr("Unsupported network. Try another") },
             ]
         }
 

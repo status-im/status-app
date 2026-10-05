@@ -17144,6 +17144,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Unsupported network. Try another</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation type="unfinished"></translation>
     </message>
