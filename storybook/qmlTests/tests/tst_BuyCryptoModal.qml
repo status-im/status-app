@@ -88,7 +88,9 @@ Item {
                     console.warn("fetchProviderUrl called >> uuid: ", uuid, "providerID: ",providerID
                                  , "isRecurrent: ", isRecurrent, "accountAddress: ", accountAddress,
                                  "chainID: ", chainID, "symbol: ", symbol)
+                    const provider = ModelUtils.getByKey(providersModel, "id", providerID)
                     buySellModal.uuid = uuid
+                    buySellModal.pendingUrl = "https://" + provider.hostname + "/checkout"
                     debounceFetchProviderUrl()
                 }
             }
@@ -116,8 +118,9 @@ Item {
                 }
             }
             property string uuid
+            property string pendingUrl
             property var debounceFetchProviderUrl: Backpressure.debounce(root, 500, function() {
-                buySellModal.buyCryptoStore.providerUrlReady(uuid, "xxxx")
+                buySellModal.buyCryptoStore.providerUrlReady(uuid, buySellModal.pendingUrl)
             })
             property var debounceFetchProvidersList: Backpressure.debounce(root, 500, function() {
                 if (buySellModal && buySellModal.buyCryptoStore) {
@@ -267,7 +270,7 @@ Item {
 
             verify(controlUnderTest.rightButtons[0].loading)
             tryCompare(notificationSpy, "count", 1)
-            compare(notificationSpy.signalArguments[0][0], "xxxx")
+            compare(notificationSpy.signalArguments[0][0], "https://" + modelData.hostname + "/checkout")
             notificationSpy.clear()
 
             // popup should be closed
@@ -290,7 +293,7 @@ Item {
 
             verify(loadingIndicator.visible)
             tryCompare(notificationSpy, "count", 1)
-            compare(notificationSpy.signalArguments[0][0], "xxxx")
+            compare(notificationSpy.signalArguments[0][0], "https://" + modelData.hostname + "/checkout")
             notificationSpy.clear()
 
             // popup should be closed
