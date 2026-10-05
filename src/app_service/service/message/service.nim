@@ -99,6 +99,7 @@ type
 
   ChatThreadsForChatsLoadedArgs* = ref object of Args
     threads*: seq[ThreadDto]
+    completedChatIds*: seq[string]
 
   ThreadCreatedArgs* = ref object of Args
     chatId*: string
@@ -292,12 +293,22 @@ QtObject:
       return
 
     var pending: seq[string] = @[]
+    var completedThreads: seq[ThreadDto] = @[]
+    var completedChatIds: seq[string] = @[]
     for chatId in chatIds:
-      if chatId.len == 0 or
-         self.chatThreadListsLoadedChats.contains(chatId) or
-         self.chatThreadListsLoadingChats.contains(chatId):
+      if chatId.len == 0 or self.chatThreadListsLoadingChats.contains(chatId):
+        continue
+      if self.chatThreadListsLoadedChats.contains(chatId):
+        completedChatIds.add(chatId)
+        if self.chatThreadsByParentIdByChat.hasKey(chatId):
+          for _, thread in self.chatThreadsByParentIdByChat[chatId]:
+            completedThreads.add(thread)
         continue
       pending.add(chatId)
+
+    if completedChatIds.len > 0:
+      self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
+        ChatThreadsForChatsLoadedArgs(threads: completedThreads, completedChatIds: completedChatIds))
 
     if pending.len == 0:
       return
@@ -336,7 +347,7 @@ QtObject:
         mergedThreads.add(self.chatThreadsByParentIdByChat[thread.chatId][thread.parentMessageId])
 
     self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
-      ChatThreadsForChatsLoadedArgs(threads: mergedThreads))
+      ChatThreadsForChatsLoadedArgs(threads: mergedThreads, completedChatIds: @[]))
 
   proc handleThreadsFromResponse(self: Service, response: JsonNode) =
     var threadsArr: JsonNode
@@ -974,7 +985,7 @@ QtObject:
         self.chatThreadListsLoadedChats.incl(chatId)
         self.chatThreadListsLoadingChats.excl(chatId)
       self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
-        ChatThreadsForChatsLoadedArgs(threads: threads))
+        ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: chatIds))
     except Exception as e:
       for chatId in chatIds:
         self.chatThreadListsLoadingChats.excl(chatId)
