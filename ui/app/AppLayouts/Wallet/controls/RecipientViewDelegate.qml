@@ -56,6 +56,7 @@ StatusListItem {
     statusListItemSubTitle.customColor: sensor.containsMouse ? Theme.palette.directColor1 : Theme.palette.baseColor1
     statusListItemTitle.elide: Text.ElideRight
     statusListItemTitle.font.family: Fonts.monoFont.family
+    statusListItemTitle.font.features: Fonts.monoFont.features
     statusListItemIcon.name: useAddressAsLetterIdenticon ? root.address : title
 
     asset.emoji: root.emoji

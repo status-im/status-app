@@ -9,6 +9,7 @@ class Fonts: public QObject {
     QML_SINGLETON
 
     Q_PROPERTY(QFont baseFont READ baseFont CONSTANT FINAL)
+    // monoFont shares baseFont's family; QML must also bind font.features.
     Q_PROPERTY(QFont monoFont READ monoFont CONSTANT FINAL)
     Q_PROPERTY(QFont codeFont READ codeFont CONSTANT FINAL)
 

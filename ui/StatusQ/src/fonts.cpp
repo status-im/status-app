@@ -40,10 +40,11 @@ constexpr auto loadAndAssignFont = [](QLatin1StringView fontRelPath, QFont& font
         const auto families = QFontDatabase::applicationFontFamilies(id);
         if (families.isEmpty()) {
             qWarning() << "!!! EMPTY FONT ???" << fontRelPath;
-            return;
+            return -1;
         }
         font = QFont(families);
     }
+    return id;
 };
 }
 
@@ -59,36 +60,23 @@ void Fonts::initFonts()
     QElapsedTimer t;
     t.start();
 #endif
-    // main fonts
-    loadAndAssignFont("Inter/Inter-Regular.otf"_L1, m_baseFont);
-    loadAndAssignFont("InterStatus/InterStatus-Regular.otf"_L1, m_monoFont);
-    loadAndAssignFont("RobotoMono/RobotoMono-Regular.ttf"_L1, m_codeFont);
+    // Inter (baseFont & monoFont) styles
+    const auto baseFontId = loadAndAssignFont("InterVariable.ttf"_L1, m_baseFont);
+    loadFont("InterVariable-Italic.ttf"_L1);
 
-    // Inter (baseFont) styles
-    loadFont("Inter/Inter-Thin.otf"_L1);
-    loadFont("Inter/Inter-ExtraLight.otf"_L1);
-    loadFont("Inter/Inter-Light.otf"_L1);
-    loadFont("Inter/Inter-Medium.otf"_L1);
-    loadFont("Inter/Inter-Bold.otf"_L1);
-    loadFont("Inter/Inter-ExtraBold.otf"_L1);
-    loadFont("Inter/Inter-Black.otf"_L1);
+    // Roboto Mono (codeFont)
+    loadAndAssignFont("RobotoMono-VariableFont_wght.ttf"_L1, m_codeFont);
+    loadFont("RobotoMono-Italic-VariableFont_wght.ttf"_L1);
 
-    // Inter Status (monoFont) styles
-    loadFont("InterStatus/InterStatus-Thin.otf"_L1);
-    loadFont("InterStatus/InterStatus-ExtraLight.otf"_L1);
-    loadFont("InterStatus/InterStatus-Light.otf"_L1);
-    loadFont("InterStatus/InterStatus-Medium.otf"_L1);
-    loadFont("InterStatus/InterStatus-Bold.otf"_L1);
-    loadFont("InterStatus/InterStatus-ExtraBold.otf"_L1);
-    loadFont("InterStatus/InterStatus-ExtraBoldItalic.otf"_L1);
-    loadFont("InterStatus/InterStatus-Black.otf"_L1);
-
-    // Roboto Mono (codeFont) styles
-    loadFont("RobotoMono/RobotoMono-Thin.ttf"_L1);
-    loadFont("RobotoMono/RobotoMono-ExtraLight.ttf"_L1);
-    loadFont("RobotoMono/RobotoMono-Light.ttf"_L1);
-    loadFont("RobotoMono/RobotoMono-Medium.ttf"_L1);
-    loadFont("RobotoMono/RobotoMono-Bold.ttf"_L1);
+    // monoFont fine tuning (https://rsms.me/inter/#features)
+    if (baseFontId != -1) {
+        m_monoFont = m_baseFont;
+        for (auto tag: {"tnum", "ss02"}) {
+            const auto feature = QFont::Tag::fromString(tag);
+            if (feature)
+                m_monoFont.setFeature(*feature, true);
+        }
+    }
 
 #ifdef QT_DEBUG
     qInfo()

@@ -198,7 +198,7 @@ Item {
             const delegateUnderTest = assetsList.itemAtIndex(2)
             verify(!!delegateUnderTest)
             compare(delegateUnderTest.rowAt(0).symbol, "DAI")
-            mouseClick(delegateUnderTest.rowAt(0))
+            mouseClick(delegateUnderTest.rowAt(0), delegateUnderTest.width/2, delegateUnderTest.height/2 - 10) // -10 because there's the clickable address tag in the middle
 
             compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
             compare(assetSelector.contentItem.name, "DAI")

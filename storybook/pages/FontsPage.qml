@@ -29,6 +29,7 @@ Item {
         CustomLabel {
             type: "monoFont"
             font.family: Fonts.monoFont.family
+            font.features: Fonts.monoFont.features
         }
         CustomLabel {
             type: "codeFont"
@@ -58,7 +59,7 @@ Item {
         property string type
         textFormat: Text.RichText
         text: "<big>%1 (%2):</big><br>%3<br>".arg(type).arg(font.family)
-          .arg("Lorem Ipsum dolor sit amet. ff fi fff Ill<br>0123456789 -> 0xdeadbeef &lt;==&gt; &amp; @ $ &pound; # &mdash;<br><b>bold</b>, <i>italic</i>, <b><i>bold + italic</i></b>")
+          .arg("Lorem Ipsum dolor sit amet. ff fi fff Ill<br>0123456789 (3*9=27) -> 0xdeadbeef &lt;==&gt; &amp; @ $ &pound; # &mdash;<br><b>bold</b>, <i>italic</i>, <b><i>bold + italic</i></b>")
         font.pixelSize: 18
     }
 }
