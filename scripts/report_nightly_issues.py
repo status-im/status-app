@@ -119,16 +119,16 @@ def report(report_dir, output_dir, environ=None, github_factory=GitHub):
             raise ValueError("BUILD_URL is required so every reported issue links to its Jenkins run")
         reports, failures = failed_tests(report_dir)
         summary["failed_tests"] = failures
-        if not reports:
+        if not reports and environ.get("NIGHTLY_BUILD_RESULT") != "FAILURE":
             summary.update(action="no-test-report", message="No JUnit report: inspect setup/build logs. No issue created.")
             return 0
-        if not failures:
+        if reports and not failures:
             summary["action"] = "no-failures"
             return 0
         marker = f"<!-- logos-delivery-nightly:run:{hashlib.sha256(build_url.encode()).hexdigest()} -->"
         title = f"{TITLE_PREFIX} {datetime.now(timezone.utc):%d.%m.%Y}"
         body = (
-            "This issue was created automatically based on failing automated tests from the Logos Delivery nightly job.\n\n"
+            "This issue was created automatically based on failures from the Logos Delivery nightly job.\n\n"
             f"{marker}\n\nJenkins build: {build_url}\n\n"
             f"Test report: {build_url}testReport/\n\n"
             f"Full failure details: {build_url}artifact/nightly-report/issue-report.json\n\n"
@@ -136,7 +136,12 @@ def report(report_dir, output_dir, environ=None, github_factory=GitHub):
             f"status-app test commit: `{environ.get('GIT_COMMIT', 'not recorded')}`\n\n"
             f"Tested app: `{environ.get('TESTED_APP', 'not recorded')}`\n\n"
             f"Delivery image ID: `{environ.get('WAKU_IMAGE_ID', 'not recorded')}`\n\n"
-            f"Delivery image: `{environ.get('WAKU_IMAGE', 'not recorded')}`\n\n" + failure_details(failures)
+            f"Delivery image: `{environ.get('WAKU_IMAGE', 'not recorded')}`\n\n" + (
+                failure_details(failures) if reports else
+                "### Build/setup failure\n\n"
+                "The nightly build failed without producing a JUnit report. "
+                f"Inspect the Jenkins console for the cause: {build_url}console\n"
+            )
         )
         # Preserve the complete structured report as an artifact even for unusually large runs.
         if len(body) > 60000:
