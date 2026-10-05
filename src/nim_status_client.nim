@@ -268,7 +268,8 @@ proc mainProc() =
   enableHDPI(uiScaleFilePath)
 
   # Enable threaded renderer (replaces dos_qguiapplication_try_enable_threaded_renderer)
-  putEnv("QSG_RENDER_LOOP", "threaded")
+  if not existsEnv("QSG_RENDER_LOOP"):
+    putEnv("QSG_RENDER_LOOP", "threaded")
 
   # Install self-signed certificate (replaces dos_add_self_signed_certificate)
   let imageCert = imageServerTLSCert()
