@@ -241,7 +241,7 @@ when isMainModule:
         result.opened = if bench.modalOpen: 1 else: 0
         bench.beginMonitor()
         let tp = bench.nowMs()
-        while bench.builtKind1 < 2 and (bench.nowMs() - tp) < openTimeoutMs:
+        while bench.builtKind1 + bench.builtKind3 < 2 and (bench.nowMs() - tp) < openTimeoutMs:
           QCoreApplication.processEvents()
         bench.spinFor(80)  # let the seed's post-build tick delta register
         bench.endMonitor()

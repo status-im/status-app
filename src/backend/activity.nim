@@ -323,6 +323,7 @@ type
     communityId*: Option[string]
     interactedContractAddress*: Option[eth.Address]
     approvalSpender*: Option[eth.Address]
+    swapProvider*: Option[string]
     isNew*: bool
 
   # Mirrors status-go/services/wallet/activity/activity.go EntryData
@@ -360,6 +361,7 @@ type
 
     interactedContractAddress*: Option[eth.Address]
     approvalSpender*: Option[eth.Address]
+    swapProvider*: Option[string]
 
   # Mirrors services/wallet/activity/service.go ErrorCode
   ErrorCode* = enum
@@ -428,6 +430,7 @@ proc fromJson*(e: JsonNode, T: typedesc[Data]): Data {.inline.} =
   const communityIdField = "communityId"
   const interactedContractAddressField = "interactedContractAddress"
   const approvalSpenderField = "approvalSpender"
+  const swapProviderField = "swapProvider"
   const isNewField = "isNew"
   result = T(
     payloadType: fromJson(e["payloadType"], PayloadType),
@@ -491,6 +494,8 @@ proc fromJson*(e: JsonNode, T: typedesc[Data]): Data {.inline.} =
     var address: eth.Address
     fromJson(e[approvalSpenderField], approvalSpenderField, address)
     result.approvalSpender = some(address)
+  if e.hasKey(swapProviderField) and e[swapProviderField].kind != JNull:
+    result.swapProvider = some(e[swapProviderField].getStr())
   result.isNew = e.hasKey(isNewField) and e[isNewField].getBool()
 
 proc fromJson*(e: JsonNode, T: typedesc[ActivityEntry]): ActivityEntry {.inline.} =
@@ -518,6 +523,7 @@ proc fromJson*(e: JsonNode, T: typedesc[ActivityEntry]): ActivityEntry {.inline.
     communityId: data.communityId,
     interactedContractAddress: data.interactedContractAddress,
     approvalSpender: data.approvalSpender,
+    swapProvider: data.swapProvider,
     isNew: data.isNew
   )
 
@@ -546,6 +552,7 @@ proc `$`*(self: ActivityEntry): string =
     communityId* {$self.communityId},
     interactedContractAddress* {$self.interactedContractAddress},
     approvalSpender* {$self.approvalSpender},
+    swapProvider* {$self.swapProvider},
     isNew* {$self.isNew},
   )"""
 

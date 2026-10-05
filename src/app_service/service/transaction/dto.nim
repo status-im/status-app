@@ -44,6 +44,13 @@ type
     CommunitySetSignerPubKey
     Approve
 
+# A sent collectible transaction reports only chain and contract as its token
+# key; the requested key also carries the token id.
+proc toastAssetKey*(sendType: SendType, requestedKey: string, sentKey: string): string =
+  if sentKey.len == 0 or sendType in {SendType.ERC721Transfer, SendType.ERC1155Transfer}:
+    return requestedKey
+  return sentKey
+
 type
   PendingTransactionTypeDto* {.pure.} = enum
     Unknown = "Unknown"
@@ -274,6 +281,7 @@ type
     txBonderFees*: UInt256 # Unchanged value from Path V2
     cost*: float
     estimatedTime*: int
+    estimatedTimeSeconds*: int
     amountInLocked*: bool
     isFirstSimpleTx*: bool
     isFirstBridgeTx*: bool
@@ -299,6 +307,7 @@ proc `$`*(self: TransactionPathDto): string =
     bonderFees:{self.bonderFees},
     cost:{self.cost},
     estimatedTime:{self.estimatedTime},
+    estimatedTimeSeconds:{self.estimatedTimeSeconds},
     amountInLocked:{self.amountInLocked},
     isFirstSimpleTx:{self.isFirstSimpleTx},
     isFirstBridgeTx:{self.isFirstBridgeTx}
@@ -324,6 +333,7 @@ proc convertToTransactionPathDto*(jsonObj: JsonNode): TransactionPathDto =
   result.amountIn = stint.u256(jsonObj{"amountIn"}.getStr)
   result.amountOut = stint.u256(jsonObj{"amountOut"}.getStr)
   result.estimatedTime = jsonObj{"estimatedTime"}.getInt
+  result.estimatedTimeSeconds = jsonObj{"estimatedTimeSeconds"}.getInt
   result.amountInLocked = jsonObj{"amountInLocked"}.getBool
   result.isFirstSimpleTx = jsonObj{"isFirstSimpleTx"}.getBool
   result.isFirstBridgeTx = jsonObj{"isFirstBridgeTx"}.getBool

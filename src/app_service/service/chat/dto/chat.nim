@@ -75,6 +75,7 @@ type ChatDto* = object
   active*: bool # indicates whether the chat has been soft deleted
   chatType*: ChatType
   timestamp*: int64 # indicates the last time this chat has received/sent a message
+  lastOwnMessageTimestamp*: int64 # last time the user posted here from any device, 0 when unknown
   lastClockValue*: int64 # indicates the last clock value to be used when sending messages
   deletedAtClockValue*: int64 # indicates the clock value at time of deletion, messages with lower clock value of this should be discarded
   readMessagesAtClockValue*: int64
@@ -277,6 +278,7 @@ proc toChatDto*(jsonObj: JsonNode): ChatDto =
   discard jsonObj.getProp("emoji", result.emoji)
   discard jsonObj.getProp("active", result.active)
   discard jsonObj.getProp("timestamp", result.timestamp)
+  discard jsonObj.getProp("lastOwnMessageTimestamp", result.lastOwnMessageTimestamp)
   discard jsonObj.getProp("lastClockValue", result.lastClockValue)
   discard jsonObj.getProp("deletedAtClockValue", result.deletedAtClockValue)
   discard jsonObj.getProp("readMessagesAtClockValue", result.readMessagesAtClockValue)

@@ -79,6 +79,9 @@ proc buildGroupsForChainTo*(self: Controller, chainId: int) =
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): TokenItem =
   return self.tokenService.getTokenByKeyOrGroupKeyFromAllTokens(key)
 
+proc ensurePricesForGroup*(self: Controller, key: string) =
+  self.tokenService.ensurePricesForGroup(key)
+
 proc getGroupsForChain*(self: Controller): var seq[TokenGroupItem] =
   return self.tokenService.getGroupsForChain()
 
@@ -165,11 +168,8 @@ proc toggleAutoRefreshTokensLists*(self: Controller): bool =
 proc getMandatoryTokenGroupKeys*(self: Controller): seq[string] =
   return self.tokenService.getMandatoryTokenGroupKeys()
 
-proc isChainSupportedForSwapViaParaswap*(self: Controller, chainId: int): bool =
-  return self.tokenService.isChainSupportedForSwapViaParaswap(chainId)
-
-proc isChainSupportedForSwapViaLiFi*(self: Controller, chainId: int): bool =
-  return self.tokenService.isChainSupportedForSwapViaLiFi(chainId)
+proc isChainSupportedForSwap*(self: Controller, chainId: int): bool =
+  return self.tokenService.isChainSupportedForSwap(chainId)
 
 proc loadTokenLists*(self: Controller) =
   self.tokenService.asyncFetchAllTokenLists()

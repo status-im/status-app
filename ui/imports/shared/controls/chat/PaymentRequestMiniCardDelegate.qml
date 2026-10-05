@@ -11,6 +11,8 @@ import utils
 CalloutCard {
     id: root
 
+    objectName: "paymentRequestMiniCard"
+
     required property string amount
     required property string symbol
     required property string logoUri

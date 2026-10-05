@@ -46,7 +46,7 @@ QtObject {
     // Host Download Target policy: platform downloads location (overridable in tests).
     property string downloadsDirectory: {
         const loc = StandardPaths.writableLocation(StandardPaths.DownloadLocation)
-        return loc ? String(loc).replace("file://", "") : ""
+        return loc ? UrlUtils.convertUrlToLocalPath(loc) : ""
     }
 
     /// The one platform seam: filesystem, share/clipboard, and the two platform
@@ -57,6 +57,7 @@ QtObject {
     /// - sharePaths([path]) — mobile share sheet for files
     /// - shareText(text) — mobile share sheet for text/URL
     /// - copyText(text) — desktop Copy file path / Copy URL
+    /// - openFile(url) → bool — hand a file to the OS; false when no app took it
     /// - showInFolder(path) — desktop reveals file; Android opens system Downloads UI
     /// - preferShareSheet: bool — mobile → share sheet; desktop → copy
     /// - showInFolderSupported: bool — Desktop + Android; hidden on iOS
@@ -67,6 +68,7 @@ QtObject {
         sharePaths: function(paths) { SystemUtils.sharePaths(paths) },
         shareText: function(text) { ShareUtils.shareText(text) },
         copyText: function(text) { ClipboardUtils.setText(text) },
+        openFile: function(url) { return Qt.openUrlExternally(url) },
         showInFolder: function(path) { SystemUtils.showInFolder(path) },
         preferShareSheet: SQUtils.Utils.isMobile,
         showInFolderSupported: !SQUtils.Utils.isIOS
@@ -338,7 +340,11 @@ QtObject {
     function openRecord(record) {
         if (!record || record.missingFile)
             return
-        Qt.openUrlExternally(UrlUtils.urlFromUserInput(record.targetPath))
+        if (root.platform.openFile(UrlUtils.urlFromUserInput(record.targetPath)))
+            return
+        // No app took the file: show it in the system Downloads instead.
+        if (root.platform.showInFolderSupported)
+            root.platform.showInFolder(record.targetPath)
     }
 
     function openDirectoryForRecord(record) {
@@ -397,13 +403,26 @@ QtObject {
     }
 
     function canShareUrl(record) {
-        return !!record && sourceUrlString(record).length > 0
+        return canShareUrlString(sourceUrlString(record))
+    }
+
+    /// blob: and data: URLs address memory in the page that made them.
+    function canShareUrlString(url) {
+        const text = String(url || "")
+        return text.length > 0 && !/^(blob|data):/i.test(text)
     }
 
     function sourceUrlString(record) {
         if (!record || record.url === undefined || record.url === null)
             return ""
-        return String(record.url)
+        // String(url) is QUrl's pretty form, which decodes %20 into a space; a
+        // URL parser re-encodes it so the link survives being shared as text.
+        const text = String(record.url)
+        try {
+            return new URL(text).href
+        } catch (e) {
+            return text
+        }
     }
 
     /// Mobile: system share sheet. Desktop: copy the Download Target path.
@@ -428,7 +447,7 @@ QtObject {
     /// Same share-vs-copy policy for a raw URL (link long-press menu).
     function shareUrlString(url) {
         const text = String(url || "")
-        if (!text)
+        if (!canShareUrlString(text))
             return false
         if (root.platform.preferShareSheet) {
             if (root.platform.shareText)

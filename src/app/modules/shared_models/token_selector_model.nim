@@ -31,6 +31,7 @@ when defined(QT_MODEL_SPY):
 type
   ModelRole {.pure.} = enum
     Key = UserRole + 1
+    GroupKey
     Name
     Symbol
     LogoUri
@@ -103,6 +104,7 @@ QtObject:
   method roleNames(self: TokenSelectorModel): Table[int, string] =
     {
       ModelRole.Key.int: "key",
+      ModelRole.GroupKey.int: "groupKey",
       ModelRole.Name.int: "name",
       ModelRole.Symbol.int: "symbol",
       ModelRole.LogoUri.int: "logoUri",
@@ -123,6 +125,7 @@ QtObject:
     let item = self.items[index.row]
     case role.ModelRole:
     of ModelRole.Key: return newQVariant(item.key)
+    of ModelRole.GroupKey: return newQVariant(item.groupKey)
     of ModelRole.Name: return newQVariant(item.name)
     of ModelRole.Symbol: return newQVariant(item.symbol)
     of ModelRole.LogoUri: return newQVariant(item.logoUri)
@@ -239,7 +242,7 @@ QtObject:
         popularGroups = self.source.getPopular()
     self.setSourceItems(buildDisplayItems(
       self.ownedGroups, self.networks, self.params, self.mode, searching,
-      popularGroups, searchGroups))
+      popularGroups, searchGroups, self.searchKeyword))
 
   proc setOwnedSource*(self: TokenSelectorModel, groups: seq[AggTokenGroup],
       networks: seq[NetworkInfo]) =
@@ -261,16 +264,23 @@ QtObject:
 
   # The params are exposed as read+write QtProperties so the QML sites can drive
   # them declaratively (Binding onto the picker model); the write setters guard
-  # and recompute. No notify is needed — the binding is one-way QML -> model.
+  # and recompute. The bindings are one-way QML -> model, so the params need no
+  # notify, with one exception: accountAddress. A panel compares it with its own
+  # account to know when the rows are filtered to that account (an empty address
+  # means every account), and a binding on a property without notify would never
+  # re-evaluate after the write.
+  proc accountAddressChanged*(self: TokenSelectorModel) {.signal.}
   proc setAccountAddress*(self: TokenSelectorModel, address: string) {.slot.} =
     if address == self.params.accountAddress: return
     self.params.accountAddress = address
     self.recompute()
+    self.accountAddressChanged()
   proc getAccountAddress(self: TokenSelectorModel): string {.slot.} =
     self.params.accountAddress
   QtProperty[string] accountAddress:
     read = getAccountAddress
     write = setAccountAddress
+    notify = accountAddressChanged
 
   proc setEnabledChainId*(self: TokenSelectorModel, chainId: int) {.slot.} =
     ## -1 means "no chain filter". The pickers only ever scope to a single chain
@@ -387,6 +397,8 @@ QtObject:
       self.items.mapIt(it.key)
     proc sectionNameAtForTest*(self: TokenSelectorModel, i: int): string =
       self.sectionNameFor(self.items[i])
+    proc groupKeyAtForTest*(self: TokenSelectorModel, i: int): string =
+      self.items[i].groupKey
     proc decimalsAtForTest*(self: TokenSelectorModel, i: int): int =
       self.items[i].decimals
     proc cryptoPriceAtForTest*(self: TokenSelectorModel, i: int): float =

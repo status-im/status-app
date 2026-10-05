@@ -12,6 +12,12 @@ using namespace Status;
 #include <QDebug>
 #include <QDesktopServices>
 #include <QGuiApplication>
+#include <QJsonArray>
+#include <QJsonDocument>
+
+#if defined(Q_OS_IOS)
+    #include <CoreFoundation/CFBundle.h>
+#endif
 
 void UrlSchemeEvent::registerUrlHandler()
 {
@@ -21,6 +27,17 @@ void UrlSchemeEvent::registerUrlHandler()
     // Register a handler for "https" scheme to intercept these URLs.
     QDesktopServices::setUrlHandler("https", this, "handleUrl");
     QDesktopServices::setUrlHandler("status-app", this, "handleUrl");
+    // Variant-unique wake scheme: each app variant registers its bundle id as
+    // a URL scheme (mobile/ios/Info.plist.template) so a co-installed variant
+    // can't hijack the share extension's wake — iOS keeps one global handler
+    // per scheme. The extension derives the same scheme from its bundle id
+    // (mobile/ios/shareExtension/ShareViewController.m). QUrl lowercases
+    // schemes on parse, so register the lowercased form.
+    if (CFBundleRef bundle = CFBundleGetMainBundle()) {
+        const QString bundleId = QString::fromCFString(CFBundleGetIdentifier(bundle));
+        if (!bundleId.isEmpty())
+            QDesktopServices::setUrlHandler(bundleId.toLower(), this, "handleUrl");
+    }
 #endif
 }
 
@@ -50,6 +67,12 @@ void UrlSchemeEvent::watchApplicationState()
     // appBackgrounded/appForegrounded drive the iOS pausable-services
     // bridge (src/app/core/services_pause_bridge.nim): pause on suspension,
     // resume — and media-server rebind — on return to the foreground.
+    // appForegrounded also drives the pending intake slot contract
+    // (src/app/core/intake/pending_intake_slot.nim): the host takes the
+    // payload when it comes to the foreground. This covers the wake-less iOS
+    // fallback for an already-running app — the share extension wrote the
+    // slot but its unsupported openURL wake failed or was dropped. Harmless
+    // elsewhere: consuming an inactive/empty slot is a no-op.
     // Under QCoreApplication (unit tests) there is no application state; skip.
     if (auto* app = qobject_cast<QGuiApplication*>(QCoreApplication::instance())) {
         connect(app, &QGuiApplication::applicationStateChanged, this,
@@ -90,6 +113,17 @@ void UrlSchemeEvent::emitDeepLinkToQt(const QString& url)
     emit urlActivated(url);
 }
 
+void UrlSchemeEvent::emitShareToQt(const QString& text, const QStringList& imagePaths)
+{
+    if (text.isEmpty() && imagePaths.isEmpty()) return;
+
+    QJsonArray paths;
+    for (const auto& path : imagePaths)
+        paths.append(path);
+
+    emit shareActivated(text, QString::fromUtf8(QJsonDocument(paths).toJson(QJsonDocument::Compact)));
+}
+
 static UrlSchemeEvent* g_urlSchemeEventInstance = nullptr;
 
 void UrlSchemeEvent::setInstance(UrlSchemeEvent* instance)
@@ -106,6 +140,30 @@ Java_app_status_mobile_StatusQtActivity_passDeepLinkToQt(JNIEnv* /*env*/, jclass
 
     if (g_urlSchemeEventInstance) {
         g_urlSchemeEventInstance->emitDeepLinkToQt(deepLink);
+    }
+}
+
+// Share-target hand-off: text/links and images shared from another app. Kept
+// separate from the URL channel — a shared link must launch the share flow,
+// not URL routing. Image paths are app-private cached copies made by the Java
+// layer at receipt (OS read grants expire), never OS-managed content URIs.
+extern "C" JNIEXPORT void JNICALL
+Java_app_status_mobile_StatusQtActivity_passShareToQt(JNIEnv* env, jclass /*clazz*/, jstring text, jobjectArray imagePaths)
+{
+    const QString shareText = QJniObject(text).toString();
+
+    QStringList paths;
+    if (imagePaths) {
+        const jsize count = env->GetArrayLength(imagePaths);
+        for (jsize i = 0; i < count; ++i) {
+            auto path = static_cast<jstring>(env->GetObjectArrayElement(imagePaths, i));
+            paths << QJniObject(path).toString();
+            env->DeleteLocalRef(path);
+        }
+    }
+
+    if (g_urlSchemeEventInstance) {
+        g_urlSchemeEventInstance->emitShareToQt(shareText, paths);
     }
 }
 #endif

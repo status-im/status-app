@@ -11,6 +11,7 @@ import constants as main_constants
 import statusq_bridge
 import app/core/signal_handler
 import app/core/custom_urls/url_scheme_event
+import app/core/intake/pending_intake_slot
 import app/global/single_instance
 
 when defined(ios):
@@ -267,7 +268,8 @@ proc mainProc() =
   enableHDPI(uiScaleFilePath)
 
   # Enable threaded renderer (replaces dos_qguiapplication_try_enable_threaded_renderer)
-  putEnv("QSG_RENDER_LOOP", "threaded")
+  if not existsEnv("QSG_RENDER_LOOP"):
+    putEnv("QSG_RENDER_LOOP", "threaded")
 
   # Install self-signed certificate (replaces dos_add_self_signed_certificate)
   let imageCert = imageServerTLSCert()
@@ -295,6 +297,17 @@ proc mainProc() =
   let app = newQGuiApplication()
   singletonInstance.setApplication(app)
 
+  # The only hook every exit path reaches
+  QCoreApplication.instance().onAboutToQuit(proc() =
+    markShuttingDown()
+
+    when defined(ios):
+      # iOS answers UIApplicationWillTerminateNotification with qApp->exit(),
+      # unwinding main() into the ORC teardown that mobile otherwise refuses.
+      info "iOS termination requested, leaving without teardown"
+      tryTerminateWithoutCascade()
+  )
+
   when defined(qmldebug):
     const qmlDebugPort {.intdefine: "qmlDebugPort".} = 49152
     discard QQmlDebuggingEnabler.startTcpDebugServer(qmlDebugPort.cint,
@@ -303,8 +316,14 @@ proc mainProc() =
   let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
   let urlSchemeEvent = newUrlSchemeEvent()
   urlSchemeEvent.setInstance()
-  # init url manager before app controller
-  statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri)
+  # App Group hand-off slot written by the iOS share extension; the dir is
+  # empty (slot inactive) on platforms without an App Group container.
+  let pendingIntakeSlot = newPendingIntakeSlot($statusq_shareintake_pending_dir())
+  # init url manager before app controller; the manager also sweeps stale
+  # extension-made image copies from the App Group share-intake cache (keeping
+  # the copies the still-pending slot payload references).
+  statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri,
+    pendingIntakeSlot, $statusq_shareintake_cache_dir())
 
   when defined(ios):
     # iOS runs status-go in-process, so the app lifecycle must drive the
@@ -379,6 +398,10 @@ proc mainProc() =
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
     signalsManagerQVariant.delete()
+
+    # Drain before the services are destroyed
+    statusFoundation.threadpool.teardown()
+
     appController.delete()
     statusFoundation.delete()
     when defined(ios):

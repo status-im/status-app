@@ -1,4 +1,5 @@
 #include <QAbstractItemModelTester>
+#include <QCoreApplication>
 #include <QAbstractListModel>
 #include <QSignalSpy>
 #include <QTest>
@@ -181,6 +182,116 @@ class TestManageTokensController : public QObject
 private slots:
 
     // --- Characterization: observable end-state that must survive the refactor ---
+
+    // A refetch that returns a smaller collectibles list makes the Nim source
+    // model remove its stale rows one by one, synchronously, in one burst.
+    // Rebuilding the leaf models from scratch per removed row is what froze
+    // Android for 29 minutes; the burst must cost at most one rebuild.
+    void burstOfSourceRowRemovalsRebuildsLeafModelsAtMostOnce()
+    {
+        QList<Row> rows;
+        for (int i = 0; i < 400; i++) {
+            if (i % 2)
+                rows << communityToken(QString("c%1").arg(i), QString("community_%1").arg(i % 5));
+            else
+                rows << regularToken(QString("r%1").arg(i));
+        }
+        SourceModel source;
+        source.resetWith(rows);
+
+        ManageTokensController controller;
+        populate(controller, source);
+
+        auto regular = model(controller, "regularTokensModel");
+        auto community = model(controller, "communityTokensModel");
+        QSignalSpy regularReset(regular, &QAbstractItemModel::modelReset);
+        QSignalSpy communityReset(community, &QAbstractItemModel::modelReset);
+
+        for (int i = 0; i < 200; i++)
+            source.removeRow(0);
+
+        // Let any deferred, coalesced update flush.
+        QCoreApplication::processEvents();
+        QCoreApplication::processEvents();
+
+        QStringList expected;
+        for (int i = 200; i < 400; i++)
+            expected << rows[i].value("key").toString();
+        auto remaining = keysOf(regular) + keysOf(community);
+        expected.sort();
+        remaining.sort();
+        QCOMPARE(remaining, expected);
+
+        QVERIFY2(regularReset.size() <= 1, qPrintable(QString("regular model reset %1 times").arg(regularReset.size())));
+        QVERIFY2(communityReset.size() <= 1, qPrintable(QString("community model reset %1 times").arg(communityReset.size())));
+    }
+
+    void removingACommunityTokenUpdatesItsGroupCount()
+    {
+        SourceModel source;
+        source.resetWith({communityToken("cat", "community_1"),
+                          communityToken("dog", "community_1"),
+                          communityToken("fox", "community_2")});
+        ManageTokensController controller;
+        populate(controller, source);
+
+        source.removeRow(0); // cat
+        QCoreApplication::processEvents();
+        QCoreApplication::processEvents();
+
+        auto groups = model(controller, "communityTokenGroupsModel");
+        QCOMPARE(groups->rowCount(), 2);
+        QCOMPARE(dataForKey(groups, "dog", "enabledNetworkBalance").toInt(), 1);
+
+        source.removeRow(0); // dog, last of community_1
+        QCoreApplication::processEvents();
+        QCoreApplication::processEvents();
+        QCOMPARE(groups->rowCount(), 1);
+        QCOMPARE(keysOf(model(controller, "communityTokensModel")), (QStringList{"fox"}));
+    }
+
+    void removalsThenInsertInOneBurstEndWithTheRightKeys()
+    {
+        SourceModel source;
+        source.resetWith({regularToken("a"), regularToken("b"), regularToken("c")});
+        ManageTokensController controller;
+        populate(controller, source);
+        auto regular = model(controller, "regularTokensModel");
+        QSignalSpy resetSpy(regular, &QAbstractItemModel::modelReset);
+
+        // Shape of collectibles_model.updateItems: remove stale rows, then append new ones.
+        source.removeRow(0);
+        source.removeRow(0);
+        source.appendRow(regularToken("d"));
+        QCoreApplication::processEvents();
+        QCoreApplication::processEvents();
+
+        auto keys = keysOf(regular);
+        keys.sort();
+        QCOMPARE(keys, (QStringList{"c", "d"}));
+        QCOMPARE(resetSpy.size(), 0);
+    }
+
+    void removalAfterQueuedCellUpdateFallsBackToOneFullReparse()
+    {
+        SourceModel source;
+        source.resetWith({regularToken("a", "1"), regularToken("b", "1"), regularToken("c", "1")});
+        ManageTokensController controller;
+        populate(controller, source);
+        auto regular = model(controller, "regularTokensModel");
+        QSignalSpy resetSpy(regular, &QAbstractItemModel::modelReset);
+
+        source.updateCell(2, "enabledNetworkBalance", "9"); // queued, keyed by row 2
+        source.removeRow(0);                                // shifts row 2 to row 1
+        QCoreApplication::processEvents();
+        QCoreApplication::processEvents();
+
+        auto keys = keysOf(regular);
+        keys.sort();
+        QCOMPARE(keys, (QStringList{"b", "c"}));
+        QCOMPARE(dataForKey(regular, "c", "enabledNetworkBalance").toString(), QString("9"));
+        QCOMPARE(resetSpy.size(), 1);
+    }
 
     void initialParsePartitionsByCommunity()
     {

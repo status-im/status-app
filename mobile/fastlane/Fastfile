@@ -125,12 +125,21 @@ platform :ios do
     UI.message("Signing identity: #{signing_identity}")
     UI.message("Provisioning profile: #{provisioning_profile}")
 
+    # The embedded share extension is re-signed too and needs its own profile.
+    ext_identifier = "#{app_identifier}.ShareExtension"
+    ext_profile = ENV["sigh_#{ext_identifier}_#{profile_type}_profile-path"]
+    ext_embedded = File.exist?(File.join(app_path, "PlugIns", "StatusShareExtension.appex"))
+    UI.message("Share extension profile: #{ext_profile || 'n/a'} (embedded: #{ext_embedded})")
+
     unless provisioning_profile && File.exist?(provisioning_profile)
       UI.user_error!("Provisioning profile not found!")
     end
 
     unless signing_identity
       UI.user_error!("Signing identity not found!")
+    end
+    if ext_embedded && !(ext_profile && File.exist?(ext_profile))
+      UI.user_error!("Provisioning profile for #{ext_identifier} not found (run match for it)!")
     end
 
     UI.message("Creating unsigned IPA...")
@@ -178,13 +187,18 @@ platform :ios do
       UI.message("Modified NFC entitlements: removed NDEF, keeping TAG and PACE")
     end
 
+    # No -e here: resign.sh applies one entitlements file to every bundle it
+    # signs, nested extension included, which would give the extension the
+    # host's application-identifier. Default mode derives each bundle's
+    # entitlements from its own profile; the host is re-sealed below with the
+    # patched entitlements.
     UI.message("Resigning IPA with resign.sh directly via bash...")
     command = [
       resign_sh.shellescape,
       ipa_path.shellescape,
       signing_identity.shellescape,
       "-p", "#{app_identifier}=#{provisioning_profile}".shellescape,
-      "-e", entitlements_file.path.shellescape,
+      *(ext_embedded ? ["-p", "#{ext_identifier}=#{ext_profile}".shellescape] : []),
       "-d", display_name.shellescape,
       "-b", app_identifier.shellescape,
       "-v",
@@ -195,6 +209,19 @@ platform :ios do
 
     # Use sh() which properly executes via the shell, wrapped in bash -c
     sh("/bin/bash", "-c", command)
+
+    UI.message("Re-sealing #{app_name} with the patched entitlements...")
+    Dir.mktmpdir do |tmpdir|
+      Dir.chdir(tmpdir) do
+        sh("unzip -q #{ipa_path.shellescape}")
+        app_in_payload = File.join("Payload", app_name).shellescape
+        sh("codesign --force --sign #{signing_identity.shellescape} --generate-entitlement-der " \
+           "--entitlements #{entitlements_file.path.shellescape} #{app_in_payload}")
+        sh("codesign --verify --deep --strict #{app_in_payload}")
+        FileUtils.rm_f(ipa_path)
+        sh("zip -qr #{ipa_path.shellescape} Payload")
+      end
+    end
 
     UI.success("Signed and packaged: #{ipa_path}")
   end

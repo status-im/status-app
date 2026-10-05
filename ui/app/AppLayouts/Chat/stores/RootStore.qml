@@ -309,6 +309,21 @@ QtObject {
         return result
     }
 
+    // Share-flow send: one payload, many destinations. The Nim side fans it
+    // out through the chat service (no section activation needed).
+    function sendSharedContent(destinations, text, imagePaths = []) {
+        const textMsg = cleanMessageText(text)
+        if (destinations.length === 0)
+            return false
+        if (imagePaths.length === 0 && textMsg.trim() === "")
+            return false
+        const contentType = Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType
+                                                       : Constants.messageContentType.messageType
+        root.mainModuleInst.sendSharedContent(JSON.stringify(destinations), textMsg.trim(),
+                                              JSON.stringify(imagePaths), contentType)
+        return true
+    }
+
     function openCloseCreateChatView() {
         if (root.openCreateChat) {
             Global.closeCreateChatView()

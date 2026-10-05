@@ -15,17 +15,22 @@ NIM_BENCHES := $(addprefix nim-test-run/,$(NIM_BENCH_FILES))
 # need it built first.
 NIM_TESTS_LINK_STATUSQ := \
 	asset_proxy_chain_bench \
+	chat_search_model_bulk_load_test \
+	chat_search_model_test \
+	collectibles_request_ids_test \
 	collectibles_selector_bench \
 	collectibles_selector_model_bench \
 	send_handler_adaptors_bench \
 	send_handler_lookup_bench \
 	send_modal_instantiation_bench \
 	services_pause_bridge_test \
+	share_intake_wake_test \
 	signal_handler_test \
 	swap_key_harvest_bench \
 	swap_modal_instantiation_bench \
 	typed_completion_test \
-	url_scheme_event_test
+	url_scheme_event_test \
+	wallet_connect_controller_test
 
 NIM_STATUSQ_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_LINK_STATUSQ))
 $(NIM_STATUSQ_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
@@ -37,6 +42,8 @@ $(NIM_STATUSQ_TARGETS): | statusq
 # per-file, NOT globally
 NIM_TESTS_MODEL_SPY := \
 	assets_adaptor_model_test \
+	chat_search_model_bulk_load_test \
+	collectibles_model_test \
 	collectibles_selector_model_test \
 	grouped_account_assets_model_test \
 	market_leaderboard_model_test \

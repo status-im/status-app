@@ -80,6 +80,8 @@ Item {
         thirdpartyServicesEnabled: appMain.featureFlagsStore.privacyModeFeatureEnabled ?
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
+        onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
+        onLaunchShareFlow: (text, imagePaths) => shareFlowLoader.launch(text, imagePaths)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
             mainLayoutItem.openACCenterPanel = true
@@ -512,8 +514,7 @@ Item {
             }
 
             if (txType === Constants.SendType.ERC721Transfer || txType === Constants.SendType.ERC1155Transfer) {
-                const key = "%1+%2+%3".arg(fromChainId).arg(txToAddr).arg(fromAsset)
-                const entry = SQUtils.ModelUtils.getByKey(appMain.walletCollectiblesStore.allCollectiblesModel, "symbol", key)
+                const entry = SQUtils.ModelUtils.getByKey(appMain.walletCollectiblesStore.allCollectiblesModel, "key", fromAsset)
                 if (!!entry) {
                     assetName = entry.name
                 }
@@ -576,6 +577,13 @@ Item {
                 }
                 case Constants.SendType.Swap: {
                     toastTitle = qsTr("Swapping %1 to %2 in %3").arg(sentAmount).arg(receivedAmount).arg(sender)
+                    if (approvalTx) {
+                        toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                    }
+                    break
+                }
+                case Constants.SendType.Bridge: {
+                    toastTitle = qsTr("Bridging %1 on %2 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
                     if (approvalTx) {
                         toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
                     }
@@ -692,6 +700,13 @@ Item {
                     }
                     break
                 }
+                case Constants.SendType.Bridge: {
+                    toastTitle = qsTr("Bridge confirmed on %2: %1 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
+                    if (approvalTx) {
+                        toastTitle = qsTr("Spending cap set: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                    }
+                    break
+                }
                 case Constants.SendType.CommunityDeployAssets: {
                     if (communityAmountInfinite1){
                         toastTitle = qsTr("Minted infinite %1 tokens for %2 using %3").arg(communityDeployedTokenName).arg(communityName).arg(sender)
@@ -796,6 +811,13 @@ Item {
                 }
                 case Constants.SendType.Swap: {
                     toastTitle = qsTr("Swap failed: %1 to %2 in %3").arg(sentAmount).arg(receivedAmount).arg(sender)
+                    if (approvalTx) {
+                        toastTitle = qsTr("Spending cap failed: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                    }
+                    break
+                }
+                case Constants.SendType.Bridge: {
+                    toastTitle = qsTr("Bridge failed: %1 on %2 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
                     if (approvalTx) {
                         toastTitle = qsTr("Spending cap failed: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
                     }
@@ -1136,6 +1158,25 @@ Item {
             Global.linkOpenedExternally(link)
         }
 
+        // External intake, browser-tab route: the OS handed us this URL explicitly
+        // (browser candidacy), so it opens as a new tab in the in-app browser with
+        // the browser section foregrounded — no confirmation popup and no external
+        // hand-off, which would bounce straight back when Status is the default
+        // browser.
+        function openUrlInNewBrowserTab(link: string) {
+            if (!d.isBrowserEnabled) {
+                Global.requestOpenLink(link)
+                return
+            }
+            globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
+            Qt.callLater(() => {
+                // BrowserPrivacyWall (privacy mode) has no openUrlInNewTab()
+                const browser = browserLayoutContainer.item
+                if (browser && browser.openUrlInNewTab)
+                    browser.openUrlInNewTab(link)
+            })
+        }
+
         function tryOpenNavigationEducationPopup() {
             if(!appMainGlobalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible) {
                 Global.openNavigationEducationPopupRequested()
@@ -1154,7 +1195,7 @@ Item {
             const introMessage = localAccountSettings.freshProfile
                 ? qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for welcome messages and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
                 : qsTr("Send a contact request to the Status Team peer-to-peer bot over the decentralised network for Status updates and how-to tips, and to share feedback or issues. See our Privacy Policy for more details about interacting with the bot. Disconnect anytime")
-            Global.openContactRequestPopupWithDefaultMessage(d.supportBotPublicKey, null, introMessage)
+            Global.openContactRequestPopupWithDefaultMessage(d.supportBotPublicKey, null, introMessage, false)
         }
     }
 
@@ -2651,6 +2692,7 @@ Item {
                             isChatSectionModule: true
                         }
                         createChatPropertiesStore: appMain.createChatPropertiesStore
+                        unlimitedChatImagesEnabled: appMain.featureFlagsStore.unlimitedChatImagesEnabled
 
                         mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
                         allContactsModel: appMain.contactsStore.contactsModel
@@ -2677,6 +2719,7 @@ Item {
                 }
 
                 browserSectionActive: d.activeSectionType === Constants.appSection.browser
+                swapProvidersEnabled: appMain.featureFlagsStore.swapProvidersEnabled
 
                 PrimaryNavSidebarAdaptor {
                     id: sidebarAdaptor
@@ -2897,6 +2940,17 @@ Item {
         sequence: "Ctrl+,"
         onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
+    }
+
+    ShareFlowLoader {
+        id: shareFlowLoader
+
+        rootStore: appMain.rootStore
+        rootChatStore: appMain.rootChatStore
+        excludedChatId: d.myPublicKey
+        unlimitedImages: appMain.featureFlagsStore.unlimitedChatImagesEnabled
+        emojiPopup: statusEmojiPopup.item
+        stickersPopup: statusStickersPopupLoader.item
     }
 
     Loader {

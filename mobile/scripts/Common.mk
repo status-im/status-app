@@ -66,6 +66,13 @@ OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h'
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
 STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
+# Android package sources (Java/res/aidl/manifest/gradle) that buildApp.sh rsyncs into
+# android-build before gradle compiles. Tracked so edits to them invalidate $(TARGET);
+# without this the app target has no dependency on them and gradle silently rebuilds the
+# previously-copied (stale) sources.
+ifeq ($(OS),android)
+ANDROID_APP_FILES := $(shell find $(ROOT_DIR)/android/qt$(QT_MAJOR) -type f)
+endif
 STATUS_GO_STUB_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_stub_exports.cpp
 STATUS_GO_SERVICE_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_service_dispatch.cpp
 

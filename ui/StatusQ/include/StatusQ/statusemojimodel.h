@@ -9,8 +9,7 @@ class StatusEmojiModel : public QAbstractListModel
     Q_OBJECT
 
     Q_PROPERTY(QString userUID READ userUID WRITE setUserUID NOTIFY userUIDChanged FINAL)
-    Q_PROPERTY(QJsonArray emojiJson READ emojiJson WRITE setEmojiJson NOTIFY emojiJsonChanged
-                   REQUIRED FINAL)
+    Q_PROPERTY(QJsonArray emojiJson READ emojiJson NOTIFY emojiJsonChanged FINAL)
     Q_PROPERTY(QStringList categories READ categories CONSTANT FINAL)
     Q_PROPERTY(QStringList categoryIcons READ categoryIcons CONSTANT FINAL)
     Q_PROPERTY(QStringList recentEmojis READ recentEmojis WRITE setRecentEmojis NOTIFY
@@ -40,6 +39,7 @@ public:
 
     Q_INVOKABLE QString getEmojiUnicodeFromShortname(const QString &shortname) const;
     Q_INVOKABLE QString getEmojiFromAsciiAlias(const QString &alias) const;
+    Q_INVOKABLE QJsonArray getSuggestions(const QString& name) const;
     Q_INVOKABLE int maxAsciiEmojiAliasLength() const;
     Q_INVOKABLE int getCategoryOffset(int categoryIndex) const;
 
@@ -54,7 +54,10 @@ private:
     QJsonArray emojiJson() const;
     void setEmojiJson(const QJsonArray &newEmojiJson);
     QJsonArray m_emojiJson;
-    mutable int m_maxAsciiEmojiAliasLength = -1;
+
+    void rebuildAsciiAliasIndex();
+    QHash<QString, QString> m_asciiAliasToEmoji;
+    int m_maxAsciiEmojiAliasLength = 0;
 
     QStringList categories() const;
     QStringList categoryIcons() const;

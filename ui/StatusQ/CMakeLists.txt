@@ -168,6 +168,13 @@ if (${STATUSQ_SHADOW_BUILD})
     endif()
 endif()
 
+if (ANDROID OR IOS)
+    # qt_add_big_resources() not supported on iOS
+    qt_add_resources(STATUSQ_QRC_COMPILED src/StatusQ/Core/Utils/emojiList.qrc)
+else()
+    qt_add_big_resources(STATUSQ_QRC_COMPILED src/StatusQ/Core/Utils/emojiList.qrc)
+endif()
+
 add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
         ${STATUSQ_TESTCONFIG_RCC}
@@ -258,6 +265,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/urlutils.cpp
         src/statuslayoutstate.cpp
         src/ios_utils.h
+        include/StatusQ/shareintake.h
 
         src/StatusQ/Controls/NativeSwipeHandlerItem.cpp
         src/StatusQ/Controls/NativeIndicatorItem.cpp
@@ -297,6 +305,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QDarwinCameraPermissionPlugin)
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
+        src/shareintake_other.cpp
         src/keychain_apple.mm
         src/osnotification_apple.mm
         src/accessibility_crash_filter.mm
@@ -317,6 +326,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm
+        src/shareintake_ios.mm
         src/keychain_apple.mm
         src/accessibility_crash_filter.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
@@ -332,10 +342,12 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
         src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
         src/StatusQ/Controls/NativeIndicatorItem_android.cpp
         src/shareutils_android.cpp
+        src/shareintake_other.cpp
     )
 else ()
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
+        src/shareintake_other.cpp
         src/keychain_other.cpp
     )
 endif ()
@@ -357,7 +369,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG 10429c13aa3e2f7e877e953a6699ba1705226fef
+      GIT_TAG 3b507db858176eb5b125b745cd7242ed7169bb3b
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)

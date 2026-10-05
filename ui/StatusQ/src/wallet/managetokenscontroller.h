@@ -128,10 +128,12 @@ private:
     void flushPendingSourceUpdates();
     void applyIncrementalDataUpdate(int sourceRow);
     void cancelPendingSourceUpdates();
-    bool hasPendingSourceUpdates() const;
+    void onSourceRowsAboutToBeRemoved(const QModelIndex& parent, int first, int last);
+    void applyPendingRemovals();
 
     QTimer* m_sourceUpdateBatchTimer{nullptr};
     QSet<int> m_pendingChangedRows;
+    QSet<QString> m_pendingRemovedKeys;
     QSet<QByteArray> m_pendingChangedRoleNames;
     bool m_pendingFullReparse{false};
 

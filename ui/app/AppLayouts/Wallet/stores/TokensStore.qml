@@ -20,8 +20,8 @@ QtObject {
     readonly property var _tokenSelectorModule: !!walletSectionTokenSelector ? walletSectionTokenSelector : null
 
     /* Creates a terminal token-selector picker model for the given kind
-       (0=send, 1=swap pay side, 2=buy, 3=swap receive side — destination-chain
-       catalog). Returns { model, id }: the producer keeps the
+       (0=owned tokens: send and the swap pay side, 2=buy, 3=swap receive side —
+       destination-chain catalog). Returns { model, id }: the producer keeps the
        model updated with the owned source and the caller sets its per-modal
        params; the id must be passed to releaseTokenSelectorModel when the owning
        modal is destroyed so the model stops being tracked and can be freed. */
@@ -152,6 +152,11 @@ QtObject {
         root._allTokensModule.fetchAllChainsTokenGroups(mandatoryKeys)
     }
 
+    function ensurePricesForGroup(key) {
+        if (!!root._allTokensModule)
+            root._allTokensModule.ensurePricesForGroup(key)
+    }
+
     // Due to performance reasons, use this function as the last option, when you're sure the token is not present in the models.
     function getTokenByKeyOrGroupKeyFromAllTokens(key) {
 
@@ -171,6 +176,8 @@ QtObject {
         }
 
         const jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
+        if (!jsonToken)
+            return defaultValue
 
         try {
             return JSON.parse(jsonToken)
@@ -231,11 +238,7 @@ QtObject {
         return root._allTokensModule.getTokenPreferencesJson(jsonData)
     }
 
-    function isChainSupportedForSwapViaParaswap(chainId) {
-        return root._allTokensModule.isChainSupportedForSwapViaParaswap(chainId)
-    }
-
-    function isChainSupportedForSwapViaLiFi(chainId) {
-        return root._allTokensModule.isChainSupportedForSwapViaLiFi(chainId)
+    function isChainSupportedForSwap(chainId) {
+        return root._allTokensModule.isChainSupportedForSwap(chainId)
     }
 }

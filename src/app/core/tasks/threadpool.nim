@@ -16,6 +16,7 @@ logScope:
 type
   ThreadPool* = ref object
     pool: Taskpool
+    tornDown: bool
   ThreadSafeTaskArg* = object
     tptr: common.Task
     payload: cstring
@@ -34,6 +35,11 @@ proc toString*(input: ThreadSafeTaskArg): string =
   deallocShared input.payload
 
 proc teardown*(self: ThreadPool) =
+  ## Taskpool.shutdown is not reentrant.
+  if self.tornDown:
+    return
+  self.tornDown = true
+
   featureGuard THREADPOOL_ENABLED:
     self.pool.syncAll()
     self.pool.shutdown()

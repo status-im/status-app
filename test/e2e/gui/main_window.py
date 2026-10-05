@@ -112,14 +112,18 @@ class MainLeftPanel(QObject):
 
     @allure.step('Get communities names')
     def communities(self) -> typing.List[str]:
-        self.community_template_button.real_name['objectName'] = (
-            names.statusCommunityMainNavBarListView_CommunityNavBarButton['objectName']
-        )
         prefix = 'CommunityNavBarButton_'
-        return [
-            str(obj.objectName).removeprefix(prefix)
-            for obj in driver.findAllObjects(self.community_template_button.real_name)
-        ]
+        locator = names.statusCommunityMainNavBarListView_CommunityNavBarButton.copy()
+        locator.pop('objectName', None)
+        community_names = []
+        for obj in driver.findAllObjects(locator):
+            try:
+                object_name = str(obj.objectName)
+            except (AttributeError, RuntimeError):
+                continue
+            if object_name:
+                community_names.append(object_name.removeprefix(prefix))
+        return community_names
 
     @allure.step('Create community')
     def create_community(self, community_data: CommunityData) -> 'CommunityScreen':
@@ -173,7 +177,9 @@ class MainLeftPanel(QObject):
         raise Exception(f"Failed to open Communities Portal after {attempts} attempts with {last_exception}")
 
     def _get_community(self, name: str):
-        self.community_template_button.real_name['objectName'] = f'CommunityNavBarButton_{name}'
+        locator = names.statusCommunityMainNavBarListView_CommunityNavBarButton.copy()
+        locator['objectName'] = f'CommunityNavBarButton_{name}'
+        self.community_template_button.real_name = locator
         try:
             return self.community_template_button.object
         except Exception as error:

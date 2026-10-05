@@ -56,6 +56,11 @@ Window {
         statusSupportBotEnabled: featureFlags ? featureFlags.statusSupportBotEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
         threadsEnabled: featureFlags ? featureFlags.threadsEnabled : false
+        unlimitedChatImagesEnabled: featureFlags ? featureFlags.unlimitedChatImagesEnabled : false
+        paraswapEnabled: featureFlags ? featureFlags.paraswapEnabled : false
+        lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
+        relayEnabled: featureFlags ? featureFlags.relayEnabled : false
+        swapProvidersEnabled: featureFlags ? featureFlags.swapProvidersEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}

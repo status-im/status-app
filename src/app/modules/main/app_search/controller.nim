@@ -4,6 +4,7 @@ import io_interface
 import ../../../global/app_signals
 import ../../../global/global_singleton
 import ../../../../app_service/service/contacts/service as contact_service
+import ../../../../app_service/service/contacts/dto/status_update
 import ../../../../app_service/service/chat/service as chat_service
 import ../../../../app_service/service/community/service as community_service
 import ../../../../app_service/service/message/service as message_service
@@ -55,6 +56,12 @@ proc newController*(delegate: io_interface.AccessInterface, events: EventEmitter
 proc delete*(self: Controller) =
   self.resultItems.clear
 
+proc newestMessage(messages: openArray[MessageDto]): MessageDto =
+  result = messages[0]
+  for m in messages:
+    if m.timestamp > result.timestamp:
+      result = m
+
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SEARCH_MESSAGES_LOADED) do(e:Args):
     let args = MessagesArgs(e)
@@ -71,6 +78,10 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_CONTACT_UPDATED) do(e: Args):
     let args = ContactArgs(e)
     self.delegate.contactUpdated(args.contactId)
+
+  self.events.on(SIGNAL_CONTACTS_STATUS_UPDATED) do(e: Args):
+    let args = ContactsStatusUpdatedArgs(e)
+    self.delegate.contactsStatusUpdated(args.statusUpdates)
 
   self.events.on(SIGNAL_COMMUNITIES_UPDATE) do(e:Args):
     let args = CommunitiesArgs(e)
@@ -95,13 +106,16 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
-    self.delegate.updateLastMessage(args.chat.id, args.chat.communityId, args.chat.chatType, args.chat.lastMessage)
+    self.delegate.updateLastMessage(args.chat.id, args.chat.communityId, args.chat.chatType, args.chat.lastMessage,
+      args.chat.timestamp.int)
+    self.delegate.updateLastOwnMessageTimestamp(args.chat.id, args.chat.lastOwnMessageTimestamp.int)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
     let args = MessagesArgs(e)
     if args.messages.len == 0:
       return
-    self.delegate.updateLastMessage(args.chatId, args.sectionId, args.chatType, args.messages[0])
+    self.delegate.updateLastMessage(args.chatId, args.sectionId, args.chatType, newestMessage(args.messages),
+      args.lastMessageTimestamp)
 
 proc activeSectionId*(self: Controller): string =
   return self.activeSectionId
@@ -212,8 +226,14 @@ proc getColorId*(self: Controller, pubkey: string): int =
 proc getAllChats*(self: Controller): seq[ChatDto] =
   result = self.chatService.getAllChats()
 
+proc getCommunityIds*(self: Controller): seq[string] =
+  self.communityService.getCommunityIds()
+
 proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactsService.getContactDetails(contactId)
+
+proc getStatusForContactWithId*(self: Controller, publicKey: string): StatusUpdateDto =
+  self.contactsService.getStatusForContactWithId(publicKey)
 
 proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
   return self.messageService.getMessagesParsedPlainText(message, communityChats)

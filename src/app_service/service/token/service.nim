@@ -1,4 +1,4 @@
-import nimqml, tables, sets, json, std/sequtils, chronicles, strutils, sugar, algorithm
+import nimqml, tables, sets, json, std/sequtils, chronicles, strutils, sugar, algorithm, std/times
 
 import web3/eth_api_types
 import backend/backend as backend
@@ -12,6 +12,7 @@ import app_service/service/settings/service as settings_service
 import app/core/eventemitter
 import app/core/tasks/[qt, threadpool]
 import app/core/signals/types
+import app/global/feature_flags
 import app_service/common/cache
 
 import json_serialization
@@ -25,6 +26,8 @@ import token_missing_fetch
 import token_pending_fetch
 import token_refresh_generation
 import token_apply_builder
+import token_market_values_apply
+import token_price_requests
 
 export dto_types, items_types
 
@@ -46,13 +49,15 @@ QtObject:
     rebuildMarketDataDebouncer: debouncer_service.Debouncer
 
     # local storage, fulfilled by need, empty at the start
-    chainsSupportedForSwapViaParaswap: Table[int, bool] # [chainId, bool]
-    chainsSupportedForSwapViaLiFi: Table[int, bool] # [chainId, bool]
+    chainsSupportedForSwap: Table[int, bool] # [chainId, bool], refers to the active swap provider
+    swapSupportChainIdsInFlight: HashSet[int] # chains used for a prefetch check
     # local storage
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]
     knownMissingKeys: HashSet[string] # keys the backend confirmed as "not found"; skip re-fetching until a refresh applies
     pendingTokenFetch: PendingTokenFetch # missing keys awaiting an async batch fetch (replaces the sync GUI-thread RPC)
     missingTokenKeysFetchDebouncer: debouncer_service.Debouncer # coalesces a burst of misses into one batch
+    onDemandPrices: OnDemandPriceRequests # prices asked for by key (catalog tokens the periodic refresh doesn't cover)
+    onDemandPricesDebouncer: debouncer_service.Debouncer # coalesces a burst of by-key price requests into one fetch
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
     groupsOfInterest: seq[TokenGroupItem] # refers to groups for tokens of interest
     allTokensByGroupKey: Table[string, seq[TokenItem]] # rebuilt in applyRefreshTokensData for getTokenByKeyOrGroupKeyFromAllTokens
@@ -94,6 +99,7 @@ QtObject:
   proc fetchTokenPreferences(self: Service)
   proc scheduleMissingTokenKeysFetch(self: Service)
   proc fetchPendingMissingTokenKeys(self: Service)
+  proc fetchPendingOnDemandPrices(self: Service)
   proc startRefreshTokensTask(self: Service, generation: int, fetchAllTokens: bool = false)
   proc startFetchAllTokenListsTask(self: Service, generation: int)
 
@@ -101,6 +107,7 @@ QtObject:
   proc tokensMarketValuesRetrieved(self: Service, response: string) {.slot.}
   proc tokensDetailsRetrieved(self: Service, response: string) {.slot.}
   proc tokensPricesRetrieved(self: Service, response: string) {.slot.}
+  proc onDemandTokensPricesRetrieved(self: Service, response: string) {.slot.}
   proc tokenHistoricalDataResolved*(self: Service, response: string) {.slot.}
   proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.}
@@ -108,8 +115,7 @@ QtObject:
   proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.}
   proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.}
-  proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.}
-  proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.}
+  proc prefetchSwapSupportRetrieved(self: Service, response: string) {.slot.}
 
 
   proc delete*(self: Service)
@@ -130,6 +136,7 @@ QtObject:
     result.tokensOfInterestByKey = initTable[string, TokenItem]()
     result.knownMissingKeys = initHashSet[string]()
     result.pendingTokenFetch = initPendingTokenFetch()
+    result.onDemandPrices = initOnDemandPriceRequests()
     result.refreshTokensGen = initRefreshGenerationState()
     result.fetchAllTokenListsGen = initRefreshGenerationState()
     result.groupsOfInterestByKey = initTable[string, TokenGroupItem]()

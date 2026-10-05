@@ -1120,6 +1120,14 @@ QtObject {
             readonly property string errPriceTimeout                   : "WPP-037"
             readonly property string errNotEnoughLiquidity             : "WPP-038"
             readonly property string errPriceImpactTooHigh             : "WPP-039"
+            readonly property string errLiFiCustomError                : "WPP-044"
+            readonly property string errRelayCustomError               : "WPP-045"
+            readonly property string errNoRoutesFound                  : "WPP-046"
+            readonly property string errNoQuotesAvailable              : "WPP-047"
+            readonly property string errSlippageExceeded               : "WPP-048"
+            readonly property string errAmountTooLow                   : "WPP-049"
+            readonly property string errAmountTooHigh                  : "WPP-050"
+            readonly property string errUnsupportedCurrency            : "WPP-051"
         }
 
         readonly property QtObject router: QtObject {
@@ -1476,8 +1484,15 @@ QtObject {
         readonly property string lifiTermsAndConditionUrl: "https://li.fi/legal/terms-and-conditions/"
         readonly property string lifiContractAddress: "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"
 
+        readonly property string relayName: "Relay"
+        readonly property string relayIcon: "relay"
+        readonly property string relayHostname: "relay.link"
+        readonly property string relayUrl: "https://relay.link/"
+        readonly property string relayTermsAndConditionUrl: "https://relay.link/terms"
+
         readonly property string paraswapProcessorName: "Paraswap"
         readonly property string lifiProcessorName: "LiFi"
+        readonly property string relayProcessorName: "Relay"
 
         // How the provider ranks routes; sent verbatim as LI.FI's `order` parameter.
         readonly property string routeOrderBestReturn: "RECOMMENDED"

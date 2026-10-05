@@ -1,5 +1,6 @@
 import QtQuick
 
+import StatusQ.Core.Theme
 import StatusQ.Popups
 import StatusQ.Core.Utils as SQUtils
 
@@ -10,6 +11,14 @@ import StatusQ.Core.Utils as SQUtils
  */
 StatusMenu {
     id: root
+
+    // Design System row, like the download menu.
+    itemIconSize: 20
+    itemTextSpacing: Theme.halfPadding
+    itemVerticalPadding: Theme.halfPadding * 0.625
+    itemMinimumHeight: 30
+    itemBackgroundRadius: 10
+    itemsSpacing: Theme.halfPadding
 
     property url linkUrl
     property url imageUrl
@@ -33,11 +42,12 @@ StatusMenu {
     readonly property bool hasLink: linkUrl.toString() !== ""
     readonly property bool hasImage: imageUrl.toString() !== ""
 
+    /// Bound by the host to DownloadsStore.canShareUrlString.
+    property bool canShareLink: true
+
     // Mobile: system share sheet. Desktop (unused today): copy.
     readonly property string shareLabel: SQUtils.Utils.isMobile ? qsTr("Share link") : qsTr("Copy link")
-    readonly property string shareIcon: SQUtils.Utils.isMobile
-            ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
-            : "copy"
+    readonly property string shareIcon: SQUtils.Utils.isMobile ? "link-2" : "copy"
 
     signal openInNewTabRequested(url targetUrl)
     signal shareUrlRequested(url targetUrl)
@@ -50,7 +60,7 @@ StatusMenu {
         onTriggered: root.openInNewTabRequested(root.linkUrl)
     }
     StatusAction {
-        enabled: root.hasLink
+        enabled: root.hasLink && root.canShareLink
         icon.name: root.shareIcon
         text: root.shareLabel
         onTriggered: root.shareUrlRequested(root.linkUrl)

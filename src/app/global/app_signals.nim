@@ -41,6 +41,26 @@ type
 
 const SIGNAL_STATUS_URL_ACTIVATED* = "statusUrlActivated"
 
+type
+  ExternalUrlIntakeArgs* = ref object of Args
+    url*: string
+
+const SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB* = "externalUrlIntakeBrowserTab"
+## Emitted for an externally received web URL that is not a Status link
+## (browser candidacy): it must open as a new tab in the in-app browser with
+## the browser section foregrounded.
+
+type
+  ExternalShareIntakeArgs* = ref object of Args
+    text*: string
+    imagePaths*: seq[string]
+
+const SIGNAL_EXTERNAL_SHARE_INTAKE* = "externalShareIntake"
+## Emitted for content shared to Status from another app (share target):
+## it must launch the share flow (destination picker -> preview -> send).
+## Text and links both arrive as `text`; shared images arrive as `imagePaths`
+## (app-private cached copies made at receipt, never OS-managed URIs).
+
 const SIGNAL_MAIN_LOADED* = "signalMainLoaded"
 
 type

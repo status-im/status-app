@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-library 'status-jenkins-lib@v1.9.52'
+library 'status-jenkins-lib@v1.9.53'
 
 /* Options section can't access functions in objects. */
 def isPRBuild = utils.isPRBuild()
@@ -82,6 +82,11 @@ pipeline {
     /* prevent sharing cache dir across different jobs */
     GO_GENERATE_FAST_DIR = "${env.WORKSPACE_TMP}/go-generate-fast"
     SENTRY_PRODUCTION = "${utils.isReleaseBuild() ? 'true' : 'false'}"
+    /* Swap */
+    FLAG_SWAP_ENABLED = 1
+    FLAG_RELAY_ENABLED = 1
+    FLAG_LIFI_ENABLED = 0
+    FLAG_PARASWAP_ENABLED = 0
     /* Hack fix for params not being set in job on first run */
     ENTITLEMENTS =           "${params.ENTITLEMENTS}"
     RELEASE =                "${params.RELEASE}"

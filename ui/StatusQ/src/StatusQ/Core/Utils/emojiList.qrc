@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/StatusQ/Core/Utils">
+        <file>emojiList.json</file>
+    </qresource>
+</RCC>

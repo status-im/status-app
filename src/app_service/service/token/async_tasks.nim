@@ -5,16 +5,8 @@ import times, std/strformat, json
 #################################################
 
 type
-  TokensMarketValuesSlotResponse* = object
-    tokenMarketValues*: JsonNode
-    error*: string
-
   TokensDetailsSlotResponse* = object
     tokensDetails*: JsonNode
-    error*: string
-
-  TokensPricesSlotResponse* = object
-    tokensPrices*: JsonNode
     error*: string
 
 #################################################
@@ -202,6 +194,7 @@ proc fetchTokensMarketValuesTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[FetchTokensMarketValuesTaskArg](argEncoded)
   var output = %*{
     "tokenMarketValues": newJNull(),
+    "currency": arg.currency,
     "error": ""
   }
   try:
@@ -232,16 +225,18 @@ proc fetchTokensDetailsTask*(argEncoded: string) {.gcsafe, nimcall.} =
 type
   FetchTokensPricesTaskArg = ref object of QObjectTaskArg
     tokensKeys: seq[string]
-    currencies: seq[string]
+    currency: string
 
 proc fetchTokensPricesTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[FetchTokensPricesTaskArg](argEncoded)
   var output = %*{
     "tokensPrices": newJNull(),
+    "currency": arg.currency,
+    "requestedKeys": arg.tokensKeys,
     "error": ""
   }
   try:
-    let response = backend.fetchPrices(arg.tokensKeys, arg.currencies)
+    let response = backend.fetchPrices(arg.tokensKeys, @[arg.currency])
     output["tokensPrices"] = %*response
   except Exception as e:
     output["error"] = %* fmt"Error fetching prices: {e.msg}"
@@ -298,57 +293,29 @@ proc getTokenHistoricalDataTask*(argEncoded: string) {.gcsafe, nimcall.} =
   arg.finish(output)
 
 type
-  PrefetchParaswapSupportTaskArg = ref object of QObjectTaskArg
-    chainId: int
+  PrefetchSwapSupportTaskArg = ref object of QObjectTaskArg
+    chainIds: seq[int]
 
-proc prefetchParaswapSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[PrefetchParaswapSupportTaskArg](argEncoded)
-  if arg.chainId <= 0:
-    arg.finish(%*{"chainId": 0, "error": "invalid chainId"})
+proc prefetchSwapSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[PrefetchSwapSupportTaskArg](argEncoded)
+  if arg.chainIds.len == 0:
+    arg.finish(%*{"chainIds": arg.chainIds, "error": "no chains"})
     return
   try:
     var response: JsonNode
-    var err = status_go_tokens.isChainSupportedForSwapViaParaswap(response, arg.chainId)
+    let err = status_go_tokens.getChainsSupportedForSwap(response, arg.chainIds)
     if err.len > 0:
       raise newException(CatchableError, "failed" & err)
-    if response.isNil or response.kind != JsonNodeKind.JBool:
+    if response.isNil or response.kind != JsonNodeKind.JObject:
       raise newException(CatchableError, "unexpected response")
     arg.finish(%*{
-      "chainId": arg.chainId,
-      "supported": response.getBool(),
+      "chainIds": arg.chainIds,
+      "supported": response,
       "error": "",
     })
   except Exception as e:
-    error "prefetch paraswap chain support failed", chainId = arg.chainId, err = e.msg
+    error "prefetch swap chain support failed", chainIds = arg.chainIds, err = e.msg
     arg.finish(%*{
-      "chainId": arg.chainId,
-      "error": e.msg,
-    })
-
-type
-  PrefetchLiFiSupportTaskArg = ref object of QObjectTaskArg
-    chainId: int
-
-proc prefetchLiFiSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[PrefetchLiFiSupportTaskArg](argEncoded)
-  if arg.chainId <= 0:
-    arg.finish(%*{"chainId": 0, "error": "invalid chainId"})
-    return
-  try:
-    var response: JsonNode
-    var err = status_go_tokens.isChainSupportedForSwapViaLiFi(response, arg.chainId)
-    if err.len > 0:
-      raise newException(CatchableError, "failed" & err)
-    if response.isNil or response.kind != JsonNodeKind.JBool:
-      raise newException(CatchableError, "unexpected response")
-    arg.finish(%*{
-      "chainId": arg.chainId,
-      "supported": response.getBool(),
-      "error": "",
-    })
-  except Exception as e:
-    error "prefetch lifi chain support failed", chainId = arg.chainId, err = e.msg
-    arg.finish(%*{
-      "chainId": arg.chainId,
+      "chainIds": arg.chainIds,
       "error": e.msg,
     })

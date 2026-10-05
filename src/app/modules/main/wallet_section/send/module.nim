@@ -140,6 +140,7 @@ proc convertTransactionPathDtoToSuggestedRouteItem(self: Module, pathOld: Transa
     approvalAmountRequired = $pathOld.approvalAmountRequired,
     approvalContractAddress = pathOld.approvalContractAddress,
     slippagePercentage = pathOld.slippagePercentage,
+    estimatedTimeSeconds = pathOld.estimatedTimeSeconds,
     txFeeInWei = pathNew.txFee.toString(),
     txL1FeeInWei = pathNew.txL1Fee.toString(),
     approvalFeeInWei = pathNew.approvalFee.toString(),
@@ -417,8 +418,7 @@ method splitAndFormatAddressPrefix*(self: Module, text : string, updateInStore: 
 method transactionSendingComplete*(self: Module, txHash: string, status: string) =
   self.view.sendtransactionSendingCompleteSignal(txHash, status)
 
-method reevaluateSwap*(self: Module, uuid: string, chainId: int, isApprovalTx: bool) =
-  const pathName = "Paraswap"
+method reevaluateSwap*(self: Module, uuid: string, pathName: string, chainId: int, isApprovalTx: bool) =
   let err = self.controller.reevaluateRouterPath(uuid, pathName, chainId, isApprovalTx)
   if err.len > 0:
     error "reevaluateRouterPath failed: ", err=err

@@ -1,4 +1,4 @@
-import chronicles, stint
+import chronicles, stint, json
 import app/global/global_singleton
 import app/global/app_signals
 import app/core/signals/types as signal_types
@@ -25,6 +25,9 @@ import app_service/service/shared_urls/service as urls_service
 import app_service/service/network/network_item
 
 import app_service/service/community_tokens/community_collectible_owner
+import app_service/service/message/dto/link_preview
+import app_service/service/message/dto/urls_unfurling_plan
+import app_service/service/settings/dto/settings
 
 import io_interface
 
@@ -299,6 +302,34 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_STATUS_URL_ACTIVATED) do(e: Args):
     var args = StatusUrlArgs(e)
     self.delegate.activateStatusDeepLink(args.url)
+
+  self.events.on(SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB) do(e: Args):
+    let args = ExternalUrlIntakeArgs(e)
+    self.delegate.openUrlInNewBrowserTab(args.url)
+
+  self.events.on(SIGNAL_EXTERNAL_SHARE_INTAKE) do(e: Args):
+    let args = ExternalShareIntakeArgs(e)
+    self.delegate.launchShareFlow(args.text, args.imagePaths)
+
+  self.events.on(SIGNAL_URLS_UNFURLING_PLAN_READY) do(e: Args):
+    let args = UrlsUnfurlingPlanDataArgs(e)
+    self.delegate.onShareUnfurlingPlanReady(args.requestUuid, args.plan)
+
+  self.events.on(SIGNAL_URLS_UNFURLED) do(e: Args):
+    let args = LinkPreviewDataArgs(e)
+    self.delegate.onShareUrlsUnfurled(args.requestUuid, args.linkPreviews)
+
+  self.events.on(SIGNAL_URLS_UNFURLING_PLAN_FAILED) do(e: Args):
+    let args = UrlsUnfurlingFailedArgs(e)
+    self.delegate.onShareUnfurlFailed(args.requestUuid)
+
+  self.events.on(SIGNAL_URLS_UNFURL_FAILED) do(e: Args):
+    let args = UrlsUnfurlingFailedArgs(e)
+    self.delegate.onShareUnfurlFailed(args.requestUuid)
+
+  self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
+    let args = SendingFinishedArgs(e)
+    self.delegate.onShareImagesSendFinished(args.chatId, args.sendToken)
 
   self.events.on(SIGNAL_OS_NOTIFICATION_CLICKED) do(e: Args):
     var args = ClickedNotificationArgs(e)
@@ -586,3 +617,20 @@ proc isMessagingNetworkConnected*(self: Controller): bool =
 
 proc logout*(self: Controller) =
   self.generalService.logout()
+
+proc urlUnfurlingMode*(self: Controller): UrlUnfurlingMode =
+  self.settingsService.urlUnfurlingMode()
+
+proc requestTextUrlsToUnfurl*(self: Controller, text: string): string =
+  self.messageService.asyncGetTextURLsToUnfurl(text)
+
+proc requestUnfurlUrls*(self: Controller, urls: seq[string]): string =
+  self.messageService.asyncUnfurlUrls(urls)
+
+proc sendSharedText*(self: Controller, chatId, text: string, contentType: int, linkPreviews: seq[LinkPreview]) =
+  self.chatService.asyncSendChatMessage(chatId, text, "", contentType, singletonInstance.userProfile.getPreferredName(), linkPreviews, @[])
+
+proc sendSharedImages*(self: Controller, chatId: string, imagePaths: seq[string], text: string,
+    linkPreviews: seq[LinkPreview], releaseCachedFiles: bool, sendToken: string, releasePaths: seq[string]) =
+  self.chatService.asyncSendImages(chatId, $(%imagePaths), text, "", singletonInstance.userProfile.getPreferredName(),
+    linkPreviews, @[], releaseCachedFiles = releaseCachedFiles, sendToken = sendToken, releasePaths = releasePaths)

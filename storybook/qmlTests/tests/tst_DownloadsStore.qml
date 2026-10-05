@@ -144,6 +144,7 @@ Item {
                 shareText: function(text) {},
                 copyText: function(text) {},
                 showInFolder: function(path) {},
+                openFile: function(url) { return true },
                 preferShareSheet: false,
                 showInFolderSupported: true
             }
@@ -156,6 +157,31 @@ Item {
             const store = createTemporaryObject(component, root)
             store.platform = fakePlatform()
             return store
+        }
+
+        // A shared or copied link is the URL itself: QML's url-to-string decodes
+        // %20 into a space, and a chat app ends the link there.
+        function test_shareUrl_keepsTheSourceUrlEncoded() {
+            const signed = "https://example.com/a.exe?rscd=attachment%3B+filename%3Da.exe"
+                         + "&rcd=attachment%3B%20filename%3Da.exe"
+            const store = createStore()
+            let shared = ""
+            let copied = ""
+            store.platform.shareText = function(text) { shared = text }
+            store.platform.copyText = function(text) { copied = text }
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            live.url = signed
+            const record = store.addDownload(live)
+
+            compare(store.sourceUrlString(record), signed)
+
+            store.platform.preferShareSheet = true
+            verify(store.shareUrl(record))
+            compare(shared, signed)
+
+            store.platform.preferShareSheet = false
+            verify(store.shareUrl(record))
+            compare(copied, signed)
         }
 
         function test_createRecord_fromLiveDownload() {
@@ -280,6 +306,22 @@ Item {
             const live = createTemporaryObject(fakeDownloadComponent, root)
             compare(store.acceptLiveDownload(live, null),
                     "/tmp/status-downloads/report.pdf")
+        }
+
+        function test_defaultDownloadsDirectory_isLocalPath() {
+            const store = createStore()
+            verify(!store.downloadsDirectory.startsWith("file:"), store.downloadsDirectory)
+            verify(!/^\/[A-Za-z]:/.test(store.downloadsDirectory), store.downloadsDirectory)
+        }
+
+        function test_downloadTarget_windowsDriveDirectory() {
+            const store = createStore()
+            store.downloadsDirectory = "C:/Users/x/Downloads"
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            compare(store.acceptLiveDownload(live, null), "C:/Users/x/Downloads/report.pdf")
+            compare(live.downloadDirectory, "C:/Users/x/Downloads")
+            compare(live.downloadFileName, "report.pdf")
         }
 
         function test_downloadTarget_addsCollisionSuffixes() {
@@ -833,6 +875,32 @@ Item {
             compare(shared.length, 0)
         }
 
+        function test_canShareUrl_refusesPageLocalUrls() {
+            const store = createStore()
+            const http = createTemporaryObject(fakeDownloadComponent, root)
+            http.url = "https://example.com/photo.png"
+            verify(store.canShareUrl(store.addDownload(http)))
+
+            const blob = createTemporaryObject(fakeDownloadComponent, root)
+            blob.url = "blob:https://example.com/f1e65319-142c-47cf-ac82-79bc2a65e458"
+            verify(!store.canShareUrl(store.addDownload(blob)))
+
+            const data = createTemporaryObject(fakeDownloadComponent, root)
+            data.url = "data:image/png;base64,iVBORw0KGgo="
+            verify(!store.canShareUrl(store.addDownload(data)))
+
+            // The link menu shares a raw URL through the same policy.
+            verify(store.canShareUrlString("https://example.com/photo.png"))
+            verify(!store.canShareUrlString("blob:https://example.com/f1e65319"))
+
+            store.platform.preferShareSheet = true
+            let shared = ""
+            store.platform.shareText = function(text) { shared = text }
+            verify(!store.shareUrl(store.addDownload(blob)))
+            verify(!store.shareUrlString("blob:https://example.com/f1e65319"))
+            compare(shared, "")
+        }
+
         function test_shareUrl_mobile_usesShareText_desktop_copies() {
             const store = createStore()
             const live = createTemporaryObject(fakeDownloadComponent, root)
@@ -867,6 +935,48 @@ Item {
             store.platform.showInFolderSupported = true
             record.missingFile = true
             verify(!store.canShowInFolder(record))
+        }
+
+        // A file no app can open (an APK the installer refuses to take, a type
+        // with no viewer) is shown in the system Downloads instead.
+        function test_openRecord_fallsBackToTheFolder_whenNoAppTakesTheFile() {
+            const store = createStore()
+            store.platform.fileExists = function(path) { return true }
+            let opened = 0
+            let shownPath = ""
+            store.platform.openFile = function(url) { opened += 1; return false }
+            store.platform.showInFolder = function(path) { shownPath = path }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            store.openRecord(record)
+            compare(opened, 1)
+            compare(shownPath, record.targetPath)
+
+            // Where there is no folder to show (iOS), nothing else happens.
+            shownPath = "unchanged"
+            store.platform.showInFolderSupported = false
+            store.openRecord(record)
+            compare(shownPath, "unchanged")
+        }
+
+        function test_openRecord_doesNotShowTheFolder_whenAnAppTakesTheFile() {
+            const store = createStore()
+            store.platform.fileExists = function(path) { return true }
+            let shownPath = ""
+            store.platform.openFile = function(url) { return true }
+            store.platform.showInFolder = function(path) { shownPath = path }
+
+            const live = createTemporaryObject(fakeDownloadComponent, root)
+            const record = store.addDownload(live)
+            live.complete()
+            store.refreshMissingFiles()
+
+            store.openRecord(record)
+            compare(shownPath, "")
         }
 
         function test_openDirectoryForRecord_callsPlatformShowInFolder_withTargetPath() {

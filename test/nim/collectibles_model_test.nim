@@ -26,6 +26,22 @@ QtObject:
   proc delete(self: ItemsDataUpdatedSpy) =
     self.QObject.delete
 
+QtObject:
+  type CountChangedSpy = ref object of QObject
+    count: int
+
+  proc delete(self: CountChangedSpy)
+
+  proc onCountChanged*(self: CountChangedSpy) {.slot.} =
+    inc self.count
+
+  proc newCountChangedSpy(): CountChangedSpy =
+    new(result, delete)
+    result.QObject.setup
+
+  proc delete(self: CountChangedSpy) =
+    self.QObject.delete
+
 proc createTestCollectible(seed: int): CollectiblesEntry =
     let data = Collectible(
         dataType: UniqueID,
@@ -204,3 +220,81 @@ suite "collectibles model - ownership refresh of kept entries":
     check(model.getItemById(a.getIDAsString()).getOwnership().mapIt(it.balance) == @[u256(9)])
     check(model.getItemById(c.getIDAsString()).getOwnership().mapIt(it.address) == @["0xBBB"])
     check(spy.count == 1)
+
+when defined(QT_MODEL_SPY):
+  import app/modules/shared/qt_model_spy
+
+  # Every structural notification of this model is amplified downstream: the
+  # wallet's ManageTokensController re-reads the whole source on each rowsRemoved,
+  # through a LeftJoinModel that scans the communities model per row. A refetch
+  # that drops many rows must therefore not be announced row by row.
+  suite "collectibles model - structural notifications on refetch":
+    test "a contiguous run of dropped rows is announced as one range":
+      let model = newModel()
+      let items = createTestCollectibles(0, 10)
+      model.updateItems(items)
+
+      let spy = newQtModelSpy()
+      spy.enable()
+      defer: spy.disable()
+
+      var kept = items
+      kept.delete(3..5)
+      model.updateItems(kept)
+
+      check(model.getItems().mapIt(it.getIDAsString()) == kept.mapIt(it.getIDAsString()))
+      check(spy.countResets == 0)
+      check(spy.countRemoves == 1)
+      let removes = spy.getRemoves()
+      check(removes.len == 1 and removes[0].first == 3 and removes[0].last == 5)
+
+    test "a refetch that drops every other row emits one range per hole, one countChanged, no reset":
+      let model = newModel()
+      var original: seq[CollectiblesEntry] = @[]
+      for i in 0 ..< 3000:
+        original.add(createOwnedCollectible(1000 + i, balances(("0xAAA", 1, 10))))
+      model.updateItems(original)
+
+      let spy = newQtModelSpy()
+      spy.enable()
+      defer: spy.disable()
+      let countSpy = newCountChangedSpy()
+      discard QObject.connect(model, countChanged, countSpy, onCountChanged)
+
+      var refreshed: seq[CollectiblesEntry] = @[]
+      for i in 0 ..< 3000:
+        if i mod 2 == 0:
+          refreshed.add(createOwnedCollectible(1000 + i, balances(("0xAAA", 5, 50))))
+      model.updateItems(refreshed)
+
+      check(spy.countResets == 0)
+      check(spy.countRemoves == 1500)
+      # pushSelectorSource rebuilds every open picker per countChanged: once, not 1500 times.
+      check(countSpy.count == 1)
+      check(model.getItems().len == 1500)
+      for i in 0 ..< 3000:
+        if i mod 2 == 0:
+          let kept = model.getItemById(original[i].getIDAsString())
+          # Same object as before the refetch, carrying the refreshed balance.
+          check(kept == original[i])
+          check(kept.getOwnership().mapIt(it.balance) == @[u256(5)])
+
+    test "scattered dropped rows are removed from the highest range down":
+      let model = newModel()
+      let items = createTestCollectibles(0, 10)
+      model.updateItems(items)
+
+      let spy = newQtModelSpy()
+      spy.enable()
+      defer: spy.disable()
+
+      var kept = items
+      kept.delete(8)
+      kept.delete(1)
+      model.updateItems(kept)
+
+      check(model.getItems().mapIt(it.getIDAsString()) == kept.mapIt(it.getIDAsString()))
+      let removes = spy.getRemoves()
+      check(removes.len == 2)
+      check(removes[0].first == 8 and removes[0].last == 8)
+      check(removes[1].first == 1 and removes[1].last == 1)

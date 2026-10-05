@@ -1567,6 +1567,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Обмін %1 на %2 у %3</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>Бриджинг %1 у %2 на %3 у %4 в %5</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>Випуск необмеженої кількості токенів %1 для %2 через %3</translation>
     </message>
@@ -1725,6 +1729,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>Не вдалося встановити ліміт витрат: %1 у %2 для %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>Бриджинг не вдався: %1 у %2 на %3 у %4 в %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -1961,6 +1969,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT та Infura недоступні для %1. Не вдалося отримати баланси токенів %1.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>Бриджинг підтверджено в %2: %1 на %3 у %4 в %5</translation>
     </message>
     <message>
         <source>How to fix</source>
@@ -2810,10 +2822,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Find in page</source>
         <translation>Знайти на сторінці</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Режим сумісності</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -4252,21 +4260,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Do not show this again</source>
         <translation>Більше не показувати</translation>
-    </message>
-</context>
-<context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation>Увімкнути GIF від KLIPY?</translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation>Після ввімкнення GIF, опубліковані в чаті, можуть передавати ваші метадані KLIPY.</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Увімкнути</translation>
     </message>
 </context>
 <context>
@@ -6320,10 +6313,6 @@ key pair. Keycard will be required for signing</source>
         <translation>Копіювати URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Завантаження</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Призупинити</translation>
     </message>
@@ -6348,8 +6337,12 @@ key pair. Keycard will be required for signing</source>
         <translation>Скасувати</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Закрити</translation>
+        <source>Clear from bar</source>
+        <translation>Прибрати з панелі</translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation>Показати в Завантаженнях</translation>
     </message>
 </context>
 <context>
@@ -8403,6 +8396,21 @@ Are you sure you want to do this?</source>
     <message>
         <source>%1 %2 %3</source>
         <translation>%1 %2 %3</translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation>Увімкнути GIF від KLIPY?</translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation>Після ввімкнення GIF, опубліковані в чаті, можуть передавати ваші метадані KLIPY.</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>Увімкнути</translation>
     </message>
 </context>
 <context>
@@ -11054,6 +11062,10 @@ to load</source>
         <translation>Ринок</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>Немає увімкнених провайдерів</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Обмін</translation>
     </message>
@@ -11740,10 +11752,6 @@ to load</source>
     <message>
         <source>Zoom Fit</source>
         <translation>Підігнати масштаб</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Режим сумісності</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13528,6 +13536,10 @@ to load</source>
         <source>Activity Center</source>
         <translation>Центр активності</translation>
     </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation>Немає увімкнених провайдерів</translation>
+    </message>
 </context>
 <context>
     <name>PrivacyAndSecurityView</name>
@@ -13782,11 +13794,11 @@ to load</source>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>Пов’язаний обліковий запис</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">Перенесено з %1</translation>
+        <translation>Перенесено з %1</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -15495,6 +15507,65 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>ShareComposer</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationDelegate</name>
+    <message numerus="yes">
+        <source>%n member(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n учасник</numerusform>
+            <numerusform>%n учасники</numerusform>
+            <numerusform>%n учасників</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationList</name>
+    <message>
+        <source>No destinations found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing selected yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationPickerPanel</name>
+    <message>
+        <source>Share</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search chats and channels</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationTabBar</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">Усі</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Спільноти</translation>
+    </message>
+</context>
+<context>
     <name>ShareProfileDialog</name>
     <message>
         <source>Profile link</source>
@@ -17030,12 +17101,16 @@ to load</source>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>Обмін + бридж</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Обмін</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>Обмін + бридж</translation>
+        <source>Bridge</source>
+        <translation>Бридж</translation>
     </message>
     <message>
         <source>Fastest</source>
@@ -17046,6 +17121,18 @@ to load</source>
         <translation>Мін. комісія</translation>
     </message>
     <message>
+        <source>Best return</source>
+        <translation>Макс. сума</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>Інформація</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>Обмін у %1 незабаром стане доступним.</translation>
+    </message>
+    <message>
         <source>Add assets</source>
         <translation>Додати активи</translation>
     </message>
@@ -17054,21 +17141,33 @@ to load</source>
         <translation>Додати %1</translation>
     </message>
     <message>
-        <source>Best return</source>
-        <translation>Макс. сума</translation>
-    </message>
-    <message>
-        <source>Bridge</source>
-        <translation>Бридж</translation>
-    </message>
-    <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
         <translation>%1 с</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Курс недоступний</translation>
+    </message>
+    <message>
         <source>Choose route</source>
         <translation>Вибрати маршрут</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>Від %1 через %2</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Від %1</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
@@ -17110,44 +17209,56 @@ to load</source>
         <source>Sign</source>
         <translation>Підписати</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>Інформація</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>Обмін у %1 незабаром стане доступним.</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>Недостатньо коштів для обміну</translation>
+        <source>Insufficient funds</source>
+        <translation>Недостатньо коштів</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>Недостатньо ETH для сплати комісій за газ</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>Недостатньо ETH для сплати комісій</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>Отримання ціни триває довше, ніж очікувалося. Спробуйте пізніше.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>Час очікування котирування вичерпано. Повторити ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>Недостатньо ліквідності. Зменште кількість токенів або спробуйте пізніше.</translation>
+        <source>Low liquidity. Lower amount or try later</source>
+        <translation>Низька ліквідність. Зменште суму або спробуйте пізніше</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>Завеликий вплив на ціну. Зменште кількість токенів або спробуйте пізніше.</translation>
+        <source>No quotes right now. Try later</source>
+        <translation>Наразі немає котирувань. Спробуйте пізніше</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>Не знайдено маршрутів із достатньою ліквідністю</translation>
+        <source>Slippage exceeded. Increase or try later</source>
+        <translation>Перевищено прослизання. Збільште його або спробуйте пізніше</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Сталася помилка. Змініть суму чи токен або спробуйте пізніше.</translation>
+        <source>High price impact. Lower amount or try later</source>
+        <translation>Великий вплив на ціну. Зменште суму або спробуйте пізніше</translation>
+    </message>
+    <message>
+        <source>Unsupported token. Try others</source>
+        <translation>Токен не підтримується. Спробуйте інші</translation>
+    </message>
+    <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>Виникла проблема. Змініть суму, токен або повторіть спробу ↺</translation>
+    </message>
+    <message>
+        <source>No route. Try other tokens or networks</source>
+        <translation>Маршруту немає. Спробуйте інші токени або мережі</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>Сума занадто мала. Збільште суму</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>Сума занадто велика. Зменште суму</translation>
     </message>
 </context>
 <context>
@@ -19127,6 +19238,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>Купити</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>Немає увімкнених провайдерів</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Обмін</translation>
     </message>
@@ -19318,7 +19433,15 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>~%1s</source>
-        <translation>~%1 с</translation>
+        <translation>~%1с</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1хв</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1хв %2с</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

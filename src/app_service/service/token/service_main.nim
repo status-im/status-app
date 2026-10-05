@@ -1,6 +1,7 @@
 proc rebuildMarketDataInternal(self: Service) =
   self.fetchTokensMarketValues() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
   self.fetchTokensPrices()
+  self.refetchOnDemandPrices()
 
 proc rebuildMarketData*(self: Service) =
   self.rebuildMarketDataDebouncer.call()
@@ -28,71 +29,47 @@ proc applyAllTokenListsResult(self: Service, res: AllTokenListsApplyResult) =
   # them in (never copy — see applyRefreshTokensResult).
   self.allTokenLists = move res.allTokenLists
 
-proc prefetchParaswapSupport(self: Service) =
-  let chainIds = self.networkService.getEnabledChainIds()
-  if chainIds.len == 0:
+proc prefetchSwapSupport(self: Service, chainIds: seq[int] = @[]) =
+  if not SWAP_PROVIDER_ENABLED:
     return
-  # One task per chain so the cache fills incrementally as each RPC completes.
-  for chainId in chainIds:
-    if chainId <= 0:
-      continue
-    let arg = PrefetchParaswapSupportTaskArg(
-      tptr: prefetchParaswapSupportTask,
-      vptr: cast[uint](self.vptr),
-      slot: "prefetchParaswapSupportRetrieved",
-      chainId: chainId,
-    )
-    self.threadpool.start(arg)
+  var ids = chainIds
+  if ids.len == 0:
+    # every active chain, not just the ones enabled in the wallet's network filter:
+    # the swap can be pointed at any active chain
+    ids = self.networkService.getCurrentNetworksChainIds()
+  ids = ids.filterIt(it > 0 and it notin self.swapSupportChainIdsInFlight)
+  if ids.len == 0:
+    return
+  for chainId in ids:
+    self.swapSupportChainIdsInFlight.incl(chainId)
+  # one request for all chains; the backend asks the active provider
+  let arg = PrefetchSwapSupportTaskArg(
+    tptr: prefetchSwapSupportTask,
+    vptr: cast[uint](self.vptr),
+    slot: "prefetchSwapSupportRetrieved",
+    chainIds: ids,
+  )
+  self.threadpool.start(arg)
 
-proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} =
+proc prefetchSwapSupportRetrieved(self: Service, response: string) {.slot.} =
   try:
     let parsedJson = response.parseJson
+    if parsedJson.hasKey("chainIds"):
+      for chainId in parsedJson["chainIds"]:
+        self.swapSupportChainIdsInFlight.excl(chainId.getInt())
     var errorString: string
     discard parsedJson.getProp("error", errorString)
     if errorString.len > 0:
       return
-    if not parsedJson.hasKey("chainId") or not parsedJson.hasKey("supported"):
+    if not parsedJson.hasKey("supported"):
       return
-    let chainId = parsedJson["chainId"].getInt()
-    if chainId <= 0:
-      return
-    let supported = parsedJson["supported"].getBool()
-    self.chainsSupportedForSwapViaParaswap[chainId] = supported
+    # chains the provider couldn't answer for are simply absent and stay unknown
+    for chainIdStr, supported in parsedJson["supported"]:
+      let chainId = parseInt(chainIdStr)
+      if chainId > 0:
+        self.chainsSupportedForSwap[chainId] = supported.getBool()
   except Exception as ex:
-    error "prefetchParaswapSupportRetrieved", err = ex.msg
-
-proc prefetchLiFiSupport(self: Service) =
-  let chainIds = self.networkService.getEnabledChainIds()
-  if chainIds.len == 0:
-    return
-  # One task per chain so the cache fills incrementally as each RPC completes.
-  for chainId in chainIds:
-    if chainId <= 0:
-      continue
-    let arg = PrefetchLiFiSupportTaskArg(
-      tptr: prefetchLiFiSupportTask,
-      vptr: cast[uint](self.vptr),
-      slot: "prefetchLiFiSupportRetrieved",
-      chainId: chainId,
-    )
-    self.threadpool.start(arg)
-
-proc prefetchLiFiSupportRetrieved(self: Service, response: string) {.slot.} =
-  try:
-    let parsedJson = response.parseJson
-    var errorString: string
-    discard parsedJson.getProp("error", errorString)
-    if errorString.len > 0:
-      return
-    if not parsedJson.hasKey("chainId") or not parsedJson.hasKey("supported"):
-      return
-    let chainId = parsedJson["chainId"].getInt()
-    if chainId <= 0:
-      return
-    let supported = parsedJson["supported"].getBool()
-    self.chainsSupportedForSwapViaLiFi[chainId] = supported
-  except Exception as ex:
-    error "prefetchLiFiSupportRetrieved", err = ex.msg
+    error "prefetchSwapSupportRetrieved", err = ex.msg
 
 proc applyRefreshTokensResult(self: Service, res: RefreshTokensApplyResult) =
   # Slim GUI-thread apply: swap in the structures the worker already built
@@ -302,6 +279,12 @@ proc init*(self: Service) =
     checkIntervalMs = 100)
   self.missingTokenKeysFetchDebouncer.registerCall0(callback = proc() = self.fetchPendingMissingTokenKeys())
 
+  self.onDemandPricesDebouncer = debouncer_service.newDebouncer(
+    self.threadpool,
+    delayMs = 200,
+    checkIntervalMs = 100)
+  self.onDemandPricesDebouncer.registerCall0(callback = proc() = self.fetchPendingOnDemandPrices())
+
   self.events.on(SignalType.Wallet.event) do(e:Args):
     var data = WalletSignal(e)
     case data.eventType:
@@ -314,15 +297,14 @@ proc init*(self: Service) =
 
   self.events.on(SIGNAL_NETWORK_MODE_UPDATED) do(e:Args):
     self.asyncRefreshTokens()
-    self.prefetchParaswapSupport()
-    self.prefetchLiFiSupport()
+    self.prefetchSwapSupport()
 
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
+    self.resetMarketValuesCache()
     self.rebuildMarketData()
 
   self.asyncRefreshTokens(fetchAllTokens = true)
-  self.prefetchParaswapSupport()
-  self.prefetchLiFiSupport()
+  self.prefetchSwapSupport()
 
 proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
   let tokenKeys = getMandatoryTokenKeys()
@@ -516,21 +498,30 @@ proc getTokensByGroupKey*(self: Service, groupKey: string): seq[TokenItem] =
 
 ## Note: use this function in a very rare case, when you're sure the token is not present in the models.
 ## Returns a token that matches the key, or the first token in the group that matches the key.
-proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenItem =
+# Every deployment of a token by its key or group key: the tokens of interest
+# first, then the indexed all-tokens cache, then the full token list.
+proc getTokensByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): seq[TokenItem] =
   if common_utils.isTokenKey(key):
-    return self.getTokenByKey(key)
-  var tokens = self.getTokensByGroupKey(key)
-  if tokens.len > 0:
-    return tokens[0]
+    let token = self.getTokenByKey(key)
+    return if token.isNil: @[] else: @[token]
+  result = self.getTokensByGroupKey(key)
+  if result.len > 0:
+    return
   if self.allTokensByGroupKey.hasKey(key):
-    let indexed = self.allTokensByGroupKey[key]
-    if indexed.len > 0:
-      return indexed[0]
-  tokens = getAllTokens()
-  let matchedTokens = tokens.filter(t => t.groupKey == key)
-  if matchedTokens.len > 0:
-    return matchedTokens[0]
-  return nil
+    result = self.allTokensByGroupKey[key]
+    if result.len > 0:
+      return
+  return getAllTokens().filter(t => t.groupKey == key)
+
+proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenItem =
+  let tokens = self.getTokensByKeyOrGroupKeyFromAllTokens(key)
+  return if tokens.len > 0: tokens[0] else: nil
+
+proc ensurePricesForGroup*(self: Service, key: string) =
+  let keys = if common_utils.isTokenKey(key): @[key]
+             else: self.getTokensByKeyOrGroupKeyFromAllTokens(key).mapIt(it.key)
+  if keys.len > 0:
+    self.ensurePricesForTokens(keys)
 
 proc findTokenByGroupKeyAndChainIdInTable(
     tokensByGroupKey: Table[string, seq[TokenItem]],
@@ -569,27 +560,19 @@ proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int
 
   return nil
 
-## Checks if the chain is supported for swap via Paraswap
-proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
+proc isChainSupportedForSwap*(self: Service, chainId: int): bool =
+  if not SWAP_PROVIDER_ENABLED:
+    return false
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
     return false
-  if self.chainsSupportedForSwapViaParaswap.hasKey(chainId):
-    return self.chainsSupportedForSwapViaParaswap[chainId]
-  let supported = isChainSupportedForSwapViaParaswap(chainId)
-  self.chainsSupportedForSwapViaParaswap[chainId] = supported
-  return supported
-
-## Checks if the chain is supported for swap via LI.FI
-proc isChainSupportedForSwapViaLiFi*(self: Service, chainId: int): bool =
-  if chainId <= 0:
-    warn "invalid chainId", chainId = chainId
-    return false
-  if self.chainsSupportedForSwapViaLiFi.hasKey(chainId):
-    return self.chainsSupportedForSwapViaLiFi[chainId]
-  let supported = isChainSupportedForSwapViaLiFi(chainId)
-  self.chainsSupportedForSwapViaLiFi[chainId] = supported
-  return supported
+  if self.chainsSupportedForSwap.hasKey(chainId):
+    return self.chainsSupportedForSwap[chainId]
+  # not answered yet (a chain activated after the startup prefetch, or a failed
+  # fetch): ask, and don't block meanwhile. Only a provider's "no" blocks a chain;
+  # an unsupported one still fails at the route request.
+  self.prefetchSwapSupport(@[chainId])
+  return true
 
 proc getTokenListUpdatedAt*(self: Service): int64 =
   return self.tokenListUpdatedAt

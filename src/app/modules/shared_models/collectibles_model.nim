@@ -2,6 +2,9 @@ import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, std/strformat, sequtils, stint, json
 import chronicles
 
+when defined(QT_MODEL_SPY):
+  import app/modules/shared/qt_model_spy
+
 import ./collectibles_entry
 import backend/collectibles as backend_collectibles
 import backend/collectibles_types as backend_collectibles_types
@@ -203,9 +206,13 @@ QtObject:
       result = newQVariant()
 
   proc resetCollectibleItems(self: Model, newItems: seq[CollectiblesEntry] = @[]) =
+    when defined(QT_MODEL_SPY):
+      recordBeginResetModel()
     self.beginResetModel()
     self.items = newItems
     self.endResetModel()
+    when defined(QT_MODEL_SPY):
+      recordEndResetModel()
     self.countChanged()
 
   proc appendCollectibleItems(self: Model, newItems: seq[CollectiblesEntry]) =
@@ -220,22 +227,29 @@ QtObject:
     # End at the new last real item
     let endIdx = startIdx + newItems.len - 1
 
+    when defined(QT_MODEL_SPY):
+      recordBeginInsertRows(startIdx, endIdx)
     self.beginInsertRows(parentModelIndex, startIdx, endIdx)
     self.items.insert(newItems, startIdx)
     self.endInsertRows()
+    when defined(QT_MODEL_SPY):
+      recordEndInsertRows()
     self.countChanged()
 
-  proc removeCollectibleItem(self: Model, idx: int) =
-    if idx < 0 or idx >= self.items.len:
+  proc removeCollectibleItems(self: Model, first, last: int) =
+    if first < 0 or last >= self.items.len or first > last:
       return
 
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
-    self.beginRemoveRows(parentModelIndex, idx, idx)
-    self.items.delete(idx)
+    when defined(QT_MODEL_SPY):
+      recordBeginRemoveRows(first, last)
+    self.beginRemoveRows(parentModelIndex, first, last)
+    self.items.delete(first..last)
     self.endRemoveRows()
-    self.countChanged()
+    when defined(QT_MODEL_SPY):
+      recordEndRemoveRows()
 
   proc itemsDataUpdated*(self: Model) {.signal.}
 
@@ -329,17 +343,24 @@ QtObject:
         newTable.del(uid)
 
     if len(oldIndicesToRemove) > 0:
-      var removedItems = 0
+      # oldIndicesToRemove is ascending; fold neighbours into one range.
+      var ranges: seq[tuple[first, last: int]] = @[]
       for idx in oldIndicesToRemove:
-        let updatedIdx = idx - removedItems
-        self.removeCollectibleItem(updatedIdx)
-        removedItems += 1
-      self.countChanged()
+        if ranges.len > 0 and ranges[^1].last == idx - 1:
+          ranges[^1].last = idx
+        else:
+          ranges.add((first: idx, last: idx))
+      # Descending so the ranges still to be removed keep their indices.
+      for i in countdown(ranges.high, 0):
+        self.removeCollectibleItems(ranges[i].first, ranges[i].last)
 
     var newItemsToAdd: seq[CollectiblesEntry] = @[]
     for uid, idx in newTable:
       newItemsToAdd.add(newItems[idx])
-    self.appendCollectibleItems(newItemsToAdd)
+    if newItemsToAdd.len > 0:
+      self.appendCollectibleItems(newItemsToAdd)   # emits countChanged itself
+    elif len(oldIndicesToRemove) > 0:
+      self.countChanged()
 
     if anyKeptItemUpdated:
       self.itemsDataUpdated()

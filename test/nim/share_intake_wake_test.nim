@@ -1,0 +1,341 @@
+## Integration test for the Nim side of the share-target hand-off
+## (urls_manager + pending_intake_slot). Proves the delivery paths over the
+## real StatusQ signals:
+##  - the iOS extension's wake URL (unsupported openURL trick) delivers and
+##    clears the App Group pending intake slot without being routed as a deep
+##    link, and a share payload in the slot reaches the external intake seam
+##    as SIGNAL_EXTERNAL_SHARE_INTAKE — immediately when ready, buffered until
+##    appReady otherwise (login-first rule), last-wins across several shares;
+##    blank/unknown-type/malformed payloads are cleared and dispatch nothing;
+##  - appReady delivers a payload left behind when the wake never arrived
+##    (degraded fallback: next manual app open, no data loss);
+##  - foregrounding an already-running app (appForegrounded) delivers the slot
+##    the same way — immediately when logged in, parked in the seam until
+##    appReady when logged out; empty-slot foregrounds are no-ops;
+##  - the Android SEND/SEND_MULTIPLE hand-off (shareActivated signal) reaches
+##    SIGNAL_EXTERNAL_SHARE_INTAKE — text-only and with cached image paths —
+##    with pre-ready buffering.
+
+import unittest, os, json
+import nimqml
+import app/core/eventemitter
+import app/core/custom_urls/url_scheme_event
+import app/core/custom_urls/urls_manager
+import app/core/intake/pending_intake_slot
+import app/core/intake/share_intake_cache
+import app/global/app_signals
+import app/global/single_instance
+import statusq_bridge
+# Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
+# gen_qobject_types.QObject and make nimqml's QObject ambiguous (see url_scheme_event_test).
+from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+
+discard QCoreApplication.create()  # one app for the whole suite
+
+proc processEventsUntil(cond: proc(): bool) =
+  var spins = 0
+  while not cond() and spins < 100:
+    QCoreApplication.processEvents()
+    sleep(5)
+    inc spins
+
+proc drainEvents() =
+  for _ in 0 ..< 10:
+    QCoreApplication.processEvents()
+    sleep(5)
+
+suite "share_intake_wake":
+  setup:
+    # Not "share_intake_wake_test": newSingleInstance below creates its local
+    # socket under that name in the temp dir and removeDir would trip on it.
+    let slotDir = getTempDir() / "share_intake_wake_test_slot"
+    removeDir(slotDir)
+    # App-Group-style cache dir the iOS extension copies shared images into;
+    # must be named `share-intake` for the Nim cache-lifecycle guard to own it.
+    let cacheBase = getTempDir() / "share_intake_wake_test_cache"
+    removeDir(cacheBase)
+    let cacheDir = cacheBase / ShareIntakeCacheDirName
+    let events = createEventEmitter()
+    let urlSchemeEvent = newUrlSchemeEvent()
+    let singleInstance = newSingleInstance("share_intake_wake_test", "")
+    let slot = newPendingIntakeSlot(slotDir)
+    let manager = newUrlsManager(events, urlSchemeEvent, singleInstance, "", slot)
+    var sharedTexts: seq[string] = @[]
+    var sharedImagePaths: seq[seq[string]] = @[]
+    events.on(SIGNAL_EXTERNAL_SHARE_INTAKE) do(e: Args):
+      let args = ExternalShareIntakeArgs(e)
+      sharedTexts.add(args.text)
+      sharedImagePaths.add(args.imagePaths)
+
+  teardown:
+    removeDir(slotDir)
+    removeDir(cacheBase)
+
+  test "wake url delivers the slot share payload to the intake seam":
+    manager.appReady()
+    slot.write("""{"type":"share","text":"shared from the extension"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    # consumed by the manager: cleared after read, nothing left to take
+    check not fileExists(slot.filePath())
+    check slot.take() == ""
+    check sharedTexts == @["shared from the extension"]
+
+  test "variant-scheme wake url delivers the slot share payload":
+    # Co-installed variants (issue #48): each iOS variant wakes itself through
+    # its own bundle-id-derived scheme; the host recognizes the wake by its
+    # share-intake authority, whatever the variant scheme.
+    manager.appReady()
+    slot.write("""{"type":"share","text":"woken through the variant scheme"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr,
+      "app.status.mobile.pr://share-intake".cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check slot.take() == ""
+    check sharedTexts == @["woken through the variant scheme"]
+
+  test "wake url before appReady buffers the slot share until appReady (login-first)":
+    # Logged-out share: the extension wakes the host, the host consumes the
+    # slot immediately (file cleared), but the seam holds the share until
+    # main-window-ready — login/onboarding first, share flow after.
+    slot.write("""{"type":"share","text":"shared while logged out"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check sharedTexts.len == 0
+
+    manager.appReady()
+
+    check sharedTexts == @["shared while logged out"]
+
+  test "later slot share wins when several arrive before delivery":
+    slot.write("""{"type":"share","text":"first share"}""")
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    slot.write("""{"type":"share","text":"second share wins"}""")
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    manager.appReady()
+
+    check sharedTexts == @["second share wins"]
+
+  test "blank slot share text is cleared and dispatches nothing":
+    manager.appReady()
+    slot.write("""{"type":"share","text":"   \n  "}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check sharedTexts.len == 0
+
+  test "slot payload with an unknown type is cleared and dispatches nothing":
+    manager.appReady()
+    slot.write("""{"type":"image","path":"/somewhere.png"}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check sharedTexts.len == 0
+
+  test "slot share payload with image paths reaches the intake seam":
+    manager.appReady()
+    slot.write("""{"type":"share","text":"pic","imagePaths":["/cache/share-intake/img.png"]}""")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check sharedTexts == @["pic"]
+    check sharedImagePaths == @[@["/cache/share-intake/img.png"]]
+
+  test "slot share delivers App Group cached image paths with the files intact":
+    # iOS end-to-end: the extension copied the shared images into the App
+    # Group share-intake dir and referenced them in the payload; delivery
+    # hands the paths over with the files still on disk — release happens
+    # only after send/cancel, not at delivery.
+    manager.appReady()
+    createDir(cacheDir)
+    let img = cacheDir / "shared.png"
+    writeFile(img, "img")
+    slot.write($ %*{"type": "share", "text": "pic", "imagePaths": [img]})
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedTexts == @["pic"]
+    check sharedImagePaths == @[@[img]]
+    check fileExists(img)
+
+  test "a slot image share replaced before delivery releases its cached copies":
+    # Logged-out user shares twice: the second slot payload wins; the first
+    # share's App Group copies are unreferenced now and must not accumulate.
+    createDir(cacheDir)
+    let oldImg = cacheDir / "old.png"
+    let newImg = cacheDir / "new.png"
+    writeFile(oldImg, "img")
+    writeFile(newImg, "img")
+
+    slot.write($ %*{"type": "share", "text": "first", "imagePaths": [oldImg]})
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    slot.write($ %*{"type": "share", "text": "second", "imagePaths": [newImg]})
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    manager.appReady()
+
+    check sharedTexts == @["second"]
+    check sharedImagePaths == @[@[newImg]]
+    check not fileExists(oldImg)
+    check fileExists(newImg)
+
+  test "manager construction sweeps leftover cached copies, keeping slot-referenced ones":
+    # Fresh-launch hygiene: a previous run killed mid-flow left copies in the
+    # App Group cache; only the copies the still-pending slot payload
+    # references survive the sweep (a logged-out share survives restarts).
+    createDir(cacheDir)
+    let leftover = cacheDir / "leftover.png"
+    let referenced = cacheDir / "pending.png"
+    writeFile(leftover, "img")
+    writeFile(referenced, "img")
+    slot.write($ %*{"type": "share", "text": "pic", "imagePaths": [referenced]})
+
+    let freshManager = newUrlsManager(events, urlSchemeEvent, singleInstance,
+      "", slot, cacheDir)
+
+    check not fileExists(leftover)
+    check fileExists(referenced)
+
+    freshManager.appReady()
+
+    check sharedTexts == @["pic"]
+    check sharedImagePaths == @[@[referenced]]
+    check fileExists(referenced)
+
+  test "malformed slot payload is cleared and dispatches nothing":
+    manager.appReady()
+    slot.write("not json at all")
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, ShareIntakeWakeUrl.cstring)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check sharedTexts.len == 0
+
+  test "android share text reaches the intake seam once ready":
+    manager.appReady()
+
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr,
+      "look at this https://example.com/article", "[]")
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedTexts == @["look at this https://example.com/article"]
+    check sharedImagePaths == @[newSeq[string]()]
+
+  test "android share with cached image paths reaches the intake seam":
+    manager.appReady()
+
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "gallery caption",
+      """["/cache/share-intake/a.png","/cache/share-intake/b.jpg"]""")
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedTexts == @["gallery caption"]
+    check sharedImagePaths ==
+      @[@["/cache/share-intake/a.png", "/cache/share-intake/b.jpg"]]
+
+  test "android image share with no text reaches the intake seam":
+    manager.appReady()
+
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "",
+      """["/cache/share-intake/screenshot.png"]""")
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check sharedTexts == @[""]
+    check sharedImagePaths == @[@["/cache/share-intake/screenshot.png"]]
+
+  test "share text before appReady is buffered and delivered at appReady":
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "pre-login share", "[]")
+    drainEvents() # let the queued slot run; the seam must buffer, not dispatch
+    check sharedTexts.len == 0
+
+    manager.appReady()
+
+    check sharedTexts == @["pre-login share"]
+
+  test "app foregrounding delivers a payload left behind when the wake never arrived":
+    # Wake-less fallback for an already-running app: the user backgrounds
+    # Status, shares (extension writes the slot, openURL wake fails/dropped),
+    # then manually returns to Status — the payload must not wait for a full
+    # app restart.
+    manager.appReady()
+    slot.write("""{"type":"share","text":"delivered on foreground"}""")
+
+    statusq_urlscheme_emit_appforegrounded(urlSchemeEvent.vptr)
+    processEventsUntil(proc(): bool = sharedTexts.len > 0)
+
+    check not fileExists(slot.filePath())
+    check sharedTexts == @["delivered on foreground"]
+
+  test "app foregrounding before appReady parks the payload until appReady (login-first)":
+    # Logged-out warm app: the user foregrounds Status manually after sharing.
+    # The slot is consumed from disk right away (file cleared) but the seam
+    # must hold the share until login/onboarding completes — parked, not lost.
+    slot.write("""{"type":"share","text":"shared while logged out, foregrounded"}""")
+
+    statusq_urlscheme_emit_appforegrounded(urlSchemeEvent.vptr)
+    processEventsUntil(proc(): bool = not fileExists(slot.filePath()))
+
+    check not fileExists(slot.filePath())
+    check sharedTexts.len == 0
+
+    manager.appReady()
+
+    check sharedTexts == @["shared while logged out, foregrounded"]
+
+  test "app foregrounding with an empty slot is a no-op":
+    manager.appReady()
+
+    statusq_urlscheme_emit_appforegrounded(urlSchemeEvent.vptr)
+    drainEvents()
+
+    check sharedTexts.len == 0
+    check slot.take() == ""
+
+  test "appReady delivers a payload left behind when the wake never arrived":
+    slot.write("""{"type":"share","text":"payload from a killed wake"}""")
+
+    manager.appReady()
+
+    check not fileExists(slot.filePath())
+    check slot.take() == ""
+    check sharedTexts == @["payload from a killed wake"]
+
+  test "appReady with an empty slot is a no-op":
+    manager.appReady()
+    check slot.take() == ""
+
+  test "a web url is routed, not eaten as a wake ping, where no slot exists":
+    # Android's host-less http/https filter can deliver any web URL, and there
+    # the slot is inactive — so it must reach the routing seam, not the wake path.
+    let inactiveSlot = newPendingIntakeSlot("")
+    let browserManager = newUrlsManager(events, urlSchemeEvent, singleInstance, "",
+      inactiveSlot)
+    browserManager.appReady()
+    var browserTabUrls: seq[string] = @[]
+    events.on(SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB) do(e: Args):
+      browserTabUrls.add(ExternalUrlIntakeArgs(e).url)
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr, "https://share-intake".cstring)
+    drainEvents()
+
+    check browserTabUrls == @["https://share-intake"]

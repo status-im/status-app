@@ -1,4 +1,6 @@
 
+import json
+import os
 import time
 
 from constants.support_bot import SUPPORT_BOT_DISPLAY_NAME
@@ -212,17 +214,179 @@ class ChatPage(BasePage):
             self.logger.debug("Could not pre-clear edit input; relying on qt_safe_input clear")
         return self.send_message(updated_text, timeout=timeout)
 
-    def message_exists(self, content: str, timeout: int | None = 10) -> bool:
-        locators = (
+    def _message_locators(self, content: str) -> tuple:
+        return (
             self.locators.message_text_exact(content),
             self.locators.message_text(content),
             self.locators.message_content_desc_any(content),
         )
 
+    def message_exists(self, content: str, timeout: int | None = 10) -> bool:
+        """Presence only: a delegate carrying ``content`` is in the accessibility
+        tree, on screen or not. ``message_visible`` adds the on-screen check."""
+        locators = self._message_locators(content)
+
         def _found_message() -> bool:
             return any(self.find_element_safe(locator, timeout=2) for locator in locators)
 
         return self.wait_for_condition(_found_message, timeout=timeout)
+
+    @staticmethod
+    def rect_within_list(
+        rect: dict, toolbar_bottom: int, composer_top: int, screen_height: int
+    ) -> bool:
+        """Whether ``rect`` lies inside the chat log's viewport.
+
+        The log's ListView has no accessibility node; its viewport runs from
+        the toolbar's bottom edge to the composer panel's top edge. A delegate
+        the list keeps in its cache buffer reports a real rect below the
+        composer or above the toolbar, a zero rect when wholly off the display,
+        or a rect pinned to a display edge when it straddles one. None of those
+        is on screen, and Appium's ``displayed`` flag is true for all of them.
+        """
+        width = rect.get("width", 0)
+        height = rect.get("height", 0)
+        top = rect.get("y", 0)
+        bottom = top + height
+        if width <= 0 or height <= 0:
+            return False
+        if top <= 0 or bottom >= screen_height:
+            # A rect meeting a display edge is a clipped delegate. Its centre can
+            # still land in the band, so the band check alone would press it.
+            return False
+        # Both press strategies aim at the element's centre, so that is the point
+        # that must be in the band; containment would reject a tall row that presses fine.
+        press_y = top + height // 2
+        return toolbar_bottom < press_y < composer_top
+
+    def chat_bounds(self, timeout: int = 2) -> tuple[int, int, int] | None:
+        """``(toolbar_bottom, composer_top, screen_height)`` of the open chat, or None."""
+        toolbar = self.find_element_safe(self.locators.CHAT_TOOLBAR, timeout=timeout)
+        composer = self.find_element_safe(self.locators.CHAT_INPUT_PANEL, timeout=timeout)
+        if toolbar is None or composer is None:
+            self.logger.warning(
+                "Chat bounds unavailable (toolbar found=%s, composer found=%s)",
+                toolbar is not None, composer is not None,
+            )
+            return None
+        try:
+            toolbar_rect = toolbar.rect
+            composer_rect = composer.rect
+            screen_height = self.driver.get_window_size()["height"]
+        except Exception as exc:
+            self.logger.warning("Chat bounds unreadable: %s", exc)
+            return None
+        return (
+            toolbar_rect["y"] + toolbar_rect["height"],
+            composer_rect["y"],
+            screen_height,
+        )
+
+    def _message_elements(self, content: str) -> list:
+        for locator in self._message_locators(content):
+            try:
+                elements = self.driver.find_elements(*locator)
+            except Exception:
+                continue
+            if elements:
+                return elements
+        return []
+
+    def on_screen_message(self, content: str, bounds: tuple[int, int, int]):
+        """The delegate carrying ``content`` that is inside the viewport right
+        now, or None. Callers press this element: the one that satisfied the
+        rule, not whichever match a later lookup returns first."""
+        toolbar_bottom, composer_top, screen_height = bounds
+        for element in self._message_elements(content):
+            try:
+                rect = element.rect
+            except Exception:
+                continue
+            if self.rect_within_list(rect, toolbar_bottom, composer_top, screen_height):
+                return element
+        return None
+
+    def message_on_screen(self, content: str, bounds: tuple[int, int, int]) -> bool:
+        return self.on_screen_message(content, bounds) is not None
+
+    def message_visible(
+        self,
+        content: str,
+        timeout: int | None = 10,
+        *,
+        scrolled: bool = False,
+        bounds: tuple[int, int, int] | None = None,
+    ) -> bool:
+        """Wait until a message carrying ``content`` is on screen: present in the
+        accessibility tree AND inside the chat log's viewport (``rect_within_list``).
+
+        The list bounds are read once per call, not per poll. Each call appends
+        one line to ``reports/visibility-cost.jsonl``. ``scrolled`` records that
+        the caller swiped to bring the message on screen; ``bounds`` lets a
+        caller reuse a lookup it already made. Without bounds the answer is
+        False: this helper never falls back to presence.
+        """
+        return self.visible_message(
+            content, timeout, scrolled=scrolled, bounds=bounds,
+        ) is not None
+
+    def visible_message(
+        self,
+        content: str,
+        timeout: int | None = 10,
+        *,
+        scrolled: bool = False,
+        bounds: tuple[int, int, int] | None = None,
+    ):
+        """As ``message_visible``, returning the element that satisfied the rule
+        so the caller can press that one."""
+        started = time.monotonic()
+        polls = 0
+        outcome = "timeout"
+        found = None
+        bounds = bounds or self.chat_bounds()
+        if bounds is not None:
+
+            def _on_screen() -> bool:
+                nonlocal polls, found
+                polls += 1
+                found = self.on_screen_message(content, bounds)
+                return found is not None
+
+            if self.wait_for_condition(_on_screen, timeout=timeout, poll_interval=0.5):
+                outcome = "visible"
+        self._record_visibility_cost(
+            content, time.monotonic() - started, polls, scrolled, outcome,
+        )
+        return found if outcome == "visible" else None
+
+    def _record_visibility_cost(
+        self, content: str, elapsed: float, polls: int, scrolled: bool, outcome: str
+    ) -> None:
+        current = os.environ.get("PYTEST_CURRENT_TEST", "")
+        nodeid, _, stage = current.rpartition(" (")
+        line = {
+            "test": nodeid or current,
+            "stage": stage.rstrip(")"),
+            "message": content[:40],
+            "elapsed_s": round(elapsed, 3),
+            "polls": polls,
+            "scrolled": scrolled,
+            "outcome": outcome,
+        }
+        try:
+            from config import get_config
+
+            root = get_config().reports_dir
+        except Exception:
+            # Instrumentation must never fail a test: fall back rather than raise.
+            root = "reports"
+        try:
+            os.makedirs(root, exist_ok=True)
+            with open(os.path.join(root, "visibility-cost.jsonl"), "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(line) + "\n")
+        except Exception as exc:
+            self.logger.warning("visibility cost line not written: %s", exc)
 
     def dismiss_introduce_prompt(self, timeout: int | None = 2) -> bool:
         element = self.find_element_safe(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)

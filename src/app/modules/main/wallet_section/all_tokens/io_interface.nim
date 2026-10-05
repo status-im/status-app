@@ -99,6 +99,9 @@ method buildGroupsForChainTo*(self: AccessInterface, chainId: int) {.base.} =
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: AccessInterface, key: string): TokenItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method ensurePricesForGroup*(self: AccessInterface, key: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method filterChanged*(self: AccessInterface, addresses: seq[string]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -147,10 +150,7 @@ method showCommunityAssetWhenSendingTokensChanged*(self: AccessInterface) {.base
 method getMandatoryTokenGroupKeys*(self: AccessInterface): seq[string] {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method isChainSupportedForSwapViaParaswap*(self: AccessInterface, chainId: int): bool {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method isChainSupportedForSwapViaLiFi*(self: AccessInterface, chainId: int): bool {.base.} =
+method isChainSupportedForSwap*(self: AccessInterface, chainId: int): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method loadTokenLists*(self: AccessInterface) {.base.} =

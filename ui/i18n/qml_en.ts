@@ -619,6 +619,16 @@
     </message>
 </context>
 <context>
+    <name>ShareDestinationDelegate</name>
+    <message numerus="yes">
+        <source>%n member(s)</source>
+        <translation>
+            <numerusform>%n member</numerusform>
+            <numerusform>%n members</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>SharedAddressesPanel</name>
     <message numerus="yes">
         <source>Reveal %n address(s)</source>

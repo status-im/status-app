@@ -435,6 +435,24 @@ QtObject:
   proc emitOpenUrlSignal*(self: View, url: string) =
     self.openUrl(url)
 
+  proc openUrlInNewBrowserTab*(self: View, url: string) {.signal.}
+  proc emitOpenUrlInNewBrowserTabSignal*(self: View, url: string) =
+    self.openUrlInNewBrowserTab(url)
+
+  proc launchShareFlow*(self: View, text: string, imagePathsJson: string) {.signal.}
+  proc emitLaunchShareFlowSignal*(self: View, text: string, imagePathsJson: string) =
+    self.launchShareFlow(text, imagePathsJson)
+
+  proc releaseShareIntakeFiles*(self: View, imagePathsJson: string) {.slot.} =
+    ## Share-flow cancel path: releases the cached copies of shared images
+    ## (JSON array of absolute paths, as delivered by launchShareFlow).
+    self.delegate.releaseShareIntakeFiles(imagePathsJson)
+
+  proc sendSharedContent*(self: View, destinationsJson: string, text: string, imagePathsJson: string, contentType: int) {.slot.} =
+    ## Share-flow send: fans the shared content out to every destination
+    ## (JSON array of {sectionId, chatId}) through the chat service.
+    self.delegate.sendSharedContent(destinationsJson, text, imagePathsJson, contentType)
+
   proc navigateToMessageDetails*(self: View) {.signal.}
   proc emitNavigateToMessageDetailsSignal*(self: View) =
     self.navigateToMessageDetails()

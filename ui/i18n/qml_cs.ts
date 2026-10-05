@@ -1567,6 +1567,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Směna %1 za %2 v %3</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>Přemostění %1 na %2 za %3 na %4 v %5</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>Ražba nekonečného množství tokenů %1 pro %2 pomocí %3</translation>
     </message>
@@ -1725,6 +1729,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>Limit útraty selhal: %1 v %2 pro %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>Přemostění selhalo: %1 na %2 za %3 na %4 v %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -1961,6 +1969,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT &amp; Infura mimo provoz pro %1. Zůstatky tokenů %1 nelze načíst.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>Přemostění potvrzeno na %2: %1 za %3 na %4 v %5</translation>
     </message>
     <message>
         <source>How to fix</source>
@@ -2810,10 +2822,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Find in page</source>
         <translation>Najít na stránce</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Režim kompatibility</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -4252,21 +4260,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <message>
         <source>Do not show this again</source>
         <translation>Znovu nezobrazovat</translation>
-    </message>
-</context>
-<context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation>Povolit GIFy z KLIPY?</translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation>Po povolení mohou animované obrázky odeslané v chatu sdílet vaše metadata se službou KLIPY.</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Povolit</translation>
     </message>
 </context>
 <context>
@@ -5821,7 +5814,7 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>In case you lost Keycard, want to create a backup or import a
 key pair. Keycard will be required for signing</source>
-        <translation>V případě, že jste Keycard ztratili, chcete vytvořit zálohu nebo importovat pár klíčů. 
+        <translation>V případě, že jste Keycard ztratili, chcete vytvořit zálohu nebo importovat pár klíčů.
 Keycard bude vyžadována pro podepisování</translation>
     </message>
     <message>
@@ -6320,10 +6313,6 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Kopírovat URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Stažené soubory</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Pozastavit</translation>
     </message>
@@ -6348,8 +6337,12 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Zrušit</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Zavřít</translation>
+        <source>Clear from bar</source>
+        <translation>Odebrat z lišty</translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation>Zobrazit ve Stažených souborech</translation>
     </message>
 </context>
 <context>
@@ -8403,6 +8396,21 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>%1 %2 %3</source>
         <translation>%1 %2 %3</translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation>Povolit GIFy z KLIPY?</translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation>Po povolení mohou animované obrázky odeslané v chatu sdílet vaše metadata se službou KLIPY.</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>Povolit</translation>
     </message>
 </context>
 <context>
@@ -11053,6 +11061,10 @@ selhalo</translation>
         <translation>Trh</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Směnit</translation>
     </message>
@@ -11739,10 +11751,6 @@ selhalo</translation>
     <message>
         <source>Zoom Fit</source>
         <translation>Přizpůsobit velikost</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Režim kompatibility</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13526,6 +13534,10 @@ selhalo</translation>
     <message>
         <source>Activity Center</source>
         <translation>Centrum aktivit</translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
     </message>
 </context>
 <context>
@@ -15494,6 +15506,65 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>ShareComposer</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Zpráva</translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationDelegate</name>
+    <message numerus="yes">
+        <source>%n member(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n člen</numerusform>
+            <numerusform>%n členové</numerusform>
+            <numerusform>%n členů</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationList</name>
+    <message>
+        <source>No destinations found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing selected yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationPickerPanel</name>
+    <message>
+        <source>Share</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search chats and channels</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationTabBar</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">Všechny</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished">Kontakty</translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Komunity</translation>
+    </message>
+</context>
+<context>
     <name>ShareProfileDialog</name>
     <message>
         <source>Profile link</source>
@@ -17029,12 +17100,36 @@ selhalo</translation>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>Směna + Most</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Směnit</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>Směna + Most</translation>
+        <source>Bridge</source>
+        <translation>Most</translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation>Nejrychlejší</translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation>Nejnižší poplatek</translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation>Nejlepší výnos</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>Info</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>Směny na %1 budou brzy dostupné.</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -17050,12 +17145,28 @@ selhalo</translation>
         <translation>%1 s</translation>
     </message>
     <message>
-        <source>Best return</source>
-        <translation>Nejlepší výnos</translation>
+        <source>Rate unavailable</source>
+        <translation>Kurz není k dispozici</translation>
     </message>
     <message>
-        <source>Bridge</source>
-        <translation>Most</translation>
+        <source>Choose route</source>
+        <translation>Vyberte trasu</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>Od %1 přes %2</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Od %1</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
@@ -17097,56 +17208,56 @@ selhalo</translation>
         <source>Sign</source>
         <translation>Podepsat</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>Info</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>Směny na %1 budou brzy dostupné.</translation>
-    </message>
-    <message>
-        <source>Fastest</source>
-        <translation>Nejrychlejší</translation>
-    </message>
-    <message>
-        <source>Lowest fee</source>
-        <translation>Nejnižší poplatek</translation>
-    </message>
-    <message>
-        <source>Choose route</source>
-        <translation>Vyberte trasu</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>Nedostatek prostředků pro swap</translation>
+        <source>Insufficient funds</source>
+        <translation>Nedostatek prostředků</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>Nedostatek ETH na zaplacení poplatků za plyn</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>Nedostatek ETH na zaplacení poplatků</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>Získání ceny trvalo déle, než se očekávalo. Zkuste to prosím později.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>Získání nabídky vypršelo. Zkusit znovu ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>Nedostatek likvidity. Snižte množství tokenů nebo to zkuste později.</translation>
+        <source>Low liquidity. Lower amount or try later</source>
+        <translation>Nízká likvidita. Snižte částku nebo to zkuste později</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>Dopad na cenu je příliš vysoký. Snižte množství tokenů nebo to zkuste později.</translation>
+        <source>No quotes right now. Try later</source>
+        <translation>Momentálně žádné nabídky. Zkuste to později</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>Nenalezeny žádné trasy s dostatečnou likviditou</translation>
+        <source>Slippage exceeded. Increase or try later</source>
+        <translation>Překročen skluz. Zvyšte ho nebo to zkuste později</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Něco se pokazilo. Změňte částku, token nebo to zkuste později.</translation>
+        <source>High price impact. Lower amount or try later</source>
+        <translation>Vysoký dopad na cenu. Snižte částku nebo to zkuste později</translation>
+    </message>
+    <message>
+        <source>Unsupported token. Try others</source>
+        <translation>Nepodporovaný token. Zkuste jiné</translation>
+    </message>
+    <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>Nastal problém. Změňte částku, token nebo to zkuste znovu ↺</translation>
+    </message>
+    <message>
+        <source>No route. Try other tokens or networks</source>
+        <translation>Žádná trasa. Zkuste jiné tokeny nebo sítě</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>Částka je příliš nízká. Zvyšte částku</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>Částka je příliš vysoká. Snižte částku</translation>
     </message>
 </context>
 <context>
@@ -18504,7 +18615,7 @@ The higher the tip, the faster your transaction is likely to be processed, espec
         <source>AKA gas limit. Refers to the maximum number of computational steps (or units of gas) that a transaction can consume. It represents the complexity or amount of work required to execute a transaction or smart contract.
 
 The gas limit is a cap on how much work the transaction can do on the blockchain. If the gas limit is set too low, the transaction may fail due to insufficient gas.</source>
-        <translation>Také známé jako limit gasu. Označuje maximální počet výpočetních kroků (nebo jednotek gasu), které může transakce spotřebovat. Představuje složitost nebo množství práce potřebné k provedení transakce nebo chytré smlouvy. 
+        <translation>Také známé jako limit gasu. Označuje maximální počet výpočetních kroků (nebo jednotek gasu), které může transakce spotřebovat. Představuje složitost nebo množství práce potřebné k provedení transakce nebo chytré smlouvy.
 
 Limit gasu je strop pro množství práce, kterou může transakce na blockchainu vykonat. Pokud je limit gasu nastaven příliš nízko, transakce může selhat kvůli nedostatečnému množství gasu.</translation>
     </message>
@@ -18524,7 +18635,7 @@ Limit gasu je strop pro množství práce, kterou může transakce na blockchain
         <source>Transaction counter ensuring transactions from your account are processed in the correct order and can’t be replayed. Each new transaction increments the nonce by 1, ensuring uniqueness and preventing double-spending.
 
 If a transaction with a lower nonce is pending, higher nonce transactions will remain in the queue until the earlier one is confirmed.</source>
-        <translation>Čítač transakcí, který zajišťuje, že transakce z vašeho účtu budou zpracovány ve správném pořadí a nebudou opakovaně odeslány. Každá nová transakce zvýší nonce o 1, čímž zajistí jedinečnost a zabrání dvojímu utrácení. 
+        <translation>Čítač transakcí, který zajišťuje, že transakce z vašeho účtu budou zpracovány ve správném pořadí a nebudou opakovaně odeslány. Každá nová transakce zvýší nonce o 1, čímž zajistí jedinečnost a zabrání dvojímu utrácení.
 
 Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zůstanou ve frontě, dokud se dřívější nepotvrdí.</translation>
     </message>
@@ -19122,6 +19233,10 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
         <translation>Koupit</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>Nejsou povoleni žádní poskytovatelé</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Směnit</translation>
     </message>
@@ -19314,6 +19429,14 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <message>
         <source>~%1s</source>
         <translation>~%1s</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1m</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1m %2s</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

@@ -66,7 +66,8 @@ QtObject {
     }
 
     readonly property SwapModalHandler swapModalHandler: SwapModalHandler {
-
+        swapEnabled: root.featureFlagsStore.swapEnabled && root.featureFlagsStore.swapProvidersEnabled
+        routeOrderEnabled: root.featureFlagsStore.lifiEnabled
 
         function launchSwap() {
             if (root.walletRootStore.areTestNetworksEnabled) {

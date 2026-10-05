@@ -2,6 +2,7 @@ import nimqml, tables, os, json, std/strformat, sequtils, strutils, std/options
 import json_serialization, chronicles
 
 import app/global/global_singleton
+import app/global/feature_flags
 import ./dto/accounts as dto_accounts
 import ./dto/generated_accounts as dto_generated_accounts
 import ./dto/login_request
@@ -170,6 +171,7 @@ QtObject:
       raribleTestnetApiKey: RARIBLE_TESTNET_API_KEY_RESOLVED,
       alchemyApiKey: ALCHEMY_API_KEY_RESOLVED,
       lifiApiKey: LIFI_API_KEY_RESOLVED,
+      relayApiKey: RELAY_API_KEY_RESOLVED,
       statusProxyStageName: STATUS_PROXY_STAGE_NAME_RESOLVED,
       marketDataProxyUrl: MARKET_DATA_PROXY_URL_RESOLVED,
       marketDataProxyUser: MARKET_DATA_PROXY_USER_RESOLVED,
@@ -192,6 +194,9 @@ QtObject:
       tokensListsAutoRefreshCheckInterval: 0,
       marketDataFullDataRefreshInterval: toInt(MARKET_DATA_FULL_REFRESH_INTERVAL, 0),
       marketDataPriceRefreshInterval: toInt(MARKET_DATA_PRICE_REFRESH_INTERVAL, 0),
+      enableParaswapProvider: PARASWAP_PROVIDER_ENABLED,
+      enableLiFiProvider: LIFI_PROVIDER_ENABLED,
+      enableRelayProvider: RELAY_PROVIDER_ENABLED,
     )
 
   proc defaultCreateAccountRequest*(): CreateAccountRequest =

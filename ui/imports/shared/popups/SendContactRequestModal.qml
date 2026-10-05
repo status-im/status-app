@@ -24,6 +24,7 @@ CommonContactAdaptiveDialog {
     property string challengeText: qsTr("Write a short message telling them who you are...")
     property string buttonText: qsTr("Send contact request")
     property string defaultMessage: ""
+    property bool messageEditable: true
     property string message: defaultMessage
 
     title: qsTr("Send contact request")
@@ -81,16 +82,25 @@ CommonContactAdaptiveDialog {
             maximumHeight: d.msgHeight
             input.verticalAlignment: TextEdit.AlignTop
             text: root.message
+            readOnly: !root.messageEditable
             validators: StatusMinLengthValidator {
                 minLength: d.minMsgLength
                 errorMessage: Utils.getErrorMessage(messageInput.errors, qsTr("who are you"))
             }
 
             onTextChanged: root.message = text
-            onValidChanged: d.messageValid = valid
             Component.onCompleted: {
-                d.messageValid = valid
                 input.edit.forceActiveFocus()
+                // Prefilled message - make sure to validate on load
+                if (root.message.length > 0) {
+                    messageInput.validate(true)
+                }
+            }
+
+            Binding {
+                target: d
+                property: "messageValid"
+                value: messageInput.valid
             }
         }
     }

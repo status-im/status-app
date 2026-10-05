@@ -211,6 +211,9 @@ QtObject:
       return ""
     return $(%* token)
 
+  proc ensurePricesForGroup*(self: View, key: string) {.slot.} =
+    self.delegate.ensurePricesForGroup(key)
+
   proc getTokenGroupsModelObj*(self: View): TokenGroupsModel =
     ## Non-QML accessor: the raw model instances, so a sibling producer can
     ## snapshot their loaded rows and drive their lazy loading directly.
@@ -350,11 +353,8 @@ QtObject:
   proc loadTokenLists*(self: View) {.slot.} =
     self.delegate.loadTokenLists()
 
-  proc isChainSupportedForSwapViaParaswap*(self: View, chainId: int): bool {.slot.} =
-    return self.delegate.isChainSupportedForSwapViaParaswap(chainId)
-
-  proc isChainSupportedForSwapViaLiFi*(self: View, chainId: int): bool {.slot.} =
-    return self.delegate.isChainSupportedForSwapViaLiFi(chainId)
+  proc isChainSupportedForSwap*(self: View, chainId: int): bool {.slot.} =
+    return self.delegate.isChainSupportedForSwap(chainId)
 
   proc delete*(self: View) =
     self.QObject.delete

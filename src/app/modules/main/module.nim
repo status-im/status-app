@@ -1,7 +1,11 @@
 import nimqml
-import std/[strformat, strutils, tables, json, sequtils, marshal, times], chronicles, stint
+import std/[strformat, strutils, tables, json, sequtils, marshal, times, options], chronicles, stint, uuids
 
 import io_interface, view, controller
+import share_send
+import app_service/service/message/dto/link_preview
+import app_service/service/message/dto/urls_unfurling_plan
+import app_service/service/settings/dto/settings
 import ephemeral_notification_item, ephemeral_notification_model
 import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details]
 import app/modules/shared_modules/authentication/module as authentication_module
@@ -80,6 +84,8 @@ import app/core/notifications/notifications_manager
 import app/core/notifications/details
 import app/core/eventemitter
 import app/core/custom_urls/urls_manager
+import app/core/intake/external_intake
+import app/core/intake/share_intake_cache
 
 export io_interface
 
@@ -148,16 +154,27 @@ type
     statusDeepLinkToActivate: string
     pendingProfileMigrationCheck: bool
     profileMigrationFlowInProgress: bool
+    urlToOpenInNewBrowserTab: string
+    shareTextToDeliver: string
+    shareImagePathsToDeliver: seq[string]
+    shareToDeliverPending: bool
+    shareQueue: seq[PendingShare]
 
 {.push warning[Deprecated]: off.}
 
 # Forward declaration
 proc switchToContactOrDisplayUserProfile[T](self: Module[T], publicKey: string)
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string)
+method openUrlInNewBrowserTab*[T](self: Module[T], url: string)
+method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string])
 proc checkIfWeHaveNotifications[T](self: Module[T])
 proc updateIconBadgeNumber[T](self: Module[T])
 proc createMemberItem[T](self: Module[T], memberId: string, requestId: string, state: MembershipRequestState, role: MemberRole, airdropAddress: string = ""): MemberItem
 proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): seq[MemberItem]
+proc dispatchNextShareImageSend[T](self: Module[T])
+proc dispatchShareSend[T](self: Module[T])
+proc startActiveShare[T](self: Module[T])
+proc finishActiveShare[T](self: Module[T])
 
 proc clearPendingSpectateRequest[T](self: Module[T]) =
   self.pendingSpectateRequest = SpectateRequest()
@@ -495,8 +512,7 @@ proc sendNotification[T](self: Module[T], status: string, sendDetails: SendDetai
         fromAmount = txAmountIn
       if txAmountOut != "0":
         toAmount = txAmountOut
-      if sentTransaction.fromToken.len > 0:
-        fromAsset = sentTransaction.fromToken
+      fromAsset = toastAssetKey(SendType(sendDetails.sendType), fromAsset, sentTransaction.fromToken)
       if sentTransaction.toToken.len > 0:
         toAsset = sentTransaction.toToken
       txHash = sentTransaction.hash
@@ -873,7 +889,7 @@ method load*[T](
     self.view.model().addItem(marketItem)
     if activeSectionId == marketItem.id:
       activeSection = marketItem
-  else:
+  elif singletonInstance.featureFlags().getSwapEnabled():
     # Swap Section
     let swapSectionItem = initSectionItem(
       SWAP_SECTION_ID,
@@ -1032,6 +1048,7 @@ method onChatsLoaded*[T](
 
   self.view.model().removeItem(LOADING_SECTION_ID)
 
+  self.appSearchModule.onEverythingLoaded()
   self.view.sectionsLoaded()
 
   self.events.emit(SIGNAL_MAIN_LOADED, Args())
@@ -1043,6 +1060,18 @@ method onChatsLoaded*[T](
   if self.pendingProfileMigrationCheck:
     self.pendingProfileMigrationCheck = false
     self.checkAndPerformProfileMigrationIfNeeded()
+  if self.urlToOpenInNewBrowserTab != "":
+    let url = self.urlToOpenInNewBrowserTab
+    self.urlToOpenInNewBrowserTab = ""
+    self.openUrlInNewBrowserTab(url)
+
+  if self.shareToDeliverPending:
+    let text = self.shareTextToDeliver
+    let imagePaths = self.shareImagePathsToDeliver
+    self.shareToDeliverPending = false
+    self.shareTextToDeliver = ""
+    self.shareImagePathsToDeliver = @[]
+    self.launchShareFlow(text, imagePaths)
 
 method onMediaServerStarted*[T](self: Module[T], port: int) =
   self.view.model().updateMediaServerPort(port)
@@ -2162,6 +2191,14 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
 
   let urlData = self.sharedUrlsModule.parseSharedUrl(statusDeepLink)
   if urlData.notASupportedStatusLink:
+    if isStatusWebUrl(statusDeepLink):
+      # Unresolvable status.app link: an external hand-off would route straight
+      # back here when Status holds the browser role (default browser on
+      # Android) — a dead-end bounce via the external-open dialog. Open it as
+      # an in-app browser tab instead, same as the browser-candidacy route of
+      # the external intake seam.
+      self.openUrlInNewBrowserTab(statusDeepLink)
+      return
     # Just open it in the browser
     self.view.emitOpenUrlSignal(statusDeepLink)
     return
@@ -2177,6 +2214,114 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     self.onStatusUrlRequested(StatusUrlAction.DisplayUserProfile, communityId="", channelId="", url="",
       userId = urlData.contact.publicKey)
     return
+
+method openUrlInNewBrowserTab*[T](self: Module[T], url: string) =
+  ## Browser-tab route of the external intake seam: an externally received web
+  ## URL always opens as a new tab in the in-app browser, browser section
+  ## foregrounded. Buffered until the main view is loaded, mirroring the
+  ## deep-link route above. Also the fallback for unresolvable status.app deep
+  ## links, whose external hand-off would bounce back to Status itself.
+  if not self.chatsLoaded:
+    self.urlToOpenInNewBrowserTab = url
+    return
+  self.view.emitOpenUrlInNewBrowserTabSignal(url)
+
+method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string]) =
+  ## Share route of the external intake seam: content shared to Status from
+  ## another app launches the share flow (destination picker -> preview ->
+  ## send). Buffered until the main view is loaded, mirroring the deep-link
+  ## and browser-tab routes above; the buffer is last-wins, and a replaced
+  ## share's cached image copies are released so they don't accumulate.
+  if not self.chatsLoaded:
+    if self.shareToDeliverPending:
+      releaseCachedShareFiles(self.shareImagePathsToDeliver)
+    self.shareToDeliverPending = true
+    self.shareTextToDeliver = text
+    self.shareImagePathsToDeliver = imagePaths
+    return
+  self.view.emitLaunchShareFlowSignal(text, $(%imagePaths))
+
+method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
+  ## Cache lifecycle, cancel path: the share flow was dismissed without
+  ## sending, so the cached copies of the shared images are released here.
+  ## (The send path releases them in the image-send task, after the files
+  ## have been consumed.)
+  releaseCachedShareFiles(parseImagePathsJson(imagePathsJson))
+
+proc dispatchNextShareImageSend[T](self: Module[T]) =
+  let share = self.shareQueue[0]
+  let dispatch = takeNextImageDispatch(self.shareQueue)
+  if dispatch.isNone:
+    self.finishActiveShare()
+    return
+  let d = dispatch.get()
+  self.controller.sendSharedImages(d.chatId, d.imagePaths,
+    text = if d.withText: share.text else: "",
+    linkPreviews = if d.withText: share.linkPreviews else: @[],
+    releaseCachedFiles = d.releaseCachedFiles, sendToken = d.token,
+    releasePaths = if d.releaseCachedFiles: share.imagePaths else: @[])
+
+proc dispatchShareSend[T](self: Module[T]) =
+  let share = self.shareQueue[0]
+  if share.imagePaths.len > 0:
+    self.shareQueue[0].imageSends = imageSendPlan(share.destinations, share.imagePaths, share.token)
+    self.shareQueue[0].nextImageSend = 0
+    self.dispatchNextShareImageSend()
+    return
+  for dest in share.destinations:
+    self.controller.sendSharedText(dest.chatId, share.text, share.contentType, share.linkPreviews)
+  self.finishActiveShare()
+
+proc startActiveShare[T](self: Module[T]) =
+  let share = self.shareQueue[0]
+  if not needsUnfurl(self.controller.urlUnfurlingMode(), share.text):
+    self.dispatchShareSend()
+    return
+  self.shareQueue[0].planRequestUuid = self.controller.requestTextUrlsToUnfurl(share.text)
+
+proc finishActiveShare[T](self: Module[T]) =
+  if finishActiveShare(self.shareQueue):
+    self.startActiveShare()
+
+method sendSharedContent*[T](self: Module[T], destinationsJson, text, imagePathsJson: string, contentType: int) =
+  let destinations = parseShareDestinations(destinationsJson)
+  let imagePaths = parseImagePathsJson(imagePathsJson)
+  if destinations.len == 0:
+    releaseCachedShareFiles(imagePaths)
+    return
+  let share = PendingShare(token: $genUUID(), destinations: destinations, text: text,
+    imagePaths: imagePaths, contentType: contentType)
+  if enqueueShare(self.shareQueue, share):
+    self.startActiveShare()
+
+method onShareUnfurlingPlanReady*[T](self: Module[T], requestUuid: string, plan: UrlsUnfurlingPlan) =
+  if self.shareQueue.len == 0 or requestUuid != self.shareQueue[0].planRequestUuid:
+    return
+  self.shareQueue[0].planRequestUuid = ""
+  self.shareQueue[0].urls = unfurlableUrls(plan, SHARE_LINK_PREVIEWS_LIMIT)
+  if self.shareQueue[0].urls.len == 0:
+    self.dispatchShareSend()
+    return
+  self.shareQueue[0].unfurlRequestUuid = self.controller.requestUnfurlUrls(self.shareQueue[0].urls)
+
+method onShareUrlsUnfurled*[T](self: Module[T], requestUuid: string, linkPreviews: Table[string, LinkPreview]) =
+  if self.shareQueue.len == 0 or requestUuid != self.shareQueue[0].unfurlRequestUuid:
+    return
+  self.shareQueue[0].unfurlRequestUuid = ""
+  self.shareQueue[0].linkPreviews = orderedLinkPreviews(self.shareQueue[0].urls, linkPreviews)
+  self.dispatchShareSend()
+
+method onShareUnfurlFailed*[T](self: Module[T], requestUuid: string) =
+  if not unfurlFailureMatchesActive(self.shareQueue, requestUuid):
+    return
+  self.shareQueue[0].planRequestUuid = ""
+  self.shareQueue[0].unfurlRequestUuid = ""
+  self.dispatchShareSend()
+
+method onShareImagesSendFinished*[T](self: Module[T], chatId: string, sendToken: string) =
+  if not matchesActiveImageSend(self.shareQueue, chatId, sendToken):
+    return
+  self.dispatchNextShareImageSend()
 
 method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
   if (sectionId.len > 0 and self.chatSectionModules.contains(sectionId)):

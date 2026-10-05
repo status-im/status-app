@@ -20,6 +20,8 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Lets the browser hand a downloaded APK to the system installer. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- features -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -37,7 +39,7 @@
         android:normalScreens="true"
         android:smallScreens="false" />
     <application
-        android:name="org.qtproject.qt.android.bindings.QtApplication"
+        android:name="app.status.mobile.StatusApplication"
         android:hardwareAccelerated="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
@@ -49,10 +51,12 @@
         android:hasFragileUserData="true"
         android:fullBackupOnly="false"
         android:enableOnBackInvokedCallback="false">
+        <!-- singleTask: share/view intents land in the caller's task, where singleTop
+             would spawn a second activity Qt cannot re-init against (dead screen). -->
         <activity
             android:name="app.status.mobile.StatusQtActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:resizeableActivity="true"
             android:windowSoftInputMode="adjustNothing"
             android:exported="true">
@@ -113,6 +117,40 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="status-app" />
+            </intent-filter>
+            <!--
+              Browser candidacy: handle arbitrary http/https links so Status appears
+              in the OS link-open chooser and in Settings > Default apps > Browser.
+              A scheme-only VIEW+BROWSABLE filter (no host) is what qualifies an app
+              as a browser. Routing happens at the Nim external-intake seam: Status
+              links keep deep-link behavior, anything else opens a new browser tab.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+            <!--
+              Share target: text, links and images shared from other apps
+              (share sheet). Only text/plain and image/* are declared - exactly
+              what chat can send today; video/audio/arbitrary files are not.
+              Extraction is decision-free (StatusQtActivity.handleShareIntake):
+              image streams are copied to app-private cache at receipt (OS read
+              grants expire); the share flow launches at the Nim
+              external-intake seam.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
 

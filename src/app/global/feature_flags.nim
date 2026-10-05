@@ -34,7 +34,13 @@ const DEFAULT_FLAG_KEYCARD_ENABLED = true
 const DEFAULT_FLAG_THREADPOOL_ENABLED = true
 const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
 const DEFAULT_FLAG_BUY_ENABLED = true
+const DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED = true
+
 const DEFAULT_FLAG_SWAP_ENABLED = true
+# Swap providers are opt-in; Swap itself is only usable when at least one is enabled.
+const DEFAULT_FLAG_PARASWAP_ENABLED = false
+const DEFAULT_FLAG_LIFI_ENABLED = false
+const DEFAULT_FLAG_RELAY_ENABLED = true
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
@@ -55,6 +61,21 @@ featureFlag("THREADPOOL_ENABLED",             DEFAULT_FLAG_THREADPOOL_ENABLED, t
 featureFlag("SINGLE_STATUS_INSTANCE_ENABLED", DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED, true)
 featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
 featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
+featureFlag("UNLIMITED_CHAT_IMAGES_ENABLED",  DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED, true)
+featureFlag("PARASWAP_ENABLED",               DEFAULT_FLAG_PARASWAP_ENABLED, true)
+featureFlag("LIFI_ENABLED",                   DEFAULT_FLAG_LIFI_ENABLED, true)
+featureFlag("RELAY_ENABLED",                  DEFAULT_FLAG_RELAY_ENABLED, true)
+
+# There is no fallback support for more than one swap/bridge provider.
+# The app uses Relay (if enabled), then LI.FI (if enabled), Paraswap is not an option for now, since the UI doesn't
+# support Paraswap due to a single chain swap only
+const RELAY_PROVIDER_ENABLED* = RELAY_ENABLED
+const LIFI_PROVIDER_ENABLED* = LIFI_ENABLED and not RELAY_ENABLED
+# const PARASWAP_PROVIDER_ENABLED* = PARASWAP_ENABLED and not RELAY_ENABLED and not LIFI_ENABLED
+const PARASWAP_PROVIDER_ENABLED* = false
+
+# Only one provider at a time.
+const SWAP_PROVIDER_ENABLED* = RELAY_PROVIDER_ENABLED or LIFI_PROVIDER_ENABLED or PARASWAP_PROVIDER_ENABLED
 
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
@@ -103,6 +124,11 @@ QtObject:
     statusSupportBotEnabled: bool
     buyEnabled: bool
     threadsEnabled: bool
+    unlimitedChatImagesEnabled: bool
+    paraswapEnabled: bool
+    lifiEnabled: bool
+    relayEnabled: bool
+    swapProvidersEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -121,6 +147,11 @@ QtObject:
     self.statusSupportBotEnabled = STATUS_SUPPORT_BOT_ENABLED
     self.buyEnabled = BUY_ENABLED
     self.threadsEnabled = THREADS_ENABLED
+    self.unlimitedChatImagesEnabled = UNLIMITED_CHAT_IMAGES_ENABLED
+    self.paraswapEnabled = PARASWAP_PROVIDER_ENABLED
+    self.lifiEnabled = LIFI_PROVIDER_ENABLED
+    self.relayEnabled = RELAY_PROVIDER_ENABLED
+    self.swapProvidersEnabled = SWAP_PROVIDER_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -218,3 +249,33 @@ QtObject:
 
   proc getThreadsEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.threadsEnabled
+
+  proc getUnlimitedChatImagesEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.unlimitedChatImagesEnabled
+
+  QtProperty[bool] unlimitedChatImagesEnabled:
+    read = getUnlimitedChatImagesEnabled
+
+  proc getParaswapEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.paraswapEnabled
+
+  QtProperty[bool] paraswapEnabled:
+    read = getParaswapEnabled
+
+  proc getLifiEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.lifiEnabled
+
+  QtProperty[bool] lifiEnabled:
+    read = getLifiEnabled
+
+  proc getRelayEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.relayEnabled
+
+  QtProperty[bool] relayEnabled:
+    read = getRelayEnabled
+
+  proc getSwapProvidersEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.swapProvidersEnabled
+
+  QtProperty[bool] swapProvidersEnabled:
+    read = getSwapProvidersEnabled

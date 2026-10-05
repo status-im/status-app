@@ -81,6 +81,12 @@ Control {
         return qsTr("Type something")
     }
 
+    /* When true the text area grows to fill the height given to the input
+       instead of capping at 200px — for hosts that hand the input all the
+       space between header and screen bottom (e.g. the share preview). The
+       in-chat usage keeps the default (false) and with it the 200px cap. */
+    property bool fillAvailableHeight: false
+
     property alias textInput: messageInputField
 
     // Background color of the surface the input sits on. Propagated to the text area so the
@@ -103,6 +109,10 @@ Control {
     property bool threadsEnabled // feature flag
     property bool isThread       // is this chat an existing thread inside a different `chatName`?
     property string threadName   // (an existing) thread name
+
+    property bool sendEnabled: true
+    // Attachment cap; 0 = no limit (the host splits the send)
+    property int maxImages: Constants.maxUploadFiles
 
     onEnabledChanged: {
         if (enabled)
@@ -389,6 +399,8 @@ Control {
         - hides extended area
       */
     function tryFinalizeMessage() {
+        if (!root.sendEnabled)
+            return
         // Convert a trailing ASCII emoticon ("hello :)") that was never completed with a space.
         messageInputField.convertAsciiEmoji()
 
@@ -742,6 +754,7 @@ Control {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.fillHeight: root.fillAvailableHeight
             spacing: 0
 
             StatusChatInputReplyPanel {
@@ -780,6 +793,7 @@ Control {
                 StatusChatImageQtyValidator {
                     id: imageQtyValidator
                     Layout.alignment: Qt.AlignHCenter
+                    maxImages: root.maxImages
                 }
 
                 Timer {
@@ -792,6 +806,8 @@ Control {
 
             ColumnLayout {
                 id: inputLayout
+
+                Layout.fillHeight: root.fillAvailableHeight
 
                 RowLayout {
                     id: editModeTag
@@ -920,8 +936,15 @@ Control {
                     Layout.preferredHeight: messageInputField.implicitHeight
                                             + flickable.topMargin
                                             + flickable.bottomMargin
-                    Layout.maximumHeight: root.isEdit ? editMaxHeight : 200
                     Layout.fillWidth: true
+                    Layout.fillHeight: root.fillAvailableHeight
+                    Layout.maximumHeight: {
+                        if (root.isEdit)
+                            return editMaxHeight
+                        if (root.fillAvailableHeight)
+                            return Number.POSITIVE_INFINITY
+                        return 200
+                    }
 
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     ScrollBar.vertical.implicitWidth: Theme.halfPadding
@@ -1090,9 +1113,10 @@ Control {
                 imageDialog.open()
             }
 
-            sendButton.enabled: messageInputField.length > 0 || messageInputField.preeditText
-                               || root.fileUrlsAndSources.length > 0
-                               || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0)
+            sendButton.enabled: root.sendEnabled
+                               && (messageInputField.length > 0 || messageInputField.preeditText
+                                   || root.fileUrlsAndSources.length > 0
+                                   || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0))
 
             sendButton.limitText: messageInputField.length >= root.messageLimit - root.messageLimitSoft
                                   ? (root.messageLimit - messageInputField.length).toString()

@@ -10,8 +10,13 @@ type
     emoji: string
     chatType: int
     lastMessageText: string
+    lastMessageTimestamp: int
+    lastOwnMessageTimestamp: int
+    canPost: bool
+    membersCount: int
+    onlineStatus: int
 
-proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageText: string): ChatSearchItem =
+proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageText: string, lastMessageTimestamp: int, lastOwnMessageTimestamp: int, canPost: bool, membersCount: int, onlineStatus: int): ChatSearchItem =
   result = ChatSearchItem()
   result.chatId = chatId
   result.name = name
@@ -23,6 +28,11 @@ proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, secti
   result.emoji = emoji
   result.chatType = chatType
   result.lastMessageText = lastMessageText
+  result.lastMessageTimestamp = lastMessageTimestamp
+  result.lastOwnMessageTimestamp = lastOwnMessageTimestamp
+  result.canPost = canPost
+  result.membersCount = membersCount
+  result.onlineStatus = onlineStatus
 
 proc chatId*(self: ChatSearchItem): string =
   self.chatId
@@ -69,5 +79,35 @@ proc lastMessageText*(self: ChatSearchItem): string =
 proc `lastMessageText=`*(self: ChatSearchItem, value: string) =
   self.lastMessageText = value
 
+proc lastMessageTimestamp*(self: ChatSearchItem): int =
+  self.lastMessageTimestamp
+
+proc `lastMessageTimestamp=`*(self: ChatSearchItem, value: int) =
+  self.lastMessageTimestamp = value
+
+proc lastOwnMessageTimestamp*(self: ChatSearchItem): int =
+  self.lastOwnMessageTimestamp
+
+proc `lastOwnMessageTimestamp=`*(self: ChatSearchItem, value: int) =
+  self.lastOwnMessageTimestamp = value
+
+proc canPost*(self: ChatSearchItem): bool =
+  self.canPost
+
+proc `canPost=`*(self: ChatSearchItem, value: bool) =
+  self.canPost = value
+
 proc chatType*(self: ChatSearchItem): int =
   self.chatType
+
+proc membersCount*(self: ChatSearchItem): int =
+  self.membersCount
+
+proc `membersCount=`*(self: ChatSearchItem, value: int) =
+  self.membersCount = value
+
+proc onlineStatus*(self: ChatSearchItem): int =
+  self.onlineStatus
+
+proc `onlineStatus=`*(self: ChatSearchItem, value: int) =
+  self.onlineStatus = value

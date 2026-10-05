@@ -30,21 +30,22 @@ type
 when defined(ios) or defined(android):
   proc c_exit(code: cint) {.importc: "_exit", header: "<unistd.h>".}
 
+proc tryTerminateWithoutCascade*() =
+  ## Mobile teardown policy: leave without running static destructors
+  when defined(ios) or defined(android):
+    c_exit(0)
+
 proc quit*(self: ApplicationHandle) =
   markShuttingDown()
   if not self.app.isNil:
     self.app.quit()
-
-  when defined(ios) or defined(android):
-    c_exit(0) # terminates the process immediately without running any static destructors or atexit handlers — no cascade possible.
+  tryTerminateWithoutCascade()
 
 proc exit*(self: ApplicationHandle) =
   markShuttingDown()
   if not self.app.isNil:
     self.app.exit()
-
-  when defined(ios) or defined(android):
-    c_exit(0) # terminates the process immediately without running any static destructors or atexit handlers — no cascade possible.
+  tryTerminateWithoutCascade()
 # #########################################################
 
 

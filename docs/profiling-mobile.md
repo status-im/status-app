@@ -36,3 +36,20 @@ You can run both profilers concurrently — attach Android Studio first
 while the app is still blocked, then release with the QML side.
 
 To switch back to a normal run, just `make mobile-run`.
+
+## PR builds and the env file
+
+`BUILD_VARIANT=pr make mobile-build` produces `app.status.mobile.pr` with `<profileable android:shell="true"/>`
+(release and fdroid stay non-profileable), so heapprofd, simpleperf and Perfetto can attach to the APKs CI builds.
+It does not make `/proc/<pid>/smaps` readable from the shell: that still needs a debuggable build and `run-as`.
+
+Debug, profile and PR packages apply `KEY=VALUE` lines from `/sdcard/Android/data/<package>/files/status-env.txt`
+to both processes before Qt and status-go load. Lines starting with `#` are ignored. Go runtime variables
+(`GOGC`, `GOMEMLIMIT`, `GODEBUG`) have no effect: the Go runtime keeps the environment from process start.
+
+```sh
+printf 'QSG_ATLAS_WIDTH=1024\nQSG_ATLAS_HEIGHT=1024\nQSG_INFO=1\nSTATUS_RUNTIME_LOG_LEVEL=DEBUG\n' > status-env.txt
+adb push status-env.txt /sdcard/Android/data/app.status.mobile.pr/files/status-env.txt
+adb shell am force-stop app.status.mobile.pr   # both processes read the file on the next start
+adb logcat -d | grep 'StatusApplication: env'
+```

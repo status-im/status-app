@@ -1556,6 +1556,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Swapping %1 por %2 en %3</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>Bridging %1 en %2 por %3 en %4 en %5</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>Acuñando tokens %1 infinitos para %2 usando %3</translation>
     </message>
@@ -1714,6 +1718,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>Límite de gasto fallido: %1 en %2 para %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>Bridge fallido: %1 en %2 por %3 en %4 en %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -1949,6 +1957,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>POKT e Infura caídos para %1. No se pueden obtener los balances de tokens de %1.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>Bridge confirmado en %2: %1 por %3 en %4 en %5</translation>
     </message>
     <message>
         <source>How to fix</source>
@@ -2802,10 +2814,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Find in page</source>
         <translation>Buscar en la página</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Modo de compatibilidad</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -4234,21 +4242,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>Do not show this again</source>
         <translation>No mostrar esto de nuevo</translation>
-    </message>
-</context>
-<context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation>¿Habilitar los GIFs de KLIPY?</translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation>Una vez habilitado, los GIFs publicados en el chat pueden compartir tus metadatos con KLIPY.</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Habilitar</translation>
     </message>
 </context>
 <context>
@@ -6294,10 +6287,6 @@ par de claves. Se requerirá Keycard para firmar</translation>
         <translation>Copiar URL</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>Descargas</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>Pausar</translation>
     </message>
@@ -6322,8 +6311,12 @@ par de claves. Se requerirá Keycard para firmar</translation>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>Descartar</translation>
+        <source>Clear from bar</source>
+        <translation>Quitar de la barra</translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation>Mostrar en Descargas</translation>
     </message>
 </context>
 <context>
@@ -8369,6 +8362,21 @@ Are you sure you want to do this?</source>
     <message>
         <source>%1 %2 %3</source>
         <translation>%1 %2 %3</translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation>¿Habilitar los GIFs de KLIPY?</translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation>Una vez habilitado, los GIFs publicados en el chat pueden compartir tus metadatos con KLIPY.</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>Habilitar</translation>
     </message>
 </context>
 <context>
@@ -11004,6 +11012,10 @@ al cargar</translation>
         <translation>Mercado</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>No hay proveedores habilitados</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Swap</translation>
     </message>
@@ -11681,10 +11693,6 @@ al cargar</translation>
     <message>
         <source>Zoom Fit</source>
         <translation>Ajustar zoom</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>Modo de compatibilidad</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13462,6 +13470,10 @@ al cargar</translation>
         <source>Activity Center</source>
         <translation>Centro de actividad</translation>
     </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation>No hay proveedores habilitados</translation>
+    </message>
 </context>
 <context>
     <name>PrivacyAndSecurityView</name>
@@ -13715,11 +13727,11 @@ al cargar</translation>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>Cuenta vinculada</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">Conectado desde %1</translation>
+        <translation>Conectado desde %1</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -15426,6 +15438,64 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>ShareComposer</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Mensaje</translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationDelegate</name>
+    <message numerus="yes">
+        <source>%n member(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n miembro</numerusform>
+            <numerusform>%n miembros</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationList</name>
+    <message>
+        <source>No destinations found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing selected yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationPickerPanel</name>
+    <message>
+        <source>Share</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search chats and channels</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationTabBar</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">Todos</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished">Contactos</translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Comunidades</translation>
+    </message>
+</context>
+<context>
     <name>ShareProfileDialog</name>
     <message>
         <source>Profile link</source>
@@ -16950,12 +17020,16 @@ al cargar</translation>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>Swap + Bridge</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Swap</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>Swap + Bridge</translation>
+        <source>Bridge</source>
+        <translation>Bridge</translation>
     </message>
     <message>
         <source>Fastest</source>
@@ -16966,6 +17040,18 @@ al cargar</translation>
         <translation>Comisión más baja</translation>
     </message>
     <message>
+        <source>Best return</source>
+        <translation>Mejor rendimiento</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>Información</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>Los swaps en %1 estarán disponibles pronto.</translation>
+    </message>
+    <message>
         <source>Add assets</source>
         <translation>Agregar activos</translation>
     </message>
@@ -16974,21 +17060,33 @@ al cargar</translation>
         <translation>Agregar %1</translation>
     </message>
     <message>
-        <source>Best return</source>
-        <translation>Mejor rendimiento</translation>
-    </message>
-    <message>
-        <source>Bridge</source>
-        <translation>Bridge</translation>
-    </message>
-    <message>
         <source>%1s</source>
         <comment>short for seconds</comment>
         <translation>%1s</translation>
     </message>
     <message>
+        <source>Rate unavailable</source>
+        <translation>Tasa no disponible</translation>
+    </message>
+    <message>
         <source>Choose route</source>
         <translation>Elegir ruta</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>Por %1 vía %2</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Por %1</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
@@ -17030,44 +17128,56 @@ al cargar</translation>
         <source>Sign</source>
         <translation>Firmar</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>Información</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>Los swaps en %1 estarán disponibles pronto.</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>Fondos insuficientes para el swap</translation>
+        <source>Insufficient funds</source>
+        <translation>Fondos insuficientes</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>No hay suficiente ETH para pagar las comisiones de gas</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>No hay suficiente ETH para pagar las comisiones</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>Obtener el precio tomó más tiempo del esperado. Por favor, inténtalo de nuevo más tarde.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>La cotización tardó demasiado. Reintentar ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>No hay suficiente liquidez. Reduce la cantidad de tokens o inténtalo de nuevo más tarde.</translation>
+        <source>Low liquidity. Lower amount or try later</source>
+        <translation>Poca liquidez. Reduce la cantidad o inténtalo más tarde</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>El impacto en el precio es demasiado alto. Reduce la cantidad de tokens o inténtalo de nuevo más tarde.</translation>
+        <source>No quotes right now. Try later</source>
+        <translation>No hay cotizaciones ahora. Inténtalo más tarde</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>No se encontraron rutas con suficiente liquidez</translation>
+        <source>Slippage exceeded. Increase or try later</source>
+        <translation>Slippage superado. Auméntalo o inténtalo más tarde</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Algo salió mal. Cambia la cantidad, el token o inténtalo de nuevo más tarde.</translation>
+        <source>High price impact. Lower amount or try later</source>
+        <translation>Impacto en el precio alto. Reduce la cantidad o inténtalo más tarde</translation>
+    </message>
+    <message>
+        <source>Unsupported token. Try others</source>
+        <translation>Token no compatible. Prueba con otros</translation>
+    </message>
+    <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>Hubo un problema. Cambia la cantidad o el token, o reintenta ↺</translation>
+    </message>
+    <message>
+        <source>No route. Try other tokens or networks</source>
+        <translation>Sin ruta. Prueba con otros tokens o redes</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>Cantidad demasiado baja. Aumenta la cantidad</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>Cantidad demasiado alta. Reduce la cantidad</translation>
     </message>
 </context>
 <context>
@@ -19040,6 +19150,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <translation>Comprar</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>No hay proveedores habilitados</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>Swap</translation>
     </message>
@@ -19232,6 +19346,14 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>~%1s</source>
         <translation>~%1s</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1m</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1m %2s</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

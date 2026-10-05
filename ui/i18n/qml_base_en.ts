@@ -1555,6 +1555,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1712,6 +1716,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1947,6 +1955,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2795,10 +2807,6 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Find in page</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4228,21 +4236,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Do not show this again</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6281,10 +6274,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6309,7 +6298,11 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Dismiss</source>
+        <source>Clear from bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8353,6 +8346,21 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>%1 %2 %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10982,6 +10990,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11663,10 +11675,6 @@ to load</source>
     </message>
     <message>
         <source>Zoom Fit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13441,6 +13449,10 @@ to load</source>
     </message>
     <message>
         <source>Activity Center</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There are no enabled providers</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15407,6 +15419,64 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>ShareComposer</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationDelegate</name>
+    <message numerus="yes">
+        <source>%n member(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationList</name>
+    <message>
+        <source>No destinations found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing selected yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationPickerPanel</name>
+    <message>
+        <source>Share</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search chats and channels</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationTabBar</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ShareProfileDialog</name>
     <message>
         <source>Profile link</source>
@@ -16930,11 +17000,35 @@ to load</source>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
+        <source>Bridge</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16951,11 +17045,27 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Best return</source>
+        <source>Rate unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Bridge</source>
+        <source>Choose route</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>By %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16998,55 +17108,55 @@ to load</source>
         <source>Sign</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Fastest</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Lowest fee</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Choose route</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
+        <source>Insufficient funds</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
+        <source>Not enough ETH to pay fees</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
+        <source>Getting a quote timed out. Retry ↺</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
+        <source>Low liquidity. Lower amount or try later</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
+        <source>No quotes right now. Try later</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
+        <source>Slippage exceeded. Increase or try later</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
+        <source>High price impact. Lower amount or try later</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unsupported token. Try others</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No route. Try other tokens or networks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19007,6 +19117,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation type="unfinished"></translation>
     </message>
@@ -19198,6 +19312,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>~%1s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

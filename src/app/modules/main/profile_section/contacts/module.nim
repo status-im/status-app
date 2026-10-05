@@ -51,7 +51,7 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
   result.viewVariant = newQVariant(result.view)
   result.controller = controller.newController(result, events, contactsService, chatService, networkService)
   result.collectiblesController = collectiblesc.newController(
-    requestId = int32(backend_collectibles.CollectiblesRequestID.ProfileShowcase),
+    requestId = int32(backend_collectibles.CollectiblesRequestID.ContactShowcase),
     loadType = collectiblesc.LoadType.AutoLoadSingleUpdate,
     networkService = networkService,
     events = events,

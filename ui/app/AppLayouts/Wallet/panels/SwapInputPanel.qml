@@ -55,6 +55,10 @@ Control {
     onSelectedAccountAddressChanged: {
         reevaluateSelectedId()
     }
+
+    // the list holds only what the account owns (no catalog behind it), so an empty
+    // list is a settled answer, not a catalog still being built
+    property bool ownedTokensOnly: false
     property string nonInteractiveGroupKey
     property int nonInteractiveChainId: -1
 
@@ -214,12 +218,24 @@ Control {
         }
 
 
-        // Only a settled list answers "is this token available here?": it is empty
-        // while the catalog is (re)built, holds search results while searching, and
-        // may hold another side's chain while a shared picker is scoped to it.
-        readonly property bool listSettled: !!root.tokenSelectorModel
+        // Whether the picker model is filtered to this panel's account. The owner may
+        // attach the model before the form names the account, and the Binding below
+        // applies the account only afterwards; until it has, the rows are every
+        // account's holdings and must not be read, or the panel would select a token
+        // another account holds and show that account's balance.
+        readonly property bool pickerScopedToAccount: !!root.tokenSelectorModel
+                                                      && root.selectedAccountAddress !== ""
+                                                      && root.tokenSelectorModel.accountAddress === root.selectedAccountAddress
+        // re-apply the selection once the rows may be read (or may no longer be)
+        onPickerScopedToAccountChanged: d.setHoldingToSelector()
+
+        // Only a settled list answers "is this token available here?": the rows
+        // must be this account's, the list is empty while the catalog is (re)built,
+        // holds search results while searching, and may hold another side's chain
+        // while a shared picker is scoped to it.
+        readonly property bool listSettled: d.pickerScopedToAccount
                                             && !root.tokenSelectorLoading
-                                            && root.tokenSelectorModel.count > 0
+                                            && (root.ownedTokensOnly || root.tokenSelectorModel.count > 0)
                                             && root.tokenSelectorModel.searchString === ""
                                             && (root.catalogChainId === -1
                                                 || root.catalogChainId === root.listCatalogChainId)
@@ -273,7 +289,7 @@ Control {
         function setHoldingToSelector() {
             if (!root.tokenSelectorModel)
                 return
-            if (selectedHolding.available && !!selectedHolding.item) {
+            if (d.isSelectedHoldingValidAsset) {
                 const tokens = selectedHolding.item.tokens
                 const tokensCount = !!tokens ? tokens.ModelCount.count : 0
                 let tokenKey = ""
@@ -299,7 +315,9 @@ Control {
                 holdingSelector.reset()
         }
 
-        readonly property bool isSelectedHoldingValidAsset: selectedHolding.available && !!selectedHolding.item
+        // the selected group's row, but only from rows that are this account's
+        readonly property bool isSelectedHoldingValidAsset: d.pickerScopedToAccount
+                                                            && selectedHolding.available && !!selectedHolding.item
 
         readonly property SQUtils.ModelChangeTracker selectedBalancesTracker: SQUtils.ModelChangeTracker {
             model: d.selectedHolding.available && !!d.selectedHolding.item
@@ -320,6 +338,14 @@ Control {
         readonly property string inputSymbol: amountToSendInput.fiatMode ? root.currencyStore.currentCurrency
                                                                          : (!!isSelectedHoldingValidAsset ? selectedHolding.item.symbol : "")
         readonly property string balanceSymbol: isSelectedHoldingValidAsset ? selectedHolding.item.symbol : ""
+
+        function cryptoCurrencyAmount(amount) {
+            const currencyAmount = root.currencyStore.getCurrencyAmount(amount, isSelectedHoldingValidAsset ? selectedHolding.item.key : "")
+            if (isSelectedHoldingValidAsset)
+                currencyAmount.symbol = selectedHolding.item.symbol
+            return currencyAmount
+        }
+
         readonly property double maxSafeCryptoValue: WalletUtils.calculateMaxSafeSendAmount(maxCryptoBalance, balanceSymbol, root.selectedNetworkChainId, root.cryptoFeesToReserve)
 
 
@@ -528,10 +554,13 @@ Control {
             multiplierIndex: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.decimals ? d.selectedHolding.item.decimals : 18
             cryptoPrice: d.isSelectedHoldingValidAsset && !!d.selectedHolding.item.cryptoPrice ? d.selectedHolding.item.cryptoPrice : 0
             formatFiat: amount => qsTr("≈ %1").arg(root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency))
-            formatBalance: amount => qsTr("≈ %1").arg(LocaleUtils.currencyAmountToLocaleString(root.currencyStore.getCurrencyAmount(amount, d.selectedHolding.item.key)))
+            formatBalance: amount => qsTr("≈ %1").arg(LocaleUtils.currencyAmountToLocaleString(d.cryptoCurrencyAmount(amount)))
 
             mainInputLoading: root.mainInputLoading
             bottomTextLoading: root.bottomTextLoading
+            // the unit shown can change under a set amount: fiat only while the
+            // holding has a price, crypto otherwise
+            onFiatModeChanged: Qt.callLater(d.updateInputText)
             selectedSymbol: amountToSendInput.fiatMode ? d.inputSymbol : ""
 
             amountInputRightPadding: holdingSelector.width + Theme.padding

@@ -6,6 +6,9 @@ type
     tokensListsAutoRefreshCheckInterval*: int
     marketDataFullDataRefreshInterval*: int
     marketDataPriceRefreshInterval*: int
+    enableParaswapProvider*: bool
+    enableLiFiProvider*: bool
+    enableRelayProvider*: bool
 
 proc toJson*(self: WalletConfig): JsonNode =
   return %* {
@@ -13,4 +16,7 @@ proc toJson*(self: WalletConfig): JsonNode =
     "tokensListsAutoRefreshCheckInterval": self.tokensListsAutoRefreshCheckInterval,
     "marketDataFullDataRefreshInterval": self.marketDataFullDataRefreshInterval,
     "marketDataPriceRefreshInterval": self.marketDataPriceRefreshInterval,
+    "enableParaswapProvider": self.enableParaswapProvider,
+    "enableLiFiProvider": self.enableLiFiProvider,
+    "enableRelayProvider": self.enableRelayProvider,
   }

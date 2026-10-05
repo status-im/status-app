@@ -32,9 +32,20 @@ QObject {
     // the below property holds internal checks done by the SwapModal
     property bool amountEnteredGreaterThanBalance: false
 
-    // To expose the selected from and to Token from the SwapModal
-    readonly property var fromToken: fromTokenEntry.item
-    readonly property var toToken: toTokenEntry.item
+    // To expose the selected from and to Token from the SwapModal. The entries cover
+    // the wallet's tokens of interest and the lazily loaded window of each side's
+    // chain catalog; a token outside both (not held, and past the first rows of a
+    // chain's catalog) is looked up in the full token list, so a route to it can
+    // still be converted with its decimals and named by its symbol.
+    readonly property var fromToken: fromTokenEntry.available ? fromTokenEntry.item
+                                                              : (fromTokenCatalogEntry.available ? fromTokenCatalogEntry.item
+                                                                                                 : d.tokenFromAllTokens(root.swapFormData.fromGroupKey))
+    readonly property var toToken: toTokenEntry.available ? toTokenEntry.item
+                                                          : (toTokenCatalogEntry.available ? toTokenCatalogEntry.item
+                                                                                           : d.tokenFromAllTokens(root.swapFormData.toGroupKey))
+
+    onFromTokenChanged: d.ensurePriced(root.fromToken, root.swapFormData.fromGroupKey)
+    onToTokenChanged: d.ensurePriced(root.toToken, root.swapFormData.toGroupKey)
 
     /** the user's own wallet accounts, usable as sender or recipient **/
     readonly property var accountsModel: root.swapStore.accounts
@@ -56,6 +67,24 @@ QObject {
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapFormData.selectedNetworkChainId)
         readonly property string nativeTokenKey: Utils.getNativeTokenKey(root.swapFormData.selectedNetworkChainId)
+
+        function ensurePriced(token, groupKey) {
+            if (!token || !groupKey)
+                return
+            if (!!token.marketDetails && !!token.marketDetails.currencyPrice
+                    && token.marketDetails.currencyPrice.amount > 0)
+                return
+            root.walletAssetsStore.walletTokensStore.ensurePricesForGroup(groupKey)
+        }
+
+        // last resort for a token no loaded model carries: symbol and decimals only,
+        // no market details (the store's lookup is a synchronous backend call)
+        function tokenFromAllTokens(key) {
+            if (!key)
+                return null
+            const token = root.walletAssetsStore.walletTokensStore.getTokenByKeyOrGroupKeyFromAllTokens(key)
+            return !!token && !!token.symbol ? token : null
+        }
 
         // Properties to handle error states
         readonly property bool isRouteEthBalanceInsufficient: root.validSwapProposalReceived && root.swapOutputData.errCode === Constants.routerErrorCodes.router.errNotEnoughNativeBalance
@@ -94,25 +123,38 @@ QObject {
 
         property string errorMessage: {
             if (isBalanceInsufficientForSwap) {
-                return qsTr("Insufficient funds for swap")
+                return qsTr("Insufficient funds")
             } else if (isBalanceInsufficientForFees) {
-                return qsTr("Not enough ETH to pay gas fees")
+                return qsTr("Not enough ETH to pay fees")
             } else if (root.swapOutputData.hasError) {
                 // TOOD #15874: Unify with WalletUtils router error code handling
                 switch (root.swapOutputData.errCode) {
                     case Constants.routerErrorCodes.processor.errPriceTimeout:
-                        return qsTr("Fetching the price took longer than expected. Please, try again later.")
+                        return qsTr("Getting a quote timed out. Retry ↺")
                     case Constants.routerErrorCodes.processor.errNotEnoughLiquidity:
-                        return qsTr("Not enough liquidity. Lower token amount or try again later.")
+                        return qsTr("Low liquidity. Lower amount or try later")
+                    case Constants.routerErrorCodes.processor.errNoRoutesFound:
+                        return qsTr("No route. Try other tokens or networks")
+                    case Constants.routerErrorCodes.processor.errNoQuotesAvailable:
+                        return qsTr("No quotes right now. Try later")
+                    case Constants.routerErrorCodes.processor.errSlippageExceeded:
+                        return qsTr("Slippage exceeded. Increase or try later")
+                    case Constants.routerErrorCodes.processor.errAmountTooLow:
+                        return qsTr("Amount too low. Increase amount")
+                    case Constants.routerErrorCodes.processor.errAmountTooHigh:
+                        return qsTr("Amount too high. Lower amount")
                     case Constants.routerErrorCodes.processor.errPriceImpactTooHigh:
-                        return qsTr("Price impact too high. Lower token amount or try again later.")
+                        return qsTr("High price impact. Lower amount or try later")
+                    case Constants.routerErrorCodes.processor.errUnsupportedCurrency:
+                        return qsTr("Unsupported token. Try others")
                     case Constants.routerErrorCodes.processor.errSwapParaswapCustomError:
-                        const errMsg = qsTr("No routes found with enough liquidity")
+                        // matched against the backend's (English) Paraswap error text, so not translated
+                        const errMsg = "No routes found with enough liquidity"
                         if (root.swapOutputData.errDescription.indexOf(errMsg) !== -1) {
-                            return qsTr("Not enough liquidity. Lower token amount or try again later.")
+                            return qsTr("Low liquidity. Lower amount or try later")
                         }
                 }
-                return qsTr("Something went wrong. Change amount, token or try again later.")
+                return qsTr("Hit an issue. Change amount, token, or retry ↺")
             }
             return ""
         }
@@ -128,6 +170,20 @@ QObject {
     ModelEntry {
         id: toTokenEntry
         sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsModel
+        key: "key"
+        value: root.swapFormData.toGroupKey
+    }
+
+    ModelEntry {
+        id: fromTokenCatalogEntry
+        sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
+        key: "key"
+        value: root.swapFormData.fromGroupKey
+    }
+
+    ModelEntry {
+        id: toTokenCatalogEntry
+        sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsForChainToModel
         key: "key"
         value: root.swapFormData.toGroupKey
     }
@@ -177,6 +233,7 @@ QObject {
                 root.swapOutputData.approvalAmountRequired = !!bestPath ? bestPath.approvalAmountRequired: ""
                 root.swapOutputData.approvalContractAddress = !!bestPath ? bestPath.approvalContractAddress: ""
                 root.swapOutputData.estimatedTime = !!bestPath ? bestPath.estimatedTime: Constants.TransactionEstimatedTime.Unknown
+                root.swapOutputData.estimatedTimeSeconds = !!bestPath && !!bestPath.estimatedTimeSeconds ? bestPath.estimatedTimeSeconds : 0
                 root.swapOutputData.txProviderName = !!bestPath ? bestPath.bridgeName: ""
                 root.swapOutputData.txProviderTool = !!bestPath ? bestPath.tool: ""
                 // TODO: should approval fees be included in maxFeesToReserveRaw?
@@ -204,7 +261,8 @@ QObject {
                 root.approvalSuccessful = status == "Success" // TODO: make a all tx statuses Constants (success, pending, failed)
                 d.txHash = ""
 
-                root.swapStore.reevaluateSwap(d.uuid, root.swapFormData.selectedNetworkChainId, true)
+                root.swapStore.reevaluateSwap(d.uuid, root.swapOutputData.txProviderName,
+                                              root.swapFormData.selectedNetworkChainId, true)
             }
         }
     }

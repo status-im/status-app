@@ -188,6 +188,9 @@ proc fetchAllChainsTokenGroupsForKeys*(self: Module, mandatoryGroupKeys: seq[str
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)
 
+method ensurePricesForGroup*(self: Module, key: string) =
+  self.controller.ensurePricesForGroup(key)
+
 method filterChanged*(self: Module, addresses: seq[string]) =
   if addresses == self.addresses:
       return
@@ -247,11 +250,8 @@ method showCommunityAssetWhenSendingTokensChanged*(self: Module) =
 method getMandatoryTokenGroupKeys*(self: Module): seq[string] =
   return self.controller.getMandatoryTokenGroupKeys()
 
-method isChainSupportedForSwapViaParaswap*(self: Module, chainId: int): bool =
-  return self.controller.isChainSupportedForSwapViaParaswap(chainId)
-
-method isChainSupportedForSwapViaLiFi*(self: Module, chainId: int): bool =
-  return self.controller.isChainSupportedForSwapViaLiFi(chainId)
+method isChainSupportedForSwap*(self: Module, chainId: int): bool =
+  return self.controller.isChainSupportedForSwap(chainId)
 
 method loadTokenLists*(self: Module) =
   self.view.setTokenListsLoading(true)

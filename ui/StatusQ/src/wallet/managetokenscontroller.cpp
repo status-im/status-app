@@ -54,10 +54,13 @@ ManageTokensController::ManageTokensController(QObject* parent)
                     Q_UNUSED(parent)
                     // A structural change interleaving with queued in-place updates
                     // shifts row indices; fall back to a correct full re-parse.
-                    if (hasPendingSourceUpdates()) {
+                    // Queued in-place updates are keyed by source row, which an
+                    // insert shifts; only they force a full re-parse.
+                    if (m_pendingFullReparse || !m_pendingChangedRows.isEmpty()) {
                         parseSourceModel();
                         return;
                     }
+                    applyPendingRemovals();
 #ifdef QT_DEBUG
                     QElapsedTimer t;
                     t.start();
@@ -76,7 +79,7 @@ ManageTokensController::ManageTokensController(QObject* parent)
                         << "!!! ADDING NEW SOURCE DATA TOOK" << t.nsecsElapsed() / 1'000'000.f << "ms";
 #endif
                 });
-        connect(m_sourceModel, &QAbstractItemModel::rowsRemoved, this, &ManageTokensController::parseSourceModel);
+        connect(m_sourceModel, &QAbstractItemModel::rowsAboutToBeRemoved, this, &ManageTokensController::onSourceRowsAboutToBeRemoved);
         connect(m_sourceModel, &QAbstractItemModel::dataChanged, this, &ManageTokensController::onSourceDataChanged);
         m_modelConnectionsInitialized = true;
     });
@@ -450,11 +453,6 @@ void ManageTokensController::parseSourceModel()
     emit sourceModelChanged();
 }
 
-bool ManageTokensController::hasPendingSourceUpdates() const
-{
-    return m_pendingFullReparse || !m_pendingChangedRows.isEmpty();
-}
-
 void ManageTokensController::cancelPendingSourceUpdates()
 {
     if (m_sourceUpdateBatchTimer)
@@ -462,6 +460,36 @@ void ManageTokensController::cancelPendingSourceUpdates()
     m_pendingFullReparse = false;
     m_pendingChangedRows.clear();
     m_pendingChangedRoleNames.clear();
+    m_pendingRemovedKeys.clear();
+}
+
+void ManageTokensController::onSourceRowsAboutToBeRemoved(const QModelIndex& parent, int first, int last)
+{
+    Q_UNUSED(parent)
+    if (!m_sourceModel)
+        return;
+
+    // Queued in-place updates are keyed by source row; a removal shifts them.
+    if (!m_pendingChangedRows.isEmpty())
+        m_pendingFullReparse = true;
+
+    if (!m_pendingFullReparse) {
+        const auto keyRole = m_sourceModel->roleNames().key(kKeyRoleName, -1);
+        for (int row = first; row <= last; ++row)
+            m_pendingRemovedKeys.insert(m_sourceModel->index(row, 0).data(keyRole).toString());
+    }
+    scheduleSourceUpdateFlush();
+}
+
+void ManageTokensController::applyPendingRemovals()
+{
+    for (const auto& key : std::as_const(m_pendingRemovedKeys)) {
+        for (auto model : {m_regularTokensModel, m_communityTokensModel, m_hiddenTokensModel}) {
+            if (model->takeItem(key).has_value())
+                break;
+        }
+    }
+    m_pendingRemovedKeys.clear();
 }
 
 void ManageTokensController::scheduleSourceUpdateFlush()
@@ -511,9 +539,15 @@ void ManageTokensController::flushPendingSourceUpdates()
         return;
     }
 
+    const bool removedAny = !m_pendingRemovedKeys.isEmpty();
+    applyPendingRemovals();
+
     const auto rows = m_pendingChangedRows;
     for (const auto row : rows)
         applyIncrementalDataUpdate(row);
+
+    if (removedAny)
+        rebuildModels();
 
     cancelPendingSourceUpdates();
 }

@@ -1,5 +1,6 @@
 #!/usr/bin/env groovy
-library 'status-jenkins-lib@v1.9.52'
+
+library 'status-jenkins-lib@v1.9.53'
 
 QT_VERSION = "6.11.0"
 
@@ -19,7 +20,7 @@ pipeline {
       args '--entrypoint="" ' +
            '--volume=/nix:/nix ' +
            '--volume=/etc/nix:/etc/nix '
-      customWorkspace "/home/jenkins/workspace/status-app-android/${env.BUILD_NUMBER}"
+      customWorkspace "/home/jenkins/workspace/status-app-android/${env.JOB_NAME}/${env.BUILD_NUMBER}"
     }
   }
 
@@ -83,6 +84,11 @@ pipeline {
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Enable test mode (hooks for e2e) for PR/nightly builds, but NOT for releases */
     STATUSQ_TESTMODE = "${!utils.isReleaseBuild()}"
+    /* Swap */
+    FLAG_SWAP_ENABLED = 1
+    FLAG_RELAY_ENABLED = 1
+    FLAG_LIFI_ENABLED = 0
+    FLAG_PARASWAP_ENABLED = 0
   }
 
   stages {

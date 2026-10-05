@@ -36,6 +36,12 @@ dependencies {
     implementation 'androidx.documentfile:documentfile:1.0.1'
     
     implementation 'im.status:mobileui-android:0.0.0-local'
+
+    // Instrumentation tests (see src/androidTest). Run with:
+    //   ./gradlew connectedAndroidTest
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
 }
 
 // Allow overriding qtAndroidDir via environment variable (for different Qt installations)
@@ -45,6 +51,8 @@ def qtDir = System.getenv("QT_ANDROID_DIR") ?: qtAndroidDir
 def buildVariant = System.getenv("BUILD_VARIANT") ?: "release"
 // Bundle identifier from EnvVariables.mk
 def bundleIdentifier = System.getenv("BUNDLE_IDENTIFIER") ?: "app.status.mobile"
+// PR builds are profileable (heapprofd/simpleperf/perfetto from the shell), release and fdroid are not.
+def prVariant = buildVariant == "pr"
 
 android {
     /*******************************************************
@@ -75,6 +83,7 @@ android {
         main {
             manifest.srcFile 'AndroidManifest.xml'
             java.srcDirs = [qtDir + '/src', 'src', 'java']
+            java.exclude 'androidTest/**'
             aidl.srcDirs = [qtDir + '/src', 'src', 'aidl']
             res.srcDirs = [qtDir + '/res', 'res']
             resources.srcDirs = ['resources']
@@ -114,6 +123,8 @@ android {
         resValue "string", "app_name", buildVariant == 'release' ? "Status" : "Status PR"
         // lib_name must match TARGET in Status.pro (spaces cause weird issues in paths)
         resValue "string", "lib_name", buildVariant == 'release' ? "Status" : "StatusPR"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "boolean", "PR_VARIANT", "${prVariant}"
     }
 
     signingConfigs {
@@ -129,6 +140,7 @@ android {
         release {
             debuggable = false
             minifyEnabled = false
+            profileable = prVariant
             signingConfig signingConfigs.release
         }
         fdroid {

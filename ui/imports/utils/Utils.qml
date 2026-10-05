@@ -1152,6 +1152,44 @@ QtObject {
         return undefined
     }
 
+    function getSwapProviderDetails(processorName) {
+        switch (processorName) {
+            case Constants.swap.paraswapProcessorName:
+                return {
+                    "name": Constants.swap.paraswapName,
+                    "url": Constants.swap.paraswapUrl,
+                    "hostname": Constants.swap.paraswapHostname,
+                    "icon": Constants.swap.paraswapIcon,
+                }
+            case Constants.swap.lifiProcessorName:
+                return {
+                    "name": Constants.swap.lifiName,
+                    "url": Constants.swap.lifiUrl,
+                    "hostname": Constants.swap.lifiHostname,
+                    "icon": Constants.swap.lifiIcon,
+                }
+            case Constants.swap.relayProcessorName:
+                return {
+                    "name": Constants.swap.relayName,
+                    "url": Constants.swap.relayUrl,
+                    "hostname": Constants.swap.relayHostname,
+                    "icon": Constants.swap.relayIcon,
+                }
+        }
+        return undefined
+    }
+
+    function getSwapProviderDappDetails(processorName) {
+        const details = getSwapProviderDetails(processorName)
+        if (!details)
+            return undefined
+        return {
+            "icon": Assets.png("swap/%1".arg(details.icon)),
+            "url": details.url,
+            "name": details.name,
+        }
+    }
+
     // Leave this function at the bottom of the file as QT Creator messes up the code color after this
     function isPunct(c) {
         return /(!|\@|#|\$|%|\^|&|\*|\(|\)|\+|\||-|=|\\|{|}|[|]|"|;|'|<|>|\?|,|\.|\/)/.test(c)

@@ -112,6 +112,12 @@ class SendPopup(QObject):
             pass
         return False
 
+    @allure.step('Close send modal without signing')
+    def close_without_signing(self):
+        driver.type(self.object, '<Escape>')
+        self.wait_until_hidden()
+        return self
+
     @allure.step('Open sign and send modal')
     def open_sign_send_modal(self):
         self.send_modal_review_send_button.click()

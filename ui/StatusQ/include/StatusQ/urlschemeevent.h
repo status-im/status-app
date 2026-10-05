@@ -15,6 +15,7 @@ namespace Status
             void emitAppForegroundedToQt();
             void emitAppBackgroundedToQt();
             void watchApplicationState();
+            void emitShareToQt(const QString& text, const QStringList& imagePaths);
             static void setInstance(UrlSchemeEvent* instance);
 
             void registerUrlHandler();
@@ -33,6 +34,10 @@ namespace Status
             // NOT backgrounded: share sheets and system alerts briefly
             // deactivate the app without suspending it.
             void appBackgrounded();
+            // Share-target hand-off: shared text/links plus app-private cached
+            // copies of shared images, as a JSON array of absolute paths (a
+            // JSON string keeps the Nim slot signature to plain QStrings).
+            void shareActivated(const QString& text, const QString& imagePathsJson);
     };
 }
 

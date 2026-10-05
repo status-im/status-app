@@ -22,6 +22,15 @@ proc setTokensMarketDetailsLoadingStateAndNotify(self: Service, state: bool) =
 proc setTokensPricesLoadingStateAndNotify(self: Service, state: bool) =
   self.resolveTokensMarketValuesLoadingStateAndNotify(state, self.tokensMarketDetailsLoading)
 
+# Drops values priced in the previous currency and marks prices loading until refetched.
+proc resetMarketValuesCache(self: Service) =
+  self.tokenPriceTable.clear()
+  self.tokenMarketValuesTable.clear()
+  self.hasPriceValuesCache = false
+  self.hasMarketDetailsCache = false
+  self.onDemandPrices.resetForRefetch()
+  self.setTokensPricesLoadingStateAndNotify(true)
+
 proc updateTokenPrices*(self: Service, updatedPrices: Table[string, float64]) =
   var anyUpdated = false
   for tokenKey, price in updatedPrices:
@@ -44,33 +53,14 @@ proc fetchTokensMarketValues(self: Service, tokensKeys: seq[string] = @[]) =
   self.threadpool.start(arg)
 
 proc tokensMarketValuesRetrieved(self: Service, response: string) {.slot.} =
-  # this is emited so that the models can notify about market values being available
-  defer: self.setTokensMarketDetailsLoadingStateAndNotify(false)
   try:
     let env = Json.decode(response, TokensMarketValuesSlotResponse, allowUnknownFields = true)
-    if not env.error.isEmptyOrWhitespace:
-      raise newException(Exception, "Error getting tokens market values: " & env.error)
-    if env.tokenMarketValues.isNil or env.tokenMarketValues.kind == JNull:
+    # A response for another currency is dropped; the request for the current one clears loading.
+    if not applyMarketValuesResponse(self.tokenMarketValuesTable, self.hasMarketDetailsCache, env, self.getCurrency()):
       return
-    var tokensResult: JsonNode
-    discard env.tokenMarketValues.getProp("result", tokensResult)
-    if tokensResult.isNil or tokensResult.kind == JNull:
-      return
-
-    for (tokenKey, marketValuesObj) in tokensResult.pairs:
-      let marketValuesDto = Json.decode($marketValuesObj, TokenMarketValuesDto, allowUnknownFields = true)
-      self.tokenMarketValuesTable[tokenKey] = TokenMarketValuesItem(
-        marketCap: marketValuesDto.marketCap,
-        highDay: marketValuesDto.highDay,
-        lowDay: marketValuesDto.lowDay,
-        changePctHour: marketValuesDto.changePctHour,
-        changePctDay: marketValuesDto.changePctDay,
-        changePct24hour: marketValuesDto.changePct24hour,
-        change24hour: marketValuesDto.change24hour)
-    self.hasMarketDetailsCache = true
   except Exception as e:
-    let errDesription = e.msg
-    error "error: ", errDesription
+    error "error: ", errDesription = e.msg
+  self.setTokensMarketDetailsLoadingStateAndNotify(false)
 
 # if tokensKeys is empty, details for all tokens will be fetched
 proc fetchTokensDetails(self: Service, tokensKeys: seq[string] = @[]) =
@@ -108,39 +98,64 @@ proc tokensDetailsRetrieved(self: Service, response: string) {.slot.} =
     error "error: ", errDesription
 
 # if tokensKeys is empty, prices for all tokens will be fetched
-proc fetchTokensPrices(self: Service, tokensKeys: seq[string] = @[]) =
-  defer: self.setTokensPricesLoadingStateAndNotify(true)
+proc startFetchTokensPricesTask(self: Service, tokensKeys: seq[string], slot: string) =
   let arg = FetchTokensPricesTaskArg(
     tptr: fetchTokensPricesTask,
     vptr: cast[uint](self.vptr),
-    slot: "tokensPricesRetrieved",
+    slot: slot,
     tokensKeys: tokensKeys,
-    currencies: @[self.getCurrency()]
+    currency: self.getCurrency()
   )
   self.threadpool.start(arg)
 
-proc tokensPricesRetrieved(self: Service, response: string) {.slot.} =
-  # this is emited so that the models can notify about prices being available
-  defer: self.setTokensPricesLoadingStateAndNotify(false)
+proc fetchTokensPrices(self: Service, tokensKeys: seq[string] = @[]) =
+  defer: self.setTokensPricesLoadingStateAndNotify(true)
+  self.startFetchTokensPricesTask(tokensKeys, "tokensPricesRetrieved")
+
+proc ensurePricesForTokens*(self: Service, tokensKeys: seq[string]) =
+  if self.onDemandPrices.request(tokensKeys, self.tokenPriceTable, now = getTime().toUnix()):
+    self.onDemandPricesDebouncer.call()
+
+proc fetchPendingOnDemandPrices(self: Service) =
+  let keys = self.onDemandPrices.takeBatch()
+  if keys.len == 0:
+    return
+  self.startFetchTokensPricesTask(keys, "onDemandTokensPricesRetrieved")
+
+proc refetchOnDemandPrices(self: Service) =
+  let keys = self.onDemandPrices.rememberedKeys()
+  if keys.len == 0:
+    return
+  self.startFetchTokensPricesTask(keys, "onDemandTokensPricesRetrieved")
+
+proc onDemandTokensPricesRetrieved(self: Service, response: string) {.slot.} =
+  var applied = false
   try:
     let env = Json.decode(response, TokensPricesSlotResponse, allowUnknownFields = true)
-    if not env.error.isEmptyOrWhitespace:
-      raise newException(Exception, "Error getting tokens prices: " & env.error)
-    if env.tokensPrices.isNil or env.tokensPrices.kind == JNull:
-      return
-    var tokensResult: JsonNode
-    discard env.tokensPrices.getProp("result", tokensResult)
-    if tokensResult.isNil or tokensResult.kind == JNull:
-      return
-
-    for (tokenKey, prices) in tokensResult.pairs:
-      for (currency, price) in prices.pairs:
-        if cmpIgnoreCase(self.getCurrency(), currency) == 0:
-          self.tokenPriceTable[tokenKey] = price.getFloat
-    self.hasPriceValuesCache = true
+    let currency = self.getCurrency()
+    let now = getTime().toUnix()
+    var hasCache = self.hasPriceValuesCache # the tokens-of-interest refresh owns that flag
+    applied = applyPricesResponse(self.tokenPriceTable, hasCache, env, currency)
+    if applied:
+      self.onDemandPrices.completeBatch(env.requestedKeys, pricedKeysInResponse(env, currency), now)
+    else:
+      # fetched for a previous currency: dropped, and the keys are simply released
+      self.onDemandPrices.releaseBatch(env.requestedKeys)
   except Exception as e:
-    let errDesription = e.msg
-    error "error: ", errDesription
+    error "error fetching on-demand token prices: ", errDesription = e.msg
+    self.onDemandPrices.drainInFlight()
+  if applied:
+    self.events.emit(SIGNAL_TOKENS_MARKET_VALUES_UPDATED, Args())
+
+proc tokensPricesRetrieved(self: Service, response: string) {.slot.} =
+  try:
+    let env = Json.decode(response, TokensPricesSlotResponse, allowUnknownFields = true)
+    # A response for another currency is dropped; the request for the current one clears loading.
+    if not applyPricesResponse(self.tokenPriceTable, self.hasPriceValuesCache, env, self.getCurrency()):
+      return
+  except Exception as e:
+    error "error: ", errDesription = e.msg
+  self.setTokensPricesLoadingStateAndNotify(false)
 
 # History Data
 proc tokenHistoricalDataResolved*(self: Service, response: string) {.slot.} =

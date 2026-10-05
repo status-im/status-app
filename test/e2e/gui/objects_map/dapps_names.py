@@ -17,7 +17,7 @@ btn_wallet_connect = {
 wc_uri_input = {
     'container': statusDesktop_mainWindow_overlay,
     'objectName': 'wcUriInput',
-    'type': 'StatusBaseInput',
+    'type': 'StatusTextArea',
     'visible': True,
 }
 

@@ -9,6 +9,7 @@ from ../../shared_models/section_item import SectionType
 
 import ../../../global/global_singleton
 import app/core/eventemitter
+import app_service/common/types
 import app_service/service/contacts/service as contact_service
 import app_service/service/chat/service as chat_service
 import app_service/service/community/service as community_service
@@ -360,6 +361,11 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
   elif chat.chatType == ChatType.CommunityChat:
     sectionId = chat.communityId
     sectionName = self.delegate.getSectionName(sectionId)
+
+  var onlineStatus = OnlineStatus.Inactive.int
+  if chat.chatType == ChatType.OneToOne:
+    onlineStatus = toOnlineStatus(self.controller.getStatusForContactWithId(chat.id).statusType).int
+
   return chat_search_item.initItem(
     chat.id,
     chatName,
@@ -376,6 +382,18 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
           self.controller.getCommunityById(chat.communityId).chats)
       else:
         self.controller.getMessagesParsedPlainText(chat.lastMessage, []),
+    lastMessageTimestamp = chat.timestamp.int,
+    # Fallback for chats that predate the lastOwnMessageTimestamp column
+    lastOwnMessageTimestamp = max(chat.lastOwnMessageTimestamp.int,
+      if chat.lastMessage.`from` == singletonInstance.userProfile.getPubKey(): chat.timestamp.int else: 0),
+    # Post rights for channels live on the community's own chat record
+    canPost =
+      if isCommunity:
+        self.controller.getCommunityById(chat.communityId).getCommunityChat(chat.id).canPost
+      else:
+        chat.canPost,
+    membersCount = chat.members.len,
+    onlineStatus = onlineStatus,
   )
 
 method buildChatSearchModel*(self: Module) =
@@ -391,6 +409,9 @@ method buildChatSearchModel*(self: Module) =
     items.add(item)
 
   self.view.chatSearchModel().setItems(items)
+
+method onEverythingLoaded*(self: Module) =
+  self.view.chatSearchModel().onEverythingLoaded()
 
 method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
   for chat in updatedChats:
@@ -414,10 +435,18 @@ method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
       self.view.chatSearchModel().removeItemByIndex(index)
       continue
 
+    if chat.lastOwnMessageTimestamp > 0:
+      self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chat.id, chat.lastOwnMessageTimestamp.int)
     if chat.chatType == ChatType.OneToOne:
       # 1-1 chat properties are updated when a contact is updated, so we can skip it here
       continue
     self.view.chatSearchModel().updateChatItem(chat.id, chat.name, chat.color, chat.icon, chat.emoji)
+    self.view.chatSearchModel().updateCanPostOnChatItem(chat.id, chat.canPost)
+    self.view.chatSearchModel().updateMembersCountOnChatItem(chat.id, chat.members.len)
+
+method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto]) =
+  for s in statusUpdates:
+    self.view.chatSearchModel().updateOnlineStatusOnChatItem(s.publicKey, toOnlineStatus(s.statusType).int)
 
 method contactUpdated*(self: Module, contactId: string) =
   let contactDetails = self.controller.getContactDetails(contactId)
@@ -439,7 +468,11 @@ method chatAdded*(self: Module, chat: ChatDto) =
 method chatRemoved*(self: Module, chatId: string) =
   self.view.chatSearchModel().removeItemById(chatId)
 
-method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto) =
+method updateLastOwnMessageTimestamp*(self: Module, chatId: string, lastOwnMessageTimestamp: int) =
+  if lastOwnMessageTimestamp > 0:
+    self.view.chatSearchModel().updateLastOwnMessageTimestampOnChatItem(chatId, lastOwnMessageTimestamp)
+
+method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto, lastMessageTimestamp: int) =
   self.view.chatSearchModel().updateLastMessageTextOnChatItem(
     chatId,
     if chatType == ChatType.CommunityChat and communityId != "":
@@ -448,3 +481,5 @@ method updateLastMessage*(self: Module, chatId, communityId: string, chatType: C
     else:
       self.controller.getMessagesParsedPlainText(lastMessage, [])
   )
+  if lastMessageTimestamp > 0:
+    self.view.chatSearchModel().updateLastMessageTimestampOnChatItem(chatId, lastMessageTimestamp)

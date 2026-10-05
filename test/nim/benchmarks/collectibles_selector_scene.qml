@@ -75,8 +75,20 @@ Window {
 
     // Raw source model, mutated by the append / balance-update scenarios.
     ListModel { id: collectiblesSrc }
+    // The chain reads from activeSrc; swapping it is the only way to make a QML
+    // ListModel-fed chain see a real modelReset (ListModel.clear() emits a removal).
+    property var activeSrc: collectiblesSrc
+
+    function restoreSource() {
+        if (root.activeSrc === collectiblesSrc)
+            return
+        const stale = root.activeSrc
+        root.activeSrc = collectiblesSrc
+        stale.destroy()
+    }
 
     function fillSource(n) {
+        root.restoreSource()
         const rows = []
         for (let i = 0; i < n; i++)
             rows.push(root.makeRow(i))
@@ -105,7 +117,7 @@ Window {
         networksModel: netSrc
         // mirror SendModalHandler: soulbound items filtered out before the adaptor
         collectiblesModel: SortFilterProxyModel {
-            sourceModel: collectiblesSrc
+            sourceModel: root.activeSrc
             filters: ValueFilter { roleName: "soulbound"; value: false }
         }
         filterCommunityOwnerAndMasterTokens: true
@@ -197,6 +209,22 @@ Window {
                 rows.push(r)
             }
             collectiblesSrc.append(rows)
+            break
+        }
+        case 5: { // remove every other row, one rowsRemoved range per hole (descending)
+            for (let i = collectiblesSrc.count - 1; i >= 0; i -= 2)
+                collectiblesSrc.remove(i, 1)
+            break
+        }
+        case 6: { // same end state as case 5, announced as one modelReset
+            const n = collectiblesSrc.count
+            const fresh = Qt.createQmlObject("import QtQml.Models; ListModel {}", root)
+            const keep = []
+            for (let i = 0; i < n; i += 2)
+                keep.push(root.makeRow(i))
+            fresh.append(keep)
+            // Swapping the proxy chain's source is a reset for every consumer downstream.
+            root.activeSrc = fresh
             break
         }
         case 4: { // single ownership balance update on a displayed collectible

@@ -5,7 +5,6 @@ import QtQuick
 import StatusQ
 
 import "../../../assets/twemoji/twemoji.js" as Twemoji
-import "./emojiList.js" as EmojiJSON
 
 QtObject {
     readonly property var size: {
@@ -16,11 +15,9 @@ QtObject {
         "verySmall": "16x16"
     }
     readonly property string base: Qt.resolvedUrl("../../../assets/twemoji/svg/")
-    readonly property var emojiJSON: EmojiJSON
+    readonly property alias emojiJSON: emojiModel.emojiJson
 
-    readonly property StatusEmojiModel emojiModel: StatusEmojiModel {
-        emojiJson: EmojiJSON.emoji_json
-    }
+    readonly property StatusEmojiModel emojiModel: StatusEmojiModel { id: emojiModel }
 
     function parse(text, renderSize = size.small) {
         const renderSizes = renderSize.split("x");
@@ -112,12 +109,16 @@ QtObject {
     // WARNING: use status-go RandomWalletEmoji instead.
     // More details here: https://github.com/status-im/status-go/issues/5663
     function getRandomEmoji(size) {
-        let whitelistedIndex = Math.floor(Math.random() * (EmojiJSON.emoji_json.length - flagsCount))
+        const emojisLength = emojiJSON.length
+        if (emojisLength <= 0)
+            return ""
+
+        let whitelistedIndex = Math.floor(Math.random() * (emojisLength - flagsCount))
         // Compensating for the missing flags emojis index
         if (whitelistedIndex >= firstFlagIndex) {
             whitelistedIndex += flagsCount
         }
-        var randomEmoji = EmojiJSON.emoji_json[whitelistedIndex]
+        var randomEmoji = emojiJSON[whitelistedIndex]
 
         const extensionIndex = randomEmoji.unicode.lastIndexOf('.');
         let iconCodePoint = randomEmoji.unicode
@@ -132,12 +133,7 @@ QtObject {
     }
 
     function getSuggestions(input: string) : var {
-        return emojiJSON.emoji_json.filter(emoji => {
-            return emoji.name.includes(input) ||
-                    emoji.shortname.includes(input) ||
-                    emoji.aliases.some(a => a.includes(input)) ||
-                    emoji.keywords.some(k => k.includes(input))
-        })
+        return emojiModel.getSuggestions(input)
     }
 
     // Length of the longest ASCII emoticon, to bound the look-back when matching one.

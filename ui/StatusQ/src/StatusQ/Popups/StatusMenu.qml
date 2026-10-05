@@ -97,9 +97,25 @@ Menu {
         }
     }
 
+    /// Row metrics, opt-in: the defaults are the app's long-standing row.
+    property int itemIconSize: 18
+    property int itemTextSpacing: 4
+    property real itemVerticalPadding: Math.max(16, Theme.padding)
+    property real itemBackgroundRadius: 0
+    property int itemMinimumHeight: 0
+    property int itemsSpacing: 0
+
     delegate: StatusMenuItem {
         visible: root.hideDisabledItems && !visibleOnDisabled ? enabled : true
+        // The column lays rows out by implicitHeight, so the floor belongs there.
+        implicitHeight: Math.max(root.itemMinimumHeight,
+                                 contentItem.implicitHeight + 2 * verticalPadding)
         height: visible ? implicitHeight : 0
+        icon.width: root.itemIconSize
+        icon.height: root.itemIconSize
+        spacing: root.itemTextSpacing
+        verticalPadding: root.itemVerticalPadding
+        backgroundRadius: root.itemBackgroundRadius
         visualizeShortcuts: root.visualizeShortcuts
         rippleOrigin: root.rippleOrigin
     }
@@ -109,7 +125,7 @@ Menu {
         padding: 0
 
         ColumnLayout {
-            spacing: 0
+            spacing: root.itemsSpacing
 
             width: root.availableWidth
 

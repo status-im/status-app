@@ -32,6 +32,7 @@ Rectangle {
     required property TransactionStore transactionStore
 
     property bool swapEnabled
+    property bool swapProvidersEnabled: true
     property bool buyEnabled
 
     property real widthBreakpoint: 600 // Width at which the buttons will be displayed in a single row, with no text
@@ -174,9 +175,10 @@ Rectangle {
             id: swap
             objectName: "walletFooterSwapButton"
 
-            interactive: networkConnectionStore.walletReadyForTransactionsEnabled
+            interactive: root.swapProvidersEnabled && networkConnectionStore.walletReadyForTransactionsEnabled
             visible: d.swapActionAvailable
-            tooltip.text: networkConnectionStore.walletReadyForTransactionsToolTipText
+            tooltip.text: !root.swapProvidersEnabled ? qsTr("There are no enabled providers")
+                                                     : networkConnectionStore.walletReadyForTransactionsToolTipText
             icon.name: "swap"
             text: qsTr("Swap")
             onClicked: root.launchSwapModal()

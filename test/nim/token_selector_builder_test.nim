@@ -291,11 +291,26 @@ suite "buildDisplayItems — path selection":
     check items.findItem("ETH").hasBalance            # enriched from owned
     check not items.findItem("DAI").hasBalance
 
-  test "Owned mode + search: results filtered to owned only":
+  test "Owned mode + search matches the owned rows locally, never the catalog":
+    # the catalog's search rows are irrelevant here: DAI is not held, ETH is
     let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
       TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
-      searchGroups = @[popular("ETH"), popular("DAI")])   # DAI not owned -> dropped
+      searchGroups = @[popular("DAI")], searchKeyword = "eth")
     check items.mapIt(it.key) == @["ETH"]
+
+  test "Owned mode + search is case-insensitive over symbol, name and key":
+    let owned = @[
+      group("usd-coin", symbol = "USDC", name = "USD Coin", balances = @[bal("0xA", 1, "1000000")]),
+      group("tether", symbol = "USDT", name = "Tether USD", balances = @[bal("0xA", 1, "1000000")]),
+      group("SNT", name = "Status", balances = @[bal("0xA", 1, "1000000")]),
+    ]
+    proc found(kw: string): seq[string] =
+      buildDisplayItems(owned, networks, noFilterParams(), TokenSelectorMode.Owned,
+        searchActive = true, popularGroups = @[], searchGroups = @[], searchKeyword = kw).mapIt(it.key)
+    check found("usd").sorted == @["tether", "usd-coin"]   # symbol and name
+    check found("TeThEr") == @["tether"]                     # name, any case
+    check found("coin") == @["usd-coin"]                     # group key
+    check found("nothing-like-it").len == 0
 
   test "Owned mode + search keeps an owned token sitting at zero balance":
     # showZeroBalanceForDefaultTokens is what puts ETH/SNT/DAI in the send picker
@@ -309,30 +324,38 @@ suite "buildDisplayItems — path selection":
 
     let searched = buildDisplayItems(owned, networks, params,
       TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
-      searchGroups = @[popular("SNT"), popular("DAI")])
-    check searched.mapIt(it.key) == @["SNT"]        # still visible; DAI unowned -> dropped
+      searchGroups = @[], searchKeyword = "snt")
+    check searched.mapIt(it.key) == @["SNT"]        # still visible
 
-  test "Owned mode + address-narrowed search requires deployment-level ownership":
-    # The account owns the group ONLY on chain 10; the searched contract
-    # address matched the chain-1 deployment (the search narrowed the row's
-    # refs to it). Group-level ownership must not resurrect the row — send
-    # would offer a deployment the account doesn't own.
-    let ownedOn10 = @[group("USDC", price = 1.0,
-      balances = @[bal("0xA", 10, "1000000000000000000")])]
-    var narrowed = popular("USDC")
-    narrowed.tokens = @[(key: "1-0xaaa", chainId: 1)]
-    let items = buildDisplayItems(ownedOn10, networks, noFilterParams(),
-      TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
-      searchGroups = @[narrowed])
-    check items.len == 0
+  test "Owned mode + address search requires the deployment to be held":
+    # The account holds USDC ONLY on chain 10. Its chain-1 contract address must
+    # not surface the row (send would offer a deployment the account doesn't own);
+    # its chain-10 address does, with the row scoped to that chain.
+    var g = group("USDC", price = 1.0, balances = @[
+      bal("0xA", 10, "1000000000000000000"), bal("0xA", 42161, "1000000000000000000")])
+    g.tokens = @[(key: "1-0xaaa111", chainId: 1), (key: "10-0xbbb222", chainId: 10),
+                 (key: "42161-0xccc333", chainId: 42161)]
+    proc search(kw: string): seq[TokenSelectorItem] =
+      buildDisplayItems(@[g], networks, noFilterParams(), TokenSelectorMode.Owned,
+        searchActive = true, popularGroups = @[], searchGroups = @[], searchKeyword = kw)
+    check search("0xaaa1").len == 0
+    let hit = search("0xbbb2")
+    check hit.mapIt(it.key) == @["USDC"]
+    check hit[0].chips.mapIt(it.chainId) == @[10]
+    check hit[0].tokens.mapIt(it.chainId) == @[10]
+    check hit[0].currentBalance == 1.0
+    # without the 0x prefix a needle needs 4 hex digits, like the catalog search
+    check search("bbb").len == 0
+    check search("bbb2").mapIt(it.key) == @["USDC"]
 
-    # the un-narrowed row (full refs incl. chain 10) is owned there -> kept
-    var full = popular("USDC")
-    full.tokens = @[(key: "1-0xaaa", chainId: 1), (key: "10-0xbbb", chainId: 10)]
-    let items2 = buildDisplayItems(ownedOn10, networks, noFilterParams(),
-      TokenSelectorMode.Owned, searchActive = true, popularGroups = @[],
-      searchGroups = @[full])
-    check items2.mapIt(it.key) == @["USDC"]
+  test "Owned mode + search honours the chain filter":
+    let params = TokenSelectorParams(enabledChainIds: @[10])
+    let owned = @[group("ETH", balances = @[bal("0xA", 1, "1000000000000000000")]),
+                  group("SNT", balances = @[bal("0xA", 10, "1000000000000000000")])]
+    let items = buildDisplayItems(owned, networks, params, TokenSelectorMode.Owned,
+      searchActive = true, popularGroups = @[], searchGroups = @[], searchKeyword = "")
+    # an empty keyword with searchActive is the caller's call; every row on the chain
+    check items.mapIt(it.key) == @["SNT"]
 
   test "AllTokens mode + search: results shown even when not owned":
     let items = buildDisplayItems(ownedGroups, networks, noFilterParams(),
@@ -341,3 +364,73 @@ suite "buildDisplayItems — path selection":
     check items.mapIt(it.key) == @["ETH", "DAI"]
     check items.findItem("ETH").hasBalance
     check not items.findItem("DAI").hasBalance
+
+suite "buildDisplayItems — \"All\" splits off the chains a held token is not held on":
+  # SNT held on chain 1 only, deployed on 1, 10 and 42161
+  let sntTokens = @[(key: "snt:1", chainId: 1), (key: "snt:10", chainId: 10),
+                    (key: "snt:42161", chainId: 42161)]
+  proc heldOnOne(): seq[AggTokenGroup] =
+    var g = group("SNT", price = 2.0, balances = @[bal("0xA", 1, "5000000000000000000")])
+    g.tokens = sntTokens
+    @[g]
+  proc sntPopular(): PopularGroup =
+    result = popular("SNT")
+    result.tokens = sntTokens
+
+  test "the unheld chains form a second, zero-balance row right after the held one":
+    let items = buildDisplayItems(heldOnOne(), networks, noFilterParams(),
+      TokenSelectorMode.AllTokens, searchActive = false,
+      popularGroups = @[sntPopular(), popular("DAI")], searchGroups = @[])
+    check items.mapIt(it.key) == @["SNT", unheldRowKey("SNT"), "DAI"]
+    let held = items[0]
+    check held.groupKey == "SNT"
+    check held.hasBalance
+    check held.chips.mapIt(it.chainId) == @[1]
+    # the row a selection resolves against keeps every deployment
+    check held.tokens.mapIt(it.chainId) == @[1, 10, 42161]
+    let rest = items[1]
+    check rest.groupKey == "SNT"
+    check rest.symbol == "SNT"
+    check rest.marketPrice == 2.0
+    check not rest.hasBalance
+    check rest.chips.len == 0
+    check rest.currentBalance == 0.0
+    check rest.currencyBalance == 0.0
+    check rest.tokens.mapIt(it.chainId) == @[10, 42161]
+
+  test "no second row when the token is held on every chain it is deployed on":
+    var g = group("ETH", price = 1.0, balances = @[bal("0xA", 1, "1"), bal("0xA", 10, "1")])
+    g.tokens = @[(key: "eth:1", chainId: 1), (key: "eth:10", chainId: 10)]
+    var p = popular("ETH")
+    p.tokens = g.tokens
+    let items = buildDisplayItems(@[g], networks, noFilterParams(),
+      TokenSelectorMode.AllTokens, searchActive = false, popularGroups = @[p], searchGroups = @[])
+    check items.mapIt(it.key) == @["ETH"]
+
+  test "no second row for a token that is not held at all":
+    let items = buildDisplayItems(@[], networks, noFilterParams(),
+      TokenSelectorMode.AllTokens, searchActive = false, popularGroups = @[sntPopular()], searchGroups = @[])
+    check items.mapIt(it.key) == @["SNT"]
+    check items[0].tokens.len == 3
+
+  test "a chain filter lists the token once (its section already tells held from not held)":
+    let params = TokenSelectorParams(enabledChainIds: @[10])
+    let items = buildDisplayItems(heldOnOne(), networks, params,
+      TokenSelectorMode.AllTokens, searchActive = false, popularGroups = @[sntPopular()], searchGroups = @[])
+    check items.mapIt(it.key) == @["SNT"]
+
+  test "the split applies to search results too":
+    let items = buildDisplayItems(heldOnOne(), networks, noFilterParams(),
+      TokenSelectorMode.AllTokens, searchActive = true, popularGroups = @[], searchGroups = @[sntPopular()])
+    check items.mapIt(it.key) == @["SNT", unheldRowKey("SNT")]
+
+  test "Owned mode never adds the row (send and the swap pay side list held tokens only)":
+    let items = buildDisplayItems(heldOnOne(), networks, noFilterParams(),
+      TokenSelectorMode.Owned, searchActive = false, popularGroups = @[], searchGroups = @[])
+    check items.mapIt(it.key) == @["SNT"]
+
+  test "ordinary rows carry their own key as groupKey":
+    let owned = buildTokenSelectorItems(heldOnOne(), networks, noFilterParams())
+    check owned[0].groupKey == "SNT"
+    let merged = mergePopularWithOwned(@[popular("DAI")], @[], showCommunityAssets = false)
+    check merged[0].groupKey == "DAI"

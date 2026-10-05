@@ -1544,6 +1544,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>%3에서 %1을(를) %2로 스왑하는 중</translation>
     </message>
     <message>
+        <source>Bridging %1 on %2 to %3 on %4 in %5</source>
+        <translation>%5에서 %2의 %1을(를) %4의 %3(으)로 브리징하는 중</translation>
+    </message>
+    <message>
         <source>Minting infinite %1 tokens for %2 using %3</source>
         <translation>%3을(를) 사용해 %2에 무한 %1 토큰 발행</translation>
     </message>
@@ -1702,6 +1706,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Spending cap failed: %1 in %2 for %3</source>
         <translation>지출 한도 실패: %2에서 %1, 대상 %3</translation>
+    </message>
+    <message>
+        <source>Bridge failed: %1 on %2 to %3 on %4 in %5</source>
+        <translation>브리징 실패: %2의 %1 → %4의 %3, %5</translation>
     </message>
     <message>
         <source>Mint failed: infinite %1 tokens for %2 using %3</source>
@@ -1932,6 +1940,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>POKT &amp; Infura down for %1. %1 token balances cannot be retrieved.</source>
         <translation>%1에 대해 POKT 및 Infura가 중단됨. %1 토큰 잔액을 가져올 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Bridge confirmed on %2: %1 to %3 on %4 in %5</source>
+        <translation>%2에서 브리징 확인됨: %5에서 %1을(를) %4의 %3(으)로</translation>
     </message>
     <message>
         <source>How to fix</source>
@@ -2781,10 +2793,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Find in page</source>
         <translation>페이지에서 찾기</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>호환 모드</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -4215,21 +4223,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Do not show this again</source>
         <translation>다시는 표시하지 않기</translation>
-    </message>
-</context>
-<context>
-    <name>ConfirmationPopup</name>
-    <message>
-        <source>Enable KLIPY GIFs?</source>
-        <translation>KLIPY GIF를 활성화하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
-        <translation>활성화하면 채팅에 게시된 GIF가 회원님의 메타데이터를 KLIPY와 공유할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>사용</translation>
     </message>
 </context>
 <context>
@@ -6267,10 +6260,6 @@ key pair. Keycard will be required for signing</source>
         <translation>URL 복사</translation>
     </message>
     <message>
-        <source>Downloads</source>
-        <translation>다운로드</translation>
-    </message>
-    <message>
         <source>Pause</source>
         <translation>일시 중지</translation>
     </message>
@@ -6295,8 +6284,12 @@ key pair. Keycard will be required for signing</source>
         <translation>취소</translation>
     </message>
     <message>
-        <source>Dismiss</source>
-        <translation>닫기</translation>
+        <source>Clear from bar</source>
+        <translation>표시줄에서 지우기</translation>
+    </message>
+    <message>
+        <source>Show in Downloads</source>
+        <translation>다운로드에서 보기</translation>
     </message>
 </context>
 <context>
@@ -8336,6 +8329,21 @@ Are you sure you want to do this?</source>
     <message>
         <source>%1 %2 %3</source>
         <translation>%1 %2 %3</translation>
+    </message>
+</context>
+<context>
+    <name>GifEnableOverlay</name>
+    <message>
+        <source>Enable KLIPY GIFs?</source>
+        <translation>KLIPY GIF를 활성화하시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation>활성화하면 채팅에 게시된 GIF가 회원님의 메타데이터를 KLIPY와 공유할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation>활성화</translation>
     </message>
 </context>
 <context>
@@ -10945,6 +10953,10 @@ to load</source>
         <translation>마켓</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>활성화된 제공자가 없습니다</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>스왑</translation>
     </message>
@@ -11623,10 +11635,6 @@ to load</source>
     <message>
         <source>Zoom Fit</source>
         <translation>맞춤 확대</translation>
-    </message>
-    <message>
-        <source>Compatibility mode</source>
-        <translation>호환 모드</translation>
     </message>
     <message>
         <source>Supported formats</source>
@@ -13397,6 +13405,10 @@ to load</source>
         <source>Activity Center</source>
         <translation>활동 센터</translation>
     </message>
+    <message>
+        <source>There are no enabled providers</source>
+        <translation>활성화된 제공자가 없습니다</translation>
+    </message>
 </context>
 <context>
     <name>PrivacyAndSecurityView</name>
@@ -13649,11 +13661,11 @@ to load</source>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged account</source>
-        <translation type="unfinished"></translation>
+        <translation>연결된 계정</translation>
     </message>
     <message>
         <source>Bridged from %1</source>
-        <translation type="unfinished">%1에서 브리지됨</translation>
+        <translation>%1에서 브리지됨</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -15358,6 +15370,63 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>ShareComposer</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">메시지</translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationDelegate</name>
+    <message numerus="yes">
+        <source>%n member(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationList</name>
+    <message>
+        <source>No destinations found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Nothing selected yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationPickerPanel</name>
+    <message>
+        <source>Share</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search chats and channels</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareDestinationTabBar</name>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">전체</translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished">연락처</translation>
+    </message>
+    <message>
+        <source>Groups</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">커뮤니티</translation>
+    </message>
+</context>
+<context>
     <name>ShareProfileDialog</name>
     <message>
         <source>Profile link</source>
@@ -16871,12 +16940,36 @@ to load</source>
 <context>
     <name>SwapModal</name>
     <message>
+        <source>Swap + Bridge</source>
+        <translation>스왑 + 브리지</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>스왑</translation>
     </message>
     <message>
-        <source>Swap + Bridge</source>
-        <translation>스왑 + 브리지</translation>
+        <source>Bridge</source>
+        <translation>브리지</translation>
+    </message>
+    <message>
+        <source>Fastest</source>
+        <translation>가장 빠름</translation>
+    </message>
+    <message>
+        <source>Lowest fee</source>
+        <translation>최저 수수료</translation>
+    </message>
+    <message>
+        <source>Best return</source>
+        <translation>최고 수익률</translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation>정보</translation>
+    </message>
+    <message>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation>%1에서의 스왑은 곧 제공될 예정입니다.</translation>
     </message>
     <message>
         <source>Add assets</source>
@@ -16892,12 +16985,28 @@ to load</source>
         <translation>%1초</translation>
     </message>
     <message>
-        <source>Best return</source>
-        <translation>최고 수익률</translation>
+        <source>Rate unavailable</source>
+        <translation>환율을 알 수 없어요</translation>
     </message>
     <message>
-        <source>Bridge</source>
-        <translation>브리지</translation>
+        <source>Choose route</source>
+        <translation>경로 선택</translation>
+    </message>
+    <message>
+        <source>%1 → %2</source>
+        <translation>%1 → %2</translation>
+    </message>
+    <message>
+        <source>%1</source>
+        <translation>%1</translation>
+    </message>
+    <message>
+        <source>By %1 via %2</source>
+        <translation>%2 경유, %1 제공</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>%1 제공</translation>
     </message>
     <message>
         <source>by %1 via %2</source>
@@ -16939,56 +17048,56 @@ to load</source>
         <source>Sign</source>
         <translation>서명</translation>
     </message>
-    <message>
-        <source>Info</source>
-        <translation>정보</translation>
-    </message>
-    <message>
-        <source>Swaps on %1 are coming soon.</source>
-        <translation>%1에서의 스왑은 곧 제공될 예정입니다.</translation>
-    </message>
-    <message>
-        <source>Fastest</source>
-        <translation>가장 빠름</translation>
-    </message>
-    <message>
-        <source>Lowest fee</source>
-        <translation>최저 수수료</translation>
-    </message>
-    <message>
-        <source>Choose route</source>
-        <translation>경로 선택</translation>
-    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
     <message>
-        <source>Insufficient funds for swap</source>
-        <translation>스왑에 필요한 자금이 부족합니다</translation>
+        <source>Insufficient funds</source>
+        <translation>자금이 부족합니다</translation>
     </message>
     <message>
-        <source>Not enough ETH to pay gas fees</source>
-        <translation>가스 요금을 지불할 ETH가 부족합니다</translation>
+        <source>Not enough ETH to pay fees</source>
+        <translation>수수료를 지불할 ETH가 부족합니다</translation>
     </message>
     <message>
-        <source>Fetching the price took longer than expected. Please, try again later.</source>
-        <translation>가격 정보를 가져오는 데 예상보다 시간이 걸리고 있어요. 잠시 후 다시 시도해 주세요.</translation>
+        <source>Getting a quote timed out. Retry ↺</source>
+        <translation>견적 요청 시간이 초과됐어요. 다시 시도 ↺</translation>
     </message>
     <message>
-        <source>Not enough liquidity. Lower token amount or try again later.</source>
-        <translation>유동성이 부족합니다. 토큰 수량을 줄이거나 나중에 다시 시도하세요.</translation>
+        <source>Low liquidity. Lower amount or try later</source>
+        <translation>유동성이 부족해요. 수량을 줄이거나 나중에 다시 시도하세요</translation>
     </message>
     <message>
-        <source>Price impact too high. Lower token amount or try again later.</source>
-        <translation>가격 영향이 너무 큽니다. 토큰 수량을 줄이거나 나중에 다시 시도하세요.</translation>
+        <source>No quotes right now. Try later</source>
+        <translation>지금은 견적이 없어요. 나중에 다시 시도하세요</translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
-        <translation>충분한 유동성을 가진 경로를 찾을 수 없습니다</translation>
+        <source>Slippage exceeded. Increase or try later</source>
+        <translation>슬리피지를 초과했어요. 높이거나 나중에 다시 시도하세요</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>문제가 발생했습니다. 수량이나 토큰을 변경하거나 나중에 다시 시도하세요.</translation>
+        <source>High price impact. Lower amount or try later</source>
+        <translation>가격 영향이 커요. 수량을 줄이거나 나중에 다시 시도하세요</translation>
+    </message>
+    <message>
+        <source>Unsupported token. Try others</source>
+        <translation>지원하지 않는 토큰이에요. 다른 토큰을 시도해 보세요</translation>
+    </message>
+    <message>
+        <source>Hit an issue. Change amount, token, or retry ↺</source>
+        <translation>문제가 발생했어요. 수량이나 토큰을 변경하거나 다시 시도하세요 ↺</translation>
+    </message>
+    <message>
+        <source>No route. Try other tokens or networks</source>
+        <translation>경로가 없어요. 다른 토큰이나 네트워크를 시도해 보세요</translation>
+    </message>
+    <message>
+        <source>Amount too low. Increase amount</source>
+        <translation>금액이 너무 적어요. 금액을 늘려 주세요</translation>
+    </message>
+    <message>
+        <source>Amount too high. Lower amount</source>
+        <translation>금액이 너무 많아요. 금액을 줄여 주세요</translation>
     </message>
 </context>
 <context>
@@ -18954,6 +19063,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>구매</translation>
     </message>
     <message>
+        <source>There are no enabled providers</source>
+        <translation>활성화된 제공자가 없습니다</translation>
+    </message>
+    <message>
         <source>Swap</source>
         <translation>스왑</translation>
     </message>
@@ -19146,6 +19259,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>~%1s</source>
         <translation>~%1s</translation>
+    </message>
+    <message>
+        <source>~%1m</source>
+        <translation>~%1분</translation>
+    </message>
+    <message>
+        <source>~%1m %2s</source>
+        <translation>~%1분 %2초</translation>
     </message>
     <message>
         <source>an internal error occurred</source>

@@ -1,7 +1,9 @@
 #include "StatusQ/statusemojimodel.h"
 
 #include <QDebug>
+#include <QFile>
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QSettings>
 
 #include <array>
@@ -34,7 +36,29 @@ constexpr auto kRecentEmojisSettingsEntry = "recentEmojis"_L1;
 
 StatusEmojiModel::StatusEmojiModel(QObject *parent)
     : QAbstractListModel(parent)
-{}
+{
+    // lazy load the emoji_json from the QRC resource, not to block the CTOR
+    QMetaObject::invokeMethod(this, [this]() {
+        QFile f(":/StatusQ/Core/Utils/emojiList.json"_L1);
+        if (!f.open(QFile::ReadOnly | QFile::Text)) {
+            qWarning() << "Failed to open EmojiJSON DB from file:" << f.fileName();
+            return;
+        }
+        const auto jsonDB = f.readAll();
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(jsonDB, &err);
+        if (err.error != QJsonParseError::NoError) {
+            qWarning() << "Failed to parse EmojiJSON:" << err.error << err.errorString() << "; at offset:" << err.offset;
+            return;
+        }
+        if (!doc.isArray()) {
+            qWarning() << "Malformed EmojiJSON, not a JSON array: " << f.fileName();
+            return;
+        }
+        setEmojiJson(doc.array());
+        addRecentEmojisToModel(m_recentEmojis);
+    }, Qt::QueuedConnection);
+}
 
 int StatusEmojiModel::rowCount(const QModelIndex &parent) const
 {
@@ -118,7 +142,7 @@ void StatusEmojiModel::setEmojiJson(const QJsonArray &newEmojiJson)
 
     beginResetModel();
     m_emojiJson = newEmojiJson;
-    m_maxAsciiEmojiAliasLength = -1;
+    rebuildAsciiAliasIndex();
     emit emojiJsonChanged();
     endResetModel();
 }
@@ -127,7 +151,7 @@ QString StatusEmojiModel::getEmojiUnicodeFromShortname(const QString &shortname)
 {
     const auto it = std::find_if(m_emojiJson.cbegin(),
                                  m_emojiJson.cend(),
-                                 [shortname](const auto &emoji) {
+                                 [&shortname](const auto &emoji) {
                                      return emoji.isObject()
                                             && emoji.toObject().value(kShortname).toString()
                                                    == shortname;
@@ -139,39 +163,59 @@ QString StatusEmojiModel::getEmojiUnicodeFromShortname(const QString &shortname)
 
 QString StatusEmojiModel::getEmojiFromAsciiAlias(const QString &alias) const
 {
-    const auto it = std::find_if(m_emojiJson.cbegin(),
-                                 m_emojiJson.cend(),
-                                 [&alias](const auto &emojiValue) {
-                                     if (!emojiValue.isObject())
-                                         return false;
+    return m_asciiAliasToEmoji.value(alias);
+}
 
-                                     const auto aliases = emojiValue.toObject()
-                                                              .value(kAliasesAscii)
-                                                              .toArray();
-                                     return std::any_of(aliases.cbegin(),
-                                                        aliases.cend(),
-                                                        [&alias](const auto &aliasValue) {
-                                                            return aliasValue.toString() == alias;
-                                                        });
-                                 });
-    return it == m_emojiJson.cend() ? QString() : it->toObject().value(kEmoji).toString();
+QJsonArray StatusEmojiModel::getSuggestions(const QString &name) const
+{
+    const auto anyContains = [&name](const QJsonArray &values) {
+        return std::any_of(values.cbegin(), values.cend(), [&name](const auto &value) {
+            return value.toString().contains(name);
+        });
+    };
+
+    QJsonArray result;
+    for (const auto &emojiValue : std::as_const(m_emojiJson)) {
+        if (!emojiValue.isObject())
+            continue;
+
+        const auto emoji = emojiValue.toObject();
+        if (emoji.value(kName).toString().contains(name)
+            || emoji.value(kShortname).toString().contains(name)
+            || anyContains(emoji.value(kAliases).toArray())
+            || anyContains(emoji.value(kKeywords).toArray()))
+            result.append(emoji);
+    }
+    return result;
 }
 
 int StatusEmojiModel::maxAsciiEmojiAliasLength() const
 {
-    if (m_maxAsciiEmojiAliasLength >= 0)
-        return m_maxAsciiEmojiAliasLength;
+    return m_maxAsciiEmojiAliasLength;
+}
 
+void StatusEmojiModel::rebuildAsciiAliasIndex()
+{
+    m_asciiAliasToEmoji.clear();
     m_maxAsciiEmojiAliasLength = 0;
-    for (const auto &emojiValue : m_emojiJson) {
+    for (const auto &emojiValue : std::as_const(m_emojiJson)) {
         if (!emojiValue.isObject())
             continue;
 
-        for (const auto &aliasValue : emojiValue.toObject().value(kAliasesAscii).toArray())
-            m_maxAsciiEmojiAliasLength = qMax(m_maxAsciiEmojiAliasLength,
-                                              aliasValue.toString().size());
+        const auto emoji = emojiValue.toObject();
+        const auto aliases = emoji.value(kAliasesAscii).toArray();
+        if (aliases.isEmpty())
+            continue;
+
+        const auto emojiStr = emoji.value(kEmoji).toString();
+        for (const auto &aliasValue : aliases) {
+            const auto alias = aliasValue.toString();
+            // first occurrence wins, same as the former linear search
+            if (!m_asciiAliasToEmoji.contains(alias))
+                m_asciiAliasToEmoji.insert(alias, emojiStr);
+            m_maxAsciiEmojiAliasLength = qMax(m_maxAsciiEmojiAliasLength, alias.size());
+        }
     }
-    return m_maxAsciiEmojiAliasLength;
 }
 
 int StatusEmojiModel::getCategoryOffset(int categoryIndex) const {

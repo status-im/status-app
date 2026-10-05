@@ -159,12 +159,9 @@ QtObject {
             return
         }
 
-        if (record.state === AbstractWebView.DownloadState.DownloadCompleted) {
+        // The pill stays: opening a download is not dismissing it.
+        if (record.state === AbstractWebView.DownloadState.DownloadCompleted)
             openCompletedRecord(record)
-            // Dropping the last pill empties the strip model — stripVisible
-            // observes emptiness, so the strip hides by derivation.
-            downloadsStore.dismissRecordFromStrip(record)
-        }
     }
 
     /// Prefer our browser when the type is renderable; otherwise hand off to the OS.
@@ -219,8 +216,8 @@ QtObject {
     /// share-vs-copy fact. BIND it at the call site
     /// (capabilities: ctx.capabilitiesFor(menu.record, options)) so a stale
     /// menu is structurally impossible — the Missing File refresh happens here,
-    /// never at call sites. options.showDismiss — pill strip session dismiss.
-    /// options.showDownloadsEntry — pill strip "Downloads" entry;
+    /// never at call sites. options.showDownloadsEntry — the pill strip's
+    /// "Show in Downloads" entry;
     /// list menus never pass it — the user is already in the Downloads List.
     function capabilitiesFor(record, options) {
         downloadsStore.refreshMissingFiles()

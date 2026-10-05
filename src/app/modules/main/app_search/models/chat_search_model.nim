@@ -1,5 +1,7 @@
 import app/modules/shared_models/model_utils
 import nimqml, tables
+when defined(QT_MODEL_SPY):
+  import app/modules/shared/qt_model_spy
 import chat_search_item
 import ../io_interface
 
@@ -15,11 +17,18 @@ type
     Emoji
     ChatType
     LastMessageText
+    LastMessageTimestamp
+    LastOwnMessageTimestamp
+    CanPost
+    MembersCount
+    OnlineStatus
 
 QtObject:
   type Model* = ref object of QAbstractListModel
     items: seq[ChatSearchItem]
     delegate: io_interface.AccessInterface
+    ready: bool
+    rowCountRequested: bool
     built: bool
 
   proc setup(self: Model)
@@ -28,6 +37,8 @@ QtObject:
     new(result, delete)
     result.setup
     result.delegate = delegate
+    result.ready = false
+    result.rowCountRequested = false
     result.built = false
 
   proc getItemIndexById*(self: Model, chatId: string): int =
@@ -37,8 +48,20 @@ QtObject:
     return -1
 
   proc setItems*(self: Model, items: seq[ChatSearchItem]) =
-    # No reset since the model build is called from the first time `rowCount` is called
-    self.items = items
+    # A view may have pulled `rowCount` before the chats were loaded: a build
+    # after that must reset the attached views. A build from the first
+    # `rowCount` needs no reset.
+    if self.built:
+      when defined(QT_MODEL_SPY):
+        recordBeginResetModel()
+      self.beginResetModel()
+      self.items = items
+      self.endResetModel()
+      when defined(QT_MODEL_SPY):
+        recordEndResetModel()
+    else:
+      self.items = items
+      self.built = true
 
   proc addItem*(self: Model, item: ChatSearchItem) =
     if self.getItemIndexById(item.chatId) != -1:
@@ -65,13 +88,22 @@ QtObject:
       return
     self.removeItemByIndex(index)
 
-  method rowCount(self: Model, index: QModelIndex = nil): int =
-    if not self.built:
+  method rowCount*(self: Model, index: QModelIndex = nil): int =
+    if not self.ready:
+      self.rowCountRequested = true
+    elif not self.built:
       self.delegate.buildChatSearchModel()
       self.built = true
     return self.items.len
 
-  method roleNames(self: Model): Table[int, string] =
+  proc onEverythingLoaded*(self: Model) =
+    self.ready = true
+    if self.rowCountRequested and not self.built:
+      # views already attached to the empty model; setItems must reset them
+      self.built = true
+      self.delegate.buildChatSearchModel()
+
+  method roleNames*(self: Model): Table[int, string] =
     {
       ModelRole.ChatId.int:"chatId",
       ModelRole.Name.int:"name",
@@ -83,9 +115,14 @@ QtObject:
       ModelRole.Emoji.int:"emoji",
       ModelRole.ChatType.int:"chatType",
       ModelRole.LastMessageText.int:"lastMessageText",
+      ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
+      ModelRole.LastOwnMessageTimestamp.int:"lastOwnMessageTimestamp",
+      ModelRole.CanPost.int:"canPost",
+      ModelRole.MembersCount.int:"membersCount",
+      ModelRole.OnlineStatus.int:"onlineStatus",
     }.toTable
 
-  method data(self: Model, index: QModelIndex, role: int): QVariant =
+  method data*(self: Model, index: QModelIndex, role: int): QVariant =
     guardModelData(index, self.items.len, role, ModelRole)
 
     let item = self.items[index.row]
@@ -113,6 +150,16 @@ QtObject:
         result = newQVariant(item.chatType)
       of ModelRole.LastMessageText:
         result = newQVariant(item.lastMessageText)
+      of ModelRole.LastMessageTimestamp:
+        result = newQVariant(item.lastMessageTimestamp)
+      of ModelRole.LastOwnMessageTimestamp:
+        result = newQVariant(item.lastOwnMessageTimestamp)
+      of ModelRole.CanPost:
+        result = newQVariant(item.canPost)
+      of ModelRole.MembersCount:
+        result = newQVariant(item.membersCount)
+      of ModelRole.OnlineStatus:
+        result = newQVariant(item.onlineStatus)
 
   proc updateChatItem*(self:Model, chatId, name, color, icon, emoji: string) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
@@ -128,6 +175,26 @@ QtObject:
   proc updateLastMessageTextOnChatItem*(self:Model, chatId, lastMessageText: string) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
       updateRole(lastMessageText)
+
+  proc updateLastMessageTimestampOnChatItem*(self:Model, chatId: string, lastMessageTimestamp: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(lastMessageTimestamp)
+
+  proc updateLastOwnMessageTimestampOnChatItem*(self:Model, chatId: string, lastOwnMessageTimestamp: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(lastOwnMessageTimestamp)
+
+  proc updateCanPostOnChatItem*(self:Model, chatId: string, canPost: bool) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(canPost)
+
+  proc updateMembersCountOnChatItem*(self: Model, chatId: string, membersCount: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(membersCount)
+
+  proc updateOnlineStatusOnChatItem*(self: Model, chatId: string, onlineStatus: int) =
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(onlineStatus)
 
   proc updateSectionNameOnChats*(self:Model, sectionId, sectionName: string) =
     for item in self.items:

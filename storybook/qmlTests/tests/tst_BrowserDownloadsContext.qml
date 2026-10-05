@@ -574,7 +574,7 @@ Item {
             compare(store.openRecordCalls, 0)
         }
 
-        function test_pillClick_completed_opensThenDismisses() {
+        function test_pillClick_completed_opens_andKeepsThePill() {
             const store = createStore()
             const ctx = createContext(store)
             const live = createTemporaryObject(fakeDownloadComponent, root)
@@ -588,9 +588,9 @@ Item {
 
             ctx.handlePillClicked(record)
             compare(openedUrls.length, 1)
-            compare(store.dismissCalls, 1)
-            compare(store.downloadStripModel.length, 0)
-            verify(!ctx.stripVisible, "last pill gone → strip hides by derivation")
+            compare(store.dismissCalls, 0)
+            compare(store.downloadStripModel.length, 1)
+            verify(ctx.stripVisible, "the pill stays after opening it")
         }
 
         function test_listClick_completed_opensSameAsPill() {
@@ -669,14 +669,12 @@ Item {
             verify(caps.shareUrl)
             verify(!caps.showInFolder, "platform.showInFolderSupported is false here")
             verify(!caps.retry)
-            verify(!caps.dismiss)
             verify(!caps.downloadsEntry, "list menus never get the Downloads entry")
             verify(caps.useShareLabels, "platform.preferShareSheet flows through")
 
-            compare(ctx.capabilitiesFor(record, { showDismiss: true }).dismiss, true)
 
             // Pill strip opens ask for the Downloads entry.
-            const stripCaps = ctx.capabilitiesFor(record, { showDismiss: true, showDownloadsEntry: true })
+            const stripCaps = ctx.capabilitiesFor(record, { showDownloadsEntry: true })
             compare(stripCaps.downloadsEntry, true)
         }
 
@@ -702,7 +700,7 @@ Item {
                 record: interrupted
             })
             holder.caps = Qt.binding(function() {
-                return ctx.capabilitiesFor(holder.record, { showDismiss: true })
+                return ctx.capabilitiesFor(holder.record, { showDownloadsEntry: true })
             })
 
             verify(holder.caps.retry)

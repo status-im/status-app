@@ -51,6 +51,9 @@ StatusDialog {
     readonly property string selectedTokenKey: d.selectedTokenKey
     readonly property string selectedSymbol: d.selectedSymbol
     readonly property string selectedTokenLogoUri: d.selectedTokenLogoUri
+    readonly property bool tokenSelectionReady: d.isSelectedHoldingValidAsset
+                                              && d.selectedTokenKey !== ""
+                                              && d.selectedSymbol !== ""
 
     readonly property string defaultTokenGroupKey: Utils.getNativeTokenGroupKey(selectedNetworkChainId)
     // output
@@ -94,21 +97,30 @@ StatusDialog {
         property string selectedSymbol: ""
         property string selectedTokenLogoUri: ""
 
+        function clearSelectedToken() {
+            d.selectedTokenKey = ""
+            d.selectedSymbol = ""
+            d.selectedTokenLogoUri = ""
+        }
+
         function updateSelectedTokenKey() {
             const tokenGroup = SQUtils.ModelUtils.getByKey(holdingSelector.model, "key", root.selectedTokenGroupKey)
             if (!tokenGroup) {
                 console.warn("cannot relove the token group for the group key", root.selectedTokenGroupKey)
-            } else {
-                const token = SQUtils.ModelUtils.getByKey(tokenGroup.tokens, "chainId", root.selectedNetworkChainId)
-                if (!token) {
-                    console.warn("cannot find the token on chain", root.selectedTokenGroupKey, "for the group", root.selectedTokenGroupKey)
-                } else {
-                    d.selectedTokenKey = token.key
-                    d.selectedSymbol = token.symbol
-                    d.selectedTokenLogoUri = token.image
-                }
+                d.clearSelectedToken()
+                return
             }
 
+            const token = SQUtils.ModelUtils.getByKey(tokenGroup.tokens, "chainId", root.selectedNetworkChainId)
+            if (!token) {
+                console.warn("cannot find the token on chain", root.selectedTokenGroupKey, "for the group", root.selectedTokenGroupKey)
+                d.clearSelectedToken()
+                return
+            }
+
+            d.selectedTokenKey = token.key
+            d.selectedSymbol = token.symbol
+            d.selectedTokenLogoUri = token.image
             holdingSelector.setSelection(tokenGroup.symbol, tokenGroup.logoUri, tokenGroup.key)
         }
 
@@ -126,8 +138,11 @@ StatusDialog {
             onAvailableChanged: {
                 if (available) {
                     Qt.callLater(d.updateSelectedTokenKey)
-                } else if (root.selectedTokenGroupKey !== root.defaultTokenGroupKey) {
-                    Qt.callLater(d.resetSelectedToken)
+                } else {
+                    d.clearSelectedToken()
+                    if (root.selectedTokenGroupKey !== root.defaultTokenGroupKey) {
+                        Qt.callLater(d.resetSelectedToken)
+                    }
                 }
             }
         }
@@ -159,6 +174,7 @@ StatusDialog {
                          && root.selectedAccountAddress !== ""
                          && root.selectedNetworkChainId > 0
                          && root.selectedTokenGroupKey !== ""
+                         && root.tokenSelectionReady
                 interactive: true
                 onClicked: root.accept()
             }

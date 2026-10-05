@@ -21,12 +21,14 @@ StatusCenteredFlow {
         text: qsTr("Powered by")
     }
     StatusLinkText {
-        text: "%1.".arg(root.serviceProviderName)
+        objectName: "serviceProviderLink"
+        text: "%1".arg(root.serviceProviderName)
         font.weight: Font.Normal
         textFormat: Text.PlainText
         onClicked: root.linkClicked()
     }
     StatusBaseText {
+        visible: !!root.txProviderTool
         font.pixelSize: Theme.additionalTextSize
         text: qsTr("via %1").arg(root.txProviderTool)
     }
