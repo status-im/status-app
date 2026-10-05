@@ -81,6 +81,7 @@ pipeline {
     QMAKE = "/opt/qt/${QT_VERSION}/android_arm64_v8a/bin/qmake"
     STATUS_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'apk', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
     STATUS_AAB_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'aab', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
+    STATUS_MAPPING_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'apk', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}-mapping.txt"
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Enable test mode (hooks for e2e) for PR/nightly builds, but NOT for releases */
     STATUSQ_TESTMODE = "${!utils.isReleaseBuild()}"
@@ -103,6 +104,7 @@ pipeline {
         env.STATUS_ANDROID_APP_NAME = isRelease ? 'Status' : 'StatusPR'
         env.STATUS_BINARY = "${env.WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.apk"
         env.STATUS_AAB_BINARY = "${env.WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.aab"
+        env.STATUS_MAPPING_BINARY = "${env.WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}-mapping.txt"
       } }
     }
 
@@ -144,6 +146,7 @@ pipeline {
         script {
           sh 'mkdir -p pkg'
           sh "cp -v ${env.STATUS_BINARY} ${env.STATUS_ARTIFACT}"
+          sh "cp -v ${env.STATUS_MAPPING_BINARY} ${env.STATUS_MAPPING_ARTIFACT}"
           if (env.IS_RELEASE_BRANCH == 'true') {
             sh "cp -v ${env.STATUS_AAB_BINARY} ${env.STATUS_AAB_ARTIFACT}"
           }
@@ -178,6 +181,7 @@ pipeline {
       steps {
         script {
           archiveArtifacts env.STATUS_ARTIFACT
+          archiveArtifacts env.STATUS_MAPPING_ARTIFACT
           if (env.IS_RELEASE_BRANCH == 'true') {
             archiveArtifacts env.STATUS_AAB_ARTIFACT
           }

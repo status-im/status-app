@@ -83,7 +83,7 @@ if [[ "${OS}" == "android" ]]; then
   done
 
   # Copy custom Android files, preserve Qt-generated libs.xml
-  cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties} "$BUILD_DIR/android-build/"
+  cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties,proguard-rules.pro} "$BUILD_DIR/android-build/"
   rsync -a --exclude='libs.xml' "$CWD/../android/qt${QT_MAJOR}/res/" "$BUILD_DIR/android-build/res/" 2>/dev/null || true
   rsync -a "$CWD/../android/qt${QT_MAJOR}/src/" "$BUILD_DIR/android-build/src/" 2>/dev/null || true
   rsync -a "$CWD/../android/qt${QT_MAJOR}/aidl/" "$BUILD_DIR/android-build/aidl/" 2>/dev/null || true
@@ -135,6 +135,11 @@ if [[ "${OS}" == "android" ]]; then
   if [[ -f "$AAB_OUT" ]]; then
     cp "$AAB_OUT" "$BIN_DIR/${OUTPUT_NAME}.aab"
     BUILT="$BUILT $BIN_DIR/${OUTPUT_NAME}.aab"
+  fi
+  # R8 mapping for retracing obfuscated stack traces; archive it with the APK.
+  MAPPING_OUT="build/outputs/mapping/${BUILD_TYPE}/mapping.txt"
+  if [[ -f "$MAPPING_OUT" ]]; then
+    cp "$MAPPING_OUT" "$BIN_DIR/${OUTPUT_NAME}-mapping.txt"
   fi
 
   [[ -z "$BUILT" ]] && { echo "Error: No artifacts produced"; exit 1; }
