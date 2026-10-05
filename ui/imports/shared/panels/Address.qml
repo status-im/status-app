@@ -13,6 +13,7 @@ StyledText {
     text: "0x9ce0056c5fc6bb9459a4dcfa35eaad8c1fee5ce9"
     font.pixelSize: Theme.additionalTextSize
     font.family: Fonts.monoFont.family
+    font.features: Fonts.monoFont.features
     elide: Text.ElideMiddle
     color: Theme.palette.secondaryText
 

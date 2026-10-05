@@ -46,6 +46,7 @@ StatusListItem {
     }
     statusListItemSubTitle.wrapMode: Text.NoWrap
     statusListItemSubTitle.font.family: Fonts.monoFont.family
+    statusListItemSubTitle.font.features: Fonts.monoFont.features
     asset.emoji: root.emoji
     asset.color: root.walletColor
     asset.name: root.emoji ? "filled-account": ""
