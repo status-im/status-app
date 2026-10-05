@@ -215,6 +215,9 @@ QtObject {
     property var contactRequestsModel: chatCommunitySectionModule.contactRequestsModel
 
     property bool loadingHistoryMessagesInProgress: chatCommunitySectionModule.loadingHistoryMessagesInProgress
+    readonly property string openThreadId: chatCommunitySectionModule?.openThreadId ?? ""
+    readonly property string openThreadName: chatCommunitySectionModule?.openThreadName ?? ""
+    readonly property string openThreadParentChatId: chatCommunitySectionModule?.openThreadParentChatId ?? ""
 
     property var advancedModule: profileSectionModule.advancedModule
 
@@ -228,6 +231,14 @@ QtObject {
 
     function setActiveCommunity(communityId) {
         mainModule.setActiveSectionById(communityId);
+    }
+
+    function openThreadPanel(threadId, threadName, parentChatId) {
+        chatCommunitySectionModule.openThreadPanel(threadId, threadName, parentChatId)
+    }
+
+    function closeThreadPanel() {
+        chatCommunitySectionModule.closeThreadPanel()
     }
 
     function activateStatusDeepLink(link) {

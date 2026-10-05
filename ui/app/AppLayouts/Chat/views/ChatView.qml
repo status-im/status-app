@@ -183,9 +183,9 @@ Item {
         id: d
         objectName: "chatViewInternal"
 
-        property string openThreadId
-        property string openThreadName
-        property string openThreadParentChatId
+        readonly property string openThreadId: root.rootStore.openThreadId
+        readonly property string openThreadName: root.rootStore.openThreadName
+        readonly property string openThreadParentChatId: root.rootStore.openThreadParentChatId
         // The thread closes when the active chat changes, so the parent is always the active one
         readonly property string openThreadParentChatName: {
             if (!openThreadId)
@@ -208,9 +208,7 @@ Item {
         readonly property bool threadHeaderInToolbar: !!openThreadId && !!root.sectionLayout?.isPortrait
 
         function closeThreadPanel() {
-            openThreadId = ""
-            openThreadName = ""
-            openThreadParentChatId = ""
+            root.rootStore.closeThreadPanel()
         }
     }
 
@@ -691,9 +689,7 @@ Item {
             onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
             onOpenThreadRequested: (threadId, threadName) => {
-                d.openThreadId = threadId
-                d.openThreadName = threadName
-                d.openThreadParentChatId = root.activeItemId
+                root.rootStore.openThreadPanel(threadId, threadName, root.activeItemId)
 
                 // Give the layout a moment to add the right panel page before swiping to it
                 if (root.sectionLayout?.isPortrait)

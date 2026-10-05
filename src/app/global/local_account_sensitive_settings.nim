@@ -32,6 +32,9 @@ const DEFAULT_SHOW_DELETE_THREAD_WARNING = true
 const LSS_KEY_ACTIVE_SECTION* = "activeSection"
 const DEFAULT_ACTIVE_SECTION = ""
 const LAST_SECTION_CHAT = "LastSectionChat"
+const LAST_SECTION_THREAD = "LastSectionThread"
+const THREAD_PRESENTATION_SELECTED_CHAT* = "selectedChat"
+const THREAD_PRESENTATION_SIDE_PANEL* = "sidePanel"
 const DEFAULT_ACTIVE_CHAT = ""
 const DEFAULT_SHOW_BROWSER_SELECTOR = true
 const LSS_KEY_OPEN_LINKS_IN_STATUS* = "openLinksInStatus"
@@ -76,6 +79,29 @@ const LS_KEY_LOCAL_BACKUP_CHOSEN_PATH* = "localBackupChosenPath"
 
 logScope:
   topics = "la-sensitive-settings"
+
+type SectionThreadRecord* = object
+  threadId*: string
+  parentChatId*: string
+  presentation*: string
+
+proc parseLastSectionThread*(serialized: string): SectionThreadRecord =
+  if serialized.len == 0:
+    return
+
+  try:
+    let value = serialized.parseJson()
+    if value.kind != JObject:
+      raise newException(ValueError, "thread record is not an object")
+    result.threadId = value{"threadId"}.getStr()
+    result.parentChatId = value{"parentChatId"}.getStr()
+    result.presentation = value{"presentation"}.getStr()
+    if result.threadId.len == 0 or result.parentChatId.len == 0 or
+        result.presentation notin [THREAD_PRESENTATION_SELECTED_CHAT, THREAD_PRESENTATION_SIDE_PANEL]:
+      raise newException(ValueError, "thread record is incomplete")
+  except CatchableError as e:
+    warn "ignoring malformed last section thread record", msg=e.msg
+    result = SectionThreadRecord()
 
 QtObject:
   type LocalAccountSensitiveSettings* = ref object of QObject
@@ -157,9 +183,34 @@ QtObject:
 
   proc setSectionLastOpenChat*(self: LocalAccountSensitiveSettings, sectionId: string, value: string) =
     self.setSettingsGroupProp(LAST_SECTION_CHAT, sectionId, newQVariant(value))
+    if not self.settings.isNil:
+       self.settings.sync()
+
+  proc getSectionLastOpenThread*(self: LocalAccountSensitiveSettings, sectionId: string): string =
+    getSettingsGroupProp[string](self, LAST_SECTION_THREAD, sectionId, newQVariant(""))
+
+  proc setSectionLastOpenThread*(self: LocalAccountSensitiveSettings, sectionId: string,
+      threadId: string, parentChatId: string, presentation: string) =
+    if threadId.len == 0 or parentChatId.len == 0 or
+        presentation notin [THREAD_PRESENTATION_SELECTED_CHAT, THREAD_PRESENTATION_SIDE_PANEL]:
+      error "refusing invalid last section thread record", sectionId, threadId, parentChatId, presentation
+      return
+    self.setSettingsGroupProp(LAST_SECTION_THREAD, sectionId, newQVariant($(%*{
+      "threadId": threadId,
+      "parentChatId": parentChatId,
+      "presentation": presentation,
+    })))
+    if not self.settings.isNil:
+       self.settings.sync()
+
+  proc removeSectionLastOpenThread*(self: LocalAccountSensitiveSettings, sectionId: string) =
+    self.removeSettingsGroupKey(LAST_SECTION_THREAD, sectionId)
+    if not self.settings.isNil:
+       self.settings.sync()
     
   proc removeSectionChatRecord*(self: LocalAccountSensitiveSettings, sectionId: string) =
     self.removeSettingsGroupKey(LAST_SECTION_CHAT, sectionId)
+    self.removeSectionLastOpenThread(sectionId)
 
   proc chatSplitViewChanged*(self: LocalAccountSensitiveSettings) {.signal.}
   proc getChatSplitView*(self: LocalAccountSensitiveSettings): QVariant {.slot.} =
