@@ -263,10 +263,14 @@ Control {
                 }
                 const defaultIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", root.defaultGroupKey)
                                        ? root.defaultGroupKey : undefined
-                const nativeGroupKey = Utils.getNativeTokenGroupKey(root.listCatalogChainId)
-                const nativeIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", nativeGroupKey)
-                                      ? nativeGroupKey : undefined
-                d.selectedHoldingId = defaultIfPresent ?? nativeIfPresent ?? root.defaultGroupKey
+                if (root.ownedTokensOnly) {
+                    d.selectedHoldingId = defaultIfPresent ?? ""
+                } else {
+                    const nativeGroupKey = Utils.getNativeTokenGroupKey(root.listCatalogChainId)
+                    const nativeIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", nativeGroupKey)
+                                          ? nativeGroupKey : undefined
+                    d.selectedHoldingId = defaultIfPresent ?? nativeIfPresent ?? root.defaultGroupKey
+                }
             }
             d.setHoldingToSelector()
         }

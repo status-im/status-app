@@ -2716,6 +2716,38 @@ Item {
             closeAndVerfyModal()
         }
 
+        // The pay side lists what the account holds. When the default pay token is not
+        // among the holdings the user is asked to pick one; the chain's native token is
+        // NOT selected in its place (that showed ETH on both sides).
+        function test_paySideAsksToSelectAssetWhenTheDefaultIsNotHeld() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const row = (key, symbol, chainId) => ({
+                key: key, groupKey: key, name: symbol, symbol: symbol, logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 5, currencyBalance: 5, sectionName: "",
+                balances: [{ chainId: chainId, iconUrl: "", chainName: "", balance: 5, rawBalance: "5000000000000000000" }],
+                tokens: [{ key: key, chainId: chainId }]
+            })
+            // the account holds ETH only; the default pay token (USDC) is not held
+            store.tokenSelectorStubData = [row(ethGroupKey, "ETH", 1)]
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, { swapInputParamsForm: root.swapFormData })
+            launchAndVerfyModal()
+            compare(root.swapFormData.defaultFromGroupKey, Constants.usdcGroupKeyEvm)
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            verify(!!payPanel && !!receivePanel)
+            tryCompare(payPanel, "selectedHoldingId", "")
+            compare(root.swapFormData.fromGroupKey, "")
+            const payTokenText = findChild(payPanel, "tokenSelectorContentItemText")
+            verify(!!payTokenText)
+            compare(payTokenText.text, qsTr("Select asset"))
+            tryCompare(receivePanel, "selectedHoldingId", ethGroupKey)
+
+            store.tokenSelectorStubData = []
+            closeAndVerfyModal()
+        }
+
         // The receive side always gets its own destination picker on open (so
         // browsing either side's list can't disturb the other), seeded like the
         // pay one; switching to a bridge afterwards must not build anything new.
