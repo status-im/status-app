@@ -950,7 +950,7 @@ Loader {
                 isAReply: root.responseToMessageWithId !== ""
                 isEdited: root.isEdited
                 hasMention: root.hasMention
-                isPinned: root.pinnedMessage
+                isPinned: !root.isThreadView && root.pinnedMessage
                 pinnedBy: {
                     if (!root.pinnedMessage || root.isDiscordMessage || !root.messagePinnedByContactEntryLoader.active)
                         return ""
