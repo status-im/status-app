@@ -333,8 +333,21 @@ Flickable {
         // reason this is cheap - the rows arrive already in the order they are
         // drawn, so no position, band or edge has to be mirrored. Only
         // itemAtRow(), which is public and speaks the caller's model, converts.
-        readonly property var effectiveModel:
-                root.model && d.bottomUp ? reverser : root.model
+        // Keyed on the reverser having its source, not on root.model having a
+        // value: a Repeater handed a proxy that is still sourceless builds
+        // every row against its empty shape and then builds them all again
+        // when the source lands. Both of these react to root.model, so reading
+        // root.model here would race the reverser's own binding and lose about
+        // half the time; reading the reverser cannot.
+        // Keyed on the reverser having its source, not on root.model having a
+        // value: a Repeater handed a proxy that is still sourceless builds
+        // every row against its empty shape and then builds them all again
+        // when the source lands. Both of these react to root.model, so reading
+        // root.model here would race the reverser's own binding and lose about
+        // half the time; reading the reverser cannot.
+        readonly property var effectiveModel: d.bottomUp
+                ? (reverser.sourceModel ? reverser : null)
+                : root.model
 
         property bool loadingTop: false
         property bool loadingBottom: false
