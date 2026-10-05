@@ -313,6 +313,36 @@ Item {
                    "a same-symbol group is not the selected token")
         }
 
+        // A holdings-only list (the pay side) has nothing to fall back on but the
+        // default: when that is not held either, the panel asks the user to pick
+        // rather than selecting the chain's native token.
+        function test_holdingsOnlyListFallsBackToSelectAssetNotNative() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                                                         groupKey: sttGroupKey,
+                                                         defaultGroupKey: "usd-coin",
+                                                         ownedTokensOnly: true
+                                                     })
+            verify(!!controlUnderTest)
+
+            const holdings = store.createTokenSelectorModel(0).model
+            verify(!!holdings)
+            holdings.sourceModel = null // the mock lists sourceData only without a source model
+            controlUnderTest.tokenSelectorLoading = true
+            controlUnderTest.tokenSelectorModel = holdings
+            // the account holds ETH only: neither STT nor the default USDC
+            holdings.sourceData = [{
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 5, currencyBalance: 5, sectionName: "",
+                balances: [{ chainId: d.goOptChainId, iconUrl: "", chainName: "", balance: 5, rawBalance: "5000000000000000000" }],
+                tokens: [{ key: d.goOptChainId + "-native", chainId: d.goOptChainId }]
+            }]
+            controlUnderTest.tokenSelectorLoading = false
+
+            tryCompare(controlUnderTest, "selectedHoldingId", "")
+            verify(controlUnderTest.selectedHoldingId !== ethGroupKey, "the native token is not selected in the user's place")
+        }
+
         function test_multiChainTokenRefsStillResolveSelection() {
             const store = d.adaptor.walletAssetsStore.walletTokensStore
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
