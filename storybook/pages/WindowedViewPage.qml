@@ -155,7 +155,10 @@ SplitView {
         readonly property int placeholderRowHeight: 72
         readonly property int defaultPlaceholderRows: 10
 
+        readonly property int defaultRowSource: 0
         readonly property int defaultPoolTarget: 80
+        // The pool's own pacing, and what it falls back to after a boost.
+        readonly property int defaultBackgroundInterval: 64
         readonly property bool defaultAsynchronous: true
         readonly property int defaultMinDelay: 0
         readonly property int defaultMaxDelay: 200
@@ -398,7 +401,9 @@ SplitView {
             autoRequestSwitch.checked = d.defaultAutoRequest
             placeholderSwitch.checked = d.defaultPlaceholder
             placeholderRowsSpinBox.value = d.defaultPlaceholderRows
+            rowSourceComboBox.currentIndex = d.defaultRowSource
             poolTargetSpinBox.value = d.defaultPoolTarget
+            intervalSpinBox.value = d.defaultBackgroundInterval
             asyncSwitch.checked = d.defaultAsynchronous
             minDelaySpinBox.value = d.defaultMinDelay
             maxDelaySpinBox.value = d.defaultMaxDelay
@@ -409,6 +414,198 @@ SplitView {
             // Last: the edge it lands on follows the direction, which has just
             // been put back.
             d.openAtTheStart()
+        }
+
+        // ---- The two row sources ---------------------------------------
+        //
+        // The view asks the same question either way - "a row item for this
+        // row, please" - and everything that differs is on this side of the
+        // call. ItemPool builds on demand and answers through a callback;
+        // DelegatePool only ever hands out what it has already built, so a dry
+        // moment has to be waited out, and RowBinder does the dressing the
+        // page does by hand for the other one.
+        readonly property bool fromRowPool: rowSourceComboBox.currentIndex === 1
+        readonly property string poolKind: rowPool.kind
+
+        // Rows that asked while the pool was dry, waiting for an item to be
+        // released or built. Not an error: the pool paces its building on
+        // purpose, and the view tolerates a late answer.
+        property var starvedQueue: []
+        property int starvedCount: 0
+
+        // What the readouts bind to. readyCount() is a function and mutating
+        // starvedQueue in place notifies nothing, so neither can be read from
+        // a binding - these are republished where they change.
+        property int waitingCount: 0
+        property int readyCount: 0
+
+        function republishPool() {
+            d.waitingCount = d.starvedQueue.length
+            d.readyCount = rowPool.readyCount(d.poolKind)
+        }
+
+        // Switching source leaves the rows that are already dressed alone -
+        // they belong to the pool that built them, and the view has no reason
+        // to ask again - so the model is dropped for a turn, which releases
+        // every row and rebuilds the window from the new source.
+        property bool rebuilding: false
+
+        onFromRowPoolChanged: {
+            d.clearStarved()
+            d.rebuilding = true
+            rowSourceTimer.restart()
+        }
+
+        function acquire(shell, row, modelRow, cb) {
+            if (d.fromRowPool)
+                d.acquireFromRowPool(shell, row, cb)
+            else
+                d.acquireFromItemPool(shell, modelRow, cb)
+        }
+
+        function acquireFromItemPool(shell, modelRow, cb) {
+            itemPool.acquire(shell, (obj) => {
+                // Every role binding is guarded twice over, because a row on
+                // its way out fails in two different ways: the row object is
+                // destroyed before the shell that holds these bindings, and
+                // before that it survives as an object whose role reads have
+                // already gone undefined. A null check alone catches only the
+                // first.
+                obj.width = Qt.binding(() => (shell ? shell.width : undefined) ?? 0)
+                obj.text = Qt.binding(() => (modelRow ? modelRow.messageText : undefined) ?? "")
+                obj.images = Qt.binding(() => (modelRow ? modelRow.messageImages : undefined) ?? [])
+                obj.date = Qt.binding(() => (modelRow ? modelRow.messageDate : undefined) ?? new Date(0))
+                obj.avatar = Qt.binding(() => (modelRow ? modelRow.messageAvatar : undefined) ?? "")
+
+                cb(obj)
+            }, d.instantAcquire)
+        }
+
+        function acquireFromRowPool(shell, row, cb) {
+            const item = rowPool.acquire(d.poolKind)
+
+            if (!item) {
+                d.starvedQueue.push({ shell, cb })
+                d.starvedCount++
+                d.republishPool()
+                return
+            }
+
+            d.dressFromRowPool(item, shell, row)
+            cb(item)
+            d.republishPool()
+        }
+
+        function dressFromRowPool(item, shell, row) {
+            // Width is not a role, so the binder does not do it.
+            item.width = Qt.binding(() => (shell ? shell.width : undefined) ?? 0)
+
+            // Bound to the window, by number: the binder holds a persistent
+            // index from here on, so it follows the row as the window shifts
+            // it and lets go when the row leaves.
+            item.binder.bind(windowSource.model, row)
+
+            // Last, and easy to forget: acquire() only un-parks the item, it
+            // does not hand it over. Until it is put in the shell it stays a
+            // child of the pool's own container - dressed, measured, and drawn
+            // nowhere. Last so that nothing is ever on screen half dressed.
+            item.parent = shell
+        }
+
+        function drainStarved() {
+            while (d.starvedQueue.length > 0) {
+                const waiting = d.starvedQueue[0]
+
+                // A row that left the window while it waited never had content
+                // to hand back, so the view never said anything about it - a
+                // destroyed shell reads as null from JS, and that is the only
+                // notice there is.
+                if (!waiting.shell) {
+                    d.starvedQueue.shift()
+                    d.republishPool()
+                    continue
+                }
+
+                const item = rowPool.acquire(d.poolKind)
+
+                if (!item)
+                    return
+
+                d.starvedQueue.shift()
+                d.dressFromRowPool(item, waiting.shell, waiting.shell.row)
+                waiting.cb(item)
+                d.republishPool()
+            }
+        }
+
+        function clearStarved() {
+            d.starvedQueue = []
+            d.starvedCount = 0
+            d.republishPool()
+        }
+
+        function release(obj) {
+            // Self-describing, not mode-describing: an item handed out before
+            // the switch flipped has to go back to the pool that built it,
+            // whichever source is selected now.
+            if (obj.binder !== undefined) {
+                obj.binder.detach()
+                // Breaks the width binding without disturbing the value. The
+                // next bind is the reset for everything the binder wrote.
+                obj.width = obj.width
+                rowPool.release(obj)
+                d.republishPool()
+                return
+            }
+
+            // The page installed these bindings, so the page drops them. Left
+            // in place they keep evaluating against a row object that no longer
+            // exists, which is where the undefined-role warnings come from -
+            // and ItemPool cannot do it, since it does not know the roles.
+            obj.text = ""
+            obj.images = []
+            obj.date = new Date(0)
+            obj.avatar = ""
+            obj.width = 0
+
+            itemPool.release(obj)
+        }
+
+        // The pool paces its building to stay out of the way, which is not
+        // what a window waiting on it wants: for as long as any row is queued,
+        // ask for priority. Cleared again once nothing is waiting, so the pool
+        // goes back to filling itself in the background.
+        //
+        // Hung off the queue rather than off initialLoading, which the view
+        // drops as soon as it stops calling the population fresh - long before
+        // the rows have their items.
+        onWaitingCountChanged: {
+            if (!d.fromRowPool)
+                return
+
+            if (d.waitingCount > 0)
+                d.boostForFill()
+            else
+                rowPool.clearBoost(d.poolKind)
+        }
+
+        function boostForFill() {
+            if (d.fromRowPool)
+                rowPool.boost(d.poolKind, windowSizeSpinBox.value)
+        }
+
+        // The one model operation that changes a row rather than the set of
+        // rows - which is where the two sources differ: a hand-written binding
+        // follows the role by itself, and RowBinder is told by dataChanged.
+        property int touchSerial: 0
+
+        function touchRow(row) {
+            if (row < 0 || row >= messagesModel.count)
+                return
+
+            messagesModel.setProperty(row, "messageText",
+                                      "**edited " + (++d.touchSerial)
+                                      + "** this row was changed in place")
         }
 
         // True only while insertMessages() is causing rows that should not
@@ -536,6 +733,27 @@ SplitView {
         }
     }
 
+    // The second row source. In its own file because the pool incubates its
+    // delegate with no creation context, which a component declared in this
+    // file - `pragma ComponentBehavior: Bound` - refuses to be instantiated
+    // outside of.
+    BoundRowPool {
+        id: rowPool
+
+        // A window's worth plus the chunk a slide overlaps by, and more if the
+        // panel asks for it. Never less: a pool that cannot cover the window
+        // leaves rows waiting on an item it will never build - it stops at its
+        // target, the boost clears itself for want of anything to build, and
+        // the view reveals what arrived and holds the rest. An app-level owner
+        // carries the same obligation, which is why the chat sizes its target
+        // from the view rather than from a setting.
+        readonly property int needed: windowSizeSpinBox.value
+                                      + slideStepSpinBox.value
+
+        target: Math.max(poolTargetSpinBox.value, needed)
+        backgroundIntervalMs: intervalSpinBox.value
+    }
+
     Rectangle {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
@@ -560,7 +778,7 @@ SplitView {
 
             anchors.fill: parent
 
-            model: windowSource.model
+            model: d.rebuilding ? null : windowSource.model
 
             verticalLayoutDirection: d.bottomUp
                     ? WindowedView.VerticalLayoutDirection.BottomToTop
@@ -602,36 +820,10 @@ SplitView {
 
             ScrollBar.vertical: ScrollBar {}
 
-            // The binding policy, and the only place that knows the roles.
-            acquireDelegate: (parent, row, modelRow, cb) => itemPool.acquire(parent, (obj) => {
-                // Every role binding is guarded twice over, because a row on
-                // its way out fails in two different ways: the row object is
-                // destroyed before the shell that holds these bindings, and
-                // before that it survives as an object whose role reads have
-                // already gone undefined. A null check alone catches only the
-                // first.
-                obj.width = Qt.binding(() => (parent ? parent.width : undefined) ?? 0)
-                obj.text = Qt.binding(() => (modelRow ? modelRow.messageText : undefined) ?? "")
-                obj.images = Qt.binding(() => (modelRow ? modelRow.messageImages : undefined) ?? [])
-                obj.date = Qt.binding(() => (modelRow ? modelRow.messageDate : undefined) ?? new Date(0))
-                obj.avatar = Qt.binding(() => (modelRow ? modelRow.messageAvatar : undefined) ?? "")
-
-                cb(obj)
-            }, d.instantAcquire)
-
-            // The page installed the bindings, so the page drops them. Left in
-            // place they keep evaluating against a row object that no longer
-            // exists, which is where the undefined-role warnings come from -
-            // and ItemPool cannot do it, since it does not know the roles.
-            releaseDelegate: (obj) => {
-                obj.text = ""
-                obj.images = []
-                obj.date = new Date(0)
-                obj.avatar = ""
-                obj.width = 0
-
-                itemPool.release(obj)
-            }
+            // The binding policy lives in the page either way - which role
+            // goes to which property, and who builds the item that holds it.
+            acquireDelegate: d.acquire
+            releaseDelegate: d.release
         }
     }
 
@@ -683,10 +875,34 @@ SplitView {
                     font.bold: true
                 }
 
+                // Where the view's rows come from. The view is identical
+                // either way; everything that differs is in the page.
+                ComboBox {
+                    id: rowSourceComboBox
+
+                    Layout.fillWidth: true
+
+                    model: ["ItemPool, bindings by hand",
+                            "DelegatePool, RowBinder"]
+                    currentIndex: d.defaultRowSource
+                }
+
                 Label {
+                    visible: !d.fromRowPool
+
                     text: "built " + itemPool.builtCount
                           + "  |  in use " + itemPool.acquiredCount
                           + "  |  parked " + itemPool.availableCount
+                }
+
+                Label {
+                    visible: d.fromRowPool
+
+                    text: "ready " + d.readyCount
+                          + " of " + rowPool.target
+                          + "  |  waiting on the pool " + d.waitingCount
+                          + "  |  starved " + d.starvedCount
+                          + (rowPool.boosted ? "  |  boosted" : "")
                 }
 
                 RowLayout {
@@ -711,6 +927,7 @@ SplitView {
                     id: asyncSwitch
 
                     Layout.fillWidth: true
+                    visible: !d.fromRowPool
 
                     text: "Asynchronous"
                     checked: d.defaultAsynchronous
@@ -719,6 +936,7 @@ SplitView {
                 // The two bounds cap each other, so the range cannot be inverted.
                 RowLayout {
                     Layout.fillWidth: true
+                    visible: !d.fromRowPool
 
                     Label { text: "Min delay" }
 
@@ -740,6 +958,7 @@ SplitView {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    visible: !d.fromRowPool
 
                     Label { text: "Max delay" }
 
@@ -757,6 +976,41 @@ SplitView {
                         textFromValue: (value) => value + " ms"
                         valueFromText: (text) => parseInt(text)
                     }
+                }
+
+                // How far apart the pool starts its background builds. It also
+                // yields to any other incubation in flight, so this is a floor
+                // rather than a rate.
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: d.fromRowPool
+
+                    Label { text: "Build interval" }
+
+                    SpinBox {
+                        id: intervalSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: 1000
+                        stepSize: 16
+                        value: d.defaultBackgroundInterval
+                        editable: true
+
+                        textFromValue: (value) => value + " ms"
+                        valueFromText: (text) => parseInt(text)
+                    }
+                }
+
+                Button {
+                    Layout.fillWidth: true
+                    visible: d.fromRowPool
+
+                    text: "Boost to a window's worth"
+                    enabled: !rowPool.boosted
+
+                    onClicked: d.boostForFill()
                 }
 
                 Item { Layout.preferredHeight: 8 }
@@ -1257,6 +1511,35 @@ SplitView {
                                    countSpinBox.value, d.panelInsertIndex())
                 }
 
+                // Changes a row instead of the set of rows, which is the one
+                // operation the two row sources answer differently: a binding
+                // installed by hand follows the role by itself, while the
+                // binder hears about it through dataChanged.
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label { text: "Touch row" }
+
+                    SpinBox {
+                        id: touchRowSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: Math.max(0, messagesModel.count - 1)
+                        stepSize: 10
+                        value: 0
+                        editable: true
+                    }
+
+                    Button {
+                        text: "Edit"
+                        enabled: messagesModel.count > 0
+
+                        onClicked: d.touchRow(touchRowSpinBox.value)
+                    }
+                }
+
                 Item { Layout.preferredHeight: 16 }
 
                 Button {
@@ -1283,6 +1566,22 @@ SplitView {
         }
     }
 
+    // A row that found the pool dry is dressed as soon as there is anything to
+    // dress it with.
+    Connections {
+        target: rowPool
+
+        function onAvailabilityChanged(kind, readyCount) {
+            if (kind !== d.poolKind)
+                return
+
+            d.republishPool()
+
+            if (readyCount > 0)
+                d.drainStarved()
+        }
+    }
+
     // Lit briefly when the view reports a jump honoured.
     Timer {
         id: positionedFlash
@@ -1295,6 +1594,19 @@ SplitView {
 
         function onRowPositioned(row) {
             positionedFlash.restart()
+        }
+    }
+
+    // Lets the model-less turn through, then opens the rebuilt window where
+    // the page always opens it.
+    Timer {
+        id: rowSourceTimer
+
+        interval: 0
+
+        onTriggered: {
+            d.rebuilding = false
+            d.openAtTheStart()
         }
     }
 
@@ -1349,6 +1661,7 @@ SplitView {
         property alias placeholder: placeholderSwitch.checked
         property alias autoRequest: autoRequestSwitch.checked
         property alias placeholderRows: placeholderRowsSpinBox.value
+        property alias rowSource: rowSourceComboBox.currentIndex
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked
         property alias minDelay: minDelaySpinBox.value

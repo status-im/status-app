@@ -2916,6 +2916,138 @@ Item {
         onBatchRevealed: windowSource.trim()
     }
 
+    // ------------------------------------------------------------------
+    // The other row source: the C++ DelegatePool hands out pre-built rows and
+    // RowBinder dresses them, where everything above binds roles by hand. The
+    // view is the same; what differs is all on this side of acquireDelegate.
+    // ------------------------------------------------------------------
+
+    SQUtils.IndexWindowSource {
+        id: pooledWindowSource
+
+        sourceModel: sourceRows
+        size: 30
+    }
+
+    PooledRowPool {
+        id: pooledRowPool
+    }
+
+    QtObject {
+        id: pooled
+
+        // The pool never builds on demand - acquire() hands back what exists
+        // or nothing - so a request that finds it dry waits here for an item
+        // to be built or released. The view tolerates a late answer.
+        property var queue: []
+        property int starved: 0
+        property int inUse: 0
+
+        // Every item this group has ever seen dressed, so a test can tell a
+        // reused row from a newly built one.
+        property var seen: []
+
+        function acquire(shell, row, modelRow, cb) {
+            const item = pooledRowPool.acquire(pooledRowPool.kind)
+
+            if (!item) {
+                pooled.queue.push({ shell, cb })
+                pooled.starved++
+                return
+            }
+
+            pooled.dress(item, shell, row)
+            cb(item)
+        }
+
+        function dress(item, shell, row) {
+            // Width is not a role, so the binder does not do it.
+            item.width = Qt.binding(() => (shell ? shell.width : undefined) ?? 0)
+            item.binder.bind(pooledWindowSource.model, row)
+
+            // acquire() only un-parks the item; until it is put in the shell it
+            // stays a child of the pool's container, dressed and drawn nowhere.
+            item.parent = shell
+
+            if (pooled.seen.indexOf(item) === -1)
+                pooled.seen.push(item)
+
+            pooled.inUse++
+        }
+
+        function drain() {
+            while (pooled.queue.length > 0) {
+                const waiting = pooled.queue[0]
+
+                // A row that left the window while it waited never had content
+                // to hand back, so nothing was said about it - a destroyed
+                // shell reads as null from JS, which is the only notice there
+                // is.
+                if (!waiting.shell) {
+                    pooled.queue.shift()
+                    continue
+                }
+
+                const item = pooledRowPool.acquire(pooledRowPool.kind)
+
+                if (!item)
+                    return
+
+                pooled.queue.shift()
+                pooled.dress(item, waiting.shell, waiting.shell.row)
+                waiting.cb(item)
+            }
+        }
+
+        function release(item) {
+            item.binder.detach()
+            // breaks the width binding without disturbing the value
+            item.width = item.width
+            pooledRowPool.release(item)
+            pooled.inUse--
+        }
+    }
+
+    Connections {
+        target: pooledRowPool
+
+        function onAvailabilityChanged(kind, readyCount) {
+            if (kind === pooledRowPool.kind && readyCount > 0)
+                pooled.drain()
+        }
+    }
+
+    WindowedView {
+        id: pooledView
+
+        // Beside the other two, inside the window so it is laid out for real.
+        x: 2 * root.width
+        width: root.width
+        height: root.height
+
+        model: pooledWindowSource.model
+
+        moreAvailableTop: pooledWindowSource.moreAvailableStart
+        moreAvailableBottom: pooledWindowSource.moreAvailableEnd
+
+        autoRequest: false
+
+        acquireDelegate: pooled.acquire
+        releaseDelegate: pooled.release
+
+        onMoreRequestedTop: {
+            pooledWindowSource.growStart(10)
+            moreLoadedTop()
+        }
+
+        onMoreRequestedBottom: {
+            pooledWindowSource.growEnd(10)
+            moreLoadedBottom()
+        }
+
+        onBatchRevealed: pooledWindowSource.trim()
+    }
+
     TestCase {
         id: integrationTests
 
@@ -2985,6 +3117,198 @@ Item {
             verify(!isNaN(offsetAfter), "the anchor row " + anchorKey + " survived")
             fuzzyCompare(offsetAfter, offsetBefore, 0.5,
                          "and stayed where the user was looking")
+        }
+    }
+
+    TestCase {
+        id: cppPoolTests
+
+        name: "WindowedView.CppPool"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(pooledView)
+        }
+
+        function init() {
+            // Whatever the last test left queued belongs to rows that are
+            // still alive, so it is drained rather than dropped: a dropped
+            // answer leaves its row staged for ever.
+            pooledRowPool.target = 60
+            pooledRowPool.boost(pooledRowPool.kind, 30)
+            pooledWindowSource.size = 30
+            pooledWindowSource.moveTo(0)
+
+            tryVerify(() => pooled.queue.length === 0 && !pooledView.busy
+                            && pooledView.rowCount === 30, 30000,
+                      "the window filled from the pool")
+            waitForRendering(pooledView)
+
+            pooledRowPool.clearBoost(pooledRowPool.kind)
+            pooled.starved = 0
+        }
+
+        function cleanup() {
+            pooledView.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+        }
+
+        function dressedRows() {
+            let dressed = 0
+
+            for (let row = 0; row < pooledView.rowCount; ++row) {
+                const shell = pooledView.itemAtRow(row)
+
+                if (shell && shell.content)
+                    ++dressed
+            }
+
+            return dressed
+        }
+
+        function sourceRowOf(row) {
+            // what the window holds at that row, in the source model's terms
+            return pooledWindowSource.first + row
+        }
+
+        function test_everyRowOfTheFillIsDressedFromThePool() {
+            compare(dressedRows(), pooledView.rowCount,
+                    "every row has an item")
+
+            // Dressed is not drawn: an item the pool handed over is still its
+            // own child until someone puts it in the shell.
+            for (let row = 0; row < pooledView.rowCount; ++row) {
+                const shell = pooledView.itemAtRow(row)
+
+                compare(shell.content.parent, shell,
+                        "row " + row + "'s item sits in its shell")
+            }
+
+            const first = pooledView.itemAtRow(0)
+
+            verify(first.content.width > 0 && first.content.height > 0,
+                   "and has a size")
+            compare(pooled.inUse, pooledView.rowCount,
+                    "one item per row, none left over")
+            verify(pooled.seen.length >= pooledView.rowCount,
+                   "and they were all built: " + pooled.seen.length)
+        }
+
+        // The binder is told a model row; the item has to end up showing that
+        // row's data, whichever way the view lays the rows out.
+        function test_theBinderDressesTheRowTheViewSaysItIs() {
+            for (let row = 0; row < pooledView.rowCount; ++row) {
+                const shell = pooledView.itemAtRow(row)
+
+                verify(!!shell && !!shell.content, "row " + row + " is dressed")
+                compare(shell.content.messageText,
+                        "message " + sourceRowOf(row),
+                        "row " + row + " shows its own message")
+            }
+        }
+
+        function test_theBinderIsRightBottomUpToo() {
+            pooledView.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+            tryVerify(() => !pooledView.busy && pooledView.rowCount === 30,
+                      20000, "refilled upside down")
+            waitForRendering(pooledView)
+
+            for (let row = 0; row < pooledView.rowCount; ++row) {
+                const shell = pooledView.itemAtRow(row)
+
+                verify(!!shell && !!shell.content, "row " + row + " is dressed")
+                compare(shell.content.messageText,
+                        "message " + sourceRowOf(row),
+                        "model row " + row + " still shows its own message")
+            }
+
+            // and the model's first row is the one at the bottom
+            verify(pooledView.itemAtRow(0).y
+                   > pooledView.itemAtRow(pooledView.rowCount - 1).y)
+        }
+
+        // The pool answers with nothing when it is dry, which is not an error:
+        // the request waits, and the row is dressed once an item exists.
+        function test_aDryPoolMakesTheRowWaitAndThenDressesIt() {
+            // Three times the window in one go. The thirty items in use are
+            // not coming back, the pool has at most thirty more parked, and
+            // its target forbids building the rest - so some rows have to
+            // wait.
+            pooledWindowSource.size = 90
+
+            tryVerify(() => pooled.starved > 0, 10000,
+                      "rows found the pool dry")
+
+            const waiting = pooled.queue.length
+
+            verify(waiting > 0, "and are queued: " + waiting)
+            verify(dressedRows() < pooledView.rowCount,
+                   "so some rows are holding their place without an item")
+
+            // Room to build the rest, and priority while it does.
+            pooledRowPool.target = 120
+            pooledRowPool.boost(pooledRowPool.kind, 120)
+
+            tryVerify(() => pooled.queue.length === 0, 30000,
+                      "the queue drained")
+            tryVerify(() => !pooledView.busy && pooledView.rowCount === 90,
+                      30000, "and the view settled")
+
+            compare(dressedRows(), pooledView.rowCount,
+                    "every row that waited is dressed")
+        }
+
+        function test_slidingReusesItemsAndLeaksNone() {
+            const seenBefore = pooled.seen.length
+
+            for (let i = 0; i < 5; ++i) {
+                verify(pooledView.requestMoreBottom(), "slide " + i)
+                tryVerify(() => !pooledView.busy, 20000)
+            }
+
+            compare(pooledView.rowCount, 30, "the window kept its size")
+            compare(dressedRows(), pooledView.rowCount, "and is fully dressed")
+
+            // A slide overlaps - the new chunk exists before the far end is
+            // dropped - so the pool grows by at most a chunk, not by a window
+            // per slide.
+            verify(pooled.seen.length <= seenBefore + 10,
+                   "no new items beyond one chunk: " + seenBefore + " -> "
+                   + pooled.seen.length)
+
+            compare(pooled.seen.filter(item => !!item).length,
+                    pooled.seen.length,
+                    "no item was destroyed between the shell dying and the "
+                    + "pool taking it back")
+            compare(pooled.inUse, pooledView.rowCount,
+                    "and the view holds exactly as many as it has rows")
+        }
+
+        // A row can leave the window while its request is still queued. It is
+        // never told anything - it had no content to hand back - so the drain
+        // is what has to notice.
+        function test_aRowLeavingWhileStarvedDoesNotWedgeTheDrain() {
+            // Starve a batch: the whole source model at once, which no pool
+            // the earlier tests could have grown is able to supply.
+            pooledWindowSource.size = 200
+            tryVerify(() => pooled.queue.length > 0, 10000, "rows queued")
+
+            // Away again before anything could answer them: these shells die
+            // without ever having had content to hand back.
+            pooledWindowSource.size = 30
+            pooledWindowSource.moveTo(0)
+
+            pooledRowPool.boost(pooledRowPool.kind, 30)
+            tryVerify(() => pooled.queue.length === 0, 20000,
+                      "the drain got through the dead shells")
+            tryVerify(() => !pooledView.busy && pooledView.rowCount === 30,
+                      20000, "and the window is whole")
+
+            compare(dressedRows(), pooledView.rowCount,
+                    "with every row dressed")
+            compare(pooled.seen.filter(item => !!item).length,
+                    pooled.seen.length, "and nothing lost on the way")
         }
     }
 
