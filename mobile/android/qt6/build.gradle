@@ -51,6 +51,8 @@ def qtDir = System.getenv("QT_ANDROID_DIR") ?: qtAndroidDir
 def buildVariant = System.getenv("BUILD_VARIANT") ?: "release"
 // Bundle identifier from EnvVariables.mk
 def bundleIdentifier = System.getenv("BUNDLE_IDENTIFIER") ?: "app.status.mobile"
+// PR builds are profileable (heapprofd/simpleperf/perfetto from the shell), release and fdroid are not.
+def prVariant = buildVariant == "pr"
 
 android {
     /*******************************************************
@@ -122,6 +124,7 @@ android {
         // lib_name must match TARGET in Status.pro (spaces cause weird issues in paths)
         resValue "string", "lib_name", buildVariant == 'release' ? "Status" : "StatusPR"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "boolean", "PR_VARIANT", "${prVariant}"
     }
 
     signingConfigs {
@@ -137,6 +140,7 @@ android {
         release {
             debuggable = false
             minifyEnabled = false
+            profileable = prVariant
             signingConfig signingConfigs.release
         }
         fdroid {
