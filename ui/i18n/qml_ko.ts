@@ -16912,6 +16912,10 @@ to load</source>
         <translation>지원하지 않는 토큰이에요. 다른 토큰을 시도해 보세요</translation>
     </message>
     <message>
+        <source>Unsupported network. Try another</source>
+        <translation>지원하지 않는 네트워크예요. 다른 네트워크를 시도해 보세요</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>문제가 발생했어요. 수량이나 토큰을 변경하거나 다시 시도하세요 ↺</translation>
     </message>

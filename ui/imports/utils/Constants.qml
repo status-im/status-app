@@ -1124,6 +1124,7 @@ QtObject {
             readonly property string errAmountTooLow                   : "WPP-049"
             readonly property string errAmountTooHigh                  : "WPP-050"
             readonly property string errUnsupportedCurrency            : "WPP-051"
+            readonly property string errUnsupportedChain               : "WPP-052"
         }
 
         readonly property QtObject router: QtObject {

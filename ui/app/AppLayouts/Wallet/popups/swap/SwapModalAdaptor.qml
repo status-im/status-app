@@ -147,6 +147,8 @@ QObject {
                         return qsTr("High price impact. Lower amount or try later")
                     case Constants.routerErrorCodes.processor.errUnsupportedCurrency:
                         return qsTr("Unsupported token. Try others")
+                    case Constants.routerErrorCodes.processor.errUnsupportedChain:
+                        return qsTr("Unsupported network. Try another")
                     case Constants.routerErrorCodes.processor.errSwapParaswapCustomError:
                         // matched against the backend's (English) Paraswap error text, so not translated
                         const errMsg = "No routes found with enough liquidity"
