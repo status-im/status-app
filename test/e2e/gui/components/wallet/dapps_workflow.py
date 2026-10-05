@@ -1,7 +1,6 @@
 import allure
 
 import configs
-import driver
 from gui.elements.button import Button
 from gui.elements.object import QObject, set_text_property_on_object
 from gui.objects_map import dapps_names
@@ -34,7 +33,7 @@ class DappsWorkflow:
             uri: str,
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ) -> 'DappsWorkflow':
-        set_text_property_on_object(self._wc_uri_input.object.edit, uri.strip(), timeout_msec)
+        set_text_property_on_object(self._wc_uri_input.object, uri.strip(), timeout_msec)
         self._connect_primary_button.wait_until_appears(timeout_msec)
         self._connect_primary_button.wait_until_enabled(timeout_msec)
         return self
@@ -44,26 +43,9 @@ class DappsWorkflow:
             self,
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ) -> 'DappsWorkflow':
-        connect_button_text = str(self._connect_primary_button.object.text)
         self._connect_primary_button.wait_until_enabled(timeout_msec)
         self._connect_primary_button.click()
-
-        def _close_ready() -> bool:
-            try:
-                button = self._connect_primary_button.object
-                return (
-                    bool(button.visible)
-                    and bool(button.enabled)
-                    and str(button.text) != connect_button_text
-                )
-            except (LookupError, RuntimeError, AttributeError):
-                return False
-
-        assert driver.waitFor(_close_ready, timeout_msec), (
-            'Close button on connected dApp popup did not appear'
-        )
-        self._connect_primary_button.click()
-        self._connect_primary_button.wait_until_hidden(timeout_msec)
+        self._sign_button.wait_until_appears(timeout_msec)
         return self
 
     @allure.step('Approve WalletConnect sign request')
