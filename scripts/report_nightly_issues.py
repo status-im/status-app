@@ -119,10 +119,11 @@ def report(report_dir, output_dir, environ=None, github_factory=GitHub):
             raise ValueError("BUILD_URL is required so every reported issue links to its Jenkins run")
         reports, failures = failed_tests(report_dir)
         summary["failed_tests"] = failures
-        if not reports and environ.get("NIGHTLY_BUILD_RESULT") != "FAILURE":
+        build_failed = environ.get("NIGHTLY_BUILD_RESULT") in ("FAILURE", "ABORTED")
+        if not reports and not build_failed:
             summary.update(action="no-test-report", message="No JUnit report: inspect setup/build logs. No issue created.")
             return 0
-        if reports and not failures:
+        if reports and not failures and not build_failed:
             summary["action"] = "no-failures"
             return 0
         marker = f"<!-- logos-delivery-nightly:run:{hashlib.sha256(build_url.encode()).hexdigest()} -->"
@@ -137,9 +138,9 @@ def report(report_dir, output_dir, environ=None, github_factory=GitHub):
             f"Tested app: `{environ.get('TESTED_APP', 'not recorded')}`\n\n"
             f"Delivery image ID: `{environ.get('WAKU_IMAGE_ID', 'not recorded')}`\n\n"
             f"Delivery image: `{environ.get('WAKU_IMAGE', 'not recorded')}`\n\n" + (
-                failure_details(failures) if reports else
-                "### Build/setup failure\n\n"
-                "The nightly build failed without producing a JUnit report. "
+                failure_details(failures) if failures else
+                "### Build failure or interruption\n\n"
+                "The nightly build failed or was aborted without recorded test failures. "
                 f"Inspect the Jenkins console for the cause: {build_url}console\n"
             )
         )
