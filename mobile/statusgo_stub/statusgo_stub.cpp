@@ -5,6 +5,8 @@
 #include <mutex>
 #include <string>
 #include <android/log.h>
+
+#include "args_json.h"
 // Tiny UI-process stub for status-go's exported C API.
 // Instead of linking libstatus (real status-go) into the UI process, we export
 // the same symbols and forward them to a separate Android service process via Java.
@@ -42,30 +44,6 @@ static char* dupToMalloc(const char* s) {
   return out;
 }
 
-static void appendJsonEscaped(std::string& out, const char* s) {
-  if (!s) return;
-  for (const unsigned char* p = (const unsigned char*)s; *p; ++p) {
-    const unsigned char c = *p;
-    switch (c) {
-      case '\\': out += "\\\\"; break;
-      case '"': out += "\\\""; break;
-      case '\b': out += "\\b"; break;
-      case '\f': out += "\\f"; break;
-      case '\n': out += "\\n"; break;
-      case '\r': out += "\\r"; break;
-      case '\t': out += "\\t"; break;
-      default:
-        if (c < 0x20) {
-          char buf[7];
-          snprintf(buf, sizeof(buf), "\\u%04x", (unsigned)c);
-          out += buf;
-        } else {
-          out.push_back((char)c);
-        }
-        break;
-    }
-  }
-}
 static char* callJava(const char* method, const char* argsJson) {
   JNIEnv* env = getEnv();
   if (!env) {
@@ -104,19 +82,6 @@ static char* callJava(const char* method, const char* argsJson) {
   env->ReleaseStringUTFChars(jRet, cRet);
   env->DeleteLocalRef(jRet);
   return out;
-}
-static char* buildArgsJson(const char** argv, size_t argc) {
-  std::string out;
-  out.reserve(64);
-  out.push_back('[');
-  for (size_t i = 0; i < argc; i++) {
-    if (i) out.push_back(',');
-    out.push_back('"');
-    appendJsonEscaped(out, argv[i] ? argv[i] : "");
-    out.push_back('"');
-  }
-  out.push_back(']');
-  return dupToMalloc(out.c_str());
 }
 } // namespace
 
@@ -162,11 +127,8 @@ void SetSignalEventCallback(SignalCallback cb) { g_signalCb = cb; }
 // - All arguments are passed as strings (even ints/bools) to simplify IPC.
 // - The service side will interpret them based on the called method.
 char* statusgo_stub_callv(const char* method, const char** argv, size_t argc) {
-  char* argsJson = buildArgsJson(argv, argc);
-  if (!argsJson) return dupToMalloc("{\"error\":\"oom\"}");
-  char* out = callJava(method, argsJson);
-  free(argsJson);
-  return out;
+  const std::string argsJson = statusgo_ipc::buildArgsJson(argv, argc);
+  return callJava(method, argsJson.c_str());
 }
 
 } // extern "C"

@@ -5,6 +5,8 @@
 #include <mutex>
 #include <cstring>
 
+#include "args_json.h"
+
 // Real status-go exports (from libstatus.so)
 extern "C" {
   typedef void (*SignalCallback)(const char* signalJson);
@@ -45,64 +47,6 @@ static void signalCb(const char* signalJson) {
   }
 }
 
-// Minimal JSON array-of-strings parser:
-// Accepts the exact format produced by the UI stub runtime:
-//   ["str1","str2",...]
-// with standard JSON escaping.
-static bool parseJsonString(const char*& p, std::string& out) {
-  if (*p != '"') return false;
-  ++p;
-  while (*p) {
-    char c = *p++;
-    if (c == '"') return true;
-    if (c == '\\') {
-      char e = *p++;
-      switch (e) {
-        case '"': out.push_back('"'); break;
-        case '\\': out.push_back('\\'); break;
-        case '/': out.push_back('/'); break;
-        case 'b': out.push_back('\b'); break;
-        case 'f': out.push_back('\f'); break;
-        case 'n': out.push_back('\n'); break;
-        case 'r': out.push_back('\r'); break;
-        case 't': out.push_back('\t'); break;
-        case 'u': {
-          // Skip \uXXXX (best-effort; keep ASCII only for now)
-          for (int i = 0; i < 4 && *p; i++) ++p;
-          // Replace with '?'
-          out.push_back('?');
-          break;
-        }
-        default:
-          out.push_back(e);
-          break;
-      }
-    } else {
-      out.push_back(c);
-    }
-  }
-  return false;
-}
-
-static std::vector<std::string> parseArgsJson(const char* argsJson) {
-  std::vector<std::string> out;
-  if (!argsJson) return out;
-  const char* p = argsJson;
-  while (*p && (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')) ++p;
-  if (*p != '[') return out;
-  ++p;
-  while (*p) {
-    while (*p && (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')) ++p;
-    if (*p == ']') break;
-    std::string s;
-    if (!parseJsonString(p, s)) break;
-    out.push_back(std::move(s));
-    while (*p && (*p == ' ' || *p == '\n' || *p == '\t' || *p == '\r')) ++p;
-    if (*p == ',') { ++p; continue; }
-    if (*p == ']') break;
-  }
-  return out;
-}
 } // namespace
 
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
@@ -135,7 +79,8 @@ Java_app_status_mobile_ipc_StatusGoService_nativeCall(JNIEnv* env, jclass, jstri
   const char* method = jMethod ? env->GetStringUTFChars(jMethod, nullptr) : nullptr;
   const char* argsJson = jArgsJson ? env->GetStringUTFChars(jArgsJson, nullptr) : nullptr;
 
-  std::vector<std::string> args = parseArgsJson(argsJson);
+  std::vector<std::string> args =
+      argsJson ? statusgo_ipc::parseArgsJson(argsJson, strlen(argsJson)) : std::vector<std::string>{};
   std::vector<const char*> argv;
   argv.reserve(args.size());
   for (auto& s : args) argv.push_back(s.c_str());
