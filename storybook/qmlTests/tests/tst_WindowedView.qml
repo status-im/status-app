@@ -282,7 +282,9 @@ Item {
                     provider.builtCount++
                 }
 
-                item.value = modelRow.value
+                // A row removed while its answer was owed reads its roles as
+                // undefined - answering it anyway is the case under test.
+                item.value = modelRow.value ?? -1
                 item.parent = parent
                 // Bound at acquire, exactly as a real consumer does it: the item
                 // goes from its parked width to the row width here, which is what
@@ -352,6 +354,17 @@ Item {
         function clear() {
             queue = []
             running = false
+        }
+
+        // Every owed answer, now, in this turn - before anything deferred to
+        // the event loop has had a chance to run.
+        function flush() {
+            const due = queue
+
+            clear()
+
+            for (let i = 0; i < due.length; ++i)
+                due[i].callback()
         }
 
         onTriggered: {
@@ -1347,6 +1360,27 @@ Item {
                     "one item per row in the window")
             compare(provider.acquiredCount + provider.availableCount,
                     provider.builtCount, "no item leaked and none was released twice")
+        }
+
+        // A removed row's shell outlives its removal: the Repeater releases
+        // it at once but deletes it later. An answer landing in between must
+        // still come back, or the item is lost with the shell.
+        function test_anAnswerToARemovedRowIsHandedBack() {
+            provider.delay = 1000
+
+            rows.append(rows.make(100, 5))
+            rows.remove(rows.count - 5, 5)
+
+            deliveryTimer.flush()
+
+            compare(provider.acquiredCount, view.rowCount,
+                    "the late answers were handed straight back")
+            compare(provider.acquiredCount + provider.availableCount,
+                    provider.builtCount, "and none was lost")
+
+            waitForRendering(view)
+            compare(provider.acquiredCount + provider.availableCount,
+                    provider.builtCount, "nor after the shells were deleted")
         }
 
         // The provider is told which row it is dressing. A provider that

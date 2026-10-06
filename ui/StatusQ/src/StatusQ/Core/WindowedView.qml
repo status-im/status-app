@@ -1710,6 +1710,10 @@ Flickable {
                 // is still waiting for its content.
                 property bool staged: false
 
+                // Released: the row has left the model. The Repeater deletes
+                // the shell only later, so it can still be reached meanwhile.
+                property bool retired: false
+
                 readonly property var rowKey:
                     shell.model ? shell.model[root.keyRole] : undefined
 
@@ -1754,7 +1758,9 @@ Flickable {
                         // once the shell is destroyed, while a captured JS
                         // reference to the same object stays truthy - which is
                         // why the provider cannot reliably check this itself.
-                        if (!shell) {
+                        // Between its release and the deferred delete the id
+                        // still reads the shell, so `retired` covers that.
+                        if (!shell || shell.retired) {
                             if (obj && root.releaseDelegate)
                                 root.releaseDelegate(obj)
                             return
@@ -1777,6 +1783,8 @@ Flickable {
                 // can reach it first, and an exception thrown here disappears
                 // without trace.
                 Component.onDestruction: {
+                    shell.retired = true
+
                     // A destroyed row fires no property change, so the count
                     // it contributed is given back here.
                     if (shell.revealed)
