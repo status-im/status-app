@@ -261,7 +261,6 @@ StatusDialog {
                         StatusRoundedImage {
                             Layout.preferredWidth: bookmarkDelegate.icon.width
                             Layout.preferredHeight: bookmarkDelegate.icon.height
-                            image.sourceSize: Qt.size(width, height)
                             image.source: bookmarkDelegate.icon.source
                         }
                         ColumnLayout {
