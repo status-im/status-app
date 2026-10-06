@@ -83,6 +83,29 @@ proc sendChatMessage*(
     }
   ])
 
+proc startThreadFromNewMessage*(
+    chatId: string,
+    msg: string,
+    contentType: int,
+    preferredUsername: string,
+    standardLinkPreviews: JsonNode,
+    statusLinkPreviews: JsonNode,
+    threadName: string,
+    ): RpcResponse[JsonNode] =
+  result = callPrivateRPC("startThreadFromNewMessage".prefix, %* [
+    {
+      "message": {
+        "chatId": chatId,
+        "text": msg,
+        "contentType": contentType,
+        "ensName": preferredUsername,
+        "linkPreviews": standardLinkPreviews,
+        "statusLinkPreviews": statusLinkPreviews,
+      },
+      "threadName": threadName,
+    }
+  ])
+
 proc sendImages*(chatId: string,
                  images: var seq[string],
                  msg: string,
@@ -116,6 +139,10 @@ proc createThread*(chatId: string, parentMessageId: string): RpcResponse[JsonNod
 proc fetchChatThreads*(chatId: string): RpcResponse[JsonNode] =
   let payload = %* [chatId]
   result = callPrivateRPC("chatThreads".prefix, payload)
+
+proc fetchChatThreadsForChats*(chatIds: seq[string]): RpcResponse[JsonNode] =
+  let payload = %* [chatIds]
+  result = callPrivateRPC("chatThreadsByChatIDs".prefix, payload)
 
 proc muteChat*(chatId: string, interval: int): RpcResponse[JsonNode] =
   result = callPrivateRPC("muteChatV2".prefix, %* [

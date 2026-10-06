@@ -260,6 +260,14 @@ proc mainProc() =
   scheduleStartupLogCleanup(statusFoundation.threadpool, LOGDIR, STATUSGODIR,
     logCleanupProcessStartedAt)
 
+  # setup (a smaller) QSG atlas size on mobile
+  when defined(ios) or defined(android):
+    const MobileQsgAtlasSize = "1024"
+    if not existsEnv("QSG_ATLAS_WIDTH"):
+      putEnv("QSG_ATLAS_WIDTH", MobileQsgAtlasSize)
+    if not existsEnv("QSG_ATLAS_HEIGHT"):
+      putEnv("QSG_ATLAS_HEIGHT", MobileQsgAtlasSize)
+
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
   statusq_initializeWebEngine()
 

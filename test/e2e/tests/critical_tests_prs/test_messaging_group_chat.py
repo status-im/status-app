@@ -24,7 +24,7 @@ from tests.benchmark_tests.send_timing_helpers import GIF_URL
 @pytest.mark.critical
 @pytest.mark.smoke
 @pytest.mark.parametrize('community_name, domain_link, domain_link_2',
-                         [pytest.param('Status', 'status.app', 'github.com')
+                         [pytest.param('Status', 'status.app', 'ogp.me')
                           ])
 def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain_link, domain_link_2):
     user_one: UserAccount = RandomUser()
@@ -222,9 +222,9 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 messages_screen.group_chat.type_message(message)
 
             with step('Wait until link preview is ready'):
-                assert driver.waitFor(
-                    lambda: domain_link_2 == messages_screen.group_chat.get_link_preview_bubble_description(),
-                    15000)
+                assert messages_screen.group_chat.get_link_preview_bubble_description(timeout), (
+                    'Link preview subtitle was not shown in the composer'
+                )
 
             with step(f'Paste image to the same message'):
                 messages_screen.group_chat.choose_image(str(path))
@@ -240,13 +240,12 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                                       timeout), f"Link preview is not found in the last message"
                 assert driver.waitFor(
                     lambda: domain_link_2 == messages_screen.chat.messages(0)[0].get_link_domain(),
-                    configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+                    timeout), f"Link domain is not '{domain_link_2}'"
 
             with step(f'Paste link to user profile link and send message'):
                 message_user = profile_link
                 messages_screen.group_chat.type_message(message_user)
-                assert driver.waitFor(
-                lambda: user_two.name == messages_screen.group_chat.get_link_preview_bubble_title(), configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+                assert user_two.name == messages_screen.group_chat.get_link_preview_bubble_title(timeout)
                 messages_screen.group_chat.confirm_sending_message()
 
             with step('Verify title is correct for link preview of sent message'):

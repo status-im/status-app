@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Looked up by name in org.qtproject.qt.android.QtLoader / QtActivityBase
+     (Resources.getIdentifier), invisible to the resource shrinker. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@array/qt_libs,@array/bundled_libs,@array/load_local_libs,@string/use_local_qt_libs,@string/bundle_local_qt_libs,@string/system_libs_prefix,@string/fatal_error_msg" />

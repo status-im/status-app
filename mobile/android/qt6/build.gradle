@@ -139,13 +139,17 @@ android {
     buildTypes {
         release {
             debuggable = false
-            minifyEnabled = false
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             profileable = prVariant
             signingConfig signingConfigs.release
         }
         fdroid {
             debuggable = false
-            minifyEnabled = false
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
             debuggable = true
@@ -164,6 +168,9 @@ android {
             initWith debug
             debuggable = false
             profileable = true
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

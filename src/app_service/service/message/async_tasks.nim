@@ -30,6 +30,9 @@ type
   AsyncFetchChatThreadsTaskArg = ref object of QObjectTaskArg
     chatId: string
 
+  AsyncFetchChatThreadsForChatsTaskArg = ref object of QObjectTaskArg
+    chatIds: seq[string]
+
   AsyncCreateThreadTaskArg = ref object of QObjectTaskArg
     chatId: string
     parentMessageId: string
@@ -55,13 +58,11 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     responseJson["messages"] = messagesArr
     responseJson["messagesCursor"] = messagesCursor
 
-    # handle reactions (only for base chats, not threads)
-    if arg.threadId == "":
-      var reactionsArr: JsonNode
-      let rResponse = status_go.fetchReactions(arg.chatId, arg.msgCursor, arg.limit)
-      if not rResponse.error.isNil:
-        raise newException(CatchableError, rResponse.error.message)
-      responseJson["reactions"] = rResponse.result
+    # handle reactions
+    let rResponse = status_go.fetchReactions(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
+    if not rResponse.error.isNil:
+      raise newException(CatchableError, rResponse.error.message)
+    responseJson["reactions"] = rResponse.result
 
     arg.finish(responseJson)
 
@@ -93,6 +94,30 @@ proc asyncFetchChatThreadsTask(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     arg.finish(%* {
       "chatId": arg.chatId,
+      "error": e.msg,
+    })
+
+proc asyncFetchChatThreadsForChatsTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchChatThreadsForChatsTaskArg](argEncoded)
+  try:
+    let response = status_go_chat.fetchChatThreadsForChats(arg.chatIds)
+    if not response.error.isNil:
+      raise newException(CatchableError, response.error.message)
+
+    var responseJson = %*{
+      "chatIds": arg.chatIds,
+      "threads": %*[],
+      "error": "",
+    }
+
+    var threadsArr: JsonNode
+    if response.result.getProp("threads", threadsArr):
+      responseJson["threads"] = threadsArr
+
+    arg.finish(responseJson)
+  except Exception as e:
+    arg.finish(%* {
+      "chatIds": arg.chatIds,
       "error": e.msg,
     })
 

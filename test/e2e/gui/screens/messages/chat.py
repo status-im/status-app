@@ -401,6 +401,18 @@ class CreateChatView(QObject):
         return SendContactRequestFromProfile().wait_until_appears()
 
 
+def _wait_visible_object_text(element: QObject, timeout_msec: int) -> str:
+    def ready() -> bool:
+        try:
+            return bool(element.is_visible and str(element.object.text))
+        except Exception:
+            return False
+
+    if not driver.waitFor(ready, timeout_msec):
+        return ''
+    return str(element.object.text)
+
+
 class ChatMessagesView(QObject):
 
     def __init__(self):
@@ -519,18 +531,11 @@ class ChatMessagesView(QObject):
 
     @allure.step('Get text of title of link preview bubble')
     def get_link_preview_bubble_title(self, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> str:
-        def _ready():
-            try:
-                str(self._link_preview_title.object.text); return True
-            except (RuntimeError, AttributeError, LookupError):
-                return False
-
-        driver.waitFor(_ready, timeout_msec)
-        return str(self._link_preview_title.object.text)
+        return _wait_visible_object_text(self._link_preview_title, timeout_msec)
 
     @allure.step('Get text of description of link preview bubble')
-    def get_link_preview_bubble_description(self) -> str:
-        return str(self._link_preview_preview_subtitle.object.text)
+    def get_link_preview_bubble_description(self, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> str:
+        return _wait_visible_object_text(self._link_preview_preview_subtitle, timeout_msec)
 
     @allure.step('Get text of title of show link preview bubble')
     def get_show_link_preview_bubble_title(self) -> str:
