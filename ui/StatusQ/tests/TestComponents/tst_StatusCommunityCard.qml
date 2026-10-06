@@ -57,8 +57,11 @@ Item {
             tryCompare(banner, "status", Image.Ready)
 
             // PreserveAspectCrop covers the banner box: a square source is decoded at the
-            // box width rounded up to the 128 device px decode step
-            const expected = Math.min(Math.ceil(banner.width * banner.Screen.devicePixelRatio / 128) * 128, 2048)
+            // box width rounded up to the next decode step
+            const devicePx = banner.width * banner.Screen.devicePixelRatio
+            let expected = 0
+            while (expected < devicePx)
+                expected += Math.max(16, Math.ceil(expected / 8))
             compare(ImageInspector.decodedSize(banner), Qt.size(expected, expected))
             compare(qtOutput.qtOuput(), "")
         }

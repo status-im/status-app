@@ -44,16 +44,21 @@ public:
         return true;
     }
 
-    // Each side in device px, rounded up to decodeStep so resizing within a step reuses the
-    // decode, and capped at maxDecodeSide.
+    // Each side in device px, rounded up to the next decode step boundary so resizing within
+    // a step reuses the decode. Boundaries are 16 device px apart up to 128, then 1/8 of the
+    // size apart (at most ~27% extra pixels), capped at maxDecodeSide.
+    static int decodeBucket(qreal devicePx)
+    {
+        int boundary = 0;
+        while (boundary < devicePx && boundary < RenderSizedImage::maxDecodeSide)
+            boundary += qMax(16, qCeil(boundary / 8.0));
+        return qMin(boundary, int(RenderSizedImage::maxDecodeSide));
+    }
+
     static QSize decodeBoxFor(const QSize& logical, qreal targetDevicePixelRatio)
     {
         const auto side = [targetDevicePixelRatio](int length) {
-            if (length <= 0)
-                return 0;
-            const int step = RenderSizedImage::decodeStep;
-            const int quantised = qCeil(length * targetDevicePixelRatio / step) * step;
-            return qMin(quantised, int(RenderSizedImage::maxDecodeSide));
+            return length > 0 ? decodeBucket(length * targetDevicePixelRatio) : 0;
         };
         return { side(logical.width()), side(logical.height()) };
     }

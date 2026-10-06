@@ -81,9 +81,16 @@ Item {
             return Math.ceil(logical * item.Screen.devicePixelRatio)
         }
 
-        // Longest decoded side for a box: device px rounded up to 128, capped at 2048
+        // Decode step boundaries: 16 device px apart up to 128, then 1/8 of the size
+        function decodeBucket(devicePx) {
+            let boundary = 0
+            while (boundary < devicePx)
+                boundary += Math.max(16, Math.ceil(boundary / 8))
+            return Math.min(boundary, 2048)
+        }
+
         function decoded(logical, item) {
-            return Math.min(Math.ceil(logical * item.Screen.devicePixelRatio / 128) * 128, 2048)
+            return decodeBucket(logical * item.Screen.devicePixelRatio)
         }
 
         function test_rasterDecodedAtRenderedSize() {
@@ -181,6 +188,28 @@ Item {
             compare(ImageInspector.decodedSize(img).width, decoded(40, img))
         }
 
+        function test_smallImageDecodedNearItsSize() {
+            const img = createTemporaryObject(imageComponent, root,
+                                              { width: 40, height: 40, source: root.largeRaster })
+            tryCompare(img, "status", Image.Ready)
+            verify(ImageInspector.decodedSize(img).width <= physical(40, img) + 16,
+                   `decoded ${ImageInspector.decodedSize(img).width}px for ${physical(40, img)}px`)
+        }
+
+        function test_decodeStepCostsAtMostAQuarter() {
+            for (const size of [24, 40, 64, 100, 333, 700]) {
+                const img = createTemporaryObject(imageComponent, root,
+                                                  { width: size, height: size, source: root.hugeRaster })
+                tryCompare(img, "status", Image.Ready)
+                const exact = Math.ceil(size * img.Screen.devicePixelRatio)
+                const width = ImageInspector.decodedSize(img).width
+                if (exact >= 128)
+                    verify(width * width <= 1.27 * exact * exact, `${width}px for ${exact}px`)
+                else
+                    verify(width <= exact + 16, `${width}px for ${exact}px`)
+            }
+        }
+
         function test_resizeWithinDecodeStepKeepsDecode() {
             const img = createTemporaryObject(imageComponent, root,
                                               { width: 40, height: 40, source: root.largeRaster })
@@ -204,7 +233,8 @@ Item {
             const keys = [ImageInspector.decodeKey(img)]
             const next = Math.floor(decoded(40, img) / img.Screen.devicePixelRatio) + 1
 
-            for (let size = 41; size <= next + 10; ++size) {
+            const last = Math.floor(decoded(next, img) / img.Screen.devicePixelRatio)
+            for (let size = 41; size <= last; ++size) {
                 img.width = size
                 tryCompare(img, "status", Image.Ready)
                 const key = ImageInspector.decodeKey(img)
@@ -213,7 +243,7 @@ Item {
             }
             compare(keys.length, 2, "exactly one re-decode when crossing the step")
             compare(ImageInspector.decodedSize(img).width, decoded(next, img))
-            compare(img.implicitWidth, next + 10)
+            compare(img.implicitWidth, last)
         }
 
         function test_rasterInLayoutDecodedAtPreferredSize() {
