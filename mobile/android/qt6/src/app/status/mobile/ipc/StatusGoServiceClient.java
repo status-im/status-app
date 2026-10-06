@@ -16,7 +16,7 @@ import android.util.Log;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 
 import app.status.mobile.StatusGoStub;
 
@@ -67,26 +67,23 @@ public final class StatusGoServiceClient {
         public void onSignal(byte[] utf8) {
             if (utf8 == null) return;
             // Forward into the native stub callback (SetSignalEventCallback).
-            StatusGoStub.nativeDeliverSignal(new String(utf8, StandardCharsets.UTF_8));
+            StatusGoStub.nativeDeliverSignal(utf8);
         }
 
         @Override
-        public void onSignalShm(RpcResponse signalPayload) {
+        public void onSignalShm(IpcPayload signalPayload) {
             if (signalPayload == null) {
                 Log.w(TAG, "onSignalShm: null payload");
                 return;
             }
 
-            try (RpcResponse payload = signalPayload) {
-                final String jsonSignal = payload.readJson();
-                final int signalSizeBytes = jsonSignal != null
-                        ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
-                        : 0;
-                if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-                    Log.w(TAG, "received large status-go signal type=" + SignalEnvelope.typeOf(jsonSignal)
-                            + " sizeBytes=" + signalSizeBytes);
+            try (IpcPayload payload = signalPayload) {
+                final ByteBuffer utf8 = payload.buffer();
+                if (utf8.remaining() >= LARGE_SIGNAL_WARN_BYTES) {
+                    Log.w(TAG, "received large status-go signal type=" + SignalEnvelope.typeOf(utf8)
+                            + " sizeBytes=" + utf8.remaining());
                 }
-                StatusGoStub.nativeDeliverSignal(jsonSignal);
+                StatusGoStub.nativeDeliverSignalDirect(utf8, utf8.remaining());
             } catch (ErrnoException e) {
                 Log.w(TAG, "onSignalShm: shared memory read failed", e);
             }
@@ -293,7 +290,11 @@ public final class StatusGoServiceClient {
         }
     }
 
-    public String call(Context context, String method, String argsJson) {
+    /**
+     * Calls status-go in the service process. {@code argsUtf8} is the JSON array of string
+     * arguments; it is read during the call only. The caller must close() the result.
+     */
+    public IpcPayload call(Context context, String method, ByteBuffer argsUtf8) {
         final Context app = context.getApplicationContext();
         ensureStartedAndBound(app);
         IStatusGoService s;
@@ -315,10 +316,10 @@ public final class StatusGoServiceClient {
             if (everConnected) {
                 requestFrontendRestart(app, "statusgo_service_not_connected");
             }
-            return "{\"error\":\"status-go service not connected\"}";
+            return IpcPayload.inline("{\"error\":\"status-go service not connected\"}");
         }
         try {
-            return readRpc(s, method, argsJson);
+            return readRpc(s, method, argsUtf8);
         } catch (RemoteException e) {
             Log.w(TAG, "call failed", e);
             // After reinstall/update (or service crash), binder can become a dead object.
@@ -341,7 +342,7 @@ public final class StatusGoServiceClient {
                 }
                 if (s != null) {
                     try {
-                        return readRpc(s, method, argsJson);
+                        return readRpc(s, method, argsUtf8);
                     } catch (RemoteException e2) {
                         Log.w(TAG, "call retry failed", e2);
                     }
@@ -350,25 +351,18 @@ public final class StatusGoServiceClient {
             if (everConnected) {
                 requestFrontendRestart(app, "statusgo_service_call_failed");
             }
-            return "{\"error\":\"status-go service call failed\"}";
+            return IpcPayload.inline("{\"error\":\"status-go service call failed\"}");
         }
     }
 
-    /**
-     * Issues an rpcCall and reads the response. The RpcResponse is closed unconditionally
-     * via try-with-resources so the SharedMemory fd (if any) is released on every exit path.
-     */
-    private static String readRpc(IStatusGoService s, String method, String argsJson)
+    /** Issues an rpcCall with the request inline in the Parcel. */
+    private static IpcPayload readRpc(IStatusGoService s, String method, ByteBuffer argsUtf8)
             throws RemoteException {
-        try (RpcResponse resp = s.rpcCall(method, argsJson)) {
-            if (resp == null) {
-                return "{\"error\":\"status-go service returned null\"}";
-            }
-            return resp.readJson();
-        } catch (ErrnoException e) {
-            Log.w(TAG, "rpcCall: shared memory read failed", e);
-            return "{\"error\":\"shared memory read failed\"}";
+        final IpcPayload resp = s.rpcCall(method, IpcPayload.inline(SignalFanout.toArray(argsUtf8)));
+        if (resp == null) {
+            return IpcPayload.inline("{\"error\":\"status-go service returned null\"}");
         }
+        return resp;
     }
 
     /**

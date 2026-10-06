@@ -81,14 +81,18 @@ public final class StatusNotificationManager {
 
     // ── Signal handling ───────────────────────────────────────────────────────
 
+    /** Whether handleSignal would act on a signal of this envelope type. */
+    public boolean wantsSignal(String type) {
+        return !uiVisible && "local-notifications".equals(type);
+    }
+
     /**
      * Processes a status-go signal JSON and shows an OS notification if appropriate.
      * Suppresses notifications when the UI is in the foreground. {@code type} is the
      * envelope type, so other signals are rejected without parsing them.
      */
     public void handleSignal(String type, String jsonSignal) {
-        if (uiVisible) return;
-        if (!"local-notifications".equals(type)) return;
+        if (!wantsSignal(type)) return;
         if (jsonSignal == null || jsonSignal.isEmpty()) return;
         try {
             final JSONObject eventWrap = new JSONObject(jsonSignal).optJSONObject("event");

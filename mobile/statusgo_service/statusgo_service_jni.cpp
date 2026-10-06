@@ -39,9 +39,16 @@ static void signalCb(const char* signalJson) {
   if (!g_serviceObj || !g_onSignal) return;
   JNIEnv* env = getEnv();
   if (!env) return;
-  jstring jSig = env->NewStringUTF(signalJson ? signalJson : "");
-  env->CallVoidMethod(g_serviceObj, g_onSignal, jSig);
-  env->DeleteLocalRef(jSig);
+  // Zero-copy view of status-go's buffer, which is freed once this callback returns.
+  static char empty[] = "";
+  char* data = signalJson ? const_cast<char*>(signalJson) : empty;
+  jobject buf = env->NewDirectByteBuffer(data, static_cast<jlong>(strlen(data)));
+  if (!buf) {
+    env->ExceptionClear();
+    return;
+  }
+  env->CallVoidMethod(g_serviceObj, g_onSignal, buf);
+  env->DeleteLocalRef(buf);
   if (env->ExceptionCheck()) {
     env->ExceptionClear();
   }
@@ -64,9 +71,10 @@ Java_app_status_mobile_ipc_StatusGoService_nativeInit(JNIEnv* env, jclass, jobje
   }
   g_serviceObj = env->NewGlobalRef(serviceObj);
   jclass cls = env->GetObjectClass(serviceObj);
-  g_onSignal = env->GetMethodID(cls, "onNativeSignal", "(Ljava/lang/String;)V");
+  g_onSignal = env->GetMethodID(cls, "onNativeSignal", "(Ljava/nio/ByteBuffer;)V");
   if (!g_onSignal) {
-    loge("Failed to find StatusGoService.onNativeSignal(String)");
+    env->ExceptionClear();
+    loge("Failed to find StatusGoService.onNativeSignal(ByteBuffer)");
   }
   env->DeleteLocalRef(cls);
 
@@ -74,28 +82,53 @@ Java_app_status_mobile_ipc_StatusGoService_nativeInit(JNIEnv* env, jclass, jobje
   SetSignalEventCallback(signalCb);
 }
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_app_status_mobile_ipc_StatusGoService_nativeCall(JNIEnv* env, jclass, jstring jMethod, jstring jArgsJson) {
+namespace {
+// Returns a direct buffer over the status-go result; Java releases it with nativeFree.
+jobject dispatch(JNIEnv* env, jstring jMethod, std::vector<std::string> args) {
   const char* method = jMethod ? env->GetStringUTFChars(jMethod, nullptr) : nullptr;
-  const char* argsJson = jArgsJson ? env->GetStringUTFChars(jArgsJson, nullptr) : nullptr;
-
-  std::vector<std::string> args =
-      argsJson ? statusgo_ipc::parseArgsJson(argsJson, strlen(argsJson)) : std::vector<std::string>{};
   std::vector<const char*> argv;
   argv.reserve(args.size());
   for (auto& s : args) argv.push_back(s.c_str());
 
   char* out = statusgo_service_dispatch(method ? method : "", argv.empty() ? nullptr : argv.data(), argv.size());
-  const bool shouldFree = (out != nullptr);
-  if (!out) out = (char*)"{\"error\":\"null return from dispatch\"}";
-
-  jstring jOut = env->NewStringUTF(out);
-
-  if (shouldFree) Free(out);
-
   if (jMethod) env->ReleaseStringUTFChars(jMethod, method);
-  if (jArgsJson) env->ReleaseStringUTFChars(jArgsJson, argsJson);
+  if (!out) return nullptr;
 
-  return jOut;
+  jobject buf = env->NewDirectByteBuffer(out, static_cast<jlong>(strlen(out)));
+  if (!buf) Free(out);
+  return buf;
+}
+} // namespace
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_app_status_mobile_ipc_StatusGoService_nativeCall(JNIEnv* env, jclass, jstring jMethod, jbyteArray jArgs) {
+  std::vector<std::string> args;
+  if (jArgs) {
+    const jsize len = env->GetArrayLength(jArgs);
+    jbyte* bytes = env->GetByteArrayElements(jArgs, nullptr);
+    if (!bytes) return nullptr;
+    args = statusgo_ipc::parseArgsJson(reinterpret_cast<const char*>(bytes), static_cast<size_t>(len));
+    env->ReleaseByteArrayElements(jArgs, bytes, JNI_ABORT);
+  }
+  return dispatch(env, jMethod, std::move(args));
 }
 
+extern "C" JNIEXPORT jobject JNICALL
+Java_app_status_mobile_ipc_StatusGoService_nativeCallDirect(JNIEnv* env, jclass, jstring jMethod, jobject jArgs, jint length) {
+  std::vector<std::string> args;
+  const char* data = jArgs ? static_cast<const char*>(env->GetDirectBufferAddress(jArgs)) : nullptr;
+  const jlong capacity = jArgs ? env->GetDirectBufferCapacity(jArgs) : 0;
+  if (data && length >= 0 && length <= capacity) {
+    args = statusgo_ipc::parseArgsJson(data, static_cast<size_t>(length));
+  } else if (jArgs) {
+    loge("nativeCallDirect: unreadable argument buffer");
+  }
+  return dispatch(env, jMethod, std::move(args));
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_app_status_mobile_ipc_StatusGoService_nativeFree(JNIEnv* env, jclass, jobject jResult) {
+  if (!jResult) return;
+  void* p = env->GetDirectBufferAddress(jResult);
+  if (p) Free(p);
+}
