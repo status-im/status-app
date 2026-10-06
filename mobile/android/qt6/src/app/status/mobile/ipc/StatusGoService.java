@@ -16,8 +16,6 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
-import android.os.SharedMemory;
-import android.system.OsConstants;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -50,14 +48,6 @@ public final class StatusGoService extends Service {
     private static final String TAG = "StatusGoService";
     private static final int LARGE_SIGNAL_WARN_BYTES = 256 * 1024;
     private static final int SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES = 128 * 1024;
-
-    /**
-     * Responses shorter than this (in UTF-8 bytes) are returned inline in the Binder reply
-     * Parcel; larger responses are transferred via SharedMemory to stay under Android's
-     * per-process Binder transaction budget (~1 MB hard cap). Empirically ~97% of calls fit
-     * at 64 KB.
-     */
-    private static final int INLINE_THRESHOLD_BYTES = 64 * 1024;
 
     public static final String ACTION_START =
             BuildConfig.APPLICATION_ID + ".ipc.StatusGoService.START";
@@ -113,7 +103,7 @@ public final class StatusGoService extends Service {
             lifecycleExecutor.execute(() -> {
                 if (uiVisible) return;
                 try {
-                    final String resp = nativeCall("PauseService", "[\"messaging\"]");
+                    final String resp = callRpc("PauseService", "[\"messaging\"]");
                 } catch (Throwable t) {
                     Log.w(TAG, "failed to re-pause messaging after background send", t);
                 }
@@ -145,11 +135,26 @@ public final class StatusGoService extends Service {
     }
 
     private static native void nativeInit(StatusGoService self);
-    private static native String nativeCall(String method, String argsJson);
 
-    /** Exposes nativeCall for components in the same process (e.g. NotificationReplyReceiver). */
+    /**
+     * Calls status-go with a UTF-8 JSON array of string arguments. Returns a direct buffer over
+     * the status-go-owned result (null if there is none) that must be released by nativeFree.
+     */
+    private static native ByteBuffer nativeCall(String method, byte[] argsUtf8);
+    private static native ByteBuffer nativeCallDirect(String method, ByteBuffer argsUtf8, int length);
+    private static native void nativeFree(ByteBuffer result);
+
+    private static final String NULL_RESPONSE = "{\"error\":\"null response\"}";
+
+    /** String convenience for in-process callers (e.g. NotificationReplyReceiver). */
     public static String callRpc(String method, String argsJson) {
-        return nativeCall(method, argsJson);
+        final ByteBuffer result = nativeCall(method, argsJson.getBytes(StandardCharsets.UTF_8));
+        if (result == null) return NULL_RESPONSE;
+        try {
+            return StandardCharsets.UTF_8.decode(result).toString();
+        } finally {
+            nativeFree(result);
+        }
     }
 
     /**
@@ -179,20 +184,33 @@ public final class StatusGoService extends Service {
         }
     }
 
-    /** Called from native (status-go callback). */
+    /**
+     * Called from native (status-go callback). {@code utf8} is a direct view of status-go's
+     * signal memory and is only valid during this call; it must not be retained.
+     */
     @SuppressWarnings("unused")
-    private void onNativeSignal(String jsonSignal) {
-        if (jsonSignal == null) return;
-        final ByteBuffer utf8 = ByteBuffer.wrap(jsonSignal.getBytes(StandardCharsets.UTF_8));
-        final String type = SignalEnvelope.typeOf(jsonSignal);
+    private void onNativeSignal(ByteBuffer utf8) {
+        if (utf8 == null) return;
+        final String type = SignalEnvelope.typeOf(utf8);
         if (utf8.remaining() >= LARGE_SIGNAL_WARN_BYTES) {
             Log.w(TAG, "large status-go signal type=" + type + " sizeBytes=" + utf8.remaining());
         }
 
-        maybeStartForegroundFromSignal(type, jsonSignal);
-        notificationManager.handleSignal(type, jsonSignal);
+        String json = null;
+        if ("node.login".equals(type)) {
+            json = decode(utf8);
+            maybeStartForegroundFromSignal(json);
+        }
+        if (notificationManager.wantsSignal(type)) {
+            if (json == null) json = decode(utf8);
+            notificationManager.handleSignal(type, json);
+        }
 
         dispatchSignalToListeners(type, utf8);
+    }
+
+    private static String decode(ByteBuffer utf8) {
+        return StandardCharsets.UTF_8.decode(utf8.duplicate()).toString();
     }
 
     /**
@@ -204,18 +222,18 @@ public final class StatusGoService extends Service {
             final int n = listeners.beginBroadcast();
             try {
                 return SignalFanout.deliver(utf8, SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES, n,
-                        i -> new SignalFanout.Listener<RpcResponse>() {
+                        i -> new SignalFanout.Listener<IpcPayload>() {
                             @Override
                             public void onInline(byte[] bytes) throws RemoteException {
                                 listeners.getBroadcastItem(i).onSignal(bytes);
                             }
 
                             @Override
-                            public void onShared(RpcResponse region) throws RemoteException {
+                            public void onShared(IpcPayload region) throws RemoteException {
                                 listeners.getBroadcastItem(i).onSignalShm(region);
                             }
                         },
-                        buf -> sharedPayload(buf, "statusgo-signal"),
+                        buf -> IpcPayload.shared(buf, "statusgo-signal"),
                         (i, t) -> Log.w(TAG, "failed to deliver signal to UI listener=" + i
                                 + " type=" + type + " sizeBytes=" + utf8.remaining(), t));
             } finally {
@@ -261,30 +279,8 @@ public final class StatusGoService extends Service {
         }
     }
 
-    private static RpcResponse sharedPayload(ByteBuffer utf8, String namePrefix)
-            throws android.system.ErrnoException {
-        SharedMemory shm = null;
-        try {
-            shm = SharedMemory.create(namePrefix, utf8.remaining());
-            final ByteBuffer buf = shm.mapReadWrite();
-            try {
-                buf.put(utf8.duplicate());
-            } finally {
-                SharedMemory.unmap(buf);
-            }
-            shm.setProtect(OsConstants.PROT_READ);
-            final RpcResponse result = RpcResponse.shared(shm);
-            shm = null;
-            return result;
-        } finally {
-            if (shm != null) shm.close();
-        }
-    }
-
-    private void maybeStartForegroundFromSignal(String type, String jsonSignal) {
-        // On successful node login, keep this service as a foreground service so it survives
-        // swipe-away from Recents.
-        if (!"node.login".equals(type)) return;
+    /** On successful node login, stay in the foreground so swipe-away from Recents is survived. */
+    private void maybeStartForegroundFromSignal(String jsonSignal) {
         try {
             final JSONObject event = new JSONObject(jsonSignal).optJSONObject("event");
             if (event == null) return;
@@ -306,12 +302,12 @@ public final class StatusGoService extends Service {
         }
     }
 
-    private void maybeStopOnLogoutCall(String method, String respJson) {
+    private void maybeStopOnLogoutCall(String method, ByteBuffer respUtf8) {
         if (method == null) return;
         if (!method.equalsIgnoreCase("Logout")) return;
-        if (respJson == null || respJson.isEmpty()) return;
+        if (!respUtf8.hasRemaining()) return;
         try {
-            final JSONObject resp = new JSONObject(respJson);
+            final JSONObject resp = new JSONObject(decode(respUtf8));
             if (!resp.optString("error", "").isEmpty()) return;
             try {
                 stopForeground(true);
@@ -330,7 +326,7 @@ public final class StatusGoService extends Service {
      * Returns null if the node is not running or the response cannot be parsed.
      */
     private String fetchPausableServiceNames() throws org.json.JSONException {
-        final String response = nativeCall("PausableServices", "[]");
+        final String response = callRpc("PausableServices", "[]");
         if (response == null || response.isEmpty()) return null;
         final JSONArray services = new JSONArray(response);
         if (services.length() == 0) return null;
@@ -366,7 +362,7 @@ public final class StatusGoService extends Service {
                 if (namesJson == null) return;
                 final String method = visible ? "ResumeServices" : "PauseServices";
                 final String argsJson = "[" + JSONObject.quote(namesJson) + "]";
-                final String response = nativeCall(method, argsJson);
+                final String response = callRpc(method, argsJson);
                 if (response == null || response.isEmpty()) return;
                 final JSONObject parsed = new JSONObject(response);
                 final String error = parsed.optString("error", "");
@@ -438,7 +434,7 @@ public final class StatusGoService extends Service {
                     // a single JSON-object string.
                     final String argsJson = "[" + JSONObject.quote(payload.toString()) + "]";
                     Log.d(TAG, "ConnectionChange args: " + argsJson);
-                    final String resp = nativeCall("ConnectionChange", argsJson);
+                    final String resp = callRpc("ConnectionChange", argsJson);
                     lastConnectionKey = key; // only on success, so a transient failure can retry
                     if (resp != null && !resp.isEmpty()) {
                         final String err = new JSONObject(resp).optString("error", "");
@@ -498,36 +494,31 @@ public final class StatusGoService extends Service {
 
     private final IStatusGoService.Stub binder = new IStatusGoService.Stub() {
         @Override
-        public RpcResponse rpcCall(String method, String argsJson) {
+        public IpcPayload rpcCall(String method, IpcPayload args) {
             enforceCallerIsSameApp();
-            String resp = nativeCall(method, argsJson);
-            if (resp == null) resp = "{\"error\":\"null response\"}";
-            maybeStopOnLogoutCall(method, resp);
-
-            final byte[] bytes = resp.getBytes(StandardCharsets.UTF_8);
-            if (bytes.length < INLINE_THRESHOLD_BYTES) {
-                return RpcResponse.inline(bytes);
-            }
-
-            SharedMemory shm = null;
-            try {
-                shm = SharedMemory.create("statusgo-rpc", bytes.length);
-                final ByteBuffer buf = shm.mapReadWrite();
-                try {
-                    buf.put(bytes);
-                } finally {
-                    SharedMemory.unmap(buf);
+            final ByteBuffer result;
+            try (IpcPayload request = args) {
+                if (request == null) {
+                    result = nativeCall(method, null);
+                } else {
+                    final Object view = request.nativeView();
+                    result = view instanceof byte[]
+                            ? nativeCall(method, (byte[]) view)
+                            : nativeCallDirect(method, (ByteBuffer) view, request.length());
                 }
-                shm.setProtect(OsConstants.PROT_READ);
-
-                final RpcResponse result = RpcResponse.shared(shm);
-                shm = null; // ownership transferred; closure happens in writeToParcel
-                return result;
             } catch (Throwable t) {
-                if (shm != null) shm.close();
+                Log.w(TAG, "rpcCall: reading request failed", t);
+                return IpcPayload.inline("{\"error\":\"request transfer failed\"}");
+            }
+            if (result == null) return IpcPayload.inline(NULL_RESPONSE);
+            try {
+                maybeStopOnLogoutCall(method, result);
+                return IpcPayload.of(result, IpcPayload.INLINE_THRESHOLD_BYTES, "statusgo-rpc");
+            } catch (Throwable t) {
                 Log.w(TAG, "rpcCall: SharedMemory path failed; returning error JSON", t);
-                return RpcResponse.inline(
-                        "{\"error\":\"shared memory transfer failed\"}".getBytes(StandardCharsets.UTF_8));
+                return IpcPayload.inline("{\"error\":\"shared memory transfer failed\"}");
+            } finally {
+                nativeFree(result);
             }
         }
 

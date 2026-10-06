@@ -51,7 +51,15 @@
 # mobile/statusgo_service/statusgo_service_jni.cpp: GetMethodID
 # "onNativeSignal" on the service instance passed to nativeInit.
 -keepclassmembers class app.status.mobile.ipc.StatusGoService {
-    void onNativeSignal(java.lang.String);
+    void onNativeSignal(java.nio.ByteBuffer);
+}
+
+# mobile/statusgo_stub/statusgo_stub.cpp: FindClass + GetMethodID on the
+# status-go call result.
+-keep class app.status.mobile.ipc.IpcPayload {
+    java.lang.Object nativeView();
+    int length();
+    void close();
 }
 
 # MobileWebView (StatusQ FetchContent): libMobileWebView.so constructs

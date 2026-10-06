@@ -1,7 +1,10 @@
 package app.status.mobile;
 
 import android.content.Context;
+import app.status.mobile.ipc.IpcPayload;
 import app.status.mobile.ipc.StatusGoServiceClient;
+
+import java.nio.ByteBuffer;
 
 /**
  * UI-process bridge used by the native status-go stub library (libstatus_stub.so).
@@ -21,8 +24,11 @@ public final class StatusGoStub {
     // Native: supplies the Java class that implements call().
     private static native void nativeInit(Class<?> bridgeClass);
 
-    // Native: used later to deliver signals from Binder listener to Nim callback.
-    public static native void nativeDeliverSignal(String jsonSignal);
+    // Native: deliver UTF-8 signal JSON from the Binder listener to the Nim callback.
+    public static native void nativeDeliverSignal(byte[] utf8);
+
+    // Native: as above for a mapped shared region; reads {@code length} bytes in place.
+    public static native void nativeDeliverSignalDirect(ByteBuffer utf8, int length);
 
     /** Must be called early (e.g. Activity.onCreate) to bind the Java bridge. */
     public static void ensureInitialized(Context context) {
@@ -32,16 +38,16 @@ public final class StatusGoStub {
     }
 
     /**
-     * Called from native status-go stub.
+     * Called from native status-go stub; the native side reads and closes the result.
      * @param method status-go exported method name (e.g. "CallPrivateRPC")
-     * @param argsJson JSON array of string args (placeholder encoding for now)
+     * @param argsUtf8 direct buffer over the UTF-8 JSON array of string args
      */
-    public static String call(String method, String argsJson) {
+    public static IpcPayload call(String method, ByteBuffer argsUtf8) {
         // Called from native stub exports; forward to separate-process service.
         if (sContext == null) {
-            return "{\"error\":\"StatusGoStub not initialized\"}";
+            return IpcPayload.inline("{\"error\":\"StatusGoStub not initialized\"}");
         }
-        return StatusGoServiceClient.get().call(sContext, method, argsJson);
+        return StatusGoServiceClient.get().call(sContext, method, argsUtf8);
     }
 
     /** Hint to the service whether the UI is currently visible (foreground). */

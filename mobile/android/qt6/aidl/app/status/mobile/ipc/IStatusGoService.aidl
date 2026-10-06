@@ -1,18 +1,18 @@
 package app.status.mobile.ipc;
 
 import app.status.mobile.ipc.IStatusGoSignalListener;
-import app.status.mobile.ipc.RpcResponse;
+import app.status.mobile.ipc.IpcPayload;
 
 interface IStatusGoService {
     /**
-     * Hybrid status-go RPC.
+     * status-go call: {@code args} is the UTF-8 JSON array of string arguments.
      *
-     * Returns the response inline in the Binder reply Parcel when small enough, otherwise
-     * via an ashmem-backed SharedMemory region carried by the returned RpcResponse. The
-     * server picks the path based on response size; the client must release the
-     * RpcResponse via close() (try-with-resources).
+     * Requests and responses travel inline in the Parcel when small enough, otherwise via
+     * an ashmem-backed SharedMemory region carried by the IpcPayload, so neither side can
+     * exceed the Binder transaction budget. Both sides release their IpcPayloads via
+     * close() (try-with-resources).
      */
-    RpcResponse rpcCall(String method, String argsJson);
+    IpcPayload rpcCall(String method, in IpcPayload args);
 
     /** Register a signal listener. */
     void registerSignalListener(IStatusGoSignalListener listener);
