@@ -179,6 +179,32 @@ Item {
         }
     }
 
+    // What the tests put in a slot: a banner whose height they move, so the
+    // space a slot takes can grow and shrink under the rows.
+    property real bannerHeight: 40
+
+    Component {
+        id: headerComponent
+
+        Rectangle {
+            objectName: "headerBanner"
+
+            implicitHeight: root.bannerHeight
+            color: "#8844aaff"
+        }
+    }
+
+    Component {
+        id: footerComponent
+
+        Rectangle {
+            objectName: "footerBanner"
+
+            implicitHeight: root.bannerHeight
+            color: "#88ffaa44"
+        }
+    }
+
     QtObject {
         id: placeholderProbe
 
@@ -2452,6 +2478,9 @@ Item {
             view.verticalLayoutDirection
                     = WindowedView.VerticalLayoutDirection.TopToBottom
             owner.holdAnswer = false
+            view.header = null
+            view.footer = null
+            view.autoRequest = false
         }
 
         function renderBottomUp() {
@@ -2756,6 +2785,77 @@ Item {
         // The bands are the screen's in both directions: moreAvailableTop puts
         // one above the first row drawn, whichever model end the owner means by
         // it.
+        // A slot and a band are both content above the rows, and they have to
+        // stack in that order: the slot outside, the band next to the rows.
+        function test_theBandStaysBetweenAHeaderAndTheRows() {
+            view.moreAvailableTop = true
+            provider.delay = 0
+            freshFill(30)
+            finishFill(30)
+
+            view.header = headerComponent
+            tryVerify(() => !!view.itemAtRow(0), 2000, "rows are up")
+            waitForRendering(view)
+
+            const slot = named("topSlot")
+            const band = named("topPlaceholder")
+            const firstRow = view.itemAtRow(0)
+
+            verify(slot && slot.visible, "the slot is up")
+            verify(band && band.visible, "and so is the band")
+            verify(slot.y < band.y, "the slot is above the band")
+            verify(band.y < firstRow.y, "and the band above the rows")
+
+            view.header = null
+        }
+
+        // What the bands drive keeps working with slots in the column.
+        function test_aBandStillAsksForMoreWithSlotsUp() {
+            provider.delay = 0
+            freshFill(30)
+            finishFill(30)
+
+            view.header = headerComponent
+            view.footer = footerComponent
+            waitForRendering(view)
+
+            owner.startBudget = 3
+            owner.endBudget = 3
+            view.moreAvailableTop = Qt.binding(() => owner.startBudget > 0)
+            view.moreAvailableBottom = Qt.binding(() => owner.endBudget > 0)
+            view.autoRequest = true
+
+            view.contentY = 0
+            waitForRendering(view)
+
+            tryVerify(() => owner.startBudget < 3, 3000,
+                      "the band in the viewport asked for more")
+            tryVerify(() => !view.busy, 8000, "and the batch landed")
+
+            view.autoRequest = false
+            view.header = null
+            view.footer = null
+        }
+
+        // Finds an item by objectName, for the placements the view names.
+        function named(name, obj) {
+            const from = obj || view
+
+            if (from.objectName === name)
+                return from
+
+            const kids = from.children
+
+            for (let i = 0; kids && i < kids.length; ++i) {
+                const found = named(name, kids[i])
+
+                if (found)
+                    return found
+            }
+
+            return null
+        }
+
         function test_bottomUpTheTopBandIsStillAtTheTop() {
             renderBottomUp()
             view.moreAvailableTop = true
@@ -3046,6 +3146,434 @@ Item {
         }
 
         onBatchRevealed: pooledWindowSource.trim()
+    }
+
+    TestCase {
+        id: headerFooterTests
+
+        name: "WindowedView.HeaderFooter"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            root.bannerHeight = 40
+        }
+
+        // The groups share one view, so everything this touches goes back.
+        function cleanup() {
+            view.header = null
+            view.footer = null
+            view.stickToBottom = false
+            view.placeholder = null
+            view.autoRequest = false
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+            view.moreAvailableTop = true
+            view.moreAvailableBottom = true
+            root.bannerHeight = 40
+            root.width = 500
+            owner.answerOwed = false
+        }
+
+        function fill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        // The live slot content, wherever it has been placed.
+        function named(name, obj) {
+            const from = obj || view
+
+            if (from.objectName === name)
+                return from
+
+            const kids = from.children
+
+            for (let i = 0; kids && i < kids.length; ++i) {
+                const found = named(name, kids[i])
+
+                if (found)
+                    return found
+            }
+
+            return null
+        }
+
+        function show(slot, component, name) {
+            view[slot] = component
+            tryVerify(() => !!named(name), 2000, name + " loaded")
+            // the Loader has its item the moment the component is assigned; the
+            // column only re-lays out on the next polish
+            waitForRendering(view)
+            return named(name)
+        }
+
+        function topInViewport(item) {
+            return item.mapToItem(view, 0, 0).y
+        }
+
+        // The topmost row the reader can see the start of. Same shape as the
+        // Resize group's, which is where the idea comes from.
+        function topVisible() {
+            for (const shell of shells()) {
+                if (!shell.visible || !shell.content)
+                    continue
+
+                if (shell.y >= view.contentY + view.height)
+                    break           // below the viewport entirely
+
+                if (shell.y >= view.contentY - 0.5)
+                    return { value: shell.content.value,
+                             offset: shell.y - view.contentY }
+            }
+
+            return { value: -9999, offset: 0 }
+        }
+
+        // A slot's height lands on the item at once and in the column a polish
+        // later, so a test that measures geometry has to wait for both.
+        function resizeSlot(name, height) {
+            root.bannerHeight = height
+            tryVerify(() => Math.abs(named(name).height - height) < 0.5, 2000,
+                      name + " took its new height")
+            waitForRendering(view)
+        }
+
+        function wholeOnScreen(item) {
+            const top = topInViewport(item)
+
+            return top >= -0.5 && top + item.height <= view.height + 0.5
+        }
+
+        function bottomEdge() {
+            return Math.max(0, view.contentHeight - view.height)
+        }
+
+        // ---- placement -------------------------------------------------
+
+        function test_theSlotsFollowTheLayoutDirection() {
+            fill(root.windowSize)
+
+            const header = show("header", headerComponent, "headerBanner")
+            const footer = show("footer", footerComponent, "footerBanner")
+
+            compare(header.parent.objectName, "topSlot",
+                    "top-down, the header is at the screen top")
+            compare(footer.parent.objectName, "bottomSlot")
+
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+            tryVerify(() => settled(root.windowSize), 8000, "redrawn upside down")
+
+            compare(named("headerBanner").parent.objectName, "bottomSlot",
+                    "bottom-up, the header is at the screen bottom - under the "
+                    + "model's first row, where ListView puts it")
+            compare(named("footerBanner").parent.objectName, "topSlot")
+        }
+
+        function test_aSlotIsNotARow() {
+            fill(root.windowSize)
+
+            const rows = view.rowCount
+            const key = view.keyAtRow(0)
+            const without = view.contentHeight
+
+            show("footer", footerComponent, "footerBanner")
+
+            tryVerify(() => Math.abs(view.contentHeight
+                                     - (without + root.bannerHeight)) < 0.5,
+                      2000, "the content grew by the slot's height")
+            compare(view.rowCount, rows, "the row count is untouched")
+            compare(view.rowForKey(key), 0, "and so is addressing")
+        }
+
+        // ---- the rows must not move ------------------------------------
+
+        // Space appearing above the viewport moves every row unless contentY
+        // moves with it, which is what the view already does for the start
+        // band. A slot there is the same thing.
+        function test_aSlotAboveTheRowsDoesNotMoveThem() {
+            fill(60)
+
+            view.contentY = 300
+            waitForRendering(view)
+
+            const before = topVisible()
+
+            show("header", headerComponent, "headerBanner")
+
+            let after = topVisible()
+
+            compare(after.value, before.value, "the same row is at the top")
+            fuzzyCompare(after.offset, before.offset, 0.5,
+                         "at the same offset, after the slot appeared")
+
+            resizeSlot("headerBanner", 140)
+
+            after = topVisible()
+            compare(after.value, before.value, "still the same row")
+            fuzzyCompare(after.offset, before.offset, 0.5, "after it grew")
+
+            resizeSlot("headerBanner", 20)
+
+            after = topVisible()
+            compare(after.value, before.value)
+            fuzzyCompare(after.offset, before.offset, 0.5, "after it shrank")
+
+            view.header = null
+            tryVerify(() => !named("headerBanner"), 2000, "the slot went away")
+            waitForRendering(view)
+
+            after = topVisible()
+            compare(after.value, before.value)
+            fuzzyCompare(after.offset, before.offset, 0.5, "after it went")
+        }
+
+        // ---- sticking to the end ---------------------------------------
+
+        function test_stickingToTheEndHoldsThroughABottomSlot() {
+            view.stickToBottom = true
+            fill(root.windowSize)
+
+            view.contentY = bottomEdge()
+            tryVerify(() => view.atBottom, 2000, "at the bottom to begin with")
+
+            const footer = show("footer", footerComponent, "footerBanner")
+
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
+                      "still at the bottom once the slot is there")
+            verify(view.atBottom, "and the view says so")
+            verify(wholeOnScreen(footer), "with the slot wholly in view")
+
+            resizeSlot("footerBanner", 160)
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
+                      "still at the bottom after it grew")
+            verify(wholeOnScreen(named("footerBanner")))
+
+            resizeSlot("footerBanner", 25)
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
+                      "and after it shrank")
+            verify(wholeOnScreen(named("footerBanner")))
+
+            view.footer = null
+            tryVerify(() => !named("footerBanner"), 2000, "the slot went away")
+            waitForRendering(view)
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
+                      "and the bottom is still the bottom")
+            verify(view.atBottom)
+        }
+
+        // The chat's case: bottom-up, so the thing pinned at the screen bottom
+        // is the *header*.
+        function test_stickingToTheEndHoldsThroughTheHeaderBottomUp() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+            view.stickToBottom = true
+            fill(root.windowSize)
+
+            view.contentY = bottomEdge()
+            tryVerify(() => view.atBottom, 2000, "at the bottom")
+
+            const header = show("header", headerComponent, "headerBanner")
+
+            compare(header.parent.objectName, "bottomSlot")
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
+                      "still at the bottom")
+            verify(wholeOnScreen(header), "with the header in view")
+
+            resizeSlot("headerBanner", 150)
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
+                      "and after it grew")
+            verify(wholeOnScreen(named("headerBanner")))
+        }
+
+        function test_aRowArrivingKeepsTheBottomSlotInView() {
+            view.stickToBottom = true
+            fill(root.windowSize)
+
+            const footer = show("footer", footerComponent, "footerBanner")
+
+            view.contentY = bottomEdge()
+            tryVerify(() => view.atBottom, 2000, "at the bottom")
+
+            owner.appendLive()
+            tryVerify(() => view.rowCount === root.windowSize + 1, 5000,
+                      "the row arrived")
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
+                      "and the view followed it")
+
+            verify(wholeOnScreen(named("footerBanner")),
+                   "the slot is still in view")
+
+            const last = view.itemAtRow(view.rowCount - 1)
+
+            verify(topInViewport(last) + last.height
+                   <= topInViewport(named("footerBanner")) + 0.5,
+                   "and the new row sits above it, not behind it")
+        }
+
+        function test_theFirstFillWithASlotLandsAtTheBottomEdge() {
+            view.stickToBottom = true
+            show("footer", footerComponent, "footerBanner")
+
+            fill(root.windowSize)
+
+            tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 5000,
+                      "the fill landed at the bottom of the content")
+            verify(wholeOnScreen(named("footerBanner")),
+                   "with the slot in view rather than below the fold")
+        }
+
+        // Reading mid-history, a slot appearing at either end must not drag the
+        // reader to it - the pin is for a view that was already at the bottom.
+        function test_aSlotDoesNotPullTheReaderToTheEnd() {
+            view.stickToBottom = true
+            fill(60)
+
+            view.contentY = 200
+            waitForRendering(view)
+
+            const before = topVisible()
+
+            show("footer", footerComponent, "footerBanner")
+
+            const after = topVisible()
+
+            compare(after.value, before.value, "the same row is at the top")
+            fuzzyCompare(after.offset, before.offset, 0.5, "at the same offset")
+            verify(!view.atBottom, "and the view did not jump to the end")
+        }
+
+        // The pin is for a view that is at the bottom; a slot growing past the
+        // viewport takes the bottom away from it, and the view has to say so
+        // rather than claim it is still there.
+        function test_atBottomGoesFalseWhenASlotGrowsPastTheViewport() {
+            fill(60)
+
+            const footer = show("footer", footerComponent, "footerBanner")
+
+            view.contentY = bottomEdge()
+            waitForRendering(view)
+            verify(view.atBottom, "at the bottom to begin with")
+
+            const before = topVisible()
+
+            resizeSlot("footerBanner", view.height + 80)
+
+            verify(!view.atBottom,
+                   "the slot pushed the end below the viewport")
+
+            const after = topVisible()
+
+            compare(after.value, before.value,
+                    "and nothing above the viewport moved")
+            fuzzyCompare(after.offset, before.offset, 0.5)
+        }
+
+        // ---- positioning -----------------------------------------------
+
+        function test_positioningARowIgnoresTheSlots() {
+            fill(60)
+
+            verify(view.positionViewAtRow(30,
+                                          WindowedView.PositionMode.Beginning),
+                   "accepted")
+            waitForRendering(view)
+
+            const without = topInViewport(view.itemAtRow(30))
+
+            show("header", headerComponent, "headerBanner")
+            show("footer", footerComponent, "footerBanner")
+
+            verify(view.positionViewAtRow(30,
+                                          WindowedView.PositionMode.Beginning))
+            waitForRendering(view)
+
+            fuzzyCompare(topInViewport(view.itemAtRow(30)), without, 0.5,
+                         "the row still lands at the viewport top")
+
+            verify(view.positionViewAtRow(30, WindowedView.PositionMode.Center))
+            waitForRendering(view)
+
+            const item = view.itemAtRow(30)
+
+            fuzzyCompare(topInViewport(item) + item.height / 2,
+                         view.height / 2, 1.0, "and centres on the viewport")
+        }
+
+        function test_theOffsetRoundTripSurvivesTheSlots() {
+            fill(60)
+            show("header", headerComponent, "headerBanner")
+            show("footer", footerComponent, "footerBanner")
+
+            view.contentY = 400
+            waitForRendering(view)
+
+            const row = 25
+            const captured = view.viewportOffsetToRow(row)
+
+            verify(!isNaN(captured), "captured an offset")
+
+            view.positionViewAtEnd()
+            waitForRendering(view)
+            verify(Math.abs(view.viewportOffsetToRow(row) - captured) > 20,
+                   "the position is genuinely lost")
+
+            verify(view.positionViewAtRowOffset(row, captured), "accepted")
+            tryVerify(() => Math.abs(view.viewportOffsetToRow(row) - captured)
+                            < 0.5, 5000, "and restored to the pixel")
+        }
+
+        // Content edges, so they include the slots - ListView's do too.
+        function test_theContentEdgesIncludeTheSlots() {
+            fill(60)
+
+            const header = show("header", headerComponent, "headerBanner")
+            const footer = show("footer", footerComponent, "footerBanner")
+
+            view.positionViewAtBeginning()
+            waitForRendering(view)
+
+            fuzzyCompare(view.contentY, 0, 0.5, "the beginning is the content's")
+            verify(wholeOnScreen(header),
+                   "which is where the header is, above the first row")
+
+            view.positionViewAtEnd()
+            waitForRendering(view)
+
+            fuzzyCompare(view.contentY, bottomEdge(), 0.5)
+            verify(wholeOnScreen(footer), "and the footer is at the end")
+        }
+
+        function test_theResizeAnchorHoldsWithSlots() {
+            provider.delegate = layoutDelegate
+            fill(60)
+            show("header", headerComponent, "headerBanner")
+            show("footer", footerComponent, "footerBanner")
+
+            view.contentY = 300
+            waitForRendering(view)
+
+            const before = topVisible()
+
+            root.width = 380
+            tryVerify(() => !view.busy, 5000, "the re-wrap settled")
+            waitForRendering(view)
+
+            const after = topVisible()
+
+            compare(after.value, before.value,
+                    "the same row is at the viewport top")
+            fuzzyCompare(after.offset, before.offset, 1.0,
+                         "and at the same offset")
+        }
     }
 
     TestCase {

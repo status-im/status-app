@@ -155,6 +155,10 @@ SplitView {
         readonly property int placeholderRowHeight: 72
         readonly property int defaultPlaceholderRows: 10
 
+        readonly property bool defaultHeader: false
+        readonly property bool defaultFooter: false
+        readonly property int defaultSlotHeight: 48
+
         readonly property int defaultRowSource: 0
         readonly property int defaultPoolTarget: 80
         // The pool's own pacing, and what it falls back to after a boost.
@@ -401,6 +405,9 @@ SplitView {
             autoRequestSwitch.checked = d.defaultAutoRequest
             placeholderSwitch.checked = d.defaultPlaceholder
             placeholderRowsSpinBox.value = d.defaultPlaceholderRows
+            headerSwitch.checked = d.defaultHeader
+            footerSwitch.checked = d.defaultFooter
+            slotHeightSpinBox.value = d.defaultSlotHeight
             rowSourceComboBox.currentIndex = d.defaultRowSource
             poolTargetSpinBox.value = d.defaultPoolTarget
             intervalSpinBox.value = d.defaultBackgroundInterval
@@ -717,6 +724,41 @@ SplitView {
         Component.onCompleted: append(d.createInitialMessages(root.initialMessageCount))
     }
 
+    // What the page puts in the view's slots. Sized from the spin box in the
+    // panel, so the space a slot takes can be grown and shrunk while watching
+    // what the rows do.
+    Component {
+        id: headerBannerComponent
+
+        Rectangle {
+            implicitHeight: slotHeightSpinBox.value
+            color: "#2f3d5c"
+
+            Label {
+                anchors.centerIn: parent
+
+                color: "white"
+                text: "header - the start of the layout direction"
+            }
+        }
+    }
+
+    Component {
+        id: footerBannerComponent
+
+        Rectangle {
+            implicitHeight: slotHeightSpinBox.value
+            color: "#5c3d2f"
+
+            Label {
+                anchors.centerIn: parent
+
+                color: "white"
+                text: "footer - the end of it"
+            }
+        }
+    }
+
     // What a row looks like. The view never sees this.
     Component {
         id: messageComponent
@@ -817,6 +859,9 @@ SplitView {
                 windowSource.trim()
                 d.applyJump()
             }
+
+            header: headerSwitch.checked ? headerBannerComponent : null
+            footer: footerSwitch.checked ? footerBannerComponent : null
 
             ScrollBar.vertical: ScrollBar {}
 
@@ -1254,6 +1299,58 @@ SplitView {
                 Item { Layout.preferredHeight: 8 }
 
                 Label {
+                    text: "Header and footer"
+                    font.bold: true
+                }
+
+                // Which screen edge each lands at follows the direction, as
+                // ListView's do: the header goes at the start of it.
+                Label {
+                    text: "Drawn: header at the "
+                          + (d.bottomUp ? "bottom" : "top")
+                          + ", footer at the "
+                          + (d.bottomUp ? "top" : "bottom")
+                }
+
+                Switch {
+                    id: headerSwitch
+
+                    Layout.fillWidth: true
+
+                    text: "Header"
+                    checked: d.defaultHeader
+                }
+
+                Switch {
+                    id: footerSwitch
+
+                    Layout.fillWidth: true
+
+                    text: "Footer"
+                    checked: d.defaultFooter
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label { text: "Slot height" }
+
+                    SpinBox {
+                        id: slotHeightSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: 600
+                        stepSize: 10
+                        value: d.defaultSlotHeight
+                        editable: true
+                    }
+                }
+
+                Item { Layout.preferredHeight: 8 }
+
+                Label {
                     text: "Addressing"
                     font.bold: true
                 }
@@ -1661,6 +1758,9 @@ SplitView {
         property alias placeholder: placeholderSwitch.checked
         property alias autoRequest: autoRequestSwitch.checked
         property alias placeholderRows: placeholderRowsSpinBox.value
+        property alias header: headerSwitch.checked
+        property alias footer: footerSwitch.checked
+        property alias slotHeight: slotHeightSpinBox.value
         property alias rowSource: rowSourceComboBox.currentIndex
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked

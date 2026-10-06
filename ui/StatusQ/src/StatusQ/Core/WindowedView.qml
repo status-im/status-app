@@ -69,6 +69,11 @@ Flickable {
     // instead of joining a batch.
     property string keyRole: "key"
 
+    // Content of the view's own, above and below the rows, with ListView's
+    // meaning.
+    property Component header: null
+    property Component footer: null
+
     // Set by whoever owns the data: is there anything beyond each edge? Top
     // and bottom are the screen's, so an owner whose model runs the other way
     // round - a newest-first chat model rendered BottomToTop - crosses its own
@@ -699,14 +704,18 @@ Flickable {
             })
         }
 
-        // What the top band contributes above the rows, as the current
-        // contentY already accounts for it. Its `height` is a constant, so what
-        // actually changes is whether it is shown at all - a Column drops an
-        // invisible child from its layout entirely.
-        property real appliedTopBand: 0
+        // What stands above the rows at the screen's top, as the current
+        // contentY already accounts for it: the start band, and whatever the
+        // owner put in the slot there. The band's `height` is a constant, so for
+        // it what changes is only whether it is shown at all - a Column drops an
+        // invisible child from its layout entirely - while a slot's content can
+        // also grow and shrink. Both arrive here the same way, because any of it
+        // changes the Column's height, and that is what calls this.
+        property real appliedAboveRows: 0
 
-        function topBandExtent() {
-            return topBand.visible ? topBand.height : 0
+        function aboveRowsExtent() {
+            return (topBand.visible ? topBand.height : 0)
+                    + (topSlot.visible ? topSlot.height : 0)
         }
 
         function applyContentHeight() {
@@ -718,15 +727,16 @@ Flickable {
             // bottom the viewport was actually sitting at - and against the
             // height it was sitting in, which a resize has already changed.
             const wasAtBottom = d.wasAtBottomOfContent()
-            const startBandDelta = d.topBandExtent() - d.appliedTopBand
+            const startBandDelta = d.aboveRowsExtent() - d.appliedAboveRows
             const was = d.applyingPosition
 
-            d.appliedTopBand = d.topBandExtent()
+            d.appliedAboveRows = d.aboveRowsExtent()
 
             d.applyingPosition = true
             root.contentHeight = Math.max(root.height, rowsColumn.height)
 
-            // The start band grew or shrank above the rows, so without this
+            // The start band or the slot above the rows grew or shrank, so
+            // without this
             // every one of them shifts by that much - visibly, since outside a
             // slide no anchor is armed to absorb it. The bottom band needs nothing:
             // it is below the viewport. Applied before the stickToBottom pin, and
@@ -1547,6 +1557,19 @@ Flickable {
             height: 0
         }
 
+        // The header/footer slots
+        Loader {
+            id: topSlot
+
+            // named so a test can tell which placement holds the slot
+            objectName: "topSlot"
+
+            width: rowsColumn.width
+
+            sourceComponent: d.bottomUp ? root.footer : root.header
+            visible: !!sourceComponent
+        }
+
         // The three placements. Each reserves its own space and is empty until
         // the one instance is moved into it. Invisible children leave a Column's
         // layout entirely, so a band that is not wanted costs nothing.
@@ -1717,6 +1740,18 @@ Flickable {
                      && (root.moreAvailableBottom || d.pendingBottom)
 
             onVisibleChanged: d.applyPlaceholder()
+        }
+
+        // The other placement: the screen's bottom.
+        Loader {
+            id: bottomSlot
+
+            objectName: "bottomSlot"
+
+            width: rowsColumn.width
+
+            sourceComponent: d.bottomUp ? root.header : root.footer
+            visible: !!sourceComponent
         }
     }
 
