@@ -71,6 +71,10 @@ suite "share_intake_wake":
     removeDir(slotDir)
     removeDir(cacheBase)
 
+  test "preserves the internal thread notification deep link":
+    let deepLink = "status-app://thread-notification?chatId=chat-id&threadId=thread-id&messageId=message-id"
+    check convertInternalLinkToExternal(deepLink) == deepLink
+
   test "wake url delivers the slot share payload to the intake seam":
     manager.appReady()
     slot.write("""{"type":"share","text":"shared from the extension"}""")

@@ -31,7 +31,7 @@ QtObject:
 
   proc showMessageNotification*(self: GlobalEvents, title: string, message: string, sectionId: string,
     isCommunitySection: bool, isSectionActive: bool, chatId: string, isChatActive: bool, messageId: string,
-    notificationType: int, isOneToOne: bool, isGroupChat: bool) {.signal.}
+    threadId: string, notificationType: int, isOneToOne: bool, isGroupChat: bool) {.signal.}
 
   proc showNewContactRequestNotification*(self: GlobalEvents, title: string, message: string,
     sectionId: string) {.signal.}
