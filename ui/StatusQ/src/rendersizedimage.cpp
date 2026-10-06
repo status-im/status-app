@@ -6,6 +6,8 @@
 class RenderSizedImagePrivate : public QQuickImagePrivate
 {
 public:
+    // Private Qt hook, verified against Qt 6.11.0 (tested), 6.11.1 and 6.12.0 (source);
+    // tst_StatusImage::test_privateDprHookActive fails if it stops being called.
     // Called by QQuickImageBase::load() when sourceSize is valid or the source is scalable.
     bool updateDevicePixelRatio(qreal targetDevicePixelRatio) override
     {
