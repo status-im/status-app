@@ -150,6 +150,22 @@ Item {
             verify(sectionDelegate)
         }
 
+        // only holdings show a balance; a "Popular assets" row is not held
+        function test_popularRowsShowNoBalance() {
+            const control = createTemporaryObject(panelCmp, root)
+            const listView = findChild(control, "assetsListView")
+            waitForRendering(listView)
+
+            const held = listView.itemAtIndex(0)
+            const popular = listView.itemAtIndex(1)
+            verify(held && popular)
+            compare(popular.ListView.section, "Popular assets")
+
+            verify(held.rowAt(0).currencyBalanceAsString !== "", "a holding shows its fiat balance")
+            compare(popular.rowAt(0).currencyBalanceAsString, "")
+            compare(popular.rowAt(0).cryptoBalanceStr, "")
+        }
+
         function test_withNoSectionsModel() {
             const model = createTemporaryQmlObject("import QtQml.Models; ListModel {}", root)
             const control = createTemporaryObject(panelCmp, root)
