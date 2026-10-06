@@ -1,0 +1,24 @@
+#!/usr/bin/env groovy
+
+// Configure a Jenkins Pipeline job to load this file from master.
+pipeline {
+  agent none
+
+  triggers {
+    cron('TZ=Etc/UTC\nH 4 * * *')
+  }
+
+  stages {
+    stage('Run') {
+      steps {
+        build(
+          job: '/status-app/e2e/prs',
+          parameters: [
+            booleanParam(name: 'NIGHTLY', value: true),
+            string(name: 'GIT_REF', value: 'master'),
+          ]
+        )
+      }
+    }
+  }
+}
