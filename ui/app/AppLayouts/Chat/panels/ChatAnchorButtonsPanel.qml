@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -33,16 +33,20 @@ Item {
     }
 
     component AnchorButton: StatusButton {
+        id: anchorButton
+
         Layout.preferredHeight: 40
         spacing: 2
 
         verticalPadding: Theme.halfPadding
         horizontalPadding: Theme.smallPadding
 
-        layer.enabled: true
-        layer.effect: DropShadow {
-            samples: 16
-            cached: true
+        RectangularShadow {
+            parent: anchorButton.background
+            anchors.fill: parent
+            z: -1
+            radius: anchorButton.radius
+            blur: 8
             color: StatusColors.alphaColor(Theme.palette.directColor1, 0.16)
         }
     }

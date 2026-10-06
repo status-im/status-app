@@ -90,8 +90,7 @@ SplitView {
             community: QtObject {
                 property string id: "1"
                 property string name: "Socks"
-                property var members: { "count": 5 }
-                property string image: Assets.png("tokens/UNI")
+                property string image: ctrlHasImage.checked ? Assets.png("tokens/UNI") : ""
                 property string color: "orchid"
             }
             devicesStore: ProfileStores.DevicesStore {
@@ -117,15 +116,22 @@ SplitView {
 
         logsView.logText: logs.logText
 
-        Switch {
-            id: ctrlHasSyncedDevices
-            text: "Has synced devices"
+        Column {
+            Switch {
+                id: ctrlHasSyncedDevices
+                text: "Has synced devices"
+            }
+            Switch {
+                id: ctrlHasImage
+                text: "Has community image"
+                checked: true
+            }
         }
     }
 }
 
 // category: Popups
-
+// status: good
 // https://www.figma.com/file/qHfFm7C9LwtXpfdbxssCK3/Kuba%E2%8E%9CDesktop---Communities?type=design&node-id=36894-685070&mode=design&t=6k1ago8SSQ5Ip9J8-0
 // https://www.figma.com/file/qHfFm7C9LwtXpfdbxssCK3/Kuba%E2%8E%9CDesktop---Communities?type=design&node-id=37275-289960&mode=design&t=6k1ago8SSQ5Ip9J8-0
 // https://www.figma.com/file/qHfFm7C9LwtXpfdbxssCK3/Kuba%E2%8E%9CDesktop---Communities?type=design&node-id=37275-290036&mode=design&t=6k1ago8SSQ5Ip9J8-0

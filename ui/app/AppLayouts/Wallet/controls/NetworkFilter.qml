@@ -3,7 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Core
@@ -122,11 +122,17 @@ StatusComboBox {
                     z: index + 1
 
                     image.layer.enabled: index < chainRepeater.count - 1 && row.spacing < 0
-                    image.layer.effect: OpacityMask {
+                    image.layer.effect: MultiEffect {
+                        maskEnabled: true
+                        maskThresholdMin: 0.5
+                        maskSpreadAtMin: 1.0
                         id: mask
-                        invert: true
+                        maskInverted: true
 
                         maskSource: Item {
+                            parent: root
+                            layer.enabled: true
+                            visible: false
                             width: mask.width + 2
                             height: mask.height + 2
 

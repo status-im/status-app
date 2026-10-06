@@ -195,7 +195,7 @@ Item {
             const backdrop = findChild(controlUnderTest, "blurBackdropRect")
             verify(!!backdrop, "frosted backdrop rectangle exists")
             verify(backdrop.visible, "backdrop is visible when content is behind the footer")
-            verify(backdrop.layer.enabled, "FastBlur layer effect is enabled")
+            verify(backdrop.layer.enabled, "MultiEffect blur layer is enabled")
 
             const src = findChild(controlUnderTest, "blurBackdropSource")
             verify(!!src, "backdrop shader effect source exists")

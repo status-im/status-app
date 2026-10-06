@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
@@ -20,12 +20,17 @@ Frame {
     }
 
     layer.enabled: true
-    layer.effect: OpacityMask {
+    layer.effect: MultiEffect {
+        maskEnabled: true
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
         maskSource: Rectangle {
+            parent: root
+            layer.enabled: true
+            visible: false
             width: root.width
             height: root.height
             radius: background.radius
-            visible: false
         }
     }
 }

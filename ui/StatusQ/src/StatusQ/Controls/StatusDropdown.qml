@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import QtQuick.Controls as QC
 import QtQml
 
@@ -138,24 +137,9 @@ QC.Popup {
         }
     }
 
-    background: Rectangle {
-       color: Theme.palette.statusMenu.backgroundColor
-       topLeftRadius: d.cornerRadius
-       topRightRadius: d.cornerRadius
-       bottomLeftRadius: root.bottomSheet ? 0 : d.cornerRadius
-       bottomRightRadius: root.bottomSheet ? 0 : d.cornerRadius
-
-       RectangularShadow {
-           anchors.fill: parent
-           anchors.margins: -d.cornerRadius
-           z: parent.z - 1
-           topLeftRadius: parent.topLeftRadius
-           topRightRadius: parent.topRightRadius
-           bottomLeftRadius: parent.bottomLeftRadius
-           bottomRightRadius: parent.bottomRightRadius
-           spread: 0.1
-           color: Theme.palette.dropShadow
-       }
+    background: StatusBackgroundPanel {
+        bottomLeftRadius: root.bottomSheet ? 0 : d.cornerRadius
+        bottomRightRadius: root.bottomSheet ? 0 : d.cornerRadius
     }
 
     // Take focus while open so the section Back shortcut (handled by AppMain)

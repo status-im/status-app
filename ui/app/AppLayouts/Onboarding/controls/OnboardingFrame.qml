@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -19,14 +19,15 @@ Frame {
         border.color: Theme.palette.baseColor2
         radius: 20
         color: Theme.palette.background
-    }
 
-    layer.enabled: root.dropShadow
-    layer.effect: DropShadow {
-        verticalOffset: 4
-        radius: 7
-        samples: 15
-        cached: true
-        color: Theme.palette.dropShadow
+        RectangularShadow {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            blur: 7
+            offset.y: 4
+            color: Theme.palette.dropShadow
+            visible: root.dropShadow
+        }
     }
 }

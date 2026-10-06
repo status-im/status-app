@@ -38,6 +38,7 @@ Control {
 
     property color color: Theme.palette.statusModal.backgroundColor
     property int radius: Theme.radius
+    property bool bottomSheet
 
     QtObject {
         id: d
@@ -79,8 +80,8 @@ Control {
 
     background: StatusDialogBackground {
         color: root.color
-        bottomLeftRadius: root.radius
-        bottomRightRadius: root.radius
+        bottomLeftRadius: root.bottomSheet ? 0 : root.radius
+        bottomRightRadius: root.bottomSheet ? 0 : root.radius
         topLeftRadius: 0
         topRightRadius: 0
     }

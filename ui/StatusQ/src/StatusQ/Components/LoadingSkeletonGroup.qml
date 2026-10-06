@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
@@ -13,7 +13,7 @@ import StatusQ.Core.Theme
 
    Use this for creation-time skeleton screens instead of many LoadingComponent
    instances: tiles are plain rectangles and the whole group costs one effect
-   pass, where every LoadingComponent carries its own OpacityMask and animator.
+   pass, where every LoadingComponent carries its own mask effect and animator.
 
    Example:
 
@@ -42,6 +42,7 @@ Item {
     Item {
         id: shapesContainer
         anchors.fill: parent
+        layer.enabled: root.visible
     }
 
     // The animated sweep band, materialized only while the group is visible.
@@ -88,7 +89,10 @@ Item {
         }
     }
 
-    OpacityMask {
+    MultiEffect {
+        maskEnabled: true
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
         anchors.fill: parent
         source: sweepContainer
         maskSource: shapesContainer

@@ -3,7 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -141,24 +141,7 @@ Menu {
         }
     }
 
-    background: Rectangle {
-        id: backgroundContent
+    background: StatusBackgroundPanel {
         implicitWidth: 176
-        color: Theme.palette.statusMenu.backgroundColor
-        radius: Theme.radius
-        layer.enabled: true
-        layer.effect: DropShadow {
-            width: backgroundContent.width
-            height: backgroundContent.height
-            x: backgroundContent.x
-            visible: backgroundContent.visible
-            source: backgroundContent
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 12
-            samples: 25
-            spread: 0.2
-            color: Theme.palette.dropShadow
-        }
     }
 }

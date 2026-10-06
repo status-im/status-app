@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -40,23 +40,13 @@ Switch {
             Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
         }
 
-        Rectangle {
+        StatusBackgroundPanel {
             id: circle
             y: 4
             width: 20
             height: 20
             radius: 10
             color: StatusColors.white
-            layer.enabled: true
-            layer.effect: DropShadow {
-                width: circle.width
-                height: circle.height
-                visible: true
-                verticalOffset: 1
-                fast: true
-                cached: true
-                color: Theme.palette.dropShadow
-            }
 
             states: [
                 State {

@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Controls.Universal
 import QtQuick.Layouts
 import QtQuick.Window
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -35,6 +35,17 @@ ToolBar {
         topRightRadius: root.radius
         bottomLeftRadius: 0
         bottomRightRadius: 0
+
+        RectangularShadow {
+            anchors.fill: parent
+            z: -1
+            topLeftRadius: root.radius
+            topRightRadius: root.radius
+            bottomLeftRadius: 0
+            bottomRightRadius: 0
+            color: Theme.palette.dropShadow3
+            visible: root.dropShadowEnabled
+        }
     }
 
     Item {
@@ -80,7 +91,7 @@ ToolBar {
         StatusDialogDivider {
             anchors.bottom: parent.bottom
             width: parent.width
-            visible: root.showDivider
+            visible: root.showDivider && !root.dropShadowEnabled
         }
 
         Rectangle {
@@ -110,12 +121,5 @@ ToolBar {
             active: root.internalPopupActive
             sourceComponent: root.internalPopupComponent
         }
-    }
-    layer.enabled: root.dropShadowEnabled
-    layer.effect: DropShadow {
-        horizontalOffset: 0
-        verticalOffset: 2
-        samples: 37
-        color: Theme.palette.dropShadow
     }
 }

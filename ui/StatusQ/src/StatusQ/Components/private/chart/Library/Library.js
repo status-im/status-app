@@ -70,7 +70,7 @@
                     event,
                     canvas))
             }
-            
+
             canvas._eventSource[mapped].connect(qmlHandler)
             canvas._eventSource.connectedHandlers.push({
                 listener: listener,
@@ -124,7 +124,7 @@
             if (!me.canvas) {
                 return
             }
-           
+
             var opts = me.options
             var h = Math.max(0, me.canvas.height)
             var w = Math.max(0, me.canvas.width)

@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Core
@@ -188,11 +188,18 @@ StatusDialog {
                             asset.bgColor: "transparent"
                             visible: !!asset.name
                             layer.enabled: toImageSmartIdenticon.visible
-                            layer.effect: OpacityMask {
+                            layer.effect: MultiEffect {
+                                maskEnabled: true
+                                maskThresholdMin: 0.5
+                                maskSpreadAtMin: 1.0
                                 id: mask
-                                invert: true
+                                maskInverted: true
 
                                 maskSource: Item {
+                                    objectName: "signTransactionFromImageMask"
+                                    parent: fromImageSmartIdenticon
+                                    layer.enabled: true
+                                    visible: false
                                     width: mask.width + 4
                                     height: mask.height + 4
 
@@ -239,11 +246,11 @@ StatusDialog {
                                 radius: 12
                                 isCollectibleLoading: root.isCollectibleLoading
                             }
-                            layer.enabled: true
-                            layer.effect: DropShadow {
-                                horizontalOffset: 0
-                                verticalOffset: 0
-                                samples: 37
+                            RectangularShadow {
+                                anchors.fill: collectibleMedia
+                                z: -1
+                                radius: collectibleMedia.radius
+                                blur: 18
                                 color: Utils.setColorAlpha(root.gradientColor, 0.15)
                             }
                         }
@@ -309,6 +316,7 @@ StatusDialog {
                 objectName: "countdownPill"
                 anchors.right: parent.right
                 anchors.top: parent.top
+                anchors.margins: Theme.halfPadding
                 timestamp: root.requestTimestamp
                 expirationSeconds: root.expirationSeconds
                 visible: !!root.hasExpiryDate

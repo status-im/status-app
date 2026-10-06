@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -76,8 +76,14 @@ Item {
         height: imageContainer.imageAlias ? imageContainer.imageAlias.height : 0
 
         layer.enabled: true
-        layer.effect: OpacityMask {
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             maskSource: Item {
+                parent: root
+                layer.enabled: true
+                visible: false
                 width: imageBox.width
                 height: imageBox.height
 

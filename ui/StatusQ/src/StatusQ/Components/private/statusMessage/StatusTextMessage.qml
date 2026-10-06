@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Components
@@ -75,7 +75,7 @@ Item {
         selectable: !root.isMobile
         font.pixelSize: Theme.primaryTextFontSize
 
-        opacity: !showMoreOpacityMask.active ? 1 : 0
+        opacity: !showMoreMaskEffect.active ? 1 : 0
 
         edited: root.isEdited
         blocks: MarkdownUtils.toBlocks(
@@ -110,9 +110,8 @@ Item {
         anchors.fill: chatTextView
         active: showMoreButtonLoader.active && !d.readMore
         visible: false
-        sourceComponent: LinearGradient {
-            start: Qt.point(0, 0)
-            end: Qt.point(0, chatTextView.height)
+        layer.enabled: active
+        sourceComponent: Rectangle {
             gradient: Gradient {
                 GradientStop { position: 0.0; color: StatusColors.white }
                 GradientStop { position: 0.85; color: StatusColors.white }
@@ -122,10 +121,13 @@ Item {
     }
 
     Loader {
-        id: showMoreOpacityMask
+        id: showMoreMaskEffect
         active: showMoreButtonLoader.active && !d.readMore
         anchors.fill: chatTextView
-        sourceComponent: OpacityMask {
+        sourceComponent: MultiEffect {
+            maskEnabled: true
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             source: chatTextView
             maskSource: showMoreMaskGradient
         }

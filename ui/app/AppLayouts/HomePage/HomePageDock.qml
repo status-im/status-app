@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
+import StatusQ.Controls
 import StatusQ.Core.Theme
 
 import utils
@@ -62,19 +62,9 @@ Control {
     padding: Theme.defaultSmallPadding
     spacing: Theme.defaultSmallPadding
 
-    background: Rectangle {
+    background: StatusBackgroundPanel {
         color: Theme.palette.baseColor4
         radius: Theme.defaultSmallPadding * 2
-    }
-
-    layer.enabled: true
-    layer.effect: DropShadow {
-        horizontalOffset: 0
-        verticalOffset: 4
-        radius: 12
-        samples: 25
-        spread: 0
-        color: Theme.palette.dropShadow
     }
 
     implicitHeight: 84 // by design

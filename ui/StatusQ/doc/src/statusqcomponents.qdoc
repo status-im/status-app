@@ -43,7 +43,6 @@
        \li \l{StatusListItemBadge}
        \li \l{StatusEmojiAndColorComboBox}
        \li \l{StatusSmartIdenticon}
-       \li \l{StatusTagSelector}
        \li \l{StatusToastMessage}
        \li \l{StatusVideo}
        \li \l{StatusWizardStepper}

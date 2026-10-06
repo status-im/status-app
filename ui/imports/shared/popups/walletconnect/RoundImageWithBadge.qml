@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -52,11 +52,17 @@ Item {
         }
 
         layer.enabled: badge.visible
-        layer.effect: OpacityMask {
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             id: mask
-            invert: true
+            maskInverted: true
 
             maskSource: Item {
+                parent: root
+                layer.enabled: true
+                visible: false
                 width: mask.width
                 height: mask.height
 

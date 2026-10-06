@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -269,8 +269,15 @@ StatusDialog {
         }
 
         layer.enabled: root.visible && !root.messageToPin
-        layer.effect: OpacityMask {
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             maskSource: Rectangle {
+                objectName: "pinnedMessagesMask"
+                parent: column
+                layer.enabled: true
+                visible: false
                 width: column.width
                 height: column.height
                 radius: background.radius

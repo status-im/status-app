@@ -11,7 +11,7 @@
 
 !*/
 
-(function(global){    
+(function(global){
     // ChartJs needs a global object to work. Simulating the window object
     global.window = global
 

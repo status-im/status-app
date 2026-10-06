@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Controls
 import StatusQ.Components
@@ -50,20 +49,7 @@ StatusComboBox {
     popupContentItemObjectName: "accountSelectorList"
 
     control.popup.width: 430
-    control.popup.background: Rectangle {
-        radius: Theme.radius
-        color: Theme.palette.background
-        border.color: Theme.palette.border
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: 8
-            samples: 15
-            fast: true
-            cached: true
-            color: "#22000000"
-        }
-    }
+    control.popup.background: StatusBackgroundPanel {border.color: Theme.palette.border}
 
     control.valueRole: "address"
     control.textRole: "name"

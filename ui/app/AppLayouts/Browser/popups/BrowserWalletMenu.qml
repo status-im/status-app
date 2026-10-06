@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import StatusQ
 import StatusQ.Controls
@@ -39,26 +38,10 @@ Dialog {
     parent: Overlay.overlay
     implicitWidth: 720
     height: 480
-    background: Rectangle {
-        id: bgPopup
+    background: StatusBackgroundPanel {
         color: root.incognitoMode ?
                    Theme.palette.privacyColors.primary:
                    Theme.palette.background
-        radius: Theme.radius
-        layer.enabled: true
-        layer.effect: DropShadow {
-            width: bgPopup.width
-            height: bgPopup.height
-            x: bgPopup.x
-            y: bgPopup.y + 10
-            visible: bgPopup.visible
-            source: bgPopup
-            horizontalOffset: 0
-            verticalOffset: 5
-            radius: 10
-            samples: 15
-            color: Theme.palette.dropShadow
-        }
     }
     padding: Theme.padding
 

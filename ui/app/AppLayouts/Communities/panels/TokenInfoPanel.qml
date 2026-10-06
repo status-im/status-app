@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -50,6 +50,7 @@ Control {
 
         // General artwork representation:
         Rectangle {
+            id: artwork
             visible: !token.isPrivilegedToken
 
             Layout.fillWidth: true
@@ -67,15 +68,23 @@ Control {
 
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                visible: false
                 source: token.artworkSource
                 sourceClipRect: imageCropRect ? imageCropRect : undefined
             }
 
-            OpacityMask {
-                anchors.fill: image
-                source: image
-                maskSource: parent
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                maskEnabled: true
+                maskThresholdMin: 0.5
+                maskSpreadAtMin: 1.0
+                maskSource: Rectangle {
+                    parent: root
+                    width: artwork.width
+                    height: artwork.height
+                    radius: artwork.radius
+                    visible: false
+                    layer.enabled: true
+                }
             }
         }
 

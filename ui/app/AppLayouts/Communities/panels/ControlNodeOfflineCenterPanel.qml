@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -29,7 +29,7 @@ ColumnLayout {
             id: centralPanelData
             width: parent.width
             layer.enabled: true
-            layer.effect: fastBlur
+            layer.effect: blurEffect
 
             StatusBaseText {
                 Layout.alignment: Qt.AlignHCenter
@@ -128,11 +128,11 @@ ColumnLayout {
     }
 
     Component {
-        id: fastBlur
+        id: blurEffect
 
-        FastBlur {
-            radius: 32
-            transparentBorder: true
+        MultiEffect {
+            blurEnabled: true
+            blur: 1.0
         }
     }
 }

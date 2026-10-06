@@ -2,9 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
+import StatusQ.Controls
 import StatusQ.Core.Theme
 
 Control {
@@ -21,20 +21,13 @@ Control {
     padding: Theme.defaultPadding
     bottomPadding: padding + root.parent.SafeArea.margins.bottom
 
-    background: Rectangle {
+    background: StatusBackgroundPanel {
         color: root.color
         bottomLeftRadius: root.bottomSheet ? 0 : Theme.radius
         bottomRightRadius: root.bottomSheet ? 0 : Theme.radius
         topLeftRadius: 0
         topRightRadius: 0
-
-        layer.enabled: root.dropShadowEnabled
-        layer.effect: DropShadow {
-            horizontalOffset: 0
-            verticalOffset: -2
-            samples: 37
-            color: Theme.palette.dropShadow
-        }
+        shadowVisible: root.dropShadowEnabled
 
         StatusDialogDivider {
             anchors.top: parent.top

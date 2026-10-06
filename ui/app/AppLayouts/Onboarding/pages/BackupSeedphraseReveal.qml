@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Components
@@ -119,10 +119,10 @@ OnboardingPage {
                         }
                     }
                     layer.enabled: !d.seedphraseRevealed
-                    layer.effect: GaussianBlur {
-                        radius: samples/2 - 1
-                        samples: 64
-                        transparentBorder: true
+                    layer.effect: MultiEffect {
+                        blurEnabled: true
+                        blurMax: 31
+                        blur: 1.0
                     }
                 }
 

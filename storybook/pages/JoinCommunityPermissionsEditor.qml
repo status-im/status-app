@@ -10,7 +10,7 @@ ColumnLayout {
     id: root
 
     property bool isOnlyChannelPanelEditor: false
-    property string channelName: "#vip"
+    property string channelName: "vip"
     property bool joinCommunity: true // Otherwise, enter channel
     property bool requirementsMet: true
     property bool requirementsCheckPending: false

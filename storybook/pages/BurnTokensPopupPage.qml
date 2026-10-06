@@ -62,7 +62,7 @@ SplitView {
                 isAsset: assetButton.checked
                 tokenSource: assetButton.checked
                              ? ModelsData.assets.socks
-                             : ModelsData.collectibles.kitty1Big
+                             : ModelsData.collectibles.cryptoPunks
                 accounts: accountsModel
                 chainName: "Optimism"
 

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 import StatusQ.Components
 
 /*!
@@ -35,7 +36,7 @@ TabButton {
     font.weight: Font.Medium
     font.pixelSize: Theme.primaryTextFontSize
 
-    hoverEnabled: enabled
+    hoverEnabled: enabled && !Utils.isMobile
 
     opacity: enabled ? 1 : ThemeUtils.disabledOpacity
 

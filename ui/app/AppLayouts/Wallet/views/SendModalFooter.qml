@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQml.Models
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Controls
 import StatusQ.Core
@@ -51,8 +51,10 @@ StatusDialogFooter {
             radius: 8
 
             layer.enabled: !!root.blurSource
-            layer.effect: FastBlur {
-                radius: 36
+            layer.effect: MultiEffect {
+                blurEnabled: true
+                blur: 1.0
+                autoPaddingEnabled: false
             }
 
             ShaderEffectSource {
@@ -120,12 +122,17 @@ StatusDialogFooter {
                 }
             }
 
-            layer.enabled: root.dropShadowEnabled
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: -3
-                samples: 24
+            RectangularShadow {
+                anchors.fill: parent
+                z: -1
+                radius: 8
+                topLeftRadius: 0
+                topRightRadius: 0
+                blur: 12
+                offset.y: -3
                 color: StatusColors.alphaColor(Theme.palette.dropShadow, 0.06)
+                opacity: root.color.a * (!!root.blurSource ? 0.85 : 1)
+                visible: root.dropShadowEnabled
             }
 
             StatusDialogDivider {

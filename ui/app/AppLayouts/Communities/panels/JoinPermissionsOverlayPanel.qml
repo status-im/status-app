@@ -72,8 +72,9 @@ Control {
         readonly property var viewOnlyPermissionsModel: SortFilterProxyModel {
             sourceModel: root.viewOnlyHoldingsModel
             filters: [
-                ExpressionFilter {
+                FastExpressionFilter {
                     expression: d.filterPermissions(model)
+                    expectedRoles: ["tokenCriteriaMet", "isPrivate"]
                 }
             ]
         }
@@ -81,8 +82,9 @@ Control {
         readonly property var viewAndPostPermissionsModel: SortFilterProxyModel {
             sourceModel: root.viewAndPostHoldingsModel
             filters: [
-                ExpressionFilter {
+                FastExpressionFilter {
                     expression: d.filterPermissions(model)
+                    expectedRoles: ["tokenCriteriaMet", "isPrivate"]
                 }
             ]
         }
@@ -90,8 +92,9 @@ Control {
         readonly property var moderatePermissionsModel: SortFilterProxyModel {
             sourceModel: root.moderateHoldingsModel
             filters: [
-                ExpressionFilter {
+                FastExpressionFilter {
                     expression: d.filterPermissions(model)
+                    expectedRoles: ["tokenCriteriaMet", "isPrivate"]
                 }
             ]
         }

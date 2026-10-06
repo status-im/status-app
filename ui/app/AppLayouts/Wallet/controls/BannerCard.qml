@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -57,20 +57,10 @@ Control {
     HoverHandler {
         cursorShape: Qt.PointingHandCursor
     }
-    background: Rectangle {
-        id: background
-        color: Theme.palette.background
+    background: StatusBackgroundPanel {
         radius: 12
         border.width: 1
         border.color: Theme.palette.baseColor2
-        layer.enabled: true
-        layer.effect: DropShadow {
-            horizontalOffset: 0
-            verticalOffset: 7
-            radius: 8
-            spread: root.hovered ? 0.3 : 0
-            color: Theme.palette.baseColor2
-        }
     }
     contentItem: RowLayout {
         id: layout

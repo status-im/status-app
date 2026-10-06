@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Components
@@ -29,21 +28,12 @@ TabButton {
         }
     }
 
-    background: Rectangle {
+    background: StatusBackgroundPanel {
         implicitWidth: 148
         implicitHeight: 36
         color: root.checked ? Theme.palette.statusSwitchTab.buttonBackgroundColor
-                            : "transparent"
-        radius: Theme.radius
-        layer.enabled: true
-        layer.effect: DropShadow {
-            horizontalOffset: 0
-            verticalOffset: 0
-            radius: 10
-            samples: 25
-            spread: 0
-            color: Theme.palette.dropShadow
-        }
+                            : StatusColors.transparent
+        shadowVisible: root.checked
 
         HoverHandler {
             cursorShape: hovered ? Qt.PointingHandCursor : undefined

@@ -31,7 +31,7 @@ SplitView {
 Nemo enim 😋 ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.".arg(d.name)
 
         property color color: "orchid"
-        property string channelName: joinCommunity ? "general" : "#vip"
+        property string channelName: joinCommunity ? "general" : "vip"
         property string channelDesc: "VIP members only"
         property bool joinCommunity: true // Otherwise it means join channel action
         property int accessType: Constants.communityChatPublicAccess

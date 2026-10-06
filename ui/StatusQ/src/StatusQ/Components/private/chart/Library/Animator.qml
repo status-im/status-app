@@ -45,7 +45,7 @@ QtObject {
     function animate() {
         var requests = _requests
         var ilen = requests.length
-        
+
         var requestItem = null
         var i = 0
 

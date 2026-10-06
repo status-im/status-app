@@ -3,6 +3,7 @@ module StatusQ.Controls
 StatusAmountInput 0.1 StatusAmountInput.qml
 StatusAnimatedText 0.1 StatusAnimatedText.qml
 StatusBackButton 0.1 StatusBackButton.qml
+StatusBackgroundPanel 0.1 StatusBackgroundPanel.qml
 StatusBanner 0.1 StatusBanner.qml
 StatusBaseButton 0.1 StatusBaseButton.qml
 StatusBaseInput 0.1 StatusBaseInput.qml
