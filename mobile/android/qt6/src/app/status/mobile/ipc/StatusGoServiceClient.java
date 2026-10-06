@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.TransactionTooLargeException;
 import android.system.ErrnoException;
 import android.util.Log;
 
@@ -320,6 +321,11 @@ public final class StatusGoServiceClient {
         }
         try {
             return readRpc(s, method, argsUtf8);
+        } catch (TransactionTooLargeException e) {
+            // A payload problem, not a dead service: restarting the frontend cannot help.
+            Log.w(TAG, "call failed: transaction too large method=" + method
+                    + " argsBytes=" + argsUtf8.remaining(), e);
+            return IpcPayload.inline("{\"error\":\"status-go transaction too large\"}");
         } catch (RemoteException e) {
             Log.w(TAG, "call failed", e);
             // After reinstall/update (or service crash), binder can become a dead object.
@@ -355,14 +361,20 @@ public final class StatusGoServiceClient {
         }
     }
 
-    /** Issues an rpcCall with the request inline in the Parcel. */
+    /** Issues an rpcCall, sending large requests through SharedMemory. */
     private static IpcPayload readRpc(IStatusGoService s, String method, ByteBuffer argsUtf8)
             throws RemoteException {
-        final IpcPayload resp = s.rpcCall(method, IpcPayload.inline(SignalFanout.toArray(argsUtf8)));
-        if (resp == null) {
-            return IpcPayload.inline("{\"error\":\"status-go service returned null\"}");
+        try (IpcPayload request = IpcPayload.of(
+                argsUtf8, IpcPayload.INLINE_THRESHOLD_BYTES, "statusgo-request")) {
+            final IpcPayload resp = s.rpcCall(method, request);
+            if (resp == null) {
+                return IpcPayload.inline("{\"error\":\"status-go service returned null\"}");
+            }
+            return resp;
+        } catch (ErrnoException e) {
+            Log.w(TAG, "rpcCall: shared memory request failed", e);
+            return IpcPayload.inline("{\"error\":\"shared memory request failed\"}");
         }
-        return resp;
     }
 
     /**
