@@ -33,6 +33,11 @@ pipeline {
       description: 'Existing BrowserStack app identifier (bs://...). Leave empty to upload from BUILD_SOURCE.',
       defaultValue: ''
     )
+    string(
+      name: 'BROWSERSTACK_ACCOUNT',
+      description: 'BrowserStack account to run on: the one that uploaded BROWSERSTACK_APP_ID. Empty means account 1 when BROWSERSTACK_APP_ID is set, and any lane otherwise.',
+      defaultValue: ''
+    )
     choice(
       name: 'TEST_DEVICE_ID',
       description: 'BrowserStack device id to run on (leave empty to use the environment default).',
@@ -52,7 +57,7 @@ pipeline {
 
   options {
     timestamps()
-    /* Spent waiting for a lane. The run budget is the timeout around pytest. */
+    /* The whole build, mostly the wait for a lane. The run budget is the timeout around pytest. */
     timeout(time: 4, unit: 'HOURS')
     buildDiscarder(logRotator(
       daysToKeepStr: '30',
@@ -85,13 +90,14 @@ pipeline {
       }
     }
 
-    /* Lockable resources: label `browserstack-android-lane`, names
-     * browserstack-android-account-<N>-lane-<a|b>. Declare them in the order
-     * 1-a, 2-a, 1-b, 2-b: the plugin hands them out in declaration order.
-     * Disable an account's resources to take it out of service. */
+    /* Lockable resources: names browserstack-android-account-<N>-lane-<a|b>, each
+     * with the labels `browserstack-android-lane` and `browserstack-android-account-<N>`.
+     * Declare them in the order 1-a, 2-a, 1-b, 2-b: the plugin hands them out in
+     * declaration order. Reserve an account's lanes to take it out of service. */
     stage('E2E lane') {
       options {
-        lock(label: 'browserstack-android-lane', quantity: 1, variable: 'BROWSERSTACK_LANE')
+        /* From params: env set in `environment` or by an earlier stage reads as null here. */
+        lock(label: "${laneLabel()}", quantity: 1, variable: 'BROWSERSTACK_LANE')
       }
       environment {
         VIRTUAL_ENV = "${env.WORKSPACE_TMP}/venv-appium"
@@ -123,10 +129,15 @@ pipeline {
                       "and carry the label browserstack-android-lane. Fix the resource name in\n" +
                       "Manage Jenkins > Lockable Resources.")
               }
+              def wanted = laneAccount()
+              if (wanted && account != wanted) {
+                error("Lane '${lane}' carries the label ${laneLabel()} but belongs to account ${account}.\n" +
+                      "Give each lane only its own account's label in Manage Jenkins > Lockable Resources.")
+              }
               def credentialsId = credentialsForAccount(account)
               if (!credentialsId) {
                 error("No BrowserStack credential configured for account ${account} (lane '${lane}').\n" +
-                      "Either add it to credentialsForAccount() in this file, or disable the\n" +
+                      "Either add it to credentialsForAccount() in this file, or reserve the\n" +
                       "browserstack-android-account-${account}-lane-* resources so builds stop\n" +
                       "being handed a lane this job cannot use.")
               }
@@ -160,7 +171,7 @@ pipeline {
                 def code = lines ? lines[-1] : ''
                 if (code != '200') {
                   error("BrowserStack account ${env.BROWSERSTACK_ACCOUNT} did not answer (HTTP ${code ?: 'no response'}).\n" +
-                        "The credential may be revoked, or the account may be down. Disable the\n" +
+                        "The credential may be revoked, or the account may be down. Reserve the\n" +
                         "browserstack-android-account-${env.BROWSERSTACK_ACCOUNT}-lane-* resources to take it\n" +
                         "out of service; builds will queue on the remaining lanes.")
                 }
@@ -191,8 +202,8 @@ pipeline {
                   if (!apps.contains(wanted)) {
                     echo "WARNING: BROWSERSTACK_APP_ID '${wanted}' is not among the recent uploads on " +
                          "account ${env.BROWSERSTACK_ACCOUNT}. A bs:// id only works on the account that " +
-                         "uploaded it; if the run fails with INVALID_APP_URL, leave BROWSERSTACK_APP_ID " +
-                         "empty so the build uploads to its own account."
+                         "uploaded it; if the run fails with INVALID_APP_URL, set BROWSERSTACK_ACCOUNT to that " +
+                         "account, or leave BROWSERSTACK_APP_ID empty so the build uploads to its own account."
                   }
                 }
               }
@@ -366,6 +377,21 @@ def credentialsForAccount(String account) {
     '2': 'browserstack-status-mobile-android-2',
   ]
   return byAccount[account]
+}
+
+/* A bs:// app id works only on the account that uploaded it, so a run that reuses
+ * one waits for that account's lanes. Before lanes, every upload was on account 1. */
+def laneAccount() {
+  def account = params.BROWSERSTACK_ACCOUNT?.trim() ?: (params.BROWSERSTACK_APP_ID?.trim() ? '1' : '')
+  if (account && !credentialsForAccount(account)) {
+    error("BROWSERSTACK_ACCOUNT '${account}' has no row in credentialsForAccount().")
+  }
+  return account
+}
+
+def laneLabel() {
+  def account = laneAccount()
+  return account ? "browserstack-android-account-${account}" : 'browserstack-android-lane'
 }
 
 /* Worker count from PYTEST_ARGS, every xdist spelling, last one wins as pytest
