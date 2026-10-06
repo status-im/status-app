@@ -59,8 +59,12 @@ Control {
     // the list holds only what the account owns (no catalog behind it), so an empty
     // list is a settled answer, not a catalog still being built
     property bool ownedTokensOnly: false
+    // the other side's selection: not pickable here, and the receive side never
+    // settles on it for the same chain (the exchange button can leave both sides
+    // on one token; the pay side is the user's choice, so the receive side yields)
     property string nonInteractiveGroupKey
     property int nonInteractiveChainId: -1
+    onNonInteractiveGroupKeyChanged: reevaluateSelectedId()
 
     property string groupKey
     onGroupKeyChanged: {
@@ -250,26 +254,42 @@ Control {
                    && root.tokenSelectorModel.searchString === ""
         }
 
+        // the group the other side has on this very chain; "" when there is none
+        function groupKeyTakenByOtherSide() {
+            return root.nonInteractiveChainId !== -1 && root.nonInteractiveChainId === root.selectedNetworkChainId
+                   ? root.nonInteractiveGroupKey : ""
+        }
+
         function reevaluateSelectedId() {
             if (!d.listSettledNow())
                 return
-            if (d.catalogJudgesSelection
-                    && !SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
-                if (!!d.selectedHoldingId
+            if (d.catalogJudgesSelection) {
+                const taken = root.swapSide === SwapInputPanel.SwapSide.Receive ? d.groupKeyTakenByOtherSide() : ""
+                const clashes = !!taken && d.selectedHoldingId === taken
+                if (!clashes && SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", d.selectedHoldingId)) {
+                    d.setHoldingToSelector()
+                    return
+                }
+                if (!clashes && !!d.selectedHoldingId
                         && !!root.tokenSelectorModel.pinGroup
                         && root.tokenSelectorModel.pinGroup(d.selectedHoldingId)) {
                     d.setHoldingToSelector()
                     return
                 }
-                const defaultIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", root.defaultGroupKey)
-                                       ? root.defaultGroupKey : undefined
+                // a fallback is a listed group the pay side does not have on this chain
+                const free = (groupKey) => !!groupKey && groupKey !== taken
+                                           && SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", groupKey)
+                                           ? groupKey : undefined
+                const defaultIfPresent = free(root.defaultGroupKey)
                 if (root.ownedTokensOnly) {
+                    // a list of the account's holdings: nothing to fall back on but the
+                    // default, so the user is asked to pick ("Select asset") rather than
+                    // handed the chain's native token
                     d.selectedHoldingId = defaultIfPresent ?? ""
                 } else {
-                    const nativeGroupKey = Utils.getNativeTokenGroupKey(root.listCatalogChainId)
-                    const nativeIfPresent = SQUtils.ModelUtils.contains(root.tokenSelectorModel, "key", nativeGroupKey)
-                                          ? nativeGroupKey : undefined
-                    d.selectedHoldingId = defaultIfPresent ?? nativeIfPresent ?? root.defaultGroupKey
+                    const nativeIfPresent = free(Utils.getNativeTokenGroupKey(root.listCatalogChainId))
+                    d.selectedHoldingId = defaultIfPresent ?? nativeIfPresent
+                                          ?? (root.defaultGroupKey !== taken ? root.defaultGroupKey : "")
                 }
             }
             d.setHoldingToSelector()
