@@ -8450,14 +8450,6 @@ Are you sure you want to do this?</source>
 <context>
     <name>HandlersManager</name>
     <message>
-        <source>Info</source>
-        <translation>Інформація</translation>
-    </message>
-    <message>
-        <source>Swap is not available in the testnet mode.</source>
-        <translation>Обмін недоступний у режимі Testnet.</translation>
-    </message>
-    <message>
         <source>Push notifications enabled</source>
         <translation>Push-сповіщення увімкнено</translation>
     </message>
