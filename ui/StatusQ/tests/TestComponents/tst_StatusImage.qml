@@ -106,6 +106,21 @@ Item {
             verify(decoded.height < decoded.width)
         }
 
+        // Guards the private QQuickImageBasePrivate::updateDevicePixelRatio override in
+        // RenderSizedImage: without it Qt covers the box (upscaling to 400px) and reports
+        // the implicit size in decoded pixels.
+        function test_privateDprHookActive() {
+            const img = createTemporaryObject(imageComponent, root,
+                                              { width: 400, height: 200, source: root.smallRaster })
+            tryCompare(img, "status", Image.Ready)
+            compare(ImageInspector.decodedSize(img), Qt.size(72, 72))
+
+            img.source = root.largeRaster
+            tryCompare(img, "status", Image.Ready)
+            compare(ImageInspector.decodedSize(img), Qt.size(physical(200, img), physical(200, img)))
+            compare(img.implicitWidth, 200)
+        }
+
         function test_smallRasterNotUpscaled() {
             const img = createTemporaryObject(imageComponent, root,
                                               { width: 400, height: 400, source: root.smallRaster })
