@@ -98,6 +98,23 @@ QObject {
     QtObject {
         id: d
         property var homePageEntriesModel
+
+        // helpers for FastExpressionRole, whose expression context does not resolve singletons
+        function chatColor(color, colorId) {
+            return color || Utils.colorForColorId(root.Theme.palette, colorId)
+        }
+
+        function walletColor(colorId) {
+            return Utils.getColorForId(root.Theme.palette, colorId ?? Constants.walletAccountColors.primary)
+        }
+
+        function currencyBalance(balance) {
+            return LocaleUtils.currencyAmountToLocaleString(balance)
+        }
+
+        function dappName(name, url) {
+            return name || (url ? StringUtils.extractDomainFromLink(url) : "")
+        }
     }
 
     // Provides data for the Dock's left (fixed) part; w/o the writable layer
@@ -168,166 +185,189 @@ QObject {
     }
 
     function clear() {
-        const count = homePageProxyModel.ModelCount.count
-        for (let i = 0; i < count; i++) {
-            homePageProxyModel.proxyObject(i).pinned = false
-            homePageProxyModel.proxyObject(i).timestamp = 0
-        }
+        homePageProxyModel.clear()
     }
 
-    ObjectProxyModel {
+    // The per-source models below only rename source roles and add cheap proxy roles, so no
+    // per-row objects are created: sorting/filtering the combined model stays lazy.
+    SortFilterProxyModel {
         id: communitiesModel
 
-        sourceModel: SortFilterProxyModel {
+        sourceModel: RolesRenamingModel {
             sourceModel: root.sectionsBaseModel
-            filters: [
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.community
-                }
+            mapping: [
+                RoleRename { from: "icon"; to: "sectionIcon" },
+                RoleRename { from: "image"; to: "icon" },
+                RoleRename { from: "bannerImageData"; to: "banner" },
+                RoleRename { from: "joinedMembersCount"; to: "members" },
+                RoleRename { from: "activeMembersCount"; to: "activeMembers" },
+                RoleRename { from: "amIBanned"; to: "banned" }
             ]
         }
-
-        delegate: QtObject {
-            readonly property string key: Constants.appSection.community + ';' + model.id
-            readonly property string id: model.id
-            readonly property string name: model.name
-            readonly property string icon: model.image
-            readonly property color color: model.color
-            readonly property string banner: model.bannerImageData
-            readonly property bool hasNotification: model.hasNotification
-            readonly property int notificationsCount: model.notificationsCount
-
-            readonly property int members: model.joinedMembersCount
-            readonly property int activeMembers: model.activeMembersCount
-
-            readonly property bool pending: model.spectated && !model.joined
-            readonly property bool banned: model.amIBanned
+        filters: ValueFilter {
+            roleName: "sectionType"
+            value: Constants.appSection.community
         }
-
-        expectedRoles: ["id", "name", "image", "color", "bannerImageData", "hasNotification", "notificationsCount",
-            "joinedMembersCount", "activeMembersCount", "spectated", "joined", "amIBanned"]
-        exposedRoles: ["key", "id", "name", "icon", "color", "banner", "hasNotification", "notificationsCount",
-            "members", "activeMembers", "pending", "banned"]
+        proxyRoles: [
+            ConstantRole { name: "keyPrefix"; value: Constants.appSection.community },
+            JoinRole { name: "key"; roleNames: ["keyPrefix", "id"]; separator: ";" },
+            FastExpressionRole {
+                name: "pending"
+                expression: !!(model.spectated && !model.joined)
+                expectedRoles: ["spectated", "joined"]
+            }
+        ]
     }
 
-    ObjectProxyModel {
+    SortFilterProxyModel {
         id: settingsModel
 
-        sourceModel: SettingsEntriesModel {
-            showWalletEntries: true
-            showBrowserEntries: root.browserEnabled
-            syncingBadgeCount: root.syncingBadgeCount
-            messagingBadgeCount: root.messagingBadgeCount
-            showBackUpSeed: root.showBackUpSeed
-            backUpSeedBadgeCount: root.backUpSeedBadgeCount
-            isKeycardEnabled: root.keycardEnabled
-            showSubSubSections: true
+        sourceModel: RolesRenamingModel {
+            sourceModel: SettingsEntriesModel {
+                showWalletEntries: true
+                showBrowserEntries: root.browserEnabled
+                syncingBadgeCount: root.syncingBadgeCount
+                messagingBadgeCount: root.messagingBadgeCount
+                showBackUpSeed: root.showBackUpSeed
+                backUpSeedBadgeCount: root.backUpSeedBadgeCount
+                isKeycardEnabled: root.keycardEnabled
+                showSubSubSections: true
+            }
+            mapping: [
+                RoleRename { from: "text"; to: "name" },
+                RoleRename { from: "badgeCount"; to: "notificationsCount" }
+            ]
         }
-        delegate: QtObject {
-            readonly property string key: Constants.appSection.profile + ';' + model.subsection
-            readonly property string id: model.subsection
-            readonly property string name: model.text
-            readonly property string icon: model.icon
-            readonly property color color: root.Theme.palette.primaryColor1
-            readonly property bool hasNotification: model.badgeCount > 0
-            readonly property int notificationsCount: model.badgeCount
-
-            readonly property bool isExperimental: model.isExperimental
-        }
-        expectedRoles: ["subsection", "text", "icon", "badgeCount", "isExperimental"]
-        exposedRoles: ["key", "id", "name", "icon", "color", "hasNotification", "notificationsCount",
-            "isExperimental"]
+        proxyRoles: [
+            ConstantRole { name: "keyPrefix"; value: Constants.appSection.profile },
+            JoinRole { name: "key"; roleNames: ["keyPrefix", "subsection"]; separator: ";" },
+            JoinRole { name: "id"; roleNames: ["subsection"] },
+            ConstantRole { name: "color"; value: root.Theme.palette.primaryColor1 },
+            FastExpressionRole {
+                name: "hasNotification"
+                expression: model.notificationsCount > 0
+                expectedRoles: ["notificationsCount"]
+            }
+        ]
     }
 
-    ObjectProxyModel {
+    SortFilterProxyModel {
         id: chatsModel
-        sourceModel: SortFilterProxyModel {
+
+        sourceModel: RolesRenamingModel {
             sourceModel: root.chatsBaseModel
-            filters: [
-                ValueFilter {
-                    roleName: "isCategory"
-                    value: false
-                }
+            mapping: [
+                RoleRename { from: "type"; to: "chatType" }, // cf. Constants.chatType.*
+                RoleRename { from: "icon"; to: "sourceIcon" },
+                RoleRename { from: "color"; to: "sourceColor" }
             ]
         }
-        delegate: QtObject {
-            readonly property string key: Constants.appSection.chat + ';' + model.itemId
-            readonly property string id: model.itemId
-            readonly property string name: model.name
-            readonly property string icon: model.icon || model.emoji
-            readonly property string lastMessageText: model.lastMessageText
-            readonly property color color: model.color || Utils.colorForColorId(root.Theme.palette, model.colorId)
-            readonly property bool hasNotification: model.hasUnreadMessages || model.notificationsCount
-            readonly property int notificationsCount: model.notificationsCount
-
-            readonly property int chatType: model.type // cf. Constants.chatType.*
-            readonly property int onlineStatus: model.onlineStatus // cf. Constants.onlineStatus.*
+        filters: ValueFilter {
+            roleName: "isCategory"
+            value: false
         }
-
-        expectedRoles: ["itemId", "type", "name", "emoji", "icon", "color", "colorId", "hasUnreadMessages", "notificationsCount", "onlineStatus", "lastMessageText"]
-        exposedRoles: ["key", "id", "chatType", "name", "icon", "color", "hasNotification", "notificationsCount", "onlineStatus", "lastMessageText"]
+        proxyRoles: [
+            ConstantRole { name: "keyPrefix"; value: Constants.appSection.chat },
+            JoinRole { name: "key"; roleNames: ["keyPrefix", "itemId"]; separator: ";" },
+            JoinRole { name: "id"; roleNames: ["itemId"] },
+            FastExpressionRole {
+                name: "icon"
+                expression: model.sourceIcon || model.emoji || ""
+                expectedRoles: ["sourceIcon", "emoji"]
+            },
+            FastExpressionRole {
+                name: "color"
+                expression: d.chatColor(model.sourceColor, model.colorId)
+                expectedRoles: ["sourceColor", "colorId"]
+            },
+            FastExpressionRole {
+                name: "hasNotification"
+                expression: !!(model.hasUnreadMessages || model.notificationsCount)
+                expectedRoles: ["hasUnreadMessages", "notificationsCount"]
+            }
+        ]
     }
 
-    ObjectProxyModel {
+    SortFilterProxyModel {
         id: chatsSearchModel
-        sourceModel: SortFilterProxyModel {
-            sourceModel: root.chatsSearchBaseModel
-            filters: [
-                ValueFilter {
-                    roleName: "chatType"
-                    value: Constants.chatType.communityChat
-                }
+
+        sourceModel: RolesRenamingModel {
+            sourceModel: root.chatsSearchBaseModel ?? null
+            mapping: [
+                RoleRename { from: "icon"; to: "sourceIcon" },
+                RoleRename { from: "color"; to: "sourceColor" }
             ]
         }
-        delegate: QtObject {
-            readonly property string key: model.sectionId + ';' + model.chatId
-            readonly property string id: model.chatId
-            readonly property string name: model.name
-            readonly property string icon: model.icon || model.emoji
-            readonly property string lastMessageText: model.lastMessageText
-            readonly property color color: model.color || Utils.colorForColorId(root.Theme.palette, model.colorId)
+        filters: ValueFilter {
+            roleName: "chatType"
+            value: Constants.chatType.communityChat
         }
-
-        expectedRoles: ["sectionId", "chatId", "chatType", "name", "sectionName", "emoji", "icon", "color", "colorId", "lastMessageText"]
-        exposedRoles: ["key", "id", "name", "icon", "color", "lastMessageText"]
+        proxyRoles: [
+            JoinRole { name: "key"; roleNames: ["sectionId", "chatId"]; separator: ";" },
+            JoinRole { name: "id"; roleNames: ["chatId"] },
+            FastExpressionRole {
+                name: "icon"
+                expression: model.sourceIcon || model.emoji || ""
+                expectedRoles: ["sourceIcon", "emoji"]
+            },
+            FastExpressionRole {
+                name: "color"
+                expression: d.chatColor(model.sourceColor, model.colorId)
+                expectedRoles: ["sourceColor", "colorId"]
+            }
+        ]
     }
 
-    ObjectProxyModel {
+    SortFilterProxyModel {
         id: walletsModel
 
-        sourceModel: root.walletsBaseModel
-        delegate: QtObject {
-            readonly property string key: Constants.appSection.wallet + ';' + model.mixedcaseAddress
-            readonly property string id: model.mixedcaseAddress
-            readonly property string name: model.name
-            readonly property string icon: model.emoji
-            readonly property color color: Utils.getColorForId(root.Theme.palette, model.colorId ?? Constants.walletAccountColors.primary)
-            readonly property bool hasNotification: false
-            readonly property int notificationsCount: 0
-
-            readonly property string walletType: model.walletType
-            readonly property string currencyBalance: LocaleUtils.currencyAmountToLocaleString(model.currencyBalance)
+        sourceModel: RolesRenamingModel {
+            sourceModel: root.walletsBaseModel
+            mapping: RoleRename { from: "currencyBalance"; to: "sourceCurrencyBalance" }
         }
-        expectedRoles: ["mixedcaseAddress", "name", "emoji", "colorId", "walletType", "currencyBalance"]
-        exposedRoles: ["key", "id", "name", "icon", "color", "hasNotification", "notificationsCount", "walletType", "currencyBalance"]
+        proxyRoles: [
+            ConstantRole { name: "keyPrefix"; value: Constants.appSection.wallet },
+            JoinRole { name: "key"; roleNames: ["keyPrefix", "mixedcaseAddress"]; separator: ";" },
+            JoinRole { name: "id"; roleNames: ["mixedcaseAddress"] },
+            JoinRole { name: "icon"; roleNames: ["emoji"] },
+            FastExpressionRole {
+                name: "color"
+                expression: d.walletColor(model.colorId)
+                expectedRoles: ["colorId"]
+            },
+            ConstantRole { name: "hasNotification"; value: false },
+            ConstantRole { name: "notificationsCount"; value: 0 },
+            FastExpressionRole {
+                name: "currencyBalance"
+                expression: d.currencyBalance(model.sourceCurrencyBalance)
+                expectedRoles: ["sourceCurrencyBalance"]
+            }
+        ]
     }
 
-    ObjectProxyModel {
+    SortFilterProxyModel {
         id: dappsModel
 
-        sourceModel: root.dappsBaseModel
-        delegate: QtObject {
-            readonly property string key: Constants.appSection.dApp + ';' + model.url
-            readonly property string id: model.url
-            readonly property string name: model.name || StringUtils.extractDomainFromLink(model.url)
-            readonly property string icon: model.iconUrl || "dapp"
-            readonly property color color: root.Theme.palette.primaryColor1
-
-            readonly property url connectorBadge: model.connectorBadge
+        sourceModel: RolesRenamingModel {
+            sourceModel: root.dappsBaseModel
+            mapping: RoleRename { from: "name"; to: "sourceName" }
         }
-        expectedRoles: ["url", "name", "iconUrl", "connectorBadge"]
-        exposedRoles: ["key", "id", "name", "icon", "color", "connectorBadge"]
+        proxyRoles: [
+            ConstantRole { name: "keyPrefix"; value: Constants.appSection.dApp },
+            JoinRole { name: "key"; roleNames: ["keyPrefix", "url"]; separator: ";" },
+            JoinRole { name: "id"; roleNames: ["url"] },
+            FastExpressionRole {
+                name: "name"
+                expression: d.dappName(model.sourceName, model.url)
+                expectedRoles: ["sourceName", "url"]
+            },
+            FastExpressionRole {
+                name: "icon"
+                expression: model.iconUrl || "dapp"
+                expectedRoles: ["iconUrl"]
+            },
+            ConstantRole { name: "color"; value: root.Theme.palette.primaryColor1 }
+        ]
     }
 
     ConcatModel {
@@ -375,30 +415,20 @@ QObject {
         category: "HomePage_%1".arg(root.profileId)
     }
 
-    ObjectProxyModel { // provides a writable overlay for "timestamp" and "pinned" roles
+    RolesOverlayModel { // provides a writable overlay for "timestamp" and "pinned" roles
         id: homePageProxyModel
 
         sourceModel: combinedModel
-        delegate: QtObject {
-            property real timestamp
-            property bool pinned
-        }
-
-        exposedRoles: ["timestamp", "pinned"]
+        keyRole: "key"
+        defaults: ({ timestamp: 0, pinned: false })
     }
 
     function setPinned(key, pinned) {
-        const idx = ModelUtils.indexOf(homePageProxyModel, "key", key)
-        if (idx > -1) {
-            homePageProxyModel.proxyObject(idx).pinned = pinned
-        }
+        homePageProxyModel.set(key, "pinned", pinned)
     }
 
     function setTimestamp(key, timestamp) {
-        const idx = ModelUtils.indexOf(homePageProxyModel, "key", key)
-        if (idx > -1) {
-            homePageProxyModel.proxyObject(idx).timestamp = timestamp
-        }
+        homePageProxyModel.set(key, "timestamp", timestamp)
     }
 
     function save() {
@@ -419,13 +449,7 @@ QObject {
             return
         }
 
-        dataArray.forEach(function(item) {
-            const idx = ModelUtils.indexOf(homePageProxyModel, "key", item.key)
-            if (idx > -1) {
-                homePageProxyModel.proxyObject(idx).pinned = item.pinned
-                homePageProxyModel.proxyObject(idx).timestamp = item.timestamp
-            }
-        })
+        homePageProxyModel.setEntries(dataArray)
     }
 
     SortFilterProxyModel {
