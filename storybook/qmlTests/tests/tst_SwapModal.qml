@@ -35,9 +35,15 @@ Item {
         function getWei2Eth(wei, decimals) {
             return wei/(10**decimals)
         }
-        function fetchSuggestedRoutes(uuid, accountFrom, accountTo, amount, tokenFrom, tokenTo,
-                                      fromChainID, toChainID, preferredChainIDs, sendType) {
-                    swapStore.fetchSuggestedRoutesCalled()
+        property var lastRouteRequest: null
+        function fetchSuggestedRoutes(uuid, accountFrom, accountTo, amountIn, amountOut, tokenFrom, tokenTo,
+                                      fromChainID, toChainID, sendType, slippagePercentage, routeOrder) {
+            swapStore.lastRouteRequest = {
+                fromChainID: fromChainID,
+                toChainID: toChainID,
+                sendType: sendType
+            }
+            swapStore.fetchSuggestedRoutesCalled()
         }
         function authenticateAndTransfer(uuid, accountFrom, accountTo, tokenFrom,
                                          tokenTo, sendType, tokenName, tokenIsOwnerToken, paths) {}
@@ -2804,6 +2810,71 @@ Item {
                     "switching to a bridge builds no new picker")
             compare(receivePanel.tokenSelectorModel, receiveModel,
                     "the receive panel keeps its picker across the bridge switch")
+
+            closeAndVerfyModal()
+        }
+
+        function test_confirmLabelAndSendTypeFollowSwapOrBridge() {
+            root.swapAdaptor.reset()
+            launchAndVerfyModal()
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            verify(!!payPanel && !!receivePanel)
+
+            const toKeyFromModel = root.swapAdaptor.walletAssetsStore.walletTokensStore.tokenGroupsModel.get(1).key
+            const cases = [
+                { fromKey: sttGroupKey, toKey: toKeyFromModel, fromChain: 11155420, toChain: 11155420, sendType: Constants.SendType.Swap },
+                { fromKey: ethGroupKey, toKey: ethGroupKey, fromChain: 11155420, toChain: 10, sendType: Constants.SendType.Bridge },
+                { fromKey: ethGroupKey, toKey: sttGroupKey, fromChain: 11155420, toChain: 10, sendType: Constants.SendType.Bridge },
+            ]
+
+            for (let i = 0; i < cases.length; i++) {
+                const spec = cases[i]
+                fetchSuggestedRoutesCalled.clear()
+                formValuesChanged.clear()
+                root.swapStore.lastRouteRequest = null
+                if (root.swapFormData.fromGroupKey !== spec.fromKey) {
+                    root.swapFormData.fromGroupKey = spec.fromKey
+                    formValuesChanged.wait()
+                }
+                if (root.swapFormData.toGroupKey !== spec.toKey) {
+                    root.swapFormData.toGroupKey = spec.toKey
+                    formValuesChanged.wait()
+                }
+                root.swapFormData.fromTokenAmount = ""
+                formValuesChanged.wait()
+                root.swapFormData.fromTokenAmount = "0.001"
+                waitForRendering(receivePanel)
+                formValuesChanged.wait()
+                if (root.swapFormData.selectedNetworkChainId !== spec.fromChain) {
+                    root.swapFormData.selectedNetworkChainId = spec.fromChain
+                    formValuesChanged.wait()
+                }
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(spec.fromChain)
+                if (root.swapFormData.toNetworkChainId !== spec.toChain) {
+                    root.swapFormData.toNetworkChainId = spec.toChain
+                    formValuesChanged.wait()
+                }
+                if (spec.toChain !== spec.fromChain) {
+                    root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(spec.toChain)
+                }
+
+                fetchSuggestedRoutesCalled.wait()
+                const request = root.swapStore.lastRouteRequest
+                verify(!!request, "route request captured")
+                compare(request.fromChainID, spec.fromChain)
+                compare(request.toChainID, spec.toChain)
+                compare(request.sendType, spec.sendType)
+
+                const txRoutes = root.dummySwapTransactionRoutes.txNoRoutes
+                txRoutes.uuid = root.swapAdaptor.uuid
+                root.swapStore.suggestedRoutesReady(txRoutes, "NO_ROUTES", "No routes found")
+
+                const signButton = findChild(controlUnderTest, "signButton")
+                verify(!!signButton)
+                tryCompare(signButton, "text", expectedConfirmText())
+            }
 
             closeAndVerfyModal()
         }

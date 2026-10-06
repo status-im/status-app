@@ -19,6 +19,8 @@ import utils
 SignTransactionModalBase {
     id: root
 
+    objectName: "swapSignModal"
+
     required property string fromTokenSymbol
     required property string fromTokenAmount
     required property string fromTokenContractAddress
