@@ -1,5 +1,6 @@
 #include "StatusQ/rendersizedimage.h"
 
+#include <QtCore/QtMath>
 #include <QtQml/QQmlContext>
 #include <QtQuick/private/qquickimage_p_p.h>
 
@@ -33,15 +34,50 @@ public:
         // with it, it covers the box and upscales small sources.
         providerOptions.setPreserveAspectRatioFit(false);
 
-        const int longestSide = qMax(sourcesize.width(), sourcesize.height());
-        devicePixelRatio = longestSide > 0
-                ? qMin(targetDevicePixelRatio, qreal(RenderSizedImage::maxDecodeSide) / longestSide)
-                : targetDevicePixelRatio;
+        // Qt requests sourcesize x devicePixelRatio: request the quantised device-px box
+        // directly. RenderSizedImage::load() restores the logical size right after.
+        logicalSize = sourcesize;
+        decodeBox = decodeBoxFor(sourcesize, targetDevicePixelRatio);
+        sourcesize = decodeBox;
+        devicePixelRatio = 1.0;
         renderSized = true;
         return true;
     }
 
+    // Each side in device px, rounded up to decodeStep so resizing within a step reuses the
+    // decode, and capped at maxDecodeSide.
+    static QSize decodeBoxFor(const QSize& logical, qreal targetDevicePixelRatio)
+    {
+        const auto side = [targetDevicePixelRatio](int length) {
+            if (length <= 0)
+                return 0;
+            const int step = RenderSizedImage::decodeStep;
+            const int quantised = qCeil(length * targetDevicePixelRatio / step) * step;
+            return qMin(quantised, int(RenderSizedImage::maxDecodeSide));
+        };
+        return { side(logical.width()), side(logical.height()) };
+    }
+
+    // Logical implicit size: the decode fitted into the logical box, or the native size
+    // when the source was smaller than the decode box.
+    void updateImplicitRatio()
+    {
+        const QSize pix(currentPix->width(), currentPix->height());
+        const bool downscaled = (decodeBox.width() > 0 && pix.width() >= decodeBox.width())
+                || (decodeBox.height() > 0 && pix.height() >= decodeBox.height());
+        qreal ratio = 0.0;
+        if (downscaled) {
+            if (logicalSize.width() > 0)
+                ratio = qMax(ratio, qreal(pix.width()) / logicalSize.width());
+            if (logicalSize.height() > 0)
+                ratio = qMax(ratio, qreal(pix.height()) / logicalSize.height());
+        }
+        devicePixelRatio = ratio > 0 ? ratio : 1.0;
+    }
+
     bool renderSized = false;
+    QSize logicalSize;
+    QSize decodeBox;
 };
 
 RenderSizedImage::RenderSizedImage(QQuickItem* parent)
@@ -49,23 +85,37 @@ RenderSizedImage::RenderSizedImage(QQuickItem* parent)
 {
 }
 
+void RenderSizedImage::setSourceSize(const QSize& size)
+{
+    Q_D(RenderSizedImage);
+    const bool sameDecode = d->renderSized && isComponentComplete() && d->status == Ready
+            && size.isValid() && size != d->sourcesize
+            && RenderSizedImagePrivate::decodeBoxFor(size, d->effectiveDevicePixelRatio())
+               == d->decodeBox;
+    if (!sameDecode) {
+        QQuickImage::setSourceSize(size);
+        return;
+    }
+
+    d->sourcesize = size;
+    d->logicalSize = size;
+    emit sourceSizeChanged();
+    pixmapChange();
+}
+
 void RenderSizedImage::load()
 {
     Q_D(RenderSizedImage);
     d->renderSized = false;
     QQuickImage::load();
+    if (d->renderSized)
+        d->sourcesize = d->logicalSize;
 }
 
 void RenderSizedImage::pixmapChange()
 {
     Q_D(RenderSizedImage);
-    if (d->renderSized && !d->currentPix->isNull()) {
-        const QSize requested = d->sourcesize * d->devicePixelRatio;
-        const bool downscaled = (requested.width() > 0 && d->currentPix->width() >= requested.width())
-                || (requested.height() > 0 && d->currentPix->height() >= requested.height());
-        // A source smaller than the box was decoded as is: treat it as a 1x asset.
-        if (!downscaled)
-            d->devicePixelRatio = 1.0;
-    }
+    if (d->renderSized && !d->currentPix->isNull())
+        d->updateImplicitRatio();
     QQuickImage::pixmapChange();
 }
