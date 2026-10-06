@@ -182,16 +182,16 @@ public final class StatusGoService extends Service {
     /** Called from native (status-go callback). */
     @SuppressWarnings("unused")
     private void onNativeSignal(String jsonSignal) {
+        final String type = SignalEnvelope.typeOf(jsonSignal);
         final int signalSizeBytes = jsonSignal != null
                 ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
                 : 0;
         if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-            Log.w(TAG, "large status-go signal type=" + getSignalType(jsonSignal)
-                    + " sizeBytes=" + signalSizeBytes);
+            Log.w(TAG, "large status-go signal type=" + type + " sizeBytes=" + signalSizeBytes);
         }
 
-        maybeStartForegroundFromSignal(jsonSignal);
-        notificationManager.handleSignal(jsonSignal);
+        maybeStartForegroundFromSignal(type, jsonSignal);
+        notificationManager.handleSignal(type, jsonSignal);
 
         dispatchSignalToListeners(jsonSignal);
     }
@@ -224,13 +224,13 @@ public final class StatusGoService extends Service {
                         }
                         delivered++;
                     } catch (RemoteException e) {
-                        Log.w(TAG, "failed to deliver signal to UI listener type=" + getSignalType(jsonSignal)
+                        Log.w(TAG, "failed to deliver signal to UI listener type=" + SignalEnvelope.typeOf(jsonSignal)
                                 + " sizeBytes=" + signalSizeBytes, e);
                     } catch (RuntimeException e) {
-                        Log.w(TAG, "runtime failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
+                        Log.w(TAG, "runtime failure delivering signal to UI listener type=" + SignalEnvelope.typeOf(jsonSignal)
                                 + " sizeBytes=" + signalSizeBytes, e);
                     } catch (Throwable e) {
-                        Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
+                        Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + SignalEnvelope.typeOf(jsonSignal)
                                 + " sizeBytes=" + signalSizeBytes, e);
                     }
                 }
@@ -292,31 +292,15 @@ public final class StatusGoService extends Service {
         }
     }
 
-    private String getSignalType(String jsonSignal) {
-        if (jsonSignal == null || jsonSignal.isEmpty()) return "";
+    private void maybeStartForegroundFromSignal(String type, String jsonSignal) {
+        // On successful node login, keep this service as a foreground service so it survives
+        // swipe-away from Recents.
+        if (!"node.login".equals(type)) return;
         try {
-            return new JSONObject(jsonSignal).optString("type", "");
-        } catch (Throwable t) {
-            return "";
-        }
-    }
-
-    private void maybeStartForegroundFromSignal(String jsonSignal) {
-        if (jsonSignal == null || jsonSignal.isEmpty()) return;
-        try {
-            final JSONObject root = new JSONObject(jsonSignal);
-            final String type = root.optString("type", "");
-            if (type.isEmpty()) return;
-
-            // On successful node login, keep this service as a foreground service so it survives
-            // swipe-away from Recents.
-            if ("node.login".equals(type)) {
-                final JSONObject event = root.optJSONObject("event");
-                if (event == null) return;
-                if (!event.optString("error", "").isEmpty()) return;
-                ensureForegroundStarted();
-                return;
-            }
+            final JSONObject event = new JSONObject(jsonSignal).optJSONObject("event");
+            if (event == null) return;
+            if (!event.optString("error", "").isEmpty()) return;
+            ensureForegroundStarted();
         } catch (Throwable t) {
             // Best-effort only; don't crash the service.
         }

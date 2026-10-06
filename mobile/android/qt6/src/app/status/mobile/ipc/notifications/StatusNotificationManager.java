@@ -83,23 +83,17 @@ public final class StatusNotificationManager {
 
     /**
      * Processes a status-go signal JSON and shows an OS notification if appropriate.
-     * Suppresses notifications when the UI is in the foreground.
+     * Suppresses notifications when the UI is in the foreground. {@code type} is the
+     * envelope type, so other signals are rejected without parsing them.
      */
-    public void handleSignal(String jsonSignal) {
+    public void handleSignal(String type, String jsonSignal) {
+        if (uiVisible) return;
+        if (!"local-notifications".equals(type)) return;
         if (jsonSignal == null || jsonSignal.isEmpty()) return;
         try {
-            final JSONObject root = new JSONObject(jsonSignal);
-            final String type = root.optString("type", "");
-
-            // Suppress OS notifications when app is in foreground
-            if (uiVisible) return;
-
-            final JSONObject eventWrap = root.optJSONObject("event");
+            final JSONObject eventWrap = new JSONObject(jsonSignal).optJSONObject("event");
             if (eventWrap == null) return;
-
-            if ("local-notifications".equals(type)) {
-                handleLocalNotification(eventWrap);
-            }
+            handleLocalNotification(eventWrap);
         } catch (Throwable t) {
             Log.w(TAG, "handleSignal failed", t);
         }
