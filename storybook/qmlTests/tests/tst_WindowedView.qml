@@ -2324,6 +2324,7 @@ Item {
             view.cancelFlick()
 
             view.autoRequest = false
+            view.prefetchMargin = 0
             view.placeholder = null
             view.placeholderHeight = 100
             view.moreAvailableTop = true
@@ -2370,6 +2371,42 @@ Item {
             tryVerify(() => owner.startBudget < 3, 3000, "it asked")
             tryVerify(() => !view.busy, 8000)
             verify(values()[0] < before, "and older rows arrived")
+        }
+
+        // The start band sits above the rows, so contentY is how far below
+        // the band's bottom edge the viewport starts. Armed far from the band,
+        // then scrolled to the spot under test: the scroll renders a frame,
+        // and the deferred request has run by the time it does.
+        function scrollWithin(offset) {
+            view.contentY = view.placeholderHeight + 400
+            waitForRendering(view)
+            arm(3)
+
+            view.contentY = view.placeholderHeight + offset
+            waitForRendering(view)
+        }
+
+        function test_aBandWithinTheMarginAsksForMore() {
+            provider.delay = 0
+            freshFill(40)
+
+            scrollWithin(50)
+            compare(owner.startBudget, 3, "off screen and no margin: nothing asked")
+
+            view.prefetchMargin = 100
+
+            tryVerify(() => owner.startBudget < 3, 3000, "within the margin: asked")
+            tryVerify(() => !view.busy, 8000)
+        }
+
+        function test_aBandBeyondTheMarginDoesNotAsk() {
+            provider.delay = 0
+            freshFill(40)
+
+            view.prefetchMargin = 100
+            scrollWithin(300)
+
+            compare(owner.startBudget, 3, "beyond the margin: nothing asked")
         }
 
         function test_nothingIsAskedWhileTheHandleIsHeld() {
