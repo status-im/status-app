@@ -81,11 +81,16 @@ Item {
             return Math.ceil(logical * item.Screen.devicePixelRatio)
         }
 
+        // Longest decoded side for a box: device px rounded up to 128, capped at 2048
+        function decoded(logical, item) {
+            return Math.min(Math.ceil(logical * item.Screen.devicePixelRatio / 128) * 128, 2048)
+        }
+
         function test_rasterDecodedAtRenderedSize() {
             const img = createTemporaryObject(imageComponent, root,
                                               { width: 40, height: 40, source: root.largeRaster })
             tryCompare(img, "status", Image.Ready)
-            compare(ImageInspector.decodedSize(img), Qt.size(physical(40, img), physical(40, img)))
+            compare(ImageInspector.decodedSize(img), Qt.size(decoded(40, img), decoded(40, img)))
             compare(img.implicitWidth, 40)
         }
 
@@ -94,16 +99,16 @@ Item {
                                                   { width: 40, height: 40, "image.source": root.largeRaster })
             tryCompare(rounded.image, "status", Image.Ready)
             compare(ImageInspector.decodedSize(rounded.image),
-                    Qt.size(physical(40, rounded.image), physical(40, rounded.image)))
+                    Qt.size(decoded(40, rounded.image), decoded(40, rounded.image)))
         }
 
         function test_rasterDecodeFitsAspect() {
             const img = createTemporaryObject(imageComponent, root,
                                               { width: 100, height: 100, source: root.hugeRaster })
             tryCompare(img, "status", Image.Ready)
-            const decoded = ImageInspector.decodedSize(img)
-            compare(decoded.width, physical(100, img))
-            verify(decoded.height < decoded.width)
+            const decodedSize = ImageInspector.decodedSize(img)
+            compare(decodedSize.width, decoded(100, img))
+            verify(decodedSize.height < decodedSize.width)
         }
 
         // Guards the private QQuickImageBasePrivate::updateDevicePixelRatio override in
@@ -117,7 +122,7 @@ Item {
 
             img.source = root.largeRaster
             tryCompare(img, "status", Image.Ready)
-            compare(ImageInspector.decodedSize(img), Qt.size(physical(200, img), physical(200, img)))
+            compare(ImageInspector.decodedSize(img), Qt.size(decoded(200, img), decoded(200, img)))
             compare(img.implicitWidth, 200)
         }
 
@@ -134,7 +139,8 @@ Item {
                                               { width: 40, height: 40, source: root.multiResRaster })
             tryCompare(img, "status", Image.Ready)
             compare(img.implicitWidth, 40)
-            verify(ImageInspector.decodedSize(img).width <= physical(40, img))
+            // Qt picks the @Nx variant for ceil(dpr)
+            verify(ImageInspector.decodedSize(img).width <= 40 * Math.ceil(img.Screen.devicePixelRatio))
         }
 
         function test_rasterDecodeCapped() {
@@ -156,7 +162,7 @@ Item {
                                               { height: 20, source: root.largeRaster })
             tryCompare(img, "status", Image.Ready)
             compare(img.width, 20)
-            compare(ImageInspector.decodedSize(img), Qt.size(physical(20, img), physical(20, img)))
+            compare(ImageInspector.decodedSize(img), Qt.size(decoded(20, img), decoded(20, img)))
         }
 
         function test_rasterDecodeFollowsResize() {
@@ -167,19 +173,54 @@ Item {
             img.width = 200
             img.height = 200
             tryCompare(img, "status", Image.Ready)
-            compare(ImageInspector.decodedSize(img).width, physical(200, img))
+            compare(ImageInspector.decodedSize(img).width, decoded(200, img))
 
             img.width = 40
             img.height = 40
             tryCompare(img, "status", Image.Ready)
-            compare(ImageInspector.decodedSize(img).width, physical(40, img))
+            compare(ImageInspector.decodedSize(img).width, decoded(40, img))
+        }
+
+        function test_resizeWithinDecodeStepKeepsDecode() {
+            const img = createTemporaryObject(imageComponent, root,
+                                              { width: 40, height: 40, source: root.largeRaster })
+            tryCompare(img, "status", Image.Ready)
+            const key = ImageInspector.decodeKey(img)
+            const stepEnd = Math.floor(decoded(40, img) / img.Screen.devicePixelRatio)
+
+            for (let size = 41; size <= stepEnd; ++size) {
+                img.width = size
+                img.height = size
+                compare(ImageInspector.decodeKey(img), key, `re-decoded at ${size}px`)
+                compare(img.implicitWidth, size)
+            }
+        }
+
+        function test_resizeAcrossDecodeStepDecodesOnce() {
+            // Wide source in a tall box: only the width constrains the decode
+            const img = createTemporaryObject(imageComponent, root,
+                                              { width: 40, height: 400, source: root.hugeRaster })
+            tryCompare(img, "status", Image.Ready)
+            const keys = [ImageInspector.decodeKey(img)]
+            const next = Math.floor(decoded(40, img) / img.Screen.devicePixelRatio) + 1
+
+            for (let size = 41; size <= next + 10; ++size) {
+                img.width = size
+                tryCompare(img, "status", Image.Ready)
+                const key = ImageInspector.decodeKey(img)
+                if (key !== keys[keys.length - 1])
+                    keys.push(key)
+            }
+            compare(keys.length, 2, "exactly one re-decode when crossing the step")
+            compare(ImageInspector.decodedSize(img).width, decoded(next, img))
+            compare(img.implicitWidth, next + 10)
         }
 
         function test_rasterInLayoutDecodedAtPreferredSize() {
             const layout = createTemporaryObject(preferredSizeLayoutComponent, root)
             waitForPolish(layout)
             tryCompare(layout.image, "status", Image.Ready)
-            compare(ImageInspector.decodedSize(layout.image).width, physical(40, layout.image))
+            compare(ImageInspector.decodedSize(layout.image).width, decoded(40, layout.image))
         }
 
         function test_rasterInLayoutSizedByImplicitWidth() {
@@ -188,7 +229,7 @@ Item {
             tryCompare(layout.image, "status", Image.Ready)
             compare(layout.image.width, 20)
             compare(layout.image.height, 20)
-            compare(ImageInspector.decodedSize(layout.image).width, physical(20, layout.image))
+            compare(ImageInspector.decodedSize(layout.image).width, decoded(20, layout.image))
         }
 
         function test_svgRenderedAtItemSize() {
