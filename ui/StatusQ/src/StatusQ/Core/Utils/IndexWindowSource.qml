@@ -152,8 +152,22 @@ QObject {
     function moveTo(first) {
         d.owedStart = 0
         d.owedEnd = 0
-        d.first = Math.max(0, first)
-        d.last = d.first + Math.max(1, root.size) - 1
+
+        const newFirst = Math.max(0, first)
+        const newLast = newFirst + Math.max(1, root.size) - 1
+
+        // Each bound re-filters on its own write, so the order matters: moving
+        // back, lowering the start first would admit every row between the new
+        // start and the old end, and a row would be built for each. Shrinking
+        // first never holds more than the window; with no overlap it is
+        // briefly empty - start past end - rather than the union.
+        if (newFirst < d.first) {
+            d.last = newLast
+            d.first = newFirst
+        } else {
+            d.first = newFirst
+            d.last = newLast
+        }
     }
 
     // The row `key` occupies in the source model, or -1 when the model does not

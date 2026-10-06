@@ -177,6 +177,51 @@ Item {
             compare(source.model.count, 10)
         }
 
+        // The most rows the window held at any moment of a move. Each bound
+        // re-filters on its own write, so a move can pass through an
+        // intermediate window - and every row of it gets a row built.
+        function peakDuring(source, move) {
+            let peak = source.model.count
+            const track = () => peak = Math.max(peak, source.model.count)
+
+            source.model.rowsInserted.connect(track)
+            move()
+            source.model.rowsInserted.disconnect(track)
+
+            return peak
+        }
+
+        function test_movingBackNeverAdmitsTheSpanBetween() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(40)
+
+            compare(peakDuring(source, () => source.moveTo(0)), 10,
+                    "never more than the window's size")
+            compare(source.first, 0)
+            compare(source.last, 9)
+            compare(values(source)[0], 0)
+            compare(source.model.count, 10)
+        }
+
+        function test_movingBackOverlappingNeverOversizes() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.moveTo(20)
+
+            compare(peakDuring(source, () => source.moveTo(15)), 10)
+            compare(values(source)[0], 15)
+            compare(values(source)[9], 24)
+        }
+
+        function test_movingForwardNeverAdmitsTheSpanBetween() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            compare(peakDuring(source, () => source.moveTo(40)), 10)
+            compare(values(source)[0], 40)
+            compare(source.model.count, 10)
+        }
+
         // IndexFilter judges a row by its position and QSortFilterProxyModel
         // never re-tests a row it has already judged, so without the source's
         // re-filtering an insertion would leave the window permanently
