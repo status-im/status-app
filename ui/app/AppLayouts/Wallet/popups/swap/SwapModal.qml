@@ -321,9 +321,14 @@ StatusDialog {
 
     onOpened: {
         // Defer the terminal picker model creation + seed off the open critical
-        // path; callLater lets the opened frame render before the seed runs.
-        Qt.callLater(d.createPickers)
+        pickerInitTimer.start()
         payPanel.forceActiveFocus()
+    }
+
+    Timer {
+        id: pickerInitTimer
+        interval: 0
+        onTriggered: d.createPickers()
     }
     onClosed: {
         d.lastRequestedChainId = -1

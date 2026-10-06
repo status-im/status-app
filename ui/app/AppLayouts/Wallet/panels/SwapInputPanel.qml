@@ -109,8 +109,13 @@ Control {
     signal accountPillClicked()
 
     function reevaluateSelectedId() {
-        // Ensure calculation after all bindings are evaluated
-        Qt.callLater(d.reevaluateSelectedId)
+        reevaluateTimer.restart()
+    }
+
+    Timer {
+        id: reevaluateTimer
+        interval: 0
+        onTriggered: d.reevaluateSelectedId()
     }
 
     // the catalog is built asynchronously — re-check when its rows change
