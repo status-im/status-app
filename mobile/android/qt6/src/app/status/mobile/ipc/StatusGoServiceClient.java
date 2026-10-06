@@ -64,16 +64,10 @@ public final class StatusGoServiceClient {
 
     private final IStatusGoSignalListener signalListener = new IStatusGoSignalListener.Stub() {
         @Override
-        public void onSignal(String jsonSignal) {
-            final int signalSizeBytes = jsonSignal != null
-                    ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
-                    : 0;
-            if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-                Log.w(TAG, "received large status-go signal type=" + SignalEnvelope.typeOf(jsonSignal)
-                        + " sizeBytes=" + signalSizeBytes);
-            }
+        public void onSignal(byte[] utf8) {
+            if (utf8 == null) return;
             // Forward into the native stub callback (SetSignalEventCallback).
-            StatusGoStub.nativeDeliverSignal(jsonSignal);
+            StatusGoStub.nativeDeliverSignal(new String(utf8, StandardCharsets.UTF_8));
         }
 
         @Override

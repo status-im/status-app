@@ -4,7 +4,8 @@ import app.status.mobile.ipc.RpcResponse;
 
 /** One-way signal stream from status-go service to UI process. */
 oneway interface IStatusGoSignalListener {
-    void onSignal(String jsonSignal);
+    /** UTF-8 signal JSON, small enough for the Binder buffer. */
+    void onSignal(in byte[] utf8);
     void onSignalShm(in RpcResponse signalPayload);
 }
 
