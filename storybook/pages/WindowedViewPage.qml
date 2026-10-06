@@ -159,6 +159,8 @@ SplitView {
         readonly property bool defaultHeader: false
         readonly property bool defaultFooter: false
         readonly property int defaultSlotHeight: 48
+        readonly property int defaultTopPadding: 0
+        readonly property int defaultBottomPadding: 0
 
         readonly property int defaultRowSource: 0
         readonly property int defaultPoolTarget: 80
@@ -414,6 +416,8 @@ SplitView {
             headerSwitch.checked = d.defaultHeader
             footerSwitch.checked = d.defaultFooter
             slotHeightSpinBox.value = d.defaultSlotHeight
+            topPaddingSpinBox.value = d.defaultTopPadding
+            bottomPaddingSpinBox.value = d.defaultBottomPadding
             rowSourceComboBox.currentIndex = d.defaultRowSource
             poolTargetSpinBox.value = d.defaultPoolTarget
             intervalSpinBox.value = d.defaultBackgroundInterval
@@ -868,6 +872,8 @@ SplitView {
             }
 
             header: headerSwitch.checked ? headerBannerComponent : null
+            topPadding: topPaddingSpinBox.value
+            bottomPadding: bottomPaddingSpinBox.value
             footer: footerSwitch.checked ? footerBannerComponent : null
 
             ScrollBar.vertical: ScrollBar {}
@@ -1375,6 +1381,44 @@ SplitView {
                     }
                 }
 
+                // Space at the screen's edges of the content, outside the
+                // slots and the placeholders.
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label { text: "Top padding" }
+
+                    SpinBox {
+                        id: topPaddingSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: 200
+                        stepSize: 4
+                        value: d.defaultTopPadding
+                        editable: true
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label { text: "Bottom padding" }
+
+                    SpinBox {
+                        id: bottomPaddingSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: 200
+                        stepSize: 4
+                        value: d.defaultBottomPadding
+                        editable: true
+                    }
+                }
+
                 Item { Layout.preferredHeight: 8 }
 
                 Label {
@@ -1772,6 +1816,8 @@ SplitView {
         property alias header: headerSwitch.checked
         property alias footer: footerSwitch.checked
         property alias slotHeight: slotHeightSpinBox.value
+        property alias topPadding: topPaddingSpinBox.value
+        property alias bottomPadding: bottomPaddingSpinBox.value
         property alias rowSource: rowSourceComboBox.currentIndex
         property alias poolTarget: poolTargetSpinBox.value
         property alias asynchronous: asyncSwitch.checked

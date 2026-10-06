@@ -3428,6 +3428,8 @@ Item {
         function cleanup() {
             view.header = null
             view.footer = null
+            view.topPadding = 0
+            view.bottomPadding = 0
             view.stickToBottom = false
             view.placeholder = null
             view.autoRequest = false
@@ -3598,6 +3600,103 @@ Item {
         }
 
         // ---- sticking to the end ---------------------------------------
+
+        // ---- padding ---------------------------------------------------
+
+        function rowTopInViewport(row) {
+            return view.itemAtRow(row).mapToItem(view, 0, 0).y
+        }
+
+        function rowBottomInViewport(row) {
+            const item = view.itemAtRow(row)
+
+            return item.mapToItem(view, 0, item.height).y
+        }
+
+        function pad(top, bottom) {
+            view.topPadding = top
+            view.bottomPadding = bottom
+            waitForRendering(view)
+        }
+
+        function test_thePaddingIsSpaceAtTheContentEdges() {
+            fill(60)
+            pad(16, 24)
+
+            view.positionViewAtBeginning()
+            waitForRendering(view)
+            fuzzyCompare(rowTopInViewport(0), 16, 0.5,
+                         "the first row starts below the top padding")
+
+            view.positionViewAtEnd()
+            waitForRendering(view)
+            fuzzyCompare(rowBottomInViewport(59), view.height - 24, 0.5,
+                         "and the last ends above the bottom padding")
+        }
+
+        function test_thePaddingIsOutsideTheSlots() {
+            fill(60)
+            const header = show("header", headerComponent, "headerBanner")
+            const footer = show("footer", footerComponent, "footerBanner")
+            pad(16, 24)
+
+            view.positionViewAtBeginning()
+            waitForRendering(view)
+            fuzzyCompare(topInViewport(header), 16, 0.5, "the header is inside it")
+
+            view.positionViewAtEnd()
+            waitForRendering(view)
+            fuzzyCompare(topInViewport(footer) + footer.height, view.height - 24,
+                         0.5, "and so is the footer")
+        }
+
+        // Rendered bottom-up, model row 0 is the bottom row, and the screen's
+        // bottom padding is still below it.
+        function test_thePaddingIsTheScreensBottomUp() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+            fill(60)
+            pad(16, 24)
+
+            view.positionViewAtBeginning()
+            waitForRendering(view)
+            fuzzyCompare(rowBottomInViewport(0), view.height - 24, 0.5,
+                         "the model's first row rests on the bottom padding")
+        }
+
+        function test_changingTheTopPaddingDoesNotMoveTheRows() {
+            fill(60)
+
+            view.contentY = 300
+            waitForRendering(view)
+
+            const before = topVisible()
+
+            pad(40, 0)
+
+            const after = topVisible()
+
+            compare(after.value, before.value, "the same row at the top")
+            fuzzyCompare(after.offset, before.offset, 0.5, "at the same offset")
+        }
+
+        function test_stickingToTheEndKeepsTheBottomPadding() {
+            view.stickToBottom = true
+            fill(root.windowSize)
+            pad(0, 24)
+
+            view.positionViewAtEnd()
+            tryVerify(() => view.atBottom, 2000, "at the bottom to begin with")
+
+            owner.appendLive()
+
+            const last = view.rowCount - 1
+
+            tryVerify(() => view.itemAtRow(last).visible, 2000, "the row arrived")
+            tryVerify(() => Math.abs(rowBottomInViewport(last)
+                                     - (view.height - 24)) < 0.5, 2000,
+                      "it shows above the padding, which stays in view")
+        }
 
         function test_stickingToTheEndHoldsThroughABottomSlot() {
             view.stickToBottom = true

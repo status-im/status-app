@@ -80,6 +80,10 @@ Flickable {
     property Component header: null
     property Component footer: null
 
+    // Extra space at the screen's top and bottom edges of the content.
+    property real topPadding: 0
+    property real bottomPadding: 0
+
     // Set by whoever owns the data: is there anything beyond each edge? Top
     // and bottom are the screen's, so an owner whose model runs the other way
     // round - a newest-first chat model rendered BottomToTop - crosses its own
@@ -749,8 +753,8 @@ Flickable {
         }
 
         // What stands above the rows at the screen's top, as the current
-        // contentY already accounts for it: the start band, and whatever the
-        // owner put in the slot there. The band's `height` is a constant, so for
+        // contentY already accounts for it: the top padding, the start band,
+        // and whatever the owner put in the slot there. The band's `height` is a constant, so for
         // it what changes is only whether it is shown at all - a Column drops an
         // invisible child from its layout entirely - while a slot's content can
         // also grow and shrink. Both arrive here the same way, because any of it
@@ -758,7 +762,8 @@ Flickable {
         property real appliedAboveRows: 0
 
         function aboveRowsExtent() {
-            return (topBand.visible ? topBand.height : 0)
+            return root.topPadding
+                    + (topBand.visible ? topBand.height : 0)
                     + (topSlot.visible ? topSlot.height : 0)
         }
 
@@ -1642,6 +1647,13 @@ Flickable {
             height: 0
         }
 
+        Item {
+            id: topPaddingSpacer
+
+            width: rowsColumn.width
+            height: root.topPadding
+        }
+
         // The header/footer slots
         Loader {
             id: topSlot
@@ -1668,8 +1680,10 @@ Flickable {
             // named so a test can tell which placement holds the instance
             objectName: "fillPlaceholder"
 
+            // The viewport less the padding, so the fill and the padding
+            // together are exactly one screen.
             width: rowsColumn.width
-            height: root.height
+            height: Math.max(0, root.height - root.topPadding - root.bottomPadding)
             visible: root.initialLoading && !!root.placeholder
 
             onVisibleChanged: d.applyPlaceholder()
@@ -1851,6 +1865,13 @@ Flickable {
 
             sourceComponent: d.bottomUp ? root.header : root.footer
             visible: !!sourceComponent
+        }
+
+        Item {
+            id: bottomPaddingSpacer
+
+            width: rowsColumn.width
+            height: root.bottomPadding
         }
     }
 
