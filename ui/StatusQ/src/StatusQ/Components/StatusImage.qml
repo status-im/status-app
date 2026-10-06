@@ -1,5 +1,7 @@
 import QtQuick
 
+import StatusQ.Components.private
+
 /*!
     \qmltype StatusImage
     \inherits Image
@@ -9,6 +11,11 @@ import QtQuick
 
     This is a plain wrapper for the Image QML type. It sets some default property values and
     adds some properties common to other media type wrappers.
+
+    sourceSize is in logical pixels for raster sources too and follows the item's size, so a
+    raster is decoded at the rendered size x device pixel ratio (never upscaled, capped at 2048px
+    per side) instead of its native resolution, and re-decoded when the item is resized. An
+    unsized item decodes at native size. Set \c sourceSize explicitly to override.
 
     Example of how to use it:
 
@@ -23,7 +30,7 @@ import QtQuick
     \endqml
 
 */
-Image {
+RenderSizedImage {
     id: root
 
     /*!
@@ -45,5 +52,11 @@ Image {
     readonly property bool isError: status === Image.Error
 
     fillMode: Image.PreserveAspectFit
-    sourceSize: source.toString().endsWith(".svg") ? Qt.size(width, height) : undefined
+    sourceSize: {
+        if (source.toString().endsWith(".svg"))
+            return Qt.size(width, height)
+        if (width > 0 || height > 0)
+            return Qt.size(Math.ceil(width), Math.ceil(height))
+        return undefined
+    }
 }

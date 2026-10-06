@@ -16,6 +16,7 @@
 #include "StatusQ/networkchecker.h"
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
+#include "StatusQ/rendersizedimage.h"
 #include "StatusQ/rxvalidator.h"
 #include "StatusQ/shareutils.h"
 #include "StatusQ/statuscolors.h"
@@ -156,6 +157,7 @@ void registerStatusQTypes() {
         });
 
     qmlRegisterType<LocalNetworkPermission>("StatusQ.Core", 0, 1, "LocalNetworkPermission");
+    qmlRegisterType<RenderSizedImage>("StatusQ.Components.private", 0, 1, "RenderSizedImage");
 
     // onboarding
     qmlRegisterSingletonType<OnboardingEnums>("AppLayouts.Onboarding.enums", 1, 0,

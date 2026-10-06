@@ -33,7 +33,7 @@ endif()
 find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt6 COMPONENTS
-        Core CorePrivate Qml Gui GuiPrivate Quick QuickControls2 WebChannel Svg Network REQUIRED)
+        Core CorePrivate Qml Gui GuiPrivate Quick QuickPrivate QuickControls2 WebChannel Svg Network REQUIRED)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT ANDROID)
     find_package(Qt6 COMPONENTS DBus REQUIRED)
@@ -208,6 +208,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/networkchecker.h
         include/StatusQ/oneoffilter.h
         include/StatusQ/permissionutilsinternal.h
+        include/StatusQ/rendersizedimage.h
         include/StatusQ/rxvalidator.h
         include/StatusQ/shareutils.h
         include/StatusQ/stablearraysorter.h
@@ -251,6 +252,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp
+        src/rendersizedimage.cpp
         src/rxvalidator.cpp
         src/stablearraysorter.cpp
         src/statuscolors.cpp
@@ -290,7 +292,7 @@ add_library(StatusQ ${LIB_TYPE}
         )
 
 target_compile_features(StatusQ PRIVATE cxx_std_17)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::GuiPrivate)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::GuiPrivate Qt6::QuickPrivate)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(AppKit AppKit)

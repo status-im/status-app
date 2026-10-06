@@ -3,13 +3,15 @@ project(TestStatusQ LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        QuickTest Qml Quick WebEngineQuick REQUIRED)
+        QuickTest Qml Quick QuickPrivate WebEngineQuick REQUIRED)
 
 ##############
 # Test Library
 ##############
 
 add_library(StatusQTestLib
+    src/TestHelpers/imageinspector.cpp
+    src/TestHelpers/imageinspector.h
     src/TestHelpers/MonitorQtOutput.cpp
     src/TestHelpers/MonitorQtOutput.h
     src/TestHelpers/modelaccessobserverproxy.cpp
@@ -17,6 +19,7 @@ add_library(StatusQTestLib
 )
 
 target_link_libraries(StatusQTestLib PUBLIC Qt::Core Qt::Quick Qt::QuickTest Qt::Test StatusQ)
+target_link_libraries(StatusQTestLib PRIVATE Qt::QuickPrivate)
 target_include_directories(StatusQTestLib PUBLIC src)
 
 enable_testing()
