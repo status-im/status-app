@@ -182,63 +182,51 @@ public final class StatusGoService extends Service {
     /** Called from native (status-go callback). */
     @SuppressWarnings("unused")
     private void onNativeSignal(String jsonSignal) {
+        if (jsonSignal == null) return;
+        final ByteBuffer utf8 = ByteBuffer.wrap(jsonSignal.getBytes(StandardCharsets.UTF_8));
         final String type = SignalEnvelope.typeOf(jsonSignal);
-        final int signalSizeBytes = jsonSignal != null
-                ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
-                : 0;
-        if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-            Log.w(TAG, "large status-go signal type=" + type + " sizeBytes=" + signalSizeBytes);
+        if (utf8.remaining() >= LARGE_SIGNAL_WARN_BYTES) {
+            Log.w(TAG, "large status-go signal type=" + type + " sizeBytes=" + utf8.remaining());
         }
 
         maybeStartForegroundFromSignal(type, jsonSignal);
         notificationManager.handleSignal(type, jsonSignal);
 
-        dispatchSignalToListeners(jsonSignal);
+        dispatchSignalToListeners(type, utf8);
     }
 
     /**
      * Sends a signal over the existing Binder transport. Returns how many listeners accepted
      * delivery, which lets notification replies remain queued until a UI listener is reachable.
      */
-    private int dispatchSignalToListeners(String jsonSignal) {
-        final int signalSizeBytes = jsonSignal != null
-                ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
-                : 0;
-        final boolean useSharedMemorySignal = signalSizeBytes >= SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES;
-        final byte[] signalBytes = useSharedMemorySignal
-                ? (jsonSignal != null ? jsonSignal.getBytes(StandardCharsets.UTF_8) : new byte[0])
-                : null;
-        int delivered = 0;
+    private int dispatchSignalToListeners(String type, ByteBuffer utf8) {
         synchronized (signalDispatchLock) {
             final int n = listeners.beginBroadcast();
             try {
-                for (int i = 0; i < n; i++) {
-                    try {
-                        final IStatusGoSignalListener listener = listeners.getBroadcastItem(i);
-                        if (useSharedMemorySignal) {
-                            try (RpcResponse signalResponse = sharedPayload(signalBytes, "statusgo-signal")) {
-                                listener.onSignalShm(signalResponse);
+                return SignalFanout.deliver(utf8, SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES, n,
+                        i -> new SignalFanout.Listener<RpcResponse>() {
+                            @Override
+                            public void onInline(byte[] bytes) throws RemoteException {
+                                listeners.getBroadcastItem(i).onSignal(bytes);
                             }
-                        } else {
-                            listener.onSignal(jsonSignal);
-                        }
-                        delivered++;
-                    } catch (RemoteException e) {
-                        Log.w(TAG, "failed to deliver signal to UI listener type=" + SignalEnvelope.typeOf(jsonSignal)
-                                + " sizeBytes=" + signalSizeBytes, e);
-                    } catch (RuntimeException e) {
-                        Log.w(TAG, "runtime failure delivering signal to UI listener type=" + SignalEnvelope.typeOf(jsonSignal)
-                                + " sizeBytes=" + signalSizeBytes, e);
-                    } catch (Throwable e) {
-                        Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + SignalEnvelope.typeOf(jsonSignal)
-                                + " sizeBytes=" + signalSizeBytes, e);
-                    }
-                }
+
+                            @Override
+                            public void onShared(RpcResponse region) throws RemoteException {
+                                listeners.getBroadcastItem(i).onSignalShm(region);
+                            }
+                        },
+                        buf -> sharedPayload(buf, "statusgo-signal"),
+                        (i, t) -> Log.w(TAG, "failed to deliver signal to UI listener=" + i
+                                + " type=" + type + " sizeBytes=" + utf8.remaining(), t));
             } finally {
                 listeners.finishBroadcast();
             }
         }
-        return delivered;
+    }
+
+    private int dispatchSignalToListeners(String jsonSignal) {
+        return dispatchSignalToListeners(SignalEnvelope.typeOf(jsonSignal),
+                ByteBuffer.wrap(jsonSignal.getBytes(StandardCharsets.UTF_8)));
     }
 
     private boolean publishNotificationReplyResultInternal(String rpcResponseJson) {
@@ -273,13 +261,14 @@ public final class StatusGoService extends Service {
         }
     }
 
-    private RpcResponse sharedPayload(byte[] bytes, String namePrefix) throws android.system.ErrnoException {
+    private static RpcResponse sharedPayload(ByteBuffer utf8, String namePrefix)
+            throws android.system.ErrnoException {
         SharedMemory shm = null;
         try {
-            shm = SharedMemory.create(namePrefix, bytes.length);
+            shm = SharedMemory.create(namePrefix, utf8.remaining());
             final ByteBuffer buf = shm.mapReadWrite();
             try {
-                buf.put(bytes);
+                buf.put(utf8.duplicate());
             } finally {
                 SharedMemory.unmap(buf);
             }
