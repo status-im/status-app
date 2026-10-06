@@ -82,6 +82,10 @@ Item {
     property bool stickersLoaded: false
 
     readonly property var chatContentModule: rootStore.currentChatContentModule() || null
+    // ID of the chat currently selected by the owning layout.
+    property string activeItemId
+    // Name of the chat currently selected by the owning layout.
+    property string activeItemName
     readonly property bool canView: chatContentModule?.chatDetails.canView || false
     readonly property bool canPost: chatContentModule?.chatDetails.canPost || false
     readonly property bool missingEncryptionKey: chatContentModule?.chatDetails.missingEncryptionKey || false
@@ -165,6 +169,11 @@ Item {
     property var usersModel
     property bool amIChatAdmin
 
+    onActiveItemIdChanged: {
+        if (d.openThreadId && root.activeItemId !== d.openThreadParentChatId)
+            d.closeThreadPanel()
+    }
+
     // Navigation:
     // Internal triggers for navigating between messaging panels
     property bool navToMsgDetails: false
@@ -174,6 +183,18 @@ Item {
         id: d
         objectName: "chatViewInternal"
 
+        readonly property string openThreadId: root.rootStore.openThreadId
+        readonly property string openThreadName: root.rootStore.openThreadName
+        readonly property string openThreadParentChatId: root.rootStore.openThreadParentChatId
+        // The thread closes when the active chat changes, so the parent is always the active one
+        readonly property string openThreadParentChatName: {
+            if (!openThreadId)
+                return ""
+            const type = root.chatContentModule?.chatDetails.type
+            const isChannel = type === Constants.chatType.communityChat || type === Constants.chatType.publicChat
+            return (isChannel ? "# " : "") + root.activeItemName
+        }
+
         readonly property bool shouldLoadCenterPanel: !root.isPortraitMode ||
                                                       centerPanelRequested ||
                                                       (root.sectionLayout?.currentIndex ?? StatusSectionLayout.LeftPanel) !== StatusSectionLayout.LeftPanel
@@ -181,6 +202,13 @@ Item {
 
         function requestCenterPanel() {
             centerPanelRequested = true
+        }
+
+        // On portrait the toolbar already carries the back button, so it also hosts the thread title
+        readonly property bool threadHeaderInToolbar: !!openThreadId && !!root.sectionLayout?.isPortrait
+
+        function closeThreadPanel() {
+            root.rootStore.closeThreadPanel()
         }
     }
 
@@ -254,6 +282,38 @@ Item {
         sourceComponent: root.contentLocked ? joinCommunityHeaderPanelComponent : chatHeaderContentViewComponent
     }
 
+    // Header of the right panel page's toolbar (portrait): shows the open thread
+    readonly property Item rightPanelHeaderContent: Loader {
+        active: !!d.openThreadId
+        sourceComponent: threadHeaderComponent
+    }
+
+    // Title and parent chat of the open thread, shown in the section toolbar
+    // (next to its back button) while the thread page is swiped in on portrait
+    Component {
+        id: threadHeaderComponent
+
+        ColumnLayout {
+            spacing: 0
+
+            StatusBaseText {
+                Layout.fillWidth: true
+                text: d.openThreadName
+                font.bold: true
+                elide: Text.ElideRight
+            }
+
+            StatusBaseText {
+                Layout.fillWidth: true
+                visible: !!d.openThreadParentChatName
+                text: qsTr("in %1").arg(d.openThreadParentChatName)
+                font.pixelSize: Theme.additionalTextSize
+                color: Theme.palette.baseColor1
+                elide: Text.ElideRight
+            }
+        }
+    }
+
     readonly property Item leftPanel: Loader {
         id: contactColumnLoader
         // The panel incubates before it is proxied into the chrome, i.e. with
@@ -282,6 +342,9 @@ Item {
     }
 
     readonly property bool showRightPanel: {
+        if (d.openThreadId)
+            return true
+
         if (root.contentLocked || root.rootStore.openCreateChat ||
                 !root.showUsersList || !root.chatContentModule)
             return false
@@ -294,7 +357,8 @@ Item {
     // only because its answer is not known yet. Let the section chrome keep
     // the user-requested members column in that interval instead of resizing
     // from shown → hidden → shown as this view initializes.
-    readonly property bool rightPanelDecisionReady: !root.showUsersList
+    readonly property bool rightPanelDecisionReady: !!d.openThreadId
+                                                  || !root.showUsersList
                                                   || root.contentLocked
                                                   || root.rootStore.openCreateChat
                                                   || root.allChannelsAreHiddenBecauseNotPermitted
@@ -347,7 +411,13 @@ Item {
             sourceComponent: MembersListSkeleton {}
         }
 
-        sourceComponent: UserListPanel {
+        sourceComponent: d.openThreadId ? threadChatPanelComponent : membersPanelComponent
+    }
+
+    Component {
+        id: membersPanelComponent
+
+        UserListPanel {
             // async incubation parents the partially-built panel into the
             // scene early — keep it invisible behind the skeleton until ready.
             // Binding the model eagerly is fine: it arrives pre-sorted from
@@ -386,6 +456,94 @@ Item {
 
             onMarkAsTrustedRequested: Global.openMarkAsIDVerifiedPopup(pubKey, null)
             onRemoveTrustedMarkRequested: Global.openRemoveIDVerificationDialog(pubKey, null)
+        }
+    }
+
+    Component {
+        id: threadChatPanelComponent
+
+        ColumnLayout {
+            spacing: 0
+
+            RowLayout {
+                visible: !d.threadHeaderInToolbar
+                Layout.fillWidth: true
+                Layout.preferredHeight: 64
+                Layout.leftMargin: Theme.padding
+                Layout.rightMargin: Theme.halfPadding
+                spacing: Theme.padding
+
+                StatusIcon {
+                    Layout.preferredWidth: 16
+                    Layout.preferredHeight: 16
+                    icon: "thread"
+                    color: Theme.palette.baseColor1
+                }
+
+                Loader {
+                    Layout.fillWidth: true
+                    sourceComponent: threadHeaderComponent
+                }
+
+                StatusFlatRoundButton {
+                    objectName: "closeThreadPanelButton"
+                    icon.name: "close"
+                    tooltip.text: qsTr("Close thread")
+                    onClicked: {
+                        d.closeThreadPanel()
+                        root.showUsersListRequested(false)
+                    }
+                }
+            }
+
+            Rectangle {
+                visible: !d.threadHeaderInToolbar
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: Theme.palette.separator
+            }
+
+            ChatColumnView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                threadId: d.openThreadId
+                parentModule: root.rootStore.chatCommunitySectionModule
+                rootStore: root.rootStore
+                createChatPropertiesStore: root.createChatPropertiesStore
+                messagesViewEnabled: rightPanelLoader.status === Loader.Ready
+                areTestNetworksEnabled: root.areTestNetworksEnabled
+                stickersLoaded: root.stickersLoaded
+                emojiPopup: root.emojiPopup
+                stickersPopup: root.stickersPopup
+                viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
+                canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost
+                amISectionAdmin: root.amISectionAdmin
+                amIBanned: root.sectionItemModel ? root.sectionItemModel.amIBanned : false
+                sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
+                messageLinkSharingEnabled: root.messageLinkSharingEnabled
+                threadsFeatureEnabled: root.threadsFeatureEnabled
+                disabledTooltipText: root.disabledTooltipText
+                paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
+                joined: root.joined
+                gifUnfurlingEnabled: root.gifUnfurlingEnabled
+                neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
+                usersModel: root.usersModel
+                myPublicKey: root.myPublicKey
+                threadName: d.openThreadName
+
+                onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
+                onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+                onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) =>
+                                           root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+                onChangeContactNicknameRequest: root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
+                onRemoveTrustStatusRequest: root.removeTrustStatusRequest(pubKey)
+                onDismissContactRequest: root.dismissContactRequest(chatId, contactRequestId)
+                onAcceptContactRequest: root.acceptContactRequest(chatId, contactRequestId)
+                onSpectateCommunityRequested: communityId => root.spectateCommunityRequested(communityId)
+                onSupportBotChatRequested: root.supportBotChatRequested()
+            }
         }
     }
 
@@ -432,6 +590,7 @@ Item {
             // is needed because SwipeView doesn't expose any API to detect completed
             // swipe action
             Backpressure.setTimeout(root, 300, () => {
+                d.closeThreadPanel()
                 root.showUsersListRequested(false)
             })
         }
@@ -471,7 +630,11 @@ Item {
             }
 
             onGroupMembersUpdateRequested: root.groupMembersUpdateRequested(membersPubKeysList)
-            onToggleShowMembersRequested: root.showUsersListRequested(!root.showUsersList)
+            onToggleShowMembersRequested: {
+                if (d.openThreadId)
+                    d.closeThreadPanel()
+                root.showUsersListRequested(!root.showUsersList)
+            }
         }
     }
 
@@ -525,6 +688,16 @@ Item {
 
             onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+            onOpenThreadRequested: (threadId, threadName) => {
+                root.rootStore.openThreadPanel(threadId, threadName, root.activeItemId)
+
+                // Give the layout a moment to add the right panel page before swiping to it
+                if (root.sectionLayout?.isPortrait)
+                    Backpressure.setTimeout(root, 50, () => {
+                        if (d.openThreadId)
+                            root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+                    })
+            }
 
             // Unfurling related requests:
             onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)

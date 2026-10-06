@@ -76,6 +76,18 @@ type
     PaymentRequestModel
     CompressedKey
     HasThread
+    ThreadId
+    ThreadOriginalMessageId
+    ThreadTitle
+    ThreadMessagesCount
+    ThreadNotificationCount
+    ThreadParticipantsModel
+    ThreadParticipantsCount
+    ThreadLastMessageSenderName
+    ThreadLastMessageSenderImage
+    ThreadLastMessageSenderColorId
+    ThreadLastMessageText
+    ThreadLastMessageTimestamp
 
 QtObject:
   type
@@ -187,6 +199,18 @@ QtObject:
       ModelRole.PaymentRequestModel.int: "paymentRequestModel",
       ModelRole.CompressedKey.int: "compressedKey",
       ModelRole.HasThread.int: "hasThread",
+      ModelRole.ThreadId.int: "threadId",
+      ModelRole.ThreadOriginalMessageId.int: "threadOriginalMessageId",
+      ModelRole.ThreadTitle.int: "threadTitle",
+      ModelRole.ThreadMessagesCount.int: "threadMessagesCount",
+      ModelRole.ThreadNotificationCount.int: "threadNotificationCount",
+      ModelRole.ThreadParticipantsModel.int: "threadParticipantsModel",
+      ModelRole.ThreadParticipantsCount.int: "threadParticipantsCount",
+      ModelRole.ThreadLastMessageSenderName.int: "threadLastMessageSenderName",
+      ModelRole.ThreadLastMessageSenderImage.int: "threadLastMessageSenderImage",
+      ModelRole.ThreadLastMessageSenderColorId.int: "threadLastMessageSenderColorId",
+      ModelRole.ThreadLastMessageText.int: "threadLastMessageText",
+      ModelRole.ThreadLastMessageTimestamp.int: "threadLastMessageTimestamp",
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -360,6 +384,33 @@ QtObject:
       result = newQVariant(item.compressedKey)
     of ModelRole.HasThread:
       result = newQVariant(item.hasThread)
+    of ModelRole.ThreadId:
+      result = newQVariant(item.threadSummary.threadId)
+    of ModelRole.ThreadOriginalMessageId:
+      result = newQVariant(item.threadSummary.originalMessageId)
+    of ModelRole.ThreadTitle:
+      result = newQVariant(item.threadSummary.title)
+    of ModelRole.ThreadMessagesCount:
+      result = newQVariant(item.threadSummary.messagesCount)
+    of ModelRole.ThreadNotificationCount:
+      result = newQVariant(item.threadSummary.notificationCount)
+    of ModelRole.ThreadParticipantsModel:
+      if item.threadParticipantsModel.isNil:
+        result = newQVariant()
+      else:
+        result = newQVariant(item.threadParticipantsModel)
+    of ModelRole.ThreadParticipantsCount:
+      result = newQVariant(item.threadSummary.participantsCount)
+    of ModelRole.ThreadLastMessageSenderName:
+      result = newQVariant(item.threadSummary.lastMessageSenderName)
+    of ModelRole.ThreadLastMessageSenderImage:
+      result = newQVariant(item.threadSummary.lastMessageSenderImage)
+    of ModelRole.ThreadLastMessageSenderColorId:
+      result = newQVariant(item.threadSummary.lastMessageSenderColorId)
+    of ModelRole.ThreadLastMessageText:
+      result = newQVariant(item.threadSummary.lastMessageText)
+    of ModelRole.ThreadLastMessageTimestamp:
+      result = newQVariant(item.threadSummary.lastMessageTimestamp)
 
   proc updateAdjacentMessageRolesAtIndex(self: Model, row: int) =
     if row < 0 or row >= self.items.len:
@@ -645,6 +696,29 @@ QtObject:
     let index = self.createIndex(ind, 0, nil)
     defer: index.delete
     self.dataChanged(index, index, @[ModelRole.HasThread.int])
+
+  proc setThreadSummary*(self: Model, messageId: string, summary: ThreadSummary) =
+    let ind = self.findIndexForMessageId(messageId)
+    if ind == -1 or self.items[ind].threadSummary == summary:
+      return
+
+    self.items[ind].threadSummary = summary
+    let index = self.createIndex(ind, 0, nil)
+    defer: index.delete
+    self.dataChanged(index, index, @[
+      ModelRole.ThreadId.int,
+      ModelRole.ThreadOriginalMessageId.int,
+      ModelRole.ThreadTitle.int,
+      ModelRole.ThreadMessagesCount.int,
+      ModelRole.ThreadNotificationCount.int,
+      ModelRole.ThreadParticipantsModel.int,
+      ModelRole.ThreadParticipantsCount.int,
+      ModelRole.ThreadLastMessageSenderName.int,
+      ModelRole.ThreadLastMessageSenderImage.int,
+      ModelRole.ThreadLastMessageSenderColorId.int,
+      ModelRole.ThreadLastMessageText.int,
+      ModelRole.ThreadLastMessageTimestamp.int,
+    ])
 
   proc getMessageByIdAsJson*(self: Model, messageId: string): JsonNode =
     for it in self.items:

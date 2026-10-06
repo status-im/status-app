@@ -68,7 +68,7 @@ ColumnLayout {
     property string myPublicKey
 
     signal showReplyArea(messageId: string)
-    signal openThread(messageId: string)
+    signal openThread(threadId: string, threadName: string, parentMessageId: string)
     signal forceInputFocus()
     signal editMessageRequested(messageId: string)
 
@@ -142,6 +142,7 @@ ColumnLayout {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             threadsFeatureEnabled: root.threadsFeatureEnabled
+            isThreadView: !!root.messageStore.threadId
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding
@@ -158,8 +159,8 @@ ColumnLayout {
             onShowReplyArea: (messageId, senderId) => {
                 root.showReplyArea(messageId)
             }
-            onOpenThread: (messageId) => {
-                root.openThread(messageId)
+            onOpenThread: (threadId, threadName, parentMessageId) => {
+                root.openThread(threadId, threadName, parentMessageId)
             }
             onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)

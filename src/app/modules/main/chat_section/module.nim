@@ -1,4 +1,4 @@
-import nimqml, tables, chronicles, json, sequtils, std/strformat, sugar, marshal, std/sets
+import nimqml, tables, chronicles, json, sequtils, strutils, std/strformat, sugar, marshal, std/sets
 from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop, isActive
 
 import io_interface
@@ -67,6 +67,11 @@ type
     mailserversService: mailservers_service.Service
     sharedUrlsService: shared_urls_service.Service
     threadChatIds: HashSet[string]
+    pendingThreadId: string
+    pendingThreadParentChatId: string
+    pendingThreadPresentation: string
+    pendingThreadMessageId: string
+    lastAppliedActiveItemId: string
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -145,6 +150,11 @@ proc newModule*(
   result.mailserversService = mailserversService
   result.sharedUrlsService = sharedUrlsService
   result.threadChatIds = initHashSet[string]()
+  result.pendingThreadId = ""
+  result.pendingThreadParentChatId = ""
+  result.pendingThreadPresentation = ""
+  result.pendingThreadMessageId = ""
+  result.lastAppliedActiveItemId = ""
 
   result.chatContentModules = initOrderedTable[string, chat_content_module.AccessInterface]()
   if isCommunity:
@@ -247,7 +257,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     threadName: string, hasUnreadMessages: bool, notificationsCount: int): ChatItem =
   return chat_item.initChatItem(
     id = threadId,
-    name = "🧵 " & threadName,
+    name = threadName,
     usesDefaultName = false,
     icon = parentItem.icon,
     color = parentItem.color,
@@ -269,6 +279,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     canPost = parentItem.canPost,
     canView = parentItem.canView,
     canPostReactions = parentItem.canPostReactions,
+    viewersCanPostReactions = parentItem.viewersCanPostReactions,
     isThread = true,
     parentChatId = parentChatId,
     sortTimestamp = parentItem.lastMessageTimestamp,
@@ -337,6 +348,13 @@ proc buildChatSectionUI(
   var sectionLastOpenChat = self.controller.getActiveChatId()
   if sectionLastOpenChat == "":
     sectionLastOpenChat = singletonInstance.localAccountSensitiveSettings.getSectionLastOpenChat(self.controller.getMySectionId())
+    let lastThread = parseLastSectionThread(singletonInstance.localAccountSensitiveSettings.getSectionLastOpenThread(
+      self.controller.getMySectionId()))
+    if lastThread.threadId.len > 0:
+      self.pendingThreadId = lastThread.threadId
+      self.pendingThreadParentChatId = lastThread.parentChatId
+      self.pendingThreadPresentation = lastThread.presentation
+      sectionLastOpenChat = lastThread.parentChatId
   var items: seq[ChatItem] = @[]
   let community {.cursor.} = self.controller.getCommunityById(communityId)
   for categoryDto in community.categories:
@@ -519,6 +537,25 @@ method setActiveItem*(self: Module, itemId: string) =
 method isChatThread*(self: Module, chatId: string): bool =
   return self.threadChatIds.contains(chatId)
 
+method openThreadPanel*(self: Module, threadId: string, threadName: string,
+    parentChatId: string) =
+  let threadItem = self.view.chatsModel().getItemById(threadId)
+  if threadItem.isNil or not threadItem.isThread or threadItem.parentChatId != parentChatId:
+    error "openThreadPanel: unknown thread", threadId, parentChatId
+    return
+
+  self.ensureThreadContentModule(threadItem)
+  self.view.setOpenThread(threadId, threadName, parentChatId)
+  singletonInstance.localAccountSensitiveSettings.setSectionLastOpenThread(
+    self.controller.getMySectionId(), threadId, parentChatId, THREAD_PRESENTATION_SIDE_PANEL)
+
+method closeThreadPanel*(self: Module) =
+  if self.view.getOpenThreadId().len == 0:
+    return
+  self.view.setOpenThread("", "", "")
+  singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(
+    self.controller.getMySectionId())
+
 method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, threadName: string, parentMessageId: string,
     setActive: bool = false, hasUnreadMessages: bool = false, notificationsCount: int = 0) =
   if threadId.len == 0:
@@ -550,7 +587,17 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
   if setActive:
     self.setActiveItem(threadId)
 
-method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto]) =
+proc clearPendingThreadRestore(self: Module, clearSettings: bool) =
+  self.pendingThreadId = ""
+  self.pendingThreadParentChatId = ""
+  self.pendingThreadPresentation = ""
+  self.pendingThreadMessageId = ""
+  if clearSettings:
+    singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(
+      self.controller.getMySectionId())
+
+method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
+    completedChatIds: seq[string]) =
   var threadsByChat = initOrderedTable[string, seq[ThreadDto]]()
   for thread in threads:
     if thread.threadId.len == 0 or thread.parentMessageId.len == 0:
@@ -585,6 +632,31 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto]) =
     for item in items:
       self.threadChatIds.incl(item.id)
 
+  if self.pendingThreadId.len == 0 or
+      self.pendingThreadParentChatId notin completedChatIds:
+    return
+
+  let threadItem = self.view.chatsModel().getItemById(self.pendingThreadId)
+  if threadItem.isNil or not threadItem.isThread or
+      threadItem.parentChatId != self.pendingThreadParentChatId:
+    self.clearPendingThreadRestore(clearSettings = true)
+    return
+
+  let presentation = self.pendingThreadPresentation
+  let messageId = self.pendingThreadMessageId
+  self.clearPendingThreadRestore(clearSettings = false)
+  if presentation == THREAD_PRESENTATION_SELECTED_CHAT:
+    self.setActiveItem(threadItem.id)
+    if messageId.len > 0:
+      self.chatContentModules[threadItem.id].scrollToMessage(messageId)
+  else:
+    self.openThreadPanel(threadItem.id, threadItem.name,
+      threadItem.parentChatId)
+
+method onChatThreadsLoadingFailed*(self: Module, chatId: string) =
+  if chatId == self.pendingThreadParentChatId:
+    warn "preserving pending thread restoration after thread list load failure", chatId
+
 proc updateActiveChatMembership*(self: Module) =
   let activeChatId = self.controller.getActiveChatId()
   let activeChatItem = self.view.chatsModel().getItemById(activeChatId)
@@ -603,6 +675,7 @@ method activeItemSet*(self: Module, itemId: string) =
   if itemId == "":
     self.view.activeItem().resetActiveItemData()
     singletonInstance.localAccountSensitiveSettings.removeSectionChatRecord(mySectionId)
+    self.lastAppliedActiveItemId = ""
     return
 
   # requested before the deferred first build — the pending id is picked up
@@ -627,7 +700,14 @@ method activeItemSet*(self: Module, itemId: string) =
   # update view maintained by this module
   self.view.activeItemSet(chat_item)
   self.view.chatsModel().setActiveItem(itemId)
+  if not chat_item.isThread:
+    if self.pendingThreadId.len > 0 and itemId != self.pendingThreadParentChatId:
+      self.clearPendingThreadRestore(clearSettings = true)
+    elif self.pendingThreadId.len == 0 and itemId != self.lastAppliedActiveItemId:
+      self.closeThreadPanel()
+      singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(mySectionId)
 
+  self.lastAppliedActiveItemId = itemId
   self.updateActiveChatMembership()
 
   let activeChatId = self.controller.getActiveChatId()
@@ -641,6 +721,9 @@ method activeItemSet*(self: Module, itemId: string) =
 
   # save last open chat in settings for restore on the next app launch
   singletonInstance.localAccountSensitiveSettings.setSectionLastOpenChat(mySectionId, activeChatId)
+  if chat_item.isThread:
+    singletonInstance.localAccountSensitiveSettings.setSectionLastOpenThread(mySectionId,
+      chat_item.id, chat_item.parentChatId, THREAD_PRESENTATION_SELECTED_CHAT)
 
   let (deactivateSectionId, deactivateChatId) = singletonInstance.loaderDeactivator.addChatInMemory(mySectionId, activeChatId)
 
@@ -676,6 +759,11 @@ method getChatContentModule*(self: Module, chatId: string): QVariant =
   if(not self.chatContentModules.contains(chatId)):
     error "getChatContentModule: unexisting chat key", chatId, methodName="getChatContentModule"
     return
+
+  # A thread can be displayed in the side panel without becoming the active chat.
+  # Load requested modules lazily so their messages and input state are available.
+  if not self.chatContentModules[chatId].isLoaded:
+    self.chatContentModules[chatId].load(chatItem)
 
   return self.chatContentModules[chatId].getModuleAsVariant()
 
@@ -1059,6 +1147,12 @@ proc removeThreadsForParent(self: Module, parentChatId: string) =
 method onCommunityChannelDeletedOrChatLeft*(self: Module, chatId: string) =
   if self.view.chatsModel().getItemById(chatId).isNil:
     return
+  let savedThread = parseLastSectionThread(singletonInstance.localAccountSensitiveSettings.getSectionLastOpenThread(
+    self.controller.getMySectionId()))
+  if savedThread.threadId == chatId or savedThread.parentChatId == chatId:
+    self.clearPendingThreadRestore(clearSettings = true)
+  if self.view.getOpenThreadId() == chatId or self.view.getOpenThreadParentChatId() == chatId:
+    self.closeThreadPanel()
   if self.isChatThread(chatId):
     self.threadChatIds.excl(chatId)
   else:
@@ -1142,6 +1236,9 @@ method changeMutedOnChat*(self: Module, chatId: string, muted: bool) =
 
 proc changeCanPostValues*(self: Module, chatId: string, canPost, canView, canPostReactions, viewersCanPostReactions: bool) =
   discard self.view.chatsModel().changeCanPostValues(chatId, canPost, canView, canPostReactions, viewersCanPostReactions)
+  for threadItem in self.view.chatsModel().items:
+    if threadItem.isThread and threadItem.parentChatId == chatId and self.chatContentModules.contains(threadItem.id):
+      self.chatContentModules[threadItem.id].onParentChatPermissionsUpdated(canPost, canView, canPostReactions)
 
 proc updateChatsRequiredPermissions(self: Module, communityChats: seq[ChatDto]) =
   for communityChat in communityChats:
@@ -1459,26 +1556,32 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
   let plainText = self.controller.getMessagesParsedPlainText(message, self.controller.getMyCommunity().chats)
 
   var notificationTitle = senderDisplayName
+  let threadName = if message.threadId.len > 0:
+      self.messageService.getThreadById(chatIdMsgBelongsTo, message.threadId).name
+    else:
+      ""
 
   case chatDetails.chatType:
     of ChatType.PrivateGroupChat:
-      notificationTitle.add(fmt" ({chatDetails.name})")
+      let conversationName = if threadName.len > 0: chatDetails.name & " Ξ" & threadName else: chatDetails.name
+      notificationTitle.add(fmt" ({conversationName})")
     of ChatType.CommunityChat:
+      let channelName = if threadName.len > 0: "#" & chatDetails.name & " Ξ" & threadName else: "#" & chatDetails.name
       if (chatDetails.categoryId.len == 0):
-        notificationTitle.add(fmt" (#{chatDetails.name})")
+        notificationTitle.add(fmt" ({channelName})")
       else:
         let categoryDetails = self.controller.getCommunityCategoryDetails(chatDetails.communityId, chatDetails.categoryId)
-        notificationTitle.add(fmt" (#{chatDetails.name}, {categoryDetails.name})")
+        notificationTitle.add(fmt" ({channelName}, {categoryDetails.name})")
     else:
       discard
 
   let messageBelongsToActiveSection = sectionIdMsgBelongsTo == self.controller.getMySectionId() and
     self.controller.getMySectionId() == self.delegate.getActiveSectionId()
-  let messageBelongsToActiveChat = self.controller.getActiveChatId() == chatIdMsgBelongsTo
+  let messageBelongsToActiveChat = self.controller.getActiveChatId() == displayChatId
 
   singletonInstance.globalEvents.showMessageNotification(notificationTitle, plainText, sectionIdMsgBelongsTo,
     self.controller.isCommunity(), messageBelongsToActiveSection, chatIdMsgBelongsTo, messageBelongsToActiveChat,
-    message.id, notificationType.int, chatTypeMsgBelongsTo == ChatType.OneToOne,
+    message.id, message.threadId, notificationType.int, chatTypeMsgBelongsTo == ChatType.OneToOne,
     chatTypeMsgBelongsTo == ChatType.PrivateGroupChat)
 
 method addGroupMembers*(self: Module, chatId: string, pubKeys: string) =
@@ -1855,6 +1958,36 @@ method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messag
   if chatId notin self.chatContentModules:
     return false
   self.chatContentModules[chatId].scrollToMessage(messageId)
+  return true
+
+method openThreadAndScrollToMessage*(self: Module, parentChatId: string, threadId: string,
+    messageId: string): bool =
+  if self.view.chatsModel().getItemById(parentChatId).isNil:
+    if not self.chatsLoaded:
+       self.pendingThreadId = threadId
+       self.pendingThreadParentChatId = parentChatId
+       self.pendingThreadPresentation = THREAD_PRESENTATION_SELECTED_CHAT
+       self.pendingThreadMessageId = messageId
+       return true
+    return false
+
+  let threadItem = self.view.chatsModel().getItemById(threadId)
+  if threadItem.isNil:
+    self.pendingThreadId = threadId
+    self.pendingThreadParentChatId = parentChatId
+    self.pendingThreadPresentation = THREAD_PRESENTATION_SELECTED_CHAT
+    self.pendingThreadMessageId = messageId
+    self.controller.loadChatThreadsForChats(@[parentChatId])
+    return true
+
+  if not threadItem.isThread or threadItem.parentChatId != parentChatId:
+    error "openThreadAndScrollToMessage: thread does not belong to parent", threadId, parentChatId
+    return false
+
+  self.setActiveItem(threadId)
+  if threadId notin self.chatContentModules:
+    return false
+  self.chatContentModules[threadId].scrollToMessage(messageId)
   return true
 
 method updateRequestToJoinState*(self: Module, state: RequestToJoinState) =

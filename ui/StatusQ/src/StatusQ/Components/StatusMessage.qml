@@ -80,6 +80,9 @@ Control {
     property string disabledTooltipText
     readonly property string selectedText: d.selectedText
 
+    // Optional content rendered below the message body and reactions.
+    property Component messageAttachmentComponent
+
     // When true (default), the text selection is dropped when the message text loses active focus.
     // Set to false to keep the selection while focus temporarily moves elsewhere (e.g. a context menu).
     property bool clearSelectionOnLostFocus: true
@@ -226,47 +229,73 @@ Control {
             }
 
             RowLayout {
+                id: messageRow
+
                 Layout.fillWidth: true
                 Layout.leftMargin: Theme.padding
                 Layout.rightMargin: Theme.padding
                 spacing: Theme.halfPadding
 
-                StatusUserImage {
-                    id: profileImage
-                    objectName: "messageProfileImage"
-                    Layout.alignment: Qt.AlignTop
-                    // The avatar stack (identicon/image + mask effect) is one
-                    // of the heaviest parts of a row; incubate it off the
-                    // creation path behind a fixed-size skeleton.
-                    asynchronous: true
-                    Layout.preferredWidth: imageWidth
-                    Layout.preferredHeight: imageHeight
-                    active: root.showHeader
-                    visible: active
-                    name: root.messageDetails.sender.displayName
-                    usesDefaultName: root.messageDetails.sender.usesDefaultName
-                    userColor: root.messageDetails.sender.profileImage.assetSettings.color
-                    image: root.messageDetails.sender.profileImage.assetSettings.name
-                    interactive: true
-                    imageWidth: root.messageDetails.sender.profileImage.assetSettings.width
-                    imageHeight: root.messageDetails.sender.profileImage.assetSettings.height
-                    isBridgedAccount: root.messageDetails.contentType === StatusMessage.ContentType.BridgeMessage
-                    bridgeBadgeImage: root.messageDetails.sender.badgeImage || Assets.svg("bridge")
-                    onClicked: (mouse) => root.profilePictureClicked(this, mouse)
+                Item {
+                    id: messageRail
 
-                    LoadingSkeletonTile {
-                        objectName: "avatarLoadingSkeleton"
-                        anchors.fill: parent
-                        radius: width / 2
-                        visible: profileImage.active && profileImage.status !== Loader.Ready
+                    Layout.alignment: Qt.AlignTop
+                    Layout.preferredWidth: root.messageDetails.sender.profileImage.assetSettings.width
+                    Layout.fillHeight: true
+
+                    StatusUserImage {
+                        id: profileImage
+                        objectName: "messageProfileImage"
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        // The avatar stack (identicon/image + mask effect) is one
+                        // of the heaviest parts of a row; incubate it off the
+                        // creation path behind a fixed-size skeleton.
+                        asynchronous: true
+                        active: root.showHeader
+                        visible: active
+                        name: root.messageDetails.sender.displayName
+                        usesDefaultName: root.messageDetails.sender.usesDefaultName
+                        userColor: root.messageDetails.sender.profileImage.assetSettings.color
+                        image: root.messageDetails.sender.profileImage.assetSettings.name
+                        interactive: true
+                        imageWidth: root.messageDetails.sender.profileImage.assetSettings.width
+                        imageHeight: root.messageDetails.sender.profileImage.assetSettings.height
+                        isBridgedAccount: root.messageDetails.contentType === StatusMessage.ContentType.BridgeMessage
+                        bridgeBadgeImage: root.messageDetails.sender.badgeImage || Assets.svg("bridge")
+                        onClicked: (mouse) => root.profilePictureClicked(this, mouse)
+
+                        LoadingSkeletonTile {
+                            objectName: "avatarLoadingSkeleton"
+                            anchors.fill: parent
+                            radius: width / 2
+                            visible: profileImage.active && profileImage.status !== Loader.Ready
+                        }
+                    }
+
+                    // Stands in for the avatar on a header-less message that still
+                    // anchors the connector, so the line has something to start from.
+                    // A Loader keeps the icon out of every row that doesn't need it.
+                    Loader {
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        active: messageAttachmentLoader.active && !root.showHeader
+                        sourceComponent: StatusIcon {
+                            width: d.threadMarkerSize
+                            height: d.threadMarkerSize
+                            icon: "thread"
+                            color: Theme.palette.baseColor1
+                            opacity: 0.4
+                        }
                     }
                 }
 
                 ColumnLayout {
+                    id: messageContentColumn
+
                     spacing: 2
                     Layout.alignment: Qt.AlignTop
                     Layout.fillWidth: true
-                    Layout.leftMargin: profileImage.active ? 0 : root.messageDetails.sender.profileImage.assetSettings.width + parent.spacing
 
                     StatusPinMessageDetails {
                         active: root.isPinned
@@ -392,6 +421,39 @@ Control {
                             onToggleReaction: (hexcode) => root.toggleReactionClicked(hexcode)
                         }
                     }
+
+                    Item {
+                        id: messageAttachmentHost
+
+                        Layout.fillWidth: true
+                        implicitHeight: messageAttachmentLoader.implicitHeight
+                        visible: messageAttachmentLoader.active
+
+                        // Y (in this host) where the connector meets the attachment.
+                        readonly property int connectorY: Theme.padding + Theme.halfPadding
+
+                        Loader {
+                            x: -(messageRow.spacing + messageRail.width / 2)
+                            y: (root.showHeader ? profileImage.height : d.threadMarkerSize)
+                               - messageAttachmentHost.y
+                            width: messageRow.spacing + messageRail.width / 2
+                            height: Math.max(0, messageAttachmentHost.connectorY - y)
+                            active: messageAttachmentLoader.active
+                            visible: active
+                            sourceComponent: StatusMessageConnector {
+                                direction: StatusMessageConnector.Direction.Down
+                            }
+                        }
+
+                        Loader {
+                            id: messageAttachmentLoader
+
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            active: !!root.messageAttachmentComponent
+                            sourceComponent: root.messageAttachmentComponent
+                        }
+                    }
                 }
             }
         }
@@ -408,6 +470,8 @@ Control {
     QtObject {
         id: d
         property string selectedText
+
+        readonly property int threadMarkerSize: 20
 
         // Hover must be reported for real pointing devices only. A touch tap makes Qt synthesize a
         // mouse move (a "core pointer" event, indistinguishable from a real mouse by

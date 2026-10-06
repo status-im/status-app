@@ -105,6 +105,8 @@ No in-process conversation buffer is maintained. Instead, conversation state is 
 
 Conversation identity is the `NotificationBuilder.conversationKey()` value — the chat ID, or `chatId#threadId` when the message belongs to a message thread — not the bare `conversationId` reported by `status-go` (which is always the parent chat). It derives the notification ID, the group key and the shortcut ID, so a thread gets its own notification stack. This is required for correctness, not just presentation: the notification ID doubles as the inline-reply `PendingIntent` request code, and `PendingIntent` matching ignores extras, so a shared ID would let whichever notification was posted last decide where a reply is sent.
 
+Thread notifications receive their privacy-filtered conversation title and deep link from `status-go`. For a community channel, the title is `#channel ΞthreadName`; `threadName` is the stored `Thread.Name`, including its existing parent-message defaulting and normalization. The thread deep link carries the parent chat, thread, notified message, and optional community IDs. Status routes it to the selected thread chat and scrolls to that message, including after deferred startup/thread-list loading. Android must not recreate this naming or privacy logic, and its dynamic conversation shortcut uses the same deep link as the notification tap.
+
 ---
 
 ### 6. Outgoing message handling (`isFromMe`)

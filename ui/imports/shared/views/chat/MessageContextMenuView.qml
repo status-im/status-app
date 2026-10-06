@@ -32,6 +32,7 @@ StatusMenu {
     property bool pinMessageAllowedForMembers: false
     property bool threadsFeatureEnabled: false
     property bool hasThread: false
+    property bool isThreadView: false
     property bool editRestricted: false
     property bool pinnedMessage: false
     property bool canPin: false
@@ -72,7 +73,7 @@ StatusMenu {
         readonly property int defaultActionSize: iconSize + 2 * compactPadding
         readonly property int singleRowActionSize: iconSize + 3 * compactPadding
         readonly property bool editActionVisible: root.isMyMessage && !root.editRestricted && !root.disabledForChat
-        readonly property bool compactPinActionVisible: !editActionVisible && d.canPinMessage
+        readonly property bool compactPinActionVisible: !root.isThreadView && !editActionVisible && d.canPinMessage
         readonly property bool reactionsVisible: !root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)
         readonly property int singleRowActionCount: 1 +
                                                     (!root.disabledForChat ? 2 : 0) +
@@ -337,11 +338,10 @@ StatusMenu {
     MsgCtxAction {
         id: openThreadAction
         objectName: "messageContextMenu_openThread"
-        text: root.hasThread ? qsTr("Open Thread") : qsTr("Create Thread")
+        text: qsTr("Create Thread")
         icon.name: "chat"
         onTriggered: root.openThread()
-        enabled: !root.disabledForChat &&
-                root.threadsFeatureEnabled &&
+        enabled: root.threadsFeatureEnabled && !root.hasThread && !root.isThreadView && !root.disabledForChat &&
                 Utils.isThreadSupportedChatType(root.chatType)
     }
 
@@ -400,7 +400,7 @@ StatusMenu {
             if (!root.canPin) return root.pinnedMessagesLimitReached()
             root.pinMessage()
         }
-        enabled: root.expanded && d.canPinMessage
+        enabled: root.expanded && d.canPinMessage && !root.isThreadView
     }
 
     MsgCtxAction {

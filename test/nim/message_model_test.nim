@@ -7,6 +7,7 @@ import app_service/service/message/dto/message
 import app/modules/shared_models/message_model
 import app/modules/shared_models/message_item
 import app/modules/shared_models/message_transaction_parameters_item
+from app/modules/shared_models/thread_participant_model import Participant, count
 
 proc createTestMessageItem(id: string, clock: int64): Item =
   return message_model.createMessageItemFromDtos(
@@ -30,7 +31,7 @@ let message3 = createTestMessageItem("0xc", 3)
 let message4 = createTestMessageItem("0xd", 3)
 let message5 = createTestMessageItem("0xe", 4)
 
-template checkOrder(model: Model) =
+template checkOrder(model: message_model.Model) =
   require(model.items.len == 7)
   check(model.items[0].id == message5.id)
   check(model.items[1].id == message4.id)
@@ -45,6 +46,54 @@ suite "empty model":
 
   test "initial size":
     require(model.rowCount() == 0)
+
+suite "thread summary":
+  test "keeps typed data and updates the participants model":
+    let item = createTestMessageItem("thread-parent", 1)
+    item.threadSummary = ThreadSummary(
+      threadId: "thread-id",
+      originalMessageId: "thread-parent",
+      title: "Thread title",
+      messagesCount: 2,
+      notificationCount: 1,
+      participantsCount: 8,
+      participants: @[
+        Participant(id: "alice", name: "Alice", colorId: 1),
+        Participant(id: "bob", name: "Bob", colorId: 2),
+      ],
+      lastMessageSenderName: "Bob",
+      lastMessageText: "Latest reply",
+      lastMessageTimestamp: 42,
+    )
+
+    check(item.threadSummary.threadId == "thread-id")
+    check(item.threadSummary.lastMessageText == "Latest reply")
+    check(item.threadParticipantsModel.count() == 2)
+    check(item.threadSummary.participantsCount == 8)
+
+  test "populates participants after a late summary update":
+    let model = newModel()
+    let item = createTestMessageItem("thread-parent", 1)
+    item.threadSummary = ThreadSummary(
+      threadId: "thread-id",
+      originalMessageId: "thread-parent",
+      messagesCount: 2,
+      participantsCount: 2,
+    )
+    model.insertItemBasedOnClock(item)
+
+    model.setThreadSummary("thread-parent", ThreadSummary(
+      threadId: "thread-id",
+      originalMessageId: "thread-parent",
+      messagesCount: 2,
+      participantsCount: 2,
+      participants: @[
+        Participant(id: "alice", name: "Alice", colorId: 1),
+        Participant(id: "bob", name: "Bob", colorId: 2),
+      ],
+    ))
+
+    check(item.threadParticipantsModel.count() == 2)
 
 suite "outgoing status ordering":
   test "applies an early sent signal when the message is inserted":

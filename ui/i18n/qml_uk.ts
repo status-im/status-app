@@ -3329,8 +3329,16 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatView</name>
     <message>
+        <source>in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Members</source>
         <translation>Учасники</translation>
+    </message>
+    <message>
+        <source>Close thread</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11309,10 +11317,6 @@ to load</source>
     <message>
         <source>Reply</source>
         <translation>Відповісти</translation>
-    </message>
-    <message>
-        <source>Open Thread</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Create Thread</source>

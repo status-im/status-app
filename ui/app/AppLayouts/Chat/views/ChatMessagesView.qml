@@ -65,6 +65,7 @@ Item {
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
+    property bool isThreadView
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -77,7 +78,7 @@ Item {
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
     signal showReplyArea(string messageId, string author)
     signal editModeChanged(bool editModeOn, string messageId)
-    signal openThread(string messageId)
+    signal openThread(string threadId, string threadName, string parentMessageId)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -280,7 +281,9 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         spacing: 0
-        bottomMargin: Theme.halfPadding
+        // Keep short threads at the top without changing the model order.
+        bottomMargin: root.isThreadView ? Math.max(Theme.halfPadding, height - contentHeight)
+                                        : Theme.halfPadding
         verticalLayoutDirection: ListView.BottomToTop
         cacheBuffer: height > 0 ? height * 2 : 0 // cache 2 screens worth of items
 
@@ -454,6 +457,19 @@ Item {
             quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
             bridgeName: model.bridgeName
             hasThread: model.hasThread
+            isThreadView: root.isThreadView
+            threadId: model.threadId
+            threadOriginalMessageId: model.threadOriginalMessageId
+            threadTitle: model.threadTitle
+            threadMessagesCount: model.threadMessagesCount
+            threadNotificationCount: model.threadNotificationCount
+            threadParticipantsModel: model.threadParticipantsModel
+            threadParticipantsCount: model.threadParticipantsCount
+            threadLastMessageSenderName: model.threadLastMessageSenderName
+            threadLastMessageSenderImage: model.threadLastMessageSenderImage
+            threadLastMessageSenderColorId: model.threadLastMessageSenderColorId
+            threadLastMessageText: model.threadLastMessageText
+            threadLastMessageTimestamp: model.threadLastMessageTimestamp
 
             gapFrom: model.gapFrom
             gapTo: model.gapTo
@@ -482,7 +498,8 @@ Item {
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
 
             onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)
-            onOpenThread: (messageId) => root.openThread(messageId)
+            onOpenThread: (threadId, threadName, parentMessageId) =>
+                root.openThread(threadId, threadName, parentMessageId)
 
             stickersLoaded: root.stickersLoaded
 

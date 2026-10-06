@@ -8,11 +8,26 @@ import ../../../app_service/service/message/dto/link_preview
 import ../../../app_service/service/message/dto/payment_request
 import ./link_preview_model as link_preview_model
 import ./payment_request_model as payment_request_model
+import ./thread_participant_model as thread_participant_model
 
 export types.ContentType
 import message_reaction_model, message_transaction_parameters_item, contacts_utils
 
 type
+  ThreadSummary* = object
+    threadId*: string
+    originalMessageId*: string
+    title*: string
+    messagesCount*: int
+    notificationCount*: int
+    participantsCount*: int
+    participants*: seq[thread_participant_model.Participant]
+    lastMessageSenderName*: string
+    lastMessageSenderImage*: string
+    lastMessageSenderColorId*: int
+    lastMessageText*: string
+    lastMessageTimestamp*: int64
+
   Item* = ref object
     id: string
     communityId: string
@@ -77,6 +92,8 @@ type
     bridgeName: string
     paymentRequestModel: payment_request_model.Model
     hasThread: bool
+    threadSummary: ThreadSummary
+    threadParticipantsModel: thread_participant_model.Model
 
 proc initMessageItem*(
     id,
@@ -633,7 +650,15 @@ proc toJsonNode*(self: Item): JsonNode =
     "albumMessageIds": self.albumMessageIds,
     "albumImagesCount": self.albumImagesCount,
     "bridgeName": self.bridgeName,
-    "hasThread": self.hasThread
+    "hasThread": self.hasThread,
+    "threadId": self.threadSummary.threadId,
+    "threadOriginalMessageId": self.threadSummary.originalMessageId,
+    "threadTitle": self.threadSummary.title,
+    "threadMessagesCount": self.threadSummary.messagesCount,
+    "threadNotificationCount": self.threadSummary.notificationCount,
+    "threadParticipantsCount": self.threadSummary.participantsCount,
+    "threadLastMessageText": self.threadSummary.lastMessageText,
+    "threadLastMessageTimestamp": self.threadSummary.lastMessageTimestamp
   }
 
 proc hasThread*(self: Item): bool {.inline.} =
@@ -641,6 +666,19 @@ proc hasThread*(self: Item): bool {.inline.} =
 
 proc `hasThread=`*(self: Item, value: bool) {.inline.} =
   self.hasThread = value
+
+proc threadSummary*(self: Item): ThreadSummary {.inline.} =
+  self.threadSummary
+
+proc `threadSummary=`*(self: Item, value: ThreadSummary) =
+  self.threadSummary = value
+  if self.threadParticipantsModel.isNil:
+    self.threadParticipantsModel = thread_participant_model.newModel(value.participants)
+  else:
+    self.threadParticipantsModel.setParticipants(value.participants)
+
+proc threadParticipantsModel*(self: Item): thread_participant_model.Model {.inline.} =
+  self.threadParticipantsModel
 
 proc editMode*(self: Item): bool {.inline.} =
   self.editMode

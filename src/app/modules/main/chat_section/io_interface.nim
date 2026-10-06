@@ -105,7 +105,11 @@ method changeMutedOnChat*(self: AccessInterface, chatId: string, muted: bool) {.
 method onMarkAllMessagesRead*(self: AccessInterface, chat: ChatDto, threadId: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onChatThreadsForChatsLoaded*(self: AccessInterface, threads: seq[ThreadDto]) {.base.} =
+method onChatThreadsForChatsLoaded*(self: AccessInterface, threads: seq[ThreadDto],
+    completedChatIds: seq[string]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChatThreadsLoadingFailed*(self: AccessInterface, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onMarkMessageAsUnread*(self: AccessInterface, chat: ChatDto) {.base.} =
@@ -179,6 +183,13 @@ method openThreadAsChat*(self: AccessInterface, parentChatId: string, threadId: 
   raise newException(ValueError, "No implementation available")
 
 method isChatThread*(self: AccessInterface, chatId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method openThreadPanel*(self: AccessInterface, threadId: string, threadName: string,
+    parentChatId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method closeThreadPanel*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getChatContentModule*(self: AccessInterface, chatId: string): QVariant {.base.} =
@@ -426,6 +437,10 @@ method communityContainsChat*(self: AccessInterface, chatId: string): bool {.bas
   raise newException(ValueError, "No implementation available")
 
 method openCommunityChatAndScrollToMessage*(self: AccessInterface, chatId: string, messageId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method openThreadAndScrollToMessage*(self: AccessInterface, parentChatId: string,
+    threadId: string, messageId: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method updateRequestToJoinState*(self: AccessInterface, state: RequestToJoinState) {.base.} =

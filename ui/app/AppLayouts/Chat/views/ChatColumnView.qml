@@ -55,7 +55,8 @@ Item {
     */
     property bool messagesViewEnabled: true
 
-    readonly property string activeChatId: parentModule && parentModule.activeItem.id
+    // Thread rendered by this view. Empty when rendering the selected chat.
+    property string threadId
     readonly property int chatsCount: parentModule && parentModule.model ? parentModule.model.count : 0
     readonly property int activeChatType: rootStore.activeChatType
     property bool stickersLoaded: false
@@ -71,6 +72,7 @@ Item {
     // When on, the input takes any number of images; the send is split into messages of six
     property bool unlimitedChatImagesEnabled
     property bool joined
+    property string threadName
 
     property int extraLeftPadding: 0
 
@@ -86,6 +88,7 @@ Item {
 
     signal openStickerPackPopup(string stickerPackId)
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
+    signal openThreadRequested(string threadId, string threadName)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -134,7 +137,12 @@ Item {
 
     QtObject {
         id: d
-        readonly property var activeChatContentModule: d.getChatContentModule(root.activeChatId)
+
+        // Chat selected in the parent navigation model.
+        readonly property string activeChatId: root.parentModule?.activeItem?.id ?? ""
+        // Chat rendered by this view: the thread when provided, otherwise the selected chat.
+        readonly property string effectiveChatId: root.threadId || d.activeChatId
+        readonly property var activeChatContentModule: d.getChatContentModule(d.effectiveChatId)
 
         property bool sendingInProgress: !!d.activeChatContentModule? d.activeChatContentModule.inputAreaModule.sendingInProgress : false
 
@@ -439,7 +447,7 @@ Item {
 
     EmptyChatPanel {
         anchors.fill: parent
-        visible: root.activeChatId === "" || root.chatsCount == 0
+        visible: d.effectiveChatId === "" || root.chatsCount == 0
         onShareChatKeyClicked: Global.shareProfileDialogRequested(userProfile.pubKey)
         onSupportBotChatRequested: root.supportBotChatRequested()
     }
@@ -463,6 +471,10 @@ Item {
                 Loader {
                     id: chatContentLoader
 
+                    readonly property bool selected: root.threadId
+                                                     ? model.itemId === root.threadId
+                                                     : model.active
+
                     anchors.fill: parent
 
                     // Only chats that have been activated get a content view;
@@ -472,19 +484,21 @@ Item {
                     property bool wasShown: false
 
                     Binding on wasShown {
-                        when: !!model && model.active
+                        when: !!model && chatContentLoader.selected
                         value: true
                         restoreMode: Binding.RestoreNone
                     }
 
                     active: model.type !== Constants.chatType.category && model.type !== Constants.chatType.unknown &&
-                            (model.active || (model.loaderActive && chatContentLoader.wasShown))
+                            (chatContentLoader.selected
+                             || (!root.threadId && model.loaderActive && chatContentLoader.wasShown))
 
                     sourceComponent: ChatContentView {
-                        visible: !root.rootStore.openCreateChat && model.active
+                        visible: !root.rootStore.openCreateChat && chatContentLoader.selected
                         chatId: model.itemId
                         chatType: model.type
-                        chatMessagesLoader.active: model.loaderActive && root.messagesViewEnabled
+                        chatMessagesLoader.active: (root.threadId ? chatContentLoader.selected : model.loaderActive)
+                                                   && root.messagesViewEnabled
                         rootStore: root.rootStore
                         formatBalance: d.formatBalance
                         emojiPopup: root.emojiPopup
@@ -516,11 +530,15 @@ Item {
                         onEditMessageRequested: (messageId) => {
                             d.startEditMessage(messageId)
                         }
-                        onOpenThread: (messageId) => {
+                        onOpenThread: (threadId, threadName, parentMessageId) => {
                             if (root.threadsFeatureEnabled
                                     && Utils.isThreadSupportedChatType(root.activeChatType)
                                     && !d.activeMessagesStore.threadId) {
-                                d.activeMessagesStore.createThread(messageId)
+                                if (threadId) {
+                                    root.openThreadRequested(threadId, threadName)
+                                    return
+                                }
+                                d.activeMessagesStore.createThread(parentMessageId)
                             }
                         }
                         onForceInputFocus: {
@@ -638,6 +656,7 @@ Item {
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
                     maxImages: root.unlimitedChatImagesEnabled ? 0 : Constants.maxUploadFiles
+                    threadName: root.threadName
 
                     textInput.onTextChanged: {
                         if (chatInput.isEdit || !d.activeChatContentModule)
@@ -687,7 +706,7 @@ Item {
                             return
                         }
 
-                        if (root.rootStore.sendMessage(root.activeChatId,
+                        if (root.rootStore.sendMessage(d.effectiveChatId,
                                                     chatInput.getTextWithPublicKeys(),
                                                     chatInput.isReply? chatInput.replyMessageId : "",
                                                     chatInput.fileUrlsAndSources,
