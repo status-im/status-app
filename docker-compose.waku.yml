@@ -1,6 +1,6 @@
 services:
   boot-1:
-    image: harbor.status.im/wakuorg/nwaku:v0.39.0
+    image: harbor.status.im/wakuorg/nwaku:v0.39.1
     ports:
       - "39001"
       - "8645"
@@ -43,7 +43,7 @@ services:
       retries: 10
 
   store:
-    image: harbor.status.im/wakuorg/nwaku:v0.39.0
+    image: harbor.status.im/wakuorg/nwaku:v0.39.1
     ports:
       - "39002"
       - "8646"
@@ -88,7 +88,7 @@ services:
       retries: 10
 
   store-2:
-    image: harbor.status.im/wakuorg/nwaku:v0.39.0
+    image: harbor.status.im/wakuorg/nwaku:v0.39.1
     ports:
       - "39003"
       - "8647"
