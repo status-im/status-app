@@ -42,6 +42,10 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test:runner:1.5.2'
     androidTestImplementation 'androidx.test:rules:1.5.0'
+
+    // JVM unit tests for Android-free helpers (see test/). Also run by
+    // `make -C mobile ipc-host-tests` without a Gradle project.
+    testImplementation 'junit:junit:4.13.2'
 }
 
 // Allow overriding qtAndroidDir via environment variable (for different Qt installations)
@@ -91,6 +95,9 @@ android {
             assets.srcDirs = ['assets']
             jniLibs.srcDirs = ['libs']
        }
+        test {
+            java.srcDirs = ['test']
+        }
     }
 
     tasks.withType(JavaCompile) {

@@ -13,8 +13,6 @@ import android.os.RemoteException;
 import android.system.ErrnoException;
 import android.util.Log;
 
-import org.json.JSONObject;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -71,7 +69,7 @@ public final class StatusGoServiceClient {
                     ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
                     : 0;
             if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-                Log.w(TAG, "received large status-go signal type=" + getSignalType(jsonSignal)
+                Log.w(TAG, "received large status-go signal type=" + SignalEnvelope.typeOf(jsonSignal)
                         + " sizeBytes=" + signalSizeBytes);
             }
             // Forward into the native stub callback (SetSignalEventCallback).
@@ -91,7 +89,7 @@ public final class StatusGoServiceClient {
                         ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
                         : 0;
                 if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-                    Log.w(TAG, "received large status-go signal type=" + getSignalType(jsonSignal)
+                    Log.w(TAG, "received large status-go signal type=" + SignalEnvelope.typeOf(jsonSignal)
                             + " sizeBytes=" + signalSizeBytes);
                 }
                 StatusGoStub.nativeDeliverSignal(jsonSignal);
@@ -100,15 +98,6 @@ public final class StatusGoServiceClient {
             }
         }
     };
-
-    private static String getSignalType(String jsonSignal) {
-        if (jsonSignal == null || jsonSignal.isEmpty()) return "";
-        try {
-            return new JSONObject(jsonSignal).optString("type", "");
-        } catch (Throwable t) {
-            return "";
-        }
-    }
 
     private final ServiceConnection conn = new ServiceConnection() {
         @Override
