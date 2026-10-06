@@ -204,12 +204,16 @@ SplitView {
         // request is pending for the rest of that turn and honoured by the same
         // reveal, so the rows appear already in the right place.
         //
+        // The window move is wrapped in beginBatch()/endBatch(), so it is one
+        // batch however it lands - every row replaced, or only some slid in -
+        // and with an answer delay set it lands late, the way a backend fetch
+        // would.
+        //
         // Carried across as a key, never as a row number: moving the window
         // re-indexes everything the view holds.
         property string jumpKey: ""
         property int jumpMode: -1
         property real jumpOffset: NaN
-        property int jumpAttempts: 0
 
         // rowForKey() is a linear scan, so nothing inside it tells QML when its
         // answer can change - and its two paths do not even read the same
@@ -286,26 +290,28 @@ SplitView {
             d.jumpKey = key
             d.jumpMode = mode
             d.jumpOffset = offset
-            d.jumpAttempts = 0
 
             // Already on screen: no window move, nothing to wait for.
             if (d.applyJump())
                 return
 
-            // Otherwise bring it into the window.
-            if (!windowSource.moveToKey(key)) {
-                d.clearJump()
+            // Otherwise bring it into the window, as one batch.
+            windowedView.beginBatch()
+
+            if (answerDelaySpinBox.value <= 0) {
+                d.moveWindowToJump()
                 return
             }
 
-            // A move that replaces every row reaches the view as a fresh
-            // population, and batchRevealed() completes the jump inside it.
-            // A move that only slides the window does not: some rows survive,
-            // so the view has nothing to stage and reveals the new ones one by
-            // one, with no batch and no signal. This covers that - it retries
-            // until the row turns up, and finds the work already done whenever
-            // the reveal got there first.
-            jumpTimer.restart()
+            jumpAnswerTimer.interval = answerDelaySpinBox.value
+            jumpAnswerTimer.restart()
+        }
+
+        function moveWindowToJump() {
+            if (!windowSource.moveToKey(d.jumpKey))
+                d.clearJump()
+
+            windowedView.endBatch()
         }
 
         function applyJump() {
@@ -327,11 +333,9 @@ SplitView {
         }
 
         function clearJump() {
-            jumpTimer.stop()
             d.jumpKey = ""
             d.jumpMode = -1
             d.jumpOffset = NaN
-            d.jumpAttempts = 0
         }
 
         // The page opens on the newest content, which is where reading starts
@@ -1713,28 +1717,11 @@ SplitView {
         onTriggered: d.deliver(d.answerAtTop)
     }
 
-    // Waits for a jump's row to turn up when the window move did not produce a
-    // batch to complete it in. Bounded: a row that never arrives gives up
-    // rather than leaving the view pinned to a request for ever.
-    //
-    // A Timer rather than Qt.callLater, like landTimer below: the storybook
-    // destroys and rebuilds a page on a hot reload, and a callLater still
-    // pending across that fires into a context that no longer exists.
+    // A jump's window move answered late, the way a backend fetch would.
     Timer {
-        id: jumpTimer
+        id: jumpAnswerTimer
 
-        interval: 16
-        repeat: true
-
-        onTriggered: {
-            if (!d.jumpKey || d.applyJump()) {
-                stop()
-                return
-            }
-
-            if (++d.jumpAttempts > 60)
-                d.clearJump()
-        }
+        onTriggered: d.moveWindowToJump()
     }
 
     // A Timer rather than Qt.callLater: the storybook destroys and rebuilds a

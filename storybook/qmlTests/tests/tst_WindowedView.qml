@@ -1102,6 +1102,196 @@ Item {
     }
 
     TestCase {
+        id: batchTests
+
+        name: "WindowedView.Batch"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            owner.reset(root.windowSize)
+            positionedSpy.clear()
+            tryVerify(() => settled(root.windowSize), 5000, "rows laid out")
+        }
+
+        // An open batch outlives a failing test just as a held answer does.
+        function cleanup() {
+            view.endBatch()
+            owner.holdAnswer = false
+            owner.answer()
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        function test_rowsAddedInsideTheBatchRevealTogether() {
+            provider.delay = 40
+            const reveals = owner.revealCount
+
+            view.beginBatch()
+            verify(view.busy, "busy while the batch is open")
+
+            rows.append(rows.make(100, 5))
+            compare(hiddenShells().length, 5, "the rows are staged")
+
+            view.endBatch()
+            compare(hiddenShells().length, 5, "and stay staged until ready")
+
+            tryVerify(() => !view.busy, 5000)
+            compare(owner.revealCount, reveals + 1, "revealed once")
+            compare(hiddenShells().length, 0)
+            compare(view.rowCount, root.windowSize + 5)
+        }
+
+        // The point of the pair: the owner may take as long as it likes, and
+        // rows arriving long after beginBatch() still belong to the batch.
+        function test_aLateBatchWaitsForTheOwner() {
+            provider.delay = 40
+            const reveals = owner.revealCount
+
+            view.beginBatch()
+
+            // past the stall detector's interval, with nothing arrived
+            let deadline = Date.now() + 1500
+
+            while (Date.now() < deadline) {
+                compare(view.busy, true, "still waiting on the owner")
+                compare(owner.revealCount, reveals, "and nothing was revealed")
+                waitForRendering(view)
+            }
+
+            rows.append(rows.make(100, 5))
+
+            // every row has its content, but the owner has not said it is done
+            deadline = Date.now() + 300
+
+            while (Date.now() < deadline) {
+                compare(hiddenShells().length, 5, "the late rows are staged")
+                waitForRendering(view)
+            }
+
+            view.endBatch()
+            tryVerify(() => !view.busy, 5000)
+            compare(owner.revealCount, reveals + 1, "revealed once, on endBatch()")
+            compare(hiddenShells().length, 0)
+        }
+
+        function test_anEmptyBatchLeavesNoState() {
+            const reveals = owner.revealCount
+
+            view.beginBatch()
+            view.endBatch()
+
+            compare(view.busy, false)
+            compare(view.initialLoading, false)
+            compare(owner.revealCount, reveals, "nothing to reveal")
+
+            verify(view.requestMoreBottom(), "paging works afterwards")
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        function test_requestsAreRefusedWhileABatchIsOpen() {
+            view.beginBatch()
+            compare(view.requestMoreBottom(), false)
+            compare(view.requestMoreTop(), false)
+            view.endBatch()
+
+            compare(view.busy, false)
+            verify(view.requestMoreBottom(), "and taken again once it is closed")
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        // Opened while a request is outstanding, the batch joins it: one reveal,
+        // and only once both the owner's answer and endBatch() have arrived.
+        function test_aBatchOpenedDuringARequestJoinsIt() {
+            provider.delay = 40
+            owner.holdAnswer = true
+            const reveals = owner.revealCount
+
+            verify(view.requestMoreBottom())
+            view.beginBatch()
+            rows.append(rows.make(500, 3))
+
+            owner.answer()
+            compare(view.loadingBottom, false, "the request is answered")
+
+            const deadline = Date.now() + 300
+
+            while (Date.now() < deadline) {
+                compare(view.busy, true, "but the batch is still open")
+                compare(owner.revealCount, reveals)
+                waitForRendering(view)
+            }
+
+            view.endBatch()
+            tryVerify(() => !view.busy, 5000)
+
+            compare(owner.revealCount, reveals + 1, "one reveal for both")
+            compare(hiddenShells().length, 0)
+            verify(values().indexOf(500) !== -1, "the batch's rows are shown")
+            compare(values()[0], root.chunk, "and the request's far end trimmed")
+        }
+
+        function test_replacingEveryRowInsideABatchIsAFreshFill() {
+            provider.delay = 40
+            const reveals = owner.revealCount
+
+            view.beginBatch()
+            rows.clear()
+            rows.append(rows.make(200, root.windowSize))
+            verify(view.initialLoading, "the replacement is a fresh population")
+
+            view.endBatch()
+            tryVerify(() => !view.busy, 5000)
+
+            compare(view.initialLoading, false)
+            compare(owner.revealCount, reveals + 1, "revealed in one step")
+            compare(values()[0], 200)
+        }
+
+        // A jump whose window move only slides some rows in: the rows surviving
+        // the move mean the view is not showing nothing, so without the batch
+        // the new rows would reveal one by one with no batchRevealed() to
+        // complete the jump in.
+        function test_aSlidingJumpLandsInTheReveal() {
+            provider.delay = 30
+            const reveals = owner.revealCount
+
+            let asked = false
+
+            function onRevealed() {
+                asked = true
+                view.positionViewAtRow(view.rowForKey("k20"),
+                                       WindowedView.PositionMode.Center)
+            }
+
+            view.batchRevealed.connect(onRevealed)
+
+            view.beginBatch()
+            rows.remove(0, root.chunk)
+            rows.append(rows.make(root.windowSize, root.chunk))
+            compare(view.rowForKey("k20"), root.windowSize - root.chunk,
+                    "the target is held, staged")
+            view.endBatch()
+
+            tryVerify(() => !view.busy && positionedSpy.count === 1, 8000,
+                      "the jump was honoured")
+            view.batchRevealed.disconnect(onRevealed)
+            waitForRendering(view)
+
+            verify(asked)
+            compare(owner.revealCount, reveals + 1, "in a single reveal")
+
+            const item = view.itemAtRow(view.rowForKey("k20"))
+
+            fuzzyCompare(item.y - view.contentY + item.height / 2,
+                         view.height / 2, 1.0, "and centred")
+        }
+    }
+
+    TestCase {
         id: cacheTests
 
         name: "WindowedView.Cache"

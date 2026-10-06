@@ -26,6 +26,12 @@ import StatusQ.Core.Utils as SQUtils
   defers removals (an index window trimming its far end) must do them there, or
   the two ends change in different frames and the content height moves twice.
 
+  The owner can open a batch itself: everything that arrives between
+  beginBatch() and endBatch() is one batch, staged and revealed the same way,
+  whether it arrives inside that pair synchronously or long after from a
+  backend. That is how a jump that moves a window gets a batchRevealed() to
+  complete in, whether the move replaces every row or only slides some in.
+
   Position is held in one of two ways, and they do not compete. While a slide is
   in flight a surviving row is anchored and its offset re-applied whenever it
   moves, which is what keeps the content still to the pixel. Outside a slide,
@@ -155,7 +161,8 @@ Flickable {
     // Either a request is outstanding, a batch is staged and unrevealed, or a
     // fresh population is still being gathered.
     readonly property bool busy: d.loadingTop || d.loadingBottom
-                                 || root.staging || d.initialLoading
+                                 || d.batchOpen || root.staging
+                                 || d.initialLoading
 
     // A fresh population - a first load, or a jump that replaced every row - is
     // being staged and has not been revealed yet: the view is showing nothing
@@ -196,6 +203,19 @@ Flickable {
 
     function moreLoadedBottom() {
         d.loaded(false)
+    }
+
+    // Everything that arrives until endBatch() is one batch: staged, revealed
+    // in a single frame, with batchRevealed() fired inside the reveal. The rows
+    // may arrive inside the pair or much later - call endBatch() when the owner
+    // is done, exactly once, even when nothing arrived. Opened while the view
+    // is already busy, it joins what is in flight, and one reveal covers both.
+    function beginBatch() {
+        d.beginBatch()
+    }
+
+    function endBatch() {
+        d.endBatch()
     }
 
     // The row item for a *model* row, as ListView.itemAtIndex() is: rendering
@@ -357,7 +377,11 @@ Flickable {
         property bool loadingTop: false
         property bool loadingBottom: false
 
+        // An owner-opened batch: rows are admitted until endBatch().
+        property bool batchOpen: false
+
         readonly property bool loading: d.loadingTop || d.loadingBottom
+                                        || d.batchOpen
 
         // A batch asked for at this edge has been admitted but not revealed yet.
         // The band has to stand for all of it: an owner that answers inside the
@@ -366,15 +390,20 @@ Flickable {
         // down at request time and the rows that replace it appear separately,
         // which is the two-step change everything else here works to avoid.
         readonly property bool pendingTop: d.loadingTop
-                                             || (d.wave.length > 0 && d.requestedAtTop)
+                                             || (d.wave.length > 0 && d.requestedAtEdge
+                                                 && d.requestedAtTop)
         readonly property bool pendingBottom: d.loadingBottom
-                                           || (d.wave.length > 0 && !d.requestedAtTop)
+                                           || (d.wave.length > 0 && d.requestedAtEdge
+                                               && !d.requestedAtTop)
 
         // How far this slide is going, and how many of the rows it added are
         // still waiting for content. Rows count themselves in and out.
         // Which edge the outstanding request was made at, so the anchor and the
         // reveal know which side is growing.
         property bool requestedAtTop: false
+        // Whether the current wave was asked for at an edge at all. A batch the
+        // owner opened has no edge, so it lights no band.
+        property bool requestedAtEdge: false
         // Keys admitted by the slide whose shells do not exist yet, and the
         // shells that have claimed one. A batch is complete when no key is
         // outstanding and every claimed shell has content.
@@ -1052,7 +1081,7 @@ Flickable {
                 return
             }
 
-            if (d.armAnchor(d.requestedAtTop))
+            if (d.armAnchor(d.requestedAtEdge ? d.requestedAtTop : true))
                 return
 
             // Nothing that survives is on screen: the user has scrolled into
@@ -1097,6 +1126,7 @@ Flickable {
             d.armAnchor(atTop)
 
             d.requestedAtTop = atTop
+            d.requestedAtEdge = true
 
             if (atTop)
                 d.loadingTop = true
@@ -1130,6 +1160,46 @@ Flickable {
             else
                 d.loadingBottom = false
 
+            d.checkWaveComplete()
+        }
+
+        function beginBatch() {
+            if (d.batchOpen)
+                return
+
+            const wasBusy = root.busy
+
+            d.batchOpen = true
+
+            if (!wasBusy) {
+                d.wave = []
+                d.stagedKeys = new Set()
+                d.noProgressIntervals = 0
+                d.requestedAtEdge = false
+
+                // No edge to grow from, so hold the reading position: the row
+                // at the viewport top stays put while rows come and go.
+                d.releaseAnchor()
+                d.armAnchor(true)
+            }
+
+            // A staged wave may be settling; it must not reveal while the batch
+            // can still add to it. endBatch() starts the settle again.
+            settleTimer.stop()
+
+            // Nothing on screen: what arrives is a fresh population, shown
+            // under the fill placeholder and revealed in one step.
+            if (d.showingNothing())
+                d.initialLoading = true
+
+            acquireTimer.restart()
+        }
+
+        function endBatch() {
+            if (!d.batchOpen)
+                return
+
+            d.batchOpen = false
             d.checkWaveComplete()
         }
 
@@ -1666,6 +1736,12 @@ Flickable {
                     // its siblings will claim from.
                     if (!d.loading && !d.initialLoading && d.showingNothing())
                         d.beginFreshFill()
+
+                    // An open batch that removed every row before adding these
+                    // is replacing the population: the fill placeholder covers
+                    // it until the reveal.
+                    if (d.batchOpen && d.showingNothing())
+                        d.initialLoading = true
 
                     // Either its key was captured before the Repeater built it,
                     // or the Repeater won the race and the outstanding request
