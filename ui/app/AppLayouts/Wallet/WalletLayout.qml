@@ -311,6 +311,15 @@ Item {
                     StatusQUtils.ModelUtils.get(RootStore.nonWatchAccounts, 0, "address")
         }
 
+        function defaultSwapChainId() {
+            const activeNetworks = root.networksStore.activeNetworks
+            if (root.networksStore.areTestNetworksEnabled
+                    && !!StatusQUtils.ModelUtils.getByKey(activeNetworks, "chainId", Constants.chains.sepoliaChainId)) {
+                return Constants.chains.sepoliaChainId
+            }
+            return StatusQUtils.ModelUtils.getByKey(activeNetworks, "layer", 1, "chainId")
+        }
+
         function launchBuyCryptoModal() {
             const walletStore = RootStore
 
@@ -376,9 +385,11 @@ Item {
                                                                   hasFloatingButtons: true
                                                               })
             onLaunchSwapModal: (groupKey) => {
+                const chainId = d.defaultSwapChainId()
                 const params = {
                     selectedAccountAddress: d.getSelectedOrFirstNonWatchedAddress(),
-                    selectedNetworkChainId: StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId"),
+                    selectedNetworkChainId: chainId,
+                    toNetworkChainId: chainId,
                     defaultFromGroupKey: groupKey
                 }
                 root.openSwapModalRequested(params)
@@ -522,9 +533,11 @@ Item {
                            }
 
         onLaunchSwapModal: {
+            const chainId = d.defaultSwapChainId()
             let params = {
                 selectedAccountAddress: d.getSelectedOrFirstNonWatchedAddress(),
-                selectedNetworkChainId: StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId"),
+                selectedNetworkChainId: chainId,
+                toNetworkChainId: chainId,
             }
 
             if(!!walletStore.currentViewedHoldingTokenGroupKey && walletStore.currentViewedHoldingType === Constants.TokenType.ERC20) {

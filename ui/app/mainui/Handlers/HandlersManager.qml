@@ -69,10 +69,21 @@ QtObject {
         swapEnabled: root.featureFlagsStore.swapEnabled && root.featureFlagsStore.swapProvidersEnabled
         routeOrderEnabled: root.featureFlagsStore.lifiEnabled
 
+        function defaultSwapNetworkChainId() {
+            const activeNetworks = root.networksStore.activeNetworks
+            if (root.walletRootStore.areTestNetworksEnabled
+                    && !!SQUtils.ModelUtils.getByKey(activeNetworks, "chainId", Constants.chains.sepoliaChainId)) {
+                return Constants.chains.sepoliaChainId
+            }
+            return SQUtils.ModelUtils.getByKey(activeNetworks, "layer", 1, "chainId")
+        }
+
         function launchSwap() {
+            const chainId = defaultSwapNetworkChainId()
             const data = {
                 selectedAccountAddress: SQUtils.ModelUtils.get(root.walletRootStore.nonWatchAccounts, 0, "address"),
-                selectedNetworkChainId: SQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId")
+                selectedNetworkChainId: chainId,
+                toNetworkChainId: chainId
             }
 
             openSendModal(data)
