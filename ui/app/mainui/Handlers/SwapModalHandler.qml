@@ -178,8 +178,8 @@ QtObject {
             }
 
             onClosed: {
-                destroy()
                 swapInputParamsForm.resetFormData()
+                destroy()
             }
         }
     }
