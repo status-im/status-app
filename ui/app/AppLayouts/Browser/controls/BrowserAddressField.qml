@@ -54,7 +54,6 @@ StatusTextField {
         anchors.left: parent.left
         anchors.leftMargin: height/3
         anchors.verticalCenter: parent.verticalCenter
-        image.sourceSize: Qt.size(width, height)
         image.source: {
             if (root.url.toString() !== root.text || root.text === "") {
                 return root.searchEngineIcon

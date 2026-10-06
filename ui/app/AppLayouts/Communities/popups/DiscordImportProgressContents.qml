@@ -278,7 +278,6 @@ StatusScrollView {
             StatusRoundedImage {
                 Layout.preferredWidth: 36
                 Layout.preferredHeight: 36
-                image.sourceSize: Qt.size(36, 36)
                 image.source: root.store.discordImportCommunityImage
                 visible: root.store.discordImportCommunityImage.toString() !== ""
             }
