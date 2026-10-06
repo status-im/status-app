@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtTest
 
@@ -90,6 +91,11 @@ Item {
             searchPhrase: ""
             profileId: root.uniqueProfileId()
         }
+    }
+
+    Component {
+        id: settingsComponent
+        Settings {}
     }
 
     ObjectCounter {
@@ -234,6 +240,51 @@ Item {
             compareRows(snapshot(second.homePageEntriesModel), expectedEntries)
             compareRows(snapshot(second.pinnedModel), expectedPinned)
             second.clear()
+        }
+
+        function storedEntries(profileId) {
+            const settings = createTemporaryObject(settingsComponent, root, { category: "HomePage_" + profileId })
+            return JSON.parse(settings.value("HomePageEntries"))
+        }
+
+        // saved data: every present row with key/timestamp/pinned (format kept)
+        function test_savedFormat() {
+            const profileId = root.uniqueProfileId()
+            const adaptor = createAdaptor({ profileId, showAllChats: true }) // all rows visible
+            applyInteractions(adaptor)
+            const rowCount = adaptor.homePageEntriesModel.ModelCount.count
+            adaptor.save()
+
+            const stored = storedEntries(profileId)
+            compare(stored.length, rowCount)
+            for (const entry of stored)
+                compare(JSON.stringify(Object.keys(entry).sort()), JSON.stringify(["key", "pinned", "timestamp"]))
+
+            const fab = stored.find(e => e.key === "1;0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884")
+            compare(fab.timestamp, 3000)
+            compare(fab.pinned, false)
+            compare(stored.find(e => e.key === "2;id1").pinned, true)
+            adaptor.clear()
+        }
+
+        // stored entries for keys not present when loading are dropped
+        function test_loadIgnoresAbsentKeys() {
+            const profileId = root.uniqueProfileId()
+            const settings = createTemporaryObject(settingsComponent, root, { category: "HomePage_" + profileId })
+            settings.setValue("HomePageEntries", JSON.stringify([
+                { key: "2;id1", timestamp: 1000, pinned: true },
+                { key: "2;gone", timestamp: 2000, pinned: true }
+            ]))
+            settings.sync()
+
+            const adaptor = createAdaptor({ profileId })
+            tryCompare(adaptor.pinnedModel.ModelCount, "count", 1)
+            compare(SQUtils.ModelUtils.get(adaptor.pinnedModel, 0, "key"), "2;id1")
+
+            adaptor.save()
+            const stored = storedEntries(profileId)
+            verify(!stored.some(e => e.key === "2;gone"))
+            adaptor.clear()
         }
 
         function test_clear() {
