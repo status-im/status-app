@@ -18,6 +18,7 @@ JAVA_ROOT="$HERE/../../android/qt6"
 JAVA_SOURCES=(
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalEnvelope.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalFanout.java"
+  "$JAVA_ROOT/src/app/status/mobile/ipc/SignalTypeResolver.java"
 )
 if [[ -z "${JUNIT_JAR:-}" ]]; then
   JUNIT_JAR="$(find "$HOME/.gradle/caches" -name 'junit-4.13.2.jar' 2>/dev/null | head -1)"

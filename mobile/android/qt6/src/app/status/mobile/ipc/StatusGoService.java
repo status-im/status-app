@@ -129,6 +129,12 @@ public final class StatusGoService extends Service {
 
     private StatusNotificationManager notificationManager;
 
+    private final SignalTypeResolver signalTypes = new SignalTypeResolver(
+            utf8 -> new JSONObject(decode(utf8)).optString("type", ""),
+            message -> Log.w(TAG, message),
+            android.os.SystemClock::elapsedRealtime,
+            60_000L);
+
     static {
         // Loads libstatus_service.so (JNI wrapper that links real libstatus.so).
         System.loadLibrary("status_service");
@@ -191,7 +197,7 @@ public final class StatusGoService extends Service {
     @SuppressWarnings("unused")
     private void onNativeSignal(ByteBuffer utf8) {
         if (utf8 == null) return;
-        final String type = SignalEnvelope.typeOf(utf8);
+        final String type = signalTypes.resolve(utf8);
         if (utf8.remaining() >= LARGE_SIGNAL_WARN_BYTES) {
             Log.w(TAG, "large status-go signal type=" + type + " sizeBytes=" + utf8.remaining());
         }
