@@ -363,6 +363,7 @@ def accountOfLane(String lane) {
 def credentialsForAccount(String account) {
   def byAccount = [
     '1': 'browserstack-status-mobile-android',
+    '2': 'browserstack-status-mobile-android-2',
   ]
   return byAccount[account]
 }
