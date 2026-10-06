@@ -1071,6 +1071,21 @@ modalHeader_HeaderTitleText = {"container": statusDesktop_mainWindow_overlay, "o
 """Swap popup"""
 
 swapPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "SwapModal", "type": "PopupItem", "visible": True}
+swapModalTitle = {"container": swapPopup, "type": "HeaderTitleText", "visible": True}
+swapModalCloseButton = {"container": swapPopup, "objectName": "closeButton", "type": "StatusFlatRoundButton", "visible": True}
+swapModalPayPanel = {"container": swapPopup, "objectName": "payPanel", "type": "SwapInputPanel", "visible": True}
+swapModalReceivePanel = {"container": swapPopup, "objectName": "receivePanel", "type": "SwapInputPanel", "visible": True}
+swapModalPayTokenSelectorButton = {"container": swapModalPayPanel, "objectName": "tokenSelectorButton", "type": "TokenSelectorButton", "visible": True}
+swapModalReceiveTokenSelectorButton = {"container": swapModalReceivePanel, "objectName": "tokenSelectorButton", "type": "TokenSelectorButton", "visible": True}
+swapModalErrorTag = {"container": swapPopup, "objectName": "errorTag", "type": "ErrorTag", "visible": True}
+swapModalQuoteText = {"container": swapPopup, "objectName": "swapQuoteText", "type": "StatusTextWithLoadingState", "visible": True}
+swapModalSignButton = {"container": swapPopup, "objectName": "signButton", "type": "StatusButton", "visible": True}
+swapModalAmountField = {"container": swapModalPayPanel, "objectName": "amountToSend_textField", "type": "StatusTextField", "visible": True}
+swapModalSearchBox = {"container": statusDesktop_mainWindow_overlay, "objectName": "searchBox", "type": "TokenSearchBox", "visible": True}
+swapModalChainFilter = {"container": statusDesktop_mainWindow_overlay, "objectName": "chainFilter", "visible": True}
+swapModalChainChip = {"container": statusDesktop_mainWindow_overlay, "objectName": "chainChip_", "visible": True}
+swapSignModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "swapSignModal", "type": "PopupItem", "visible": True}
+swapSignModalSignButton = {"container": swapSignModal, "objectName": "signButton", "type": "StatusButton", "visible": True}
 
 # Token Selector popup
 tokenSelectorPanel_TokenSelectorNew = {"container": statusDesktop_mainWindow_overlay, "objectName": "tokenSelectorPanel", "type": "TokenSelectorPanel", "visible": True}
