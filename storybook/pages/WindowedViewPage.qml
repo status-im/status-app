@@ -154,6 +154,7 @@ SplitView {
         // always comes out a whole number of them.
         readonly property int placeholderRowHeight: 72
         readonly property int defaultPlaceholderRows: 10
+        readonly property int defaultPrefetchMargin: 0
 
         readonly property bool defaultHeader: false
         readonly property bool defaultFooter: false
@@ -409,6 +410,7 @@ SplitView {
             autoRequestSwitch.checked = d.defaultAutoRequest
             placeholderSwitch.checked = d.defaultPlaceholder
             placeholderRowsSpinBox.value = d.defaultPlaceholderRows
+            prefetchMarginSpinBox.value = d.defaultPrefetchMargin
             headerSwitch.checked = d.defaultHeader
             footerSwitch.checked = d.defaultFooter
             slotHeightSpinBox.value = d.defaultSlotHeight
@@ -846,6 +848,7 @@ SplitView {
             placeholder: placeholderSwitch.checked ? messageSkeleton : null
             placeholderHeight: placeholderRowsSpinBox.value
                                * d.placeholderRowHeight
+            prefetchMargin: prefetchMarginSpinBox.value
 
             // With no delay this answers inside the signal, which is what an
             // index window really is - it has the rows already. With one, the
@@ -1203,6 +1206,26 @@ SplitView {
                         from: 1
                         to: 20
                         value: d.defaultPlaceholderRows
+                        editable: true
+                    }
+                }
+
+                // Asks this far ahead of a band showing, so a batch can be
+                // revealed before its placeholder is ever on screen.
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label { text: "Prefetch margin (px)" }
+
+                    SpinBox {
+                        id: prefetchMarginSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: 2000
+                        stepSize: 50
+                        value: d.defaultPrefetchMargin
                         editable: true
                     }
                 }
@@ -1745,6 +1768,7 @@ SplitView {
         property alias placeholder: placeholderSwitch.checked
         property alias autoRequest: autoRequestSwitch.checked
         property alias placeholderRows: placeholderRowsSpinBox.value
+        property alias prefetchMargin: prefetchMarginSpinBox.value
         property alias header: headerSwitch.checked
         property alias footer: footerSwitch.checked
         property alias slotHeight: slotHeightSpinBox.value

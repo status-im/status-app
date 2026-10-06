@@ -96,9 +96,16 @@ Flickable {
     property Component placeholder: null
 
     // Ask for more by itself when a band the user can see still has content
-    // behind it. The band is the trigger area, so a view with no placeholder
-    // reserves nothing and pages only when told to.
+    // behind it. The band - widened by prefetchMargin - is the trigger area,
+    // so a view with no placeholder reserves nothing and pages only when told
+    // to.
     property bool autoRequest: true
+
+    // How far beyond the viewport, in px, a placeholder band still counts as
+    // reached for autoRequest. 0 asks only once a band is on screen; a
+    // viewport's height asks a screen ahead, so the next batch is usually
+    // revealed before its placeholder is seen.
+    property real prefetchMargin: 0
 
     // Space each edge reserves for the placeholder. The single instance only ever
     // occupies the edge nearer the viewport, so the other reserves this much
@@ -455,8 +462,8 @@ Flickable {
         readonly property bool shouldRequestMore:
                 root.autoRequest && d.hasViewport
                 && !root.busy && !d.finishing && !d.scrollBarHeld
-                && ((root.moreAvailableTop && d.bandInViewport(topBand))
-                    || (root.moreAvailableBottom && d.bandInViewport(bottomBand)))
+                && ((root.moreAvailableTop && d.bandInReach(topBand))
+                    || (root.moreAvailableBottom && d.bandInReach(bottomBand)))
 
         // Deferred by one turn, not polled: requesting writes `d.wave`, which
         // feeds `staging`, which feeds `busy`, which this condition reads - so
@@ -465,10 +472,10 @@ Flickable {
         // so nothing is actually delayed.
         onShouldRequestMoreChanged: {
             if (d.shouldRequestMore)
-                Qt.callLater(d.requestForVisibleBand)
+                Qt.callLater(d.requestForReachedBand)
         }
 
-        function requestForVisibleBand() {
+        function requestForReachedBand() {
             // Re-checked rather than trusted from the edge that scheduled it:
             // the view may have moved, stopped being idle, or had the request
             // answered by other means in between.
@@ -477,9 +484,9 @@ Flickable {
 
             // The top first, so a view short enough to show both bands walks
             // back through the history rather than fighting itself.
-            if (root.moreAvailableTop && d.bandInViewport(topBand))
+            if (root.moreAvailableTop && d.bandInReach(topBand))
                 d.request(true)
-            else if (root.moreAvailableBottom && d.bandInViewport(bottomBand))
+            else if (root.moreAvailableBottom && d.bandInReach(bottomBand))
                 d.request(false)
         }
 
@@ -497,6 +504,14 @@ Flickable {
             return band.visible
                     && d.rowTop(band) < root.contentY + root.height
                     && d.rowTop(band) + band.height > root.contentY
+        }
+
+        // Whether a band is within prefetchMargin of what the user can see -
+        // the trigger for asking, which may run ahead of the band showing.
+        function bandInReach(band) {
+            return band.visible
+                    && d.rowTop(band) < root.contentY + root.height + root.prefetchMargin
+                    && d.rowTop(band) + band.height > root.contentY - root.prefetchMargin
         }
 
         // How far a band's nearest edge is from the viewport, for picking
