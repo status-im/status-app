@@ -78,19 +78,19 @@ endif
 	@cmp -s $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
 	@cmp -s ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
 
-$(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB) $(STATUS_GO_STUB_GEN) $(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp
+$(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB) $(STATUS_GO_STUB_GEN) $(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp $(STATUS_GO_IPC_HEADERS)
 	@echo "Building status-go stub library (UI process)"
 	@mkdir -p $(LIB_PATH)
-	@$(CXX) -shared -fPIC $(CXX_OPT_FLAGS) \
+	@$(CXX) -shared -fPIC $(CXX_OPT_FLAGS) -I$(STATUS_GO_IPC_DIR) \
 		-o $(STATUS_GO_STUB_LIB) \
 		$(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp \
 		$(STATUS_GO_STUB_GEN) \
 		-llog -lc++_shared
 
-$(STATUS_GO_SERVICE_LIB): $(STATUS_GO_LIB) $(STATUS_GO_SERVICE_GEN) $(STATUS_DESKTOP)/mobile/statusgo_service/statusgo_service_jni.cpp
+$(STATUS_GO_SERVICE_LIB): $(STATUS_GO_LIB) $(STATUS_GO_SERVICE_GEN) $(STATUS_DESKTOP)/mobile/statusgo_service/statusgo_service_jni.cpp $(STATUS_GO_IPC_HEADERS)
 	@echo "Building status-go service JNI library (service process)"
 	@mkdir -p $(LIB_PATH)
-	@$(CXX) -shared -fPIC $(CXX_OPT_FLAGS) \
+	@$(CXX) -shared -fPIC $(CXX_OPT_FLAGS) -I$(STATUS_GO_IPC_DIR) \
 		-o $(STATUS_GO_SERVICE_LIB) \
 		$(STATUS_DESKTOP)/mobile/statusgo_service/statusgo_service_jni.cpp \
 		$(STATUS_GO_SERVICE_GEN) \
@@ -239,6 +239,10 @@ endif
 
 .PHONY: all
 all: $(TARGET)
+
+.PHONY: ipc-host-tests
+ipc-host-tests:
+	@$(STATUS_GO_IPC_DIR)/tests/run.sh
 
 .PHONY: clean
 clean: clean-statusq clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc

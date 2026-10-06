@@ -75,6 +75,8 @@ ANDROID_APP_FILES := $(shell find $(ROOT_DIR)/android/qt$(QT_MAJOR) -type f)
 endif
 STATUS_GO_STUB_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_stub_exports.cpp
 STATUS_GO_SERVICE_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_service_dispatch.cpp
+STATUS_GO_IPC_DIR := $(STATUS_DESKTOP)/mobile/statusgo_ipc
+STATUS_GO_IPC_HEADERS := $(wildcard $(STATUS_GO_IPC_DIR)/*.h)
 
 # script files
 STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh
