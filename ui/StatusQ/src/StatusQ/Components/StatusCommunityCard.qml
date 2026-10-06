@@ -243,7 +243,7 @@ Rectangle {
             visible: !root.loaded || image.status !== Image.Ready
         }
 
-        Image {
+        StatusImage {
             id: image
 
             anchors.fill: parent
