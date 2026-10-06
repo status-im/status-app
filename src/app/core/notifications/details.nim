@@ -39,6 +39,7 @@ type
     isOneToOne*: bool
     isGroupChat*: bool
     messageId*: string
+    threadId*: string
     notificationId*: string
 
 proc isEmpty*(self: NotificationDetails): bool =
@@ -58,6 +59,7 @@ proc toNotificationDetails*(jsonObj: JsonNode): NotificationDetails =
     return NotificationDetails()
 
   result.notificationType = notificationType.NotificationType
+  discard jsonObj.getProp("threadId", result.threadId)
 
 proc toJsonNode*(self: NotificationDetails): JsonNode =
   result = %* {
@@ -69,5 +71,6 @@ proc toJsonNode*(self: NotificationDetails): JsonNode =
     "chatActive": self.chatActive,
     "isOneToOne": self.isOneToOne,
     "isGroupChat": self.isGroupChat,
-    "messageId": self.messageId
+    "messageId": self.messageId,
+    "threadId": self.threadId
   }

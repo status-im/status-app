@@ -227,11 +227,12 @@ public final class StatusNotificationManager {
                     messages.remove(0);
                 }
                 if (isFromMe && !conversationAlreadyActive) return;
-                String notificationTitle = (isOneToOne
+                final boolean isThread = threadId != null && !threadId.isEmpty();
+                String notificationTitle = (isOneToOne && !isThread
                         && oneToOneContactTitle != null
                         && !oneToOneContactTitle.isEmpty())
                         ? oneToOneContactTitle
-                        : ((activeVisual != null
+                        : ((!isThread && activeVisual != null
                         && activeVisual.title != null
                         && !activeVisual.title.isEmpty())
                         ? activeVisual.title : title);

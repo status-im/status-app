@@ -70,6 +70,7 @@ type
     pendingThreadId: string
     pendingThreadParentChatId: string
     pendingThreadPresentation: string
+    pendingThreadMessageId: string
     lastAppliedActiveItemId: string
 
 # Forward declaration
@@ -152,6 +153,7 @@ proc newModule*(
   result.pendingThreadId = ""
   result.pendingThreadParentChatId = ""
   result.pendingThreadPresentation = ""
+  result.pendingThreadMessageId = ""
   result.lastAppliedActiveItemId = ""
 
   result.chatContentModules = initOrderedTable[string, chat_content_module.AccessInterface]()
@@ -589,6 +591,7 @@ proc clearPendingThreadRestore(self: Module, clearSettings: bool) =
   self.pendingThreadId = ""
   self.pendingThreadParentChatId = ""
   self.pendingThreadPresentation = ""
+  self.pendingThreadMessageId = ""
   if clearSettings:
     singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(
       self.controller.getMySectionId())
@@ -640,9 +643,12 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     return
 
   let presentation = self.pendingThreadPresentation
+  let messageId = self.pendingThreadMessageId
   self.clearPendingThreadRestore(clearSettings = false)
   if presentation == THREAD_PRESENTATION_SELECTED_CHAT:
     self.setActiveItem(threadItem.id)
+    if messageId.len > 0:
+      self.chatContentModules[threadItem.id].scrollToMessage(messageId)
   else:
     self.openThreadPanel(threadItem.id, threadItem.name,
       threadItem.parentChatId)
@@ -1550,16 +1556,22 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
   let plainText = self.controller.getMessagesParsedPlainText(message, self.controller.getMyCommunity().chats)
 
   var notificationTitle = senderDisplayName
+  let threadName = if message.threadId.len > 0:
+      self.messageService.getThreadById(chatIdMsgBelongsTo, message.threadId).name
+    else:
+      ""
 
   case chatDetails.chatType:
     of ChatType.PrivateGroupChat:
-      notificationTitle.add(fmt" ({chatDetails.name})")
+      let conversationName = if threadName.len > 0: chatDetails.name & " Ξ" & threadName else: chatDetails.name
+      notificationTitle.add(fmt" ({conversationName})")
     of ChatType.CommunityChat:
+      let channelName = if threadName.len > 0: "#" & chatDetails.name & " Ξ" & threadName else: "#" & chatDetails.name
       if (chatDetails.categoryId.len == 0):
-        notificationTitle.add(fmt" (#{chatDetails.name})")
+        notificationTitle.add(fmt" ({channelName})")
       else:
         let categoryDetails = self.controller.getCommunityCategoryDetails(chatDetails.communityId, chatDetails.categoryId)
-        notificationTitle.add(fmt" (#{chatDetails.name}, {categoryDetails.name})")
+        notificationTitle.add(fmt" ({channelName}, {categoryDetails.name})")
     else:
       discard
 
@@ -1569,7 +1581,7 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
 
   singletonInstance.globalEvents.showMessageNotification(notificationTitle, plainText, sectionIdMsgBelongsTo,
     self.controller.isCommunity(), messageBelongsToActiveSection, chatIdMsgBelongsTo, messageBelongsToActiveChat,
-    message.id, notificationType.int, chatTypeMsgBelongsTo == ChatType.OneToOne,
+    message.id, message.threadId, notificationType.int, chatTypeMsgBelongsTo == ChatType.OneToOne,
     chatTypeMsgBelongsTo == ChatType.PrivateGroupChat)
 
 method addGroupMembers*(self: Module, chatId: string, pubKeys: string) =
@@ -1946,6 +1958,36 @@ method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messag
   if chatId notin self.chatContentModules:
     return false
   self.chatContentModules[chatId].scrollToMessage(messageId)
+  return true
+
+method openThreadAndScrollToMessage*(self: Module, parentChatId: string, threadId: string,
+    messageId: string): bool =
+  if self.view.chatsModel().getItemById(parentChatId).isNil:
+    if not self.chatsLoaded:
+       self.pendingThreadId = threadId
+       self.pendingThreadParentChatId = parentChatId
+       self.pendingThreadPresentation = THREAD_PRESENTATION_SELECTED_CHAT
+       self.pendingThreadMessageId = messageId
+       return true
+    return false
+
+  let threadItem = self.view.chatsModel().getItemById(threadId)
+  if threadItem.isNil:
+    self.pendingThreadId = threadId
+    self.pendingThreadParentChatId = parentChatId
+    self.pendingThreadPresentation = THREAD_PRESENTATION_SELECTED_CHAT
+    self.pendingThreadMessageId = messageId
+    self.controller.loadChatThreadsForChats(@[parentChatId])
+    return true
+
+  if not threadItem.isThread or threadItem.parentChatId != parentChatId:
+    error "openThreadAndScrollToMessage: thread does not belong to parent", threadId, parentChatId
+    return false
+
+  self.setActiveItem(threadId)
+  if threadId notin self.chatContentModules:
+    return false
+  self.chatContentModules[threadId].scrollToMessage(messageId)
   return true
 
 method updateRequestToJoinState*(self: Module, state: RequestToJoinState) =
