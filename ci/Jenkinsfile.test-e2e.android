@@ -3,8 +3,7 @@
 library 'status-jenkins-lib@v1.9.53'
 
 pipeline {
-  /* The agent is allocated inside the lane stage, after the lock, so a waiting
-   * build holds no executor. */
+  /* The agent is allocated after the lane lock, so a waiting build holds no executor. */
   agent none
 
   parameters {
@@ -57,7 +56,7 @@ pipeline {
 
   options {
     timestamps()
-    /* The whole build, mostly the wait for a lane. The run budget is the timeout around pytest. */
+    /* Mostly the wait for a lane; the pytest timeout limits the run itself. */
     timeout(time: 4, unit: 'HOURS')
     buildDiscarder(logRotator(
       daysToKeepStr: '30',
@@ -69,7 +68,6 @@ pipeline {
 
   environment {
     PLATFORM = 'tests/e2e-android'
-    /* VIRTUAL_ENV is set in the lane stage; there is no node here yet. */
     PYTHONUNBUFFERED = "1"
     CHANGE_ID = "${params.CHANGE_ID}"
     TEST_DEVICE_ID = "${params.TEST_DEVICE_ID}"
@@ -79,8 +77,7 @@ pipeline {
   }
 
   stages {
-    /* No agent: runs on the controller before the lane wait, so a queued rerun
-     * of the same commit shows pending rather than its earlier result. */
+    /* Before the lane wait, so a queued rerun of a commit shows pending, not its old result. */
     stage('Status') {
       steps {
         script {
@@ -90,13 +87,12 @@ pipeline {
       }
     }
 
-    /* Lockable resources: names browserstack-android-account-<N>-lane-<a|b>, each
-     * with the labels `browserstack-android-lane` and `browserstack-android-account-<N>`.
-     * Declare them in the order 1-a, 2-a, 1-b, 2-b: the plugin hands them out in
-     * declaration order. Reserve an account's lanes to take it out of service. */
+    /* Lanes: browserstack-android-account-<N>-lane-<a|b>, labelled `browserstack-android-lane` and
+     * `browserstack-android-account-<N>`, declared 1-a, 2-a, 1-b, 2-b: the plugin hands them out
+     * in that order. Reserve an account's lanes to take it out of service. */
     stage('E2E lane') {
       options {
-        /* From params: env set in `environment` or by an earlier stage reads as null here. */
+        /* laneLabel() reads params: env from `environment` or an earlier stage is null here. */
         lock(label: "${laneLabel()}", quantity: 1, variable: 'BROWSERSTACK_LANE')
       }
       environment {
@@ -120,7 +116,6 @@ pipeline {
         stage('Prep') {
           steps {
             script {
-              /* Fail closed: a default would send unknown lanes to one account. */
               def lane = env.BROWSERSTACK_LANE
               def account = accountOfLane(lane)
               if (!account) {
@@ -159,8 +154,7 @@ pipeline {
                   passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
                 )
               ]) {
-                /* Credentials reach curl as a config line on stdin, not in argv, which
-                 * other processes on the agent can read. */
+                /* Credentials go to curl on stdin: argv is visible to other processes on the agent. */
                 def probe = sh(
                   script: 'printf \'user = "%s:%s"\\n\' "$BROWSERSTACK_USERNAME" "$BROWSERSTACK_ACCESS_KEY" | ' +
                           'curl -sS --max-time 30 -K - -w "\\n%{http_code}" ' +
@@ -181,8 +175,6 @@ pipeline {
                 int free = allowed - running
                 echo "Account ${env.BROWSERSTACK_ACCOUNT}: ${running}/${allowed} sessions in use, " +
                      "${free} free; this run starts ${workers} workers. A multi-device test holds up to three sessions per worker."
-                /* Not fatal: BrowserStack queues sessions past the plan. The warning is
-                 * the signal that a run is slower than its worker count suggests. */
                 if (allowed > 0 && workers > free) {
                   echo "WARNING: ${workers} workers but only ${free} of ${allowed} sessions are free on " +
                        "account ${env.BROWSERSTACK_ACCOUNT}; the suite will queue for the rest."
@@ -196,9 +188,7 @@ pipeline {
                             'https://api-cloud.browserstack.com/app-automate/recent_apps || true',
                     returnStdout: true
                   ).trim()
-                  /* recent_apps lists only the latest uploads and BrowserStack has no
-                   * per-app lookup, so absence is a warning. A wrong-account id fails
-                   * at session start with INVALID_APP_URL. */
+                  /* recent_apps lists only the latest uploads, so an id missing from it is a warning. */
                   if (!apps.contains(wanted)) {
                     echo "WARNING: BROWSERSTACK_APP_ID '${wanted}' is not among the recent uploads on " +
                          "account ${env.BROWSERSTACK_ACCOUNT}. A bs:// id only works on the account that " +
@@ -312,8 +302,7 @@ pipeline {
                     variable: 'WALLET_TEST_USER_SEED'
                   )
                 ]) {
-                  /* The run budget, as a step wrapper: a stage option would also
-                   * cover the lane wait, and Jenkins does not fix that order. */
+                  /* A step wrapper, so the lane wait does not count against it. */
                   timeout(time: 90, unit: 'MINUTES') {
                     sh "TMPDIR=${env.WORKSPACE_TMP} BROWSERSTACK_APP_ID=${appId} ${VIRTUAL_ENV}/bin/python -m pytest --env browserstack ${params.PYTEST_ARGS?.trim() ?: ''}"
                   }
@@ -328,7 +317,6 @@ pipeline {
         always { script {
           junit allowEmptyResults: true, testResults: "test/e2e_appium/reports/${env.BUILD_TAG}/pytest_results_*.xml"
           archiveArtifacts artifacts: "test/e2e_appium/reports/${env.BUILD_TAG}/**/*", allowEmptyArchive: true
-          /* Read by notifyPR in the success and failure conditions below. */
           env.PKG_URL = "${env.BUILD_URL}testReport/"
         } }
         success { script { github.notifyPR(true) } }
@@ -351,8 +339,7 @@ pipeline {
       }
     }
   }
-  /* Pipeline-level, not stage-level: a stage post does not run when the build
-   * is aborted while waiting for the lane. */
+  /* Pipeline-level: a stage post does not run for a build aborted while it waits for a lane. */
   post {
     always { script { updateGitHubStatus() } }
   }
@@ -369,8 +356,6 @@ def accountOfLane(String lane) {
   return parts[3]
 }
 
-/* One row per account: a lane whose account is not here fails in Prep. Adding an
- * account is its two lane resources plus a row here. */
 def credentialsForAccount(String account) {
   def byAccount = [
     '1': 'browserstack-status-mobile-android',
@@ -379,8 +364,7 @@ def credentialsForAccount(String account) {
   return byAccount[account]
 }
 
-/* A bs:// app id works only on the account that uploaded it, so a run that reuses
- * one waits for that account's lanes. Before lanes, every upload was on account 1. */
+/* A bs:// app id works only on the account that uploaded it. Before lanes, every upload was on account 1. */
 def laneAccount() {
   def account = params.BROWSERSTACK_ACCOUNT?.trim() ?: (params.BROWSERSTACK_APP_ID?.trim() ? '1' : '')
   if (account && !credentialsForAccount(account)) {
@@ -394,10 +378,6 @@ def laneLabel() {
   return account ? "browserstack-android-account-${account}" : 'browserstack-android-lane'
 }
 
-/* Worker count from PYTEST_ARGS, every xdist spelling, last one wins as pytest
- * does. No -n, or -n 0, is one worker. "auto" cannot be sized, so it is refused before any
- * session opens. Sessions per worker are not estimated: a multi-device test holds
- * up to three, and which tests a marker expression reaches is only known at collection. */
 def workersRequested(String pytestArgs) {
   def tokens = (pytestArgs ?: '').tokenize(' ')
   String count = null
@@ -415,7 +395,6 @@ def workersRequested(String pytestArgs) {
   if (!count.isInteger() || count.toInteger() < 0) {
     error("PYTEST_ARGS worker count '${count}' must be a whole number so the lane preflight can report it against the plan.")
   }
-  /* -n 0 is xdist's in-process mode: one worker. */
   return Math.max(count.toInteger(), 1)
 }
 
