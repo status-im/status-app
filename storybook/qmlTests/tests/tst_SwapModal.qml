@@ -2764,9 +2764,9 @@ Item {
             verify(!!swapExchangeButton)
             swapExchangeButton.clicked()
             tryCompare(payPanel, "selectedHoldingId", ethGroupKey)
-            // the receive side settles a tick later; let its fallback run before judging it
-            waitForRendering(receivePanel)
-            wait(100)
+            receivePanel.reevaluateSelectedId()
+            const reevaluated = createTemporaryQmlObject("import QtQml; Timer { interval: 0; running: true }", root)
+            tryVerify(() => !reevaluated.running)
             compare(receivePanel.selectedHoldingId, "")
             compare(root.swapFormData.fromGroupKey, ethGroupKey)
             compare(root.swapFormData.toGroupKey, "")

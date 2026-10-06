@@ -343,6 +343,47 @@ Item {
             verify(controlUnderTest.selectedHoldingId !== ethGroupKey, "the native token is not selected in the user's place")
         }
 
+        // The receive side never settles on the token the pay side has on the same
+        // chain. When the pay side takes the receive side's token, the receive side
+        // moves to its default; when that is taken too, it asks the user to pick.
+        function test_receiveSideYieldsTheTokenThePaySideTakes() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                                                         groupKey: sttGroupKey,
+                                                         defaultGroupKey: ethGroupKey,
+                                                         swapSide: SwapInputPanel.SwapSide.Receive,
+                                                         nonInteractiveChainId: d.goOptChainId
+                                                     })
+            verify(!!controlUnderTest)
+            const catalog = store.createTokenSelectorModel(3).model
+            verify(!!catalog)
+            controlUnderTest.tokenSelectorModel = catalog
+            catalog.sourceData = [{
+                key: sttGroupKey, name: "Status Test Token", symbol: "STT", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: d.goOptChainId + "-stt", chainId: d.goOptChainId }]
+            }, {
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: d.goOptChainId + "-native", chainId: d.goOptChainId }]
+            }]
+            tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
+
+            // the pay side takes STT on this chain: the receive side moves to its default
+            controlUnderTest.nonInteractiveGroupKey = sttGroupKey
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+
+            // the pay side takes ETH, the default and the chain's native token: nothing
+            // is left to fall back on, so the receive side asks the user to pick
+            controlUnderTest.nonInteractiveGroupKey = ethGroupKey
+            tryCompare(controlUnderTest, "selectedHoldingId", "")
+
+            // on another chain the same token is fine
+            controlUnderTest.nonInteractiveChainId = 1
+            controlUnderTest.groupKey = ethGroupKey
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+        }
+
         function test_multiChainTokenRefsStillResolveSelection() {
             const store = d.adaptor.walletAssetsStore.walletTokensStore
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
