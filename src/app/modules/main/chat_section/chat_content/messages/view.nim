@@ -122,6 +122,14 @@ QtObject:
   proc loadMoreMessages*(self: View) {.slot.} =
     self.delegate.loadMoreMessages()
 
+  # A loadMoreMessages() call has been answered: emitted once the fetched page
+  # is in the model - even when it brought nothing or failed - and at once when
+  # there is nothing left to fetch. Loads nobody asked for (the initial one)
+  # emit it too.
+  proc moreMessagesLoaded*(self: View) {.signal.}
+  proc emitMoreMessagesLoadedSignal*(self: View) =
+    self.moreMessagesLoaded()
+
   proc messageSuccessfullySent*(self: View) {.signal.}
   proc emitSendingMessageSuccessSignal*(self: View) =
     self.messageSuccessfullySent()

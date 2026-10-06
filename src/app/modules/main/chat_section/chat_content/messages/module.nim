@@ -307,6 +307,7 @@ method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: se
 
   self.initialMessagesLoaded = true
   self.reevaluateViewLoadingState()
+  self.view.emitMoreMessagesLoadedSignal()
 
 method messagesAdded*(self: Module, messages: seq[MessageDto]) =
   let threadId = self.controller.getMyThreadId()
@@ -374,7 +375,9 @@ method onMessageDelivered*(self: Module, messageId: string) =
   self.view.model().itemDelivered(messageId)
 
 method loadMoreMessages*(self: Module) =
-  discard self.controller.loadMoreMessages()
+  # Nothing left to fetch starts no request, so nothing would ever answer it.
+  if not self.controller.loadMoreMessages():
+    self.view.emitMoreMessagesLoadedSignal()
 
 method toggleReaction*(self: Module, messageId: string, emoji: string) =
   let item = self.view.model().getItemWithMessageId(messageId)
