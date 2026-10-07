@@ -17578,6 +17578,10 @@ This action cannot be undone.</source>
         <translation>Rechercher dans les favoris</translation>
     </message>
     <message>
+        <source>Search in downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit bookmark</source>
         <translation>Modifier le favori</translation>
     </message>

@@ -17663,6 +17663,10 @@ Tuto akci nelze vzít zpět.</translation>
         <translation>Vyhledávání v záložkách</translation>
     </message>
     <message>
+        <source>Search in downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit bookmark</source>
         <translation>Upravit záložku</translation>
     </message>

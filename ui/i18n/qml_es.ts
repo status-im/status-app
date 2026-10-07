@@ -17583,6 +17583,10 @@ Esta acción no se puede deshacer.</translation>
         <translation>Buscar en marcadores</translation>
     </message>
     <message>
+        <source>Search in downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit bookmark</source>
         <translation>Editar marcador</translation>
     </message>

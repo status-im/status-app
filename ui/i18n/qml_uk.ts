@@ -17664,6 +17664,10 @@ This action cannot be undone.</source>
         <translation>Пошук у закладках</translation>
     </message>
     <message>
+        <source>Search in downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit bookmark</source>
         <translation>Редагувати закладку</translation>
     </message>

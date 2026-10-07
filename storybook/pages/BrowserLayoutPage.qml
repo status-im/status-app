@@ -169,6 +169,9 @@ SplitView {
             function canShareUrl(record) {
                 return !!record && !!record.url && String(record.url).length > 0
             }
+            function canShareUrlString(linkUrl) {
+                return Utils.isURL(linkUrl)
+            }
             function canShowInFolder(record) {
                 return canShareFile(record)
             }
