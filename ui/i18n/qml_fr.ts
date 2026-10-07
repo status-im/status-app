@@ -4288,6 +4288,13 @@ Vous resterez connecté et votre phrase de récupération sera entièrement entr
     </message>
 </context>
 <context>
+    <name>ConnectorConstants</name>
+    <message>
+        <source>Not enough funds on this network to pay the network fee.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Constants</name>
     <message>
         <source>Key pair starting with whitespace are not allowed</source>
