@@ -121,6 +121,14 @@ To roll back using the same binary, fully quit the client, set both options to
 These development controls do not enable the new catalogue in release builds;
 live parity verification and cross-platform packaging remain pending.
 
+The mobile build accepts the same `USE_NIM_TOKEN_LISTS=true` opt-in and forwards
+it to status-go's Android/iOS build. It prepares the pinned token library inside
+status-go, with separate archives for each architecture and for iOS devices and
+simulators. No second checkout or token-library path is needed. The mobile
+`make clean` also clears that managed checkout. Runtime selection still uses
+the existing token-catalogue options; the SDK backend remains available while
+full application and device verification is pending.
+
 When launching through `make run`, `STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true`
 also selects the tagged backend build. Status-go checks both the native archive
 and backend cache, reusing matching artifacts and rebuilding only when needed.
