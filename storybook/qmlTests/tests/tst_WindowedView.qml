@@ -488,12 +488,12 @@ Item {
                 if (owner.holdAdmit)
                     owner.admit(!owner.bottomUp(), root.chunk)
 
-                view.moreLoadedTop()
+                view.moreLoaded(WindowedView.Edge.Top)
             } else {
                 if (owner.holdAdmit)
                     owner.admit(owner.bottomUp(), root.chunk)
 
-                view.moreLoadedBottom()
+                view.moreLoaded(WindowedView.Edge.Bottom)
             }
         }
 
@@ -584,31 +584,18 @@ Item {
         // The view asks by screen edge, the owner hands rows over by model end.
         // Which of the two lines up with which depends on the layout direction:
         // rendered bottom-up, what belongs above the top row is the model's end.
-        onMoreRequestedTop: {
-            const atModelStart = !owner.bottomUp()
+        onMoreRequested: (edge) => {
+            const atTop = edge === WindowedView.Edge.Top
+            const atModelStart = atTop !== owner.bottomUp()
 
             if (!owner.holdAdmit)
                 owner.admit(atModelStart, root.chunk)
 
             if (owner.holdAnswer || owner.holdAdmit) {
                 owner.answerOwed = true
-                owner.answerOwedAtTop = true
+                owner.answerOwedAtTop = atTop
             } else {
-                view.moreLoadedTop()
-            }
-        }
-
-        onMoreRequestedBottom: {
-            const atModelStart = owner.bottomUp()
-
-            if (!owner.holdAdmit)
-                owner.admit(atModelStart, root.chunk)
-
-            if (owner.holdAnswer || owner.holdAdmit) {
-                owner.answerOwed = true
-                owner.answerOwedAtTop = false
-            } else {
-                view.moreLoadedBottom()
+                view.moreLoaded(edge)
             }
         }
 
@@ -756,7 +743,7 @@ Item {
             const contentY = view.contentY
             const dropped = heightOfFirst(root.chunk)
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => !view.busy, 5000)
 
             const after = offsetOf(before.value)
@@ -772,7 +759,7 @@ Item {
             const before = topRow()
             const contentY = view.contentY
 
-            verify(view.requestMoreTop())
+            verify(view.requestMore(WindowedView.Edge.Top))
             tryVerify(() => !view.busy, 5000)
 
             const added = heightOfFirst(root.chunk)
@@ -789,7 +776,7 @@ Item {
             const before = topRow()
             const contentY = view.contentY
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             verify(view.busy, "still staged")
 
             fuzzyCompare(offsetOf(before.value), before.offset, 0.5,
@@ -802,7 +789,7 @@ Item {
         function test_noOverscrollAtTheTop() {
             view.contentY = 0
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => !view.busy, 5000)
 
             verify(view.contentY >= 0, "not overscrolled: " + view.contentY)
@@ -812,7 +799,7 @@ Item {
         function test_noOverscrollAtTheBottom() {
             view.contentY = view.contentHeight - view.height
 
-            verify(view.requestMoreTop())
+            verify(view.requestMore(WindowedView.Edge.Top))
             tryVerify(() => !view.busy, 5000)
 
             verify(view.contentY >= 0)
@@ -858,11 +845,11 @@ Item {
         }
 
         function test_scrollingDownDuringAnEndRequest() {
-            moveDuringLoad(() => view.requestMoreBottom(), 200)
+            moveDuringLoad(() => view.requestMore(WindowedView.Edge.Bottom), 200)
         }
 
         function test_scrollingUpDuringAStartRequest() {
-            moveDuringLoad(() => view.requestMoreTop(), -200)
+            moveDuringLoad(() => view.requestMore(WindowedView.Edge.Top), -200)
         }
     }
 
@@ -902,7 +889,7 @@ Item {
             provider.delay = 40      // so the staged state is observable
             const before = values()
 
-            verify(view.requestMoreBottom(), "the request was taken")
+            verify(view.requestMore(WindowedView.Edge.Bottom), "the request was taken")
             verify(view.busy, "busy until the batch is revealed")
 
             compare(view.rowCount, root.windowSize + root.chunk,
@@ -921,7 +908,7 @@ Item {
 
         function test_requestAtStartMovesTheOtherWay() {
             provider.delay = 40
-            verify(view.requestMoreTop())
+            verify(view.requestMore(WindowedView.Edge.Top))
             compare(hiddenShells().length, root.chunk)
 
             tryVerify(() => !view.busy, 5000)
@@ -931,9 +918,10 @@ Item {
 
         function test_aSecondRequestIsRefusedWhileLoading() {
             provider.delay = 60
-            verify(view.requestMoreBottom())
-            compare(view.requestMoreBottom(), false, "already loading at that end")
-            compare(view.requestMoreTop(), false, "and the other end too")
+            verify(view.requestMore(WindowedView.Edge.Bottom))
+            compare(view.requestMore(WindowedView.Edge.Bottom), false,
+                    "already loading at that end")
+            compare(view.requestMore(WindowedView.Edge.Top), false, "and the other end too")
 
             tryVerify(() => !view.busy, 5000)
         }
@@ -945,7 +933,7 @@ Item {
             provider.delay = 60
             owner.holdAnswer = true
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             compare(view.loadingBottom, true, "the owner has not answered yet")
             compare(view.staging, true, "though the rows it admitted are staged")
 
@@ -968,7 +956,7 @@ Item {
 
             const reveals = owner.revealCount
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => view.rowCount === root.windowSize + root.chunk, 2000)
 
             // Well past the detector's 1000 ms, asserted continuously rather
@@ -997,7 +985,7 @@ Item {
             provider.delay = 40
             owner.holdAdmit = true
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             compare(view.loadingBottom, true, "waiting on the owner")
             compare(view.staging, false, "with nothing admitted to stage")
             compare(view.rowCount, root.windowSize, "and no rows yet")
@@ -1019,7 +1007,7 @@ Item {
 
             const reveals = owner.revealCount
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             // let the detector lapse over the fetch, then admit into silence
             const deadline = Date.now() + 1400
@@ -1037,7 +1025,7 @@ Item {
 
         function test_aRefusedRequestSetsNoState() {
             view.moreAvailableBottom = false
-            compare(view.requestMoreBottom(), false, "nothing more to get")
+            compare(view.requestMore(WindowedView.Edge.Bottom), false, "nothing more to get")
             compare(view.busy, false)
             compare(view.loadingBottom, false)
             view.moreAvailableBottom = true
@@ -1050,7 +1038,7 @@ Item {
         function test_aSynchronousProviderStillLandsCorrectly() {
             provider.delay = 0
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => !view.busy, 5000)
 
             compare(view.rowCount, root.windowSize, "exactly one drop happened")
@@ -1087,7 +1075,7 @@ Item {
         function test_rowsAdmittedWhileLoadingAreTheBatch() {
             provider.delay = 40         // so the staged state is observable
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             const staged = valuesOf(hiddenShells())
             compare(staged.length, root.chunk)
@@ -1103,7 +1091,7 @@ Item {
         function test_aLiveRowMidRevealDoesNotJoinTheBatch() {
             provider.delay = 60
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             verify(view.busy, "the batch is staged")
             compare(view.loadingBottom, false, "and the owner has already answered")
 
@@ -1128,7 +1116,7 @@ Item {
         function test_aBatchRowRemovedBeforeItArrivesDoesNotWedgeTheReveal() {
             provider.mute = true        // nothing the batch asks for arrives
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             verify(view.busy)
 
             // take the whole batch straight back out again
@@ -1228,18 +1216,19 @@ Item {
             compare(view.initialLoading, false)
             compare(owner.revealCount, reveals, "nothing to reveal")
 
-            verify(view.requestMoreBottom(), "paging works afterwards")
+            verify(view.requestMore(WindowedView.Edge.Bottom), "paging works afterwards")
             tryVerify(() => !view.busy, 5000)
         }
 
         function test_requestsAreRefusedWhileABatchIsOpen() {
             view.beginBatch()
-            compare(view.requestMoreBottom(), false)
-            compare(view.requestMoreTop(), false)
+            compare(view.requestMore(WindowedView.Edge.Bottom), false)
+            compare(view.requestMore(WindowedView.Edge.Top), false)
             view.endBatch()
 
             compare(view.busy, false)
-            verify(view.requestMoreBottom(), "and taken again once it is closed")
+            verify(view.requestMore(WindowedView.Edge.Bottom),
+                   "and taken again once it is closed")
             tryVerify(() => !view.busy, 5000)
         }
 
@@ -1250,7 +1239,7 @@ Item {
             owner.holdAnswer = true
             const reveals = owner.revealCount
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             view.beginBatch()
             rows.append(rows.make(500, 3))
 
@@ -1436,7 +1425,7 @@ Item {
 
         function topReveal() {
             provider.delay = 40
-            verify(view.requestMoreTop(), "the request was taken")
+            verify(view.requestMore(WindowedView.Edge.Top), "the request was taken")
             tryVerify(() => !view.busy, 8000, "revealed")
         }
 
@@ -1460,7 +1449,7 @@ Item {
             const adjacent = outermostValue(false)
 
             provider.delay = 40
-            verify(view.requestMoreBottom(), "the request was taken")
+            verify(view.requestMore(WindowedView.Edge.Bottom), "the request was taken")
             tryVerify(() => !view.busy, 8000, "revealed")
 
             fuzzyCompare(offsetOf(adjacent) + heightOf(adjacent), 0, 0.5,
@@ -1537,7 +1526,7 @@ Item {
         function test_withoutABudgetABatchIsAcquiredInsideTheRequest() {
             provider.acquireLog = []
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             compare(provider.acquireLog.length, root.chunk,
                     "every row of the batch was asked for in the request")
 
@@ -1551,7 +1540,7 @@ Item {
 
             const reveals = owner.revealCount
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             compare(provider.acquireLog.length, 0, "nothing was asked for inside the request")
             verify(view.busy)
 
@@ -1594,7 +1583,7 @@ Item {
             provider.cost = 3
             provider.acquireLog = []
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             // the last five rows of the batch leave before anything was asked
             rows.remove(rows.count - 5, 5)
@@ -1622,7 +1611,7 @@ Item {
             const reveals = owner.revealCount
 
             view.visible = false
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             turnOver(30)
             compare(provider.acquireLog.length, 0, "hidden: nothing asked for")
@@ -1644,7 +1633,7 @@ Item {
             const reveals = owner.revealCount
 
             view.visible = false
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             const until = Date.now() + 3500
             tryVerify(() => Date.now() >= until, 5000)
@@ -1703,7 +1692,7 @@ Item {
             compare(provider.builtCount, root.windowSize,
                     "the first fill builds one item per row")
 
-            slide(() => view.requestMoreBottom(), 1)
+            slide(() => view.requestMore(WindowedView.Edge.Bottom), 1)
 
             // A slide overlaps: the new chunk exists before the far end is
             // dropped, so the mark is one chunk above the window - and never
@@ -1712,16 +1701,16 @@ Item {
             verify(high <= root.windowSize + root.chunk,
                    "one extra chunk at most, not one per slide: " + high)
 
-            slide(() => view.requestMoreBottom(), 5)
-            slide(() => view.requestMoreTop(), 6)
+            slide(() => view.requestMore(WindowedView.Edge.Bottom), 5)
+            slide(() => view.requestMore(WindowedView.Edge.Top), 6)
 
             compare(provider.builtCount, high,
                     "nothing was built after the high-water mark")
         }
 
         function test_everyItemIsEitherInUseOrParked() {
-            slide(() => view.requestMoreBottom(), 3)
-            slide(() => view.requestMoreTop(), 3)
+            slide(() => view.requestMore(WindowedView.Edge.Bottom), 3)
+            slide(() => view.requestMore(WindowedView.Edge.Top), 3)
 
             compare(provider.acquiredCount, view.rowCount,
                     "one item per row in the window")
@@ -1801,7 +1790,7 @@ Item {
 
             const before = topRow()
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => !view.busy, 5000)
 
             const atReveal = view.contentY
@@ -1851,7 +1840,7 @@ Item {
             const positions = new Set()
             const sizes = new Set()
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             let frames = 0
 
@@ -1901,7 +1890,7 @@ Item {
         function test_aProviderSlowerThanTheWatchdogStillRevealsInOneStep() {
             provider.delay = 1200       // acquireTimer.interval is 1000
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => !view.busy, 8000)
 
             compare(owner.revealCount, 1, "one reveal, not one per row")
@@ -1918,7 +1907,7 @@ Item {
             ignoreWarning(/WindowedView: nothing arrived in/)
             provider.mute = true
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             tryVerify(() => owner.revealCount === 1, 8000,
                       "the watchdog ended the wait and completed the slide")
@@ -1939,7 +1928,7 @@ Item {
             provider.mute = true        // the admitted rows never get content
             owner.holdAnswer = true     // rows admitted, "that is all" held back
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             // past the watchdog's three 1 s intervals
             const until = Date.now() + 3500
@@ -1962,7 +1951,7 @@ Item {
             ignoreWarning(/WindowedView: nothing arrived in/)
             provider.delay = 4500       // past the watchdog's three 1 s intervals
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
 
             tryVerify(() => owner.revealCount === 1 && !view.busy, 8000,
                       "the watchdog gave up first")
@@ -2107,7 +2096,7 @@ Item {
 
             const before = topRow()
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => !view.busy, 5000)
 
             const after = offsetOf(before.value)
@@ -2224,19 +2213,22 @@ Item {
             // Sampled here on purpose: the keys are captured but no shell has
             // claimed one yet, so the wave is empty and only initialLoading
             // stands between this and a request that would orphan the batch.
-            compare(view.requestMoreTop(), false, "refused before the wave exists")
-            compare(view.requestMoreBottom(), false)
+            compare(view.requestMore(WindowedView.Edge.Top), false,
+                    "refused before the wave exists")
+            compare(view.requestMore(WindowedView.Edge.Bottom), false)
 
             let frames = 0
 
             while (view.initialLoading && frames < 300) {
-                compare(view.requestMoreBottom(), false, "still refused mid-fill")
+                compare(view.requestMore(WindowedView.Edge.Bottom), false,
+                        "still refused mid-fill")
                 ++frames
                 waitForRendering(view)
             }
 
             finishFill(40)
-            verify(view.requestMoreBottom(), "and accepted once the fill is done")
+            verify(view.requestMore(WindowedView.Edge.Bottom),
+                   "and accepted once the fill is done")
             tryVerify(() => !view.busy, 5000)
         }
 
@@ -2293,7 +2285,7 @@ Item {
 
             const reveals = owner.revealCount
 
-            verify(view.requestMoreBottom(), "and paging still works")
+            verify(view.requestMore(WindowedView.Edge.Bottom), "and paging still works")
             tryVerify(() => !view.busy, 5000)
 
             compare(hiddenShells().length, 0, "the paged rows are shown")
@@ -2314,7 +2306,7 @@ Item {
 
             tryVerify(() => !view.initialLoading && !view.busy, 5000,
                       "the fill ended with the rows")
-            verify(view.requestMoreBottom(), "and paging works again")
+            verify(view.requestMore(WindowedView.Edge.Bottom), "and paging works again")
             tryVerify(() => !view.busy, 5000)
         }
 
@@ -2679,7 +2671,7 @@ Item {
 
             verify(anchored.value !== -9999, "there is a row for it to anchor")
 
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             verify(view.busy, "the batch is in flight")
 
             narrowIt()
@@ -3311,7 +3303,7 @@ Item {
 
             owner.holdAnswer = true
             view.contentY = 0
-            verify(view.requestMoreTop(), "a request is outstanding")
+            verify(view.requestMore(WindowedView.Edge.Top), "a request is outstanding")
             compare(view.loadingTop, true)
 
             view.moreAvailableTop = false      // that was the last of it
@@ -3424,7 +3416,8 @@ Item {
             const heightBefore = view.contentHeight
 
             provider.delay = 60     // long enough for the batch to stay staged
-            verify(atTop ? view.requestMoreTop() : view.requestMoreBottom())
+            verify(view.requestMore(atTop ? WindowedView.Edge.Top
+                                          : WindowedView.Edge.Bottom))
 
             // that was the last of it
             if (atTop)
@@ -3686,14 +3679,13 @@ Item {
             itemPool.release(obj)
         }
 
-        onMoreRequestedTop: {
-            windowSource.growStart(10)
-            smokeView.moreLoadedTop()
-        }
+        onMoreRequested: (edge) => {
+            if (edge === WindowedView.Edge.Top)
+                windowSource.growStart(10)
+            else
+                windowSource.growEnd(10)
 
-        onMoreRequestedBottom: {
-            windowSource.growEnd(10)
-            smokeView.moreLoadedBottom()
+            smokeView.moreLoaded(edge)
         }
 
         onBatchRevealed: windowSource.trim()
@@ -3818,14 +3810,13 @@ Item {
         acquireDelegate: pooled.acquire
         releaseDelegate: pooled.release
 
-        onMoreRequestedTop: {
-            pooledWindowSource.growStart(10)
-            moreLoadedTop()
-        }
+        onMoreRequested: (edge) => {
+            if (edge === WindowedView.Edge.Top)
+                pooledWindowSource.growStart(10)
+            else
+                pooledWindowSource.growEnd(10)
 
-        onMoreRequestedBottom: {
-            pooledWindowSource.growEnd(10)
-            moreLoadedBottom()
+            moreLoaded(edge)
         }
 
         onBatchRevealed: pooledWindowSource.trim()
@@ -4416,7 +4407,7 @@ Item {
             const offsetBefore = offsetOfKey(anchorKey)
             const firstBefore = windowSource.first
 
-            verify(smokeView.requestMoreBottom(), "the request was taken")
+            verify(smokeView.requestMore(WindowedView.Edge.Bottom), "the request was taken")
             tryVerify(() => !smokeView.busy, 10000)
 
             compare(windowSource.first, firstBefore + 10,
@@ -4573,7 +4564,7 @@ Item {
             const seenBefore = pooled.seen.length
 
             for (let i = 0; i < 5; ++i) {
-                verify(pooledView.requestMoreBottom(), "slide " + i)
+                verify(pooledView.requestMore(WindowedView.Edge.Bottom), "slide " + i)
                 tryVerify(() => !pooledView.busy, 20000)
             }
 
@@ -4695,7 +4686,7 @@ Item {
             fill(20)
 
             owner.removeOnReveal = false
-            verify(view.requestMoreBottom(), "the request was taken")
+            verify(view.requestMore(WindowedView.Edge.Bottom), "the request was taken")
             tryVerify(() => view.staging, 2000, "a batch is staged")
 
             // the owner admits values 20.. at the model's end, so k20 is the
@@ -4939,7 +4930,7 @@ Item {
             fill(30)
 
             owner.removeOnReveal = false
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => view.staging, 2000, "a batch is staged")
 
             const shell = view.itemAtRow(30)
@@ -4966,7 +4957,7 @@ Item {
             verify(view.atBottom)
 
             owner.removeOnReveal = false
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => view.staging, 2000, "a batch is staged")
             verify(view.positionViewAtRow(5, beginning))
 
@@ -5050,7 +5041,7 @@ Item {
 
             view.batchRevealed.connect(onRevealed)
             owner.removeOnReveal = false
-            verify(view.requestMoreBottom(), "the request was taken")
+            verify(view.requestMore(WindowedView.Edge.Bottom), "the request was taken")
             tryVerify(() => !view.busy && positionedSpy.count === 1, 8000,
                       "the jump was honoured")
             view.batchRevealed.disconnect(onRevealed)
@@ -5070,7 +5061,7 @@ Item {
             fill(30)
 
             owner.removeOnReveal = false
-            verify(view.requestMoreBottom())
+            verify(view.requestMore(WindowedView.Edge.Bottom))
             tryVerify(() => view.staging, 2000, "a batch is staged")
             verify(view.positionViewAtRow(30, beginning))
 
@@ -5202,7 +5193,7 @@ Item {
             owner.revealCount = 0
             owner.removeOnReveal = false
 
-            verify(view.requestMoreTop(), "the request was taken")
+            verify(view.requestMore(WindowedView.Edge.Top), "the request was taken")
             tryVerify(() => settled(40), 8000, "the batch was revealed")
 
             compare(owner.revealCount, 1, "one reveal for the whole batch")

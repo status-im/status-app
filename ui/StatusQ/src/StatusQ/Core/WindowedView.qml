@@ -12,15 +12,20 @@ import StatusQ.Core.Utils as SQUtils
   told to wait for, and holds the viewport still.
 
   It owns no window, no proxy and no fetch. When a placeholder edge comes into
-  reach it asks - moreRequestedTop/Bottom - and whoever owns the data answers
+  reach it asks - moreRequested(edge) - and whoever owns the data answers
   however it likes: by moving an index window's bounds, or by calling a backend
   that replies much later. Everything that arrives between the request and
-  moreLoadedTop/Bottom() is one batch, revealed in a single frame once every row
+  moreLoaded(edge) is one batch, revealed in a single frame once every row
   of it has content and the heights have stopped moving.
+
+  Every verb in that protocol names its edge with an argument - Edge.Top or
+  Edge.Bottom - because an owner carries the edge as a value and would otherwise
+  branch to pick a member. The two states it reads, moreAvailableTop/Bottom and
+  loadingTop/Bottom, stay one property per edge: those are bound, not called.
 
   loadingTop/Bottom belong to the view, set the moment it asks, because the view
   is the only party that knows a request exists. The owner's obligation is one
-  call to moreLoadedTop/Bottom() per request - whatever arrived, even nothing.
+  call to moreLoaded(edge) per request - whatever arrived, even nothing.
 
   batchRevealed() fires inside the reveal, in the same turn: an owner that
   defers removals (an index window trimming its far end) must do them there, or
@@ -135,6 +140,10 @@ Flickable {
 
     enum VerticalLayoutDirection { TopToBottom, BottomToTop }
 
+    // Which end of the view a request, an answer or a signal is about. The
+    // screen's, like every other top and bottom here.
+    enum Edge { Top, Bottom }
+
     // Where positionViewAtRow() puts the row it is given. ListView's
     // vocabulary, minus the modes a windowed view has no use for: Contain
     // leaves a row that is already wholly on screen exactly where it is.
@@ -193,9 +202,10 @@ Flickable {
     // one to hang a skeleton on.
     readonly property bool initialLoading: d.initialLoading
 
-    // "I would like more rows at this edge." Nothing is promised.
-    signal moreRequestedTop()
-    signal moreRequestedBottom()
+    // "I would like more rows at this edge." Nothing is promised. The argument
+    // is an Edge; it is typed int because a QML-declared enum cannot be a
+    // signal parameter type.
+    signal moreRequested(int edge)
 
     // Fired inside the reveal, in the same turn. An owner deferring removals
     // must perform them in this handler.
@@ -209,22 +219,15 @@ Flickable {
 
     // Asks for more at one edge, once. Ignored while that edge is loading or has
     // nothing more to give.
-    function requestMoreTop() {
-        return d.request(true)
-    }
-
-    function requestMoreBottom() {
-        return d.request(false)
+    function requestMore(edge) {
+        return d.request(d.isTop(edge))
     }
 
     // The owner's answer: whatever arrived, that is the batch. Called exactly
-    // once per request, even when nothing arrived.
-    function moreLoadedTop() {
-        d.loaded(true)
-    }
-
-    function moreLoadedBottom() {
-        d.loaded(false)
+    // once per request, even when nothing arrived, and at the edge it was asked
+    // for.
+    function moreLoaded(edge) {
+        d.loaded(d.isTop(edge))
     }
 
     // Everything that arrives until endBatch() is one batch: staged, revealed
@@ -344,6 +347,18 @@ Flickable {
 
         readonly property bool bottomUp: root.verticalLayoutDirection
                 === WindowedView.VerticalLayoutDirection.BottomToTop
+
+        // The one place the public edge vocabulary meets the internal one:
+        // everything below says `atTop`, because an edge here is one of two
+        // sides and never a third thing.
+        function isTop(edge) {
+            if (edge !== WindowedView.Edge.Top
+                    && edge !== WindowedView.Edge.Bottom)
+                console.warn("WindowedView: unknown edge", edge,
+                             "- treating it as the bottom")
+
+            return edge === WindowedView.Edge.Top
+        }
 
         // How many rows the model has, asked of the model itself. The argument
         // is only a dependency: rowCount() tells QML nothing about when its
@@ -683,7 +698,7 @@ Flickable {
         // used to be synchronous, and without this the first row to answer
         // finished the slide from inside the Repeater's creation pass, trimming
         // the far end against a half-built window. The settle wait now defers
-        // completion to a timer, and rows admitted before moreLoaded*() arrive
+        // completion to a timer, and rows admitted before moreLoaded() arrive
         // while `loading` is still true, so either check alone suffices.
         // Removing it is measurably safe today; it is kept because it states
         // the intent, and because a future synchronous reveal path would need it.
@@ -1126,7 +1141,7 @@ Flickable {
         // Asks the owner for more at one end. Nothing is admitted here - the
         // owner may answer inside this call by moving a window's bounds, or much
         // later from a backend. Either way every row that arrives before
-        // moreLoaded*() is one batch.
+        // moreLoaded() is one batch.
         function request(atTop) {
             // Not just "not loading": a batch that has been admitted but not yet
             // revealed is still outstanding, and starting a second request there
@@ -1169,10 +1184,8 @@ Flickable {
             // themselves because loading is already true.
             d.admitting = true
 
-            if (atTop)
-                root.moreRequestedTop()
-            else
-                root.moreRequestedBottom()
+            root.moreRequested(atTop ? WindowedView.Edge.Top
+                                     : WindowedView.Edge.Bottom)
 
             d.admitting = false
 
