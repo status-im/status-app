@@ -1305,6 +1305,148 @@ Item {
     }
 
     TestCase {
+        id: revealAtEdgeTests
+
+        name: "WindowedView.RevealAtEdge"
+        when: windowShown
+
+        // The shared delegates size rows by `value % 5`, which is negative for
+        // the negative values a request at the model's start hands out - and
+        // a batch of negative heights cannot land anywhere meaningful.
+        Component {
+            id: edgeRowDelegate
+
+            Item {
+                property int value: 0
+
+                implicitHeight: 20 + (Math.abs(value) % 5) * 30
+            }
+        }
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            provider.delegate = edgeRowDelegate
+            view.autoRequest = false
+
+            // Taller than the 400px view, so the viewport can sit wholly
+            // inside a band with no row on screen.
+            view.placeholder = skeletonPlaceholder
+            view.placeholderHeight = 600
+        }
+
+        function cleanup() {
+            view.placeholder = null
+            view.placeholderHeight = 100
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.TopToBottom
+        }
+
+        function fill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        function revealed(shell) {
+            return shell.visible && !!shell.content
+        }
+
+        // The row next to the content's top or bottom edge on screen, whatever
+        // the layout direction - the one a reveal at that edge lands against.
+        function outermostValue(atTop) {
+            let best = null
+
+            for (const shell of shells())
+                if (revealed(shell) && (!best || (atTop ? shell.y < best.y
+                                                        : shell.y > best.y)))
+                    best = shell
+
+            return best.content.value
+        }
+
+        function heightOf(value) {
+            for (const shell of shells())
+                if (revealed(shell) && shell.content.value === value)
+                    return shell.height
+
+            return NaN
+        }
+
+        function scrollTo(y) {
+            view.contentY = y
+            waitForRendering(view)
+        }
+
+        function topReveal() {
+            provider.delay = 40
+            verify(view.requestMoreTop(), "the request was taken")
+            tryVerify(() => !view.busy, 8000, "revealed")
+        }
+
+        function test_aTopRevealSeenOnlyAsPlaceholderEndsAtTheViewportBottom() {
+            fill(30)
+            scrollTo(50)        // inside the top band, no row on screen
+
+            const adjacent = outermostValue(true)
+
+            topReveal()
+
+            fuzzyCompare(offsetOf(adjacent), view.height, 0.5,
+                         "the batch ends exactly at the viewport's bottom edge")
+            verify(values().indexOf(-1) !== -1, "with the batch above it")
+        }
+
+        function test_aBottomRevealSeenOnlyAsPlaceholderStartsAtTheViewportTop() {
+            fill(30)
+            scrollTo(view.contentHeight - view.height)   // inside the bottom band
+
+            const adjacent = outermostValue(false)
+
+            provider.delay = 40
+            verify(view.requestMoreBottom(), "the request was taken")
+            tryVerify(() => !view.busy, 8000, "revealed")
+
+            fuzzyCompare(offsetOf(adjacent) + heightOf(adjacent), 0, 0.5,
+                         "the batch starts exactly at the viewport's top edge")
+        }
+
+        function test_aRevealWithARowOnScreenStillHoldsItStill() {
+            fill(30)
+            scrollTo(view.placeholderHeight - 100)   // the band and the first rows
+
+            const adjacent = outermostValue(true)
+            const before = offsetOf(adjacent)
+
+            verify(before > 0 && before < view.height, "a row is on screen")
+
+            topReveal()
+
+            fuzzyCompare(offsetOf(adjacent), before, 0.5,
+                         "the row on screen did not move")
+        }
+
+        // The chat's direction: the top band stands for the model's end.
+        function test_bottomUpTopRevealEndsAtTheViewportBottom() {
+            view.verticalLayoutDirection
+                    = WindowedView.VerticalLayoutDirection.BottomToTop
+            fill(30)
+            scrollTo(50)
+
+            const adjacent = outermostValue(true)
+
+            topReveal()
+
+            fuzzyCompare(offsetOf(adjacent), view.height, 0.5,
+                         "the batch ends exactly at the viewport's bottom edge")
+        }
+    }
+
+    TestCase {
         id: cacheTests
 
         name: "WindowedView.Cache"

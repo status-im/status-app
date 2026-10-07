@@ -1230,10 +1230,59 @@ Flickable {
         //
         // No measurement here: the held anchor restores the position, now and
         // again whenever the rows move as their deferred layout settles.
+        // A reveal the user sees only as placeholder - scrolled so far into
+        // the band at the requested edge that no row is on screen - lands the
+        // batch at the viewport's far edge instead of wherever the held row's
+        // offset puts it: growing at the top, the batch ends at the viewport's
+        // bottom edge; at the bottom, it starts at the top edge. Read before
+        // the reveal, while the geometry is still the one the user saw; staged
+        // rows take no space, so the row next to the batch is the outermost
+        // one on the requested side. Null when a row is on screen - then the
+        // held anchor keeps the content still, as for any reveal.
+        function edgeAlignment() {
+            if (!d.requestedAtEdge)
+                return null
+
+            const viewTop = root.contentY
+            const viewBottom = root.contentY + root.height
+
+            let outermost = null
+
+            for (let i = 0; i < rowsRepeater.count; ++i) {
+                const item = rowsRepeater.itemAt(i)
+
+                if (!item || !item.visible)
+                    continue
+
+                const top = d.rowTop(item)
+
+                if (d.requestedAtTop) {
+                    if (top < viewBottom)
+                        return null
+
+                    if (!outermost || top < d.rowTop(outermost))
+                        outermost = item
+                } else {
+                    if (top + item.height > viewTop)
+                        return null
+
+                    if (!outermost || top > d.rowTop(outermost))
+                        outermost = item
+                }
+            }
+
+            if (!outermost)
+                return null
+
+            return { item: outermost,
+                     offset: d.requestedAtTop ? root.height : -outermost.height }
+        }
+
         function completeWave() {
             settleTimer.stop()
             d.finishing = true
 
+            const edge = d.edgeAlignment()
             const arrived = d.waveArrived()
 
             for (let i = 0; i < arrived.length; ++i) {
@@ -1246,6 +1295,13 @@ Flickable {
             // In this same turn, so rows leaving and rows appearing change the
             // content together. An owner that defers removals trims here.
             root.batchRevealed()
+
+            // After the owner's turn: a jump asked for in batchRevealed() wins,
+            // and a row its trim removed can hold nothing.
+            if (edge && d.pendingRow < 0 && !edge.item.retired) {
+                d.anchorItem = edge.item
+                d.anchorOffset = edge.offset
+            }
 
             // Cleared here, not at the end: it collapses the viewport-filling
             // placeholder, and that has to happen in the same layout pass as the
