@@ -131,6 +131,9 @@ ios {
     # Base libraries (always included)
     LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lstatusq -lMobileWebView -lstatus -lsds -lssl_3 -lcrypto_3 -lSCodes -lZXing -lresolv -lqrcodegen
 
+    # The Go facade owns the token ABI; keep it private in the final executable.
+    QMAKE_LFLAGS += -Wl,-unexported_symbols_list,$$shell_quote($$PWD/../../vendor/status-go/scripts/tkl-unexported-macos.txt)
+
     contains(DEFINES, FLAG_KEYCARD_ENABLED) {
         # Use entitlements with NFC support (requires paid Apple Developer account)
         MY_ENTITLEMENTS.name = CODE_SIGN_ENTITLEMENTS

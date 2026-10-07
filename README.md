@@ -129,6 +129,10 @@ simulators. No second checkout or token-library path is needed. The mobile
 the existing token-catalogue options; the SDK backend remains available while
 full application and device verification is pending.
 
+On iOS, status-go bundles the token library into its static archive. The app's
+final link hides the token ABI and the build checks the installed executable
+for leaked token-library exports.
+
 When launching through `make run`, `STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true`
 also selects the tagged backend build. Status-go checks both the native archive
 and backend cache, reusing matching artifacts and rebuilding only when needed.
