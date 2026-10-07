@@ -412,6 +412,9 @@ Item {
     // view's contract is a model plus the two flags, and simulating loading by
     // hand keeps this suite about the view alone.
     // ------------------------------------------------------------------
+    // A second population, for swapping the model under an open batch.
+    ListModel { id: otherRows }
+
     ListModel {
         id: rows
 
@@ -1269,6 +1272,31 @@ Item {
             compare(hiddenShells().length, 0)
             verify(values().indexOf(500) !== -1, "the batch's rows are shown")
             compare(values()[0], root.chunk, "and the request's far end trimmed")
+        }
+
+        // Shells rebuilt while a batch is open - here by a model swap, where no
+        // insert ever reaches the key capture - are the batch by membership.
+        function test_shellsRebuiltInsideABatchRevealWithIt() {
+            provider.delay = 40
+            const reveals = owner.revealCount
+
+            otherRows.clear()
+            otherRows.append(rows.make(500, root.windowSize))
+
+            view.beginBatch()
+            view.model = otherRows
+            tryVerify(() => view.rowCount === root.windowSize, 2000, "rebuilt")
+            verify(view.busy, "held by the open batch")
+
+            view.endBatch()
+            tryVerify(() => !view.busy, 5000, "revealed")
+
+            compare(hiddenShells().length, 0, "every rebuilt row is shown")
+            compare(owner.revealCount, reveals + 1, "in one reveal")
+            compare(values()[0], 500)
+
+            view.model = rows
+            tryVerify(() => settled(root.windowSize), 5000, "back on the shared rows")
         }
 
         function test_replacingEveryRowInsideABatchIsAFreshFill() {
@@ -2200,10 +2228,12 @@ Item {
             verify(values().indexOf(owner.liveValue) !== -1)
         }
 
-        // The documented degradation: without the key role there is no batch to
-        // gather, so rows reveal one by one. What must not happen is the view
-        // announcing a fill that nothing can ever complete and refusing to page
-        // from then on.
+        // The documented degradation: without the key role a fresh fill has
+        // nothing to gather by, so its rows reveal one by one. What must not
+        // happen is the view announcing a fill that nothing can ever complete
+        // and refusing to page from then on - nor the rows a request pages in
+        // staying hidden: they are built while the request is open, so they
+        // are that request's batch by membership, key or no key.
         function test_aModelWithoutTheKeyRoleStillRevealsAndStillPages() {
             ignoreWarning(/WindowedView: no "absent" role on the model/)
             view.keyRole = "absent"
@@ -2214,8 +2244,15 @@ Item {
 
             tryVerify(() => settled(20), 8000, "the rows revealed anyway")
             compare(view.busy, false)
+
+            const reveals = owner.revealCount
+
             verify(view.requestMoreBottom(), "and paging still works")
             tryVerify(() => !view.busy, 5000)
+
+            compare(hiddenShells().length, 0, "the paged rows are shown")
+            compare(owner.revealCount, reveals + 1, "together, as one batch")
+            compare(view.rowCount, 20, "and the far end was trimmed")
         }
 
         // Every staged row leaving before it arrives completes no wave, so
