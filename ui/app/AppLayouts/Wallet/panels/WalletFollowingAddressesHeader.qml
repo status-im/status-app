@@ -106,6 +106,7 @@ Control {
 
         StatusButton {
             id: reloadButton
+            objectName: "followingAddressesReloadButton"
             size: StatusBaseButton.Size.Tiny
 
             Layout.preferredHeight: 38
@@ -142,6 +143,7 @@ Control {
 
             Timer {
                 id: throttleTimer
+                objectName: "followingAddressesReloadThrottle"
 
                 interval: d.reloadThrottleTimeMs
 
