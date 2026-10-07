@@ -38,6 +38,10 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_AUTO_APPLY_KEYPAIR_MIGRATIONS_UPDATED) do(e: Args):
     self.delegate.onAutoApplyKeypairMigrationsUpdated()
 
+  self.events.on(SIGNAL_HTTP_TRAFFIC_REPORT_FETCHED) do(e: Args):
+    let args = HttpTrafficReportArgs(e)
+    self.delegate.onHttpTrafficReportFetched(args.report, args.error, args.endpoints, args.key)
+
 proc hasPairedDevices*(self: Controller): bool =
   return self.walletAccountService.hasPairedDevices()
 
@@ -46,6 +50,15 @@ proc getRpcStats*(self: Controller): string =
 
 proc resetRpcStats*(self: Controller) =
   self.nodeService.resetRpcStats()
+
+proc fetchHttpTrafficReport*(self: Controller, endpoints: string, key: string) =
+  self.nodeService.fetchHttpTrafficReport(endpoints, key)
+
+proc resetHttpTrafficStats*(self: Controller) =
+  self.nodeService.resetHttpTrafficStats()
+
+proc setHttpTrafficStatsEnabled*(self: Controller, enabled: bool) =
+  self.nodeService.setHttpTrafficStatsEnabled(enabled)
 
 proc refetchTxHistory*(self: Controller) =
   self.walletAccountService.refetchTxHistory()

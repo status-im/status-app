@@ -58,6 +58,19 @@ method getRpcStats*(self: AccessInterface): string {.base.} =
 method resetRpcStats*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method fetchHttpTrafficReport*(self: AccessInterface, endpoints: string, key: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onHttpTrafficReportFetched*(self: AccessInterface, report: string, error: string, endpoints: string,
+    key: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method resetHttpTrafficStats*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setHttpTrafficStatsEnabled*(self: AccessInterface, enabled: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method refetchTxHistory*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

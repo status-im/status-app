@@ -8576,8 +8576,100 @@ Are you sure you want to do this?</source>
 <context>
     <name>HttpStatsModal</name>
     <message>
+        <source>%1h %2m</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1m</source>
+        <translation type="unfinished">%1m</translation>
+    </message>
+    <message>
         <source>network %1 in %2 req · cache %3 in %4 req</source>
         <translation>네트워크 %1(%2건 요청) · 캐시 %3(%4건 요청)</translation>
+    </message>
+    <message>
+        <source>sent %1 · received %2 in %3 req</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>status-go: sent %1 · received %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>app: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> · measuring %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collection is off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paused at %1 · counting continues</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stopped while the app is in the background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stopped while the window is minimized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Live · updated %1 s ago</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation type="unfinished">재개</translation>
+    </message>
+    <message>
+        <source>Pause updates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collect</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>status-go</source>
+        <translation type="unfinished">status-go</translation>
+    </message>
+    <message>
+        <source>App (QML)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation type="unfinished">전체</translation>
+    </message>
+    <message>
+        <source>Waku</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Webviews</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>status-go does not report its HTTP traffic: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collection is off. It costs a little work on every request, so release builds collect only while Debug is on. Turn it on to start measuring from now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start collecting</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Total: %1</source>
@@ -8588,8 +8680,13 @@ Are you sure you want to do this?</source>
         <translation>디스크 캐시: %2 중 %1</translation>
     </message>
     <message>
-        <source>Not counted here: status-go, messaging, the webviews, and requests made outside the QML network access manager.</source>
-        <translation>여기에 포함되지 않음: status-go, 메시징, 웹뷰, QML 네트워크 액세스 관리자 외부에서 이루어진 요청.</translation>
+        <source>Not counted here: requests made outside the QML network access manager.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>status-go: %1
+app: %2</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -8606,6 +8703,231 @@ Are you sure you want to do this?</source>
     <message>
         <source>Total</source>
         <translation>합계</translation>
+    </message>
+</context>
+<context>
+    <name>HttpTrafficDashboard</name>
+    <message>
+        <source>—/h</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1/h</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↑ %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↓ %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 req</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 cached</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 h %2 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 min</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 in background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No HTTP traffic yet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>upload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source> (%n call(s) bundled)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n other host(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>+ %n more source(s) · %1 together</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Multicall3 · %n call(s) bundled per request</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Multicall3 · %n call(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per response.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↑ Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↓ Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In background · %1 · now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In background · %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Where does the traffic go?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Top consumers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>click for details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show fewer sources</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Where it goes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation type="unfinished">%1%</translation>
+    </message>
+    <message>
+        <source>%1 sent · %2 received · bold = total since start · chip = per hour · grey bars = in background</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↑</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↓</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>All sources</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total · %1% of all traffic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Why so much upload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Per response</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 per request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 per response</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>How often</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 requests</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 req/h</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Endpoints</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection bytes only: no HTTP requests went to this host, e.g. a WebSocket.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↑ %1/req</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↓ %1/req</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>⏱ %1 ms · p95 %2 ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 × %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Caller: %1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

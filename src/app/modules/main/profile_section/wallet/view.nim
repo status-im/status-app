@@ -69,6 +69,14 @@ QtObject:
   proc resetRpcStats(self: View) {.slot.} =
     self.delegate.resetRpcStats()
 
+  proc fetchHttpTrafficReport(self: View, endpoints: string, key: string) {.slot.} =
+    self.delegate.fetchHttpTrafficReport(endpoints, key)
+  proc httpTrafficReportFetched*(self: View, report: string, error: string, endpoints: string, key: string) {.signal.}
+  proc resetHttpTrafficStats(self: View) {.slot.} =
+    self.delegate.resetHttpTrafficStats()
+  proc setHttpTrafficStatsEnabled(self: View, enabled: bool) {.slot.} =
+    self.delegate.setHttpTrafficStatsEnabled(enabled)
+
   proc refetchTxHistory*(self: View) {.slot.} =
     self.delegate.refetchTxHistory()
 

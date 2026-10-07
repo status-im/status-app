@@ -224,7 +224,8 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
     result.settingsService, result.accountsService, result.walletAccountService)
   result.mailserversService = mailservers_service.newService(statusFoundation.events, statusFoundation.threadpool,
     result.settingsService, result.nodeConfigurationService)
-  result.nodeService = node_service.newService(statusFoundation.events, result.settingsService, result.nodeConfigurationService)
+  result.nodeService = node_service.newService(statusFoundation.events, statusFoundation.threadpool, result.settingsService,
+    result.nodeConfigurationService)
   result.gifService = gif_service.newService(result.settingsService, statusFoundation.events, statusFoundation.threadpool)
   result.ensService = ens_service.newService(statusFoundation.events, statusFoundation.threadpool,
     result.settingsService, result.walletAccountService, result.transactionService,
@@ -437,6 +438,11 @@ proc load(self: AppController) =
   if not main_constants.runtimeLogLevelSet():
     if self.nodeConfigurationService.isDebugEnabled():
       setLogLevel(chronicles.LogLevel.DEBUG)
+
+  # The HTTP traffic stats cost work on every request, so release builds keep
+  # them for debug sessions; the HTTP statistics screen can still turn them on.
+  self.nodeService.setHttpTrafficStatsEnabled(
+    not defined(production) or self.nodeConfigurationService.isDebugEnabled())
 
   # Apply the user's per-family cap
   scheduleLogFamilyCleanup(

@@ -300,6 +300,44 @@
     </message>
 </context>
 <context>
+    <name>HttpTrafficDashboard</name>
+    <message numerus="yes">
+        <source> (%n call(s) bundled)</source>
+        <translation>
+            <numerusform> (%n call bundled)</numerusform>
+            <numerusform> (%n calls bundled)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n other host(s)</source>
+        <translation>
+            <numerusform>%n other host</numerusform>
+            <numerusform>%n other hosts</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>+ %n more source(s) · %1 together</source>
+        <translation>
+            <numerusform>+ %n more source · %1 together</numerusform>
+            <numerusform>+ %n more sources · %1 together</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Multicall3 · %n call(s) bundled per request</source>
+        <translation>
+            <numerusform>Multicall3 · %n call bundled per request</numerusform>
+            <numerusform>Multicall3 · %n calls bundled per request</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Multicall3 · %n call(s)</source>
+        <translation>
+            <numerusform>Multicall3 · %n call</numerusform>
+            <numerusform>Multicall3 · %n calls</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>ImportCommunityPopup</name>
     <message numerus="yes">
         <source>%n member(s)</source>
