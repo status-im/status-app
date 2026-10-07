@@ -3,6 +3,23 @@ import std/[json, unittest]
 import app_service/service/message/dto/thread
 
 suite "thread dto":
+  test "parses thread creator independently of the parent message":
+    let dto = parseJson("""{
+      "threadId": "root-id",
+      "parentMessageId": "root-id",
+      "creatorId": "thread-creator",
+      "name": "Renamed"
+    }""").toThreadDto()
+    check dto.creatorId == "thread-creator"
+    check dto.name == "Renamed"
+
+  test "legacy threads have no inferred creator":
+    let dto = parseJson("""{
+      "threadId": "legacy",
+      "participantsPreviewIds": ["root-author"]
+    }""").toThreadDto()
+    check dto.creatorId == ""
+
   test "parses participant total independently from displayed participants":
     let dto = parseJson("""{
       "threadId": "thread-id",

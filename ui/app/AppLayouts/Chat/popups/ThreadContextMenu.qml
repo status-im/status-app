@@ -19,6 +19,8 @@ StatusMenu {
     required property bool pinEnabled
     required property string threadLinkToCopyShare
     required property bool deleteEnabled
+    property bool editEnabled: false
+    property bool isThread: false
 
     signal editNameRequested()
     signal followRequested()
@@ -34,6 +36,7 @@ StatusMenu {
         objectName: "threadContextMenu_editName"
         text: qsTr("Edit name")
         icon.name: "edit_pencil"
+        enabled: root.editEnabled
         onTriggered: root.editNameRequested()
     }
 
@@ -41,20 +44,22 @@ StatusMenu {
         objectName: "threadContextMenu_follow"
         text: root.followed ? qsTr("Unfollow") : qsTr("Follow")
         icon.name: "checkmark"
+        enabled: !root.isThread
         onTriggered: root.followed ? root.unfollowRequested() : root.followRequested()
     }
 
     MuteChatMenuItem {
         objectName: "threadContextMenu_muteThread"
         title: qsTr("Mute thread")
-        enabled: !root.muted
+        visible: !root.isThread
+        enabled: !root.muted && !root.isThread
         onMuteTriggered: interval => root.muteRequested(interval)
     }
 
     StatusAction {
         objectName: "threadContextMenu_unmuteThread"
         text: qsTr("Unmute thread")
-        enabled: root.muted
+        enabled: root.muted && !root.isThread
         icon.name: "notification"
         onTriggered: root.unmuteRequested()
     }
@@ -63,11 +68,13 @@ StatusMenu {
         objectName: "threadContextMenu_markAsRead"
         text: qsTr("Mark as read")
         icon.name: "checkmark-circle"
+        enabled: !root.isThread
         onTriggered: root.markAsReadRequested()
     }
 
     StatusSuccessAction {
         objectName: "threadContextMenu_copyShare"
+        visible: !root.isThread
 
         readonly property string shareIcon: root.isMobile
                                             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
@@ -85,7 +92,7 @@ StatusMenu {
     StatusAction {
         objectName: "threadContextMenu_pin"
         text: root.pinned ? qsTr("Unpin from list") : qsTr("Pin to list")
-        enabled: root.pinEnabled
+        enabled: root.pinEnabled && !root.isThread
         icon.name: root.pinned ? "unpin" : "pin"
         onTriggered: root.pinned ? root.unpinRequested() : root.pinRequested()
     }
@@ -98,7 +105,7 @@ StatusMenu {
         id: actionDelete
         objectName: "threadContextMenu_delete"
         text: qsTr("Delete")
-        enabled: root.deleteEnabled
+        enabled: root.deleteEnabled && !root.isThread
         icon.name: "delete"
         type: StatusAction.Type.Danger
         onTriggered: {

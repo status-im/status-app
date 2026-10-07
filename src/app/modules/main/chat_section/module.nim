@@ -616,9 +616,13 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     var pendingThreadIds = initHashSet[string]()
     for thread in parentThreads:
       if not self.view.chatsModel().getItemById(thread.threadId).isNil:
+        self.view.renameThreadItem(thread.threadId, thread.name)
+        if self.view.getOpenThreadId() == thread.threadId:
+          self.view.setOpenThread(thread.threadId, thread.name, parentChatId)
         self.view.chatsModel().updateNotificationsForItemById(thread.threadId,
           thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount)
         if self.chatContentModules.contains(thread.threadId):
+          self.chatContentModules[thread.threadId].onThreadRenamed(thread.name)
           self.chatContentModules[thread.threadId].onNotificationsUpdated(
             thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount)
         continue

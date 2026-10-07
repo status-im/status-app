@@ -285,6 +285,11 @@ proc init*(self: Controller) =
       return
     self.delegate.onChatThreadsLoadingFailed()
 
+  self.events.on(SIGNAL_THREAD_EDIT_FINISHED) do(e: Args):
+    let args = ThreadEditFinishedArgs(e)
+    if self.chatId == args.chatId and self.threadId == args.threadId:
+      self.delegate.onThreadEditFinished(args.requestId, args.error)
+
 proc getMySectionId*(self: Controller): string =
   return self.sectionId
 
@@ -310,6 +315,12 @@ proc pendingSends*(self: Controller): seq[SendingStartedArgs] =
 
 proc getThreadForParentMessage*(self: Controller, parentMessageId: string): ThreadDto =
   return self.messageService.getThreadForParentMessage(self.chatId, parentMessageId)
+
+proc getThread*(self: Controller): ThreadDto =
+  self.messageService.getThreadById(self.chatId, self.threadId)
+
+proc editThread*(self: Controller, name, requestId: string) =
+  self.messageService.asyncEditThread(self.chatId, self.threadId, name, requestId)
 
 proc getChatDetails*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)

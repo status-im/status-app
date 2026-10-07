@@ -48,6 +48,19 @@ suite "empty model":
     require(model.rowCount() == 0)
 
 suite "thread summary":
+  test "renames a zero-reply thread card without editing the root message":
+    let model = newModel()
+    let item = createTestMessageItem("thread-parent", 1)
+    let originalText = item.messageText
+    model.insertItemBasedOnClock(item)
+    model.setThreadSummary("thread-parent", ThreadSummary(
+      threadId: "thread-id", originalMessageId: "thread-parent", title: "Renamed",
+      messagesCount: 0,
+    ))
+    check item.threadSummary.title == "Renamed"
+    check item.threadSummary.messagesCount == 0
+    check item.messageText == originalText
+
   test "keeps typed data and updates the participants model":
     let item = createTestMessageItem("thread-parent", 1)
     item.threadSummary = ThreadSummary(

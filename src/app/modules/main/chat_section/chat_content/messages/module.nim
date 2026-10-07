@@ -1,4 +1,4 @@
-import nimqml, chronicles, sequtils, uuids, sets, times, tables, system
+import nimqml, chronicles, sequtils, uuids, sets, times, tables, system, options
 import io_interface
 import ../io_interface as delegate_interface
 import view, controller
@@ -14,6 +14,7 @@ import ../../../../../../app_service/service/community/service as community_serv
 import ../../../../../../app_service/service/chat/service as chat_service
 import ../../../../../../app_service/service/message/service as message_service
 import ../../../../../../app_service/service/message/dto/thread
+import ../../../../../../app_service/service/message/thread_permissions
 import ../../../../../../app_service/service/mailservers/service as mailservers_service
 import ../../../../../../app_service/service/shared_urls/service as shared_urls_service
 import ../../../../../../app_service/service/contacts/dto/contact_details
@@ -46,6 +47,8 @@ type
     initialMessagesLoaded: bool
     firstUnseenMessageState: FirstUnseenMessageState
     getMessageRequestId: UUID
+    threadEditRequestId: string
+    threadCanView: Option[bool]
 
 proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitter, sectionId: string, chatId: string,
     belongsToCommunity: bool, contactService: contact_service.Service, communityService: community_service.Service,
@@ -92,6 +95,7 @@ method isLoaded*(self: Module): bool =
 method viewDidLoad*(self: Module) =
   if THREADS_ENABLED:
     self.view.setThreadId(self.controller.getMyThreadId())
+    self.updateThreadDetails()
 
     if self.controller.getMyThreadId().len > 0:
       discard self.controller.loadMoreMessages()
@@ -469,6 +473,9 @@ method setThreadId*(self: Module, threadId: string) =
 
   self.controller.setThreadId(threadId)
   self.view.setThreadId(threadId)
+  self.threadEditRequestId = ""
+  self.view.setThreadEditPending(false)
+  self.updateThreadDetails()
   self.initialMessagesLoaded = false
   self.view.model().clear()
 
@@ -478,6 +485,46 @@ method setThreadId*(self: Module, threadId: string) =
   self.updateChatIdentifier()
   discard self.controller.loadMoreMessages()
   self.reevaluateViewLoadingState()
+
+method updateThreadDetails*(self: Module) =
+  let thread = self.controller.getThread()
+  var chat = self.controller.getChatDetails()
+  if self.threadCanView.isSome:
+    chat.canView = self.threadCanView.get()
+  let community = if chat.chatType == ChatType.CommunityChat:
+      self.controller.getCommunityDetails()
+    else:
+      CommunityDto()
+  let parentName = if chat.chatType == ChatType.OneToOne:
+      self.controller.getOneToOneChatNameAndImage().name
+    else:
+      chat.name
+  self.view.setThreadDetails(thread.name, parentName,
+    THREADS_ENABLED and thread_permissions.canEditThread(thread, chat,
+      singletonInstance.userProfile.getPubKey(), community))
+
+method updateThreadCanView*(self: Module, canView: bool) =
+  self.threadCanView = some(canView)
+  self.updateThreadDetails()
+
+method editThread*(self: Module, name: string) =
+  if self.threadEditRequestId.len > 0:
+    return
+  self.updateThreadDetails()
+  if not self.view.getCanEditThread():
+    error "thread edit permission denied", threadId = self.controller.getMyThreadId()
+    self.view.emitThreadEditFinished("only the thread creator or an admin can edit this thread")
+    return
+  self.threadEditRequestId = $genUUID()
+  self.view.setThreadEditPending(true)
+  self.controller.editThread(name, self.threadEditRequestId)
+
+method onThreadEditFinished*(self: Module, requestId, error: string) =
+  if requestId != self.threadEditRequestId or requestId.len == 0:
+    return
+  self.threadEditRequestId = ""
+  self.view.setThreadEditPending(false)
+  self.view.emitThreadEditFinished(error)
 
 method createThread*(self: Module, parentMessageId: string) =
   if self.controller.hasThreadForParentMessage(parentMessageId):
@@ -547,8 +594,8 @@ method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
   for thread in threads:
     if thread.parentMessageId.len > 0:
       self.view.model().setHasThread(thread.parentMessageId, true)
-      if thread.messagesCount > 0:
-        self.view.model().setThreadSummary(thread.parentMessageId, self.threadSummary(thread))
+      self.view.model().setThreadSummary(thread.parentMessageId, self.threadSummary(thread))
+  self.updateThreadDetails()
 
 method getChatType*(self: Module): int =
   let chatDto = self.controller.getChatDetails()
@@ -762,11 +809,13 @@ method updateCommunityDetails*(self: Module, community: CommunityDto) =
   if community.id == self.getSectionId():
     self.view.setAmIChatAdmin(community.isPrivilegedUser)
     self.view.setIsPinMessageAllowedForMembers(community.adminSettings.pinMessageAllMembersEnabled)
+    self.updateThreadDetails()
 
   for item in self.view.model().items:
     item.linkPreviewModel.setCommunityInfo(community)
 
 proc setChatDetails(self: Module, chatDetails: ChatDto) =
+  self.updateThreadDetails()
   self.view.setChatColor(chatDetails.color)
   self.view.setChatIcon(chatDetails.icon)
   self.view.setChatType(chatDetails.chatType.int)

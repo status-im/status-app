@@ -284,7 +284,7 @@ Item {
 
     // Header of the right panel page's toolbar (portrait): shows the open thread
     readonly property Item rightPanelHeaderContent: Loader {
-        active: !!d.openThreadId
+        active: d.threadHeaderInToolbar
         sourceComponent: threadHeaderComponent
     }
 
@@ -293,23 +293,31 @@ Item {
     Component {
         id: threadHeaderComponent
 
-        ColumnLayout {
-            spacing: 0
+        ThreadHeader {
+            id: panelThreadHeader
+            threadId: d.openThreadId
+            threadName: threadMessageStore.threadName
+            parentChatName: d.openThreadParentChatName
+            canEdit: threadMessageStore.canEditThread
+            pending: threadMessageStore.threadEditPending
+            onRenameRequested: name => threadMessageStore.editThread(name)
 
-            StatusBaseText {
-                Layout.fillWidth: true
-                text: d.openThreadName
-                font.bold: true
-                elide: Text.ElideRight
+            ChatStores.MessageStore {
+                id: threadMessageStore
+                messageModule: {
+                    if (!root.rootStore.chatCommunitySectionModule || !d.openThreadId)
+                        return null
+                    root.rootStore.chatCommunitySectionModule.prepareChatContentModuleForChatId(d.openThreadId)
+                    return root.rootStore.chatCommunitySectionModule.getChatContentModule()?.messagesModule ?? null
+                }
+                chatSectionModule: root.rootStore.chatCommunitySectionModule
             }
 
-            StatusBaseText {
-                Layout.fillWidth: true
-                visible: !!d.openThreadParentChatName
-                text: qsTr("in %1").arg(d.openThreadParentChatName)
-                font.pixelSize: Theme.additionalTextSize
-                color: Theme.palette.baseColor1
-                elide: Text.ElideRight
+            Connections {
+                target: threadMessageStore.messageModule
+                function onThreadEditFinished(error: string) {
+                    panelThreadHeader.editFinished(error)
+                }
             }
         }
     }
@@ -468,7 +476,7 @@ Item {
             RowLayout {
                 visible: !d.threadHeaderInToolbar
                 Layout.fillWidth: true
-                Layout.preferredHeight: 64
+                Layout.minimumHeight: 64
                 Layout.leftMargin: Theme.padding
                 Layout.rightMargin: Theme.halfPadding
                 spacing: Theme.padding
@@ -482,6 +490,7 @@ Item {
 
                 Loader {
                     Layout.fillWidth: true
+                    active: !d.threadHeaderInToolbar
                     sourceComponent: threadHeaderComponent
                 }
 
