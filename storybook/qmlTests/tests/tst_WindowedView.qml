@@ -1930,6 +1930,32 @@ Item {
             compare(view.busy, false, "so paging is possible again")
         }
 
+        // Silence from the provider is only counted once the owner is done: a
+        // request still being answered - or a batch still open - is a batch the
+        // owner may still add to, and revealing it would split it and let the
+        // far end be trimmed early.
+        function test_theWatchdogWaitsWhileTheOwnerIsStillAdmitting() {
+            ignoreWarning(/WindowedView: nothing arrived in/)
+            provider.mute = true        // the admitted rows never get content
+            owner.holdAnswer = true     // rows admitted, "that is all" held back
+
+            verify(view.requestMoreBottom())
+
+            // past the watchdog's three 1 s intervals
+            const until = Date.now() + 3500
+            tryVerify(() => Date.now() >= until, 5000)
+
+            compare(owner.revealCount, 0, "nothing revealed while the owner admits")
+            compare(view.loadingBottom, true)
+            compare(view.staging, true, "the batch is still held")
+
+            owner.holdAnswer = false
+            owner.answer()
+
+            tryVerify(() => owner.revealCount === 1 && !view.busy, 6000,
+                      "once the owner is done, the watchdog ends the wait")
+        }
+
         // Given up on is not thrown away: a row whose content turns up after
         // the watchdog gave up shows itself, on its own.
         function test_contentArrivingAfterTheWatchdogShowsItself() {
