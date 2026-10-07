@@ -126,11 +126,13 @@ Item {
             verify(!!createdModal)
             compare(createdModal.objectName, "swapModal")
             compare(findChild(root, "swapModal"), createdModal)
+            compare(handler.openModals, 1)
             tryCompare(createdModal, "opened", true)
 
             // The modal destroys itself on close.
             createdModal.close()
             tryVerify(() => findChild(root, "swapModal") === null)
+            compare(handler.openModals, 0)
         }
     }
 }

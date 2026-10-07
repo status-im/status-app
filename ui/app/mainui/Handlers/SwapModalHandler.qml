@@ -26,6 +26,9 @@ QtObject {
     required property bool swapEnabled
     required property bool routeOrderEnabled
 
+    /** number of swap modals open now **/
+    property int openModals: 0
+
     function openSendModal(params = {}, callback = null) {
         if (!root.swapEnabled) {
             console.warn("SwapModalHandler: swap is disabled by feature flag")
@@ -35,6 +38,8 @@ QtObject {
         d.swapInputParams.resetFormData()
 
         let swapModalInst = swapModalComponent.createObject(popupParent)
+        root.openModals++
+        swapModalInst.closed.connect(() => root.openModals--)
         swapModalInst.open()
 
         if (callback)

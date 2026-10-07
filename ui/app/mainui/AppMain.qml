@@ -1090,6 +1090,7 @@ Item {
         readonly property bool isWalletRelatedSectionType: activeSectionType === Constants.appSection.wallet ||
                                                            activeSectionType === Constants.appSection.swap || activeSectionType === Constants.appSection.market ||
                                                            activeSectionType === Constants.appSection.dApp
+
         readonly property bool isBrowserEnabled: appMain.featureFlagsStore.browserEnabled &&
                                                  localAccountSensitiveSettings.isBrowserEnabled
         readonly property int syncingBadgeCount: (appMain.devicesStore?.totalDevicesCount ?? 0)
@@ -1289,6 +1290,20 @@ Item {
         onWcUriScanned: uri => d.pairWalletConnectUri(uri)
         onNavigationEducationDialogSeenRequested: appMainGlobalSettings.newMenuEducationPopupSeen = true
         onRestartRequested: SystemUtils.restartApplication()
+    }
+
+    BalancesOnScreenTracker {
+        sectionType: d.activeSectionType
+        isMobile: SQUtils.Utils.isMobile
+        applicationState: Qt.application.state
+        windowVisibility: appMain.Window.window ? appMain.Window.window.visibility : Window.Hidden
+        // Send, swap and a dApp request waiting to be signed all show balances
+        popupOpen: (popupRequestsHandler.item?.sendModalHandler.openModals ?? 0) > 0 ||
+                   (popupRequestsHandler.item?.swapModalHandler.openModals ?? 0) > 0 ||
+                   (dAppsServiceLoader.item?.sessionRequestsModel.count ?? 0) > 0
+
+        onOnScreenChanged: appMain.walletRootStore.setBalancesActive(onScreen)
+        Component.onCompleted: appMain.walletRootStore.setBalancesActive(onScreen)
     }
 
     HandlersManagerLoader {

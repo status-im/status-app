@@ -167,9 +167,14 @@ QtObject {
     /** signal to request launch of buy crypto modal **/
     signal launchBuyFlowRequested(string accountAddress, int chainId, string groupKey)
 
+    /** number of send modals open now **/
+    property int openModals: 0
+
     function openSend(params = {}) {
         root.simpleSendParams = params
         let sendModalInst = simpleSendModalComponent.createObject(popupParent)
+        root.openModals++
+        sendModalInst.closed.connect(() => root.openModals--)
         sendModalInst.open()
     }
 

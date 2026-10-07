@@ -24,6 +24,9 @@ method setFilterAllAddresses*(self: AccessInterface) {.base.} =
 method updateCurrency*(self: AccessInterface, currency: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method setBalancesActive*(self: AccessInterface, active: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getCurrentCurrency*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -61,6 +61,9 @@ QtObject:
   proc currentCurrencyChanged*(self: View) {.signal.}
   proc updateCurrency*(self: View, currency: string) {.slot.} =
     self.delegate.updateCurrency(currency)
+
+  proc setBalancesActive*(self: View, active: bool) {.slot.} =
+    self.delegate.setBalancesActive(active)
   proc setCurrentCurrency*(self: View, currency: string) =
     self.currentCurrency = currency
     self.currentCurrencyChanged()

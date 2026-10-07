@@ -226,6 +226,11 @@ QtObject {
         walletSectionInst.setFilterAllAddresses()
     }
 
+    // While balances are not on screen, the backend refreshes them less often
+    function setBalancesActive(active) {
+        walletSectionInst.setBalancesActive(active)
+    }
+
     function deleteAccount(address, password) {
         return walletSectionAccounts.deleteAccount(address, password)
     }
