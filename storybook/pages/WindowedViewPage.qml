@@ -398,10 +398,8 @@ SplitView {
             else
                 windowSource.growEnd(slideStepSpinBox.value)
 
-            if (atTop)
-                windowedView.moreLoadedTop()
-            else
-                windowedView.moreLoadedBottom()
+            windowedView.moreLoaded(atTop ? WindowedView.Edge.Top
+                                          : WindowedView.Edge.Bottom)
         }
 
         function restoreDefaults() {
@@ -862,8 +860,7 @@ SplitView {
             // rows are admitted only when the delay is up, the way an owner
             // talking to a backend behaves: nothing exists until the reply
             // lands. The view cannot tell the difference either way.
-            onMoreRequestedTop: d.fetch(true)
-            onMoreRequestedBottom: d.fetch(false)
+            onMoreRequested: (edge) => d.fetch(edge === WindowedView.Edge.Top)
 
             // Deferred removals happen here, in the reveal's own turn, so both
             // ends of the window change together - and a jump waiting for its
@@ -889,8 +886,8 @@ SplitView {
     }
 
     LogsAndControlsPanel {
-        SplitView.minimumWidth: 420
-        SplitView.preferredWidth: 420
+        SplitView.minimumWidth: 450
+        SplitView.preferredWidth: 450
 
         // Taller than the panel, so the controls scroll. contentWidth is
         // pinned to the viewport so only the vertical direction ever moves: a
@@ -1269,7 +1266,8 @@ SplitView {
                         text: "Slide up"
                         enabled: !windowedView.busy && windowedView.moreAvailableTop
 
-                        onClicked: windowedView.requestMoreTop()
+                        onClicked: windowedView.requestMore(
+                                       WindowedView.Edge.Top)
                     }
 
                     Button {
@@ -1278,7 +1276,8 @@ SplitView {
                         text: "Slide down"
                         enabled: !windowedView.busy && windowedView.moreAvailableBottom
 
-                        onClicked: windowedView.requestMoreBottom()
+                        onClicked: windowedView.requestMore(
+                                       WindowedView.Edge.Bottom)
                     }
                 }
 
