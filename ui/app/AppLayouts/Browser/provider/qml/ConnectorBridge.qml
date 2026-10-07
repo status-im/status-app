@@ -1,6 +1,8 @@
 import QtQuick
 import QtWebChannel
 
+import utils
+
 import "Utils.js" as BrowserUtils
 
 /**
@@ -35,6 +37,16 @@ QtObject {
         onAccountsChangedEvent: (accounts) => eip1193ProviderAdapter.accountsChangedEvent(accounts)
         onChainChangedEvent: (chainId) => eip1193ProviderAdapter.chainChangedEvent(chainId)
         onRequestCompletedEvent: (payload) => eip1193ProviderAdapter.requestCompletedEvent(payload)
+        onWalletRpcUserError: (message) => {
+            Global.displayToastMessage(
+                message,
+                "",
+                "warning",
+                false,
+                Constants.ephemeralNotificationType.danger,
+                ""
+            )
+        }
         onDisconnectEvent: (error) => eip1193ProviderAdapter.disconnectEvent(error)
         onMessageEvent: (message) => eip1193ProviderAdapter.messageEvent(message)
         onProviderStateChanged: () => eip1193ProviderAdapter.providerStateChanged()

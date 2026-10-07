@@ -32,6 +32,7 @@ QtObject {
     signal chainChangedEvent(string chainId)
     signal messageEvent(var message)
     signal requestCompletedEvent(var payload)
+    signal walletRpcUserError(string message)
 
     // PUBLIC API - EIP-1193 REQUEST
     function request(args) {
@@ -68,7 +69,7 @@ QtObject {
         }
 
         connectorController.connectorCallRPC(requestId, JSON.stringify(rpcRequest))
-        _ownRequestIds[requestId] = true
+        _ownRequestIds[requestId] = method
 
         // Return immediately - response comes via connectorCallRPCResult signal
         return JSON.stringify({
@@ -203,10 +204,14 @@ QtObject {
         }
 
         function onConnectorCallRPCResult(requestId, payload) {
-            if (!_ownRequestIds[requestId])
+            const method = _ownRequestIds[requestId]
+            if (!method)
                 return
 
             delete _ownRequestIds[requestId]
+
+            if (Utils.isInsufficientGasFeeError(method, payload))
+                root.walletRpcUserError(ConnectorConstants.insufficientNetworkFeeMessage)
 
             // Emit to Eip1193ProviderAdapter → ethereum_wrapper.js
             requestCompletedEvent({

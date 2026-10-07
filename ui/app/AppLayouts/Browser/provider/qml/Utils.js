@@ -85,3 +85,46 @@ function validateDAppIcon(iconUrl, siteUrl) {
     return { valid: false, iconUrl: "", reason: "domain_mismatch" }
 }
 
+function isGasEstimateMethod(method) {
+    return method === "eth_estimateGas" || method === "linea_estimateGas"
+}
+
+function rpcErrorText(payload) {
+    if (payload === undefined || payload === null)
+        return ""
+
+    let parsed = payload
+    if (typeof payload === "string") {
+        try {
+            parsed = JSON.parse(payload)
+        } catch (e) {
+            return payload
+        }
+    }
+
+    if (!parsed || typeof parsed !== "object" || !parsed.error)
+        return ""
+
+    const error = parsed.error
+    if (typeof error === "string")
+        return error
+
+    const message = error.message || ""
+    const dataMessage = error.data && typeof error.data === "object" ? (error.data.message || "") : ""
+    const dataText = typeof error.data === "string" ? error.data : dataMessage
+    return (message + " " + dataText).trim()
+}
+
+function isInsufficientFundsForGas(errorText) {
+    if (!errorText)
+        return false
+    const text = errorText.toLowerCase()
+    return text.includes("insufficient funds") || text.includes("gas required exceeds")
+}
+
+function isInsufficientGasFeeError(method, payload) {
+    if (!isGasEstimateMethod(method))
+        return false
+    return isInsufficientFundsForGas(rpcErrorText(payload))
+}
+
