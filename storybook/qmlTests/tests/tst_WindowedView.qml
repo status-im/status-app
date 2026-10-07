@@ -1488,10 +1488,18 @@ Item {
         }
 
         function cleanup() {
+            view.visible = true
             view.acquireBudget = 0
             provider.cost = 0
             turnTicker.running = false
             tryVerify(() => !view.busy, 8000)
+        }
+
+        // Lets the event loop turn over `count` times - enough for a queue
+        // that was going to drain to have drained.
+        function turnOver(count) {
+            const until = turnTicker.count + count
+            tryVerify(() => turnTicker.count >= until, 5000)
         }
 
         function turns() {
@@ -1576,6 +1584,51 @@ Item {
             compare(provider.acquiredCount, view.rowCount, "one item per row")
             compare(provider.acquiredCount + provider.availableCount, provider.builtCount,
                     "nothing leaked")
+        }
+
+        function test_aHiddenViewAsksForNothingUntilShown() {
+            view.acquireBudget = 8
+            provider.cost = 3
+            provider.acquireLog = []
+
+            const reveals = owner.revealCount
+
+            view.visible = false
+            verify(view.requestMoreBottom())
+
+            turnOver(30)
+            compare(provider.acquireLog.length, 0, "hidden: nothing asked for")
+            verify(view.busy, "the batch is held")
+
+            view.visible = true
+
+            tryVerify(() => !view.busy, 8000, "shown: asked for and revealed")
+            compare(provider.acquireLog.length, root.chunk)
+            compare(owner.revealCount, reveals + 1, "in one go")
+        }
+
+        // Past the stall detector's three intervals: rows the paused queue holds
+        // back were never asked for, so the batch is not given up on.
+        function test_aHeldBatchOutlastsTheStallDetector() {
+            view.acquireBudget = 8
+            provider.acquireLog = []
+
+            const reveals = owner.revealCount
+
+            view.visible = false
+            verify(view.requestMoreBottom())
+
+            const until = Date.now() + 3500
+            tryVerify(() => Date.now() >= until, 5000)
+
+            compare(owner.revealCount, reveals, "nothing revealed while hidden")
+            compare(provider.acquireLog.length, 0)
+
+            view.visible = true
+
+            tryVerify(() => !view.busy, 8000)
+            compare(owner.revealCount, reveals + 1)
+            compare(hiddenShells().length, 0, "the whole batch revealed")
         }
 
         function test_aLiveRowIsAcquiredAtOnce() {
