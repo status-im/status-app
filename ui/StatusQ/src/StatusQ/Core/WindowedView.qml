@@ -80,9 +80,10 @@ Flickable {
     property real acquireBudget: 0
 
     // The role that identifies a row. A fetch admits an unknown number of rows,
-    // so membership in a batch is a set of keys rather than a count. A model
-    // without this role still works - those rows reveal themselves individually
-    // instead of joining a batch.
+    // so membership in a batch is a set of keys rather than a count - which is
+    // what lets rows whose shells are not built yet hold the batch open. A model
+    // without this role still works: rows built while a request or batch is
+    // open still join it, and only a fresh fill reveals its rows one by one.
     property string keyRole: "key"
 
     // Content of the view's own, above and below the rows, with ListView's
@@ -1420,11 +1421,17 @@ Flickable {
                     if (!d.keyWarningShown) {
                         d.keyWarningShown = true
                         console.warn("WindowedView: no \"" + root.keyRole
-                                     + "\" role on the model; rows will reveal"
-                                     + " individually instead of as a batch")
+                                     + "\" role on the model; a fresh fill will"
+                                     + " reveal row by row instead of as a batch")
                     }
                     continue
                 }
+
+                // Its shell was built first and joined the wave without a
+                // claim: a key captured now would be owed by nothing, and hold
+                // the batch open until the watchdog gave up on it.
+                if (d.wave.some(shell => shell.rowKey === key))
+                    continue
 
                 d.stagedKeys.add(key)
             }
@@ -1903,6 +1910,15 @@ Flickable {
                     // or the Repeater won the race and the outstanding request
                     // is what tells it to wait. Both mean the same thing.
                     shell.staged = d.claimStagedRow(shell) || d.loading
+
+                    // Staged with no key to claim - a keyless model, a shell the
+                    // Repeater built before its key was captured, or one rebuilt
+                    // while a batch is open (a model swap or reset, which no
+                    // insert announces): the batch is the shells built while it
+                    // is open, so it joins by identity. Left out, nothing would
+                    // ever reveal it.
+                    if (shell.staged && d.wave.indexOf(shell) === -1)
+                        d.wave = d.wave.concat([shell])
 
                     if (shell.staged && root.acquireBudget > 0)
                         d.enqueueAcquire(shell)
