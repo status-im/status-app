@@ -19,11 +19,24 @@ QtObject {
     readonly property bool amIChatAdmin: false
     readonly property bool isPinMessageAllowedForMembers: false
     readonly property string chatId: messageModule ? messageModule.getChatId() : ""
-    readonly property int chatType: 0
+    readonly property int chatType: messageModule?.chatType ?? 0
     readonly property string chatColor: "#4360DF"
     readonly property string chatIcon: ""
     readonly property bool keepUnread: false
     readonly property bool isChatActive: true
+    readonly property string threadId: messageModule?.threadId ?? ""
+    readonly property string threadName: messageModule?.threadName ?? ""
+    readonly property string threadParentChatName: messageModule?.threadParentChatName ?? ""
+    readonly property bool canEditThread: messageModule?.canEditThread ?? false
+    readonly property bool threadEditPending: messageModule?.threadEditPending ?? false
+
+    function editThread(name) {
+        if (!root.messageModule || !root.messageModule.editThread) {
+            console.error("editThread: mock message module is not set")
+            return
+        }
+        root.messageModule.editThread(name)
+    }
 
     onMessageModuleChanged: {
         if (messageModule)

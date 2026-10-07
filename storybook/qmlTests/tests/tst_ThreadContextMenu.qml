@@ -29,6 +29,7 @@ Item {
             pinned: false
             pinEnabled: true
             deleteEnabled: true
+            editEnabled: true
 
             // Test-only override so each test can drive the "do not show
             // again" persisted setting without touching the real Settings
@@ -196,6 +197,18 @@ Item {
             compare(muteMenu.count >= 6, true, "MuteChatMenuItem must expose all muting intervals")
             muteMenu.close()
 
+            menu.close()
+        }
+
+        function test_editPermissionAndRenameOnlyMode() {
+            const menu = createMenu({editEnabled: false, isThread: true})
+            const edit = findEntry(menu, "threadContextMenu_editName")
+            compare(edit.enabled, false)
+            compare(menu.itemAt(0).visible, false)
+            menu.editEnabled = true
+            compare(menu.itemAt(0).visible, true)
+            for (let i = 1; i < menu.count; ++i)
+                compare(menu.itemAt(i).visible, false)
             menu.close()
         }
 

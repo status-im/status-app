@@ -3314,10 +3314,6 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatView</name>
     <message>
-        <source>in %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Members</source>
         <translation>Membres</translation>
     </message>
@@ -17825,6 +17821,29 @@ This action cannot be undone.</source>
     <message>
         <source>Are you sure you want to delete this thread? It may remain visible on other participants&apos; devices.</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ThreadHeader</name>
+    <message>
+        <source>Couldn&apos;t rename thread: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Renaming...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>More</source>
+        <translation type="unfinished">Plus</translation>
     </message>
 </context>
 <context>

@@ -80,7 +80,7 @@ method load*(self: Module, chatItem: ChatItem) =
   var chatImage = chatItem.icon
   var isContact = false
   var trustStatus = TrustStatus.Unknown
-  if chatItem.`type` == ChatType.OneToOne.int:
+  if chatItem.`type` == ChatType.OneToOne.int and not chatItem.isThread:
     let contactDto = self.controller.getContactById(self.controller.getMyChatId())
     chatName = contactDto.userDefaultDisplayName()
     isContact = contactDto.isContact
@@ -101,6 +101,8 @@ method load*(self: Module, chatItem: ChatItem) =
   self.view.chatDetailsChanged()
 
   self.inputAreaModule.load()
+  if chatItem.isThread:
+    self.messagesModule.updateThreadCanView(chatItem.canView)
   self.messagesModule.load()
 
 proc checkIfModuleDidLoad(self: Module) =
@@ -337,16 +339,17 @@ method onContactDetailsUpdated*(self: Module, contactId: string) =
       let communityChats = self.controller.getCommunityDetails().chats
       item.messageText = self.controller.getRenderedText(item.parsedText, communityChats)
 
-  if self.controller.getMyChatId() == contactId:
-    self.view.updateChatDetailsNameAndIcon(updatedContact.defaultDisplayName, updatedContact.icon)
-    self.view.updateTrustStatus(updatedContact.dto.trustStatus)
-    self.view.updateChatBlocked(updatedContact.dto.blocked)
+    if self.controller.getMyChatId() == contactId:
+      if self.messagesModule.getThreadId().len == 0:
+        self.view.updateChatDetailsNameAndIcon(updatedContact.defaultDisplayName, updatedContact.icon)
+      self.view.updateTrustStatus(updatedContact.dto.trustStatus)
+      self.view.updateChatBlocked(updatedContact.dto.blocked)
 
 method onNotificationsUpdated*(self: Module, hasUnreadMessages: bool, notificationCount: int) =
   self.view.updateChatDetailsNotifications(hasUnreadMessages, notificationCount)
 
 method onChatUpdated*(self: Module, chatItem: ChatItem) =
-  if chatItem.`type` != ChatType.OneToOne.int:
+  if chatItem.`type` != ChatType.OneToOne.int or chatItem.isThread:
     self.view.chatDetails.setName(chatItem.name)
     self.view.chatDetails.setIcon(chatItem.icon)
   self.view.chatDetails.setDescription(chatItem.description)
@@ -359,6 +362,8 @@ method onChatUpdated*(self: Module, chatItem: ChatItem) =
   self.view.chatDetails.setHideIfPermissionsNotMet(chat_item.hideIfPermissionsNotMet)
   self.view.chatDetails.setMissingEncryptionKey(chat_item.missingEncryptionKey)
   self.view.chatDetails.setRequiresPermissions(chat_item.requiresPermissions)
+  if chatItem.isThread:
+    self.messagesModule.updateThreadCanView(chatItem.canView)
 
   self.messagesModule.updateChatFetchMoreMessages()
   self.messagesModule.updateChatIdentifier()
@@ -367,6 +372,7 @@ method onParentChatPermissionsUpdated*(self: Module, canPost, canView, canPostRe
   self.view.chatDetails.setCanPost(canPost)
   self.view.chatDetails.setCanView(canView)
   self.view.chatDetails.setCanPostReactions(canPostReactions)
+  self.messagesModule.updateThreadCanView(canView)
 
 method onCommunityChannelEdited*(self: Module, chatDto: ChatDto) =
   # This is CommunityChat ChatDto
@@ -376,9 +382,11 @@ method onCommunityChannelEdited*(self: Module, chatDto: ChatDto) =
   self.view.chatDetails.setMuted(chatDto.muted)
   self.view.chatDetails.setCanPost(chatDto.canPost)
   self.view.chatDetails.setCanView(chatDto.canView)
+  self.messagesModule.updateThreadCanView(chatDto.canView)
   self.view.chatDetails.setCanPostReactions(chatDto.canPostReactions)
   self.view.chatDetails.setHideIfPermissionsNotMet(chatDto.hideIfPermissionsNotMet)
-  self.view.chatDetails.setName(chatDto.name)
+  if self.messagesModule.getThreadId().len == 0:
+    self.view.chatDetails.setName(chatDto.name)
   self.view.chatDetails.setIcon(chatDto.icon)
   self.view.chatDetails.setMissingEncryptionKey(chatDto.missingEncryptionKey)
 
@@ -391,11 +399,19 @@ method onCommunityChannelEdited*(self: Module, chatDto: ChatDto) =
   self.messagesModule.updateChatIdentifier()
 
 method onChatRenamed*(self: Module, newName: string) =
-  self.view.updateChatDetailsName(newName)
+  if self.messagesModule.getThreadId().len == 0:
+    self.view.updateChatDetailsName(newName)
   self.messagesModule.updateChatIdentifier()
 
+method onThreadRenamed*(self: Module, newName: string) =
+  self.view.updateChatDetailsName(newName)
+
 method onGroupChatDetailsUpdated*(self: Module, newName: string, newColor: string, newImage: string) =
-  self.view.updateChatDetailsNameColorIcon(newName, newColor, newImage)
+  if self.messagesModule.getThreadId().len == 0:
+    self.view.updateChatDetailsNameColorIcon(newName, newColor, newImage)
+  else:
+    self.view.chatDetails.setColor(newColor)
+    self.view.chatDetails.setIcon(newImage)
   self.messagesModule.updateChatIdentifier()
 
 method onMutualContactChanged*(self: Module) =
