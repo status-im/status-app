@@ -244,6 +244,11 @@ Item {
         property Component delegate: plainDelegate
         property int delay: 0              // ms before answering; 0 = synchronously
         property bool mute: false           // answer never arrives
+        property int cost: 0                // ms of busy work per acquire, like building a row
+
+        // Every acquire, with the turn it happened in (turnTicker.count), so a
+        // test can tell whether rows were asked for across several turns.
+        property var acquireLog: []
         property bool pooled: false
 
         property int builtCount: 0
@@ -267,6 +272,9 @@ Item {
         function acquire(parent, row, modelRow, callback) {
             provider.dressedAt[row] = parent
             provider.dressedCount++
+            provider.acquireLog.push({ value: modelRow.value, turn: turnTicker.count })
+
+            for (const until = Date.now() + provider.cost; Date.now() < until;) {}
 
             const deliver = () => {
                 if (!parent || provider.mute)
@@ -329,6 +337,8 @@ Item {
             provider.acquiredCount = 0
             provider.mute = false
             provider.delay = 0
+            provider.cost = 0
+            provider.acquireLog = []
             provider.pooled = false
             provider.delegate = plainDelegate
             provider.forgetDressing()
@@ -336,6 +346,20 @@ Item {
     }
 
     Item { id: parkingLot; visible: false }
+
+    // Counts event-loop turns, roughly: two acquires with the same count ran
+    // without the loop getting a 1 ms timer through in between.
+    Timer {
+        id: turnTicker
+
+        property int count: 0
+
+        interval: 1
+        repeat: true
+        running: false
+
+        onTriggered: ++count
+    }
 
     // Deferred deliveries, all on one timer so a batch waits in parallel.
     Timer {
@@ -1443,6 +1467,126 @@ Item {
 
             fuzzyCompare(offsetOf(adjacent), view.height, 0.5,
                          "the batch ends exactly at the viewport's bottom edge")
+        }
+    }
+
+    TestCase {
+        id: pacingTests
+
+        name: "WindowedView.Pacing"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            owner.reset(root.windowSize)
+            tryVerify(() => settled(root.windowSize), 5000, "rows laid out")
+            turnTicker.running = true
+        }
+
+        function cleanup() {
+            view.acquireBudget = 0
+            provider.cost = 0
+            turnTicker.running = false
+            tryVerify(() => !view.busy, 8000)
+        }
+
+        function turns() {
+            return new Set(provider.acquireLog.map(e => e.turn)).size
+        }
+
+        function test_withoutABudgetABatchIsAcquiredInsideTheRequest() {
+            provider.acquireLog = []
+
+            verify(view.requestMoreBottom())
+            compare(provider.acquireLog.length, root.chunk,
+                    "every row of the batch was asked for in the request")
+
+            tryVerify(() => !view.busy, 5000)
+        }
+
+        function test_aBatchIsAcquiredAcrossSeveralTurns() {
+            view.acquireBudget = 8
+            provider.cost = 3
+            provider.acquireLog = []
+
+            const reveals = owner.revealCount
+
+            verify(view.requestMoreBottom())
+            compare(provider.acquireLog.length, 0, "nothing was asked for inside the request")
+            verify(view.busy)
+
+            tryVerify(() => !view.busy, 8000, "revealed")
+
+            compare(provider.acquireLog.length, root.chunk, "every row asked for once")
+            verify(turns() >= 2, "over several turns: " + turns())
+            compare(owner.revealCount, reveals + 1, "and revealed in one go")
+            compare(hiddenShells().length, 0)
+        }
+
+        function test_aFreshFillIsPacedAndRevealsOnce() {
+            view.acquireBudget = 8
+            provider.cost = 3
+
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            provider.acquireLog = []
+
+            owner.reset(root.windowSize)
+            verify(view.initialLoading, "a fresh fill")
+            compare(provider.acquireLog.length, 0, "nothing asked for while the rows were built")
+
+            tryVerify(() => settled(root.windowSize), 8000, "revealed")
+            compare(provider.acquireLog.length, root.windowSize)
+            verify(turns() >= 2, "over several turns: " + turns())
+        }
+
+        function test_aRowRemovedBeforeItsTurnIsNeverAcquired() {
+            // Rows out first, so every item is handed back before the counters
+            // are zeroed - the Cache group's order, for the same reason.
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            provider.reset()
+            provider.pooled = true
+            owner.reset(root.windowSize)
+            tryVerify(() => settled(root.windowSize), 5000, "rows laid out")
+
+            view.acquireBudget = 8
+            provider.cost = 3
+            provider.acquireLog = []
+
+            verify(view.requestMoreBottom())
+
+            // the last five rows of the batch leave before anything was asked
+            rows.remove(rows.count - 5, 5)
+            owner.admitted = root.chunk - 5
+
+            tryVerify(() => !view.busy, 8000, "revealed")
+
+            const removed = []
+            for (let v = root.windowSize + root.chunk - 5; v < root.windowSize + root.chunk; ++v)
+                removed.push(v)
+
+            compare(provider.acquireLog.filter(e => removed.indexOf(e.value) !== -1).length, 0,
+                    "the removed rows were never asked for")
+            compare(provider.acquireLog.length, root.chunk - 5)
+            compare(provider.acquiredCount, view.rowCount, "one item per row")
+            compare(provider.acquiredCount + provider.availableCount, provider.builtCount,
+                    "nothing leaked")
+        }
+
+        function test_aLiveRowIsAcquiredAtOnce() {
+            view.acquireBudget = 8
+
+            owner.appendLive()
+
+            const live = shells().filter(shell => shell.model.value === owner.liveValue)
+
+            compare(live.length, 1)
+            verify(!!live[0].content, "asked for and answered in the same turn")
         }
     }
 
