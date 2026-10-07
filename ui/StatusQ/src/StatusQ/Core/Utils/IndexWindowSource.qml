@@ -208,6 +208,7 @@ QObject {
         // Asked before the insert lands, while the counts still describe the
         // world the window was placed in.
         function onRowsAboutToBeInserted(parent, first, last) {
+            d.countBefore = root.sourceRowCount
             d.wasAtSourceEnd = d.last >= root.sourceRowCount - 1
             d.wasAtSourceStart = d.first <= 0
 
@@ -235,19 +236,27 @@ QObject {
             if (root.followsStart && d.wasAtSourceStart && !root.growing)
                 return
 
-            // The window covered the source's last row, so it still should:
-            // whatever was inserted, the last index moved by exactly this much.
-            // Counted from the signal rather than read back from the model -
-            // sourceRowCount follows ModelCount, which has not necessarily
-            // caught up by the time this runs.
+            // The window covered the source's last row, so it still should.
+            // The source's new last index is counted from the signal rather
+            // than read back from the model - sourceRowCount follows
+            // ModelCount, which has not necessarily caught up by the time this
+            // runs.
             //
-            // Both bounds move, so the window slides rather than grows and the
-            // size is kept. Doing it for any insert at or before the end, not
-            // just an append, is what covers a row landing *inside* the window:
-            // that pushes the newest one out past `last` just the same.
+            // Only what overflows the window slides it: a window larger than
+            // its source overhangs the end and has room, and the new rows fill
+            // that first - sliding by the whole insert would drop rows from the
+            // start that never needed to go. Both bounds move by the overflow,
+            // so the window slides rather than grows and the size is kept.
+            // Doing it for any insert at or before the end, not just an append,
+            // is what covers a row landing *inside* the window: that pushes the
+            // newest one out past `last` just the same.
             if (root.followsEnd && d.wasAtSourceEnd && !root.growing) {
-                d.first += inserted
-                d.last += inserted
+                const overflow = (d.countBefore - 1 + inserted) - d.last
+
+                if (overflow > 0) {
+                    d.first += overflow
+                    d.last += overflow
+                }
                 return
             }
 
@@ -291,6 +300,10 @@ QObject {
         property bool wasAtSourceEnd: false
         property bool wasAtSourceStart: false
         property bool wasOverRows: false
+
+        // The source's row count before that insert, for how far the new last
+        // row overflows the window.
+        property int countBefore: 0
 
         // How many rows each end owes once the view has revealed the batch.
         property int owedStart: 0

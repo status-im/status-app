@@ -287,6 +287,40 @@ Item {
             compare(values(source)[9], 999, "the new row is the last one shown")
         }
 
+        // A window larger than its source overhangs the end, and that counts as
+        // covering the last row too - but it has room to spare. An append lands
+        // in that room: nothing slides, and the first row stays.
+        function test_followingTheEndOfAShortSourceKeepsItsFirstRow() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.size = 60            // the source has 50 rows
+            source.followsEnd = true
+
+            source.sourceModel.append([{ key: "newest", value: 999 }])
+
+            compare(source.first, 0, "the window did not slide")
+            compare(source.model.count, 51, "it took the new row in")
+            compare(values(source)[0], 0, "the first row is still shown")
+            compare(values(source)[50], 999, "and so is the new one")
+        }
+
+        // Only the overflow slides: the room left is filled first.
+        function test_followingTheEndFillsTheRoomBeforeSliding() {
+            const source = createTemporaryObject(componentUnderTest, root)
+
+            source.size = 52            // two rows of room over 50
+            source.followsEnd = true
+
+            source.sourceModel.append([{ key: "n0", value: 900 },
+                                       { key: "n1", value: 901 },
+                                       { key: "n2", value: 902 }])
+
+            compare(source.first, 1, "slid by the one row that did not fit")
+            compare(source.last, 52)
+            compare(source.model.count, 52, "a full window")
+            compare(values(source)[51], 902, "ending at the newest row")
+        }
+
         // An insert anywhere at or before the end pushes the newest row out past
         // the window just as an append does, so following has to cover it too.
         function test_followingTheEndAbsorbsAnInsertInsideTheWindow() {
