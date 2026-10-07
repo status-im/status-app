@@ -1191,6 +1191,10 @@ Flickable {
             else
                 d.loadingBottom = false
 
+            // The provider's silence counts from here: a full interval before
+            // the watchdog may give up on rows the owner has just finished
+            // admitting. checkWaveComplete() stops it again if nothing is owed.
+            acquireTimer.restart()
             d.checkWaveComplete()
         }
 
@@ -1231,6 +1235,9 @@ Flickable {
                 return
 
             d.batchOpen = false
+
+            // As in loaded(): the provider's silence counts from here.
+            acquireTimer.restart()
             d.checkWaveComplete()
         }
 
@@ -1603,17 +1610,22 @@ Flickable {
             const arrived = d.waveArrived().length
             const waiting = d.waveWaiting().length
 
-            if (arrived === 0 && waiting === 0 && d.stagedKeys.size === 0) {
-                // Nothing is owed yet. An owner that fetches before it admits
-                // has a request outstanding here and rows still to come, so
-                // keep watching - let the detector lapse and a provider that
-                // goes silent after that admission is never caught.
-                if (d.loading)
-                    acquireTimer.restart()
-
+            // The owner is still admitting - a request not yet answered, or a
+            // batch still open - so whatever is staged is a batch it may still
+            // add to. Giving up now would reveal part of it and let the far end
+            // be trimmed before the owner is done. Keep watching instead, and
+            // count the provider's silence from when the owner finishes (that
+            // is when loaded() and endBatch() restart the detector). Re-armed,
+            // never dropped: an owner that fetches before it admits has rows
+            // still to come, and a provider that goes silent after that
+            // admission must still be caught.
+            if (d.loading) {
+                acquireTimer.restart()
                 return
             }
 
+            if (arrived === 0 && waiting === 0 && d.stagedKeys.size === 0)
+                return      // nothing is owed
 
             if (arrived === 0 && ++d.noProgressIntervals < d.maxWaitIntervals) {
                 // Nothing to reveal yet: keep waiting rather than trim against
