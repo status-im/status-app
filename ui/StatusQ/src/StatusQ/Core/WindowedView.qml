@@ -69,6 +69,14 @@ Flickable {
     // function(obj) - the item is no longer needed.
     property var releaseDelegate
 
+    // Milliseconds per event-loop turn spent asking acquireDelegate for the
+    // rows of a batch. Those rows are hidden until the whole batch reveals, so
+    // asking for them over several turns is invisible, and it keeps a large
+    // batch from blocking the GUI thread in one piece. At least one row is
+    // asked for per turn, however long it takes. 0 asks for every row in the
+    // turn it is built. A row outside any batch is always asked for at once.
+    property real acquireBudget: 0
+
     // The role that identifies a row. A fetch admits an unknown number of rows,
     // so membership in a batch is a set of keys rather than a count. A model
     // without this role still works - those rows reveal themselves individually
@@ -1420,6 +1428,37 @@ Flickable {
             }
         }
 
+        // Staged shells waiting for their turn to be acquired, oldest first.
+        property var acquireQueue: []
+
+        function enqueueAcquire(shell) {
+            d.acquireQueue.push(shell)
+
+            if (!acquireQueueTimer.running)
+                acquireQueueTimer.start()
+        }
+
+        function dequeueAcquire(shell) {
+            const i = d.acquireQueue.indexOf(shell)
+
+            if (i !== -1)
+                d.acquireQueue.splice(i, 1)
+        }
+
+        function drainAcquireQueue() {
+            const deadline = Date.now() + root.acquireBudget
+
+            do {
+                const shell = d.acquireQueue.shift()
+
+                if (shell && !shell.retired)
+                    shell.acquire()
+            } while (d.acquireQueue.length > 0 && Date.now() < deadline)
+
+            if (d.acquireQueue.length > 0)
+                acquireQueueTimer.start()
+        }
+
         // A staged row leaving the window before its shell was ever built must
         // not hold the batch open. Read on aboutToBeRemoved, while the key can
         // still be read.
@@ -1621,6 +1660,17 @@ Flickable {
         interval: 1000
 
         onTriggered: d.abandonWait()
+    }
+
+    // One slice of queued acquires per firing; a separate event-loop
+    // iteration each time, so input and rendering run in between. A Timer
+    // rather than Qt.callLater: it dies with the view.
+    Timer {
+        id: acquireQueueTimer
+
+        interval: 0
+
+        onTriggered: d.drainAcquireQueue()
     }
 
     Timer {
@@ -1837,6 +1887,15 @@ Flickable {
                     // is what tells it to wait. Both mean the same thing.
                     shell.staged = d.claimStagedRow(shell) || d.loading
 
+                    if (shell.staged && root.acquireBudget > 0)
+                        d.enqueueAcquire(shell)
+                    else
+                        shell.acquire()
+                }
+
+                // Asks for the row's content. `row` is read now, which is what
+                // a queued acquire needs: the window may have moved meanwhile.
+                function acquire() {
                     root.acquireDelegate(shell, shell.row, shell.model, (obj) => {
                         // The row can be gone by the time a deferred answer
                         // arrives. Checking the id is what works: it reads null
@@ -1869,6 +1928,7 @@ Flickable {
                 // without trace.
                 Component.onDestruction: {
                     shell.retired = true
+                    d.dequeueAcquire(shell)
 
                     // A destroyed row fires no property change, so the count
                     // it contributed is given back here.

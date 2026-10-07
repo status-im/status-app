@@ -155,6 +155,7 @@ SplitView {
         readonly property int placeholderRowHeight: 72
         readonly property int defaultPlaceholderRows: 10
         readonly property int defaultPrefetchMargin: 0
+        readonly property int defaultAcquireBudget: 0
 
         readonly property bool defaultHeader: false
         readonly property bool defaultFooter: false
@@ -413,6 +414,7 @@ SplitView {
             placeholderSwitch.checked = d.defaultPlaceholder
             placeholderRowsSpinBox.value = d.defaultPlaceholderRows
             prefetchMarginSpinBox.value = d.defaultPrefetchMargin
+            acquireBudgetSpinBox.value = d.defaultAcquireBudget
             headerSwitch.checked = d.defaultHeader
             footerSwitch.checked = d.defaultFooter
             slotHeightSpinBox.value = d.defaultSlotHeight
@@ -853,6 +855,7 @@ SplitView {
             placeholderHeight: placeholderRowsSpinBox.value
                                * d.placeholderRowHeight
             prefetchMargin: prefetchMarginSpinBox.value
+            acquireBudget: acquireBudgetSpinBox.value
 
             // With no delay this answers inside the signal, which is what an
             // index window really is - it has the rows already. With one, the
@@ -1232,6 +1235,25 @@ SplitView {
                         to: 2000
                         stepSize: 50
                         value: d.defaultPrefetchMargin
+                        editable: true
+                    }
+                }
+
+                // How long per turn the view may spend asking for the rows of
+                // a batch; 0 asks for all of them at once.
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Label { text: "Acquire budget (ms)" }
+
+                    SpinBox {
+                        id: acquireBudgetSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 0
+                        to: 50
+                        value: d.defaultAcquireBudget
                         editable: true
                     }
                 }
@@ -1813,6 +1835,7 @@ SplitView {
         property alias autoRequest: autoRequestSwitch.checked
         property alias placeholderRows: placeholderRowsSpinBox.value
         property alias prefetchMargin: prefetchMarginSpinBox.value
+        property alias acquireBudget: acquireBudgetSpinBox.value
         property alias header: headerSwitch.checked
         property alias footer: footerSwitch.checked
         property alias slotHeight: slotHeightSpinBox.value
