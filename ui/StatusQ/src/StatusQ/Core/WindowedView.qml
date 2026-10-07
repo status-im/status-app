@@ -75,6 +75,8 @@ Flickable {
     // batch from blocking the GUI thread in one piece. At least one row is
     // asked for per turn, however long it takes. 0 asks for every row in the
     // turn it is built. A row outside any batch is always asked for at once.
+    // The queue pauses while the view is invisible, so a hidden view takes no
+    // row content until it is shown again.
     property real acquireBudget: 0
 
     // The role that identifies a row. A fetch admits an unknown number of rows,
@@ -1433,8 +1435,13 @@ Flickable {
 
         function enqueueAcquire(shell) {
             d.acquireQueue.push(shell)
+            d.resumeAcquireQueue()
+        }
 
-            if (!acquireQueueTimer.running)
+        // Started only while the view is visible; onVisibleChanged resumes it.
+        function resumeAcquireQueue() {
+            if (root.visible && d.acquireQueue.length > 0
+                    && !acquireQueueTimer.running)
                 acquireQueueTimer.start()
         }
 
@@ -1446,6 +1453,10 @@ Flickable {
         }
 
         function drainAcquireQueue() {
+            // Hidden since the slice was scheduled: wait to be shown.
+            if (!root.visible)
+                return
+
             const deadline = Date.now() + root.acquireBudget
 
             do {
@@ -1455,8 +1466,7 @@ Flickable {
                     shell.acquire()
             } while (d.acquireQueue.length > 0 && Date.now() < deadline)
 
-            if (d.acquireQueue.length > 0)
-                acquireQueueTimer.start()
+            d.resumeAcquireQueue()
         }
 
         // A staged row leaving the window before its shell was ever built must
@@ -1575,6 +1585,13 @@ Flickable {
         // up, so a merely slow provider costs one deferred reveal rather than a
         // row-by-row crawl of the content height.
         function abandonWait() {
+            // Rows held back by the paused queue are not a silent provider:
+            // nothing was asked for, so there is nothing to give up on.
+            if (!root.visible && d.acquireQueue.length > 0) {
+                acquireTimer.restart()
+                return
+            }
+
             const arrived = d.waveArrived().length
             const waiting = d.waveWaiting().length
 
@@ -1992,6 +2009,8 @@ Flickable {
     }
 
     onInitialLoadingChanged: d.applyPlaceholder()
+
+    onVisibleChanged: d.resumeAcquireQueue()
 
     Component.onCompleted: {
         if (!root.acquireDelegate || !root.releaseDelegate)
