@@ -106,6 +106,7 @@ Item {
 
         SearchBox {
             id: searchBox
+            objectName: "followingAddressesSearchBox"
             Layout.fillWidth: true
             Layout.bottomMargin: Theme.padding
             visible: true
@@ -192,6 +193,7 @@ Item {
 
     ColumnLayout {
         id: noFollowingAddresses
+        objectName: "followingAddressesEmptyState"
         anchors.centerIn: parent
         width: parent.width - 2 * Theme.bigPadding
         visible: root.totalFollowingCount === 0 && !d.isPaginationLoading
