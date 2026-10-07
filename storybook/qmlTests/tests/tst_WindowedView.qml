@@ -1912,7 +1912,8 @@ Item {
 
         // A provider that never answers must not leave the window oversized and
         // both directions disabled for good. The slide completes - flags cleared,
-        // far end trimmed - and the rows that never came stay staged.
+        // far end trimmed - the rows that never came stay hidden, and the view
+        // is free to page again rather than waiting on them for ever.
         function test_aProviderThatNeverAnswersStillCompletesTheSlide() {
             ignoreWarning(/WindowedView: nothing arrived in/)
             provider.mute = true
@@ -1924,7 +1925,26 @@ Item {
             compare(view.loadingBottom, false)
             compare(view.rowCount, root.windowSize, "the far end was trimmed anyway")
             compare(hiddenShells().length, root.chunk,
-                    "and the rows that never arrived are still staged, not shown")
+                    "the rows that never arrived are not shown")
+            compare(view.staging, false, "and are no longer waited for")
+            compare(view.busy, false, "so paging is possible again")
+        }
+
+        // Given up on is not thrown away: a row whose content turns up after
+        // the watchdog gave up shows itself, on its own.
+        function test_contentArrivingAfterTheWatchdogShowsItself() {
+            ignoreWarning(/WindowedView: nothing arrived in/)
+            provider.delay = 4500       // past the watchdog's three 1 s intervals
+
+            verify(view.requestMoreBottom())
+
+            tryVerify(() => owner.revealCount === 1 && !view.busy, 8000,
+                      "the watchdog gave up first")
+            compare(hiddenShells().length, root.chunk, "with nothing to show yet")
+
+            tryVerify(() => hiddenShells().length === 0, 5000,
+                      "the late rows showed up")
+            compare(owner.revealCount, 1, "each on its own, not as a second batch")
         }
     }
 
@@ -2307,8 +2327,8 @@ Item {
 
             tryVerify(() => !view.initialLoading, 8000, "the watchdog ended it")
             compare(owner.revealCount, 1, "the fill completed, with nothing to show")
-            compare(hiddenShells().length, 20,
-                    "and the rows that never arrived are still staged")
+            compare(hiddenShells().length, 20, "the rows that never arrived are not shown")
+            compare(view.busy, false, "and the view is not left busy for good")
         }
     }
 

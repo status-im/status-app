@@ -1234,13 +1234,6 @@ Flickable {
             d.checkWaveComplete()
         }
 
-        // Reveals the rows of the current wave that have arrived, and - on the
-        // first wave of a slide - drops the far end. Rows still waiting stay
-        // staged and become the next wave, so a slow row delays its own reveal
-        // instead of dragging the content height along one row at a time.
-        //
-        // No measurement here: the held anchor restores the position, now and
-        // again whenever the rows move as their deferred layout settles.
         // A reveal the user sees only as placeholder - scrolled so far into
         // the band at the requested edge that no row is on screen - lands the
         // batch at the viewport's far edge instead of wherever the held row's
@@ -1289,6 +1282,13 @@ Flickable {
                      offset: d.requestedAtTop ? root.height : -outermost.height }
         }
 
+        // Reveals the rows of the current wave that have arrived, and - on the
+        // first wave of a slide - drops the far end. Rows still waiting are
+        // left in the wave; only the watchdog ever completes a wave with rows
+        // still owed, and it lets go of them straight after (abandonWait).
+        //
+        // No measurement here: the held anchor restores the position, now and
+        // again whenever the rows move as their deferred layout settles.
         function completeWave() {
             settleTimer.stop()
             d.finishing = true
@@ -1328,8 +1328,7 @@ Flickable {
             d.restorePosition()
 
             // Not re-armed here: an arrival does that, so a wave still owed
-            // rows gets a fresh interval each time one lands, and a provider
-            // gone silent for good just leaves its rows hidden.
+            // rows gets a fresh interval each time one lands.
             acquireTimer.stop()
             d.finishing = false
         }
@@ -1585,12 +1584,14 @@ Flickable {
             d.beginSettling()
         }
 
-        // No progress for a whole interval. Giving up on *waiting* must not mean
-        // giving up on batching: the slide completes - far end trimmed, flags
-        // cleared, position restored - and whatever has not arrived stays staged
-        // as the next wave. Those rows then reveal together whenever they turn
-        // up, so a merely slow provider costs one deferred reveal rather than a
-        // row-by-row crawl of the content height.
+        // No progress for a whole interval. The slide completes - far end
+        // trimmed, flags cleared, position restored - with whatever has
+        // arrived, and the rows still owed are let go of: they leave the wave,
+        // so the view is no longer busy on their account and can page again,
+        // and each shows itself if its content ever turns up. Keeping them as
+        // a next wave would batch their eventual reveal, but a provider that
+        // never answers would then hold the view busy - every request refused,
+        // and an emptied first fill left blank - for good.
         function abandonWait() {
             // Rows held back by the paused queue are not a silent provider:
             // nothing was asked for, so there is nothing to give up on.
@@ -1624,15 +1625,22 @@ Flickable {
             if (arrived > 0)
                 console.warn("WindowedView: no progress for",
                              acquireTimer.interval + "ms; revealing", arrived,
-                             "rows and holding", waiting, "for the next wave")
+                             "rows;", waiting, "will show as their content arrives")
             else
                 console.warn("WindowedView: nothing arrived in",
                              d.noProgressIntervals * acquireTimer.interval + "ms;",
-                             waiting, "rows stay staged and reveal together when they do")
+                             waiting, "rows will show as their content arrives")
 
             // Rows that were never built cannot be waited on any longer.
             d.stagedKeys = new Set()
             d.completeWave()
+
+            // Let go of the rows still owed. Unstaged, a late answer reveals
+            // its row directly (see the shell's acquire callback).
+            for (let i = 0; i < d.wave.length; ++i)
+                d.wave[i].staged = false
+
+            d.wave = []
         }
 
     }
@@ -1677,7 +1685,7 @@ Flickable {
     // Stall detector for the wait itself, re-armed by every row that arrives,
     // so it fires only after a whole interval with no progress at all - a
     // wedged batch, not a slow one. Without it a provider that never answers
-    // leaves the window oversized and both slide directions disabled for good.
+    // leaves the window oversized and the view busy for good.
     Timer {
         id: acquireTimer
 
