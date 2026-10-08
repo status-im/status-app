@@ -349,6 +349,15 @@ QtObject:
     for key in keys:
       self.threadMsgCursor.del(key)
 
+  # True once loading has reached the chat's (or the thread's) oldest stored
+  # message. Asking creates no cursor: an initialized one changes how received
+  # messages are handled.
+  proc isHistoryExhausted*(self: Service, chatId: string, threadId: string = ""): bool =
+    if threadId.len > 0:
+      let key = self.getThreadMessageCursorKey(chatId, threadId)
+      return self.threadMsgCursor.hasKey(key) and self.threadMsgCursor[key].isMostRecent()
+    return self.msgCursor.hasKey(chatId) and self.msgCursor[chatId].isMostRecent()
+
   proc initOrGetMessageCursor(self: Service, chatId: string): MessageCursor =
     if(not self.msgCursor.hasKey(chatId)):
       self.msgCursor[chatId] = initMessageCursor(value="", pending=false, mostRecent=false)
