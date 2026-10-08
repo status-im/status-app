@@ -67,7 +67,17 @@ class DerivationPathName(Enum):
 
 
 class WalletAddress(Enum):
-    RECEIVER_ADDRESS = '0x3286c371ef648fe6232324b27ee0515f4ded24d9'
+    # Using same address as sender is intentional, to save tokens so they are returning to the same account and not lost
+    RECEIVER_ADDRESS = '0x44ddd47A0c7681A5b0fa080a56CBB7701db4BB43'
+
+
+class WalletCollectibleCollections(Enum):
+    ERC721_FAUCET = 'ERC-721 Faucet'
+
+
+class WalletCollectibleTokenType(IntEnum):
+    ERC721 = 2
+    ERC1155 = 3
 
 
 class WalletTokenSymbols(Enum):

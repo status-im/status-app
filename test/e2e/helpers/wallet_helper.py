@@ -46,6 +46,19 @@ def is_assets_tab_content_loaded(asset_item) -> bool:
     return bool(items) and all(not getattr(item, 'balanceLoading', False) for item in items)
 
 
+def find_network_option_item(network_name: str, network_options: list):
+    """Match a network selector delegate by objectName suffix (spaces omitted in QML ids)."""
+    normalized = network_name.replace(' ', '')
+    available = [str(getattr(item, 'objectName', '')) for item in network_options]
+    for item in network_options:
+        obj_name = str(getattr(item, 'objectName', ''))
+        if obj_name.endswith(network_name) or obj_name.endswith(normalized):
+            return item
+    raise AssertionError(
+        f'Network "{network_name}" not found in available networks: {available}'
+    )
+
+
 def is_activity_tab_content_loaded() -> bool:
     views = driver.findAllObjects(wallet_names.activity_history_view)
     try:

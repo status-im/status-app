@@ -3,8 +3,6 @@ import time
 import allure
 import typing
 
-import pyperclip
-
 import configs.timeouts
 import driver
 from driver.objects_access import walk_children
@@ -15,6 +13,7 @@ from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import names
+from helpers.wallet_helper import find_network_option_item
 
 
 class SendPopup(QObject):
@@ -36,7 +35,6 @@ class SendPopup(QObject):
         self.tokens_list = QObject(names.statusListView)
         self.asset_list_item = QObject(names.o_TokenBalancePerChainDelegate_template)
         self.ens_address_text_input = TextEdit(names.ens_or_address_text_input)
-        self.ens_address_paste_button = Button(names.ens_or_address_paste_button)
 
     @property
     @allure.step('Get selected recipient address')
@@ -63,52 +61,35 @@ class SendPopup(QObject):
     def select_network(self, network_name):
         self.send_modal_network_filter.click()
         network_options = driver.findAllObjects(self.send_modal_network_item.real_name)
-        assert network_options, f'Network options are not displayed'
-        
-        # Build list of available networks and try to find exact match
-        available_networks = []
-        matched_item = None
-        # Normalize the network name for comparison (remove spaces for objectName matching)
-        normalized_network_name = network_name.replace(' ', '')
-        
-        for item in network_options:
-            obj_name = str(getattr(item, 'objectName', ''))
-            available_networks.append(obj_name)
-            # Check if objectName ends with the network name (with or without spaces)
-            # objectName format is typically "networkSelectorDelegate_NetworkName" (no spaces)
-            if obj_name.endswith(network_name) or obj_name.endswith(normalized_network_name):
-                matched_item = item
-                break
-        
-        # If we found a match, click it
-        if matched_item:
-            QObject(matched_item).click()
-            time.sleep(0.2)  # allow network selector component to hide
-        else:
-            # Network not found - fail with helpful error message
-            raise AssertionError(f'Network "{network_name}" not found in available networks: {available_networks}')
-        
+        assert network_options, 'Network options are not displayed'
+        QObject(find_network_option_item(network_name, network_options)).click()
+        time.sleep(0.2)
         return self
+
+    @staticmethod
+    def _same_address(actual: str, expected: str) -> bool:
+        return actual.strip().lower() == expected.strip().lower()
+
+    def _recipient_is_selected(self, address: str) -> bool:
+        try:
+            return self._same_address(self.selected_recipient_address, address)
+        except (LookupError, RuntimeError, AttributeError):
+            return False
 
     @allure.step('Select address from suggestions if available')
     def select_from_suggestions_if_shown(self, address: str):
-        """Check if recipient suggestions panel appears and select the matching address if it does"""
+        """Pick a suggestion whose title or address matches. Named accounts use the address role."""
         try:
-            # Check if suggestions panel is visible with a short timeout
-            if self._send_modal_recipient_panel.is_visible:
-                # Find all recipient delegates
-                delegates = driver.findAllObjects(self.send_modal_recipient_delegate.real_name)
-                if delegates:
-                    # Find the delegate with title matching the address
-                    for delegate in delegates:
-                        delegate_title = str(getattr(delegate, 'title', '')).lower()
-                        # Compare addresses (case-insensitive)
-                        if delegate_title == address.lower():
-                            QObject(delegate).click()
-                            time.sleep(0.2)  # brief wait for selection to register
-                            return True
+            if not self._send_modal_recipient_panel.is_visible:
+                return False
+            for delegate in driver.findAllObjects(self.send_modal_recipient_delegate.real_name):
+                title = str(getattr(delegate, 'title', ''))
+                delegate_address = str(getattr(delegate, 'address', ''))
+                if self._same_address(title, address) or self._same_address(delegate_address, address):
+                    QObject(delegate).click()
+                    time.sleep(0.2)
+                    return True
         except Exception:
-            # If panel is not visible or any error occurs, just continue
             pass
         return False
 
@@ -122,6 +103,25 @@ class SendPopup(QObject):
     def open_sign_send_modal(self):
         self.send_modal_review_send_button.click()
         return SignSendModalPopup().wait_until_appears()
+
+    def _set_recipient_address(self, address: str, wait_for_field: bool = False):
+        if wait_for_field:
+            self.ens_address_text_input.wait_until_appears(
+                timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+            )
+        self.ens_address_text_input.click()
+        self.ens_address_text_input.set_text_property(address)
+        driver.waitFor(
+            lambda: self._recipient_is_selected(address),
+            configs.timeouts.RECIPIENT_VALIDATION_MSEC,
+        )
+        if not self._recipient_is_selected(address):
+            self.select_from_suggestions_if_shown(address)
+
+        assert driver.waitFor(
+            lambda: self._recipient_is_selected(address),
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), f'Recipient {address} was not selected'
 
     def _parse_amount(self, raw: str) -> float:
         if not raw:
@@ -194,28 +194,25 @@ class SendPopup(QObject):
         return self
 
     @allure.step('Send {2} {3} to {1}')
-    def sign_and_send(self, address: str, amount: str, asset: str):
+    def sign_and_send(self, address: str, amount: str, asset: str, collectible_collection: str = ''):
         token_selector = self.open_token_selector()
 
         if asset:
             token_selector.select_asset_from_list(asset_name=asset)
             self.wait_until_send_balance_ready()
             self.send_modal_amount_field.text = amount
-            self.ens_address_text_input.click()
-            pyperclip.copy(address)
-            self.ens_address_paste_button.click()
-            assert address in self.ens_address_text_input.text
-            self.select_from_suggestions_if_shown(address)
-
+            time.sleep(1)
+            self._set_recipient_address(address)
         else:
             search_view = token_selector.open_collectibles_search_view()
-            search_view.select_random_collectible()
-            self.ens_address_text_input.wait_until_appears(timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-            self.ens_address_text_input.click()
-            pyperclip.copy(address)
-            self.ens_address_paste_button.click()
-            assert address in self.ens_address_text_input.text
-            self.select_from_suggestions_if_shown(address)
+            if collectible_collection:
+                search_view.select_collectible_from_collection(collectible_collection)
+            else:
+                search_view.select_random_collectible()
+            self._set_recipient_address(
+                address,
+                wait_for_field=True,
+            )
 
         self.wait_for_review_send_ready()
 

@@ -21,6 +21,7 @@ from gui.components.wallet.dapps_workflow import DappsWorkflow
 from gui.components.wallet.delete_account_confirmation_popup import RemoveAccountWithConfirmation
 from gui.components.wallet.receive_popup import ReceivePopup
 from gui.components.wallet.send_popup import SendPopup
+from helpers.wallet_helper import find_network_option_item
 from gui.components.wallet.swap_popup import SwapPopup
 from gui.components.wallet.wallet_account_context_menu import WalletAccountContextMenu
 from gui.components.wallet.wallet_account_popups import AccountPopup
@@ -297,6 +298,13 @@ def compact_address(addr: str, chars: int = 4) -> str:
     return f'{addr[:2 + chars]}...{addr[-chars:]}'
 
 
+def _history_party_matches(actual: str, expected: str) -> bool:
+    if not actual or not expected:
+        return False
+    variants = {expected, compact_address(expected)}
+    return actual in variants or actual.lower() in {variant.lower() for variant in variants}
+
+
 _HISTORY_TIMESTAMP_SKEW_SEC = 180
 
 
@@ -326,9 +334,9 @@ class TransactionRecord:
         to_address: str | None = None,
         amount: str | None = None,
     ) -> bool:
-        if self.networkName != network_name or self.fromAddress != from_address:
+        if self.networkName != network_name or not _history_party_matches(self.fromAddress, from_address):
             return False
-        if to_address is not None and self.toAddress != compact_address(to_address):
+        if to_address is not None and not _history_party_matches(self.toAddress, to_address):
             return False
         if amount is not None and amount not in self.transactionValue:
             return False
@@ -360,6 +368,8 @@ class WalletAccountView(QObject):
         self._collectibles_empty_placeholder = QObject(wallet_names.collectibles_empty_placeholder)
         self._arrow_icon = QObject(wallet_names.arrow_icon_StatusIcon)
         self.footer_swap_button = Button(wallet_names.mainWindow_Swap_Button)
+        self._network_filter = QObject(wallet_names.walletHeaderNetworkFilter)
+        self._network_selector_item = QObject(wallet_names.walletNetworkSelectorItem)
 
     @property
     @allure.step('Get name of account')
@@ -422,6 +432,7 @@ class WalletAccountView(QObject):
         self,
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         loading_timeout_msec: int | None = configs.timeouts.COLLECTIBLES_SYNC_TIMEOUT_MSEC,
+        require_items: bool = False,
     ):
         self._collectibles_view.wait_until_appears(timeout_msec)
 
@@ -431,16 +442,19 @@ class WalletAccountView(QObject):
                 return False
             if items:
                 return True
+            if require_items:
+                return False
             try:
                 return self._collectibles_empty_placeholder.is_visible
             except (LookupError, RuntimeError, AttributeError):
                 return False
 
-        _wait_until(
-            collectibles_loaded,
-            loading_timeout_msec,
-            'Collectibles tab did not finish loading',
+        error_message = (
+            'Collectibles did not appear on the Collectibles tab'
+            if require_items
+            else 'Collectibles tab did not finish loading'
         )
+        _wait_until(collectibles_loaded, loading_timeout_msec, error_message)
         return self
 
     @allure.step('Wait for History tab content to finish loading')
@@ -478,6 +492,7 @@ class WalletAccountView(QObject):
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         wait_until_loaded: bool = True,
         loading_timeout_msec: int | None = configs.timeouts.COLLECTIBLES_SYNC_TIMEOUT_MSEC,
+        require_items: bool = False,
     ):
         self._collectibles_tab_button.click()
         assert driver.waitFor(
@@ -486,7 +501,11 @@ class WalletAccountView(QObject):
         ), 'Collectibles tab did not become selected'
         if not wait_until_loaded:
             return self
-        self.wait_for_collectibles_tab_content_loaded(timeout_msec, loading_timeout_msec)
+        self.wait_for_collectibles_tab_content_loaded(
+            timeout_msec,
+            loading_timeout_msec,
+            require_items=require_items,
+        )
         return self
 
     @allure.step('Open History tab')
@@ -515,6 +534,22 @@ class WalletAccountView(QObject):
             TransactionRecord(item)
             for item in driver.findAllObjects(self._activity_delegate.real_name)
         ]
+
+    @allure.step('Enable networks in wallet header filter')
+    def enable_networks(self, *network_names: str):
+        self._network_filter.click()
+        network_options = driver.findAllObjects(self._network_selector_item.real_name)
+        assert network_options, 'Wallet network options are not displayed'
+
+        for network_name in network_names:
+            matched_item = find_network_option_item(network_name, network_options)
+            check_state = getattr(matched_item, 'checkState', 0)
+            if int(check_state or 0) == 0:
+                QObject(matched_item).click()
+                time.sleep(0.2)
+
+        driver.type(self.object, '<Escape>')
+        return self
 
     @allure.step('Wait for new History transaction')
     def wait_for_new_history_transaction(

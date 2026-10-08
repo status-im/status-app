@@ -37,6 +37,7 @@ community_member = UserAccount('member', '1111111111', [None], None)
 
 wallet_load = UserAccount('wallet_load', '1111111111', [None], None)
 wallet_load_alex = UserAccount('wallet_load_alex', '1111111111', [None], None)
+funds = UserAccount('funds', '1111111111', [None], '0x44ddd47a0c7681a5b0fa080a56cbb7701db4bb43')
 status_community_member = UserAccount('status_community_member', '1111111111', [None], None)
 
 message_sync_user = UserAccount('message_sync_user', '1111111111', [None], None)
