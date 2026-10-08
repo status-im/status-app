@@ -1097,9 +1097,6 @@ tokenSelectorBackButton = {"container": statusDesktop_mainWindow_overlay, "id": 
                            "type": "StatusIconTextButton", "unnamed": 1, "visible": True}
 tokenSelectorSearchBar = {"container": statusDesktop_mainWindow_overlay, "objectName": "collectiblesSearchBox",
                           "type": "TokenSearchBox", "visible": True}
-# tokenSelectorSearchBarBaseInput = {"container": tokenSelectorSearchBar, "objectName": "statusBaseInput", "occurrence": 2, "type": "StatusBaseInput", "visible": True}
-tokenSelectorSearchBarTextEdit = {"container": tokenSelectorSearchBar, "id": "edit", "type": "TextEdit", "unnamed": 1,
-                                  "visible": True}
 
 """Send contact request modal"""
 sendContactRequestModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "SendContactRequestModal",

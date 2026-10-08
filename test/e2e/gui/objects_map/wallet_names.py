@@ -27,6 +27,11 @@ savedAddresses_area = {"container": mainWindow_SavedAddressesView_2, "objectName
 # Wallet Account View
 mainWindow_RightTabView = {"container": statusDesktop_mainWindow, "type": "RightTabView", "unnamed": 1, "visible": True}
 mainWallet_Account_Name = {"container": mainWindow_RightTabView, "objectName": "walletHeaderTitle", "type": "StatusBaseText", "visible": True}
+walletHeaderNetworkFilter = {"container": mainWindow_RightTabView, "objectName": "walletHeaderNetworkFilter",
+                             "type": "NetworkFilter", "visible": True}
+walletNetworkSelectorItem = {"container": statusDesktop_mainWindow_overlay,
+                             "objectName": RegularExpression("networkSelectorDelegate_*"),
+                             "type": "NetworkSelectItemDelegate", "visible": True}
 wallet_dapps_combo_box = {"container": mainWindow_RightTabView, "objectName": "walletDappsComboBox", "type": "DappsComboBox", "visible": True}
 mainWindow_Send_Button = {"container": statusDesktop_mainWindow, "objectName": "walletFooterSendButton", "type": "StatusFlatButton", "visible": True}
 mainWindow_Receive_Button = {"checkable": False, "container": statusDesktop_mainWindow, "objectName": "walletFooterReceiveButton", "type": "StatusFlatButton", "visible": True}

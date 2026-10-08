@@ -7,6 +7,7 @@ from constants.wallet import (
     WalletAddress,
     WalletHistoryTitles,
     WalletNetworkNaming,
+    WalletNetworkSettings,
 )
 from gui.components.wallet.send_popup import SendPopup
 from helpers.wallet_helper import (
@@ -53,6 +54,6 @@ def test_wallet_send_0_eth(main_window, user_account, receiver_account_address, 
             titles=WalletHistoryTitles.SEND,
             network_name=network_name,
             sent_at=sent_at,
-            to_address=receiver_account_address,
+            to_address=WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value,
             amount=amount,
         )
