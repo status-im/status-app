@@ -89,7 +89,8 @@ inline void appendUtf8(std::string& out, unsigned cp) {
   }
 }
 
-// Decodes the escape after "\u"; unpaired surrogates become U+FFFD.
+// Decodes the escape after "\u"; unpaired surrogates become U+FFFD. U+0000 becomes '?'
+// because arguments reach status-go as C strings, where a NUL would truncate them.
 inline bool readUnicodeEscape(const char*& p, const char* end, std::string& out) {
   unsigned cp = 0;
   if (!readHex4(p, end, cp)) return false;
@@ -107,6 +108,8 @@ inline bool readUnicodeEscape(const char*& p, const char* end, std::string& out)
     cp = 0xFFFD;
   } else if (cp >= 0xDC00 && cp <= 0xDFFF) {
     cp = 0xFFFD;
+  } else if (cp == 0) {
+    cp = '?';
   }
   appendUtf8(out, cp);
   return true;

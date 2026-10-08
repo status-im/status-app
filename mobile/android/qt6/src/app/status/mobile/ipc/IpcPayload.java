@@ -111,11 +111,6 @@ public final class IpcPayload implements Parcelable, AutoCloseable {
         return buffer();
     }
 
-    public String readJson() throws ErrnoException {
-        if (inlineUtf8 != null) return new String(inlineUtf8, StandardCharsets.UTF_8);
-        return StandardCharsets.UTF_8.decode(buffer()).toString();
-    }
-
     @Override
     public void close() {
         if (mappedBuffer != null) {
