@@ -10,12 +10,14 @@
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QTemporaryDir>
 
 #include <QtGui/private/qhighdpiscaling_p.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuick/private/qquickimagebase_p.h>
 #include <QtQuick/private/qquickimagebase_p_p.h>
 
+#include <StatusQ/rendersizedimage.h>
 #include <StatusQ/typesregistration.h>
 
 namespace {
@@ -63,6 +65,33 @@ private slots:
     {
         for (auto screen : QGuiApplication::screens())
             QHighDpiScaling::setScreenFactor(screen, 1.0);
+    }
+
+    void knownNativeSizesStayBounded()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const int sources = RenderSizedImage::maxKnownNativeSizes + 100;
+        QImage pixels(8, 8, QImage::Format_ARGB32);
+        pixels.fill(Qt::red);
+
+        QQmlComponent component(m_engine);
+        component.setData(R"(
+            import QtQuick
+            import StatusQ.Components
+            StatusImage { width: 4; height: 4; fillMode: Image.PreserveAspectCrop }
+        )", QUrl());
+        std::unique_ptr<QObject> image(component.create());
+        QVERIFY2(image, qPrintable(component.errorString()));
+
+        for (int i = 0; i < sources; ++i) {
+            const QString path = dir.filePath(QStringLiteral("%1.png").arg(i));
+            QVERIFY(pixels.save(path));
+            image->setProperty("source", QUrl::fromLocalFile(path));
+            QTRY_COMPARE(image->property("status").toInt(), int(QQuickImageBase::Ready));
+            QVERIFY(RenderSizedImage::knownNativeSizeCount() <= RenderSizedImage::maxKnownNativeSizes);
+        }
+        QCOMPARE(RenderSizedImage::knownNativeSizeCount(), RenderSizedImage::maxKnownNativeSizes);
     }
 
     void dprChangesKeepSourceSizeLogical_data()

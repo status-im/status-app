@@ -21,11 +21,15 @@ class RenderSizedImage : public QQuickImage
 
 public:
     static constexpr int maxDecodeSide = 2048;
+    // Bound of the process-wide, GUI-thread-only LRU of native source sizes (~80 B each)
+    static constexpr int maxKnownNativeSizes = 512;
 
     explicit RenderSizedImage(QQuickItem* parent = nullptr);
 
     void setSourceSize(const QSize& size) override;
     bool explicitlySized() const;
+
+    static int knownNativeSizeCount();
 
 signals:
     void explicitlySizedChanged();

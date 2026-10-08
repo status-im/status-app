@@ -1,6 +1,6 @@
 #include "StatusQ/rendersizedimage.h"
 
-#include <QtCore/QHash>
+#include <QtCore/QCache>
 #include <QtCore/QtMath>
 #include <QtQml/QQmlContext>
 #include <QtQuick/private/qquickimage_p_p.h>
@@ -8,14 +8,13 @@
 namespace {
 
 // Native sizes of decoded sources, so a cover decode of a source smaller than its box is
-// requested at native size instead of upscaled.
-QHash<QUrl, QSize>& nativeSizes()
+// requested at native size instead of upscaled. Keyed by the URL's hash to keep entries
+// small; only touched on the GUI thread (load() and pixmapChange()).
+QCache<size_t, QSize>& nativeSizes()
 {
-    static QHash<QUrl, QSize> sizes;
+    static QCache<size_t, QSize> sizes(RenderSizedImage::maxKnownNativeSizes);
     return sizes;
 }
-
-constexpr int maxKnownNativeSizes = 4096;
 
 bool isRenderSizedFillMode(QQuickImage::FillMode mode)
 {
@@ -94,7 +93,8 @@ public:
         if (sourcesize.height() > 0)
             ratio = qMax(ratio, qreal(decodeBox.height()) / sourcesize.height());
 
-        const QSize native = nativeSizes().value(resolvedUrl());
+        const QSize* known = nativeSizes().object(qHash(resolvedUrl()));
+        const QSize native = known ? *known : QSize();
         nativeKnown = !native.isEmpty();
         if (cover && nativeKnown && sourcesize.width() > 0 && sourcesize.height() > 0) {
             const qreal nativeRatio = qMin(qreal(native.width()) / sourcesize.width(),
@@ -160,6 +160,11 @@ void RenderSizedImage::setSourceSize(const QSize& size)
     pixmapChange();
 }
 
+int RenderSizedImage::knownNativeSizeCount()
+{
+    return nativeSizes().size();
+}
+
 bool RenderSizedImage::explicitlySized() const
 {
     Q_D(const RenderSizedImage);
@@ -183,10 +188,7 @@ void RenderSizedImage::pixmapChange()
         const bool upscaled = d->currentPix->width() > native.width()
                 || d->currentPix->height() > native.height();
 
-        auto& sizes = nativeSizes();
-        if (sizes.size() >= maxKnownNativeSizes)
-            sizes.clear();
-        sizes.insert(d->resolvedUrl(), native);
+        nativeSizes().insert(qHash(d->resolvedUrl()), new QSize(native));
 
         // Only the first cover decode of a source smaller than its box can upscale; the
         // reload is requested at native size.
