@@ -131,6 +131,27 @@ Item {
             compare(buttonText, null)
         }
 
+        function test_iconBackgroundSize_data() {
+            return [
+                { tag: "background larger than icon", bgWidth: 40, bgHeight: 36, expectedWidth: 40, expectedHeight: 36 },
+                { tag: "background smaller than icon", bgWidth: 12, bgHeight: 16, expectedWidth: 24, expectedHeight: 24 },
+            ]
+        }
+
+        function test_iconBackgroundSize(data) {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                                                         "icon.name": "gif",
+                                                         "asset.bgWidth": data.bgWidth,
+                                                         "asset.bgHeight": data.bgHeight
+                                                     })
+            verify(!!controlUnderTest)
+
+            const buttonIcon = findChild(controlUnderTest, "buttonIcon")
+            verify(!!buttonIcon)
+            tryCompare(buttonIcon, "width", data.expectedWidth)
+            tryCompare(buttonIcon, "height", data.expectedHeight)
+        }
+
         function test_roundIcon() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, { "icon.name": "gif", "isRoundIcon": true })
             verify(!!controlUnderTest)

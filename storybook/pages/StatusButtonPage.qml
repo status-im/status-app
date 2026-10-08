@@ -258,8 +258,10 @@ SplitView {
             ColumnLayout {
                 width: parent.width
                 RowLayout {
+                    Layout.fillWidth: true
                     Label { text: "Text:" }
                     TextField {
+                        Layout.fillWidth: true
                         id: ctrlText
                         placeholderText: "Button text"
                         text: "Foobar"
@@ -276,16 +278,20 @@ SplitView {
                     }
                 }
                 RowLayout {
+                    Layout.fillWidth: true
                     Label { text: "Icon name:" }
                     TextField {
+                        Layout.fillWidth: true
                         id: ctrlIconName
                         placeholderText: "Icon name"
                         text: "gif"
                     }
                 }
                 RowLayout {
+                    Layout.fillWidth: true
                     Label { text: "Emoji:" }
                     TextField {
+                        Layout.fillWidth: true
                         id: ctrlEmoji
                         text: "💩"
                     }
@@ -295,14 +301,17 @@ SplitView {
                     }
                 }
                 RowLayout {
+                    Layout.fillWidth: true
                     Label { text: "Tooltip:" }
                     TextField {
+                        Layout.fillWidth: true
                         id: ctrlTooltip
                         placeholderText: "Tooltip"
                         text: "Sample tooltip"
                     }
                 }
                 RowLayout {
+                    Layout.fillWidth: true
                     Label { text: "Type:" }
                     ComboBox {
                         id: ctrlType
