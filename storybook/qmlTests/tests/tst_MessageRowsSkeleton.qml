@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import StatusQ.Core.Theme
+
 import AppLayouts.Chat.panels
 
 Item {
@@ -44,6 +46,31 @@ Item {
                            `${rows.height} px of rows for ${height} px, stacked from the `
                            + (stackFromTop ? "top" : "bottom"))
                 }
+            }
+        }
+
+        // The fake rows line up with the real ones: StatusMessage's side
+        // margins, its 40 px avatar, and its gap between avatar and text.
+        function test_theRowsHaveTheMarginsOfARealMessage() {
+            const skeleton = createTemporaryObject(skeletonComp, root, { height: 600 })
+            verify(!!skeleton)
+            waitForRendering(skeleton)
+
+            const avatar = findChild(skeleton, "skeletonAvatar")
+            const text = findChild(skeleton, "skeletonText")
+            verify(!!avatar && !!text)
+
+            compare(avatar.mapToItem(skeleton, 0, 0).x, Theme.padding, "the left margin")
+            compare(avatar.width, 40)
+            compare(text.mapToItem(skeleton, 0, 0).x, Theme.padding + 40 + Theme.halfPadding,
+                    "the text after the avatar")
+
+            for (let i = 0; i < text.children.length; ++i) {
+                const bar = text.children[i]
+                if (!bar.visible)
+                    continue
+                verify(bar.mapToItem(skeleton, bar.width, 0).x <= skeleton.width - Theme.padding,
+                       "no bar runs into the right margin")
             }
         }
 

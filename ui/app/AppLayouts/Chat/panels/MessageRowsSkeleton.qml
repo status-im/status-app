@@ -89,17 +89,25 @@ LoadingSkeletonGroup {
                         // stable root width, not the row itself, to avoid a
                         // sizing cycle
                         readonly property real textWidth:
-                            Math.max(0, root.width - 40 - Theme.halfPadding)
+                            Math.max(0, root.width - 2 * Theme.padding - 40 - Theme.halfPadding)
 
+                        // the geometry of a real message row (StatusMessage):
+                        // side margins, avatar, gap to the text
                         width: parent.width
+                        leftPadding: Theme.padding
+                        rightPadding: Theme.padding
                         spacing: Theme.halfPadding
 
                         LoadingSkeletonTile {
+                            objectName: "skeletonAvatar"
+
                             implicitWidth: 40
                             implicitHeight: 40
                             radius: width / 2
                         }
                         Column {
+                            objectName: "skeletonText"
+
                             spacing: 6
 
                             LoadingSkeletonTile {
