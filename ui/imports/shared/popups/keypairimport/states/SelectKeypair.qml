@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
@@ -100,7 +101,8 @@ Item {
             displayRadioButtonForSelection: false
             useTransparentItemBackgroundColor: true
 
-            modelFilters: ExpressionFilter {
+            modelFilters: FastExpressionFilter {
+                expectedRoles: ["keyPair"]
                 expression: model.keyPair.migratedToColdWallet ||
                             model.keyPair.pairType == d.profileTypeValue  ||
                             model.keyPair.operability == d.fullyOperableValue ||

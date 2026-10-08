@@ -52,7 +52,8 @@ StatusDialog {
         }
         readonly property var syncedDesktopDevices: SortFilterProxyModel {
             sourceModel: root.devicesStore.devicesModel
-            filters: ExpressionFilter {
+            filters: FastExpressionFilter {
+                expectedRoles: ["isCurrentDevice", "enabled", "deviceType"]
                 expression: !model.isCurrentDevice && model.enabled && (model.deviceType !== "ios" && model.deviceType !== "android")
             }
         }

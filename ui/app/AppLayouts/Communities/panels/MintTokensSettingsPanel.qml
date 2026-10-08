@@ -197,7 +197,7 @@ StackView {
 
             model: SortFilterProxyModel {
                 sourceModel: root.tokensModel
-                proxyRoles: ExpressionRole {
+                proxyRoles: FastExpressionRole {
                     name: "color"
                     expression: root.communityColor
                 }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
@@ -145,7 +146,8 @@ ColumnLayout {
             spacing: Theme.padding
             model: SortFilterProxyModel {
                 sourceModel: root.keypairSigningModel
-                filters: ExpressionFilter {
+                filters: FastExpressionFilter {
+                    expectedRoles: ["keyPair"]
                     expression: !model.keyPair.migratedToColdWallet
                 }
             }
@@ -185,7 +187,8 @@ ColumnLayout {
             spacing: Theme.padding
             model: SortFilterProxyModel {
                 sourceModel: root.keypairSigningModel
-                filters: ExpressionFilter {
+                filters: FastExpressionFilter {
+                    expectedRoles: ["keyPair"]
                     expression: model.keyPair.migratedToColdWallet
                 }
             }

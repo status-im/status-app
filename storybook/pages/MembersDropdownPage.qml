@@ -9,6 +9,7 @@ import SortFilterProxyModel
 
 import Storybook
 
+import StatusQ
 import StatusQ.Core
 
 SplitView {
@@ -96,13 +97,14 @@ SplitView {
                 sourceModel: members
 
                 filters: [
-                    ExpressionFilter {
+                    FastExpressionFilter {
                         enabled: membersDropdown.searchText !== ""
 
                         function matchesAlias(name, filter) {
                             return name.split(" ").some(p => p.startsWith(filter))
                         }
 
+                        expectedRoles: ["alias", "displayName", "ensName", "localNickname", "pubKey"]
                         expression: {
                             membersDropdown.searchText
 

@@ -156,8 +156,9 @@ ColumnLayout {
                 property var daysTo: (d1, d2) => LocaleUtils.daysTo(d1, d2)
                 property var daysBetween: (d1, d2) => LocaleUtils.daysBetween(d1, d2)
                 property var getFirstDayOfTheCurrentWeek: () => LocaleUtils.getFirstDayOfTheCurrentWeek()
-                proxyRoles: ExpressionRole {
+                proxyRoles: FastExpressionRole {
                     name: "date"
+                    expectedRoles: ["activityEntry"]
                     expression: {
                         if (!model.activityEntry || model.activityEntry.timestamp === 0)
                             return ""

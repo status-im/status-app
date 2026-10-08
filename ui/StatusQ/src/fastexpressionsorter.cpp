@@ -31,8 +31,8 @@ using namespace qqsfpm;
     \endcode
 
     The expression may either return a boolean (\c true when modelLeft should
-    be placed before modelRight, as in ExpressionSorter) or a number (negative,
-    zero or positive, like a regular comparator function).
+    be placed before modelRight, as in ExpressionSorter) or an integer
+    (negative, zero or positive, like a regular comparator function).
 
     By accessing only needed roles, the performance is significantly better in
     comparison to ExpressionSorter.

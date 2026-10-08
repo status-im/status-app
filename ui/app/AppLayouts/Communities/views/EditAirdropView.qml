@@ -436,11 +436,12 @@ StatusScrollView {
 
                 sourceModel: membersModel
 
-                filters: ExpressionFilter {
+                filters: FastExpressionFilter {
                     id: selectedKeysFilter
 
                     property var keys: new Set()
 
+                    expectedRoles: ["airdropAddress"]
                     expression: keys.has(model.airdropAddress) && model.airdropAddress !== ""
                 }
             }

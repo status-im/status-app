@@ -95,7 +95,7 @@ ColumnLayout {
                 sortOrder: Qt.AscendingOrder
             }
 
-            filters: ExpressionFilter {
+            filters: FastExpressionFilter {
 
                 function spellingTolerantSearch(data, searchKeyword) {
                     const regex = new RegExp(searchKeyword.split('').join('.{0,1}'), 'i')
@@ -104,6 +104,7 @@ ColumnLayout {
 
                 enabled: !!searchBox.text && searchBox.valid
 
+                expectedRoles: ["name", "address", "ens"]
                 expression: {
                     searchBox.text
                     let keyword = searchBox.text.trim().toUpperCase()

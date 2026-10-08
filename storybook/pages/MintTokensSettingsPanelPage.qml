@@ -6,6 +6,7 @@ import QtQuick.Layouts
 
 import AppLayouts.Communities.panels
 import AppLayouts.Chat.stores
+import StatusQ
 import StatusQ.Core.Theme
 
 import SortFilterProxyModel
@@ -75,10 +76,11 @@ SplitView {
                 sourceModel: mintedTokensModel
 
                 filters: [
-                    ExpressionFilter {
+                    FastExpressionFilter {
                         readonly property int ownerLevel: Constants.TokenPrivilegesLevel.Owner
                         readonly property int tMasterLevel: Constants.TokenPrivilegesLevel.TMaster
 
+                        expectedRoles: ["privilegesLevel"]
                         expression: {
                             return ((model.privilegesLevel === ownerLevel) ||
                                     (model.privilegesLevel === tMasterLevel))

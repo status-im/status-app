@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 
 import shared.status
@@ -191,7 +192,8 @@ Control {
             id: filteredModel
             sourceModel: root.linkPreviewModel
             filters: [
-                ExpressionFilter {
+                FastExpressionFilter {
+                    expectedRoles: ["immutable", "unfurled"]
                     expression: !model.immutable || model.unfurled // Filter out immutable links that haven't been unfurled yet
                 }
             ]
