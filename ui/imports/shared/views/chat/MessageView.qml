@@ -397,7 +397,11 @@ Loader {
 
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
-    height: root.status === Loader.Ready && root.item ? root.item.implicitHeight : 50
+    // No height of its own: the Loader follows its item. An explicit one is
+    // pushed onto the item when it loads and stays there; forced to the
+    // item's implicitHeight instead, it resizes a Text item, which relays
+    // out and reports a new implicitHeight from inside that very write - a
+    // binding loop. Kinds with nothing to show load an empty item.
 
     sourceComponent: {
         if (root.deleted) {
@@ -407,7 +411,7 @@ Loader {
         case Constants.messageContentType.chatIdentifier:
             return channelIdentifierComponent
         case Constants.messageContentType.fetchMoreMessagesButton:
-            return null // cf https://github.com/status-im/status-app/issues/17823
+            return emptyComponent // cf https://github.com/status-im/status-app/issues/17823
         case Constants.messageContentType.systemMessagePrivateGroupType:
             return systemMessageGroupComponent
         case Constants.messageContentType.systemMessageMutualEventSent:
@@ -433,9 +437,9 @@ Loader {
             return messageComponent
         case Constants.messageContentType.unknownContentType:
             // NOTE: We could display smth like "unknown message type, please upgrade Status to see it".
-            return null
+            return emptyComponent
         default:
-            return null
+            return emptyComponent
         }
     }
 
@@ -694,6 +698,14 @@ Loader {
     }
 
     Component {
+        id: emptyComponent
+
+        Item {
+            implicitHeight: 50
+        }
+    }
+
+    Component {
         id: gapComponent
         GapComponent {
             gapFrom: root.gapFrom
@@ -750,9 +762,10 @@ Loader {
             }
             color: Theme.palette.secondaryText
             font.pixelSize: Theme.secondaryTextFontSize
-            width: parent.width - 120
+            // sized by the Loader - see systemMessagePinnedMessageComponent
+            leftPadding: 60
+            rightPadding: 60
             horizontalAlignment: Text.AlignHCenter
-            anchors.horizontalCenter: parent.horizontalCenter
             textFormat: Text.RichText
             topPadding: root.prevMessageIndex === 1 ? Theme.bigPadding : 0
         }
@@ -803,7 +816,11 @@ Loader {
         id: systemMessagePinnedMessageComponent
 
         StatusBaseText {
-            width: parent.width - 120
+            // No width of its own: the Loader sizes its item, and one derived
+            // from the Loader's would feed back into it while the Loader has
+            // no width yet. The side margins are padding instead.
+            leftPadding: 60
+            rightPadding: 60
             horizontalAlignment: Text.AlignHCenter
             text: qsTr("%1 pinned a message").arg(root.senderDisplayName)
             color: Theme.palette.directColor3

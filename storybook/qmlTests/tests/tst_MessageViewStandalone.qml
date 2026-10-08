@@ -132,6 +132,17 @@ Item {
         }
     }
 
+    Component {
+        id: unsizedMessageViewComp
+
+        MessageView {
+            rootStore: rootStoreMock
+            messageStore: messageStoreMock
+            chatContentModule: chatContentModuleMock
+            joined: true
+        }
+    }
+
     TestCase {
         name: "MessageViewStandalone"
         when: windowShown
@@ -409,6 +420,82 @@ Item {
             const textMessage = findChild(view, "StatusMessage_textMessage")
             verify(!!textMessage)
             tryVerify(() => textMessage.textField.text.indexOf("bravo message text") >= 0)
+        }
+
+        // The row is as tall as what it shows - on its first load, and when
+        // a reused row is given a longer message. Rows of another height
+        // overlap their neighbours, or leave gaps between them.
+        function test_theHeightFollowsTheContent() {
+            const view = createTemporaryObject(storedMessageViewComp, root)
+            verify(!!view)
+
+            rebind(view, messageA)
+            tryVerify(() => view.status === Loader.Ready)
+            waitForRendering(view)
+
+            const short = view.height
+            verify(short > 50, "taller than the placeholder")
+            compare(short, view.item.implicitHeight)
+            compare(view.item.height, view.item.implicitHeight)
+
+            const long = "a much longer message, wrapping over many lines ".repeat(20)
+            rebind(view, Object.assign({}, messageB, { messageText: long, unparsedText: long }))
+            tryVerify(() => view.height > short, 5000, "the row grew with its message")
+            compare(view.height, view.item.implicitHeight)
+            compare(view.item.height, view.item.implicitHeight)
+
+            // and nothing to show still takes the placeholder height
+            view.messageContentType = Constants.messageContentType.fetchMoreMessagesButton
+            tryCompare(view, "height", 50)
+        }
+
+        // A system message is a bare Text, which computes its implicit size
+        // only when first asked. Asked from inside the Loader's height binding,
+        // it lays out right then and signals the change mid-evaluation - a
+        // binding loop, logged on every such row a reused view switches to.
+        function test_systemMessagesSizeWithoutABindingLoop() {
+            failOnWarning(/Binding loop/)
+
+            const view = createTemporaryObject(storedMessageViewComp, root)
+            verify(!!view)
+
+            for (const type of [Constants.messageContentType.systemMessagePrivateGroupType,
+                                Constants.messageContentType.systemMessagePinnedMessage,
+                                Constants.messageContentType.systemMessageMutualEventSent]) {
+                view.messageContentType = Constants.messageContentType.messageType
+                view.messageText = "<p>a regular message first, the way a pooled row is reused</p>"
+                tryVerify(() => view.status === Loader.Ready)
+
+                view.messageContentType = type
+                view.messageText = "<p>alice created the group and added bob and carol</p>"
+                tryVerify(() => view.status === Loader.Ready)
+                waitForRendering(view)
+                compare(view.height, view.item.implicitHeight)
+                verify(view.height > 0)
+            }
+        }
+
+        // Built on demand, a row gets its content before its width. Until the
+        // width arrives the Loader takes its width from the item, so an item
+        // deriving its width from the Loader's chases itself.
+        function test_systemMessagesBuiltBeforeTheirWidthSizeWithoutALoop() {
+            failOnWarning(/Binding loop/)
+
+            for (const type of [Constants.messageContentType.systemMessagePrivateGroupType,
+                                Constants.messageContentType.systemMessagePinnedMessage,
+                                Constants.messageContentType.systemMessageMutualEventSent]) {
+                const view = createTemporaryObject(unsizedMessageViewComp, null)
+                verify(!!view)
+                view.messageContentType = type
+                view.messageText = "<p>alice created the group and added bob and carol</p>"
+                tryVerify(() => view.status === Loader.Ready)
+
+                view.width = Qt.binding(() => root.width)
+                view.parent = root
+                waitForRendering(view)
+                compare(view.item.width, view.width)
+                verify(view.height > 0)
+            }
         }
 
         function test_rebindLeavesNoResidue() {
