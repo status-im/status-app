@@ -81,7 +81,7 @@ Item {
             sectionsBaseModel: emptyModelComponent.createObject(this)
             chatsSearchBaseModel: emptyModelComponent.createObject(this)
             walletsBaseModel: emptyModelComponent.createObject(this)
-            dappsBaseModel: emptyModelComponent.createObject(this)
+            dappsBaseModel: null
 
             syncingBadgeCount: 0
             messagingBadgeCount: 0
@@ -102,6 +102,20 @@ Item {
     Component {
         id: settingsComponent
         Settings {}
+    }
+
+    Component {
+        id: listViewComponent
+        ListView {
+            width: 300
+            height: 200
+            cacheBuffer: 0
+            delegate: Item {
+                required property var model
+                height: 20
+                readonly property var shown: [model.name, model.icon, model.color, model.hasNotification]
+            }
+        }
     }
 
     ObjectCounter {
@@ -427,6 +441,24 @@ Item {
             const baseline = liveProxyRowsFor(0)
             const scaled = liveProxyRowsFor(200)
             compare(scaled - baseline, 0, "per-row proxy objects: baseline " + baseline + ", with 200 chats " + scaled)
+        }
+
+        // A view creates computed-role objects only for the rows it shows
+        function test_proxyObjectsOnlyForViewedRows() {
+            const chats = createTemporaryObject(generatedChatsComponent, root, { rowsToGenerate: 200 })
+            objectCounter.start()
+            const adaptor = createTemporaryObject(scaledAdaptorComponent, root, { chatsBaseModel: chats })
+            tryVerify(() => !!adaptor.homePageEntriesModel)
+            const baseline = objectCounter.count("QQmlPropertyMap")
+
+            const view = createTemporaryObject(listViewComponent, root, { model: adaptor.homePageEntriesModel })
+            tryVerify(() => view.count > 0)
+            waitForRendering(view)
+
+            const created = objectCounter.count("QQmlPropertyMap") - baseline
+            verify(created > 0)
+            verify(created < 40, "proxy objects for viewed rows only: " + created + " for " + view.count + " rows")
+            objectCounter.stop()
         }
 
         function test_pinAndActivateWithManyChats() {

@@ -88,7 +88,7 @@ QObject {
     readonly property var homePageEntriesModel: d.homePageEntriesModel
     Component.onCompleted: {
         Qt.callLater(function() {
-            d.homePageEntriesModel = filteredCombinedModel // FIXME bug in SFPM or OPM
+            d.homePageEntriesModel = entriesModel // FIXME bug in SFPM or OPM
             root.load()
         })
     }
@@ -99,22 +99,12 @@ QObject {
         id: d
         property var homePageEntriesModel
 
-        // helpers for FastExpressionRole, whose expression context does not resolve singletons
-        function chatColor(color, colorId) {
-            return color || Utils.colorForColorId(root.Theme.palette, colorId)
-        }
-
-        function walletColor(colorId) {
-            return Utils.getColorForId(root.Theme.palette, colorId ?? Constants.walletAccountColors.primary)
-        }
-
-        function currencyBalance(balance) {
-            return LocaleUtils.currencyAmountToLocaleString(balance)
-        }
-
-        function dappName(name, url) {
-            return name || (url ? StringUtils.extractDomainFromLink(url) : "")
-        }
+        readonly property var computedRolesNames: ["icon", "color", "hasNotification", "pending", "currencyBalance"]
+        readonly property var computedRolesInputs: [
+            "sectionType", "icon", "sourceIcon", "emoji", "iconUrl", "color", "sourceColor", "colorId",
+            "hasNotification", "hasUnreadMessages", "notificationsCount", "spectated", "joined",
+            "sourceCurrencyBalance"
+        ]
     }
 
     // Provides data for the Dock's left (fixed) part; w/o the writable layer
@@ -169,27 +159,33 @@ QObject {
     }
 
     // Provides data for the Dock's right (variable/pinned) part
-    readonly property var pinnedModel: SortFilterProxyModel {
-        sourceModel: homePageProxyModel
-        filters: [
-            ValueFilter {
-                roleName: "pinned"
-                value: true
-            }
-        ]
-        sorters: [
-            RoleSorter {
-                roleName: "timestamp"
-            }
-        ]
+    readonly property var pinnedModel: ObjectProxyModel {
+        sourceModel: SortFilterProxyModel {
+            sourceModel: homePageProxyModel
+            filters: [
+                ValueFilter {
+                    roleName: "pinned"
+                    value: true
+                }
+            ]
+            sorters: [
+                RoleSorter {
+                    roleName: "timestamp"
+                }
+            ]
+        }
+        delegate: computedRoles
+        expectedRoles: d.computedRolesInputs
+        exposedRoles: d.computedRolesNames
     }
 
     function clear() {
         homePageProxyModel.clear()
     }
 
-    // The per-source models below only rename source roles and add cheap proxy roles, so no
-    // per-row objects are created: sorting/filtering the combined model stays lazy.
+    // The per-source models below only rename source roles and add cheap C++ proxy roles: sorting,
+    // filtering, search and the writable overlay work on them without per-row objects. Roles computed
+    // in JS are added at the very end (ObjectProxyModel), only for rows a view requests.
     SortFilterProxyModel {
         id: communitiesModel
 
@@ -210,12 +206,7 @@ QObject {
         }
         proxyRoles: [
             ConstantRole { name: "keyPrefix"; value: Constants.appSection.community },
-            JoinRole { name: "key"; roleNames: ["keyPrefix", "id"]; separator: ";" },
-            FastExpressionRole {
-                name: "pending"
-                expression: !!(model.spectated && !model.joined)
-                expectedRoles: ["spectated", "joined"]
-            }
+            JoinRole { name: "key"; roleNames: ["keyPrefix", "id"]; separator: ";" }
         ]
     }
 
@@ -242,12 +233,7 @@ QObject {
             ConstantRole { name: "keyPrefix"; value: Constants.appSection.profile },
             JoinRole { name: "key"; roleNames: ["keyPrefix", "subsection"]; separator: ";" },
             JoinRole { name: "id"; roleNames: ["subsection"] },
-            ConstantRole { name: "color"; value: root.Theme.palette.primaryColor1 },
-            FastExpressionRole {
-                name: "hasNotification"
-                expression: model.notificationsCount > 0
-                expectedRoles: ["notificationsCount"]
-            }
+            ConstantRole { name: "color"; value: root.Theme.palette.primaryColor1 }
         ]
     }
 
@@ -269,22 +255,7 @@ QObject {
         proxyRoles: [
             ConstantRole { name: "keyPrefix"; value: Constants.appSection.chat },
             JoinRole { name: "key"; roleNames: ["keyPrefix", "itemId"]; separator: ";" },
-            JoinRole { name: "id"; roleNames: ["itemId"] },
-            FastExpressionRole {
-                name: "icon"
-                expression: model.sourceIcon || model.emoji || ""
-                expectedRoles: ["sourceIcon", "emoji"]
-            },
-            FastExpressionRole {
-                name: "color"
-                expression: d.chatColor(model.sourceColor, model.colorId)
-                expectedRoles: ["sourceColor", "colorId"]
-            },
-            FastExpressionRole {
-                name: "hasNotification"
-                expression: !!(model.hasUnreadMessages || model.notificationsCount)
-                expectedRoles: ["hasUnreadMessages", "notificationsCount"]
-            }
+            JoinRole { name: "id"; roleNames: ["itemId"] }
         ]
     }
 
@@ -304,17 +275,7 @@ QObject {
         }
         proxyRoles: [
             JoinRole { name: "key"; roleNames: ["sectionId", "chatId"]; separator: ";" },
-            JoinRole { name: "id"; roleNames: ["chatId"] },
-            FastExpressionRole {
-                name: "icon"
-                expression: model.sourceIcon || model.emoji || ""
-                expectedRoles: ["sourceIcon", "emoji"]
-            },
-            FastExpressionRole {
-                name: "color"
-                expression: d.chatColor(model.sourceColor, model.colorId)
-                expectedRoles: ["sourceColor", "colorId"]
-            }
+            JoinRole { name: "id"; roleNames: ["chatId"] }
         ]
     }
 
@@ -330,44 +291,30 @@ QObject {
             JoinRole { name: "key"; roleNames: ["keyPrefix", "mixedcaseAddress"]; separator: ";" },
             JoinRole { name: "id"; roleNames: ["mixedcaseAddress"] },
             JoinRole { name: "icon"; roleNames: ["emoji"] },
-            FastExpressionRole {
-                name: "color"
-                expression: d.walletColor(model.colorId)
-                expectedRoles: ["colorId"]
-            },
             ConstantRole { name: "hasNotification"; value: false },
-            ConstantRole { name: "notificationsCount"; value: 0 },
-            FastExpressionRole {
-                name: "currencyBalance"
-                expression: d.currencyBalance(model.sourceCurrencyBalance)
-                expectedRoles: ["sourceCurrencyBalance"]
-            }
+            ConstantRole { name: "notificationsCount"; value: 0 }
         ]
     }
 
-    SortFilterProxyModel {
+    // dApps: the name used for sorting/searching is computed, so this (small) source keeps an
+    // ObjectProxyModel of its own
+    ObjectProxyModel {
         id: dappsModel
 
-        sourceModel: RolesRenamingModel {
+        sourceModel: SortFilterProxyModel {
             sourceModel: root.dappsBaseModel
-            mapping: RoleRename { from: "name"; to: "sourceName" }
+            proxyRoles: [
+                ConstantRole { name: "keyPrefix"; value: Constants.appSection.dApp },
+                JoinRole { name: "key"; roleNames: ["keyPrefix", "url"]; separator: ";" },
+                JoinRole { name: "id"; roleNames: ["url"] },
+                ConstantRole { name: "color"; value: root.Theme.palette.primaryColor1 }
+            ]
         }
-        proxyRoles: [
-            ConstantRole { name: "keyPrefix"; value: Constants.appSection.dApp },
-            JoinRole { name: "key"; roleNames: ["keyPrefix", "url"]; separator: ";" },
-            JoinRole { name: "id"; roleNames: ["url"] },
-            FastExpressionRole {
-                name: "name"
-                expression: d.dappName(model.sourceName, model.url)
-                expectedRoles: ["sourceName", "url"]
-            },
-            FastExpressionRole {
-                name: "icon"
-                expression: model.iconUrl || "dapp"
-                expectedRoles: ["iconUrl"]
-            },
-            ConstantRole { name: "color"; value: root.Theme.palette.primaryColor1 }
-        ]
+        delegate: QtObject {
+            readonly property string name: model.name || StringUtils.extractDomainFromLink(model.url)
+        }
+        expectedRoles: ["name", "url"]
+        exposedRoles: ["name"]
     }
 
     ConcatModel {
@@ -406,7 +353,10 @@ QObject {
             "banner", "members", "activeMembers", "pending", "banned", // community
             "isExperimental", // settings
             "walletType", "currencyBalance", // wallet
-            "connectorBadge" // dapp
+            "connectorBadge", // dapp
+            // inputs of the computed roles (computedRoles)
+            "sourceIcon", "emoji", "iconUrl", "sourceColor", "colorId", "hasUnreadMessages",
+            "spectated", "joined", "sourceCurrencyBalance"
         ]
     }
 
@@ -477,5 +427,51 @@ QObject {
                 roleName: "name"
             }
         ]
+    }
+
+    ObjectProxyModel {
+        id: entriesModel
+
+        sourceModel: filteredCombinedModel
+        delegate: computedRoles
+        expectedRoles: d.computedRolesInputs
+        exposedRoles: d.computedRolesNames
+    }
+
+    // Roles computed in JS, per entry type; created only for rows requested by a view
+    Component {
+        id: computedRoles
+
+        QtObject {
+            readonly property int sectionType: model.sectionType
+            readonly property bool isChat: sectionType === Constants.appSection.chat || sectionType === -1
+
+            readonly property var icon: {
+                if (isChat)
+                    return model.sourceIcon || model.emoji || ""
+                if (sectionType === Constants.appSection.dApp)
+                    return model.iconUrl || "dapp"
+                return model.icon
+            }
+            readonly property var color: {
+                if (isChat)
+                    return model.sourceColor || Utils.colorForColorId(root.Theme.palette, model.colorId)
+                if (sectionType === Constants.appSection.wallet)
+                    return Utils.getColorForId(root.Theme.palette, model.colorId ?? Constants.walletAccountColors.primary)
+                return model.color
+            }
+            readonly property var hasNotification: {
+                if (sectionType === Constants.appSection.chat)
+                    return !!(model.hasUnreadMessages || model.notificationsCount)
+                if (sectionType === Constants.appSection.profile)
+                    return model.notificationsCount > 0
+                return model.hasNotification
+            }
+            readonly property var pending: sectionType === Constants.appSection.community
+                                           ? !!(model.spectated && !model.joined) : undefined
+            readonly property var currencyBalance: sectionType === Constants.appSection.wallet
+                                                   ? LocaleUtils.currencyAmountToLocaleString(model.sourceCurrencyBalance)
+                                                   : undefined
+        }
     }
 }
