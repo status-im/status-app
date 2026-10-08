@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
@@ -60,19 +60,17 @@ Item {
             walletStore: WalletStores.RootStore
 
             readOnly: true
+
+            RectangularShadow {
+                parent: profilePreview.background
+                anchors.fill: parent
+                z: -1
+                radius: Theme.radius
+                blur: 16
+                offset.y: 4
+                color: "#40000000"
+            }
         }
         Item { Layout.fillHeight: true }
-    }
-
-    DropShadow {
-        id: shadow
-        anchors.fill: layout
-        anchors.topMargin: profilePreview.y
-        horizontalOffset: 0
-        verticalOffset: 4
-        radius: 16
-        samples: 12
-        color: "#40000000"
-        source: profilePreview
     }
 }

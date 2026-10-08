@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -36,21 +36,9 @@ AbstractButton {
     ContextMenu.onRequested: pos => root.contextMenuRequested(pos.x, pos.y)
     onPressAndHold: root.contextMenuRequested(pressX, pressY)
 
-    background: Rectangle {
-        anchors.fill: parent
-        color: Theme.palette.background
-        radius: Theme.radius
-        border.width: 1
-        border.color: Theme.palette.baseColor2
-        layer.enabled: root.hovered || root.highlight
-        layer.effect: DropShadow {
-            horizontalOffset: 0
-            verticalOffset: 2
-            radius: 16
-            samples: 25
-            spread: 0
-            color: Theme.palette.backdropColor
-        }
+    background: StatusBackgroundPanel {
+        shadowColor: Theme.palette.backdropColor
+        shadowVisible: root.hovered || root.highlight
     }
 
     contentItem: Item {

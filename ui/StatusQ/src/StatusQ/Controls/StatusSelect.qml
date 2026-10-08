@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -83,24 +82,13 @@ Item {
         }
     }
 
-    Rectangle {
+    StatusBackgroundPanel {
         width: selectMenu.width
         height: selectMenu.height
         x: selectMenu.x
         y: selectMenu.y
         visible: selectMenu.opened
         color: Theme.palette.statusSelect.menuItemBackgroundColor
-        radius: 8
-        border.color: Theme.palette.baseColor2
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: 8
-            samples: 15
-            fast: true
-            cached: true
-            color: Theme.palette.dropShadow
-        }
     }
 
     StatusMenu {

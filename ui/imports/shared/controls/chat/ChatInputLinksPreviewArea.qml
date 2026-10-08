@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import QtQuick.Layouts
 
 import StatusQ.Core
@@ -165,6 +165,7 @@ Control {
         id: horizontalClipMask
         anchors.fill: opacityMaskWrapper
         visible: false
+        layer.enabled: true
         gradient: Gradient {
             orientation: Gradient.Horizontal
             GradientStop { position: 0.0; color: "transparent" }
@@ -174,7 +175,10 @@ Control {
         }
     }
     
-    OpacityMask {
+    MultiEffect {
+        maskEnabled: true
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
         anchors.fill: opacityMaskWrapper
         source: opacityMaskWrapper
         maskSource: horizontalClipMask

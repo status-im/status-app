@@ -50,7 +50,7 @@ AbstractButton {
         offset.y: 10
         radius: Theme.defaultPadding
         spread: 0.1
-        color: root.hovered ? Theme.palette.backdropColor : Theme.palette.dropShadow
+        color: root.hovered ? Theme.palette.backdropColor : Theme.palette.dropShadow3
         Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
     }
 

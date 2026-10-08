@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Universal
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Core
@@ -220,19 +220,7 @@ ComboBox {
         padding: 0
         bottomPadding: Theme.halfPadding
 
-        background: Rectangle {
-            color: Theme.palette.statusSelect.menuItemBackgroundColor
-            radius: Theme.radius
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 4
-                radius: 12
-                samples: 25
-                spread: 0.2
-                color: Theme.palette.dropShadow
-            }
-        }
+        background: StatusBackgroundPanel {}
 
         contentItem: ColumnLayout {
             spacing: 0

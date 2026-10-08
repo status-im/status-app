@@ -32,11 +32,10 @@ StatusMenu {
     property bool clearingBrowsingData: false
     property bool clearSiteDataSupported: true
 
-    background: Rectangle {
+    background: StatusBackgroundPanel {
         color: root.incognitoMode ?
                    Theme.palette.privacyColors.primary:
                    Theme.palette.statusMenu.backgroundColor
-        radius: Theme.radius
     }
 
     StatusAction {

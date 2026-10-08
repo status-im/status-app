@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import QtQml
 
 import StatusQ.Controls
@@ -44,7 +44,7 @@ StatusDraggableListItem {
     }
 
     layer.enabled: root.blurState
-    layer.effect: fastBlur
+    layer.effect: blurEffect
 
     height: ProfileUtils.defaultDelegateHeight
     topInset: 0
@@ -130,11 +130,11 @@ StatusDraggableListItem {
     ]
 
     Component {
-        id: fastBlur
+        id: blurEffect
 
-        FastBlur {
-            radius: 32
-            transparentBorder: true
+        MultiEffect {
+            blurEnabled: true
+            blur: 1.0
         }
     }
 }

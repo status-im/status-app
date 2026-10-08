@@ -242,7 +242,16 @@ Dialog {
         }
     }
 
-    background: StatusDialogBackground {}
+    background: StatusDialogBackground {
+        Binding on bottomLeftRadius {
+            value: 0
+            when: d.bottomSheet
+        }
+        Binding on bottomRightRadius {
+            value: 0
+            when: d.bottomSheet
+        }
+    }
 
     // Header contract:
     // - Uses Dialog.header so the native Dialog layout owns section placement.
@@ -330,6 +339,7 @@ Dialog {
             Layout.leftMargin: d.edgePadding + d.leftSafeArea
             Layout.rightMargin: d.edgePadding + d.rightSafeArea
             visible: d.hasFooter
+            bottomSheet: d.bottomSheet
 
             leftButtons: root.footerLeftButtons
             rightButtons: root.footerRightButtons

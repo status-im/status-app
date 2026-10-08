@@ -128,7 +128,7 @@ Control {
 
     objectName: "activityCenterPanel"
     background: StatusDialogBackground {
-        color: parent.backgroundColor
+        color: root.backgroundColor
         radius: Theme.radius
     }
 

@@ -2,10 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Controls
+import StatusQ.Components
 import StatusQ.Popups.Dialog
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
@@ -221,26 +221,12 @@ StatusDialog {
         headline.subtitle: qsTr("%1 %2 remaining in smart contract")
             .arg(d.remainingTokensDisplayText).arg(root.tokenName)
 
-        leftComponent: Rectangle {
+        leftComponent: StatusRoundedImage {
             height: 40
             width: height
             radius: root.isAsset ? height/2 : 8
-            color:Theme.palette.baseColor2
-
-            Image {
-                id: image
-
-                source: root.tokenSource
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-                visible: false
-            }
-
-            OpacityMask {
-                anchors.fill: image
-                source: image
-                maskSource: parent
-            }
+            color: Theme.palette.baseColor2
+            image.source: root.tokenSource
         }
         actions.closeButton.onClicked: root.close()
     }

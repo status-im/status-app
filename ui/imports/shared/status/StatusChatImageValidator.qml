@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core.Theme
+import StatusQ.Controls
 
 import utils
 import ".."
@@ -21,19 +21,8 @@ Item {
     width: imgExclamation.width + txtValidationError.width + txtValidationExtraInfo.width + 24
     height: txtValidationError.height + 14
 
-    Rectangle {
+    StatusBackgroundPanel {
         anchors.fill: parent
-        color: Theme.palette.background
-        radius: Theme.halfPadding
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: 8
-            samples: 15
-            fast: true
-            cached: true
-            color: "#22000000"
-        }
 
         SVGImage {
             id: imgExclamation

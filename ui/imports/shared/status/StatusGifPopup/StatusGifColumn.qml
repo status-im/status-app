@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -90,9 +90,15 @@ Column {
                 fillMode: Image.PreserveAspectFit
                 z: 0
                 layer.enabled: true
-                layer.effect: OpacityMask {
+                layer.effect: MultiEffect {
+                    maskEnabled: true
+                    maskThresholdMin: 0.5
+                    maskSpreadAtMin: 1.0
                     opacity: model.id === root.lastHoveredId ? 0.6 : 1
                     maskSource: Rectangle {
+                        parent: root
+                        layer.enabled: true
+                        visible: false
                         width: animation.width
                         height: animation.height
                         radius: Theme.radius

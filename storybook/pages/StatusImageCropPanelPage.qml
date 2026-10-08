@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml
-import Qt5Compat.GraphicalEffects
 
 import Storybook
 import Models

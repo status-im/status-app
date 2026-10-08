@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
@@ -115,8 +115,11 @@ Control {
             radius: 8
 
             layer.enabled: !!root.blurSource
-            layer.effect: FastBlur {
-                radius: 36
+            layer.effect: MultiEffect {
+                blurEnabled: true
+                blurMax: 36
+                blur: 1.0
+                autoPaddingEnabled: false
             }
 
             ShaderEffectSource {
@@ -190,12 +193,17 @@ Control {
                 }
             }
 
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 5
-                samples: 24
+            RectangularShadow {
+                anchors.fill: parent
+                z: -1
+                radius: foregroundRect.radius
+                bottomLeftRadius: 0
+                bottomRightRadius: 0
+                blur: 12
+                offset.y: 5
                 color: StatusColors.alphaColor(Theme.palette.dropShadow, 0.06)
+                opacity: foregroundRect.color.a
+                visible: foregroundRect.color.a > 0
             }
         }
     }

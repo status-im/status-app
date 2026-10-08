@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -61,17 +61,23 @@ Rectangle {
 
     implicitWidth: 40
     implicitHeight: 40
-    color: "transparent"
+    color: StatusColors.transparent
     radius: width / 2
-    // The mask is a ShaderEffectSource + OpacityMask + mask Rectangle per instance.
-    // Invisible instances (e.g. an unused badge) must not pay for it.
+
+    // Invisible instances (e.g. an unused badge) must not render the mask effect.
     layer.enabled: root.visible
-    layer.effect: OpacityMask {
+    layer.effect: MultiEffect {
+        maskEnabled: true
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
+
         maskSource: Rectangle {
-            x: root.x; y: root.y
+            parent: root
             width: root.width
             height: root.height
             radius: root.radius
+            visible: false
+            layer.enabled: true
         }
     }
 

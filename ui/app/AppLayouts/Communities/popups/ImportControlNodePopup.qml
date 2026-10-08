@@ -25,8 +25,12 @@ StatusDialog {
         headline.title: qsTr("Make this device the control node for %1").arg(root.community.name)
         actions.closeButton.onClicked: root.close()
         leftComponent: StatusSmartIdenticon {
-            asset.name: root.community.image
+            width: 32
+            height: 32
+            name: root.community?.name ?? ""
+            asset.name: root.community?.image ?? ""
             asset.isImage: !!asset.name
+            asset.color: root.community?.color ?? ""
         }
     }
 

@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -210,17 +210,16 @@ Rectangle {
     radius: d.bannerRadius
     color: "transparent"
     border.color: Theme.palette.directColor8
-    layer.enabled: true
-    layer.mipmap: true
-    layer.textureSize: Qt.size(width * 2, height * 2)
-    layer.effect: DropShadow {
-        source: root
-        horizontalOffset: 0
-        verticalOffset: 2
-        radius: root.hovered ? d.bannerRadiusHovered : d.bannerRadius
-        samples: 25
-        spread: 0
-        color: root.hovered ? Theme.palette.backdropColor : Theme.palette.dropShadow
+
+    RectangularShadow {
+        anchors.fill: parent
+        z: -1
+        radius: parent.radius
+        bottomLeftRadius: d.cardRadius
+        bottomRightRadius: d.cardRadius
+        blur: root.hovered ? d.bannerRadiusHovered : d.bannerRadius
+        offset.y: 2
+        color: root.hovered ? Theme.palette.backdropColor : Theme.palette.dropShadow3
     }
 
     // Community banner:
@@ -233,6 +232,7 @@ Rectangle {
 
         Rectangle {
             id: mask
+            layer.enabled: true
 
             anchors.fill: parent
 
@@ -255,7 +255,10 @@ Rectangle {
             cache: false
         }
 
-        OpacityMask {
+        MultiEffect {
+            maskEnabled: true
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             anchors.fill: image
 
             visible: root.loaded
@@ -282,7 +285,6 @@ Rectangle {
             width: parent.width - 4
             height: width
             image.source: root.asset.source
-            color: "transparent"
         }
     } // End of community logo
 

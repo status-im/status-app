@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -203,19 +202,8 @@ Item {
                 padding: 1
                 verticalPadding: 8
 
-                background: Rectangle {
+                background: StatusBackgroundPanel {
                     color: Theme.palette.statusSelect.menuItemBackgroundColor
-                    radius: 8
-                    border.color: Theme.palette.baseColor2
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        horizontalOffset: 0
-                        verticalOffset: 4
-                        radius: 12
-                        samples: 25
-                        spread: 0.2
-                        color: Theme.palette.dropShadow
-                    }
                 }
 
                 contentItem: StatusListView {

@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -79,13 +79,14 @@ ColumnLayout {
             cache: false
         }
 
-        FastBlur {
+        MultiEffect {
+            blurEnabled: true
+            blurMax: 40
+            blur: d.codeExpired || d.qrBlurred ? 1.0 : 0.0
             anchors.fill: qrCode
             source: qrCode
-            radius: d.codeExpired || d.qrBlurred ? 40 : 0
-            transparentBorder: true
 
-            Behavior on radius {
+            Behavior on blur {
                 NumberAnimation { duration: 500 }
             }
         }

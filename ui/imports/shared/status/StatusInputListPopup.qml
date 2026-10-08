@@ -1,11 +1,11 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Controls
 
 import utils
 import shared
@@ -54,26 +54,8 @@ Popup {
         return Math.min(400, possibleHeight)
     }
     y: -height
-    background: Rectangle {
-        id: bgRectangle
+    background: StatusBackgroundPanel {
         visible: !!popup.title || (!!popup.modelList && popup.modelList.length > 0)
-        color: Theme.palette.background
-        border.width: 0
-        radius: Theme.radius
-        layer.enabled: true
-        layer.effect: DropShadow{
-            width: bgRectangle.width
-            height: bgRectangle.height
-            x: bgRectangle.x
-            y: bgRectangle.y + 10
-            visible: bgRectangle.visible
-            source: bgRectangle
-            horizontalOffset: 0
-            verticalOffset: 2
-            radius: 10
-            samples: 15
-            color: Theme.palette.dropShadow
-        }
     }
 
     StyledText {

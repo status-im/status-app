@@ -1,5 +1,4 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -30,19 +29,14 @@ Rectangle {
         width: roundedIconImage.width
         height: roundedIconImage.height
 
-        SVGImage {
+        StatusIcon {
             id: roundedIconImage
             width: 12
             height: 12
             fillMode: Image.PreserveAspectFit
             source: Assets.svg("new_chat")
             rotation: root.rotation
-        }
-        ColorOverlay {
-            anchors.fill: roundedIconImage
-            source: roundedIconImage
             color: root.iconColor
-            rotation: roundedIconImage.rotation
         }
     }
 

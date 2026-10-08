@@ -106,20 +106,8 @@ Control {
 
     background: StatusDialogBackground {
         color: Theme.palette.baseColor4
-        Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            height: parent.radius
-            color: parent.color
-        }
-        Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            height: 1
-            color: Theme.palette.baseColor2
-        }
+        topLeftRadius: 0
+        topRightRadius: 0
     }
 
     contentItem: StackLayout {

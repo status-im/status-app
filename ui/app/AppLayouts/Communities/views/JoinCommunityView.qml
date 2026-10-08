@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -56,12 +56,6 @@ StatusSectionLayout {
     signal requestToJoinClicked
     signal invitationPendingClicked
 
-    QtObject {
-        id: d
-
-        readonly property int blurryRadius: 32
-    }
-
     headerContent: JoinCommunityHeaderPanel {
         joinCommunity: root.joinCommunity
         color: root.color
@@ -89,7 +83,7 @@ StatusSectionLayout {
             Layout.fillWidth: true
             Layout.margins: Theme.halfPadding
             layer.enabled: root.joinCommunity
-            layer.effect: fastBlur
+            layer.effect: blurEffect
 
             Repeater {
                 model: root.communityItemsModel
@@ -147,11 +141,11 @@ StatusSectionLayout {
     showRightPanel: false
 
     Component {
-        id: fastBlur
+        id: blurEffect
 
-        FastBlur {
-            radius: d.blurryRadius
-            transparentBorder: true
+        MultiEffect {
+            blurEnabled: true
+            blur: 1.0
         }
     }
 }

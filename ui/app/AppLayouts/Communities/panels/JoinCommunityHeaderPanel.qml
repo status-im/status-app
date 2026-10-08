@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -33,14 +33,14 @@ RowLayout {
         enabled: false
         type: StatusChatInfoButton.Type.CommunityChat
         layer.enabled: root.joinCommunity // Blured when joining community but not when entering channel
-        layer.effect: fastBlur
+        layer.effect: blurEffect
     }
 
     RowLayout {
         Layout.preferredHeight: parent.height
         spacing: 10
         layer.enabled: true
-        layer.effect: fastBlur
+        layer.effect: blurEffect
 
         StatusFlatRoundButton {
             id: search
@@ -63,11 +63,11 @@ RowLayout {
     }
 
     Component {
-        id: fastBlur
+        id: blurEffect
 
-        FastBlur {
-            radius: 32
-            transparentBorder: true
+        MultiEffect {
+            blurEnabled: true
+            blur: 1.0
         }
     }
 }

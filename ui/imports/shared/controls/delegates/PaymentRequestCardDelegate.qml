@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import StatusQ.Core
 
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 import StatusQ.Components
@@ -78,11 +78,17 @@ CalloutCard {
                     width: 44
                     height: width
                     image.layer.enabled: true
-                    image.layer.effect: OpacityMask {
+                    image.layer.effect: MultiEffect {
+                        maskEnabled: true
+                        maskThresholdMin: 0.5
+                        maskSpreadAtMin: 1.0
                         id: mask
-                        invert: true
+                        maskInverted: true
 
                         maskSource: Item {
+                            parent: root
+                            layer.enabled: true
+                            visible: false
                             width: mask.width + 2
                             height: mask.height + 2
 

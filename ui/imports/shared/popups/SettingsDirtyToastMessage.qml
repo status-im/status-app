@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import utils
 
@@ -115,15 +115,14 @@ Control {
                       ? Theme.palette.dangerColor2 : Theme.palette.primaryColor2
         border.width: 2
 
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: Theme.radius
-            samples: 15
-            fast: true
-            cached: true
+        RectangularShadow {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            blur: Theme.radius
+            spread: Theme.radius * 0.1
+            offset.y: 3
             color: backgroundRect.border.color
-            spread: 0.1
         }
 
         NumberAnimation on border.width {

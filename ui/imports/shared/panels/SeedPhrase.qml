@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -48,14 +48,14 @@ Control {
         }
     }
 
-    GaussianBlur {
+    MultiEffect {
+        blurEnabled: true
+        blurMax: 16
+        blur: 1.0
         id: blur
         anchors.fill: contentItem
         visible: !root.seedPhraseRevealed
         source: grid
-        radius: 16
-        samples: 16
-        transparentBorder: true
     }
 
     StatusButton {

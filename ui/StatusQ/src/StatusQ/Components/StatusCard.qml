@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -198,25 +198,13 @@ Rectangle {
     border.width: 1
     border.color: Theme.palette.primaryColor2
 
-    // This is used to create a shadow around the rectangle when hovered
-    // it was needed to be done this way because it doesnt work with the
-    // main rect when it is transparent in its "default" state
-    Rectangle {
-        id: dummyRect
+    RectangularShadow {
         anchors.fill: parent
         radius: root.radius
-        opacity: 0
-    }
-    DropShadow {
-        anchors.fill: dummyRect
-        verticalOffset: 0
-        horizontalOffset: 0
-        radius: 8
-        samples: 17
-        source: dummyRect
-        color: Theme.palette.dropShadow
+        blur: 8
+        color: Theme.palette.dropShadow3
         visible: sensor.containsMouse
-        z: root.z - 1
+        z: -1
     }
 
     StatusMouseArea {

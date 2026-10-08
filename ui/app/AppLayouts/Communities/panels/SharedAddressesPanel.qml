@@ -2,7 +2,7 @@ import QtQuick
 import QtQml.Models
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Core
@@ -270,12 +270,12 @@ Control {
             border.color: Theme.palette.baseColor3
             visible: permissionsView.hasAnyVisiblePermission
 
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: -9
-                radius: 14
-                samples: 29
+            RectangularShadow {
+                anchors.fill: parent
+                z: -1
+                radius: parent.radius
+                blur: 14
+                offset.y: -9
                 color: Qt.rgba(0, 0, 0, 0.04)
             }
         }

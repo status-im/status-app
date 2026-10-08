@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import QtQuick.Layouts
 
 import StatusQ.Core
@@ -107,13 +107,14 @@ OnboardingPage {
                     Layout.alignment: Qt.AlignHCenter
                     source: Assets.png("status")
                     mipmap: true
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        horizontalOffset: 0
-                        verticalOffset: 4
-                        radius: 12
-                        samples: 25
-                        spread: 0.2
+                    RectangularShadow {
+                        anchors.fill: parent
+                        z: -1
+                        anchors.margins: parent.width * 100 / 1024
+                        radius: width * 0.3
+                        blur: 12
+                        spread: 2.4
+                        offset.y: 4
                         color: Theme.palette.dropShadow
                     }
                 }

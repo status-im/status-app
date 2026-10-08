@@ -55,6 +55,7 @@ SplitView {
         AirdropRecipientsSelector {
             id: selector
 
+            implicitWidth: 400
             anchors.centerIn: parent
 
             addressesModel: addresses

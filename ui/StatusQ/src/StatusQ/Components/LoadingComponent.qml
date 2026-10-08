@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
@@ -44,7 +44,7 @@ Control {
             anchors.fill: parent
             color: Theme.palette.statusLoadingHighlight
             radius: root.radius
-            visible: false // used only as the OpacityMask source
+            visible: false // used only as the mask effect source
 
             // The animated sweep is materialized only while the placeholder is
             // effectively visible. When hidden, the Loader is inactive so no
@@ -59,10 +59,16 @@ Control {
             }
         }
 
-        OpacityMask {
+        MultiEffect {
+            maskEnabled: true
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             anchors.fill: rect
             source: rect
             maskSource: Rectangle {
+                parent: root
+                layer.enabled: true
+                visible: false
                 width: root.width
                 height: root.height
                 radius: root.radius
@@ -70,8 +76,7 @@ Control {
         }
     }
 
-    // Native Rectangle gradient sweep — no Qt5Compat LinearGradient (which is an
-    // extra ShaderEffectSource pass). Only the rounded OpacityMask pass remains.
+    // Native Rectangle gradient sweep; only the rounded mask effect pass remains.
     // The sweep reads its geometry from `parent` (the Loader) so it needs no
     // reference to outer-scope ids.
     Component {

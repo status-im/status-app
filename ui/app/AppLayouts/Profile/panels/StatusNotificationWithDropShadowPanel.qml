@@ -1,7 +1,8 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Platform
+import StatusQ.Core.Theme
 
 Item {
     property string name
@@ -18,15 +19,14 @@ Item {
         width: parent.width
         name: parent.name
         message: parent.message
-    }
 
-    DropShadow {
-        anchors.fill: statusNotification
-        horizontalOffset: 0
-        verticalOffset: 2
-        radius: 10
-        samples: 12
-        color: "#22000000"
-        source: statusNotification
+        RectangularShadow {
+            parent: statusNotification.background
+            anchors.fill: parent
+            z: -1
+            radius: Theme.radius
+            offset.y: 2
+            color: Theme.palette.dropShadow3
+        }
     }
 }

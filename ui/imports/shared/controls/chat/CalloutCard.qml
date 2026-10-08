@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Shapes
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
@@ -34,14 +34,16 @@ Control {
         radius: Theme.radius * 2
         leftBottomRadius: root.leftTail ? Theme.radius / 2 : Theme.radius * 2
         rightBottomRadius: root.leftTail ? Theme.radius * 2 : Theme.radius / 2
-        layer.enabled: root.dropShadow
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: 8
-            samples: 15
-            fast: true
-            cached: true
+        RectangularShadow {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            bottomLeftRadius: parent.leftBottomRadius
+            bottomRightRadius: parent.rightBottomRadius
+            blur: 8
+            offset.y: 3
             color: Theme.palette.dropShadow
+            visible: root.dropShadow
         }
     }
 }

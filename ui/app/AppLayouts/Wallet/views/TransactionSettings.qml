@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -274,13 +274,11 @@ Rectangle {
                         showSubText: true
                         showAdditionalText: true
 
-                        GaussianBlur {
-                            anchors.fill: parent
-                            visible: !root.fromChainEIP1559Compliant
-                            source: parent
-                            radius: 4
-                            samples: 4
-                            transparentBorder: true
+                        layer.enabled: !root.fromChainEIP1559Compliant
+                        layer.effect: MultiEffect {
+                            blurEnabled: true
+                            blurMax: 4
+                            blur: 1.0
                         }
 
                         onClicked: root.selectedFeeMode = Constants.FeePriorityModeType.Fast
@@ -298,13 +296,11 @@ Rectangle {
                         showSubText: true
                         showAdditionalText: true
 
-                        GaussianBlur {
-                            anchors.fill: parent
-                            visible: !root.fromChainEIP1559Compliant
-                            source: parent
-                            radius: 4
-                            samples: 4
-                            transparentBorder: true
+                        layer.enabled: !root.fromChainEIP1559Compliant
+                        layer.effect: MultiEffect {
+                            blurEnabled: true
+                            blurMax: 4
+                            blur: 1.0
                         }
 
                         onClicked: root.selectedFeeMode = Constants.FeePriorityModeType.Urgent

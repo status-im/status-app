@@ -1,5 +1,4 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Components
 import StatusQ.Core
@@ -84,7 +83,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            SVGImage {
+            StatusIcon {
                 id: caretImg
                 anchors.verticalCenter: parent.verticalCenter
                 source: Assets.svg("caret")
@@ -92,10 +91,6 @@ Rectangle {
                 anchors.left: numberCollectibleText.right
                 anchors.leftMargin: Theme.padding
                 fillMode: Image.PreserveAspectFit
-            }
-            ColorOverlay {
-                anchors.fill: caretImg
-                source: caretImg
                 color: StatusColors.black
             }
         }

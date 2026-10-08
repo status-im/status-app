@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQml.Models
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import utils
 import shared
@@ -79,13 +79,15 @@ StatusDialog {
                 blurSource.scheduleUpdate()
             }
 
-            GaussianBlur {
+            MultiEffect {
+                blurEnabled: true
+                blurMax: 16
+                blur: 1.0
+                autoPaddingEnabled: false
                 visible: true
 
                 anchors.fill: parent
                 source: blurSource
-                radius: 16
-                samples: 16
 
                 Rectangle {
                     anchors.fill: parent

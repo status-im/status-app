@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
 
+import StatusQ
 import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Core
@@ -43,9 +44,10 @@ StatusDialog {
                     priority: 1 // Higher number === higher priority
                 }
             ]
-            proxyRoles: ExpressionRole {
+            proxyRoles: FastExpressionRole {
                 name: "isMobile"
                 expression: model.deviceType === "ios" || model.deviceType === "android"
+                expectedRoles: ["deviceType"]
             }
         }
         readonly property var syncedDesktopDevices: SortFilterProxyModel {
@@ -62,8 +64,12 @@ StatusDialog {
         headline.title: qsTr("How to move the %1 control node to another device").arg(root.community.name)
         actions.closeButton.onClicked: root.close()
         leftComponent: StatusSmartIdenticon {
-            asset.name: root.community.image
+            width: 32
+            height: 32
+            name: root.community?.name ?? ""
+            asset.name: root.community?.image ?? ""
             asset.isImage: !!asset.name
+            asset.color: root.community?.color ?? ""
         }
     }
 

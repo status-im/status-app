@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
@@ -55,6 +55,7 @@ Control {
                 Rectangle {
                     id: mask
                     anchors.fill: parent
+                    layer.enabled: true
                     gradient: Gradient {
                         GradientStop { position: 0.0; color:  Theme.palette.statusAppLayout.rightPanelBackgroundColor}
                         GradientStop { position: 1.0; color: "transparent" }
@@ -62,7 +63,10 @@ Control {
                     visible: false
                 }
 
-                OpacityMask {
+                MultiEffect {
+                    maskEnabled: true
+                    maskThresholdMin: 0.5
+                    maskSpreadAtMin: 1.0
                     anchors.fill: base
                     source: base
                     maskSource: mask

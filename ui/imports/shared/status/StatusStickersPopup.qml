@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import utils
 import shared.panels
@@ -66,20 +65,7 @@ StatusDropdown {
     implicitWidth: 360
     implicitHeight: Math.max(contentItem.implicitHeight, d.minimumContentHeight) + topPadding + bottomPadding
 
-    background: Rectangle {
-        radius: Theme.radius
-        color: Theme.palette.background
-        border.color: Theme.palette.border
-        layer.enabled: true
-        layer.effect: DropShadow {
-            verticalOffset: 3
-            radius: 8
-            samples: 15
-            fast: true
-            cached: true
-            color: "#22000000"
-        }
-    }
+    background: StatusBackgroundPanel {}
 
     onAboutToShow: {
         d.getInstalledStickerPacks()

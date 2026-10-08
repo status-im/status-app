@@ -141,7 +141,7 @@ std::unique_ptr<ThemePalette> createDarkThemePalette(QObject* parent)
     t->neutral95 = QColor(0x06, 0x0F, 0x1F); // #060F1F
     t->dropShadow = alpha(StatusColors::black, 0.08);
     t->dropShadow2 = alpha(StatusColors::blue8, 0.02);
-    t->dropShadow3 = alpha(StatusColors::blue8, 0.05);
+    t->dropShadow3 = alpha(StatusColors::black, 0.13);
     t->backdropColor = alpha(StatusColors::black, 0.4);
     t->statusFloatingButtonHighlight = alpha(StatusColors::blue4, 0.3);
     t->statusLoadingHighlight = alpha(StatusColors::white, 0.03);

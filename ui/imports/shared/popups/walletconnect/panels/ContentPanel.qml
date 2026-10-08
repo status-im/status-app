@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Controls
 import StatusQ.Core
@@ -40,8 +40,14 @@ Rectangle {
         wrapMode: Text.Wrap
 
         layer.enabled: !d.expanded && d.canExpand
-        layer.effect: OpacityMask {
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             maskSource: Rectangle {
+                parent: root
+                layer.enabled: true
+                visible: false
                 width: root.width
                 height: root.height
                 gradient: Gradient {

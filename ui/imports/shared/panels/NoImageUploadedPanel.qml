@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import utils
 import shared.panels
@@ -77,7 +76,7 @@ Control {
 
     contentItem: ColumnLayout {
         id: content
-        Image {
+        StatusIcon {
             id: imageImg
             source: Assets.svg("images_icon")
             width: 20
@@ -86,10 +85,7 @@ Control {
             sourceSize.height: height || undefined
             fillMode: Image.PreserveAspectFit
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-            layer.enabled: !Qt.colorEqual(root.imgColor, Theme.palette.baseColor1)
-            layer.effect: ColorOverlay {
-                color: root.imgColor
-            }
+            color: root.imgColor
         }
 
         StatusBaseText {

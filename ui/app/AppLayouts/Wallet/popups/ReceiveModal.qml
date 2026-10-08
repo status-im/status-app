@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import QtQuick.Layouts
 import QtQuick.Controls
 import SortFilterProxyModel
@@ -163,8 +163,15 @@ StatusModal {
             anchors.horizontalCenter: parent.horizontalCenter
 
             layer.enabled: true
-            layer.effect: OpacityMask {
+            layer.effect: MultiEffect {
+                maskEnabled: true
+                maskThresholdMin: 0.5
+                maskSpreadAtMin: 1.0
                 maskSource: Item {
+                    objectName: "receiveModalQrMask"
+                    parent: qrCode
+                    layer.enabled: true
+                    visible: false
                     width: qrCode.width
                     height: qrCode.height
                     Rectangle {
@@ -231,4 +238,3 @@ StatusModal {
         }
     }
 }
-

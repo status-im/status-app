@@ -1,5 +1,4 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Components
 import StatusQ.Core
@@ -90,18 +89,13 @@ Rectangle {
 
     Component {
         id: reload
-        SVGImage {
+        StatusIcon {
             source: Assets.svg("reload")
             mipmap: false
             width: 15.5
             height: 19.5
             fillMode: Image.PreserveAspectFit
-            ColorOverlay {
-                anchors.fill: parent
-                source: parent
-                color: Theme.palette.textColor
-                antialiasing: true
-            }
+            color: Theme.palette.textColor
             StatusMouseArea {
                 cursorShape: Qt.PointingHandCursor
                 anchors.fill: parent

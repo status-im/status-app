@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import SortFilterProxyModel
 
 import StatusQ.Core
@@ -235,14 +235,14 @@ Rectangle {
             color: root.color
             z: 2
 
-            layer.enabled: !(d.accountsListView?.atYBeginning ?? true)
-            layer.effect: DropShadow {
-                verticalOffset: 10
-                radius: 20
-                samples: 41
-                fast: true
-                cached: true
+            RectangularShadow {
+                anchors.fill: parent
+                z: -1
+                radius: parent.radius
+                blur: 20
+                offset.y: 10
                 color: Theme.palette.dropShadow2
+                visible: !(d.accountsListView?.atYBeginning ?? true)
             }
         }
 
@@ -465,14 +465,14 @@ Rectangle {
                     implicitWidth: root.width
                     implicitHeight: (d.accountsListView?.firstItem?.height ?? Theme.xlPadding*2) + Theme.xlPadding
 
-                    layer.enabled: (d.accountsListView?.footerOverlayed ?? false) && !(d.accountsListView?.atYEnd ?? true)
-                    layer.effect: DropShadow {
-                        verticalOffset: -10
-                        radius: 20
-                        samples: 41
-                        fast: true
-                        cached: true
+                    RectangularShadow {
+                        anchors.fill: parent
+                        z: -1
+                        radius: parent.radius
+                        blur: 20
+                        offset.y: -10
                         color: Theme.palette.dropShadow2
+                        visible: (d.accountsListView?.footerOverlayed ?? false) && !(d.accountsListView?.atYEnd ?? true)
                     }
 
                     Separator {

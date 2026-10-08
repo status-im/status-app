@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Shapes as Shapes
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -63,29 +63,29 @@ Item {
         property bool pickingSatVal: false
     }
 
-    ConicalGradient {
+    Shapes.Shape {
         id: hueGauge
         anchors.fill: parent
-        angle: 90.0
-        gradient: Gradient {
-            GradientStop { position: 0.000; color: Qt.hsva(1.000, 1, 1, 1) }
-            GradientStop { position: 0.167; color: Qt.hsva(0.833, 1, 1, 1) }
-            GradientStop { position: 0.333; color: Qt.hsva(0.666, 1, 1, 1) }
-            GradientStop { position: 0.500; color: Qt.hsva(0.500, 1, 1, 1) }
-            GradientStop { position: 0.667; color: Qt.hsva(0.333, 1, 1, 1) }
-            GradientStop { position: 0.833; color: Qt.hsva(0.166, 1, 1, 1) }
-            GradientStop { position: 1.000; color: Qt.hsva(0.000, 1, 1, 1) }
-        }
-        layer.enabled: true
-        layer.effect: OpacityMask {
-            maskSource: Item {
-                width: root.width
-                height: root.height
+        preferredRendererType: Shapes.Shape.CurveRenderer
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Math.min(width, height) / 2
-                }
+        Shapes.ShapePath {
+            strokeWidth: -1
+            fillGradient: Shapes.ConicalGradient {
+                centerX: hueGauge.width / 2
+                centerY: hueGauge.height / 2
+                angle: 0
+                GradientStop { position: 0.000; color: Qt.hsva(0.000, 1, 1, 1) }
+                GradientStop { position: 0.167; color: Qt.hsva(0.166, 1, 1, 1) }
+                GradientStop { position: 0.333; color: Qt.hsva(0.333, 1, 1, 1) }
+                GradientStop { position: 0.500; color: Qt.hsva(0.500, 1, 1, 1) }
+                GradientStop { position: 0.667; color: Qt.hsva(0.666, 1, 1, 1) }
+                GradientStop { position: 0.833; color: Qt.hsva(0.833, 1, 1, 1) }
+                GradientStop { position: 1.000; color: Qt.hsva(1.000, 1, 1, 1) }
+            }
+            PathRectangle {
+                width: hueGauge.width
+                height: hueGauge.height
+                radius: Math.min(width, height) / 2
             }
         }
 

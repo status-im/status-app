@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -120,15 +120,13 @@ ColumnLayout {
         visible: edit.text !== "" && !forceHide
         padding: Theme.halfPadding
         background: StatusDialogBackground {
-            id: bg
-            layer.enabled: true
-            layer.effect: DropShadow {
-                source: bg
-                horizontalOffset: 0
-                verticalOffset: 4
-                radius: 12
-                samples: 25
-                spread: 0.2
+            RectangularShadow {
+                anchors.fill: parent
+                z: -1
+                radius: parent.radius
+                blur: 12
+                spread: 2.4
+                offset.y: 4
                 color: Theme.palette.dropShadow
             }
         }

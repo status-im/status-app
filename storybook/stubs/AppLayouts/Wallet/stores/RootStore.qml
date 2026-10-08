@@ -23,6 +23,10 @@ QtObject {
 
     // TODO: Remove this. This stub should be empty. The color transformation should be done in adaptors or in the first model transformation steps.
 
+    function addressWasShown(address) {
+
+    }
+
     function savedAddressNameExists(name) {
         return false
     }

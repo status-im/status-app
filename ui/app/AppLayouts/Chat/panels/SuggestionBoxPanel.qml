@@ -1,10 +1,10 @@
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Controls
 
 import utils
 import shared.panels
@@ -30,25 +30,7 @@ Control {
         NumberAnimation {}
     }
 
-    background: Rectangle {
-        color: Theme.palette.background
-        radius: Theme.radius
-    }
-
-    layer.enabled: true
-    layer.effect: DropShadow {
-        width: root.width
-        height: root.height
-        x: root.x
-        y: root.y + 10
-        visible: root.visible
-        source: root
-        horizontalOffset: 0
-        verticalOffset: 2
-        radius: 10
-        samples: 15
-        color: "#22000000"
-    }
+    background: StatusBackgroundPanel {}
 
     contentItem: StatusListView {
         id: listView

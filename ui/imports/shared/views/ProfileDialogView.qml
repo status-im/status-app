@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Core
@@ -531,8 +531,14 @@ Pane {
     }
 
     layer.enabled: !root.readOnly // profile preview has its own layer.effect
-    layer.effect: OpacityMask {
+    layer.effect: MultiEffect {
+        maskEnabled: true
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
         maskSource: Rectangle {
+            parent: root
+            layer.enabled: true
+            visible: false
             anchors.centerIn: parent
             width: column.width
             height: column.height
