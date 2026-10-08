@@ -173,6 +173,24 @@ Item {
             verify(size.width <= 2880 && size.height <= 1540)
         }
 
+        function test_coverDecodeCappedForExtremeAspect() {
+            for (const fillMode of [Image.PreserveAspectCrop, Image.Stretch]) {
+                const img = createTemporaryObject(imageComponent, root,
+                                                  { width: 4000, height: 1, fillMode: fillMode })
+                let largest = 0
+                img.paintedGeometryChanged.connect(() => {
+                    const size = ImageInspector.decodedSize(img)
+                    largest = Math.max(largest, size.width, size.height)
+                })
+                img.source = root.hugeRaster
+                tryCompare(img, "status", Image.Ready)
+                waitForRendering(img)
+                verify(largest <= 2048, `decoded ${largest}px`)
+                verify(ImageInspector.decodedSize(img).width >= 2047,
+                       `${ImageInspector.decodedSize(img)}`)
+            }
+        }
+
         function test_tiledImageKeepsNativeDecode() {
             const img = createTemporaryObject(imageComponent, root,
                                               { width: 40, height: 40, source: root.largeRaster,

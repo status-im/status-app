@@ -84,7 +84,8 @@ public:
     }
 
     // Qt requests sourcesize x devicePixelRatio: the ratio that reaches the decode box on
-    // both sides, lowered to native size when a cover decode would upscale a known source.
+    // both sides, lowered for a known source so a cover decode neither upscales it nor
+    // exceeds maxDecodeSide.
     qreal requestRatio()
     {
         qreal ratio = 0;
@@ -93,13 +94,25 @@ public:
         if (sourcesize.height() > 0)
             ratio = qMax(ratio, qreal(decodeBox.height()) / sourcesize.height());
 
+        // A cover decode is at least the request, so keep the request within maxDecodeSide
+        if (cover)
+            ratio = qMin(ratio, qreal(RenderSizedImage::maxDecodeSide)
+                                    / qMax(sourcesize.width(), sourcesize.height()));
+
         const QSize* known = nativeSizes().object(qHash(resolvedUrl()));
         const QSize native = known ? *known : QSize();
         nativeKnown = !native.isEmpty();
-        if (cover && nativeKnown && sourcesize.width() > 0 && sourcesize.height() > 0) {
-            const qreal nativeRatio = qMin(qreal(native.width()) / sourcesize.width(),
-                                           qreal(native.height()) / sourcesize.height());
-            ratio = qMin(ratio, nativeRatio);
+        if (cover && nativeKnown) {
+            // Qt scales a cover decode by ratio x coverScale
+            qreal coverScale = 0;
+            if (sourcesize.width() > 0)
+                coverScale = qMax(coverScale, qreal(sourcesize.width()) / native.width());
+            if (sourcesize.height() > 0)
+                coverScale = qMax(coverScale, qreal(sourcesize.height()) / native.height());
+            const qreal maxScale = qMin(1.0, qreal(RenderSizedImage::maxDecodeSide)
+                                                 / qMax(native.width(), native.height()));
+            if (coverScale > 0)
+                ratio = qMin(ratio, maxScale / coverScale);
         }
         return ratio > 0 ? ratio : 1.0;
     }
@@ -185,14 +198,14 @@ void RenderSizedImage::pixmapChange()
     Q_D(RenderSizedImage);
     if (d->renderSized && !d->currentPix->isNull()) {
         const QSize native = d->currentPix->implicitSize();
-        const bool upscaled = d->currentPix->width() > native.width()
-                || d->currentPix->height() > native.height();
+        const bool overLimit = d->currentPix->width() > qMin(native.width(), maxDecodeSide)
+                || d->currentPix->height() > qMin(native.height(), maxDecodeSide);
 
         nativeSizes().insert(qHash(d->resolvedUrl()), new QSize(native));
 
-        // Only the first cover decode of a source smaller than its box can upscale; the
-        // reload is requested at native size.
-        if (upscaled && !d->nativeKnown)
+        // Only the first cover decode, before the native size is known, can upscale or
+        // exceed maxDecodeSide; the reload is requested within both.
+        if (overLimit && !d->nativeKnown)
             QMetaObject::invokeMethod(this, &RenderSizedImage::load, Qt::QueuedConnection);
 
         d->updateImplicitRatio();
