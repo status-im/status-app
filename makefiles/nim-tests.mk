@@ -5,8 +5,7 @@
 # Naming convention: benchmarks end in `_bench.nim`; everything else is a test.
 
 NIM_BENCH_FILES := $(wildcard test/nim/*_bench.nim)
-# The runtime configuration test has its own CLI/environment runner below.
-NIM_TEST_FILES := $(filter-out $(NIM_BENCH_FILES) test/nim/token_catalogue_runtime_config_test.nim,$(wildcard test/nim/*.nim))
+NIM_TEST_FILES := $(filter-out $(NIM_BENCH_FILES),$(wildcard test/nim/*.nim))
 NIM_TESTS := $(addprefix nim-test-run/,$(NIM_TEST_FILES))
 NIM_BENCHES := $(addprefix nim-test-run/,$(NIM_BENCH_FILES))
 
@@ -79,22 +78,10 @@ nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
 	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
 .PHONY: tests-nim-token-catalogue
-TOKEN_CATALOGUE_TEST := bin/token_catalogue_runtime_config_test$(if $(filter win32,$(mkspecs)),.exe)
-tests-nim-token-catalogue: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-token_catalogue_runtime_config_test
-ifneq ($(mkspecs),win32)
-tests-nim-token-catalogue: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
-endif
-tests-nim-token-catalogue: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
+tests-nim-token-catalogue: | qt-pkgconfig
 	python3 scripts/test_token_catalogue_build.py
-	bash scripts/test_status_go_has_tkl.sh
-	@set -e; for default in true false; do \
-		$(ENV_SCRIPT) nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc \
-			-d:TOKEN_LISTS_USE_NIM_DEFAULT=$$default \
-			--passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" \
-			-o:$(TOKEN_CATALOGUE_TEST) test/nim/token_catalogue_runtime_config_test.nim; \
-		TKL_TEST_LIBRARY_PATH="$(QT_LIBDIR):$(NIMSDS_LIBDIR):$(STATUSGO_LIBDIR):$(EXTRA_LIBS_PATH)" \
-			bash scripts/test_token_catalogue_config.sh ./$(TOKEN_CATALOGUE_TEST) $$default; \
-	done
+	$(ENV_SCRIPT) nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --nimcache:$(NIMCACHE_BASE)-token_catalogue_config_test \
+		-o:bin/token_catalogue_config_test -r test/nim/token_catalogue_config_test.nim
 
 tests-nim: $(NIM_TESTS) tests-nim-token-catalogue
 

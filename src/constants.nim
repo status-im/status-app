@@ -86,8 +86,6 @@ let
   MARKET_DATA_PROXY_PASSWORD_RESOLVED* = desktopConfig.marketDataProxyPassword
   MARKET_DATA_FULL_REFRESH_INTERVAL* = desktopConfig.marketDataFullRefreshInterval
   MARKET_DATA_PRICE_REFRESH_INTERVAL* = desktopConfig.marketDataPricesRefreshInterval
-  TOKEN_LISTS_USE_NIM* = desktopConfig.tokenListsUseNim
-  TOKEN_LISTS_SHADOW* = desktopConfig.tokenListsShadow
   ETH_RPC_PROXY_USER_RESOLVED* = desktopConfig.ethRpcProxyUser
   ETH_RPC_PROXY_PASSWORD_RESOLVED* = desktopConfig.ethRpcProxyPassword
   ETH_RPC_PROXY_URL_RESOLVED* = desktopConfig.ethRpcProxyUrl

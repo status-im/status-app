@@ -20,9 +20,6 @@ FLAG_DAPPS_ENABLED ?= 1
 FLAG_CONNECTOR_ENABLED ?= 0
 FLAG_BROWSER_ENABLED ?= 1
 
-# Same default build as desktop; runtime rollback keeps native support available.
-USE_NIM_TOKEN_LISTS ?= true
-
 $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 
 # default rule
@@ -52,7 +49,6 @@ ifeq ($(OS),android)
 	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_LDFLAGS="-Wl,--build-id=none" \
 	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
-		USE_NIM_TOKEN_LISTS=$(USE_NIM_TOKEN_LISTS) \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
@@ -71,7 +67,6 @@ else ifeq ($(OS),ios)
 	CGO_CFLAGS="-ffile-prefix-map=$(HOME)=." \
 	CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
 	$(MAKE) -C ../vendor/status-go statusgo-ios-library \
-		USE_NIM_TOKEN_LISTS=$(USE_NIM_TOKEN_LISTS) \
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
@@ -144,7 +139,6 @@ $(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT
 	LIB_SUFFIX=$(LIB_SUFFIX) \
 	LIB_EXT=$(LIB_EXT) \
 	USE_QML_SERVER=$(USE_QML_SERVER) \
-	USE_NIM_TOKEN_LISTS=$(USE_NIM_TOKEN_LISTS) \
 	BUNDLE_IDENTIFIER="$(BUNDLE_IDENTIFIER)" \
 	DEBUG=$(DEBUG) \
 	PROFILE=$(PROFILE) \

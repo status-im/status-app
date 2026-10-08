@@ -9,8 +9,6 @@ type
     enableParaswapProvider*: bool
     enableLiFiProvider*: bool
     enableRelayProvider*: bool
-    tokenListsUseNim*: bool
-    tokenListsShadow*: bool
 
 proc toJson*(self: WalletConfig): JsonNode =
   return %* {
@@ -21,6 +19,4 @@ proc toJson*(self: WalletConfig): JsonNode =
     "enableParaswapProvider": self.enableParaswapProvider,
     "enableLiFiProvider": self.enableLiFiProvider,
     "enableRelayProvider": self.enableRelayProvider,
-    "tokenListsUseNim": self.tokenListsUseNim,
-    "tokenListsShadow": self.tokenListsShadow,
   }

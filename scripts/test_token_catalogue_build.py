@@ -12,7 +12,7 @@ import unittest
 
 
 class TokenCatalogueBuildTest(unittest.TestCase):
-    def test_mobile_compiler_default(self):
+    def test_mobile_compiler_has_no_backend_selector(self):
         # Capture the real mobile script's compiler arguments without a cross-build.
         repo = Path(__file__).resolve().parent.parent
         git_dir = subprocess.check_output(
@@ -66,11 +66,9 @@ class TokenCatalogueBuildTest(unittest.TestCase):
                             result.returncode, 0, result.stdout + result.stderr
                         )
                         args = (root / "args").read_text().splitlines()
-                        self.assertIn(
-                            f"-d:TOKEN_LISTS_USE_NIM_DEFAULT={override or 'true'}", args
-                        )
+                        self.assertFalse(any("TOKEN_LISTS_USE_NIM_DEFAULT" in arg for arg in args))
 
-    def test_runtime_rollback_keeps_native_support_in_default_builds(self):
+    def test_native_backend_is_always_built(self):
         repo = Path(__file__).resolve().parent.parent
         for platform in ("desktop", "android", "ios"):
             for runtime in (None, "false", "true"):
@@ -160,28 +158,13 @@ class TokenCatalogueBuildTest(unittest.TestCase):
                             0,
                             f"{command}\n{result.stdout}\n{result.stderr}",
                         )
-                        enabled = override != "false"
-                        expected = "true" if enabled else "false"
+                        self.assertNotIn("TOKEN_LISTS_USE_NIM_DEFAULT", result.stdout)
+                        self.assertNotIn("USE_NIM_TOKEN_LISTS=", result.stdout)
                         if platform == "desktop":
-                            self.assertIn(
-                                f"-d:TOKEN_LISTS_USE_NIM_DEFAULT={expected}",
-                                result.stdout,
-                            )
-                            self.assertEqual(
-                                "statusgo-shared-library-tkl" in result.stdout,
-                                enabled,
-                                result.stdout,
-                            )
+                            self.assertIn("statusgo-shared-library", result.stdout)
                         else:
-                            self.assertIn(
-                                f"USE_NIM_TOKEN_LISTS={expected}", result.stdout
-                            )
-                            client_command = result.stdout.split(
-                                "Building Status Desktop Lib", 1
-                            )[1]
-                            self.assertIn(
-                                f"USE_NIM_TOKEN_LISTS={expected}", client_command
-                            )
+                            self.assertIn(f"statusgo-{platform}-library", result.stdout)
+
 
 
 if __name__ == "__main__":

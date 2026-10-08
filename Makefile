@@ -303,7 +303,13 @@ NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/vendor/nim-sds
 export NIM_SDS_SOURCE_DIR
 NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
+ifeq ($(mkspecs),win32)
+ # Nim invokes native clang.exe outside the MSYS shell. Pass the import library
+ # as a Windows path so lld-link does not have to resolve -lsds via an MSYS -L.
+ NIM_EXTRA_PARAMS += --passL:"$(shell cygpath -am '$(NIMSDS_LIBDIR)/sds.lib')"
+else
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
+endif
 STATUSGO_MAKE_PARAMS += NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)"
 
 # desktop only; mobile cleanup lives in mobile/Makefile
@@ -515,16 +521,10 @@ STATUSGO := vendor/status-go/build/bin/libstatus.$(LIB_EXT)
 STATUSGO_LIBDIR := $(shell pwd)/$(shell dirname "$(STATUSGO)")
 export STATUSGO_LIBDIR
 
-# Keep both runtime choices available in normal builds, including after rollback.
-# USE_NIM_TOKEN_LISTS=false explicitly builds a backend without Nim support.
-USE_NIM_TOKEN_LISTS ?= true
-TOKEN_LISTS_USE_NIM_DEFAULT := $(if $(filter true,$(USE_NIM_TOKEN_LISTS)),true,false)
-NIM_PARAMS += -d:TOKEN_LISTS_USE_NIM_DEFAULT=$(TOKEN_LISTS_USE_NIM_DEFAULT)
-ifeq ($(USE_NIM_TOKEN_LISTS),true)
+# Check native/backend cache inputs on every invocation.
 .PHONY: check-status-go-tkl
 check-status-go-tkl:
 $(STATUSGO): check-status-go-tkl | force-rebuild-status-go
-endif
 
 # Rebuild libsds independently after platform switch cleanup deletes vendor/nim-sds/build.
 $(NIMSDS_LIBFILE): | platform-cleanup
@@ -534,22 +534,14 @@ $(NIMSDS_LIBFILE): | platform-cleanup
 $(STATUSGO): | deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
-ifeq ($(USE_NIM_TOKEN_LISTS),true)
-	# This target checks both caches and compiles only when inputs or outputs changed.
-	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library-tkl SHELL=/bin/sh \
-		SENTRY_CONTEXT_NAME="status-desktop" SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)"
-	@bash scripts/status_go_has_tkl.sh "$(STATUSGO)"
-else
+	# This target checks both caches and compiles only when inputs changed.
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library SHELL=/bin/sh \
-		SENTRY_CONTEXT_NAME="status-desktop" \
-		SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)" \
-		 $(HANDLE_OUTPUT)
-endif
+		SENTRY_CONTEXT_NAME="status-desktop" SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)"
 
 status-go: $(STATUSGO)
 
 .PHONY: status-go-tkl
-# Explicit tagged build using status-go's pinned token-library dependency.
+# Compatibility alias for the native token catalogue build.
 status-go-tkl:
 	@test -n "$(PLATFORM_TARGET)" && test "$$(cat .platform-target 2>/dev/null)" = "$(PLATFORM_TARGET)" || \
 		{ echo "Prepare this platform with make platform-cleanup, then build libsds before status-go-tkl." >&2; exit 1; }
@@ -632,10 +624,8 @@ ifeq ($(mkspecs),win32)
  # link (MSVC ABI, to use Qt's msvc build), and lld-link — unlike mingw's ld —
  # cannot link a .dll directly; it needs an import library. status-go/keycard
  # (Go) and nim-sds ship only .dll + .h, so synthesize the import libs from each
- # header via scripts/gen-import-lib.sh. They're named to match the -l flags in
- # the client link (status/<keycard>/sds.lib) and dropped into the dirs already
- # on -L. (The Qt keycard variant is a CMake shared lib that already emits its
- # own import lib, so only the Go keycard needs this.)
+ # header via scripts/gen-import-lib.sh. The Qt keycard variant already emits
+ # its own import lib, so only status-go and nim-sds need this.
  STATUSGO_IMPLIB := $(STATUSGO_LIBDIR)/status.lib
  NIMSDS_IMPLIB := $(NIMSDS_LIBDIR)/sds.lib
  WIN_IMPORT_LIBS := $(STATUSGO_IMPLIB) $(NIMSDS_IMPLIB)
@@ -644,7 +634,10 @@ ifeq ($(mkspecs),win32)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(STATUSGO_IMPLIB))"
 	bash scripts/gen-import-lib.sh "$(STATUSGO_LIBDIR)/libstatus.h" "$(notdir $(STATUSGO))" "$(STATUSGO_IMPLIB)" $(HANDLE_OUTPUT)
 
- $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE)
+ # status-go's SDS build cleans the SDS checkout, including any earlier sds.lib.
+ # Regenerate it only after status-go finishes; the client uses it order-only.
+ .PHONY: $(NIMSDS_IMPLIB)
+ $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE) $(STATUSGO)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
 	bash scripts/gen-import-lib.sh "$(NIM_SDS_SOURCE_DIR)/library/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
 
