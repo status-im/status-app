@@ -17164,6 +17164,10 @@ al cargar</translation>
         <translation>Token no compatible. Prueba con otros</translation>
     </message>
     <message>
+        <source>Unsupported network. Try another</source>
+        <translation>Red no compatible. Prueba con otra</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Hubo un problema. Cambia la cantidad o el token, o reintenta ↺</translation>
     </message>

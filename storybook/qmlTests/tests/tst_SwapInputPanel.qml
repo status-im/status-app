@@ -313,6 +313,77 @@ Item {
                    "a same-symbol group is not the selected token")
         }
 
+        // A holdings-only list (the pay side) has nothing to fall back on but the
+        // default: when that is not held either, the panel asks the user to pick
+        // rather than selecting the chain's native token.
+        function test_holdingsOnlyListFallsBackToSelectAssetNotNative() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                                                         groupKey: sttGroupKey,
+                                                         defaultGroupKey: "usd-coin",
+                                                         ownedTokensOnly: true
+                                                     })
+            verify(!!controlUnderTest)
+
+            const holdings = store.createTokenSelectorModel(0).model
+            verify(!!holdings)
+            holdings.sourceModel = null // the mock lists sourceData only without a source model
+            controlUnderTest.tokenSelectorLoading = true
+            controlUnderTest.tokenSelectorModel = holdings
+            // the account holds ETH only: neither STT nor the default USDC
+            holdings.sourceData = [{
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 5, currencyBalance: 5, sectionName: "",
+                balances: [{ chainId: d.goOptChainId, iconUrl: "", chainName: "", balance: 5, rawBalance: "5000000000000000000" }],
+                tokens: [{ key: d.goOptChainId + "-native", chainId: d.goOptChainId }]
+            }]
+            controlUnderTest.tokenSelectorLoading = false
+
+            tryCompare(controlUnderTest, "selectedHoldingId", "")
+            verify(controlUnderTest.selectedHoldingId !== ethGroupKey, "the native token is not selected in the user's place")
+        }
+
+        // The receive side never settles on the token the pay side has on the same
+        // chain. When the pay side takes the receive side's token, the receive side
+        // moves to its default; when that is taken too, it asks the user to pick.
+        function test_receiveSideYieldsTheTokenThePaySideTakes() {
+            const store = d.adaptor.walletAssetsStore.walletTokensStore
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                                                         groupKey: sttGroupKey,
+                                                         defaultGroupKey: ethGroupKey,
+                                                         swapSide: SwapInputPanel.SwapSide.Receive,
+                                                         nonInteractiveChainId: d.goOptChainId
+                                                     })
+            verify(!!controlUnderTest)
+            const catalog = store.createTokenSelectorModel(3).model
+            verify(!!catalog)
+            controlUnderTest.tokenSelectorModel = catalog
+            catalog.sourceData = [{
+                key: sttGroupKey, name: "Status Test Token", symbol: "STT", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: d.goOptChainId + "-stt", chainId: d.goOptChainId }]
+            }, {
+                key: ethGroupKey, name: "Ether", symbol: "ETH", logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 0, currencyBalance: 0, sectionName: "",
+                balances: [], tokens: [{ key: d.goOptChainId + "-native", chainId: d.goOptChainId }]
+            }]
+            tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
+
+            // the pay side takes STT on this chain: the receive side moves to its default
+            controlUnderTest.nonInteractiveGroupKey = sttGroupKey
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+
+            // the pay side takes ETH, the default and the chain's native token: nothing
+            // is left to fall back on, so the receive side asks the user to pick
+            controlUnderTest.nonInteractiveGroupKey = ethGroupKey
+            tryCompare(controlUnderTest, "selectedHoldingId", "")
+
+            // on another chain the same token is fine
+            controlUnderTest.nonInteractiveChainId = 1
+            controlUnderTest.groupKey = ethGroupKey
+            tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
+        }
+
         function test_multiChainTokenRefsStillResolveSelection() {
             const store = d.adaptor.walletAssetsStore.walletTokensStore
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})

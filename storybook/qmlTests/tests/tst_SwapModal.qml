@@ -1542,6 +1542,12 @@ Item {
             root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.fromGroupKey = data.fromToken
+            // the handler names the pay token through the default too, which keeps
+            // the receive default off it (ETH on both sides is never a valid state)
+            if (!!data.fromToken) {
+                root.swapFormData.defaultFromGroupKey = data.fromToken
+                root.swapFormData.defaultToGroupKey = root.swapFormData.getDefaultToGroupKey(root.swapFormData.toNetworkChainId)
+            }
             root.swapFormData.fromTokenAmount = data.fromTokenAmount
             root.swapFormData.toGroupKey = data.toToken
             root.swapFormData.toTokenAmount = data.toTokenAmount
@@ -1894,6 +1900,10 @@ Item {
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             root.swapFormData.selectedNetworkChainId = 11155111
             root.swapFormData.fromGroupKey = ethGroupKey
+            // as the handler does: name the pay token through the default too, so the
+            // receive default moves off ETH (ETH to ETH on one chain is no swap)
+            root.swapFormData.defaultFromGroupKey = ethGroupKey
+            root.swapFormData.defaultToGroupKey = root.swapFormData.getDefaultToGroupKey(root.swapFormData.toNetworkChainId)
             // for testing making it 1.2 seconds so as to not make tests running too long
             root.swapFormData.autoRefreshTime = 1200
 
@@ -1953,6 +1963,10 @@ Item {
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             root.swapFormData.selectedNetworkChainId = 11155111
             root.swapFormData.fromGroupKey = ethGroupKey
+            // as the handler does: name the pay token through the default too, so the
+            // receive default moves off ETH (ETH to ETH on one chain is no swap)
+            root.swapFormData.defaultFromGroupKey = ethGroupKey
+            root.swapFormData.defaultToGroupKey = root.swapFormData.getDefaultToGroupKey(root.swapFormData.toNetworkChainId)
             // for testing making it 1.2 seconds so as to not make tests running too long
             root.swapFormData.autoRefreshTime = 1200
 
@@ -2444,6 +2458,8 @@ Item {
                   message: qsTr("Amount too high. Lower amount") },
                 { tag: "unsupported currency", code: Constants.routerErrorCodes.processor.errUnsupportedCurrency,
                   message: qsTr("Unsupported token. Try others") },
+                { tag: "unsupported chain", code: Constants.routerErrorCodes.processor.errUnsupportedChain,
+                  message: qsTr("Unsupported network. Try another") },
             ]
         }
 
@@ -2711,6 +2727,54 @@ Item {
             receivePanel.tokenSelectorModel.sourceData = [row(sttGroupKey, "STT", 18, 11155420, 1), row(ethGroupKey, "ETH", 18, 11155420, 1), row(rhtKey, "RHT", 18, 11155420, 0.5)]
             tryCompare(receivePanel, "fiatMode", true)
 
+            closeAndVerfyModal()
+        }
+
+        // The pay side lists what the account holds. When the default pay token is not
+        // among the holdings the user is asked to pick one; the chain's native token is
+        // NOT selected in its place (that showed ETH on both sides).
+        function test_paySideAsksToSelectAssetWhenTheDefaultIsNotHeldAndExchangeKeepsSidesApart() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const row = (key, symbol, chainId) => ({
+                key: key, groupKey: key, name: symbol, symbol: symbol, logoUri: "", decimals: 18,
+                cryptoPrice: 1, currentBalance: 5, currencyBalance: 5, sectionName: "",
+                balances: [{ chainId: chainId, iconUrl: "", chainName: "", balance: 5, rawBalance: "5000000000000000000" }],
+                tokens: [{ key: key, chainId: chainId }]
+            })
+            // the account holds ETH only; the default pay token (USDC) is not held
+            store.tokenSelectorStubData = [row(ethGroupKey, "ETH", 1)]
+
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, { swapInputParamsForm: root.swapFormData })
+            launchAndVerfyModal()
+            compare(root.swapFormData.defaultFromGroupKey, Constants.usdcGroupKeyEvm)
+
+            const payPanel = findChild(controlUnderTest, "payPanel")
+            const receivePanel = findChild(controlUnderTest, "receivePanel")
+            verify(!!payPanel && !!receivePanel)
+            tryCompare(payPanel, "selectedHoldingId", "")
+            compare(root.swapFormData.fromGroupKey, "")
+            const payTokenText = findChild(payPanel, "tokenSelectorContentItemText")
+            verify(!!payTokenText)
+            compare(payTokenText.text, qsTr("Select asset"))
+            tryCompare(receivePanel, "selectedHoldingId", ethGroupKey)
+
+            // the exchange moves ETH to the pay side; the receive side must not keep
+            // (or fall back to) the same token on the same chain
+            const swapExchangeButton = findChild(controlUnderTest, "swapExchangeButton")
+            verify(!!swapExchangeButton)
+            swapExchangeButton.clicked()
+            tryCompare(payPanel, "selectedHoldingId", ethGroupKey)
+            receivePanel.reevaluateSelectedId()
+            const reevaluated = createTemporaryQmlObject("import QtQml; Timer { interval: 0; running: true }", root)
+            tryVerify(() => !reevaluated.running)
+            compare(receivePanel.selectedHoldingId, "")
+            compare(root.swapFormData.fromGroupKey, ethGroupKey)
+            compare(root.swapFormData.toGroupKey, "")
+            const receiveTokenText = findChild(receivePanel, "tokenSelectorContentItemText")
+            verify(!!receiveTokenText)
+            compare(receiveTokenText.text, qsTr("Select asset"))
+
+            store.tokenSelectorStubData = []
             closeAndVerfyModal()
         }
 

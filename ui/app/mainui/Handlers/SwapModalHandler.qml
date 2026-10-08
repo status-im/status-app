@@ -1,5 +1,7 @@
 import QtQuick
 
+import StatusQ.Core.Utils as SQUtils
+
 import AppLayouts.Wallet.popups.swap
 import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Wallet.stores as WalletStores
@@ -43,15 +45,24 @@ QtObject {
             d.swapInputParams.fromGroupKey = Qt.binding(() => d.swapInputParams.defaultFromGroupKey)
             d.swapInputParams.toGroupKey = Qt.binding(() => d.swapInputParams.defaultToGroupKey)
 
-            if (d.isValidParameter(params.selectedNetworkChainId)) {
-                d.swapInputParams.selectedNetworkChainId = params.selectedNetworkChainId
+            // The pay side lists what the account holds, so the modal opens on the chain
+            // where the account holds the pay token (the one the launch names, else the
+            // default), preferring the requested chain. Held nowhere: no pay token.
+            const requestedChainId = d.isValidParameter(params.selectedNetworkChainId) ? params.selectedNetworkChainId : -1
+            const pay = d.resolvePayToken(swapModalInst.swapAdaptor, params.defaultFromGroupKey,
+                                          d.isValidParameter(params.selectedAccountAddress) ? params.selectedAccountAddress : "",
+                                          requestedChainId)
+            if (pay.chainId !== -1) {
+                d.swapInputParams.selectedNetworkChainId = pay.chainId
+            } else if (requestedChainId !== -1) {
+                d.swapInputParams.selectedNetworkChainId = requestedChainId
             }
             // optional pre-filled destination chain (defaults to the source chain)
             if (d.isValidParameter(params.toNetworkChainId)) {
                 d.swapInputParams.toNetworkChainId = params.toNetworkChainId
             }
-            if (d.isValidParameter(params.defaultFromGroupKey)) {
-                d.swapInputParams.defaultFromGroupKey = params.defaultFromGroupKey
+            if (!!pay.groupKey) {
+                d.swapInputParams.defaultFromGroupKey = pay.groupKey
             }
             if (d.isValidParameter(params.defaultToGroupKey)) {
                 d.swapInputParams.defaultToGroupKey = params.defaultToGroupKey
@@ -75,6 +86,9 @@ QtObject {
             if (d.isValidParameter(params.toTokenAmount)) {
                 d.swapInputParams.toTokenAmount = params.toTokenAmount
             }
+            if (pay.chainId === -1) {
+                d.swapInputParams.fromGroupKey = "" // "Select asset"
+            }
         }
 
         if (swapModalInst.opened) {
@@ -91,6 +105,29 @@ QtObject {
 
         function isValidParameter(param) {
             return param !== undefined && param !== null
+        }
+
+        function resolvePayToken(adaptor, namedGroupKey, accountAddress, requestedChainId) {
+            let candidates = []
+            if (d.isValidParameter(namedGroupKey) && namedGroupKey !== "") {
+                candidates = [namedGroupKey]
+            } else {
+                const chains = adaptor.filteredFlatNetworksModel
+                const chainIds = [requestedChainId]
+                for (let i = 0; i < chains.rowCount(); i++)
+                    chainIds.push(SQUtils.ModelUtils.get(chains, i, "chainId"))
+                for (const chainId of chainIds) {
+                    const groupKey = d.swapInputParams.getDefaultFromGroupKey(chainId)
+                    if (!candidates.includes(groupKey))
+                        candidates.push(groupKey)
+                }
+            }
+            for (const groupKey of candidates) {
+                const chainId = adaptor.chainHoldingGroup(groupKey, accountAddress, requestedChainId)
+                if (chainId !== -1)
+                    return { groupKey: groupKey, chainId: chainId }
+            }
+            return { groupKey: candidates.length > 0 ? candidates[0] : "", chainId: -1 }
         }
 
         readonly property WalletStores.SwapStore swapStore: WalletStores.SwapStore {
@@ -141,8 +178,8 @@ QtObject {
             }
 
             onClosed: {
-                destroy()
                 swapInputParamsForm.resetFormData()
+                destroy()
             }
         }
     }

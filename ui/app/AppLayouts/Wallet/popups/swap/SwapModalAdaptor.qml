@@ -53,6 +53,31 @@ QObject {
     readonly property string uuid: d.uuid
     readonly property var filteredFlatNetworksModel: root.networksStore.activeNetworks
 
+    /** The active chain on which the account holds the token group, `preferredChainId`
+        when it qualifies, else the first one found; -1 when the account holds it nowhere **/
+    function chainHoldingGroup(groupKey, accountAddress, preferredChainId) {
+        if (!groupKey || !accountAddress)
+            return -1
+        const balances = ModelUtils.getByKey(root.walletAssetsStore.groupedAccountAssetsModel, "key", groupKey, "balances")
+        if (!balances)
+            return -1
+        const account = accountAddress.toLowerCase()
+        const zero = AmountsArithmetic.fromString("0")
+        let firstHeld = -1
+        for (let i = 0; i < balances.rowCount(); i++) {
+            const row = ModelUtils.get(balances, i)
+            if (row.account.toLowerCase() !== account
+                    || !ModelUtils.contains(root.filteredFlatNetworksModel, "chainId", row.chainId)
+                    || AmountsArithmetic.cmp(AmountsArithmetic.fromString(row.balance), zero) <= 0)
+                continue
+            if (row.chainId === preferredChainId)
+                return row.chainId
+            if (firstHeld === -1)
+                firstHeld = row.chainId
+        }
+        return firstHeld
+    }
+
     readonly property string errorMessage: d.errorMessage
     readonly property bool isEthBalanceInsufficient: d.isEthBalanceInsufficient
     readonly property bool isTokenBalanceInsufficient: d.isTokenBalanceInsufficient
@@ -147,6 +172,8 @@ QObject {
                         return qsTr("High price impact. Lower amount or try later")
                     case Constants.routerErrorCodes.processor.errUnsupportedCurrency:
                         return qsTr("Unsupported token. Try others")
+                    case Constants.routerErrorCodes.processor.errUnsupportedChain:
+                        return qsTr("Unsupported network. Try another")
                     case Constants.routerErrorCodes.processor.errSwapParaswapCustomError:
                         // matched against the backend's (English) Paraswap error text, so not translated
                         const errMsg = "No routes found with enough liquidity"

@@ -171,10 +171,11 @@ ItemDelegate {
                             color: Theme.palette.baseColor1
                             font.pixelSize: Theme.tertiaryTextFontSize
                             font.family: Fonts.monoFont.family
+                            font.features: Fonts.monoFont.features
                         }
                         StatusIcon {
-                            width: 12
-                            height: 12
+                            Layout.preferredWidth: 12
+                            Layout.preferredHeight: 12
                             icon: "external"
                             color: Theme.palette.baseColor1
                         }

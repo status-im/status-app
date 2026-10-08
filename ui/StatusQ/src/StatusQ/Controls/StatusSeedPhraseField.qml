@@ -45,6 +45,7 @@ TextField {
 
             text: "" + root.displayIndex
             font.family: Fonts.monoFont.family
+            font.features: Fonts.monoFont.features
 
             horizontalAlignment: Qt.AlignHCenter
             verticalAlignment: Qt.AlignVCenter
