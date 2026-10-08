@@ -2719,6 +2719,18 @@ Item {
         name: "WindowedView.AutoRequest"
         when: windowShown
 
+        // The shared delegates size rows by `value % 5`, which is negative for
+        // the negative values a slide at the top hands out.
+        Component {
+            id: signedRowDelegate
+
+            Item {
+                property int value: 0
+
+                implicitHeight: 20 + (Math.abs(value) % 5) * 30
+            }
+        }
+
         function initTestCase() {
             waitForRendering(view)
         }
@@ -2827,6 +2839,38 @@ Item {
             scrollWithin(300)
 
             compare(owner.startBudget, 3, "beyond the margin: nothing asked")
+        }
+
+        // A window shorter than the viewport and both prefetch margins has
+        // both bands in reach at once. After a slide at one edge the other
+        // band is in reach again, so without a hold the view would slide back
+        // and forth with nobody touching it. The opposite edge waits for the
+        // user to move towards it.
+        function test_aSlideDoesNotBounceBackWithoutAMove() {
+            provider.delay = 0
+            provider.delegate = signedRowDelegate
+            freshFill(20)
+
+            // 20 rows of ~80 px between two 100 px bands, the viewport near
+            // the top: a margin this deep keeps both bands in reach before a
+            // top slide and after it
+            view.prefetchMargin = 1100
+            view.contentY = 300
+            waitForRendering(view)
+            arm(5)
+
+            tryVerify(() => owner.startBudget < 5 && !view.busy, 5000, "it slid at the top")
+
+            // a frame through the event loop - moving up, which leaves the
+            // bottom held - so a request the bottom had pending would have run
+            view.contentY = view.contentY - 1
+            waitForRendering(view)
+            tryVerify(() => !view.busy, 5000)
+            compare(owner.endBudget, 5, "the bottom was not asked without a move towards it")
+
+            // moving towards the bottom releases it
+            view.contentY = view.contentY + 20
+            tryVerify(() => owner.endBudget < 5, 5000, "asked once the user moved towards it")
         }
 
         function test_nothingIsAskedWhileTheHandleIsHeld() {
