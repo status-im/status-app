@@ -59,6 +59,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 text: "advancedMode"
                 font.family: Fonts.monoFont.family
+                font.features: Fonts.monoFont.features
                 onClicked: {
                     card.advancedMode = checked
                 }
@@ -69,6 +70,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 text: "loading"
                 font.family: Fonts.monoFont.family
+                font.features: Fonts.monoFont.features
                 onClicked: {
                     card.loading = checked
                 }

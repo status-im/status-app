@@ -19,7 +19,8 @@ StatusInput {
     property bool readOnly: false
 
     input.edit.readOnly: root.readOnly
-    input.font: Fonts.monoFont.family
+    input.font.family: Fonts.monoFont.family
+    input.font.features: Fonts.monoFont.features
     input.placeholderFont: root.input.font
 
     input.rightComponent: {

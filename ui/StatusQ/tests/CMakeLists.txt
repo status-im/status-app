@@ -83,6 +83,10 @@ add_executable(TestHttpStats src/tst_httpstats.cpp)
 target_link_libraries(TestHttpStats PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
 add_test(NAME TestHttpStats COMMAND TestHttpStats)
 
+qt_add_executable(TestFonts src/tst_fonts.cpp)
+target_link_libraries(TestFonts PRIVATE Qt::Test Qt::Gui Qt::GuiPrivate Qt::Qml StatusQ)
+add_test(NAME TestFonts COMMAND TestFonts)
+
 add_executable(TestNetworkAccessFactory src/tst_networkaccessfactory.cpp)
 target_link_libraries(TestNetworkAccessFactory PRIVATE Qt::Test Qt::Network Qt::Qml StatusQ)
 add_test(NAME TestNetworkAccessFactory COMMAND TestNetworkAccessFactory)
