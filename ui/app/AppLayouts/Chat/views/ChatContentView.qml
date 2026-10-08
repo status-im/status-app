@@ -3,27 +3,23 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import StatusQ
-import StatusQ.Core.Theme
-import StatusQ.Core.Utils as StatusQUtils
 import StatusQ.Components
 import StatusQ.Controls
 
 import utils
 import shared
-import shared.popups
 import shared.status
-import shared.controls
-import shared.views.chat
 
 import AppLayouts.Chat.stores as ChatStores
 
-import "../helpers"
-import "../controls"
-import "../popups"
 import "../panels"
-import "../../Wallet"
 
+/*
+  The per-chat shell: the blocked banner, the loading skeleton and the slot the
+  section's shared ChatMessagesView is reparented into while this chat is the
+  active one (see ChatColumnView) - one messages view per section instead of
+  one per visited chat.
+*/
 ColumnLayout {
     id: root
 
@@ -34,70 +30,23 @@ ColumnLayout {
     property ChatStores.RootStore rootStore
     property string chatId
     property int chatType: Constants.chatType.unknown
-    property var formatBalance
-
-    // The app-wide reservoir of pre-built message rows; null builds every
-    // row on demand.
-    property DelegatePool rowPool: null
-
-    readonly property alias chatMessagesLoader: chatMessagesLoader
-    property bool areTestNetworksEnabled
-
-    property var emojiPopup
-    property var stickersPopup
-
-    // Users related data:
-    property var usersModel
-
-    signal openStickerPackPopup(string stickerPackId)
-    signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
 
     property bool isBlocked: false
-    property bool isUserAllowedToSendMessage: root.rootStore.isUserAllowedToSendMessage
-    property bool stickersLoaded: false
-    property bool joined
+
+    // Where the shared messages view goes while this chat is active.
+    readonly property alias messagesSlot: messagesSlot
 
     readonly property ChatStores.MessageStore messageStore: ChatStores.MessageStore {
-        messageModule: chatContentModule ? chatContentModule.messagesModule : null
+        messageModule: root.chatContentModule ? root.chatContentModule.messagesModule : null
         chatSectionModule: root.rootStore.chatCommunitySectionModule
     }
-
-    property bool sendViaPersonalChatEnabled
-    property bool messageLinkSharingEnabled
-    property bool threadsFeatureEnabled
-    property string disabledTooltipText
-
-    property int extraLeftPadding: 0
-
-    // Contacts related data:
-    property string myPublicKey
-
-    signal showReplyArea(messageId: string)
-    signal openThread(messageId: string)
-    signal forceInputFocus()
-    signal editMessageRequested(messageId: string)
-
-    // Unfurling related data:
-    property bool gifUnfurlingEnabled
-    property bool neverAskAboutUnfurlingAgain
-
-    signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
-
-    signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
-
-    // Contacts related requests:
-    signal changeContactNicknameRequest(string pubKey, string nickname, string displayName, bool sEdit)
-    signal removeTrustStatusRequest(string pubKey)
-    signal dismissContactRequest(string chatId, string contactRequestId)
-    signal acceptContactRequest(string chatId, string contactRequestId)
-
-    // Community access related requests:
-    signal spectateCommunityRequested(string communityId)
 
     objectName: "chatContentViewColumn"
     spacing: 0
 
     Loader {
+        objectName: "blockedBannerLoader"
+
         Layout.fillWidth: true
         active: root.isBlocked
         visible: active
@@ -107,94 +56,40 @@ ColumnLayout {
         }
     }
 
-    Loader {
-        id: chatMessagesLoader
+    Item {
+        id: messagesSlot
+
         Layout.fillWidth: true
         Layout.fillHeight: true
 
-        // The messages view is the heavy part of a chat; incubate it off the
-        // switch path so the shell (header, input) appears instantly.
-        asynchronous: true
+        // Whether the shared messages view is parented here. The skeleton is
+        // a child too, and does not count.
+        property bool occupied: false
+
+        onChildrenChanged: {
+            for (let i = 0; i < children.length; ++i) {
+                if (children[i] !== chatMessagesSkeleton) {
+                    occupied = true
+                    return
+                }
+            }
+
+            occupied = false
+        }
 
         Loader {
             id: chatMessagesSkeleton
+
             anchors.fill: parent
             z: 1
-            // Covers both the view construction and the backend fetch - over
-            // the view, not instead of it: hidden, the view would hand its
-            // rows back and miss a jump the fetch ends with. The rows that
-            // arrive meanwhile stay staged under the skeleton.
-            active: chatMessagesLoader.status !== Loader.Ready
-                    || root.messageStore.loading
+
+            // Covers the backend fetch, and the slot until the messages view
+            // has arrived. The view's own fill then covers the rows until
+            // they reveal, all at once.
+            active: root.messageStore.loading || !messagesSlot.occupied
             visible: active
             sourceComponent: MessageRowsSkeleton {
                 objectName: "chatMessagesSkeleton"
-            }
-        }
-
-        sourceComponent: ChatMessagesView {
-            chatContentModule: root.chatContentModule
-            rowPool: root.rowPool
-
-            rootStore: root.rootStore
-            messageStore: root.messageStore
-            formatBalance: root.formatBalance
-            emojiPopup: root.emojiPopup
-            stickersPopup: root.stickersPopup
-            stickersLoaded: root.stickersLoaded
-            chatId: root.chatId
-            isOneToOne: root.chatType === Constants.chatType.oneToOne
-            isChatBlocked: root.isBlocked || !root.isUserAllowedToSendMessage
-            isContactBlocked: root.isBlocked
-            channelEmoji: !chatContentModule ? "" : (chatContentModule.chatDetails.emoji || "")
-            sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
-            messageLinkSharingEnabled: root.messageLinkSharingEnabled
-            threadsFeatureEnabled: root.threadsFeatureEnabled
-            disabledTooltipText: root.disabledTooltipText
-            areTestNetworksEnabled: root.areTestNetworksEnabled
-            extraLeftPadding: root.extraLeftPadding
-            usersModel: root.usersModel
-            joined: root.joined
-
-            // Unfurling related data:
-            gifUnfurlingEnabled: root.gifUnfurlingEnabled
-            neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
-
-            // Contacts related data:
-            myPublicKey: root.myPublicKey
-
-            onShowReplyArea: (messageId, senderId) => {
-                root.showReplyArea(messageId)
-            }
-            onOpenThread: (messageId) => {
-                root.openThread(messageId)
-            }
-            onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
-            onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
-            onEditModeChanged: (editModeOn, messageId) => {
-                if (editModeOn) {
-                    root.editMessageRequested(messageId)
-                    return
-                }
-
-                if (!editModeOn)
-                    root.forceInputFocus()
-            }
-
-            // Unfurling related requests:
-            onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
-
-            onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
-
-            // Contacts related requests:
-            onChangeContactNicknameRequest: root.changeContactNicknameRequest(pubKey, nickname, displayName, isEdit)
-            onRemoveTrustStatusRequest: root.removeTrustStatusRequest(pubKey)
-            onDismissContactRequest: root.dismissContactRequest(chatId, contactRequestId)
-            onAcceptContactRequest: root.acceptContactRequest(chatId, contactRequestId)
-
-            // Community access related requests:
-            onSpectateCommunityRequested: (communityId) => {
-                root.spectateCommunityRequested(communityId)
             }
         }
     }
