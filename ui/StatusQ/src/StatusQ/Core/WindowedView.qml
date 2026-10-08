@@ -498,12 +498,13 @@ Flickable {
 
         // Deferred by one turn, not polled: requesting writes `d.wave`, which
         // feeds `staging`, which feeds `busy`, which this condition reads - so
-        // doing it here, inside the notification, is a binding loop. callLater
-        // runs in this same event-loop iteration, before anything is rendered,
-        // so nothing is actually delayed.
+        // doing it here, inside the notification, is a binding loop. A Timer
+        // rather than Qt.callLater: it dies with the view, while a callLater
+        // still pending when the view is destroyed runs into a context that no
+        // longer has its functions.
         onShouldRequestMoreChanged: {
             if (d.shouldRequestMore)
-                Qt.callLater(d.requestForReachedBand)
+                requestTimer.restart()
         }
 
         function requestForReachedBand() {
@@ -1718,6 +1719,14 @@ Flickable {
         interval: 1000
 
         onTriggered: d.abandonWait()
+    }
+
+    Timer {
+        id: requestTimer
+
+        interval: 0
+
+        onTriggered: d.requestForReachedBand()
     }
 
     // One slice of queued acquires per firing; a separate event-loop
