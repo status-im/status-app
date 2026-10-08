@@ -119,7 +119,11 @@ ColumnLayout {
         Loader {
             id: chatMessagesSkeleton
             anchors.fill: parent
-            // covers both the view construction and the backend fetch
+            z: 1
+            // Covers both the view construction and the backend fetch - over
+            // the view, not instead of it: hidden, the view would hand its
+            // rows back and miss a jump the fetch ends with. The rows that
+            // arrive meanwhile stay staged under the skeleton.
             active: chatMessagesLoader.status !== Loader.Ready
                     || root.messageStore.loading
             visible: active
@@ -129,8 +133,6 @@ ColumnLayout {
         }
 
         sourceComponent: ChatMessagesView {
-            visible: !chatMessagesSkeleton.visible
-
             chatContentModule: root.chatContentModule
             rowPool: root.rowPool
 

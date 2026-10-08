@@ -49,9 +49,12 @@ Item {
             signal sendingMessageFailed(string error)
             signal reactionActionFailed()
             signal scrollToMessage(string messageId)
+            signal moreMessagesLoaded()
+            signal chatThreadsLoadingFailed()
+            signal threadCreationFailed()
 
             function getChatId() { return "chat-1" }
-            function loadMoreMessages() {}
+            function loadMoreMessages() { moreMessagesLoaded() }
             function updateKeepUnread(flag) {}
         }
 
@@ -148,10 +151,12 @@ Item {
                       "skeleton must be released once the fetch is done")
         }
 
-        // The skeleton is not an overlay: whatever it covers must not paint
-        // underneath it — the real view stays invisible until it is ready
-        // AND its data is loaded.
-        function test_messagesViewHiddenWhileSkeletonShown() {
+        // The skeleton covers the fetch from above, and the rows arriving
+        // meanwhile stay staged under it - one batch, revealed once the fetch
+        // is done - so nothing paints underneath it. The view itself stays
+        // visible: hidden, it would hand its rows back and miss a jump the
+        // fetch ends with.
+        function test_rowsStayHiddenWhileTheFetchRuns() {
             contentModuleMock.messagesModule.loading = true
 
             const view = createTemporaryObject(contentViewComp, root)
@@ -161,14 +166,77 @@ Item {
 
             const skeleton = findChild(view, "chatMessagesSkeleton")
             verify(!!skeleton)
-            verify(skeleton.visible)
-            verify(!view.chatMessagesLoader.item.visible,
-                   "messages view must be invisible while the skeleton shows")
+            verify(skeleton.visible, "the skeleton covers the fetch")
+
+            fillMessages(10)
+
+            const lv = view.chatMessagesLoader.item.chatLogView
+
+            tryVerify(() => lv.rowCount === 10, 5000, "the rows are in")
+            verify(lv.busy, "and held while the fetch runs")
+            compare(revealedRows(lv), 0, "none of them shows")
 
             contentModuleMock.messagesModule.loading = false
-            tryVerify(() => view.chatMessagesLoader.item.visible)
+
+            tryVerify(() => !lv.busy && revealedRows(lv) === 10, 5000,
+                      "revealed together once the fetch is done")
             tryVerify(() => !findChild(view, "chatMessagesSkeleton"), 5000,
-                      "skeleton must be released once the view is shown")
+                      "and the skeleton is released")
+        }
+
+        function revealedRows(lv) {
+            let n = 0
+            for (let row = 0; row < lv.rowCount; ++row) {
+                const shell = lv.itemAtRow(row)
+                if (shell && shell.visible)
+                    ++n
+            }
+            return n
+        }
+
+        function fillMessages(count) {
+            const now = Date.now()
+            const rows = []
+
+            // newest first, as the backend model keeps them
+            for (let i = 0; i < count; ++i) {
+                const ts = now - i * 60000
+                rows.push({
+                    id: "msg-" + i,
+                    timestamp: ts,
+                    contentType: Constants.messageContentType.messageType,
+                    senderId: "0xpeer",
+                    senderDisplayName: "Peer",
+                    messageText: "Message " + i,
+                    unparsedText: "Message " + i,
+                    deleted: false,
+                    prevMsgIndex: i + 1,
+                    nextMsgIndex: i - 1,
+                    prevMsgTimestamp: ts - 60000,
+                    nextMsgTimestamp: ts + 60000,
+                    prevMsgSenderId: "0xpeer",
+                    prevMsgContentType: Constants.messageContentType.messageType,
+                    prevMsgDeleted: false,
+                    outgoingStatus: "",
+                    pinned: false,
+                    pinnedBy: "",
+                    reactions: "",
+                    editMode: false,
+                    mentioned: false,
+                    senderEnsVerified: false,
+                    transactionParameters: "",
+                    albumImagesCount: 0,
+                    quotedMessageText: "",
+                    quotedMessageParsedText: "",
+                    quotedMessageAuthorName: "",
+                    quotedMessageAuthorDisplayName: "",
+                    quotedMessageAuthorThumbnailImage: "",
+                    quotedMessageAuthorEnsVerified: false,
+                    quotedMessageAuthorIsContact: false
+                })
+            }
+
+            messagesModel.append(rows)
         }
     }
 }

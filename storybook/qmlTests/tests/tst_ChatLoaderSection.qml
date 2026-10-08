@@ -222,9 +222,10 @@ Item {
                 signal sendingMessageFailed(string error)
                 signal reactionActionFailed()
                 signal scrollToMessage(string messageId)
+                signal moreMessagesLoaded()
 
                 function getChatId() { return contentModule.chatId }
-                function loadMoreMessages() {}
+                function loadMoreMessages() { moreMessagesLoaded() }
                 function updateKeepUnread(flag) {}
             }
 
@@ -332,11 +333,13 @@ Item {
             return out
         }
 
+        // The rows the message views hold: a window of the history, built
+        // and revealed as one batch.
         function totalMessageRows(loader) {
             const views = findAllIn(loader, "chatLogView", [])
             let total = 0
             for (let i = 0; i < views.length; ++i)
-                total += views[i].contentItem.children.length
+                total += views[i].rowCount
             return total
         }
 
@@ -344,8 +347,7 @@ Item {
             const views = findAllIn(loader, "chatLogView", [])
             for (let i = 0; i < views.length; ++i) {
                 const lv = views[i]
-                if (lv.visible && lv.model && lv.count > 0
-                        && lv.contentItem.children.length > 0)
+                if (lv.visible && lv.model && lv.rowCount > 0 && !lv.busy)
                     return lv
             }
             return null
@@ -361,7 +363,6 @@ Item {
             tryVerify(() => !!activeReadyLogView(loader), 10000)
 
             function measureSwitch(chatId) {
-                const rowsBefore = totalMessageRows(loader)
                 const t0 = Date.now()
                 d.setActiveChat(chatId)
                 const syncMs = Date.now() - t0
@@ -370,8 +371,10 @@ Item {
                     return !!lv && lv.parent.visible
                 }, 120000)
                 waitForRendering(loader)
+                // a hidden chat hands its rows back: what the views hold
+                // after the switch is what the switch built
                 return { ms: Date.now() - t0, syncMs: syncMs,
-                         rows: totalMessageRows(loader) - rowsBefore }
+                         rows: totalMessageRows(loader) }
             }
 
             const small = measureSwitch("chat-1")
@@ -388,7 +391,6 @@ Item {
             tryVerify(() => !!activeReadyLogView(loader2), 120000)
             waitForRendering(loader2)
 
-            const rowsBefore = totalMessageRows(loader2)
             const t0 = Date.now()
             d.setActiveChat("chat-2")
             const syncMs = Date.now() - t0
@@ -398,7 +400,7 @@ Item {
             }, 120000)
             waitForRendering(loader2)
             const large = { ms: Date.now() - t0, syncMs: syncMs,
-                            rows: totalMessageRows(loader2) - rowsBefore }
+                            rows: totalMessageRows(loader2) }
 
             console.info("chat switch cost: 150 msgs =", small.ms, "ms (sync",
                          small.syncMs, ") /", small.rows,
@@ -428,14 +430,14 @@ Item {
 
             const lv = findChild(loader, "chatLogView")
             verify(!!lv)
-            tryVerify(() => lv.count === 150, 10000)
+            tryVerify(() => lv.rowCount > 0 && !lv.busy, 10000)
             waitForRendering(lv)
 
-            const created = lv.contentItem.children.length
+            const created = lv.rowCount
             verify(created > 0, "some message rows must be built")
             verify(created < 75,
-                   "only viewport+cache rows may be built, got " + created
-                   + " of " + lv.count)
+                   "only a window of rows may be built, got " + created
+                   + " of " + messagesModel.count)
         }
 
         // Loading the section must cost the same whether the chat list holds

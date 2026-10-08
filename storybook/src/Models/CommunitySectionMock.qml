@@ -269,9 +269,10 @@ QtObject {
                 signal sendingMessageFailed(string error)
                 signal reactionActionFailed()
                 signal scrollToMessage(string messageId)
+                signal moreMessagesLoaded()
 
                 function getChatId() { return contentModule.chatId }
-                function loadMoreMessages() {}
+                function loadMoreMessages() { moreMessagesLoaded() }
                 function updateKeepUnread(flag) {}
             }
 

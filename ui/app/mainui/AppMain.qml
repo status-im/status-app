@@ -28,6 +28,7 @@ import shared.stores as SharedStores
 import shared.popups.send as SendPopups
 import shared.popups.send.views
 import shared.stores.send
+import shared.views.chat as ChatViews
 
 import StatusQ
 import StatusQ.Components
@@ -263,6 +264,23 @@ Item {
     }
     readonly property var allContacsAdaptor: contactInfrastructureLoader.item?.allContactsAdaptor ?? null
     readonly property var contactsModelAdaptor: contactInfrastructureLoader.item?.contactsAdaptor ?? null
+
+    // The app-wide reservoir of pre-built message rows, handed down to every
+    // chat section's messages view. Declared here, in a file without
+    // `pragma ComponentBehavior: Bound`: the pool builds its delegate with no
+    // creation context. Building starts at background pace; the messages view
+    // raises the target (grow-only) to cover its window and boosts while a
+    // batch waits on it.
+    readonly property DelegatePool messageRowPool: DelegatePool {
+        DelegatePoolKind {
+            kind: "message"
+            target: Math.ceil(appMain.height / 48) * 3
+
+            delegate: Component {
+                ChatViews.MessageView {}
+            }
+        }
+    }
 
     Loader {
         id: supportBotContactLoader
@@ -2377,6 +2395,7 @@ Item {
                         popupHandler: popupRequestsHandler
                         emojiPopupLoader: statusEmojiPopup
                         stickersPopupLoader: statusStickersPopupLoader
+                        rowPool: appMain.messageRowPool
 
                         createChatViewOpened: createChatView.opened
                         isPortraitMode: appMain.isPortraitMode
@@ -2582,6 +2601,7 @@ Item {
                             popupHandler: popupRequestsHandler
                             emojiPopupLoader: statusEmojiPopup
                             stickersPopupLoader: statusStickersPopupLoader
+                            rowPool: appMain.messageRowPool
 
                             createChatViewOpened: createChatView.opened
                             isPortraitMode: appMain.isPortraitMode
