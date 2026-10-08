@@ -335,6 +335,7 @@ Flickable {
         return root.contentY - d.rowTop(item)
     }
 
+    clip: true
     contentWidth: width
 
     // contentHeight is assigned, never bound: writing it runs Flickable's own
