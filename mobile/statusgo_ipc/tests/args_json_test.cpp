@@ -54,7 +54,8 @@ static void testUnicodeEscapesDecodeToUtf8() {
     CHECK_EQ(out[1], std::string("\xe4\xb8\xad"));
     CHECK_EQ(out[2], std::string("\xf0\x9f\x98\x80"));
     CHECK_EQ(out[3], std::string("\xe2\x80\xa8"));
-    CHECK_EQ(out[4], std::string("a\0b", 3));
+    // Arguments reach status-go as C strings: an embedded NUL would truncate them.
+    CHECK_EQ(out[4], std::string("a?b"));
   }
 }
 

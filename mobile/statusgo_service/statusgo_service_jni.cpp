@@ -91,7 +91,7 @@ jobject dispatch(JNIEnv* env, jstring jMethod, std::vector<std::string> args) {
   for (auto& s : args) argv.push_back(s.c_str());
 
   char* out = statusgo_service_dispatch(method ? method : "", argv.empty() ? nullptr : argv.data(), argv.size());
-  if (jMethod) env->ReleaseStringUTFChars(jMethod, method);
+  if (method) env->ReleaseStringUTFChars(jMethod, method);
   if (!out) return nullptr;
 
   jobject buf = env->NewDirectByteBuffer(out, static_cast<jlong>(strlen(out)));
