@@ -224,6 +224,9 @@ QtObject:
     chatThreadsByParentIdByChat: Table[string, Table[string, ThreadDto]]
     chatThreadListsLoadedChats: HashSet[string]
     chatThreadListsLoadingChats: HashSet[string]
+    # Read-only sentinel returned via `lent` borrow when a thread lookup misses.
+    # Mutating it would affect every subsequent miss result.
+    emptyThread: ThreadDto
 
   proc asyncLoadChatThreadsForChats*(self: Service, chatIds: seq[string])
 
@@ -341,12 +344,13 @@ QtObject:
       return
     return self.chatThreadsByParentIdByChat[chatId].getOrDefault(parentMessageId)
 
-  proc getThreadById*(self: Service, chatId: string, threadId: string): ThreadDto =
+  proc getThreadById*(self: Service, chatId: string, threadId: string): lent ThreadDto =
     if not self.chatThreadsByParentIdByChat.hasKey(chatId):
-      return
-    for _, thread in self.chatThreadsByParentIdByChat[chatId]:
-      if thread.threadId == threadId:
-        return thread
+      return self.emptyThread
+    for parentMessageId in self.chatThreadsByParentIdByChat[chatId].keys:
+      if self.chatThreadsByParentIdByChat[chatId][parentMessageId].threadId == threadId:
+        return self.chatThreadsByParentIdByChat[chatId][parentMessageId]
+    return self.emptyThread
 
   proc getParentMessageIdForThread(self: Service, chatId: string, threadId: string): string =
     if not self.chatThreadsByParentIdByChat.hasKey(chatId):

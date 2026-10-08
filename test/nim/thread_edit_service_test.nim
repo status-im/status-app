@@ -15,6 +15,35 @@ suite "thread edit metadata handling":
     events.on(SIGNAL_THREAD_EDIT_FINISHED) do(args: Args):
       completions.add(ThreadEditFinishedArgs(args))
 
+  test "thread lookup borrows cached storage across subsequent lookups":
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "first", chatId: "chat", parentMessageId: "first-root",
+        name: "First thread", participantsPreviewIds: @["creator", "member"],
+        lastMessage: ThreadLastMessageDto(text: "First reply")),
+      ThreadDto(threadId: "second", chatId: "chat", parentMessageId: "second-root",
+        name: "Second thread"),
+    ]))
+    let first {.cursor.} = service.getThreadById("chat", "first")
+    let second {.cursor.} = service.getThreadById("chat", "second")
+    check second.name == "Second thread"
+    check first.threadId == "first"
+    check first.name == "First thread"
+    check first.participantsPreviewIds == @["creator", "member"]
+    check first.lastMessage.text == "First reply"
+    let copied = first
+    check copied.name == "First thread"
+    check copied.participantsPreviewIds == @["creator", "member"]
+
+  test "missing chat and thread lookups return an empty DTO":
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root",
+        name: "Existing thread"),
+    ]))
+    check service.getThreadById("missing-chat", "thread") == ThreadDto()
+    check service.getThreadById("chat", "missing-thread") == ThreadDto()
+    check service.getThreadById("", "") == ThreadDto()
+    check service.getThreadById("chat", "thread").name == "Existing thread"
+
   test "local rename preserves cached summary and emits keyed completion":
     events.emit(SignalType.Message.event, MessageSignal(threads: @[
       ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root", name: "Old",

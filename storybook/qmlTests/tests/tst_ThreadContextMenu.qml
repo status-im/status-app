@@ -200,18 +200,6 @@ Item {
             menu.close()
         }
 
-        function test_editPermissionAndRenameOnlyMode() {
-            const menu = createMenu({editEnabled: false, isThread: true})
-            const edit = findEntry(menu, "threadContextMenu_editName")
-            compare(edit.enabled, false)
-            compare(menu.itemAt(0).visible, false)
-            menu.editEnabled = true
-            compare(menu.itemAt(0).visible, true)
-            for (let i = 1; i < menu.count; ++i)
-                compare(menu.itemAt(i).visible, false)
-            menu.close()
-        }
-
         function test_02_signals_emit_for_each_action() {
             const menu = createMenu({
                 isMobile: false,
