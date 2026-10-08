@@ -309,12 +309,14 @@ Flickable {
     function positionViewAtBeginning() {
         d.cancelPosition()
         d.releaseAnchor()
+        d.releaseHolds()
         d.apply(d.bottomUp ? d.bottomY() : 0)
     }
 
     function positionViewAtEnd() {
         d.cancelPosition()
         d.releaseAnchor()
+        d.releaseHolds()
         d.apply(d.bottomUp ? 0 : d.bottomY())
     }
 
@@ -493,8 +495,28 @@ Flickable {
         readonly property bool shouldRequestMore:
                 root.autoRequest && d.hasViewport
                 && !root.busy && !d.finishing && !d.scrollBarHeld
-                && ((root.moreAvailableTop && d.bandInReach(topBand))
-                    || (root.moreAvailableBottom && d.bandInReach(bottomBand)))
+                && (d.wantsMore(true) || d.wantsMore(false))
+
+        // An edge with more behind it whose band is in reach - unless that
+        // edge is held: the one opposite the last slide waits for the user to
+        // move towards it. A window too short for the viewport and both
+        // prefetch margins has both bands in reach at once, and without the
+        // hold every slide would put the other band back in reach - sliding
+        // back and forth for ever with nobody touching anything. Prefetch is
+        // there to anticipate a move; with no move there is nothing to
+        // anticipate.
+        property bool holdTop: false
+        property bool holdBottom: false
+
+        function wantsMore(atTop) {
+            return atTop ? root.moreAvailableTop && !d.holdTop && d.bandInReach(topBand)
+                         : root.moreAvailableBottom && !d.holdBottom && d.bandInReach(bottomBand)
+        }
+
+        function releaseHolds() {
+            d.holdTop = false
+            d.holdBottom = false
+        }
 
         // Deferred by one turn, not polled: requesting writes `d.wave`, which
         // feeds `staging`, which feeds `busy`, which this condition reads - so
@@ -516,9 +538,9 @@ Flickable {
 
             // The top first, so a view short enough to show both bands walks
             // back through the history rather than fighting itself.
-            if (root.moreAvailableTop && d.bandInReach(topBand))
+            if (d.wantsMore(true))
                 d.request(true)
-            else if (root.moreAvailableBottom && d.bandInReach(bottomBand))
+            else if (d.wantsMore(false))
                 d.request(false)
         }
 
@@ -725,6 +747,9 @@ Flickable {
         // scrollbar drags, which emit no movement signals at all.
         property bool applyingPosition: false
 
+        // Where contentY was, for the direction of a user's move.
+        property real lastContentY: 0
+
         // Writing contentY cancels an in-flight flick: setContentY() resets the
         // timeline and ends the movement. So the velocity is taken before the
         // write and the flick started again after it. Under Qt's constant
@@ -894,6 +919,9 @@ Flickable {
         function requestPosition(row, mode, offset) {
             if (row < 0 || row >= root.rowCount)
                 return false
+
+            // a deliberate position is a new place to read from
+            d.releaseHolds()
 
             // A deliberate position replaces whatever was holding the view,
             // including a slide's anchor: the request is the guarantee now.
@@ -1119,7 +1147,13 @@ Flickable {
         // jump by the height of everything that changed. Re-anchor to where the
         // user has just put the view instead. Outside a slide the anchor has no
         // work to do.
-        function userMoved() {
+        function userMoved(delta) {
+            // Moving towards a held edge is what the hold waited for.
+            if (delta < 0)
+                d.holdTop = false
+            else if (delta > 0)
+                d.holdBottom = false
+
             // A jump must not outlive the user's next move - the same lifetime
             // the resize anchor has.
             d.cancelPosition()
@@ -1325,6 +1359,11 @@ Flickable {
 
             d.wave = d.waveWaiting()
 
+            // A slide holds the opposite edge until the user moves towards it;
+            // anything else - a fill, an owner's batch - leaves both free.
+            d.holdTop = d.requestedAtEdge && !d.requestedAtTop
+            d.holdBottom = d.requestedAtEdge && d.requestedAtTop
+
             // In this same turn, so rows leaving and rows appearing change the
             // content together. An owner that defers removals trims here.
             root.batchRevealed()
@@ -1426,6 +1465,9 @@ Flickable {
 
             d.initialLoading = true
             d.noProgressIntervals = 0
+
+            // a fill has no edge: no band to keep up, no edge to hold after
+            d.requestedAtEdge = false
 
             // Nothing else arms it here: contentArrived() is what normally
             // re-arms the detector, and a provider that never answers produces
@@ -1704,6 +1746,7 @@ Flickable {
         // a reset removes every row with no per-row signal
         function onModelAboutToBeReset() {
             d.clearStaging()
+            d.releaseHolds()
             d.loadingTop = false
             d.loadingBottom = false
         }
@@ -1763,8 +1806,11 @@ Flickable {
     // Any contentY change that is not ours is the user scrolling - wheel,
     // touch, or a scrollbar drag, which emits no movement signals at all.
     onContentYChanged: {
+        const delta = root.contentY - d.lastContentY
+        d.lastContentY = root.contentY
+
         if (!d.applyingPosition)
-            d.userMoved()
+            d.userMoved(delta)
 
         d.applyPlaceholder()
     }
