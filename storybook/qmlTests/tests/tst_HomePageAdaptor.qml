@@ -6,6 +6,7 @@ import Models
 import Storybook
 import Storybook.Testing
 
+import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 
 import QtModelsToolkit
@@ -91,6 +92,11 @@ Item {
             searchPhrase: ""
             profileId: root.uniqueProfileId()
         }
+    }
+
+    Component {
+        id: chatsModelComponent
+        ChatsModel {}
     }
 
     Component {
@@ -284,6 +290,68 @@ Item {
             adaptor.save()
             const stored = storedEntries(profileId)
             verify(!stored.some(e => e.key === "2;gone"))
+            adaptor.clear()
+        }
+
+        // a source model reset (here: model swap) drops overlay values of its rows, as before
+        function test_sourceResetDropsOverlay() {
+            const adaptor = createAdaptor()
+            applyInteractions(adaptor)
+            tryCompare(adaptor.pinnedModel.ModelCount, "count", 2)
+
+            adaptor.chatsBaseModel = chatsModelComponent.createObject(adaptor)
+
+            tryCompare(adaptor.pinnedModel.ModelCount, "count", 1)
+            compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "2;id1", "pinned"), false)
+            compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "2;id1", "timestamp"), 0)
+            compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "3;id106", "pinned"), true)
+            adaptor.clear()
+        }
+
+        function test_themeChangeUpdatesColors() {
+            const adaptor = createAdaptor()
+            const chatKey = "2;id1" // color derived from colorId 1
+            const walletKey = "1;0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884"
+
+            const expected = () => ({
+                chat: normalize("color", Utils.colorForColorId(adaptor.Theme.palette, 1)),
+                settings: normalize("color", adaptor.Theme.palette.primaryColor1),
+                wallet: normalize("color", Utils.getColorForId(adaptor.Theme.palette,
+                    SQUtils.ModelUtils.getByKey(adaptor.walletsBaseModel, "mixedcaseAddress",
+                                                walletKey.split(";")[1], "colorId")))
+            })
+            const actual = () => ({
+                chat: normalize("color", SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", chatKey, "color")),
+                settings: normalize("color", SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "4;12", "color")),
+                wallet: normalize("color", SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", walletKey, "color"))
+            })
+
+            compare(JSON.stringify(actual()), JSON.stringify(expected()))
+            const light = actual()
+
+            adaptor.Theme.style = Theme.Dark
+            verify(JSON.stringify(expected()) !== JSON.stringify(light), "dark palette differs")
+            tryVerify(() => JSON.stringify(actual()) === JSON.stringify(expected()))
+
+            adaptor.Theme.style = Theme.Light
+            tryVerify(() => JSON.stringify(actual()) === JSON.stringify(light))
+        }
+
+        // keys are made of entity ids, which don't change; a changed id is a new entry
+        function test_keyChange() {
+            const adaptor = createAdaptor()
+            adaptor.setTimestamp("2;id1", 1000)
+            adaptor.setPinned("2;id1", true)
+            tryCompare(adaptor.pinnedModel.ModelCount, "count", 1)
+
+            const chats = adaptor.chatsBaseModel
+            chats.setProperty(SQUtils.ModelUtils.indexOf(chats, "itemId", "id1"), "itemId", "id1b")
+
+            tryVerify(() => SQUtils.ModelUtils.indexOf(adaptor.homePageEntriesModel, "key", "2;id1b") >= 0)
+            compare(SQUtils.ModelUtils.indexOf(adaptor.homePageEntriesModel, "key", "2;id1"), -1)
+            compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "2;id1b", "id"), "id1b")
+            compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "2;id1b", "pinned"), false)
+            tryCompare(adaptor.pinnedModel.ModelCount, "count", 0)
             adaptor.clear()
         }
 
