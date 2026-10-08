@@ -2,6 +2,9 @@
 
 #include <filters/filter.h>
 
+#include <QHash>
+#include <QList>
+#include <QPair>
 #include <QQmlContext>
 #include <QQmlExpression>
 #include <QQmlScriptString>
@@ -38,12 +41,16 @@ Q_SIGNALS:
     void expectedRolesChanged();
 
 private:
-    void updateContext(const qqsfpm::QQmlSortFilterProxyModel& proxyModel);
-    void updateExpression();
+    void updateContext(const QHash<int, QByteArray>& roles) const;
+    void updateExpression() const;
 
     QQmlScriptString m_scriptString;
-    std::unique_ptr<QQmlExpression> m_expression;
-    std::unique_ptr<QQmlContext> m_context;
+    mutable std::unique_ptr<QQmlContext> m_context;
+    mutable std::unique_ptr<QQmlContext> m_evaluationContext;
+    mutable std::unique_ptr<QQmlExpression> m_expression;
+    mutable std::unique_ptr<QQmlExpression> m_evaluationExpression;
 
     QStringList m_expectedRoles;
+    mutable QHash<int, QByteArray> m_roleNames;
+    mutable QList<QPair<int, QString>> m_resolvedRoles;
 };

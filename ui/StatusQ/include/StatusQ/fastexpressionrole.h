@@ -2,6 +2,9 @@
 
 #include <proxyroles/singlerole.h>
 
+#include <QHash>
+#include <QList>
+#include <QPair>
 #include <QQmlContext>
 #include <QQmlExpression>
 #include <QQmlScriptString>
@@ -36,12 +39,16 @@ Q_SIGNALS:
 private:
     QVariant data(const QModelIndex& sourceIndex,
                   const qqsfpm::QQmlSortFilterProxyModel& proxyModel) override;
-    void updateContext(const qqsfpm::QQmlSortFilterProxyModel& proxyModel);
+    void updateContext(const QHash<int, QByteArray>& roles);
     void updateExpression();
 
     QQmlScriptString m_scriptString;
-    std::unique_ptr<QQmlExpression> m_expression;
     std::unique_ptr<QQmlContext> m_context;
+    std::unique_ptr<QQmlContext> m_evaluationContext;
+    std::unique_ptr<QQmlExpression> m_expression;
+    std::unique_ptr<QQmlExpression> m_evaluationExpression;
 
     QStringList m_expectedRoles;
+    QHash<int, QByteArray> m_roleNames;
+    QList<QPair<int, QString>> m_resolvedRoles;
 };

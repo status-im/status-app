@@ -2,6 +2,9 @@
 
 #include <sorters/sorter.h>
 
+#include <QHash>
+#include <QList>
+#include <QPair>
 #include <QQmlContext>
 #include <QQmlExpression>
 #include <QQmlScriptString>
@@ -41,18 +44,22 @@ protected:
     int compare(const QModelIndex& sourceLeft, const QModelIndex& sourceRight, const qqsfpm::QQmlSortFilterProxyModel& proxyModel) const override;
 
 private:
-    void updateContext(const qqsfpm::QQmlSortFilterProxyModel& proxyModel);
-    void updateExpression();
+    void updateContext(const QHash<int, QByteArray>& roles) const;
+    void updateExpression() const;
+    void setRowInputs(const QModelIndex& sourceLeft,
+                      const QModelIndex& sourceRight,
+                      const qqsfpm::QQmlSortFilterProxyModel& proxyModel) const;
 
     QQmlScriptString m_scriptString;
 
-    std::unique_ptr<QQmlExpression> m_expression;
-    std::unique_ptr<QQmlContext> m_context;
+    mutable std::unique_ptr<QQmlPropertyMap> m_modelLeftMap;
+    mutable std::unique_ptr<QQmlPropertyMap> m_modelRightMap;
+    mutable std::unique_ptr<QQmlContext> m_context;
+    mutable std::unique_ptr<QQmlExpression> m_expression;
 
     QSet<QByteArray> m_expectedRoles;
+    mutable QHash<int, QByteArray> m_roleNames;
+    mutable QList<QPair<int, QString>> m_resolvedRoles;
 
     bool m_queuedInvalidate { false };
-
-    QQmlPropertyMap* m_modelLeftMap = QQmlPropertyMap::create(this);
-    QQmlPropertyMap* m_modelRightMap = QQmlPropertyMap::create(this);
 };
