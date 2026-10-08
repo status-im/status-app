@@ -43,6 +43,7 @@ Item {
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
     property var emojiPopup
     property var stickersPopup
+    property DelegatePool rowPool: null
     property bool areTestNetworksEnabled
 
     /*
@@ -489,6 +490,7 @@ Item {
                         formatBalance: d.formatBalance
                         emojiPopup: root.emojiPopup
                         stickersPopup: root.stickersPopup
+                        rowPool: root.rowPool
                         stickersLoaded: root.stickersLoaded
                         isBlocked: model.blocked
                         sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
