@@ -19,6 +19,15 @@ Item {
             property alias sorterEnabled: sorter.enabled
             property alias sortingAscending: sorter.ascendingOrder
             property alias sorters: testModel.sorters
+            readonly property FastExpressionSorter sorterObject: sorter
+
+            readonly property FastExpressionSorter replacementSorter: FastExpressionSorter {
+                expression: (modelLeft.b ?? 0) - (modelRight.b ?? 0)
+            }
+
+            readonly property FastExpressionSorter indexSorter: FastExpressionSorter {
+                expression: modelRight.index - modelLeft.index
+            }
 
             readonly property ListModel source: ListModel {
                 id: listModel
@@ -32,6 +41,12 @@ Item {
                 ListElement { a: 2; b: 12; c: 101 }
                 ListElement { a: 7; b: 17; c: 107 }
                 ListElement { a: 7; b: 17; c: 108 }
+            }
+
+            readonly property ListModel alternateSource: ListModel {
+                ListElement { unused: 0; c: 30; b: 20; a: 3 }
+                ListElement { unused: 1; c: 31; b: 21; a: 1 }
+                ListElement { unused: 2; c: 32; b: 22; a: 9 }
             }
 
             readonly property ModelAccessObserverProxy observer: ModelAccessObserverProxy {
@@ -70,10 +85,12 @@ Item {
                 id: sorter
 
                 expression: {
+                    // Capture the external dependency even when the rows compare equal.
+                    const ascending = d
                     if (modelLeft.a < modelRight.a) 
-                        return d ? -1 : 1
+                        return ascending ? -1 : 1
                     else if (modelLeft.a > modelRight.a)
-                        return d ? 1 : -1
+                        return ascending ? 1 : -1
                     else
                         return 0
                 }
@@ -113,6 +130,45 @@ Item {
                 target: testModel
                 signalName: "layoutChanged"
             }
+
+            readonly property SignalSpy sorterInvalidatedSpy: SignalSpy {
+                target: sorter
+                signalName: "invalidated"
+            }
+        }
+    }
+
+    Component {
+        id: boolSorterComponent
+
+        QtObject {
+            property bool byB: false
+            property alias ascending: boolSorter.ascendingOrder
+
+            readonly property ListModel source: ListModel {
+                ListElement { a: 3; b: 1; c: 0 }
+                ListElement { a: 1; b: 3; c: 1 }
+                ListElement { a: 2; b: 2; c: 2 }
+                ListElement { a: 1; b: 4; c: 3 }
+                ListElement { a: 3; b: 0; c: 4 }
+            }
+
+            readonly property SortFilterProxyModel model: SortFilterProxyModel {
+                sourceModel: source
+                sorters: FastExpressionSorter {
+                    id: boolSorter
+                    expectedRoles: ["a", "b"]
+                    expression: byB ? modelLeft.b < modelRight.b
+                                    : modelLeft.a < modelRight.a
+                }
+            }
+
+            function column(role) {
+                const values = []
+                for (let i = 0; i < model.count; ++i)
+                    values.push(model.get(i, role))
+                return values
+            }
         }
     }
 
@@ -145,9 +201,9 @@ Item {
                    < count * Math.ceil(Math.log2(count)) * 3)
             compare(obj.observer.accessedRoles.size, 1)
 
-            tryVerify(() => obj.model.get(0).a, 7)
-            tryVerify(() => obj.model.get(1).a, 6)
-            tryVerify(() => obj.model.get(6).a, 1)
+            tryVerify(() => obj.model.get(0, "a") === 7)
+            tryVerify(() => obj.model.get(1, "a") === 7)
+            tryVerify(() => obj.model.get(8, "a") === 1)
         }
 
         function test_enabled() {
@@ -196,9 +252,9 @@ Item {
             tryVerify(() => obj.observer.accessCounter
                    < count * Math.ceil(Math.log2(count)) * 3)
 
-            tryVerify(() => obj.model.get(0).a, 7)
-            tryVerify(() => obj.model.get(1).a, 6)
-            tryVerify(() => obj.model.get(7).a, 1)
+            tryVerify(() => obj.model.get(0, "a") === 7)
+            tryVerify(() => obj.model.get(1, "a") === 7)
+            tryVerify(() => obj.model.get(8, "a") === 1)
         }
 
         function test_sortingDescendingAfterEnablingSorting() {
@@ -400,6 +456,95 @@ Item {
             compare(obj.model.get(8).a, 7)
             compare(obj.model.get(7).c, 108) // descending "c"
             compare(obj.model.get(8).c, 107)
+        }
+
+        function test_repeatedContextChanges() {
+            const obj = createTemporaryObject(testComponent, root)
+            verify(!!obj, "Component exists")
+
+            compare(obj.model.get(0, "a"), 1)
+            wait(0)
+            obj.sorterInvalidatedSpy.clear()
+            wait(0)
+            compare(obj.sorterInvalidatedSpy.count, 0)
+
+            obj.d = 0
+            tryVerify(() => obj.model.get(0, "a") === 7)
+            tryCompare(obj.sorterInvalidatedSpy, "count", 1)
+            obj.d = 1
+            tryVerify(() => obj.model.get(0, "a") === 1)
+            tryCompare(obj.sorterInvalidatedSpy, "count", 2)
+            obj.d = 0
+            tryVerify(() => obj.model.get(0, "a") === 7)
+            tryCompare(obj.sorterInvalidatedSpy, "count", 3)
+        }
+
+        function test_changingExpressionAndExpectedRoles() {
+            const obj = createTemporaryObject(testComponent, root)
+            verify(!!obj, "Component exists")
+
+            obj.sorterObject.expression = obj.replacementSorter.expression
+            obj.sorterObject.expectedRoles = ["b"]
+            tryVerify(() => obj.model.get(2, "b") === 12)
+
+            obj.sorterObject.expectedRoles = []
+            tryVerify(() => obj.model.get(2, "b") === 13)
+            obj.sorterObject.expectedRoles = ["b"]
+            tryVerify(() => obj.model.get(2, "b") === 12)
+        }
+
+        function test_replacingSource() {
+            const obj = createTemporaryObject(testComponent, root)
+            verify(!!obj, "Component exists")
+
+            obj.model.sourceModel = obj.alternateSource
+            compare(obj.model.count, 3)
+            compare(obj.model.get(0, "a"), 1)
+            compare(obj.model.get(1, "a"), 3)
+            compare(obj.model.get(2, "a"), 9)
+
+            obj.d = 0
+            tryVerify(() => obj.model.get(0, "a") === 9)
+
+            obj.model.sourceModel = obj.observer
+            compare(obj.model.count, 9)
+            compare(obj.model.get(0, "a"), 7)
+            compare(obj.model.get(8, "a"), 1)
+        }
+
+        function test_sourceRowIndex() {
+            const obj = createTemporaryObject(testComponent, root)
+            verify(!!obj, "Component exists")
+
+            obj.sorterObject.expression = obj.indexSorter.expression
+            obj.sorterObject.expectedRoles = []
+            tryVerify(() => obj.model.get(0, "c") === 108)
+            compare(obj.model.get(8, "c"), 100)
+
+            obj.source.clear()
+            compare(obj.model.count, 0)
+            obj.source.append({ a: 4, b: 14, c: 104 })
+            obj.source.append({ a: 1, b: 11, c: 101 })
+            compare(obj.model.get(0, "c"), 101)
+            compare(obj.model.get(1, "c"), 104)
+        }
+
+        function test_booleanExpression() {
+            const obj = createTemporaryObject(boolSorterComponent, root)
+            verify(!!obj, "Component exists")
+
+            // Equal values keep the source order (stable sort).
+            compare(obj.column("a"), [1, 1, 2, 3, 3])
+            compare(obj.column("c"), [1, 3, 2, 0, 4])
+
+            obj.ascending = false
+            compare(obj.column("a"), [3, 3, 2, 1, 1])
+            compare(obj.column("c"), [0, 4, 2, 1, 3])
+
+            obj.ascending = true
+            obj.byB = true
+            tryVerify(() => obj.model.get(0, "b") === 0)
+            compare(obj.column("b"), [0, 1, 2, 3, 4])
         }
     }
 }

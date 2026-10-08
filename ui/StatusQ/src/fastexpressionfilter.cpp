@@ -2,6 +2,8 @@
 
 #include <qqmlsortfilterproxymodel.h>
 
+#include <utility>
+
 using namespace qqsfpm;
 
 /*!
@@ -28,6 +30,11 @@ using namespace qqsfpm;
 
     By accessing only needed roles, the performance is significantly better in
     comparison to ExpressionFilter.
+
+    The row evaluation context and expression are reused between evaluations,
+    with role names resolved when the role schema or expectedRoles changes.
+    A separate expression tracks external QML dependencies using invalid role
+    values, as in ExpressionFilter, without observing row input changes.
 */
 
 /*!
@@ -55,7 +62,7 @@ void FastExpressionFilter::setExpression(const QQmlScriptString& scriptString)
 
 void FastExpressionFilter::proxyModelCompleted(const QQmlSortFilterProxyModel& proxyModel)
 {
-    updateContext(proxyModel);
+    updateContext(proxyModel.roleNames());
 }
 
 /*!
@@ -69,6 +76,8 @@ void FastExpressionFilter::setExpectedRoles(const QStringList& expectedRoles)
         return;
 
     m_expectedRoles = expectedRoles;
+    if (m_context)
+        updateContext(m_roleNames);
     emit expectedRolesChanged();
 
     invalidate();
@@ -85,32 +94,26 @@ bool FastExpressionFilter::filterRow(const QModelIndex& sourceIndex,
     if (m_scriptString.isEmpty())
         return true;
 
-    QVariantMap modelMap;
-    auto roles = proxyModel.roleNames();
+    const auto roles = proxyModel.roleNames();
+    if (!m_evaluationContext || m_roleNames != roles)
+        updateContext(roles);
 
-    QQmlContext context(qmlContext(this));
+    QVariantMap modelMap;
     auto addToContext = [&] (const QString &name, const QVariant& value) {
-        context.setContextProperty(name, value);
+        m_evaluationContext->setContextProperty(name, value);
         modelMap.insert(name, value);
     };
 
-    for (auto it = roles.cbegin(); it != roles.cend(); ++it) {
-        auto name = it.value();
-
-        if (!m_expectedRoles.contains(name))
-            continue;
-
-        addToContext(it.value(), proxyModel.sourceData(sourceIndex, it.key()));
-    }
+    for (const auto& role : std::as_const(m_resolvedRoles))
+        addToContext(role.second, proxyModel.sourceData(sourceIndex, role.first));
 
     addToContext(QStringLiteral("index"), sourceIndex.row());
-    context.setContextProperty(QStringLiteral("model"), modelMap);
+    m_evaluationContext->setContextProperty(QStringLiteral("model"), modelMap);
 
-    QQmlExpression expression(m_scriptString, &context);
-    QVariant result = expression.evaluate();
+    QVariant result = m_evaluationExpression->evaluate();
 
-    if (expression.hasError()) {
-        qWarning() << expression.error();
+    if (m_evaluationExpression->hasError()) {
+        qWarning() << m_evaluationExpression->error();
         return true;
     }
 
@@ -118,48 +121,55 @@ bool FastExpressionFilter::filterRow(const QModelIndex& sourceIndex,
         return result.toBool();
     } else {
         qWarning("%s:%i:%i : Can't convert result to bool",
-                 expression.sourceFile().toUtf8().data(),
-                 expression.lineNumber(),
-                 expression.columnNumber());
+                 m_evaluationExpression->sourceFile().toUtf8().constData(),
+                 m_evaluationExpression->lineNumber(),
+                 m_evaluationExpression->columnNumber());
         return true;
     }
 }
 
-void FastExpressionFilter::updateContext(const QQmlSortFilterProxyModel& proxyModel)
+void FastExpressionFilter::updateContext(const QHash<int, QByteArray>& roles) const
 {
-    m_context = std::make_unique<QQmlContext>(qmlContext(this));
+    m_expression.reset();
+    m_evaluationExpression.reset();
+    m_roleNames = roles;
+    m_resolvedRoles.clear();
 
-    QVariantMap modelMap;
-
-    auto addToContext = [&] (const QString &name, const QVariant& value) {
-        m_context->setContextProperty(name, value);
-        modelMap.insert(name, value);
-    };
-
-    const auto roles = proxyModel.roleNames();
-
-    for (auto it = roles.cbegin(); it != roles.cend(); ++it) {
-        auto name = it.value();
-
-        if (!m_expectedRoles.contains(name))
-            continue;
-
-        addToContext(name, {});
+    for (auto it = m_roleNames.cbegin(); it != m_roleNames.cend(); ++it) {
+        const QString name = QString::fromUtf8(it.value());
+        if (m_expectedRoles.contains(name))
+            m_resolvedRoles.append({it.key(), name});
     }
 
-    addToContext(QStringLiteral("index"), -1);
+    auto createContext = [this] {
+        auto context = std::make_unique<QQmlContext>(qmlContext(this));
+        QVariantMap modelMap;
 
-    m_context->setContextProperty(QStringLiteral("model"), modelMap);
+        for (const auto& role : std::as_const(m_resolvedRoles)) {
+            context->setContextProperty(role.second, QVariant());
+            modelMap.insert(role.second, QVariant());
+        }
+        context->setContextProperty(QStringLiteral("index"), -1);
+        modelMap.insert(QStringLiteral("index"), -1);
+        context->setContextProperty(QStringLiteral("model"), modelMap);
+
+        return context;
+    };
+
+    m_context = createContext();
+    m_evaluationContext = createContext();
     updateExpression();
 }
 
-void FastExpressionFilter::updateExpression()
+void FastExpressionFilter::updateExpression() const
 {
     if (!m_context)
         return;
 
     m_expression = std::make_unique<QQmlExpression>(m_scriptString,
                                                     m_context.get());
+    m_evaluationExpression = std::make_unique<QQmlExpression>(m_scriptString,
+                                                            m_evaluationContext.get());
     connect(m_expression.get(), &QQmlExpression::valueChanged, this,
             &FastExpressionFilter::invalidate);
     m_expression->setNotifyOnValueChanged(true);
