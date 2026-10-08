@@ -87,6 +87,14 @@ add_executable(TestNetworkAccessFactory src/tst_networkaccessfactory.cpp)
 target_link_libraries(TestNetworkAccessFactory PRIVATE Qt::Test Qt::Network Qt::Qml StatusQ)
 add_test(NAME TestNetworkAccessFactory COMMAND TestNetworkAccessFactory)
 
+add_executable(TestRenderSizedImage src/tst_rendersizedimage.cpp)
+target_link_libraries(TestRenderSizedImage PRIVATE Qt::Test Qt::Gui Qt::GuiPrivate Qt::Qml Qt::Quick
+    Qt::QuickPrivate StatusQ)
+target_compile_definitions(TestRenderSizedImage PRIVATE
+    STATUSQ_MODULE_IMPORT_PATH="${STATUSQ_MODULE_IMPORT_PATH}"
+    ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/")
+add_test(NAME TestRenderSizedImage COMMAND TestRenderSizedImage)
+
 add_executable(TestIncubationCadence src/tst_incubationcadence.cpp)
 target_link_libraries(TestIncubationCadence PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationCadence COMMAND TestIncubationCadence)

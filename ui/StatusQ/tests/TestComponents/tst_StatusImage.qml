@@ -16,6 +16,7 @@ Item {
     readonly property url largeRaster: root.assets + "png/status-logo-icon.png" // 1024x1024
     readonly property url hugeRaster: root.assets + "png/wallet/placeholders/mainView-light.png" // 2880x1540
     readonly property url smallRaster: root.assets + "png/wallet/wallet-green.png" // 72x72
+    readonly property url tinyRaster: root.assets + "png/swap/relay.png" // 40x40, only used by the crop test
     readonly property url multiResRaster: root.assets + "png/tokens/0-native.png" // 40px + @2x + @3x
     readonly property url svgSource: root.assets + "img/icons/action-add.svg"
 
@@ -129,8 +130,55 @@ Item {
 
             img.source = root.largeRaster
             tryCompare(img, "status", Image.Ready)
-            compare(ImageInspector.decodedSize(img), Qt.size(decoded(200, img), decoded(200, img)))
+            // The square source fits the 200 side; one request ratio covers both sides of
+            // the box, so that side may land up to a step above its own boundary
+            const side = ImageInspector.decodedSize(img).width
+            verify(side >= decoded(200, img) && side <= decoded(200, img) * 1.13, `${side}px`)
             compare(img.implicitWidth, 200)
+        }
+
+        function test_unsizedRasterDecodesOnce() {
+            const img = createTemporaryObject(imageComponent, root, { source: root.largeRaster })
+            tryCompare(img, "status", Image.Ready)
+            const key = ImageInspector.decodeKey(img)
+            waitForRendering(img)
+            compare(ImageInspector.decodeKey(img), key)
+            compare(img.explicitlySized, false)
+        }
+
+        function test_cropNeverUpscalesSmallSource() {
+            const first = createTemporaryObject(imageComponent, root,
+                                                { width: 64, height: 64, source: root.tinyRaster,
+                                                  fillMode: Image.PreserveAspectCrop })
+            tryVerify(() => first.status === Image.Ready
+                      && ImageInspector.decodedSize(first).width === 40)
+            compare(ImageInspector.decodedSize(first), Qt.size(40, 40))
+
+            // Once the native size is known the decode is never upscaled
+            const second = createTemporaryObject(imageComponent, root,
+                                                 { width: 64, height: 64, source: root.tinyRaster,
+                                                   fillMode: Image.PreserveAspectCrop })
+            tryCompare(second, "status", Image.Ready)
+            compare(ImageInspector.decodedSize(second), Qt.size(40, 40))
+        }
+
+        function test_stretchCoversBothSides() {
+            const img = createTemporaryObject(imageComponent, root,
+                                              { width: 100, height: 100, source: root.hugeRaster,
+                                                fillMode: Image.Stretch })
+            tryCompare(img, "status", Image.Ready)
+            const size = ImageInspector.decodedSize(img)
+            verify(size.width >= decoded(100, img) && size.height >= decoded(100, img),
+                   `${size.width}x${size.height}`)
+            verify(size.width <= 2880 && size.height <= 1540)
+        }
+
+        function test_tiledImageKeepsNativeDecode() {
+            const img = createTemporaryObject(imageComponent, root,
+                                              { width: 40, height: 40, source: root.largeRaster,
+                                                fillMode: Image.Tile })
+            tryCompare(img, "status", Image.Ready)
+            compare(ImageInspector.decodedSize(img), Qt.size(1024, 1024))
         }
 
         function test_smallRasterNotUpscaled() {
