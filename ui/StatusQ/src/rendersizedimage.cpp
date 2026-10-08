@@ -1,45 +1,66 @@
 #include "StatusQ/rendersizedimage.h"
 
+#include <QtCore/QHash>
 #include <QtCore/QtMath>
 #include <QtQml/QQmlContext>
 #include <QtQuick/private/qquickimage_p_p.h>
+
+namespace {
+
+// Native sizes of decoded sources, so a cover decode of a source smaller than its box is
+// requested at native size instead of upscaled.
+QHash<QUrl, QSize>& nativeSizes()
+{
+    static QHash<QUrl, QSize> sizes;
+    return sizes;
+}
+
+constexpr int maxKnownNativeSizes = 4096;
+
+bool isRenderSizedFillMode(QQuickImage::FillMode mode)
+{
+    return mode == QQuickImage::PreserveAspectFit || mode == QQuickImage::PreserveAspectCrop
+            || mode == QQuickImage::Stretch;
+}
+
+} // namespace
 
 class RenderSizedImagePrivate : public QQuickImagePrivate
 {
 public:
     // Private Qt hook, verified against Qt 6.11.0 (tested), 6.11.1 and 6.12.0 (source);
     // tst_StatusImage::test_privateDprHookActive fails if it stops being called.
-    // Called by QQuickImageBase::load() when sourceSize is valid or the source is scalable.
+    // Called by QQuickImageBase::load() when sourceSize is valid or the source is scalable,
+    // and again by QQuickImageBase::itemChange() after a DPR change reload.
     bool updateDevicePixelRatio(qreal targetDevicePixelRatio) override
     {
         providerOptions.setPreserveAspectRatioFit(fillMode == QQuickImage::PreserveAspectFit);
+        providerOptions.setPreserveAspectRatioCrop(fillMode == QQuickImage::PreserveAspectCrop);
 
+        if (!inLoad)
+            return QQuickImagePrivate::updateDevicePixelRatio(targetDevicePixelRatio);
         if (QQuickImagePrivate::updateDevicePixelRatio(targetDevicePixelRatio))
             return true;
 
-        if (!sourcesize.isValid())
+        if (!sourcesize.isValid() || !isRenderSizedFillMode(fillMode))
             return false;
 
         // Bundled "@Nx" assets: let Qt pick the variant, which keeps sourceSize logical too.
-        const QQmlContext* context = qmlContext(static_cast<QQuickItem*>(q_ptr));
         QUrl unused;
         qreal assetDevicePixelRatio = 1.0;
-        QQuickImageBase::resolve2xLocalFile(context ? context->resolvedUrl(url) : url,
-                                            targetDevicePixelRatio, &unused,
+        QQuickImageBase::resolve2xLocalFile(resolvedUrl(), targetDevicePixelRatio, &unused,
                                             &assetDevicePixelRatio);
         if (assetDevicePixelRatio != 1.0)
             return false;
 
-        // Without the flag Qt fits the decode inside the requested box and never upscales;
-        // with it, it covers the box and upscales small sources.
+        // Without the flags Qt fits the decode inside the requested box; with the crop flag
+        // it covers the box, which Stretch needs too so neither axis is magnified.
+        cover = fillMode != QQuickImage::PreserveAspectFit;
         providerOptions.setPreserveAspectRatioFit(false);
+        providerOptions.setPreserveAspectRatioCrop(cover);
 
-        // Qt requests sourcesize x devicePixelRatio: request the quantised device-px box
-        // directly. RenderSizedImage::load() restores the logical size right after.
-        logicalSize = sourcesize;
         decodeBox = decodeBoxFor(sourcesize, targetDevicePixelRatio);
-        sourcesize = decodeBox;
-        devicePixelRatio = 1.0;
+        devicePixelRatio = requestRatio();
         renderSized = true;
         return true;
     }
@@ -63,25 +84,57 @@ public:
         return { side(logical.width()), side(logical.height()) };
     }
 
+    // Qt requests sourcesize x devicePixelRatio: the ratio that reaches the decode box on
+    // both sides, lowered to native size when a cover decode would upscale a known source.
+    qreal requestRatio()
+    {
+        qreal ratio = 0;
+        if (sourcesize.width() > 0)
+            ratio = qMax(ratio, qreal(decodeBox.width()) / sourcesize.width());
+        if (sourcesize.height() > 0)
+            ratio = qMax(ratio, qreal(decodeBox.height()) / sourcesize.height());
+
+        const QSize native = nativeSizes().value(resolvedUrl());
+        nativeKnown = !native.isEmpty();
+        if (cover && nativeKnown && sourcesize.width() > 0 && sourcesize.height() > 0) {
+            const qreal nativeRatio = qMin(qreal(native.width()) / sourcesize.width(),
+                                           qreal(native.height()) / sourcesize.height());
+            ratio = qMin(ratio, nativeRatio);
+        }
+        return ratio > 0 ? ratio : 1.0;
+    }
+
     // Logical implicit size: the decode fitted into the logical box, or the native size
-    // when the source was smaller than the decode box.
+    // when the source was decoded as is because it is smaller than the decode box.
     void updateImplicitRatio()
     {
         const QSize pix(currentPix->width(), currentPix->height());
-        const bool downscaled = (decodeBox.width() > 0 && pix.width() >= decodeBox.width())
-                || (decodeBox.height() > 0 && pix.height() >= decodeBox.height());
-        qreal ratio = 0.0;
-        if (downscaled) {
-            if (logicalSize.width() > 0)
-                ratio = qMax(ratio, qreal(pix.width()) / logicalSize.width());
-            if (logicalSize.height() > 0)
-                ratio = qMax(ratio, qreal(pix.height()) / logicalSize.height());
+        const QSize native = currentPix->implicitSize();
+        const QSize requested = sourcesize * devicePixelRatio;
+        const bool fitsBox = pix != native
+                || (requested.width() > 0 && pix.width() >= requested.width())
+                || (requested.height() > 0 && pix.height() >= requested.height());
+        qreal ratio = 0;
+        if (fitsBox) {
+            if (sourcesize.width() > 0)
+                ratio = qMax(ratio, qreal(pix.width()) / sourcesize.width());
+            if (sourcesize.height() > 0)
+                ratio = qMax(ratio, qreal(pix.height()) / sourcesize.height());
         }
         devicePixelRatio = ratio > 0 ? ratio : 1.0;
     }
 
+    QUrl resolvedUrl() const
+    {
+        const QQmlContext* context = qmlContext(static_cast<const QQuickItem*>(q_ptr));
+        return context ? context->resolvedUrl(url) : url;
+    }
+
+    bool inLoad = false;
     bool renderSized = false;
-    QSize logicalSize;
+    bool cover = false;
+    bool nativeKnown = false;
+    bool explicitlySized = false;
     QSize decodeBox;
 };
 
@@ -103,24 +156,55 @@ void RenderSizedImage::setSourceSize(const QSize& size)
     }
 
     d->sourcesize = size;
-    d->logicalSize = size;
     emit sourceSizeChanged();
     pixmapChange();
+}
+
+bool RenderSizedImage::explicitlySized() const
+{
+    Q_D(const RenderSizedImage);
+    return d->explicitlySized;
 }
 
 void RenderSizedImage::load()
 {
     Q_D(RenderSizedImage);
     d->renderSized = false;
+    d->inLoad = true;
     QQuickImage::load();
-    if (d->renderSized)
-        d->sourcesize = d->logicalSize;
+    d->inLoad = false;
 }
 
 void RenderSizedImage::pixmapChange()
 {
     Q_D(RenderSizedImage);
-    if (d->renderSized && !d->currentPix->isNull())
+    if (d->renderSized && !d->currentPix->isNull()) {
+        const QSize native = d->currentPix->implicitSize();
+        const bool upscaled = d->currentPix->width() > native.width()
+                || d->currentPix->height() > native.height();
+
+        auto& sizes = nativeSizes();
+        if (sizes.size() >= maxKnownNativeSizes)
+            sizes.clear();
+        sizes.insert(d->resolvedUrl(), native);
+
+        // Only the first cover decode of a source smaller than its box can upscale; the
+        // reload is requested at native size.
+        if (upscaled && !d->nativeKnown)
+            QMetaObject::invokeMethod(this, &RenderSizedImage::load, Qt::QueuedConnection);
+
         d->updateImplicitRatio();
+    }
     QQuickImage::pixmapChange();
+}
+
+void RenderSizedImage::geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry)
+{
+    Q_D(RenderSizedImage);
+    QQuickImage::geometryChange(newGeometry, oldGeometry);
+    const bool sized = d->widthValid() || d->heightValid();
+    if (sized != d->explicitlySized) {
+        d->explicitlySized = sized;
+        emit explicitlySizedChanged();
+    }
 }

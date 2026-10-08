@@ -62,6 +62,7 @@ Item {
             let expected = 0
             while (expected < devicePx)
                 expected += Math.max(16, Math.ceil(expected / 8))
+            expected = Math.min(expected, 1024) // never above the native size
             compare(ImageInspector.decodedSize(banner), Qt.size(expected, expected))
             compare(qtOutput.qtOuput(), "")
         }
