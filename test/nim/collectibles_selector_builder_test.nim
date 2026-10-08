@@ -188,6 +188,7 @@ suite "collectibles builder - sort and grouping":
     check groups[1].thumbnailUrl == "z_thumb.png"
     check groups[1].imageUrl == "z.png"
     check groups[1].subitems.mapIt(it.key) == @["o1"]
+    check groups[1].subitems[0].tokenType == 2
     # subitem icons follow the same pick
     check groups[1].subitems.mapIt(it.icon) == @["z_thumb.png"]
 
@@ -222,7 +223,8 @@ suite "collectibles builder - sort and grouping":
 
   test "other group subitem balance = the collectible's owned amount (ERC-1155)":
     let items = @[
-      item("e1155", collectionUid = "coll", ownership = @[own("0xA", 7)]),
+      item("e1155", collectionUid = "coll", tokenType = 3, ownership = @[own("0xA", 7)]),
     ]
     let groups = buildDisplay(items, networks, params("0xA")).groups
     check groups[0].subitems[0].balance == 7
+    check groups[0].subitems[0].tokenType == 3
