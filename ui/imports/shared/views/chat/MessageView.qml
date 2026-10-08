@@ -109,10 +109,13 @@ Loader {
     property bool quotedMessageAuthorDetailsEnsVerified: false
     property bool quotedMessageAuthorDetailsIsContact: false
 
-    property var album: []
+    // Space-joined image lists, as the model exposes them, so a plain roles
+    // rebind retargets the view; the arrays derive from them.
+    property string albumMessageImages: ""
+    property var album: albumMessageImages ? albumMessageImages.split(" ") : []
     property int albumCount: 0
 
-    property var quotedMessageAlbumMessageImages: []
+    property string quotedMessageAlbumMessageImages: ""
     property int quotedMessageAlbumImagesCount: 0
 
     // External behavior changers
@@ -1184,6 +1187,7 @@ Loader {
                         if (responseMessage && contentType === StatusMessage.ContentType.Image)
                             return responseMessage.albumMessageImages
                         return root.quotedMessageAlbumMessageImages
+                               ? root.quotedMessageAlbumMessageImages.split(" ") : []
                     }
                     albumCount: {
                         if (responseMessage && contentType === StatusMessage.ContentType.Image)
