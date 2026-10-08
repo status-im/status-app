@@ -224,13 +224,12 @@ StatusRoundedComponent {
         d.reset()
         if (root.mediaUrl.toString() !== "") {
             if (componentMediaType === StatusRoundedMedia.MediaType.Image) {
+                const properties = { "source": root.mediaUrl, "fillMode": root.fillMode }
+                if (root.allowAnimation)
+                    properties.sourceSize = Qt.size(width, height)
                 mediaLoader.setSource(root.allowAnimation ? "StatusAnimatedImage.qml"
                                                           : "StatusImage.qml",
-                                    {
-                                        "source": root.mediaUrl,
-                                        "fillMode": root.fillMode,
-                                        "sourceSize": Qt.size(width, height)
-                                    });
+                                      properties);
                 return
             } else if (componentMediaType === StatusRoundedMedia.MediaType.Video) {
                 mediaLoader.setSource("StatusVideo.qml",
@@ -255,8 +254,7 @@ StatusRoundedComponent {
                 mediaLoader.setSource("StatusImage.qml",
                                     {
                                         "source": root.mediaUrl,
-                                        "fillMode": root.fillMode,
-                                        "sourceSize": Qt.size(width, height)
+                                        "fillMode": root.fillMode
                                     })
                 return
             } else if (root.fallbackImageUrl !== "") {
@@ -273,8 +271,7 @@ StatusRoundedComponent {
         mediaLoader.setSource("StatusImage.qml",
                             {
                                 "source": root.fallbackImageUrl,
-                                "fillMode": root.fillMode,
-                                "sourceSize": Qt.size(width, height)
+                                "fillMode": root.fillMode
                             })
     }
 
@@ -283,8 +280,7 @@ StatusRoundedComponent {
         mediaLoader.setSource("StatusImage.qml",
                             {
                                 "source": "",
-                                "fillMode": root.fillMode,
-                                "sourceSize": Qt.size(-1, -1)
+                                "fillMode": root.fillMode
                             });
     }
 }
