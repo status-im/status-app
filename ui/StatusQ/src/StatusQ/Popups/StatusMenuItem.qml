@@ -16,7 +16,6 @@ MenuItem {
     spacing: 4
     horizontalPadding: Theme.halfPadding
     verticalPadding: Math.max(16, Theme.padding)
-    implicitHeight: contentItem.implicitHeight + 2 * root.verticalPadding
 
     hoverEnabled: enabled
 
@@ -125,8 +124,6 @@ MenuItem {
     }
 
     contentItem: RowLayout {
-        height: root.availableHeight
-
         StatusBaseText {
             Layout.fillWidth: true
             Layout.fillHeight: true

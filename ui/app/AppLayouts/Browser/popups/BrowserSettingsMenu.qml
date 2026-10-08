@@ -58,6 +58,7 @@ StatusMenu {
     StatusMenuItem {
         id: zoomMenuItem
         text: qsTr("Zoom")
+        leftPadding: Theme.padding
         RowLayout {
             spacing: 2
             height: parent.availableHeight
