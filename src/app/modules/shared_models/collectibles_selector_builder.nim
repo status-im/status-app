@@ -159,7 +159,8 @@ proc buildCollectibleGroups*(flat: seq[FlatCollectible]): seq[CollectibleGroup] 
     else:
       for m in members:
         group.subitems.add(CollectibleSubItem(key: m.key, name: m.name,
-          balance: m.balance, icon: m.icon, iconUrl: m.iconUrl))
+          balance: m.balance, icon: m.icon, iconUrl: m.iconUrl,
+          tokenType: m.tokenType))
     result.add(group)
     i = j
 

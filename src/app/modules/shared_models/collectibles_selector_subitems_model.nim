@@ -18,6 +18,7 @@ type
     Balance
     Icon
     IconUrl
+    TokenType
 
 QtObject:
   type
@@ -54,6 +55,7 @@ QtObject:
       ModelRole.Balance.int: "balance",
       ModelRole.Icon.int: "icon",
       ModelRole.IconUrl.int: "iconUrl",
+      ModelRole.TokenType.int: "tokenType",
     }.toTable
 
   method data(self: CollectiblesSelectorSubitemsModel, index: QModelIndex, role: int): QVariant =
@@ -65,6 +67,7 @@ QtObject:
     of ModelRole.Balance: return newQVariant(item.balance)
     of ModelRole.Icon: return newQVariant(item.icon)
     of ModelRole.IconUrl: return newQVariant(item.iconUrl)
+    of ModelRole.TokenType: return newQVariant(item.tokenType)
 
   proc syncKey(it: CollectibleSubItem): string = it.key
   proc syncRoles(o, n: CollectibleSubItem): seq[int] =
@@ -73,6 +76,7 @@ QtObject:
     if o.balance != n.balance: result.add(ModelRole.Balance.int)
     if o.icon != n.icon: result.add(ModelRole.Icon.int)
     if o.iconUrl != n.iconUrl: result.add(ModelRole.IconUrl.int)
+    if o.tokenType != n.tokenType: result.add(ModelRole.TokenType.int)
 
   proc setSubItems*(self: CollectiblesSelectorSubitemsModel, items: seq[CollectibleSubItem]) =
     self.modelSync(self.items, items)

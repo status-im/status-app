@@ -125,6 +125,9 @@ Control {
 
                     name: model.groupName
                     balance: showCount ? subitemsCount : ""
+                    tokenType: subitemsCount === 1 && !isCommunity
+                               ? (ModelUtils.get(model.subitems, 0, "tokenType") || 0)
+                               : 0
                     // Pick only — TokenSelectorCollectibleDelegate asks the CDN
                     // for its own icon width.
                     image: Utils.collectibleMediaSource(model.thumbnailUrl,
@@ -256,6 +259,7 @@ Control {
 
                     name: model.name
                     balance: model.balance > 1 ? model.balance : ""
+                    tokenType: model.tokenType || 0
                     image: model.icon
                     goDeeperIconVisible: false
                     networkIcon: model.iconUrl

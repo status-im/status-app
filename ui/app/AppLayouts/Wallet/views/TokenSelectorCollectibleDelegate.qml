@@ -18,6 +18,7 @@ ItemDelegate {
     required property string networkIcon
     required property bool isAutoHovered
 
+    property int tokenType: 0
     property bool goDeeperIconVisible: true
     property bool interactive: true
 

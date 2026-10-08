@@ -85,6 +85,7 @@ type
     balance*: int
     icon*: string
     iconUrl*: string
+    tokenType*: int
 
   CollectibleGroup* = object
     ## A top-level grouped row. `groupKey` (== groupingValue) is the diff identity.
