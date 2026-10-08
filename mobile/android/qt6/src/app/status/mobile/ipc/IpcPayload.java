@@ -141,8 +141,11 @@ public final class IpcPayload implements Parcelable, AutoCloseable {
             return;
         }
         dest.writeByte(TAG_SHARED);
-        shm.writeToParcel(dest, flags);
-        if ((flags & PARCELABLE_WRITE_RETURN_VALUE) != 0) close();
+        try {
+            shm.writeToParcel(dest, flags);
+        } finally {
+            if ((flags & PARCELABLE_WRITE_RETURN_VALUE) != 0) close();
+        }
     }
 
     public static final Parcelable.Creator<IpcPayload> CREATOR =

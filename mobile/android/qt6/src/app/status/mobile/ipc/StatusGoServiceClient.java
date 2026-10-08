@@ -322,10 +322,7 @@ public final class StatusGoServiceClient {
         try {
             return readRpc(s, method, argsUtf8);
         } catch (TransactionTooLargeException e) {
-            // A payload problem, not a dead service: restarting the frontend cannot help.
-            Log.w(TAG, "call failed: transaction too large method=" + method
-                    + " argsBytes=" + argsUtf8.remaining(), e);
-            return IpcPayload.inline("{\"error\":\"status-go transaction too large\"}");
+            return transactionTooLarge(method, argsUtf8, e);
         } catch (RemoteException e) {
             Log.w(TAG, "call failed", e);
             // After reinstall/update (or service crash), binder can become a dead object.
@@ -349,6 +346,8 @@ public final class StatusGoServiceClient {
                 if (s != null) {
                     try {
                         return readRpc(s, method, argsUtf8);
+                    } catch (TransactionTooLargeException e2) {
+                        return transactionTooLarge(method, argsUtf8, e2);
                     } catch (RemoteException e2) {
                         Log.w(TAG, "call retry failed", e2);
                     }
@@ -359,6 +358,14 @@ public final class StatusGoServiceClient {
             }
             return IpcPayload.inline("{\"error\":\"status-go service call failed\"}");
         }
+    }
+
+    // A payload problem, not a dead service: restarting the frontend cannot help.
+    private static IpcPayload transactionTooLarge(String method, ByteBuffer argsUtf8,
+            TransactionTooLargeException e) {
+        Log.w(TAG, "call failed: transaction too large method=" + method
+                + " argsBytes=" + argsUtf8.remaining(), e);
+        return IpcPayload.inline("{\"error\":\"status-go transaction too large\"}");
     }
 
     /** Issues an rpcCall, sending large requests through SharedMemory. */
