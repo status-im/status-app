@@ -3,6 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
@@ -33,6 +34,10 @@ Item {
     property MessageStore messageStore
     property string channelEmoji
     property var formatBalance
+
+    // The app-wide reservoir of pre-built message rows; null builds every
+    // row on demand.
+    property DelegatePool rowPool: null
 
     // Users related data:
     property var usersModel

@@ -1,6 +1,7 @@
 import QtQml
 import QtQuick
 
+import StatusQ
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Layout
@@ -44,6 +45,7 @@ StatusSectionLoader {
     required property HandlersManagerLoader popupHandler
     required property Loader emojiPopupLoader
     required property Loader stickersPopupLoader
+    property DelegatePool rowPool: null
 
     // Inputs
     required property bool createChatViewOpened
@@ -275,6 +277,7 @@ StatusSectionLoader {
             navToMsgDetails:                Qt.binding(() => root.rootStore.navToMsgDetails),
             navToMsgList:                   Qt.binding(() => root.rootStore.navToMsgList),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
+            rowPool:                        Qt.binding(() => root.rowPool),
         })
     }
 
