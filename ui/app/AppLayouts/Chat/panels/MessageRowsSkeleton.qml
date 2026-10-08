@@ -12,29 +12,60 @@ import StatusQ.Core.Theme
 LoadingSkeletonGroup {
     id: root
 
-    // rows stack upward from the bottom edge (where the input sits); rows
-    // that don't fit are clipped at the top instead of bleeding below
+    // Rows stack upward from the bottom edge (where the input sits), and those
+    // that don't fit are clipped at the top instead of bleeding below. Set,
+    // they stack down from the top edge instead and are clipped at the bottom
+    // - for a placeholder standing below the rows it leads to.
+    property bool stackFromTop: false
+
     clip: true
 
-    Column {
-        anchors {
-            left: parent.left
-            right: parent.right
-            bottom: parent.bottom
-        }
-        spacing: Theme.padding
+    QtObject {
+        id: d
 
         // name/line widths are fractions of the available text width so the
         // shape survives narrow and wide panels alike
+        readonly property var pattern: [
+            { name: 0.22, lines: [0.95, 0.9, 0.86, 0.5] },
+            { separator: true },
+            { name: 0.18, lines: [0.6], card: true },
+            { name: 0.26, lines: [0.92, 0.35] },
+            { separator: true },
+            { name: 0.2, lines: [0.88, 0.44] },
+        ]
+
+        // The pattern, repeated to cover any height: it is taller than this,
+        // so whole copies never fall short. Rebuilt only when the number of
+        // copies changes, not on every resize.
+        readonly property int patternHeightAtLeast: 400
+        readonly property int copies: Math.max(1, Math.ceil(root.height / patternHeightAtLeast))
+
+        readonly property var rows: {
+            const rows = []
+
+            for (let i = 0; i < copies; ++i)
+                rows.push(...pattern)
+
+            return rows
+        }
+    }
+
+    Column {
+        objectName: "skeletonRows"
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        // Placed by y, not by switching between a top and a bottom anchor:
+        // the two anchor bindings update one at a time, the moment both are
+        // set stretches the column to the skeleton's height, and that height
+        // outlives the anchor - leaving the rows at the top for good.
+        y: root.stackFromTop ? 0 : root.height - height
+
+        spacing: Theme.padding
+
         Repeater {
-            model: [
-                { name: 0.22, lines: [0.95, 0.9, 0.86, 0.5] },
-                { separator: true },
-                { name: 0.18, lines: [0.6], card: true },
-                { name: 0.26, lines: [0.92, 0.35] },
-                { separator: true },
-                { name: 0.2, lines: [0.88, 0.44] },
-            ]
+            model: d.rows
 
             delegate: DelegateChooser {
                 role: "separator"

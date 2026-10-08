@@ -29,6 +29,8 @@ SplitView {
                 MessageRowsSkeleton {
                     anchors.fill: parent
                     anchors.margins: Theme.padding
+
+                    stackFromTop: stackFromTopCheckBox.checked
                 }
             }
         }
@@ -49,6 +51,10 @@ SplitView {
                 to: 1000
                 value: 700
                 stepSize: 1
+            }
+            CheckBox {
+                id: stackFromTopCheckBox
+                text: "Stack from top"
             }
             Item { Layout.fillHeight: true }
         }
