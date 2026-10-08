@@ -17244,6 +17244,10 @@ selhalo</translation>
         <translation>Nepodporovaný token. Zkuste jiné</translation>
     </message>
     <message>
+        <source>Unsupported network. Try another</source>
+        <translation>Nepodporovaná síť. Zkuste jinou</translation>
+    </message>
+    <message>
         <source>Hit an issue. Change amount, token, or retry ↺</source>
         <translation>Nastal problém. Změňte částku, token nebo to zkuste znovu ↺</translation>
     </message>

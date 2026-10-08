@@ -139,6 +139,7 @@ Item {
             rightPadding: 4
             text: root.leftComponentText
             font.family: Fonts.monoFont.family
+            font.features: Fonts.monoFont.features
             horizontalAlignment: Qt.AlignHCenter
             color: root.isError ? Theme.palette.dangerColor1
                                 : seedWordInput.input.edit.activeFocus ? Theme.palette.primaryColor1

@@ -196,7 +196,6 @@
         <file>StatusQ/Core/StatusSharedUpdateTimer.qml</file>
         <file>StatusQ/Core/StatusTooltipSettings.qml</file>
         <file>StatusQ/Core/Theme/Assets.qml</file>
-        <file>StatusQ/Core/Theme/Fonts.qml</file>
         <file>StatusQ/Core/Theme/ThemeUtils.qml</file>
         <file>StatusQ/Core/Theme/qmldir</file>
         <file>StatusQ/Core/Utils/AmountsArithmetic.qml</file>

@@ -434,3 +434,8 @@ proc keyUID*(): string =
   var funcOut = go_shim.keyUID()
   defer: go_shim.free(funcOut)
   return $funcOut
+
+proc startPprof*(address: string): string =
+  var funcOut = go_shim.startPprof(address.cstring)
+  defer: go_shim.free(funcOut)
+  return $funcOut

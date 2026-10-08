@@ -102,6 +102,7 @@ StatusDialog {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 font.family: Fonts.monoFont.family
+                font.features: Fonts.monoFont.features
                 color: Theme.palette.directColor1
             }
 
@@ -126,6 +127,7 @@ StatusDialog {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 font.family: Fonts.monoFont.family
+                font.features: Fonts.monoFont.features
                 color: Theme.palette.directColor1
             }
 

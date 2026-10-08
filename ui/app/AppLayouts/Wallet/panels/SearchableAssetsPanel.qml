@@ -338,9 +338,11 @@ Control {
 
                         name: holding.name
                         symbol: holding.symbol
-                        currencyBalanceAsString: root.formatCurrencyBalance(
-                            !!modelData ? modelData.balance * (holding.cryptoPrice ?? 0)
-                                        : holding.currencyBalance)
+                        readonly property bool held: (!!modelData ? modelData.balance : (holding.currentBalance ?? 0)) > 0
+                        currencyBalanceAsString: held ? root.formatCurrencyBalance(
+                                                            !!modelData ? modelData.balance * (holding.cryptoPrice ?? 0)
+                                                                        : holding.currencyBalance)
+                                                      : ""
                         iconSource: holding.logoUri || Constants.tokenIcon(holding.symbol)
                         balancesModel: holding.balances
                         tokensModel: holding.tokens
