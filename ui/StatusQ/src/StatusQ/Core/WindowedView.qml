@@ -132,6 +132,12 @@ Flickable {
     // blank.
     property real placeholderHeight: root.height
 
+    // The placeholder stands in the band below the rows, so the rows are above
+    // it. A placeholder whose content is shorter than its band lays itself out
+    // from the edge it shares with the rows, rather than leaving a gap there.
+    // False in the band above them and while it covers the whole view.
+    readonly property bool placeholderBelowRows: d.placeholderHost === bottomBand
+
     // Keep the viewport at the bottom edge while it is already there, so the
     // last row stays visible as content grows and the initial fill lands
     // showing the newest row rather than the oldest. Off by default: for a

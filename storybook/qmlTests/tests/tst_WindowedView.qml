@@ -3332,6 +3332,24 @@ Item {
             compare(placeholderProbe.created, 1, "and it was never rebuilt")
         }
 
+        // A placeholder laying itself out towards the rows is told which side
+        // of it they are on.
+        function test_thePlaceholderIsToldWhereTheRowsAre() {
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            view.contentY = 0
+            waitForRendering(view)
+            compare(host(), "topPlaceholder")
+            verify(!view.placeholderBelowRows, "above the rows")
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+            compare(host(), "bottomPlaceholder")
+            verify(view.placeholderBelowRows, "below them")
+        }
+
         function test_itIsParkedWhenNeitherEndIsOnScreen() {
             view.moreAvailableTop = false
             view.moreAvailableBottom = false
