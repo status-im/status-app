@@ -176,6 +176,7 @@ Page {
                 stickersPopup: root.stickersPopup
                 closeGifPopupAfterSelection: true
                 usersModel: membersSelector.selectedContactsModel
+                usersModelIncludeAtEveryone: membersSelector.model.ModelCount.count > 1
                 paymentRequestFeatureEnabled: false
                 onStickerSelected: (hashId, packId, url) => {
                     root.createChatPropertiesStore.createChatStickerHashId = hashId;

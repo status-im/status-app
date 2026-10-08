@@ -399,6 +399,69 @@ Item {
                                               "pubKey", "0x0" + displayName)
         }
 
+        function everyoneSuggestionIndex() {
+            return SQUtils.ModelUtils.indexOf(suggestionList().model, "pubKey", "0x00001")
+        }
+
+        function test_mentionSuggestions_everyoneChangesWithChat() {
+            controlUnderTest.usersModelIncludeAtEveryone = false
+            appendContact("Alice")
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText("@")
+            tryVerify(() => memberSuggestionIndex("Alice") >= 0)
+            compare(everyoneSuggestionIndex(), -1)
+
+            controlUnderTest.usersModelIncludeAtEveryone = true
+            appendContact("Bob")
+            tryVerify(() => memberSuggestionIndex("Bob") >= 0)
+            tryCompare(suggestionList(), "count", 2)
+            compare(everyoneSuggestionIndex(), 0)
+
+            controlUnderTest.usersModelIncludeAtEveryone = false
+            appendContact("Carol")
+            tryVerify(() => memberSuggestionIndex("Carol") >= 0)
+            tryCompare(suggestionList(), "count", 1)
+            compare(everyoneSuggestionIndex(), -1)
+
+            controlUnderTest.usersModelIncludeAtEveryone = true
+            tryCompare(suggestionList(), "count", 2)
+            compare(everyoneSuggestionIndex(), 0)
+        }
+
+        function test_mentionSuggestions_commitEveryone_data() {
+            return [
+                { tag: "tab-unfiltered", text: "@", method: "tab" },
+                { tag: "enter-filtered", text: "@eve", method: "enter" },
+                { tag: "mouse-filtered", text: "@eve", method: "mouse" }
+            ]
+        }
+
+        function test_mentionSuggestions_commitEveryone(data) {
+            controlUnderTest.y = 200
+            appendContact("Alice")
+            controlUnderTest.usersModelIncludeAtEveryone = true
+            controlUnderTest.textInput.forceActiveFocus()
+            typeText(data.text)
+            tryVerify(() => everyoneSuggestionIndex() === 0)
+            const box = findChild(controlUnderTest, "suggestionsBox")
+            tryCompare(box, "loading", false)
+            tryCompare(box, "opacity", 1)
+            const list = suggestionList()
+            tryCompare(list, "currentIndex", 0)
+            signalSpy.setup(controlUnderTest, "sendMessageRequested")
+
+            if (data.method === "mouse") {
+                tryVerify(() => !!list.itemAtIndex(0))
+                mouseClick(list.itemAtIndex(0))
+            } else {
+                keyClick(data.method === "tab" ? Qt.Key_Tab : Qt.Key_Return)
+            }
+
+            tryCompare(controlUnderTest.textInput, "enteringSuggestion", false)
+            compare(controlUnderTest.getPlainText(), "@0x00001 ")
+            compare(signalSpy.count, 0)
+        }
+
         function test_mentionSuggestions_membersNotMaterializedBeforeEntry() {
             appendContact("JohnDoe")
             waitForRendering(controlUnderTest)

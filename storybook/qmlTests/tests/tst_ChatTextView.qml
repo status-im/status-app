@@ -554,6 +554,53 @@ Item {
             compare(mentionSpy.signalArguments[0][0], "0xabc")
         }
 
+        function test_everyoneNotActionable_data() {
+            return [
+                { tag: "non-selectable", selectable: false },
+                { tag: "selectable", selectable: true }
+            ]
+        }
+
+        function test_everyoneNotActionable(data) {
+            control.selectable = data.selectable
+            control.blocks = [{ type: "text", html: '<a href="0xabc" class="mention">@alice</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+            mouseMove(control, 10, 5)
+            tryCompare(control, "hoveredLink", "0xabc")
+
+            mouseMove(control, control.width - 4, 5)
+            tryCompare(control, "hoveredLink", "")
+            control.blocks = [{ type: "text", html: '<a href="0x00001" class="mention">@everyone</a>' }]
+            tryVerify(() => renders(control, "@everyone"))
+            waitForRendering(control)
+            mouseMove(control, 10, 5)
+            tryCompare(control, "hoveredLink", "")
+            verify(renders(control, 'href="0x00001"'))
+
+            mentionSpy.clear()
+            linkSpy.clear()
+            mouseClick(control, 10, 5)
+            control.activateLinkAt(Qt.point(10, 5))
+            const touch = touchEvent(control)
+            touch.press(0, control, 10, 5).commit()
+            touch.release(0, control, 10, 5).commit()
+            compare(mentionSpy.count, 0)
+            compare(linkSpy.count, 0)
+        }
+
+        function test_everyoneRemainsSelectable() {
+            control.selectable = true
+            control.blocks = [{ type: "text", html: '<a href="0x00001" class="mention">@everyone</a>' }]
+            tryVerify(() => control.implicitHeight > 0)
+
+            mousePress(control, 0, 5)
+            mouseMove(control, control.width - 4, 5)
+            mouseRelease(control, control.width - 4, 5)
+            compare(control.selectedText, "@everyone")
+            keySequence(StandardKey.Copy)
+            tryCompare(ClipboardUtils, "text", "@everyone")
+        }
+
         // A real touch tap (not the direct activateLinkAt() API call above) must also activate
         // a link. The read-only TextEdit backing each block grabs touch points exclusively by
         // default, so this guards against that grab silently swallowing the tap.
