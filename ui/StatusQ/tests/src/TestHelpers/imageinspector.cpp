@@ -2,6 +2,7 @@
 
 #include <QtQuick/private/qquickimagebase_p.h>
 #include <QtQuick/private/qquickimagebase_p_p.h>
+#include <QtQuickLayouts/private/qquicklayout_p.h>
 
 QSize ImageInspector::decodedSize(QQuickItem* image) const
 {
@@ -21,4 +22,9 @@ QString ImageInspector::decodeKey(QQuickItem* image) const
 
     const auto pixmap = QQuickImageBasePrivate::get(imageBase)->currentPix;
     return pixmap ? QString::number(pixmap->image().cacheKey()) : QString();
+}
+
+bool ImageInspector::hasLayoutAttached(QQuickItem* item) const
+{
+    return qmlAttachedPropertiesObject<QQuickLayout>(item, false) != nullptr;
 }

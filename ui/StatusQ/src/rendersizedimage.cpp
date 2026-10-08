@@ -4,6 +4,7 @@
 #include <QtCore/QtMath>
 #include <QtQml/QQmlContext>
 #include <QtQuick/private/qquickimage_p_p.h>
+#include <QtQuickLayouts/private/qquicklayout_p.h>
 
 namespace {
 
@@ -137,6 +138,22 @@ public:
         devicePixelRatio = ratio > 0 ? ratio : 1.0;
     }
 
+    // Layout.preferredWidth/Height when in a layout that already attached them; read
+    // without creating an attached object. An unsized item only gets its geometry at the
+    // layout's polish, after the first load.
+    QSize layoutPreferredSize() const
+    {
+        const auto item = static_cast<QQuickItem*>(q_ptr);
+        if (!qobject_cast<QQuickLayout*>(item->parentItem()))
+            return {};
+        const auto attached = qobject_cast<QQuickLayoutAttached*>(
+                qmlAttachedPropertiesObject<QQuickLayout>(item, false));
+        if (!attached)
+            return {};
+        return { attached->isPreferredWidthSet() ? qCeil(attached->preferredWidth()) : 0,
+                 attached->isPreferredHeightSet() ? qCeil(attached->preferredHeight()) : 0 };
+    }
+
     QUrl resolvedUrl() const
     {
         const QQmlContext* context = qmlContext(static_cast<const QQuickItem*>(q_ptr));
@@ -187,6 +204,14 @@ bool RenderSizedImage::explicitlySized() const
 void RenderSizedImage::load()
 {
     Q_D(RenderSizedImage);
+    if (!d->sourcesize.isValid() && isRenderSizedFillMode(d->fillMode)) {
+        const QSize preferred = d->layoutPreferredSize();
+        if (preferred.width() > 0 || preferred.height() > 0) {
+            d->sourcesize = preferred;
+            emit sourceSizeChanged();
+        }
+    }
+
     d->renderSized = false;
     d->inLoad = true;
     QQuickImage::load();
