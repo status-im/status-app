@@ -215,75 +215,36 @@ class App(BasePage):
     )
 
     def _open_nav_drawer(self) -> bool:
-        """Open the left navigation drawer in portrait mode.
-
-        Strategies tried in order:
-        1. mobile: dragGesture with elementId (Pixel-friendly).
-        2. W3C pointer actions from handle position (Samsung-friendly,
-           avoids system gesture zones).
-        3. Coordinate-based drag fallback.
-        """
+        """Open the left navigation drawer in portrait mode by dragging its handle."""
         try:
-            size = self.driver.get_window_size()
-            w = size["width"]
-            h = size["height"]
-
-            # Strategy 1: element-based mobile: dragGesture
             handle = self.find_element_safe(self.NAV_DRAWER_HANDLE, timeout=2)
-            if handle:
-                handle_rect = handle.rect
-                try:
-                    self.driver.execute_script("mobile: dragGesture", {
-                        "elementId": handle.id,
-                        "endX": int(w * 0.7),
-                        "endY": int(handle_rect["y"] + handle_rect["height"] / 2),
-                    })
-                    if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
-                        return True
-                except Exception as e:
-                    self.logger.debug("Strategy 1 (element drag) failed: %s", e)
+            if not handle:
+                self.logger.debug("Nav drawer handle not found")
+                return False
 
-                # Strategy 2: W3C touch actions from handle centre
-                try:
-                    from selenium.webdriver.common.actions import interaction
-                    from selenium.webdriver.common.actions.action_builder import ActionBuilder
-                    from selenium.webdriver.common.actions.pointer_input import PointerInput
+            from selenium.webdriver.common.actions import interaction
+            from selenium.webdriver.common.actions.action_builder import ActionBuilder
+            from selenium.webdriver.common.actions.pointer_input import PointerInput
 
-                    start_x = int(handle_rect["x"] + handle_rect["width"] / 2)
-                    start_y = int(handle_rect["y"] + handle_rect["height"] / 2)
-                    end_x = int(w * 0.7)
+            rect = handle.rect
+            start_x = int(rect["x"] + rect["width"] / 2)
+            start_y = int(rect["y"] + rect["height"] / 2)
+            end_x = int(self.driver.get_window_size()["width"] * 0.7)
 
-                    actions = ActionBuilder(
-                        self.driver,
-                        mouse=PointerInput(interaction.POINTER_TOUCH, "finger"),
-                    )
-                    actions.pointer_action.move_to_location(start_x, start_y)
-                    actions.pointer_action.pointer_down()
-                    actions.pointer_action.pause(0.1)
-                    actions.pointer_action.move_to_location(end_x, start_y)
-                    actions.pointer_action.pause(0.05)
-                    actions.pointer_action.pointer_up()
-                    actions.perform()
+            # A touch that rests on the handle for the tap timeout (100 ms) is handed to the
+            # page underneath, so the drag must start moving at once: no pause, no dragGesture.
+            actions = ActionBuilder(
+                self.driver,
+                mouse=PointerInput(interaction.POINTER_TOUCH, "finger"),
+            )
+            actions.pointer_action.move_to_location(start_x, start_y)
+            actions.pointer_action.pointer_down()
+            actions.pointer_action.move_to_location(end_x, start_y)
+            actions.pointer_action.pause(0.05)
+            actions.pointer_action.pointer_up()
+            actions.perform()
 
-                    if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
-                        return True
-                except Exception as e:
-                    self.logger.debug("Strategy 2 (W3C actions) failed: %s", e)
-
-            # Strategy 3: coordinate-based drag from left-centre area
-            try:
-                self.driver.execute_script("mobile: dragGesture", {
-                    "startX": int(w * 0.08),
-                    "startY": int(h * 0.5),
-                    "endX": int(w * 0.7),
-                    "endY": int(h * 0.5),
-                })
-                if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
-                    return True
-            except Exception as e:
-                self.logger.debug("Strategy 3 (coordinate drag) failed: %s", e)
-
-            return False
+            return self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3)
         except Exception as e:
             self.logger.debug("_open_nav_drawer failed: %s", e)
             return False
