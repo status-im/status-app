@@ -878,6 +878,12 @@ Item {
             owner.answer()
         }
 
+        // Rows and bands extend far past the viewport; nothing of them may
+        // paint outside the view's own bounds.
+        function test_clipsToItsBounds() {
+            verify(view.clip)
+        }
+
         function test_rendersTheWholeModel() {
             compare(view.rowCount, root.windowSize)
             compare(values()[0], 0)
