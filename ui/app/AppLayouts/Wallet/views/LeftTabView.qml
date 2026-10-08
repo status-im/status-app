@@ -202,7 +202,6 @@ Rectangle {
             }
 
             StatusBaseText {
-                id: walletTitleText
                 text: qsTr("Wallet")
                 font.weight: Font.Bold
                 font.pixelSize: Theme.secondaryAdditionalTextSize
@@ -487,10 +486,10 @@ Rectangle {
                     highlighted: viewState.showSavedAddresses
                     hoverColor: Theme.palette.backgroundHover
                     asset.bgColor: Theme.palette.primaryColor3
+                    asset.bgWidth: 40
+                    asset.bgHeight: 40
                     text: qsTr("Saved addresses")
                     icon.name: "address"
-                    icon.width: 40
-                    icon.height: 40
                     icon.color: Theme.palette.primaryColor1
                     isRoundIcon: true
                     textColor: Theme.palette.directColor1
@@ -518,10 +517,10 @@ Rectangle {
                     highlighted: viewState.showFollowingAddresses
                     hoverColor: Theme.palette.backgroundHover
                     asset.bgColor: Theme.palette.primaryColor3
+                    asset.bgWidth: 40
+                    asset.bgHeight: 40
                     text: qsTr("Onchain friends")
                     icon.name: "contact"
-                    icon.width: 40
-                    icon.height: 40
                     icon.color: Theme.palette.primaryColor1
                     isRoundIcon: true
                     textColor: Theme.palette.directColor1

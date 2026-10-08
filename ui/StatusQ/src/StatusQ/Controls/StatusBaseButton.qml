@@ -266,8 +266,8 @@ AbstractButton {
             // decoration
             Loader {
                 objectName: "buttonIcon"
-                Layout.preferredWidth: root.icon.width
-                Layout.preferredHeight: root.icon.height
+                Layout.preferredWidth: Math.max(root.asset.bgWidth, root.icon.width)
+                Layout.preferredHeight: Math.max(root.asset.bgHeight, root.icon.height)
                 Layout.alignment: Qt.AlignCenter
                 active: root.icon.name !== "" && root.display !== AbstractButton.TextOnly && !root.loadingWithText
                 visible: active
