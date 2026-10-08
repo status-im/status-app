@@ -2,11 +2,13 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core.Theme
 
 import utils
 
 import shared.stores as SharedStores
+import shared.views.chat as ChatViews
 import shared.stores.send as SendStores
 
 import AppLayouts.stores as AppStores
@@ -51,6 +53,20 @@ SplitView {
     Component {
         id: messagesModelComp
         ListModel {}
+    }
+
+    // The app-wide row pool, as AppMain.qml declares it.
+    DelegatePool {
+        id: messageRowPool
+
+        DelegatePoolKind {
+            kind: "message"
+            target: 60
+
+            delegate: Component {
+                ChatViews.MessageView {}
+            }
+        }
     }
 
     QtObject {
@@ -319,8 +335,11 @@ SplitView {
                 signal sendingMessageFailed(string error)
                 signal reactionActionFailed()
                 signal scrollToMessage(string messageId)
+                signal moreMessagesLoaded()
 
                 function getChatId() { return contentModule.chatId }
+                // Like the backend: answered once the page is in the model,
+                // and at once when there is nothing left to fetch.
                 function loadMoreMessages() {
                     d.loadMoreCallCount++
                     console.info("loadMoreMessages call #" + d.loadMoreCallCount,
@@ -328,14 +347,19 @@ SplitView {
                                  "t=" + (Date.now() - d.loadStartTime) + "ms",
                                  "backlog", d.backlogs[contentModule.chatId] || 0)
                     const remaining = d.backlogs[contentModule.chatId] || 0
-                    if (remaining <= 0)
+                    if (remaining <= 0) {
+                        moreMessagesLoaded()
                         return
+                    }
                     const page = Math.min(20, remaining)
                     d.backlogs[contentModule.chatId] = remaining - page
                     const total = ctrlMessages.value
-                    Qt.callLater(() => d.fillMessages(contentModule.messagesModel, page,
-                                                      contentModule.chatId.split("-")[1],
-                                                      total - remaining + 20))
+                    Qt.callLater(() => {
+                        d.fillMessages(contentModule.messagesModel, page,
+                                       contentModule.chatId.split("-")[1],
+                                       total - remaining + 20)
+                        moreMessagesLoaded()
+                    })
                 }
                 function updateKeepUnread(flag) {}
             }
@@ -420,6 +444,7 @@ SplitView {
                     popupHandler: null
                     emojiPopupLoader: emojiPopupLoaderMock
                     stickersPopupLoader: stickersPopupLoaderMock
+                    rowPool: messageRowPool
                     createChatViewOpened: false
                     isPortraitMode: (Window.width ?? 0) < ThemeUtils.portraitBreakpoint.width
 
