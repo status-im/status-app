@@ -17811,6 +17811,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>in %1</source>
+        <comment>The channel containing the thread</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>

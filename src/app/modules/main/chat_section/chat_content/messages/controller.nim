@@ -316,7 +316,7 @@ proc pendingSends*(self: Controller): seq[SendingStartedArgs] =
 proc getThreadForParentMessage*(self: Controller, parentMessageId: string): ThreadDto =
   return self.messageService.getThreadForParentMessage(self.chatId, parentMessageId)
 
-proc getThread*(self: Controller): ThreadDto =
+proc getThread*(self: Controller): lent ThreadDto =
   self.messageService.getThreadById(self.chatId, self.threadId)
 
 proc editThread*(self: Controller, name, requestId: string) =

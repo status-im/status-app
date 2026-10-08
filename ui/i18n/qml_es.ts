@@ -17832,6 +17832,7 @@ Esta acción no se puede deshacer.</translation>
     </message>
     <message>
         <source>in %1</source>
+        <comment>The channel containing the thread</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
