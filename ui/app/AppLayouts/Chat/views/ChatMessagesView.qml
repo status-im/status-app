@@ -416,7 +416,7 @@ Item {
             messageText: model.messageText
             unparsedText: model.unparsedText
             messageImage: model.messageImage
-            album: model.albumMessageImages.split(" ")
+            albumMessageImages: model.albumMessageImages
             albumCount: model.albumImagesCount
             messageTimestamp: model.timestamp
             messageOutgoingStatus: model.outgoingStatus
@@ -450,7 +450,7 @@ Item {
             quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorThumbnailImage
             quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorEnsVerified
             quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorIsContact
-            quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages.split(" ")
+            quotedMessageAlbumMessageImages: model.quotedMessageAlbumMessageImages
             quotedMessageAlbumImagesCount: model.quotedMessageAlbumImagesCount
             bridgeName: model.bridgeName
             hasThread: model.hasThread
