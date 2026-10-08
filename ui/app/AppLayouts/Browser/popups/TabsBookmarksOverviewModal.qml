@@ -41,6 +41,7 @@ StatusDialog {
     // bookmarks
     required property var bookmarksModel
 
+    signal addBookmarkRequested
     signal editBookmarkRequested(string url, string name)
     signal deleteBookmarkRequested(string url)
     signal bookmarkClicked(string url)
@@ -73,6 +74,8 @@ StatusDialog {
             return qsTr("Open tabs")
         }
 
+        readonly property string searchQuery: searchField.text
+
         // Tabs Overview
         readonly property int cardWidth: 162
         readonly property int cardHeight: 200
@@ -96,7 +99,7 @@ StatusDialog {
             ]
             filters: SQUtils.SearchFilter {
                 roleName: "title"
-                searchPhrase: searchField.text
+                searchPhrase: d.searchQuery
                 enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs
             }
         }
@@ -107,7 +110,7 @@ StatusDialog {
             filters: [
                 SQUtils.SearchFilter {
                     roleName: "name"
-                    searchPhrase: searchField.text
+                    searchPhrase: d.searchQuery
                     enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks
                 },
                 ValueFilter {
@@ -126,11 +129,16 @@ StatusDialog {
             id: searchField
 
             Layout.fillWidth: true
-            visible: searchButton.checked && mainTabBar.currentIndex !== TabsBookmarksOverviewModal.Mode.Downloads
+            visible: searchButton.checked
             onVisibleChanged: clear()
 
-            placeholderText: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs ? qsTr("Search in open tabs")
-                                                                                                  : qsTr("Search in bookmarks")
+            placeholderText: {
+                if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs)
+                    return qsTr("Search in open tabs")
+                if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks)
+                    return qsTr("Search in bookmarks")
+                return qsTr("Search in downloads")
+            }
         }
 
         StackLayout {
@@ -304,7 +312,8 @@ StatusDialog {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(root.availableHeight, 400)
                 Layout.fillHeight: true
-                downloadsModel: root.downloadsModel
+                downloadsModel: root.downloadsModel.filter(item => item.fileName.toLowerCase().includes(d.searchQuery.toLowerCase()))
+
                 onOpenDownloadClicked: record => root.downloadClicked(record)
                 onOptionsClicked: (record, anchor) => root.downloadOptionsClicked(record, anchor)
                 onScrolled: root.downloadsScrolled()
@@ -347,9 +356,6 @@ StatusDialog {
                 icon.width: d.iconSize
                 icon.height: d.iconSize
                 checkable: true
-                // Disabled, not hidden: Downloads has neither action, and dropping
-                // the buttons would shift the header row on every tab switch.
-                enabled: mainTabBar.currentIndex !== TabsBookmarksOverviewModal.Mode.Downloads
                 tooltip.text: qsTr("Search")
                 onToggled: searchField.focus = checked
             }
@@ -357,10 +363,13 @@ StatusDialog {
                 icon.name: "add"
                 icon.width: d.iconSize
                 icon.height: d.iconSize
-                enabled: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs
+                enabled: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs || mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks
                 tooltip.text: qsTr("Add")
                 onClicked: {
-                    root.addTabRequested()
+                    if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks)
+                        root.addBookmarkRequested()
+                    else
+                        root.addTabRequested()
                     root.close()
                 }
             }

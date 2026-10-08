@@ -17503,6 +17503,10 @@ This action cannot be undone.</source>
         <translation>북마크에서 검색</translation>
     </message>
     <message>
+        <source>Search in downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit bookmark</source>
         <translation>북마크 편집</translation>
     </message>
