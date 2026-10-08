@@ -28,11 +28,12 @@ Item {
     StatusTestCase {
         name: "StatusCommunityCard"
 
-        // Absorbs the one-time "Populating font family aliases" warning
+        // Absorbs one-time, per-engine output of the card's dependencies: the "Populating font
+        // family aliases" warning, and Qt5Compat's shader builder logging that it found no GL
+        // context to resolve capabilities on headless OpenGL machines (CI)
         function initTestCase() {
-            const text = createTemporaryQmlObject(
-                           'import QtQuick; Text { text: "x"; font.family: "Sans Serif" }', root)
-            waitForRendering(text)
+            const card = createTemporaryObject(cardComponent, root)
+            waitForRendering(card)
         }
 
         function init() {
