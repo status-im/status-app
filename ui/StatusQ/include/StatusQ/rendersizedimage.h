@@ -37,6 +37,7 @@ signals:
 protected:
     void load() override;
     void pixmapChange() override;
+    void updatePolish() override;
     void geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry) override;
 
 private:

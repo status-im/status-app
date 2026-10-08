@@ -2,6 +2,8 @@
 
 #include <QtCore/QCache>
 #include <QtCore/QtMath>
+#include <QtGui/QImageReader>
+#include <QtQml/QQmlFile>
 #include <QtQml/QQmlContext>
 #include <QtQuick/private/qquickimage_p_p.h>
 #include <QtQuickLayouts/private/qquicklayout_p.h>
@@ -101,7 +103,9 @@ public:
                                     / qMax(sourcesize.width(), sourcesize.height()));
 
         const QSize* known = nativeSizes().object(qHash(resolvedUrl()));
-        const QSize native = known ? *known : QSize();
+        QSize native = known ? *known : QSize();
+        if (cover && native.isEmpty())
+            native = probeNativeSize(1.0, nullptr);
         nativeKnown = !native.isEmpty();
         if (cover && nativeKnown) {
             // Qt scales a cover decode by ratio x coverScale
@@ -154,6 +158,31 @@ public:
                  attached->isPreferredHeightSet() ? qCeil(attached->preferredHeight()) : 0 };
     }
 
+    // Native size of a local source from its header alone, recorded in nativeSizes();
+    // empty when the source isn't a readable local raster. assetDevicePixelRatio is that of
+    // the "@Nx" variant Qt would pick for targetDevicePixelRatio.
+    QSize probeNativeSize(qreal targetDevicePixelRatio, qreal* assetDevicePixelRatio)
+    {
+        const QUrl resolved = resolvedUrl();
+        QUrl file = resolved;
+        qreal fileDevicePixelRatio = 1.0;
+        QQuickImageBase::resolve2xLocalFile(resolved, targetDevicePixelRatio, &file,
+                                            &fileDevicePixelRatio);
+        const QString path = QQmlFile::urlToLocalFileOrQrc(file);
+        if (path.isEmpty() || path.endsWith(QLatin1String(".svg"), Qt::CaseInsensitive))
+            return {};
+
+        QImageReader reader(path);
+        const QSize native = reader.size();
+        if (native.isEmpty())
+            return {};
+        if (file == resolved && !nativeSizes().contains(qHash(resolved)))
+            nativeSizes().insert(qHash(resolved), new QSize(native));
+        if (assetDevicePixelRatio)
+            *assetDevicePixelRatio = fileDevicePixelRatio;
+        return native;
+    }
+
     QUrl resolvedUrl() const
     {
         const QQmlContext* context = qmlContext(static_cast<const QQuickItem*>(q_ptr));
@@ -161,6 +190,7 @@ public:
     }
 
     bool inLoad = false;
+    bool deferredLoad = false;
     bool renderSized = false;
     bool cover = false;
     bool nativeKnown = false;
@@ -212,6 +242,27 @@ void RenderSizedImage::load()
         }
     }
 
+    // Not sized yet and nothing preferred: give the layout the header's natural size and
+    // decode once it has settled, in this frame's polish pass.
+    if (!d->sourcesize.isValid() && isRenderSizedFillMode(d->fillMode) && !d->explicitlySized
+            && window() && window()->isVisible()) {
+        qreal assetDevicePixelRatio = 1.0;
+        QSize native = d->probeNativeSize(d->effectiveDevicePixelRatio(), &assetDevicePixelRatio);
+        if (!native.isEmpty()) {
+            if (autoTransform()) {
+                QImageReader reader(QQmlFile::urlToLocalFileOrQrc(d->resolvedUrl()));
+                if (reader.transformation() & QImageIOHandler::TransformationRotate90)
+                    native.transpose();
+            }
+            d->deferredLoad = true;
+            setImplicitSize(native.width() / assetDevicePixelRatio,
+                            native.height() / assetDevicePixelRatio);
+            polish();
+            return;
+        }
+    }
+
+    d->deferredLoad = false;
     d->renderSized = false;
     d->inLoad = true;
     QQuickImage::load();
@@ -226,7 +277,10 @@ void RenderSizedImage::pixmapChange()
         const bool overLimit = d->currentPix->width() > qMin(native.width(), maxDecodeSide)
                 || d->currentPix->height() > qMin(native.height(), maxDecodeSide);
 
-        nativeSizes().insert(qHash(d->resolvedUrl()), new QSize(native));
+        const size_t key = qHash(d->resolvedUrl());
+        const QSize* known = nativeSizes().object(key);
+        if (!known || *known != native)
+            nativeSizes().insert(key, new QSize(native));
 
         // Only the first cover decode, before the native size is known, can upscale or
         // exceed maxDecodeSide; the reload is requested within both.
@@ -238,10 +292,29 @@ void RenderSizedImage::pixmapChange()
     QQuickImage::pixmapChange();
 }
 
+void RenderSizedImage::updatePolish()
+{
+    Q_D(RenderSizedImage);
+    QQuickImage::updatePolish();
+    // A layout still to polish sizes this item, which loads it through sourceSize
+    const auto layout = qobject_cast<QQuickLayout*>(parentItem());
+    if (d->deferredLoad && !(layout && QQuickItemPrivate::get(layout)->polishScheduled)) {
+        d->deferredLoad = false;
+        d->renderSized = false;
+        d->inLoad = true;
+        QQuickImage::load();
+        d->inLoad = false;
+    }
+}
+
 void RenderSizedImage::geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry)
 {
     Q_D(RenderSizedImage);
-    QQuickImage::geometryChange(newGeometry, oldGeometry);
+    // QQuickImage would reset the probed implicit size to the empty pixmap's
+    if (d->deferredLoad)
+        QQuickImageBase::geometryChange(newGeometry, oldGeometry);
+    else
+        QQuickImage::geometryChange(newGeometry, oldGeometry);
     const bool sized = d->widthValid() || d->heightValid();
     if (sized != d->explicitlySized) {
         d->explicitlySized = sized;
