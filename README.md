@@ -99,51 +99,46 @@ We welcome contributions from the community! To get started:
 
 ### Nim token catalogue
 
-With the development environment configured, prepare the current platform with
-`make platform-cleanup` and build libsds, then run
-`make status-go-tkl`, then build the desktop client normally. Status-go pins the
-public Go wrapper and native library to the same revision. Its build prepares
-one checkout at `vendor/status-go/build/deps/nim-token-lists` and reuses the
-compiled library on subsequent builds. No separate library checkout or path
-setting is needed. `make clean` removes this managed checkout and its artifacts;
-the next tagged build prepares them again. If the dependency pin changes, clean
-before rebuilding. Existing nim-sds setup is unchanged.
+Normal desktop and mobile builds include the Nim token library, and the app
+selects it by default for login and account creation. With the development
+environment configured, the usual build and `make run` commands need no token
+flags or separate library checkout.
 
-Before launching the rebuilt client, set
-`STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true` and, for comparison logs,
-`STATUS_RUNTIME_TOKEN_LISTS_SHADOW=true`. Both default to false. The command-line
-equivalents are `--token-lists-use-nim=true` and `--token-lists-shadow=true`.
-Shadow comparison requires the Nim catalogue. The choices apply to login and
-account creation.
+Status-go pins the public Go wrapper and native library to the same revision.
+Its build prepares one checkout at `vendor/status-go/build/deps/nim-token-lists`
+and reuses matching native and backend artifacts. Mobile archives are separate
+for each architecture and for iOS devices and simulators. `make clean` removes
+the managed checkout and its artifacts; the next build prepares them again.
+Existing nim-sds setup is unchanged.
 
-To roll back using the same binary, fully quit the client, set both options to
-`false`, restart and log in again. Remove any conflicting command-line overrides.
-These development controls do not enable the new catalogue in release builds;
-live parity verification and cross-platform packaging remain pending.
+`STATUS_RUNTIME_TOKEN_LISTS_USE_NIM` defaults to `true` and
+`STATUS_RUNTIME_TOKEN_LISTS_SHADOW` defaults to `false`. Their command-line
+equivalents are `--token-lists-use-nim` and `--token-lists-shadow`. Enable shadow
+comparison with `STATUS_RUNTIME_TOKEN_LISTS_SHADOW=true` or
+`--token-lists-shadow=true`; it requires the Nim catalogue.
 
-The mobile build accepts the same `USE_NIM_TOKEN_LISTS=true` opt-in and forwards
-it to status-go's Android/iOS build. It prepares the pinned token library inside
-status-go, with separate archives for each architecture and for iOS devices and
-simulators. No second checkout or token-library path is needed. The mobile
-`make clean` also clears that managed checkout. Runtime selection still uses
-the existing token-catalogue options; the SDK backend remains available while
+To roll back using the same binary, fully quit the app, set both runtime options
+to `false`, restart and log in again. Explicit command-line values override the
+environment. Runtime rollback keeps Nim support in subsequent builds, so it can
+be enabled again without rebuilding. The SDK backend remains available while
 full application and device verification is pending.
+
+For an explicitly untagged build, pass `USE_NIM_TOKEN_LISTS=false` to Make.
+This also compiles the app with the SDK catalogue selected by default, including
+on mobile. Clean existing artifacts first (`make clean` on desktop or in
+`mobile`) when switching this build option. An untagged backend cannot enable
+the Nim catalogue at runtime; remove any explicit runtime opt-in when using it.
 
 On iOS, status-go bundles the token library into its static archive. The app's
 final link hides the token ABI and the build checks the installed executable
 for leaked token-library exports.
 
-When launching through `make run`, `STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true`
-also selects the tagged backend build. Status-go checks both the native archive
-and backend cache, reusing matching artifacts and rebuilding only when needed.
-No library path setting is required. For CLI-only selection, pass
-`USE_NIM_TOKEN_LISTS=true` to Make as well. An environment flag alone cannot add
-Nim catalogue support to an already-built untagged library launched directly.
-
 Run `make tests-nim-token-catalogue` in the configured desktop build environment
-to compile the runtime-control test with Qt and check defaults, environment
-opt-in, CLI opt-in, and explicit CLI rollback overriding enabled environment
-flags. This target also runs as part of `make tests-nim` and its Linux CI target.
+to check desktop/mobile build selection and six runtime configurations for each
+compiled default, covering environment and CLI selection and rollback precedence.
+The runtime test compiles with Qt. Standalone recipe-test runs also require
+`qmake` and `androiddeployqt` on `PATH`; the Make target supplies the Qt environment.
+This target also runs as part of `make tests-nim` and its Linux CI target.
 
 <!-- TODO Improve the contributing guide to be more about how to contribute -->
 <!-- TODO add guide on how to translate -->

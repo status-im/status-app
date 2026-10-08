@@ -2,7 +2,7 @@ import std/[json, unittest]
 import ../../src/app_service/service/accounts/dto/wallet_config
 
 suite "token catalogue login configuration":
-  test "defaults retain the existing catalogue":
+  test "zero-value DTO preserves explicit false flags":
     let payload = WalletConfig().toJson()
     check payload["tokenListsUseNim"].getBool() == false
     check payload["tokenListsShadow"].getBool() == false

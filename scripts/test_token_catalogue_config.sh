@@ -7,9 +7,13 @@ export DYLD_LIBRARY_PATH="${TKL_TEST_LIBRARY_PATH:-}:${DYLD_LIBRARY_PATH:-}"
 export LD_LIBRARY_PATH="${TKL_TEST_LIBRARY_PATH:-}:${LD_LIBRARY_PATH:-}"
 unset STATUS_RUNTIME_TOKEN_LISTS_USE_NIM STATUS_RUNTIME_TOKEN_LISTS_SHADOW
 unset TKL_TEST_EXPECT_NIM TKL_TEST_EXPECT_SHADOW
+export TKL_TEST_EXPECT_NIM="${2:-true}"
 
-echo "Checking default catalogue configuration"
+echo "Checking compiled catalogue default: $TKL_TEST_EXPECT_NIM"
 "$binary"
+echo "Checking environment rollback"
+STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=false STATUS_RUNTIME_TOKEN_LISTS_SHADOW=false \
+  TKL_TEST_EXPECT_NIM=false "$binary"
 echo "Checking environment opt-in"
 STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true STATUS_RUNTIME_TOKEN_LISTS_SHADOW=true \
   TKL_TEST_EXPECT_NIM=true TKL_TEST_EXPECT_SHADOW=true "$binary"
@@ -18,4 +22,8 @@ TKL_TEST_EXPECT_NIM=true TKL_TEST_EXPECT_SHADOW=true \
   "$binary" --token-lists-use-nim=true --token-lists-shadow=true
 echo "Checking explicit rollback overrides enabled environment options"
 STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=true STATUS_RUNTIME_TOKEN_LISTS_SHADOW=true \
+  TKL_TEST_EXPECT_NIM=false \
   "$binary" --token-lists-use-nim=false --token-lists-shadow=false
+echo "Checking command-line enablement overrides environment rollback"
+STATUS_RUNTIME_TOKEN_LISTS_USE_NIM=false STATUS_RUNTIME_TOKEN_LISTS_SHADOW=false \
+  TKL_TEST_EXPECT_NIM=true "$binary" --token-lists-use-nim=true

@@ -20,8 +20,8 @@ FLAG_DAPPS_ENABLED ?= 1
 FLAG_CONNECTOR_ENABLED ?= 0
 FLAG_BROWSER_ENABLED ?= 1
 
-# Same build opt-in as desktop; runtime selection remains a separate option.
-USE_NIM_TOKEN_LISTS ?= $(if $(filter true 1,$(STATUS_RUNTIME_TOKEN_LISTS_USE_NIM)),true,false)
+# Same default build as desktop; runtime rollback keeps native support available.
+USE_NIM_TOKEN_LISTS ?= true
 
 $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 
@@ -144,6 +144,7 @@ $(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT
 	LIB_SUFFIX=$(LIB_SUFFIX) \
 	LIB_EXT=$(LIB_EXT) \
 	USE_QML_SERVER=$(USE_QML_SERVER) \
+	USE_NIM_TOKEN_LISTS=$(USE_NIM_TOKEN_LISTS) \
 	BUNDLE_IDENTIFIER="$(BUNDLE_IDENTIFIER)" \
 	DEBUG=$(DEBUG) \
 	PROFILE=$(PROFILE) \

@@ -7,6 +7,7 @@ import # vendor libs
 
 const BUILD_TIME_PREFIX = "STATUS_BUILD_"
 const RUN_TIME_PREFIX = "STATUS_RUNTIME"
+const TOKEN_LISTS_USE_NIM_DEFAULT {.booldefine.} = true
 
 # default log level value
 const DEFAULT_LOG_LEVEL* = if defined(production): $LogLevel.INFO else: $LogLevel.DEBUG
@@ -213,7 +214,7 @@ type StatusDesktopConfig = object
     name: $BASE_NAME_MARKET_DATA_FULL_REFRESH_INTERVAL
     abbr: "market-data-full-refresh-interval" .}: string
   tokenListsUseNim* {.
-    defaultValue: false
+    defaultValue: TOKEN_LISTS_USE_NIM_DEFAULT
     desc: "Use the Nim token catalogue (requires a tkl-enabled backend)"
     name: "TOKEN_LISTS_USE_NIM"
     abbr: "token-lists-use-nim" .}: bool

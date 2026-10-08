@@ -515,9 +515,11 @@ STATUSGO := vendor/status-go/build/bin/libstatus.$(LIB_EXT)
 STATUSGO_LIBDIR := $(shell pwd)/$(shell dirname "$(STATUSGO)")
 export STATUSGO_LIBDIR
 
-# Runtime opt-in via make run must survive the normal/24-hour backend rebuild.
-# CLI-only users can select this build explicitly with USE_NIM_TOKEN_LISTS=true.
-USE_NIM_TOKEN_LISTS ?= $(if $(filter true 1,$(STATUS_RUNTIME_TOKEN_LISTS_USE_NIM)),true,false)
+# Keep both runtime choices available in normal builds, including after rollback.
+# USE_NIM_TOKEN_LISTS=false explicitly builds a backend without Nim support.
+USE_NIM_TOKEN_LISTS ?= true
+TOKEN_LISTS_USE_NIM_DEFAULT := $(if $(filter true,$(USE_NIM_TOKEN_LISTS)),true,false)
+NIM_PARAMS += -d:TOKEN_LISTS_USE_NIM_DEFAULT=$(TOKEN_LISTS_USE_NIM_DEFAULT)
 ifeq ($(USE_NIM_TOKEN_LISTS),true)
 .PHONY: check-status-go-tkl
 check-status-go-tkl:
@@ -547,7 +549,7 @@ endif
 status-go: $(STATUSGO)
 
 .PHONY: status-go-tkl
-# Explicit opt-in build using status-go's pinned token-library dependency.
+# Explicit tagged build using status-go's pinned token-library dependency.
 status-go-tkl:
 	@test -n "$(PLATFORM_TARGET)" && test "$$(cat .platform-target 2>/dev/null)" = "$(PLATFORM_TARGET)" || \
 		{ echo "Prepare this platform with make platform-cleanup, then build libsds before status-go-tkl." >&2; exit 1; }

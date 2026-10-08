@@ -59,6 +59,10 @@ FEATURE_FLAGS=(
 )
 
 # app configuration defines
+TOKEN_LISTS_USE_NIM_DEFAULT=false
+if [[ "${USE_NIM_TOKEN_LISTS:-true}" == true ]]; then
+    TOKEN_LISTS_USE_NIM_DEFAULT=true
+fi
 APP_CONFIG_DEFINES=(
     --outdir:./bin
     -d:KDF_ITERATIONS=3200
@@ -66,6 +70,7 @@ APP_CONFIG_DEFINES=(
     -d:STATUSGO_VERSION="$STATUSGO_VERSION"
     -d:GIT_COMMIT="$(git log --pretty=format:'%h' -n 1)"
     -d:PUSH_TOPIC="$BUNDLE_IDENTIFIER"
+    -d:TOKEN_LISTS_USE_NIM_DEFAULT="$TOKEN_LISTS_USE_NIM_DEFAULT"
 )
 
 NIM_FLAGS=(
