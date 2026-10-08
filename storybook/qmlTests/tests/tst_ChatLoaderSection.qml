@@ -371,8 +371,8 @@ Item {
                     return !!lv && lv.parent.visible
                 }, 120000)
                 waitForRendering(loader)
-                // a hidden chat hands its rows back: what the views hold
-                // after the switch is what the switch built
+                // one shared view: what it holds after the switch is what the
+                // switch built
                 return { ms: Date.now() - t0, syncMs: syncMs,
                          rows: totalMessageRows(loader) }
             }
@@ -401,6 +401,9 @@ Item {
             waitForRendering(loader2)
             const large = { ms: Date.now() - t0, syncMs: syncMs,
                             rows: totalMessageRows(loader2) }
+
+            compare(findAllIn(loader2, "chatLogView", []).length, 1,
+                    "one messages view per section, however many chats were visited")
 
             console.info("chat switch cost: 150 msgs =", small.ms, "ms (sync",
                          small.syncMs, ") /", small.rows,
