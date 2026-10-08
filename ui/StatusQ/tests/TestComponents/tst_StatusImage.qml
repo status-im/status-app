@@ -44,6 +44,13 @@ Item {
                 decodes.push({ key, width: ImageInspector.decodedSize(recorded).width })
         }
 
+        property size implicitSizeAtCompletion
+        property int decodesAtCompletion: -1
+        Component.onCompleted: {
+            implicitSizeAtCompletion = Qt.size(implicitWidth, implicitHeight)
+            decodesAtCompletion = decodes.length
+        }
+
         onImplicitWidthChanged: record()
         onImplicitHeightChanged: record()
         onStatusChanged: record()
@@ -82,6 +89,29 @@ Item {
                 source: root.largeRaster
             }
         }
+    }
+
+    Component {
+        id: naturalSizeLayoutComponent
+
+        RowLayout {
+            readonly property alias image: img
+            property url source: root.largeRaster
+            property bool autoTransform: false
+
+            DecodeRecordingImage {
+                id: img
+
+                source: parent.source
+                autoTransform: parent.autoTransform
+            }
+        }
+    }
+
+    Component {
+        id: recordingImageComponent
+
+        DecodeRecordingImage {}
     }
 
     Component {
@@ -191,7 +221,7 @@ Item {
             const img = createTemporaryObject(imageComponent, root, { source: root.largeRaster })
             tryCompare(img, "status", Image.Ready)
             const key = ImageInspector.decodeKey(img)
-            waitForRendering(img)
+            waitForPolish(img)
             compare(ImageInspector.decodeKey(img), key)
             compare(img.explicitlySized, false)
         }
@@ -377,15 +407,60 @@ Item {
             compare(layout.image.decodes[0].width, decoded(40, layout.image))
         }
 
-        // Pins a known cost: without Layout preferred sizes the size is only known after the
-        // layout's polish, so the first decode is native and the second at the rendered size
-        function test_fillWidthInLayoutDecodesNativeFirst() {
+        function test_fillWidthInLayoutDecodesOnce() {
             const layout = createTemporaryObject(fillWidthLayoutComponent, root)
             waitForPolish(layout)
             tryCompare(layout.image, "status", Image.Ready)
-            tryCompare(layout.image.decodes, "length", 2)
+            waitForPolish(layout)
+            compare(layout.image.decodes.length, 1, JSON.stringify(layout.image.decodes))
+            compare(layout.image.decodes[0].width, decoded(40, layout.image))
+        }
+
+        // The natural size comes from the image header, so the layout settles before the
+        // only decode
+        function test_naturallySizedLayoutChildDecodesOnce() {
+            const layout = createTemporaryObject(naturalSizeLayoutComponent, root)
+            compare(layout.image.decodesAtCompletion, 0)
+            compare(layout.image.implicitSizeAtCompletion, Qt.size(1024, 1024))
+
+            waitForPolish(layout)
+            tryCompare(layout.image, "status", Image.Ready)
+            waitForPolish(layout)
+            compare(layout.image.decodes.length, 1, JSON.stringify(layout.image.decodes))
             compare(layout.image.decodes[0].width, 1024)
-            compare(layout.image.decodes[1].width, decoded(40, layout.image))
+            compare(Qt.size(layout.image.implicitWidth, layout.image.implicitHeight),
+                    Qt.size(1024, 1024))
+        }
+
+        function test_naturalSizeFollowsExifRotation() {
+            const source = ImageInspector.writeImage(80, 40, "jpg", true)
+            verify(source.toString() !== "")
+            const layout = createTemporaryObject(naturalSizeLayoutComponent, root,
+                                                 { source, autoTransform: true })
+            compare(layout.image.implicitSizeAtCompletion, Qt.size(40, 80))
+
+            tryCompare(layout.image, "status", Image.Ready)
+            waitForPolish(layout)
+            compare(Qt.size(layout.image.implicitWidth, layout.image.implicitHeight),
+                    Qt.size(40, 80))
+            compare(layout.image.decodes.length, 1, JSON.stringify(layout.image.decodes))
+        }
+
+        function test_cropOfSmallLocalSourceNeverUpscalesFirstDecode() {
+            const img = createTemporaryObject(recordingImageComponent, root,
+                                              { width: 64, height: 64,
+                                                fillMode: Image.PreserveAspectCrop,
+                                                source: ImageInspector.writeImage(40, 40) })
+            tryCompare(img, "status", Image.Ready)
+            waitForPolish(img)
+            compare(img.decodes.length, 1, JSON.stringify(img.decodes))
+            compare(img.decodes[0].width, 40)
+        }
+
+        function test_imageOutsideAWindowStillLoads() {
+            const img = createTemporaryObject(imageComponent, null, { source: root.largeRaster })
+            tryCompare(img, "status", Image.Ready)
+            compare(ImageInspector.decodedSize(img), Qt.size(1024, 1024))
         }
 
         function test_noLayoutAttachedObjectOutsideLayouts() {
