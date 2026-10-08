@@ -18,8 +18,9 @@ import java.nio.charset.StandardCharsets;
  * region holds the payload followed by one NUL byte, so native readers can hand the
  * mapping to C callers without copying it.
  *
- * Returned from a Binder method, writeToParcel runs with PARCELABLE_WRITE_RETURN_VALUE and
- * SharedMemory hands its fd to the Parcel. Passed as an {@code in} argument, the sender
+ * The Parcel always gets its own dup of the region's fd. Returned from a Binder method
+ * (PARCELABLE_WRITE_RETURN_VALUE), writeToParcel closes this side's fd once written, so the
+ * region lives only as long as the reply. Passed as an {@code in} argument, the sender
  * still owns the fd and must close() after the call. Receivers must close() (try-with-
  * resources) to release the mapping and the fd. close() is idempotent.
  */
@@ -141,6 +142,7 @@ public final class IpcPayload implements Parcelable, AutoCloseable {
         }
         dest.writeByte(TAG_SHARED);
         shm.writeToParcel(dest, flags);
+        if ((flags & PARCELABLE_WRITE_RETURN_VALUE) != 0) close();
     }
 
     public static final Parcelable.Creator<IpcPayload> CREATOR =
