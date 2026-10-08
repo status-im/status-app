@@ -10,6 +10,8 @@ import AppLayouts.Communities.controls
 
 import SortFilterProxyModel
 
+import StatusQ
+
 import utils
 
 SplitView {
@@ -66,23 +68,23 @@ SplitView {
                 sourceModel: collectiblesModel
 
                 proxyRoles: [
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "supply"
                         expression: (model.index === 1 ? 1 : (model.index + 1) * 115).toString()
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "multiplierIndex"
                         expression: 0
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "infiniteSupply"
                         expression: !((model.index + 1) % 4)
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "chainName"
                         expression: model.index ? "Optimism" : "Arbitrum"
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
 
                         readonly property string icon1: "network/optimism"
                         readonly property string icon2: "network/arbitrum"
@@ -103,28 +105,28 @@ SplitView {
                 sourceModel: assetsModel
 
                 proxyRoles: [
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "supply"
                         expression: ((model.index + 1) * 584).toString()
                                     + "0".repeat(18)
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "multiplierIndex"
                         expression: 18
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "infiniteSupply"
                         expression: !(model.index % 4)
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "chainName"
                         expression: model.index ? "Ethereum Mainnet" : "Sepolia"
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         name: "decimals"
                         expression: decimalsText.text
                     },
-                    ExpressionRole {
+                    FastExpressionRole {
                         readonly property string icon1: "network/ethereum"
                         readonly property string icon2: "network/testnet"
 

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -68,7 +69,8 @@ Control {
         SortFilterProxyModel {
             id: filteredModel
             sourceModel: root.keypairsModel ?? null
-            filters: ExpressionFilter {
+            filters: FastExpressionFilter {
+                expectedRoles: ["keyPair"]
                 expression: root.profileOnly
                             ? model.keyPair.pairType === d.profileKeyPairTypeValue && !model.keyPair.migratedToColdWallet
                             : root.fixedKeyUid.length > 0

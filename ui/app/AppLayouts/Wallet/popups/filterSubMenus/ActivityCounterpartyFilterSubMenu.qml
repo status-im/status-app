@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Popups
 import StatusQ.Controls
 import StatusQ.Core
@@ -136,8 +137,9 @@ StatusMenu {
                         visible: true
                         model: SortFilterProxyModel {
                             sourceModel: root.recentsList
-                            filters: ExpressionFilter {
+                            filters: FastExpressionFilter {
                                 enabled: root.recentsList.count > 0 && layout.currentIndex === 0
+                                expectedRoles: ["address"]
                                 expression: {
                                     const searchValue = searchBox.searchValue
                                     if (!searchValue)
@@ -193,8 +195,9 @@ StatusMenu {
                     Layout.fillHeight: true
                     model: SortFilterProxyModel {
                         sourceModel: root.savedAddressList
-                        filters: ExpressionFilter {
+                        filters: FastExpressionFilter {
                             enabled: root.savedAddressList.count > 0 && layout.currentIndex === 1
+                            expectedRoles: ["name", "address", "ens"]
                             expression: {
                                 const searchValue = searchBox.searchValue
                                 if (!searchValue)

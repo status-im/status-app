@@ -181,9 +181,10 @@ StatusMenu {
                     model: SortFilterProxyModel {
                         id: collectibleProxyModel
                         sourceModel: root.collectiblesList
-                        filters: ExpressionFilter {
+                        filters: FastExpressionFilter {
                             enabled: root.collectiblesList.count > 0 && !!collectiblesSearchBox.text
                             readonly property string searchText: collectiblesSearchBox.text.toUpperCase()
+                            expectedRoles: ["name"]
                             expression: {
                                 return String(name).toUpperCase().startsWith(searchText)
                             }
