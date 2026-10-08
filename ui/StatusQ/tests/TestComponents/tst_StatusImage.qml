@@ -32,17 +32,67 @@ Item {
         StatusRoundedImage {}
     }
 
+    // Records every decode from creation on: [{ key, width }]
+    component DecodeRecordingImage: StatusImage {
+        id: recorded
+
+        readonly property var decodes: []
+
+        function record() {
+            const key = ImageInspector.decodeKey(recorded)
+            if (key !== "" && !decodes.some(d => d.key === key))
+                decodes.push({ key, width: ImageInspector.decodedSize(recorded).width })
+        }
+
+        onImplicitWidthChanged: record()
+        onImplicitHeightChanged: record()
+        onStatusChanged: record()
+    }
+
     Component {
         id: preferredSizeLayoutComponent
 
         RowLayout {
             readonly property alias image: img
 
-            StatusImage {
+            DecodeRecordingImage {
                 id: img
 
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
+                source: root.largeRaster
+            }
+        }
+    }
+
+    Component {
+        id: fillWidthLayoutComponent
+
+        RowLayout {
+            readonly property alias image: img
+
+            width: 40
+            height: 40
+
+            DecodeRecordingImage {
+                id: img
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                source: root.largeRaster
+            }
+        }
+    }
+
+    Component {
+        id: plainParentComponent
+
+        Item {
+            readonly property alias image: img
+
+            StatusImage {
+                id: img
+
                 source: root.largeRaster
             }
         }
@@ -317,6 +367,35 @@ Item {
             waitForPolish(layout)
             tryCompare(layout.image, "status", Image.Ready)
             compare(ImageInspector.decodedSize(layout.image).width, decoded(40, layout.image))
+        }
+
+        function test_rasterInLayoutDecodesOnceAtPreferredSize() {
+            const layout = createTemporaryObject(preferredSizeLayoutComponent, root)
+            waitForPolish(layout)
+            tryCompare(layout.image, "status", Image.Ready)
+            compare(layout.image.decodes.length, 1, JSON.stringify(layout.image.decodes))
+            compare(layout.image.decodes[0].width, decoded(40, layout.image))
+        }
+
+        // Pins a known cost: without Layout preferred sizes the size is only known after the
+        // layout's polish, so the first decode is native and the second at the rendered size
+        function test_fillWidthInLayoutDecodesNativeFirst() {
+            const layout = createTemporaryObject(fillWidthLayoutComponent, root)
+            waitForPolish(layout)
+            tryCompare(layout.image, "status", Image.Ready)
+            tryCompare(layout.image.decodes, "length", 2)
+            compare(layout.image.decodes[0].width, 1024)
+            compare(layout.image.decodes[1].width, decoded(40, layout.image))
+        }
+
+        function test_noLayoutAttachedObjectOutsideLayouts() {
+            const imageInItem = createTemporaryObject(plainParentComponent, root).image
+            tryCompare(imageInItem, "status", Image.Ready)
+            verify(!ImageInspector.hasLayoutAttached(imageInItem))
+
+            const layout = createTemporaryObject(implicitWidthLayoutComponent, root)
+            tryCompare(layout.image, "status", Image.Ready)
+            verify(ImageInspector.hasLayoutAttached(layout.image))
         }
 
         function test_rasterInLayoutSizedByImplicitWidth() {

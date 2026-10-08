@@ -16,7 +16,8 @@ import StatusQ.Components.private
     raster is decoded at the rendered size x device pixel ratio (rounded up to a proportional
     step, never upscaled, capped at 2048px per side) instead of its native resolution, and
     re-decoded when the item is resized past a step. Items sized by their implicit size and
-    tiled or padded images decode at native size. Set \c sourceSize explicitly to override.
+    tiled or padded images decode at native size; a layout child not sized yet decodes at its
+    Layout.preferredWidth/Height when set. Set \c sourceSize explicitly to override.
 
     Example of how to use it:
 
