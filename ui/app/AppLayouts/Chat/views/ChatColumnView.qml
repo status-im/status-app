@@ -584,7 +584,8 @@ Item {
                     }
 
                     usersModel: root.usersModel
-                    usersModelIncludeAtEveryone: root.activeChatType !== Constants.chatType.oneToOne
+                    usersModelIncludeAtEveryone: root.activeChatType === Constants.chatType.privateGroupChat
+                                                 || root.activeChatType === Constants.chatType.communityChat
                     linkPreviewModel: !!d.activeChatContentModule ? d.activeChatContentModule.inputAreaModule.linkPreviewModel : null
                     paymentRequestModel: !!d.activeChatContentModule ? d.activeChatContentModule.inputAreaModule.paymentRequestModel : null
                     formatBalance: d.formatBalance

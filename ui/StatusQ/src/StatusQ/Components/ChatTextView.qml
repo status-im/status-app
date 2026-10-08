@@ -46,7 +46,7 @@ Control {
     // Combined selected text across all blocks ("" when nothing is selected).
     readonly property alias selectedText: d.selectedText
 
-    // The link under the pointer — a URL for links, a pub key for mentions; "" when none.
+    // The actionable link under the pointer; system mentions such as everyone are excluded.
     readonly property alias hoveredLink: d.hoveredLink
 
     // Emitted when the user clicks a mention pill (its pub key) or a link (its url) in the text.
@@ -120,10 +120,10 @@ Control {
                 color: block.textColor
                 font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                text: `<style>${d.styleFor(hoveredLink)}</style>` + d.wrapContent(content)
+                text: `<style>${d.styleFor(d.actionableLink(hoveredLink))}</style>` + d.wrapContent(content)
 
                 onLinkActivated: (link) => d.activateLink(link)
-                onHoveredLinkChanged: d.hoveredLink = hoveredLink
+                onHoveredLinkChanged: d.hoveredLink = d.actionableLink(hoveredLink)
             }
         }
         Component {
@@ -134,7 +134,7 @@ Control {
                 property bool selectionParticipant: true
                 property string hoveredLinkInternal
 
-                readonly property string style: d.styleFor(hoveredLink)
+                readonly property string style: d.styleFor(d.actionableLink(hoveredLink))
                 property string effectiveStyle
 
                 // keep selection if only style changes, otherwise selection is lost
@@ -160,7 +160,7 @@ Control {
 
                 text: effectiveStyle + d.wrapContent(content)
 
-                onHoveredLinkChanged: d.hoveredLink = hoveredLink
+                onHoveredLinkChanged: d.hoveredLink = d.actionableLink(hoveredLink)
 
                 // A plain TextEdit grabs touch points exclusively (even with selectByMouse:
                 // false), so a TapHandler placed anywhere above it in the hierarchy (e.g. in
@@ -387,8 +387,12 @@ Control {
         // Routes an activated <a href> to the right intent: URLs carry a scheme ("://") and
         // wallet/ENS send links a "//" prefix (//send-via-personal-chat//…); both are links.
         // Mention hrefs are bare pub keys, so they route as mentions.
+        function actionableLink(href) {
+            return href === "0x00001" ? "" : href
+        }
+
         function activateLink(href) {
-            if (!href)
+            if (!actionableLink(href))
                 return
             if (href.indexOf("://") >= 0 || href.startsWith("//"))
                 root.linkClicked(href)
@@ -410,7 +414,7 @@ Control {
                 const editor = editors[i]
                 const point = editor.mapFromItem(root.contentItem, x, y)
                 if (editor.contains(point))
-                    return editor.linkAt(point.x, point.y) || ""
+                    return actionableLink(editor.linkAt(point.x, point.y) || "")
             }
             return ""
         }

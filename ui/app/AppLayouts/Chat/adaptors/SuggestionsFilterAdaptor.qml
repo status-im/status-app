@@ -5,8 +5,8 @@ import StatusQ.Core.Utils
 import QtModelsToolkit
 import SortFilterProxyModel
 
-// Adaptor adding special entry "everyone" to list of users, providing filtering
-// by preferredDisplayName role and sorting by the same role.
+// Filters users by preferredDisplayName, optionally keeping "everyone" first
+// and sorting the remaining suggestions by name.
 QObject {
     id: root
 
@@ -29,24 +29,26 @@ QObject {
             roleName: "preferredDisplayName"
             searchPhrase: root.filter
         }
-        sorters: StringSorter {
-            roleName: "preferredDisplayName"
-            caseSensitivity: Qt.CaseInsensitive
-        }
+        sorters: [
+            StringSorter {
+                roleName: "which_model"
+            },
+            StringSorter {
+                roleName: "preferredDisplayName"
+                caseSensitivity: Qt.CaseInsensitive
+            }
+        ]
     }
 
-    SourceModel {
-        id: everyoneSourceModel
-        model: ListModel {
-            ListElement {
-                pubKey: "0x00001"
-                preferredDisplayName: "everyone"
-                icon: ""
-                colorId: 0
-                usesDefaultName: false
-            }
+    ListModel {
+        id: everyoneModel
+        ListElement {
+            pubKey: "0x00001"
+            preferredDisplayName: "everyone"
+            icon: ""
+            colorId: 0
+            usesDefaultName: false
         }
-        markerRoleValue: "everyone_model"
     }
 
     ConcatModel {
@@ -56,14 +58,13 @@ QObject {
             SourceModel {
                 model: root.sourceModel
                 markerRoleValue: "filtered_model"
+            },
+            SourceModel {
+                model: root.usersModelIncludeAtEveryone ? everyoneModel : null
+                markerRoleValue: "everyone_model"
             }
         ]
         markerRoleName: "which_model"
         expectedRoles: ["pubKey", "preferredDisplayName"]
-        Component.onCompleted: {
-            if (root.usersModelIncludeAtEveryone) {
-                sources.push(everyoneSourceModel)
-            }
-        }
     }
 }
