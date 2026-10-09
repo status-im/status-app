@@ -19,6 +19,7 @@ Item {
     readonly property url tinyRaster: root.assets + "png/swap/relay.png" // 40x40, only used by the crop test
     readonly property url multiResRaster: root.assets + "png/tokens/0-native.png" // 40px + @2x + @3x
     readonly property url svgSource: root.assets + "img/icons/action-add.svg"
+    readonly property url svgzSource: Qt.resolvedUrl("assets/action-add.svgz") // gzipped svgSource
 
     Component {
         id: imageComponent
@@ -486,6 +487,16 @@ Item {
             const img = createTemporaryObject(imageComponent, root,
                                               { width: 40, height: 40, source: root.svgSource })
             tryCompare(img, "status", Image.Ready)
+            compare(img.sourceSize, Qt.size(40, 40))
+            compare(img.implicitWidth, 40)
+            compare(ImageInspector.decodedSize(img), Qt.size(physical(40, img), physical(40, img)))
+        }
+
+        function test_svgzRenderedAtItemSize() {
+            const img = createTemporaryObject(imageComponent, root,
+                                              { width: 40, height: 40, source: root.svgzSource })
+            tryCompare(img, "status", Image.Ready)
+            verify(img.vector)
             compare(img.sourceSize, Qt.size(40, 40))
             compare(img.implicitWidth, 40)
             compare(ImageInspector.decodedSize(img), Qt.size(physical(40, img), physical(40, img)))

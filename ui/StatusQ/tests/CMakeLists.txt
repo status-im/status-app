@@ -96,7 +96,8 @@ target_link_libraries(TestRenderSizedImage PRIVATE Qt::Test Qt::Gui Qt::GuiPriva
     Qt::QuickPrivate StatusQ)
 target_compile_definitions(TestRenderSizedImage PRIVATE
     STATUSQ_MODULE_IMPORT_PATH="${STATUSQ_MODULE_IMPORT_PATH}"
-    ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/")
+    ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/"
+    TEST_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/TestComponents/assets/")
 add_test(NAME TestRenderSizedImage COMMAND TestRenderSizedImage)
 
 add_executable(TestIncubationCadence src/tst_incubationcadence.cpp)

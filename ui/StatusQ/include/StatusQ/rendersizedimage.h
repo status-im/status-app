@@ -12,12 +12,13 @@ class RenderSizedImagePrivate;
     the decode. A downscaled decode reports a logical implicit size, a source decoded at its
     native size keeps it, so binding sourceSize to the item's size cannot feed back into its
     implicit size. explicitlySized tells whether the item's size is set rather than taken
-    from its implicit size.
+    from its implicit size; vector whether the source is an SVG (svg or svgz) by its MIME type.
 */
 class RenderSizedImage : public QQuickImage
 {
     Q_OBJECT
     Q_PROPERTY(bool explicitlySized READ explicitlySized NOTIFY explicitlySizedChanged)
+    Q_PROPERTY(bool vector READ isVector NOTIFY vectorChanged)
 
 public:
     static constexpr int maxDecodeSide = 2048;
@@ -28,11 +29,13 @@ public:
 
     void setSourceSize(const QSize& size) override;
     bool explicitlySized() const;
+    bool isVector() const;
 
     static int knownNativeSizeCount();
 
 signals:
     void explicitlySizedChanged();
+    void vectorChanged();
 
 protected:
     void load() override;
