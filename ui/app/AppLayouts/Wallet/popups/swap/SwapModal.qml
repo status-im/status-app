@@ -224,13 +224,14 @@ StatusDialog {
                 if (isSideChain)
                     Qt.callLater(() => {
                                      if (isToSide) {
-                                         root.swapInputParamsForm.toNetworkChainId = root.swapInputParamsForm.selectedNetworkChainId
+                                         root.swapInputParamsForm.toNetworkChainId = Utils.isChainIDTestnet(chainId)
+                                             ? Constants.chains.sepoliaChainId
+                                             : root.swapInputParamsForm.selectedNetworkChainId
                                          return
                                      }
-                                     // by default set ethereum chain
-                                     root.swapInputParamsForm.selectedNetworkChainId = Utils.isChainIDTestnet(chainId)?
-                                         Constants.chains.hoodiChainId
-                                       : Constants.chains.mainnetChainId
+                                     root.swapInputParamsForm.selectedNetworkChainId = Utils.isChainIDTestnet(chainId)
+                                         ? Constants.chains.sepoliaChainId
+                                         : Constants.chains.mainnetChainId
                                  })
                 return
             }

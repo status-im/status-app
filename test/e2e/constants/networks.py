@@ -3,6 +3,7 @@ from enum import Enum
 
 class WalletNetworkNaming(Enum):
     LAYER1_ETHEREUM_TESTNET = (11155111, 'Sepolia')
+    LAYER2_BASE_SEPOLIA = (84532, 'Base Sepolia')
     LAYER1_ETHEREUM_HOODI = (560048, 'Hoodi')
     LAYER2_OPTIMISM_SEPOLIA = (11155420, 'Optimism Sepolia')
     LAYER2_ARBITRUM_SEPOLIA = (421614, 'Arbitrum Sepolia')

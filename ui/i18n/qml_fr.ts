@@ -8411,14 +8411,6 @@ Are you sure you want to do this?</source>
 <context>
     <name>HandlersManager</name>
     <message>
-        <source>Info</source>
-        <translation>Informations</translation>
-    </message>
-    <message>
-        <source>Swap is not available in the testnet mode.</source>
-        <translation>Échanger n&apos;est pas disponible en mode testnet.</translation>
-    </message>
-    <message>
         <source>Push notifications enabled</source>
         <translation>Notifications push activées</translation>
     </message>

@@ -150,6 +150,8 @@ class WalletTransactionType(IntEnum):
 
 class WalletHistoryTitles:
     SEND = ('Sent',)
+    SWAP = ('Swapping', 'Swapped')
+    BRIDGE = ('Bridging', 'Bridged')
     ENS = ('Interaction', 'Contract deployed')
     MINT = ('Interaction', 'Token minted', 'Collectible minted', 'Contract deployed')
 

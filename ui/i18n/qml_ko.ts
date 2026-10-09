@@ -8383,14 +8383,6 @@ Are you sure you want to do this?</source>
 <context>
     <name>HandlersManager</name>
     <message>
-        <source>Info</source>
-        <translation>정보</translation>
-    </message>
-    <message>
-        <source>Swap is not available in the testnet mode.</source>
-        <translation>테스트넷 모드에서는 스왑을 사용할 수 없습니다.</translation>
-    </message>
-    <message>
         <source>Push notifications enabled</source>
         <translation>푸시 알림이 활성화되었습니다</translation>
     </message>
