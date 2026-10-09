@@ -48,6 +48,18 @@ suite "updating chat items":
     model.setData(@[chatA, catA, chatB])
     check(model.rowCount() == 3)
 
+  test "thread rename preserves parent and unread counters":
+    var thread = createTestChatItem("thread", isThread = true, parentChatId = "parent")
+    thread.hasUnreadMessages = true
+    thread.notificationsCount = 2
+    model.appendItem(thread)
+    model.renameItemById("thread", "Renamed thread")
+    check thread.name == "Renamed thread"
+    check thread.parentChatId == "parent"
+    check thread.isThread
+    check thread.hasUnreadMessages
+    check thread.notificationsCount == 2
+
   test "update can post values":
     # Call with the same values, so nothing should change
     var updatedRoles = model.changeCanPostValues(

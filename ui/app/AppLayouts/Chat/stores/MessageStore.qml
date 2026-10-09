@@ -24,6 +24,18 @@ QtObject {
     readonly property string chatIcon: messageModule ? messageModule.chatIcon : ""
     readonly property bool keepUnread: messageModule ? messageModule.keepUnread : false
     readonly property string threadId: messageModule ? messageModule.threadId : ""
+    readonly property string threadName: messageModule ? messageModule.threadName : ""
+    readonly property string threadParentChatName: messageModule ? messageModule.threadParentChatName : ""
+    readonly property bool canEditThread: messageModule ? messageModule.canEditThread : false
+    readonly property bool threadEditPending: messageModule ? messageModule.threadEditPending : false
+
+    function editThread(name: string) {
+        if (!root.messageModule) {
+            console.error("editThread: message module is not set")
+            return
+        }
+        root.messageModule.editThread(name)
+    }
 
     onMessageModuleChanged: {
         if(!messageModule)

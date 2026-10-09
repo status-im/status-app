@@ -34,6 +34,7 @@ SplitView {
             pinEnabled: ctrlPinEnabled.checked
             pinned: ctrlPinned.checked
             deleteEnabled: ctrlDeleteEnabled.checked
+            editEnabled: ctrlEditEnabled.checked
 
             onEditNameRequested: logs.logEvent("onEditNameRequested()")
             onFollowRequested: logs.logEvent("onFollowRequested()")
@@ -59,6 +60,11 @@ SplitView {
         logsView.logText: logs.logText
 
         ColumnLayout {
+            Switch {
+                id: ctrlEditEnabled
+                text: "Can edit name"
+                checked: true
+            }
             Switch {
                 id: ctrlFollowed
                 text: "Followed"

@@ -11,6 +11,10 @@ QtObject:
       model: Model
       modelVariant: QVariant
       threadId: string
+      threadName: string
+      threadParentChatName: string
+      canEditThread: bool
+      threadEditPending: bool
       messageSearchOngoing: bool
       amIChatAdmin: bool
       isPinMessageAllowedForMembers: bool
@@ -104,6 +108,54 @@ QtObject:
   QtProperty[string] threadId:
     read = getThreadId
     notify = threadIdChanged
+
+  proc threadDetailsChanged*(self: View) {.signal.}
+  proc getThreadName(self: View): string {.slot.} =
+    self.threadName
+  QtProperty[string] threadName:
+    read = getThreadName
+    notify = threadDetailsChanged
+
+  proc getThreadParentChatName(self: View): string {.slot.} =
+    self.threadParentChatName
+  QtProperty[string] threadParentChatName:
+    read = getThreadParentChatName
+    notify = threadDetailsChanged
+
+  proc getCanEditThread*(self: View): bool {.slot.} =
+    self.canEditThread
+  QtProperty[bool] canEditThread:
+    read = getCanEditThread
+    notify = threadDetailsChanged
+
+  proc setThreadDetails*(self: View, name, parentChatName: string, canEdit: bool) =
+    if self.threadName == name and self.threadParentChatName == parentChatName and
+        self.canEditThread == canEdit:
+      return
+    self.threadName = name
+    self.threadParentChatName = parentChatName
+    self.canEditThread = canEdit
+    self.threadDetailsChanged()
+
+  proc threadEditPendingChanged*(self: View) {.signal.}
+  proc getThreadEditPending(self: View): bool {.slot.} =
+    self.threadEditPending
+  QtProperty[bool] threadEditPending:
+    read = getThreadEditPending
+    notify = threadEditPendingChanged
+
+  proc setThreadEditPending*(self: View, pending: bool) =
+    if self.threadEditPending == pending:
+      return
+    self.threadEditPending = pending
+    self.threadEditPendingChanged()
+
+  proc threadEditFinished*(self: View, error: string) {.signal.}
+  proc emitThreadEditFinished*(self: View, error: string) =
+    self.threadEditFinished(error)
+
+  proc editThread*(self: View, name: string) {.slot.} =
+    self.delegate.editThread(name)
 
   proc createThread*(self: View, parentMessageId: string) {.slot.} =
     self.delegate.createThread(parentMessageId)
@@ -276,4 +328,3 @@ QtObject:
 
   proc delete*(self: View) =
     self.QObject.delete
-

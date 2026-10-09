@@ -29,6 +29,7 @@ Item {
             pinned: false
             pinEnabled: true
             deleteEnabled: true
+            editEnabled: true
 
             // Test-only override so each test can drive the "do not show
             // again" persisted setting without touching the real Settings

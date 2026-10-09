@@ -48,6 +48,7 @@ const SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED* = "chatThreadsForChatsLoaded"
 const SIGNAL_CHAT_THREADS_LOADING_FAILED* = "chatThreadsLoadingFailed"
 const SIGNAL_THREAD_CREATED* = "threadCreated"
 const SIGNAL_THREAD_CREATION_FAILED* = "threadCreationFailed"
+const SIGNAL_THREAD_EDIT_FINISHED* = "threadEditFinished"
 const SIGNAL_PINNED_MESSAGES_LOADED* = "pinnedMessagesLoaded"
 const SIGNAL_REACTIONS_FOR_MESSAGE_LOADED* = "signalReactionsForMessageLoaded"
 const SIGNAL_FIRST_UNSEEN_MESSAGE_LOADED* = "firstUnseenMessageLoaded"
@@ -105,6 +106,12 @@ type
     chatId*: string
     parentMessageId*: string
     threads*: seq[ThreadDto]
+
+  ThreadEditFinishedArgs* = ref object of Args
+    chatId*: string
+    threadId*: string
+    requestId*: string
+    error*: string
 
   PinnedMessagesLoadedArgs* = ref object of Args
     chatId*: string
@@ -217,6 +224,9 @@ QtObject:
     chatThreadsByParentIdByChat: Table[string, Table[string, ThreadDto]]
     chatThreadListsLoadedChats: HashSet[string]
     chatThreadListsLoadingChats: HashSet[string]
+    # Read-only sentinel returned via `lent` borrow when a thread lookup misses.
+    # Mutating it would affect every subsequent miss result.
+    emptyThread: ThreadDto
 
   proc asyncLoadChatThreadsForChats*(self: Service, chatIds: seq[string])
 
@@ -248,6 +258,8 @@ QtObject:
 
   proc mergeThreadSummary(existing, incoming: ThreadDto): ThreadDto =
     result = incoming
+    if result.creatorId.len == 0:
+      result.creatorId = existing.creatorId
     if incoming.messagesCount == 0 and existing.messagesCount > 0:
       result.messagesCount = existing.messagesCount
       result.participantsCount = existing.participantsCount
@@ -332,12 +344,13 @@ QtObject:
       return
     return self.chatThreadsByParentIdByChat[chatId].getOrDefault(parentMessageId)
 
-  proc getThreadById*(self: Service, chatId: string, threadId: string): ThreadDto =
+  proc getThreadById*(self: Service, chatId: string, threadId: string): lent ThreadDto =
     if not self.chatThreadsByParentIdByChat.hasKey(chatId):
-      return
-    for _, thread in self.chatThreadsByParentIdByChat[chatId]:
-      if thread.threadId == threadId:
-        return thread
+      return self.emptyThread
+    for parentMessageId in self.chatThreadsByParentIdByChat[chatId].keys:
+      if self.chatThreadsByParentIdByChat[chatId][parentMessageId].threadId == threadId:
+        return self.chatThreadsByParentIdByChat[chatId][parentMessageId]
+    return self.emptyThread
 
   proc getParentMessageIdForThread(self: Service, chatId: string, threadId: string): string =
     if not self.chatThreadsByParentIdByChat.hasKey(chatId):
@@ -495,6 +508,23 @@ QtObject:
 
     self.threadpool.start(arg)
     return true
+
+  proc asyncEditThread*(self: Service, chatId, threadId, name, requestId: string) =
+    if chatId.len == 0 or threadId.len == 0 or requestId.len == 0:
+      error "invalid thread edit identifiers", chatId, threadId, requestId
+      self.events.emit(SIGNAL_THREAD_EDIT_FINISHED,
+        ThreadEditFinishedArgs(chatId: chatId, threadId: threadId, requestId: requestId,
+          error: "edit-thread: invalid request"))
+      return
+    self.threadpool.start(AsyncEditThreadTaskArg(
+      tptr: asyncEditThreadTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncEditThread",
+      chatId: chatId,
+      threadId: threadId,
+      name: name,
+      requestId: requestId,
+    ))
 
   proc asyncCreateThread*(self: Service, chatId: string, parentMessageId: string) =
     if chatId.len == 0 or parentMessageId.len == 0:
@@ -1048,6 +1078,31 @@ QtObject:
           self.threadMsgCursor.del(key)
         self.events.emit(SIGNAL_MESSAGES_LOADED,
           MessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: @[], reactions: @[]))
+
+  proc onAsyncEditThread*(self: Service, response: string) {.slot.} =
+    var args = ThreadEditFinishedArgs()
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(ValueError, "edit thread response is not a json object")
+      discard responseObj.getProp("chatId", args.chatId)
+      discard responseObj.getProp("threadId", args.threadId)
+      discard responseObj.getProp("requestId", args.requestId)
+      args.error = responseObj{"error"}.getStr()
+      if args.error.len == 0:
+        let threadsArr = responseObj{"threads"}
+        if threadsArr.isNil or threadsArr.kind != JArray:
+          raise newException(ValueError, "edit thread response is missing thread metadata")
+        let threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
+        if not threads.anyIt(it.chatId == args.chatId and it.threadId == args.threadId and
+            it.parentMessageId.len > 0 and it.name.len > 0):
+          raise newException(ValueError, "edit thread response is missing the edited thread")
+        self.handleThreadsUpdate(threads)
+    except CatchableError as e:
+      args.error = e.msg
+    if args.error.len > 0:
+      error "error editing thread", chatId = args.chatId, threadId = args.threadId, msg = args.error
+    self.events.emit(SIGNAL_THREAD_EDIT_FINISHED, args)
 
   proc onAsyncCreateThread*(self: Service, response: string) {.slot.} =
     var chatId: string = ""

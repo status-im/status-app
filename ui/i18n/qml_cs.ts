@@ -3329,10 +3329,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 <context>
     <name>ChatView</name>
     <message>
-        <source>in %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Members</source>
         <translation>Členové</translation>
     </message>
@@ -17911,6 +17907,30 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>Are you sure you want to delete this thread? It may remain visible on other participants&apos; devices.</source>
         <translation>Opravdu chcete smazat toto vlákno? Může i tak zůstat viditelné na zařízeních ostatních účastníků.</translation>
+    </message>
+</context>
+<context>
+    <name>ThreadHeader</name>
+    <message>
+        <source>Couldn&apos;t rename thread: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>in %1</source>
+        <comment>The channel containing the thread</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Renaming...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>More</source>
+        <translation type="unfinished">Více</translation>
     </message>
 </context>
 <context>
