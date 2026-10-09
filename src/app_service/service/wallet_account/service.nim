@@ -14,6 +14,7 @@ import app_service/common/[utils]
 
 import dto/keypair_dto as keypair_dto
 import dto/derived_address_dto as derived_address_dto
+import balances_grouping
 
 import app/core/eventemitter
 import app/core/signals/types
@@ -51,11 +52,13 @@ QtObject:
     keypairs: Table[string, KeypairDto] ## [keyUid, KeypairDto]
     groupedAssets: seq[AssetGroupItem]
     hasBalanceCache: bool
+    pendingBalances: PendingBalances # balances received before the token map was ready
     buildTokensDebouncer: debouncer_service.Debouncer
 
   # Forward declaration
   proc buildAllTokens*(self: Service, accounts: seq[string], forceRefresh: bool)
   proc buildAllTokensInternal(self: Service, accounts: seq[string], forceRefresh: bool)
+  proc applyPendingBalances(self: Service)
   proc handleWalletAccount(self: Service, account: WalletAccountDto, notify: bool = true)
   proc handleKeypair(self: Service, keypair: KeypairDto)
   proc updateAccountsPositions(self: Service)

@@ -53,6 +53,7 @@ QtObject:
     swapSupportChainIdsInFlight: HashSet[int] # chains used for a prefetch check
     # local storage
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]
+    tokensOfInterestLoaded: bool # true once the first tokens refresh has been applied
     knownMissingKeys: HashSet[string] # keys the backend confirmed as "not found"; skip re-fetching until a refresh applies
     pendingTokenFetch: PendingTokenFetch # missing keys awaiting an async batch fetch (replaces the sync GUI-thread RPC)
     missingTokenKeysFetchDebouncer: debouncer_service.Debouncer # coalesces a burst of misses into one batch
