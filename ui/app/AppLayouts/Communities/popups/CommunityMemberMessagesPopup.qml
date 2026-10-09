@@ -36,6 +36,8 @@ StatusDialog {
     readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
         chatUsersModel: root.chatCommunitySectionModule?.membersModel ?? null
         contactsModel: root.rootStore?.contactsModel ?? null
+        selfPubKey: root.rootStore?.myPublicKey() ?? ""
+        selfDisplayName: root.rootStore?.name ?? ""
     }
 
     readonly property MentionResolver mentionResolver: MentionResolver {

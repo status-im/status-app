@@ -47,6 +47,8 @@ Item {
 
         chatUsersModel: root.usersModel
         contactsModel: root.rootStore?.contactsModel ?? null
+        selfPubKey: root.myPublicKey
+        selfDisplayName: root.rootStore?.name ?? ""
     }
 
     // Resolves mention pub keys to display names. Reactive to member/contact

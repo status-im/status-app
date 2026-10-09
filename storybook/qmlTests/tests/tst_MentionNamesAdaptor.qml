@@ -18,6 +18,8 @@ import StatusQ.Core.Utils as SQUtils
    no member model yet) without taking the other one down
  - with neither input present every key is simply unknown, and a source wired in
    later starts resolving
+ - the local user resolves too, since neither input carries them in a 1:1 — the
+   contacts model leaves the local user out and the chat's users are mutual contacts
 */
 Item {
     id: root
@@ -113,6 +115,37 @@ Item {
 
             adaptor.chatUsersModel = membersSource
             compare(nameOf(adaptor, "0xalice"), "Alice")
+        }
+
+        // being mentioned yourself in a DM used to show your own chat key
+        function test_resolvesSelf() {
+            const adaptor = createTemporaryObject(adaptorComponent, root, {
+                selfPubKey: "0xme", selfDisplayName: "Me"
+            })
+            compare(nameOf(adaptor, "0xme"), "Me")
+        }
+
+        function test_noSelfRowWithoutAKey() {
+            const adaptor = createTemporaryObject(adaptorComponent, root)
+            compare(nameOf(adaptor, ""), null)
+            compare(SQUtils.ModelUtils.modelToArray(adaptor.model, ["pubKey"]).length, 4)
+        }
+
+        // a real row for the same key keeps precedence over the appended self row
+        function test_selfRowLosesToARealRow() {
+            const adaptor = createTemporaryObject(adaptorComponent, root, {
+                selfPubKey: "0xalice", selfDisplayName: "Me"
+            })
+            compare(nameOf(adaptor, "0xalice"), "Alice")
+        }
+
+        function test_selfRenamePropagates() {
+            const adaptor = createTemporaryObject(adaptorComponent, root, {
+                selfPubKey: "0xme", selfDisplayName: "Me"
+            })
+            compare(nameOf(adaptor, "0xme"), "Me")
+            adaptor.selfDisplayName = "Myself"
+            compare(nameOf(adaptor, "0xme"), "Myself")
         }
 
         // MentionResolver rebuilds its cache from the name role changing, so the
