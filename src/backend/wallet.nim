@@ -298,3 +298,6 @@ rpc(refetchTxHistory, "wallet"):
 
 rpc(getUnsupportedCollectibleChainIds, "wallet"):
   discard
+
+rpc(setBalancesActive, "wallet"):
+  active: bool

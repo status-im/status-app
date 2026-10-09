@@ -201,3 +201,21 @@ proc fetchENSNamesForAddressesTask*(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     response["error"] = %* e.msg
   arg.finish(response)
+
+#################################################
+# Async tell status-go whether balances are on screen
+#################################################
+type
+  SetBalancesActiveTaskArg* = ref object of QObjectTaskArg
+    active: bool
+
+proc setBalancesActiveTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[SetBalancesActiveTaskArg](argEncoded)
+  var output = %*{
+    "error": ""
+  }
+  try:
+    discard status_go_wallet.setBalancesActive(arg.active)
+  except Exception as e:
+    output["error"] = %* e.msg
+  arg.finish(output)

@@ -52,6 +52,9 @@ QtObject:
     groupedAssets: seq[AssetGroupItem]
     hasBalanceCache: bool
     buildTokensDebouncer: debouncer_service.Debouncer
+    balancesActiveWanted: Option[bool]
+    balancesActiveSent: Option[bool]
+    balancesActiveSending: bool
 
   # Forward declaration
   proc buildAllTokens*(self: Service, accounts: seq[string], forceRefresh: bool)

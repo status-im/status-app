@@ -227,6 +227,9 @@ method delete*(self: Module) =
 method updateCurrency*(self: Module, currency: string) =
   self.controller.updateCurrency(currency)
 
+method setBalancesActive*(self: Module, active: bool) =
+  self.controller.setBalancesActive(active)
+
 method getCurrentCurrency*(self: Module): string =
   self.controller.getCurrency()
 

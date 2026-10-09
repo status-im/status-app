@@ -658,6 +658,38 @@ proc deleteKeypair*(self: Service, keyUid: string, password: string) =
 proc updateCurrency*(self: Service, newCurrency: string) =
   discard self.settingsService.saveCurrency(newCurrency)
 
+## Sends the wanted "balances on screen" to status-go unless it has it already.
+## One call is under way at a time, so that the latest value is the last to arrive.
+proc sendBalancesActive(self: Service) =
+  if self.balancesActiveSending or self.balancesActiveWanted == self.balancesActiveSent:
+    return
+  let active = self.balancesActiveWanted.get()
+  self.balancesActiveSending = true
+  self.balancesActiveSent = self.balancesActiveWanted
+  debug "balances on screen", active
+  let arg = SetBalancesActiveTaskArg(
+    active: active,
+    tptr: setBalancesActiveTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onBalancesActiveSet",
+  )
+  self.threadpool.start(arg)
+
+## Whether balances are on screen; while not, status-go refreshes them less often.
+proc setBalancesActive*(self: Service, active: bool) =
+  self.balancesActiveWanted = some(active)
+  self.sendBalancesActive()
+
+proc onBalancesActiveSet*(self: Service, jsonString: string) {.slot.} =
+  self.balancesActiveSending = false
+  let failure = parseJson(jsonString){"error"}.getStr()
+  if failure.len > 0:
+    # The next change sends again; a retry now could loop on a lasting failure
+    error "setBalancesActive failed", msg = failure
+    self.balancesActiveSent = none(bool)
+    return
+  self.sendBalancesActive()
+
 proc setNetworksState*(self: Service, chainIds: seq[int], enabled: bool) =
   self.networkService.setNetworksState(chainIds, enabled)
   self.events.emit(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED, Args())

@@ -48,6 +48,9 @@ proc getCurrencyAmount*(self: Controller, amount: float64, key: string): Currenc
 proc updateCurrency*(self: Controller, currency: string) =
   self.walletAccountService.updateCurrency(currency)
 
+proc setBalancesActive*(self: Controller, active: bool) =
+  self.walletAccountService.setBalancesActive(active)
+
 proc getCurrentNetworks*(self: Controller): seq[NetworkItem] =
   return self.networkService.getCurrentNetworks()
 
