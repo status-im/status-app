@@ -12127,16 +12127,16 @@ to load</source>
 <context>
     <name>NewMessagesMarker</name>
     <message>
-        <source>UNREAD</source>
-        <comment>unread message(s)</comment>
-        <translation>НЕПРОЧИТАНІ</translation>
+        <source>NEW</source>
+        <comment>new message(s)</comment>
+        <translation type="unfinished">НОВЕ</translation>
     </message>
     <message numerus="yes">
-        <source>%n unread message(s) since %1</source>
-        <translation>
-            <numerusform>%n непрочитане повідомлення після %1</numerusform>
-            <numerusform>%n непрочитані повідомлення після %1</numerusform>
-            <numerusform>%n непрочитаних повідомлень після %1</numerusform>
+        <source>%n new message(s) since %1</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>

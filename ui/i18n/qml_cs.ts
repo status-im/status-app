@@ -3163,7 +3163,7 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Copy thread ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopírovat ID vlákna</translation>
     </message>
     <message>
         <source>Copy channel ID</source>
@@ -3277,11 +3277,11 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlákna nelze načíst</translation>
     </message>
     <message>
         <source>Couldn&apos;t create thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Nelze vytvořit vlákno</translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -11307,11 +11307,11 @@ selhalo</translation>
     </message>
     <message>
         <source>Open Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít vlákno</translation>
     </message>
     <message>
         <source>Create Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Vytvořit vlákno</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -11323,7 +11323,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Copy message</source>
-        <translation>Kopírovar zprávu</translation>
+        <translation>Kopírovat zprávu</translation>
     </message>
     <message>
         <source>Copy link to message</source>
@@ -12126,12 +12126,12 @@ selhalo</translation>
 <context>
     <name>NewMessagesMarker</name>
     <message>
-        <source>UNREAD</source>
-        <comment>unread message(s)</comment>
-        <translation>NEPŘEČTENO</translation>
+        <source>NEW</source>
+        <comment>new message(s)</comment>
+        <translation>NOVÉ</translation>
     </message>
     <message numerus="yes">
-        <source>%n unread message(s) since %1</source>
+        <source>%n new message(s) since %1</source>
         <translation>
             <numerusform>%n nová zpráva od %1</numerusform>
             <numerusform>%n nové zprávy od %1</numerusform>
@@ -15509,14 +15509,14 @@ selhalo</translation>
     <name>ShareComposer</name>
     <message>
         <source>Message</source>
-        <translation type="unfinished">Zpráva</translation>
+        <translation>Zpráva</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationDelegate</name>
     <message numerus="yes">
         <source>%n member(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n člen</numerusform>
             <numerusform>%n členové</numerusform>
             <numerusform>%n členů</numerusform>
@@ -15527,41 +15527,41 @@ selhalo</translation>
     <name>ShareDestinationList</name>
     <message>
         <source>No destinations found</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádný cíl nenalezen</translation>
     </message>
     <message>
         <source>Nothing selected yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Nic není ještě vybráno</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationPickerPanel</name>
     <message>
         <source>Share</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílet</translation>
     </message>
     <message>
         <source>Search chats and channels</source>
-        <translation type="unfinished"></translation>
+        <translation>Prohledat konverzace a kanály</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationTabBar</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Všechny</translation>
+        <translation>Vše</translation>
     </message>
     <message>
         <source>Contacts</source>
-        <translation type="unfinished">Kontakty</translation>
+        <translation>Kontakty</translation>
     </message>
     <message>
         <source>Groups</source>
-        <translation type="unfinished"></translation>
+        <translation>Skupiny</translation>
     </message>
     <message>
         <source>Communities</source>
-        <translation type="unfinished">Komunity</translation>
+        <translation>Komunity</translation>
     </message>
 </context>
 <context>
@@ -16120,11 +16120,11 @@ selhalo</translation>
     <name>StatusChatInput</name>
     <message>
         <source>Reply in %1, also send to %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Odpovědět v %1, také poslat do %2</translation>
     </message>
     <message>
         <source>Reply in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Odpovědět v %1</translation>
     </message>
     <message>
         <source>Type something</source>
@@ -16172,86 +16172,86 @@ selhalo</translation>
     </message>
     <message>
         <source>Add a thread name (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Přidat (volitelný) název vlákna</translation>
     </message>
     <message>
         <source>Also send to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Také poslat do %1</translation>
     </message>
     <message>
         <source>Confirm</source>
-        <translation type="unfinished">Potvrdit</translation>
+        <translation>Potvrdit</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Odpovědět</translation>
+        <translation>Odpovědět</translation>
     </message>
     <message>
         <source>Send</source>
-        <translation type="unfinished">Odeslat</translation>
+        <translation>Odeslat</translation>
     </message>
 </context>
 <context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
-        <translation type="unfinished"></translation>
+        <translation>Formát</translation>
     </message>
     <message>
         <source>Bold</source>
-        <translation type="unfinished"></translation>
+        <translation>Tučné</translation>
     </message>
     <message>
         <source>Italics</source>
-        <translation type="unfinished"></translation>
+        <translation>Skloněné</translation>
     </message>
     <message>
         <source>Strike through</source>
-        <translation type="unfinished"></translation>
+        <translation>Přeškrtnuté</translation>
     </message>
     <message>
         <source>Quote</source>
-        <translation type="unfinished"></translation>
+        <translation>Citace</translation>
     </message>
     <message>
         <source>Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Kód</translation>
     </message>
     <message>
         <source>Start a new thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Zahájit nové vlákno</translation>
     </message>
     <message>
         <source>Camera</source>
-        <translation type="unfinished"></translation>
+        <translation>Kamera</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Obrázek</translation>
     </message>
     <message>
         <source>Payment</source>
-        <translation type="unfinished"></translation>
+        <translation>Platba</translation>
     </message>
     <message>
         <source>Mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Zmínka</translation>
     </message>
     <message>
         <source>Emojis</source>
-        <translation type="unfinished"></translation>
+        <translation>Emotikony</translation>
     </message>
     <message>
         <source>Stickers</source>
-        <translation type="unfinished"></translation>
+        <translation>Samolepky</translation>
     </message>
     <message>
         <source>GIFs</source>
-        <translation type="unfinished"></translation>
+        <translation>GIFs</translation>
     </message>
     <message>
         <source>Reply in thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Odpovědět ve vlákně</translation>
     </message>
 </context>
 <context>
@@ -17664,7 +17664,7 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Search in downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat ve stahováních</translation>
     </message>
     <message>
         <source>Edit bookmark</source>

@@ -527,10 +527,10 @@
 <context>
     <name>NewMessagesMarker</name>
     <message numerus="yes">
-        <source>%n unread message(s) since %1</source>
+        <source>%n new message(s) since %1</source>
         <translation>
-            <numerusform>%n unread message since %1</numerusform>
-            <numerusform>%n unread messages since %1</numerusform>
+            <numerusform>%n new message since %1</numerusform>
+            <numerusform>%n new messages since %1</numerusform>
         </translation>
     </message>
 </context>
@@ -736,7 +736,7 @@
     <name>ThreadCard</name>
     <message numerus="yes">
         <source>%n message(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n message</numerusform>
             <numerusform>%n messages</numerusform>
         </translation>
