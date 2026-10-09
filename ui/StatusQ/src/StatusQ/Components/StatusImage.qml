@@ -55,7 +55,7 @@ RenderSizedImage {
 
     fillMode: Image.PreserveAspectFit
     sourceSize: {
-        if (source.toString().endsWith(".svg"))
+        if (vector)
             return Qt.size(width, height)
         // Tiled and padded images draw at native size; an item sized by its implicit size
         // already shows the native decode

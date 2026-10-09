@@ -1,6 +1,7 @@
 #include "StatusQ/rendersizedimage.h"
 
 #include <QtCore/QCache>
+#include <QtCore/QMimeDatabase>
 #include <QtCore/QtMath>
 #include <QtGui/QImageReader>
 #include <QtQml/QQmlFile>
@@ -23,6 +24,14 @@ bool isRenderSizedFillMode(QQuickImage::FillMode mode)
 {
     return mode == QQuickImage::PreserveAspectFit || mode == QQuickImage::PreserveAspectCrop
             || mode == QQuickImage::Stretch;
+}
+
+// By file name only: no file access, case-insensitive globs
+bool isVectorFileName(const QString& fileName)
+{
+    const QMimeType mime = QMimeDatabase().mimeTypeForFile(fileName, QMimeDatabase::MatchExtension);
+    return mime.inherits(QStringLiteral("image/svg+xml"))
+            || mime.inherits(QStringLiteral("image/svg+xml-compressed"));
 }
 
 } // namespace
@@ -169,7 +178,7 @@ public:
         QQuickImageBase::resolve2xLocalFile(resolved, targetDevicePixelRatio, &file,
                                             &fileDevicePixelRatio);
         const QString path = QQmlFile::urlToLocalFileOrQrc(file);
-        if (path.isEmpty() || path.endsWith(QLatin1String(".svg"), Qt::CaseInsensitive))
+        if (vector || path.isEmpty())
             return {};
 
         QImageReader reader(path);
@@ -195,12 +204,21 @@ public:
     bool cover = false;
     bool nativeKnown = false;
     bool explicitlySized = false;
+    bool vector = false;
     QSize decodeBox;
 };
 
 RenderSizedImage::RenderSizedImage(QQuickItem* parent)
     : QQuickImage(*(new RenderSizedImagePrivate), parent)
 {
+    connect(this, &QQuickImageBase::sourceChanged, this, [this](const QUrl& source) {
+        Q_D(RenderSizedImage);
+        const bool vector = isVectorFileName(source.fileName());
+        if (vector != d->vector) {
+            d->vector = vector;
+            emit vectorChanged();
+        }
+    });
 }
 
 void RenderSizedImage::setSourceSize(const QSize& size)
@@ -229,6 +247,12 @@ bool RenderSizedImage::explicitlySized() const
 {
     Q_D(const RenderSizedImage);
     return d->explicitlySized;
+}
+
+bool RenderSizedImage::isVector() const
+{
+    Q_D(const RenderSizedImage);
+    return d->vector;
 }
 
 void RenderSizedImage::load()

@@ -67,6 +67,59 @@ private slots:
             QHighDpiScaling::setScreenFactor(screen, 1.0);
     }
 
+    // Runs before knownNativeSizesStayBounded fills the native size cache
+    void vectorSourcesMatchedByMimeType_data()
+    {
+        QTest::addColumn<QString>("asset");
+        QTest::addColumn<QString>("fileName");
+        QTest::addColumn<bool>("vector");
+
+        const QString svg = QStringLiteral(ASSETS_DIR "img/icons/action-add.svg");
+        const QString svgz = QStringLiteral(TEST_ASSETS_DIR "action-add.svgz");
+        const QString png = QStringLiteral(ASSETS_DIR "png/wallet/wallet-green.png");
+        QTest::addRow("svg") << svg << "icon.svg" << true;
+        QTest::addRow("svg upper case") << svg << "ICON.SVG" << true;
+        QTest::addRow("svgz") << svgz << "icon.svgz" << true;
+        QTest::addRow("svgz mixed case") << svgz << "Icon.SvgZ" << true;
+        QTest::addRow("png") << png << "icon.png" << false;
+        QTest::addRow("svg in base name") << png << "svg.png" << false;
+    }
+
+    void vectorSourcesMatchedByMimeType()
+    {
+        QFETCH(QString, asset);
+        QFETCH(QString, fileName);
+        QFETCH(bool, vector);
+
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString path = dir.filePath(fileName);
+        QVERIFY(QFile::copy(asset, path));
+
+        QQmlComponent component(m_engine);
+        component.setData(R"(
+            import QtQuick
+            import StatusQ.Components.private
+            Window {
+                width: 300; height: 300; visible: true
+                property alias image: img
+                RenderSizedImage { id: img; fillMode: Image.PreserveAspectFit }
+            })", QUrl());
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QVERIFY(QTest::qWaitForWindowExposed(qobject_cast<QQuickWindow*>(root.get())));
+        auto image = root->property("image").value<QQuickItem*>();
+        QVERIFY(image);
+
+        const int knownBefore = RenderSizedImage::knownNativeSizeCount();
+        image->setProperty("source", QUrl::fromLocalFile(path));
+        QTRY_COMPARE(image->property("status").toInt(), int(QQuickImageBase::Ready));
+
+        QCOMPARE(image->property("vector").toBool(), vector);
+        // Only a raster source gets its native size probed from the header
+        QCOMPARE(RenderSizedImage::knownNativeSizeCount() - knownBefore, vector ? 0 : 1);
+    }
+
     void knownNativeSizesStayBounded()
     {
         QTemporaryDir dir;
