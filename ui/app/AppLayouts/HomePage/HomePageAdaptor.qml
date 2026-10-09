@@ -85,19 +85,16 @@ QObject {
         timestamp          [int]    - timestamp of the last user interaction with the item
     **/
 
-    readonly property var homePageEntriesModel: d.homePageEntriesModel
-    Component.onCompleted: {
-        Qt.callLater(function() {
-            d.homePageEntriesModel = entriesModel // FIXME bug in SFPM or OPM
-            root.load()
-        })
-    }
+    readonly property var homePageEntriesModel: entriesModel
+
+    // SettingsEntriesModel fills its ListModel in its own Component.onCompleted, which runs after
+    // this one; load() drops saved entries whose rows are absent, so defer it until they exist
+    Component.onCompleted: Qt.callLater(load)
 
     Component.onDestruction: save()
 
     QtObject {
         id: d
-        property var homePageEntriesModel
 
         readonly property var computedRolesNames: ["icon", "color", "hasNotification", "pending", "currencyBalance"]
         readonly property var computedRolesInputs: [
@@ -467,11 +464,11 @@ QObject {
                     return model.notificationsCount > 0
                 return model.hasNotification
             }
-            readonly property var pending: sectionType === Constants.appSection.community
-                                           ? !!(model.spectated && !model.joined) : undefined
-            readonly property var currencyBalance: sectionType === Constants.appSection.wallet
-                                                   ? LocaleUtils.currencyAmountToLocaleString(model.sourceCurrencyBalance)
-                                                   : undefined
+            readonly property bool pending: sectionType === Constants.appSection.community
+                                            && !!(model.spectated && !model.joined)
+            readonly property string currencyBalance: sectionType === Constants.appSection.wallet
+                                                      ? LocaleUtils.currencyAmountToLocaleString(model.sourceCurrencyBalance)
+                                                      : ""
         }
     }
 }
