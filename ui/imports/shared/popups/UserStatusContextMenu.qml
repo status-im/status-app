@@ -25,12 +25,14 @@ StatusDropdown {
     required property string bio
 
     property int currentUserStatus: Constants.currentUserStatus.unknown
+    property bool isMobile: SQUtils.Utils.isMobile
 
     signal viewProfileRequested
     signal copyLinkRequested
     signal shareOwnProfileRequested
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
+    signal quitRequested
 
     implicitWidth: 400
     padding: 0
@@ -45,6 +47,7 @@ StatusDropdown {
             spacing: Theme.halfPadding
 
             StatusUserImage {
+                objectName: "userStatusImage"
                 Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                 name: root.name
                 usesDefaultName: root.usesDefaultName
@@ -118,7 +121,7 @@ StatusDropdown {
         }
 
         ActionWrapper {
-            visible: !SQUtils.Utils.isMobile
+            visible: !root.isMobile
             action: StatusAction {
                 objectName: "userStatusCopyLinkAction"
                 text: qsTr("Copy link to profile")
@@ -131,7 +134,7 @@ StatusDropdown {
         }
 
         ActionWrapper {
-            visible: SQUtils.Utils.isMobile
+            visible: root.isMobile
             action: StatusAction {
                 objectName: "userStatusShareProfileAction"
                 text: qsTr("Invite contacts")
@@ -150,6 +153,18 @@ StatusDropdown {
                 icon.name: "settings"
                 onTriggered: {
                     root.settingsRequested()
+                    root.close()
+                }
+            }
+        }
+
+        ActionWrapper {
+            action: StatusAction {
+                objectName: "userStatusQuitAction"
+                text: qsTr("Sign out & Quit")
+                icon.name: "logout"
+                onTriggered: {
+                    root.quitRequested()
                     root.close()
                 }
             }
