@@ -61,7 +61,7 @@ public:
         qreal assetDevicePixelRatio = 1.0;
         QQuickImageBase::resolve2xLocalFile(resolvedUrl(), targetDevicePixelRatio, &unused,
                                             &assetDevicePixelRatio);
-        if (assetDevicePixelRatio != 1.0)
+        if (!qFuzzyCompare(assetDevicePixelRatio, 1.0))
             return false;
 
         // Without the flags Qt fits the decode inside the requested box; with the crop flag
