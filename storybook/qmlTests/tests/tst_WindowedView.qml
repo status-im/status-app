@@ -3065,6 +3065,75 @@ Item {
                    + " from " + at)
         }
 
+        // A row settling its height while a batch is in flight - an image
+        // finishing loading - moves the held anchor, and putting it back writes
+        // contentY, which ends the flick; the view restarts it. Right after
+        // that restart Qt's smoothed verticalVelocity reads nothing for a
+        // frame, so a second row settling in the very next frame used to find
+        // no velocity to restart with, and the flick stopped dead.
+        function test_aFlickSurvivesRowsSettlingInConsecutiveFrames() {
+            provider.delay = 400                  // the batch stays in flight
+            provider.delegate = tallDelegate
+            view.placeholderHeight = 300
+            view.prefetchMargin = 20000           // and is asked for at once
+            freshFill(40)
+            arm(3)
+
+            view.contentY = 6000
+            waitForRendering(view)
+            tryVerify(() => view.busy, 2000, "a batch is in flight")
+
+            view.flick(0, 3000)
+            verify(view.flickingVertically, "flicking")
+
+            for (let i = 0; i < 4; ++i)
+                waitForRendering(view)
+
+            const grow = (fraction, by) => {
+                const y = view.contentY + view.height * fraction
+
+                for (let row = 0; row < view.rowCount; ++row) {
+                    const shell = view.itemAtRow(row)
+
+                    if (!shell || !shell.visible || !shell.content)
+                        continue
+
+                    const top = shell.mapToItem(view.contentItem, 0, 0).y
+
+                    if (top <= y && top + shell.height > y) {
+                        shell.content.implicitHeight += by
+                        return
+                    }
+                }
+
+                fail("no row at " + fraction)
+            }
+
+            // Rows settling one after another, a frame apart - images finishing
+            // loading. Each lands while the flick the previous one restarted
+            // still reads no velocity.
+            for (let i = 0; i < 4; ++i) {
+                verify(view.busy, "still in flight at change " + i)
+                grow(0.2 + i * 0.2, 120)
+                waitForRendering(view)
+            }
+
+            verify(view.flickingVertically, "still flicking after all of them")
+
+            // Movement rather than verticalVelocity, which is the very thing
+            // that reads nothing here. A few frames, not two: a rendered frame
+            // need not carry an animation tick.
+            const at = view.contentY
+
+            for (let i = 0; i < 6 && view.contentY >= at; ++i)
+                waitForRendering(view)
+
+            verify(view.contentY < at,
+                   "and still travelling the same way: " + view.contentY + " from " + at)
+
+            tryVerify(() => !view.busy, 8000)
+        }
+
         // Counted rather than read off `flickingVertically`: a correction can
         // leave the view slightly out of bounds, and the rebound Qt animates
         // back reports as flicking too. What must not happen is this view
