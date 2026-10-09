@@ -2560,8 +2560,21 @@ QtObject:
       return false
 
   proc markAllReadInCommunity*(self: Service, communityId: string) =
+    let arg = AsyncMarkAllReadInCommunityTaskArg(
+      tptr: asyncMarkAllReadInCommunityTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncMarkAllReadInCommunityDone",
+      communityId: communityId,
+    )
+    self.threadpool.start(arg)
+
+  proc onAsyncMarkAllReadInCommunityDone*(self: Service, rpcResponse: string) {.slot.} =
     try:
-      let response = status_go.markAllReadInCommunity(communityId)
+      let rpcResponseObj = rpcResponse.parseJson
+      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
+        raise newException(CatchableError, rpcResponseObj{"error"}.getStr)
+
+      let response = Json.decode($rpcResponseObj["response"], RpcResponse[JsonNode])
       if response.error != nil:
         let error = Json.decode($response.error, RpcError)
         raise newException(RpcException, error.message)

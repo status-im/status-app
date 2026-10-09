@@ -269,6 +269,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     canPost = parentItem.canPost,
     canView = parentItem.canView,
     canPostReactions = parentItem.canPostReactions,
+    viewersCanPostReactions = parentItem.viewersCanPostReactions,
     isThread = true,
     parentChatId = parentChatId,
     sortTimestamp = parentItem.lastMessageTimestamp,
@@ -1147,6 +1148,9 @@ method changeMutedOnChat*(self: Module, chatId: string, muted: bool) =
 
 proc changeCanPostValues*(self: Module, chatId: string, canPost, canView, canPostReactions, viewersCanPostReactions: bool) =
   discard self.view.chatsModel().changeCanPostValues(chatId, canPost, canView, canPostReactions, viewersCanPostReactions)
+  for threadItem in self.view.chatsModel().items:
+    if threadItem.isThread and threadItem.parentChatId == chatId and self.chatContentModules.contains(threadItem.id):
+      self.chatContentModules[threadItem.id].onParentChatPermissionsUpdated(canPost, canView, canPostReactions)
 
 proc updateChatsRequiredPermissions(self: Module, communityChats: seq[ChatDto]) =
   for communityChat in communityChats:
@@ -1479,7 +1483,7 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
 
   let messageBelongsToActiveSection = sectionIdMsgBelongsTo == self.controller.getMySectionId() and
     self.controller.getMySectionId() == self.delegate.getActiveSectionId()
-  let messageBelongsToActiveChat = self.controller.getActiveChatId() == chatIdMsgBelongsTo
+  let messageBelongsToActiveChat = self.controller.getActiveChatId() == displayChatId
 
   singletonInstance.globalEvents.showMessageNotification(notificationTitle, plainText, sectionIdMsgBelongsTo,
     self.controller.isCommunity(), messageBelongsToActiveSection, chatIdMsgBelongsTo, messageBelongsToActiveChat,
