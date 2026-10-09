@@ -11,10 +11,12 @@ import StatusQ.Core.Utils
 // (rendering) and ChatTextArea.loadText (editing) to turn the raw "@0x…" mentions in a
 // message into display names — replacing the status-go/Nim name resolution.
 //
-// Cost scales with the mentions in the text — a regex scan plus one keyed model lookup
-// per distinct unseen key (cached until the model changes) — never with the size of the
-// source model. The result crosses into MarkdownUtils as a QVariantMap, so keeping it
-// per-message also keeps that conversion small.
+// Cost scales with the mentions in the text: a parser scan plus one model lookup per
+// distinct unseen key, cached until the model changes. A message without mentions never
+// touches the model at all, which is what keeps a model as wide as the whole contact
+// list affordable here — the per-key lookup itself is a row scan in C++. The result
+// crosses into MarkdownUtils as a QVariantMap, so keeping it per-message also keeps that
+// conversion small.
 QObject {
     id: root
 

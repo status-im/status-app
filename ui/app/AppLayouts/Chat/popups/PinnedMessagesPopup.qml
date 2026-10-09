@@ -15,6 +15,7 @@ import shared.status
 import shared.views.chat
 import shared.stores as SharedStores
 
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.stores
 
 StatusDialog {
@@ -32,10 +33,15 @@ StatusDialog {
     property bool isPinActionAvailable: true
 
     // Resolves mention pub keys to display names for the client-side renderer, mirroring
-    // ChatMessagesView. Fed by the active chat's users model (via the shared UsersStore);
+    // ChatMessagesView. Fed by the active chat's users model plus every known contact;
     // without it, "@0x…" mentions render as raw keys.
+    readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
+        chatUsersModel: root.store?.usersStore.usersModel ?? null
+        contactsModel: root.store?.contactsModel ?? null
+    }
+
     readonly property MentionResolver mentionResolver: MentionResolver {
-        sourceModel: root.store?.usersStore.usersModel ?? null
+        sourceModel: root.mentionNames?.model ?? null
         nameRole: "preferredDisplayName"
     }
 

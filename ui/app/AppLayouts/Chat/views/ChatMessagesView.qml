@@ -19,6 +19,7 @@ import shared.status
 import shared.controls
 import shared.views.chat
 
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.stores
 
 import "../controls"
@@ -37,13 +38,24 @@ Item {
     // Users related data:
     property var usersModel
 
+    // Names for mentions are looked up wider than this chat: a message may mention
+    // somebody who is not in it, and in a 1:1 `usersModel` is narrowed to mutual
+    // contacts because it feeds the "@" suggestions. Without the contacts model
+    // behind it, such a mention renders as a raw chat key.
+    MentionNamesAdaptor {
+        id: mentionNames
+
+        chatUsersModel: root.usersModel
+        contactsModel: root.rootStore?.contactsModel ?? null
+    }
+
     // Resolves mention pub keys to display names. Reactive to member/contact
     // name changes; "everyone" is built in.
     MentionResolver {
         id: mentionResolver
 
         enabled: root.visible
-        sourceModel: root.usersModel
+        sourceModel: mentionNames.model
         nameRole: "preferredDisplayName"
     }
 

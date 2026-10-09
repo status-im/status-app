@@ -14,6 +14,7 @@ import shared.status
 import shared.views.chat
 import shared.stores as SharedStores
 
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.stores as ChatStores
 
 StatusDialog {
@@ -29,10 +30,16 @@ StatusDialog {
     property bool joined
 
     // Resolves mention pub keys to display names for the client-side renderer, mirroring
-    // ChatMessagesView. Fed by the community's full member list; without it, "@0x…" mentions
+    // ChatMessagesView. Fed by the community's full member list plus every known contact
+    // (a message may mention somebody who is not a member); without it, "@0x…" mentions
     // render as raw keys.
+    readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
+        chatUsersModel: root.chatCommunitySectionModule?.membersModel ?? null
+        contactsModel: root.rootStore?.contactsModel ?? null
+    }
+
     readonly property MentionResolver mentionResolver: MentionResolver {
-        sourceModel: root.chatCommunitySectionModule?.membersModel ?? null
+        sourceModel: root.mentionNames?.model ?? null
         nameRole: "preferredDisplayName"
     }
 
