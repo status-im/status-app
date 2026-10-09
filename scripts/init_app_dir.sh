@@ -16,7 +16,7 @@ copy_native_libs() {
 }
 
 # Debian multiarch library directory name, e.g. x86_64-linux-gnu or aarch64-linux-gnu.
-MULTIARCH="$(uname -m)-linux-gnu"
+MULTIARCH="$(dpkg-architecture -qDEB_HOST_MULTIARCH)"
 
 # System libraries from the Ubuntu build image: GStreamer, NSS, PC/SC.
 copy_system_libs() {
