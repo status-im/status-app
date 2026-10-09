@@ -106,6 +106,7 @@ proc applyRefreshTokensResult(self: Service, res: RefreshTokensApplyResult) =
     self.allTokensByGroupKey = move res.allTokensByGroupKey
   else:
     debug "ignoring empty all-tokens refresh; keeping existing all tokens cache"
+  self.tokensOfInterestLoaded = true
   self.rebuildMarketData()
   self.fetchTokensDetails() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
   # notify modules
@@ -445,6 +446,9 @@ proc getTokenBySymbolOnChain*(self: Service, symbol: string, chainId: int): Toke
       return token
   return nil
 ################################################################################
+
+proc areTokensOfInterestLoaded*(self: Service): bool =
+  return self.tokensOfInterestLoaded
 
 proc getTokenByKey*(self: Service, key: string): TokenItem =
   if not common_utils.isTokenKey(key):
