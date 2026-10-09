@@ -16,6 +16,9 @@ import shared.status
  - a key the model does not know falls back to aliasProvider, so the renderer shows
    a 3-word alias rather than 130 hex characters; with no provider it stays
    unresolved and the renderer falls back to the raw key
+ - a key the model cannot name is handed to contactInfoRequester exactly once, and
+   never from inside the binding that discovered it (resolveFor() is called from a
+   binding, which must not call into the backend mid-evaluation)
  - display-name changes in the model are reflected (revision tracking)
  - while `enabled` is false results are frozen; re-enabling catches up
  - resolution cost scales with the mentions IN THE TEXT, not with the size
@@ -30,6 +33,7 @@ Item {
     readonly property string keyA: "0x" + "a".repeat(130)
     readonly property string keyB: "0x" + "b".repeat(130)
     readonly property string keyUnknown: "0x" + "c".repeat(130)
+    readonly property string keyUnknown2: "0x" + "d".repeat(130)
 
     ListModel {
         id: usersModel
@@ -66,6 +70,36 @@ Item {
         }
     }
 
+    // records what was asked about, and when
+    QtObject {
+        id: requesterStub
+
+        property var keys: []
+        property bool calledSynchronously: false
+        property bool resolving: false
+
+        function requestContactInfo(pubKey) {
+            if (resolving)
+                calledSynchronously = true
+            keys = keys.concat([pubKey])
+        }
+
+        function reset() {
+            keys = []
+            calledSynchronously = false
+            resolving = false
+        }
+    }
+
+    Component {
+        id: requestingResolverComp
+
+        MentionResolver {
+            sourceModel: usersModel
+            contactInfoRequester: pubKey => requesterStub.requestContactInfo(pubKey)
+        }
+    }
+
     Component {
         id: aliasResolverComp
 
@@ -78,9 +112,18 @@ Item {
     TestCase {
         name: "MentionResolver"
 
-        // the alias stub is shared, so every test counts its calls from zero
+        // the stubs are shared, so every test starts from a clean slate
         function init() {
             aliasStub.calls = 0
+            requesterStub.reset()
+        }
+
+        // resolveFor() is called from a binding; the request must land after it returns
+        function resolveDeferred(r, text) {
+            requesterStub.resolving = true
+            const m = r.resolveFor(text)
+            requesterStub.resolving = false
+            return m
         }
 
         function test_noMentions() {
@@ -151,6 +194,60 @@ Item {
             r.aliasProvider = pubKey => aliasStub.generateAlias(pubKey)
             compare(r.resolveFor("@" + root.keyUnknown)[root.keyUnknown],
                     "Alias of 0x" + "c".repeat(4))
+        }
+
+        function test_unknownKeyIsRequested() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            resolveDeferred(r, "hi @" + root.keyUnknown)
+
+            tryVerify(() => requesterStub.keys.length === 1, 2000,
+                      "an unnameable key must be asked about")
+            compare(requesterStub.keys[0], root.keyUnknown)
+            verify(!requesterStub.calledSynchronously,
+                   "the request must not happen during the binding's evaluation")
+        }
+
+        // All requests from one resolveFor() are queued in the same event-loop turn, so a
+        // key that did arrive is a fence: anything else would have arrived with it.
+        function test_knownKeyIsNotRequested() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            resolveDeferred(r, "@" + root.keyA + " @0x00001 @" + root.keyUnknown)
+
+            tryVerify(() => requesterStub.keys.length > 0, 2000)
+            compare(requesterStub.keys, [root.keyUnknown],
+                    "a name from the model, and the everyone tag, cost no round trip")
+        }
+
+        function test_keyIsRequestedOnlyOnce() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            const text = "@" + root.keyUnknown
+            resolveDeferred(r, text)
+            tryVerify(() => requesterStub.keys.length > 0, 2000)
+
+            // re-resolving, and a model change that drops the name cache, must not re-ask
+            resolveDeferred(r, text)
+            usersModel.setProperty(0, "name", "Alicia")
+            resolveDeferred(r, text)
+            usersModel.setProperty(0, "name", "Alice")
+
+            // a fresh key fences the repeats: it arrives after anything they queued
+            resolveDeferred(r, "@" + root.keyUnknown2)
+            tryVerify(() => requesterStub.keys.length > 1, 2000)
+            compare(requesterStub.keys, [root.keyUnknown, root.keyUnknown2],
+                    "one round trip per key per resolver")
+        }
+
+        // the point of asking: the answer arrives in the model and the name takes over
+        function test_nameArrivingFromARequestWins() {
+            const r = createTemporaryObject(requestingResolverComp, root, {
+                aliasProvider: pubKey => aliasStub.generateAlias(pubKey)
+            })
+            compare(r.resolveFor("@" + root.keyUnknown)[root.keyUnknown],
+                    "Alias of 0x" + "c".repeat(4))
+
+            usersModel.append({ pubKey: root.keyUnknown, name: "Carol" })
+            compare(r.resolveFor("@" + root.keyUnknown)[root.keyUnknown], "Carol")
+            usersModel.remove(usersModel.count - 1)
         }
 
         function test_everyoneTag() {

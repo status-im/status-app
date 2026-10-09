@@ -656,4 +656,11 @@ QtObject {
     function populateContactDetailsRequested(publicKey) {
         root.contactsStore.populateContactDetails(publicKey)
     }
+
+    // Asks the mailserver for a profile we have never seen. Answers arrive out of band:
+    // on success the contact lands in contactsModel, so anything bound to it picks up the
+    // real display name by itself.
+    function requestContactInfo(publicKey) {
+        root.contactsStore.requestContactInfo(publicKey)
+    }
 }

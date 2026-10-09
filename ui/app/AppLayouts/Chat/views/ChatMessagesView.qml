@@ -60,6 +60,7 @@ Item {
         sourceModel: mentionNames.model
         nameRole: "preferredDisplayName"
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
+        contactInfoRequester: pubKey => root.rootStore?.requestContactInfo(pubKey)
     }
 
     // Contacts related data:
