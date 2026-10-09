@@ -186,6 +186,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/clipboardutils.h
         include/StatusQ/incubationhints.h
         include/StatusQ/constantrole.h
+        include/StatusQ/delegatepool.h
         include/StatusQ/fastexpressionfilter.h
         include/StatusQ/fastexpressionrole.h
         include/StatusQ/fastexpressionsorter.h
@@ -211,6 +212,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/networkchecker.h
         include/StatusQ/oneoffilter.h
         include/StatusQ/permissionutilsinternal.h
+        include/StatusQ/rowbinder.h
         include/StatusQ/rxvalidator.h
         include/StatusQ/shareutils.h
         include/StatusQ/stablearraysorter.h
@@ -231,6 +233,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/clipboardutils.cpp
         src/incubationhints.cpp
         src/constantrole.cpp
+        src/delegatepool.cpp
         src/externc.cpp
         src/fastexpressionfilter.cpp
         src/fastexpressionrole.cpp
@@ -255,6 +258,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp
+        src/rowbinder.cpp
         src/rxvalidator.cpp
         src/stablearraysorter.cpp
         src/statuscolors.cpp
@@ -397,7 +401,7 @@ FetchContent_Declare(
   QtModelsToolkit
 
   GIT_REPOSITORY https://github.com/status-im/QtModelsToolkit.git
-  GIT_TAG 84d2433e8e869d75a3e3a8105510be1bc325d248
+  GIT_TAG 0783ca9f8270adf6d42c811f789afbb63cd0f676
 )
 
 FetchContent_MakeAvailable(QtModelsToolkit)
