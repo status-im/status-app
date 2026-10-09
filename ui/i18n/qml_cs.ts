@@ -3329,8 +3329,16 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 <context>
     <name>ChatView</name>
     <message>
+        <source>in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Members</source>
         <translation>Členové</translation>
+    </message>
+    <message>
+        <source>Close thread</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

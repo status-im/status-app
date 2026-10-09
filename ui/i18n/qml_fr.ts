@@ -3314,8 +3314,16 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatView</name>
     <message>
+        <source>in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Members</source>
         <translation>Membres</translation>
+    </message>
+    <message>
+        <source>Close thread</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

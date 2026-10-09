@@ -72,6 +72,19 @@ Item {
             compare(startedSpy.count, 1, "the slide must emit exactly one pair")
         }
 
+        function test_rightPanelHeaderContentIsShownInRightPanelToolbar() {
+            const header = createTemporaryObject(panelComponent, root, {
+                                                     implicitWidth: 100,
+                                                     implicitHeight: 20
+                                                 })
+            layout.rightPanelHeaderContent = header
+            layout.currentIndex = 2
+
+            // the proxy reparents the item into the right page toolbar
+            tryVerify(() => header.visible && header.width > 0 && header.height > 0)
+            tryVerify(() => header.parent !== root)
+        }
+
         function test_noSignalsWhileIdle() {
             waitForRendering(layout)
             compare(startedSpy.count, 0)
