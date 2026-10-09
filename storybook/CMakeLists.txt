@@ -35,7 +35,9 @@ endif()
 find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core CorePrivate Gui Quick QuickControls2 Test
-    QuickTest Qml WebView REQUIRED)
+    QuickTest Qml WebView Multimedia Widgets REQUIRED)
+
+include(cmake/NimLibs.cmake)
 
 set(STATUSQ_BUILD_SANITY_CHECKER OFF)
 set(STATUSQ_BUILD_TESTS OFF)
@@ -88,6 +90,9 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_link_libraries(
     ${PROJECT_NAME} PRIVATE Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2
     Qt::WebView StatusQ QmlStorybookLib)
+if (STORYBOOK_NIM_LIBS)
+  target_link_libraries(${PROJECT_NAME} PRIVATE StorybookNim)
+endif()
 
 add_executable(
   QmlFilesServer
@@ -111,6 +116,9 @@ add_executable(
 
 target_link_libraries(
     PagesValidator PUBLIC Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2 Qt::WebView StatusQ QmlStorybookLib)
+if (STORYBOOK_NIM_LIBS)
+  target_link_libraries(PagesValidator PRIVATE StorybookNim)
+endif()
 
 target_compile_definitions(PagesValidator PRIVATE
         QML_IMPORT_ROOT="${CMAKE_CURRENT_LIST_DIR}"
@@ -132,6 +140,9 @@ target_compile_definitions(QmlTests PRIVATE
 target_link_libraries(QmlTests PRIVATE
   Qt::QuickTest Qt::Qml Qt::Core Qt::CorePrivate Qt::Gui Qt::Quick Qt::QuickControls2
   StatusQ SortFilterProxyModel QmlStorybookLib)
+if (STORYBOOK_NIM_LIBS)
+  target_link_libraries(QmlTests PRIVATE StorybookNim)
+endif()
 add_test(NAME QmlTests COMMAND QmlTests -platform offscreen)
 
 set(OVERRIDE_STORE_PATHS_WITH_STUBS_IN_QTCREATOR OFF CACHE BOOL

@@ -15,6 +15,10 @@
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
 
+#ifdef STORYBOOK_HAS_NIM
+#include "storybook_nim.h"
+#endif
+
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
                                                            int gentlePeriodMs, int boostGapMs);
 
@@ -138,6 +142,9 @@ int main(int argc, char *argv[])
 
     StorybookSetup::configureEngine(&engine, mode == u"local"_s);
     registerStatusQTypes();
+#ifdef STORYBOOK_HAS_NIM
+    storybook_nim_install(&engine);
+#endif
 
     loadContextPropertiesMocks(QML_IMPORT_ROOT, engine);
 
