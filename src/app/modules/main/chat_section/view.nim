@@ -37,6 +37,9 @@ QtObject:
       communityMemberReevaluationStatus: int
       permissionSaveInProgress: bool
       errorSavingPermission: string
+      openThreadId: string
+      openThreadName: string
+      openThreadParentChatId: string
 
   proc setPermissionSaveInProgress*(self: View, value: bool)
   proc setErrorSavingPermission*(self: View, value: string)
@@ -68,6 +71,9 @@ QtObject:
     result.communityMemberReevaluationStatus = 0
     result.permissionSaveInProgress = false
     result.errorSavingPermission = ""
+    result.openThreadId = ""
+    result.openThreadName = ""
+    result.openThreadParentChatId = ""
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -138,6 +144,42 @@ QtObject:
 
   proc setActiveItem*(self: View, itemId: string) {.slot.} =
     self.delegate.setActiveItem(itemId)
+
+  proc openThreadChanged*(self: View) {.signal.}
+
+  proc getOpenThreadId*(self: View): string {.slot.} =
+    self.openThreadId
+  QtProperty[string] openThreadId:
+    read = getOpenThreadId
+    notify = openThreadChanged
+
+  proc getOpenThreadName*(self: View): string {.slot.} =
+    self.openThreadName
+  QtProperty[string] openThreadName:
+    read = getOpenThreadName
+    notify = openThreadChanged
+
+  proc getOpenThreadParentChatId*(self: View): string {.slot.} =
+    self.openThreadParentChatId
+  QtProperty[string] openThreadParentChatId:
+    read = getOpenThreadParentChatId
+    notify = openThreadChanged
+
+  proc setOpenThread*(self: View, threadId: string, threadName: string, parentChatId: string) =
+    if self.openThreadId == threadId and self.openThreadName == threadName and
+        self.openThreadParentChatId == parentChatId:
+      return
+    self.openThreadId = threadId
+    self.openThreadName = threadName
+    self.openThreadParentChatId = parentChatId
+    self.openThreadChanged()
+
+  proc openThreadPanel*(self: View, threadId: string, threadName: string,
+      parentChatId: string) {.slot.} =
+    self.delegate.openThreadPanel(threadId, threadName, parentChatId)
+
+  proc closeThreadPanel*(self: View) {.slot.} =
+    self.delegate.closeThreadPanel()
 
   proc switchToChannel*(self: View, channelName: string) {.slot.} =
     self.delegate.switchToChannel(channelName)
