@@ -714,7 +714,6 @@ method removeNewMessagesMarker*(self: Module) =
   self.view.model().resetNewMessagesMarker()
 
 method markAllMessagesRead*(self: Module) =
-  self.removeNewMessagesMarker()
   self.view.model().markAllAsSeen()
 
 method markMessagesAsRead*(self: Module, messages: seq[string]) =
