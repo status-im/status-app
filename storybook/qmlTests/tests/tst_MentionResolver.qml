@@ -13,7 +13,9 @@ import shared.status
  The resolver's product contract:
  - a message's mentions resolve to display names from the source model
  - the "everyone" system tag always resolves
- - unknown keys stay unresolved (renderer falls back to the raw key)
+ - a key the model does not know falls back to aliasProvider, so the renderer shows
+   a 3-word alias rather than 130 hex characters; with no provider it stays
+   unresolved and the renderer falls back to the raw key
  - display-name changes in the model are reflected (revision tracking)
  - while `enabled` is false results are frozen; re-enabling catches up
  - resolution cost scales with the mentions IN THE TEXT, not with the size
@@ -38,6 +40,12 @@ Item {
         }
     }
 
+    ListModel {
+        id: namelessModel
+
+        Component.onCompleted: append({ pubKey: root.keyA, name: "" })
+    }
+
     Component {
         id: resolverComp
 
@@ -46,8 +54,34 @@ Item {
         }
     }
 
+    // counts the provider calls, so a name from the model is seen to cost none
+    QtObject {
+        id: aliasStub
+
+        property int calls: 0
+
+        function generateAlias(pubKey) {
+            calls++
+            return "Alias of " + pubKey.substring(0, 6)
+        }
+    }
+
+    Component {
+        id: aliasResolverComp
+
+        MentionResolver {
+            sourceModel: usersModel
+            aliasProvider: pubKey => aliasStub.generateAlias(pubKey)
+        }
+    }
+
     TestCase {
         name: "MentionResolver"
+
+        // the alias stub is shared, so every test counts its calls from zero
+        function init() {
+            aliasStub.calls = 0
+        }
 
         function test_noMentions() {
             const r = createTemporaryObject(resolverComp, root)
@@ -70,10 +104,53 @@ Item {
             compare(Object.keys(m).length, 2)
         }
 
+        // with no provider the renderer still gets nothing and shows the raw key
         function test_unknownKeyStaysUnresolved() {
             const r = createTemporaryObject(resolverComp, root)
             const m = r.resolveFor("hi @" + root.keyUnknown)
             verify(!(root.keyUnknown in m))
+        }
+
+        function test_unknownKeyFallsBackToAnAlias() {
+            const r = createTemporaryObject(aliasResolverComp, root)
+            const m = r.resolveFor("hi @" + root.keyUnknown)
+            compare(m[root.keyUnknown], "Alias of 0x" + "c".repeat(4))
+        }
+
+        function test_knownKeyIgnoresTheAliasProvider() {
+            const r = createTemporaryObject(aliasResolverComp, root)
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alice")
+            compare(aliasStub.calls, 0, "a name from the model must not cost a backend call")
+        }
+
+        // a row with an empty display name is a miss, not a name
+        function test_emptyNameFallsBackToAnAlias() {
+            const r = createTemporaryObject(aliasResolverComp, root,
+                                            { sourceModel: namelessModel })
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alias of 0x" + "a".repeat(4))
+        }
+
+        // the provider is a function literal, so its binding never re-evaluates when the
+        // store behind it arrives; the next pass must ask again
+        function test_providerWithoutItsStoreYetIsRetried() {
+            let ready = false
+            const r = createTemporaryObject(resolverComp, root, {
+                aliasProvider: pubKey => ready ? aliasStub.generateAlias(pubKey) : ""
+            })
+            verify(!(root.keyUnknown in r.resolveFor("@" + root.keyUnknown)))
+
+            ready = true
+            compare(r.resolveFor("@" + root.keyUnknown)[root.keyUnknown],
+                    "Alias of 0x" + "c".repeat(4))
+        }
+
+        function test_aliasProviderWiredUpLate() {
+            const r = createTemporaryObject(resolverComp, root)
+            verify(!(root.keyUnknown in r.resolveFor("@" + root.keyUnknown)))
+
+            r.aliasProvider = pubKey => aliasStub.generateAlias(pubKey)
+            compare(r.resolveFor("@" + root.keyUnknown)[root.keyUnknown],
+                    "Alias of 0x" + "c".repeat(4))
         }
 
         function test_everyoneTag() {

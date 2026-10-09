@@ -59,6 +59,7 @@ Item {
         enabled: root.visible
         sourceModel: mentionNames.model
         nameRole: "preferredDisplayName"
+        aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
     }
 
     // Contacts related data:

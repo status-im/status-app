@@ -11,6 +11,10 @@ import StatusQ.Core.Utils
 // (rendering) and ChatTextArea.loadText (editing) to turn the raw "@0x…" mentions in a
 // message into display names — replacing the status-go/Nim name resolution.
 //
+// A key the model does not know falls back to `aliasProvider`, so a mention of somebody
+// the local user has never heard of reads as a generated 3-word alias rather than 130
+// hex characters — which is what the retired Nim renderer did.
+//
 // Cost scales with the mentions in the text: a parser scan plus one model lookup per
 // distinct unseen key, cached until the model changes. A message without mentions never
 // touches the model at all, which is what keeps a model as wide as the whole contact
@@ -25,15 +29,21 @@ QObject {
     property string pubKeyRole: "pubKey"
     property string nameRole: "name"
 
+    // Last resort for a key absent from the source model: (pubKey) -> name, expected to
+    // be a store's generated-alias call. Asked on every miss: generating an alias takes
+    // microseconds, so it is not worth a cache of its own. Without a provider an unknown
+    // key stays unresolved and the renderer falls back to the raw key.
+    property var aliasProvider: null
+
     // When false, results are frozen: source-model changes are still tracked but not
     // applied. Setting it back to true catches up once, and only if the model changed
     // meanwhile.
     property bool enabled: true
 
-    // { pubKey: displayName } for the mentions present in `text`. An unknown pub key is
-    // simply absent (the renderer/editor then falls back to the raw key). Reads the
-    // applied revision, so QML bindings over this call re-evaluate when tracked
-    // source-model changes are applied.
+    // { pubKey: displayName } for the mentions present in `text`. A pub key neither the
+    // model nor `aliasProvider` can name is simply absent (the renderer/editor then falls
+    // back to the raw key). Reads the applied revision, so QML bindings over this call
+    // re-evaluate when tracked source-model changes are applied.
     function resolveFor(text) {
         const revision = d.appliedRevision
         if (revision !== d.cacheRevision) {
@@ -57,9 +67,12 @@ QObject {
                     name = "everyone"
                 else if (root.sourceModel)
                     name = ModelUtils.getByKey(root.sourceModel, root.pubKeyRole, pubKey, root.nameRole)
-                name = (name === undefined || name === null) ? null : name
+                // an empty name is a miss too: the row exists but has nothing to show
+                name = name || null
                 d.cache[pubKey] = name
             }
+            if (name === null)
+                name = d.aliasOf(pubKey)
             if (name !== null)
                 result[pubKey] = name
         }
@@ -79,6 +92,13 @@ QObject {
         // The source revision resolution currently reflects. Tracks sourceRevision only
         // while enabled (frozen otherwise), so re-enabling catches up if it fell behind.
         property int appliedRevision: 0
+
+        // Not cached, so an empty answer - a provider that cannot reach its store yet,
+        // whose function-literal binding never re-evaluates to say when it can - is
+        // simply asked again on the next pass.
+        function aliasOf(pubKey) {
+            return root.aliasProvider ? (root.aliasProvider(pubKey) || null) : null
+        }
     }
 
     // Apply the latest source revision while enabled; freeze it (RestoreNone) while disabled so
