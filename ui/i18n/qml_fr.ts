@@ -12062,15 +12062,15 @@ chargement</translation>
 <context>
     <name>NewMessagesMarker</name>
     <message>
-        <source>UNREAD</source>
-        <comment>unread message(s)</comment>
-        <translation>Non lu(s)</translation>
+        <source>NEW</source>
+        <comment>new message(s)</comment>
+        <translation type="unfinished">NOUVEAU</translation>
     </message>
     <message numerus="yes">
-        <source>%n unread message(s) since %1</source>
-        <translation>
-            <numerusform>%n nouveau message depuis %1</numerusform>
-            <numerusform>%n nouveaux messages depuis %1</numerusform>
+        <source>%n new message(s) since %1</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>

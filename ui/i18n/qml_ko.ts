@@ -12010,14 +12010,14 @@ to load</source>
 <context>
     <name>NewMessagesMarker</name>
     <message>
-        <source>UNREAD</source>
-        <comment>unread message(s)</comment>
-        <translation>읽지 않음</translation>
+        <source>NEW</source>
+        <comment>new message(s)</comment>
+        <translation type="unfinished">새로 추가</translation>
     </message>
     <message numerus="yes">
-        <source>%n unread message(s) since %1</source>
-        <translation>
-            <numerusform>%1부터 읽지 않은 메시지 %n개</numerusform>
+        <source>%n new message(s) since %1</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>
