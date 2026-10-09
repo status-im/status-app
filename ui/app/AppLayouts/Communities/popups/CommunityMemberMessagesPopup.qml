@@ -43,6 +43,7 @@ StatusDialog {
     readonly property MentionResolver mentionResolver: MentionResolver {
         sourceModel: root.mentionNames?.model ?? null
         nameRole: "preferredDisplayName"
+        aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
     }
 
 

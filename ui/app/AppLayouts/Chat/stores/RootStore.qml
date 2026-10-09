@@ -556,6 +556,12 @@ QtObject {
         return globalUtilsInst.isBase64DataUrl(str)
     }
 
+    // The generated 3-word name for a pub key. Deterministic, and defined for any key,
+    // so it is what names a mention of somebody no local model knows about.
+    function generateAlias(publicKey) {
+        return globalUtilsInst.generateAlias(publicKey)
+    }
+
     function getEtherscanTxLink() {
         return profileSectionModule.ensUsernamesModule.getEtherscanTxLink()
     }
