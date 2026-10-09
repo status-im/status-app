@@ -23,6 +23,7 @@ import ./dto/removed_message as removed_msg_dto
 import ./dto/urls_unfurling_plan
 import ./dto/link_preview
 import ./message_cursor
+import ./payment_request_tokens
 
 import app_service/common/activity_center
 import app_service/common/message as message_common
@@ -360,26 +361,22 @@ QtObject:
 
     return self.pinnedMsgCursor[chatId]
 
-  proc checkPaymentRequestsInMessage*(self: Service, message: var MessageDto) =
-    for paymentRequest in message.paymentRequests.mitems:
-      if paymentRequest.tokenKey.len == 0 or paymentRequest.logoUri.len == 0:
-        if paymentRequest.symbol.len > 0:
-          # due to backward compatibility, in case the tokenKey is empty, we should try to find it by symbol on the received chain.
-          let token = self.tokenService.getTokenBySymbolOnChain(paymentRequest.symbol, paymentRequest.chainId)
-          if token.isNil:
-            error "token is nil", tokenKey=paymentRequest.tokenKey, procName="checkPaymentRequestsInMessage"
-            continue
-          paymentRequest.tokenKey = token.key
-          paymentRequest.symbol = token.symbol
-          paymentRequest.logoUri = token.logoUri
+  proc checkPaymentRequestsInMessage(self: Service, message: var MessageDto, cache: var PaymentRequestTokenCache) =
+    let tokenService = self.tokenService
+    let unresolved = resolvePaymentRequestTokens(message.paymentRequests, cache,
+      proc(symbol: string, chainId: int): TokenItem = tokenService.getTokenBySymbolOnChain(symbol, chainId))
+    for symbol in unresolved:
+      error "token is nil", symbol, procName="checkPaymentRequestsInMessage"
 
   proc checkPaymentRequestsInMessages*(self: Service, messages: var seq[MessageDto]) =
+    var cache: PaymentRequestTokenCache
     for message in messages.mitems:
-      self.checkPaymentRequestsInMessage(message)
+      self.checkPaymentRequestsInMessage(message, cache)
 
   proc checkPaymentRequestsInPinnedMessages*(self: Service, pinnedMessages: var seq[PinnedMessageDto]) =
+    var cache: PaymentRequestTokenCache
     for pinnedMessage in pinnedMessages.mitems:
-      self.checkPaymentRequestsInMessage(pinnedMessage.message)
+      self.checkPaymentRequestsInMessage(pinnedMessage.message, cache)
 
   proc asyncLoadMoreMessagesForChat*(self: Service, chatId: string, limit = MESSAGES_PER_PAGE): bool =
     if (chatId.len == 0):
