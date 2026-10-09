@@ -26,13 +26,24 @@ Item {
     ListModel {
         id: rawChannelsModel
 
-        Component.onCompleted: append({
-            itemId: "_general",
-            name: "general",
-            icon: "",
-            emoji: "👋",
-            color: "blue"
-        })
+        Component.onCompleted: append([
+            {
+                itemId: "_general",
+                isThread: false,
+                name: "general",
+                icon: "",
+                emoji: "👋",
+                color: "blue"
+            },
+            {
+                itemId: "_general-thread",
+                isThread: true,
+                name: "general thread",
+                icon: "",
+                emoji: "",
+                color: "blue"
+            }
+        ])
     }
 
     ChannelsSelectionModel {
@@ -57,6 +68,8 @@ Item {
     ListModel {
         id: testPermissionsModel
     }
+
+    ListModel { id: emptyModel }
 
     Component {
         id: permissionsViewComponent
@@ -100,6 +113,8 @@ Item {
         // Regression for #14882: raw chat models expose itemId/name, while
         // permission tags join on key/text from ChannelsSelectionModel.
         function test_channelName_joinedFromRawChatModel() {
+            compare(transformedChannelsModel.count, 1)
+            compare(transformedChannelsModel.get(0).key, "_general")
             const permissionItem = createTemporaryObject(permissionItemComponent, root)
             verify(!!permissionItem)
             waitForRendering(permissionItem)
@@ -109,13 +124,31 @@ Item {
             tryCompare(channelTag, "title", "#general")
         }
 
+        function test_overviewResolvesChannelAlongsideThread() {
+            const view = createTemporaryObject(permissionsViewComponent, root)
+            verify(!!view)
+            testPermissionsModel.append({
+                permissionType: PermissionTypes.Type.Read,
+                permissionState: PermissionTypes.State.Approved,
+                isPrivate: false,
+                holdingsListModel: emptyModel,
+                channelsListModel: permissionChannelsModel
+            })
+            let channelTag = null
+            tryVerify(() => {
+                channelTag = findChild(view, "inCommunityStatusListItem")
+                return !!channelTag
+            })
+            tryCompare(channelTag, "title", "#general")
+        }
+
         function test_communityName_whenChannelsListEmpty() {
             testPermissionsModel.append({
                 permissionType: PermissionTypes.Type.Member,
                 permissionState: PermissionTypes.State.Approved,
                 isPrivate: false,
-                holdingsListModel: [],
-                channelsListModel: []
+                holdingsListModel: emptyModel,
+                channelsListModel: emptyModel
             })
 
             const view = createTemporaryObject(permissionsViewComponent, root)

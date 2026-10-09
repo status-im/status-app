@@ -3,6 +3,7 @@ import QtQuick
 ListModel {
     ListElement {
         itemId: "_welcome"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: ""
@@ -14,6 +15,7 @@ ListModel {
     }
     ListElement {
         itemId: "_announcements"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: ""
@@ -29,6 +31,7 @@ ListModel {
         type: -1
         categoryId: "_discussion"
         name: "discussion"
+        isThread: false
         emoji: ""
         color: ""
         icon: ""
@@ -36,6 +39,7 @@ ListModel {
     }
     ListElement {
         itemId: "_general"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_discussion"
@@ -47,6 +51,7 @@ ListModel {
     }
     ListElement {
         itemId: "_help"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_discussion"
@@ -62,6 +67,7 @@ ListModel {
         type: -1
         categoryId: "_support"
         name: "support"
+        isThread: false
         emoji: ""
         color: ""
         icon: ""
@@ -69,6 +75,7 @@ ListModel {
     }
     ListElement {
         itemId: "_faq"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -80,6 +87,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -91,6 +99,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam2"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -102,6 +111,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam3"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -113,6 +123,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam4"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -124,6 +135,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam5"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -135,6 +147,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam6"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -146,6 +159,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam7"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -157,6 +171,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam8"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -168,6 +183,7 @@ ListModel {
     }
     ListElement {
         itemId: "_report-scam9"
+        isThread: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -183,6 +199,7 @@ ListModel {
         type: -1
         categoryId: "_faq"
         name: "faq"
+        isThread: false
         emoji: ""
         color: ""
         icon: ""

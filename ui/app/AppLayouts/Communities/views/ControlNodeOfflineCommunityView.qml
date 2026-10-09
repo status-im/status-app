@@ -16,6 +16,8 @@ import StatusQ.Layout
 import utils
 import shared.popups
 
+import SortFilterProxyModel
+
 StatusSectionLayout {
     id: root
 
@@ -68,7 +70,14 @@ StatusSectionLayout {
             layer.effect: fastBlur
 
             Repeater {
-                model: root.communityItemsModel
+                objectName: "communityPreviewChannelList"
+                model: SortFilterProxyModel {
+                    sourceModel: root.communityItemsModel
+                    filters: ValueFilter {
+                        roleName: "isThread"
+                        value: false
+                    }
+                }
                 delegate: StatusChatListItem {
                     enabled: false
                     name: model.name

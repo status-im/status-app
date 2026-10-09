@@ -4,6 +4,7 @@ import StatusQ.Components
 ListModel {
     ListElement {
         itemId: "id0"
+        isThread: false
         categoryId: "id0"
         active: false
         notificationsCount: 0
@@ -19,6 +20,7 @@ ListModel {
     }
     ListElement {
         itemId: "id1"
+        isThread: false
         type: StatusChatListItem.Type.OneToOneChat
         onlineStatus: 1 //Constants.onlineStatus.online
         name: "Punxnotdead"
@@ -38,6 +40,7 @@ ListModel {
     }
     ListElement {
         itemId: "id2"
+        isThread: false
         categoryId: "id2"
         name: "Category Y"
         active: false
@@ -55,6 +58,7 @@ ListModel {
     }
     ListElement {
         itemId: "id3"
+        isThread: false
         categoryId: "id2"
         type: StatusChatListItem.Type.CommunityChat
         name: "Channel Y_1"
@@ -73,6 +77,7 @@ ListModel {
     }
     ListElement {
         itemId: "id4"
+        isThread: false
         categoryId: "id2"
         name: "Channel Y_2"
         active: false
@@ -89,6 +94,7 @@ ListModel {
     }
     ListElement {
         itemId: "id5"
+        isThread: false
         type: StatusChatListItem.Type.GroupChat
         categoryId: "id2"
         name: "Channel Y_3"

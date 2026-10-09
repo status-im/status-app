@@ -5,6 +5,7 @@ import Models
 import Storybook
 
 import StatusQ.TestHelpers
+import StatusQ.Core.Utils
 
 import AppLayouts.HomePage
 
@@ -19,7 +20,7 @@ Item {
         id: homePageAdaptor
 
         sectionsBaseModel: SectionsModel {}
-        chatsBaseModel: ChatsModel {}
+        chatsBaseModel: ChatsModel { id: homeChats }
         chatsSearchBaseModel: ChatsSearchModel {}
         walletsBaseModel: WalletAccountsModel {}
         dappsBaseModel: DappsModel {}
@@ -73,17 +74,56 @@ Item {
     }
 
     property HomePage controlUnderTest: null
+    property int initialChatsCount
 
     StatusTestCase {
         name: "HomePage"
 
         function init() {
+            root.initialChatsCount = homeChats.count
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
         }
 
         function cleanup() {
             dynamicSpy.cleanup()
             homePageAdaptor.clear() // cleanup the pinned items
+            if (homeChats.count > root.initialChatsCount)
+                homeChats.remove(root.initialChatsCount, homeChats.count - root.initialChatsCount)
+        }
+
+        function homeChat(id, isThread, isCategory) {
+            return {
+                itemId: id, name: id, isThread: isThread, isCategory: isCategory,
+                type: Constants.chatType.oneToOne, icon: "", emoji: "", color: "",
+                colorId: 1, hasUnreadMessages: false, notificationsCount: 0,
+                onlineStatus: 1, lastMessageText: ""
+            }
+        }
+
+        function test_searchIncludesThreads() {
+            const model = homePageAdaptor.homePageEntriesModel
+            verify(ModelUtils.indexOf(model, "id", "id1") >= 0)
+            homeChats.append(homeChat("filter-thread", true, false))
+            homeChats.append(homeChat("filter-channel", false, false))
+            homeChats.append(homeChat("filter-category", false, true))
+            const searchField = findChild(controlUnderTest, "homeSearchField")
+            verify(!!searchField)
+            searchField.text = "filter"
+            tryCompare(model, "count", 2)
+            compare(ModelUtils.modelToArray(model, ["id"]).map(row => row.id).sort(),
+                    ["filter-channel", "filter-thread"])
+            homeChats.setProperty(root.initialChatsCount, "isThread", false)
+            compare(model.count, 2)
+            homeChats.setProperty(root.initialChatsCount, "isThread", true)
+            compare(model.count, 2)
+            homeChats.remove(root.initialChatsCount + 1)
+            tryCompare(model, "count", 1)
+            compare(ModelUtils.get(model, 0).id, "filter-thread")
+            homeChats.remove(root.initialChatsCount)
+            tryCompare(model, "count", 0)
+            searchField.text = "welcome"
+            tryCompare(model, "count", 1)
+            compare(ModelUtils.get(model, 0).id, "id2")
         }
 
         function test_basic_geometry() {
