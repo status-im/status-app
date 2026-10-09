@@ -332,6 +332,13 @@ QtObject:
       return
     return self.chatThreadsByParentIdByChat[chatId].getOrDefault(parentMessageId)
 
+  proc getThreadById*(self: Service, chatId: string, threadId: string): ThreadDto =
+    if not self.chatThreadsByParentIdByChat.hasKey(chatId):
+      return
+    for _, thread in self.chatThreadsByParentIdByChat[chatId]:
+      if thread.threadId == threadId:
+        return thread
+
   proc getParentMessageIdForThread(self: Service, chatId: string, threadId: string): string =
     if not self.chatThreadsByParentIdByChat.hasKey(chatId):
       return

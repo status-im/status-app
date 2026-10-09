@@ -468,6 +468,10 @@ method addressWasShown*(self: AccessInterface, address: string) {.base.} =
 method openSectionChatAndMessage*(self: AccessInterface, sectionId: string, chatId: string, messageId: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method openSectionThreadAndMessage*(self: AccessInterface, sectionId: string, chatId: string,
+    threadId: string, messageId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method updateRequestToJoinState*(self: AccessInterface, sectionId: string, requestToJoinState: RequestToJoinState) {.base.} =
   raise newException(ValueError, "No implementation available")
 
