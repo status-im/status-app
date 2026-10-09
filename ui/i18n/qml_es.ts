@@ -18740,6 +18740,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <translation>Ajustes</translation>
     </message>
     <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished">Cerrar sesión y salir</translation>
+    </message>
+    <message>
         <source>Always online</source>
         <translation>Siempre en línea</translation>
     </message>

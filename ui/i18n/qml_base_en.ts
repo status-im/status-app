@@ -18707,6 +18707,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Always online</source>
         <translation type="unfinished"></translation>
     </message>

@@ -29,6 +29,7 @@ StatusIconTabButton {
     signal shareOwnProfileRequested
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
+    signal quitRequested
 
     name: root.name
     enabled: !root.loading
@@ -102,5 +103,6 @@ StatusIconTabButton {
         onSettingsRequested: root.settingsRequested()
         onCopyLinkRequested: ClipboardUtils.setText(root.getLinkToProfileFn(root.pubKey))
         onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
+        onQuitRequested: root.quitRequested()
     }
 }

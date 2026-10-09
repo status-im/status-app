@@ -15,6 +15,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 OTHER_FILES += $$files("$$PWD/*qmldir", true)
 OTHER_FILES += $$files("$$PWD/*.qml", true)
 OTHER_FILES += $$files("$$PWD/*.js", true)
+OTHER_FILES += $$files("$$PWD/*.mm", true)
+OTHER_FILES += $$files("$$PWD/../mobile/android/*.java", true)
 OTHER_FILES += $$files("$$PWD/../src/*.nim", true)
 OTHER_FILES += $$files("$$PWD/../monitoring/*.qml", true)
 

@@ -18735,6 +18735,10 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
         <translation>Paramètres</translation>
     </message>
     <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Always online</source>
         <translation>Toujours en ligne</translation>
     </message>

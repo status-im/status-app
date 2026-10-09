@@ -18818,6 +18818,10 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
         <translation>Nastavení</translation>
     </message>
     <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished">Odhlásit se a ukončit</translation>
+    </message>
+    <message>
         <source>Always online</source>
         <translation>Vždy online</translation>
     </message>

@@ -18658,6 +18658,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>설정</translation>
     </message>
     <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished">로그아웃 및 종료</translation>
+    </message>
+    <message>
         <source>Always online</source>
         <translation>항상 온라인</translation>
     </message>

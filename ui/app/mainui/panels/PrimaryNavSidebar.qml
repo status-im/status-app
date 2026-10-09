@@ -78,6 +78,7 @@ Control {
     signal shareOwnProfileRequested
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
+    signal quitRequested
 
     Component.onCompleted: d.snapToMode()
     onAlwaysVisibleChanged: d.snapToMode()
@@ -315,6 +316,7 @@ Control {
                     onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
                     onShareOwnProfileRequested: root.shareOwnProfileRequested()
                     onSettingsRequested: root.settingsRequested()
+                    onQuitRequested: root.quitRequested()
                 }
             }
         }
