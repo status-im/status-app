@@ -765,6 +765,35 @@ Flickable {
         property real heldFlickVelocity: 0
         property bool flickHoldActive: false
 
+        // The last flick this view restarted, in flick()'s sign: the velocity
+        // and when. Cleared when any flick ends.
+        property real restartedFlickVelocity: 0
+        property real restartedFlickAt: -1
+
+        // The flick's current velocity, in flick()'s sign. Qt's verticalVelocity
+        // is smoothed and reads nothing for a frame after a restart, so a write
+        // in the very next frame - a second row settling its height - would
+        // find no flick to preserve and end it. Then the velocity is computed
+        // from the restart instead: under Qt's constant deceleration it is the
+        // restart velocity less flickDeceleration for every second since.
+        function currentFlickVelocity() {
+            if (root.verticalVelocity !== 0)
+                return -root.verticalVelocity
+
+            if (d.restartedFlickAt < 0)
+                return 0
+
+            const elapsed = (Date.now() - d.restartedFlickAt) / 1000
+            const speed = Math.abs(d.restartedFlickVelocity) - root.flickDeceleration * elapsed
+
+            return speed > 0 ? Math.sign(d.restartedFlickVelocity) * speed : 0
+        }
+
+        function forgetFlickRestart() {
+            d.restartedFlickVelocity = 0
+            d.restartedFlickAt = -1
+        }
+
         function preservingFlick(write) {
             // The velocity is taken once, on the first write of a turn, and put
             // back after every write of that turn - completeWave() moves the
@@ -778,10 +807,11 @@ Flickable {
             // end reports as flicking, but what is running then is Qt's own
             // rebound back into bounds - re-flicking there fights the bounce
             // instead of preserving anything.
-            if (!d.flickHoldActive && root.flickingVertically
-                    && root.verticalOvershoot === 0
-                    && root.verticalVelocity !== 0) {
-                d.heldFlickVelocity = -root.verticalVelocity
+            const velocity = d.flickHoldActive || !root.flickingVertically
+                    || root.verticalOvershoot !== 0 ? 0 : d.currentFlickVelocity()
+
+            if (velocity !== 0) {
+                d.heldFlickVelocity = velocity
                 d.flickHoldActive = true
 
                 // Releases the hold at the end of this turn. It only ever
@@ -792,8 +822,13 @@ Flickable {
 
             write()
 
-            if (d.flickHoldActive && d.heldFlickVelocity !== 0)
+            // Recorded after the flick() call: the write above ended the
+            // flick, and that clears the record.
+            if (d.flickHoldActive && d.heldFlickVelocity !== 0) {
                 root.flick(0, d.heldFlickVelocity)
+                d.restartedFlickVelocity = d.heldFlickVelocity
+                d.restartedFlickAt = Date.now()
+            }
         }
 
         function endFlickHold() {
@@ -1806,6 +1841,16 @@ Flickable {
 
         function onYChanged() {
             d.restorePosition()
+        }
+    }
+
+    // A restart is only good for the flick it restarted. A Connections rather
+    // than a handler on the root, which an owner may set for itself.
+    Connections {
+        target: root
+
+        function onFlickEnded() {
+            d.forgetFlickRestart()
         }
     }
 
