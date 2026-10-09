@@ -9,6 +9,8 @@ ContactsView 1.0 ContactsView.qml
 EnsDetailsView 1.0 EnsDetailsView.qml
 EnsListView 1.0 EnsListView.qml
 EnsTermsAndConditionsView 1.0 EnsTermsAndConditionsView.qml
+HttpStatsModal 1.0 HttpStatsModal.qml
+HttpTrafficDashboard 1.0 HttpTrafficDashboard.qml
 LanguageView 1.0 LanguageView.qml
 LogosNetworkView 1.0 LogosNetworkView.qml
 NotificationsView 1.0 NotificationsView.qml

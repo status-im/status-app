@@ -131,6 +131,18 @@ method getRpcStats*(self: Module): string =
 method resetRpcStats*(self: Module) =
   self.controller.resetRpcStats()
 
+method fetchHttpTrafficReport*(self: Module, endpoints: string, key: string) =
+  self.controller.fetchHttpTrafficReport(endpoints, key)
+
+method onHttpTrafficReportFetched*(self: Module, report: string, error: string, endpoints: string, key: string) =
+  self.view.httpTrafficReportFetched(report, error, endpoints, key)
+
+method resetHttpTrafficStats*(self: Module) =
+  self.controller.resetHttpTrafficStats()
+
+method setHttpTrafficStatsEnabled*(self: Module, enabled: bool) =
+  self.controller.setHttpTrafficStatsEnabled(enabled)
+
 method refetchTxHistory*(self: Module) =
   self.controller.refetchTxHistory()
 

@@ -885,6 +885,7 @@ SettingsContentBase {
         HttpStatsModal {
             id: httpStatsModal
 
+            walletStore: root.walletStore
             title: httpStatsButton.text
         }
     }

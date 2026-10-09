@@ -10,6 +10,16 @@ proc getRpcStats*(): string =
 proc resetRpcStats*() =
     discard callPrivateRPCNoDecode("rpcstats_reset")
 
+## endpoints is "none", "all", "source" or "host"; key names the source or host.
+proc getHttpTrafficReport*(endpoints: string, key: string): string =
+    result = callPrivateRPCNoDecode("wallet_getHTTPTrafficReport", %*[{"endpoints": endpoints, "key": key}])
+
+proc resetHttpTrafficStats*() =
+    discard callPrivateRPCNoDecode("wallet_resetHTTPTrafficStats")
+
+proc setHttpTrafficStatsEnabled*(enabled: bool) =
+    discard callPrivateRPCNoDecode("wallet_setHTTPTrafficStatsEnabled", %*[enabled])
+
 proc getConnectionStatus*(): bool =
     try:
         let response = callPrivateRPC("connectionStatus".prefix, %*[])

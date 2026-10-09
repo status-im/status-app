@@ -164,6 +164,30 @@ QtObject {
         root.walletModule.resetRpcStats()
     }
 
+    //! Answers with httpTrafficReportFetched. endpoints is "none", "all",
+    //! "source" or "host"; key names the source or host.
+    function fetchHttpTrafficReport(endpoints, key) {
+        root.walletModule.fetchHttpTrafficReport(endpoints, key)
+    }
+
+    //! endpoints and key echo the query the report answers.
+    signal httpTrafficReportFetched(string report, string error, string endpoints, string key)
+
+    readonly property Connections _httpTrafficConnections: Connections {
+        target: root.walletModule
+        function onHttpTrafficReportFetched(report, error, endpoints, key) {
+            root.httpTrafficReportFetched(report, error, endpoints, key)
+        }
+    }
+
+    function resetHttpTrafficStats() {
+        root.walletModule.resetHttpTrafficStats()
+    }
+
+    function setHttpTrafficStatsEnabled(enabled) {
+        root.walletModule.setHttpTrafficStatsEnabled(enabled)
+    }
+
     function setAutoApplyKeypairMigrations(enabled) {
         root.walletModule.setAutoApplyKeypairMigrations(enabled)
     }
