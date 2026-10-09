@@ -44,6 +44,7 @@ StatusDialog {
         sourceModel: root.mentionNames?.model ?? null
         nameRole: "preferredDisplayName"
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
+        contactInfoRequester: pubKey => root.rootStore?.requestContactInfo(pubKey)
     }
 
 
