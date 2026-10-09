@@ -129,3 +129,4 @@ For more information, visit our [official website](https://status.app/) or explo
 
 
 This project is tested with BrowserStack.
+
