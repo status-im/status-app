@@ -39,15 +39,6 @@ Item {
         imageCropperModal.open()
     }
 
-    // Native FileDialog is still closing; opening a Popup here becomes a new window on Linux.
-    Timer {
-        id: openCropperTimer
-        interval: 1
-        repeat: false
-        property url pendingImage
-        onTriggered: root.cropImage(pendingImage)
-    }
-
     QtObject {
         id: d
 
@@ -67,8 +58,7 @@ Item {
             if (fileDialog.selectedFiles.length > 0) {
                 const url = fileDialog.selectedFile
                 if (Utils.isValidDragNDropImage(url)) {
-                    openCropperTimer.pendingImage = url
-                    openCropperTimer.restart()
+                    root.cropImage(url)
                 } else {
                     errorDialog.fileOpened = url
                     errorDialog.open()
