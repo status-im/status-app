@@ -77,7 +77,13 @@ nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
 	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
-tests-nim: $(NIM_TESTS)
+.PHONY: tests-nim-token-catalogue
+tests-nim-token-catalogue: | qt-pkgconfig
+	python3 scripts/test_token_catalogue_build.py
+	$(ENV_SCRIPT) nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --nimcache:$(NIMCACHE_BASE)-token_catalogue_config_test \
+		-o:bin/token_catalogue_config_test -r test/nim/token_catalogue_config_test.nim
+
+tests-nim: $(NIM_TESTS) tests-nim-token-catalogue
 
 benches-nim: $(NIM_BENCHES)
 

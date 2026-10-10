@@ -97,6 +97,36 @@ To build Status from source, follow the instructions specific to your operating 
 
 We welcome contributions from the community! To get started:
 
+### Nim token catalogue
+
+Normal desktop and mobile builds use the Nim token library for login and
+account creation. With the development
+environment configured, the usual build and `make run` commands need no token
+flags or separate library checkout.
+
+Status-go pins the public Go wrapper and native library to the same revision.
+Its build prepares one checkout at `vendor/status-go/build/deps/nim-token-lists`
+and reuses matching native and backend artifacts. Mobile archives are separate
+for each architecture and for iOS devices and simulators. `make clean` removes
+the managed checkout and its artifacts; the next build prepares them again.
+Existing nim-sds setup is unchanged.
+
+The Nim catalogue is the sole backend. The `USE_NIM_TOKEN_LISTS` build option,
+runtime environment switches and `--token-lists-use-nim` / `--token-lists-shadow`
+arguments have been removed. Run `make run` normally; no catalogue flag is needed.
+Remove those arguments from existing launch commands. A rollback requires an
+earlier app/backend revision.
+
+On iOS, status-go bundles the token library into its static archive. The app's
+final link hides the token ABI and the build checks the installed executable
+for leaked token-library exports.
+
+Run `make tests-nim-token-catalogue` in the configured desktop build environment
+to check mandatory native builds and login/account-creation payloads. The payload
+test uses the app's Qt build environment. Standalone recipe-test runs require `qmake` and
+`androiddeployqt` on `PATH`; the Make target supplies the Qt environment.
+This target also runs as part of `make tests-nim` and its Linux CI target.
+
 <!-- TODO Improve the contributing guide to be more about how to contribute -->
 <!-- TODO add guide on how to translate -->
 <!-- TODO Create a guide per persona in the contributing guide -->

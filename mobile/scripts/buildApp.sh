@@ -192,6 +192,10 @@ else
 
   [[ ! -e "$BIN_DIR/${OUTPUT_NAME}.app/Info.plist" ]] && { echo "Build failed"; exit 1; }
 
+  # Audit the installed executable, after libstatus's static archive is linked.
+  TKL_TARGET_OS=ios bash "$REPO_ROOT/vendor/status-go/scripts/check_tkl_exports.sh" \
+    "$BIN_DIR/${OUTPUT_NAME}.app/$OUTPUT_NAME"
+
   # Post-link: build + embed the share extension into PlugIns/ and re-sign
   # (see mobile/ios/shareExtension/ and mobile/scripts/ios/buildShareExtension.sh).
   if [[ "${FLAG_SHARE_EXTENSION_ENABLED:-1}" == "1" ]]; then

@@ -247,6 +247,7 @@ ipc-host-tests:
 .PHONY: clean
 clean: clean-statusq clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc
 	@echo "Cleaning"
+	$(MAKE) -C ../vendor/status-go clean-libtkl SHELL=/bin/sh
 	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
 
 .PHONY: run
