@@ -172,6 +172,32 @@ Item {
         }
     }
 
+    Component {
+        id: millisecondTimestampSortingComponent
+
+        QtObject {
+            readonly property ListModel source: ListModel {
+                ListElement { timestamp: 1577836800000 }
+                ListElement { timestamp: 1767225600000 }
+                ListElement { timestamp: 1704067200000 }
+            }
+
+            readonly property SortFilterProxyModel model: SortFilterProxyModel {
+                sourceModel: source
+                sorters: FastExpressionSorter {
+                    expectedRoles: ["timestamp"]
+                    expression: {
+                        if (modelLeft.timestamp > modelRight.timestamp)
+                            return -1
+                        if (modelLeft.timestamp < modelRight.timestamp)
+                            return 1
+                        return 0
+                    }
+                }
+            }
+        }
+    }
+
     TestCase {
         name: "FastExpressionSorter"
 
@@ -187,6 +213,14 @@ Item {
             compare(obj.model.get(0).a, 1)
             compare(obj.model.get(1).a, 2)
             compare(obj.model.get(7).a, 7)
+        }
+
+        function test_millisecondTimestampSorting() {
+            const obj = createTemporaryObject(millisecondTimestampSortingComponent, root)
+
+            compare(obj.model.get(0).timestamp, 1767225600000)
+            compare(obj.model.get(1).timestamp, 1704067200000)
+            compare(obj.model.get(2).timestamp, 1577836800000)
         }
 
         function test_sortingAfterContextChange() {
