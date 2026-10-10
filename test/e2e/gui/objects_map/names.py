@@ -1081,9 +1081,12 @@ swapModalErrorTag = {"container": swapPopup, "objectName": "errorTag", "type": "
 swapModalQuoteText = {"container": swapPopup, "objectName": "swapQuoteText", "type": "StatusTextWithLoadingState", "visible": True}
 swapModalSignButton = {"container": swapPopup, "objectName": "signButton", "type": "StatusButton", "visible": True}
 swapModalAmountField = {"container": swapModalPayPanel, "objectName": "amountToSend_textField", "type": "StatusTextField", "visible": True}
-swapModalSearchBox = {"container": statusDesktop_mainWindow_overlay, "objectName": "searchBox", "type": "TokenSearchBox", "visible": True}
-swapModalChainFilter = {"container": statusDesktop_mainWindow_overlay, "objectName": "chainFilter", "visible": True}
-swapModalChainChip = {"container": statusDesktop_mainWindow_overlay, "objectName": "chainChip_", "visible": True}
+swapModalPayAssetsPanel = {"container": statusDesktop_mainWindow_overlay, "objectName": "swapPayAssetsPanel", "visible": True}
+swapModalReceiveAssetsPanel = {"container": statusDesktop_mainWindow_overlay, "objectName": "swapReceiveAssetsPanel", "visible": True}
+swapModalPaySearchBox = {"container": swapModalPayAssetsPanel, "objectName": "searchBox", "type": "TokenSearchBox", "visible": True}
+swapModalReceiveSearchBox = {"container": swapModalReceiveAssetsPanel, "objectName": "searchBox", "type": "TokenSearchBox", "visible": True}
+swapModalPayChainChip = {"container": swapModalPayAssetsPanel, "objectName": RegularExpression("chainChip_.*"), "visible": True}
+swapModalReceiveChainChip = {"container": swapModalReceiveAssetsPanel, "objectName": RegularExpression("chainChip_.*"), "visible": True}
 swapSignModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "swapSignModal", "type": "PopupItem", "visible": True}
 swapSignModalSignButton = {"container": swapSignModal, "objectName": "signButton", "type": "StatusButton", "visible": True}
 
