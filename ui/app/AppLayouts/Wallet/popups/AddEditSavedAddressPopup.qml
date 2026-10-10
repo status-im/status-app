@@ -15,6 +15,7 @@ import AppLayouts.Profile.helpers
 
 StatusDialog {
     id: root
+    objectName: "AddEditSavedAddressPopup"
 
     required property var isChecksumValidForAddress
     required property var getWalletAccount
