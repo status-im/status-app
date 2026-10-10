@@ -75,7 +75,8 @@ function Install-MSYS2-Packages {
 
 function Install-Qt-SDK {
     Write-Host "Installing Qt $QtVersion SDK..."
-    run pip install aqtinstall
+    # FIXME: Drop once the proper fix is in release newer than 3.3.0
+    run pip install --no-cache-dir "git+https://github.com/miurahr/aqtinstall.git@8c3695d"
     run aqt install-qt -O "C:\Qt" windows desktop $QtVersion win64_msvc2022_64 -m all
 }
 
