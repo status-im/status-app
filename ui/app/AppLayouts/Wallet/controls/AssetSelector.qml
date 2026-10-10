@@ -51,6 +51,12 @@ Control {
     signal selected(string groupKey, int chainId)
     signal loadMoreRequested()
 
+    property string assetsPanelObjectName: "searchableAssetsPanel"
+
+    function selectGroupKey(groupKey, chainId) {
+        searchableAssetsPanel.selected(groupKey, chainId)
+    }
+
     function setSelection(symbol, icon, tokenGroupKey) {
         button.name = symbol
         button.icon = icon
@@ -104,7 +110,7 @@ Control {
         contentItem: SearchableAssetsPanel {
             id: searchableAssetsPanel
 
-            objectName: "searchableAssetsPanel"
+            objectName: root.assetsPanelObjectName
 
             model: root.model
             nonInteractiveKey: root.nonInteractiveKey

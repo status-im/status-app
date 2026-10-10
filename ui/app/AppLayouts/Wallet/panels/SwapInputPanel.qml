@@ -81,6 +81,7 @@ Control {
     property real cryptoFeesToReserve: 0
 
     property int swapSide: SwapInputPanel.SwapSide.Pay
+    readonly property bool swapPaySide: root.swapSide === SwapInputPanel.SwapSide.Pay
     // mirrors AmountToSend's own default
     property bool fiatInputInteractive: interactive
     property bool mainInputLoading
@@ -641,7 +642,8 @@ Control {
             AssetSelector {
                 id: holdingSelector
 
-                objectName: "holdingSelector"
+                objectName: root.swapPaySide ? "swapPayHoldingSelector" : "swapReceiveHoldingSelector"
+                assetsPanelObjectName: root.swapPaySide ? "swapPayAssetsPanel" : "swapReceiveAssetsPanel"
 
                 size: TokenSelectorButton.Size.Small
 
