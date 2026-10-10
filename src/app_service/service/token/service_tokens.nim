@@ -109,20 +109,24 @@ proc getTokenByChainAddress(chainId: int, address: string): TokenItem =
     error "error: ", errDesription
 
 
-proc getTokensByChain(chainId: int): seq[TokenItem] =
+proc fetchTokenBySymbolOnChain(chainId: int, symbol: string): TokenItem =
   try:
     var response: JsonNode
-    var err = status_go_tokens.getTokensByChain(response, chainId)
+    var err = status_go_tokens.getTokenBySymbolOnChain(response, chainId, symbol)
+    if err == status_go_tokens.NO_RESULT:
+      return nil
     if err.len > 0:
       raise newException(CatchableError, "failed" & err)
-    if response.isNil or response.kind != JsonNodeKind.JArray:
+    if response.isNil or response.kind == JsonNodeKind.JNull:
+      return nil
+    if response.kind != JsonNodeKind.JObject:
       raise newException(CatchableError, "unexpected response")
 
     # Create a copy of the tokenResultStr to avoid exceptions in `decode`
     # Workaround for https://github.com/status-im/status-desktop/issues/17398
     let responseStr = $response
-    let parsedResponse = Json.decode(responseStr, seq[TokenDtoSafe], allowUnknownFields = true)
-    result = parsedResponse.map(t => createTokenItem(t))
+    let parsedResponse = Json.decode(responseStr, TokenDtoSafe, allowUnknownFields = true)
+    result = createTokenItem(parsedResponse)
   except Exception as e:
     let errDesription = e.msg
     error "error: ", errDesription
