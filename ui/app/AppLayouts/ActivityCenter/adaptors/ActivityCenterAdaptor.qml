@@ -198,15 +198,7 @@ QtObject {
         redirectToLink       [bool]    - whether clicking the notification opens a popup/link
         redirectToWallet     [bool]    - whether clicking the notification opens wallet activity
     */
-    readonly property var model: SortFilterProxyModel {
-        // Sort by newest first (dismissed entries already excluded upstream)
-        sourceModel: d.objectProxy
-
-        sorters: RoleSorter {
-            roleName: "timestamp"
-            ascendingOrder: false
-        }
-    }
+    readonly property var model: d.objectProxy
 
 
     /*!
@@ -234,6 +226,7 @@ QtObject {
         // Pre-filter dismissed notifications before ObjectProxyModel to skip
         // heavy delegate processing for entries that will never be shown.
         // Community membership decisions are kept so pending/final states remain visible.
+        // Sorted (newest first) here, on the source role, so ObjectProxyModel rows stay lazy.
         readonly property SortFilterProxyModel filteredNotifications: SortFilterProxyModel {
             sourceModel: root.notifications ?? null
             filters: AnyOf {
@@ -252,6 +245,10 @@ QtObject {
                         inverted: true
                     }
                 }
+            }
+            sorters: RoleSorter {
+                roleName: "timestamp"
+                ascendingOrder: false
             }
         }
 

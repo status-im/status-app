@@ -11,6 +11,7 @@
 #include <StatusQ/typesregistration.h>
 
 #include "inputmethodtester.h"
+#include "objectcounter.h"
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -54,6 +55,7 @@ public slots:
 
         // Test-only helper for driving the IME/input-method path from QML tests.
         qmlRegisterType<InputMethodTester>("Storybook.Testing", 1, 0, "InputMethodTester");
+        qmlRegisterType<ObjectCounter>("Storybook.Testing", 1, 0, "ObjectCounter");
 
         // Register the same context-property mocks the storybook app uses (e.g. userProfile),
         // so components that read them (via Utils) behave the same under test.

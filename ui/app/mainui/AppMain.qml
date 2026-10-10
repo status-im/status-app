@@ -1963,6 +1963,7 @@ Item {
 
             // Container for the Activity Center Area in Landscape
             Rectangle {
+                id: acSlideContainer
                 objectName: "activityCenterSlideContainer"
                 readonly property bool openPanel: !mainLayoutItem.isPortraitMode ? mainLayoutItem.openACCenterPanel : false
 
@@ -2085,6 +2086,8 @@ Item {
 
                 Loader {
                     id: acPanelLoader
+                    // kept alive while the panel animates out, released once fully closed
+                    active: mainLayoutItem.openACCenterPanel || acSlideContainer._shown || acPortraitPopup.visible
                     sourceComponent: ActivityCenterAdaptor {
                         contactsModel: appMain.contactsStore?.contactsModel ?? null
                         userProfileName: appMain.profileStore?.name ?? ""
