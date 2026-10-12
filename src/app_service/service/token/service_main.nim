@@ -122,18 +122,21 @@ proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
   # in-flight gate. On a nil handoff use the in-flight generation (not a stale
   # sentinel) so it cannot re-fire forever.
   let completedGen = if not res.isNil: res.generation else: self.refreshTokensGen.currentGeneration
-  let c = self.refreshTokensGen.onCompletion(completedGen)
-  if c.action == rcaDropAndRefire:
-    debug "dropping stale async refresh tokens response; re-firing newest",
-      completedGen = completedGen
-    # A dropped flagged result discards the catalogue it fetched — the re-fire must
-    # re-fetch it, in addition to any want queued by the triggers that made us stale.
+  # Until a first map is applied, a stale result is still better than none: apply
+  # it so held balances resolve, and let the re-fire replace it.
+  let c = self.refreshTokensGen.onCompletion(completedGen,
+    applyStale = not self.tokensOfInterestLoaded)
+  if c.action in {rcaDropAndRefire, rcaApplyAndRefire}:
+    debug "stale async refresh tokens response; re-firing newest",
+      completedGen = completedGen, applied = c.action == rcaApplyAndRefire
+    # A stale flagged result's catalogue is outdated — the re-fire must re-fetch
+    # it, in addition to any want queued by the triggers that made us stale.
     let refireFetchAllTokens = self.pendingFetchAllTokens or self.inFlightFetchAllTokens
     self.pendingFetchAllTokens = false
     self.inFlightFetchAllTokens = refireFetchAllTokens
     self.startRefreshTokensTask(c.gen, refireFetchAllTokens)
-    return
-  # rcaApply: this is the newest generation.
+    if c.action == rcaDropAndRefire:
+      return
   if res.isNil:
     return
   if res.error.len > 0:

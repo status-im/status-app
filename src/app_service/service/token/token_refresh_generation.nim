@@ -6,13 +6,16 @@
 ##  - each trigger bumps the desired generation;
 ##  - a task is started only when none is in flight;
 ##  - the in-flight completion re-fires once if newer triggers arrived while it
-##    ran, and its own (now stale) result is dropped without applying.
+##    ran, and its own (now stale) result is dropped without applying — unless
+##    the caller has nothing applied yet, in which case the stale result is
+##    applied first and the re-fire then replaces it.
 ## Net: N queued triggers -> exactly one apply of the newest data. Pure, so it is
 ## unit-tested without a live Service; the service owns the actual task start/apply.
 
 type RefreshCompletionAction* = enum
   rcaApply          ## the completed result is the newest — apply it
   rcaDropAndRefire  ## the completed result is stale — drop it and start a fresh task
+  rcaApplyAndRefire ## the completed result is stale but nothing was applied yet — apply it, then start a fresh task
 
 type RefreshGenerationState* = object
   desiredGen: int   ## bumped on every trigger; the newest generation wanted
@@ -44,13 +47,15 @@ proc requestRefresh*(self: var RefreshGenerationState): tuple[shouldStart: bool,
   return (shouldStart: true, gen: self.desiredGen)
 
 proc onCompletion*(self: var RefreshGenerationState,
-    completedGen: int): tuple[action: RefreshCompletionAction, gen: int] =
+    completedGen: int, applyStale: bool = false): tuple[action: RefreshCompletionAction, gen: int] =
   ## Called when a task completes. If newer triggers arrived while it ran, its
-  ## result is stale: drop it and re-fire once with the newest generation.
+  ## result is stale: drop it (or apply it, when `applyStale` — older data beats
+  ## none) and re-fire once with the newest generation.
   ## Otherwise it is the newest: apply it and go idle.
   if completedGen < self.desiredGen:
     self.inFlightState = true
     self.inFlightGen = self.desiredGen
-    return (action: rcaDropAndRefire, gen: self.desiredGen)
+    let action = if applyStale: rcaApplyAndRefire else: rcaDropAndRefire
+    return (action: action, gen: self.desiredGen)
   self.inFlightState = false
   return (action: rcaApply, gen: completedGen)
