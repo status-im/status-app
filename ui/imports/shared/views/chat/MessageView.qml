@@ -279,7 +279,7 @@ Loader {
         if (root.isChatBlocked && !d.addReactionAllowed)
             return
 
-        if (chatLogView?.moving)
+        if (d.listScrolling)
             return
 
         const openExpanded = options.openExpanded ?? false
@@ -625,6 +625,40 @@ Loader {
         property bool contextMenuHovered: false
         property var contextMenuHoverAnchor: null
         property bool messageHovered: false
+
+        // The list moves under the pointer - a drag, a flick, or a WindowedView
+        // wheel glide, which is no movement to Flickable. Hovering a message then
+        // is the scroll's doing, not the user's.
+        readonly property bool listScrolling: (root.chatLogView?.moving ?? false)
+                                              || (root.chatLogView?.wheelScrolling ?? false)
+
+        // Hover stays off a little past the end of a scroll. Wheel notches come
+        // as separate glides with short gaps between them, and so can quick
+        // flicks - re-enabled at once, the message under the pointer would
+        // highlight and pop up its menu in every gap.
+        readonly property int hoverResumeDelay: 300
+        readonly property bool hoverSuppressed: d.listScrolling || d.hoverResumeTimer.running
+
+        readonly property Timer hoverResumeTimer: Timer {
+            interval: d.hoverResumeDelay
+        }
+
+        // Off at once, back after the delay. A hover menu stays where it was
+        // opened while the content moves on, so it goes the moment scrolling
+        // starts rather than after the hover-exit delay. A menu the user opened
+        // themselves is left alone.
+        onListScrollingChanged: {
+            if (!d.listScrolling) {
+                d.hoverResumeTimer.restart()
+                return
+            }
+
+            d.hoverResumeTimer.stop()
+
+            if (d.contextMenuOpenedFromHover)
+                d.contextMenu?.close()
+        }
+
         readonly property var _contextMenuConn: Connections {
             target: root?.chatLogView ?? null
             function onMovementEnded() {
@@ -995,7 +1029,7 @@ Loader {
                 bottomPadding: showHeader && d.nextMessageHasHeader ? Theme.halfPadding : 2
                 disableHover: root.disableHover ||
                               (delegate.hideQuickActions && !d.addReactionAllowed) ||
-                              (root.chatLogView?.moving ?? false)
+                              d.hoverSuppressed
 
                 disableEmojis: !d.addReactionAllowed
                 hideMessage: d.hideMessage
