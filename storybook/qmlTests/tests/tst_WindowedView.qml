@@ -2714,6 +2714,179 @@ Item {
     }
 
     TestCase {
+        id: wheelTests
+
+        name: "WindowedView.Wheel"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            view.autoRequest = false
+            view.customWheelScrolling = true
+            view.wheelScrollPixels = 100
+            view.wheelScrollDuration = 60
+        }
+
+        function cleanup() {
+            view.customWheelScrolling = false
+            view.wheelScrollPixels = 160
+            view.wheelScrollDuration = 200
+            view.interactive = true
+            view.cancelFlick()
+            view.placeholder = null
+            view.placeholderHeight = 100
+            view.moreAvailableTop = true
+            view.moreAvailableBottom = true
+        }
+
+        function freshFill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        // Positive notches turn the wheel away, which scrolls up.
+        function wheel(notches) {
+            mouseWheel(view, view.width / 2, view.height / 2, 0, notches * 120)
+        }
+
+        function glided() {
+            tryVerify(() => !view.wheelScrolling, 2000, "the glide settled")
+        }
+
+        function test_aNotchScrollsTheSetDistance() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+
+            wheel(-1)
+            verify(view.wheelScrolling, "gliding rather than jumping")
+            glided()
+            compare(view.contentY, 1100, "one notch down")
+
+            wheel(1)
+            glided()
+            compare(view.contentY, 1000, "and one back up")
+        }
+
+        // Each notch adds onto where the glide was going, not where it got to:
+        // a fast spin goes as far as a slow one.
+        function test_notchesAddUp() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+
+            wheel(-1)
+            wheel(-1)
+            wheel(-1)
+            glided()
+            compare(view.contentY, 1300)
+        }
+
+        function test_theGlideStaysWithinTheContent() {
+            freshFill(40)
+            view.contentY = 50
+            waitForRendering(view)
+
+            wheel(3)
+            glided()
+            compare(view.contentY, 0, "stopped at the top")
+
+            const bottom = view.contentHeight - view.height
+            view.contentY = bottom - 50
+            waitForRendering(view)
+
+            wheel(-3)
+            glided()
+            compare(view.contentY, bottom, "and at the bottom")
+        }
+
+        // An animated contentY is no movement to Flickable, which would leave
+        // the scroll bar faded out for the whole scroll.
+        function test_theScrollBarShowsWhileGliding() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.wheelScrollDuration = 300
+
+            wheel(-1)
+            verify(scrollBar.active, "shown while gliding")
+            glided()
+            verify(!scrollBar.active, "and released once the glide settles")
+        }
+
+        // The view corrects its own position while the wheel glides - here the
+        // start band going away, which moves every row up by its height. The
+        // glide carries on from the corrected position, by the same amount.
+        function test_aCorrectionWhileGlidingIsKept() {
+            view.placeholder = skeletonPlaceholder
+            view.placeholderHeight = 100
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.wheelScrollDuration = 300
+
+            const before = topRow()
+
+            wheel(-2)
+            waitForRendering(view)
+            verify(view.wheelScrolling, "still gliding when the band goes")
+
+            view.moreAvailableTop = false
+            glided()
+
+            fuzzyCompare(offsetOf(before.value), before.offset - 200, 0.5,
+                         "the rows went where the wheel was taking them")
+        }
+
+        function test_aDeliberatePositionStopsTheGlide() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.wheelScrollDuration = 300
+
+            wheel(-3)
+            verify(view.wheelScrolling)
+
+            view.positionViewAtRow(5, WindowedView.PositionMode.Beginning)
+            verify(!view.wheelScrolling, "the jump replaces the glide")
+
+            waitForRendering(view)
+            waitForRendering(view)
+            fuzzyCompare(view.viewportOffsetToRow(5), 0, 0.5, "and stays where it put the view")
+        }
+
+        // Unset, the wheel is Flickable's, which scrolls by its own rules.
+        function test_theDefaultLeavesTheWheelToFlickable() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.customWheelScrolling = false
+
+            wheel(-1)
+            verify(!view.wheelScrolling, "no glide of its own")
+            tryVerify(() => view.contentY > 1000, 2000, "Flickable scrolled instead")
+        }
+
+        function test_aViewThatIsNotInteractiveIgnoresTheWheel() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.interactive = false
+
+            wheel(-1)
+            verify(!view.wheelScrolling)
+            waitForRendering(view)
+            compare(view.contentY, 1000)
+        }
+    }
+
+    TestCase {
         id: autoRequestTests
 
         name: "WindowedView.AutoRequest"

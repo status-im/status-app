@@ -144,6 +144,31 @@ Flickable {
     // top-down list a short model growing past the viewport should stay put.
     property bool stickToBottom: false
 
+    // Whether the view handles the mouse wheel itself instead of leaving it to
+    // Flickable. Flickable's own handling moves a fixed wheelScrollLines * 24 px
+    // per notch over a 300 ms curve restarted on every notch - so a fast spin
+    // barely goes further than a slow one - and ignores flickDeceleration and
+    // maximumFlickVelocity, which apply to drag flicks.
+    //
+    // Set, each notch scrolls wheelScrollPixels, adding onto where the previous
+    // ones were taking the view, and the view glides there over
+    // wheelScrollDuration. Mouse wheels only: a touchpad delivers pixel deltas
+    // in scroll phases, and Flickable gives those their momentum itself.
+    property bool customWheelScrolling: false
+
+    // Distance, in px, one notch of a mouse wheel scrolls with
+    // customWheelScrolling set (120 units of angleDelta; a high resolution
+    // wheel's smaller deltas scroll their share).
+    property real wheelScrollPixels: 160
+
+    // Short, so the view tracks the wheel instead of coasting.
+    property int wheelScrollDuration: 200
+
+    // A wheel scroll is gliding to its destination. It is no movement as far as
+    // Flickable is concerned - moving stays false and no movementEnded() follows
+    // - so this is what an owner watches for the scroll to settle.
+    readonly property bool wheelScrolling: wheelScrollAnimation.running
+
     enum VerticalLayoutDirection { TopToBottom, BottomToTop }
 
     // Which end of the view a request, an answer or a signal is about. The
@@ -313,6 +338,7 @@ Flickable {
     // placeholder band, so an owner who means the row itself moves the window
     // there first.
     function positionViewAtBeginning() {
+        d.stopWheelScroll()
         d.cancelPosition()
         d.releaseAnchor()
         d.releaseHolds()
@@ -320,6 +346,7 @@ Flickable {
     }
 
     function positionViewAtEnd() {
+        d.stopWheelScroll()
         d.cancelPosition()
         d.releaseAnchor()
         d.releaseHolds()
@@ -485,6 +512,73 @@ Flickable {
         // Auto-request ///////////////////////////////////////////////////
         //
         // Holding the scroll bar defers a request.
+        // Mouse wheel ////////////////////////////////////////////////////
+        //
+        // One notch's worth of angleDelta.y, scrolling up for a positive value -
+        // the screen's up, in either layout direction.
+        function wheelScroll(notches) {
+            if (notches === 0)
+                return
+
+            root.cancelFlick()
+
+            // Onto the pending destination rather than the current position, so
+            // notches add up while the view is still gliding.
+            const origin = wheelScrollAnimation.running ? wheelScrollAnimation.to
+                                                        : root.contentY
+            const target = d.clampedContentY(origin - notches * root.wheelScrollPixels)
+
+            if (target === root.contentY)
+                return
+
+            d.setScrollBarActive(true)
+            d.glideTo(target)
+        }
+
+        function clampedContentY(y) {
+            return Math.max(0, Math.min(Math.max(0, root.contentHeight - root.height), y))
+        }
+
+        function glideTo(target) {
+            wheelScrollAnimation.stop()
+            wheelScrollAnimation.from = root.contentY
+            wheelScrollAnimation.to = target
+            wheelScrollAnimation.start()
+        }
+
+        // The view corrected its own position while the wheel was gliding - the
+        // anchor kept a row still as a batch landed, a band appeared or went.
+        // The animation writes contentY from a destination captured before
+        // that, so on its next tick it would undo the correction: move the
+        // destination by as much, and carry on from where the view now is.
+        function retargetWheelScroll(delta) {
+            d.glideTo(d.clampedContentY(wheelScrollAnimation.to + delta))
+        }
+
+        function stopWheelScroll() {
+            if (!wheelScrollAnimation.running)
+                return
+
+            wheelScrollAnimation.stop()
+            d.setScrollBarActive(false)
+        }
+
+        // An animated contentY is no movement to Flickable, so the attached
+        // scroll bar would stay inactive - faded out - for the whole scroll.
+        // The style still owns the fade-out delay afterwards.
+        function setScrollBarActive(active) {
+            const bar = root.ScrollBar.vertical
+
+            if (!bar)
+                return
+
+            // whatever else owns the state keeps it: a drag, a hover, a flick
+            if (!active && (bar.pressed || bar.hovered || root.movingVertically))
+                return
+
+            bar.active = active
+        }
+
         readonly property bool scrollBarHeld: {
             const bar = root.ScrollBar.vertical
 
@@ -960,6 +1054,9 @@ Flickable {
         function requestPosition(row, mode, offset) {
             if (row < 0 || row >= root.rowCount)
                 return false
+
+            // a deliberate position replaces wherever the wheel was going
+            d.stopWheelScroll()
 
             // a deliberate position is a new place to read from
             d.releaseHolds()
@@ -1857,6 +1954,29 @@ Flickable {
         }
     }
 
+    // Replaces Flickable's own wheel handling - see customWheelScrolling. A
+    // pointer handler is offered the event before the item itself, and this one
+    // blocks it, so the built-in path never runs while it is enabled. Disabled,
+    // it declines every event and Flickable scrolls exactly as it always did.
+    WheelHandler {
+        enabled: root.interactive && root.customWheelScrolling
+
+        onWheel: event => d.wheelScroll(event.angleDelta.y / 120)
+    }
+
+    NumberAnimation {
+        id: wheelScrollAnimation
+
+        target: root
+        property: "contentY"
+        duration: root.wheelScrollDuration
+        easing.type: Easing.OutQuad
+
+        // On natural completion only - a notch restarting it mid-glide does not
+        // count - so the scroll bar is released once the scroll settles.
+        onFinished: d.setScrollBarActive(false)
+    }
+
     // A restart is only good for the flick it restarted. A Connections rather
     // than a handler on the root, which an owner may set for itself.
     Connections {
@@ -1875,6 +1995,8 @@ Flickable {
 
         if (!d.applyingPosition)
             d.userMoved(delta)
+        else if (delta !== 0 && wheelScrollAnimation.running)
+            d.retargetWheelScroll(delta)
 
         d.applyPlaceholder()
     }
