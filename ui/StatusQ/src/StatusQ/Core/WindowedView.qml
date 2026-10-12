@@ -1055,7 +1055,10 @@ Flickable {
             return true
         }
 
-        function restorePosition() {
+        // mayRelease: false from the anchor's own y change, which can arrive in
+        // the middle of the Column's layout - the rows already placed, the
+        // Column's height not updated yet - see the release below.
+        function restorePosition(mayRelease = true) {
             if (d.applyPendingPosition())
                 return
 
@@ -1088,7 +1091,16 @@ Flickable {
             // sits at the bottom without being stuck to it and the next row to
             // arrive leaves it behind. Not while a slide is in flight: there the
             // anchor is the guarantee, and the far end has yet to be trimmed.
-            if (root.stickToBottom && !root.busy && target >= bottom
+            //
+            // Not on a caller's say-so either: mid-layout, bottomY() still reads
+            // the Column's old height, so a correct target past that stale
+            // bottom looks like the bottom reached. Released then, the anchor
+            // could not take the clamp back once the height catches up, and
+            // applyContentHeight() would pin the view to the new bottom - the
+            // reader thrown to the newest delegate by a page loaded above them.
+            // The Column's height change follows in the same turn and decides
+            // with the real bottom.
+            if (mayRelease && root.stickToBottom && !root.busy && target >= bottom
                     && root.contentY >= bottom - 0.5)
                 d.releaseAnchor()
         }
@@ -1835,12 +1847,13 @@ Flickable {
 
     // The whole point of the held anchor: a slide moves the surviving rows,
     // and so does the deferred layout of a recycled row a frame later. Both
-    // arrive here, and both are corrected the same way.
+    // arrive here, and both are corrected the same way - but without letting
+    // go of the anchor, since this can run before the Column has its new height.
     Connections {
         target: d.anchorItem
 
         function onYChanged() {
-            d.restorePosition()
+            d.restorePosition(false)
         }
     }
 

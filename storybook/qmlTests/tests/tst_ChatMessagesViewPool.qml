@@ -639,6 +639,40 @@ Item {
             verify(Math.abs(after.offset - top.offset) < 1)
         }
 
+        // A short chat: the first page of older history is requested while the
+        // reader is still close to the newest message, closer than the page is
+        // tall. It must land above them, not throw them to the newest message.
+        function test_theFirstPageOfAShortChatLandsAboveTheReader() {
+            prewarmedPool()
+            fill(messagesA, "a", 20)
+            moduleA.historyLeft = 100
+            moduleA.answerLater = true
+
+            const view = openView()
+            const lv = view.chatLogView
+            tryVerify(() => !lv.busy && lv.atBottom, 5000, "opened at the newest message")
+            waitForRendering(lv)
+
+            // scrolled up, the way a wheel does, until the page is asked for
+            for (let i = 0; i < 40 && !moduleA.answerOwed; ++i) {
+                lv.contentY = Math.max(lv.originY, lv.contentY - 60)
+                waitForRendering(lv)
+            }
+            verify(moduleA.answerOwed, "the first page was asked for")
+
+            const top = messageIdAtViewportTop(view)
+            verify(!!top)
+
+            moduleA.answer()
+            tryVerify(() => !lv.busy && lv.rowForKey("a-29") >= 0, 5000, "the page arrived")
+            waitForRendering(lv)
+
+            verify(!lv.atBottom, "not thrown to the newest message")
+            const after = messageIdAtViewportTop(view)
+            compare(after.key, top.key, "the reader is still on their message")
+            verify(Math.abs(after.offset - top.offset) < 1)
+        }
+
         // Reaching the top fetches pages only until they have filled the reach
         // above the reader, who stays where they were - not a chain of fetches
         // running to the chat's first message.

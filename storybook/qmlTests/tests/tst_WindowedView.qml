@@ -5347,6 +5347,42 @@ Item {
             owner.removeOnReveal = true
         }
 
+        // The chat case of the request above: stuck to the bottom, and reading
+        // closer to it than the batch is tall. Placing the batch above moves
+        // the held row down by the batch's height, and the correction for it
+        // runs in the middle of the layout, while the bottom still reads as
+        // the content's old end - the correct position looked like the bottom
+        // reached, the anchor was let go, and the view pinned to the new
+        // bottom: the reader thrown to the newest row by a page loaded above.
+        function test_aBatchAboveDoesNotThrowAStuckReaderToTheBottom() {
+            view.stickToBottom = true
+            fill(30)
+
+            view.contentY = view.contentHeight - view.height - 150
+            waitForRendering(view)
+            verify(!view.atBottom, "reading just above the newest row")
+
+            const before = topRow()
+            const heightBefore = view.contentHeight
+
+            provider.delay = 30
+            owner.removeOnReveal = false
+
+            verify(view.requestMore(WindowedView.Edge.Top), "the request was taken")
+            tryVerify(() => settled(40), 8000, "the batch was revealed")
+            verify(view.contentHeight - heightBefore > 150,
+                   "the batch is taller than the distance to the bottom, as it must "
+                   + "be for this to matter")
+
+            const offsetAfter = offsetOf(before.value)
+
+            verify(!view.atBottom, "not thrown to the bottom")
+            verify(!isNaN(offsetAfter), "the row the user was reading survived")
+            fuzzyCompare(offsetAfter, before.offset, 0.5, "and did not move")
+
+            owner.removeOnReveal = true
+        }
+
         function test_aRemovalTranslates() {
             fill(20)
 
