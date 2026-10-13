@@ -365,7 +365,7 @@ QtObject:
 
   proc applyChannelDelta(self: CommunityRosterModel, delta: ChannelMembersDelta) =
     # a channel absent from the snapshot that gains members has just been gated;
-    # one left without members is no longer gated
+    # one left without members stays gated (it shows nobody) until a new snapshot
     if not self.channels.hasKey(delta.chatId) and delta.added.len == 0:
       return
     var roles = self.channels.getOrDefault(delta.chatId)
@@ -376,10 +376,7 @@ QtObject:
     for member in delta.modified:
       if roles.hasKey(member.key):
         roles[member.key] = member.role
-    if roles.len == 0:
-      self.channels.del(delta.chatId)
-    else:
-      self.channels[delta.chatId] = roles
+    self.channels[delta.chatId] = roles
     self.emitChannelMembersChanged(delta.chatId)
 
   proc applyDelta*(self: CommunityRosterModel, delta: RosterDelta) =

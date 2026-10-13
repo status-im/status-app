@@ -191,9 +191,10 @@ suite "community roster model":
     model.applyDelta(RosterDelta(clock: 12, channels: @[
       ChannelMembersDelta(chatId: "newly", added: @[ChannelMember(key: raw(keyA))])]))
     check model.isGatedChannel("newly")
-    # a channel that stops being gated
+    # every member leaving a gated channel keeps it gated, with nobody in it
     model.applyDelta(RosterDelta(clock: 13, channels: @[ChannelMembersDelta(chatId: "newly", removed: @[raw(keyA)])]))
-    check not model.isGatedChannel("newly")
+    check model.isGatedChannel("newly")
+    check model.channelMembers("newly").len == 0
     check parseJson(model.getChannelMemberKeys("gated")) == %*[keyB]
 
   test "contact and online status changes refresh only that row":
