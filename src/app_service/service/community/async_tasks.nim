@@ -320,3 +320,27 @@ proc asyncCollapseCategoryTask(argEncoded: string) {.gcsafe, nimcall.} =
     arg.finish(%* {
       "error": e.msg,
     })
+
+type
+  AsyncLoadCommunityRosterTaskArg = ref object of QObjectTaskArg
+    communityId: string
+    generation: int
+
+  CommunityRosterLoadResult {.acyclic.} = ref object of RootObj
+    communityId: string
+    generation: int
+    snapshot: RosterSnapshot
+    error: string
+
+proc asyncLoadCommunityRosterTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncLoadCommunityRosterTaskArg](argEncoded)
+  var res = CommunityRosterLoadResult(communityId: arg.communityId, generation: arg.generation)
+  try:
+    let response = status_go.getCommunityMembers(arg.communityId)
+    if not response.error.isNil:
+      res.error = response.error.message
+    else:
+      res.snapshot = parseRosterSnapshot(response.result)
+  except Exception as e:
+    res.error = e.msg
+  arg.finishTyped(res)

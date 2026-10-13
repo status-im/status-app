@@ -5,7 +5,7 @@ import base
 import app_service/service/message/dto/[message, pinned_message_update, reaction, removed_message, thread]
 import app_service/service/chat/dto/[chat]
 import app_service/service/bookmarks/dto/[bookmark]
-import app_service/service/community/dto/[community]
+import app_service/service/community/dto/[community, roster]
 import app_service/service/activity_center/dto/[notification]
 import app_service/service/contacts/dto/[contacts, status_update]
 import app_service/service/devices/dto/[installation]
@@ -27,6 +27,7 @@ type MessageSignal* = ref object of Signal
   emojiReactions*: seq[ReactionDto]
   communities*: seq[CommunityDto]
   communitiesSettings*: seq[CommunitySettingsDto]
+  communityRosterDeltas*: seq[RosterDelta]
   membershipRequests*: seq[CommunityMembershipRequestDto]
   activityCenterNotifications*: seq[ActivityCenterNotificationDto]
   statusUpdates*: seq[StatusUpdateDto]
@@ -126,6 +127,9 @@ proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
   if e.contains("communitiesSettings"):
     for jsonCommunitySettings in e["communitiesSettings"]:
       signal.communitiesSettings.add(jsonCommunitySettings.toCommunitySettingsDto())
+
+  if e.contains("communityChanges"):
+    signal.communityRosterDeltas = parseRosterDeltas(e["communityChanges"])
 
   if e.contains("requestsToJoinCommunity"):
     for jsonCommunity in e["requestsToJoinCommunity"]:
