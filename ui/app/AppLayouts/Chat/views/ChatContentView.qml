@@ -142,6 +142,7 @@ ColumnLayout {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             threadsFeatureEnabled: root.threadsFeatureEnabled
+            isThreadView: !!root.messageStore.threadId
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
             extraLeftPadding: root.extraLeftPadding

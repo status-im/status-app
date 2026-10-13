@@ -81,6 +81,15 @@ Item {
             return false
         }
 
+        function findAction(menu, objectName) {
+            for (let i = 0; i < menu.count; ++i) {
+                const action = menu.actionAt(i)
+                if (action && action.objectName === objectName)
+                    return action
+            }
+            return null
+        }
+
         function singleRowAction(menu, objectName) {
             const row = findChild(menu, "messageContextMenu_singleRowActions")
             verify(!!row)
@@ -152,6 +161,33 @@ Item {
             verify(texts.indexOf(qsTr("Copy")) < 0)
 
             menu.close()
+        }
+
+        function test_threadActionReflectsThreadState() {
+            const createMenuItem = createMenu({
+                openExpanded: true,
+                threadsFeatureEnabled: true
+            })
+            createMenuItem.open()
+
+            const createAction = findAction(createMenuItem, "messageContextMenu_openThread")
+            verify(!!createAction)
+            verify(createAction.enabled)
+            compare(createAction.text, qsTr("Create Thread"))
+            createMenuItem.close()
+
+            const existingThreadMenu = createMenu({
+                openExpanded: true,
+                threadsFeatureEnabled: true,
+                hasThread: true
+            })
+            existingThreadMenu.open()
+
+            const openAction = findAction(existingThreadMenu, "messageContextMenu_openThread")
+            verify(!!openAction)
+            verify(!openAction.enabled)
+            verify(enabledActionTexts(existingThreadMenu).indexOf(qsTr("Create Thread")) < 0)
+            existingThreadMenu.close()
         }
 
         function test_expandedReactionsUseAvailableWidth() {

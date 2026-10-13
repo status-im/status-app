@@ -11638,10 +11638,6 @@ selhalo</translation>
         <translation>Odpovědět</translation>
     </message>
     <message>
-        <source>Open Thread</source>
-        <translation>Otevřít vlákno</translation>
-    </message>
-    <message>
         <source>Create Thread</source>
         <translation>Vytvořit vlákno</translation>
     </message>

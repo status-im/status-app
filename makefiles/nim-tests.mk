@@ -28,6 +28,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	signal_handler_test \
 	swap_key_harvest_bench \
 	swap_modal_instantiation_bench \
+	thread_navigation_test \
 	typed_completion_test \
 	url_scheme_event_test \
 	wallet_connect_controller_test
@@ -35,6 +36,10 @@ NIM_TESTS_LINK_STATUSQ := \
 NIM_STATUSQ_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_LINK_STATUSQ))
 $(NIM_STATUSQ_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
 $(NIM_STATUSQ_TARGETS): | statusq
+
+# The messages module also imports the existing keycard service bindings.
+nim-test-run/test/nim/thread_navigation_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
+nim-test-run/test/nim/thread_navigation_test.nim: | $(STATUSKEYCARD_QT_LIB)
 
 # Model-spy tests call inspection accessors gated behind
 # `when defined(testing) or defined(QT_MODEL_SPY)` or assert on the granular

@@ -27,9 +27,6 @@ type
     msgCursor: string
     limit: int
 
-  AsyncFetchChatThreadsTaskArg = ref object of QObjectTaskArg
-    chatId: string
-
   AsyncFetchChatThreadsForChatsTaskArg = ref object of QObjectTaskArg
     chatIds: seq[string]
 
@@ -46,9 +43,13 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     }
 
     # handle messages
-    var messagesArr: JsonNode
+    var messagesArr: JsonNode = newJArray()
     var messagesCursor: JsonNode
-    let msgsResponse = status_go.fetchMessages(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
+    let includeThreadSummaries = THREADS_ENABLED and arg.threadId.len == 0
+    let msgsResponse = if includeThreadSummaries:
+        status_go.fetchMessagesWithThreadSummaries(arg.chatId, arg.msgCursor, arg.limit)
+      else:
+        status_go.fetchMessages(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
 
     if not msgsResponse.error.isNil:
       raise newException(CatchableError, msgsResponse.error.message)
@@ -58,8 +59,28 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     responseJson["messages"] = messagesArr
     responseJson["messagesCursor"] = messagesCursor
 
+    var threadsArr: JsonNode = newJArray()
+    if includeThreadSummaries:
+      var summariesError: string
+      if msgsResponse.result.getProp("threadSummariesError", summariesError) and summariesError.len > 0:
+        warn "failed to fetch thread summaries", chatId = arg.chatId, error = summariesError
+      else:
+        var fetchedThreads: JsonNode
+        if msgsResponse.result.getProp("threads", fetchedThreads) and fetchedThreads.kind == JArray:
+          threadsArr = fetchedThreads
+        else:
+          warn "invalid thread summaries response", chatId = arg.chatId
+    responseJson["threads"] = threadsArr
+
     # handle reactions
-    let rResponse = status_go.fetchReactions(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
+    var messageIds: seq[string]
+    if includeThreadSummaries:
+      for message in messagesArr.getElems():
+        messageIds.add(message["id"].getStr())
+    let rResponse = if includeThreadSummaries:
+        status_go.fetchReactionsByMessageIds(arg.chatId, messageIds)
+      else:
+        status_go.fetchReactions(arg.chatId, arg.threadId, arg.msgCursor, arg.limit)
     if not rResponse.error.isNil:
       raise newException(CatchableError, rResponse.error.message)
     responseJson["reactions"] = rResponse.result
@@ -70,30 +91,6 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
     arg.finish(%* {
       "chatId": arg.chatId,
       "threadId": arg.threadId,
-      "error": e.msg,
-    })
-
-proc asyncFetchChatThreadsTask(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[AsyncFetchChatThreadsTaskArg](argEncoded)
-  try:
-    let response = status_go_chat.fetchChatThreads(arg.chatId)
-    if not response.error.isNil:
-      raise newException(CatchableError, response.error.message)
-
-    var responseJson = %*{
-      "chatId": arg.chatId,
-      "threads": %*[],
-      "error": "",
-    }
-
-    var threadsArr: JsonNode
-    if response.result.getProp("threads", threadsArr):
-      responseJson["threads"] = threadsArr
-
-    arg.finish(responseJson)
-  except Exception as e:
-    arg.finish(%* {
-      "chatId": arg.chatId,
       "error": e.msg,
     })
 
@@ -397,9 +394,13 @@ proc asyncMarkAllMessagesReadTask(argEncoded: string) {.gcsafe, nimcall.} =
     var activityCenterNotifications: JsonNode = newJObject()
     discard rpcResponse.result.getProp("activityCenterNotifications", activityCenterNotifications)
 
+    var threads: JsonNode = newJArray()
+    discard rpcResponse.result.getProp("threads", threads)
+
     arg.finish(%*{
       "chatId": arg.chatId,
       "threadId": arg.threadId,
+      "threads": threads,
       "activityCenterNotifications": activityCenterNotifications,
       "error": rpcResponse.error,
     })

@@ -79,6 +79,7 @@ Control {
     property bool linkAddressAndEnsName
     property string disabledTooltipText
     readonly property string selectedText: d.selectedText
+    property Component messageAttachmentComponent
 
     // When true (default), the text selection is dropped when the message text loses active focus.
     // Set to false to keep the selection while focus temporarily moves elsewhere (e.g. a context menu).
@@ -391,6 +392,13 @@ Control {
                             onAddEmojiClicked: (sender, mouse) => root.addReactionClicked(sender, mouse)
                             onToggleReaction: (hexcode) => root.toggleReactionClicked(hexcode)
                         }
+                    }
+
+                    Loader {
+                        Layout.fillWidth: true
+                        active: !!root.messageAttachmentComponent
+                        visible: active
+                        sourceComponent: root.messageAttachmentComponent
                     }
                 }
             }

@@ -23,6 +23,7 @@ import StatusQ.Controls
 import StatusQ.Components
 
 import AppLayouts.Chat.stores as ChatStores
+import AppLayouts.Chat.controls
 import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Profile.helpers
 
@@ -151,6 +152,19 @@ Loader {
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
     property bool hasThread: false
+    property bool isThreadView: false
+    property string threadId: ""
+    property string threadOriginalMessageId: ""
+    property string threadTitle: ""
+    property int threadMessagesCount: 0
+    property int threadNotificationCount: 0
+    property var threadParticipantsModel: null
+    property int threadParticipantsCount: 0
+    property string threadLastMessageSenderName: ""
+    property string threadLastMessageSenderImage: ""
+    property int threadLastMessageSenderColorId: 0
+    property string threadLastMessageText: ""
+    property double threadLastMessageTimestamp: 0
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -445,6 +459,8 @@ Loader {
         readonly property bool addReactionAllowed: !root.isInPinnedPopup &&
                                                    root.chatContentModule.chatDetails.canPostReactions &&
                                                    !root.isViewMemberMessagesePopup
+        readonly property bool showThreadCard: root.threadsFeatureEnabled && root.hasThread && !root.isThreadView
+                                               && !root.isInPinnedPopup && !root.isViewMemberMessagesePopup
 
         readonly property bool canPost: root.chatContentModule.chatDetails.canPost
         readonly property bool canView: canPost || root.chatContentModule.chatDetails.canView
@@ -945,6 +961,7 @@ Loader {
                                             : d.convertOutgoingStatus(messageOutgoingStatus)
 
                 resendError: root.resendError
+                messageAttachmentComponent: d.showThreadCard ? threadCardComponent : null
                 reactionsModel: root.reactionsModel
                 maxEmojiReactionsPerMessage: Constants.maxEmojiReactionsPerMessage
                 linkPreviewModel: root.linkPreviewModel
@@ -1241,6 +1258,37 @@ Loader {
                         onSpectateCommunityRequested: (communityId) => {
                             root.spectateCommunityRequested(communityId)
                         }
+                    }
+                }
+            }
+
+            Component {
+                id: threadCardComponent
+
+                Item {
+                    implicitHeight: threadCard.implicitHeight
+
+                    ThreadCard {
+                        id: threadCard
+
+                        width: Math.min(maximumWidth, parent.width)
+                        threadId: root.threadId || root.messageId
+                        originalMessageId: root.threadOriginalMessageId || root.messageId
+                        title: root.threadTitle
+                        messagesCount: root.threadMessagesCount
+                        notificationCount: root.threadNotificationCount
+                        participantsPreviewModel: root.threadParticipantsModel
+                        participantsCount: root.threadParticipantsCount
+                        lastMessage: ({
+                            sender: {
+                                name: root.threadLastMessageSenderName,
+                                image: root.threadLastMessageSenderImage,
+                                colorId: root.threadLastMessageSenderColorId
+                            },
+                            text: root.threadLastMessageText,
+                            timestamp: root.threadLastMessageTimestamp
+                        })
+                        onClicked: (threadId, originalMessageId) => root.openThread(originalMessageId)
                     }
                 }
             }

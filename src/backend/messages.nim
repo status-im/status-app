@@ -8,6 +8,11 @@ proc fetchMessages*(chatId: string, threadId: string = "", cursorVal: string, li
   let payload = %* [chatId, threadId, cursorVal, limit]
   result = callPrivateRPC("chatMessagesV2".prefix, payload)
 
+proc fetchMessagesWithThreadSummaries*(chatId, cursorVal: string, limit: int,
+    participantsPreviewLimit: int = 6): RpcResponse[JsonNode] =
+  let payload = %* [chatId, cursorVal, limit, participantsPreviewLimit]
+  result = callPrivateRPC("chatMessagesWithThreadSummaries".prefix, payload)
+
 proc fetchPinnedMessages*(chatId: string, cursorVal: string, limit: int): RpcResponse[JsonNode] =
   let payload = %* [chatId, cursorVal, limit]
   result = callPrivateRPC("chatPinnedMessages".prefix, payload)
@@ -15,6 +20,10 @@ proc fetchPinnedMessages*(chatId: string, cursorVal: string, limit: int): RpcRes
 proc fetchReactions*(chatId: string, threadId: string = "", cursorVal: string, limit: int): RpcResponse[JsonNode] =
   let payload = %* [chatId, threadId, cursorVal, limit]
   result = callPrivateRPC("emojiReactionsByChatIDV2".prefix, payload)
+
+proc fetchReactionsByMessageIds*(chatId: string, messageIds: seq[string]): RpcResponse[JsonNode] =
+  let payload = %* [chatId, messageIds]
+  result = callPrivateRPC("emojiReactionsByChatIDMessageIDs".prefix, payload)
 
 proc addReaction*(chatId: string, messageId: string, emoji: string): RpcResponse[JsonNode] =
   let payload = %* [chatId, messageId, emoji]
