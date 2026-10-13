@@ -323,7 +323,7 @@ QtObject {
     function openInviteFriendsToCommunityPopup(community, communitySectionModule, cb) {
         openPopup(inviteFriendsToCommunityPopup, {
             community: community,
-            membersModel: communitySectionModule.membersModel,
+            membersModel: communitySectionModule.rosterModel,
             shareCommunityToUsers: (pubkeysStr, inviteMessage) => {
                 communitySectionModule.shareCommunityToUsers(pubkeysStr, inviteMessage)
             }
@@ -336,7 +336,7 @@ QtObject {
 
         openPopup(inviteFriendsToCommunityPopup, {
             community: communityData,
-            membersModel: communitySectionModuleData.membersModel,
+            membersModel: communitySectionModuleData.rosterModel,
             shareCommunityToUsers: (pubkeysStr, inviteMessage) => {
                 communitySectionModuleData.shareCommunityToUsers(pubkeysStr, inviteMessage)
             }
@@ -672,7 +672,15 @@ QtObject {
             id: inviteFriendsToCommunityPopup
 
             InviteFriendsToCommunityPopup {
+                id: invitePopup
+
                 contactsModel: root.mutualContactsModel
+
+                // marks the friends who are already members
+                readonly property RosterHolder rosterHolder: RosterHolder {
+                    communitiesStore: root.communitiesStore
+                    communityId: invitePopup.community?.id ?? ""
+                }
 
                 onClosed: destroy()
             }
@@ -1555,8 +1563,17 @@ QtObject {
         Component {
             id: communityMemberMessagesPopup
             CommunityMemberMessagesPopup {
+                id: memberMessagesPopup
+
                 sharedRootStore: root.sharedRootStore
                 utilsStore: root.utilsStore
+
+                // mention names in the messages come from the roster
+                readonly property RosterHolder rosterHolder: RosterHolder {
+                    communitiesStore: root.communitiesStore
+                    communityId: memberMessagesPopup.rootStore?.communityId ?? ""
+                }
+
                 onClosed: destroy()
             }
         },

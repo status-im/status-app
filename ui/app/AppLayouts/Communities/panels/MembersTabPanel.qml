@@ -283,7 +283,7 @@ Item {
                     profileType, contactType,
                     pubKey: model.pubKey,
                     compressedPubKey: model.compressedPubKey,
-                    emojiHash: JSON.parse(model.emojiHash),
+                    emojiHash: JSON.parse(Utils.getEmojiHashAsJson(model.pubKey)),
                     colorId: model.colorId,
                     displayName: memberItem.title || model.displayName,
                     userIcon: model.icon,

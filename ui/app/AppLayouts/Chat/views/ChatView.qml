@@ -20,6 +20,7 @@ import StatusQ.Layout
 import StatusQ.Popups
 
 import AppLayouts.Communities.controls
+import AppLayouts.Communities.helpers
 import AppLayouts.Communities.panels
 import AppLayouts.Communities.stores as CommunitiesStores
 import AppLayouts.Communities.views
@@ -170,9 +171,25 @@ Item {
     property bool navToMsgDetails: false
     property bool navToMsgList: false
 
+    // The community roster is loaded only while a members view needs it: the
+    // members panel, and "@" mentions while the message input has focus
+    RosterHolder {
+        communitiesStore: root.communitiesStore
+        communityId: d.communityId
+        active: rightPanelLoader.active
+    }
+
+    RosterHolder {
+        communitiesStore: root.communitiesStore
+        communityId: d.communityId
+        active: centerPanelLoader.item?.chatInputFocused ?? false
+    }
+
     QtObject {
         id: d
         objectName: "chatViewInternal"
+
+        readonly property string communityId: root.rootStore.isChatSectionModule ? "" : root.rootStore.communityId
 
         readonly property bool shouldLoadCenterPanel: !root.isPortraitMode ||
                                                       centerPanelRequested ||

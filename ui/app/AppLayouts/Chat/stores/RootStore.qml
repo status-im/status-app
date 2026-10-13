@@ -77,9 +77,6 @@ QtObject {
 
     // Unique instance for all the chat / channel related low-level UI components
     readonly property UsersStore usersStore: UsersStore {
-        property var chatDetails: !!root.activeChatContentModule ? root.activeChatContentModule.chatDetails : null
-
-        isFullCommunityMembers: (chatDetails?.belongsToCommunity && !chatDetails?.requiresPermissions) || false
         usersModule: !!root.activeChatContentModule ? root.activeChatContentModule.usersModule : null
         chatCommunitySectionModule: root.chatCommunitySectionModule
     }

@@ -8,11 +8,8 @@ import StatusQ.Core.Utils as SQUtils
 import utils
 
 /*
- Perf regression guard: chat-switch profile showed the members panel fully
- re-sorting the community members model in QML (SFPM RoleSorter + StringSorter,
- 881ms on a low-end device). The members model now arrives pre-sorted from Nim
- (online first, then name), so the panel must render rows in source order and
- never re-sort them.
+ The members model comes in roster (unsorted) order; the panel sorts it online
+ first, then by name, with SFPM role sorters only.
 */
 Item {
     id: root
@@ -42,7 +39,6 @@ Item {
                        memberRole: 0,
                        contactRequest: 0,
                        trustStatus: 0,
-                       emojiHash: "[]",
                        icon: "",
                        colorId: 1,
                        onlineStatus: onlineStatus
@@ -86,19 +82,31 @@ Item {
             return listView
         }
 
-        // The model owns the order (sorted in Nim): rows must come out exactly
-        // as fed in, deliberately non-alphabetical here — a QML sorter sneaking
-        // back in would flip this to ["Alice", "bob", "charlie"].
-        function test_panelShowsRowsInModelOrder() {
+        function rowNames(listView) {
+            const order = []
+            for (let i = 0; i < listView.count; i++)
+                order.push(SQUtils.ModelUtils.get(listView.model, i, "preferredDisplayName"))
+            return order
+        }
+
+        function test_panelSortsOnlineFirstThenByName() {
+            const panel = createTemporaryObject(panelComponent, root)
+            verify(!!panel)
+            const listView = memberListView(panel)
+            tryCompare(listView, "count", 3)
+            compare(rowNames(listView), ["Alice", "bob", "charlie"])
+        }
+
+        function test_onlineStatusChangeReordersRows() {
             const panel = createTemporaryObject(panelComponent, root)
             verify(!!panel)
             const listView = memberListView(panel)
             tryCompare(listView, "count", 3)
 
-            const order = []
-            for (let i = 0; i < listView.count; i++)
-                order.push(SQUtils.ModelUtils.get(listView.model, i, "preferredDisplayName"))
-            compare(order, ["charlie", "Alice", "bob"])
+            membersModel.setProperty(0, "onlineStatus", Constants.onlineStatus.online)
+            compare(rowNames(listView), ["Alice", "bob", "charlie"])
+            membersModel.setProperty(1, "onlineStatus", Constants.onlineStatus.inactive)
+            compare(rowNames(listView), ["bob", "charlie", "Alice"])
         }
 
         function test_visiblePanelShowsRowsImmediately() {

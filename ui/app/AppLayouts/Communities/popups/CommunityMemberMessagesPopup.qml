@@ -34,7 +34,7 @@ StatusDialog {
     // (a message may mention somebody who is not a member); without it, "@0x…" mentions
     // render as raw keys.
     readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
-        chatUsersModel: root.chatCommunitySectionModule?.membersModel ?? null
+        chatUsersModel: root.chatCommunitySectionModule?.rosterModel ?? null
         contactsModel: root.rootStore?.contactsModel ?? null
         selfPubKey: root.rootStore?.myPublicKey() ?? ""
         selfDisplayName: root.rootStore?.name ?? ""

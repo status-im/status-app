@@ -15,6 +15,7 @@ import AppLayouts.stores as AppStores
 import AppLayouts.stores.Messaging as MessagingStores
 import AppLayouts.Communities.stores
 import AppLayouts.Communities.panels
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.panels
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Profile.stores as ProfileStores
@@ -221,6 +222,14 @@ StatusSectionLoader {
         root.navToMsgDetails: root.item.navToMsgDetails || root.rootStore.navToMsgDetails
     }
 
+    // The active channel's members, from the community roster
+    ChannelMembersAdaptor {
+        id: channelMembers
+
+        rosterModel: d.chatRootStore?.usersStore.rosterModel ?? null
+        chatId: d.chatRootStore?.activeChatContentModule?.chatDetails.id ?? ""
+    }
+
     Component {
         id: chatRootStoreComp
 
@@ -337,7 +346,7 @@ StatusSectionLoader {
             mutualContactsModel:            Qt.binding(() => root.contactsAdaptor.mutualContacts),
             gifUnfurlingEnabled:            Qt.binding(() => root.sharedRootStore.gifUnfurlingEnabled),
             neverAskAboutUnfurlingAgain:    Qt.binding(() => root.sharedRootStore.neverAskAboutUnfurlingAgain),
-            usersModel:                     Qt.binding(() => d.chatRootStore.usersStore.usersModel),
+            usersModel:                     Qt.binding(() => channelMembers.model),
             myPublicKey:                    Qt.binding(() => root.contactsStore.myPublicKey),
             navToMsgDetails:                Qt.binding(() => root.rootStore.navToMsgDetails),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),

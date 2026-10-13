@@ -11,6 +11,7 @@ EditOwnerTokenView 1.0 EditOwnerTokenView.qml
 EditPermissionView 1.0 EditPermissionView.qml
 HoldingsSelectionModel 1.0 HoldingsSelectionModel.qml
 JoinCommunityView 1.0 JoinCommunityView.qml
+MembersModelAdaptor 1.0 MembersModelAdaptor.qml
 MintedTokensView 1.0 MintedTokensView.qml
 OwnerTokenWelcomeView 1.0 OwnerTokenWelcomeView.qml
 PermissionsView 1.0 PermissionsView.qml

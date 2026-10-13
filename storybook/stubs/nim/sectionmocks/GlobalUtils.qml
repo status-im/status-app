@@ -19,6 +19,10 @@ QtObject {
         return publicKey
     }
 
+    function getEmojiHashAsJson(publicKey) {
+        return "[]"
+    }
+
     function getStatusSupportBotChatKey() {
         return "0xdeadb07"
     }

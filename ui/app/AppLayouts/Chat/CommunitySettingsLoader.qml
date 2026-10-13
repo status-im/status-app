@@ -9,6 +9,7 @@ import shared.stores as SharedStores
 import shared.stores.send as SendStores
 
 import AppLayouts.Chat.stores as ChatStores
+import AppLayouts.Communities.stores as CommunitiesStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStore
 import AppLayouts.stores.Messaging.Community as CommunityStores
@@ -17,6 +18,7 @@ StatusSectionLoader {
     id: root
 
     required property ChatStores.RootStore rootStore
+    required property CommunitiesStores.CommunitiesStore communitiesStore
     required property SharedStores.NetworksStore networksStore
     required property WalletStore.TokensStore tokensStore
     required property SendStores.TransactionStore transactionStore
@@ -48,6 +50,7 @@ StatusSectionLoader {
             userUID:                        root.userUID,
             sectionName:                    root.sectionName,
             rootStore:                      Qt.binding(() => root.rootStore),
+            communitiesStore:               Qt.binding(() => root.communitiesStore),
             walletAccountsModel:            Qt.binding(() => WalletStore.RootStore.nonWatchAccounts),
             enabledChainIds:                Qt.binding(() => root.networksStore.networkFilters),
             activeNetworks:                 Qt.binding(() => root.networksStore.activeNetworks),
@@ -92,9 +95,6 @@ StatusSectionLoader {
         }
         function onDeclineRequestToJoinCommunityRequested(requestId, communityId) {
             root.communityAccessStore.declineRequestToJoinCommunityRequested(requestId, communityId)
-        }
-        function onLoadMembersRequested() {
-            root.rootStore.loadMembersForSectionId(root.sectionItemModel.id)
         }
         function onFinaliseOwnershipClicked() {
             Global.openFinaliseOwnershipPopup(root.sectionItemModel.id)
