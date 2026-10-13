@@ -400,7 +400,7 @@ FetchContent_Declare(
   QtModelsToolkit
 
   GIT_REPOSITORY https://github.com/status-im/QtModelsToolkit.git
-  GIT_TAG 99dc78a86523022bb52305cc156a78ca2aa8ed15
+  GIT_TAG 914e1d04ff4850a839da94f54d95dbd580cbd290
 )
 
 FetchContent_MakeAvailable(QtModelsToolkit)
