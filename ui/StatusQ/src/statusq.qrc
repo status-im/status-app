@@ -203,6 +203,8 @@
         <file>StatusQ/Core/Utils/DoubleFlickable.qml</file>
         <file>StatusQ/Core/Utils/DoubleFlickableWithFolding.qml</file>
         <file>StatusQ/Core/Utils/Emoji.qml</file>
+        <file>StatusQ/Core/Utils/IndexWindowSource.qml</file>
+        <file>StatusQ/Core/Utils/ItemPool.qml</file>
         <file>StatusQ/Core/Utils/JSONListModel.qml</file>
         <file>StatusQ/Core/Utils/LazyStackLayout.qml</file>
         <file>StatusQ/Core/Utils/ModelChangeGuard.qml</file>
@@ -228,6 +230,7 @@
         <file>StatusQ/Core/Utils/internal/HeaderWrapper.qml</file>
         <file>StatusQ/Core/Utils/qmldir</file>
         <file>StatusQ/Core/Utils/xss.js</file>
+        <file>StatusQ/Core/WindowedView.qml</file>
         <file>StatusQ/Core/qmldir</file>
         <file>StatusQ/Layout/SectionPanelSlot.qml</file>
         <file>StatusQ/Layout/StatusSectionLayout.qml</file>

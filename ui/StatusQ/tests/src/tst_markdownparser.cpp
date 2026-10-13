@@ -405,7 +405,7 @@ Document [0,5)
     {
         // An embedded object (U+FFFC) becomes a one-char Mention leaf, opaque to
         // markdown — emphasis spans across it.
-        const QString fffc(QChar(QChar::ObjectReplacementCharacter));
+        const QString fffc{QChar(QChar::ObjectReplacementCharacter)};
         auto expected = R"(
 Document [0,7)
   Paragraph [0,7)
@@ -425,7 +425,7 @@ Document [0,7)
     // **C** pairs independently (both stay bold; regression for the flanking fix).
     void boldHugsMention()
     {
-        const QString fffc(QChar(QChar::ObjectReplacementCharacter));
+        const QString fffc{QChar(QChar::ObjectReplacementCharacter)};
         auto expected = R"(
 Document [0,13)
   Paragraph [0,13)
