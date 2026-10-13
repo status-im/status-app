@@ -287,7 +287,8 @@ QtObject {
                     itemId: root.channelId,
                     name: root.name,
                     emoji: root.emoji,
-                    color: root.color
+                    color: root.color,
+                    isThread: false
                 }), "Failed to add channel to channelsModel")
             }
 

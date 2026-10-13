@@ -8,6 +8,12 @@ import utils
 SortFilterProxyModel {
     id: root
 
+    // Excludes threads; channel/category inputs must expose a boolean isThread role.
+    filters: ValueFilter {
+        roleName: "isThread"
+        value: false
+    }
+
     proxyRoles: [
         FastExpressionRole {
             name: "key"

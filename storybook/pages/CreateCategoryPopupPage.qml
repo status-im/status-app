@@ -25,6 +25,34 @@ Item {
 
     ChannelsModel {
         id: channelsModel
+        Component.onCompleted: {
+            append({
+                itemId: "_welcome-thread",
+                parentChatId: "_welcome",
+                isThread: true,
+                isCategory: false,
+                type: 0,
+                categoryId: "",
+                name: "Welcome thread",
+                emoji: "",
+                color: "blue",
+                icon: "",
+                colorId: 1
+            })
+            append({
+                itemId: "_faq-thread",
+                parentChatId: "_faq",
+                isThread: true,
+                isCategory: false,
+                type: 0,
+                categoryId: "_support",
+                name: "FAQ thread",
+                emoji: "",
+                color: "",
+                icon: "",
+                colorId: 5
+            })
+        }
     }
 
     Component {

@@ -59,16 +59,16 @@ Nemo enim 😋 ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit,
         property string chatDateTimeText: "Dec 31, 2020"
         property string  listUsersText: "simon, Mark Cuban "
         readonly property ListModel model1:  ListModel {
-            ListElement { name: "welcome"; selected: false; notificationsCount: 0; hasUnreadMessages: false}
-            ListElement { name: "general"; selected: false; notificationsCount: 0; hasUnreadMessages: true}
-            ListElement { name: "design"; selected: true; notificationsCount: 3; hasUnreadMessages: true}
-            ListElement { name: "random"; selected: false; notificationsCount: 0; hasUnreadMessages: false}
-            ListElement { name: "vip"; selected: false; notificationsCount: 0; hasUnreadMessages: true}
+            ListElement { name: "welcome"; isThread: false; selected: false; notificationsCount: 0; hasUnreadMessages: false}
+            ListElement { name: "general"; isThread: false; selected: false; notificationsCount: 0; hasUnreadMessages: true}
+            ListElement { name: "design"; isThread: false; selected: true; notificationsCount: 3; hasUnreadMessages: true}
+            ListElement { name: "random"; isThread: false; selected: false; notificationsCount: 0; hasUnreadMessages: false}
+            ListElement { name: "vip"; isThread: false; selected: false; notificationsCount: 0; hasUnreadMessages: true}
         }
         readonly property ListModel model2:  ListModel {
-            ListElement { name: "general"; selected: false; notificationsCount: 3; hasUnreadMessages: false}
-            ListElement { name: "blockchain"; selected: true; notificationsCount: 3; hasUnreadMessages: true}
-            ListElement { name: "faq"; selected: false; notificationsCount: 0; hasUnreadMessages: false}
+            ListElement { name: "general"; isThread: false; selected: false; notificationsCount: 3; hasUnreadMessages: false}
+            ListElement { name: "blockchain"; isThread: false; selected: true; notificationsCount: 3; hasUnreadMessages: true}
+            ListElement { name: "faq"; isThread: false; selected: false; notificationsCount: 0; hasUnreadMessages: false}
         }
         readonly property var messagesModel: ListModel {
             ListElement {

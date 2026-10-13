@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 
 import StatusQ.Components
+import Models
 
 // Guard (stack PR #21943): chats hidden by a collapsed category must be
 // filtered out of the view via the model-computed "hidden" role — a
@@ -15,6 +16,7 @@ Item {
     height: 600
 
     ListModel { id: chatsModel }
+    ChatsModel { id: sampleChats }
 
     StatusChatList {
         id: chatList
@@ -25,6 +27,30 @@ Item {
     TestCase {
         name: "CollapsedCategoryVirtualization"
         when: windowShown
+
+        function cleanup() {
+            chatsModel.clear()
+            chatList.showThreads = true
+        }
+
+        function test_mainListKeepsThreads() {
+            const channel = Object.assign({}, sampleChats.get(1), {
+                itemId: "channel", name: "Channel", icon: "", isThread: false
+            })
+            const thread = Object.assign({}, channel, {
+                itemId: "thread", name: "Thread", isThread: true, parentChatId: "channel"
+            })
+            chatsModel.append([channel, thread])
+            const list = chatList.statusChatListItems
+            tryCompare(list, "count", 2)
+            compare(list.model.get(0).itemId, "channel")
+            compare(list.model.get(1).itemId, "thread")
+            chatList.showThreads = false
+            tryCompare(list, "count", 1)
+            compare(list.model.get(0).itemId, "channel")
+            chatList.showThreads = true
+            tryCompare(list, "count", 2)
+        }
 
         function test_collapsedCategoryStaysVirtualized() {
             chatsModel.append({
@@ -49,6 +75,7 @@ Item {
                 requiresPermissions: false,
                 locked: false,
                 isCategory: true,
+                isThread: false,
                 position: 0,
                 categoryPosition: 0,
                 lastMessageTimestamp: 0
@@ -79,6 +106,7 @@ Item {
                     requiresPermissions: false,
                     locked: false,
                     isCategory: false,
+                    isThread: false,
                     position: i,
                     categoryPosition: 0,
                     lastMessageTimestamp: 1000000 - i

@@ -88,12 +88,18 @@ StatusAdaptiveDialog {
             model: SortFilterProxyModel {
                 sourceModel: root.isEdit ? root.store.chatCommunitySectionModule.editCategoryChannelsModel
                                          : root.store.chatCommunitySectionModule.model
-                // filter out channels with categories
-                filters: ValueFilter {
-                    enabled: !root.isEdit
-                    roleName: "categoryId"
-                    value: ""
-                }
+                filters: [
+                    ValueFilter {
+                        roleName: "isThread"
+                        value: false
+                    },
+                    // filter out channels with categories
+                    ValueFilter {
+                        enabled: !root.isEdit
+                        roleName: "categoryId"
+                        value: ""
+                    }
+                ]
             }
 
             header: Item {
