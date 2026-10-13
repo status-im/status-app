@@ -432,6 +432,9 @@ proc init*(self: Controller) =
       if args.communityId == self.sectionId:
         self.delegate.onCommunityRosterLoadFailed()
 
+    self.events.on(SignalType.MediaServerStarted.event) do(e: Args):
+      self.delegate.onRosterMediaServerStarted()
+
     when defined(android) or defined(ios):
       self.events.on(SIGNAL_APP_BACKGROUNDED) do(e: Args):
         self.delegate.onAppBackgrounded()
@@ -447,6 +450,9 @@ proc loadCommunityRoster*(self: Controller) =
 
 proc releaseCommunityRoster*(self: Controller) =
   self.communityService.releaseCommunityRoster(self.sectionId)
+
+proc contactImageUrl*(self: Controller, pubKey: string, imageClock: uint64): string =
+  self.contactService.contactImageUrl(pubKey, imageClock)
 
 proc cachedContact*(self: Controller, pubKey: string): ptr ContactDetails =
   self.contactService.cachedContact(pubKey)

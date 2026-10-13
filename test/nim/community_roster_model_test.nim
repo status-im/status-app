@@ -23,6 +23,7 @@ type FakeSources = ref object
   contacts: Table[string, RosterContact]
   statuses: Table[string, OnlineStatus]
   contactLookups: int
+  mediaPort: int
 
 proc lookups(fake: FakeSources, myPubKey = keyC): RosterLookups =
   RosterLookups(
@@ -32,6 +33,8 @@ proc lookups(fake: FakeSources, myPubKey = keyC): RosterLookups =
       fake.contacts.getOrDefault(pubKey),
     onlineStatus: proc(pubKey: string): OnlineStatus =
       fake.statuses.getOrDefault(pubKey, OnlineStatus.Inactive),
+    contactImageUrl: proc(pubKey: string, clock: uint64): string =
+      if fake.mediaPort == 0 or clock == 0: "" else: "img:" & $fake.mediaPort & ":" & pubKey & ":" & $clock,
   )
 
 proc roleOf(model: CommunityRosterModel, name: string): int =
@@ -208,6 +211,31 @@ suite "community roster model":
     check spy.countDataChanged() == 1
     check spy.calls[0].topLeft == 0
 
+  test "avatars come from the media server unless the contacts cache has one":
+    fake.mediaPort = 4000
+    var a = member(keyA, "alice")
+    a.thumbnailImageClock = 9
+    var b = member(keyB, "bob")
+    b.thumbnailImageClock = 5
+    model.fill(snapshot(10, a, b, member(keyC, "no image")))
+    fake.contacts[keyB] = RosterContact(icon: "cached-b")
+    check model.str(0, "icon") == "img:4000:" & keyA & ":9"
+    check model.str(1, "icon") == "cached-b"
+    check model.str(2, "icon") == ""
+
+  test "a media server restart refreshes every icon with one dataChanged":
+    model.fill(snapshot(10, member(keyA), member(keyB)))
+    spy.clear()
+    model.iconsChanged()
+    check spy.countDataChanged() == 1
+    check spy.calls[0].topLeft == 0
+    check spy.calls[0].bottomRight == 1
+    spy.clear()
+    model.clear()
+    spy.clear()
+    model.iconsChanged()
+    check spy.calls.len == 0
+
   test "admin overlays: membership state and airdrop address":
     model.fill(snapshot(10, member(keyA, "alice")))
     spy.clear()
@@ -236,7 +264,7 @@ suite "community roster model":
 suite "community roster handle":
   test "creating a handle acquires, destroying it releases":
     let holders = newRosterHolders(
-      RosterReleaseTimer(start: proc(ms: int) = discard, stop: proc() = discard),
+      RosterReleaseTimer(start: (proc(ms: int) = discard), stop: (proc() = discard)),
       onLoad = (proc() = discard), onDrop = (proc() = discard))
     block:
       let first = newCommunityRosterHandle(holders, newQVariant())

@@ -36,6 +36,7 @@ type
     myPubKey*: string
     contact*: proc(pubKey: string): RosterContact
     onlineStatus*: proc(pubKey: string): OnlineStatus
+    contactImageUrl*: proc(pubKey: string, clock: uint64): string
 
   ModelRole {.pure.} = enum
     PubKey = UserRole + 1
@@ -212,7 +213,10 @@ QtObject:
     of ModelRole.Alias:
       newQVariant(alias)
     of ModelRole.Icon:
-      newQVariant(contact.icon)
+      if contact.icon.len > 0 or self.lookups.contactImageUrl.isNil:
+        newQVariant(contact.icon)
+      else:
+        newQVariant(self.lookups.contactImageUrl(pubKey, member.thumbnailImageClock))
     of ModelRole.IsContact:
       newQVariant(contact.isContact)
     of ModelRole.IsVerified:
@@ -387,6 +391,20 @@ QtObject:
       self.upsert(member)
     for channel in delta.channels:
       self.applyChannelDelta(channel)
+
+  proc iconsChanged*(self: CommunityRosterModel) =
+    ## Media server restarted on a new port: every avatar URL changed.
+    if self.members.len == 0:
+      return
+    let roles = @[ModelRole.Icon.int]
+    when defined(QT_MODEL_SPY):
+      recordDataChanged(0, self.members.len - 1, roles)
+    let first = self.createIndex(0, 0, nil)
+    let last = self.createIndex(self.members.len - 1, 0, nil)
+    defer:
+      first.delete
+      last.delete
+    self.dataChanged(first, last, roles)
 
   proc contactChanged*(self: CommunityRosterModel, pubKey: string) =
     let row = self.rowOf(pubKey)
