@@ -141,7 +141,11 @@ proc init*(self: Controller) =
 
   self.events.on(message_service.SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
     let args = message_service.ChatThreadsForChatsLoadedArgs(e)
-    self.delegate.onChatThreadsForChatsLoaded(args.threads)
+    self.delegate.onChatThreadsForChatsLoaded(args.threads, args.completedChatIds)
+
+  self.events.on(message_service.SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
+    let args = message_service.ChatThreadsLoadingFailedArgs(e)
+    self.delegate.onChatThreadsLoadingFailed(args.chatId)
 
   self.events.on(chat_service.SIGNAL_CHAT_LEFT) do(e: Args):
     let args = chat_service.ChatArgs(e)

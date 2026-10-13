@@ -43,6 +43,9 @@ proc setValue*(self: QSettings, key: string, value: nimqml.QVariant) =
 proc remove*(self: QSettings, key: string) =
   sqset.remove(self.inner, key)
 
+proc sync*(self: QSettings) =
+  sqset.sync(self.inner)
+
 proc beginGroup*(self: QSettings, group: string) =
   sqset.beginGroup(self.inner, group)
 

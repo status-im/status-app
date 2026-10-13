@@ -183,16 +183,14 @@ Item {
         id: d
         objectName: "chatViewInternal"
 
-        property string openThreadId
-        property string openThreadName
-        property string openThreadParentChatId
+        readonly property string openThreadId: root.rootStore.openThreadId
+        readonly property string openThreadName: root.rootStore.openThreadName
+        readonly property string openThreadParentChatId: root.rootStore.openThreadParentChatId
         property int threadPanelRevision: 0
 
         function openThreadPanel(threadId, threadName) {
             threadPanelRevision++
-            openThreadId = threadId
-            openThreadName = threadName
-            openThreadParentChatId = root.activeItemId
+            root.rootStore.openThreadPanel(threadId, threadName, root.activeItemId)
             // Wait for the right panel page to exist before navigating to it.
             if (root.sectionLayout?.isPortrait)
                 Backpressure.setTimeout(root, 50, () => {
@@ -223,9 +221,7 @@ Item {
 
         function closeThreadPanel() {
             threadPanelRevision++
-            openThreadId = ""
-            openThreadName = ""
-            openThreadParentChatId = ""
+            root.rootStore.closeThreadPanel()
         }
     }
 
