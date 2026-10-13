@@ -332,6 +332,9 @@ QtObject:
       return
     return self.chatThreadsByParentIdByChat[chatId].getOrDefault(parentMessageId)
 
+  proc getThreadById*(self: Service, chatId: string, threadId: string): ThreadDto =
+    return self.getThreadForParentMessage(chatId, threadId)
+
   proc handleThreadsUpdate(self: Service, threads: seq[ThreadDto]) =
     var mergedThreads: seq[ThreadDto]
     for thread in threads:

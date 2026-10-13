@@ -88,7 +88,8 @@ QtObject:
     if(details.notificationType == NotificationType.NewMessage or
       details.notificationType == NotificationType.NewMessageWithPersonalMention or
       details.notificationType == NotificationType.NewMessageWithGlobalMention):
-      let data = ActiveSectionChatArgs(sectionId: details.sectionId, chatId: details.chatId, messageId: details.messageId)
+      let data = ActiveSectionChatArgs(sectionId: details.sectionId, chatId: details.chatId,
+        messageId: details.messageId, threadId: details.threadId)
       self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
     else:
       self.events.emit(SIGNAL_OS_NOTIFICATION_CLICKED, ClickedNotificationArgs(details: details))
@@ -99,7 +100,7 @@ QtObject:
 
   proc onShowMessageNotification(self: NotificationsManager, title: string, message: string, sectionId: string,
     isCommunitySection: bool, isSectionActive: bool, chatId: string, isChatActive: bool, messageId: string,
-    notificationType: int, isOneToOne: bool, isGroupChat: bool) {.slot.} =
+    threadId: string, notificationType: int, isOneToOne: bool, isGroupChat: bool) {.slot.} =
     let details = NotificationDetails(
       notificationType: notificationType.NotificationType,
       sectionId: sectionId,
@@ -109,7 +110,8 @@ QtObject:
       chatActive: isChatActive,
       isOneToOne: isOneToOne,
       isGroupChat: isGroupChat,
-      messageId: messageId)
+      messageId: messageId,
+      threadId: threadId)
     self.processNotification(title, message, details)
 
   proc onShowNewsMessageNotification(self: NotificationsManager, id: string, title: string) {.slot.} =
@@ -371,4 +373,3 @@ QtObject:
 
   proc delete*(self: NotificationsManager) =
     self.QObject.delete
-

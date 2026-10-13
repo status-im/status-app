@@ -439,6 +439,10 @@ method communityContainsChat*(self: AccessInterface, chatId: string): bool {.bas
 method openCommunityChatAndScrollToMessage*(self: AccessInterface, chatId: string, messageId: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method openThreadAndScrollToMessage*(self: AccessInterface, parentChatId: string,
+    threadId: string, messageId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method updateRequestToJoinState*(self: AccessInterface, state: RequestToJoinState) {.base.} =
   raise newException(ValueError, "No implementation available")
 

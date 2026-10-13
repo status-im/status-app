@@ -15,6 +15,7 @@ logScope:
 
 const StatusInternalLink* = "status-app://"
 const StatusExternalLink* = "https://status.app/"
+const ThreadNotificationInternalLink = StatusInternalLink & "thread-notification?"
 
 proc intakeImagePaths(parsed: JsonNode): seq[string] =
   ## imagePaths array of a slot payload (optional key; absent means none).
@@ -77,7 +78,10 @@ QtObject:
     except CatchableError:
       warn "pending intake slot payload is not valid JSON", payload
 
-  proc convertInternalLinkToExternal*(self: UrlsManager, statusDeepLink: string): string =
+  proc convertInternalLinkToExternal*(statusDeepLink: string): string =
+    if statusDeepLink.startsWith(ThreadNotificationInternalLink):
+      return statusDeepLink
+
     let idx = find(statusDeepLink, StatusInternalLink)
     result = statusDeepLink
     if idx != -1:
@@ -140,7 +144,7 @@ QtObject:
 
     let self = result
     result.intake.onDeepLinkUrl = proc(url: string) =
-      let data = StatusUrlArgs(url: self.convertInternalLinkToExternal(url))
+      let data = StatusUrlArgs(url: convertInternalLinkToExternal(url))
       self.events.emit(SIGNAL_STATUS_URL_ACTIVATED, data)
     result.intake.onBrowserTabUrl = proc(url: string) =
       self.events.emit(SIGNAL_EXTERNAL_URL_INTAKE_BROWSER_TAB,
