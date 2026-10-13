@@ -73,7 +73,7 @@ StatusMenu {
         readonly property int defaultActionSize: iconSize + 2 * compactPadding
         readonly property int singleRowActionSize: iconSize + 3 * compactPadding
         readonly property bool editActionVisible: root.isMyMessage && !root.editRestricted && !root.disabledForChat
-        readonly property bool compactPinActionVisible: !editActionVisible && d.canPinMessage
+        readonly property bool compactPinActionVisible: !root.isThreadView && !editActionVisible && d.canPinMessage
         readonly property bool reactionsVisible: !root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)
         readonly property int singleRowActionCount: 1 +
                                                     (!root.disabledForChat ? 2 : 0) +
@@ -400,7 +400,7 @@ StatusMenu {
             if (!root.canPin) return root.pinnedMessagesLimitReached()
             root.pinMessage()
         }
-        enabled: root.expanded && d.canPinMessage
+        enabled: root.expanded && d.canPinMessage && !root.isThreadView
     }
 
     MsgCtxAction {
