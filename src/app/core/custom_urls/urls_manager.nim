@@ -38,6 +38,9 @@ QtObject:
       self, SLOT("onShareActivated(QString,QString)"), ConnectionType.QueuedConnection)
     discard QObject.connect(urlSchemeEvent, SIGNAL("appForegrounded()"),
       self, SLOT("onAppForegrounded()"), ConnectionType.QueuedConnection)
+    # direct: the process may be frozen before a queued slot runs
+    discard QObject.connect(urlSchemeEvent, SIGNAL("appBackgrounded()"),
+      self, SLOT("onAppBackgrounded()"), ConnectionType.AutoConnection)
 
   proc delete*(self: UrlsManager) =
     self.QObject.delete
@@ -107,6 +110,10 @@ QtObject:
     ## wake failed or was dropped, deliver it now instead of waiting for the
     ## next full app start. No-op when the slot is inactive or empty.
     self.consumePendingIntake()
+    self.events.emit(SIGNAL_APP_FOREGROUNDED, Args())
+
+  proc onAppBackgrounded*(self: UrlsManager) {.slot.} =
+    self.events.emit(SIGNAL_APP_BACKGROUNDED, Args())
 
   proc onShareActivated*(self: UrlsManager, text: string, imagePathsJson: string) {.slot.} =
     ## Share-target hand-off (Android SEND/SEND_MULTIPLE intents): shared

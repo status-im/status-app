@@ -63,6 +63,10 @@ const SIGNAL_EXTERNAL_SHARE_INTAKE* = "externalShareIntake"
 
 const SIGNAL_MAIN_LOADED* = "signalMainLoaded"
 
+const SIGNAL_APP_BACKGROUNDED* = "appBackgrounded"
+## The app was suspended (mobile); never emitted for transient Inactive dips.
+const SIGNAL_APP_FOREGROUNDED* = "appForegrounded"
+
 type
   WalletAddressesArgs* = ref object of Args
     addresses*: seq[string]

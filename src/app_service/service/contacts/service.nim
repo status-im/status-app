@@ -453,6 +453,12 @@ QtObject:
   proc getContactById*(self: Service, id: string): ContactsDto =
     return self.getContactDetails(id).dto
 
+  proc cachedContact*(self: Service, pubKey: string): ptr ContactDetails =
+    ## The cached entry, or nil; never creates one. Valid until the cache changes.
+    self.contacts.withValue(pubKey, details):
+      return details
+    nil
+
   proc getContactColorId*(self: Service, id: string): int =
     var pubkey = id
 

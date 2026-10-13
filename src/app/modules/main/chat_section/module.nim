@@ -12,6 +12,7 @@ import app/modules/shared_models/message_model as member_msg_model
 import app/modules/shared_models/user_item as user_item
 import app/modules/shared_models/user_model as user_model
 import app/modules/shared_models/[token_permissions_model, token_permission_item, token_criteria_item, token_criteria_model, token_permission_chat_list_model, contacts_utils]
+import app/modules/shared_models/[community_roster_model, community_roster_holders, community_roster_handle]
 
 import chat_content/module as chat_content_module
 import chat_content/users/module as users_module
@@ -67,6 +68,11 @@ type
     mailserversService: mailservers_service.Service
     sharedUrlsService: shared_urls_service.Service
     threadChatIds: HashSet[string]
+    # community sections only: the on-demand member roster and its holders
+    roster: CommunityRosterModel
+    rosterVariant: QVariant
+    rosterHolders: RosterHolders
+    rosterReleaseTimer: QTimer
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -106,6 +112,7 @@ method addOrUpdateChat(self: Module,
     isSectionBuild: bool = false,
   ): ChatItem
 proc updateParentBadgeNotifications(self: Module)
+proc setupRoster(self: Module)
 
 proc newModule*(
     delegate: delegate_interface.AccessInterface,
@@ -150,8 +157,68 @@ proc newModule*(
   if isCommunity:
     result.membersListModule = users_module.newModule(events, sectionId, chatId = "", isCommunity,
       isUsersListAvailable = true, contactService, chatService, communityService, messageService, isSectionMemberList = true)
+    result.setupRoster()
   else:
     result.membersListModule = nil
+
+proc rosterContact(self: Module, pubKey: string): RosterContact =
+  if pubKey == singletonInstance.userProfile.getPubKey():
+    let ensName = singletonInstance.userProfile.getPreferredName()
+    return RosterContact(
+      displayName: singletonInstance.userProfile.getDisplayName(),
+      ensName: ensName,
+      ensVerified: ensName.len > 0,
+      alias: singletonInstance.userProfile.getUsername(),
+      icon: singletonInstance.userProfile.getThumbnailImage(),
+    )
+  let details = self.controller.cachedContact(pubKey)
+  if details.isNil:
+    return
+  RosterContact(
+    localNickname: details.dto.localNickname,
+    displayName: details.dto.displayName,
+    ensName: details.dto.name,
+    ensVerified: details.dto.ensVerified,
+    alias: details.dto.alias,
+    icon: details.icon,
+    isContact: details.dto.isContact,
+    isBlocked: details.dto.isBlocked,
+    trustStatus: details.dto.trustStatus,
+    contactRequest: toContactStatus(details.dto.contactRequestState),
+  )
+
+proc setupRoster(self: Module) =
+  let m = self
+  self.roster = newCommunityRosterModel(RosterLookups(
+    myPubKey: singletonInstance.userProfile.getPubKey(),
+    contact: proc(pubKey: string): RosterContact = m.rosterContact(pubKey),
+    onlineStatus: proc(pubKey: string): OnlineStatus =
+      toOnlineStatus(m.controller.getStatusForContactWithId(pubKey).statusType),
+  ))
+  self.rosterVariant = newQVariant(self.roster)
+  self.rosterReleaseTimer = QTimer.create()
+  self.rosterReleaseTimer.setSingleShot(true)
+  self.rosterHolders = newRosterHolders(
+    RosterReleaseTimer(
+      start: proc(ms: int) = m.rosterReleaseTimer.start(ms.cint),
+      stop: proc() = m.rosterReleaseTimer.stop(),
+    ),
+    onLoad = proc() = m.controller.loadCommunityRoster(),
+    onDrop = proc() =
+      m.controller.releaseCommunityRoster()
+      m.roster.clear(),
+  )
+  self.rosterReleaseTimer.onTimeout(proc() {.closure, raises: [].} =
+    try:
+      m.rosterHolders.onReleaseTimeout()
+    except Exception as e:
+      error "community roster release failed", msg = e.msg)
+
+proc acquireRoster*(self: Module): CommunityRosterHandle =
+  ## The roster stays loaded while the returned handle lives.
+  if self.rosterHolders.isNil:
+    return nil
+  newCommunityRosterHandle(self.rosterHolders, self.rosterVariant)
 
 proc currentUserWalletContainsAddress(self: Module, address: string): bool =
   if (address.len == 0):
@@ -198,6 +265,10 @@ proc buildCommunityMemberMessageItem(self: Module, message: MessageDto): member_
   )
 
 method delete*(self: Module) =
+  if not self.rosterHolders.isNil:
+    self.rosterReleaseTimer.stop()
+    self.controller.releaseCommunityRoster()
+    self.rosterVariant.delete
   self.controller.delete
   self.view.delete
   self.viewVariant.delete
@@ -501,6 +572,42 @@ method isLoaded*(self: Module): bool =
 
 method getSectionMemberList*(self: Module): QVariant =
   return self.membersListModule.getUsersListVariant()
+
+method getRosterModel*(self: Module): QVariant =
+  if self.rosterVariant.isNil:
+    return newQVariant()
+  return self.rosterVariant
+
+method onCommunityRosterLoaded*(self: Module, snapshot: sink RosterSnapshot, deltas: seq[RosterDelta]) =
+  if self.roster.isNil:
+    return
+  self.roster.fill(snapshot)
+  for delta in deltas:
+    self.roster.applyDelta(delta)
+  debug "community roster loaded", sectionId = self.controller.getMySectionId(),
+    members = self.roster.getCount(), heldDeltas = deltas.len
+
+method onCommunityRosterChanged*(self: Module, deltas: seq[RosterDelta]) =
+  if self.roster.isNil:
+    return
+  for delta in deltas:
+    self.roster.applyDelta(delta)
+
+method onCommunityRosterLoadFailed*(self: Module) =
+  if not self.rosterHolders.isNil:
+    self.rosterHolders.onLoadFailed()
+
+method onAppBackgrounded*(self: Module) =
+  if not self.rosterHolders.isNil:
+    self.rosterHolders.onBackgrounded()
+
+method onAppForegrounded*(self: Module) =
+  if not self.rosterHolders.isNil:
+    self.rosterHolders.onForegrounded()
+
+proc refreshRosterContact(self: Module, pubKey: string) =
+  if not self.roster.isNil:
+    self.roster.contactChanged(pubKey)
 
 method updateCommunityMemberList*(self: Module, members: seq[ChatMember]) =
   # Re-seed the contacts cache for late joiners.
@@ -1353,6 +1460,7 @@ method acceptContactRequest*(self: Module, publicKey: string, contactRequestId: 
   self.controller.acceptContactRequest(publicKey, contactRequestId)
 
 method onContactAdded*(self: Module, publicKey: string, frombackup: bool = false) =
+  self.refreshRosterContact(publicKey)
   self.view.contactRequestsModel().removeItemById(publicKey)
 
   let contact = self.controller.getContactById(publicKey)
@@ -1368,6 +1476,7 @@ method dismissContactRequest*(self: Module, publicKey: string, contactRequestId:
   self.controller.dismissContactRequest(publicKey, contactRequestId)
 
 method onContactRejected*(self: Module, publicKey: string) =
+  self.refreshRosterContact(publicKey)
   self.view.contactRequestsModel().removeItemById(publicKey)
 
 method dismissAllContactRequests*(self: Module) =
@@ -1379,6 +1488,7 @@ method blockContact*(self: Module, publicKey: string) =
   self.controller.blockContact(publicKey)
 
 method onContactBlocked*(self: Module, publicKey: string) =
+  self.refreshRosterContact(publicKey)
   self.view.contactRequestsModel().removeItemById(publicKey)
   self.view.chatsModel().changeBlockedOnItemById(publicKey, blocked=true)
   self.onCommunityChannelDeletedOrChatLeft(publicKey)
@@ -1389,6 +1499,7 @@ method onContactUnblocked*(self: Module, publicKey: string) =
 
 method onContactDetailsUpdated*(self: Module, publicKey: string) =
   if(self.controller.isCommunity()):
+    self.refreshRosterContact(publicKey)
     return
   let contactDetails = self.controller.getContactDetails(publicKey)
   if (contactDetails.dto.isContactRequestReceived() and
@@ -1715,6 +1826,8 @@ method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto])
   for s in statusUpdates:
     let status = toOnlineStatus(s.statusType)
     self.view.chatsModel().updateItemOnlineStatusById(s.publicKey, status)
+    if not self.roster.isNil:
+      self.roster.onlineStatusChanged(s.publicKey)
 
 method createOrEditCommunityTokenPermission*(self: Module, permissionId: string, permissionType: int, tokenCriteriaJson: string, channelIDs: seq[string], isPrivate: bool) =
 

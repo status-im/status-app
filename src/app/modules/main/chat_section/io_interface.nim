@@ -52,6 +52,25 @@ method updateCommunityMemberList*(self: AccessInterface, members: seq[ChatMember
 method getSectionMemberList*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getRosterModel*(self: AccessInterface): QVariant {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onCommunityRosterLoaded*(self: AccessInterface, snapshot: sink RosterSnapshot,
+    deltas: seq[RosterDelta]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onCommunityRosterChanged*(self: AccessInterface, deltas: seq[RosterDelta]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onCommunityRosterLoadFailed*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onAppBackgrounded*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onAppForegrounded*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onActiveSectionChange*(self: AccessInterface, sectionId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
