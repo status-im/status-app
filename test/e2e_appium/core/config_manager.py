@@ -19,7 +19,9 @@ class ConfigurationManager:
         self.environments_dir = self.config_dir / "environments"
         self.schemas_dir = self.config_dir / "schemas"
 
-    def load_environment(self, environment: str) -> EnvironmentConfig:
+    def load_environment(self, environment: str, validate: bool = True) -> EnvironmentConfig:
+        """``validate=False`` skips the provider checks (Appium reachability,
+        BrowserStack credentials) for readers that only need the device matrix."""
         base_config = self._load_yaml(self.environments_dir / "base.yaml")
 
         env_file = self.environments_dir / f"{environment}.yaml"
@@ -38,7 +40,8 @@ class ConfigurationManager:
 
         self._validate_schema(merged_config)
         config = self._create_config_object(merged_config)
-        config.validate()
+        if validate:
+            config.validate()
         return config
 
     def list_available_environments(self) -> List[str]:
