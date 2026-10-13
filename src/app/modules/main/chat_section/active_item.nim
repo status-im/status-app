@@ -15,19 +15,22 @@ QtObject:
   #################################################
   # Forward declaration section
   proc idChanged(self: ActiveItem) {.signal.}
+  proc nameChanged*(self: ActiveItem) {.signal.}
 
   #################################################
 
   proc setActiveItemData*(self: ActiveItem, item: ChatItem) =
     self.item = item
     self.idChanged()
+    self.nameChanged()
 
   # Used when there is no longer an active item (last channel was deleted)
   proc resetActiveItemData*(self: ActiveItem) =
     self.item = ChatItem()
     self.idChanged()
+    self.nameChanged()
 
-  proc getId(self: ActiveItem): string {.slot.} =
+  proc getId*(self: ActiveItem): string {.slot.} =
     if(self.item.isNil):
       return ""
     return self.item.id
@@ -43,6 +46,7 @@ QtObject:
 
   QtProperty[string] name:
     read = getName
+    notify = nameChanged
 
   proc getMemberRole(self: ActiveItem): int {.slot.} =
     if(self.item.isNil):
@@ -153,4 +157,3 @@ QtObject:
 
   proc delete*(self: ActiveItem) =
     self.QObject.delete
-

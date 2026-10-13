@@ -145,6 +145,11 @@ QtObject:
   proc setActiveItem*(self: View, itemId: string) {.slot.} =
     self.delegate.setActiveItem(itemId)
 
+  proc renameThreadItem*(self: View, threadId, name: string) =
+    self.chatsModel.renameItemById(threadId, name)
+    if self.activeItem.getId() == threadId:
+      self.activeItem.nameChanged()
+
   proc openThreadChanged*(self: View) {.signal.}
 
   proc getOpenThreadId*(self: View): string {.slot.} =

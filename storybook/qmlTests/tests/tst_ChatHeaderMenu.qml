@@ -30,6 +30,30 @@ Item {
         property bool communityChat: false
         property bool chatAdmin: false
 
+        readonly property var messagesModule: QtObject {
+            property string threadId
+            property string threadName: "Original thread"
+            property string threadParentChatName: "general"
+            property bool canEditThread: true
+            property bool threadEditPending: false
+            property string requestedName
+            readonly property var model: null
+            readonly property bool loading: false
+            readonly property bool messageSearchOngoing: false
+            readonly property bool amIChatAdmin: false
+            readonly property bool isPinMessageAllowedForMembers: false
+            readonly property string chatColor: ""
+            readonly property string chatIcon: ""
+            readonly property int chatType: Constants.chatType.communityChat
+            readonly property bool keepUnread: false
+            signal threadEditFinished(string error)
+            function getChatId() { return "parent-chat" }
+            function editThread(name) {
+                requestedName = name
+                threadEditPending = true
+            }
+        }
+
         readonly property var chatDetails: QtObject {
             readonly property string id: "chat-1"
             readonly property string name: "Contact 1"
@@ -127,6 +151,35 @@ Item {
 
             chatContentModuleMock.communityChat = false
             chatContentModuleMock.chatAdmin = false
+        }
+
+        function test_04_selectedThreadHeaderWiresMenuAndRename() {
+            const messages = chatContentModuleMock.messagesModule
+            messages.threadId = "thread"
+            compare(header.chatContentModule.messagesModule.threadId, "thread")
+            compare(findChild(header, "chatHeaderMessageStore").threadId, "thread")
+            tryVerify(() => !!findChild(header, "threadHeaderMenuButton"))
+            const button = findChild(header, "threadHeaderMenuButton")
+            verify(!!button)
+            compare(findChild(header, "chatToolbarMoreOptionsButton").visible, false)
+            mouseClick(button)
+            const menu = findChild(header, "threadHeaderContextMenu")
+            tryCompare(menu, "opened", true)
+            menu.actionAt(0).trigger()
+            tryVerify(() => !!findChild(header, "threadNameInput"))
+            const input = findChild(header, "threadNameInput")
+            input.text = "Renamed thread"
+            input.accepted()
+            compare(messages.requestedName, "Renamed thread")
+            compare(messages.threadEditPending, true)
+            messages.threadName = "Renamed thread"
+            messages.threadEditPending = false
+            messages.threadEditFinished("")
+            tryVerify(() => !findChild(header, "threadNameInput"))
+            messages.canEditThread = false
+            compare(button.visible, false)
+            messages.threadId = ""
+            messages.canEditThread = true
         }
     }
 }
