@@ -74,6 +74,45 @@ suite "updating chat items":
     check(item.canPost == false)
     check(item.canView == false)
 
+  test "parent permissions update thread children":
+    let parent = createTestChatItem("0xparent")
+    let thread = createTestChatItem("0xthread", isThread = true, parentChatId = parent.id)
+    let unrelatedThread = createTestChatItem("0xunrelated", isThread = true, parentChatId = "0xother")
+    thread.canPost = false
+    thread.canView = false
+    thread.canPostReactions = false
+    thread.viewersCanPostReactions = false
+    model.setData(@[parent, thread, unrelatedThread])
+
+    discard model.changeCanPostValues(
+      id = parent.id,
+      canPost = true,
+      canView = true,
+      canPostReactions = true,
+      viewersCanPostReactions = true,
+    )
+
+    check(thread.canPost == true)
+    check(thread.canView == true)
+    check(thread.canPostReactions == true)
+    check(thread.viewersCanPostReactions == true)
+    check(unrelatedThread.canPost == true)
+
+    discard model.changeCanPostValues(
+      id = parent.id,
+      canPost = false,
+      canView = false,
+      canPostReactions = false,
+      viewersCanPostReactions = false,
+    )
+
+    check(parent.canPost == false)
+    check(thread.canPost == false)
+    check(thread.canView == false)
+    check(thread.canPostReactions == false)
+    check(thread.viewersCanPostReactions == false)
+    check(unrelatedThread.canPost == true)
+
   test "update item details by id":
     # Don't touch hideIfPermissionsNotMet
     var updatedRoles = model.updateCommunityItemDetailsById(
