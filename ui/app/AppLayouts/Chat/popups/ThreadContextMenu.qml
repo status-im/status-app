@@ -19,6 +19,7 @@ StatusMenu {
     required property bool pinEnabled
     required property string threadLinkToCopyShare
     required property bool deleteEnabled
+    property bool editEnabled: false
 
     signal editNameRequested()
     signal followRequested()
@@ -34,6 +35,7 @@ StatusMenu {
         objectName: "threadContextMenu_editName"
         text: qsTr("Edit name")
         icon.name: "edit_pencil"
+        enabled: root.editEnabled
         onTriggered: root.editNameRequested()
     }
 

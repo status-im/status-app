@@ -112,4 +112,3 @@ Qt creator might not set the env paths correctly. In this case manually set buil
     
     #run
     emrun StoryBook.html
-

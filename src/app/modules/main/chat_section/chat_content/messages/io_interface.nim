@@ -115,6 +115,18 @@ method getChatId*(self: AccessInterface): string {.base.} =
 method getThreadId*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method updateThreadDetails*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method updateThreadCanView*(self: AccessInterface, canView: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method editThread*(self: AccessInterface, name: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onThreadEditFinished*(self: AccessInterface, requestId, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getChatType*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
