@@ -1,4 +1,4 @@
-from ..base_locators import BaseLocators, xpath_string
+from ..base_locators import BaseLocators, object_name_pred, xpath_string
 
 
 class ChatLocators(BaseLocators):
@@ -10,7 +10,7 @@ class ChatLocators(BaseLocators):
     - ui/imports/shared/views/chat/ChatContextMenuView.qml
     """
 
-    CHAT_LIST = BaseLocators.xpath("//*[contains(@resource-id,'ContactsColumnView_chatList')]")
+    CHAT_LIST = BaseLocators.xpath(f"//*[{object_name_pred('ContactsColumnView_chatList')}]")
     CHAT_SEARCH_BOX = BaseLocators.tid("statusBaseInput")
     CHAT_HEADER = BaseLocators.tid("ContactsColumnView_MessagesHeadline")
     TOOLBAR_BACK_BUTTON = BaseLocators.tid("toolBarBackButton")
@@ -33,15 +33,15 @@ class ChatLocators(BaseLocators):
         "or substring(@resource-id, string-length(@resource-id) - 25) "
         "= '.statusChatInputSendButton']"
         " | "
-        "//*[contains(@resource-id, 'StatusChatInputSendButton')]"
+        f"//*[{object_name_pred('StatusChatInputSendButton')}]"
     )
     EMOJI_BUTTON = BaseLocators.xpath(
         "//*[contains(@content-desc, '[tid:statusChatInputEmojiButton]') "
         "or substring(@resource-id, string-length(@resource-id) - 26) "
         "= '.statusChatInputEmojiButton']"
         " | "
-        "(//*[contains(@resource-id,'StatusChatInputToolBar')]"
-        "//*[contains(@resource-id, '.ChatIcon')])[9]"
+        f"(//*[{object_name_pred('StatusChatInputToolBar')}]"
+        f"//*[{object_name_pred('.ChatIcon')}])[9]"
     )
     COMMAND_BUTTON = BaseLocators.tid("statusChatInputCommandButton")
     CHAT_MORE_OPTIONS_BUTTON = BaseLocators.resource_id_contains("chatToolbarMoreOptionsButton")
@@ -49,8 +49,8 @@ class ChatLocators(BaseLocators):
     # Use the 1:1 chat variant (clearHistoryMenuItem) — not the group variant
     # (clearHistoryGroupMenuItem). resource_id ends with the objectName.
     CLEAR_HISTORY_MENU_ITEM = BaseLocators.xpath(
-        "//*[contains(@resource-id,'clearHistoryMenuItem') "
-        "and not(contains(@resource-id,'GroupMenuItem'))]"
+        f"//*[{object_name_pred('clearHistoryMenuItem')} "
+        f"and not{object_name_pred('GroupMenuItem')}]"
     )
     CLEAR_HISTORY_CONFIRM_BUTTON = BaseLocators.resource_id_contains(
         "clearChatConfirmationDialogClearButton"
@@ -62,7 +62,7 @@ class ChatLocators(BaseLocators):
         "deleteChatConfirmationDialogDeleteButton"
     )
     ADD_IMAGE_ACTION = BaseLocators.tid("chatCommandMenu_addImage")
-    CHAT_LOG_VIEW = BaseLocators.xpath("//*[contains(@resource-id,'chatLogView')]")
+    CHAT_LOG_VIEW = BaseLocators.xpath(f"//*[{object_name_pred('chatLogView')}]")
     # The chat log's ListView has no accessibility node; its viewport is the
     # band between the toolbar's bottom edge and the composer panel's top edge.
     CHAT_TOOLBAR = BaseLocators.tid("statusToolBar")
@@ -75,12 +75,11 @@ class ChatLocators(BaseLocators):
     # drawer-intro dialog, which has no dedicated skip button.
     # QML: StatusHeaderActions.qml objectName "headerActionsCloseButton"
     DIALOG_HEADER_CLOSE_BUTTON = BaseLocators.tid("headerActionsCloseButton")
-    START_CHAT_BUTTON = BaseLocators.xpath(
-        "//*[contains(@resource-id,'startChatButton')]"
-    )
+    START_CHAT_BUTTON = BaseLocators.object_name_contains("startChatButton")
 
     CHAT_ROWS = BaseLocators.xpath(
         "//android.widget.Button[contains(@resource-id,'StatusDraggableListItem')]"
+        " | //*[starts-with(name(),'XCUIElementType')][contains(@name,'.StatusDraggableListItem_')]"
     )
     CHAT_HEADER_NAME = BaseLocators.resource_id_contains("statusChatInfoButtonNameText")
 
@@ -89,10 +88,14 @@ class ChatLocators(BaseLocators):
         return BaseLocators.xpath(f"//*[@resource-id={xpath_string(resource_id)}]")
 
     @staticmethod
+    def chat_row_ios(name: str) -> tuple:
+        return BaseLocators.xpath(f"//*[@name={xpath_string(name)}]")
+
+    @staticmethod
     def chat_list_item(display_name: str) -> tuple:
         escaped = display_name.replace("'", "\\'")
         xpath = (
-            "//*[contains(@resource-id,'ContactsColumnView_chatList')]"
+            f"//*[{object_name_pred('ContactsColumnView_chatList')}]"
             f"//*[contains(@text,\"{escaped}\") or contains(@content-desc,\"{escaped}\")]"
         )
         return BaseLocators.xpath(xpath)
@@ -103,6 +106,8 @@ class ChatLocators(BaseLocators):
         xpath = (
             "//android.widget.EditText"
             f"[contains(@content-desc,\"{escaped}\")]"
+            " | //XCUIElementTypeStaticText[contains(@name,'StatusTextMessage_chatText')"
+            f" and contains(@label,\"{escaped}\")]"
         )
         return BaseLocators.xpath(xpath)
 
@@ -112,6 +117,8 @@ class ChatLocators(BaseLocators):
         xpath = (
             "//android.widget.EditText"
             f"[@content-desc=\"{escaped}\"]"
+            " | //XCUIElementTypeStaticText[contains(@name,'StatusTextMessage_chatText')"
+            f" and @label=\"{escaped}\"]"
         )
         return BaseLocators.xpath(xpath)
 
@@ -123,7 +130,7 @@ class ChatLocators(BaseLocators):
         a different element type than ``EditText``.
         """
         escaped = content.replace('"', '\\"')
-        return BaseLocators.xpath(f"//*[contains(@resource-id,'chatMessageViewDelegate')]//*[contains(@content-desc,\"{escaped}\")]")
+        return BaseLocators.xpath(f"//*[{object_name_pred('chatMessageViewDelegate')}]//*[contains(@content-desc,\"{escaped}\")]")
 
     # Reply preview bar shown above the chat input when replying.
     # QML: StatusChatInputReplyArea (objectName "statusChatInputReplyArea")
@@ -135,14 +142,14 @@ class ChatLocators(BaseLocators):
         "or substring(@resource-id, string-length(@resource-id) - 24) "
         "= '.statusChatInputReplyArea']"
         " | "
-        "//*[contains(@resource-id, 'StatusChatInputReplyPanel')]"
+        f"//*[{object_name_pred('StatusChatInputReplyPanel')}]"
     )
     REPLY_CLOSE_BUTTON = BaseLocators.resource_id_contains("replyAreaCloseButton")
     # Edit tag close (StatusChatInput.qml) or the toolbar's cancel
     # (StatusChatInputToolBar.qml); which one the phone exposes is untested.
     EDIT_CLOSE_BUTTON = BaseLocators.xpath(
-        "//*[contains(@resource-id,'statusChatInputEditCloseButton') "
-        "or contains(@resource-id,'statusChatInputEditCancelButton')]"
+        f"//*[{object_name_pred('statusChatInputEditCloseButton')} "
+        f"or {object_name_pred('statusChatInputEditCancelButton')}]"
     )
     REPLY_DETAILS = BaseLocators.tid("StatusMessage_replyDetails")
     REPLY_CORNER = BaseLocators.resource_id_contains("statusMessageReplyCorner")
@@ -151,7 +158,7 @@ class ChatLocators(BaseLocators):
     def reply_preview_for_user(username: str) -> tuple:
         """Locator for reply preview showing we're replying to a specific user."""
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'statusChatInputReplyArea')]"
+            f"//*[{object_name_pred('statusChatInputReplyArea')}]"
             f"[contains(@content-desc,'Replying to {username}')]"
         )
 
@@ -161,7 +168,7 @@ class ChatLocators(BaseLocators):
         escaped = content.replace('"', '\\"')
         return BaseLocators.xpath(
             f"//*[contains(@content-desc,'{escaped}')]/ancestor::*"
-            f"//*[contains(@resource-id,'statusMessageReplyCorner')]"
+            f"//*[{object_name_pred('statusMessageReplyCorner')}]"
         )
 
     # Edited message indicator - "(edited)" text appended to message
@@ -171,9 +178,12 @@ class ChatLocators(BaseLocators):
         """Locator for a message that contains both the content and '(edited)' indicator."""
         escaped = content.replace('"', '\\"')
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'chatMessageViewDelegate')]"
+            f"//*[{object_name_pred('chatMessageViewDelegate')}]"
             f"//*[contains(@content-desc,'{escaped}') "
             f"and contains(@content-desc,'(edited)')]"
+            # iOS: "(edited)" is appended to the message text's label.
+            " | //XCUIElementTypeStaticText[contains(@name,'StatusTextMessage_chatText')"
+            f" and contains(@label,'{escaped}') and contains(@label,'(edited)')]"
         )
 
     # Pinned message indicator - shows "Pinned by" text
@@ -185,7 +195,7 @@ class ChatLocators(BaseLocators):
     def pinned_indicator_by_user(username: str) -> tuple:
         """Locator for pinned indicator showing who pinned the message."""
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'statusPinMessageDetails')]"
+            f"//*[{object_name_pred('statusPinMessageDetails')}]"
             f"[contains(@content-desc,'{username}')]"
         )
 
@@ -195,7 +205,7 @@ class ChatLocators(BaseLocators):
         escaped = content.replace('"', '\\"')
         return BaseLocators.xpath(
             f"//*[contains(@content-desc,'{escaped}')]/ancestor::*"
-            f"//*[contains(@resource-id,'statusPinMessageDetails')]"
+            f"//*[{object_name_pred('statusPinMessageDetails')}]"
         )
 
     # Reaction on message - emoji reactions shown below the message
@@ -216,8 +226,8 @@ class ChatLocators(BaseLocators):
         # Look for reaction by resource-id (messageReaction_1f600) or content-desc (1f600)
         # Exclude context menu reactions by not being inside MessageContextMenuView
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'messageReaction_{emoji_code}')]"
-            f"[not(ancestor::*[contains(@resource-id,'MessageContextMenuView')])]"
+            f"//*[{object_name_pred(f'messageReaction_{emoji_code}')}]"
+            f"[not(ancestor::*[{object_name_pred('MessageContextMenuView')}])]"
         )
 
     @staticmethod
@@ -225,8 +235,13 @@ class ChatLocators(BaseLocators):
         """The reaction badge on the message carrying ``content``, so a badge an
         earlier test left on another message cannot satisfy the check."""
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'chatMessageViewDelegate')]"
+            f"//*[{object_name_pred('chatMessageViewDelegate')}]"
             f"[.//*[contains(@content-desc,{xpath_string(content)})]]"
-            f"//*[contains(@resource-id,'messageReaction_{emoji_code}')]"
-            f"[not(ancestor::*[contains(@resource-id,'MessageContextMenuView')])]"
+            f"//*[{object_name_pred(f'messageReaction_{emoji_code}')}]"
+            f"[not(ancestor::*[{object_name_pred('MessageContextMenuView')}])]"
+            # iOS: the delegate is not an element and every message shares one
+            # name path, so the badge belongs to the nearest message text above it.
+            f" | //XCUIElementTypeButton[contains(@name,'.messageReaction_{emoji_code}')]"
+            f"[preceding::XCUIElementTypeStaticText[contains(@name,'StatusTextMessage_chatText')][1]"
+            f"[contains(@label,{xpath_string(content)})]]"
         )

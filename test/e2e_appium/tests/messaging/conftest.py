@@ -585,6 +585,28 @@ async def _establish_phone_to_peer_contact(device: DeviceContext, peer) -> str:
     return phone_key
 
 
+
+def _test_device_id_overrides(test_environment: str, count: int):
+    """Resolve TEST_DEVICE_ID into pool device overrides, as the multi-device
+    fixtures do, so the peer tests pick the named device (e.g. an iPhone)
+    instead of the environment default."""
+    device_id = os.getenv("TEST_DEVICE_ID")
+    if not device_id:
+        return None
+    try:
+        from core.config_manager import ConfigurationManager
+        env_cfg = ConfigurationManager().load_environment(test_environment)
+        device = env_cfg.get_device(device_id)
+        defaults = env_cfg.device_defaults.get("capabilities", {})
+        override = {"capabilities": device.merged_capabilities(defaults)}
+        if device.provider_overrides:
+            override.update(device.provider_overrides)
+        return [override] * count
+    except Exception as exc:
+        # Falling back to the default device would run the suite on Android
+        # and still look like a run on the named device.
+        raise RuntimeError(f"TEST_DEVICE_ID={device_id} could not be resolved: {exc}") from exc
+
 async def _setup_peer_chat(pool: SessionPool, test_nodeid: str, worker: str):
     from core.backend_peer import BackendPeer
 
@@ -661,7 +683,10 @@ async def peer_chat(request, test_environment) -> PeerChatContext:
 
     logger.info("Setting up peer_chat fixture (%s)", worker)
 
-    pool = SessionPool(config=PoolConfig.from_environment(test_environment, parallel=True))
+    pool = SessionPool(config=PoolConfig.from_environment(
+        test_environment, parallel=True,
+        device_overrides=_test_device_id_overrides(test_environment, 1),
+    ))
     try:
         # pytest-timeout raises in the main thread, outside this coroutine, so
         # its expiry would skip the cleanup below and leak both the container

@@ -263,9 +263,10 @@ class AppLifecycleManager:
         try:
             self.logger.debug("Attempting mobile restart for %s", app_package)
             try:
-                self.driver.execute_script(
-                    "mobile: terminateApp", {"appId": app_package}
-                )
+                # XCUITest requires bundleId; without it terminate fails and
+                # activate_app only foregrounds the running app.
+                target = {"bundleId": app_package} if self._is_ios else {"appId": app_package}
+                self.driver.execute_script("mobile: terminateApp", target)
                 self.logger.debug("App terminated via mobile: terminateApp")
             except Exception as terminate_err:
                 self.logger.debug(

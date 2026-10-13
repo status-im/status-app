@@ -1,4 +1,14 @@
-from ..base_locators import BaseLocators, xpath_string
+from ..base_locators import BaseLocators, object_name_pred, xpath_string
+
+
+def _menu_reaction(code: str) -> tuple:
+    """A quick-reaction button in the message context menu. On iOS the menu is
+    not an element; its buttons carry the menu's path in their name."""
+    return BaseLocators.xpath(
+        f"//*[{object_name_pred('MessageContextMenuView')}]"
+        f"//android.widget.Button[@content-desc='{code}']"
+        f" | //XCUIElementTypeButton[contains(@name,'MessageContextMenuView') and @label='{code}']"
+    )
 
 
 class MessageContextMenuLocators(BaseLocators):
@@ -22,9 +32,9 @@ class MessageContextMenuLocators(BaseLocators):
     # Substring match would also hit messageContextMenu_copySelection/_copyLink,
     # which sit before plain copy in the expanded menu's tree order.
     COPY_MESSAGE = BaseLocators.xpath(
-        "//*[contains(@resource-id,'messageContextMenu_copy')"
-        " and not(contains(@resource-id,'messageContextMenu_copySelection'))"
-        " and not(contains(@resource-id,'messageContextMenu_copyLink'))]"
+        f"//*[{object_name_pred('messageContextMenu_copy')}"
+        f" and not{object_name_pred('messageContextMenu_copySelection')}"
+        f" and not{object_name_pred('messageContextMenu_copyLink')}]"
     )
     PIN_MESSAGE = BaseLocators.resource_id_contains("messageContextMenu_pin")
     MARK_AS_UNREAD = BaseLocators.resource_id_contains("messageContextMenu_markUnread")
@@ -44,52 +54,19 @@ class MessageContextMenuLocators(BaseLocators):
     # 👍 = 1f44d, 👎 = 1f44e, ❤️ = 2764, 😂 = 1f602, 😢 = 1f622, 😡 = 1f621
     
     # Quick reactions shown in the menu (varies by app configuration)
-    REACTION_GRIN = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f600']"
-    )
-    REACTION_SMILEY = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f603']"
-    )
-    REACTION_SMILE = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f604']"
-    )
-    REACTION_BEAM = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f601']"
-    )
-    REACTION_LAUGH = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f606']"
-    )
+    REACTION_GRIN = _menu_reaction("1f600")
+    REACTION_SMILEY = _menu_reaction("1f603")
+    REACTION_SMILE = _menu_reaction("1f604")
+    REACTION_BEAM = _menu_reaction("1f601")
+    REACTION_LAUGH = _menu_reaction("1f606")
     
     # Common reactions (may need to scroll or open picker)
-    REACTION_THUMBS_UP = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f44d']"
-    )
-    REACTION_THUMBS_DOWN = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f44e']"
-    )
-    REACTION_HEART = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='2764']"
-    )
-    REACTION_JOY = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f602']"
-    )
-    REACTION_SAD = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f622']"
-    )
-    REACTION_ANGRY = BaseLocators.xpath(
-        "//*[contains(@resource-id,'MessageContextMenuView')]"
-        "//android.widget.Button[@content-desc='1f621']"
-    )
+    REACTION_THUMBS_UP = _menu_reaction("1f44d")
+    REACTION_THUMBS_DOWN = _menu_reaction("1f44e")
+    REACTION_HEART = _menu_reaction("2764")
+    REACTION_JOY = _menu_reaction("1f602")
+    REACTION_SAD = _menu_reaction("1f622")
+    REACTION_ANGRY = _menu_reaction("1f621")
     
     # "Add reaction" button opens emoji picker
     ADD_REACTION_BUTTON = BaseLocators.content_desc_contains("Add reaction")
@@ -111,7 +88,7 @@ class MessageContextMenuLocators(BaseLocators):
         """
         escaped = xpath_string(text)
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'MessageContextMenuView')]"
+            f"//*[{object_name_pred('MessageContextMenuView')}]"
             f"//*[contains(@text,{escaped}) or contains(@content-desc,{escaped})]"
         )
 
@@ -131,10 +108,7 @@ class MessageContextMenuLocators(BaseLocators):
         """
         # Convert emoji character to hex code if needed
         code = cls.EMOJI_TO_CODE.get(emoji, emoji)
-        return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'MessageContextMenuView')]"
-            f"//android.widget.Button[@content-desc='{code}']"
-        )
+        return _menu_reaction(code)
 
 
 class EmojiPickerLocators(BaseLocators):
@@ -155,7 +129,7 @@ class EmojiPickerLocators(BaseLocators):
     
     # Search input wrapper (contains "Search" placeholder)
     SEARCH_INPUT_WRAPPER = BaseLocators.xpath(
-        "//*[contains(@resource-id,'StatusEmojiPopup')]"
+        f"//*[{object_name_pred('StatusEmojiPopup')}]"
         "//*[contains(@content-desc,'Search')]"
     )
     
@@ -173,7 +147,7 @@ class EmojiPickerLocators(BaseLocators):
         Note: content-desc may be empty; prefer emoji_by_shortname.
         """
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'StatusEmojiPopup')]"
+            f"//*[{object_name_pred('StatusEmojiPopup')}]"
             f"//*[contains(@content-desc,'{emoji}')]"
         )
 
@@ -191,5 +165,5 @@ class EmojiPickerLocators(BaseLocators):
         """
         # Grid items start at index 1 in the AlertDialog children (after search box)
         return BaseLocators.xpath(
-            f"(//*[contains(@resource-id,'StatusEmojiPopup.QQuickItem')])[{index + 1}]"
+            f"(//*[{object_name_pred('StatusEmojiPopup.QQuickItem')}])[{index + 1}]"
         )

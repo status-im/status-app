@@ -5,6 +5,7 @@ import re
 from ..base_page import BasePage
 from locators.settings.backup_seed_locators import BackupSeedLocators
 from support.element_state_checker import ElementStateChecker
+from support.platform import is_ios
 
 
 class BackupSeedModal(BasePage):
@@ -27,9 +28,10 @@ class BackupSeedModal(BasePage):
             nodes = self.driver.find_elements(*self.locators.SEED_WORD_TEXT_NODES)
         except Exception:
             nodes = []
+        desc_attribute = "label" if is_ios(self.driver) else "content-desc"
         for node in nodes:
             try:
-                desc = node.get_attribute("content-desc") or ""
+                desc = node.get_attribute(desc_attribute) or ""
                 # Expected format: "<word> [tid:seedWordText_N]"
                 m = re.match(r"^(?P<word>.+?)\s+\[tid:seedWordText_(?P<idx>\d+)\]$", desc)
                 if m:
@@ -109,6 +111,16 @@ class BackupSeedModal(BasePage):
             return False
 
     def _parse_input_index(self, element) -> Optional[int]:
+        if is_ios(self.driver):
+            # XCUITest rejects Android attribute names, so read name and label.
+            try:
+                for value in (element.get_attribute("name"), element.get_attribute("label")):
+                    m = re.search(r"seedInput_(\d+)", value or "")
+                    if m:
+                        return int(m.group(1)) + 1
+            except Exception:
+                return None
+            return None
         try:
             rid = element.get_attribute("resource-id") or ""
             m = re.search(r"seedInput_(\d+)", rid)

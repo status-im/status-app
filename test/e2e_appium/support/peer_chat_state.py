@@ -8,6 +8,7 @@ from config.logging_config import get_logger
 from core.device_context import DeviceContext
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
+from support.platform import ios_bundle_id, is_ios
 from support.screen_identity import dismiss_introduce_yourself
 
 logger = get_logger("peer_chat_state")
@@ -19,12 +20,15 @@ def open_peer_chat_by_deeplink(device: DeviceContext, peer, attempts: int = DEEP
     """Open the peer's 1:1 through the status-app:// deep link."""
     driver = device.driver
     chat_page = ChatPage(driver)
-    package = driver.capabilities.get("appPackage") or "app.status.mobile"
+    if is_ios(driver):
+        target = {"bundleId": ios_bundle_id(driver)}
+    else:
+        target = {"package": driver.capabilities.get("appPackage") or "app.status.mobile"}
     for attempt in range(1, attempts + 1):
         try:
             driver.execute_script(
                 "mobile: deepLink",
-                {"url": f"status-app://p/{peer.public_key}", "package": package},
+                {"url": f"status-app://p/{peer.public_key}", **target},
             )
         except InvalidSessionIdException:
             raise

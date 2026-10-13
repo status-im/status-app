@@ -1,12 +1,12 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class BackupSeedLocators(BaseLocators):
-    MODAL_ROOT = BaseLocators.xpath("//*[contains(@resource-id, 'BackupSeedModal')]")
+    MODAL_ROOT = BaseLocators.xpath(f"//*[{object_name_pred('BackupSeedModal')}]")
 
     # Scroll container inside the modal (from XML: BackupSeedModal.StatusScrollView_QMLTYPE_*)
     SCROLL_CONTAINER = BaseLocators.xpath(
-        "//*[contains(@resource-id,'BackupSeedModal') and contains(@resource-id,'StatusScrollView')]"
+        f"//*[{object_name_pred('BackupSeedModal')} and {object_name_pred('StatusScrollView')}]"
     )
 
     ACK_HAVE_PEN = BaseLocators.accessibility_id("I have a pen and paper")
@@ -23,7 +23,8 @@ class BackupSeedLocators(BaseLocators):
     # Test-mode TIDs: expose each word via Accessible.name with objectName seedWordText_<n>
     SEED_WORD_TEXT_NODES = BaseLocators.xpath(
         "//*[contains(@content-desc, '[tid:seedWordText_') "
-        "or contains(@resource-id, 'seedWordText_')]"
+        "or contains(@label, '[tid:seedWordText_') "
+        f"or {object_name_pred('seedWordText_')}]"
     )
 
     NEXT_BUTTON = BaseLocators.accessibility_id("I've backed up phrase")
@@ -35,7 +36,7 @@ class BackupSeedLocators(BaseLocators):
     # Confirm step container and inputs (single-screen, four-input UI)
     CONFIRM_STEP_CONTAINER = BaseLocators.accessibility_id("Confirm recovery phrase")
     CONFIRM_INPUTS_ANY = BaseLocators.xpath(
-        "//*[contains(@resource-id,'BackupSeedModal')]//*[contains(@resource-id,'seedInput_')]"
+        f"//*[{object_name_pred('BackupSeedModal')}]//*[{object_name_pred('seedInput_')}]"
     )
     FINAL_ACK_CHECKBOX = BaseLocators.accessibility_id(
         "I acknowledge that Status will not be able to show me my recovery phrase again."
