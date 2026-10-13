@@ -143,6 +143,15 @@ method resetHttpTrafficStats*(self: Module) =
 method setHttpTrafficStatsEnabled*(self: Module, enabled: bool) =
   self.controller.setHttpTrafficStatsEnabled(enabled)
 
+method fetchWakuTrafficReport*(self: Module) =
+  self.controller.fetchWakuTrafficReport()
+
+method onWakuTrafficReportFetched*(self: Module, report: string, error: string) =
+  self.view.wakuTrafficReportFetched(report, error)
+
+method resetWakuTrafficStats*(self: Module) =
+  self.controller.resetWakuTrafficStats()
+
 method refetchTxHistory*(self: Module) =
   self.controller.refetchTxHistory()
 

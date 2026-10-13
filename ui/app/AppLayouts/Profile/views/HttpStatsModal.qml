@@ -60,6 +60,7 @@ StatusDialog {
         readonly property int tabStatusGo: 0
         readonly property int tabApp: 1
         readonly property int tabAll: 2
+        readonly property int tabWaku: 3
 
         property var totals: ({networkRequests: 0, networkBytes: 0, cacheRequests: 0, cacheBytes: 0})
         property var cache: ({directory: "", size: 0, maximumSize: 0})
@@ -176,10 +177,37 @@ StatusDialog {
             fillAllModel()
         }
 
+        //! The Waku report, null until read or when status-go has none.
+        property var wakuStats: null
+        property string wakuError: ""
+        property bool wakuRequestInFlight: false
+        property int wakuRequestGeneration: 0
+
+        //! Asks for the report; it lands in onWakuTrafficReportFetched.
+        function updateWakuStats() {
+            if (!root.walletStore || wakuRequestInFlight)
+                return
+            wakuRequestInFlight = true
+            wakuRequestGeneration = generation
+            root.walletStore.fetchWakuTrafficReport()
+        }
+
+        function applyWakuReport(report, error) {
+            wakuRequestInFlight = false
+            if (wakuRequestGeneration !== generation)
+                return
+            const response = Report.parseResponse(report, error, qsTr("No data"))
+            wakuStats = response.result
+            wakuError = response.error
+        }
+
         function updateAll() {
             updateCounters()
             updateCacheInfo()
-            updateGoStats()
+            if (tabBar.currentIndex === tabWaku)
+                updateWakuStats()
+            else
+                updateGoStats()
             updatedAt = new Date()
             now = updatedAt
         }
@@ -228,10 +256,18 @@ StatusDialog {
                 }
                 return text
             }
+            if (tabBar.currentIndex === d.tabWaku)
+                return JSON.stringify({waku: wakuStats}, null, 2)
             return JSON.stringify({statusGo: goStats, app: {totals: totals, hosts: HttpStats.hosts()}}, null, 2)
         }
 
         function reset() {
+            if (tabBar.currentIndex === d.tabWaku) {
+                if (root.walletStore)
+                    root.walletStore.resetWakuTrafficStats()
+                updateAll()
+                return
+            }
             if (tabBar.currentIndex !== d.tabApp && root.walletStore)
                 root.walletStore.resetHttpTrafficStats()
             // Counters only: reset does not touch the cache, so there is
@@ -263,7 +299,10 @@ StatusDialog {
         repeat: true
         running: d.live && tabBar.currentIndex !== d.tabApp
         onTriggered: {
-            d.updateGoStats()
+            if (tabBar.currentIndex === d.tabWaku)
+                d.updateWakuStats()
+            else
+                d.updateGoStats()
             d.updatedAt = new Date()
         }
     }
@@ -289,6 +328,13 @@ StatusDialog {
         target: root.walletStore
         function onHttpTrafficReportFetched(report, error, endpoints, key) {
             d.applyReport(report, error, endpoints, key)
+        }
+    }
+
+    Connections {
+        target: root.walletStore
+        function onWakuTrafficReportFetched(report, error) {
+            d.applyWakuReport(report, error)
         }
     }
 
@@ -328,8 +374,10 @@ StatusDialog {
                 objectName: "httpStatsLiveLabel"
                 Layout.fillWidth: true
                 text: {
-                    const measuring = d.goStats ? qsTr(" · measuring %1").arg(d.formatDuration(d.goElapsedSeconds)) : ""
-                    if (d.goStats && !d.goEnabled)
+                    const onWaku = tabBar.currentIndex === d.tabWaku
+                    const measured = onWaku ? Report.elapsedSeconds(d.wakuStats) : d.goElapsedSeconds
+                    const measuring = (onWaku ? d.wakuStats : d.goStats) ? qsTr(" · measuring %1").arg(d.formatDuration(measured)) : ""
+                    if (!onWaku && d.goStats && !d.goEnabled)
                         return qsTr("Collection is off")
                     if (d.paused)
                         return qsTr("Paused at %1 · counting continues").arg(Qt.formatTime(d.updatedAt, "hh:mm:ss"))
@@ -353,7 +401,8 @@ StatusDialog {
             }
             StatusSwitch {
                 objectName: "httpStatsCollectSwitch"
-                visible: !!d.goStats
+                // Waku traffic is always counted.
+                visible: !!d.goStats && tabBar.currentIndex !== d.tabWaku
                 text: qsTr("Collect")
                 checked: d.goEnabled
                 onToggled: d.setCollecting(checked)
@@ -367,6 +416,8 @@ StatusDialog {
             Layout.fillWidth: true
             Layout.bottomMargin: 12
 
+            onCurrentIndexChanged: if (currentIndex === d.tabWaku && d.live) d.updateAll()
+
             StatusSwitchTabButton {
                 objectName: "httpStatsStatusGoTab"
                 text: qsTr("status-go")
@@ -379,14 +430,11 @@ StatusDialog {
                 objectName: "httpStatsAllTab"
                 text: qsTr("All")
             }
-            // Not measured yet: Waku is libp2p rather than HTTP, and the webviews
-            // fetch through the web engine's own network stack.
             StatusSwitchTabButton {
                 objectName: "httpStatsWakuTab"
                 text: qsTr("Waku")
-                enabled: false
-                opacity: ThemeUtils.disabledOpacity
             }
+            // Not measured yet: the webviews fetch through the web engine's own network stack.
             StatusSwitchTabButton {
                 objectName: "httpStatsWebviewsTab"
                 text: qsTr("Webviews")
@@ -591,6 +639,34 @@ StatusDialog {
                         subTitle: model.subtitle
                         enabled: false
                     }
+                }
+            }
+
+            // Waku
+            ColumnLayout {
+                spacing: 0
+
+                StatusBaseText {
+                    objectName: "httpStatsWakuError"
+                    Layout.fillWidth: true
+                    visible: !d.wakuStats && d.wakuError !== ""
+                    text: qsTr("status-go does not report its Waku traffic: %1").arg(d.wakuError)
+                    font.pixelSize: Theme.additionalTextSize
+                    color: Theme.palette.baseColor1
+                    wrapMode: Text.WordWrap
+                }
+
+                WakuTrafficDashboard {
+                    objectName: "wakuTrafficDashboard"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: !!d.wakuStats
+                    stats: d.wakuStats
+                }
+
+                Item {
+                    Layout.fillHeight: true
+                    visible: !d.wakuStats
                 }
             }
         }

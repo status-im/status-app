@@ -23,6 +23,30 @@ SplitView {
     QtObject {
         id: fixture
 
+        function wakuRow(sentMb, receivedMb, rest) {
+            return Object.assign({bytesSent: Math.round(sentMb * 1024 * 1024),
+                                  bytesReceived: Math.round(receivedMb * 1024 * 1024)}, rest)
+        }
+
+        // Shaped like wakuext_getTrafficReport, with invented numbers.
+        readonly property var wakuSnapshot: ({
+            since: "2026-10-13T13:00:00.663257+04:00",
+            until: "2026-10-13T14:12:00.715962+04:00",
+            totals: wakuRow(18.4, 96.2),
+            protocols: [
+                wakuRow(12.6, 60.5, {protocol: "/vac/waku/relay/2.0.0"}),
+                wakuRow(0.4, 24.9, {protocol: "/vac/waku/store-query/3.0.0"}),
+                wakuRow(0.1, 7.4, {protocol: "/vac/waku/filter-push/2.0.0-beta1"}),
+                wakuRow(3.4, 0.1, {protocol: "/vac/waku/lightpush/2.0.0-beta1"}),
+                wakuRow(1.9, 3.3, {protocol: "/ipfs/id/1.0.0"})
+            ],
+            peers: [
+                wakuRow(8.1, 45.4, {peer: "16Uiu2HAmAR24Mbb6VuzoyUiGx42UenDkshENVDj4qnmmbabLvo31"}),
+                wakuRow(4.9, 30.3, {peer: "16Uiu2HAm8mUZ18tBWPXDQsaF7PbCKYA35z7WB2xNZH2EVq1qS8LJ"}),
+                wakuRow(5.4, 20.5, {peer: "16Uiu2HAmNTpGnyZ8W1BK2sXEmgSCNWiyDKgRU3NBR2DXST2HzxRU"})
+            ]
+        })
+
         readonly property var snapshot: ({
             since: "2026-10-02T13:16:28.663257+04:00",
             until: "2026-10-02T17:01:28.715962+04:00",
@@ -151,6 +175,10 @@ SplitView {
                                       ? JSON.stringify({error: {message: "the method wallet_getHTTPTrafficReport does not exist"}})
                                       : JSON.stringify({result: fixture.snapshot})
                 onHttpTrafficStatsReset: logs.logEvent("walletStore.resetHttpTrafficStats")
+                wakuTrafficStatsJson: noStatusGoCheckBox.checked
+                                      ? JSON.stringify({error: {message: "the method wakuext_getTrafficReport does not exist"}})
+                                      : JSON.stringify({result: fixture.wakuSnapshot})
+                onWakuTrafficStatsReset: logs.logEvent("walletStore.resetWakuTrafficStats")
             }
         }
     }

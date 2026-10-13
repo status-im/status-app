@@ -76,6 +76,11 @@ QtObject:
     self.delegate.resetHttpTrafficStats()
   proc setHttpTrafficStatsEnabled(self: View, enabled: bool) {.slot.} =
     self.delegate.setHttpTrafficStatsEnabled(enabled)
+  proc fetchWakuTrafficReport(self: View) {.slot.} =
+    self.delegate.fetchWakuTrafficReport()
+  proc wakuTrafficReportFetched*(self: View, report: string, error: string) {.signal.}
+  proc resetWakuTrafficStats(self: View) {.slot.} =
+    self.delegate.resetWakuTrafficStats()
 
   proc refetchTxHistory*(self: View) {.slot.} =
     self.delegate.refetchTxHistory()

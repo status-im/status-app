@@ -16,6 +16,7 @@ logScope:
 const SIGNAL_MESSAGING_NETWORK_DISCONNECTED* = "messagingNetworkDisconnected"
 const SIGNAL_MESSAGING_NETWORK_CONNECTED* = "messagingNetworkConnected"
 const SIGNAL_HTTP_TRAFFIC_REPORT_FETCHED* = "httpTrafficReportFetched"
+const SIGNAL_WAKU_TRAFFIC_REPORT_FETCHED* = "wakuTrafficReportFetched"
 
 type HttpTrafficReportArgs* = ref object of Args
   ## The JSON-RPC envelope status-go answered wallet_getHTTPTrafficReport with.
@@ -24,6 +25,11 @@ type HttpTrafficReportArgs* = ref object of Args
   ## The query the report answers.
   endpoints*: string
   key*: string
+
+type WakuTrafficReportArgs* = ref object of Args
+  ## The JSON-RPC envelope status-go answered wakuext_getTrafficReport with.
+  report*: string
+  error*: string
 
 QtObject:
   type Service* = ref object of QObject
@@ -113,6 +119,33 @@ QtObject:
   proc setHttpTrafficStatsEnabled*(self: Service, enabled: bool) =
     try:
       status_node.setHttpTrafficStatsEnabled(enabled)
+    except Exception as e:
+      let errDescription = e.msg
+      error "error: ", errDescription
+
+  ## Reads the Waku traffic report off the GUI thread; SIGNAL_WAKU_TRAFFIC_REPORT_FETCHED
+  ## carries it back.
+  proc fetchWakuTrafficReport*(self: Service) =
+    let arg = FetchWakuTrafficReportTaskArg(
+      tptr: fetchWakuTrafficReportTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onWakuTrafficReportFetched",
+    )
+    self.threadpool.start(arg)
+
+  proc onWakuTrafficReportFetched(self: Service, response: string) {.slot.} =
+    var args = WakuTrafficReportArgs()
+    try:
+      let parsed = response.parseJson
+      args.report = parsed{"report"}.getStr
+      args.error = parsed{"error"}.getStr
+    except Exception as e:
+      args.error = e.msg
+    self.events.emit(SIGNAL_WAKU_TRAFFIC_REPORT_FETCHED, args)
+
+  proc resetWakuTrafficStats*(self: Service) =
+    try:
+      status_node.resetWakuTrafficStats()
     except Exception as e:
       let errDescription = e.msg
       error "error: ", errDescription

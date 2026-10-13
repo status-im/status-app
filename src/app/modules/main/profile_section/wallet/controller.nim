@@ -42,6 +42,10 @@ proc init*(self: Controller) =
     let args = HttpTrafficReportArgs(e)
     self.delegate.onHttpTrafficReportFetched(args.report, args.error, args.endpoints, args.key)
 
+  self.events.on(SIGNAL_WAKU_TRAFFIC_REPORT_FETCHED) do(e: Args):
+    let args = WakuTrafficReportArgs(e)
+    self.delegate.onWakuTrafficReportFetched(args.report, args.error)
+
 proc hasPairedDevices*(self: Controller): bool =
   return self.walletAccountService.hasPairedDevices()
 
@@ -59,6 +63,12 @@ proc resetHttpTrafficStats*(self: Controller) =
 
 proc setHttpTrafficStatsEnabled*(self: Controller, enabled: bool) =
   self.nodeService.setHttpTrafficStatsEnabled(enabled)
+
+proc fetchWakuTrafficReport*(self: Controller) =
+  self.nodeService.fetchWakuTrafficReport()
+
+proc resetWakuTrafficStats*(self: Controller) =
+  self.nodeService.resetWakuTrafficStats()
 
 proc refetchTxHistory*(self: Controller) =
   self.walletAccountService.refetchTxHistory()
