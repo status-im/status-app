@@ -79,6 +79,9 @@ Control {
     property var deletedMessage: ({})
 
     readonly property int maximumWidth: 420
+    readonly property real connectorY: contentItem.y + (d.deleted
+        ? bodyRow.y + bodyRow.height / 2
+        : titleRow.y + titleRow.height / 2)
 
     /*!
        Emitted when the user requests to open the thread.
@@ -143,6 +146,8 @@ Control {
 
         // Active state title row.
         RowLayout {
+            id: titleRow
+            objectName: "threadCardTitleRow"
             Layout.fillWidth: true
             visible: !d.deleted
             spacing: 0
@@ -277,6 +282,8 @@ Control {
         // Body row for both states. Active renders the last message preview;
         // deleted renders the deletion summary.
         RowLayout {
+            id: bodyRow
+            objectName: "threadCardBodyRow"
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             visible: d.deleted || d.bodyMessageText.length > 0 || d.formattedBodyTimestamp.length > 0

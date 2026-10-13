@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import StatusQ.Core.Theme
 
 import AppLayouts.Chat.controls
 
@@ -127,6 +128,35 @@ Item {
             controlUnderTest.threadState = ThreadCard.State.Active
             verify(preview.text.includes("Active reply"))
             compare(count.visible, true)
+        }
+
+        function test_connectorTracksRowGeometry_data() {
+            const rows = []
+            for (const width of [320, 420]) {
+                for (const padding of [8, 16, 24]) {
+                    for (const deleted of [false, true]) {
+                        rows.push({ tag: width + "-" + padding + "-" + deleted,
+                                    width: width, padding: padding, deleted: deleted })
+                    }
+                }
+            }
+            return rows
+        }
+
+        function test_connectorTracksRowGeometry(data) {
+            controlUnderTest.width = data.width
+            controlUnderTest.Theme.padding = data.padding
+            controlUnderTest.notificationCount = 2
+            controlUnderTest.threadState = data.deleted ? ThreadCard.State.Deleted : ThreadCard.State.Active
+            const row = findChild(controlUnderTest, data.deleted ? "threadCardBodyRow" : "threadCardTitleRow")
+            verify(!!row)
+            tryVerify(() => row.height > 0)
+            tryVerify(() => {
+                const center = row.mapToItem(controlUnderTest, 0, row.height / 2).y
+                return Math.abs(controlUnderTest.connectorY - center) < 0.5
+            })
+            verify(controlUnderTest.connectorY > 0)
+            verify(controlUnderTest.connectorY < controlUnderTest.height)
         }
     }
 }

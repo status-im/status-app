@@ -7,6 +7,7 @@ import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
 
+import AppLayouts.Chat.controls
 import Storybook
 import Models
 
@@ -21,6 +22,12 @@ SplitView {
         readonly property var exampleAlbum: [ModelsData.banners.coinbase, ModelsData.icons.status]
 
         readonly property var reactionsModels: ReactionsModels {}
+
+        readonly property var threadParticipantsModel: ListModel {
+            ListElement { name: "Alice"; image: ""; colorId: 0 }
+            ListElement { name: "Bob"; image: ""; colorId: 1 }
+            ListElement { name: "Charlie"; image: ""; colorId: 2 }
+        }
 
         readonly property var messageWithThreeReactions: [{
             timestamp: new Date().valueOf(),
@@ -271,6 +278,31 @@ Some other comment there`
         }
     }
 
+    Component {
+        id: threadCardComponent
+
+        Item {
+            implicitHeight: threadCard.implicitHeight
+
+            ThreadCard {
+                id: threadCard
+
+                width: Math.min(maximumWidth, parent.width)
+                threadId: "storybook-thread"
+                originalMessageId: "storybook-parent-message"
+                title: "Thread connector preview"
+                messagesCount: 4
+                participantsModel: d.threadParticipantsModel
+                participantsCount: 3
+                lastMessage: ({
+                    sender: { name: "Alice", color: Theme.palette.primaryColor1 },
+                    text: "Latest reply in this thread",
+                    timestamp: Date.now()
+                })
+            }
+        }
+    }
+
     SplitView {
         orientation: Qt.Vertical
         SplitView.fillWidth: true
@@ -288,6 +320,9 @@ Some other comment there`
                 spacing: 16
                 model: d.messagesModel
                 delegate: StatusMessage {
+                    readonly property bool hasThreadCard: index < 2
+                                                          || model.message === d.messageWithThreeReactions[0].message
+
                     width: ListView.view.width
                     timestamp: model.timestamp
                     isAReply: model.isAReply
@@ -298,6 +333,9 @@ Some other comment there`
                     reactionsModel: model.reactionsModel
                     maxEmojiReactionsPerMessage: 20
                     isMobile: ctrlIsMobile.checked
+                    showHeader: index !== 1 || !showMessageAttachmentCheckbox.checked
+                    messageAttachmentComponent: hasThreadCard && showMessageAttachmentCheckbox.checked
+                                                ? threadCardComponent : null
 
                     messageDetails {
                         readonly property bool isEnsVerified: model.senderDisplayName.endsWith(".eth")
@@ -366,6 +404,12 @@ Some other comment there`
                 CheckBox {
                     id: disableLinkCheckbox
                     text: "Disable Address/Ens link"
+                }
+
+                CheckBox {
+                    id: showMessageAttachmentCheckbox
+                    text: "Show thread attachment"
+                    checked: true
                 }
             }
         }

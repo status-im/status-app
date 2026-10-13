@@ -1267,6 +1267,7 @@ Loader {
 
                 Item {
                     implicitHeight: threadCard.implicitHeight
+                    readonly property real connectorY: threadCard.y + threadCard.connectorY
 
                     ThreadCard {
                         id: threadCard

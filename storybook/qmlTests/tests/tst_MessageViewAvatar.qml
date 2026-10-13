@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import StatusQ.Core.Theme
 
 import utils
 
@@ -120,6 +121,37 @@ Item {
                     visibleContent = true
             }
             verify(visibleContent, "avatar content must be visible once ready")
+        }
+
+        function test_threadConnectorTracksCardGeometry_data() {
+            const rows = []
+            for (const width of [320, 600]) {
+                for (const padding of [8, 16, 24]) {
+                    rows.push({ tag: width + "-" + padding, width: width, padding: padding })
+                }
+            }
+            return rows
+        }
+
+        function test_threadConnectorTracksCardGeometry(data) {
+            const view = createTemporaryObject(messageViewComp, root, {
+                width: data.width,
+                threadsFeatureEnabled: true,
+                hasThread: true,
+                threadTitle: "Thread title",
+                threadMessagesCount: 12
+            })
+            verify(!!view)
+            view.Theme.padding = data.padding
+            const connector = findChild(view, "messageAttachmentConnector")
+            const titleRow = findChild(view, "threadCardTitleRow")
+            verify(!!connector && !!titleRow)
+            tryVerify(() => connector.status === Loader.Ready && connector.height > 0)
+            tryVerify(() => {
+                const endpoint = connector.mapToItem(view, connector.width, connector.height).y
+                const titleCenter = titleRow.mapToItem(view, 0, titleRow.height / 2).y
+                return Math.abs(endpoint - titleCenter) < 0.5
+            })
         }
     }
 }
