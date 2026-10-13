@@ -26,9 +26,18 @@ from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import messaging_names
 from gui.screens.community import BannedCommunityScreen, CommunityScreen
-from gui.screens.messages.message import Message, _nudge_outgoing_header
+from gui.screens.messages.message import Message, _nudge_outgoing_header, _qml_int
 from helpers.chat_helper import plain_text_from_message_object
 from scripts.utils.generators import random_sticker
+
+
+def _message_row(item) -> float:
+    try:
+        row = _qml_int(item.parent, 'row')
+    except (RuntimeError, AttributeError):
+        row = None
+    return row if row is not None else float('inf')
+
 
 class ChatView(QObject):
 
@@ -40,27 +49,19 @@ class ChatView(QObject):
         self._payment_request_card = QObject(dict(messaging_names.paymentRequestCard))
 
     def _iter_message_objects(self, index: typing.Optional[int], scroll_to_recent: bool = True):
-        # message_list_item has different indexes if we run multiple instances, so we pass index
-        real_name = self._message_list_item.real_name
-        previous_index = real_name.get('index')
-        try:
-            if index is not None:
-                real_name['index'] = index
-            else:
-                real_name.pop('index', None)
-            if scroll_to_recent and self._recent_messages_button.is_visible:
-                try:
-                    self._recent_messages_button.click()
-                except RuntimeError:
-                    pass
-            for item in driver.findAllObjects(real_name):
-                if getattr(item, 'isMessage', True):
-                    yield item
-        finally:
-            if previous_index is not None:
-                real_name['index'] = previous_index
-            else:
-                real_name.pop('index', None)
+        if scroll_to_recent and self._recent_messages_button.is_visible:
+            self._recent_messages_button.click()
+
+        messages = sorted(
+            (
+                item for item in driver.findAllObjects(self._message_list_item.real_name)
+                if getattr(item, 'isMessage', True)
+            ),
+            key=_message_row,
+        )
+        if index is not None:
+            return messages[index:index + 1]
+        return messages
 
     @allure.step('Get messages')
     def messages(self, index: int, scroll_to_recent: bool = True) -> typing.List[Message]:

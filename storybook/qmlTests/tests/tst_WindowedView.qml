@@ -878,6 +878,12 @@ Item {
             owner.answer()
         }
 
+        // Rows and bands extend far past the viewport; nothing of them may
+        // paint outside the view's own bounds.
+        function test_clipsToItsBounds() {
+            verify(view.clip)
+        }
+
         function test_rendersTheWholeModel() {
             compare(view.rowCount, root.windowSize)
             compare(values()[0], 0)
@@ -2708,10 +2714,195 @@ Item {
     }
 
     TestCase {
+        id: wheelTests
+
+        name: "WindowedView.Wheel"
+        when: windowShown
+
+        function initTestCase() {
+            waitForRendering(view)
+        }
+
+        function init() {
+            provider.reset()
+            view.autoRequest = false
+            view.customWheelScrolling = true
+            view.wheelScrollPixels = 100
+            view.wheelScrollDuration = 60
+        }
+
+        function cleanup() {
+            view.customWheelScrolling = false
+            view.wheelScrollPixels = 160
+            view.wheelScrollDuration = 200
+            view.interactive = true
+            view.cancelFlick()
+            view.placeholder = null
+            view.placeholderHeight = 100
+            view.moreAvailableTop = true
+            view.moreAvailableBottom = true
+        }
+
+        function freshFill(count) {
+            owner.reset(0)
+            tryVerify(() => view.rowCount === 0, 2000, "emptied")
+            owner.reset(count)
+            tryVerify(() => settled(count), 8000, "rows laid out")
+        }
+
+        // Positive notches turn the wheel away, which scrolls up.
+        function wheel(notches) {
+            mouseWheel(view, view.width / 2, view.height / 2, 0, notches * 120)
+        }
+
+        function glided() {
+            tryVerify(() => !view.wheelScrolling, 2000, "the glide settled")
+        }
+
+        function test_aNotchScrollsTheSetDistance() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+
+            wheel(-1)
+            verify(view.wheelScrolling, "gliding rather than jumping")
+            glided()
+            compare(view.contentY, 1100, "one notch down")
+
+            wheel(1)
+            glided()
+            compare(view.contentY, 1000, "and one back up")
+        }
+
+        // Each notch adds onto where the glide was going, not where it got to:
+        // a fast spin goes as far as a slow one.
+        function test_notchesAddUp() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+
+            wheel(-1)
+            wheel(-1)
+            wheel(-1)
+            glided()
+            compare(view.contentY, 1300)
+        }
+
+        function test_theGlideStaysWithinTheContent() {
+            freshFill(40)
+            view.contentY = 50
+            waitForRendering(view)
+
+            wheel(3)
+            glided()
+            compare(view.contentY, 0, "stopped at the top")
+
+            const bottom = view.contentHeight - view.height
+            view.contentY = bottom - 50
+            waitForRendering(view)
+
+            wheel(-3)
+            glided()
+            compare(view.contentY, bottom, "and at the bottom")
+        }
+
+        // An animated contentY is no movement to Flickable, which would leave
+        // the scroll bar faded out for the whole scroll.
+        function test_theScrollBarShowsWhileGliding() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.wheelScrollDuration = 300
+
+            wheel(-1)
+            verify(scrollBar.active, "shown while gliding")
+            glided()
+            verify(!scrollBar.active, "and released once the glide settles")
+        }
+
+        // The view corrects its own position while the wheel glides - here the
+        // start band going away, which moves every row up by its height. The
+        // glide carries on from the corrected position, by the same amount.
+        function test_aCorrectionWhileGlidingIsKept() {
+            view.placeholder = skeletonPlaceholder
+            view.placeholderHeight = 100
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.wheelScrollDuration = 300
+
+            const before = topRow()
+
+            wheel(-2)
+            waitForRendering(view)
+            verify(view.wheelScrolling, "still gliding when the band goes")
+
+            view.moreAvailableTop = false
+            glided()
+
+            fuzzyCompare(offsetOf(before.value), before.offset - 200, 0.5,
+                         "the rows went where the wheel was taking them")
+        }
+
+        function test_aDeliberatePositionStopsTheGlide() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.wheelScrollDuration = 300
+
+            wheel(-3)
+            verify(view.wheelScrolling)
+
+            view.positionViewAtRow(5, WindowedView.PositionMode.Beginning)
+            verify(!view.wheelScrolling, "the jump replaces the glide")
+
+            waitForRendering(view)
+            waitForRendering(view)
+            fuzzyCompare(view.viewportOffsetToRow(5), 0, 0.5, "and stays where it put the view")
+        }
+
+        // Unset, the wheel is Flickable's, which scrolls by its own rules.
+        function test_theDefaultLeavesTheWheelToFlickable() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.customWheelScrolling = false
+
+            wheel(-1)
+            verify(!view.wheelScrolling, "no glide of its own")
+            tryVerify(() => view.contentY > 1000, 2000, "Flickable scrolled instead")
+        }
+
+        function test_aViewThatIsNotInteractiveIgnoresTheWheel() {
+            freshFill(40)
+            view.contentY = 1000
+            waitForRendering(view)
+            view.interactive = false
+
+            wheel(-1)
+            verify(!view.wheelScrolling)
+            waitForRendering(view)
+            compare(view.contentY, 1000)
+        }
+    }
+
+    TestCase {
         id: autoRequestTests
 
         name: "WindowedView.AutoRequest"
         when: windowShown
+
+        // The shared delegates size rows by `value % 5`, which is negative for
+        // the negative values a slide at the top hands out.
+        Component {
+            id: signedRowDelegate
+
+            Item {
+                property int value: 0
+
+                implicitHeight: 20 + (Math.abs(value) % 5) * 30
+            }
+        }
 
         function initTestCase() {
             waitForRendering(view)
@@ -2821,6 +3012,38 @@ Item {
             scrollWithin(300)
 
             compare(owner.startBudget, 3, "beyond the margin: nothing asked")
+        }
+
+        // A window shorter than the viewport and both prefetch margins has
+        // both bands in reach at once. After a slide at one edge the other
+        // band is in reach again, so without a hold the view would slide back
+        // and forth with nobody touching it. The opposite edge waits for the
+        // user to move towards it.
+        function test_aSlideDoesNotBounceBackWithoutAMove() {
+            provider.delay = 0
+            provider.delegate = signedRowDelegate
+            freshFill(20)
+
+            // 20 rows of ~80 px between two 100 px bands, the viewport near
+            // the top: a margin this deep keeps both bands in reach before a
+            // top slide and after it
+            view.prefetchMargin = 1100
+            view.contentY = 300
+            waitForRendering(view)
+            arm(5)
+
+            tryVerify(() => owner.startBudget < 5 && !view.busy, 5000, "it slid at the top")
+
+            // a frame through the event loop - moving up, which leaves the
+            // bottom held - so a request the bottom had pending would have run
+            view.contentY = view.contentY - 1
+            waitForRendering(view)
+            tryVerify(() => !view.busy, 5000)
+            compare(owner.endBudget, 5, "the bottom was not asked without a move towards it")
+
+            // moving towards the bottom releases it
+            view.contentY = view.contentY + 20
+            tryVerify(() => owner.endBudget < 5, 5000, "asked once the user moved towards it")
         }
 
         function test_nothingIsAskedWhileTheHandleIsHeld() {
@@ -3013,6 +3236,75 @@ Item {
             verify(view.contentY < at,
                    "and still travelling the same way: " + view.contentY
                    + " from " + at)
+        }
+
+        // A row settling its height while a batch is in flight - an image
+        // finishing loading - moves the held anchor, and putting it back writes
+        // contentY, which ends the flick; the view restarts it. Right after
+        // that restart Qt's smoothed verticalVelocity reads nothing for a
+        // frame, so a second row settling in the very next frame used to find
+        // no velocity to restart with, and the flick stopped dead.
+        function test_aFlickSurvivesRowsSettlingInConsecutiveFrames() {
+            provider.delay = 400                  // the batch stays in flight
+            provider.delegate = tallDelegate
+            view.placeholderHeight = 300
+            view.prefetchMargin = 20000           // and is asked for at once
+            freshFill(40)
+            arm(3)
+
+            view.contentY = 6000
+            waitForRendering(view)
+            tryVerify(() => view.busy, 2000, "a batch is in flight")
+
+            view.flick(0, 3000)
+            verify(view.flickingVertically, "flicking")
+
+            for (let i = 0; i < 4; ++i)
+                waitForRendering(view)
+
+            const grow = (fraction, by) => {
+                const y = view.contentY + view.height * fraction
+
+                for (let row = 0; row < view.rowCount; ++row) {
+                    const shell = view.itemAtRow(row)
+
+                    if (!shell || !shell.visible || !shell.content)
+                        continue
+
+                    const top = shell.mapToItem(view.contentItem, 0, 0).y
+
+                    if (top <= y && top + shell.height > y) {
+                        shell.content.implicitHeight += by
+                        return
+                    }
+                }
+
+                fail("no row at " + fraction)
+            }
+
+            // Rows settling one after another, a frame apart - images finishing
+            // loading. Each lands while the flick the previous one restarted
+            // still reads no velocity.
+            for (let i = 0; i < 4; ++i) {
+                verify(view.busy, "still in flight at change " + i)
+                grow(0.2 + i * 0.2, 120)
+                waitForRendering(view)
+            }
+
+            verify(view.flickingVertically, "still flicking after all of them")
+
+            // Movement rather than verticalVelocity, which is the very thing
+            // that reads nothing here. A few frames, not two: a rendered frame
+            // need not carry an animation tick.
+            const at = view.contentY
+
+            for (let i = 0; i < 6 && view.contentY >= at; ++i)
+                waitForRendering(view)
+
+            verify(view.contentY < at,
+                   "and still travelling the same way: " + view.contentY + " from " + at)
+
+            tryVerify(() => !view.busy, 8000)
         }
 
         // Counted rather than read off `flickingVertically`: a correction can
@@ -3280,6 +3572,24 @@ Item {
             compare(host(), "bottomPlaceholder", "at the bottom, the bottom one")
 
             compare(placeholderProbe.created, 1, "and it was never rebuilt")
+        }
+
+        // A placeholder laying itself out towards the rows is told which side
+        // of it they are on.
+        function test_thePlaceholderIsToldWhereTheRowsAre() {
+            provider.delay = 0
+            freshFill(40)
+            finishFill(40)
+
+            view.contentY = 0
+            waitForRendering(view)
+            compare(host(), "topPlaceholder")
+            verify(!view.placeholderBelowRows, "above the rows")
+
+            view.contentY = view.contentHeight - view.height
+            waitForRendering(view)
+            compare(host(), "bottomPlaceholder")
+            verify(view.placeholderBelowRows, "below them")
         }
 
         function test_itIsParkedWhenNeitherEndIsOnScreen() {
@@ -5204,6 +5514,42 @@ Item {
 
             const offsetAfter = offsetOf(before.value)
 
+            verify(!isNaN(offsetAfter), "the row the user was reading survived")
+            fuzzyCompare(offsetAfter, before.offset, 0.5, "and did not move")
+
+            owner.removeOnReveal = true
+        }
+
+        // The chat case of the request above: stuck to the bottom, and reading
+        // closer to it than the batch is tall. Placing the batch above moves
+        // the held row down by the batch's height, and the correction for it
+        // runs in the middle of the layout, while the bottom still reads as
+        // the content's old end - the correct position looked like the bottom
+        // reached, the anchor was let go, and the view pinned to the new
+        // bottom: the reader thrown to the newest row by a page loaded above.
+        function test_aBatchAboveDoesNotThrowAStuckReaderToTheBottom() {
+            view.stickToBottom = true
+            fill(30)
+
+            view.contentY = view.contentHeight - view.height - 150
+            waitForRendering(view)
+            verify(!view.atBottom, "reading just above the newest row")
+
+            const before = topRow()
+            const heightBefore = view.contentHeight
+
+            provider.delay = 30
+            owner.removeOnReveal = false
+
+            verify(view.requestMore(WindowedView.Edge.Top), "the request was taken")
+            tryVerify(() => settled(40), 8000, "the batch was revealed")
+            verify(view.contentHeight - heightBefore > 150,
+                   "the batch is taller than the distance to the bottom, as it must "
+                   + "be for this to matter")
+
+            const offsetAfter = offsetOf(before.value)
+
+            verify(!view.atBottom, "not thrown to the bottom")
             verify(!isNaN(offsetAfter), "the row the user was reading survived")
             fuzzyCompare(offsetAfter, before.offset, 0.5, "and did not move")
 

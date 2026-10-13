@@ -109,10 +109,13 @@ Loader {
     property bool quotedMessageAuthorDetailsEnsVerified: false
     property bool quotedMessageAuthorDetailsIsContact: false
 
-    property var album: []
+    // Space-joined image lists, as the model exposes them, so a plain roles
+    // rebind retargets the view; the arrays derive from them.
+    property string albumMessageImages: ""
+    property var album: albumMessageImages ? albumMessageImages.split(" ") : []
     property int albumCount: 0
 
-    property var quotedMessageAlbumMessageImages: []
+    property string quotedMessageAlbumMessageImages: ""
     property int quotedMessageAlbumImagesCount: 0
 
     // External behavior changers
@@ -195,8 +198,8 @@ Loader {
         active: false
         sourceComponent: ContactModelEntry {
             publicKey: root.senderId
-            contactsModel: root.rootStore.contactsModel
-            onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.senderId)
+            contactsModel: root.rootStore?.contactsModel ?? null
+            onPopulateContactDetailsRequested: root.rootStore?.populateContactDetailsRequested(root.senderId)
         }
     }
 
@@ -204,8 +207,8 @@ Loader {
         active: !!root.quotedMessageFrom
         sourceComponent: ContactModelEntry {
             publicKey: root.quotedMessageFrom
-            contactsModel: root.rootStore.contactsModel
-            onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.quotedMessageFrom)
+            contactsModel: root.rootStore?.contactsModel ?? null
+            onPopulateContactDetailsRequested: root.rootStore?.populateContactDetailsRequested(root.quotedMessageFrom)
         }
     }
 
@@ -213,9 +216,15 @@ Loader {
         active: !!root.messagePinnedBy
         sourceComponent: ContactModelEntry {
             publicKey: root.messagePinnedBy
-            contactsModel: root.rootStore.contactsModel
-            onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.messagePinnedBy)
+            contactsModel: root.rootStore?.contactsModel ?? null
+            onPopulateContactDetailsRequested: root.rootStore?.populateContactDetailsRequested(root.messagePinnedBy)
         }
+    }
+
+    // Rebind hygiene: state tied to the previous message must not outlive it.
+    onMessageIdChanged: {
+        d.contextMenu?.close()
+        d.activeMessage = ""
     }
 
     function openProfileContextMenu(x, y, isReply = false) {
@@ -240,7 +249,7 @@ Loader {
 
         const profileType = Utils.getProfileType(isMe, isBridgedAccount, contactDetails.isBlocked)
         const contactType = Utils.getContactType(contactDetails.contactRequestState, contactDetails.isContact)
-        const chatType = chatContentModule.chatDetails.type
+        const chatType = root.chatContentModule?.chatDetails?.type ?? Constants.chatType.unknown
         // set false for now, because the remove from group option is still available after member is removed
         const isAdmin = false // chatContentModule.amIChatAdmin()
 
@@ -270,7 +279,7 @@ Loader {
         if (root.isChatBlocked && !d.addReactionAllowed)
             return
 
-        if (chatLogView?.moving)
+        if (d.listScrolling)
             return
 
         const openExpanded = options.openExpanded ?? false
@@ -280,15 +289,18 @@ Loader {
         if (deferCloseOnPressOutside && d.contextMenu?.opened && !d.contextMenu.openExpanded)
             return
 
+        if (!root.messageStore)
+            return
+
         d.contextMenu?.close() // will run destruction/cleanup
 
         const params = {
-            myPublicKey: userProfile.pubKey,
+            myPublicKey: root.myPublicKey,
             amIChatAdmin: root.amIChatAdmin,
-            pinMessageAllowedForMembers: messageStore.isPinMessageAllowedForMembers,
+            pinMessageAllowedForMembers: root.messageStore.isPinMessageAllowedForMembers,
             threadsFeatureEnabled: root.threadsFeatureEnabled,
             hasThread: root.hasThread,
-            chatType: messageStore.chatType,
+            chatType: root.messageStore.chatType,
 
             messageId: root.messageId,
             unparsedText: root.unparsedText,
@@ -385,8 +397,11 @@ Loader {
 
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
-    z: (typeof chatLogView === "undefined") ? 1 : (chatLogView.count - index)
-    height: root.status === Loader.Ready && root.item ? root.item.implicitHeight : 50
+    // No height of its own: the Loader follows its item. An explicit one is
+    // pushed onto the item when it loads and stays there; forced to the
+    // item's implicitHeight instead, it resizes a Text item, which relays
+    // out and reports a new implicitHeight from inside that very write - a
+    // binding loop. Kinds with nothing to show load an empty item.
 
     sourceComponent: {
         if (root.deleted) {
@@ -396,7 +411,7 @@ Loader {
         case Constants.messageContentType.chatIdentifier:
             return channelIdentifierComponent
         case Constants.messageContentType.fetchMoreMessagesButton:
-            return null // cf https://github.com/status-im/status-app/issues/17823
+            return emptyComponent // cf https://github.com/status-im/status-app/issues/17823
         case Constants.messageContentType.systemMessagePrivateGroupType:
             return systemMessageGroupComponent
         case Constants.messageContentType.systemMessageMutualEventSent:
@@ -422,9 +437,9 @@ Loader {
             return messageComponent
         case Constants.messageContentType.unknownContentType:
             // NOTE: We could display smth like "unknown message type, please upgrade Status to see it".
-            return null
+            return emptyComponent
         default:
-            return null
+            return emptyComponent
         }
     }
 
@@ -443,11 +458,12 @@ Loader {
 
 
         readonly property bool addReactionAllowed: !root.isInPinnedPopup &&
-                                                   root.chatContentModule.chatDetails.canPostReactions &&
+                                                   (root.chatContentModule?.chatDetails?.canPostReactions ?? false) &&
                                                    !root.isViewMemberMessagesePopup
 
-        readonly property bool canPost: root.chatContentModule.chatDetails.canPost
-        readonly property bool canView: canPost || root.chatContentModule.chatDetails.canView
+        readonly property bool canPost: root.chatContentModule?.chatDetails?.canPost ?? false
+        readonly property bool canView: canPost || (root.chatContentModule?.chatDetails?.canView ?? false)
+
         function getNextMessageHasHeader() {
             if (!root.nextMessageAsJsonObj) {
                 return false
@@ -465,23 +481,17 @@ Loader {
         }
 
         function getIsExpired(messageTimeStamp, messageOutgoingStatus) {
-            return (messageOutgoingStatus === Constants.messageOutgoingStatus.sending && (Math.floor(messageTimeStamp) + 180000) < Date.now())
+            return (messageOutgoingStatus === Constants.messageOutgoingStatus.sending && (Math.floor(messageTimeStamp) + 180000) < d.timeNow)
                 || messageOutgoingStatus === Constants.expired
         }
 
-        property bool isExpired: false
-        property bool shouldRepeatHeader: false
-        property bool nextMessageHasHeader: false
+        // Advanced by StatusSharedUpdateTimer so the time-derived bindings
+        // below follow the clock as well as the message properties.
+        property double timeNow: Date.now()
 
-        Component.onCompleted: {
-            onTimeChanged()
-        }
-
-        function onTimeChanged() {
-            isExpired = getIsExpired(root.messageTimestamp, root.messageOutgoingStatus)
-            shouldRepeatHeader = getShouldRepeatHeader(root.messageTimestamp, root.prevMessageTimestamp, root.messageOutgoingStatus)
-            nextMessageHasHeader = getNextMessageHasHeader()
-        }
+        readonly property bool isExpired: getIsExpired(root.messageTimestamp, root.messageOutgoingStatus)
+        readonly property bool shouldRepeatHeader: getShouldRepeatHeader(root.messageTimestamp, root.prevMessageTimestamp, root.messageOutgoingStatus)
+        readonly property bool nextMessageHasHeader: getNextMessageHasHeader()
 
         function convertContentType(value) {
             switch (value) {
@@ -615,6 +625,40 @@ Loader {
         property bool contextMenuHovered: false
         property var contextMenuHoverAnchor: null
         property bool messageHovered: false
+
+        // The list moves under the pointer - a drag, a flick, or a WindowedView
+        // wheel glide, which is no movement to Flickable. Hovering a message then
+        // is the scroll's doing, not the user's.
+        readonly property bool listScrolling: (root.chatLogView?.moving ?? false)
+                                              || (root.chatLogView?.wheelScrolling ?? false)
+
+        // Hover stays off a little past the end of a scroll. Wheel notches come
+        // as separate glides with short gaps between them, and so can quick
+        // flicks - re-enabled at once, the message under the pointer would
+        // highlight and pop up its menu in every gap.
+        readonly property int hoverResumeDelay: 300
+        readonly property bool hoverSuppressed: d.listScrolling || d.hoverResumeTimer.running
+
+        readonly property Timer hoverResumeTimer: Timer {
+            interval: d.hoverResumeDelay
+        }
+
+        // Off at once, back after the delay. A hover menu stays where it was
+        // opened while the content moves on, so it goes the moment scrolling
+        // starts rather than after the hover-exit delay. A menu the user opened
+        // themselves is left alone.
+        onListScrollingChanged: {
+            if (!d.listScrolling) {
+                d.hoverResumeTimer.restart()
+                return
+            }
+
+            d.hoverResumeTimer.stop()
+
+            if (d.contextMenuOpenedFromHover)
+                d.contextMenu?.close()
+        }
+
         readonly property var _contextMenuConn: Connections {
             target: root?.chatLogView ?? null
             function onMovementEnded() {
@@ -669,7 +713,7 @@ Loader {
 
     Connections {
         enabled: d.emojiPopupOpened
-        target: emojiPopup
+        target: root.emojiPopup ?? null
 
         function onEmojiSelected(text: string, atCursor: bool, hexcode: string) {
             root.emojiReactionToggled(root.messageId, hexcode)
@@ -683,7 +727,15 @@ Loader {
     Connections {
         target: StatusSharedUpdateTimer
         function onTriggered() {
-            d.onTimeChanged()
+            d.timeNow = Date.now()
+        }
+    }
+
+    Component {
+        id: emptyComponent
+
+        Item {
+            implicitHeight: 50
         }
     }
 
@@ -693,7 +745,7 @@ Loader {
             gapFrom: root.gapFrom
             gapTo: root.gapTo
             onClicked: {
-                messageStore.fillGaps(messageId)
+                root.messageStore?.fillGaps(root.messageId)
                 root.visible = false;
                 root.height = 0;
             }
@@ -704,13 +756,14 @@ Loader {
         id: channelIdentifierComponent
         ChannelIdentifierView {
             chatName: root.senderDisplayName
-            chatId: root.messageStore.getChatId()
-            chatType: root.messageStore.chatType
-            chatColor: root.messageStore.chatColor
+            chatId: root.messageStore ? root.messageStore.getChatId() : ""
+            chatType: root.messageStore ? root.messageStore.chatType : Constants.chatType.unknown
+            chatColor: root.messageStore ? root.messageStore.chatColor : ""
             chatEmoji: root.channelEmoji
             amIChatAdmin: root.amIChatAdmin
             chatIcon: {
-                if (root.messageStore.chatType === Constants.chatType.privateGroupChat &&
+                if (root.messageStore &&
+                        root.messageStore.chatType === Constants.chatType.privateGroupChat &&
                         root.messageStore.chatIcon !== "") {
                     return root.messageStore.chatIcon
                 }
@@ -743,9 +796,10 @@ Loader {
             }
             color: Theme.palette.secondaryText
             font.pixelSize: Theme.secondaryTextFontSize
-            width: parent.width - 120
+            // sized by the Loader - see systemMessagePinnedMessageComponent
+            leftPadding: 60
+            rightPadding: 60
             horizontalAlignment: Text.AlignHCenter
-            anchors.horizontalCenter: parent.horizontalCenter
             textFormat: Text.RichText
             topPadding: root.prevMessageIndex === 1 ? Theme.bigPadding : 0
         }
@@ -756,9 +810,9 @@ Loader {
 
         StyledText {
             property var chatContactModelEntry: ContactModelEntry {
-                publicKey: chatId
-                contactsModel: root.rootStore.contactsModel
-                onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(chatId)
+                publicKey: root.chatId
+                contactsModel: root.rootStore?.contactsModel ?? null
+                onPopulateContactDetailsRequested: root.rootStore?.populateContactDetailsRequested(root.chatId)
             }
 
             text: {
@@ -796,9 +850,13 @@ Loader {
         id: systemMessagePinnedMessageComponent
 
         StatusBaseText {
-            width: parent.width - 120
+            // No width of its own: the Loader sizes its item, and one derived
+            // from the Loader's would feed back into it while the Loader has
+            // no width yet. The side margins are padding instead.
+            leftPadding: 60
+            rightPadding: 60
             horizontalAlignment: Text.AlignHCenter
-            text: qsTr("%1 pinned a message").arg(senderDisplayName)
+            text: qsTr("%1 pinned a message").arg(root.senderDisplayName)
             color: Theme.palette.directColor3
             font.family: Fonts.baseFont.family
             font.pixelSize: Theme.primaryTextFontSize
@@ -897,6 +955,10 @@ Loader {
         ColumnLayout {
             spacing: 0
 
+            // Pinned to the hosting Loader: unanchored, the layout follows message
+            // content implicit-width echoes and layout hosts re-polish forever.
+            width: root.width
+
             function startMessageFoundAnimation() {
                 delegate.startMessageFoundAnimation();
             }
@@ -942,7 +1004,7 @@ Loader {
                 }
                 isInPinnedPopup: root.isInPinnedPopup
                 outgoingStatus: d.isExpired ? StatusMessage.OutgoingStatus.Expired
-                                            : d.convertOutgoingStatus(messageOutgoingStatus)
+                                            : d.convertOutgoingStatus(root.messageOutgoingStatus)
 
                 resendError: root.resendError
                 reactionsModel: root.reactionsModel
@@ -967,7 +1029,7 @@ Loader {
                 bottomPadding: showHeader && d.nextMessageHasHeader ? Theme.halfPadding : 2
                 disableHover: root.disableHover ||
                               (delegate.hideQuickActions && !d.addReactionAllowed) ||
-                              (root.chatLogView && root.chatLogView.moving)
+                              d.hoverSuppressed
 
                 disableEmojis: !d.addReactionAllowed
                 hideMessage: d.hideMessage
@@ -994,7 +1056,7 @@ Loader {
                         return
                     }
                     if (link.startsWith('#')) {
-                        rootStore.chatCommunitySectionModule.switchToChannel(link.replace("#", ""))
+                        root.rootStore?.chatCommunitySectionModule.switchToChannel(link.replace("#", ""))
                         return
                     }
 
@@ -1087,9 +1149,9 @@ Loader {
                 messageDetails: StatusMessageDetails {
                     contentType: delegate.contentType
                     messageOriginInfo: {
-                        if (isDiscordMessage)  {
+                        if (root.isDiscordMessage)  {
                             return qsTr("Imported from discord")
-                        } else if (isBridgeMessage) {
+                        } else if (root.isBridgeMessage) {
                             return qsTr("Bridged from %1").arg(Utils.bridgeDisplayName(root.bridgeName))
                         }
                         return ""
@@ -1134,26 +1196,22 @@ Loader {
                 replyDetails: StatusMessageDetails {
                     // Look up the original message (when loaded) to recover data the quotedMessage
                     // payload lacks: sticker/image content and the edited state.
-                    readonly property var responseMessage: !!root.responseToMessageWithId
+                    readonly property var responseMessage: !!root.responseToMessageWithId && !!root.messageStore
                                                            ? root.messageStore.getMessageByIdAsJson(root.responseToMessageWithId)
                                                            : null
                     // The quotedMessage payload has no edited flag; derive it from the original.
                     isEdited: !!responseMessage && !!responseMessage.isEdited
-                    onResponseMessageChanged: {
+                    messageContent: {
                         if (!responseMessage)
-                            return
+                            return ""
 
                         switch (contentType) {
                         case StatusMessage.ContentType.Sticker:
-                            messageContent = responseMessage.sticker;
-                            return
+                            return responseMessage.sticker
                         case StatusMessage.ContentType.Image:
-                            messageContent = responseMessage.messageImage;
-                            albumCount = responseMessage.albumImagesCount
-                            album = responseMessage.albumMessageImages
-                            return
+                            return responseMessage.messageImage
                         default:
-                            messageContent = ""
+                            return ""
                         }
                     }
 
@@ -1176,21 +1234,30 @@ Loader {
                         return root.quotedMessageUnparsedText
                     }
                     mentionsMap: root.mentionsMap
-                    album: root.quotedMessageAlbumMessageImages
-                    albumCount: root.quotedMessageAlbumImagesCount
+                    album: {
+                        if (responseMessage && contentType === StatusMessage.ContentType.Image)
+                            return responseMessage.albumMessageImages
+                        return root.quotedMessageAlbumMessageImages
+                               ? root.quotedMessageAlbumMessageImages.split(" ") : []
+                    }
+                    albumCount: {
+                        if (responseMessage && contentType === StatusMessage.ContentType.Image)
+                            return responseMessage.albumImagesCount
+                        return root.quotedMessageAlbumImagesCount
+                    }
                     messageDeleted: root.quotedMessageDeleted
                     contentType: d.convertContentType(root.quotedMessageContentType)
-                    amISender: root.quotedMessageFrom === userProfile.pubKey
+                    amISender: root.quotedMessageFrom === root.myPublicKey
                     sender.id: root.quotedMessageFrom
-                    sender.isContact: quotedMessageAuthorDetailsIsContact
-                    sender.displayName: quotedMessageAuthorDetailsDisplayName
-                    sender.isEnsVerified: quotedMessageAuthorDetailsEnsVerified
-                    sender.secondaryName: quotedMessageAuthorDetailsName
+                    sender.isContact: root.quotedMessageAuthorDetailsIsContact
+                    sender.displayName: root.quotedMessageAuthorDetailsDisplayName
+                    sender.isEnsVerified: root.quotedMessageAuthorDetailsEnsVerified
+                    sender.secondaryName: root.quotedMessageAuthorDetailsName
                     sender.profileImage {
                         width: 20
                         height: 20
-                        name: quotedMessageAuthorDetailsThumbnailImage
-                        assetSettings.isImage: quotedMessageAuthorDetailsThumbnailImage
+                        name: root.quotedMessageAuthorDetailsThumbnailImage
+                        assetSettings.isImage: root.quotedMessageAuthorDetailsThumbnailImage
                         pubkey: sender.id
                         color: root.Theme.palette.userCustomizationColors[Utils.colorIdForPubkey(sender.id)]
                     }
@@ -1206,8 +1273,8 @@ Loader {
                         senderThumbnailImage: root.senderIcon || ""
                         senderColorId: Utils.colorIdForPubkey(root.senderId)
                         paymentRequestModel: root.paymentRequestModel
-                        playAnimations: root.Window.active && root.messageStore.isChatActive
-                        isOnline: root.messageStore.isOnline
+                        playAnimations: root.Window.active && (root.messageStore?.isChatActive ?? false)
+                        isOnline: root.messageStore?.isOnline ?? true
                         highlightLink: delegate.hoveredLink
                         areTestNetworksEnabled: root.areTestNetworksEnabled
                         formatBalance: root.formatBalance
@@ -1227,8 +1294,14 @@ Loader {
                             root.tokenPaymentRequested(request.receiver, request.tokenKey, request.amount)
                         }
 
-                        Component.onCompleted: {
-                            root.messageStore.messageModule.forceLinkPreviewsLocalData(root.messageId)
+                        // The links view survives a rebind, so the local-data fetch
+                        // must follow the message id, not the creation moment.
+                        readonly property string previewsMessageId: root.messageId
+                        onPreviewsMessageIdChanged: forceLocalPreviewData()
+                        Component.onCompleted: forceLocalPreviewData()
+
+                        function forceLocalPreviewData() {
+                            root.messageStore?.messageModule?.forceLinkPreviewsLocalData(previewsMessageId)
                         }
                     }
                 }
@@ -1251,7 +1324,7 @@ Loader {
         id: newMessagesMarkerComponent
 
         NewMessagesMarker {
-            count: root.messageStore.newMessagesCount
+            count: root.messageStore?.newMessagesCount ?? 0
             timestamp: root.messageTimestamp
         }
     }
@@ -1349,12 +1422,12 @@ Loader {
             }
             onOpened: {
                 if (!d.contextMenuOpenedFromHover)
-                    root.setMessageActive(model.id, true)
+                    root.setMessageActive(root.messageId, true)
             }
 
             onClosed: {
                 if (!d.contextMenuOpenedFromHover)
-                    root.setMessageActive(model.id, false)
+                    root.setMessageActive(root.messageId, false)
                 d.contextMenuClosesOnHoverExit = false
                 d.contextMenuOpenedFromHover = false
                 d.contextMenuHovered = false

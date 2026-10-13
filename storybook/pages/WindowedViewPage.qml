@@ -156,6 +156,8 @@ SplitView {
         readonly property int defaultPlaceholderRows: 10
         readonly property int defaultPrefetchMargin: 0
         readonly property int defaultAcquireBudget: 0
+        readonly property bool defaultCustomWheelScrolling: false
+        readonly property int defaultWheelScrollPixels: 160
 
         readonly property bool defaultHeader: false
         readonly property bool defaultFooter: false
@@ -413,6 +415,8 @@ SplitView {
             placeholderRowsSpinBox.value = d.defaultPlaceholderRows
             prefetchMarginSpinBox.value = d.defaultPrefetchMargin
             acquireBudgetSpinBox.value = d.defaultAcquireBudget
+            customWheelScrollingSwitch.checked = d.defaultCustomWheelScrolling
+            wheelScrollPixelsSpinBox.value = d.defaultWheelScrollPixels
             headerSwitch.checked = d.defaultHeader
             footerSwitch.checked = d.defaultFooter
             slotHeightSpinBox.value = d.defaultSlotHeight
@@ -854,6 +858,8 @@ SplitView {
                                * d.placeholderRowHeight
             prefetchMargin: prefetchMarginSpinBox.value
             acquireBudget: acquireBudgetSpinBox.value
+            customWheelScrolling: customWheelScrollingSwitch.checked
+            wheelScrollPixels: wheelScrollPixelsSpinBox.value
 
             // With no delay this answers inside the signal, which is what an
             // index window really is - it has the rows already. With one, the
@@ -1251,6 +1257,34 @@ SplitView {
                         from: 0
                         to: 50
                         value: d.defaultAcquireBudget
+                        editable: true
+                    }
+                }
+
+                // The view's own mouse wheel handling instead of Flickable's
+                Switch {
+                    id: customWheelScrollingSwitch
+
+                    text: "Custom wheel scrolling"
+                    checked: d.defaultCustomWheelScrolling
+                }
+
+                // How far a notch of the mouse wheel scrolls, gliding there
+                RowLayout {
+                    Layout.fillWidth: true
+                    enabled: customWheelScrollingSwitch.checked
+
+                    Label { text: "Wheel step (px)" }
+
+                    SpinBox {
+                        id: wheelScrollPixelsSpinBox
+
+                        Layout.fillWidth: true
+
+                        from: 10
+                        to: 500
+                        stepSize: 10
+                        value: d.defaultWheelScrollPixels
                         editable: true
                     }
                 }
@@ -1835,6 +1869,8 @@ SplitView {
         property alias placeholderRows: placeholderRowsSpinBox.value
         property alias prefetchMargin: prefetchMarginSpinBox.value
         property alias acquireBudget: acquireBudgetSpinBox.value
+        property alias customWheelScrolling: customWheelScrollingSwitch.checked
+        property alias wheelScrollPixels: wheelScrollPixelsSpinBox.value
         property alias header: headerSwitch.checked
         property alias footer: footerSwitch.checked
         property alias slotHeight: slotHeightSpinBox.value

@@ -132,11 +132,42 @@ Flickable {
     // blank.
     property real placeholderHeight: root.height
 
+    // The placeholder stands in the band below the rows, so the rows are above
+    // it. A placeholder whose content is shorter than its band lays itself out
+    // from the edge it shares with the rows, rather than leaving a gap there.
+    // False in the band above them and while it covers the whole view.
+    readonly property bool placeholderBelowRows: d.placeholderHost === bottomBand
+
     // Keep the viewport at the bottom edge while it is already there, so the
     // last row stays visible as content grows and the initial fill lands
     // showing the newest row rather than the oldest. Off by default: for a
     // top-down list a short model growing past the viewport should stay put.
     property bool stickToBottom: false
+
+    // Whether the view handles the mouse wheel itself instead of leaving it to
+    // Flickable. Flickable's own handling moves a fixed wheelScrollLines * 24 px
+    // per notch over a 300 ms curve restarted on every notch - so a fast spin
+    // barely goes further than a slow one - and ignores flickDeceleration and
+    // maximumFlickVelocity, which apply to drag flicks.
+    //
+    // Set, each notch scrolls wheelScrollPixels, adding onto where the previous
+    // ones were taking the view, and the view glides there over
+    // wheelScrollDuration. Mouse wheels only: a touchpad delivers pixel deltas
+    // in scroll phases, and Flickable gives those their momentum itself.
+    property bool customWheelScrolling: false
+
+    // Distance, in px, one notch of a mouse wheel scrolls with
+    // customWheelScrolling set (120 units of angleDelta; a high resolution
+    // wheel's smaller deltas scroll their share).
+    property real wheelScrollPixels: 160
+
+    // Short, so the view tracks the wheel instead of coasting.
+    property int wheelScrollDuration: 200
+
+    // A wheel scroll is gliding to its destination. It is no movement as far as
+    // Flickable is concerned - moving stays false and no movementEnded() follows
+    // - so this is what an owner watches for the scroll to settle.
+    readonly property bool wheelScrolling: wheelScrollAnimation.running
 
     enum VerticalLayoutDirection { TopToBottom, BottomToTop }
 
@@ -307,14 +338,18 @@ Flickable {
     // placeholder band, so an owner who means the row itself moves the window
     // there first.
     function positionViewAtBeginning() {
+        d.stopWheelScroll()
         d.cancelPosition()
         d.releaseAnchor()
+        d.releaseHolds()
         d.apply(d.bottomUp ? d.bottomY() : 0)
     }
 
     function positionViewAtEnd() {
+        d.stopWheelScroll()
         d.cancelPosition()
         d.releaseAnchor()
+        d.releaseHolds()
         d.apply(d.bottomUp ? 0 : d.bottomY())
     }
 
@@ -335,6 +370,7 @@ Flickable {
         return root.contentY - d.rowTop(item)
     }
 
+    clip: true
     contentWidth: width
 
     // contentHeight is assigned, never bound: writing it runs Flickable's own
@@ -476,6 +512,73 @@ Flickable {
         // Auto-request ///////////////////////////////////////////////////
         //
         // Holding the scroll bar defers a request.
+        // Mouse wheel ////////////////////////////////////////////////////
+        //
+        // One notch's worth of angleDelta.y, scrolling up for a positive value -
+        // the screen's up, in either layout direction.
+        function wheelScroll(notches) {
+            if (notches === 0)
+                return
+
+            root.cancelFlick()
+
+            // Onto the pending destination rather than the current position, so
+            // notches add up while the view is still gliding.
+            const origin = wheelScrollAnimation.running ? wheelScrollAnimation.to
+                                                        : root.contentY
+            const target = d.clampedContentY(origin - notches * root.wheelScrollPixels)
+
+            if (target === root.contentY)
+                return
+
+            d.setScrollBarActive(true)
+            d.glideTo(target)
+        }
+
+        function clampedContentY(y) {
+            return Math.max(0, Math.min(Math.max(0, root.contentHeight - root.height), y))
+        }
+
+        function glideTo(target) {
+            wheelScrollAnimation.stop()
+            wheelScrollAnimation.from = root.contentY
+            wheelScrollAnimation.to = target
+            wheelScrollAnimation.start()
+        }
+
+        // The view corrected its own position while the wheel was gliding - the
+        // anchor kept a row still as a batch landed, a band appeared or went.
+        // The animation writes contentY from a destination captured before
+        // that, so on its next tick it would undo the correction: move the
+        // destination by as much, and carry on from where the view now is.
+        function retargetWheelScroll(delta) {
+            d.glideTo(d.clampedContentY(wheelScrollAnimation.to + delta))
+        }
+
+        function stopWheelScroll() {
+            if (!wheelScrollAnimation.running)
+                return
+
+            wheelScrollAnimation.stop()
+            d.setScrollBarActive(false)
+        }
+
+        // An animated contentY is no movement to Flickable, so the attached
+        // scroll bar would stay inactive - faded out - for the whole scroll.
+        // The style still owns the fade-out delay afterwards.
+        function setScrollBarActive(active) {
+            const bar = root.ScrollBar.vertical
+
+            if (!bar)
+                return
+
+            // whatever else owns the state keeps it: a drag, a hover, a flick
+            if (!active && (bar.pressed || bar.hovered || root.movingVertically))
+                return
+
+            bar.active = active
+        }
+
         readonly property bool scrollBarHeld: {
             const bar = root.ScrollBar.vertical
 
@@ -492,17 +595,38 @@ Flickable {
         readonly property bool shouldRequestMore:
                 root.autoRequest && d.hasViewport
                 && !root.busy && !d.finishing && !d.scrollBarHeld
-                && ((root.moreAvailableTop && d.bandInReach(topBand))
-                    || (root.moreAvailableBottom && d.bandInReach(bottomBand)))
+                && (d.wantsMore(true) || d.wantsMore(false))
+
+        // An edge with more behind it whose band is in reach - unless that
+        // edge is held: the one opposite the last slide waits for the user to
+        // move towards it. A window too short for the viewport and both
+        // prefetch margins has both bands in reach at once, and without the
+        // hold every slide would put the other band back in reach - sliding
+        // back and forth for ever with nobody touching anything. Prefetch is
+        // there to anticipate a move; with no move there is nothing to
+        // anticipate.
+        property bool holdTop: false
+        property bool holdBottom: false
+
+        function wantsMore(atTop) {
+            return atTop ? root.moreAvailableTop && !d.holdTop && d.bandInReach(topBand)
+                         : root.moreAvailableBottom && !d.holdBottom && d.bandInReach(bottomBand)
+        }
+
+        function releaseHolds() {
+            d.holdTop = false
+            d.holdBottom = false
+        }
 
         // Deferred by one turn, not polled: requesting writes `d.wave`, which
         // feeds `staging`, which feeds `busy`, which this condition reads - so
-        // doing it here, inside the notification, is a binding loop. callLater
-        // runs in this same event-loop iteration, before anything is rendered,
-        // so nothing is actually delayed.
+        // doing it here, inside the notification, is a binding loop. A Timer
+        // rather than Qt.callLater: it dies with the view, while a callLater
+        // still pending when the view is destroyed runs into a context that no
+        // longer has its functions.
         onShouldRequestMoreChanged: {
             if (d.shouldRequestMore)
-                Qt.callLater(d.requestForReachedBand)
+                requestTimer.restart()
         }
 
         function requestForReachedBand() {
@@ -514,9 +638,9 @@ Flickable {
 
             // The top first, so a view short enough to show both bands walks
             // back through the history rather than fighting itself.
-            if (root.moreAvailableTop && d.bandInReach(topBand))
+            if (d.wantsMore(true))
                 d.request(true)
-            else if (root.moreAvailableBottom && d.bandInReach(bottomBand))
+            else if (d.wantsMore(false))
                 d.request(false)
         }
 
@@ -723,6 +847,9 @@ Flickable {
         // scrollbar drags, which emit no movement signals at all.
         property bool applyingPosition: false
 
+        // Where contentY was, for the direction of a user's move.
+        property real lastContentY: 0
+
         // Writing contentY cancels an in-flight flick: setContentY() resets the
         // timeline and ends the movement. So the velocity is taken before the
         // write and the flick started again after it. Under Qt's constant
@@ -731,6 +858,35 @@ Flickable {
         // same trajectory rather than approximating it.
         property real heldFlickVelocity: 0
         property bool flickHoldActive: false
+
+        // The last flick this view restarted, in flick()'s sign: the velocity
+        // and when. Cleared when any flick ends.
+        property real restartedFlickVelocity: 0
+        property real restartedFlickAt: -1
+
+        // The flick's current velocity, in flick()'s sign. Qt's verticalVelocity
+        // is smoothed and reads nothing for a frame after a restart, so a write
+        // in the very next frame - a second row settling its height - would
+        // find no flick to preserve and end it. Then the velocity is computed
+        // from the restart instead: under Qt's constant deceleration it is the
+        // restart velocity less flickDeceleration for every second since.
+        function currentFlickVelocity() {
+            if (root.verticalVelocity !== 0)
+                return -root.verticalVelocity
+
+            if (d.restartedFlickAt < 0)
+                return 0
+
+            const elapsed = (Date.now() - d.restartedFlickAt) / 1000
+            const speed = Math.abs(d.restartedFlickVelocity) - root.flickDeceleration * elapsed
+
+            return speed > 0 ? Math.sign(d.restartedFlickVelocity) * speed : 0
+        }
+
+        function forgetFlickRestart() {
+            d.restartedFlickVelocity = 0
+            d.restartedFlickAt = -1
+        }
 
         function preservingFlick(write) {
             // The velocity is taken once, on the first write of a turn, and put
@@ -745,10 +901,11 @@ Flickable {
             // end reports as flicking, but what is running then is Qt's own
             // rebound back into bounds - re-flicking there fights the bounce
             // instead of preserving anything.
-            if (!d.flickHoldActive && root.flickingVertically
-                    && root.verticalOvershoot === 0
-                    && root.verticalVelocity !== 0) {
-                d.heldFlickVelocity = -root.verticalVelocity
+            const velocity = d.flickHoldActive || !root.flickingVertically
+                    || root.verticalOvershoot !== 0 ? 0 : d.currentFlickVelocity()
+
+            if (velocity !== 0) {
+                d.heldFlickVelocity = velocity
                 d.flickHoldActive = true
 
                 // Releases the hold at the end of this turn. It only ever
@@ -759,8 +916,13 @@ Flickable {
 
             write()
 
-            if (d.flickHoldActive && d.heldFlickVelocity !== 0)
+            // Recorded after the flick() call: the write above ended the
+            // flick, and that clears the record.
+            if (d.flickHoldActive && d.heldFlickVelocity !== 0) {
                 root.flick(0, d.heldFlickVelocity)
+                d.restartedFlickVelocity = d.heldFlickVelocity
+                d.restartedFlickAt = Date.now()
+            }
         }
 
         function endFlickHold() {
@@ -893,6 +1055,12 @@ Flickable {
             if (row < 0 || row >= root.rowCount)
                 return false
 
+            // a deliberate position replaces wherever the wheel was going
+            d.stopWheelScroll()
+
+            // a deliberate position is a new place to read from
+            d.releaseHolds()
+
             // A deliberate position replaces whatever was holding the view,
             // including a slide's anchor: the request is the guarantee now.
             d.releaseAnchor()
@@ -984,7 +1152,10 @@ Flickable {
             return true
         }
 
-        function restorePosition() {
+        // mayRelease: false from the anchor's own y change, which can arrive in
+        // the middle of the Column's layout - the rows already placed, the
+        // Column's height not updated yet - see the release below.
+        function restorePosition(mayRelease = true) {
             if (d.applyPendingPosition())
                 return
 
@@ -1017,7 +1188,16 @@ Flickable {
             // sits at the bottom without being stuck to it and the next row to
             // arrive leaves it behind. Not while a slide is in flight: there the
             // anchor is the guarantee, and the far end has yet to be trimmed.
-            if (root.stickToBottom && !root.busy && target >= bottom
+            //
+            // Not on a caller's say-so either: mid-layout, bottomY() still reads
+            // the Column's old height, so a correct target past that stale
+            // bottom looks like the bottom reached. Released then, the anchor
+            // could not take the clamp back once the height catches up, and
+            // applyContentHeight() would pin the view to the new bottom - the
+            // reader thrown to the newest delegate by a page loaded above them.
+            // The Column's height change follows in the same turn and decides
+            // with the real bottom.
+            if (mayRelease && root.stickToBottom && !root.busy && target >= bottom
                     && root.contentY >= bottom - 0.5)
                 d.releaseAnchor()
         }
@@ -1117,7 +1297,13 @@ Flickable {
         // jump by the height of everything that changed. Re-anchor to where the
         // user has just put the view instead. Outside a slide the anchor has no
         // work to do.
-        function userMoved() {
+        function userMoved(delta) {
+            // Moving towards a held edge is what the hold waited for.
+            if (delta < 0)
+                d.holdTop = false
+            else if (delta > 0)
+                d.holdBottom = false
+
             // A jump must not outlive the user's next move - the same lifetime
             // the resize anchor has.
             d.cancelPosition()
@@ -1323,6 +1509,11 @@ Flickable {
 
             d.wave = d.waveWaiting()
 
+            // A slide holds the opposite edge until the user moves towards it;
+            // anything else - a fill, an owner's batch - leaves both free.
+            d.holdTop = d.requestedAtEdge && !d.requestedAtTop
+            d.holdBottom = d.requestedAtEdge && d.requestedAtTop
+
             // In this same turn, so rows leaving and rows appearing change the
             // content together. An owner that defers removals trims here.
             root.batchRevealed()
@@ -1424,6 +1615,9 @@ Flickable {
 
             d.initialLoading = true
             d.noProgressIntervals = 0
+
+            // a fill has no edge: no band to keep up, no edge to hold after
+            d.requestedAtEdge = false
 
             // Nothing else arms it here: contentArrived() is what normally
             // re-arms the detector, and a provider that never answers produces
@@ -1702,6 +1896,7 @@ Flickable {
         // a reset removes every row with no per-row signal
         function onModelAboutToBeReset() {
             d.clearStaging()
+            d.releaseHolds()
             d.loadingTop = false
             d.loadingBottom = false
         }
@@ -1717,6 +1912,14 @@ Flickable {
         interval: 1000
 
         onTriggered: d.abandonWait()
+    }
+
+    Timer {
+        id: requestTimer
+
+        interval: 0
+
+        onTriggered: d.requestForReachedBand()
     }
 
     // One slice of queued acquires per firing; a separate event-loop
@@ -1741,20 +1944,59 @@ Flickable {
 
     // The whole point of the held anchor: a slide moves the surviving rows,
     // and so does the deferred layout of a recycled row a frame later. Both
-    // arrive here, and both are corrected the same way.
+    // arrive here, and both are corrected the same way - but without letting
+    // go of the anchor, since this can run before the Column has its new height.
     Connections {
         target: d.anchorItem
 
         function onYChanged() {
-            d.restorePosition()
+            d.restorePosition(false)
+        }
+    }
+
+    // Replaces Flickable's own wheel handling - see customWheelScrolling. A
+    // pointer handler is offered the event before the item itself, and this one
+    // blocks it, so the built-in path never runs while it is enabled. Disabled,
+    // it declines every event and Flickable scrolls exactly as it always did.
+    WheelHandler {
+        enabled: root.interactive && root.customWheelScrolling
+
+        onWheel: event => d.wheelScroll(event.angleDelta.y / 120)
+    }
+
+    NumberAnimation {
+        id: wheelScrollAnimation
+
+        target: root
+        property: "contentY"
+        duration: root.wheelScrollDuration
+        easing.type: Easing.OutQuad
+
+        // On natural completion only - a notch restarting it mid-glide does not
+        // count - so the scroll bar is released once the scroll settles.
+        onFinished: d.setScrollBarActive(false)
+    }
+
+    // A restart is only good for the flick it restarted. A Connections rather
+    // than a handler on the root, which an owner may set for itself.
+    Connections {
+        target: root
+
+        function onFlickEnded() {
+            d.forgetFlickRestart()
         }
     }
 
     // Any contentY change that is not ours is the user scrolling - wheel,
     // touch, or a scrollbar drag, which emits no movement signals at all.
     onContentYChanged: {
+        const delta = root.contentY - d.lastContentY
+        d.lastContentY = root.contentY
+
         if (!d.applyingPosition)
-            d.userMoved()
+            d.userMoved(delta)
+        else if (delta !== 0 && wheelScrollAnimation.running)
+            d.retargetWheelScroll(delta)
 
         d.applyPlaceholder()
     }

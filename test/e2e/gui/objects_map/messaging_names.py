@@ -19,7 +19,7 @@ statusToolBar_StatusTagItem = {"container": mainWindow_statusToolBar_StatusToolB
 
 # Chat View
 mainWindow_ChatColumnView = {"container": statusDesktop_mainWindow, "type": "ChatColumnView", "unnamed": 1, "visible": True}
-mainWindow_chatLogView_StatusListView = {"container": statusDesktop_mainWindow, "objectName": "chatLogView", "type": "StatusListView", "visible": True}
+mainWindow_chatLogView_StatusListView = {"container": statusDesktop_mainWindow, "objectName": "chatLogView", "type": "WindowedView", "visible": True}
 chatLogView_chatMessageViewDelegate_MessageView = {"container": mainWindow_chatLogView_StatusListView, "objectName": "chatMessageViewDelegate", "type": "MessageView", "visible": True, "enabled": True}
 
 # Create Chat View
@@ -32,7 +32,7 @@ createChatViewRecipientInput = {"container": statusDesktop_mainWindow, "objectNa
 
 # Chat Messages View
 mainWindow_ChatMessagesView = {"container": statusDesktop_mainWindow, "type": "ChatMessagesView", "unnamed": 1, "visible": True}
-chatView_log = {"container": statusDesktop_mainWindow, "objectName": "chatLogView", "type": "StatusListView", "visible": True}
+chatView_log = {"container": statusDesktop_mainWindow, "objectName": "chatLogView", "type": "WindowedView", "visible": True}
 groupchatLogView_chatMessageViewDelegate_MessageView = {"container": chatView_log, "objectName": "chatMessageViewDelegate", "type": "MessageView", "visible": True}
 groupMessagesItem = {"container": groupchatLogView_chatMessageViewDelegate_MessageView, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 chatMessageViewDelegate_ChannelIdentifierView = {"container": chatLogView_chatMessageViewDelegate_MessageView, "type": "ChannelIdentifierView", "unnamed": 1, "visible": True}
@@ -86,7 +86,7 @@ chatMessageViewDelegate_messageContextMenuDeleteButton = {"container": messageCo
 chatMessageViewDelegate_messageContextMenuReplyButton = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusFlatRoundButton", "visible": True}
 chatMessageViewDelegate_messageContextMenuReplyMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusMenuItem", "visible": True}
 mainWindow_replyPanel_StatusChatInputReplyPanel = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputReplyArea", "type": "StatusChatInputReplyPanel", "visible": True}
-layout_recentMessagesButton_AnchorButton = {"checkable": False, "container": mainWindow_chatLogView_StatusListView, "id": "recentMessagesButton", "type": "AnchorButton", "unnamed": 1, "visible": True}
+layout_recentMessagesButton_AnchorButton = {"checkable": False, "container": mainWindow_ChatMessagesView, "id": "recentMessagesButton", "type": "AnchorButton", "unnamed": 1, "visible": True}
 
 # Message link preview
 mainWindow_optionsComboBox_ComboBox = {"container": statusDesktop_mainWindow, "id": "optionsComboBox", "type": "ComboBox", "unnamed": 1, "visible": True}

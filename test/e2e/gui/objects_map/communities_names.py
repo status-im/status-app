@@ -77,8 +77,8 @@ mainWindow_ChatColumnView = {"container": statusDesktop_mainWindow, "type": "Cha
 chatMessageViewDelegate_channelIdentifierNameText_StyledText = {"container": mainWindow_ChatColumnView, "objectName": "channelIdentifierNameText", "type": "StyledText", "visible": True}
 chatMessageViewDelegate_Welcome = {"container": mainWindow_ChatColumnView, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 chatMessageViewDelegate_channelIdentifierSmartIdenticon_StatusSmartIdenticon = {"container": mainWindow_ChatMessagesView, "objectName": "channelIdentifierSmartIdenticon", "type": "StatusSmartIdenticon", "visible": True}
-mainWindow_chatLogView_StatusListView = {"container": statusDesktop_mainWindow, "objectName": "chatLogView", "type": "StatusListView", "visible": True}
-chatLogView_chatMessageViewDelegate_MessageView = {"container": mainWindow_chatLogView_StatusListView, "index": 0, "objectName": "chatMessageViewDelegate", "type": "MessageView", "visible": True}
+mainWindow_chatLogView_StatusListView = {"container": statusDesktop_mainWindow, "objectName": "chatLogView", "type": "WindowedView", "visible": True}
+chatLogView_chatMessageViewDelegate_MessageView = {"container": mainWindow_chatLogView_StatusListView, "objectName": "chatMessageViewDelegate", "type": "MessageView", "visible": True}
 
 """Chat context menu"""
 chatContextMenu = {"container": statusDesktop_mainWindow_overlay, "objectName": "ChatContextMenuView", "type": "PopupItem", "visible": True}

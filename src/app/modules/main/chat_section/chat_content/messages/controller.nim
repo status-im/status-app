@@ -338,6 +338,9 @@ proc loadMoreMessages*(self: Controller): bool =
     return self.messageService.asyncLoadMoreMessagesForThread(self.chatId, self.threadId, limit)
   return self.messageService.asyncLoadMoreMessagesForChat(self.chatId, limit)
 
+proc isHistoryExhausted*(self: Controller): bool =
+  return self.messageService.isHistoryExhausted(self.chatId, self.threadId)
+
 proc addReaction*(self: Controller, messageId: string, emoji: string) =
   self.messageService.addReactionAsync(self.chatId, messageId, emoji)
 
