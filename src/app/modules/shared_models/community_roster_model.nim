@@ -83,7 +83,8 @@ QtObject:
       members: seq[RosterMember]
       rows: Table[RawPubKey, int]
       channels: Table[string, Table[RawPubKey, ChannelRole]]
-      # admin-only overlays, set by their owners; absent = Accepted / ""
+      # admin-only overlays, set by their owners; absent = Accepted / "". Kept
+      # for members not (yet) in the roster: admin data may arrive before the fill.
       membershipStates: Table[RawPubKey, MembershipRequestState]
       airdropAddresses: Table[RawPubKey, string]
       loaded: bool
@@ -275,8 +276,6 @@ QtObject:
     for chatId in self.channels.keys:
       droppedChannels.add chatId
     self.channels.clear()
-    self.membershipStates.clear()
-    self.airdropAddresses.clear()
     if self.members.len > 0:
       let parentIndex = newQModelIndex()
       defer: parentIndex.delete
@@ -413,31 +412,51 @@ QtObject:
     if row >= 0:
       self.notifyRow(row, [ModelRole.OnlineStatus])
 
-  proc setMembershipState*(self: CommunityRosterModel, pubKey: string, state: MembershipRequestState) =
-    let row = self.rowOf(pubKey)
-    if row < 0:
-      return
-    let key = self.members[row].key
+  proc setMembershipState(self: CommunityRosterModel, key: RawPubKey, state: MembershipRequestState) =
     if self.membershipStates.getOrDefault(key, MembershipRequestState.Accepted) == state:
       return
     if state == MembershipRequestState.Accepted:
       self.membershipStates.del(key)
     else:
       self.membershipStates[key] = state
-    self.notifyRow(row, [ModelRole.MembershipRequestState])
+    let row = self.rows.getOrDefault(key, -1)
+    if row >= 0:
+      self.notifyRow(row, [ModelRole.MembershipRequestState])
+
+  proc setMembershipState*(self: CommunityRosterModel, pubKey: string, state: MembershipRequestState) =
+    var key: RawPubKey
+    if parseRawPubKey(pubKey, key):
+      self.setMembershipState(key, state)
+
+  proc setMembershipStates*(self: CommunityRosterModel, states: Table[string, MembershipRequestState]) =
+    ## Replaces every membership state overlay; absent members are Accepted.
+    var wanted = initTable[RawPubKey, MembershipRequestState](states.len)
+    for pubKey, state in states.pairs:
+      var key: RawPubKey
+      if state != MembershipRequestState.Accepted and parseRawPubKey(pubKey, key):
+        wanted[key] = state
+    var stale: seq[RawPubKey]
+    for key in self.membershipStates.keys:
+      if not wanted.hasKey(key):
+        stale.add key
+    for key in stale:
+      self.setMembershipState(key, MembershipRequestState.Accepted)
+    for key, state in wanted.pairs:
+      self.setMembershipState(key, state)
 
   proc setAirdropAddress*(self: CommunityRosterModel, pubKey: string, address: string) =
-    let row = self.rowOf(pubKey)
-    if row < 0:
+    var key: RawPubKey
+    if not parseRawPubKey(pubKey, key):
       return
-    let key = self.members[row].key
     if self.airdropAddresses.getOrDefault(key) == address:
       return
     if address.len == 0:
       self.airdropAddresses.del(key)
     else:
       self.airdropAddresses[key] = address
-    self.notifyRow(row, [ModelRole.AirdropAddress])
+    let row = self.rows.getOrDefault(key, -1)
+    if row >= 0:
+      self.notifyRow(row, [ModelRole.AirdropAddress])
 
   proc onChannelMembersChanged*(self: CommunityRosterModel, handler: proc(chatId: string)) =
     ## Nim-side listener (the future key-set filter); QML uses the signal.

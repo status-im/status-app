@@ -246,6 +246,34 @@ suite "community roster model":
     check model.num(0, "membershipRequestState") == MembershipRequestState.BannedPending.int
     check model.str(0, "airdropAddress") == "0xabc"
 
+  test "admin overlays set before the fill apply to the filled rows":
+    spy.clear()
+    model.setMembershipState(keyA, MembershipRequestState.KickedPending)
+    model.setAirdropAddress(keyA, "0xabc")
+    check spy.calls.len == 0
+    model.fill(snapshot(10, member(keyA, "alice")))
+    check model.num(0, "membershipRequestState") == MembershipRequestState.KickedPending.int
+    check model.str(0, "airdropAddress") == "0xabc"
+
+  test "a release keeps the admin overlays":
+    model.fill(snapshot(10, member(keyA, "alice")))
+    model.setMembershipState(keyA, MembershipRequestState.BannedPending)
+    model.setAirdropAddress(keyA, "0xabc")
+    model.clear()
+    model.fill(snapshot(11, member(keyA, "alice")))
+    check model.num(0, "membershipRequestState") == MembershipRequestState.BannedPending.int
+    check model.str(0, "airdropAddress") == "0xabc"
+
+  test "membership states are replaced as a set, one dataChanged per changed row":
+    model.fill(snapshot(10, member(keyA), member(keyB), member(keyC)))
+    model.setMembershipStates({keyA: MembershipRequestState.BannedPending}.toTable)
+    spy.clear()
+    model.setMembershipStates({keyB: MembershipRequestState.KickedPending}.toTable)
+    check spy.countDataChanged() == 2
+    check model.num(0, "membershipRequestState") == MembershipRequestState.Accepted.int
+    check model.num(1, "membershipRequestState") == MembershipRequestState.KickedPending.int
+    check model.num(2, "membershipRequestState") == MembershipRequestState.Accepted.int
+
   test "release drops every row without a reset":
     var snap = snapshot(10, member(keyA), member(keyB))
     snap.channels["gated"] = @[ChannelMember(key: raw(keyA))]
