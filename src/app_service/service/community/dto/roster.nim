@@ -1,4 +1,4 @@
-## Community roster wire types (status-go `wakuext_getCommunityMembers` and the
+## Community roster wire types (the status-go getCommunityMembers snapshot and the
 ## roster keys of `communityChanges[]`). Keys are kept raw; hex only on the wire.
 
 import std/[json, tables]
