@@ -25,3 +25,15 @@ def is_ios(driver) -> bool:
 def is_android(driver) -> bool:
     """Return ``True`` when the driver session targets an Android device."""
     return get_platform(driver) in ("android", "")
+
+
+def ios_bundle_id(driver, default: str = "app.status.mobile") -> str:
+    """The app's bundle identifier from whichever capability key the session
+    reports; BrowserStack sessions built from an uploaded app may report none."""
+    caps = getattr(driver, "capabilities", None) or {}
+    return (
+        caps.get("appium:bundleId")
+        or caps.get("bundleId")
+        or caps.get("CFBundleIdentifier")
+        or default
+    )

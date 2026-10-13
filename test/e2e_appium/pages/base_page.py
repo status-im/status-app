@@ -1,6 +1,8 @@
 import logging
 import os
 import time
+from support.platform import is_ios as _is_ios
+from locators.base_locators import xpath_string
 from datetime import datetime
 from pathlib import Path
 from typing import NoReturn
@@ -174,6 +176,7 @@ class BasePage:
                 element = None
                 try:
                     element = self._wait_for_clickable(loc, timeout)
+                    self._wait_for_settled_ios(element)
                     # Prefer a real W3C touch event over native element.click().
                     # element.click() routes through AccessibilityNodeInfo.
                     # ACTION_CLICK and silently no-ops on QML widgets that
@@ -209,6 +212,23 @@ class BasePage:
             self.logger.debug(f"Exhausted all attempts for locator: {loc[1]}")
 
         self._raise_click_failure(all_locators, capture_evidence=capture_evidence)
+
+    def _wait_for_settled_ios(self, element, timeout: float = 1.5) -> None:
+        """Qt puts items in the iOS tree from the first frame of a page
+        transition; a tap while the page still slides lands on nothing."""
+        if not _is_ios(self.driver):
+            return
+        deadline = time.time() + timeout
+        try:
+            previous = element.rect
+            while time.time() < deadline:
+                time.sleep(0.15)
+                current = element.rect
+                if current == previous:
+                    return
+                previous = current
+        except Exception:
+            return
 
     def _wait_for_clickable(self, locator: tuple, timeout: int | None = None) -> WebElement:
         """Wait for element to be clickable and return it."""
@@ -383,7 +403,9 @@ class BasePage:
                 wait = self._create_wait(timeout, "element_click")
                 element = wait.until(EC.element_to_be_clickable(locator))
 
+                self._wait_for_settled_ios(element)
                 element.click()
+                self._wait_for_keyboard_ios()
                 if not self._wait_for_element_focused(element):
                     #TODO: Check add account flow locators to see if this can be blocking
                     self.logger.debug(
@@ -400,9 +422,16 @@ class BasePage:
                 actions.send_keys(text).perform()
 
                 if ElementStateChecker.is_password_field(element):
-                    self.logger.debug("Password field detected - skipping verification")
                     time.sleep(0.05 * len(text))
-                    return True
+                    if not _is_ios(self.driver):
+                        self.logger.debug("Password field detected - skipping verification")
+                        return True
+                    if self._password_field_filled(element):
+                        return True
+                    self.logger.warning(
+                        f"Password field still empty after typing (attempt {attempt + 1})"
+                    )
+                    continue
 
                 if not verify:
                     self.logger.info(
@@ -421,6 +450,29 @@ class BasePage:
 
         self.logger.error(f"Qt input failed after {attempts_total} attempts")
         return False
+
+    def _wait_for_keyboard_ios(self, timeout: float = 3.0) -> None:
+        """On iOS, keystrokes sent before the keyboard has finished appearing are dropped."""
+        if not _is_ios(self.driver):
+            return
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            try:
+                if self.driver.is_keyboard_shown():
+                    return
+            except Exception:
+                return
+            time.sleep(0.1)
+
+    def _password_field_filled(self, element) -> bool:
+        """Secure fields never echo text, so check that *something* landed."""
+        try:
+            value = element.get_attribute("value") or element.get_attribute("text") or ""
+        except Exception as exc:
+            self.logger.warning(f"Password field value unreadable ({exc!r}); treating as empty")
+            return False
+        self.logger.info(f"Password field check: {len(value)} chars")
+        return len(value) > 0
 
     def _wait_for_element_focused(self, element, timeout: float = 2.0) -> bool:
         """Poll until element has focus attribute set to true."""
@@ -482,6 +534,45 @@ class BasePage:
         element = self.find_element_safe(locator, timeout=timeout)
         if not element:
             return False
+
+        if _is_ios(self.driver):
+            # No Ctrl+A on iOS, and W3C key actions do not delete in a Qt
+            # field. The locator may match the input's wrapper; the editable
+            # element is the text field named under it, and typeText("\b")
+            # on that element deletes.
+            try:
+                field = element
+                if element.get_attribute("type") not in (
+                    "XCUIElementTypeTextField", "XCUIElementTypeTextView"
+                ):
+                    prefix = xpath_string(element.get_attribute("name") or "")
+                    field = self.driver.find_element(
+                        "xpath",
+                        f"//XCUIElementTypeTextField[starts-with(@name, {prefix})]"
+                        f" | //XCUIElementTypeTextView[starts-with(@name, {prefix})]",
+                    )
+                # A centre tap puts the cursor mid-text, and backspace only
+                # deletes what is before it: tap the field's right end, then
+                # read the value back.
+                for _ in range(2):
+                    length = len(field.get_attribute("value") or "")
+                    if length == 0:
+                        return True
+                    rect = field.rect
+                    self.gestures.tap(
+                        int(rect["x"] + rect["width"] - 4),
+                        int(rect["y"] + rect["height"] / 2),
+                    )
+                    self._wait_for_keyboard_ios()
+                    field.send_keys("\b" * (length + 2))
+                if field.get_attribute("value"):
+                    # The value read-back is not reliable on iOS; the caller's
+                    # own check decides.
+                    self.logger.warning("Field may not be empty after the iOS clear")
+                return True
+            except Exception as exc:
+                self.logger.debug(f"iOS backspace clear failed: {exc}")
+                return False
 
         try:
             element.click()
@@ -569,6 +660,44 @@ class BasePage:
         except Exception as e:
             self.logger.debug(f"Coordinate tap failed: {e}")
             return False
+
+    def is_on_screen(self, locator: tuple, timeout: float = 3) -> bool:
+        """Visible and horizontally inside the window. In portrait Qt slides
+        panes sideways and XCUITest still reports them as visible."""
+        width = self.driver.get_window_size()["width"]
+
+        def inside_window() -> bool:
+            for element in self.driver.find_elements(*locator):
+                try:
+                    if element.is_displayed() and 0 <= element.rect["x"] < width:
+                        return True
+                except Exception:
+                    continue
+            return False
+
+        return self.wait_for_condition(inside_window, timeout=timeout, poll_interval=0.5)
+
+    def dismiss_popup_ios(self, locator: tuple, timeout: int = 3) -> bool:
+        """iOS has no BACK key. A press outside a Qt popup closes it and is
+        consumed, so it does not reach what lies under the tap point."""
+        if not self.is_element_visible(locator, timeout=1):
+            return True
+        try:
+            # Containers are not accessibility elements on iOS, so the locator
+            # can match several children; stay outside all of them.
+            rects = [e.rect for e in self.driver.find_elements(*locator)]
+            top = min(r["y"] for r in rects)
+            bottom = max(r["y"] + r["height"] for r in rects)
+            height = self.driver.get_window_rect()["height"]
+            if height - bottom > 80:
+                y = int(bottom + (height - bottom) / 2)
+            else:
+                y = int(top / 2)
+            self.gestures.tap(12, y)
+        except Exception as exc:
+            self.logger.debug("Outside tap to dismiss popup failed: %s", exc)
+            return False
+        return self.wait_for_invisibility(locator, timeout=timeout)
 
     def _gesture_tap_fallback(self, element, locator) -> bool:
         """Tap element using a real W3C touch event at its centre coords.

@@ -3,7 +3,9 @@ import time
 
 from selenium.webdriver.remote.webelement import WebElement
 
+from locators.app_locators import AppLocators
 from locators.base_locators import BaseLocators
+from support.platform import is_ios
 from locators.wallet.accounts_locators import WalletAccountsLocators
 
 from ..base_page import BasePage
@@ -108,6 +110,11 @@ class WalletLeftPanel(BasePage):
             # Popup can stay focused in the AT tree after visual close,
             # silently swallowing the next tap via CloseOnPressOutside.
             # BACK definitively dismisses.
+            if is_ios(self.driver):
+                # Copy address does not close the menu (autoDismissMenu off).
+                if not self.dismiss_popup_ios(self.locators.ACCOUNT_CONTEXT_MENU):
+                    self.logger.warning("Account context menu still open after outside tap")
+                return clipboard_result[0]
             self.wait_for_invisibility(self.locators.ACCOUNT_CONTEXT_MENU, timeout=3)
             try:
                 self.driver.press_keycode(4)  # Android BACK
@@ -291,9 +298,10 @@ class WalletLeftPanel(BasePage):
     def account_names(self) -> list[str]:
         """Extract account names from visible account rows."""
         names: list[str] = []
+        desc_attribute = "label" if is_ios(self.driver) else "content-desc"
         for row in self.account_rows():
             try:
-                desc = row.get_attribute("content-desc")
+                desc = row.get_attribute(desc_attribute)
                 if not desc or desc == "null":
                     desc = row.get_attribute("text")
                 if not desc or desc == "null":
@@ -309,7 +317,29 @@ class WalletLeftPanel(BasePage):
     def wait_for_account_name(self, name: str, timeout: int = 10) -> bool:
         return self.wait_for_condition(lambda: name in self.account_names(), timeout=timeout)
 
+    def _show_account_list_ios(self, timeout: float = 5.0) -> None:
+        """In portrait, selecting an account slides the account list off to
+        the left; XCUITest still reports its rows as visible."""
+        if not is_ios(self.driver):
+            return
+        width = self.driver.get_window_size()["width"]
+        def rows_on_screen() -> bool:
+            for row in self.account_rows():
+                try:
+                    if 0 <= row.rect["x"] < width:
+                        return True
+                except Exception:
+                    continue
+            return False
+        if rows_on_screen():
+            return
+        self.try_click(AppLocators.TOOLBAR_BACK_BUTTON, timeout=3)
+        deadline = time.time() + timeout
+        while time.time() < deadline and not rows_on_screen():
+            time.sleep(0.3)
+
     def long_press_row(self, index: int = -1, duration_ms: int = 800) -> bool:
+        self._show_account_list_ios()
         rows = self.account_rows()
         if not rows:
             return False
@@ -424,7 +454,8 @@ class WalletLeftPanel(BasePage):
         escaped = xpath_string(name)
         locator = (
             "xpath",
-            f"//*[contains(@resource-id,'walletAccountListItem') and starts-with(@content-desc, {escaped})]"
+            f"//*[(contains(@resource-id,'walletAccountListItem') and starts-with(@content-desc, {escaped}))"
+            f" or (contains(@name,'walletAccountListItem') and starts-with(@label, {escaped}))]"
         )
         return self.find_element_safe(locator, timeout=timeout)
 
@@ -438,6 +469,7 @@ class WalletLeftPanel(BasePage):
         Returns:
             bool: True if deletion succeeded.
         """
+        self._show_account_list_ios()
         account_element = self.find_account_element_by_name(name, timeout=10)
         if not account_element:
             self.logger.error(f"Account '{name}' not found in account list")
