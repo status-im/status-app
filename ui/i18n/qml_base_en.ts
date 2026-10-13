@@ -3313,7 +3313,16 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatView</name>
     <message>
+        <source>in %1</source>
+        <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Members</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close thread</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

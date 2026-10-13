@@ -190,6 +190,18 @@ Item {
             existingThreadMenu.close()
         }
 
+        function test_noCreateThreadInsideThreadView() {
+            const menu = createMenu({
+                openExpanded: true,
+                threadsFeatureEnabled: true,
+                isThreadView: true
+            })
+            menu.open()
+
+            verify(enabledActionTexts(menu).indexOf(qsTr("Create Thread")) < 0)
+            menu.close()
+        }
+
         function test_expandedReactionsUseAvailableWidth() {
             const menu = createMenu({ openExpanded: true })
             menu.open()

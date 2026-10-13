@@ -46,6 +46,7 @@ StackLayout {
     readonly property Item leftPanel: mainViewLoader.item?.leftPanel ?? null
     readonly property Item centerPanel: mainViewLoader.item?.centerPanel ?? null
     readonly property Item rightPanel: mainViewLoader.item?.rightPanel ?? null
+    readonly property Item rightPanelHeaderContent: mainViewLoader.item?.rightPanelHeaderContent ?? null
     readonly property Item headerContent: mainViewLoader.item?.headerContent ?? null
     readonly property bool showRightPanel: mainViewLoader.item?.showRightPanel ?? false
     readonly property bool rightPanelDecisionReady: mainViewLoader.item?.rightPanelDecisionReady ?? false
@@ -309,6 +310,8 @@ StackLayout {
             objectName: "chatViewComponent"
 
             sectionLayout: root.sectionLayout
+            activeItemId: root.rootStore.chatCommunitySectionModule?.activeItem?.id ?? ""
+            activeItemName: root.rootStore.chatCommunitySectionModule?.activeItem?.name ?? ""
             rootStore: root.rootStore
             createChatPropertiesStore: root.createChatPropertiesStore
             communitiesStore: root.communitiesStore

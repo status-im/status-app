@@ -120,9 +120,9 @@ Control {
     /*!
         \qmlproperty int StatusSectionLayout::rightPanelWidth
         This property sets the right panel component's width.
-        Default value is 250.
+        Default value is 300.
     */
-    property int rightPanelWidth: 250
+    property int rightPanelWidth: 300
     /*!
         \qmlproperty bool StatusSectionLayout::showHeader
         This property sets the header component's visibility to true/false.
@@ -230,7 +230,7 @@ Control {
         readonly property int defaultLeftPanelWidth: 306
 
         // Default width of the right panel in its collapsed state.
-        readonly property int defaultRightPanelWidth: 153
+        readonly property int defaultRightPanelWidth: 300
 
         // Effective left panel used for geometry reference:
         // - If real leftPanel if provided

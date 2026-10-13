@@ -463,6 +463,7 @@ QtObject:
       slot: "onAsyncLoadMoreMessagesForThread",
       chatId: chatId,
       threadId: threadId,
+      parentMessageId: threadId,
       msgCursor: msgCursorValue,
       limit: if(limit <= MESSAGES_PER_PAGE_MAX): limit else: MESSAGES_PER_PAGE_MAX,
     )

@@ -677,6 +677,11 @@ method getChatContentModule*(self: Module, chatId: string): QVariant =
     error "getChatContentModule: unexisting chat key", chatId, methodName="getChatContentModule"
     return
 
+  # A thread can be displayed in the side panel without becoming the active chat.
+  # Load requested modules lazily so their messages and input state are available.
+  if not self.chatContentModules[chatId].isLoaded:
+    self.chatContentModules[chatId].load(chatItem)
+
   return self.chatContentModules[chatId].getModuleAsVariant()
 
 proc updateParentBadgeNotifications(self: Module) =

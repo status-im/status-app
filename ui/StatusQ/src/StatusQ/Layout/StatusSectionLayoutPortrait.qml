@@ -84,9 +84,9 @@ SwipeView {
     /*!
         \qmlproperty int StatusSectionLayout::rightPanelWidth
         This property sets the right panel component's width.
-        Default value is 250.
+        Default value is 300.
     */
-    property int rightPanelWidth: 250
+    property int rightPanelWidth: 300
     /*!
         \qmlproperty bool StatusSectionLayout::showHeader
         This property sets the header component's visibility to true/false.
@@ -130,6 +130,11 @@ SwipeView {
         the header component.
     */
     property Item headerContent
+    /*!
+        \qmlproperty Item StatusSectionLayoutPortrait::rightPanelHeaderContent
+        This property holds optional header content for the right panel toolbar.
+    */
+    property Item rightPanelHeaderContent
     /*!
         \qmlproperty color StatusSectionLayoutPortrait::backgroundColor
         This property holds color of the centeral component of
@@ -403,6 +408,10 @@ SwipeView {
             spacing: 0
             BaseToolBar {
                 Layout.fillWidth: true
+                headerContent: LayoutItemProxy {
+                    id: rightPanelHeaderProxy
+                    target: root.rightPanelHeaderContent
+                }
             }
             SectionPanelSlot {
                 id: rightPanelProxy

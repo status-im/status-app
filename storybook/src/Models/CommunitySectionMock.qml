@@ -269,10 +269,14 @@ QtObject {
                 signal sendingMessageFailed(string error)
                 signal reactionActionFailed()
                 signal scrollToMessage(string messageId)
+                signal threadOpenRequested(string threadId, string threadName)
 
                 function getChatId() { return contentModule.chatId }
                 function loadMoreMessages() {}
                 function updateKeepUnread(flag) {}
+                function createThread(parentMessageId) {
+                    threadOpenRequested(parentMessageId, "New thread")
+                }
             }
 
             readonly property var usersModule: QtObject {

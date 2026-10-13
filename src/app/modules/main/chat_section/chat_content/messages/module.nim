@@ -300,7 +300,9 @@ method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: se
 
     if self.controller.getMyThreadId().len == 0 and self.controller.getChatDetails().hasMoreMessagesToRequest():
       viewItems.add(self.createFetchMoreMessagesItem())
-    viewItems.add(self.createChatIdentifierItem())
+    # A thread starts directly with its parent message, no channel welcome header
+    if threadId.len == 0:
+      viewItems.add(self.createChatIdentifierItem())
     self.view.model().removeItem(FETCH_MORE_MESSAGES_MESSAGE_ID)
     self.view.model().removeItem(CHAT_IDENTIFIER_MESSAGE_ID)
     # Add new loaded messages
@@ -481,8 +483,10 @@ method createThread*(self: Module, parentMessageId: string) =
     let thread = self.controller.getThreadForParentMessage(parentMessageId)
     if thread.threadId.len > 0:
       self.delegate.openThreadAsChat(thread.threadId, thread.name, thread.parentMessageId,
+        setActive = false,
         hasUnreadMessages = thread.unviewedMessagesCount > 0,
         notificationsCount = thread.unviewedMentionsCount)
+      self.view.emitThreadOpenRequestedSignal(thread.threadId, thread.name)
       return
 
   self.controller.createThread(parentMessageId)
@@ -502,10 +506,11 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
     self.view.model().setHasThread(selectedThread.parentMessageId, true)
     self.view.model().setThreadSummary(selectedThread.parentMessageId, self.threadSummary(selectedThread))
 
-  # Open the freshly created thread as a sub-channel chat
+  # Prepare the thread module without changing the selected parent chat.
   self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId,
-    setActive = true, hasUnreadMessages = selectedThread.unviewedMessagesCount > 0,
+    setActive = false, hasUnreadMessages = selectedThread.unviewedMessagesCount > 0,
     notificationsCount = selectedThread.unviewedMentionsCount)
+  self.view.emitThreadOpenRequestedSignal(selectedThread.threadId, selectedThread.name)
 
 method onChatThreadsLoadingFailed*(self: Module) =
   self.view.emitChatThreadsLoadingFailedSignal()
@@ -658,11 +663,14 @@ method onMessageEdited*(self: Module, message: MessageDto) =
 method onHistoryCleared*(self: Module) =
   self.view.model().clear()
   # Add ChatIdentifier back after model is cleared, so that the chat screen is not blank
-  self.view.model().insertItemBasedOnClock(self.createChatIdentifierItem())
+  if self.controller.getMyThreadId().len == 0:
+    self.view.model().insertItemBasedOnClock(self.createChatIdentifierItem())
 
 method updateChatIdentifier*(self: Module) =
   let chatDto = self.controller.getChatDetails()
   self.setChatDetails(chatDto)
+  if self.controller.getMyThreadId().len > 0:
+    return
   let item = self.createChatIdentifierItem()
   if not self.view.model().updateChatIdentifier(item):
     self.view.model().insertItemBasedOnClock(item)

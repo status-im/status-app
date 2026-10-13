@@ -24,6 +24,7 @@ QtObject {
     readonly property string chatIcon: ""
     readonly property bool keepUnread: false
     readonly property bool isChatActive: true
+    readonly property string threadId: messageModule?.threadId ?? ""
 
     onMessageModuleChanged: {
         if (messageModule)
@@ -57,4 +58,8 @@ QtObject {
     function jumpToMessage(id) {}
     function createMessageLink(chatId, messageId) { return "" }
     function resendMessage(messageId) {}
+    function createThread(parentMessageId) {
+        if (messageModule && messageModule.createThread)
+            messageModule.createThread(parentMessageId)
+    }
 }

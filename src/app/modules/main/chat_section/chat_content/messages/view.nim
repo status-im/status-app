@@ -116,6 +116,10 @@ QtObject:
   proc emitThreadCreationFailedSignal*(self: View) =
     self.threadCreationFailed()
 
+  proc threadOpenRequested*(self: View, threadId: string, threadName: string) {.signal.}
+  proc emitThreadOpenRequestedSignal*(self: View, threadId: string, threadName: string) =
+    self.threadOpenRequested(threadId, threadName)
+
   proc getNumberOfPinnedMessages*(self: View): int {.slot.} =
     return self.delegate.getNumberOfPinnedMessages()
 
@@ -276,4 +280,3 @@ QtObject:
 
   proc delete*(self: View) =
     self.QObject.delete
-

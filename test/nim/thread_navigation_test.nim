@@ -12,6 +12,7 @@ import app_service/service/contacts/service as contact_service
 import app_service/service/community/service as community_service
 import app_service/service/message/message_cursor
 import app_service/service/message/dto/message
+import app_service/service/message/dto/thread
 
 privateAccess(messages_module.Module)
 privateAccess(message_service.Service)
@@ -55,10 +56,26 @@ suite "thread navigation":
 
       module.createThread("parent-id")
       check(delegate.opened[^1] == OpenedThread(threadId: "thread-id",
-        name: "Thread title", parentMessageId: "parent-id", setActive: true,
+        name: "Thread title", parentMessageId: "parent-id", setActive: false,
         hasUnreadMessages: unreadCount > 0, notificationsCount: mentionsCount))
 
     check(delegate.opened.len == 3)
+
+  test "creating a thread preserves the selected parent chat":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let delegate = MockDelegate()
+    let module = messages_module.newModule(delegate, events, "section-id", "chat-id",
+      true, nil, nil, nil, service, nil, nil)
+    defer: module.delete()
+
+    module.onThreadCreated("parent-id", @[ThreadDto(threadId: "parent-id",
+      parentMessageId: "parent-id", name: "New thread",
+      unviewedMessagesCount: 2, unviewedMentionsCount: 1)])
+
+    check(delegate.opened == @[OpenedThread(threadId: "parent-id",
+      name: "New thread", parentMessageId: "parent-id", setActive: false,
+      hasUnreadMessages: true, notificationsCount: 1)])
 
   test "empty and filtered final pages finish a pending message search":
     let events = createEventEmitter()
