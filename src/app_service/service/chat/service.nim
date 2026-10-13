@@ -291,15 +291,6 @@ QtObject:
     self.chats[chat.id].categoryId = categoryId
     self.events.emit(SIGNAL_CHAT_ADDED_OR_UPDATED, ChatArgs(communityId: chat.communityId, chatId: chat.id))
 
-  proc updateChannelMembers*(self: Service, channel: ChatDto) =
-    if not self.chats.hasKey(channel.id):
-      return
-
-    var chat = self.chats[channel.id]
-    chat.members = channel.members
-    self.updateOrAddChat(chat)
-    self.events.emit(SIGNAL_CHAT_MEMBERS_CHANGED, ChatMembersChangedArgs(chatId: chat.id, members: chat.members))
-
   proc parseChatResponse*(self: Service, response: RpcResponse[JsonNode]): (seq[ChatDto], seq[MessageDto]) =
     var chats: seq[ChatDto] = @[]
     var messages: seq[MessageDto] = @[]

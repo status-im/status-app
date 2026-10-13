@@ -516,13 +516,12 @@ QtObject:
     self.communityMemberReevaluationStatus = value
     self.communityMemberReevaluationStatusChanged()
 
-  proc membersModelChanged*(self: View) {.signal.}
-  proc getMembersModel(self: View): QVariant {.slot.} =
-    return self.delegate.getSectionMemberList()
+  # requests to join, banned and awaiting-address members; filled when admin settings open
+  proc getAdminMembersModel(self: View): QVariant {.slot.} =
+    return self.delegate.getAdminMembersModel()
 
-  QtProperty[QVariant] membersModel:
-    read = getMembersModel
-    notify = membersModelChanged
+  QtProperty[QVariant] adminMembersModel:
+    read = getAdminMembersModel
 
   # the on-demand community roster; empty until a holder loads it
   proc getRosterModel(self: View): QVariant {.slot.} =

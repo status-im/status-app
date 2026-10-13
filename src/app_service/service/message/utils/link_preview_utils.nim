@@ -19,8 +19,8 @@ proc setCommunityInfo*(self: StatusCommunityLinkPreview, community: CommunityDto
     self.description = community.description
     self.descriptionChanged()
 
-  if self.membersCount != community.members.len:
-    self.membersCount = community.members.len
+  if self.membersCount != community.membersCount:
+    self.membersCount = community.membersCount
     self.membersCountChanged()
 
   if self.activeMembersCount != community.activeMembersCount:

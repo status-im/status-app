@@ -13,9 +13,9 @@ import app/modules/shared_models/user_item as user_item
 import app/modules/shared_models/user_model as user_model
 import app/modules/shared_models/[token_permissions_model, token_permission_item, token_criteria_item, token_criteria_model, token_permission_chat_list_model, contacts_utils]
 import app/modules/shared_models/[community_roster_model, community_roster_holders, community_roster_handle]
+import app/modules/shared_models/[member_model, member_item]
 
 import chat_content/module as chat_content_module
-import chat_content/users/module as users_module
 
 import app/global/global_singleton
 import app/core/eventemitter
@@ -53,7 +53,6 @@ type
     chatContentModules: OrderedTable[string, chat_content_module.AccessInterface]
     moduleLoaded: bool
     chatsLoaded: bool
-    membersListModule: users_module.AccessInterface
     # defers the first-activation model build off the tap handler (seaqt
     # QTimer, auto-destroyed via =destroy)
     initialBuildTimer: QTimer
@@ -73,6 +72,10 @@ type
     rosterVariant: QVariant
     rosterHolders: RosterHolders
     rosterReleaseTimer: QTimer
+    # admin settings only: requests to join, banned and awaiting-address members
+    adminMembers: member_model.Model
+    adminMembersVariant: QVariant
+    adminMembersLoaded: bool
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -155,11 +158,7 @@ proc newModule*(
 
   result.chatContentModules = initOrderedTable[string, chat_content_module.AccessInterface]()
   if isCommunity:
-    result.membersListModule = users_module.newModule(events, sectionId, chatId = "", isCommunity,
-      isUsersListAvailable = true, contactService, chatService, communityService, messageService, isSectionMemberList = true)
     result.setupRoster()
-  else:
-    result.membersListModule = nil
 
 proc rosterContact(self: Module, pubKey: string): RosterContact =
   if pubKey == singletonInstance.userProfile.getPubKey():
@@ -198,6 +197,8 @@ proc setupRoster(self: Module) =
       m.controller.contactImageUrl(pubKey, imageClock),
   ))
   self.rosterVariant = newQVariant(self.roster)
+  self.adminMembers = member_model.newModel()
+  self.adminMembersVariant = newQVariant(self.adminMembers)
   self.rosterReleaseTimer = QTimer.create()
   self.rosterReleaseTimer.setSingleShot(true)
   self.rosterHolders = newRosterHolders(
@@ -208,7 +209,8 @@ proc setupRoster(self: Module) =
     onLoad = proc() = m.controller.loadCommunityRoster(),
     onDrop = proc() =
       m.controller.releaseCommunityRoster()
-      m.roster.clear(),
+      m.roster.clear()
+      debug "community roster released", sectionId = m.controller.getMySectionId()
   )
   self.rosterReleaseTimer.onTimeout(proc() {.closure, raises: [].} =
     try:
@@ -271,14 +273,13 @@ method delete*(self: Module) =
     self.rosterReleaseTimer.stop()
     self.controller.releaseCommunityRoster()
     self.rosterVariant.delete
+    self.adminMembersVariant.delete
   self.controller.delete
   self.view.delete
   self.viewVariant.delete
   for cModule in self.chatContentModules.values:
     cModule.delete
   self.chatContentModules.clear
-  if self.membersListModule != nil:
-    self.membersListModule.delete
 
 method isCommunity*(self: Module): bool =
   return self.controller.isCommunity()
@@ -520,16 +521,8 @@ method onChatsLoaded*(
   ) =
   self.chatsLoaded = true
 
-  let community {.cursor.} = self.controller.getCommunityById(communityId)
-  # Pre-populate the contacts cache with community members
-  contactService.seedFromChatMembers(community.members.toMemberSeeds())
-
   self.buildChatSectionUI(communityId, chats, events, settingsService, nodeConfigurationService,
     contactService, chatService, communityService, messageService, mailserversService, sharedUrlsService)
-
-  # Generate members list
-  if self.membersListModule != nil:
-    self.membersListModule.load()
 
   if not self.controller.isCommunity():
     # we do this only in case of chat section (not in case of communities)
@@ -572,9 +565,6 @@ proc checkIfModuleDidLoad(self: Module) =
 method isLoaded*(self: Module): bool =
   return self.moduleLoaded
 
-method getSectionMemberList*(self: Module): QVariant =
-  return self.membersListModule.getUsersListVariant()
-
 method getRosterModel*(self: Module): QVariant =
   if self.rosterVariant.isNil:
     return newQVariant()
@@ -612,13 +602,82 @@ method onAppForegrounded*(self: Module) =
     self.rosterHolders.onForegrounded()
 
 proc refreshRosterContact(self: Module, pubKey: string) =
-  if not self.roster.isNil:
-    self.roster.contactChanged(pubKey)
+  if self.roster.isNil:
+    return
+  self.roster.contactChanged(pubKey)
+  if self.adminMembers.hasMember(pubKey):
+    let contactDetails = self.controller.getContactDetails(pubKey)
+    self.adminMembers.updateItem(
+      pubKey = pubKey,
+      displayName = contactDetails.dto.displayName,
+      ensName = contactDetails.dto.name,
+      isEnsVerified = contactDetails.dto.ensVerified,
+      localNickname = contactDetails.dto.localNickname,
+      alias = contactDetails.dto.alias,
+      icon = contactDetails.icon,
+      isContact = contactDetails.dto.isContact,
+      isBlocked = contactDetails.dto.isBlocked,
+      trustStatus = contactDetails.dto.trustStatus,
+      contactRequest = toContactStatus(contactDetails.dto.contactRequestState),
+    )
 
-method updateCommunityMemberList*(self: Module, members: seq[ChatMember]) =
-  # Re-seed the contacts cache for late joiners.
-  self.controller.seedContactsFromChatMembers(members)
-  self.membersListModule.updateMembersList(members)
+method holdRoster*(self: Module) =
+  if not self.rosterHolders.isNil:
+    self.rosterHolders.acquire()
+
+method releaseRosterHold*(self: Module) =
+  if not self.rosterHolders.isNil:
+    self.rosterHolders.release()
+
+method getAdminMembersModel*(self: Module): QVariant =
+  if self.adminMembersVariant.isNil:
+    return newQVariant()
+  return self.adminMembersVariant
+
+method isAdminMembersLoaded*(self: Module): bool =
+  self.adminMembersLoaded
+
+method setAdminMembers*(self: Module, items: seq[MemberItem], rosterStates: Table[string, MembershipRequestState]) =
+  if self.roster.isNil:
+    return
+  if self.adminMembersLoaded:
+    self.adminMembers.updateToTheseItems(items)
+  else:
+    self.adminMembers.setItems(items)
+    self.adminMembersLoaded = true
+  self.roster.setMembershipStates(rosterStates)
+
+method addAdminMember*(self: Module, item: MemberItem) =
+  if self.adminMembersLoaded and not self.adminMembers.hasMember(item.pubKey):
+    self.adminMembers.addItem(item)
+
+method removeAdminMember*(self: Module, pubKey: string) =
+  if self.adminMembersLoaded:
+    self.adminMembers.removeItemById(pubKey)
+
+method setAdminMemberLoading*(self: Module, pubKey: string, declining: bool, loading: bool) =
+  if not self.adminMembersLoaded:
+    return
+  if declining:
+    self.adminMembers.updateDeclineLoadingState(pubKey, loading)
+  else:
+    self.adminMembers.updateLoadingState(pubKey, loading)
+
+method hasAdminMember*(self: Module, pubKey: string): bool =
+  self.adminMembersLoaded and self.adminMembers.hasMember(pubKey)
+
+method updateMembershipStatus*(self: Module, pubKey: string, state: MembershipRequestState) =
+  if self.roster.isNil:
+    return
+  self.roster.setMembershipState(pubKey, state)
+  if self.adminMembersLoaded:
+    self.adminMembers.updateMembershipStatus(pubKey, state)
+
+method setMembersAirdropAddresses*(self: Module, addresses: Table[string, string]) =
+  if self.roster.isNil:
+    return
+  for pubKey, address in addresses.pairs:
+    self.roster.setAirdropAddress(pubKey, address)
 
 method viewDidLoad*(self: Module) =
   self.checkIfModuleDidLoad()

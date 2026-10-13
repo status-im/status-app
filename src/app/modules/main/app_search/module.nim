@@ -336,6 +336,12 @@ method updateSearchLocationIfPointToChatWithId*(self: Module, chatId: string) =
   if self.controller.activeChatId() == chatId:
     self.controller.setSearchLocation(self.controller.activeSectionId(), "")
 
+proc chatMembersCount(self: Module, chat: ChatDto): int =
+  # community chats hold no member list
+  if chat.chatType == ChatType.CommunityChat and chat.communityId != "":
+    return self.controller.getCommunityById(chat.communityId).membersCount
+  chat.members.len
+
 proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, personalChatSectionName: string): ChatSearchItem =
   let isCommunity = chat.chatType == ChatType.CommunityChat and chat.communityId != ""
 
@@ -392,7 +398,7 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
         self.controller.getCommunityById(chat.communityId).getCommunityChat(chat.id).canPost
       else:
         chat.canPost,
-    membersCount = chat.members.len,
+    membersCount = self.chatMembersCount(chat),
     onlineStatus = onlineStatus,
   )
 
@@ -442,7 +448,7 @@ method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
       continue
     self.view.chatSearchModel().updateChatItem(chat.id, chat.name, chat.color, chat.icon, chat.emoji)
     self.view.chatSearchModel().updateCanPostOnChatItem(chat.id, chat.canPost)
-    self.view.chatSearchModel().updateMembersCountOnChatItem(chat.id, chat.members.len)
+    self.view.chatSearchModel().updateMembersCountOnChatItem(chat.id, self.chatMembersCount(chat))
 
 method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto]) =
   for s in statusUpdates:

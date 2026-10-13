@@ -220,41 +220,6 @@ proc toGroupChatMember*(jsonObj: JsonNode): ChatMember =
   result.role = if admin: MemberRole.Owner else: MemberRole.None
   result.joined = true
 
-proc toChannelMember*(jsonObj: JsonNode, memberId: string): ChatMember =
-  # Parse status-go "CommunityMember" type
-  # Mapping this DTO is not straightforward since only keys are used for id. We
-  # handle it a bit different.
-  result = ChatMember()
-  result.id = memberId
-  var rolesObj: JsonNode
-  var roles: seq[int] = @[]
-  if(jsonObj.getProp("roles", rolesObj)):
-    for roleObj in rolesObj:
-      roles.add(roleObj.getInt)
-
-  # People in the community members' list are joined by default
-  result.joined = true
-
-  discard jsonObj.getProp("alias", result.alias)
-  discard jsonObj.getProp("colorId", result.colorId)
-  discard jsonObj.getProp("compressedKey", result.compressedPubKey)
-  result.emojiHash = "[]"
-  var emojiHashNode: JsonNode
-  if jsonObj.getProp("emojiHash", emojiHashNode) and emojiHashNode.kind == JArray:
-    result.emojiHash = $emojiHashNode
-
-  result.role = MemberRole.None
-  if roles.contains(MemberRole.Owner.int):
-    result.role = MemberRole.Owner
-  elif roles.contains(MemberRole.Admin.int):
-    result.role = MemberRole.Admin
-  elif roles.contains(MemberRole.ManageUsers.int):
-    result.role = MemberRole.ManageUsers
-  elif roles.contains(MemberRole.ModerateContent.int):
-    result.role = MemberRole.ModerateContent
-  elif roles.contains(MemberRole.TokenMaster.int):
-    result.role = MemberRole.TokenMaster
-
 proc toMemberSeed*(m: ChatMember): MemberSeed =
   MemberSeed(
     id: m.id,
@@ -269,7 +234,7 @@ proc toMemberSeeds*(members: seq[ChatMember]): seq[MemberSeed] =
   for m in members:
     result.add(m.toMemberSeed)
 
-proc toChatDto*(jsonObj: JsonNode): ChatDto =
+proc toChatDto(jsonObj: JsonNode, parseMembers: bool): ChatDto =
   result = ChatDto()
   discard jsonObj.getProp("id", result.id)
   discard jsonObj.getProp("name", result.name)
@@ -329,7 +294,7 @@ proc toChatDto*(jsonObj: JsonNode): ChatDto =
     result.icon = chatImage
 
   var membersObj: JsonNode
-  if jsonObj.getProp("members", membersObj):
+  if parseMembers and jsonObj.getProp("members", membersObj):
     if membersObj.kind == JArray:
       # during group chat updates
       for memberObj in membersObj:
@@ -347,16 +312,17 @@ proc toChatDto*(jsonObj: JsonNode): ChatDto =
   if jsonObj.getProp("lastMessage", lastMessageObj):
     result.lastMessage = lastMessageObj.toMessageDto()
 
-# To parse Community chats to ChatDto, we need to add the commuity ID and type
-proc toChatDto*(jsonObj: JsonNode, communityId: string, communityMembers: seq[ChatMember]): ChatDto =
-  result = jsonObj.toChatDto()
+proc toChatDto*(jsonObj: JsonNode): ChatDto =
+  jsonObj.toChatDto(parseMembers = true)
+
+# To parse Community chats to ChatDto, we need to add the commuity ID and type.
+# Channel members live in the community roster, not in the DTO.
+proc toChatDto*(jsonObj: JsonNode, communityId: string): ChatDto =
+  result = jsonObj.toChatDto(parseMembers = false)
   result.chatType = ChatType.CommunityChat
   result.communityId = communityId
   if communityId != "":
     result.id = communityId & result.id.replace(communityId, "") # Adding communityID prefix in case it's not available
-
-  if not result.tokenGated:
-    result.members = communityMembers
 
 proc isOneToOneChat*(chatDto: ChatDto): bool =
   return chatDto.chatType == ChatType.OneToOne
@@ -390,7 +356,6 @@ proc updateMissingFields*(chatToUpdate: var ChatDto, oldChat: ChatDto) =
   chatToUpdate.canPostReactions = oldChat.canPostReactions
   chatToUpdate.viewersCanPostReactions = oldChat.viewersCanPostReactions
   chatToUpdate.categoryId = oldChat.categoryId
-  chatToUpdate.members = oldChat.members
 
 proc isOneToOne*(c: ChatDto): bool =
   return c.chatType == ChatType.OneToOne

@@ -161,7 +161,7 @@ type CommunityDto* = object
   categories*: seq[Category]
   images*: Images
   permissions*: Permission
-  members*: seq[ChatMember]
+  membersCount*: int
   canRequestAccess*: bool
   canManageUsers*: bool
   canJoin*: bool
@@ -475,15 +475,12 @@ proc toCommunityDto*(jsonObj: JsonNode): CommunityDto =
   if(jsonObj.getProp("adminSettings", adminSettingsObj)):
     result.adminSettings = toCommunityAdminSettingsDto(adminSettingsObj)
 
-  var membersObj: JsonNode
-  if(jsonObj.getProp("members", membersObj) and membersObj.kind == JObject):
-    for memberId, memberObj in membersObj:
-      result.members.add(toChannelMember(memberObj, memberId))
+  discard jsonObj.getProp("membersCount", result.membersCount)
 
   var chatsObj: JsonNode
   if(jsonObj.getProp("chats", chatsObj)):
     for _, chatObj in chatsObj:
-      result.chats.add(chatObj.toChatDto(result.id, result.members))
+      result.chats.add(chatObj.toChatDto(result.id))
 
   var tagsObj: JsonNode
   if(jsonObj.getProp("tags", tagsObj)):
@@ -665,12 +662,6 @@ proc getOwnerTokenAddressFromPermissions*(self: CommunityDto): (int, string) =
       for ch, add in addresses.pairs:
         return (ch, add)
   return (0, "")
-
-proc findOwner*(self: CommunityDto): ChatMember =
-  for member in self.members:
-    if member.role == MemberRole.Owner:
-      return member
-  raise newException(ValueError, "No owner found in members list")
 
 proc getContractIdFromFirstAddress*(self: CommunityTokensMetadataDto): string =
   for chainID, address in self.addresses:

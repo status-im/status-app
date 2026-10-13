@@ -477,10 +477,13 @@ method startTokenHoldersManagement*(self: AccessInterface, communityId: string, 
 method stopTokenHoldersManagement*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method contactUpdated*(self: AccessInterface, contactId: string) {.base.} =
+method loadMembersForSectionId*(self: AccessInterface, sectionId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method loadMembersForSectionId*(self: AccessInterface, sectionId: string) {.base.} =
+method acquireCommunityRoster*(self: AccessInterface, communityId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseCommunityRoster*(self: AccessInterface, communityId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getSectionId*(self: AccessInterface, sectionType: SectionType): string {.base.} =

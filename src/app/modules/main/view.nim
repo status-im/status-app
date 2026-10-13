@@ -475,6 +475,14 @@ QtObject:
   proc loadMembersForSectionId*(self: View, communityId: string) {.slot.} =
     self.delegate.loadMembersForSectionId(communityId)
 
+  # Community roster holders (RosterHolder.qml): each acquire is paired with one
+  # release, keyed by community so a release never needs a QML-held object.
+  proc acquireCommunityRoster*(self: View, communityId: string) {.slot.} =
+    self.delegate.acquireCommunityRoster(communityId)
+
+  proc releaseCommunityRoster*(self: View, communityId: string) {.slot.} =
+    self.delegate.releaseCommunityRoster(communityId)
+
   proc delete*(self: View) =
     self.QObject.delete
 

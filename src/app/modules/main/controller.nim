@@ -486,25 +486,6 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED) do(e: Args):
     self.delegate.onAppNetworkChanged()
 
-  self.events.on(SIGNAL_CONTACT_UPDATED) do(e: Args):
-    let args = ContactArgs(e)
-    self.delegate.contactUpdated(args.contactId)
-
-  self.events.on(SIGNAL_CONTACT_NICKNAME_CHANGED) do(e: Args):
-    var args = ContactArgs(e)
-    self.delegate.contactUpdated(args.contactId)
-
-  self.events.on(SIGNAL_CONTACT_BLOCKED) do(e: Args):
-    let args = ContactArgs(e)
-    self.delegate.contactUpdated(args.contactId)
-
-  self.events.on(SIGNAL_CONTACT_UNBLOCKED) do(e: Args):
-    let args = ContactArgs(e)
-    self.delegate.contactUpdated(args.contactId)
-
-  self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
-    self.delegate.contactUpdated(singletonInstance.userProfile.getPubKey())
-
 proc getActiveSectionId*(self: Controller): string =
   result = self.activeSectionId
 
@@ -531,9 +512,6 @@ proc getContactNameAndImage*(self: Controller, contactId: string):
 
 proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactsService.getContactDetails(contactId)
-
-proc seedContactsFromChatMembers*(self: Controller, members: seq[ChatMember]) =
-  self.contactsService.seedFromChatMembers(members.toMemberSeeds())
 
 proc resolveENS*(self: Controller, ensName: string, uuid: string = "", reason: string = "") =
   self.contactsService.resolveENS(ensName, uuid, reason)
