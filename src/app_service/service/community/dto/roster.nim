@@ -40,6 +40,9 @@ type
     removed*: seq[RawPubKey]
     modified*: seq[RosterMember]
     channels*: seq[ChannelMembersDelta]
+    # a token permission was added, modified or removed: which channels are
+    # gated, and who is in them, may have changed
+    permissionsChanged*: bool
 
   RosterSnapshot* = object
     clock*: uint64
@@ -115,7 +118,7 @@ proc isEmpty*(self: ChannelMembersDelta): bool =
 
 proc isEmpty*(self: RosterDelta): bool =
   self.added.len == 0 and self.removed.len == 0 and self.modified.len == 0 and
-    self.channels.len == 0
+    self.channels.len == 0 and not self.permissionsChanged
 
 proc parseRosterDelta*(node: JsonNode, delta: var RosterDelta): bool =
   ## One `communityChanges[]` element; false when it names no community.
@@ -143,6 +146,10 @@ proc parseRosterDelta*(node: JsonNode, delta: var RosterDelta): bool =
         channel.removed.add member.key
       if not channel.isEmpty:
         delta.channels.add move(channel)
+  for key in ["tokenPermissionsAdded", "tokenPermissionsModified", "tokenPermissionsRemoved"]:
+    let permissions = node{key}
+    if not permissions.isNil and permissions.kind == JObject and permissions.len > 0:
+      delta.permissionsChanged = true
   true
 
 proc parseRosterDeltas*(communityChanges: JsonNode): seq[RosterDelta] =

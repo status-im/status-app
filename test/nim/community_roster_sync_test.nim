@@ -102,6 +102,16 @@ suite "roster wire parsing":
     check parseRosterDelta(%*{"communityId": communityId, "clock": 5}, d)
     check d.isEmpty
 
+  test "a token permission change is a roster delta":
+    for key in ["tokenPermissionsAdded", "tokenPermissionsModified", "tokenPermissionsRemoved"]:
+      var d: RosterDelta
+      check parseRosterDelta(%*{"communityId": communityId, "clock": 5, key: {"p1": {"id": "p1"}}}, d)
+      check d.permissionsChanged
+      check not d.isEmpty
+    var d: RosterDelta
+    check parseRosterDelta(%*{"communityId": communityId, "clock": 5, "tokenPermissionsAdded": {}}, d)
+    check not d.permissionsChanged
+
   test "message signal community changes":
     let event = %*[
       {"communityId": communityId, "clock": 2, "rosterAdded": {keyA: {"pubKey": keyA, "roles": []}}},
@@ -185,3 +195,34 @@ suite "roster sync":
     var held: seq[RosterDelta]
     check sync.acceptSnapshot(2, 10, held)
     check held.len == 0
+
+  test "a permission change reloads the snapshot under the live roster":
+    var sync: RosterSync
+    var held: seq[RosterDelta]
+    var permission = delta(15)
+    permission.permissionsChanged = true
+    check not sync.needsReload(@[permission])
+    check sync.beginLoad(1)
+    check sync.acceptSnapshot(1, 10, held)
+    check not sync.needsReload(@[delta(12, added = @[keyA])])
+    check sync.needsReload(@[delta(12, added = @[keyA]), permission])
+    check sync.beginReload(2)
+    check sync.state == RosterSyncState.Loading
+    check sync.acceptDeltas(@[delta(21), delta(19)]).len == 0
+    check sync.acceptSnapshot(2, 20, held)
+    check held.clocks == @[21'u64]
+
+  test "a reload while loading supersedes the in-flight load":
+    var sync: RosterSync
+    var held: seq[RosterDelta]
+    check sync.beginLoad(1)
+    discard sync.acceptDeltas(@[delta(30)])
+    check sync.beginReload(2)
+    check not sync.acceptSnapshot(1, 10, held)
+    check sync.acceptSnapshot(2, 20, held)
+    check held.clocks == @[30'u64]
+
+  test "there is nothing to reload without a roster":
+    var sync: RosterSync
+    check not sync.beginReload(1)
+    check sync.state == RosterSyncState.Empty

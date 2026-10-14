@@ -1,24 +1,29 @@
 ## Who keeps a community roster alive. The first holder loads it; at zero
 ## holders it is dropped after RosterIdleReleaseMs (Idle release), and at once
-## when the app goes to the background. Holders are counted by handle objects
-## (community_roster_handle), never by hand.
+## when the app goes to the background. A failed load is retried with backoff
+## while holders remain.
 
 type
-  RosterReleaseTimer* = object
+  RosterTimer* = object
     start*: proc(ms: int)
     stop*: proc()
 
   RosterHolders* = ref object
     count: int
     active: bool
-    timer: RosterReleaseTimer
+    failedLoads: int
+    releaseTimer: RosterTimer
+    retryTimer: RosterTimer
     onLoad: proc()
     onDrop: proc()
 
-const RosterIdleReleaseMs* = 120_000
+const
+  RosterIdleReleaseMs* = 120_000
+  # the last one repeats
+  RosterRetryDelaysMs* = [2_000, 5_000, 15_000, 60_000]
 
-proc newRosterHolders*(timer: RosterReleaseTimer, onLoad: proc(), onDrop: proc()): RosterHolders =
-  RosterHolders(timer: timer, onLoad: onLoad, onDrop: onDrop)
+proc newRosterHolders*(releaseTimer, retryTimer: RosterTimer, onLoad: proc(), onDrop: proc()): RosterHolders =
+  RosterHolders(releaseTimer: releaseTimer, retryTimer: retryTimer, onLoad: onLoad, onDrop: onDrop)
 
 proc holderCount*(self: RosterHolders): int =
   self.count
@@ -35,34 +40,60 @@ proc drop(self: RosterHolders) =
   self.active = false
   self.onDrop()
 
+proc stopRetrying(self: RosterHolders) =
+  self.retryTimer.stop()
+  self.failedLoads = 0
+
 proc acquire*(self: RosterHolders) =
   inc self.count
   if self.count > 1:
     return
-  self.timer.stop()
+  self.releaseTimer.stop()
   if not self.active:
+    self.stopRetrying()
     self.load()
 
 proc release*(self: RosterHolders) =
   if self.count == 0:
     return
   dec self.count
-  if self.count == 0 and self.active:
-    self.timer.start(RosterIdleReleaseMs)
+  if self.count > 0:
+    return
+  self.stopRetrying()
+  if self.active:
+    self.releaseTimer.start(RosterIdleReleaseMs)
 
 proc onReleaseTimeout*(self: RosterHolders) =
   if self.count == 0 and self.active:
     self.drop()
 
+proc onRetryTimeout*(self: RosterHolders) =
+  if self.count > 0 and not self.active:
+    self.load()
+
 proc onBackgrounded*(self: RosterHolders) =
+  self.stopRetrying()
   if not self.active:
     return
-  self.timer.stop()
+  self.releaseTimer.stop()
   self.drop()
 
 proc onForegrounded*(self: RosterHolders) =
   if self.count > 0 and not self.active:
     self.load()
 
+proc onLoadSucceeded*(self: RosterHolders) =
+  self.failedLoads = 0
+
 proc onLoadFailed*(self: RosterHolders) =
+  if not self.active:
+    return
+  if self.count == 0:
+    # nobody waits for a retry; a reload left the rows of the old snapshot
+    self.releaseTimer.stop()
+    self.drop()
+    return
   self.active = false
+  let delay = RosterRetryDelaysMs[min(self.failedLoads, RosterRetryDelaysMs.high)]
+  inc self.failedLoads
+  self.retryTimer.start(delay)

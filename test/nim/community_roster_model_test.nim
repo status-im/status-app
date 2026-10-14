@@ -2,7 +2,7 @@ import std/[unittest, tables, json]
 
 import nimqml
 
-import app/modules/shared_models/[community_roster_model, community_roster_holders, community_roster_handle]
+import app/modules/shared_models/community_roster_model
 import app/modules/shared/qt_model_spy
 import app_service/common/types
 import app_service/service/community/dto/roster
@@ -48,6 +48,12 @@ proc value(model: CommunityRosterModel, row: int, name: string): QVariant =
 
 proc str(model: CommunityRosterModel, row: int, name: string): string =
   model.value(row, name).stringVal
+
+proc rowOfKey(model: CommunityRosterModel, hex: string): int =
+  for row in 0 ..< model.rowCount():
+    if model.str(row, "pubKey") == hex:
+      return row
+  -1
 
 proc num(model: CommunityRosterModel, row: int, name: string): int =
   model.value(row, name).intVal
@@ -187,15 +193,55 @@ suite "community roster model":
     check model.channelRole("gated", keyB) == ChannelRole.Viewer
     check changed == @["gated"]
     check spy.calls.len == 0
-    # a channel that becomes gated
-    model.applyDelta(RosterDelta(clock: 12, channels: @[
-      ChannelMembersDelta(chatId: "newly", added: @[ChannelMember(key: raw(keyA))])]))
-    check model.isGatedChannel("newly")
     # every member leaving a gated channel keeps it gated, with nobody in it
-    model.applyDelta(RosterDelta(clock: 13, channels: @[ChannelMembersDelta(chatId: "newly", removed: @[raw(keyA)])]))
-    check model.isGatedChannel("newly")
-    check model.channelMembers("newly").len == 0
-    check parseJson(model.getChannelMemberKeys("gated")) == %*[keyB]
+    model.applyDelta(RosterDelta(clock: 12, channels: @[ChannelMembersDelta(chatId: "gated", removed: @[raw(keyB)])]))
+    check model.isGatedChannel("gated")
+    check model.channelMembers("gated").len == 0
+    check parseJson(model.getChannelMemberKeys("gated")) == %*[]
+
+  test "a member delta on a channel the snapshot did not gate leaves it ungated":
+    # status-go adds joiners and promoted members to every unpermissioned channel too
+    var snap = snapshot(10, member(keyA), member(keyB))
+    snap.channels["gated"] = @[ChannelMember(key: raw(keyA))]
+    model.fill(snap)
+    var changed: seq[string]
+    model.onChannelMembersChanged(proc(chatId: string) = changed.add chatId)
+    model.applyDelta(RosterDelta(clock: 11, channels: @[
+      ChannelMembersDelta(chatId: "general", added: @[ChannelMember(key: raw(keyB))])]))
+    check not model.isGatedChannel("general")
+    check model.channelMembers("general").len == 0
+    check changed.len == 0
+
+  test "a reloaded snapshot gates and ungates channels and keeps the rows":
+    var snap = snapshot(10, member(keyA, "alice"), member(keyB, "bob"))
+    snap.channels["gated"] = @[ChannelMember(key: raw(keyA))]
+    model.fill(snap)
+    model.setMembershipState(keyB, MembershipRequestState.BannedPending)
+    var changed: seq[string]
+    model.onChannelMembersChanged(proc(chatId: string) = changed.add chatId)
+    spy.clear()
+    # the permission moved from "gated" to "general"; alice left, carol joined
+    var reloaded = snapshot(20, member(keyB, "bobby"), member(keyC, "carol"))
+    reloaded.channels["general"] = @[ChannelMember(key: raw(keyB), role: ChannelRole.Viewer)]
+    model.fill(reloaded)
+    check spy.countResets() == 0
+    # only alice's row goes and only carol's comes
+    check spy.countRemoves() == 1
+    check spy.getRemoves()[0].first == 0
+    check spy.getRemoves()[0].last == 0
+    check spy.countInserts() == 1
+    check spy.getInserts()[0].first == spy.getInserts()[0].last
+    check model.isLoaded()
+    check model.rowCount() == 2
+    check not model.hasMember(keyA)
+    check model.str(model.rowOfKey(keyB), "displayName") == "bobby"
+    check model.num(model.rowOfKey(keyB), "membershipRequestState") == MembershipRequestState.BannedPending.int
+    check model.hasMember(keyC)
+    check not model.isGatedChannel("gated")
+    check model.isGatedChannel("general")
+    check model.channelMembers("general") == @[keyB]
+    check "gated" in changed
+    check "general" in changed
 
   test "contact and online status changes refresh only that row":
     model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob")))
@@ -289,21 +335,3 @@ suite "community roster model":
     spy.clear()
     model.clear()
     check spy.calls.len == 0
-
-suite "community roster handle":
-  test "creating a handle acquires, destroying it releases":
-    let holders = newRosterHolders(
-      RosterReleaseTimer(start: (proc(ms: int) = discard), stop: (proc() = discard)),
-      onLoad = (proc() = discard), onDrop = (proc() = discard))
-    block:
-      let first = newCommunityRosterHandle(holders, newQVariant())
-      check holders.holderCount == 1
-      block:
-        let second = newCommunityRosterHandle(holders, newQVariant())
-        check holders.holderCount == 2
-        discard second
-      when defined(gcOrc):
-        check holders.holderCount == 1
-      discard first
-    when defined(gcOrc):
-      check holders.holderCount == 0

@@ -28,6 +28,24 @@ proc beginLoad*(self: var RosterSync, generation: int): bool =
   self.held = @[]
   true
 
+proc beginReload*(self: var RosterSync, generation: int): bool =
+  ## Reloads the snapshot under a loaded roster, or supersedes the load in
+  ## flight; deltas are held until the new snapshot. False without a roster.
+  if self.state == RosterSyncState.Empty:
+    return false
+  self.state = RosterSyncState.Loading
+  self.generation = generation
+  true
+
+proc needsReload*(self: RosterSync, deltas: openArray[RosterDelta]): bool =
+  ## Channel gating comes from the snapshot only, so a token permission change
+  ## takes a new one.
+  if self.state == RosterSyncState.Empty:
+    return false
+  for delta in deltas:
+    if delta.permissionsChanged:
+      return true
+
 proc release*(self: var RosterSync) =
   self = RosterSync()
 
