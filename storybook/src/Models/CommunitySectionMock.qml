@@ -299,7 +299,7 @@ QtObject {
             }
 
             readonly property var inputAreaModule: QtObject {
-                readonly property var preservedProperties: ({ text: "" })
+                readonly property var preservedProperties: ({ text: "", mentionNamesJson: "" })
                 readonly property bool sendingInProgress: false
                 readonly property var linkPreviewModel: null
                 readonly property var paymentRequestModel: null

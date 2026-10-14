@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as QC
 import QtTest
 
+import StatusQ.Core.Utils as SQUtils
 import utils
 
 import Models
@@ -642,6 +643,53 @@ Item {
 
             verify(large.rows < 60,
                    "only viewport+cache channel rows may be built, got " + large.rows)
+        }
+
+        // Somebody outside the loaded roster: the channel's member list cannot
+        // name them, as when the roster is not held.
+        readonly property string strangerKey: "0x04" + "f".repeat(128)
+
+        function chatInput(loader) {
+            const input = findChildByTypePrefix(loader, "StatusChatInput")
+            verify(!!input)
+            return input
+        }
+
+        function inputMentionNames(input) {
+            return SQUtils.ModelUtils.modelToFlatArray(input.textInput.mentionsModel, "name")
+        }
+
+        function test_editShowsMentionNamesWithoutTheRoster() {
+            const loader = loadSection()
+            const messages = mock.d.contentModuleFor(mock.activeChatId).messagesModel
+            const own = SQUtils.ModelUtils.get(messages, 1)
+            verify(own.amISender)
+            messages.setProperty(1, "unparsedText", "hi @" + strangerKey)
+            messages.setProperty(1, "mentionedNames", JSON.stringify({ [strangerKey]: "Xena" }))
+
+            const contentView = findChildByTypePrefix(loader, "ChatContentView")
+            verify(!!contentView)
+            contentView.editMessageRequested(own.id)
+
+            const input = chatInput(loader)
+            compare(inputMentionNames(input), ["@Xena"])
+            // lets the deferred jump to the edited message run before the teardown
+            waitForRendering(contentView)
+        }
+
+        function test_restoredDraftKeepsItsMentionNames() {
+            const loader = loadSection()
+            const input = chatInput(loader)
+            const draftChatId = mock.activeChatId
+            // as picked from the suggestions: the pill's name carries the "@"
+            input.textInput.insertMention(0, "@Xena", strangerKey)
+            compare(inputMentionNames(input), ["@Xena"])
+
+            mock.setActiveChat("channel-u-1")
+            tryVerify(() => inputMentionNames(input).length === 0)
+            mock.setActiveChat(draftChatId)
+            tryVerify(() => inputMentionNames(input).length === 1)
+            compare(inputMentionNames(input), ["@Xena"])
         }
     }
 }

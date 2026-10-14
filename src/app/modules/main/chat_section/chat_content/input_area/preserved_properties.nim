@@ -4,6 +4,7 @@ QtObject:
   type
     PreservedProperties* = ref object of QObject
       text: string
+      mentionNamesJson: string
       replyMessageId: string
       fileUrlsAndSourcesJson: string
 
@@ -25,6 +26,20 @@ QtObject:
     read = getText
     write = setText
     notify = textChanged
+
+  # { pubKey: name } of the mentions in `text`, as they were shown when it was saved
+  proc mentionNamesJsonChanged*(self: PreservedProperties) {.signal.}
+  proc setMentionNamesJson*(self: PreservedProperties, value: string) {.slot.} =
+    if self.mentionNamesJson == value:
+      return
+    self.mentionNamesJson = value
+    self.mentionNamesJsonChanged()
+  proc getMentionNamesJson*(self: PreservedProperties): string {.slot.} =
+    result = self.mentionNamesJson
+  QtProperty[string] mentionNamesJson:
+    read = getMentionNamesJson
+    write = setMentionNamesJson
+    notify = mentionNamesJsonChanged
 
   proc replyMessageIdChanged*(self: PreservedProperties) {.signal.}
   proc setReplyMessageId*(self: PreservedProperties, value: string) {.slot.}=
