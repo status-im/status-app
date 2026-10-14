@@ -180,12 +180,17 @@ Item {
             return root.parentModule.getChatContentModule()
         }
 
+        function mentionResolver() {
+            mentionResolverLoader.active = true
+            return mentionResolverLoader.item
+        }
+
         // { pubKey: name } maps for ChatTextArea.loadText(), which turns the "@0x…" mentions back
         // into pills. The channel's member list alone is not enough: a community channel lists
         // the roster, which is empty while nobody holds it.
         // An edited message is named like its bubble, its own mentionedNames included.
         function messageMentionNames(text, mentionedNames) {
-            return mentionResolver.resolveFor(text, mentionedNames)
+            return d.mentionResolver().resolveFor(text, mentionedNames)
         }
 
         // A restored draft is named live; a name it was saved with stands in only where the
@@ -195,13 +200,14 @@ Item {
             try {
                 saved = JSON.parse(savedNamesJson || "{}")
             } catch (e) {}
-            const names = mentionResolver.resolveFor(text)
+            const resolver = d.mentionResolver()
+            const names = resolver.resolveFor(text)
             for (const pubKey in saved) {
                 const savedName = saved[pubKey]
                 if (!savedName || savedName === pubKey)
                     continue
                 const name = names[pubKey]
-                if (!name || name === pubKey || name === mentionResolver.aliasProvider(pubKey))
+                if (!name || name === pubKey || name === resolver.aliasProvider(pubKey))
                     names[pubKey] = savedName
             }
             return names
@@ -467,21 +473,27 @@ Item {
         }
     }
 
-    MentionNamesAdaptor {
-        id: mentionNamesSource
+    // Only an edit or a restored draft names the input's mentions, so the contacts-wide
+    // source behind them is built on first use
+    Loader {
+        id: mentionResolverLoader
 
-        chatUsersModel: root.usersModel
-        contactsModel: root.rootStore?.contactsModel ?? null
-    }
+        active: false
 
-    MentionResolver {
-        id: mentionResolver
+        sourceComponent: MentionResolver {
+            sourceModel: mentionNamesSource.model
+            nameRole: "preferredDisplayName"
+            selfPubKey: root.myPublicKey
+            selfName: root.rootStore?.name ?? ""
+            aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
 
-        sourceModel: mentionNamesSource.model
-        nameRole: "preferredDisplayName"
-        selfPubKey: root.myPublicKey
-        selfName: root.rootStore?.name ?? ""
-        aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
+            MentionNamesAdaptor {
+                id: mentionNamesSource
+
+                chatUsersModel: root.usersModel
+                contactsModel: root.rootStore?.contactsModel ?? null
+            }
+        }
     }
 
     EmptyChatPanel {

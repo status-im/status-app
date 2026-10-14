@@ -135,15 +135,18 @@ Item {
             root.height = 700
         }
 
-        // walks `data` so non-visual children (popups, tooltips) are found too
+        // walks `data` so non-visual children (popups, tooltips) are found too, plus the
+        // children of non-visual objects and what a Loader loaded outside the item tree
         function findAllInDataByTypePrefix(obj, prefix, out) {
             if (!obj)
                 return out
             if (obj.toString().indexOf(prefix) === 0)
                 out.push(obj)
-            const list = obj.data ?? []
+            const list = obj.data ?? obj.children ?? []
             for (let i = 0; i < list.length; ++i)
                 findAllInDataByTypePrefix(list[i], prefix, out)
+            if (obj instanceof Loader && obj.item && obj.item.parent !== obj)
+                findAllInDataByTypePrefix(obj.item, prefix, out)
             return out
         }
 
@@ -692,6 +695,18 @@ Item {
             mock.setActiveChat(draftChatId)
             tryVerify(() => inputMentionNames(input).length === 1)
             compare(inputMentionNames(input), ["@Xena"])
+        }
+
+        // the input's own mention names cover a contacts-wide model: built on the first edit
+        function test_inputMentionNamesBuiltOnFirstUse() {
+            const loader = loadSection()
+            const columnView = findChildByTypePrefix(loader, "ChatColumnView")
+            const before = findAllInDataByTypePrefix(columnView, "MentionNamesAdaptor", []).length
+
+            const own = SQUtils.ModelUtils.get(mock.d.contentModuleFor(mock.activeChatId).messagesModel, 1)
+            findChildByTypePrefix(loader, "ChatContentView").editMessageRequested(own.id)
+            compare(findAllInDataByTypePrefix(columnView, "MentionNamesAdaptor", []).length, before + 1)
+            tryCompare(mock.d.contentModuleFor(mock.activeChatId).messagesModule, "jumpedToMessageId", own.id)
         }
 
         // leaves the draft's chat and comes back, so its draft is restored
