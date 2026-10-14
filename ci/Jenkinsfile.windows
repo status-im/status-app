@@ -98,6 +98,10 @@ pipeline {
     /* prevent sharing cache dir across different jobs */
     GO_GENERATE_FAST_DIR = "${env.WORKSPACE_TMP}/go-generate-fast"
     SENTRY_PRODUCTION = "${utils.isReleaseBuild() ? 'true' : 'false'}"
+    /* Nimble's package cache under WORKSPACE_TMP nests past MAX_PATH. */
+    GIT_CONFIG_COUNT   = "1"
+    GIT_CONFIG_KEY_0   = "core.longpaths"
+    GIT_CONFIG_VALUE_0 = "true"
     /* Swap */
     FLAG_SWAP_ENABLED = 1
     FLAG_RELAY_ENABLED = 1
