@@ -2,8 +2,8 @@ import QtQuick
 import QtTest
 
 // Verifies that Storybook hosts the nim-qtcamera library the same way the app
-// does. FrameTap is created with Qt.createQmlObject so this file still loads
-// (and skips) when Storybook is built without Nim libraries.
+// does. Taps are created with Qt.createQmlObject so each test controls their
+// lifetime.
 TestCase {
     id: root
 
@@ -15,11 +15,6 @@ TestCase {
             import QtQuick
             import NimQtCamera 1.0
             FrameTap {}`, root, name)
-    }
-
-    function init() {
-        if (typeof nimQtCameraBackend === "undefined")
-            skip("Storybook built without Nim libraries")
     }
 
     function test_frameTapAvailable() {

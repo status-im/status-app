@@ -472,7 +472,7 @@ else
  STORYBOOK_BINARY := $(STORYBOOK_BUILD_PATH)/bin/Storybook
 endif
 
-$(STORYBOOK_CMAKE_CACHE): | check-qt-dir
+$(STORYBOOK_CMAKE_CACHE): | check-qt-dir qt-pkgconfig
 	echo -e "\033[92mConfiguring:\033[39m Storybook"
 	cmake \
 		-DCMAKE_INSTALL_PREFIX=$(STORYBOOK_INSTALL_PATH) \

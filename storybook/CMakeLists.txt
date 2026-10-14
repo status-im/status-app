@@ -90,9 +90,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_link_libraries(
     ${PROJECT_NAME} PRIVATE Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2
     Qt::WebView StatusQ QmlStorybookLib)
-if (STORYBOOK_NIM_LIBS)
-  target_link_libraries(${PROJECT_NAME} PRIVATE StorybookNim)
-endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE StorybookNim)
 
 add_executable(
   QmlFilesServer
@@ -116,9 +114,7 @@ add_executable(
 
 target_link_libraries(
     PagesValidator PUBLIC Qt::Core Qt::Gui Qt::Quick Qt::QuickControls2 Qt::WebView StatusQ QmlStorybookLib)
-if (STORYBOOK_NIM_LIBS)
-  target_link_libraries(PagesValidator PRIVATE StorybookNim)
-endif()
+target_link_libraries(PagesValidator PRIVATE StorybookNim)
 
 target_compile_definitions(PagesValidator PRIVATE
         QML_IMPORT_ROOT="${CMAKE_CURRENT_LIST_DIR}"
@@ -126,6 +122,11 @@ target_compile_definitions(PagesValidator PRIVATE
     )
 
 add_test(NAME PagesValidator COMMAND PagesValidator)
+
+# NimLibs.cmake's Windows environment for the Nim build (cmake/NimEnv.cmake).
+add_test(NAME NimEnvCMake COMMAND ${CMAKE_CTEST_COMMAND} --build-and-test
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/tests/NimEnv ${CMAKE_CURRENT_BINARY_DIR}/tests/NimEnv
+  --build-generator ${CMAKE_GENERATOR})
 
 add_executable(QmlTests
     qmlTests/main.cpp
@@ -144,9 +145,7 @@ target_link_libraries(QmlTests PRIVATE
   Qt::Multimedia StatusQ SortFilterProxyModel QmlStorybookLib)
 # FakeVideoSource renders test QR codes with the vendored generator
 target_include_directories(QmlTests PRIVATE ../vendor/QR-Code-generator/c)
-if (STORYBOOK_NIM_LIBS)
-  target_link_libraries(QmlTests PRIVATE StorybookNim)
-endif()
+target_link_libraries(QmlTests PRIVATE StorybookNim)
 add_test(NAME QmlTests COMMAND QmlTests -platform offscreen)
 
 set(OVERRIDE_STORE_PATHS_WITH_STUBS_IN_QTCREATOR OFF CACHE BOOL

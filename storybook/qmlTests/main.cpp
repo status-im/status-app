@@ -10,9 +10,7 @@
 
 #include <StatusQ/typesregistration.h>
 
-#ifdef STORYBOOK_HAS_NIM
 #include "storybook_nim.h"
-#endif
 
 #include "fakevideosource.h"
 #include "inputmethodtester.h"
@@ -57,9 +55,7 @@ public slots:
             engine->addImportPath(path);
 
         registerStatusQTypes();
-#ifdef STORYBOOK_HAS_NIM
         storybook_nim_install(engine);
-#endif
 
         // Test-only helper for driving the IME/input-method path from QML tests.
         qmlRegisterType<InputMethodTester>("Storybook.Testing", 1, 0, "InputMethodTester");

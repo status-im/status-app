@@ -5,9 +5,7 @@
 
 #include <StatusQ/typesregistration.h>
 
-#ifdef STORYBOOK_HAS_NIM
 #include "storybook_nim.h"
-#endif
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -51,9 +49,7 @@ int main(int argc, char *argv[])
 
         for (const auto &path : additionalImportPaths)
             engine.addImportPath(path);
-#ifdef STORYBOOK_HAS_NIM
         storybook_nim_install(&engine);
-#endif
 
         QObject::connect(&engine, &QQmlApplicationEngine::warnings, &app,
                          [&warnings](const QList<QQmlError> &qmlWarnings) {
