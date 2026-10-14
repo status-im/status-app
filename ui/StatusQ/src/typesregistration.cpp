@@ -68,7 +68,6 @@ extern "C" void statusq_linkAccessibilityCrashFilter();
 #include "wallet/managetokensmodel.h"
 #include "onboarding/enums.h"
 
-#include <SBarcodeScanner.h>
 
 #include <QQmlEngine>
 
@@ -106,7 +105,6 @@ void registerStatusQTypes() {
     qmlRegisterType<StatusEmojiModel>("StatusQ", 0, 1, "StatusEmojiModel");
     qmlRegisterType<FormattedDoubleProperty>("StatusQ", 0, 1, "FormattedDoubleProperty");
 
-    qmlRegisterType<SBarcodeScanner>("com.scythestudio.scodes", 1, 0, "SBarcodeScanner");
 
     qmlRegisterSingletonType<ClipboardUtils>("StatusQ", 0, 1, "ClipboardUtils", &ClipboardUtils::qmlInstance);
     qmlRegisterSingletonType<IncubationHints>("StatusQ", 0, 1, "IncubationHints",

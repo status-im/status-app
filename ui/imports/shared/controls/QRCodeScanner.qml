@@ -189,9 +189,6 @@ ColumnLayout {
         StatusQrCodeScanner {
             state: root.state
             anchors.fill: parent
-            onLastTagChanged: {
-                d.validateTag(lastTag)
-            }
         }
     }
 

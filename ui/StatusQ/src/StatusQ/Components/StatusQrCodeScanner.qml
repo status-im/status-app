@@ -31,7 +31,13 @@ Item {
     readonly property size contentSize: capture.contentSize
     readonly property real sourceRatio: capture.sourceRatio
 
-    readonly property string lastTag: capture.lastTag
+    // Frames of the running camera and the scan-corner area in normalized
+    // frame coordinates, for the host's frame tap / decoder.
+    readonly property var videoSink: capture.videoSink
+    readonly property rect normalizedCaptureRect: capture.normalizedCaptureRect
+
+    // The camera runs while this is true and the scanner is visible.
+    property bool active: true
 
     property int state: StatusQrCodeScanner.State.None
 
@@ -40,8 +46,6 @@ Item {
         Success,
         Error
     }
-
-    signal tagFound(string tag)
 
     implicitWidth: sourceSize.width
     implicitHeight: sourceSize.height
@@ -63,10 +67,10 @@ Item {
             anchors.fill: parent
             visible: true
             clip: true
-            captureRectWidth: scanCorners.width
-            captureRectHeight: scanCorners.height
-
-            onTagFound: (tag) => root.tagFound(tag)
+            active: root.active && root.visible
+            // capture fills root, so scanCorners' geometry is already in its coordinates
+            captureItemRect: Qt.rect(scanCorners.x, scanCorners.y,
+                                     scanCorners.width, scanCorners.height)
         }
 
         Loader {
