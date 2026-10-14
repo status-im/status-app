@@ -122,7 +122,7 @@ proc createMessageItemFromDto(self: Module, message: MessageDto, communityId: st
     communityId,
     contactDetails,
     contactDetails.isCurrentUser,
-    renderedMessageText = self.controller.getRenderedText(message.parsedText, communityChats),
+    renderedMessageText = self.controller.getRenderedText(message.parsedText, communityChats, message.mentionedNames),
     clearText = message.text,
     albumImages,
     albumMessageIds,

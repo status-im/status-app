@@ -257,7 +257,7 @@ proc buildCommunityMemberMessageItem(self: Module, message: MessageDto): member_
     message.communityId,
     contactDetails,
     isCurrentUser,
-    self.controller.getRenderedText(message.parsedText, communityChats),
+    self.controller.getRenderedText(message.parsedText, communityChats, message.mentionedNames),
     clearText = message.text,
     albumImages = @[],
     albumMessageIds = @[],

@@ -299,7 +299,7 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
       senderName = "You"
 
     let community {.cursor.} = self.controller.getCommunityById(chatDto.communityId)
-    let renderedMessageText = self.controller.getRenderedText(m.parsedText, community.chats)
+    let renderedMessageText = self.controller.getRenderedText(m.parsedText, community.chats, m.mentionedNames)
     let colorId = self.controller.getColorId(m.`from`)
 
     if(chatDto.communityId.len == 0):

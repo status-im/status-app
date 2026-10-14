@@ -23,6 +23,7 @@ import ./dto/removed_message as removed_msg_dto
 import ./dto/urls_unfurling_plan
 import ./dto/link_preview
 import ./message_cursor
+import ./mention_names
 
 import app_service/common/activity_center
 import app_service/common/message as message_common
@@ -1639,7 +1640,8 @@ QtObject:
     return uuid
 
 # See render-inline in status-mobile/src/status_im/ui/screens/chat/message/message.cljs
-proc renderInline(self: Service, parsedText: ParsedText, communityChats: openArray[ChatDto]): string =
+proc renderInline(self: Service, parsedText: ParsedText, communityChats: openArray[ChatDto],
+    mentionedNames: Table[string, string]): string =
   let value = common_utils.escape_html(parsedText.literal)
     .multiReplace(("\r\n", "<br/>"))
     .multiReplace(("\n", "<br/>"))
@@ -1668,8 +1670,10 @@ proc renderInline(self: Service, parsedText: ParsedText, communityChats: openArr
       else:
         if isCompressedPubKey(id):
           id = status_accounts.decompressPk(id).result
-        let contactDto = self.contactService.getContactById(id)
-        result = fmt("<a href=\"//{id}\" class=\"mention\">@{contactDto.userDefaultDisplayName()}</a>")
+        let contactService = self.contactService
+        let name = mentionDisplayName(contactService.cachedContact(id), mentionedNames, id,
+          proc(pubKey: string): string = contactService.generateAlias(pubKey))
+        result = fmt("<a href=\"//{id}\" class=\"mention\">@{name}</a>")
     of PARSED_TEXT_CHILD_TYPE_STATUS_TAG:
       result = fmt("<span>#{value}</span>")
       for chat in communityChats:
@@ -1684,13 +1688,14 @@ proc renderInline(self: Service, parsedText: ParsedText, communityChats: openArr
       result = fmt(" {value} ")
 
 # See render-block in status-mobile/src/status_im/ui/screens/chat/message/message.cljs
-proc getRenderedText*(self: Service, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
+proc getRenderedText*(self: Service, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto],
+    mentionedNames = initTable[string, string]()): string =
   for parsedText in parsedTextArray:
     case parsedText.type:
       of PARSED_TEXT_TYPE_PARAGRAPH:
         result = result & "<p>"
         for child in parsedText.children:
-          result = result & self.renderInline(child, communityChats)
+          result = result & self.renderInline(child, communityChats, mentionedNames)
         result = result & "</p>"
       of PARSED_TEXT_TYPE_BLOCKQUOTE:
         # strip trailing whitespace so a trailing newline doesn't become a
@@ -1710,7 +1715,7 @@ proc getMessagesParsedPlainText*(self: Service, message: MessageDto, communityCh
   if message.contentType == ContentType.Sticker or (message.contentType == ContentType.Image and len(message.text) == 0):
     return "🖼️"
 
-  let renderedMessageText = self.getRenderedText(message.parsedText, communityChats)
+  let renderedMessageText = self.getRenderedText(message.parsedText, communityChats, message.mentionedNames)
   return singletonInstance.utils.plainText(renderedMessageText)
 
 proc deleteMessage*(self: Service, messageId: string) =

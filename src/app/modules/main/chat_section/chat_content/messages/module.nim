@@ -146,7 +146,7 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
     if(index != -1):
       self.view.model().removeItem(message.replace)
 
-    var renderedMessageText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats)
+    var renderedMessageText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats, message.mentionedNames)
 
     var transactionContract = message.transactionParameters.contract
     var transactionValue = message.transactionParameters.value
@@ -560,7 +560,7 @@ method updateContactDetails*(self: Module, contactId: string) =
       item.updateQuotedAuthorDetails(updatedContact)
 
     if item.messageContainsMentions and item.mentionedUsersPks.anyIt(it == contactId):
-      item.messageText = self.controller.getRenderedText(item.parsedText, self.controller.getCommunityDetails().chats)
+      item.messageText = self.controller.getRenderedText(item.parsedText, self.controller.getCommunityDetails().chats, item.mentionedNames)
 
     item.linkPreviewModel.setContactInfo(updatedContact)
 
@@ -604,7 +604,7 @@ method onMessageEdited*(self: Module, message: MessageDto) =
     # message from bridge does not have any tags, we need to add them here to show correctly edited message
     updatedText = "<p>" & message.bridgeMessage.content & "</p>"
   else:
-    updatedText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats)
+    updatedText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats, message.mentionedNames)
 
   self.view.model().updateEditedMsg(
     message.id,
@@ -615,7 +615,8 @@ method onMessageEdited*(self: Module, message: MessageDto) =
     message.mentioned,
     message.containsContactMentions(),
     message.links,
-    message.mentionedUsersPks
+    message.mentionedUsersPks,
+    message.mentionedNames,
     )
 
 method onHistoryCleared*(self: Module) =
