@@ -9,6 +9,7 @@ import shared.stores as SharedStores
 import shared.stores.send as SendStores
 
 import AppLayouts.Chat.stores as ChatStores
+import AppLayouts.Communities.stores as CommunitiesStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStore
 import AppLayouts.stores.Messaging.Community as CommunityStores
@@ -17,6 +18,7 @@ StatusSectionLoader {
     id: root
 
     required property ChatStores.RootStore rootStore
+    required property CommunitiesStores.CommunitiesStore communitiesStore
     required property SharedStores.NetworksStore networksStore
     required property WalletStore.TokensStore tokensStore
     required property SendStores.TransactionStore transactionStore
@@ -27,6 +29,10 @@ StatusSectionLoader {
     required property bool isPendingOwnershipRequest
     required property var sectionItemModel
     required property bool communitySettingsDisabled
+    // The admin members (requests to join, bans) are held only while settings show
+    required property bool settingsShown
+    // (pubKey) -> emoji hash array, for a member's context menu
+    property var getEmojiHashFn: pubKey => []
 
     // Re-emitted because ChatLayout owns its StackLayout's currentIndex.
     signal backToCommunityClicked()
@@ -36,6 +42,23 @@ StatusSectionLoader {
     QtObject {
         id: d
         readonly property url url: Qt.resolvedUrl("../Communities/views/CommunitySettingsView.qml")
+
+        // token details and revealed accounts are fetched on the first show only
+        property bool membersLoaded: false
+
+        function updateAdminMembers() {
+            if (!root.sectionItemModel)
+                return
+            const sectionId = root.sectionItemModel.id
+            if (!root.active || !root.settingsShown) {
+                root.rootStore.releaseAdminMembersForSectionId(sectionId)
+            } else if (membersLoaded) {
+                root.rootStore.loadAdminMembersForSectionId(sectionId)
+            } else {
+                membersLoaded = true
+                root.rootStore.loadMembersForSectionId(sectionId)
+            }
+        }
     }
 
     function loadSection() {
@@ -48,6 +71,7 @@ StatusSectionLoader {
             userUID:                        root.userUID,
             sectionName:                    root.sectionName,
             rootStore:                      Qt.binding(() => root.rootStore),
+            communitiesStore:               Qt.binding(() => root.communitiesStore),
             walletAccountsModel:            Qt.binding(() => WalletStore.RootStore.nonWatchAccounts),
             enabledChainIds:                Qt.binding(() => root.networksStore.networkFilters),
             activeNetworks:                 Qt.binding(() => root.networksStore.activeNetworks),
@@ -61,12 +85,20 @@ StatusSectionLoader {
             communitySettingsDisabled:      Qt.binding(() => root.communitySettingsDisabled),
             permissionsModel:               Qt.binding(() => root.communityPermissionsStore.permissionsModel),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
+            getEmojiHashFn:                 Qt.binding(() => root.getEmojiHashFn),
         })
-        root.rootStore.loadMembersForSectionId(root.sectionItemModel.id)
     }
 
-    onActiveChanged: loadSection()
-    Component.onCompleted: loadSection()
+    onActiveChanged: {
+        loadSection()
+        d.updateAdminMembers()
+    }
+    onSettingsShownChanged: d.updateAdminMembers()
+    Component.onCompleted: {
+        loadSection()
+        if (root.active && root.settingsShown)
+            d.updateAdminMembers()
+    }
     onLoaded: item.visible = true
 
     Connections {
@@ -92,9 +124,6 @@ StatusSectionLoader {
         }
         function onDeclineRequestToJoinCommunityRequested(requestId, communityId) {
             root.communityAccessStore.declineRequestToJoinCommunityRequested(requestId, communityId)
-        }
-        function onLoadMembersRequested() {
-            root.rootStore.loadMembersForSectionId(root.sectionItemModel.id)
         }
         function onFinaliseOwnershipClicked() {
             Global.openFinaliseOwnershipPopup(root.sectionItemModel.id)

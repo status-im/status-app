@@ -20,6 +20,7 @@ import StatusQ.Layout
 import StatusQ.Popups
 
 import AppLayouts.Communities.controls
+import AppLayouts.Communities.helpers
 import AppLayouts.Communities.panels
 import AppLayouts.Communities.stores as CommunitiesStores
 import AppLayouts.Communities.views
@@ -163,6 +164,8 @@ Item {
 
     // Users related data:
     property var usersModel
+    // (pubKey) -> emoji hash array, for a member's context menu
+    property var getEmojiHashFn: pubKey => []
     property bool amIChatAdmin
 
     // Navigation:
@@ -170,9 +173,25 @@ Item {
     property bool navToMsgDetails: false
     property bool navToMsgList: false
 
+    // The community roster is loaded only while a members view needs it: the
+    // members panel, and "@" mentions while the message input has focus
+    RosterHolder {
+        communitiesStore: root.communitiesStore
+        communityId: d.communityId
+        active: rightPanelLoader.active
+    }
+
+    RosterHolder {
+        communitiesStore: root.communitiesStore
+        communityId: d.communityId
+        active: centerPanelLoader.item?.chatInputFocused ?? false
+    }
+
     QtObject {
         id: d
         objectName: "chatViewInternal"
+
+        readonly property string communityId: root.rootStore.isChatSectionModule ? "" : root.rootStore.communityId
 
         readonly property bool shouldLoadCenterPanel: !root.isPortraitMode ||
                                                       centerPanelRequested ||
@@ -350,7 +369,7 @@ Item {
         sourceComponent: UserListPanel {
             // async incubation parents the partially-built panel into the
             // scene early — keep it invisible behind the skeleton until ready.
-            // Binding the model eagerly is fine: it arrives pre-sorted from
+            // Binding the model eagerly is fine: the roster arrives sorted from
             // Nim, so a chat switch pays no sorting.
             visible: rightPanelLoader.status === Loader.Ready
 
@@ -361,6 +380,7 @@ Item {
             communityMemberReevaluationStatus: root.communityMemberReevaluationStatus
 
             usersModel: root.usersModel
+            getEmojiHashFn: root.getEmojiHashFn
 
             onOpenProfileRequested: Global.openProfilePopup(pubKey, null)
             onReviewContactRequestRequested: Global.openReviewContactRequestPopup(pubKey, null)

@@ -19,6 +19,8 @@ ColumnLayout {
     id: root
 
     property var usersModel
+    // (pubKey) -> emoji hash array, fetched when a member's context menu opens
+    property var getEmojiHashFn: pubKey => []
 
     property string label
     property int chatType: Constants.chatType.unknown
@@ -108,8 +110,7 @@ ColumnLayout {
         verticalScrollBar.implicitWidth: d.scrollBarWidth
         verticalScrollBar.width: d.scrollBarWidth
 
-        // The members model maintains the canonical member order (online
-        // first, then name) in Nim — no sorters here, filtering only.
+        // Rows keep the model's order (online first, then by name, sorted in Nim)
         model: SortFilterProxyModel {
             sourceModel: root.usersModel
             filters: [
@@ -150,7 +151,7 @@ ColumnLayout {
                     profileType, contactType,
                     pubKey: model.pubKey,
                     compressedPubKey: model.compressedPubKey,
-                    emojiHash: JSON.parse(model.emojiHash),
+                    emojiHash: root.getEmojiHashFn(model.pubKey),
                     colorId: model.colorId,
                     displayName: model.preferredDisplayName,
                     userIcon: model.icon,

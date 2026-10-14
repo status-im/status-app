@@ -31,6 +31,8 @@ Item {
 
     property string searchString
     property RootStore rootStore
+    // (pubKey) -> emoji hash array, fetched when a member's context menu opens
+    property var getEmojiHashFn: pubKey => []
 
     property int panelType: Constants.CommunityMembershipSubSections.Members
     property int memberRole: Constants.memberRole.none
@@ -283,7 +285,7 @@ Item {
                     profileType, contactType,
                     pubKey: model.pubKey,
                     compressedPubKey: model.compressedPubKey,
-                    emojiHash: JSON.parse(model.emojiHash),
+                    emojiHash: root.getEmojiHashFn(model.pubKey),
                     colorId: model.colorId,
                     displayName: memberItem.title || model.displayName,
                     userIcon: model.icon,

@@ -1,4 +1,4 @@
-import nimqml
+import nimqml, tables
 
 import ../../../../app_service/service/settings/service as settings_service
 import ../../../../app_service/service/node_configuration/service as node_configuration_service
@@ -13,6 +13,10 @@ import ../../../../app/core/signals/types
 
 import model as chats_model
 import item as chat_item
+import ../../shared_models/member_item
+import admin_members
+
+export admin_members
 
 import ../../../core/unique_event_emitter
 
@@ -46,10 +50,41 @@ method isLoaded*(self: AccessInterface): bool {.base.} =
 method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method updateCommunityMemberList*(self: AccessInterface, members: seq[ChatMember]) {.base.} =
+method holdRoster*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getSectionMemberList*(self: AccessInterface): QVariant {.base.} =
+method releaseRosterHold*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getAdminMembersModel*(self: AccessInterface): QVariant {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isAdminMembersLoaded*(self: AccessInterface): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method refreshAdminMembers*(self: AccessInterface, membership: AdminMembership,
+    buildItem: proc(entry: AdminMemberEntry): MemberItem) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseAdminMembers*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method addAdminMember*(self: AccessInterface, item: MemberItem) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method removeAdminMember*(self: AccessInterface, pubKey: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setAdminMemberLoading*(self: AccessInterface, pubKey: string, declining: bool, loading: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method hasAdminMember*(self: AccessInterface, pubKey: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method updateMembershipStatus*(self: AccessInterface, pubKey: string, state: MembershipRequestState) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setMembersAirdropAddresses*(self: AccessInterface, addresses: Table[string, string]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getRosterModel*(self: AccessInterface): QVariant {.base.} =
@@ -66,9 +101,6 @@ method onCommunityRosterLoadFailed*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onRosterMediaServerStarted*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onLoggedInUserNameChanged*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onAppBackgrounded*(self: AccessInterface) {.base.} =

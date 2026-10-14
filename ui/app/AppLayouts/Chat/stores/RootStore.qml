@@ -77,9 +77,6 @@ QtObject {
 
     // Unique instance for all the chat / channel related low-level UI components
     readonly property UsersStore usersStore: UsersStore {
-        property var chatDetails: !!root.activeChatContentModule ? root.activeChatContentModule.chatDetails : null
-
-        isFullCommunityMembers: (chatDetails?.belongsToCommunity && !chatDetails?.requiresPermissions) || false
         usersModule: !!root.activeChatContentModule ? root.activeChatContentModule.usersModule : null
         chatCommunitySectionModule: root.chatCommunitySectionModule
     }
@@ -248,6 +245,15 @@ QtObject {
 
     function loadMembersForSectionId(sectionId) {
         root.mainModuleInst.loadMembersForSectionId(sectionId)
+    }
+
+    // Admin settings data (requests to join, bans), held while settings show
+    function loadAdminMembersForSectionId(sectionId) {
+        root.mainModuleInst.loadAdminMembersForSectionId(sectionId)
+    }
+
+    function releaseAdminMembersForSectionId(sectionId) {
+        root.mainModuleInst.releaseAdminMembersForSectionId(sectionId)
     }
 
     function acceptContactRequest(pubKey, contactRequestId) {

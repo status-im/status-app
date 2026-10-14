@@ -25,6 +25,7 @@ import AppLayouts.Communities.controls
 import AppLayouts.Communities.panels
 import AppLayouts.Communities.popups
 import AppLayouts.Communities.helpers
+import AppLayouts.Communities.stores
 import AppLayouts.Communities.views
 
 import AppLayouts.Chat.stores as ChatStores
@@ -35,6 +36,7 @@ StatusSectionLayout {
     id: root
 
     property ChatStores.RootStore rootStore
+    property CommunitiesStore communitiesStore
     property var chatCommunitySectionModule
     required property TokensStore tokensStore
     required property ProfileStores.AdvancedStore advancedStore
@@ -54,6 +56,9 @@ StatusSectionLayout {
 
     property var permissionsModel // holdings, permissionType, isPrivate, channels
 
+    // (pubKey) -> emoji hash array, for a member's context menu
+    property var getEmojiHashFn: pubKey => []
+
     // Settings related:
     property bool ensCommunityPermissionsEnabled
 
@@ -62,17 +67,19 @@ StatusSectionLayout {
     signal finaliseOwnershipClicked
 
     signal enableNetwork(int chainId)
-    signal loadMembersRequested()
+
+    // The Members tab, airdrop and mint pickers need the member roster
+    RosterHolder {
+        communitiesStore: root.communitiesStore
+        communityId: root.community.id
+        active: root.visible
+    }
 
     MembersModelAdaptor {
         id: membersModelAdaptor
-        allMembers: community.allMembers
 
-        Component.onCompleted: {
-            if (!community.membersLoaded) {
-                root.loadMembersRequested()
-            }
-        }
+        rosterModel: root.chatCommunitySectionModule?.rosterModel ?? null
+        adminMembersModel: root.chatCommunitySectionModule?.adminMembersModel ?? null
     }
 
     // Permissions Related requests:
@@ -321,6 +328,7 @@ StatusSectionLayout {
 
             sourceComponent: MembersSettingsPanel {
                 rootStore: root.rootStore
+                getEmojiHashFn: root.getEmojiHashFn
 
                 preferredHeaderContentWidth: d.preferredContentWidth
                 preferredContentWidth: d.preferredContentWidth

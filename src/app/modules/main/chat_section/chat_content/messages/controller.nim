@@ -362,8 +362,9 @@ proc requestContactInfo*(self: Controller, contactId: string) =
 proc getNumOfPinnedMessages*(self: Controller): int =
   return self.messageService.getNumOfPinnedMessages(self.chatId)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
-  return self.messageService.getRenderedText(parsedTextArray, communityChats)
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto],
+    mentionedNames = initTable[string, string]()): string =
+  return self.messageService.getRenderedText(parsedTextArray, communityChats, mentionedNames)
 
 proc deleteMessage*(self: Controller, messageId: string) =
   self.messageService.deleteMessage(messageId)

@@ -20,6 +20,7 @@ import ../../../core/signals/types
 import ../../../core/eventemitter
 import ../../../core/unique_event_emitter
 import ../../../global/app_signals
+import ../../../global/global_singleton
 
 type
   Controller* = ref object of RootObj
@@ -344,11 +345,6 @@ proc init*(self: Controller) =
       if args.communityId == self.sectionId:
         self.delegate.onSectionMutedChanged()
 
-    self.events.on(SIGNAL_COMMUNITY_MEMBERS_CHANGED) do(e: Args):
-      let args = CommunityMembersArgs(e)
-      if args.communityId == self.sectionId:
-        self.delegate.updateCommunityMemberList(args.members)
-
     self.events.on(SIGNAL_COMMUNITY_MY_REQUEST_ADDED) do(e:Args):
       let args = CommunityRequestArgs(e)
       if args.communityRequest.communityId == self.sectionId:
@@ -436,7 +432,10 @@ proc init*(self: Controller) =
       self.delegate.onRosterMediaServerStarted()
 
     self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
-      self.delegate.onLoggedInUserNameChanged()
+      self.delegate.onContactDetailsUpdated(singletonInstance.userProfile.getPubKey())
+
+    self.events.on(SIGNAL_LOGGEDIN_USER_IMAGE_CHANGED) do(e: Args):
+      self.delegate.onContactDetailsUpdated(singletonInstance.userProfile.getPubKey())
 
     when defined(android) or defined(ios):
       self.events.on(SIGNAL_APP_BACKGROUNDED) do(e: Args):
@@ -588,9 +587,6 @@ proc getContactById*(self: Controller, id: string): ContactsDto =
 
 proc getContactDetails*(self: Controller, id: string): ContactDetails =
   return self.contactService.getContactDetails(id)
-
-proc seedContactsFromChatMembers*(self: Controller, members: seq[ChatMember]) =
-  self.contactService.seedFromChatMembers(members.toMemberSeeds())
 
 proc getStatusForContactWithId*(self: Controller, publicKey: string): StatusUpdateDto =
   return self.contactService.getStatusForContactWithId(publicKey)
@@ -747,8 +743,9 @@ proc toggleCollapsedCommunityCategoryAsync*(self: Controller, categoryId: string
 proc reorderCommunityChat*(self: Controller, categoryId: string, chatId: string, position: int) =
   self.communityService.reorderCommunityChat(self.sectionId, categoryId, chatId, position)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
-  return self.messageService.getRenderedText(parsedTextArray, communityChats)
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto],
+    mentionedNames = initTable[string, string]()): string =
+  return self.messageService.getRenderedText(parsedTextArray, communityChats, mentionedNames)
 
 proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
   return self.messageService.getMessagesParsedPlainText(message, communityChats)

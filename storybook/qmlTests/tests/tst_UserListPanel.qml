@@ -10,9 +10,9 @@ import utils
 /*
  Perf regression guard: chat-switch profile showed the members panel fully
  re-sorting the community members model in QML (SFPM RoleSorter + StringSorter,
- 881ms on a low-end device). The members model now arrives pre-sorted from Nim
- (online first, then name), so the panel must render rows in source order and
- never re-sort them.
+ 881ms on a low-end device). The roster arrives sorted from Nim (online first,
+ then name), so the panel must render rows in source order and never re-sort
+ them.
 */
 Item {
     id: root
@@ -42,11 +42,50 @@ Item {
                        memberRole: 0,
                        contactRequest: 0,
                        trustStatus: 0,
-                       emojiHash: "[]",
                        icon: "",
                        colorId: 1,
                        onlineStatus: onlineStatus
                    })
+        }
+    }
+
+    // a large community roster, in roster (unsorted) order
+    ListModel {
+        id: largeRoster
+
+        function fill(count) {
+            const syllables = ["ka", "zu", "mi", "Ro", "te", "Lo", "an", "Vi", "pe", "do"]
+            let seed = 7
+            const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648)
+            for (let i = 0; i < count; i++) {
+                let name = ""
+                for (let j = 0; j < 3; j++)
+                    name += syllables[next() % syllables.length]
+                append({
+                    pubKey: "0x04" + i.toString(16).padStart(128, "0"),
+                    compressedPubKey: "zQ3sh" + i,
+                    preferredDisplayName: name + i,
+                    displayName: name + i,
+                    ensName: "",
+                    alias: "",
+                    localNickname: "",
+                    usesDefaultName: false,
+                    isEnsVerified: false,
+                    isContact: false,
+                    isVerified: false,
+                    isUntrustworthy: false,
+                    isBlocked: false,
+                    isCurrentUser: false,
+                    memberRole: 0,
+                    contactRequest: 0,
+                    trustStatus: 0,
+                    icon: "",
+                    colorId: 1,
+                    // about one member in ten online
+                    onlineStatus: next() % 10 === 0 ? Constants.onlineStatus.online
+                                                    : Constants.onlineStatus.inactive
+                })
+            }
         }
     }
 
@@ -68,9 +107,27 @@ Item {
         }
     }
 
+    Component {
+        id: fontWarmupComponent
+
+        Text {
+            textFormat: Text.RichText
+            font.family: "Sans Serif"
+            text: "warm up"
+        }
+    }
+
     TestCase {
         name: "UserListPanel"
         when: windowShown
+
+        function initTestCase() {
+            largeRoster.fill(5000)
+            // pay the one-off font alias population here, not in the benchmark's
+            // first iteration
+            const warmup = createTemporaryObject(fontWarmupComponent, root)
+            verify(warmup.implicitWidth > 0)
+        }
 
         function init() {
             membersModel.clear()
@@ -86,6 +143,13 @@ Item {
             return listView
         }
 
+        function rowNames(listView) {
+            const order = []
+            for (let i = 0; i < listView.count; i++)
+                order.push(SQUtils.ModelUtils.get(listView.model, i, "preferredDisplayName"))
+            return order
+        }
+
         // The model owns the order (sorted in Nim): rows must come out exactly
         // as fed in, deliberately non-alphabetical here — a QML sorter sneaking
         // back in would flip this to ["Alice", "bob", "charlie"].
@@ -94,11 +158,7 @@ Item {
             verify(!!panel)
             const listView = memberListView(panel)
             tryCompare(listView, "count", 3)
-
-            const order = []
-            for (let i = 0; i < listView.count; i++)
-                order.push(SQUtils.ModelUtils.get(listView.model, i, "preferredDisplayName"))
-            compare(order, ["charlie", "Alice", "bob"])
+            compare(rowNames(listView), ["charlie", "Alice", "bob"])
         }
 
         function test_visiblePanelShowsRowsImmediately() {
@@ -149,6 +209,15 @@ Item {
                    "skeleton search must be disabled")
             tryVerify(() => findChild(skeleton, "membersPanelTitle").visible, 5000,
                       "skeleton title must be visible at panel width")
+        }
+
+        // The right panel loader rebuilds the panel on every load; the roster
+        // comes sorted from Nim. Measures source set -> rows ready.
+        function benchmark_loadFiveThousandMembers() {
+            const panel = createTemporaryObject(panelComponent, root, { usersModel: null })
+            const listView = memberListView(panel)
+            panel.usersModel = largeRoster
+            compare(listView.count, 5000)
         }
 
         function test_searchButtonTogglesSearchBox() {

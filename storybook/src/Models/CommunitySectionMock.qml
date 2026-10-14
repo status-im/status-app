@@ -77,8 +77,27 @@ QtObject {
     readonly property AssetsModel assetsModel: AssetsModel {}
     readonly property CollectiblesModel collectiblesModel: CollectiblesModel {}
     readonly property ListModel chatsModel: ListModel {}
-    readonly property ListModel membersModel: ListModel {}
-    readonly property ListModel privateChannelMembersModel: ListModel {}
+    // Mock of the community roster (CommunityRosterModel): the members plus
+    // the token-gated channel member sets
+    readonly property ListModel membersModel: ListModel {
+        signal channelMembersChanged(string chatId)
+
+        function isGatedChannel(chatId) {
+            return !!d.chatInfo[chatId] && d.chatInfo[chatId].requiresPermissions
+        }
+
+        function getChannelMemberKeys(chatId) {
+            return JSON.stringify(isGatedChannel(chatId) ? d.privateChannelMemberKeys() : [])
+        }
+
+        function hasMember(pubKey) {
+            for (let i = 0; i < count; ++i) {
+                if (get(i).pubKey === pubKey)
+                    return true
+            }
+            return false
+        }
+    }
     readonly property ListModel permissionsModel: ListModel {
         // permissionId -> [chatIds]; absent/empty = community-wide
         property var channelMap: ({})
@@ -126,7 +145,6 @@ QtObject {
         readonly property bool muted: false
         // counters follow the built model (membersCount + the current user)
         // so UI counts never disagree with the members list
-        readonly property int allMembers: root.membersModel.count
         readonly property int joinedMembersCount: root.membersModel.count
         readonly property bool historyArchiveSupportEnabled: false
         readonly property bool pinMessageAllMembersEnabled: false
@@ -135,7 +153,6 @@ QtObject {
         readonly property bool amIBanned: root.amIBanned
         readonly property bool isPendingOwnershipRequest: false
         readonly property int activeMembersCount: root.membersModel.count
-        readonly property bool membersLoaded: true
         readonly property bool tokensLoading: false
     }
 
@@ -149,7 +166,8 @@ QtObject {
         readonly property int requestToJoinState: root.requestToJoinState
         readonly property bool loadingHistoryMessagesInProgress: false
         readonly property bool chatsLoaded: root.chatsLoaded
-        readonly property var membersModel: root.membersModel
+        readonly property var rosterModel: root.membersModel
+        readonly property var adminMembersModel: ListModel {}
         readonly property var contactRequestsModel: null
         readonly property string emoji: ""
 
@@ -264,6 +282,8 @@ QtObject {
             readonly property var messagesModule: QtObject {
                 readonly property var model: contentModule.messagesModel
                 readonly property bool loading: false
+                // the last message jumped to
+                property string jumpedToMessageId
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)
@@ -271,18 +291,18 @@ QtObject {
                 signal scrollToMessage(string messageId)
 
                 function getChatId() { return contentModule.chatId }
+                function jumpToMessage(messageId) { jumpedToMessageId = messageId }
                 function loadMoreMessages() {}
                 function updateKeepUnread(flag) {}
             }
 
+            // community channels list their members from the roster
             readonly property var usersModule: QtObject {
-                readonly property var model: contentModule.info.requiresPermissions
-                                             ? root.privateChannelMembersModel
-                                             : root.membersModel
+                readonly property var model: null
             }
 
             readonly property var inputAreaModule: QtObject {
-                readonly property var preservedProperties: ({ text: "" })
+                readonly property var preservedProperties: ({ text: "", mentionNamesJson: "" })
                 readonly property bool sendingInProgress: false
                 readonly property var linkPreviewModel: null
                 readonly property var paymentRequestModel: null
@@ -454,8 +474,6 @@ QtObject {
                 memberRole: role,
                 isCurrentUser: pubKey === "0xdeadbeef",
                 contactRequest: 0,
-                emojiHash: JSON.stringify(["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮", "🤷🏻‍♂️", "🤦🏻",
-                                           "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"]),
                 trustStatus: 0,
                 usesDefaultName: false,
                 joined: true
@@ -464,16 +482,22 @@ QtObject {
 
         function buildMembers() {
             root.membersModel.clear()
-            root.privateChannelMembersModel.clear()
             appendMember(root.membersModel, "0xdeadbeef", "Me", 0, root.memberRole)
             for (let i = 0; i < root.membersCount; ++i) {
                 const role = i === 0 ? Constants.memberRole.owner : Constants.memberRole.none
                 appendMember(root.membersModel, memberKey(i), "Member " + i, i + 1, role)
             }
-            appendMember(root.privateChannelMembersModel, "0xdeadbeef", "Me", 0, root.memberRole)
-            for (let i = 0; i < root.privateChannelMembersCount; ++i)
-                appendMember(root.privateChannelMembersModel, memberKey(i), "Member " + i, i + 1,
-                             i === 0 ? Constants.memberRole.owner : Constants.memberRole.none)
+            for (const chatId of privateChannelIds())
+                root.membersModel.channelMembersChanged(chatId)
+        }
+
+        // the private channels' member set: the current user and the first
+        // privateChannelMembersCount members
+        function privateChannelMemberKeys() {
+            const keys = ["0xdeadbeef"]
+            for (let i = 0; i < Math.min(root.privateChannelMembersCount, root.membersCount); ++i)
+                keys.push(memberKey(i))
+            return keys
         }
 
         function privateChannelIds() {
@@ -696,9 +720,7 @@ QtObject {
             d.fillMessages(module.messagesModel, id)
         }
         ChatStores.ChatStoresConfig.currentChatContentModule = module
-        ChatStores.ChatStoresConfig.usersModel = module && module.info.requiresPermissions
-                ? privateChannelMembersModel
-                : membersModel
+        ChatStores.ChatStoresConfig.usersModel = null
     }
 
     function rebuild() {

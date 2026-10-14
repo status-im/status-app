@@ -53,6 +53,7 @@ type
     LinkPreviewModel
     TransactionParameters
     MentionedUsersPks
+    MentionedNames
     SenderTrustStatus
     SenderEnsVerified
     MessageAttachments
@@ -166,6 +167,7 @@ QtObject:
       ModelRole.LinkPreviewModel.int: "linkPreviewModel",
       ModelRole.TransactionParameters.int: "transactionParameters",
       ModelRole.MentionedUsersPks.int: "mentionedUsersPks",
+      ModelRole.MentionedNames.int: "mentionedNames",
       ModelRole.SenderTrustStatus.int: "senderTrustStatus",
       ModelRole.SenderEnsVerified.int: "senderEnsVerified",
       ModelRole.MessageAttachments.int: "messageAttachments",
@@ -344,6 +346,9 @@ QtObject:
       }))
     of ModelRole.MentionedUsersPks:
       result = newQVariant(item.mentionedUsersPks.join(" "))
+    of ModelRole.MentionedNames:
+      # JSON { pubKey: name }; parsed by MentionResolver only for keys it cannot name
+      result = newQVariant(if item.mentionedNames.len == 0: "" else: $(%item.mentionedNames))
     of ModelRole.SenderEnsVerified:
       result = newQVariant(item.senderEnsVerified)
     of ModelRole.MessageAttachments:
@@ -755,7 +760,8 @@ QtObject:
       mentioned: bool,
       messageContainsMentions: bool,
       links: seq[string],
-      mentionedUsersPks: seq[string]
+      mentionedUsersPks: seq[string],
+      mentionedNames: Table[string, string],
       ) =
     let ind = self.findIndexForMessageId(messageId)
     if ind == -1:
@@ -769,6 +775,8 @@ QtObject:
       updateRoleWithValue(isEdited, true)
       updateRoleWithValue(links, links)
       updateRoleWithValue(mentionedUsersPks, mentionedUsersPks)
+
+      updateRoleWithValue(mentionedNames, mentionedNames)
 
       if self.items[ind].parsedText != updatedParsedText:
         self.items[ind].parsedText = updatedParsedText
@@ -958,7 +966,7 @@ QtObject:
     if albumMessageIdsFinal.len == 0:
       albumMessageIdsFinal = if (len(message.albumId) == 0): @[] else: @[message.id]
 
-    return message_item.initMessageItem(
+    result = message_item.initMessageItem(
       message.id,
       communityId,
       message.chatId,
@@ -1022,3 +1030,4 @@ QtObject:
       message.paymentRequests,
       hasThread = false,
     )
+    result.mentionedNames = message.mentionedNames

@@ -11,10 +11,10 @@ import StatusQ.Core.Utils
 // (rendering) and ChatTextArea.loadText (editing) to turn the raw "@0x…" mentions in a
 // message into display names — replacing the status-go/Nim name resolution.
 //
-// A key the model does not know falls back to `aliasProvider`, so a mention of somebody
-// the local user has never heard of reads as a generated 3-word alias rather than raw key.
-// Such a key is also handed to `contactInfoRequester` once, which is how the alias
-// eventually becomes the real name.
+// A key the model does not know takes the name the message itself carries (status-go's
+// `mentionedNames`), then falls back to `aliasProvider`, so a mention of somebody the
+// local user has never heard of reads as a name or a generated 3-word alias rather than
+// a raw key. Resolving never calls into the backend.
 //
 // Cost scales with the mentions in the text: a parser scan plus one model lookup per
 // distinct unseen key, cached until the model changes. A message without mentions never
@@ -36,39 +36,44 @@ QObject {
     // key stays unresolved and the renderer falls back to the raw key.
     property var aliasProvider: null
 
-    // Notified once per key the source model cannot name: (pubKey) -> void, expected to be
-    // a store's mailserver profile request. It is fire-and-forget — a successful answer
-    // reaches the source model on its own and the name resolves on the next pass.
-    property var contactInfoRequester: null
+    // The local user, resolved to this live name ahead of the model and the message:
+    // neither the contacts model nor a roster snapshot carries it fresh.
+    property string selfPubKey
+    property string selfName
 
     // When false, results are frozen: source-model changes are still tracked but not
     // applied. Setting it back to true catches up once, and only if the model changed
     // meanwhile.
     property bool enabled: true
 
-    // { pubKey: displayName } for the mentions present in `text`. A pub key neither the
-    // model nor `aliasProvider` can name is simply absent (the renderer/editor then falls
-    // back to the raw key). Reads the applied revision, so QML bindings over this call
-    // re-evaluate when tracked source-model changes are applied.
-    //
-    // Pure as far as its caller is concerned, but a key the model cannot name also gets
-    // queued for `contactInfoRequester` — deferred, so the calling binding stays clean.
-    function resolveFor(text) {
-        const revision = d.appliedRevision
-        if (revision !== d.cacheRevision) {
-            d.cache = ({})
-            d.cacheRevision = revision
-        }
+    // { pubKey: displayName } for the mentions present in `text`. `knownNames` is the
+    // message's own { pubKey: name } (a JSON string, as the message model's
+    // `mentionedNames` role, or an object), used for keys the model cannot name. A pub
+    // key nobody can name is simply absent (the renderer/editor then falls back to the
+    // raw key). Reads the applied revision, so QML bindings over this call re-evaluate
+    // when tracked source-model changes are applied.
+    function resolveFor(text, knownNames) {
+        // dependency only: the cache itself is reset by the revision's change handler, as
+        // writing a property from inside the caller's binding is a binding loop
+        d.appliedRevision
 
         const result = {}
         if (!text)
             return result
+
+        // parsed on the first model miss only
+        let known
 
         // Extraction follows the parser's wire grammar exactly
         const keys = MarkdownUtils.mentions(text)
         for (const pubKey of keys) {
             if (pubKey in result)
                 continue
+
+            if (root.selfPubKey && pubKey === root.selfPubKey && root.selfName) {
+                result[pubKey] = root.selfName
+                continue
+            }
 
             let name = d.cache[pubKey]
             if (name === undefined) {
@@ -81,8 +86,9 @@ QObject {
                 d.cache[pubKey] = name
             }
             if (name === null) {
-                d.requestInfoFor(pubKey)
-                name = d.aliasOf(pubKey)
+                if (known === undefined)
+                    known = d.parseKnownNames(knownNames)
+                name = known[pubKey] || d.aliasOf(pubKey)
             }
             if (name !== null)
                 result[pubKey] = name
@@ -94,9 +100,8 @@ QObject {
         id: d
 
         // Per-revision resolution cache: pubKey -> displayName, or null for a key known
-        // to be absent from the model.
+        // to be absent from the model. Filled in place, which notifies nothing.
         property var cache: ({})
-        property int cacheRevision: 0
 
         // Monotonic count of relevant source-model changes.
         property int sourceRevision: 0
@@ -104,22 +109,18 @@ QObject {
         // while enabled (frozen otherwise), so re-enabling catches up if it fell behind.
         property int appliedRevision: 0
 
-        // Keys already handed to the requester, so each costs at most one round trip per
-        // resolver instance. A failed request is not retried here; the next resolver (a
-        // chat reopened, a popup reopened) asks again.
-        property var requested: ({})
+        onAppliedRevisionChanged: cache = ({})
 
-        function requestInfoFor(pubKey) {
-            if (!root.contactInfoRequester || pubKey in requested)
-                return
-
-            requested[pubKey] = true
-            // Deferred on purpose: resolveFor() runs inside a QML binding, and a binding
-            // must not call out into the backend while it is being evaluated.
-            Qt.callLater(() => {
-                if (root.contactInfoRequester)
-                    root.contactInfoRequester(pubKey)
-            })
+        function parseKnownNames(knownNames) {
+            if (!knownNames)
+                return {}
+            if (typeof knownNames !== "string")
+                return knownNames
+            try {
+                return JSON.parse(knownNames)
+            } catch (e) {
+                return {}
+            }
         }
 
         // Not cached, so an empty answer - a provider that cannot reach its store yet,
@@ -129,10 +130,6 @@ QObject {
             return root.aliasProvider ? (root.aliasProvider(pubKey) || null) : null
         }
     }
-
-    // A requester wired up (or replaced) after the fact must hear about the keys its
-    // predecessor did not.
-    onContactInfoRequesterChanged: d.requested = ({})
 
     // Apply the latest source revision while enabled; freeze it (RestoreNone) while disabled so
     // re-enabling re-samples and rebuilds only when sourceRevision advanced in the meantime.

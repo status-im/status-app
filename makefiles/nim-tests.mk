@@ -41,6 +41,7 @@ $(NIM_STATUSQ_TARGETS): | statusq
 # signals model_sync records only under QT_MODEL_SPY. The define is applied
 # per-file, NOT globally
 NIM_TESTS_MODEL_SPY := \
+	admin_members_test \
 	assets_adaptor_model_test \
 	chat_search_model_bulk_load_test \
 	collectibles_model_test \

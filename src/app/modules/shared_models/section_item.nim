@@ -1,5 +1,4 @@
 import std/strformat, stint
-import ./member_model, ./member_item
 import ../main/communities/tokens/models/token_model as community_tokens_model
 import ../main/communities/tokens/models/token_item
 
@@ -50,15 +49,13 @@ type
     access: int
     ensOnly: bool
     muted: bool
-    membersModel: member_model.Model
-    joinedMembersCount: int # This is a separate property because the membersModel may not be loaded yet
+    joinedMembersCount: int
     historyArchiveSupportEnabled: bool
     pinMessageAllMembersEnabled: bool
     encrypted: bool
     communityTokensModel: community_tokens_model.TokenModel
     isPendingOwnershipRequest: bool
     activeMembersCount: int
-    membersLoaded: bool
     tokensLoading: bool
 
 proc initSectionItem*(
@@ -89,7 +86,6 @@ proc initSectionItem*(
     access: int = 0,
     ensOnly = false,
     muted = false,
-    members: seq[MemberItem] = @[],
     joinedMembersCount: int = 0,
     historyArchiveSupportEnabled = false,
     pinMessageAllMembersEnabled = false,
@@ -125,8 +121,6 @@ proc initSectionItem*(
   result.access = access
   result.ensOnly = ensOnly
   result.muted = muted
-  result.membersModel = newModel()
-  result.membersModel.setItems(members)
   result.joinedMembersCount = joinedMembersCount
   result.historyArchiveSupportEnabled = historyArchiveSupportEnabled
   result.pinMessageAllMembersEnabled = pinMessageAllMembersEnabled
@@ -135,7 +129,6 @@ proc initSectionItem*(
   result.communityTokensModel.setItems(communityTokens)
   result.isPendingOwnershipRequest = isPendingOwnershipRequest
   result.activeMembersCount = activeMembersCount
-  result.membersLoaded = false
   result.tokensLoading = false
 
 proc isEmpty*(self: SectionItem): bool =
@@ -170,9 +163,7 @@ proc `$`*(self: SectionItem): string =
     access:{self.access},
     ensOnly:{self.ensOnly},
     muted:{self.muted},
-    membersLoaded:{self.membersLoaded},
     tokensLoading:{self.tokensLoading},
-    members:{self.membersModel},
     joinedMembersCount:{self.joinedMembersCount},
     historyArchiveSupportEnabled:{self.historyArchiveSupportEnabled},
     pinMessageAllMembersEnabled:{self.pinMessageAllMembersEnabled},
@@ -343,9 +334,6 @@ proc muted*(self: SectionItem): bool {.inline.} =
 proc `muted=`*(self: var SectionItem, value: bool) {.inline.} =
   self.muted = value
 
-proc members*(self: SectionItem): member_model.Model {.inline.} =
-  self.membersModel
-
 proc joinedMembersCount*(self: SectionItem): int {.inline.} =
   self.joinedMembersCount
 
@@ -412,26 +400,11 @@ proc setCommunityTokenHoldersLoading*(self: SectionItem, chainId: int, contractA
 proc communityTokens*(self: SectionItem): community_tokens_model.TokenModel {.inline.} =
   self.communityTokensModel
 
-proc updatePendingRequestLoadingState*(self: SectionItem, memberKey: string, loading: bool) {.inline.} =
-  self.membersModel.updateLoadingState(memberKey, loading)
-
-proc updateDeclineRequestLoadingState*(self: SectionItem, memberKey: string, loading: bool) {.inline.} =
-  self.membersModel.updateDeclineLoadingState(memberKey, loading)
-
-proc updateMembershipStatus*(self: SectionItem, memberKey: string, state: MembershipRequestState) {.inline.} =
-  self.membersModel.updateMembershipStatus(memberKey, state)
-
 proc activeMembersCount*(self: SectionItem): int {.inline.} =
   self.activeMembersCount
 
 proc `activeMembersCount=`*(self: var SectionItem, value: int) {.inline.} =
   self.activeMembersCount = value
-
-proc membersLoaded*(self: SectionItem): bool {.inline.} =
-  self.membersLoaded
-
-proc `membersLoaded=`*(self: var SectionItem, value: bool) {.inline.} =
-  self.membersLoaded = value
 
 proc tokensLoading*(self: SectionItem): bool {.inline.} =
   self.tokensLoading

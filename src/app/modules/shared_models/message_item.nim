@@ -1,4 +1,4 @@
-import json, std/strformat, strutils
+import json, std/strformat, strutils, tables
 import app/global/global_singleton
 import ../../../app_service/common/media_server_url
 import ../../../app_service/common/types
@@ -32,6 +32,7 @@ type
     unparsedText: string
     # Saving the parsed text property because we need it to getRenderedText when mentions change
     parsedText: seq[ParsedText]
+    mentionedNames: Table[string, string]
     messageImage: string
     messageContainsMentions: bool
     sticker: string
@@ -467,6 +468,12 @@ proc parsedText*(self: Item): seq[ParsedText] {.inline.} =
 
 proc `parsedText=`*(self: Item, value: seq[ParsedText]) {.inline.} =
   self.parsedText = value
+
+proc mentionedNames*(self: Item): Table[string, string] {.inline.} =
+  self.mentionedNames
+
+proc `mentionedNames=`*(self: Item, value: Table[string, string]) {.inline.} =
+  self.mentionedNames = value
 
 proc messageImage*(self: Item): string {.inline.} =
   self.messageImage

@@ -17,6 +17,7 @@ import AppLayouts.Communities.helpers
 import AppLayouts.Communities.panels
 import AppLayouts.Communities.popups
 
+import QtModelsToolkit
 import SortFilterProxyModel
 
 
@@ -431,19 +432,19 @@ StatusScrollView {
             maxNumberOfRecipients:
                 recipientsCountInstantiator.maximumRecipientsCount
 
-            membersModel: SortFilterProxyModel {
+            // members selected by their airdrop address
+            membersModel: KeySetFilterModel {
                 id: selectedMembersModel
 
                 sourceModel: membersModel
+                keyRoleName: "airdropAddress"
+                keys: [...selectedKeysFilter.keys].filter(address => address !== "")
+            }
 
-                filters: FastExpressionFilter {
-                    id: selectedKeysFilter
+            QtObject {
+                id: selectedKeysFilter
 
-                    property var keys: new Set()
-
-                    expectedRoles: ["airdropAddress"]
-                    expression: keys.has(model.airdropAddress) && model.airdropAddress !== ""
-                }
+                property var keys: new Set()
             }
 
             onRemoveMemberRequested: {
@@ -543,18 +544,29 @@ StatusScrollView {
                     ]
 
                     filters: [
-                        FastExpressionFilter {
+                        AnyOf {
                             enabled: membersDropdown.searchText !== ""
 
-                            expression: {
-                                const filter = membersDropdown.searchText.toLowerCase()
-                                return model.alias.toLowerCase().includes(filter)
-                                         || model.displayName.toLowerCase().includes(filter)
-                                         || model.ensName.toLowerCase().includes(filter)
-                                         || model.localNickname.toLowerCase().includes(filter)
-                                         || model.pubKey.toLowerCase().includes(filter)
+                            SearchFilter {
+                                roleName: "alias"
+                                searchPhrase: membersDropdown.searchText
                             }
-                            expectedRoles: ["alias", "displayName", "ensName", "localNickname", "pubKey"]
+                            SearchFilter {
+                                roleName: "displayName"
+                                searchPhrase: membersDropdown.searchText
+                            }
+                            SearchFilter {
+                                roleName: "ensName"
+                                searchPhrase: membersDropdown.searchText
+                            }
+                            SearchFilter {
+                                roleName: "localNickname"
+                                searchPhrase: membersDropdown.searchText
+                            }
+                            SearchFilter {
+                                roleName: "pubKey"
+                                searchPhrase: membersDropdown.searchText
+                            }
                         },
                         ValueFilter {
                             roleName: "airdropAddress"

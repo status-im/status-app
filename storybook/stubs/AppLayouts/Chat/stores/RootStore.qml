@@ -43,6 +43,10 @@ QtObject {
         property bool amIBanned: false
     }
 
+    // The local user's name and every known contact, as the mention names read them
+    property string name
+    property var contactsModel: null
+
     property UsersStore usersStore: UsersStore {}
     property StickersStore stickersStore: StickersStore {}
 
@@ -52,6 +56,10 @@ QtObject {
 
     function amIChatAdmin() {
         return currentChatContentModule()?.amIChatAdmin() ?? false
+    }
+
+    function generateAlias(publicKey) {
+        return ""
     }
 
     function cleanMessageText(text) {
@@ -79,4 +87,8 @@ QtObject {
     function deleteCommunityCategory(categoryId) {}
     function prepareEditCategoryModel(categoryId) {}
     function leaveCommunity() {}
+
+    function loadMembersForSectionId(sectionId) {}
+    function loadAdminMembersForSectionId(sectionId) {}
+    function releaseAdminMembersForSectionId(sectionId) {}
 }

@@ -121,9 +121,6 @@ proc init*(self: Controller) =
 proc belongsToCommunity*(self: Controller): bool =
   self.belongsToCommunity
 
-proc getMyCommunity*(self: Controller): lent CommunityDto =
-  return self.communityService.getCommunityById(self.sectionId)
-
 proc getMyChatId*(self: Controller): string =
   return self.chatId
 

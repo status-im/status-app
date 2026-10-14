@@ -6,6 +6,7 @@ import StatusQ.Core.Utils
 
 import utils
 
+import QtModelsToolkit
 import SortFilterProxyModel
 
 QObject {
@@ -39,33 +40,59 @@ QObject {
         airdropAddress                  [string]    - the member's airdrop address (only available to TMs and owners)
         membershipRequestState          [int]       - the user's membership state (pending, joined, etc.)
     **/
-    property var allMembers
+    // Joined members: the community roster, with the pending ban/kick states
+    // and airdrop addresses set by the admin settings
+    property var rosterModel
+    // Requests to join, banned and awaiting-address members (admin settings)
+    property var adminMembersModel
 
-    readonly property var joinedMembers: SortFilterProxyModel {
-        sourceModel: root.allMembers ?? null
+    // Members kicked after an ownership change are listed as joined while they
+    // are re-joining (sharing their addresses)
+    readonly property var joinedMembers: ConcatModel {
+        sources: [
+            SourceModel {
+                model: SortFilterProxyModel {
+                    sourceModel: root.rosterModel ?? null
 
-        filters: AnyOf {
-            ValueFilter {
-                roleName: "membershipRequestState"
-                value: Constants.CommunityMembershipRequestState.Accepted
+                    filters: AnyOf {
+                        ValueFilter {
+                            roleName: "membershipRequestState"
+                            value: Constants.CommunityMembershipRequestState.Accepted
+                        }
+                        ValueFilter {
+                            roleName: "membershipRequestState"
+                            value: Constants.CommunityMembershipRequestState.KickedPending
+                        }
+                        ValueFilter {
+                            roleName: "membershipRequestState"
+                            value: Constants.CommunityMembershipRequestState.BannedPending
+                        }
+                    }
+                }
+            },
+            SourceModel {
+                model: SortFilterProxyModel {
+                    sourceModel: root.adminMembersModel ?? null
+
+                    filters: ValueFilter {
+                        roleName: "membershipRequestState"
+                        value: Constants.CommunityMembershipRequestState.AwaitingAddress
+                    }
+                }
             }
-            ValueFilter {
-                roleName: "membershipRequestState"
-                value: Constants.CommunityMembershipRequestState.KickedPending
-            }
-            ValueFilter {
-                roleName: "membershipRequestState"
-                value: Constants.CommunityMembershipRequestState.BannedPending
-            }
-            ValueFilter {
-                roleName: "membershipRequestState"
-                value: Constants.CommunityMembershipRequestState.AwaitingAddress
-            }
-        }
+        ]
+
+        markerRoleName: ""
+        expectedRoles: ["pubKey", "compressedPubKey", "isCurrentUser", "displayName",
+            "preferredDisplayName", "usesDefaultName", "ensName", "isEnsVerified",
+            "localNickname", "alias", "icon", "colorId", "onlineStatus", "isContact",
+            "isVerified", "isUntrustworthy", "trustStatus", "isBlocked", "contactRequest",
+            "memberRole", "joined", "requestToJoinId", "requestToJoinLoading",
+            "declineRequestToJoinLoading", "airdropAddress", "membershipRequestState"]
     }
 
     readonly property var bannedMembers: SortFilterProxyModel {
-        sourceModel: root.allMembers ?? null
+        sourceModel: root.adminMembersModel ?? null
 
         filters: AnyOf {
             ValueFilter {
@@ -84,7 +111,7 @@ QObject {
     }
 
     readonly property var pendingMembers: SortFilterProxyModel {
-        sourceModel: root.allMembers ?? null
+        sourceModel: root.adminMembersModel ?? null
 
         filters: AnyOf {
             ValueFilter {
@@ -103,7 +130,7 @@ QObject {
     }
 
     readonly property var declinedMembers: SortFilterProxyModel {
-        sourceModel: root.allMembers ?? null
+        sourceModel: root.adminMembersModel ?? null
 
         filters: ValueFilter {
             roleName: "membershipRequestState"

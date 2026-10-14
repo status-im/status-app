@@ -34,17 +34,16 @@ StatusDialog {
     // (a message may mention somebody who is not a member); without it, "@0x…" mentions
     // render as raw keys.
     readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
-        chatUsersModel: root.chatCommunitySectionModule?.membersModel ?? null
+        chatUsersModel: root.chatCommunitySectionModule?.rosterModel ?? null
         contactsModel: root.rootStore?.contactsModel ?? null
-        selfPubKey: root.rootStore?.myPublicKey() ?? ""
-        selfDisplayName: root.rootStore?.name ?? ""
     }
 
     readonly property MentionResolver mentionResolver: MentionResolver {
         sourceModel: root.mentionNames?.model ?? null
         nameRole: "preferredDisplayName"
+        selfPubKey: root.rootStore?.myPublicKey() ?? ""
+        selfName: root.rootStore?.name ?? ""
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
-        contactInfoRequester: pubKey => root.rootStore?.requestContactInfo(pubKey)
     }
 
 
@@ -103,7 +102,8 @@ StatusDialog {
                     amISender: model.amISender
                     messageText: model.messageText
                     unparsedText: model.unparsedText
-                    mentionsMap: root.mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
+                    mentionsMap: root.mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText,
+                                                                 model.mentionedNames)
                     messageImage: model.messageImage
                     messageTimestamp: model.timestamp
                     messageOutgoingStatus: model.outgoingStatus

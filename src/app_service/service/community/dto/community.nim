@@ -7,6 +7,7 @@ include ../../../common/json_utils
 import ../../../common/conversion
 
 import ../../chat/dto/chat
+import roster
 import ../../shared_urls/dto/url_data
 import ../../../../app_service/common/types
 
@@ -161,7 +162,7 @@ type CommunityDto* = object
   categories*: seq[Category]
   images*: Images
   permissions*: Permission
-  members*: seq[ChatMember]
+  membersCount*: int
   canRequestAccess*: bool
   canManageUsers*: bool
   canJoin*: bool
@@ -475,15 +476,12 @@ proc toCommunityDto*(jsonObj: JsonNode): CommunityDto =
   if(jsonObj.getProp("adminSettings", adminSettingsObj)):
     result.adminSettings = toCommunityAdminSettingsDto(adminSettingsObj)
 
-  var membersObj: JsonNode
-  if(jsonObj.getProp("members", membersObj) and membersObj.kind == JObject):
-    for memberId, memberObj in membersObj:
-      result.members.add(toChannelMember(memberObj, memberId))
+  discard jsonObj.getProp("membersCount", result.membersCount)
 
   var chatsObj: JsonNode
   if(jsonObj.getProp("chats", chatsObj)):
     for _, chatObj in chatsObj:
-      result.chats.add(chatObj.toChatDto(result.id, result.members))
+      result.chats.add(chatObj.toChatDto(result.id))
 
   var tagsObj: JsonNode
   if(jsonObj.getProp("tags", tagsObj)):
@@ -510,6 +508,11 @@ proc toCommunityDto*(jsonObj: JsonNode): CommunityDto =
   if(jsonObj.getProp("communityTokensMetadata", communityTokensMetadataObj) and communityTokensMetadataObj.kind == JArray):
     for tokenObj in communityTokensMetadataObj:
       result.communityTokensMetadata.add(tokenObj.toCommunityTokensMetadataDto())
+
+proc responseCommunity*(response: JsonNode): CommunityDto =
+  ## The community of a single-community messenger response, read from the
+  ## top-level `communities`, never from `communityChanges[].community`.
+  response["communities"][0].toCommunityDto
 
 proc toMembershipRequestState*(state: CommunityMemberPendingBanOrKick): MembershipRequestState =
   case state:
@@ -666,14 +669,22 @@ proc getOwnerTokenAddressFromPermissions*(self: CommunityDto): (int, string) =
         return (ch, add)
   return (0, "")
 
-proc findOwner*(self: CommunityDto): ChatMember =
-  for member in self.members:
-    if member.role == MemberRole.Owner:
-      return member
-  raise newException(ValueError, "No owner found in members list")
-
 proc getContractIdFromFirstAddress*(self: CommunityTokensMetadataDto): string =
   for chainID, address in self.addresses:
     let contractId = ContractID(chainID: chainID, address: address)
     return contractId.toString()
   return ""
+proc takeJoinedRequests*(community: var CommunityDto, added: openArray[RosterMember]): seq[string] =
+  ## Removes the pending requests whose sender was added to the roster (the
+  ## request was accepted) and returns their keys, in request order.
+  if added.len == 0:
+    return
+  var i = 0
+  while i < community.pendingRequestsToJoin.len:
+    var key: RawPubKey
+    let pubKey = community.pendingRequestsToJoin[i].publicKey
+    if parseRawPubKey(pubKey, key) and added.anyIt(it.key == key):
+      result.add pubKey
+      community.pendingRequestsToJoin.delete(i)
+    else:
+      inc i

@@ -1,6 +1,6 @@
 {.used.}
 
-import json, strutils, chronicles
+import json, strutils, chronicles, tables
 import ../../../common/types
 import link_preview, payment_request
 
@@ -134,6 +134,8 @@ type MessageDto* = object
   pinnedBy*: string
   transactionParameters*: TransactionParameters
   mentioned*: bool
+  # pubKey -> name status-go knows for a mentioned member; no aliases
+  mentionedNames*: Table[string, string]
   replied*: bool
   paymentRequests*: seq[PaymentRequest]
 
@@ -282,6 +284,10 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
   discard jsonObj.getProp("deletedForMe", result.deletedForMe)
   discard jsonObj.getProp("pinnedBy", result.pinnedBy)
   discard jsonObj.getProp("mentioned", result.mentioned)
+  var mentionedNamesObj: JsonNode
+  if jsonObj.getProp("mentionedNames", mentionedNamesObj) and mentionedNamesObj.kind == JObject:
+    for pubKey, name in mentionedNamesObj:
+      result.mentionedNames[pubKey] = name.getStr
   discard jsonObj.getProp("replied", result.replied)
 
   var quotedMessageObj: JsonNode

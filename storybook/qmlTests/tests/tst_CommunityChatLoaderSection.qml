@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as QC
 import QtTest
 
+import StatusQ.Core.Utils as SQUtils
 import utils
 
 import Models
@@ -101,6 +102,11 @@ Item {
         when: windowShown
 
         function init() {
+            // a store call the stub lacks
+            failOnWarning(/is not a function/)
+            // a MentionResolver writing its cache from inside a binding
+            failOnWarning(/Binding loop detected for property "mentionsMap"/)
+
             // baseline config: joined member of a token-gated community with
             // categories, one private channel per category and permissions
             mock.joined = true
@@ -125,18 +131,22 @@ Item {
         function cleanup() {
             harness.active = false
             mock.uninstall()
+            contactsStoreMock.myPublicKey = "0xdeadbeef"
             root.height = 700
         }
 
-        // walks `data` so non-visual children (popups, tooltips) are found too
+        // walks `data` so non-visual children (popups, tooltips) are found too, plus the
+        // children of non-visual objects and what a Loader loaded outside the item tree
         function findAllInDataByTypePrefix(obj, prefix, out) {
             if (!obj)
                 return out
             if (obj.toString().indexOf(prefix) === 0)
                 out.push(obj)
-            const list = obj.data ?? []
+            const list = obj.data ?? obj.children ?? []
             for (let i = 0; i < list.length; ++i)
                 findAllInDataByTypePrefix(list[i], prefix, out)
+            if (obj instanceof Loader && obj.item && obj.item.parent !== obj)
+                findAllInDataByTypePrefix(obj.item, prefix, out)
             return out
         }
 
@@ -637,6 +647,110 @@ Item {
 
             verify(large.rows < 60,
                    "only viewport+cache channel rows may be built, got " + large.rows)
+        }
+
+        // Somebody outside the loaded roster: the channel's member list cannot
+        // name them, as when the roster is not held.
+        readonly property string strangerKey: "0x04" + "f".repeat(128)
+
+        function chatInput(loader) {
+            const input = findChildByTypePrefix(loader, "StatusChatInput")
+            verify(!!input)
+            return input
+        }
+
+        function inputMentionNames(input) {
+            return SQUtils.ModelUtils.modelToFlatArray(input.textInput.mentionsModel, "name")
+        }
+
+        function test_editShowsMentionNamesWithoutTheRoster() {
+            const loader = loadSection()
+            const contentModule = mock.d.contentModuleFor(mock.activeChatId)
+            const messages = contentModule.messagesModel
+            const own = SQUtils.ModelUtils.get(messages, 1)
+            verify(own.amISender)
+            messages.setProperty(1, "unparsedText", "hi @" + strangerKey)
+            messages.setProperty(1, "mentionedNames", JSON.stringify({ [strangerKey]: "Xena" }))
+
+            const contentView = findChildByTypePrefix(loader, "ChatContentView")
+            verify(!!contentView)
+            contentView.editMessageRequested(own.id)
+
+            const input = chatInput(loader)
+            compare(inputMentionNames(input), ["@Xena"])
+            // the deferred jump to the edited message runs before the teardown
+            tryCompare(contentModule.messagesModule, "jumpedToMessageId", own.id)
+        }
+
+        function test_restoredDraftKeepsItsMentionNames() {
+            const loader = loadSection()
+            const input = chatInput(loader)
+            const draftChatId = mock.activeChatId
+            // as picked from the suggestions: the pill's name carries the "@"
+            input.textInput.insertMention(0, "@Xena", strangerKey)
+            compare(inputMentionNames(input), ["@Xena"])
+
+            mock.setActiveChat("channel-u-1")
+            tryVerify(() => inputMentionNames(input).length === 0)
+            mock.setActiveChat(draftChatId)
+            tryVerify(() => inputMentionNames(input).length === 1)
+            compare(inputMentionNames(input), ["@Xena"])
+        }
+
+        // the input's own mention names cover a contacts-wide model: built on the first edit
+        function test_inputMentionNamesBuiltOnFirstUse() {
+            const loader = loadSection()
+            const columnView = findChildByTypePrefix(loader, "ChatColumnView")
+            const before = findAllInDataByTypePrefix(columnView, "MentionNamesAdaptor", []).length
+
+            const own = SQUtils.ModelUtils.get(mock.d.contentModuleFor(mock.activeChatId).messagesModel, 1)
+            findChildByTypePrefix(loader, "ChatContentView").editMessageRequested(own.id)
+            compare(findAllInDataByTypePrefix(columnView, "MentionNamesAdaptor", []).length, before + 1)
+            tryCompare(mock.d.contentModuleFor(mock.activeChatId).messagesModule, "jumpedToMessageId", own.id)
+        }
+
+        // leaves the draft's chat and comes back, so its draft is restored
+        function revisitChat(input) {
+            const draftChatId = mock.activeChatId
+            mock.setActiveChat("channel-u-1")
+            tryVerify(() => inputMentionNames(input).length === 0)
+            mock.setActiveChat(draftChatId)
+            tryVerify(() => inputMentionNames(input).length === 1)
+        }
+
+        function test_restoredDraftNamesSelfWithTheCurrentName() {
+            contactsStoreMock.myPublicKey = strangerKey
+            const loader = loadSection()
+            const chatRootStore = findChildByTypePrefix(loader, "ChatColumnView").rootStore
+            chatRootStore.name = "Old Me"
+            const input = chatInput(loader)
+            input.textInput.insertMention(0, "@Old Me", strangerKey)
+
+            chatRootStore.name = "New Me"
+            revisitChat(input)
+            compare(inputMentionNames(input), ["@New Me"])
+        }
+
+        function test_restoredDraftNamesAKeyThatBecameNameable() {
+            const loader = loadSection()
+            const input = chatInput(loader)
+            // nobody could name them when the draft was written
+            input.textInput.insertMention(0, "@" + strangerKey, strangerKey)
+
+            findChildByTypePrefix(loader, "ChatColumnView").rootStore.contactsModel = namedStranger
+            revisitChat(input)
+            compare(inputMentionNames(input), ["@Xena"])
+        }
+
+        ListModel {
+            id: namedStranger
+
+            ListElement {
+                pubKey: "0x04ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                preferredDisplayName: "Xena"
+                usesDefaultName: false
+                isContact: true
+            }
         }
     }
 }

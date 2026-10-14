@@ -98,10 +98,6 @@ type
     pubKey*: string
     requestId*: string
 
-  CommunityMembersArgs* = ref object of Args
-    communityId*: string
-    members*: seq[ChatMember]
-
   CommunityMutedArgs* = ref object of Args
     communityId*: string
     muted*: bool
@@ -221,7 +217,6 @@ const SIGNAL_COMMUNITY_CATEGORY_REORDERED* = "communityCategoryReordered"
 const SIGNAL_COMMUNITY_CHANNEL_CATEGORY_CHANGED* = "communityChannelCategoryChanged"
 const SIGNAL_COMMUNITY_MEMBER_APPROVED* = "communityMemberApproved"
 const SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED* = "communityMemberStatusChanged"
-const SIGNAL_COMMUNITY_MEMBERS_CHANGED* = "communityMembersChanged"
 const SIGNAL_COMMUNITY_KICKED* = "communityKicked"
 const SIGNAL_NEW_REQUEST_TO_JOIN_COMMUNITY* = "newRequestToJoinCommunity"
 const SIGNAL_NEW_REQUEST_TO_JOIN_COMMUNITY_ACCEPTED* = "requestToJoinCommunityAccepted"
@@ -536,19 +531,8 @@ QtObject:
   proc saveUpdatedCommunity(self: Service, community: var CommunityDto) =
     # Community data we get from the signals and responses don't contgain the pending requests
     # therefore, we must keep the old one
-    community.pendingRequestsToJoin = @[]
-    for request in self.communities[community.id].pendingRequestsToJoin:
-      var requestIsNowAMember = false
-      for member in community.members:
-        if member.id == request.publicKey:
-          requestIsNowAMember = true
-          self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
-            communityId: community.id,
-            memberPubkey: request.publicKey,
-            state: MembershipRequestState.Accepted))
-          break
-      if not requestIsNowAMember:
-        community.pendingRequestsToJoin.add(request)
+    # (a request whose sender joins is dropped by acceptRequestsOfNewMembers)
+    community.pendingRequestsToJoin = self.communities[community.id].pendingRequestsToJoin
     community.declinedRequestsToJoin = self.communities[community.id].declinedRequestsToJoin
     community.canceledRequestsToJoin = self.communities[community.id].canceledRequestsToJoin
     community.waitingForSharedAddressesRequestsToJoin = self.communities[community.id].waitingForSharedAddressesRequestsToJoin
@@ -596,10 +580,6 @@ QtObject:
     # checking length is sufficient - communityTokensMetadata list can only extend
     return communityTokens.len != prevCommunityTokens.len
 
-  proc updateMemberRole(self: Service, chatId: string, member: ChatMember) =
-    self.events.emit(SIGNAL_CHAT_MEMBER_UPDATED,
-      ChatMemberUpdatedArgs(chatId: chatId, id: member.id, role: member.role, joined: member.joined))
-
   proc handleCommunityUpdates(self: Service, communities: seq[CommunityDto], updatedChats: seq[ChatDto], removedChats: seq[string]) =
     try:
       let myPublicKey = singletonInstance.userProfile.getPubKey()
@@ -626,15 +606,6 @@ QtObject:
       # Save the updated community before calling events, because some events triggers look ups on the new community
       # We will save again at the end if other properties were updated
       self.saveUpdatedCommunity(community)
-
-      try:
-        let currOwner = community.findOwner()
-        let prevOwner = prevCommunity.findOwner()
-        if currOwner.id != prevOwner.id:
-          for chat in community.chats:
-            self.updateMemberRole(chat.id, currOwner)
-      except Exception:
-        discard
 
       # community was joined
       if not prevCommunity.joined and community.joined:
@@ -746,15 +717,6 @@ QtObject:
 
             let data = CommunityChatArgs(chat: updatedChat)
             self.events.emit(SIGNAL_COMMUNITY_CHANNEL_EDITED, data)
-
-          # Handle channel members update
-          if chat.members != prevChat.members:
-            self.chatService.updateChannelMembers(chat)
-
-      # members list was changed
-      if community.members != prevCommunity.members:
-        self.events.emit(SIGNAL_COMMUNITY_MEMBERS_CHANGED,
-          CommunityMembersArgs(communityId: community.id, members: community.members))
 
       # token metadata was added
       if community.communityTokensMetadata.len > prevCommunity.communityTokensMetadata.len:
@@ -1437,8 +1399,7 @@ QtObject:
       let maxPosition = if chatsForCategory.len > 0: chatsForCategory[^1].position else: -1
 
       for chatObj in chatsJArr:
-        let community = self.communities[communityId]
-        var chatDto = chatObj.toChatDto(communityId, community.members)
+        var chatDto = chatObj.toChatDto(communityId)
         chatDto.position = maxPosition + 1
         self.chatService.updateOrAddChat(chatDto)
         self.communities[communityId].chats.add(chatDto)
@@ -1487,9 +1448,8 @@ QtObject:
         raise newException(RpcException, fmt"editCommunityChannel; there is no `chats` key in the response for community id: {communityId}")
 
       for chatObj in chatsJArr:
-        let community = self.communities[communityId]
-        var chatDto = chatObj.toChatDto(communityId, community.members)
-        let chatIndex = community.getCommunityChatIndex(chatDto.id)
+        var chatDto = chatObj.toChatDto(communityId)
+        let chatIndex = self.communities[communityId].getCommunityChatIndex(chatDto.id)
         if chatIndex > -1:
           self.communities[communityId].chats[chatIndex] = chatDto
         self.chatService.updateOrAddChat(chatDto) # we have to update chats stored in the chat service.
@@ -1583,7 +1543,7 @@ QtObject:
 
       if response.result != nil and response.result.kind != JNull:
         self.checkForCategoryPropertyUpdates(
-          response.result["communityChanges"].getElems()[0]["community"].toCommunityDto,
+          response.result.responseCommunity,
           self.communities[communityId]
         )
 
@@ -1658,7 +1618,7 @@ QtObject:
             chats.add(chatDetails)
 
         # Update communities objects
-        var updatedCommunity = response.result["communities"][0].toCommunityDto
+        var updatedCommunity = response.result.responseCommunity
         self.checkForCategoryPropertyUpdates(
           updatedCommunity,
           self.communities[communityId]
@@ -2132,12 +2092,8 @@ QtObject:
       if awaitingRequestToJoin.publicKey == myPublicKey:
         self.events.emit(SIGNAL_WAITING_ON_NEW_COMMUNITY_OWNER_TO_CONFIRM_REQUEST_TO_REJOIN, CommunityIdArgs(communityId: communityId))
 
-    let membersChanged = community.members != updatedCommunity.members
-    community.members = updatedCommunity.members
+    community.membersCount = updatedCommunity.membersCount
     self.communities[communityId] = community
-    if membersChanged:
-      self.events.emit(SIGNAL_COMMUNITY_MEMBERS_CHANGED,
-        CommunityMembersArgs(communityId: communityId, members: community.members))
     result = true
 
   proc cancelRequestToJoinCommunity*(self: Service, communityId: string) =
@@ -2325,7 +2281,7 @@ QtObject:
         let prevCommunity = self.communities[community.id]
         if prevCommunity.pendingAndBannedMembers.hasKey(memberPubkey):
           state = MembershipRequestState.Unbanned
-        elif len(prevCommunity.members) > len(community.members):
+        elif prevCommunity.membersCount > community.membersCount:
           state = MembershipRequestState.Kicked
 
       self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
@@ -2667,7 +2623,22 @@ QtObject:
       deltas: held,
     ))
 
+  proc acceptRequestsOfNewMembers(self: Service, deltas: seq[RosterDelta]) =
+    ## A pending request whose sender shows up in the roster was accepted.
+    for delta in deltas:
+      if delta.added.len == 0:
+        continue
+      var joined: seq[string]
+      self.communities.withValue(delta.communityId, community):
+        joined = community[].takeJoinedRequests(delta.added)
+      for pubKey in joined:
+        self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+          communityId: delta.communityId,
+          memberPubkey: pubKey,
+          state: MembershipRequestState.Accepted))
+
   proc handleCommunityRosterDeltas*(self: Service, deltas: seq[RosterDelta]) =
+    self.acceptRequestsOfNewMembers(deltas)
     var byCommunity: OrderedTable[string, seq[RosterDelta]]
     for delta in deltas:
       if self.rosterSyncs.hasKey(delta.communityId):

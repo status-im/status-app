@@ -243,8 +243,7 @@ method getCommunityItem(self: Module, community: CommunityDto): SectionItem =
       community.permissions.access,
       community.permissions.ensOnly,
       community.muted,
-      # No need to add the members as this module's communities are only used for display purposes
-      joinedMembersCount = community.members.len,
+      joinedMembersCount = community.membersCount,
       historyArchiveSupportEnabled = community.settings.historyArchiveSupportEnabled,
       encrypted = community.encrypted,
       communityTokens = @[],
@@ -274,7 +273,7 @@ proc getCuratedCommunityItem(self: Module, community: CommunityDto): CuratedComm
     community.images.banner,
     community.color,
     community.tags,
-    len(community.members),
+    community.membersCount,
     int(community.activeMembersCount),
     community.featuredInDirectory,
     tokenPermissionsItems,

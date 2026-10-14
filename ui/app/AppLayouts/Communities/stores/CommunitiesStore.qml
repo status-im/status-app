@@ -83,6 +83,16 @@ QtObject {
         }
     }
 
+    // Holds of a community's member roster; use RosterHolder, which pairs
+    // every acquire with exactly one release.
+    function acquireCommunityRoster(communityId) {
+        root.mainModuleInst.acquireCommunityRoster(communityId)
+    }
+
+    function releaseCommunityRoster(communityId) {
+        root.mainModuleInst.releaseCommunityRoster(communityId)
+    }
+
     function createCommunity(args = {
                                 name: "",
                                 description: "",

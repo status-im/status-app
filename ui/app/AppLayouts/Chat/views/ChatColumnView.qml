@@ -21,6 +21,7 @@ import utils
 
 import QtModelsToolkit
 
+import AppLayouts.Chat.adaptors
 import AppLayouts.Communities.popups
 import AppLayouts.Communities.panels
 import AppLayouts.Chat.stores as ChatStores
@@ -80,6 +81,8 @@ Item {
 
     // Users related data:
     property var usersModel
+    // the message input has focus, so "@" mentions may suggest members
+    readonly property bool chatInputFocused: chatInput.textInput.activeFocus
 
     // Contacts related data:
     property string myPublicKey
@@ -165,6 +168,7 @@ Item {
         property string editMessageId
         property string editOriginalInputText
         property string preEditInputText
+        property string preEditMentionNamesJson
         property string preEditReplyMessageId
         property var preEditFileUrlsAndSources: []
 
@@ -176,19 +180,48 @@ Item {
             return root.parentModule.getChatContentModule()
         }
 
-        // Builds a { pubKey: displayName } map for the mentions in `unparsedText`, resolving each
-        // pub key to a display name via usersModel, so ChatTextArea.loadText() can turn the raw
-        // "@0x…" mentions back into pills. Unknown keys and the "everyone" tag are omitted;
-        // loadText() falls back to the raw key / "everyone" for those.
-        function mentionNames(unparsedText) {
-            const names = ({})
-            const keys = MarkdownUtils.mentions(unparsedText)
-            for (const key of keys) {
-                const user = SQUtils.ModelUtils.getByKey(root.usersModel, "pubKey", key)
-                if (user)
-                    names[key] = user.preferredDisplayName
+        function mentionResolver() {
+            mentionResolverLoader.active = true
+            return mentionResolverLoader.item
+        }
+
+        // { pubKey: name } maps for ChatTextArea.loadText(), which turns the "@0x…" mentions back
+        // into pills. The channel's member list alone is not enough: a community channel lists
+        // the roster, which is empty while nobody holds it.
+        // An edited message is named like its bubble, its own mentionedNames included.
+        function messageMentionNames(text, mentionedNames) {
+            return d.mentionResolver().resolveFor(text, mentionedNames)
+        }
+
+        // A restored draft is named live; a name it was saved with stands in only where the
+        // live one is just an alias or the raw key.
+        function draftMentionNames(text, savedNamesJson) {
+            let saved = {}
+            try {
+                saved = JSON.parse(savedNamesJson || "{}")
+            } catch (e) {}
+            const resolver = d.mentionResolver()
+            const names = resolver.resolveFor(text)
+            for (const pubKey in saved) {
+                const savedName = saved[pubKey]
+                if (!savedName || savedName === pubKey)
+                    continue
+                const name = names[pubKey]
+                if (!name || name === pubKey || name === resolver.aliasProvider(pubKey))
+                    names[pubKey] = savedName
             }
             return names
+        }
+
+        // The names the input's pills show now, to be saved with its text.
+        function inputMentionNamesJson() {
+            const names = {}
+            const mentions = SQUtils.ModelUtils.modelToArray(chatInput.textInput.mentionsModel,
+                                                             ["pubKey", "name"])
+            // a pill's name carries the "@" that loadText() adds back
+            for (const mention of mentions)
+                names[mention.pubKey] = mention.name.replace(/^@/, "")
+            return JSON.stringify(names)
         }
 
         function setCurrentEditMessageOff() {
@@ -214,6 +247,7 @@ Item {
 
             if (!editMessageId) {
                 preEditInputText = chatInput.getTextWithPublicKeys()
+                preEditMentionNamesJson = d.inputMentionNamesJson()
                 preEditReplyMessageId = chatInput.replyMessageId
                 preEditFileUrlsAndSources = [...chatInput.fileUrlsAndSources]
             }
@@ -222,14 +256,16 @@ Item {
             chatInput.isEdit = true
             chatInput.resetReplyArea()
             chatInput.resetImageArea()
-            chatInput.textInput.loadText(unparsedText, d.mentionNames(unparsedText))
+            chatInput.textInput.loadText(unparsedText,
+                                         d.messageMentionNames(unparsedText, msg.mentionedNames))
             editOriginalInputText = chatInput.getTextWithPublicKeys()
             chatInput.forceInputActiveFocus()
             Qt.callLater(() => d.activeMessagesStore.jumpToMessage(messageId))
         }
 
         function restorePreEditInput() {
-            chatInput.textInput.loadText(preEditInputText, d.mentionNames(preEditInputText))
+            chatInput.textInput.loadText(preEditInputText,
+                                         d.draftMentionNames(preEditInputText, preEditMentionNamesJson))
             chatInput.replyMessageId = preEditReplyMessageId
 
             if (preEditReplyMessageId)
@@ -341,11 +377,11 @@ Item {
             chatInput.validateImagesAndShowImageArea(filesList)
         }
 
-        function restoreInputState(preservedText) {
+        function restoreInputState(preservedText, preservedMentionNamesJson) {
             // scheduled via Qt.callLater — it can fire while this view is
             // tearing down (chat/section switch), when the dying context has
             // already dropped its functions
-            if (typeof d.mentionNames !== "function")
+            if (typeof d.draftMentionNames !== "function")
                 return
 
             if (!d.activeChatContentModule) {
@@ -356,7 +392,8 @@ Item {
             }
 
             // Restore message text
-            chatInput.textInput.loadText(preservedText, d.mentionNames(preservedText))
+            chatInput.textInput.loadText(preservedText,
+                                         d.draftMentionNames(preservedText, preservedMentionNamesJson))
 
             d.restoreInputReply()
             d.restoreInputAttachments()
@@ -380,12 +417,11 @@ Item {
             editOriginalInputText = ""
             chatInput.isEdit = false
 
-            let preservedText = ""
-            preservedText = d.activeChatContentModule.inputAreaModule.preservedProperties.text
+            const preserved = d.activeChatContentModule.inputAreaModule.preservedProperties
 
             d.activeChatContentModule.inputAreaModule.clearLinkPreviewCache()
             // Call later to make sure usersStore and activeMessagesStore bindings are updated
-            Qt.callLater(d.restoreInputState, preservedText)
+            Qt.callLater(d.restoreInputState, preserved.text, preserved.mentionNamesJson)
         }
 
         // key can be either a group key or token key
@@ -434,6 +470,29 @@ Item {
 
             const num = SQUtils.AmountsArithmetic.toNumber(amount, decimals)
             return root.rootStore.currencyStore.formatCurrencyAmount(num, symbol, {noSymbol: true})
+        }
+    }
+
+    // Only an edit or a restored draft names the input's mentions, so the contacts-wide
+    // source behind them is built on first use
+    Loader {
+        id: mentionResolverLoader
+
+        active: false
+
+        sourceComponent: MentionResolver {
+            sourceModel: mentionNamesSource.model
+            nameRole: "preferredDisplayName"
+            selfPubKey: root.myPublicKey
+            selfName: root.rootStore?.name ?? ""
+            aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
+
+            MentionNamesAdaptor {
+                id: mentionNamesSource
+
+                chatUsersModel: root.usersModel
+                contactsModel: root.rootStore?.contactsModel ?? null
+            }
         }
     }
 
@@ -647,8 +706,10 @@ Item {
                         // (which holds ObjectReplacementCharacter placeholders for pills/emojis), so the
                         // draft can be restored with pills/emojis intact via loadText().
                         const wireText = chatInput.getTextWithPublicKeys()
-                        if (wireText !== d.activeChatContentModule.inputAreaModule.preservedProperties.text) {
-                            d.activeChatContentModule.inputAreaModule.preservedProperties.text = wireText
+                        const preserved = d.activeChatContentModule.inputAreaModule.preservedProperties
+                        if (wireText !== preserved.text) {
+                            preserved.text = wireText
+                            preserved.mentionNamesJson = d.inputMentionNamesJson()
                             d.updateLinkPreviews()
                         }
                     }

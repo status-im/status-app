@@ -2,7 +2,7 @@ import nimqml, tables, strutils, std/strformat
 
 import json
 
-import section_item, member_model, member_item
+import section_item
 import ../main/communities/tokens/models/[token_item, token_model]
 import model_utils
 import ../../../app_service/common/media_server_url
@@ -37,7 +37,6 @@ type
     Access
     EnsOnly
     Muted
-    MembersModel
     JoinedMembersCount
     HistoryArchiveSupportEnabled
     PinMessageAllMembersEnabled
@@ -46,7 +45,6 @@ type
     IsBanned
     IsPendingOwnershipRequest
     ActiveMembersCount
-    MembersLoaded
     TokensLoading
 
 QtObject:
@@ -115,7 +113,6 @@ QtObject:
       ModelRole.Access.int:"access",
       ModelRole.EnsOnly.int:"ensOnly",
       ModelRole.Muted.int:"muted",
-      ModelRole.MembersModel.int:"allMembers",
       ModelRole.JoinedMembersCount.int:"joinedMembersCount",
       ModelRole.HistoryArchiveSupportEnabled.int:"historyArchiveSupportEnabled",
       ModelRole.PinMessageAllMembersEnabled.int:"pinMessageAllMembersEnabled",
@@ -124,7 +121,6 @@ QtObject:
       ModelRole.IsBanned.int:"amIBanned",
       ModelRole.IsPendingOwnershipRequest.int:"isPendingOwnershipRequest",
       ModelRole.ActiveMembersCount.int:"activeMembersCount",
-      ModelRole.MembersLoaded.int:"membersLoaded",
       ModelRole.TokensLoading.int:"tokensLoading",
     }.toTable
 
@@ -187,8 +183,6 @@ QtObject:
       result = newQVariant(item.ensOnly)
     of ModelRole.Muted:
       result = newQVariant(item.muted)
-    of ModelRole.MembersModel:
-      result = newQVariant(item.members)
     of ModelRole.JoinedMembersCount:
       result = newQVariant(item.joinedMembersCount)
     of ModelRole.HistoryArchiveSupportEnabled:
@@ -205,8 +199,6 @@ QtObject:
       result = newQVariant(item.isPendingOwnershipRequest)
     of ModelRole.ActiveMembersCount:
       result = newQVariant(item.activeMembersCount)
-    of ModelRole.MembersLoaded:
-      result = newQVariant(item.membersLoaded)
     of ModelRole.TokensLoading:
       result = newQVariant(item.tokensLoading)
 
@@ -328,37 +320,6 @@ QtObject:
         isPendingOwnershipRequest,
         activeMembersCount,
         joinedMembersCount,
-      )
-
-      self.items[ind].members.updateToTheseItems(item.members.getItems())
-
-  proc updateMemberItemInSections*(
-      self: SectionModel,
-      pubKey: string,
-      displayName: string,
-      ensName: string,
-      isEnsVerified: bool,
-      localNickname: string,
-      alias: string,
-      icon: string,
-      isContact: bool,
-      isBlocked: bool,
-      trustStatus: TrustStatus,
-      contactRequest: ContactRequest,
-    ) =
-    for item in self.items:
-      item.members.updateItem(
-        pubKey,
-        displayName,
-        ensName,
-        isEnsVerified,
-        localNickname,
-        alias,
-        icon,
-        isContact,
-        isBlocked,
-        trustStatus,
-        contactRequest,
       )
 
   proc getNthEnabledItem*(self: SectionModel, nth: int): SectionItem =
@@ -504,14 +465,6 @@ QtObject:
         }
         return $jsonObj
 
-  proc setMembersAirdropAddress*(self: SectionModel, id: string, communityMembersAirdropAddress: Table[string, string]) = 
-    let index = self.getItemIndex(id)
-    if (index == -1):
-      return
-
-    for pubkey, airdropAddress in communityMembersAirdropAddress.pairs:
-      self.items[index].members.setAirdropAddress(pubkey, airdropAddress)
-
   proc setTokenItems*(self: SectionModel, id: string, communityTokensItems: seq[TokenItem]) =
     let index = self.getItemIndex(id)
     if (index == -1):
@@ -519,28 +472,9 @@ QtObject:
 
     self.items[index].communityTokens.setItems(communityTokensItems)
 
-  proc setMembersItems*(self: SectionModel, id: string, communityMembersItems: seq[MemberItem]) =
-    updateItemRolesAndNotify self.getItemIndex(id):
-      self.items[ind].members.setItems(communityMembersItems)
-      updateRoleWithValue(membersLoaded, true)
-
   proc setTokensLoading*(self: SectionModel, id: string, value: bool) =
     updateItemRolesAndNotify self.getItemIndex(id):
       updateRoleWithValue(tokensLoading, value)
-
-  proc addMember*(self: SectionModel, communityId: string, memberItem: MemberItem) =
-    let i = self.getItemIndex(communityId)
-    if i == -1:
-      return
-
-    self.items[i].members.addItem(memberItem)
-
-  proc removeMember*(self: SectionModel, communityId: string, memberId: string) =
-    let i = self.getItemIndex(communityId)
-    if i == -1:
-      return
-
-    self.items[i].members.removeItemById(memberId)
 
   proc setIsBanned*(self: SectionModel, communityId: string, isBanned: bool) =
     updateItemRolesAndNotify self.getItemIndex(communityId):

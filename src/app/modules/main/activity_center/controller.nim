@@ -1,3 +1,4 @@
+import tables
 import ./io_interface
 
 import ../../../global/app_signals
@@ -142,8 +143,9 @@ proc acceptActivityCenterNotification*(self: Controller,notificationId: string) 
 proc dismissActivityCenterNotification*(self: Controller,notificationId: string) =
   self.activityCenterService.dismissActivityCenterNotification(notificationId)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
-  return self.messageService.getRenderedText(parsedTextArray, communityChats)
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto],
+    mentionedNames = initTable[string, string]()): string =
+  return self.messageService.getRenderedText(parsedTextArray, communityChats, mentionedNames)
 
 proc switchTo*(self: Controller, sectionId, chatId, messageId: string) =
   let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: chatId, messageId: messageId)
