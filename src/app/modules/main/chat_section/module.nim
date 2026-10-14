@@ -14,6 +14,7 @@ import app/modules/shared_models/user_model as user_model
 import app/modules/shared_models/[token_permissions_model, token_permission_item, token_criteria_item, token_criteria_model, token_permission_chat_list_model, contacts_utils]
 import app/modules/shared_models/[community_roster_model, community_roster_holders, community_roster_handle]
 import app/modules/shared_models/[member_model, member_item]
+import admin_members
 
 import chat_content/module as chat_content_module
 
@@ -75,7 +76,7 @@ type
     # admin settings only: requests to join, banned and awaiting-address members
     adminMembers: member_model.Model
     adminMembersVariant: QVariant
-    adminMembersLoaded: bool
+    adminMembersState: AdminMembers
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -199,6 +200,7 @@ proc setupRoster(self: Module) =
   self.rosterVariant = newQVariant(self.roster)
   self.adminMembers = member_model.newModel()
   self.adminMembersVariant = newQVariant(self.adminMembers)
+  self.adminMembersState = newAdminMembers(self.adminMembers)
   self.rosterReleaseTimer = QTimer.create()
   self.rosterReleaseTimer.setSingleShot(true)
   self.rosterHolders = newRosterHolders(
@@ -634,29 +636,33 @@ method getAdminMembersModel*(self: Module): QVariant =
     return newQVariant()
   return self.adminMembersVariant
 
-method isAdminMembersLoaded*(self: Module): bool =
-  self.adminMembersLoaded
-
-method setAdminMembers*(self: Module, items: seq[MemberItem], rosterStates: Table[string, MembershipRequestState]) =
+method refreshAdminMembers*(self: Module, membership: AdminMembership,
+    buildItem: proc(entry: AdminMemberEntry): MemberItem) =
   if self.roster.isNil:
     return
-  if self.adminMembersLoaded:
-    self.adminMembers.updateToTheseItems(items)
-  else:
-    self.adminMembers.setItems(items)
-    self.adminMembersLoaded = true
-  self.roster.setMembershipStates(rosterStates)
+  let roster = self.roster
+  discard self.adminMembersState.refresh(membership, buildItem,
+    proc(states: Table[string, MembershipRequestState]) = roster.setMembershipStates(states))
+
+method isAdminMembersLoaded*(self: Module): bool =
+  not self.adminMembersState.isNil and self.adminMembersState.isLoaded()
+
+method releaseAdminMembers*(self: Module) =
+  if not self.adminMembersState.isNil:
+    self.adminMembersState.release()
 
 method addAdminMember*(self: Module, item: MemberItem) =
-  if self.adminMembersLoaded and not self.adminMembers.hasMember(item.pubKey):
+  if self.isAdminMembersLoaded() and not self.adminMembers.hasMember(item.pubKey):
     self.adminMembers.addItem(item)
+    self.adminMembersState.invalidate()
 
 method removeAdminMember*(self: Module, pubKey: string) =
-  if self.adminMembersLoaded:
+  if self.isAdminMembersLoaded():
     self.adminMembers.removeItemById(pubKey)
+    self.adminMembersState.invalidate()
 
 method setAdminMemberLoading*(self: Module, pubKey: string, declining: bool, loading: bool) =
-  if not self.adminMembersLoaded:
+  if not self.isAdminMembersLoaded():
     return
   if declining:
     self.adminMembers.updateDeclineLoadingState(pubKey, loading)
@@ -664,14 +670,15 @@ method setAdminMemberLoading*(self: Module, pubKey: string, declining: bool, loa
     self.adminMembers.updateLoadingState(pubKey, loading)
 
 method hasAdminMember*(self: Module, pubKey: string): bool =
-  self.adminMembersLoaded and self.adminMembers.hasMember(pubKey)
+  self.isAdminMembersLoaded() and self.adminMembers.hasMember(pubKey)
 
 method updateMembershipStatus*(self: Module, pubKey: string, state: MembershipRequestState) =
   if self.roster.isNil:
     return
   self.roster.setMembershipState(pubKey, state)
-  if self.adminMembersLoaded:
+  if self.isAdminMembersLoaded():
     self.adminMembers.updateMembershipStatus(pubKey, state)
+    self.adminMembersState.invalidate()
 
 method setMembersAirdropAddresses*(self: Module, addresses: Table[string, string]) =
   if self.roster.isNil:

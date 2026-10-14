@@ -505,6 +505,7 @@ StackLayout {
         isPendingOwnershipRequest: root.isPendingOwnershipRequest
         sectionItemModel: root.sectionItemModel
         communitySettingsDisabled: root.communitySettingsDisabled
+        settingsShown: root.currentIndex === 1
         leftPanelWidthOverride: root.leftPanelWidthOverride
 
         onBackToCommunityClicked: root.currentIndex = 0

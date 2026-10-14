@@ -7,6 +7,7 @@ include ../../../common/json_utils
 import ../../../common/conversion
 
 import ../../chat/dto/chat
+import roster
 import ../../shared_urls/dto/url_data
 import ../../../../app_service/common/types
 
@@ -673,3 +674,17 @@ proc getContractIdFromFirstAddress*(self: CommunityTokensMetadataDto): string =
     let contractId = ContractID(chainID: chainID, address: address)
     return contractId.toString()
   return ""
+proc takeJoinedRequests*(community: var CommunityDto, added: openArray[RosterMember]): seq[string] =
+  ## Removes the pending requests whose sender was added to the roster (the
+  ## request was accepted) and returns their keys, in request order.
+  if added.len == 0:
+    return
+  var i = 0
+  while i < community.pendingRequestsToJoin.len:
+    var key: RawPubKey
+    let pubKey = community.pendingRequestsToJoin[i].publicKey
+    if parseRawPubKey(pubKey, key) and added.anyIt(it.key == key):
+      result.add pubKey
+      community.pendingRequestsToJoin.delete(i)
+    else:
+      inc i

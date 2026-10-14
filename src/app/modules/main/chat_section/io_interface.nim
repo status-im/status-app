@@ -14,6 +14,9 @@ import ../../../../app/core/signals/types
 import model as chats_model
 import item as chat_item
 import ../../shared_models/member_item
+import admin_members
+
+export admin_members
 
 import ../../../core/unique_event_emitter
 
@@ -59,8 +62,11 @@ method getAdminMembersModel*(self: AccessInterface): QVariant {.base.} =
 method isAdminMembersLoaded*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method setAdminMembers*(self: AccessInterface, items: seq[MemberItem],
-    rosterStates: Table[string, MembershipRequestState]) {.base.} =
+method refreshAdminMembers*(self: AccessInterface, membership: AdminMembership,
+    buildItem: proc(entry: AdminMemberEntry): MemberItem) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseAdminMembers*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method addAdminMember*(self: AccessInterface, item: MemberItem) {.base.} =

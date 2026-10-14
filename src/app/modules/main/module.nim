@@ -2381,35 +2381,11 @@ proc createMemberItem[T](
   )
 
 proc refreshCommunityAdminMembers[T](self: Module[T], community: CommunityDto) =
-  ## Admin settings data: requests to join, banned and awaiting-address members as
-  ## items, plus the pending ban/kick states shown on joined (roster) members.
-  var items: seq[MemberItem]
-  var seen: HashSet[string]
-  var rosterStates: Table[string, MembershipRequestState]
-
-  proc addItem(pubKey, requestId: string, state: MembershipRequestState) =
-    if seen.containsOrIncl(pubKey):
-      return
-    items.add(self.createMemberItem(pubKey, requestId, state, MemberRole.None))
-
-  # Members kicked after an ownership change, re-joining once they share addresses
-  for request in community.waitingForSharedAddressesRequestsToJoin:
-    addItem(request.publicKey, "", MembershipRequestState.AwaitingAddress)
-  for request in community.pendingRequestsToJoin:
-    addItem(request.publicKey, request.id, MembershipRequestState(request.state))
-  for request in community.declinedRequestsToJoin:
-    addItem(request.publicKey, request.id, MembershipRequestState(request.state))
-  for memberId, memberState in community.pendingAndBannedMembers.pairs:
-    let state = memberState.toMembershipRequestState()
-    case state:
-      of MembershipRequestState.Banned, MembershipRequestState.BannedWithAllMessagesDelete, MembershipRequestState.UnbannedPending:
-        addItem(memberId, "", state)
-      of MembershipRequestState.BannedPending, MembershipRequestState.KickedPending:
-        rosterStates[memberId] = state
-      else:
-        discard
-
-  self.chatSectionModules[community.id].setAdminMembers(items, rosterStates)
+  ## Admin settings data; a no-op unless the requests to join, bans or pending
+  ## ban/kick states changed since the last refresh.
+  self.chatSectionModules[community.id].refreshAdminMembers(toAdminMembership(community),
+    proc(entry: AdminMemberEntry): MemberItem =
+      self.createMemberItem(entry.pubKey, entry.requestId, entry.state, MemberRole.None))
 
 method loadMembersForSectionId*[T](self: Module[T], sectionId: string) =
   let existingCommunity = self.view.model().getItemById(sectionId)
@@ -2426,6 +2402,14 @@ method loadMembersForSectionId*[T](self: Module[T], sectionId: string) =
 
   if sectionId in self.chatSectionModules:
     self.refreshCommunityAdminMembers(community)
+
+method loadAdminMembersForSectionId*[T](self: Module[T], sectionId: string) =
+  if sectionId in self.chatSectionModules:
+    self.refreshCommunityAdminMembers(self.controller.getCommunityById(sectionId))
+
+method releaseAdminMembersForSectionId*[T](self: Module[T], sectionId: string) =
+  if sectionId in self.chatSectionModules:
+    self.chatSectionModules[sectionId].releaseAdminMembers()
 
 method acquireCommunityRoster*[T](self: Module[T], communityId: string) =
   if communityId in self.chatSectionModules:

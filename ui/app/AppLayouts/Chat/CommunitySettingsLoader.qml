@@ -29,6 +29,8 @@ StatusSectionLoader {
     required property bool isPendingOwnershipRequest
     required property var sectionItemModel
     required property bool communitySettingsDisabled
+    // The admin members (requests to join, bans) are held only while settings show
+    required property bool settingsShown
 
     // Re-emitted because ChatLayout owns its StackLayout's currentIndex.
     signal backToCommunityClicked()
@@ -38,6 +40,23 @@ StatusSectionLoader {
     QtObject {
         id: d
         readonly property url url: Qt.resolvedUrl("../Communities/views/CommunitySettingsView.qml")
+
+        // token details and revealed accounts are fetched on the first show only
+        property bool membersLoaded: false
+
+        function updateAdminMembers() {
+            if (!root.sectionItemModel)
+                return
+            const sectionId = root.sectionItemModel.id
+            if (!root.active || !root.settingsShown) {
+                root.rootStore.releaseAdminMembersForSectionId(sectionId)
+            } else if (membersLoaded) {
+                root.rootStore.loadAdminMembersForSectionId(sectionId)
+            } else {
+                membersLoaded = true
+                root.rootStore.loadMembersForSectionId(sectionId)
+            }
+        }
     }
 
     function loadSection() {
@@ -65,11 +84,18 @@ StatusSectionLoader {
             permissionsModel:               Qt.binding(() => root.communityPermissionsStore.permissionsModel),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
         })
-        root.rootStore.loadMembersForSectionId(root.sectionItemModel.id)
     }
 
-    onActiveChanged: loadSection()
-    Component.onCompleted: loadSection()
+    onActiveChanged: {
+        loadSection()
+        d.updateAdminMembers()
+    }
+    onSettingsShownChanged: d.updateAdminMembers()
+    Component.onCompleted: {
+        loadSection()
+        if (root.active && root.settingsShown)
+            d.updateAdminMembers()
+    }
     onLoaded: item.visible = true
 
     Connections {

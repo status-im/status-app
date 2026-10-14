@@ -480,6 +480,12 @@ method stopTokenHoldersManagement*(self: AccessInterface) {.base.} =
 method loadMembersForSectionId*(self: AccessInterface, sectionId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method loadAdminMembersForSectionId*(self: AccessInterface, sectionId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseAdminMembersForSectionId*(self: AccessInterface, sectionId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method acquireCommunityRoster*(self: AccessInterface, communityId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

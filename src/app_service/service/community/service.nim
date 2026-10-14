@@ -2606,15 +2606,7 @@ QtObject:
         continue
       var joined: seq[string]
       self.communities.withValue(delta.communityId, community):
-        var i = 0
-        while i < community[].pendingRequestsToJoin.len:
-          var key: RawPubKey
-          let pubKey = community[].pendingRequestsToJoin[i].publicKey
-          if parseRawPubKey(pubKey, key) and delta.added.anyIt(it.key == key):
-            joined.add pubKey
-            community[].pendingRequestsToJoin.delete(i)
-          else:
-            inc i
+        joined = community[].takeJoinedRequests(delta.added)
       for pubKey in joined:
         self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
           communityId: delta.communityId,
