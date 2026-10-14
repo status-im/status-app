@@ -447,8 +447,14 @@ proc init*(self: Controller) =
 proc isCommunity*(self: Controller): bool =
   return self.isCommunitySection
 
-proc loadCommunityRoster*(self: Controller) =
-  self.communityService.loadCommunityRoster(self.sectionId)
+proc loadCommunityRoster*(self: Controller, orderInputs: proc(): RosterOrderInputs) =
+  self.communityService.loadCommunityRoster(self.sectionId, orderInputs)
+
+proc onlinePubKeys*(self: Controller): seq[string] =
+  self.contactService.onlinePubKeys()
+
+proc namedContactKeys*(self: Controller): seq[string] =
+  self.contactService.namedContactKeys()
 
 proc releaseCommunityRoster*(self: Controller) =
   self.communityService.releaseCommunityRoster(self.sectionId)

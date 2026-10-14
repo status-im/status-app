@@ -1,4 +1,4 @@
-import std/[strformat, unicode]
+import std/strformat
 import app_service/common/types
 import app_service/service/contacts/dto/contacts
 import contacts_utils
@@ -51,21 +51,6 @@ type
     isContactRequestSent: bool
     isRemoved: bool
     trustStatus: TrustStatus
-
-# Rune-wise simple-casefold compare — the name leg of the canonical member
-# order. Deliberately code-point based, not locale-collation aware.
-proc cmpFoldedNames(a, b: string): int =
-  var i = 0
-  var j = 0
-  while i < a.len and j < b.len:
-    var ra, rb: Rune
-    fastRuneAt(a, i, ra)
-    fastRuneAt(b, j, rb)
-    let fa = toLower(ra)
-    let fb = toLower(rb)
-    if fa != fb:
-      return cmp(fa.int32, fb.int32)
-  cmp(a.len - i, b.len - j)
 
 # Canonical member order (see CONTEXT.md): online first, then case-folded
 # preferred display name, then pubKey. The pubKey leg makes the order total, so

@@ -468,6 +468,19 @@ QtObject:
       return details
     nil
 
+  proc onlinePubKeys*(self: Service): seq[string] =
+    ## Keys whose last status update says online; the own key is not included.
+    for pubKey, status in self.contactsStatus.pairs:
+      if toOnlineStatus(status.statusType) == OnlineStatus.Online:
+        result.add pubKey
+
+  proc namedContactKeys*(self: Service): seq[string] =
+    ## Cached contacts whose name can differ from their profile: contacts and
+    ## anyone with a local nickname.
+    for pubKey, details in self.contacts.pairs:
+      if details.dto.isContact or details.dto.localNickname.len > 0:
+        result.add pubKey
+
   proc getContactColorId*(self: Service, id: string): int =
     var pubkey = id
 

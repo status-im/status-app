@@ -6,6 +6,7 @@ import ./dto/community as community_dto
 import ./dto/sign_params as sign_params_dto
 import ./dto/roster as roster_dto
 import ./roster_sync
+import ./roster_order
 import ../community_tokens/dto/community_token as community_token_dto
 
 import ../activity_center/service as activity_center_service
@@ -28,7 +29,7 @@ import ../../../app_service/common/types
 
 include ./async_tasks
 
-export community_dto, sign_params_dto, roster_dto
+export community_dto, sign_params_dto, roster_dto, roster_order
 
 logScope:
   topics = "community-service"
@@ -292,6 +293,8 @@ QtObject:
       # only communities whose roster is loading or loaded have an entry
       rosterSyncs: Table[string, RosterSync]
       rosterLoadGeneration: int
+      # what each roster load worker sorts by, read when the load starts
+      rosterOrderInputs: Table[string, proc(): RosterOrderInputs]
 
   # Forward declaration
   proc asyncLoadCuratedCommunities*(self: Service)
@@ -2556,17 +2559,21 @@ QtObject:
       error "error marking all read in community", msg = e.msg
 
   proc startCommunityRosterLoad(self: Service, communityId: string, generation: int) =
+    let orderInputs = self.rosterOrderInputs.getOrDefault(communityId)
     let arg = AsyncLoadCommunityRosterTaskArg(
       tptr: asyncLoadCommunityRosterTask,
       vptr: cast[uint](self.vptr),
       slot: "onAsyncCommunityRosterLoaded",
       communityId: communityId,
       generation: generation,
+      orderInputs: if orderInputs.isNil: RosterOrderInputs() else: orderInputs(),
     )
     self.threadpool.start(arg)
 
-  proc loadCommunityRoster*(self: Service, communityId: string) =
-    ## Loads the roster snapshot on a worker unless it is loading or loaded.
+  proc loadCommunityRoster*(self: Service, communityId: string, orderInputs: proc(): RosterOrderInputs) =
+    ## Loads the roster snapshot on a worker unless it is loading or loaded;
+    ## the worker sorts it by `orderInputs`.
+    self.rosterOrderInputs[communityId] = orderInputs
     inc self.rosterLoadGeneration
     let generation = self.rosterLoadGeneration
     if not self.rosterSyncs.mgetOrPut(communityId, RosterSync()).beginLoad(generation):
@@ -2586,6 +2593,7 @@ QtObject:
   proc releaseCommunityRoster*(self: Service, communityId: string) =
     ## Forgets the roster; deltas are ignored and an in-flight load is dropped.
     self.rosterSyncs.del(communityId)
+    self.rosterOrderInputs.del(communityId)
 
   proc onAsyncCommunityRosterLoaded*(self: Service, response: string) {.slot.} =
     let res = takeTyped[CommunityRosterLoadResult](response)

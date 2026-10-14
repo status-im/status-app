@@ -44,9 +44,16 @@ type
     # gated, and who is in them, may have changed
     permissionsChanged*: bool
 
+  ## A member's place in the canonical order (roster_order).
+  RosterSortKey* = object
+    online*: bool
+    name*: string
+
   RosterSnapshot* = object
     clock*: uint64
     members*: seq[RosterMember]
+    # set when sorted on the load worker, one per member
+    sortKeys*: seq[RosterSortKey]
     # token-gated channels only, keyed by channel id (without the community prefix)
     channels*: Table[string, seq[ChannelMember]]
 

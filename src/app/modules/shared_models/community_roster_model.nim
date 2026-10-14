@@ -1,13 +1,15 @@
 ## One community's member roster: a slim entry per member plus a key -> row
 ## table. Filled on demand by one insert; every delta after that is a single
-## insert, remove or dataChanged. data() never calls the backend: it reads the
-## entry, the contacts cache (through `RosterLookups.contact`) and the online
-## status table. Rows keep the snapshot order; views sort and filter in proxies.
+## insert, remove, move or dataChanged. data() never calls the backend: it reads
+## the entry, the contacts cache (through `RosterLookups.contact`) and the online
+## status table. Rows keep the canonical member order (roster_order): views bind
+## without sorting proxies.
 
-import nimqml, std/[tables, json, strutils]
+import nimqml, std/[algorithm, tables, json, strutils]
 
 import app_service/common/types
 import app_service/service/community/dto/roster
+import app_service/service/community/roster_order
 import user_item
 import contacts_utils
 import model_utils
@@ -74,6 +76,10 @@ const
     ModelRole.IsVerified, ModelRole.IsUntrustworthy, ModelRole.TrustStatus,
     ModelRole.IsBlocked, ModelRole.ContactRequest]
 
+proc names*(contact: RosterContact): RosterNames =
+  RosterNames(localNickname: contact.localNickname, displayName: contact.displayName,
+    ensName: contact.ensName, ensVerified: contact.ensVerified, alias: contact.alias)
+
 QtObject:
   type
     CommunityRosterModel* = ref object of QAbstractListModel
@@ -82,6 +88,8 @@ QtObject:
       myKey: RawPubKey
       hasMyKey: bool
       members: seq[RosterMember]
+      # one per member: its place in the canonical order
+      sortKeys: seq[RosterSortKey]
       rows: Table[RawPubKey, int]
       # keyed by channel uuid, as on the wire; the API speaks full chat ids
       channels: Table[string, Table[RawPubKey, ChannelRole]]
@@ -204,8 +212,7 @@ QtObject:
     of ModelRole.DisplayName:
       newQVariant(displayName)
     of ModelRole.PreferredDisplayName:
-      newQVariant(resolvePreferredDisplayName(contact.localNickname, effectiveEnsName,
-        displayName, alias))
+      newQVariant(preferredName(member, contact.names))
     of ModelRole.UsesDefaultName:
       newQVariant(resolveUsesDefaultName(contact.localNickname, effectiveEnsName, displayName))
     of ModelRole.EnsName:
@@ -295,6 +302,7 @@ QtObject:
         recordBeginRemoveRows(0, self.members.len - 1)
       self.beginRemoveRows(parentIndex, 0, self.members.len - 1)
       self.members = @[]
+      self.sortKeys = @[]
       self.rows.clear()
       self.endRemoveRows()
       when defined(QT_MODEL_SPY):
@@ -304,24 +312,82 @@ QtObject:
       self.emitChannelMembersChanged(chatId)
     self.setLoaded(false)
 
+  proc sortKeyOf(self: CommunityRosterModel, member: RosterMember): RosterSortKey =
+    let pubKey = toPubKeyHex(member.key)
+    RosterSortKey(online: self.lookups.onlineStatus(pubKey) == OnlineStatus.Online,
+      name: preferredName(member, self.lookups.contact(pubKey).names))
+
+  proc sortedRow(self: CommunityRosterModel, key: RosterSortKey, memberKey: RawPubKey,
+      skip = -1): int =
+    ## Where a member goes among the other rows, which are sorted; `skip` is
+    ## its own row when it already has one.
+    var lo = 0
+    var hi = self.members.len - (if skip >= 0: 1 else: 0)
+    while lo < hi:
+      let mid = (lo + hi) div 2
+      let row = if skip >= 0 and mid >= skip: mid + 1 else: mid
+      if cmpRosterOrder(self.sortKeys[row], self.members[row].key, key, memberKey) < 0:
+        lo = mid + 1
+      else:
+        hi = mid
+    lo
+
+  proc reindexRows(self: CommunityRosterModel, first, last: int) =
+    for row in first .. last:
+      self.rows[self.members[row].key] = row
+
+  proc reposition(self: CommunityRosterModel, row: int) =
+    ## Moves a row whose sort key changed to its place, as one move.
+    let dest = self.sortedRow(self.sortKeys[row], self.members[row].key, skip = row)
+    if dest == row:
+      return
+    # Qt wants destinationChild in pre-move coordinates
+    let destChild = if dest > row: dest + 1 else: dest
+    let parentIndex = newQModelIndex()
+    defer: parentIndex.delete
+    when defined(QT_MODEL_SPY):
+      recordBeginMoveRows(row, row, destChild)
+    self.beginMoveRows(parentIndex, row, row, parentIndex, destChild)
+    var member = move(self.members[row])
+    var key = move(self.sortKeys[row])
+    self.members.delete(row)
+    self.sortKeys.delete(row)
+    self.members.insert(move(member), dest)
+    self.sortKeys.insert(move(key), dest)
+    self.reindexRows(min(row, dest), max(row, dest))
+    self.endMoveRows()
+    when defined(QT_MODEL_SPY):
+      recordEndMoveRows()
+
+  proc resort(self: CommunityRosterModel, row: int) =
+    let key = self.sortKeyOf(self.members[row])
+    if key != self.sortKeys[row]:
+      self.sortKeys[row] = key
+      self.reposition(row)
+
+  proc insertSorted(self: CommunityRosterModel, member: sink RosterMember, key: sink RosterSortKey) =
+    let row = self.sortedRow(key, member.key)
+    let parentIndex = newQModelIndex()
+    defer: parentIndex.delete
+    when defined(QT_MODEL_SPY):
+      recordBeginInsertRows(row, row)
+    self.beginInsertRows(parentIndex, row, row)
+    self.members.insert(member, row)
+    self.sortKeys.insert(key, row)
+    self.reindexRows(row, self.members.len - 1)
+    self.endInsertRows()
+    when defined(QT_MODEL_SPY):
+      recordEndInsertRows()
+    self.countChanged()
+
   proc upsert(self: CommunityRosterModel, member: RosterMember) =
     let row = self.rows.getOrDefault(member.key, -1)
     if row >= 0:
       self.members[row] = member
       self.notifyRowAll(row)
+      self.resort(row)
       return
-    let parentIndex = newQModelIndex()
-    defer: parentIndex.delete
-    let newRow = self.members.len
-    when defined(QT_MODEL_SPY):
-      recordBeginInsertRows(newRow, newRow)
-    self.beginInsertRows(parentIndex, newRow, newRow)
-    self.members.add member
-    self.rows[member.key] = newRow
-    self.endInsertRows()
-    when defined(QT_MODEL_SPY):
-      recordEndInsertRows()
-    self.countChanged()
+    self.insertSorted(member, self.sortKeyOf(member))
 
   proc remove(self: CommunityRosterModel, key: RawPubKey) =
     let row = self.rows.getOrDefault(key, -1)
@@ -333,9 +399,10 @@ QtObject:
       recordBeginRemoveRows(row, row)
     self.beginRemoveRows(parentIndex, row, row)
     self.members.delete(row)
+    self.sortKeys.delete(row)
     self.rows.del(key)
-    for i in row ..< self.members.len:
-      self.rows[self.members[i].key] = i
+    if row < self.members.len:
+      self.reindexRows(row, self.members.len - 1)
     self.membershipStates.del(key)
     self.airdropAddresses.del(key)
     self.endRemoveRows()
@@ -343,57 +410,85 @@ QtObject:
       recordEndRemoveRows()
     self.countChanged()
 
-  proc appendMembers(self: CommunityRosterModel, members: sink seq[RosterMember]) =
-    if members.len == 0:
-      return
-    let parentIndex = newQModelIndex()
-    defer: parentIndex.delete
-    let first = self.members.len
-    let last = first + members.len - 1
-    when defined(QT_MODEL_SPY):
-      recordBeginInsertRows(first, last)
-    self.beginInsertRows(parentIndex, first, last)
-    for member in members.mitems:
-      self.rows[member.key] = self.members.len
-      self.members.add move(member)
-    self.endInsertRows()
-    when defined(QT_MODEL_SPY):
-      recordEndInsertRows()
-    self.countChanged()
-
   proc fill*(self: CommunityRosterModel, snapshot: sink RosterSnapshot) =
-    ## Loads the roster, or brings a loaded one to a reloaded snapshot with
-    ## per-row removes, one dataChanged and one insert (no reset).
+    ## Loads the roster with one insert, or brings a loaded one to a reloaded
+    ## snapshot with per-row removes, moves and inserts (no reset). A snapshot
+    ## the load worker did not sort is sorted here.
+    if snapshot.sortKeys.len != snapshot.members.len:
+      snapshot.sortKeys.setLen(0)
+      for member in snapshot.members:
+        snapshot.sortKeys.add self.sortKeyOf(member)
+      var order = newSeq[int](snapshot.members.len)
+      for i in 0 ..< order.len:
+        order[i] = i
+      order.sort(proc(i, j: int): int =
+        cmpRosterOrder(snapshot.sortKeys[i], snapshot.members[i].key,
+          snapshot.sortKeys[j], snapshot.members[j].key))
+      var members = newSeqOfCap[RosterMember](order.len)
+      var keys = newSeqOfCap[RosterSortKey](order.len)
+      for i in order:
+        members.add move(snapshot.members[i])
+        keys.add move(snapshot.sortKeys[i])
+      snapshot.members = move(members)
+      snapshot.sortKeys = move(keys)
+
     var firstIndex = initTable[RawPubKey, int](snapshot.members.len)
     for i, member in snapshot.members:
       discard firstIndex.hasKeyOrPut(member.key, i)
-    var row = self.members.len - 1
-    while row >= 0:
-      # a copy: remove() shifts the row the key would alias
-      let key = self.members[row].key
-      if not firstIndex.hasKey(key):
-        self.remove(key)
-      dec row
-    let kept = self.members.len
-    var added: seq[RosterMember]
-    for i, member in snapshot.members.mpairs:
-      if firstIndex[member.key] != i:
-        continue
-      let existing = self.rows.getOrDefault(member.key, -1)
-      if existing >= 0:
-        self.members[existing] = move(member)
-      else:
-        added.add move(member)
-    if kept > 0:
-      when defined(QT_MODEL_SPY):
-        recordDataChanged(0, kept - 1, @[])
-      let first = self.createIndex(0, 0, nil)
-      let last = self.createIndex(kept - 1, 0, nil)
-      defer:
-        first.delete
-        last.delete
-      self.dataChanged(first, last)
-    self.appendMembers(added)
+
+    if self.members.len == 0:
+      var members = newSeqOfCap[RosterMember](snapshot.members.len)
+      var keys = newSeqOfCap[RosterSortKey](snapshot.members.len)
+      for i in 0 ..< snapshot.members.len:
+        if firstIndex[snapshot.members[i].key] != i:
+          continue
+        self.rows[snapshot.members[i].key] = members.len
+        members.add move(snapshot.members[i])
+        keys.add move(snapshot.sortKeys[i])
+      if members.len > 0:
+        let parentIndex = newQModelIndex()
+        defer: parentIndex.delete
+        when defined(QT_MODEL_SPY):
+          recordBeginInsertRows(0, members.len - 1)
+        self.beginInsertRows(parentIndex, 0, members.len - 1)
+        self.members = move(members)
+        self.sortKeys = move(keys)
+        self.endInsertRows()
+        when defined(QT_MODEL_SPY):
+          recordEndInsertRows()
+        self.countChanged()
+    else:
+      var row = self.members.len - 1
+      while row >= 0:
+        # a copy: remove() shifts the row the key would alias
+        let key = self.members[row].key
+        if not firstIndex.hasKey(key):
+          self.remove(key)
+        dec row
+      # each kept row moves to its new place while the others stay sorted
+      var newcomers: seq[int]
+      for i in 0 ..< snapshot.members.len:
+        if firstIndex[snapshot.members[i].key] != i:
+          continue
+        let existing = self.rows.getOrDefault(snapshot.members[i].key, -1)
+        if existing < 0:
+          newcomers.add i
+          continue
+        self.members[existing] = move(snapshot.members[i])
+        if self.sortKeys[existing] != snapshot.sortKeys[i]:
+          self.sortKeys[existing] = move(snapshot.sortKeys[i])
+          self.reposition(existing)
+      if self.members.len > 0:
+        when defined(QT_MODEL_SPY):
+          recordDataChanged(0, self.members.len - 1, @[])
+        let first = self.createIndex(0, 0, nil)
+        let last = self.createIndex(self.members.len - 1, 0, nil)
+        defer:
+          first.delete
+          last.delete
+        self.dataChanged(first, last)
+      for i in newcomers:
+        self.insertSorted(move(snapshot.members[i]), move(snapshot.sortKeys[i]))
 
     var changedChannels: seq[string]
     for chatId in self.channels.keys:
@@ -453,11 +548,17 @@ QtObject:
     let row = self.rowOf(pubKey)
     if row >= 0:
       self.notifyRow(row, ContactRoles)
+      self.resort(row)
 
   proc onlineStatusChanged*(self: CommunityRosterModel, pubKey: string) =
     let row = self.rowOf(pubKey)
     if row >= 0:
       self.notifyRow(row, [ModelRole.OnlineStatus])
+      self.resort(row)
+
+  when defined(QT_MODEL_SPY):
+    proc rowOfMember*(self: CommunityRosterModel, pubKey: string): int =
+      self.rowOf(pubKey)
 
   proc setMembershipState(self: CommunityRosterModel, key: RawPubKey, state: MembershipRequestState) =
     if self.membershipStates.getOrDefault(key, MembershipRequestState.Accepted) == state:
