@@ -20,6 +20,9 @@ import StatusQ.Core.Utils as SQUtils
    later starts resolving
  - the local user resolves too, since neither input carries them in a 1:1 — the
    contacts model leaves the local user out and the chat's users are mutual contacts
+ - only contacts with a name of their own (or added ones) resolve: an alias-only
+   contacts-cache entry would hide the name the message carries
+   (MentionResolver's knownNames)
 */
 Item {
     id: root
@@ -30,10 +33,20 @@ Item {
         ListElement {
             pubKey: "0xalice"
             preferredDisplayName: "Alice"
+            usesDefaultName: false
+            isContact: false
         }
         ListElement {
             pubKey: "0xbob"
             preferredDisplayName: "Bob in this chat"
+            usesDefaultName: false
+            isContact: false
+        }
+        ListElement {
+            pubKey: "0xfrank"
+            preferredDisplayName: "Frank's Alias"
+            usesDefaultName: true
+            isContact: false
         }
     }
 
@@ -43,10 +56,26 @@ Item {
         ListElement {
             pubKey: "0xbob"
             preferredDisplayName: "Bob"
+            usesDefaultName: false
+            isContact: true
         }
         ListElement {
             pubKey: "0xcarol"
             preferredDisplayName: "Carol"
+            usesDefaultName: false
+            isContact: true
+        }
+        ListElement {
+            pubKey: "0xdave"
+            preferredDisplayName: "Dave's Alias"
+            usesDefaultName: true
+            isContact: false
+        }
+        ListElement {
+            pubKey: "0xerin"
+            preferredDisplayName: "Erin's Alias"
+            usesDefaultName: true
+            isContact: true
         }
     }
 
@@ -117,6 +146,34 @@ Item {
             compare(nameOf(adaptor, "0xalice"), "Alice")
         }
 
+        // a contacts-cache entry with only an alias (e.g. a contact request stranger)
+        function test_aliasOnlyContactDoesNotResolve() {
+            const adaptor = createTemporaryObject(adaptorComponent, root)
+            compare(nameOf(adaptor, "0xdave"), null)
+        }
+
+        // the chat's own rows are not narrowed: an alias there is what the roster knows
+        function test_aliasOnlyChatMemberResolves() {
+            const adaptor = createTemporaryObject(adaptorComponent, root)
+            compare(nameOf(adaptor, "0xfrank"), "Frank's Alias")
+        }
+
+        // an added contact counts as a name of its own, like the Nim renderer
+        function test_addedContactWithoutANameResolves() {
+            const adaptor = createTemporaryObject(adaptorComponent, root)
+            compare(nameOf(adaptor, "0xerin"), "Erin's Alias")
+        }
+
+        // a contact naming themselves starts resolving
+        function test_contactGainingANameResolves() {
+            const adaptor = createTemporaryObject(adaptorComponent, root)
+            contactsSource.setProperty(2, "preferredDisplayName", "Dave")
+            contactsSource.setProperty(2, "usesDefaultName", false)
+            compare(nameOf(adaptor, "0xdave"), "Dave")
+            contactsSource.setProperty(2, "preferredDisplayName", "Dave's Alias")
+            contactsSource.setProperty(2, "usesDefaultName", true)
+        }
+
         // being mentioned yourself in a DM used to show your own chat key
         function test_resolvesSelf() {
             const adaptor = createTemporaryObject(adaptorComponent, root, {
@@ -128,7 +185,7 @@ Item {
         function test_noSelfRowWithoutAKey() {
             const adaptor = createTemporaryObject(adaptorComponent, root)
             compare(nameOf(adaptor, ""), null)
-            compare(SQUtils.ModelUtils.modelToArray(adaptor.model, ["pubKey"]).length, 4)
+            compare(SQUtils.ModelUtils.modelToArray(adaptor.model, ["pubKey"]).length, 6)
         }
 
         // a real row for the same key keeps precedence over the appended self row

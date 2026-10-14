@@ -44,7 +44,6 @@ StatusDialog {
         sourceModel: root.mentionNames?.model ?? null
         nameRole: "preferredDisplayName"
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
-        contactInfoRequester: pubKey => root.rootStore?.requestContactInfo(pubKey)
     }
 
 
@@ -103,7 +102,8 @@ StatusDialog {
                     amISender: model.amISender
                     messageText: model.messageText
                     unparsedText: model.unparsedText
-                    mentionsMap: root.mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
+                    mentionsMap: root.mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText,
+                                                                 model.mentionedNames)
                     messageImage: model.messageImage
                     messageTimestamp: model.timestamp
                     messageOutgoingStatus: model.outgoingStatus

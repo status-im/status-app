@@ -52,7 +52,8 @@ Item {
     }
 
     // Resolves mention pub keys to display names. Reactive to member/contact
-    // name changes; "everyone" is built in.
+    // name changes; "everyone" is built in. A mention the models cannot name
+    // takes the message's own mentionedNames, then an alias.
     MentionResolver {
         id: mentionResolver
 
@@ -60,7 +61,6 @@ Item {
         sourceModel: mentionNames.model
         nameRole: "preferredDisplayName"
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
-        contactInfoRequester: pubKey => root.rootStore?.requestContactInfo(pubKey)
     }
 
     // Contacts related data:
@@ -388,7 +388,8 @@ Item {
             usersModel: root.usersModel
             // covers the message body and the quoted reply, whose mentions
             // also render through this map
-            mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
+            mentionsMap: mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText,
+                                                   model.mentionedNames)
 
             isChatBlocked: root.isChatBlocked
             joined: root.joined

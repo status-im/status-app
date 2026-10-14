@@ -3,6 +3,7 @@ import QtQuick
 import StatusQ.Core.Utils
 
 import QtModelsToolkit
+import SortFilterProxyModel
 
 // Union of the chat's own user list and every contact the local user knows about,
 // keyed by pubKey. This is the lookup source for turning the "@0x…" mentions on the
@@ -11,7 +12,9 @@ import QtModelsToolkit
 // mutual contact), and such a mention must still render as a name rather than a raw
 // chat key.
 //
-// Members come first, so a name the chat itself knows wins over a contact entry. The
+// Members come first, so a name the chat itself knows wins over a contact entry.
+// Contacts with only an alias are left out, so the name the message carries
+// (MentionResolver's knownNames) is used for them instead. The
 // local user is appended last, because neither of the other two sources carries them:
 // the Nim contacts model leaves the local user out, and in a 1:1 the chat's users are
 // the mutual contacts. Without that row, being mentioned yourself in a DM shows you
@@ -23,7 +26,8 @@ QObject {
     // for them in a 1:1. Needs the `pubKey` and `preferredDisplayName` roles.
     property var chatUsersModel
 
-    // Every contact known locally, mutual or not (RootStore.contactsModel). Same roles.
+    // Every contact known locally, mutual or not (RootStore.contactsModel). Same roles,
+    // plus `usesDefaultName` and `isContact`.
     property var contactsModel
 
     // The local user, for mentions of themselves. No row is added while the key is empty.
@@ -51,6 +55,23 @@ QObject {
         exposedRoles: concatModel.expectedRoles
     }
 
+    SortFilterProxyModel {
+        id: namedContacts
+
+        sourceModel: root.contactsModel ?? null
+
+        filters: AnyOf {
+            ValueFilter {
+                roleName: "usesDefaultName"
+                value: false
+            }
+            ValueFilter {
+                roleName: "isContact"
+                value: true
+            }
+        }
+    }
+
     ConcatModel {
         id: concatModel
 
@@ -59,7 +80,7 @@ QObject {
                 model: root.chatUsersModel ?? null
             },
             SourceModel {
-                model: root.contactsModel ?? null
+                model: root.contactsModel ? namedContacts : null
             },
             SourceModel {
                 model: root.selfPubKey ? selfModel : null

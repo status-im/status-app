@@ -1,4 +1,6 @@
-import unittest
+import std/[unittest, tables, json]
+
+import nimqml
 
 import app_service/common/types
 import app_service/service/contacts/dto/contact_details
@@ -625,3 +627,37 @@ suite "contact updates on bridged messages":
     check(item.senderIsAdded)
     check(item.senderTrustStatus == TrustStatus.Trusted)
     check(item.senderEnsVerified)
+
+proc mentionedNamesOf(model: Model, row: int): JsonNode =
+  var role = -1
+  for r, name in model.roleNames().pairs:
+    if name == "mentionedNames":
+      role = r
+  require(role >= 0)
+  let raw = model.data(model.createIndex(row, 0, nil), role).stringVal
+  if raw.len == 0: newJObject() else: parseJson(raw)
+
+suite "mentioned names":
+  const alice = "0x04aa"
+
+  test "the role carries the names status-go sent with the message":
+    let model = newModel()
+    let item = createTestMessageItem("0xf", 5)
+    item.mentionedNames = {alice: "alice"}.toTable
+    model.insertItemBasedOnClock(item)
+    check(model.mentionedNamesOf(0) == %*{alice: "alice"})
+
+  test "a message without mentions has none":
+    let model = newModel()
+    model.insertItemBasedOnClock(createTestMessageItem("0x10", 6))
+    check(model.mentionedNamesOf(0) == newJObject())
+
+  test "an edit replaces them":
+    let model = newModel()
+    let item = createTestMessageItem("0x11", 7)
+    item.mentionedNames = {alice: "alice"}.toTable
+    model.insertItemBasedOnClock(item)
+    model.updateEditedMsg("0x11", "", "", @[], ContentType.Unknown, mentioned = false,
+      messageContainsMentions = true, links = @[], mentionedUsersPks = @[alice],
+      mentionedNames = {alice: "alicia"}.toTable)
+    check(model.mentionedNamesOf(0) == %*{alice: "alicia"})
