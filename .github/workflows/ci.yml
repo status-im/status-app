@@ -65,10 +65,10 @@ jobs:
             libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
             libxkbfile1 libxslt1.1 libgtk-3-0 libcups2 libatk1.0-0
 
-      - name: Install make and OpenSSL
+      - name: Install make, OpenSSL and pkg-config
         if: runner.os == 'Windows'
         run: |
-          choco install make openssl -y --no-progress
+          choco install make openssl pkgconfiglite -y --no-progress
           for d in "/c/Program Files/OpenSSL-Win64" "/c/Program Files/OpenSSL"; do
             if [ -d "$d/include/openssl" ]; then echo "OPENSSL_ROOT_DIR=$(cygpath -w "$d")" >> "$GITHUB_ENV"; break; fi
           done
