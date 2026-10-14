@@ -29,11 +29,17 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
+            qt-host: linux
             qt-arch: linux_gcc_64
+            qt-dir: gcc_64
           - os: macos-latest
+            qt-host: mac
             qt-arch: clang_64
+            qt-dir: macos
           - os: windows-latest
+            qt-host: windows
             qt-arch: win64_msvc2022_64
+            qt-dir: msvc2022_64
     defaults:
       run:
         shell: bash
@@ -58,24 +64,47 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make -y --no-progress
 
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: runner.os == 'Windows'
-
-      - uses: jurplel/install-qt-action@v4
+      - uses: actions/setup-python@v5
         with:
-          version: ${{ env.QT_VERSION }}
-          arch: ${{ matrix.qt-arch }}
-          modules: ${{ env.QT_MODULES }}
-          cache: true
+          python-version: '3.12'
+
+      - name: Cache Qt
+        id: qt-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/Qt
+          key: qt-${{ env.QT_VERSION }}-${{ matrix.qt-arch }}-${{ hashFiles('.github/workflows/ci.yml') }}
+
+      - name: Install Qt
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        run: |
+          pip install -q aqtinstall
+          python -m aqt install-qt ${{ matrix.qt-host }} desktop "$QT_VERSION" ${{ matrix.qt-arch }} \
+            -m $QT_MODULES -O "${{ runner.temp }}/Qt" --timeout 3000
+
+      - name: Put Qt on PATH
+        run: |
+          qtdir="${{ runner.temp }}/Qt/$QT_VERSION/${{ matrix.qt-dir }}"
+          echo "QTDIR=$qtdir" >> "$GITHUB_ENV"
+          echo "QMAKE=$qtdir/bin/qmake" >> "$GITHUB_ENV"
+          echo "$qtdir/bin" >> "$GITHUB_PATH"
+          echo "$qtdir/libexec" >> "$GITHUB_PATH"
 
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - uses: jiro4989/setup-nim-action@v2
-        with:
-          nim-version: ${{ env.NIM_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Nim ${{ env.NIM_VERSION }}
+        run: |
+          if [ "${{ runner.os }}" = Windows ]; then
+            curl -sSfL -o nim.zip "https://nim-lang.org/download/nim-${NIM_VERSION}_x64.zip"
+            unzip -q nim.zip -d "$HOME"
+            echo "$HOME/nim-${NIM_VERSION}/bin" >> "$GITHUB_PATH"
+          else
+            curl -sSf https://nim-lang.org/choosenim/init.sh | sh -s -- -y
+            "$HOME/.nimble/bin/choosenim" "$NIM_VERSION"
+            echo "$HOME/.nimble/bin" >> "$GITHUB_PATH"
+          fi
 
       - name: Install Nimble ${{ env.NIMBLE_VERSION }}
         run: |
@@ -102,6 +131,15 @@ jobs:
           curl -sSfL -o protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-${asset}.zip"
           mkdir -p "$HOME/protoc" && unzip -q -o protoc.zip -d "$HOME/protoc"
           echo "$HOME/protoc/bin" >> "$GITHUB_PATH"
+
+      - name: Load the MSVC environment
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          cmd /c "`"$vs\VC\Auxiliary\Build\vcvars64.bat`" && set" | ForEach-Object {
+            if ($_ -match '^([^=]+)=(.*)$') { "$($matches[1])=$($matches[2])" >> $env:GITHUB_ENV }
+          }
 
       - name: Show toolchain
         run: |
