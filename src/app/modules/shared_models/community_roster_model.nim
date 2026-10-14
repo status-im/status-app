@@ -594,8 +594,12 @@ QtObject:
         self.airdropAddresses.hasKey(key):
       self.airdropAddresses.del(key)
       roles.add ModelRole.AirdropAddress
-    # a cancelled request leaves nothing to show
-    let shown = if state == MembershipRequestState.Canceled: MembershipRequestState.Accepted else: state
+    # a closed request leaves nothing to show: a row is a member, so one declined earlier
+    # has joined since
+    let shown = if state in {MembershipRequestState.Declined, MembershipRequestState.Canceled}:
+        MembershipRequestState.Accepted
+      else:
+        state
     if self.membershipStates.getOrDefault(key, MembershipRequestState.Accepted) != shown:
       if shown == MembershipRequestState.Accepted:
         self.membershipStates.del(key)
