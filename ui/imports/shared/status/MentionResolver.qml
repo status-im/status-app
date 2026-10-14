@@ -55,9 +55,10 @@ QObject {
     // queued for `contactInfoRequester` — deferred, so the calling binding stays clean.
     function resolveFor(text) {
         const revision = d.appliedRevision
-        if (revision !== d.cacheRevision) {
-            d.cache = ({})
-            d.cacheRevision = revision
+        const cache = d.cache
+        if (revision !== cache.revision) {
+            cache.names = {}
+            cache.revision = revision
         }
 
         const result = {}
@@ -70,7 +71,7 @@ QObject {
             if (pubKey in result)
                 continue
 
-            let name = d.cache[pubKey]
+            let name = cache.names[pubKey]
             if (name === undefined) {
                 if (pubKey === "0x00001")
                     name = "everyone"
@@ -78,7 +79,7 @@ QObject {
                     name = ModelUtils.getByKey(root.sourceModel, root.pubKeyRole, pubKey, root.nameRole)
                 // an empty name is a miss too: the row exists but has nothing to show
                 name = name || null
-                d.cache[pubKey] = name
+                cache.names[pubKey] = name
             }
             if (name === null) {
                 d.requestInfoFor(pubKey)
@@ -93,10 +94,11 @@ QObject {
     QtObject {
         id: d
 
-        // Per-revision resolution cache: pubKey -> displayName, or null for a key known
-        // to be absent from the model.
-        property var cache: ({})
-        property int cacheRevision: 0
+        // Per-revision resolution cache: `names` maps pubKey -> displayName, or null for
+        // a key known to be absent from the model. Mutated in place and never reassigned:
+        // resolveFor() runs inside bindings, and writing a property such a binding has read
+        // makes it loop.
+        readonly property var cache: ({ revision: 0, names: {} })
 
         // Monotonic count of relevant source-model changes.
         property int sourceRevision: 0
