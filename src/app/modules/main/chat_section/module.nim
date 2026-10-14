@@ -190,6 +190,7 @@ proc rosterContact(self: Module, pubKey: string): RosterContact =
 
 proc rosterOrderInputs(self: Module): RosterOrderInputs =
   ## Online members and contact names for the roster load worker's sort.
+  self.roster.captureOrderChanges()
   result.online = self.controller.onlinePubKeys()
   let myPubKey = singletonInstance.userProfile.getPubKey()
   if toOnlineStatus(self.controller.getStatusForContactWithId(myPubKey).statusType) == OnlineStatus.Online:

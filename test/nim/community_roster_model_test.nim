@@ -473,3 +473,42 @@ suite "community roster canonical order":
     check model.orderedKeys == @[keyD, keyB, keyA]
     check model.indexConsistent
     check spy.countResets() == 0
+
+  test "a status change during the load moves the row right after the fill":
+    # the worker sorted with the inputs captured when the load started
+    model.captureOrderChanges()
+    var snap = snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol"))
+    sortRoster(snap, RosterOrderInputs())
+    fake.statuses[keyC] = OnlineStatus.Online
+    model.onlineStatusChanged(keyC)
+    model.fill(snap)
+    check model.orderedKeys == @[keyC, keyA, keyB]
+    check model.indexConsistent
+    check spy.countInserts() == 1
+    check spy.countMoves() == 1
+    check spy.countResets() == 0
+
+  test "a nickname set during a reload moves a kept row right after the fill":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    model.captureOrderChanges()
+    var snap = snapshot(20, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol"))
+    sortRoster(snap, RosterOrderInputs())
+    fake.contacts[keyC] = RosterContact(localNickname: "Aaron")
+    model.contactChanged(keyC)
+    model.fill(snap)
+    check model.orderedKeys == @[keyC, keyA, keyB]
+    check model.indexConsistent
+    check spy.countResets() == 0
+
+  test "the fill ends the capture":
+    model.captureOrderChanges()
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob")))
+    fake.statuses[keyC] = OnlineStatus.Online
+    model.onlineStatusChanged(keyC)
+    # a reload whose inputs were captured after the change would sort carol first
+    var snap = snapshot(20, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol"))
+    sortRoster(snap, RosterOrderInputs())
+    spy.clear()
+    model.fill(snap)
+    check spy.countMoves() == 0
+    check model.orderedKeys == @[keyA, keyB, keyC]

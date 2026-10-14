@@ -5,7 +5,7 @@
 ## status table. Rows keep the canonical member order (roster_order): views bind
 ## without sorting proxies.
 
-import nimqml, std/[algorithm, tables, json, strutils]
+import nimqml, std/[algorithm, sets, tables, json, strutils]
 
 import app_service/common/types
 import app_service/service/community/dto/roster
@@ -90,6 +90,9 @@ QtObject:
       members: seq[RosterMember]
       # one per member: its place in the canonical order
       sortKeys: seq[RosterSortKey]
+      # order inputs that changed since the load worker captured them
+      capturing: bool
+      changedSinceCapture: HashSet[RawPubKey]
       rows: Table[RawPubKey, int]
       # keyed by channel uuid, as on the wire; the API speaks full chat ids
       channels: Table[string, Table[RawPubKey, ChannelRole]]
@@ -291,6 +294,8 @@ QtObject:
 
   proc clear*(self: CommunityRosterModel) =
     ## Drops the roster (idle or background release).
+    self.capturing = false
+    self.changedSinceCapture.clear()
     var droppedChannels: seq[string]
     for chatId in self.channels.keys:
       droppedChannels.add chatId
@@ -503,6 +508,13 @@ QtObject:
       changedChannels.add chatId
     for chatId in changedChannels:
       self.emitChannelMembersChanged(chatId)
+    # the worker sorted by inputs older than these changes
+    for key in self.changedSinceCapture:
+      let row = self.rows.getOrDefault(key, -1)
+      if row >= 0:
+        self.resort(row)
+    self.capturing = false
+    self.changedSinceCapture.clear()
     self.setLoaded(true)
 
   proc applyChannelDelta(self: CommunityRosterModel, delta: ChannelMembersDelta) =
@@ -544,13 +556,28 @@ QtObject:
       last.delete
     self.dataChanged(first, last, roles)
 
+  proc captureOrderChanges*(self: CommunityRosterModel) =
+    ## The load worker is reading its order inputs now: contact and online
+    ## status changes until the fill are held and replayed as moves after it.
+    self.capturing = true
+    self.changedSinceCapture.clear()
+
+  proc orderInputChanged(self: CommunityRosterModel, pubKey: string) =
+    if not self.capturing:
+      return
+    var key: RawPubKey
+    if parseRawPubKey(pubKey, key):
+      self.changedSinceCapture.incl key
+
   proc contactChanged*(self: CommunityRosterModel, pubKey: string) =
+    self.orderInputChanged(pubKey)
     let row = self.rowOf(pubKey)
     if row >= 0:
       self.notifyRow(row, ContactRoles)
       self.resort(row)
 
   proc onlineStatusChanged*(self: CommunityRosterModel, pubKey: string) =
+    self.orderInputChanged(pubKey)
     let row = self.rowOf(pubKey)
     if row >= 0:
       self.notifyRow(row, [ModelRole.OnlineStatus])
