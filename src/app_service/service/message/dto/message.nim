@@ -6,7 +6,6 @@ import link_preview, payment_request
 
 include ../../../common/json_utils
 
-from ../../../common/conversion import SystemTagMapping
 
 const PARSED_TEXT_TYPE_PARAGRAPH* = "paragraph"
 const PARSED_TEXT_TYPE_BLOCKQUOTE* = "blockquote"
@@ -26,6 +25,9 @@ const PARSED_TEXT_OUTGOING_STATUS_SENT*      = "sent"
 const PARSED_TEXT_OUTGOING_STATUS_DELIVERED* = "delivered"
 const PARSED_TEXT_OUTGOING_STATUS_EXPIRED* = "expired"
 const PARSED_TEXT_OUTGOING_STATUS_FAILED_RESENDING* = "failedResending"
+
+# How status-go lists a mention of everyone ("@0x00001") in `mentions`
+const EVERYONE_MENTION* = "0x00001"
 
 type ParsedText* = object
   `type`*: string
@@ -134,6 +136,10 @@ type MessageDto* = object
   pinnedBy*: string
   transactionParameters*: TransactionParameters
   mentioned*: bool
+  # The mentions status-go found in the parsed text: public keys without the "@", and
+  # EVERYONE_MENTION for a mention of everyone. Text in a quote, bold or code is not
+  # searched for mentions.
+  mentions*: seq[string]
   replied*: bool
   paymentRequests*: seq[PaymentRequest]
 
@@ -284,6 +290,11 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
   discard jsonObj.getProp("mentioned", result.mentioned)
   discard jsonObj.getProp("replied", result.replied)
 
+  var mentionsArr: JsonNode
+  if jsonObj.getProp("mentions", mentionsArr) and mentionsArr.kind == JArray:
+    for mention in mentionsArr:
+      result.mentions.add(mention.getStr)
+
   var quotedMessageObj: JsonNode
   if(jsonObj.getProp("quotedMessage", quotedMessageObj)):
     result.quotedMessage = toQuotedMessage(quotedMessageObj)
@@ -334,18 +345,7 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
     result.transactionParameters = toTransactionParameters(transactionParametersObj)
 
 proc isPersonalMention*(self: MessageDto, publicKey: string): bool =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if (child.type == PARSED_TEXT_CHILD_TYPE_MENTION and child.literal.contains(publicKey)):
-        return true
-  return false
+  return publicKey in self.mentions
 
 proc isGlobalMention*(self: MessageDto): bool =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if child.type == PARSED_TEXT_CHILD_TYPE_MENTION:
-        for pair in SystemTagMapping:
-          if child.literal.contains(pair[1]):
-            return true
-
-  return false
+  return EVERYONE_MENTION in self.mentions
