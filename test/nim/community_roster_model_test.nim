@@ -461,3 +461,19 @@ suite "community roster canonical order":
     model.fill(snap)
     check spy.countMoves() == 0
     check model.orderedKeys == @[keyA, keyB, keyC]
+
+  test "a drop after a failed reload empties the roster and ends the capture":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob")))
+    model.captureOrderChanges()
+    fake.statuses[keyB] = OnlineStatus.Online
+    model.onlineStatusChanged(keyB)
+    # the reload failed and the holders dropped the roster
+    model.clear()
+    check model.rowCount() == 0
+    var snap = snapshot(20, member(keyA, "alice"), member(keyB, "bob"))
+    sortRoster(snap, RosterOrderInputs())
+    spy.clear()
+    model.fill(snap)
+    check spy.countMoves() == 0
+    check model.orderedKeys == @[keyA, keyB]
+
