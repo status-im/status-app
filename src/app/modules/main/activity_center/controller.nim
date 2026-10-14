@@ -4,7 +4,6 @@ import ../../../global/app_signals
 import ../../../core/eventemitter
 import app_service/service/activity_center/service as activity_center_service
 import app_service/service/contacts/service as contacts_service
-import app_service/service/message/service as message_service
 import app_service/service/community/service as community_service
 import app_service/service/chat/service as chat_service
 import app_service/service/devices/service as devices_service
@@ -16,7 +15,6 @@ type
     events: EventEmitter
     activityCenterService: activity_center_service.Service
     contactsService: contacts_service.Service
-    messageService: message_service.Service
     chatService: chat_service.Service
     communityService: community_service.Service
     devicesService: devices_service.Service
@@ -27,7 +25,6 @@ proc newController*(
     events: EventEmitter,
     activityCenterService: activity_center_service.Service,
     contactsService: contacts_service.Service,
-    messageService: message_service.Service,
     chatService: chat_service.Service,
     communityService: community_service.Service,
     devicesService: devices_service.Service,
@@ -38,7 +35,6 @@ proc newController*(
   result.events = events
   result.activityCenterService = activityCenterService
   result.contactsService = contactsService
-  result.messageService = messageService
   result.chatService = chatService
   result.communityService = communityService
   result.devicesService = devicesService
@@ -141,9 +137,6 @@ proc acceptActivityCenterNotification*(self: Controller,notificationId: string) 
 
 proc dismissActivityCenterNotification*(self: Controller,notificationId: string) =
   self.activityCenterService.dismissActivityCenterNotification(notificationId)
-
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
-  return self.messageService.getRenderedText(parsedTextArray, communityChats)
 
 proc switchTo*(self: Controller, sectionId, chatId, messageId: string) =
   let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: chatId, messageId: messageId)

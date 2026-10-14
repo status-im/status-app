@@ -28,9 +28,6 @@ type
     senderIcon: string
     seen: bool
     outgoingStatus: string
-    # Backend-rendered HTML of the message, read only by the Activity Center;
-    # every other view renders unparsedText client-side.
-    messageText: string
     unparsedText: string
     messageImage: string
     sticker: string
@@ -88,7 +85,6 @@ proc initMessageItem*(
     amISender: bool,
     senderIsAdded: bool,
     outgoingStatus,
-    text,
     unparsedText: string,
     image: string,
     seen: bool,
@@ -142,7 +138,6 @@ proc initMessageItem*(
   result.senderIcon = senderIcon
   result.seen = seen
   result.outgoingStatus = outgoingStatus
-  result.messageText = text
   result.unparsedText = unparsedText
   result.messageImage = image
   result.timestamp = timestamp
@@ -206,8 +201,6 @@ proc initMessageItem*(
 
     if result.unparsedText == "":
       result.unparsedText = discordMessage.content
-    if result.messageText == "":
-      result.messageText = discordMessage.content
     result.senderId = discordMessage.author.id
     result.senderDisplayName = discordMessage.author.name
     result.senderIcon = discordMessage.author.localUrl
@@ -226,7 +219,6 @@ proc initMessageItem*(
         result.messageAttachments.add(attachment.localUrl)
 
   if contentType == ContentType.BridgeMessage:
-    result.messageText = bridgeMessage.content
     result.unparsedText = bridgeMessage.content
     result.senderDisplayName = bridgeMessage.userName
     result.senderIcon = bridgeMessage.userAvatar
@@ -255,7 +247,6 @@ proc initNewMessagesMarkerItem*(clock, timestamp: int64): Item =
     amISender = false,
     senderIsAdded = false,
     outgoingStatus = "",
-    text = "",
     unparsedText = "",
     image = "",
     seen = true,
@@ -311,7 +302,6 @@ proc `$`*(self: Item): string =
     seen: {$self.seen},
     outgoingStatus:{$self.outgoingStatus},
     resendError:{$self.resendError},
-    messageText:{self.messageText},
     unparsedText:{self.unparsedText},
     timestamp:{$self.timestamp},
     contentType:{$self.contentType},
@@ -433,12 +423,6 @@ proc resendError*(self: Item): string {.inline.} =
 
 proc `resendError=`*(self: Item, value: string) {.inline.} =
   self.resendError = value
-
-proc messageText*(self: Item): string {.inline.} =
-  self.messageText
-
-proc `messageText=`*(self: Item, value: string) {.inline.} =
-  self.messageText = value
 
 proc unparsedText*(self: Item): string {.inline.} =
   self.unparsedText

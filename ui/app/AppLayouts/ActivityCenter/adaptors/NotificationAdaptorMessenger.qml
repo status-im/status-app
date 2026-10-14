@@ -1,5 +1,6 @@
 import QtQuick
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Core.Theme
 
@@ -28,6 +29,13 @@ import utils
 NotificationAdaptorSender {
     id: root
 
+    /*!
+        Display names of the users mentioned in the message text, keyed by
+        public key, as returned by MentionResolver.resolveFor(). A mention
+        missing from the map is rendered as its raw public key.
+    */
+    property var mentionsMap: ({})
+
     // -------------------------
     // Header row related
     // -------------------------
@@ -43,10 +51,10 @@ NotificationAdaptorSender {
     // -------------------------
 
     content: {
-        const message = notification?.message
-        if (!message)
+        const text = notification?.message?.unparsedText ?? ""
+        if (!text)
             return ""
-        return Utils.isGifOnlyText(message.unparsedText) ? qsTr("GIF") : message.messageText
+        return Utils.isGifOnlyText(text) ? qsTr("GIF") : MarkdownUtils.singleLineHtml(text, root.mentionsMap)
     }
     attachments: {
         const msg = notification && notification.message

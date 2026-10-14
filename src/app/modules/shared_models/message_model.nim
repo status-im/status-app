@@ -906,8 +906,6 @@ QtObject:
       quotedMessageAuthorDetails: ContactDetails = ContactDetails(),
       transactionContract: string = "",
       transactionValue: string = "",
-      # Backend-rendered HTML, needed only by the Activity Center
-      renderedMessageText: string = "",
     ): Item =
     var albumImagesFinal = albumImages
     if albumImagesFinal.len == 0:
@@ -930,7 +928,6 @@ QtObject:
       (isCurrentUser and message.contentType != ContentType.DiscordMessage),
       sender.dto.added,
       message.outgoingStatus,
-      renderedMessageText,
       clearText,
       message.image,
       message.seen,

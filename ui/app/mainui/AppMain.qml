@@ -2124,6 +2124,7 @@ Item {
                     sourceComponent: ActivityCenterAdaptor {
                         contactsModel: appMain.contactsStore?.contactsModel ?? null
                         userProfileName: appMain.profileStore?.name ?? ""
+                        userProfilePubKey: appMain.profileStore?.pubKey ?? ""
                         notifications: appMain.activityCenterStore?.activityCenterNotifications ?? null
                         getCommunityDetails: function(communityId) {
                             return appMain.rootChatStore?.getCommunityDetailsAsJson(communityId) ?? ({})
@@ -2131,7 +2132,11 @@ Item {
                         getChatDetails: function(chatId) {
                             return appMain.rootChatStore?.getChatDetails(chatId) ?? ({})
                         }
+                        generateAlias: function(publicKey) {
+                            return appMain.rootChatStore?.generateAlias(publicKey) ?? ""
+                        }
                         onPopulateContactDetailsRequested: (contactId) => appMain.contactsStore.populateContactDetails(contactId)
+                        onContactInfoRequested: (publicKey) => appMain.contactsStore.requestContactInfo(publicKey)
                     }
                 }
 

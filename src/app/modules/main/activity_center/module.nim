@@ -11,7 +11,7 @@ import ../../../core/eventemitter
 import app_service/service/activity_center/service as activity_center_service
 from app_service/common/types import MembershipRequestState
 import app_service/service/contacts/service as contacts_service
-import app_service/service/message/service as message_service
+import app_service/service/message/dto/message as message_dto
 import app_service/service/chat/service as chat_service
 import app_service/service/community/service as community_service
 import app_service/service/devices/service as devices_service
@@ -33,7 +33,6 @@ proc newModule*(
     events: EventEmitter,
     activityCenterService: activity_center_service.Service,
     contactsService: contacts_service.Service,
-    messageService: message_service.Service,
     chatService: chat_service.Service,
     communityService: community_service.Service,
     devicesService: devices_service.Service,
@@ -48,7 +47,6 @@ proc newModule*(
     events,
     activityCenterService,
     contactsService,
-    messageService,
     chatService,
     communityService,
     devicesService,
@@ -101,7 +99,6 @@ method onUnseenChanged*(self: Module, hasUnseen: bool) =
 
 proc createMessageItemFromDto(self: Module, message: MessageDto, communityId: string, albumMessages: seq[MessageDto]): MessageItem =
   let contactDetails = self.controller.getContactDetails(message.`from`)
-  let communityChats = self.controller.getCommunityById(communityId).chats
 
   var quotedMessageAuthorDetails = ContactDetails()
   if message.quotedMessage.`from` != "":
@@ -127,7 +124,6 @@ proc createMessageItemFromDto(self: Module, message: MessageDto, communityId: st
     albumMessageIds,
     deletedByContactDetails = ContactDetails(),
     quotedMessageAuthorDetails,
-    renderedMessageText = self.controller.getRenderedText(message.parsedText, communityChats),
   )
   return msg_item_qobj.newMessageItem(messageItem)
 

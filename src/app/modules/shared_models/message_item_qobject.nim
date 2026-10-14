@@ -105,10 +105,6 @@ QtObject:
   QtProperty[string] outgoingStatus:
     read = outgoingStatus
 
-  proc messageText*(self: MessageItem): string {.slot.} = result = ?.self.messageItem.messageText
-  QtProperty[string] messageText:
-    read = messageText
-
   proc unparsedText*(self: MessageItem): string {.slot.} = result = ?.self.messageItem.unparsedText
   QtProperty[string] unparsedText:
     read = unparsedText
