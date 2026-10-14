@@ -1,0 +1,132 @@
+name: ci
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  QT_VERSION: '6.11.0'
+  QT_MODULES: 'qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtwebengine qtpositioning qtserialport qtshadertools qtimageformats qtscxml qthttpserver'
+  NIM_VERSION: '2.2.10'
+  NIMBLE_VERSION: '0.26.0'
+  GO_VERSION: '1.26.5'
+  PROTOC_VERSION: '36.0'
+
+jobs:
+  desktop:
+    name: 'status-app / ${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            qt-arch: linux_gcc_64
+          - os: macos-latest
+            qt-arch: clang_64
+          - os: windows-latest
+            qt-arch: win64_msvc2022_64
+    defaults:
+      run:
+        shell: bash
+    env:
+      MAKEFLAGS: '-j4 V=1 USE_SYSTEM_NIM=1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Allow long paths in git
+        if: runner.os == 'Windows'
+        run: git config --global core.longpaths true
+
+      - name: Install system packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq --no-install-recommends \
+            libpcsclite-dev libssl-dev libgl1-mesa-dev libxkbcommon-dev \
+            libxkbcommon-x11-dev libxcb-cursor-dev libfontconfig1 libdbus-1-3
+
+      - name: Install make
+        if: runner.os == 'Windows'
+        run: choco install make -y --no-progress
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt-arch }}
+          modules: ${{ env.QT_MODULES }}
+          cache: true
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: jiro4989/setup-nim-action@v2
+        with:
+          nim-version: ${{ env.NIM_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Nimble ${{ env.NIMBLE_VERSION }}
+        run: |
+          case "${{ runner.os }}-${{ runner.arch }}" in
+            Linux-X64)   asset=linux_x64.tar.gz ;;
+            macOS-ARM64) asset=macosx_aarch64.tar.gz ;;
+            Windows-X64) asset=windows_x64.zip ;;
+          esac
+          mkdir -p "$HOME/nimble-bin"
+          curl -sSfL -o "nimble-$asset" "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-$asset"
+          case "$asset" in
+            *.zip) unzip -q -o "nimble-$asset" -d "$HOME/nimble-bin" ;;
+            *)     tar -xzf "nimble-$asset" -C "$HOME/nimble-bin" ;;
+          esac
+          echo "$HOME/nimble-bin" >> "$GITHUB_PATH"
+
+      - name: Install protoc
+        run: |
+          case "${{ runner.os }}-${{ runner.arch }}" in
+            Linux-X64)   asset=linux-x86_64 ;;
+            macOS-ARM64) asset=osx-aarch_64 ;;
+            Windows-X64) asset=win64 ;;
+          esac
+          curl -sSfL -o protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-${asset}.zip"
+          mkdir -p "$HOME/protoc" && unzip -q -o protoc.zip -d "$HOME/protoc"
+          echo "$HOME/protoc/bin" >> "$GITHUB_PATH"
+
+      - name: Show toolchain
+        run: |
+          nim --version | head -1
+          nimble --version | head -1
+          go version
+          qmake -v
+
+      - name: Fetch submodules
+        run: ./scripts/ci-fetch-submodules.sh
+
+      - name: make update
+        run: make update
+
+      - name: make deps
+        run: make deps
+
+      - name: make status-go
+        run: make status-go
+
+      - name: make statusq
+        run: make statusq
+
+      - name: make qrcodegen
+        run: make qrcodegen
+
+      - name: make nim_status_client
+        run: make nim_status_client
