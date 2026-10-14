@@ -8,8 +8,11 @@ import StatusQ.Core.Utils as SQUtils
 import utils
 
 /*
- The members model comes in roster (unsorted) order; the panel sorts it online
- first, then by name, with SFPM role sorters only.
+ Perf regression guard: chat-switch profile showed the members panel fully
+ re-sorting the community members model in QML (SFPM RoleSorter + StringSorter,
+ 881ms on a low-end device). The roster arrives sorted from Nim (online first,
+ then name), so the panel must render rows in source order and never re-sort
+ them.
 */
 Item {
     id: root
@@ -133,24 +136,15 @@ Item {
             return order
         }
 
-        function test_panelSortsOnlineFirstThenByName() {
+        // The model owns the order (sorted in Nim): rows must come out exactly
+        // as fed in, deliberately non-alphabetical here — a QML sorter sneaking
+        // back in would flip this to ["Alice", "bob", "charlie"].
+        function test_panelShowsRowsInModelOrder() {
             const panel = createTemporaryObject(panelComponent, root)
             verify(!!panel)
             const listView = memberListView(panel)
             tryCompare(listView, "count", 3)
-            compare(rowNames(listView), ["Alice", "bob", "charlie"])
-        }
-
-        function test_onlineStatusChangeReordersRows() {
-            const panel = createTemporaryObject(panelComponent, root)
-            verify(!!panel)
-            const listView = memberListView(panel)
-            tryCompare(listView, "count", 3)
-
-            membersModel.setProperty(0, "onlineStatus", Constants.onlineStatus.online)
-            compare(rowNames(listView), ["Alice", "bob", "charlie"])
-            membersModel.setProperty(1, "onlineStatus", Constants.onlineStatus.inactive)
-            compare(rowNames(listView), ["bob", "charlie", "Alice"])
+            compare(rowNames(listView), ["charlie", "Alice", "bob"])
         }
 
         function test_visiblePanelShowsRowsImmediately() {
@@ -203,9 +197,9 @@ Item {
                       "skeleton title must be visible at panel width")
         }
 
-        // The panel sorts the whole roster in SFPM on every load (the right
-        // panel loader destroys it when hidden). Measures source set -> sorted.
-        function benchmark_sortFiveThousandMembers() {
+        // The right panel loader rebuilds the panel on every load; the roster
+        // comes sorted from Nim. Measures source set -> rows ready.
+        function benchmark_loadFiveThousandMembers() {
             const panel = createTemporaryObject(panelComponent, root, { usersModel: null })
             const listView = memberListView(panel)
             panel.usersModel = largeRoster
