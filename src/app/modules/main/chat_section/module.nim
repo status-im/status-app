@@ -73,6 +73,7 @@ type
     rosterVariant: QVariant
     rosterHolders: RosterHolders
     rosterReleaseTimer: QTimer
+    rosterRetryTimer: QTimer
 
 # Forward declaration
 proc buildChatSectionUI(
@@ -200,10 +201,16 @@ proc setupRoster(self: Module) =
   self.rosterVariant = newQVariant(self.roster)
   self.rosterReleaseTimer = QTimer.create()
   self.rosterReleaseTimer.setSingleShot(true)
+  self.rosterRetryTimer = QTimer.create()
+  self.rosterRetryTimer.setSingleShot(true)
   self.rosterHolders = newRosterHolders(
-    RosterReleaseTimer(
+    RosterTimer(
       start: proc(ms: int) = m.rosterReleaseTimer.start(ms.cint),
       stop: proc() = m.rosterReleaseTimer.stop(),
+    ),
+    RosterTimer(
+      start: proc(ms: int) = m.rosterRetryTimer.start(ms.cint),
+      stop: proc() = m.rosterRetryTimer.stop(),
     ),
     onLoad = proc() = m.controller.loadCommunityRoster(),
     onDrop = proc() =
@@ -215,6 +222,11 @@ proc setupRoster(self: Module) =
       m.rosterHolders.onReleaseTimeout()
     except Exception as e:
       error "community roster release failed", msg = e.msg)
+  self.rosterRetryTimer.onTimeout(proc() {.closure, raises: [].} =
+    try:
+      m.rosterHolders.onRetryTimeout()
+    except Exception as e:
+      error "community roster load retry failed", msg = e.msg)
 
 proc acquireRoster*(self: Module): CommunityRosterHandle =
   ## The roster stays loaded while the returned handle lives.
@@ -269,6 +281,7 @@ proc buildCommunityMemberMessageItem(self: Module, message: MessageDto): member_
 method delete*(self: Module) =
   if not self.rosterHolders.isNil:
     self.rosterReleaseTimer.stop()
+    self.rosterRetryTimer.stop()
     self.controller.releaseCommunityRoster()
     self.rosterVariant.delete
   self.controller.delete
@@ -583,6 +596,8 @@ method getRosterModel*(self: Module): QVariant =
 method onCommunityRosterLoaded*(self: Module, snapshot: sink RosterSnapshot, deltas: seq[RosterDelta]) =
   if self.roster.isNil:
     return
+  if not self.rosterHolders.isNil:
+    self.rosterHolders.onLoadSucceeded()
   self.roster.fill(snapshot)
   for delta in deltas:
     self.roster.applyDelta(delta)

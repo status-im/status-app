@@ -311,7 +311,8 @@ suite "community roster model":
 suite "community roster handle":
   test "creating a handle acquires, destroying it releases":
     let holders = newRosterHolders(
-      RosterReleaseTimer(start: (proc(ms: int) = discard), stop: (proc() = discard)),
+      RosterTimer(start: (proc(ms: int) = discard), stop: (proc() = discard)),
+      RosterTimer(start: (proc(ms: int) = discard), stop: (proc() = discard)),
       onLoad = (proc() = discard), onDrop = (proc() = discard))
     block:
       let first = newCommunityRosterHandle(holders, newQVariant())
