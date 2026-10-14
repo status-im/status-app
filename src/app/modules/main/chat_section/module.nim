@@ -195,7 +195,7 @@ proc setupRoster(self: Module) =
       toOnlineStatus(m.controller.getStatusForContactWithId(pubKey).statusType),
     contactImageUrl: proc(pubKey: string, imageClock: uint64): string =
       m.controller.contactImageUrl(pubKey, imageClock),
-  ))
+  ), self.controller.getMySectionId())
   self.rosterVariant = newQVariant(self.roster)
   self.adminMembers = member_model.newModel()
   self.adminMembersVariant = newQVariant(self.adminMembers)

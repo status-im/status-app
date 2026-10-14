@@ -4,7 +4,7 @@
 ## entry, the contacts cache (through `RosterLookups.contact`) and the online
 ## status table. Rows keep the snapshot order; views sort and filter in proxies.
 
-import nimqml, std/[tables, json]
+import nimqml, std/[tables, json, strutils]
 
 import app_service/common/types
 import app_service/service/community/dto/roster
@@ -78,10 +78,12 @@ QtObject:
   type
     CommunityRosterModel* = ref object of QAbstractListModel
       lookups: RosterLookups
+      communityId: string
       myKey: RawPubKey
       hasMyKey: bool
       members: seq[RosterMember]
       rows: Table[RawPubKey, int]
+      # keyed by channel uuid, as on the wire; the API speaks full chat ids
       channels: Table[string, Table[RawPubKey, ChannelRole]]
       # admin-only overlays, set by their owners; absent = Accepted / "". Kept
       # for members not (yet) in the roster: admin data may arrive before the fill.
@@ -92,9 +94,10 @@ QtObject:
 
   proc delete(self: CommunityRosterModel)
   proc setup(self: CommunityRosterModel)
-  proc newCommunityRosterModel*(lookups: RosterLookups): CommunityRosterModel =
+  proc newCommunityRosterModel*(lookups: RosterLookups, communityId: string): CommunityRosterModel =
     new(result, delete)
     result.lookups = lookups
+    result.communityId = communityId
     result.hasMyKey = parseRawPubKey(lookups.myPubKey, result.myKey)
     result.setup
 
@@ -265,7 +268,16 @@ QtObject:
     self.loaded = loaded
     self.loadedChanged()
 
-  proc emitChannelMembersChanged(self: CommunityRosterModel, chatId: string) =
+  proc channelKey(self: CommunityRosterModel, chatId: string): string =
+    ## A chat id is the community id followed by the channel uuid.
+    if self.communityId.len > 0 and chatId.len > self.communityId.len and
+        chatId.startsWith(self.communityId):
+      chatId[self.communityId.len .. ^1]
+    else:
+      chatId
+
+  proc emitChannelMembersChanged(self: CommunityRosterModel, channelUuid: string) =
+    let chatId = self.communityId & channelUuid
     self.channelMembersChanged(chatId)
     if not self.channelMembersChangedHandler.isNil:
       self.channelMembersChangedHandler(chatId)
@@ -459,14 +471,15 @@ QtObject:
       self.notifyRow(row, [ModelRole.AirdropAddress])
 
   proc onChannelMembersChanged*(self: CommunityRosterModel, handler: proc(chatId: string)) =
-    ## Nim-side listener (the future key-set filter); QML uses the signal.
+    ## Nim-side listener (the future key-set filter); QML uses the signal. Both get the
+    ## full chat id.
     self.channelMembersChangedHandler = handler
 
   proc isGatedChannel*(self: CommunityRosterModel, chatId: string): bool {.slot.} =
-    self.channels.hasKey(chatId)
+    self.channels.hasKey(self.channelKey(chatId))
 
   proc channelMembers*(self: CommunityRosterModel, chatId: string): seq[string] =
-    self.channels.withValue(chatId, members):
+    self.channels.withValue(self.channelKey(chatId), members):
       for key in members[].keys:
         result.add toPubKeyHex(key)
 
@@ -474,7 +487,7 @@ QtObject:
     var key: RawPubKey
     if not parseRawPubKey(pubKey, key):
       return ChannelRole.Poster
-    self.channels.withValue(chatId, members):
+    self.channels.withValue(self.channelKey(chatId), members):
       return members[].getOrDefault(key, ChannelRole.Poster)
 
   proc getChannelMemberKeys*(self: CommunityRosterModel, chatId: string): string {.slot.} =
