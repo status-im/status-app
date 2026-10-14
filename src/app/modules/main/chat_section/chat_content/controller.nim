@@ -254,9 +254,6 @@ proc getContactById*(self: Controller, contactId: string): ContactsDto =
 proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactService.getContactDetails(contactId)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
-  return self.messageService.getRenderedText(parsedTextArray, communityChats)
-
 proc getTransactionDetails*(self: Controller, message: MessageDto): (string,string) =
   return self.messageService.getTransactionDetails(message)
 

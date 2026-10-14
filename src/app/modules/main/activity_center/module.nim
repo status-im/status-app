@@ -122,13 +122,12 @@ proc createMessageItemFromDto(self: Module, message: MessageDto, communityId: st
     communityId,
     contactDetails,
     contactDetails.isCurrentUser,
-    renderedMessageText = self.controller.getRenderedText(message.parsedText, communityChats),
     clearText = message.text,
     albumImages,
     albumMessageIds,
     deletedByContactDetails = ContactDetails(),
     quotedMessageAuthorDetails,
-    quotedRenderedMessageText = self.controller.getRenderedText(message.quotedMessage.parsedText, communityChats),
+    renderedMessageText = self.controller.getRenderedText(message.parsedText, communityChats),
   )
   return msg_item_qobj.newMessageItem(messageItem)
 

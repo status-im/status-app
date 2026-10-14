@@ -333,13 +333,6 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
   if(jsonObj.getProp("commandParameters", transactionParametersObj)):
     result.transactionParameters = toTransactionParameters(transactionParametersObj)
 
-proc containsContactMentions*(self: MessageDto): bool =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if (child.type == PARSED_TEXT_CHILD_TYPE_MENTION):
-        return true
-  return false
-
 proc isPersonalMention*(self: MessageDto, publicKey: string): bool =
   for pText in self.parsedText:
     for child in pText.children:
@@ -356,9 +349,3 @@ proc isGlobalMention*(self: MessageDto): bool =
             return true
 
   return false
-
-proc mentionedUsersPks*(self: MessageDto): seq[string] =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if (child.type == PARSED_TEXT_CHILD_TYPE_MENTION):
-        result.add(child.literal)
