@@ -293,37 +293,6 @@ QtObject:
       self.emitChannelMembersChanged(chatId)
     self.setLoaded(false)
 
-  proc fill*(self: CommunityRosterModel, snapshot: sink RosterSnapshot) =
-    if self.members.len > 0 or self.channels.len > 0:
-      self.clear()
-    for chatId, channelMembers in snapshot.channels.pairs:
-      var roles = initTable[RawPubKey, ChannelRole](channelMembers.len)
-      for member in channelMembers:
-        roles[member.key] = member.role
-      self.channels[chatId] = roles
-    if snapshot.members.len > 0:
-      var rows = initTable[RawPubKey, int](snapshot.members.len)
-      var members = newSeqOfCap[RosterMember](snapshot.members.len)
-      for member in snapshot.members.mitems:
-        if rows.hasKey(member.key):
-          continue
-        rows[member.key] = members.len
-        members.add move(member)
-      let parentIndex = newQModelIndex()
-      defer: parentIndex.delete
-      when defined(QT_MODEL_SPY):
-        recordBeginInsertRows(0, members.len - 1)
-      self.beginInsertRows(parentIndex, 0, members.len - 1)
-      self.members = move(members)
-      self.rows = move(rows)
-      self.endInsertRows()
-      when defined(QT_MODEL_SPY):
-        recordEndInsertRows()
-      self.countChanged()
-    for chatId in self.channels.keys:
-      self.emitChannelMembersChanged(chatId)
-    self.setLoaded(true)
-
   proc upsert(self: CommunityRosterModel, member: RosterMember) =
     let row = self.rows.getOrDefault(member.key, -1)
     if row >= 0:
@@ -363,20 +332,86 @@ QtObject:
       recordEndRemoveRows()
     self.countChanged()
 
-  proc applyChannelDelta(self: CommunityRosterModel, delta: ChannelMembersDelta) =
-    # a channel absent from the snapshot that gains members has just been gated;
-    # one left without members stays gated (it shows nobody) until a new snapshot
-    if not self.channels.hasKey(delta.chatId) and delta.added.len == 0:
+  proc appendMembers(self: CommunityRosterModel, members: sink seq[RosterMember]) =
+    if members.len == 0:
       return
-    var roles = self.channels.getOrDefault(delta.chatId)
-    for key in delta.removed:
-      roles.del(key)
-    for member in delta.added:
-      roles[member.key] = member.role
-    for member in delta.modified:
-      if roles.hasKey(member.key):
+    let parentIndex = newQModelIndex()
+    defer: parentIndex.delete
+    let first = self.members.len
+    let last = first + members.len - 1
+    when defined(QT_MODEL_SPY):
+      recordBeginInsertRows(first, last)
+    self.beginInsertRows(parentIndex, first, last)
+    for member in members.mitems:
+      self.rows[member.key] = self.members.len
+      self.members.add move(member)
+    self.endInsertRows()
+    when defined(QT_MODEL_SPY):
+      recordEndInsertRows()
+    self.countChanged()
+
+  proc fill*(self: CommunityRosterModel, snapshot: sink RosterSnapshot) =
+    ## Loads the roster, or brings a loaded one to a reloaded snapshot with
+    ## per-row removes, one dataChanged and one insert (no reset).
+    var firstIndex = initTable[RawPubKey, int](snapshot.members.len)
+    for i, member in snapshot.members:
+      discard firstIndex.hasKeyOrPut(member.key, i)
+    var row = self.members.len - 1
+    while row >= 0:
+      # a copy: remove() shifts the row the key would alias
+      let key = self.members[row].key
+      if not firstIndex.hasKey(key):
+        self.remove(key)
+      dec row
+    let kept = self.members.len
+    var added: seq[RosterMember]
+    for i, member in snapshot.members.mpairs:
+      if firstIndex[member.key] != i:
+        continue
+      let existing = self.rows.getOrDefault(member.key, -1)
+      if existing >= 0:
+        self.members[existing] = move(member)
+      else:
+        added.add move(member)
+    if kept > 0:
+      when defined(QT_MODEL_SPY):
+        recordDataChanged(0, kept - 1, @[])
+      let first = self.createIndex(0, 0, nil)
+      let last = self.createIndex(kept - 1, 0, nil)
+      defer:
+        first.delete
+        last.delete
+      self.dataChanged(first, last)
+    self.appendMembers(added)
+
+    var changedChannels: seq[string]
+    for chatId in self.channels.keys:
+      if not snapshot.channels.hasKey(chatId):
+        changedChannels.add chatId
+    self.channels.clear()
+    for chatId, channelMembers in snapshot.channels.pairs:
+      var roles = initTable[RawPubKey, ChannelRole](channelMembers.len)
+      for member in channelMembers:
         roles[member.key] = member.role
-    self.channels[delta.chatId] = roles
+      self.channels[chatId] = roles
+      changedChannels.add chatId
+    for chatId in changedChannels:
+      self.emitChannelMembersChanged(chatId)
+    self.setLoaded(true)
+
+  proc applyChannelDelta(self: CommunityRosterModel, delta: ChannelMembersDelta) =
+    # gating comes from the snapshot only: status-go also adds members to
+    # unpermissioned channels, and a permission change reloads the snapshot
+    self.channels.withValue(delta.chatId, roles):
+      for key in delta.removed:
+        roles[].del(key)
+      for member in delta.added:
+        roles[][member.key] = member.role
+      for member in delta.modified:
+        roles[].withValue(member.key, role):
+          role[] = member.role
+    do:
+      return
     self.emitChannelMembersChanged(delta.chatId)
 
   proc applyDelta*(self: CommunityRosterModel, delta: RosterDelta) =
