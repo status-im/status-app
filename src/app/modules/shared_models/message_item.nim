@@ -198,6 +198,8 @@ proc initMessageItem*(
   result.hasThread = hasThread
 
   if quotedMessageContentType == ContentType.DiscordMessage:
+    if result.quotedMessageText == "":
+      result.quotedMessageText = quotedMessageDiscordMessage.content
     result.quotedMessageAuthorDisplayName = quotedMessageDiscordMessage.author.name
     result.quotedMessageAuthorAvatar = quotedMessageDiscordMessage.author.localUrl
     if result.quotedMessageAuthorAvatar == "":
@@ -214,9 +216,10 @@ proc initMessageItem*(
 
   if contentType == ContentType.DiscordMessage:
 
+    if result.unparsedText == "":
+      result.unparsedText = discordMessage.content
     if result.messageText == "":
       result.messageText = discordMessage.content
-      result.unparsedText = discordMessage.content
     result.senderId = discordMessage.author.id
     result.senderDisplayName = discordMessage.author.name
     result.senderIcon = discordMessage.author.localUrl

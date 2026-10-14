@@ -625,3 +625,43 @@ suite "contact updates on bridged messages":
     check(item.senderIsAdded)
     check(item.senderTrustStatus == TrustStatus.Trusted)
     check(item.senderEnsVerified)
+
+suite "message text":
+  proc createItem(message: MessageDto, renderedMessageText = ""): Item =
+    return message_model.createMessageItemFromDtos(
+      message = message,
+      communityId = "",
+      sender = ContactDetails(),
+      isCurrentUser = false,
+      renderedMessageText = renderedMessageText,
+      clearText = message.text,
+    )
+
+  # status-go parses the discord payload too, so its rendered HTML is never empty
+  const discordHtml = "<p>gm from discord</p>"
+
+  test "a discord message takes its text from the discord payload":
+    let item = createItem(MessageDto(
+      id: "0x1",
+      clock: 1,
+      contentType: ContentType.DiscordMessage,
+      discordMessage: DiscordMessage(timestamp: "1700000000", content: "gm from discord"),
+    ), discordHtml)
+
+    check(item.unparsedText == "gm from discord")
+
+  test "a reply to a discord message takes the quoted text from the discord payload":
+    let item = createItem(MessageDto(
+      id: "0x2",
+      clock: 2,
+      contentType: ContentType.Message,
+      text: "reply",
+      responseTo: "0x1",
+      quotedMessage: QuotedMessage(
+        `from`: "0xdiscord",
+        contentType: ContentType.DiscordMessage,
+        discordMessage: DiscordMessage(content: "gm from discord"),
+      ),
+    ), discordHtml)
+
+    check(item.quotedMessageText == "gm from discord")
