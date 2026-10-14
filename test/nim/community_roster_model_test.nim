@@ -345,6 +345,26 @@ suite "community roster model":
     check model.num(1, "membershipRequestState") == MembershipRequestState.KickedPending.int
     check model.num(2, "membershipRequestState") == MembershipRequestState.Accepted.int
 
+  test "a requester's airdrop address goes when the request is declined or cancelled":
+    model.setAirdropAddress(keyA, "0xaaa")
+    model.setAirdropAddress(keyB, "0xbbb")
+    model.setAirdropAddress(keyC, "0xccc")
+    model.setMembershipState(keyA, MembershipRequestState.Declined)
+    model.setMembershipStates({keyB: MembershipRequestState.Declined}.toTable)
+    model.setMembershipState(keyC, MembershipRequestState.Canceled)
+    # they join after all: an address shared then would be set again
+    model.fill(snapshot(10, member(keyA), member(keyB), member(keyC)))
+    for row in 0 ..< 3:
+      check model.str(row, "airdropAddress") == ""
+    check model.num(model.rowOfKey(keyC), "membershipRequestState") == MembershipRequestState.Accepted.int
+
+  test "a pending request keeps its airdrop address":
+    model.setAirdropAddress(keyA, "0xaaa")
+    model.setMembershipState(keyA, MembershipRequestState.Pending)
+    model.setMembershipState(keyA, MembershipRequestState.DeclinedPending)
+    model.fill(snapshot(10, member(keyA)))
+    check model.str(0, "airdropAddress") == "0xaaa"
+
   test "release drops every row without a reset":
     var snap = snapshot(10, member(keyA), member(keyB))
     snap.channels[gatedUuid] = @[ChannelMember(key: raw(keyA))]

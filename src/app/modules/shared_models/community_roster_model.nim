@@ -588,15 +588,23 @@ QtObject:
       self.rowOf(pubKey)
 
   proc setMembershipState(self: CommunityRosterModel, key: RawPubKey, state: MembershipRequestState) =
-    if self.membershipStates.getOrDefault(key, MembershipRequestState.Accepted) == state:
-      return
-    if state == MembershipRequestState.Accepted:
-      self.membershipStates.del(key)
-    else:
-      self.membershipStates[key] = state
+    var roles: seq[ModelRole]
+    # a requester who never joins has no row to take the address away with it
+    if state in {MembershipRequestState.Declined, MembershipRequestState.Canceled} and
+        self.airdropAddresses.hasKey(key):
+      self.airdropAddresses.del(key)
+      roles.add ModelRole.AirdropAddress
+    # a cancelled request leaves nothing to show
+    let shown = if state == MembershipRequestState.Canceled: MembershipRequestState.Accepted else: state
+    if self.membershipStates.getOrDefault(key, MembershipRequestState.Accepted) != shown:
+      if shown == MembershipRequestState.Accepted:
+        self.membershipStates.del(key)
+      else:
+        self.membershipStates[key] = shown
+      roles.add ModelRole.MembershipRequestState
     let row = self.rows.getOrDefault(key, -1)
-    if row >= 0:
-      self.notifyRow(row, [ModelRole.MembershipRequestState])
+    if row >= 0 and roles.len > 0:
+      self.notifyRow(row, roles)
 
   proc setMembershipState*(self: CommunityRosterModel, pubKey: string, state: MembershipRequestState) =
     var key: RawPubKey

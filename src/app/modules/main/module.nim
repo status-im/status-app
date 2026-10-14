@@ -1702,6 +1702,7 @@ method newCommunityMembershipRequestReceived*[T](self: Module[T], membershipRequ
 method communityMembershipRequestCanceled*[T](self: Module[T], communityId: string, requestId: string, pubKey: string) =
   if communityId in self.chatSectionModules:
     self.chatSectionModules[communityId].removeAdminMember(pubKey)
+    self.chatSectionModules[communityId].updateMembershipStatus(pubKey, MembershipRequestState.Canceled)
 
 method displayEphemeralNotification*[T](
     self: Module[T],
