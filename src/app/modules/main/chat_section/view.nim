@@ -524,6 +524,13 @@ QtObject:
     read = getMembersModel
     notify = membersModelChanged
 
+  # the on-demand community roster; empty until a holder loads it
+  proc getRosterModel(self: View): QVariant {.slot.} =
+    return self.delegate.getRosterModel()
+
+  QtProperty[QVariant] rosterModel:
+    read = getRosterModel
+
   proc markAllReadInCommunity*(self: View) {.slot.} =
     self.delegate.markAllReadInCommunity()
 

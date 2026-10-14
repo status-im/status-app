@@ -112,6 +112,7 @@ QtObject:
     contactsStatus: Table[string, StatusUpdateDto] # [contact_id, StatusUpdateDto]
     events: EventEmitter
     closingApp: bool
+    mediaServerPort: int
 
   # Forward declaration
   proc getContactById*(self: Service, id: string): ContactsDto
@@ -137,6 +138,10 @@ QtObject:
     result.threadpool = threadpool
     result.contacts = initTable[string, ContactDetails]()
     result.contactsStatus = initTable[string, StatusUpdateDto]()
+    # subscribed at construction: the media server first starts before login
+    let service = result
+    events.on(SignalType.MediaServerStarted.event) do(e: Args):
+      service.mediaServerPort = MediaServerStartedSignal(e).port
 
   proc addContact(self: Service, contact: ContactDetails) =
     # Private proc, used for adding contacts only.
@@ -452,6 +457,16 @@ QtObject:
 
   proc getContactById*(self: Service, id: string): ContactsDto =
     return self.getContactDetails(id).dto
+
+  proc contactImageUrl*(self: Service, pubKey: string, imageClock: uint64): string =
+    ## Thumbnail URL of any member with a known image, contact or not; no RPC.
+    contactImageUrl(self.mediaServerPort, pubKey, imageClock)
+
+  proc cachedContact*(self: Service, pubKey: string): ptr ContactDetails =
+    ## The cached entry, or nil; never creates one. Valid until the cache changes.
+    self.contacts.withValue(pubKey, details):
+      return details
+    nil
 
   proc getContactColorId*(self: Service, id: string): int =
     var pubkey = id

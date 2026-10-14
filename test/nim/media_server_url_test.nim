@@ -51,3 +51,13 @@ suite "withMediaServerPort":
   test "a port embedded in the query string is not touched":
     check withMediaServerPort("https://localhost:34567/proxy?u=http://localhost:34567/a", 40000) ==
       "https://localhost:40000/proxy?u=http://localhost:34567/a"
+
+suite "contactImageUrl":
+
+  test "matches status-go MakeContactImageURL for the thumbnail":
+    check contactImageUrl(40000, "0x04ab", 1712345678'u64) ==
+      "https://localhost:40000/contactImages?clock=1712345678&imageName=thumbnail&publicKey=0x04ab"
+
+  test "no URL without a known port or image":
+    check contactImageUrl(0, "0x04ab", 7) == ""
+    check contactImageUrl(40000, "0x04ab", 0) == ""

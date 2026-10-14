@@ -4,6 +4,8 @@ import json_serialization/std/tables as ser_tables # Needed to serialize tables 
 import json_serialization
 import ./dto/community as community_dto
 import ./dto/sign_params as sign_params_dto
+import ./dto/roster as roster_dto
+import ./roster_sync
 import ../community_tokens/dto/community_token as community_token_dto
 
 import ../activity_center/service as activity_center_service
@@ -26,7 +28,7 @@ import ../../../app_service/common/types
 
 include ./async_tasks
 
-export community_dto, sign_params_dto
+export community_dto, sign_params_dto, roster_dto
 
 logScope:
   topics = "community-service"
@@ -176,6 +178,17 @@ type
     communityId*: string
     status*: CommunityMemberReevaluationStatus
 
+  CommunityRosterLoadedArgs* = ref object of Args
+    communityId*: string
+    # receivers move it into their model
+    snapshot*: RosterSnapshot
+    # held during the load, to apply on top of the snapshot
+    deltas*: seq[RosterDelta]
+
+  CommunityRosterDeltasArgs* = ref object of Args
+    communityId*: string
+    deltas*: seq[RosterDelta]
+
 # Signals which may be emitted by this service:
 const SIGNAL_COMMUNITY_DATA_LOADED* = "communityDataLoaded"
 const SIGNAL_COMMUNITY_JOINED* = "communityJoined"
@@ -259,6 +272,10 @@ const SIGNAL_COMMUNITY_LOST_OWNERSHIP* = "communityLostOwnership"
 
 const SIGNAL_COMMUNITY_TOKENS_CHANGED* = "communityTokensChanged"
 
+const SIGNAL_COMMUNITY_ROSTER_LOADED* = "communityRosterLoaded"
+const SIGNAL_COMMUNITY_ROSTER_LOAD_FAILED* = "communityRosterLoadFailed"
+const SIGNAL_COMMUNITY_ROSTER_CHANGED* = "communityRosterChanged"
+
 QtObject:
   type
     Service* = ref object of QObject
@@ -277,6 +294,9 @@ QtObject:
       # miss results — never pass these to procs that take `var T`.
       emptyCommunity: CommunityDto
       emptyCategory: Category
+      # only communities whose roster is loading or loaded have an entry
+      rosterSyncs: Table[string, RosterSync]
+      rosterLoadGeneration: int
 
   # Forward declaration
   proc asyncLoadCuratedCommunities*(self: Service)
@@ -286,6 +306,7 @@ QtObject:
   proc handleCommunitiesRequestsToJoin(self: Service, membershipRequests: seq[CommunityMembershipRequestDto])
   proc reconcileMembershipRequestFromActivityCenter(self: Service, notification: activity_center_notification_dto.ActivityCenterNotificationDto)
   proc handleCommunitiesSettingsUpdates(self: Service, communitiesSettings: seq[CommunitySettingsDto])
+  proc handleCommunityRosterDeltas*(self: Service, deltas: seq[RosterDelta])
   proc getPendingRequestIndex(self: Service, communityId: string, requestId: string): int
   proc getDeclinedRequestIndex(self: Service, communityId: string, requestId: string): int
   proc getWaitingForSharedAddressesRequestIndex(self: Service, communityId: string, requestId: string): int
@@ -373,6 +394,9 @@ QtObject:
 
       if (receivedData.communitiesSettings.len > 0):
         self.handleCommunitiesSettingsUpdates(receivedData.communitiesSettings)
+
+      if receivedData.communityRosterDeltas.len > 0:
+        self.handleCommunityRosterDeltas(receivedData.communityRosterDeltas)
 
     self.events.on(SIGNAL_PARSE_RAW_ACTIVITY_CENTER_NOTIFICATIONS) do(e: Args):
       let raw = RawActivityCenterNotificationsArgs(e)
@@ -1897,6 +1921,7 @@ QtObject:
 
       let updatedCommunity = rpcResponseObj["response"]["result"]["communities"][0].toCommunityDto
       let requestToJoin = rpcResponseObj["response"]["result"]["requestsToJoinCommunity"][0].toCommunityMembershipRequestDto
+      self.handleCommunityRosterDeltas(parseRosterDeltas(rpcResponseObj["response"]["result"]{"communityChanges"}))
 
       let membershipRequestUpdated = self.updateMembershipRequestToNewState(communityId, requestId, updatedCommunity,
         RequestToJoinType(requestToJoin.state))
@@ -2176,6 +2201,7 @@ QtObject:
 
       let updatedCommunity = rpcResponseObj["response"]["result"]["communities"][0].toCommunityDto
       let requestToJoin = rpcResponseObj["response"]["result"]["requestsToJoinCommunity"][0].toCommunityMembershipRequestDto
+      self.handleCommunityRosterDeltas(parseRosterDeltas(rpcResponseObj["response"]["result"]{"communityChanges"}))
 
       let membershipRequestUpdated = self.updateMembershipRequestToNewState(communityId, requestId, updatedCommunity,
         RequestToJoinType(requestToJoin.state))
@@ -2286,6 +2312,7 @@ QtObject:
         raise newException(RpcException, "`communities` array is empty in the response")
 
       var community = communityJArr[0].toCommunityDto()
+      self.handleCommunityRosterDeltas(parseRosterDeltas(rpcResponseObj["response"]["result"]{"communityChanges"}))
 
       var state: MembershipRequestState = MembershipRequestState.None
       if community.pendingAndBannedMembers.hasKey(memberPubkey):
@@ -2569,3 +2596,64 @@ QtObject:
       self.chatService.parseChatResponseAndEmit(response)
     except Exception as e:
       error "error marking all read in community", msg = e.msg
+
+  proc loadCommunityRoster*(self: Service, communityId: string) =
+    ## Loads the roster snapshot on a worker unless it is loading or loaded.
+    inc self.rosterLoadGeneration
+    let generation = self.rosterLoadGeneration
+    if not self.rosterSyncs.mgetOrPut(communityId, RosterSync()).beginLoad(generation):
+      return
+    let arg = AsyncLoadCommunityRosterTaskArg(
+      tptr: asyncLoadCommunityRosterTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncCommunityRosterLoaded",
+      communityId: communityId,
+      generation: generation,
+    )
+    self.threadpool.start(arg)
+
+  proc releaseCommunityRoster*(self: Service, communityId: string) =
+    ## Forgets the roster; deltas are ignored and an in-flight load is dropped.
+    self.rosterSyncs.del(communityId)
+
+  proc onAsyncCommunityRosterLoaded*(self: Service, response: string) {.slot.} =
+    let res = takeTyped[CommunityRosterLoadResult](response)
+    if res.isNil:
+      return
+    var accepted = false
+    var held: seq[RosterDelta]
+    self.rosterSyncs.withValue(res.communityId, sync):
+      if res.error.len > 0:
+        sync[].failLoad(res.generation)
+      else:
+        accepted = sync[].acceptSnapshot(res.generation, res.snapshot.clock, held)
+    do:
+      return
+    if res.error.len > 0:
+      error "error loading the community roster", communityId = res.communityId, msg = res.error
+      if self.rosterSyncs.getOrDefault(res.communityId).state == RosterSyncState.Empty:
+        self.rosterSyncs.del(res.communityId)
+        self.events.emit(SIGNAL_COMMUNITY_ROSTER_LOAD_FAILED, CommunityIdArgs(communityId: res.communityId))
+      return
+    if not accepted:
+      return
+    self.events.emit(SIGNAL_COMMUNITY_ROSTER_LOADED, CommunityRosterLoadedArgs(
+      communityId: res.communityId,
+      snapshot: move res.snapshot,
+      deltas: held,
+    ))
+
+  proc handleCommunityRosterDeltas*(self: Service, deltas: seq[RosterDelta]) =
+    var byCommunity: OrderedTable[string, seq[RosterDelta]]
+    for delta in deltas:
+      if self.rosterSyncs.hasKey(delta.communityId):
+        byCommunity.mgetOrPut(delta.communityId, @[]).add delta
+    for communityId, communityDeltas in byCommunity.pairs:
+      var toApply: seq[RosterDelta]
+      self.rosterSyncs.withValue(communityId, sync):
+        toApply = sync[].acceptDeltas(communityDeltas)
+      if toApply.len > 0:
+        self.events.emit(SIGNAL_COMMUNITY_ROSTER_CHANGED, CommunityRosterDeltasArgs(
+          communityId: communityId,
+          deltas: toApply,
+        ))

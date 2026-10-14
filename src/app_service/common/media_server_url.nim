@@ -39,3 +39,14 @@ template refreshMediaServerUrl*(field, port, changed: untyped) =
   if updated != field:
     field = updated
     changed = true
+
+# status-go media server defaults: TLS on, advertised as localhost
+const MEDIA_SERVER_BASE = "https://localhost:"
+
+proc contactImageUrl*(port: int, pubKey: string, clock: uint64): string =
+  ## The contact thumbnail URL status-go's MakeContactImageURL builds (query
+  ## keys sorted as url.Values.Encode does); empty without a port or an image.
+  if port <= 0 or clock == 0:
+    return ""
+  MEDIA_SERVER_BASE & $port & "/contactImages?clock=" & $clock &
+    "&imageName=thumbnail&publicKey=" & encodeUrl(pubKey)

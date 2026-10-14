@@ -19,6 +19,7 @@ import ../../../../app_service/common/types
 import ../../../core/signals/types
 import ../../../core/eventemitter
 import ../../../core/unique_event_emitter
+import ../../../global/app_signals
 
 type
   Controller* = ref object of RootObj
@@ -415,8 +416,46 @@ proc init*(self: Controller) =
           continue
         self.delegate.onCommunityMemberMessagesDeleted(messagesIds)
 
+  if self.isCommunitySection:
+    self.events.on(SIGNAL_COMMUNITY_ROSTER_LOADED) do(e: Args):
+      let args = CommunityRosterLoadedArgs(e)
+      if args.communityId == self.sectionId:
+        self.delegate.onCommunityRosterLoaded(move args.snapshot, args.deltas)
+
+    self.events.on(SIGNAL_COMMUNITY_ROSTER_CHANGED) do(e: Args):
+      let args = CommunityRosterDeltasArgs(e)
+      if args.communityId == self.sectionId:
+        self.delegate.onCommunityRosterChanged(args.deltas)
+
+    self.events.on(SIGNAL_COMMUNITY_ROSTER_LOAD_FAILED) do(e: Args):
+      let args = CommunityIdArgs(e)
+      if args.communityId == self.sectionId:
+        self.delegate.onCommunityRosterLoadFailed()
+
+    self.events.on(SignalType.MediaServerStarted.event) do(e: Args):
+      self.delegate.onRosterMediaServerStarted()
+
+    when defined(android) or defined(ios):
+      self.events.on(SIGNAL_APP_BACKGROUNDED) do(e: Args):
+        self.delegate.onAppBackgrounded()
+
+      self.events.on(SIGNAL_APP_FOREGROUNDED) do(e: Args):
+        self.delegate.onAppForegrounded()
+
 proc isCommunity*(self: Controller): bool =
   return self.isCommunitySection
+
+proc loadCommunityRoster*(self: Controller) =
+  self.communityService.loadCommunityRoster(self.sectionId)
+
+proc releaseCommunityRoster*(self: Controller) =
+  self.communityService.releaseCommunityRoster(self.sectionId)
+
+proc contactImageUrl*(self: Controller, pubKey: string, imageClock: uint64): string =
+  self.contactService.contactImageUrl(pubKey, imageClock)
+
+proc cachedContact*(self: Controller, pubKey: string): ptr ContactDetails =
+  self.contactService.cachedContact(pubKey)
 
 proc getMyCommunity*(self: Controller): lent CommunityDto =
   return self.communityService.getCommunityById(self.sectionId)
