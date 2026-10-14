@@ -94,8 +94,8 @@ jobs:
           if [ "${{ runner.os }}" = Windows ]; then qtdir=$(cygpath -u "$qtdir"); fi
           echo "QTDIR=$qtdir" >> "$GITHUB_ENV"
           echo "QMAKE=$qtdir/bin/qmake" >> "$GITHUB_ENV"
-          echo "$qtdir/bin" >> "$GITHUB_PATH"
-          echo "$qtdir/libexec" >> "$GITHUB_PATH"
+          cygpath -w "$qtdir/bin" 2>/dev/null >> "$GITHUB_PATH" || echo "$qtdir/bin" >> "$GITHUB_PATH"
+          cygpath -w "$qtdir/libexec" 2>/dev/null >> "$GITHUB_PATH" || echo "$qtdir/libexec" >> "$GITHUB_PATH"
 
       - uses: actions/setup-go@v5
         with:
@@ -106,11 +106,11 @@ jobs:
           if [ "${{ runner.os }}" = Windows ]; then
             curl -sSfL -o nim.zip "https://nim-lang.org/download/nim-${NIM_VERSION}_x64.zip"
             unzip -q nim.zip -d "$HOME"
-            echo "$HOME/nim-${NIM_VERSION}/bin" >> "$GITHUB_PATH"
+            cygpath -w "$HOME/nim-${NIM_VERSION}/bin" 2>/dev/null >> "$GITHUB_PATH" || echo "$HOME/nim-${NIM_VERSION}/bin" >> "$GITHUB_PATH"
           else
             curl -sSf https://nim-lang.org/choosenim/init.sh | sh -s -- -y
             "$HOME/.nimble/bin/choosenim" "$NIM_VERSION"
-            echo "$HOME/.nimble/bin" >> "$GITHUB_PATH"
+            cygpath -w "$HOME/.nimble/bin" 2>/dev/null >> "$GITHUB_PATH" || echo "$HOME/.nimble/bin" >> "$GITHUB_PATH"
           fi
 
       - name: Install Nimble ${{ env.NIMBLE_VERSION }}
@@ -126,7 +126,7 @@ jobs:
             *.zip) unzip -q -o "nimble-$asset" -d "$HOME/nimble-bin" ;;
             *)     tar -xzf "nimble-$asset" -C "$HOME/nimble-bin" ;;
           esac
-          echo "$HOME/nimble-bin" >> "$GITHUB_PATH"
+          cygpath -w "$HOME/nimble-bin" 2>/dev/null >> "$GITHUB_PATH" || echo "$HOME/nimble-bin" >> "$GITHUB_PATH"
 
       - name: Install protoc
         run: |
@@ -137,7 +137,7 @@ jobs:
           esac
           curl -sSfL -o protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-${asset}.zip"
           mkdir -p "$HOME/protoc" && unzip -q -o protoc.zip -d "$HOME/protoc"
-          echo "$HOME/protoc/bin" >> "$GITHUB_PATH"
+          cygpath -w "$HOME/protoc/bin" 2>/dev/null >> "$GITHUB_PATH" || echo "$HOME/protoc/bin" >> "$GITHUB_PATH"
 
       - name: Load the MSVC environment
         if: runner.os == 'Windows'
