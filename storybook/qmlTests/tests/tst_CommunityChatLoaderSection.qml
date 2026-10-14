@@ -101,6 +101,9 @@ Item {
         when: windowShown
 
         function init() {
+            // a store call the stub lacks
+            failOnWarning(/is not a function/)
+
             // baseline config: joined member of a token-gated community with
             // categories, one private channel per category and permissions
             mock.joined = true

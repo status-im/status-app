@@ -79,4 +79,8 @@ QtObject {
     function deleteCommunityCategory(categoryId) {}
     function prepareEditCategoryModel(categoryId) {}
     function leaveCommunity() {}
+
+    function loadMembersForSectionId(sectionId) {}
+    function loadAdminMembersForSectionId(sectionId) {}
+    function releaseAdminMembersForSectionId(sectionId) {}
 }
