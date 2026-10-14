@@ -12,7 +12,7 @@ import app/modules/shared_models/message_model as member_msg_model
 import app/modules/shared_models/user_item as user_item
 import app/modules/shared_models/user_model as user_model
 import app/modules/shared_models/[token_permissions_model, token_permission_item, token_criteria_item, token_criteria_model, token_permission_chat_list_model, contacts_utils]
-import app/modules/shared_models/[community_roster_model, community_roster_holders, community_roster_handle]
+import app/modules/shared_models/[community_roster_model, community_roster_holders]
 
 import chat_content/module as chat_content_module
 import chat_content/users/module as users_module
@@ -227,12 +227,6 @@ proc setupRoster(self: Module) =
       m.rosterHolders.onRetryTimeout()
     except Exception as e:
       error "community roster load retry failed", msg = e.msg)
-
-proc acquireRoster*(self: Module): CommunityRosterHandle =
-  ## The roster stays loaded while the returned handle lives.
-  if self.rosterHolders.isNil:
-    return nil
-  newCommunityRosterHandle(self.rosterHolders, self.rosterVariant)
 
 proc currentUserWalletContainsAddress(self: Module, address: string): bool =
   if (address.len == 0):

@@ -2,7 +2,7 @@ import std/[unittest, tables, json]
 
 import nimqml
 
-import app/modules/shared_models/[community_roster_model, community_roster_holders, community_roster_handle]
+import app/modules/shared_models/community_roster_model
 import app/modules/shared/qt_model_spy
 import app_service/common/types
 import app_service/service/community/dto/roster
@@ -307,22 +307,3 @@ suite "community roster model":
     spy.clear()
     model.clear()
     check spy.calls.len == 0
-
-suite "community roster handle":
-  test "creating a handle acquires, destroying it releases":
-    let holders = newRosterHolders(
-      RosterTimer(start: (proc(ms: int) = discard), stop: (proc() = discard)),
-      RosterTimer(start: (proc(ms: int) = discard), stop: (proc() = discard)),
-      onLoad = (proc() = discard), onDrop = (proc() = discard))
-    block:
-      let first = newCommunityRosterHandle(holders, newQVariant())
-      check holders.holderCount == 1
-      block:
-        let second = newCommunityRosterHandle(holders, newQVariant())
-        check holders.holderCount == 2
-        discard second
-      when defined(gcOrc):
-        check holders.holderCount == 1
-      discard first
-    when defined(gcOrc):
-      check holders.holderCount == 0
