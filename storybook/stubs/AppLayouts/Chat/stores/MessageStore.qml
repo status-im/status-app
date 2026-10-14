@@ -54,7 +54,10 @@ QtObject {
     function leaveChat() {}
     function addNewMessagesMarker() {}
     function firstUnseenMentionMessageId() { return "" }
-    function jumpToMessage(id) {}
+    function jumpToMessage(id) {
+        if (messageModule && messageModule.jumpToMessage)
+            messageModule.jumpToMessage(id)
+    }
     function createMessageLink(chatId, messageId) { return "" }
     function resendMessage(messageId) {}
 }

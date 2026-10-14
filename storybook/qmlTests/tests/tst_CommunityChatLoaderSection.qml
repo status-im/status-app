@@ -661,7 +661,8 @@ Item {
 
         function test_editShowsMentionNamesWithoutTheRoster() {
             const loader = loadSection()
-            const messages = mock.d.contentModuleFor(mock.activeChatId).messagesModel
+            const contentModule = mock.d.contentModuleFor(mock.activeChatId)
+            const messages = contentModule.messagesModel
             const own = SQUtils.ModelUtils.get(messages, 1)
             verify(own.amISender)
             messages.setProperty(1, "unparsedText", "hi @" + strangerKey)
@@ -673,8 +674,8 @@ Item {
 
             const input = chatInput(loader)
             compare(inputMentionNames(input), ["@Xena"])
-            // lets the deferred jump to the edited message run before the teardown
-            waitForRendering(contentView)
+            // the deferred jump to the edited message runs before the teardown
+            tryCompare(contentModule.messagesModule, "jumpedToMessageId", own.id)
         }
 
         function test_restoredDraftKeepsItsMentionNames() {

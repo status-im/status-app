@@ -282,6 +282,8 @@ QtObject {
             readonly property var messagesModule: QtObject {
                 readonly property var model: contentModule.messagesModel
                 readonly property bool loading: false
+                // the last message jumped to
+                property string jumpedToMessageId
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)
@@ -289,6 +291,7 @@ QtObject {
                 signal scrollToMessage(string messageId)
 
                 function getChatId() { return contentModule.chatId }
+                function jumpToMessage(messageId) { jumpedToMessageId = messageId }
                 function loadMoreMessages() {}
                 function updateKeepUnread(flag) {}
             }
