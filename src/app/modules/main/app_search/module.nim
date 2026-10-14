@@ -243,6 +243,14 @@ proc getResultItemFromChats(self: Module, sectionId: string, chats: seq[ChatDto]
         self.controller.addResultItemDetails(chatDto.id, sectionId, chatDto.id)
         result.add(item)
 
+# Bridged and imported Discord messages keep their text in the bridge/discord payload
+proc rawMessageText(message: MessageDto): string =
+  if message.contentType == ContentType.BridgeMessage:
+    return message.bridgeMessage.content
+  if message.contentType == ContentType.DiscordMessage and message.text == "":
+    return message.discordMessage.content
+  return message.text
+
 method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
   var items: seq[result_item.Item]
 
@@ -299,7 +307,8 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
       senderName = "You"
 
     let community {.cursor.} = self.controller.getCommunityById(chatDto.communityId)
-    let renderedMessageText = self.controller.getRenderedText(m.parsedText, community.chats)
+    # the raw text; QML renders it, as it does for the chat itself
+    let messageText = rawMessageText(m)
     let colorId = self.controller.getColorId(m.`from`)
 
     if(chatDto.communityId.len == 0):
@@ -307,7 +316,7 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
       var chatImage = chatDto.icon
       if(chatDto.chatType == ChatType.OneToOne):
         (chatName, chatImage, _) = self.controller.getOneToOneChatNameAndImage(chatDto.id)
-      let item = result_item.initItem(m.id, renderedMessageText, $m.timestamp, m.`from`, senderName,
+      let item = result_item.initItem(m.id, messageText, $m.timestamp, m.`from`, senderName,
         SEARCH_RESULT_MESSAGES_SECTION_NAME, senderImage, chatDto.color, chatName, "", chatImage,
         chatDto.color, false, true, colorId)
 
@@ -316,7 +325,7 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
       items.add(item)
     else:
       let channelName = "#" & chatDto.name
-      let item = result_item.initItem(m.id, renderedMessageText, $m.timestamp, m.`from`, senderName,
+      let item = result_item.initItem(m.id, messageText, $m.timestamp, m.`from`, senderName,
         SEARCH_RESULT_MESSAGES_SECTION_NAME, senderImage, chatDto.color,
         community.name,
         channelName,

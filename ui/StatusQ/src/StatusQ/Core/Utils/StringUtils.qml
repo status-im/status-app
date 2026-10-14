@@ -33,6 +33,22 @@ QtObject {
         return Internal.StringUtils.shortcutToText(shortcut)
     }
 
+    // The <style> block to prepend to HTML from MarkdownUtils.singleLineHtml in a rich-text Text:
+    // code spans, links, mention pills and quote blocks. Rich text ignores Text.linkColor, so
+    // without it links and mentions show in Qt's default blue, whatever the theme. `style` holds
+    // codeBackgroundColor, codeFontFamily, linkColor, mentionTextColor, mentionBackgroundColor
+    // and quoteTextColor.
+    function singleLineHtmlStyle(style) {
+        return `<style>code { background-color: ${style.codeBackgroundColor}`
+             + `; font-family: '${style.codeFontFamily}' }`
+             + ` a { color: ${style.linkColor} }`
+             + ` a.mention { color: ${style.mentionTextColor}`
+             + `; background-color: ${style.mentionBackgroundColor}`
+             + `; text-decoration: none }`
+             + ` span.quote { color: ${style.quoteTextColor} }`
+             + `</style>`
+    }
+
     // Builds the small, dimmed "(edited)" HTML marker (with a leading space) appended after chat
     // text in the static renderers. `color` and `fontSize` (px) style the span.
     function editedMarker(color, fontSize) {

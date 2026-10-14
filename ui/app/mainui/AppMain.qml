@@ -8,6 +8,7 @@ import QtQuick.Window
 import QtQml.Models
 
 import AppLayouts.Chat
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.views
 import AppLayouts.Chat.panels as ChatPanels
 import AppLayouts.Wallet
@@ -1681,7 +1682,27 @@ Item {
             onResultItemClicked: (itemId) => {
                 appMain.appSearchStore.resultItemClicked(itemId)
             }
+            resolveMentionsFn: text => searchMentionResolver.resolveFor(text)
             onClosed: appSearch.active = false
+
+            // Names the users mentioned in message results: contacts plus the current
+            // user, with a generated alias for anybody else
+            MentionNamesAdaptor {
+                id: searchMentionNames
+
+                contactsModel: appMain.contactsStore?.contactsModel ?? null
+                selfPubKey: appMain.profileStore?.pubKey ?? ""
+                selfDisplayName: appMain.profileStore?.name ?? ""
+            }
+
+            MentionResolver {
+                id: searchMentionResolver
+
+                sourceModel: searchMentionNames.model
+                nameRole: "preferredDisplayName"
+                aliasProvider: publicKey => appMain.rootChatStore?.generateAlias(publicKey) ?? ""
+                contactInfoRequester: publicKey => appMain.contactsStore.requestContactInfo(publicKey)
+            }
         }
     }
 
