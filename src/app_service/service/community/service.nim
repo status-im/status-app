@@ -2356,6 +2356,7 @@ QtObject:
         response = status_go.createCommunityTokenPermission(communityId, int(tokenPermission.`type`), Json.encode(tokenPermission.tokenCriteria), tokenPermission.chatIDs, tokenPermission.isPrivate)
 
       if response.result != nil and response.result.kind != JNull:
+        self.handleCommunityRosterDeltas(parseRosterDeltas(response.result{"communityChanges"}))
         self.events.emit(SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_OR_UPDATE_SUCCEEDED, CommunityTokenPermissionArgs(communityId: communityId, tokenPermission: tokenPermission))
         return
 
@@ -2373,6 +2374,7 @@ QtObject:
     try:
       let response = status_go.deleteCommunityTokenPermission(communityId, permissionId)
       if response.result != nil and response.result.kind != JNull:
+        self.handleCommunityRosterDeltas(parseRosterDeltas(response.result{"communityChanges"}))
         return
 
       var tokenPermission = CommunityTokenPermissionDto()
@@ -2553,12 +2555,7 @@ QtObject:
     except Exception as e:
       error "error marking all read in community", msg = e.msg
 
-  proc loadCommunityRoster*(self: Service, communityId: string) =
-    ## Loads the roster snapshot on a worker unless it is loading or loaded.
-    inc self.rosterLoadGeneration
-    let generation = self.rosterLoadGeneration
-    if not self.rosterSyncs.mgetOrPut(communityId, RosterSync()).beginLoad(generation):
-      return
+  proc startCommunityRosterLoad(self: Service, communityId: string, generation: int) =
     let arg = AsyncLoadCommunityRosterTaskArg(
       tptr: asyncLoadCommunityRosterTask,
       vptr: cast[uint](self.vptr),
@@ -2567,6 +2564,24 @@ QtObject:
       generation: generation,
     )
     self.threadpool.start(arg)
+
+  proc loadCommunityRoster*(self: Service, communityId: string) =
+    ## Loads the roster snapshot on a worker unless it is loading or loaded.
+    inc self.rosterLoadGeneration
+    let generation = self.rosterLoadGeneration
+    if not self.rosterSyncs.mgetOrPut(communityId, RosterSync()).beginLoad(generation):
+      return
+    self.startCommunityRosterLoad(communityId, generation)
+
+  proc reloadCommunityRoster(self: Service, communityId: string) =
+    ## A new snapshot under the live roster; a load in flight is superseded.
+    inc self.rosterLoadGeneration
+    let generation = self.rosterLoadGeneration
+    var started = false
+    self.rosterSyncs.withValue(communityId, sync):
+      started = sync[].beginReload(generation)
+    if started:
+      self.startCommunityRosterLoad(communityId, generation)
 
   proc releaseCommunityRoster*(self: Service, communityId: string) =
     ## Forgets the roster; deltas are ignored and an in-flight load is dropped.
@@ -2621,10 +2636,14 @@ QtObject:
         byCommunity.mgetOrPut(delta.communityId, @[]).add delta
     for communityId, communityDeltas in byCommunity.pairs:
       var toApply: seq[RosterDelta]
+      var reload = false
       self.rosterSyncs.withValue(communityId, sync):
+        reload = sync[].needsReload(communityDeltas)
         toApply = sync[].acceptDeltas(communityDeltas)
       if toApply.len > 0:
         self.events.emit(SIGNAL_COMMUNITY_ROSTER_CHANGED, CommunityRosterDeltasArgs(
           communityId: communityId,
           deltas: toApply,
         ))
+      if reload:
+        self.reloadCommunityRoster(communityId)
