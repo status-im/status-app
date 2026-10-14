@@ -2,7 +2,7 @@ import std/[unittest, json, tables, sequtils]
 
 import app_service/common/[pubkey_codec, types]
 import app_service/service/community/dto/roster
-import app_service/service/community/roster_sync
+import app_service/service/community/[roster_sync, roster_order]
 
 const
   keyA = "0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
@@ -226,3 +226,45 @@ suite "roster sync":
     var sync: RosterSync
     check not sync.beginReload(1)
     check sync.state == RosterSyncState.Empty
+
+suite "roster canonical order":
+  const
+    keyC = "0x04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672"
+    keyD = "0x04e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd1351ed993ea0d455b75642e2098ea51448d967ae33bfbdfe40cfe97bdc47739922"
+
+  proc named(hex, name: string): RosterMember =
+    RosterMember(key: raw(hex), displayName: name)
+
+  proc keysOf(snapshot: RosterSnapshot): seq[string] =
+    snapshot.members.mapIt(toPubKeyHex(it.key))
+
+  test "a snapshot sorts online-first, then case-folded name":
+    var snap = RosterSnapshot(members: @[named(keyA, "charlie"), named(keyB, "alice"),
+      named(keyC, "Bob"), named(keyD, "Delta")])
+    var inputs: RosterOrderInputs
+    inputs.online = @[keyB, keyD]
+    sortRoster(snap, inputs)
+    check snap.keysOf == @[keyB, keyD, keyC, keyA]
+    check snap.sortKeys.len == 4
+    check snap.sortKeys[0] == RosterSortKey(online: true, name: "alice")
+
+  test "a local nickname and a verified ENS name sort as shown":
+    var snap = RosterSnapshot(members: @[named(keyA, "bob"), named(keyB, "carol"), named(keyC, "dave")])
+    var inputs: RosterOrderInputs
+    inputs.names[keyC] = RosterNames(localNickname: "Aaron")
+    var ens = named(keyB, "carol")
+    ens.ensName = "zed.eth"
+    snap.members[1] = ens
+    sortRoster(snap, inputs)
+    check snap.keysOf == @[keyC, keyA, keyB]
+    ens.ensVerified = true
+    snap.members[2] = ens
+    sortRoster(snap, inputs)
+    check snap.keysOf == @[keyC, keyA, keyB]
+    check snap.sortKeys[2].name == "zed.eth"
+
+  test "equal names tie-break on the key":
+    var snap = RosterSnapshot(members: @[named(keyC, "alice"), named(keyA, "alice")])
+    sortRoster(snap, RosterOrderInputs())
+    # keyA (0x0479…) sorts before keyC (0x04f9…)
+    check snap.keysOf == @[keyA, keyC]

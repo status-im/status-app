@@ -6,11 +6,13 @@ import app/modules/shared_models/community_roster_model
 import app/modules/shared/qt_model_spy
 import app_service/common/types
 import app_service/service/community/dto/roster
+import app_service/service/community/roster_order
 
 const
   keyA = "0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
   keyB = "0x04c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee51ae168fea63dc339a3c58419466ceaeef7f632653266d0e1236431a950cfe52a"
   keyC = "0x04f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9388f7b0f632de8140fe337e62a37f3566500a99934c2231b6cb9fd7584b8e672"
+  keyD = "0x04e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd1351ed993ea0d455b75642e2098ea51448d967ae33bfbdfe40cfe97bdc47739922"
   compressedA = "zQ3shVc2UkAfJCdc1TR8E66J85h48P43r93q8jGPkPpjF9Ef9"
 
 proc raw(hex: string): RawPubKey =
@@ -307,3 +309,116 @@ suite "community roster model":
     spy.clear()
     model.clear()
     check spy.calls.len == 0
+
+# Canonical member order (CONTEXT.md): online first, then case-folded preferred
+# display name, then key; kept with single-row inserts and moves, never resets.
+suite "community roster canonical order":
+  setup:
+    let spy = newQtModelSpy()
+    spy.enable()
+    let fake = FakeSources()
+    let model = newCommunityRosterModel(fake.lookups())
+
+  teardown:
+    spy.disable()
+
+  proc orderedKeys(model: CommunityRosterModel): seq[string] =
+    for row in 0 ..< model.rowCount():
+      result.add model.str(row, "pubKey")
+
+  proc indexConsistent(model: CommunityRosterModel): bool =
+    for row in 0 ..< model.rowCount():
+      if model.rowOfMember(model.str(row, "pubKey")) != row:
+        return false
+    true
+
+  test "the snapshot fills online-first, then case-folded name, with one insert":
+    fake.statuses[keyB] = OnlineStatus.Online
+    model.fill(snapshot(10, member(keyA, "charlie"), member(keyB, "Delta"), member(keyC, "bob"),
+      member(keyD, "alice")))
+    check model.orderedKeys == @[keyB, keyD, keyC, keyA]
+    check model.indexConsistent
+    check spy.countInserts() == 1
+    check spy.countMoves() == 0
+
+  test "a snapshot sorted on the worker goes in as it is":
+    var snap = snapshot(10, member(keyA, "bob"), member(keyB, "alice"))
+    var inputs: RosterOrderInputs
+    inputs.online = @[keyA]
+    sortRoster(snap, inputs)
+    model.fill(snap)
+    check model.orderedKeys == @[keyA, keyB]
+    check model.indexConsistent
+
+  test "an added member is inserted at its sorted position":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "charlie")))
+    spy.clear()
+    model.applyDelta(RosterDelta(clock: 11, added: @[member(keyC, "bob")]))
+    check model.orderedKeys == @[keyA, keyC, keyB]
+    check model.indexConsistent
+    check spy.countInserts() == 1
+    check spy.getInserts()[0].first == 1
+    check spy.countResets() == 0
+
+  test "a rename moves the row, not a reset":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    spy.clear()
+    model.applyDelta(RosterDelta(clock: 11, modified: @[member(keyA, "zoe")]))
+    check model.orderedKeys == @[keyB, keyC, keyA]
+    check model.indexConsistent
+    check spy.countResets() == 0
+    check spy.countInserts() == 0
+    check spy.countRemoves() == 0
+    let moves = spy.getMoves()
+    check moves.len == 1
+    check moves[0].sourceFirst == 0
+    check moves[0].sourceLast == 0
+    check moves[0].destChild == 3
+    check model.str(2, "displayName") == "zoe"
+
+  test "going online moves the row into the online group":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    spy.clear()
+    fake.statuses[keyC] = OnlineStatus.Online
+    model.onlineStatusChanged(keyC)
+    check model.orderedKeys == @[keyC, keyA, keyB]
+    check model.indexConsistent
+    let moves = spy.getMoves()
+    check moves.len == 1
+    check moves[0].sourceFirst == 2
+    check moves[0].destChild == 0
+    check spy.countResets() == 0
+
+  test "a nickname from the contacts cache moves the row":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    spy.clear()
+    fake.contacts[keyC] = RosterContact(localNickname: "Aaron")
+    model.contactChanged(keyC)
+    check model.orderedKeys == @[keyC, keyA, keyB]
+    check model.indexConsistent
+    check spy.countMoves() == 1
+    check model.str(0, "preferredDisplayName") == "Aaron"
+
+  test "a change outside the order does not move":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob")))
+    spy.clear()
+    fake.contacts[keyB] = RosterContact(icon: "icon")
+    model.contactChanged(keyB)
+    model.applyDelta(RosterDelta(clock: 11, modified: @[member(keyA, "alice", role = MemberRole.Admin)]))
+    check spy.countMoves() == 0
+    check model.orderedKeys == @[keyA, keyB]
+
+  test "removals keep the key to row table consistent":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    model.applyDelta(RosterDelta(clock: 11, modified: @[member(keyA, "zoe")]))
+    model.applyDelta(RosterDelta(clock: 12, removed: @[raw(keyB)]))
+    check model.orderedKeys == @[keyC, keyA]
+    check model.indexConsistent
+
+  test "a reloaded snapshot keeps the order without a reset":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    spy.clear()
+    model.fill(snapshot(20, member(keyA, "zoe"), member(keyB, "bob"), member(keyD, "aaron")))
+    check model.orderedKeys == @[keyD, keyB, keyA]
+    check model.indexConsistent
+    check spy.countResets() == 0

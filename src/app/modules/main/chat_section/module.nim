@@ -188,6 +188,16 @@ proc rosterContact(self: Module, pubKey: string): RosterContact =
     contactRequest: toContactStatus(details.dto.contactRequestState),
   )
 
+proc rosterOrderInputs(self: Module): RosterOrderInputs =
+  ## Online members and contact names for the roster load worker's sort.
+  result.online = self.controller.onlinePubKeys()
+  let myPubKey = singletonInstance.userProfile.getPubKey()
+  if toOnlineStatus(self.controller.getStatusForContactWithId(myPubKey).statusType) == OnlineStatus.Online:
+    result.online.add myPubKey
+  for pubKey in self.controller.namedContactKeys():
+    result.names[pubKey] = self.rosterContact(pubKey).names
+  result.names[myPubKey] = self.rosterContact(myPubKey).names
+
 proc setupRoster(self: Module) =
   let m = self
   self.roster = newCommunityRosterModel(RosterLookups(
@@ -212,7 +222,7 @@ proc setupRoster(self: Module) =
       start: proc(ms: int) = m.rosterRetryTimer.start(ms.cint),
       stop: proc() = m.rosterRetryTimer.stop(),
     ),
-    onLoad = proc() = m.controller.loadCommunityRoster(),
+    onLoad = proc() = m.controller.loadCommunityRoster(proc(): RosterOrderInputs = m.rosterOrderInputs()),
     onDrop = proc() =
       m.controller.releaseCommunityRoster()
       m.roster.clear(),
