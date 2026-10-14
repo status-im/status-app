@@ -16245,13 +16245,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>SimplifiedMessageView</name>
-    <message>
-        <source>You</source>
-        <translation>Vy</translation>
-    </message>
-</context>
-<context>
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>
