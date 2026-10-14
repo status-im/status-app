@@ -36,3 +36,11 @@ suite "mentionDisplayName":
     var cached = details(ContactsDto(id: key, alias: "a"))
     check mentionDisplayName(addr cached, initTable[string, string](), key, fakeAlias) == "a"
     check mentionDisplayName(nil, initTable[string, string](), key, fakeAlias) == "alias-" & key
+
+  test "self uses the live own-profile name, not the stale status-go one":
+    const me = "0x04bb"
+    let mentioned = {me: "old name"}.toTable
+    check mentionDisplayName(nil, mentioned, me, fakeAlias, MentionSelf(pubKey: me, name: "new name")) == "new name"
+    # someone else is unaffected
+    check mentionDisplayName(nil, {key: "go-name"}.toTable, key, fakeAlias,
+      MentionSelf(pubKey: me, name: "new name")) == "go-name"

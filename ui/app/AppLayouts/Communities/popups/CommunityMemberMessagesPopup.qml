@@ -36,13 +36,13 @@ StatusDialog {
     readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
         chatUsersModel: root.chatCommunitySectionModule?.rosterModel ?? null
         contactsModel: root.rootStore?.contactsModel ?? null
-        selfPubKey: root.rootStore?.myPublicKey() ?? ""
-        selfDisplayName: root.rootStore?.name ?? ""
     }
 
     readonly property MentionResolver mentionResolver: MentionResolver {
         sourceModel: root.mentionNames?.model ?? null
         nameRole: "preferredDisplayName"
+        selfPubKey: root.rootStore?.myPublicKey() ?? ""
+        selfName: root.rootStore?.name ?? ""
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
     }
 

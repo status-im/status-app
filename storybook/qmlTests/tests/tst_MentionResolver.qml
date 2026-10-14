@@ -17,6 +17,9 @@ import shared.status
    (`knownNames`, status-go's mentionedNames), then falls back to aliasProvider,
    so the renderer shows a 3-word alias rather than 130 hex characters; with no
    provider it stays unresolved and the renderer falls back to the raw key
+ - the local user resolves to the live own-profile name (`selfPubKey`/`selfName`),
+   ahead of the model and the message: neither the contacts model nor a roster
+   snapshot carries it fresh, so a self rename re-renders at once
  - resolving never calls into the backend
  - display-name changes in the model are reflected (revision tracking)
  - while `enabled` is false results are frozen; re-enabling catches up
@@ -75,6 +78,17 @@ Item {
         MentionResolver {
             sourceModel: usersModel
             aliasProvider: pubKey => aliasStub.generateAlias(pubKey)
+        }
+    }
+
+    Component {
+        id: selfResolverComp
+
+        MentionResolver {
+            sourceModel: usersModel
+            aliasProvider: pubKey => aliasStub.generateAlias(pubKey)
+            selfPubKey: root.keyA
+            selfName: "Me"
         }
     }
 
@@ -208,6 +222,31 @@ Item {
             usersModel.append({ pubKey: root.keyUnknown, name: "Carol" })
             compare(r.resolveFor("@" + root.keyUnknown)[root.keyUnknown], "Carol")
             usersModel.remove(usersModel.count - 1)
+        }
+
+        function test_selfTakesTheLiveName() {
+            const r = createTemporaryObject(selfResolverComp, root)
+            const known = JSON.stringify({ [root.keyA]: "Old me" })
+            compare(r.resolveFor("@" + root.keyA, known)[root.keyA], "Me")
+            compare(r.resolveFor("@" + root.keyB, known)[root.keyB], "Bob")
+        }
+
+        function test_noSelfWithoutAKey() {
+            const r = createTemporaryObject(selfResolverComp, root, { selfPubKey: "" })
+            compare(r.resolveFor("@" + root.keyA)[root.keyA], "Alice")
+        }
+
+        // the message still carries the old name; the bubble follows the rename
+        function test_selfRenameReRendersTheMention() {
+            const r = createTemporaryObject(selfResolverComp, root)
+            const holder = Qt.createQmlObject(
+                "import QtQml; QtObject { property var resolver; property var names: resolver ? resolver.resolveFor('@" + root.keyA + "', '{}') : ({}) }",
+                root)
+            holder.resolver = r
+            compare(holder.names[root.keyA], "Me")
+            r.selfName = "New me"
+            compare(holder.names[root.keyA], "New me")
+            holder.destroy()
         }
 
         function test_everyoneTag() {

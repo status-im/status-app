@@ -1671,8 +1671,10 @@ proc renderInline(self: Service, parsedText: ParsedText, communityChats: openArr
         if isCompressedPubKey(id):
           id = status_accounts.decompressPk(id).result
         let contactService = self.contactService
+        let me = MentionSelf(pubKey: singletonInstance.userProfile.getPubKey(),
+          name: singletonInstance.userProfile.getName())
         let name = mentionDisplayName(contactService.cachedContact(id), mentionedNames, id,
-          proc(pubKey: string): string = contactService.generateAlias(pubKey))
+          proc(pubKey: string): string = contactService.generateAlias(pubKey), me)
         result = fmt("<a href=\"//{id}\" class=\"mention\">@{name}</a>")
     of PARSED_TEXT_CHILD_TYPE_STATUS_TAG:
       result = fmt("<span>#{value}</span>")

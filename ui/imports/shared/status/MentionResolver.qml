@@ -36,6 +36,11 @@ QObject {
     // key stays unresolved and the renderer falls back to the raw key.
     property var aliasProvider: null
 
+    // The local user, resolved to this live name ahead of the model and the message:
+    // neither the contacts model nor a roster snapshot carries it fresh.
+    property string selfPubKey
+    property string selfName
+
     // When false, results are frozen: source-model changes are still tracked but not
     // applied. Setting it back to true catches up once, and only if the model changed
     // meanwhile.
@@ -66,6 +71,11 @@ QObject {
         for (const pubKey of keys) {
             if (pubKey in result)
                 continue
+
+            if (root.selfPubKey && pubKey === root.selfPubKey && root.selfName) {
+                result[pubKey] = root.selfName
+                continue
+            }
 
             let name = d.cache[pubKey]
             if (name === undefined) {
