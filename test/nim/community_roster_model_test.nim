@@ -532,3 +532,30 @@ suite "community roster canonical order":
     model.fill(snap)
     check spy.countMoves() == 0
     check model.orderedKeys == @[keyA, keyB, keyC]
+
+  test "a drop after a failed reload empties the roster and ends the capture":
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob")))
+    model.captureOrderChanges()
+    fake.statuses[keyB] = OnlineStatus.Online
+    model.onlineStatusChanged(keyB)
+    # the reload failed and the holders dropped the roster
+    model.clear()
+    check model.rowCount() == 0
+    var snap = snapshot(20, member(keyA, "alice"), member(keyB, "bob"))
+    sortRoster(snap, RosterOrderInputs())
+    spy.clear()
+    model.fill(snap)
+    check spy.countMoves() == 0
+    check model.orderedKeys == @[keyA, keyB]
+
+
+  test "an own-profile rename moves the self row":
+    # keyC is the logged-in user
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    spy.clear()
+    fake.contacts[keyC] = RosterContact(displayName: "aaron")
+    model.contactChanged(keyC)
+    check model.orderedKeys == @[keyC, keyA, keyB]
+    check model.indexConsistent
+    check spy.countMoves() == 1
+    check spy.countResets() == 0

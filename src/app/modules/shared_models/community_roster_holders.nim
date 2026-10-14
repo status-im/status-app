@@ -1,7 +1,8 @@
 ## Who keeps a community roster alive. The first holder loads it; at zero
 ## holders it is dropped after RosterIdleReleaseMs (Idle release), and at once
 ## when the app goes to the background. A failed load is retried with backoff
-## while holders remain.
+## while holders remain; once they go, or on background, the roster is dropped
+## (a failed reload leaves the rows of the old snapshot).
 
 type
   RosterTimer* = object
@@ -40,6 +41,9 @@ proc drop(self: RosterHolders) =
   self.active = false
   self.onDrop()
 
+proc retryPending(self: RosterHolders): bool =
+  not self.active and self.failedLoads > 0
+
 proc stopRetrying(self: RosterHolders) =
   self.retryTimer.stop()
   self.failedLoads = 0
@@ -59,9 +63,12 @@ proc release*(self: RosterHolders) =
   dec self.count
   if self.count > 0:
     return
+  let stale = self.retryPending()
   self.stopRetrying()
   if self.active:
     self.releaseTimer.start(RosterIdleReleaseMs)
+  elif stale:
+    self.drop()
 
 proc onReleaseTimeout*(self: RosterHolders) =
   if self.count == 0 and self.active:
@@ -72,8 +79,11 @@ proc onRetryTimeout*(self: RosterHolders) =
     self.load()
 
 proc onBackgrounded*(self: RosterHolders) =
+  let stale = self.retryPending()
   self.stopRetrying()
   if not self.active:
+    if stale:
+      self.drop()
     return
   self.releaseTimer.stop()
   self.drop()

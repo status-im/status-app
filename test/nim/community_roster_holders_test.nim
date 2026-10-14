@@ -136,7 +136,7 @@ suite "roster holders":
     check holders.isActive
     check not retryTimer.running
 
-  test "a release during the backoff loads nothing":
+  test "a release during the backoff after a failed first load stops retrying":
     holders.acquire()
     holders.onLoadFailed()
     check retryTimer.running
@@ -145,18 +145,66 @@ suite "roster holders":
     holders.onRetryTimeout()
     check loads == 1
     check not timer.running
+    # nothing was filled; the drop only ends the capture of the failed load
+    check drops == 1
+    check not holders.isActive
     # the next first holder loads at once
     holders.acquire()
     check loads == 2
 
-  test "backgrounding stops the backoff, foregrounding loads":
+  test "a release after a failed reload drops the stale roster":
+    holders.acquire()
+    holders.onLoadSucceeded()
+    # a permission change reloads the snapshot under the live roster; it fails
+    holders.onLoadFailed()
+    check retryTimer.running
+    holders.release()
+    check drops == 1
+    check not retryTimer.running
+    check not timer.running
+    check not holders.isActive
+    holders.acquire()
+    check loads == 2
+
+  test "a release with holders left keeps retrying a failed reload":
+    holders.acquire()
+    holders.acquire()
+    holders.onLoadSucceeded()
+    holders.onLoadFailed()
+    holders.release()
+    check drops == 0
+    check retryTimer.running
+
+  test "backgrounding after a failed first load stops the backoff, foregrounding loads":
     holders.acquire()
     holders.onLoadFailed()
     holders.onBackgrounded()
     check not retryTimer.running
-    check drops == 0
+    check drops == 1
     holders.onForegrounded()
     check loads == 2
+    check holders.isActive
+
+  test "backgrounding after a failed reload drops the stale roster":
+    holders.acquire()
+    holders.onLoadSucceeded()
+    holders.onLoadFailed()
+    holders.onBackgrounded()
+    check drops == 1
+    check not retryTimer.running
+    check not holders.isActive
+    holders.onForegrounded()
+    check loads == 2
+    check holders.isActive
+
+  test "a drop after a failed reload happens once":
+    holders.acquire()
+    holders.onLoadSucceeded()
+    holders.onLoadFailed()
+    holders.onBackgrounded()
+    holders.release()
+    holders.onBackgrounded()
+    check drops == 1
 
   test "a failed load after the last holder left drops the roster":
     holders.acquire()
