@@ -635,6 +635,9 @@ proc refreshRosterContact(self: Module, pubKey: string) =
   if not self.roster.isNil:
     self.roster.contactChanged(pubKey)
 
+method onLoggedInUserNameChanged*(self: Module) =
+  self.refreshRosterContact(singletonInstance.userProfile.getPubKey())
+
 method updateCommunityMemberList*(self: Module, members: seq[ChatMember]) =
   # Re-seed the contacts cache for late joiners.
   self.controller.seedContactsFromChatMembers(members)

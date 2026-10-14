@@ -435,6 +435,9 @@ proc init*(self: Controller) =
     self.events.on(SignalType.MediaServerStarted.event) do(e: Args):
       self.delegate.onRosterMediaServerStarted()
 
+    self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
+      self.delegate.onLoggedInUserNameChanged()
+
     when defined(android) or defined(ios):
       self.events.on(SIGNAL_APP_BACKGROUNDED) do(e: Args):
         self.delegate.onAppBackgrounded()

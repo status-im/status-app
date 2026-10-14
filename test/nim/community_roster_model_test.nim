@@ -477,3 +477,14 @@ suite "community roster canonical order":
     check spy.countMoves() == 0
     check model.orderedKeys == @[keyA, keyB]
 
+
+  test "an own-profile rename moves the self row":
+    # keyC is the logged-in user
+    model.fill(snapshot(10, member(keyA, "alice"), member(keyB, "bob"), member(keyC, "carol")))
+    spy.clear()
+    fake.contacts[keyC] = RosterContact(displayName: "aaron")
+    model.contactChanged(keyC)
+    check model.orderedKeys == @[keyC, keyA, keyB]
+    check model.indexConsistent
+    check spy.countMoves() == 1
+    check spy.countResets() == 0

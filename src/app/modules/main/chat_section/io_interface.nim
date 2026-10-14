@@ -68,6 +68,9 @@ method onCommunityRosterLoadFailed*(self: AccessInterface) {.base.} =
 method onRosterMediaServerStarted*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onLoggedInUserNameChanged*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onAppBackgrounded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

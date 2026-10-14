@@ -2656,6 +2656,7 @@ QtObject:
       error "error loading the community roster", communityId = res.communityId, msg = res.error
       if self.rosterSyncs.getOrDefault(res.communityId).state == RosterSyncState.Empty:
         self.rosterSyncs.del(res.communityId)
+        self.rosterOrderInputs.del(res.communityId)
         self.events.emit(SIGNAL_COMMUNITY_ROSTER_LOAD_FAILED, CommunityIdArgs(communityId: res.communityId))
       return
     if not accepted:
