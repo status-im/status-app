@@ -46,6 +46,46 @@ Item {
         }
     }
 
+    // a large community roster, in roster (unsorted) order
+    ListModel {
+        id: largeRoster
+
+        function fill(count) {
+            const syllables = ["ka", "zu", "mi", "Ro", "te", "Lo", "an", "Vi", "pe", "do"]
+            let seed = 7
+            const next = () => (seed = (seed * 1103515245 + 12345) % 2147483648)
+            for (let i = 0; i < count; i++) {
+                let name = ""
+                for (let j = 0; j < 3; j++)
+                    name += syllables[next() % syllables.length]
+                append({
+                    pubKey: "0x04" + i.toString(16).padStart(128, "0"),
+                    compressedPubKey: "zQ3sh" + i,
+                    preferredDisplayName: name + i,
+                    displayName: name + i,
+                    ensName: "",
+                    alias: "",
+                    localNickname: "",
+                    usesDefaultName: false,
+                    isEnsVerified: false,
+                    isContact: false,
+                    isVerified: false,
+                    isUntrustworthy: false,
+                    isBlocked: false,
+                    isCurrentUser: false,
+                    memberRole: 0,
+                    contactRequest: 0,
+                    trustStatus: 0,
+                    icon: "",
+                    colorId: 1,
+                    // about one member in ten online
+                    onlineStatus: next() % 10 === 0 ? Constants.onlineStatus.online
+                                                    : Constants.onlineStatus.inactive
+                })
+            }
+        }
+    }
+
     Component {
         id: panelComponent
 
@@ -67,6 +107,10 @@ Item {
     TestCase {
         name: "UserListPanel"
         when: windowShown
+
+        function initTestCase() {
+            largeRoster.fill(5000)
+        }
 
         function init() {
             membersModel.clear()
@@ -157,6 +201,15 @@ Item {
                    "skeleton search must be disabled")
             tryVerify(() => findChild(skeleton, "membersPanelTitle").visible, 5000,
                       "skeleton title must be visible at panel width")
+        }
+
+        // The panel sorts the whole roster in SFPM on every load (the right
+        // panel loader destroys it when hidden). Measures source set -> sorted.
+        function benchmark_sortFiveThousandMembers() {
+            const panel = createTemporaryObject(panelComponent, root, { usersModel: null })
+            const listView = memberListView(panel)
+            panel.usersModel = largeRoster
+            compare(listView.count, 5000)
         }
 
         function test_searchButtonTogglesSearchBox() {
