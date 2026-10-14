@@ -131,6 +131,7 @@ Item {
         function cleanup() {
             harness.active = false
             mock.uninstall()
+            contactsStoreMock.myPublicKey = "0xdeadbeef"
             root.height = 700
         }
 
@@ -691,6 +692,50 @@ Item {
             mock.setActiveChat(draftChatId)
             tryVerify(() => inputMentionNames(input).length === 1)
             compare(inputMentionNames(input), ["@Xena"])
+        }
+
+        // leaves the draft's chat and comes back, so its draft is restored
+        function revisitChat(input) {
+            const draftChatId = mock.activeChatId
+            mock.setActiveChat("channel-u-1")
+            tryVerify(() => inputMentionNames(input).length === 0)
+            mock.setActiveChat(draftChatId)
+            tryVerify(() => inputMentionNames(input).length === 1)
+        }
+
+        function test_restoredDraftNamesSelfWithTheCurrentName() {
+            contactsStoreMock.myPublicKey = strangerKey
+            const loader = loadSection()
+            const chatRootStore = findChildByTypePrefix(loader, "ChatColumnView").rootStore
+            chatRootStore.name = "Old Me"
+            const input = chatInput(loader)
+            input.textInput.insertMention(0, "@Old Me", strangerKey)
+
+            chatRootStore.name = "New Me"
+            revisitChat(input)
+            compare(inputMentionNames(input), ["@New Me"])
+        }
+
+        function test_restoredDraftNamesAKeyThatBecameNameable() {
+            const loader = loadSection()
+            const input = chatInput(loader)
+            // nobody could name them when the draft was written
+            input.textInput.insertMention(0, "@" + strangerKey, strangerKey)
+
+            findChildByTypePrefix(loader, "ChatColumnView").rootStore.contactsModel = namedStranger
+            revisitChat(input)
+            compare(inputMentionNames(input), ["@Xena"])
+        }
+
+        ListModel {
+            id: namedStranger
+
+            ListElement {
+                pubKey: "0x04ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                preferredDisplayName: "Xena"
+                usesDefaultName: false
+                isContact: true
+            }
         }
     }
 }

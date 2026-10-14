@@ -188,13 +188,23 @@ Item {
             return mentionResolver.resolveFor(text, mentionedNames)
         }
 
-        // A restored draft shows the names it was saved with; the chain fills any gap.
+        // A restored draft is named live; a name it was saved with stands in only where the
+        // live one is just an alias or the raw key.
         function draftMentionNames(text, savedNamesJson) {
             let saved = {}
             try {
                 saved = JSON.parse(savedNamesJson || "{}")
             } catch (e) {}
-            return Object.assign(mentionResolver.resolveFor(text), saved)
+            const names = mentionResolver.resolveFor(text)
+            for (const pubKey in saved) {
+                const savedName = saved[pubKey]
+                if (!savedName || savedName === pubKey)
+                    continue
+                const name = names[pubKey]
+                if (!name || name === pubKey || name === mentionResolver.aliasProvider(pubKey))
+                    names[pubKey] = savedName
+            }
+            return names
         }
 
         // The names the input's pills show now, to be saved with its text.
