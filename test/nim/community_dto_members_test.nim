@@ -54,3 +54,17 @@ suite "member count consumers read membersCount":
     let preview = toStatusCommunityLinkPreview(%*{"communityId": "0x02aaaa", "membersCount": 0})
     check preview.setCommunityInfo(communityJson().toCommunityDto())
     check preview.getMembersCount() == 2
+
+suite "single-community messenger responses":
+  test "the community comes from the top-level communities, not communityChanges":
+    var community = communityJson()
+    community["categories"] = %*{"cat": {"id": "cat", "name": "Cat", "position": 0}}
+    let response = %*{
+      "communities": [community],
+      "communityChanges": [{"communityId": "0x02aaaa", "categoriesAdded": {"cat": {"id": "cat"}}}],
+    }
+    let parsed = response.responseCommunity()
+    check parsed.id == "0x02aaaa"
+    check parsed.membersCount == 2
+    check parsed.categories.len == 1
+    check parsed.categories[0].name == "Cat"

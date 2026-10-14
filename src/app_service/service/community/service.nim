@@ -1540,7 +1540,7 @@ QtObject:
 
       if response.result != nil and response.result.kind != JNull:
         self.checkForCategoryPropertyUpdates(
-          response.result["communityChanges"].getElems()[0]["community"].toCommunityDto,
+          response.result.responseCommunity,
           self.communities[communityId]
         )
 
@@ -1615,7 +1615,7 @@ QtObject:
             chats.add(chatDetails)
 
         # Update communities objects
-        var updatedCommunity = response.result["communities"][0].toCommunityDto
+        var updatedCommunity = response.result.responseCommunity
         self.checkForCategoryPropertyUpdates(
           updatedCommunity,
           self.communities[communityId]

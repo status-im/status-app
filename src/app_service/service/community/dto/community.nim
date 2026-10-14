@@ -508,6 +508,11 @@ proc toCommunityDto*(jsonObj: JsonNode): CommunityDto =
     for tokenObj in communityTokensMetadataObj:
       result.communityTokensMetadata.add(tokenObj.toCommunityTokensMetadataDto())
 
+proc responseCommunity*(response: JsonNode): CommunityDto =
+  ## The community of a single-community messenger response, read from the
+  ## top-level `communities`, never from `communityChanges[].community`.
+  response["communities"][0].toCommunityDto
+
 proc toMembershipRequestState*(state: CommunityMemberPendingBanOrKick): MembershipRequestState =
   case state:
     of CommunityMemberPendingBanOrKick.Banned:
