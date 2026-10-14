@@ -56,6 +56,9 @@ StatusSectionLayout {
 
     property var permissionsModel // holdings, permissionType, isPrivate, channels
 
+    // (pubKey) -> emoji hash array, for a member's context menu
+    property var getEmojiHashFn: pubKey => []
+
     // Settings related:
     property bool ensCommunityPermissionsEnabled
 
@@ -325,6 +328,7 @@ StatusSectionLayout {
 
             sourceComponent: MembersSettingsPanel {
                 rootStore: root.rootStore
+                getEmojiHashFn: root.getEmojiHashFn
 
                 preferredHeaderContentWidth: d.preferredContentWidth
                 preferredContentWidth: d.preferredContentWidth

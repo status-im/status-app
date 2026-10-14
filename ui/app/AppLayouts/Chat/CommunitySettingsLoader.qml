@@ -31,6 +31,8 @@ StatusSectionLoader {
     required property bool communitySettingsDisabled
     // The admin members (requests to join, bans) are held only while settings show
     required property bool settingsShown
+    // (pubKey) -> emoji hash array, for a member's context menu
+    property var getEmojiHashFn: pubKey => []
 
     // Re-emitted because ChatLayout owns its StackLayout's currentIndex.
     signal backToCommunityClicked()
@@ -83,6 +85,7 @@ StatusSectionLoader {
             communitySettingsDisabled:      Qt.binding(() => root.communitySettingsDisabled),
             permissionsModel:               Qt.binding(() => root.communityPermissionsStore.permissionsModel),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
+            getEmojiHashFn:                 Qt.binding(() => root.getEmojiHashFn),
         })
     }
 

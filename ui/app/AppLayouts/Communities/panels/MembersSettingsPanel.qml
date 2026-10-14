@@ -27,6 +27,8 @@ SettingsPage {
     property var bannedMembersModel
     property var pendingMembersModel
     property var declinedMembersModel
+    // (pubKey) -> emoji hash array, for a member's context menu
+    property var getEmojiHashFn: pubKey => []
     property string communityName
 
     property int memberRole
@@ -152,6 +154,7 @@ SettingsPage {
 
             searchString: memberSearch.text
             rootStore: root.rootStore
+            getEmojiHashFn: root.getEmojiHashFn
             memberRole: root.memberRole
 
             onKickUserClicked: {

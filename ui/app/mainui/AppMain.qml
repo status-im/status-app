@@ -2364,6 +2364,7 @@ Item {
                         accountSettingsStore: appMain.accountSettingsStore
                         featureFlagsStore: appMain.featureFlagsStore
                         sharedRootStore: appMain.sharedRootStore
+                        utilsStore: appMain.utilsStore
                         currencyStore: appMain.currencyStore
                         communityTokensStore: appMain.communityTokensStore
                         networkConnectionStore: appMain.networkConnectionStore
@@ -2578,6 +2579,7 @@ Item {
                             communitiesStore: appMain.communitiesStore
                             messagingRootStore: appMain.messagingRootStore
                             createChatPropertiesStore: appMain.createChatPropertiesStore
+                            utilsStore: appMain.utilsStore
                             contactsAdaptor: contactsModelAdaptor
                             popupHandler: popupRequestsHandler
                             emojiPopupLoader: statusEmojiPopup

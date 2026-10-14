@@ -32,6 +32,7 @@ StatusSectionLoader {
     required property AppStores.AccountSettingsStore accountSettingsStore
     required property AppStores.FeatureFlagsStore featureFlagsStore
     required property SharedStores.RootStore sharedRootStore
+    property SharedStores.UtilsStore utilsStore
     required property SharedStores.CurrenciesStore currencyStore
     required property SharedStores.CommunityTokensStore communityTokensStore
     required property SharedStores.NetworkConnectionStore networkConnectionStore
@@ -337,6 +338,7 @@ StatusSectionLoader {
             currencyStore:                  Qt.binding(() => root.currencyStore),
             networksStore:                  Qt.binding(() => root.networksStore),
             advancedStore:                  Qt.binding(() => root.advancedStore),
+            utilsStore:                     Qt.binding(() => root.utilsStore),
             messageLinkSharingEnabled:      Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled
                                                      && root.advancedStore.copyMessageLinksEnabled),
             threadsFeatureEnabled:          Qt.binding(() => root.featureFlagsStore.threadsEnabled),

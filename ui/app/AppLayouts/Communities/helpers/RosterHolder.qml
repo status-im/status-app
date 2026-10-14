@@ -1,12 +1,14 @@
 import QtQml
 
+import StatusQ.Core.Utils
+
 import AppLayouts.Communities.stores
 
 // Keeps a community's member roster loaded while it exists and is active: it
 // acquires on activation and releases on deactivation, on a community change
 // and on destruction. The roster loads on its first holder and is dropped about
 // two minutes after its last one goes.
-QtObject {
+QObject {
     id: root
 
     required property CommunitiesStore communitiesStore
@@ -16,7 +18,7 @@ QtObject {
 
     readonly property bool holding: d.heldCommunityId !== ""
 
-    readonly property QtObject _d: QtObject {
+    QtObject {
         id: d
 
         property bool completed

@@ -29,6 +29,7 @@ StatusSectionLoader {
     required property AppStores.AccountSettingsStore accountSettingsStore
     required property AppStores.FeatureFlagsStore featureFlagsStore
     required property SharedStores.RootStore sharedRootStore
+    property SharedStores.UtilsStore utilsStore
     required property SharedStores.CurrenciesStore currencyStore
     required property SharedStores.CommunityTokensStore communityTokensStore
     required property SharedStores.NetworkConnectionStore networkConnectionStore
@@ -254,6 +255,7 @@ StatusSectionLoader {
             currencyStore:                  Qt.binding(() => root.currencyStore),
             networksStore:                  Qt.binding(() => root.networksStore),
             advancedStore:                  Qt.binding(() => root.advancedStore),
+            utilsStore:                     Qt.binding(() => root.utilsStore),
             emojiPopup:                     Qt.binding(() => root.emojiPopupLoader.item),
             stickersPopup:                  Qt.binding(() => root.stickersPopupLoader.item),
             sendViaPersonalChatEnabled:     Qt.binding(() => root.featureFlagsStore.sendViaPersonalChatEnabled),
