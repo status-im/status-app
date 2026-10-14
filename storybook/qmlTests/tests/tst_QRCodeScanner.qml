@@ -49,6 +49,10 @@ Item {
         id: fakeSource
     }
 
+    AppStateDriver {
+        id: appState
+    }
+
     SignalSpy {
         id: tagSpy
         signalName: "validTagFound"
@@ -64,6 +68,10 @@ Item {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             tagSpy.target = controlUnderTest
             tagSpy.clear()
+        }
+
+        function cleanup() {
+            appState.setActive(true)
         }
 
         function videoOutput() {
@@ -115,6 +123,41 @@ Item {
             compare(tagSpy.count, 0)
 
             verify(fakeSource.pushQr(output.videoSink, root.address, 1200, 1200))
+            tryCompare(tagSpy, "count", 1, 5000)
+        }
+
+        // Background (mobile) / lost focus (desktop): no camera, no scanning.
+        function test_noScanWhileAppInactive() {
+            const sink = videoOutput().videoSink
+            const scanner = findChild(controlUnderTest, "statusQrCodeScanner")
+            verify(!!scanner)
+            compare(scanner.capturing, true)
+
+            appState.setActive(false)
+            compare(Qt.application.state, Qt.ApplicationInactive)
+            compare(scanner.capturing, false) // camera stopped
+            for (let i = 0; i < 5; ++i) {
+                verify(fakeSource.pushQr(sink, root.address, 640, 640))
+                wait(150)
+            }
+            compare(tagSpy.count, 0)
+
+            appState.setActive(true)
+            compare(scanner.capturing, true)
+            verify(fakeSource.pushQr(sink, root.address, 640, 640))
+            tryCompare(tagSpy, "count", 1, 5000)
+        }
+
+        // A decode still running when the app goes inactive must not report.
+        function test_noTagWhenDeactivatedMidDecode() {
+            const sink = videoOutput().videoSink
+            verify(fakeSource.pushSlowQr(sink, root.address))
+            appState.setActive(false)
+            wait(3000)
+            compare(tagSpy.count, 0)
+
+            appState.setActive(true)
+            verify(fakeSource.pushQr(sink, root.address, 640, 640))
             tryCompare(tagSpy, "count", 1, 5000)
         }
 

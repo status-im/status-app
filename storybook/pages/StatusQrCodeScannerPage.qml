@@ -23,7 +23,7 @@ Item {
         id: tap
 
         videoSink: scanner.videoSink
-        enabled: root.visible
+        enabled: scanner.capturing
         maxFps: 10
         maxDim: 1024
 

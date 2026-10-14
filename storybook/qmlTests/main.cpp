@@ -12,6 +12,7 @@
 
 #include "storybook_nim.h"
 
+#include "appstatedriver.h"
 #include "fakevideosource.h"
 #include "inputmethodtester.h"
 #include "objectcounter.h"
@@ -60,6 +61,7 @@ public slots:
         // Test-only helper for driving the IME/input-method path from QML tests.
         qmlRegisterType<InputMethodTester>("Storybook.Testing", 1, 0, "InputMethodTester");
         qmlRegisterType<FakeVideoSource>("Storybook.Testing", 1, 0, "FakeVideoSource");
+        qmlRegisterType<AppStateDriver>("Storybook.Testing", 1, 0, "AppStateDriver");
         qmlRegisterType<ObjectCounter>("Storybook.Testing", 1, 0, "ObjectCounter");
 
         // Register the same context-property mocks the storybook app uses (e.g. userProfile),

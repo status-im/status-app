@@ -36,8 +36,13 @@ Item {
     readonly property var videoSink: capture.videoSink
     readonly property rect normalizedCaptureRect: capture.normalizedCaptureRect
 
-    // The camera runs while this is true and the scanner is visible.
+    // The camera runs while this is true, the scanner is visible and the
+    // application is active (not in the background, not lost focus).
     property bool active: true
+
+    // Whether the camera is running; hosts gate frame taps / decoding on it.
+    readonly property bool capturing: root.active && root.visible
+                                      && Qt.application.state === Qt.ApplicationActive
 
     property int state: StatusQrCodeScanner.State.None
 
@@ -67,7 +72,7 @@ Item {
             anchors.fill: parent
             visible: true
             clip: true
-            active: root.active && root.visible
+            active: root.capturing
             // capture fills root, so scanCorners' geometry is already in its coordinates
             captureItemRect: Qt.rect(scanCorners.x, scanCorners.y,
                                      scanCorners.width, scanCorners.height)

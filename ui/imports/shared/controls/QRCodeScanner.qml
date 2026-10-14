@@ -182,16 +182,19 @@ ColumnLayout {
         StatusQrCodeScanner {
             id: scanner
 
+            objectName: "statusQrCodeScanner"
             state: root.state
             anchors.fill: parent
 
             // Pulls grayscale frames from the preview, at most `maxFps`
-            // while scanning, cropped to the scan corners.
+            // while the camera runs and nothing is accepted yet, cropped to
+            // the scan corners. QrScanner drops a decode still running when
+            // this turns false (hidden, app inactive).
             FrameTap {
                 id: tap
 
                 videoSink: scanner.videoSink
-                enabled: root.visible && root.state === StatusQrCodeScanner.State.None
+                enabled: scanner.capturing && root.state === StatusQrCodeScanner.State.None
                 maxFps: 10
                 maxDim: 1024
 
