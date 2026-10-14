@@ -133,7 +133,7 @@ Item {
             messageId: "msg-1"
             senderId: "0xsender"
             senderDisplayName: "Sender Contact"
-            messageText: "hello world"
+            unparsedText: "hello world"
             messageTimestamp: Date.now()
             messageContentType: Constants.messageContentType.messageType
             amISender: false

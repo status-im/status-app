@@ -168,7 +168,6 @@ Item {
             senderTrustStatus: 0,
             compressedKey: "zQalice",
             amISender: false,
-            messageText: "alpha message text",
             unparsedText: "alpha message text",
             messageImage: "",
             album: [],
@@ -193,7 +192,6 @@ Item {
             paymentRequestModel: null,
             messageAttachments: "",
             hasMention: true,
-            quotedMessageText: "quoted A",
             quotedMessageUnparsedText: "quoted A",
             quotedMessageFrom: "0xpinner",
             quotedMessageContentType: Constants.messageContentType.imageType,
@@ -232,7 +230,6 @@ Item {
             senderTrustStatus: 0,
             compressedKey: "zQbob",
             amISender: true,
-            messageText: "bravo message text",
             unparsedText: "bravo message text",
             messageImage: "",
             album: [],
@@ -257,7 +254,6 @@ Item {
             paymentRequestModel: null,
             messageAttachments: "",
             hasMention: false,
-            quotedMessageText: "",
             quotedMessageUnparsedText: "",
             quotedMessageFrom: "",
             quotedMessageContentType: Constants.messageContentType.messageType,
@@ -298,7 +294,6 @@ Item {
             senderTrustStatus: 0,
             compressedKey: "zQcarol",
             amISender: false,
-            messageText: "charlie message text",
             unparsedText: "charlie message text",
             messageImage: "",
             album: [],
@@ -323,7 +318,6 @@ Item {
             paymentRequestModel: null,
             messageAttachments: "",
             hasMention: false,
-            quotedMessageText: "quoted C",
             quotedMessageUnparsedText: "quoted C",
             quotedMessageFrom: "0xpinner",
             quotedMessageContentType: Constants.messageContentType.imageType,
@@ -394,7 +388,7 @@ Item {
 
             const msg = statusMessageOf(view)
             verify(!!msg)
-            compare(msg.messageDetails.messageText, "")
+            compare(msg.messageDetails.unparsedText, "")
             wait(100)
         }
 
@@ -413,7 +407,7 @@ Item {
 
             const msg = statusMessageOf(view)
             verify(!!msg)
-            compare(msg.messageDetails.messageText, "bravo message text")
+            compare(msg.messageDetails.unparsedText, "bravo message text")
             compare(msg.messageDetails.sender.displayName, "Bob")
             compare(msg.timestamp, messageB.messageTimestamp)
 
@@ -439,7 +433,7 @@ Item {
             compare(view.item.height, view.item.implicitHeight)
 
             const long = "a much longer message, wrapping over many lines ".repeat(20)
-            rebind(view, Object.assign({}, messageB, { messageText: long, unparsedText: long }))
+            rebind(view, Object.assign({}, messageB, { unparsedText: long }))
             tryVerify(() => view.height > short, 5000, "the row grew with its message")
             compare(view.height, view.item.implicitHeight)
             compare(view.item.height, view.item.implicitHeight)
@@ -463,11 +457,11 @@ Item {
                                 Constants.messageContentType.systemMessagePinnedMessage,
                                 Constants.messageContentType.systemMessageMutualEventSent]) {
                 view.messageContentType = Constants.messageContentType.messageType
-                view.messageText = "<p>a regular message first, the way a pooled row is reused</p>"
+                view.unparsedText = "a regular message first, the way a pooled row is reused"
                 tryVerify(() => view.status === Loader.Ready)
 
                 view.messageContentType = type
-                view.messageText = "<p>alice created the group and added bob and carol</p>"
+                view.unparsedText = "alice created the group and added bob and carol"
                 tryVerify(() => view.status === Loader.Ready)
                 waitForRendering(view)
                 compare(view.height, view.item.implicitHeight)
@@ -487,7 +481,7 @@ Item {
                 const view = createTemporaryObject(unsizedMessageViewComp, null)
                 verify(!!view)
                 view.messageContentType = type
-                view.messageText = "<p>alice created the group and added bob and carol</p>"
+                view.unparsedText = "alice created the group and added bob and carol"
                 tryVerify(() => view.status === Loader.Ready)
 
                 view.width = Qt.binding(() => root.width)
@@ -508,7 +502,7 @@ Item {
 
             // A is fully in place: content, reply resolved from the original
             // message, pin, expired outgoing status
-            compare(msg.messageDetails.messageText, "alpha message text")
+            compare(msg.messageDetails.unparsedText, "alpha message text")
             compare(msg.messageDetails.sender.displayName, "Alice")
             verify(msg.isAReply)
             compare(msg.replyDetails.messageContent, photoA)
@@ -521,7 +515,7 @@ Item {
             // Retarget to B: every property reassigned, nothing of A remains
             rebind(view, messageB)
 
-            compare(msg.messageDetails.messageText, "bravo message text")
+            compare(msg.messageDetails.unparsedText, "bravo message text")
             compare(msg.messageDetails.sender.displayName, "Bob")
             compare(msg.timestamp, messageB.messageTimestamp)
             verify(!msg.isAReply)
@@ -582,7 +576,7 @@ Item {
             tryVerify(() => view.status === Loader.Ready && !!view.item)
             const restored = statusMessageOf(view)
             verify(!!restored)
-            compare(restored.messageDetails.messageText, "bravo message text")
+            compare(restored.messageDetails.unparsedText, "bravo message text")
         }
     }
 }

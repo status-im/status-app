@@ -789,7 +789,6 @@ Item {
             RoleRename { from: "mentioned"; to: "hasMention" },
             RoleRename { from: "senderEnsVerified"; to: "senderIsEnsVerified" },
             RoleRename { from: "transactionParameters"; to: "transactionParams" },
-            RoleRename { from: "quotedMessageParsedText"; to: "quotedMessageText" },
             RoleRename { from: "quotedMessageText"; to: "quotedMessageUnparsedText" },
             RoleRename { from: "quotedMessageAuthorName"; to: "quotedMessageAuthorDetailsName" },
             RoleRename { from: "quotedMessageAuthorDisplayName"; to: "quotedMessageAuthorDetailsDisplayName" },

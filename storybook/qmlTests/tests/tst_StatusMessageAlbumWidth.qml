@@ -37,7 +37,6 @@ Item {
 
                 messageDetails {
                     contentType: StatusMessage.ContentType.Image
-                    messageText: ""
                     unparsedText: ""
                     amISender: false
                     album: [ModelsData.banners.coinbase, ModelsData.icons.status]

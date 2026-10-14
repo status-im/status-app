@@ -65,7 +65,6 @@ Loader {
     property bool senderIsAdded: false
     property int senderTrustStatus: Constants.trustStatus.unknown
     property string compressedKey: ""
-    property string messageText: ""
     property string unparsedText: ""
     // pubKey -> display name, used by the client-side renderer to resolve mentions in unparsedText.
     property var mentionsMap: ({})
@@ -96,7 +95,6 @@ Loader {
     readonly property var gifLinks: Utils.gifLinks(links)
 
     property string responseToMessageWithId: ""
-    property string quotedMessageText: ""
     // Raw (unparsed) quoted text, for the client-side reply renderer (mentions as "@0x…").
     property string quotedMessageUnparsedText: ""
     property string quotedMessageFrom: ""
@@ -778,7 +776,8 @@ Loader {
         StyledText {
             wrapMode: Text.Wrap
 
-            readonly property string systemMessageText: root.messageText.length > 0 ? root.messageText : root.unparsedText
+            readonly property string systemMessageText: MarkdownUtils.singleLineHtml(root.unparsedText,
+                                                                                    root.mentionsMap, font)
             text: {
                 return `<html>`+
                         `<head>`+
@@ -831,7 +830,7 @@ Loader {
                             qsTr("You removed %1 as a contact").arg(displayName) :
                             qsTr("%1 removed you as a contact").arg(displayName)
                     default:
-                        return root.messageText
+                        return ""
                 }
             }
             color: Theme.palette.secondaryText
@@ -1156,7 +1155,6 @@ Loader {
                         }
                         return ""
                     }
-                    messageText: d.gifOnlyMessage ? "" : root.messageText
                     unparsedText: d.gifOnlyMessage ? "" : root.unparsedText
                     mentionsMap: root.mentionsMap
                     messageContent: {
@@ -1215,15 +1213,6 @@ Loader {
                         }
                     }
 
-                    messageText: {
-                        if (messageDeleted)
-                            return qsTr("Message deleted")
-                        if (!root.quotedMessageText && !root.quotedMessageFrom)
-                            return qsTr("Unknown message. Trying to recover it")
-                        if (Utils.isGifOnlyText(root.quotedMessageUnparsedText))
-                            return qsTr("GIF")
-                        return root.quotedMessageText
-                    }
                     unparsedText: {
                         if (messageDeleted)
                             return qsTr("Message deleted")

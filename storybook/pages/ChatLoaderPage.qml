@@ -183,9 +183,8 @@ SplitView {
                     senderEnsVerified: false,
                     senderTrustStatus: 0,
                     amISender: own,
-                    messageText: "Message " + i + " — the quick brown fox jumps over the lazy dog. "
-                                 + (i % 5 === 0 ? "A somewhat longer paragraph to vary the bubble heights and make the layout work harder while measuring text. " : ""),
-                    unparsedText: "Message " + i,
+                    unparsedText: "Message " + i + " — the quick brown fox jumps over the lazy dog. "
+                                  + (i % 5 === 0 ? "A somewhat longer paragraph to vary the bubble heights and make the layout work harder while measuring text. " : ""),
                     messageImage: "",
                     messageAttachments: "",
                     contentType: Constants.messageContentType.messageType,
@@ -195,7 +194,6 @@ SplitView {
                     resendError: "",
                     mentioned: false,
                     quotedMessageText: "",
-                    quotedMessageParsedText: "",
                     quotedMessageFrom: "",
                     quotedMessageAuthorDisplayName: "",
                     quotedMessageAuthorName: "",

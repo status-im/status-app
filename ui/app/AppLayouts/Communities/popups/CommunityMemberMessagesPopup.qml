@@ -101,7 +101,6 @@ StatusDialog {
                     senderIcon: model.senderIcon
                     senderTrustStatus: model.senderTrustStatus
                     amISender: model.amISender
-                    messageText: model.messageText
                     unparsedText: model.unparsedText
                     mentionsMap: root.mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
                     messageImage: model.messageImage
@@ -115,7 +114,7 @@ StatusDialog {
                     linkPreviewModel: model.linkPreviewModel
                     links: model.links
                     transactionParams: model.transactionParameters
-                    quotedMessageText: model.quotedMessageParsedText
+                    quotedMessageUnparsedText: model.quotedMessageText
                     quotedMessageFrom: model.quotedMessageFrom
                     quotedMessageContentType: model.quotedMessageContentType
                     quotedMessageDeleted: model.quotedMessageDeleted
