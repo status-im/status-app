@@ -36,8 +36,10 @@ if hostOS == "macosx":
     "tmp/openssl/macos-" & (if hostCPU == "arm64": "arm64" else: "x86_64"))
   switch("passL", opensslRoot & "/lib/libcrypto.a")
   switch("passL", opensslRoot & "/lib/libssl.a")
-  # https://code.videolan.org/videolan/VLCKit/-/issues/232
-  switch("passL", "-Wl,-no_compact_unwind")
+  # No `-Wl,-no_compact_unwind` (once added for VLCKit issue 232's linker
+  # warnings): on arm64 most functions only have compact unwind info, so it
+  # left C++ code linked into the app unable to throw/catch (ZXing aborted the
+  # app on a damaged QR code). test/nim/qrscan_zxing_errors_test.nim guards it.
   # set the minimum supported macOS version to 14.0
   switch("passC", "-mmacosx-version-min=14.0")
 elif hostOS == "windows":

@@ -38,6 +38,9 @@ $(NIM_STATUSQ_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-
 $(NIM_STATUSQ_TARGETS): | statusq
 
 # The messages module also imports the existing keycard service bindings.
+nim-test-run/test/nim/qrscan_zxing_errors_test.nim: NIM_PARAMS += -d:qrscanZxingLib="$(abspath $(ZXING))"
+nim-test-run/test/nim/qrscan_zxing_errors_test.nim: | $(ZXING)
+
 nim-test-run/test/nim/thread_navigation_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
 nim-test-run/test/nim/thread_navigation_test.nim: | $(STATUSKEYCARD_QT_LIB)
 
