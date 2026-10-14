@@ -103,6 +103,8 @@ Item {
         function init() {
             // a store call the stub lacks
             failOnWarning(/is not a function/)
+            // a MentionResolver writing its cache from inside a binding
+            failOnWarning(/Binding loop detected for property "mentionsMap"/)
 
             // baseline config: joined member of a token-gated community with
             // categories, one private channel per category and permissions

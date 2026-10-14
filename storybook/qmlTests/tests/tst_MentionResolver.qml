@@ -98,6 +98,8 @@ Item {
         // the stubs are shared, so every test starts from a clean slate
         function init() {
             aliasStub.calls = 0
+            // resolving must not write state from inside the caller's binding
+            failOnWarning(/Binding loop detected/)
         }
 
         function test_noMentions() {

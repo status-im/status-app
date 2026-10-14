@@ -107,12 +107,26 @@ Item {
         }
     }
 
+    Component {
+        id: fontWarmupComponent
+
+        Text {
+            textFormat: Text.RichText
+            font.family: "Sans Serif"
+            text: "warm up"
+        }
+    }
+
     TestCase {
         name: "UserListPanel"
         when: windowShown
 
         function initTestCase() {
             largeRoster.fill(5000)
+            // pay the one-off font alias population here, not in the benchmark's
+            // first iteration
+            const warmup = createTemporaryObject(fontWarmupComponent, root)
+            verify(warmup.implicitWidth > 0)
         }
 
         function init() {

@@ -53,11 +53,9 @@ QObject {
     // raw key). Reads the applied revision, so QML bindings over this call re-evaluate
     // when tracked source-model changes are applied.
     function resolveFor(text, knownNames) {
-        const revision = d.appliedRevision
-        if (revision !== d.cacheRevision) {
-            d.cache = ({})
-            d.cacheRevision = revision
-        }
+        // dependency only: the cache itself is reset by the revision's change handler, as
+        // writing a property from inside the caller's binding is a binding loop
+        d.appliedRevision
 
         const result = {}
         if (!text)
@@ -102,15 +100,16 @@ QObject {
         id: d
 
         // Per-revision resolution cache: pubKey -> displayName, or null for a key known
-        // to be absent from the model.
+        // to be absent from the model. Filled in place, which notifies nothing.
         property var cache: ({})
-        property int cacheRevision: 0
 
         // Monotonic count of relevant source-model changes.
         property int sourceRevision: 0
         // The source revision resolution currently reflects. Tracks sourceRevision only
         // while enabled (frozen otherwise), so re-enabling catches up if it fell behind.
         property int appliedRevision: 0
+
+        onAppliedRevisionChanged: cache = ({})
 
         function parseKnownNames(knownNames) {
             if (!knownNames)
