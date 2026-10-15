@@ -26,6 +26,16 @@ SplitView {
             Theme.fontSizeOffset: root.Theme.fontSizeOffset
             visible: true
             cameraPermissionDenied: !ctrlCameraEnabled.checked
+
+            onTagFound: (tagType, tag) => {
+                const typeNames = {
+                    [QRCodeScannerDialog.TagType.Link]: "Link",
+                    [QRCodeScannerDialog.TagType.Address]: "Address",
+                    [QRCodeScannerDialog.TagType.WCUri]: "WCUri"
+                }
+                logs.logEvent("tagFound", ["tagType", "tag"],
+                              [typeNames[tagType] ?? tagType, tag])
+            }
         }
 
         Button {
