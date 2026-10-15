@@ -131,6 +131,8 @@ add_executable(QmlTests
     qmlTests/main.cpp
     qmlTests/inputmethodtester.h
     qmlTests/objectcounter.h
+    qmlTests/fakevideosource.h
+    ../vendor/QR-Code-generator/c/qrcodegen.c
     ${TEST_QML_FILES})
 
 target_compile_definitions(QmlTests PRIVATE
@@ -139,7 +141,9 @@ target_compile_definitions(QmlTests PRIVATE
         QUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/qmlTests")
 target_link_libraries(QmlTests PRIVATE
   Qt::QuickTest Qt::Qml Qt::Core Qt::CorePrivate Qt::Gui Qt::Quick Qt::QuickControls2
-  StatusQ SortFilterProxyModel QmlStorybookLib)
+  Qt::Multimedia StatusQ SortFilterProxyModel QmlStorybookLib)
+# FakeVideoSource renders test QR codes with the vendored generator
+target_include_directories(QmlTests PRIVATE ../vendor/QR-Code-generator/c)
 if (STORYBOOK_NIM_LIBS)
   target_link_libraries(QmlTests PRIVATE StorybookNim)
 endif()

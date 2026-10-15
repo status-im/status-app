@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtCore
 
 import StatusQ.Components
 import StatusQ.Controls
@@ -12,6 +11,8 @@ import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 
 import MobileUI
+import NimQtCamera 1.0
+import NimQrScan 1.0
 
 import utils
 
@@ -47,6 +48,9 @@ ColumnLayout {
     // This property is used in Storybook to simulate camera access being denied
     property bool cameraPermissionDenied: false
 
+    // Camera permission (status, request, OS settings). Tests pass a fake.
+    property QtObject cameraAccess: CameraAccess {}
+
     signal validTagFound(string tag)
 
     spacing: Theme.padding / 1.4
@@ -55,7 +59,7 @@ ColumnLayout {
         id: d
 
         readonly property int radius: 16
-        readonly property bool cameraReady: !root.cameraPermissionDenied && cameraPermission.status === Qt.Granted
+        readonly property bool cameraReady: !root.cameraPermissionDenied && root.cameraAccess.granted
         property string errorMessage
         property int counter: 0
 
@@ -90,26 +94,14 @@ ColumnLayout {
     Timer {
         id: permissionTimer
         interval: 500
-        running: false
-        repeat: false
-        onTriggered: {
-            cameraPermission.request()
-        }
+        onTriggered: root.cameraAccess.request()
     }
 
-    CameraPermission {
-        id: cameraPermission
-        Component.onCompleted: {
-            if (root.cameraPermissionDenied) {
-                return
-            }
-
-            if (cameraPermission.status !== Qt.PermissionStatus.Granted) {
-                // Wait before requestiing permisisons so that the view comes up after the animation before OS popup freezes the UI
-                permissionTimer.start()
-            }
-                
-        }
+    Component.onCompleted: {
+        // Wait before requesting the permission, so the view comes up after
+        // the animation before the OS popup freezes the UI
+        if (!root.cameraPermissionDenied && root.cameraAccess.status === "undetermined")
+            permissionTimer.start()
     }
 
     Loader {
@@ -168,13 +160,13 @@ ColumnLayout {
 
             StatusButton {
                 text: qsTr("Open settings")
-                // Opening app settings is only supported on mobile
-                // This screen shouldn't be shown on desktop anyway
-                visible: SQUtils.Utils.isMobile
+                // The OS page where camera access is granted; Linux has none
+                // (and no camera permission to deny).
+                visible: root.cameraAccess.canOpenSettings
                 size: StatusBaseButton.Size.Tiny
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: Theme.smallPadding
-                onClicked: SystemUtils.openAppSettings()
+                onClicked: root.cameraAccess.openSettings()
             }
 
             Item {
@@ -186,9 +178,42 @@ ColumnLayout {
 
     Component {
         id: cameraComponent
+
         StatusQrCodeScanner {
+            id: scanner
+
             state: root.state
             anchors.fill: parent
+
+            // Pulls grayscale frames from the preview, at most `maxFps`
+            // while scanning, cropped to the scan corners.
+            FrameTap {
+                id: tap
+
+                videoSink: scanner.videoSink
+                enabled: root.visible && root.state === StatusQrCodeScanner.State.None
+                maxFps: 10
+                maxDim: 1024
+
+                function applyRoi() {
+                    const r = scanner.normalizedCaptureRect
+                    tap.setRoi(r.x, r.y, r.width, r.height)
+                }
+
+                Component.onCompleted: applyRoi()
+            }
+
+            onNormalizedCaptureRectChanged: tap.applyRoi()
+
+            QrScanner {
+                frameSource: tap.handle
+                scanning: tap.enabled
+                // One code per scan: a frame can hold several.
+                onTagFound: tag => {
+                    if (root.state === StatusQrCodeScanner.State.None)
+                        d.validateTag(tag)
+                }
+            }
         }
     }
 

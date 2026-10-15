@@ -1,5 +1,6 @@
 # Builds storybook/nim/storybook_nim.nim into a static library (StorybookNim)
-# so Storybook hosts the same Nim libraries the Status app links.
+# so Storybook hosts the same Nim libraries the Status app links
+# (nim-qtcamera, nim-qrscan and its ZXing).
 # Option STORYBOOK_NIM_LIBS (default ON when Nim and vendor/nim-qtcamera exist).
 
 set(STATUS_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
@@ -38,6 +39,27 @@ if (STORYBOOK_NIM_LIBS)
   # seaqt locates Qt through pkg-config at Nim compile time.
   set(_nim_pkgconfig "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBS}/pkgconfig")
 
+  # ZXing (readers + C API) for nim-qrscan, from its nested submodule. Nim
+  # checks the archive exists at compile time; the hosts link it.
+  # zxing-cpp 3 needs C++20 and only picks it when the standard is unset;
+  # Storybook sets 17. Both overrides are scoped to this subdirectory.
+  set(_zxing_saved_shared ${BUILD_SHARED_LIBS})
+  set(_zxing_saved_std ${CMAKE_CXX_STANDARD})
+  set(BUILD_SHARED_LIBS OFF)
+  set(CMAKE_CXX_STANDARD 20)
+  set(ZXING_READERS ON CACHE BOOL "" FORCE)
+  set(ZXING_WRITERS OFF CACHE STRING "" FORCE)
+  set(ZXING_C_API ON CACHE BOOL "" FORCE)
+  # Only core/ (the library, C API included): the top level also adds the C
+  # wrapper's demo, a CTest entry and a configure-time stb download.
+  add_subdirectory("${STATUS_ROOT}/vendor/nim-qrscan/vendor/zxing-cpp/core"
+    "${CMAKE_BINARY_DIR}/zxing" EXCLUDE_FROM_ALL)
+  set(BUILD_SHARED_LIBS ${_zxing_saved_shared})
+  set(CMAKE_CXX_STANDARD ${_zxing_saved_std})
+  # Storybook enables AUTOMOC globally; ZXing has no Qt code to moc.
+  set_target_properties(ZXing PROPERTIES POSITION_INDEPENDENT_CODE ON
+    AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+
   set(_nim_depfile "${_nim_dir}/libstorybook_nim.d")
   set(_nim_args
     --app:staticlib --noMain --mm:orc --threads:on
@@ -45,7 +67,10 @@ if (STORYBOOK_NIM_LIBS)
     "--path:${STATUS_ROOT}/vendor/nim-seaqt"
     "--path:${STATUS_ROOT}/vendor/nimqml-seaqt/src"
     "--path:${STATUS_ROOT}/vendor/nim-result"
-    "--path:${STATUS_ROOT}/vendor/nim-qtcamera")
+    "--path:${STATUS_ROOT}/vendor/nim-qtcamera"
+    "--path:${STATUS_ROOT}/vendor/nim-qrscan"
+    "--path:${STATUS_ROOT}/src/app/global"
+    "-d:qrscanZxingLib=$<TARGET_FILE:ZXing>")
   # '|'-joined: a ;-list doesn't survive the custom command's quoting.
   string(REPLACE ";" "|" _nim_args_joined "${_nim_args}")
 
@@ -71,6 +96,7 @@ if (STORYBOOK_NIM_LIBS)
     DEPENDS
       "${CMAKE_CURRENT_LIST_DIR}/../nim/storybook_nim.nim"
       "${CMAKE_CURRENT_LIST_DIR}/NimBuildWithDepfile.cmake"
+      ZXing
     DEPFILE "${_nim_depfile}"
     COMMENT "Building Nim libraries for Storybook"
     VERBATIM)
@@ -80,7 +106,7 @@ if (STORYBOOK_NIM_LIBS)
   set_target_properties(StorybookNim PROPERTIES IMPORTED_LOCATION "${_nim_out}")
   add_dependencies(StorybookNim StorybookNimBuild)
   target_link_libraries(StorybookNim INTERFACE
-    Qt::Multimedia Qt::Qml Qt::Quick Qt::Widgets Qt::Gui Qt::Core)
+    ZXing Qt::Multimedia Qt::Qml Qt::Quick Qt::Widgets Qt::Gui Qt::Core)
   target_include_directories(StorybookNim INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../nim")
   target_compile_definitions(StorybookNim INTERFACE STORYBOOK_HAS_NIM)
 endif()

@@ -43,6 +43,13 @@ var skippedDirs = map[string]bool{
 // separate .qrc that the build excludes from the Qt Quick Compiler.
 const webScriptsDir = "app/AppLayouts/Browser/provider/js"
 
+// Repeatable flag: directories holding QML modules from outside ui/ (vendored
+// Nim libraries). Each module dir under it is added as qrc:/<Module>/...
+type stringList []string
+
+func (l *stringList) String() string     { return strings.Join(*l, ",") }
+func (l *stringList) Set(v string) error { *l = append(*l, v); return nil }
+
 type qrcWriter struct {
 	file  *os.File
 	count int
@@ -64,6 +71,12 @@ func (w *qrcWriter) add(path string) {
 	w.file.WriteString("      <file>" + path + "</file>\n")
 }
 
+// addAs adds `path` (relative to the .qrc) under the resource name `alias`.
+func (w *qrcWriter) addAs(alias, path string) {
+	w.count++
+	w.file.WriteString("      <file alias=\"" + alias + "\">" + path + "</file>\n")
+}
+
 func (w *qrcWriter) close() {
 	w.file.WriteString("  </qresource>\n")
 	w.file.WriteString("</RCC>")
@@ -74,6 +87,8 @@ func main() {
 	sourceDirName := flag.String("source", "", "source dir containing ui files")
 	qrcFileName := flag.String("output", "resources.qrc", "output filename")
 	webScriptsQrcFileName := flag.String("webscripts-output", "", "output filename for browser user scripts; when empty they go into -output")
+	var moduleRoots stringList
+	flag.Var(&moduleRoots, "qml-module-root", "dir whose QML modules (e.g. vendor/lib/qml) are added as qrc:/<Module>/...; repeatable")
 	flag.Parse()
 	if flag.NFlag() == 0 {
 		flag.Usage()
@@ -114,6 +129,31 @@ func main() {
 		})
 	if err != nil {
 		log.Fatalf("Failed walking %s: %s", *sourceDirName, err)
+	}
+
+	qrcDir := filepath.Dir(*qrcFileName)
+	for _, root := range moduleRoots {
+		err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() {
+				return err
+			}
+			if !qrcExtensions[filepath.Ext(path)] && filepath.Base(path) != "qmldir" {
+				return nil
+			}
+			alias, err := filepath.Rel(root, path)
+			if err != nil {
+				return err
+			}
+			rel, err := filepath.Rel(qrcDir, path)
+			if err != nil {
+				return err
+			}
+			resources.addAs(filepath.ToSlash(alias), filepath.ToSlash(rel))
+			return nil
+		})
+		if err != nil {
+			log.Fatalf("Failed walking %s: %s", root, err)
+		}
 	}
 
 	if webScripts != resources {

@@ -44,6 +44,8 @@ LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
 	benches-nim \
 	status-go \
 	qrcodegen \
+	zxing \
+	zxing-clean \
 	status-keycard-qt \
 	keycard-simulator \
 	keycard-simulator-bundle \
@@ -635,6 +637,35 @@ $(QRCODEGEN): | deps platform-cleanup
 # Named alias so callers (ci/Jenkinsfile.linux) don't hardcode the archive path.
 qrcodegen: $(QRCODEGEN)
 
+# ZXing (readers + C API) for nim-qrscan, built from its nested zxing-cpp
+# submodule. One ZXing per program: StatusQ no longer carries one.
+ifeq ($(mkspecs),macx)
+ # The Qt kit's arch (an x86_64 kit on Apple Silicon too); one build dir per arch.
+ ZXING_PLATFORM := macos
+ ZXING_ARCH := $(QT_ARCH)
+else ifeq ($(mkspecs),win32)
+ ZXING_PLATFORM := windows
+else
+ ZXING_PLATFORM := linux
+endif
+ZXING_BUILD_DIR := vendor/nim-qrscan/build/zxing-$(ZXING_PLATFORM)$(if $(ZXING_ARCH),-$(ZXING_ARCH))
+ifeq ($(mkspecs),win32)
+ ZXING := $(ZXING_BUILD_DIR)/core/Release/ZXing.lib
+else
+ ZXING := $(ZXING_BUILD_DIR)/core/libZXing.a
+endif
+
+$(ZXING): | deps
+	echo -e $(BUILD_MSG) "ZXing"
+	bash vendor/nim-qrscan/scripts/build-zxing.sh $(ZXING_PLATFORM) $(ZXING_ARCH) $(HANDLE_OUTPUT)
+
+zxing: $(ZXING)
+
+# Every platform/arch build, not only the current one (e.g. an x86_64 kit's).
+zxing-clean:
+	echo -e "\033[92mCleaning:\033[39m ZXing"
+	rm -rf vendor/nim-qrscan/build/zxing-*
+
 
 # When modifying files that are not tracked in UI_SOURCES (see below),
 # e.g. ui/shared/img/*.svg, REBUILD_UI=true can be supplied to `make` to ensure
@@ -651,13 +682,20 @@ else
  UI_SOURCES := $(shell find ui -type f -regextype egrep -iregex '.*(qmldir|qml|qrc|js)$$' -not -iname 'resources.qrc')
 endif
 
+# QML modules of the vendored Nim libraries, bundled as qrc:/<Module>/... so an
+# installed app finds them through its "qrc:/" import path (their install()
+# only adds import paths inside this checkout).
+NIM_QML_MODULE_ROOTS := vendor/nim-qtcamera/qml vendor/nim-qrscan/qml
+NIM_QML_SOURCES := $(shell find $(NIM_QML_MODULE_ROOTS) -type f \( -name qmldir -o -name '*.qml' -o -name '*.js' \))
+
 UI_RESOURCES := resources.rcc
 
-$(UI_RESOURCES): $(UI_SOURCES) | check-qt-dir compile-translations
+$(UI_RESOURCES): $(UI_SOURCES) $(NIM_QML_SOURCES) | check-qt-dir compile-translations
 	echo -e $(BUILD_MSG) "resources.rcc"
 	rm -f ./resources.rcc
 	rm -f ./ui/resources.qrc ./ui/resources_webscripts.qrc
-	go run ui/generate-rcc.go -source=ui -output=ui/resources.qrc -webscripts-output=ui/resources_webscripts.qrc
+	go run ui/generate-rcc.go -source=ui -output=ui/resources.qrc -webscripts-output=ui/resources_webscripts.qrc \
+		$(addprefix -qml-module-root=,$(NIM_QML_MODULE_ROOTS))
 	rcc -binary $(RCC_PARAMS) ui/resources.qrc ui/resources_webscripts.qrc -o ./resources.rcc
 
 rcc: $(UI_RESOURCES)
@@ -766,7 +804,9 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 ifneq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
+# nim-qtcamera's Darwin permission plugin is not needed: StatusQ registers one.
+$(NIM_STATUS_CLIENT): NIM_PARAMS += -d:qrscanZxingLib="$(abspath $(ZXING))" -d:qtcameraNoPermissionPlugin
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) $(ZXING) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--mm:orc \
@@ -1058,7 +1098,7 @@ zip-windows: check-pkg-target-windows $(STATUS_CLIENT_7Z)
 clean-destdir:
 	rm -rf bin/*
 
-clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
+clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations zxing-clean
 	rm -rf pkg/* tmp/*
 	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 

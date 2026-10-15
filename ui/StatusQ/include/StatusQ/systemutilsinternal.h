@@ -23,7 +23,6 @@ public:
     // The application owner must release backend/single-instance resources before deleting qApp.
     Q_INVOKABLE void restartApplication() const;
     Q_INVOKABLE void restartApplication(bool killBackend) const;
-    Q_INVOKABLE void openAppSettings();
 
     Q_INVOKABLE bool fileExists(const QString &path) const;
     Q_INVOKABLE bool ensureDirectory(const QString &path) const;
