@@ -135,6 +135,8 @@ SwipeView {
         This property holds optional header content for the right panel toolbar.
     */
     property Item rightPanelHeaderContent
+    // Offers toolbar and keyboard Back to the same inner history as the section.
+    property var contentHistory: null
     /*!
         \qmlproperty color StatusSectionLayoutPortrait::backgroundColor
         This property holds color of the centeral component of
@@ -210,6 +212,7 @@ SwipeView {
 
     // Bound (not a function) so StatusSectionLayout.canGoBack stays reactive.
     readonly property bool canGoBackInternally: root.currentIndex > 0 || !!root.backButtonName
+                                              || (!!root.contentHistory && root.contentHistory.canGoBack)
 
     QtObject {
         id: d
@@ -251,7 +254,9 @@ SwipeView {
             return at
         }
 
-        function handleBackAction() {
+        function handleBackAction(tryContentHistory = true) {
+            if (tryContentHistory && root.contentHistory && root.contentHistory.tryGoBack())
+                return
             if (!!root.backButtonName) {
                 root.backButtonClicked()
                 return
@@ -268,9 +273,9 @@ SwipeView {
         }
     }
 
-    function tryGoBack() {
+    function tryGoBack(tryContentHistory = true) {
         if (root.canGoBackInternally) {
-            d.handleBackAction()
+            d.handleBackAction(tryContentHistory)
             return true
         }
         return false

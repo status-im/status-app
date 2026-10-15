@@ -3245,8 +3245,8 @@ Do you wish to override the security check and continue?</source>
         <translation>Пошук</translation>
     </message>
     <message>
-        <source>Members</source>
-        <translation>Учасники</translation>
+        <source>Info</source>
+        <translation type="unfinished">Інформація</translation>
     </message>
     <message>
         <source>More</source>
@@ -3259,6 +3259,53 @@ Do you wish to override the security check and continue?</source>
             <numerusform>%n учасники</numerusform>
             <numerusform>%n учасників</numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>ChatInfoPanel</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished">Учасники</translation>
+    </message>
+    <message>
+        <source>Threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pins</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation type="unfinished">Пошук учасників...</translation>
+    </message>
+    <message>
+        <source>Search threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search pinned messages...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No threads found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Threads will appear here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Повторити</translation>
     </message>
 </context>
 <context>
@@ -3332,6 +3379,14 @@ Do you wish to override the security check and continue?</source>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No pinned messages found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pinned messages will appear here.</source>
+        <translation type="unfinished">Тут з’являться закріплені повідомлення.</translation>
     </message>
     <message>
         <source>Members</source>
@@ -13570,6 +13625,17 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>PinnedMessagesList</name>
+    <message>
+        <source>Unpin</source>
+        <translation type="unfinished">Відкріпити</translation>
+    </message>
+    <message>
+        <source>Jump to</source>
+        <translation type="unfinished">Перейти до</translation>
+    </message>
+</context>
+<context>
     <name>PinnedMessagesPopup</name>
     <message>
         <source>Pin limit reached</source>
@@ -13594,14 +13660,6 @@ to load</source>
     <message>
         <source>Pinned messages will appear here.</source>
         <translation>Тут з’являться закріплені повідомлення.</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Відкріпити</translation>
-    </message>
-    <message>
-        <source>Jump to</source>
-        <translation>Перейти до</translation>
     </message>
     <message>
         <source>Unpin selected message and pin new message</source>

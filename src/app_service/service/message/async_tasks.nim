@@ -30,6 +30,8 @@ type
 
   AsyncFetchChatThreadsForChatsTaskArg = ref object of QObjectTaskArg
     chatIds: seq[string]
+    includeSummaries: bool
+    chatRevisions: seq[int] # Entries follow chatIds order.
 
   AsyncCreateThreadTaskArg = ref object of QObjectTaskArg
     chatId: string
@@ -118,6 +120,9 @@ proc asyncFetchChatMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
 
 proc asyncFetchChatThreadsForChatsTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchChatThreadsForChatsTaskArg](argEncoded)
+  var revisions = newJObject()
+  for i, chatId in arg.chatIds:
+    revisions[chatId] = %(if i < arg.chatRevisions.len: arg.chatRevisions[i] else: 0)
   try:
     let response = status_go_chat.fetchChatThreadsForChats(arg.chatIds)
     if not response.error.isNil:
@@ -125,6 +130,8 @@ proc asyncFetchChatThreadsForChatsTask(argEncoded: string) {.gcsafe, nimcall.} =
 
     var responseJson = %*{
       "chatIds": arg.chatIds,
+      "includeSummaries": arg.includeSummaries,
+      "chatRevisions": revisions,
       "threads": %*[],
       "error": "",
     }
@@ -133,10 +140,34 @@ proc asyncFetchChatThreadsForChatsTask(argEncoded: string) {.gcsafe, nimcall.} =
     if response.result.getProp("threads", threadsArr):
       responseJson["threads"] = threadsArr
 
+    if arg.includeSummaries and threadsArr != nil and threadsArr.kind == JArray:
+      var summaries = newJArray()
+      for chatId in arg.chatIds:
+        var parentIds: seq[string]
+        for thread in threadsArr:
+          if thread{"chatId"}.getStr() == chatId:
+            parentIds.add(thread{"parentMessageId"}.getStr())
+        # Bound SQLite host parameters and summary work per request.
+        var offset = 0
+        while offset < parentIds.len:
+          let last = min(offset + 100, parentIds.len)
+          let summaryResponse = status_go_chat.fetchThreadSummaries(chatId, parentIds[offset ..< last], 6)
+          if not summaryResponse.error.isNil:
+            raise newException(CatchableError, summaryResponse.error.message)
+          let batch = summaryResponse.result{"threads"}
+          if batch.isNil or batch.kind != JArray:
+            raise newException(CatchableError, "invalid thread summaries response")
+          for thread in batch:
+            summaries.add(thread)
+          offset = last
+      responseJson["threads"] = summaries
+
     arg.finish(responseJson)
   except Exception as e:
     arg.finish(%* {
       "chatIds": arg.chatIds,
+      "includeSummaries": arg.includeSummaries,
+      "chatRevisions": revisions,
       "error": e.msg,
     })
 

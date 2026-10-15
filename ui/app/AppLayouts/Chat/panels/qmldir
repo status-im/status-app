@@ -1,5 +1,6 @@
 ChatAnchorButtonsPanel 1.0 ChatAnchorButtonsPanel.qml
 ChatHeaderSkeleton 1.0 ChatHeaderSkeleton.qml
+ChatInfoPanel 1.0 ChatInfoPanel.qml
 ChatInputSkeleton 1.0 ChatInputSkeleton.qml
 EmptyChatPanel 1.0 EmptyChatPanel.qml
 InlineSelectorPanel 1.0 InlineSelectorPanel.qml

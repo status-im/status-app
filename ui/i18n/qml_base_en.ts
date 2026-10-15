@@ -3230,7 +3230,7 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Members</source>
+        <source>Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3243,6 +3243,53 @@ Do you wish to override the security check and continue?</source>
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>ChatInfoPanel</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pins</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search pinned messages...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No threads found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Threads will appear here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3315,6 +3362,14 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No pinned messages found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pinned messages will appear here.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13481,6 +13536,17 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>PinnedMessagesList</name>
+    <message>
+        <source>Unpin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Jump to</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PinnedMessagesPopup</name>
     <message>
         <source>Pin limit reached</source>
@@ -13503,14 +13569,6 @@ to load</source>
     </message>
     <message>
         <source>Pinned messages will appear here.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Jump to</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

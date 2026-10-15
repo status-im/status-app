@@ -4,6 +4,7 @@ import ../io_interface as delegate_interface
 import view, controller
 import ../../../../shared_models/[message_model, message_item]
 import ../../../../shared_models/link_preview_model
+import ../../../../shared_models/thread_model
 import ../../../../shared_models/thread_participant_model
 import ../../../../../global/global_singleton
 import ../../../../../global/feature_flags
@@ -55,7 +56,7 @@ proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitt
   Module =
   result = Module()
   result.delegate = delegate
-  result.view = view.newView(result)
+  result.view = view.newView(result, threadId)
   result.viewVariant = newQVariant(result.view)
   result.controller = controller.newController(result, events, sectionId, chatId, belongsToCommunity, contactService,
     communityService, chatService, messageService, mailserversService, sharedUrlsService, threadId = threadId)
@@ -73,6 +74,7 @@ proc updateLinkPreviewsCommunities(self: Module, item: Item, requestFromMailserv
 proc currentUserWalletContainsAddress(self: Module, address: string): bool
 proc updateQuotedImages(self: Module, items: var seq[Item], message: MessageDto)
 proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary
+proc updateThreadSummary(self: Module, thread: ThreadDto)
 
 method delete*(self: Module) =
   self.controller.delete
@@ -502,9 +504,7 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
         selectedThread = thread
         break
 
-  if selectedThread.parentMessageId.len > 0:
-    self.view.model().setHasThread(selectedThread.parentMessageId, true)
-    self.view.model().setThreadSummary(selectedThread.parentMessageId, self.threadSummary(selectedThread))
+  self.updateThreadSummary(selectedThread)
 
   # Prepare the thread module without changing the selected parent chat.
   self.delegate.openThreadAsChat(selectedThread.threadId, selectedThread.name, selectedThread.parentMessageId,
@@ -512,7 +512,9 @@ method onThreadCreated*(self: Module, parentMessageId: string, threads: seq[Thre
     notificationsCount = selectedThread.unviewedMentionsCount)
   self.view.emitThreadOpenRequestedSignal(selectedThread.threadId, selectedThread.name)
 
-method onChatThreadsLoadingFailed*(self: Module) =
+method onChatThreadsLoadingFailed*(self: Module, summariesRequested: bool = false) =
+  if summariesRequested:
+    self.view.setThreadsState(false, true)
   self.view.emitChatThreadsLoadingFailedSignal()
 
 method onThreadCreationFailed*(self: Module) =
@@ -540,6 +542,7 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
 
   if thread.lastMessage.`from`.len > 0:
     let sender = self.controller.getContactDetails(thread.lastMessage.`from`)
+    summary.lastMessageSenderId = thread.lastMessage.`from`
     summary.lastMessageSenderName = sender.defaultDisplayName
     summary.lastMessageSenderImage = sender.icon
     summary.lastMessageSenderColorId = sender.colorId
@@ -548,14 +551,43 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
 
   return summary
 
-method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto]) =
-  # Adding the thread rows is the chat section's job; this only back-fills the flag for
-  # messages that were already rendered when the fetch landed.
+proc updateThreadSummary(self: Module, thread: ThreadDto, parentIndex: int) =
+  let parentLoaded = parentIndex >= 0
+  let showInInfo = self.view.hasThreadsModel()
+  if showInInfo or (parentLoaded and thread.messagesCount > 0):
+    let summary = self.threadSummary(thread)
+    if showInInfo:
+      self.view.threadsModel().upsert(summary)
+    if parentLoaded and thread.messagesCount > 0:
+      self.view.model().setThreadSummary(parentIndex, summary)
+  if parentLoaded:
+    self.view.model().setHasThread(parentIndex, true)
+
+proc updateThreadSummary(self: Module, thread: ThreadDto) =
+  self.updateThreadSummary(thread, self.view.model().findIndexForMessageId(thread.parentMessageId))
+
+method loadChatThreads*(self: Module) =
+  self.controller.loadChatThreads()
+
+method onChatThreadsLoaded*(self: Module, threads: seq[ThreadDto], listLoaded: bool = false) =
+  if self.controller.getMyThreadId().len > 0:
+    return
+  # A complete snapshot can arrive synchronously from the service cache.
+  if listLoaded:
+    discard self.view.threadsModel()
+  var parentIndices = initTable[string, int]()
+  for i, item in self.view.model().items:
+    if item.id.len > 0 and not parentIndices.hasKey(item.id):
+      parentIndices[item.id] = i
+    if item.albumId.len > 0:
+      for messageId in item.albumMessageIds:
+        if messageId.len > 0 and not parentIndices.hasKey(messageId):
+          parentIndices[messageId] = i
   for thread in threads:
-    if thread.parentMessageId.len > 0:
-      self.view.model().setHasThread(thread.parentMessageId, true)
-      if thread.messagesCount > 0:
-        self.view.model().setThreadSummary(thread.parentMessageId, self.threadSummary(thread))
+    self.updateThreadSummary(thread, parentIndices.getOrDefault(thread.parentMessageId, -1))
+  if listLoaded:
+    self.view.threadsModel().retain(threads.mapIt(it.threadId))
+    self.view.setThreadsState(false, false)
 
 method getChatType*(self: Module): int =
   let chatDto = self.controller.getChatDetails()
@@ -589,6 +621,9 @@ method getNumberOfPinnedMessages*(self: Module): int =
 
 method updateContactDetails*(self: Module, contactId: string) =
   let updatedContact = self.controller.getContactDetails(contactId)
+  if self.view.hasThreadsModel():
+    self.view.threadsModel().updateContact(contactId, updatedContact.defaultDisplayName,
+      updatedContact.icon, updatedContact.colorId)
   let chatDto = self.controller.getChatDetails()
 
   if chatDto.chatType == ChatType.OneToOne and chatDto.id == contactId:
@@ -661,6 +696,9 @@ method onMessageEdited*(self: Module, message: MessageDto) =
     )
 
 method onHistoryCleared*(self: Module) =
+  if self.view.hasThreadsModel():
+    self.view.threadsModel().retain(@[])
+    self.view.setThreadsState(false, false)
   self.view.model().clear()
   # Add ChatIdentifier back after model is cleared, so that the chat screen is not blank
   if self.controller.getMyThreadId().len == 0:

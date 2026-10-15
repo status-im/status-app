@@ -122,6 +122,7 @@ StatusSectionLoader {
             showRightPanel: root.showRightPanel
             rightPanelHeaderContent: root.item?.rightPanelHeaderContent ?? null
             subsectionHistory: root.item?.viewSubsectionHistory ?? null
+            contentHistory: root.item?.viewContentHistory ?? null
 
             leftPanelWidthOverride: root.leftPanelWidthOverride
 

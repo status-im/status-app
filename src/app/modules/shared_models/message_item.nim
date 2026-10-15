@@ -22,6 +22,7 @@ type
     notificationCount*: int
     participantsCount*: int
     participants*: seq[thread_participant_model.Participant]
+    lastMessageSenderId*: string
     lastMessageSenderName*: string
     lastMessageSenderImage*: string
     lastMessageSenderColorId*: int

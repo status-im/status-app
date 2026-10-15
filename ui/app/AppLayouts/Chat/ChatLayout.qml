@@ -51,6 +51,7 @@ StackLayout {
     readonly property bool showRightPanel: mainViewLoader.item?.showRightPanel ?? false
     readonly property bool rightPanelDecisionReady: mainViewLoader.item?.rightPanelDecisionReady ?? false
     readonly property var viewSubsectionHistory: mainViewLoader.item?.subsectionHistory ?? null
+    readonly property var viewContentHistory: mainViewLoader.item?.contentHistory ?? null
 
     // Per-panel readiness of those panels, so the loader can retire each
     // skeleton slot independently

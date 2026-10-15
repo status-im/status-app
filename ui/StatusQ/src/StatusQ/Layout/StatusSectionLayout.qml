@@ -221,7 +221,7 @@ LayoutChooser {
     function tryGoBack() {
         if (root.contentHistory && root.contentHistory.tryGoBack()) // content tier
             return true
-        if (portraitView.visible && portraitView.tryGoBack()) // view tier
+        if (portraitView.visible && portraitView.tryGoBack(false)) // content tier was already tried
             return true
         if (root.subsectionHistory && root.subsectionHistory.tryGoBack()) { // subsection tier
             // Advance to the central panel so the restored subsection's detail is
@@ -426,6 +426,7 @@ LayoutChooser {
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel
         rightPanelHeaderContent: root.rightPanelHeaderContent
+        contentHistory: root.contentHistory
         footer: root.footer
         headerBackground: root.headerBackground
         showRightPanel: root.showRightPanel

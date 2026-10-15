@@ -20,6 +20,9 @@ ColumnLayout {
 
     property var usersModel
 
+    property bool headerVisible: true
+    property string searchText: searchField.text
+
     property string label
     property int chatType: Constants.chatType.unknown
     property bool isAdmin
@@ -47,14 +50,13 @@ ColumnLayout {
 
         readonly property int delegateHorizontalPadding: Math.max(Theme.halfPadding, 8)
         readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
-        // Includes the scrollbar width and a 1px gap before it.
-        readonly property int delegateRightSpacing: scrollBarWidth + 1
     }
 
     MembersPanelHeader {
         id: header
         Layout.fillWidth: true
         Layout.margins: Theme.padding
+        visible: root.headerVisible
         label: root.label
     }
 
@@ -67,7 +69,7 @@ ColumnLayout {
         Layout.leftMargin: Theme.padding
         Layout.rightMargin: Theme.padding
         placeholderText: qsTr("Search members...")
-        visible: header.searchChecked
+        visible: root.headerVisible && header.searchChecked
         onVisibleChanged: {
             if (visible)
                 forceActiveFocus()
@@ -115,15 +117,16 @@ ColumnLayout {
             filters: [
                 SQUtils.SearchFilter {
                     roleName: "preferredDisplayName"
-                    searchPhrase: searchField.text
-                    enabled: searchField.visible && !!searchField.text
+                    searchPhrase: root.searchText
+                    enabled: !!root.searchText
                 }
             ]
         }
         section.property: "onlineStatus"
         section.delegate: (root.width > 58) ? sectionDelegateComponent : null
         delegate: StatusMemberListItem {
-            width: Math.max(0, ListView.view.width - d.delegateRightSpacing)
+            // Keep equal panel margins, with the scrollbar in the right gutter.
+            width: Math.max(0, ListView.view.width - Theme.padding)
             horizontalPadding: d.delegateHorizontalPadding
 
             usesDefaultName: model.usesDefaultName
@@ -171,12 +174,12 @@ ColumnLayout {
         id: sectionDelegateComponent
 
         Item {
-            width: Math.max(0, ListView.view.width - d.delegateRightSpacing)
+            width: Math.max(0, ListView.view.width - Theme.padding)
             height: 24
 
             StatusBaseText {
                 anchors.fill: parent
-                anchors.leftMargin: Theme.padding
+                anchors.leftMargin: d.delegateHorizontalPadding
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: Theme.additionalTextSize
                 color: Theme.palette.baseColor1

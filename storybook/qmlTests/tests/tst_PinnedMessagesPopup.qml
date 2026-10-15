@@ -274,5 +274,17 @@ Item {
             verify(!!jumpItem)
             compare(jumpItem.enabled, true)
         }
+
+        function test_removingSelectedMessageDisablesConfirmation() {
+            appendPinnedMessage("msg-1", "already pinned")
+            controlUnderTest.messageToPin = "msg-to-pin"
+            openDialog()
+            mouseClick(waitForDelegate())
+            const confirm = findChild(controlUnderTest, "pinnedMessagesPopup_confirmPinButton")
+            tryCompare(confirm, "enabled", true)
+
+            pinnedModel.clear()
+            tryCompare(confirm, "enabled", false)
+        }
     }
 }

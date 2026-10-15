@@ -278,6 +278,13 @@ QtObject {
             readonly property var messagesModule: QtObject {
                 readonly property var model: contentModule.messagesModel
                 readonly property bool loading: false
+                property string threadId: ""
+                property int loadThreadsRequests: 0
+                readonly property ListModel threadsModel: ListModel {}
+                readonly property bool threadsLoading: false
+                readonly property bool threadsError: false
+
+                function loadChatThreads() { loadThreadsRequests++ }
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)
