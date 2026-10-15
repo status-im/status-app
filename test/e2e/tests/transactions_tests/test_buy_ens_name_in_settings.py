@@ -5,19 +5,19 @@ from allure_commons._allure import step
 
 import driver
 from configs.timeouts import UI_LOAD_TIMEOUT_SEC
+from helpers.ens_names_store import append_purchased_ens_name, random_ens_name_for_purchase
 from helpers.wallet_helper import (
     authenticate_with_password,
     open_wallet_account,
     wallet_send_import_user,
     wallet_send_returning_user,
 )
-from scripts.utils.generators import random_ens_string
 from constants.wallet import WalletHistoryTitles, WalletNetworkNaming
 from gui.screens.settings_ens_usernames import ENSRegisteredView
 
 @pytest.mark.transaction
-@pytest.mark.parametrize('ens_name', [pytest.param(random_ens_string())])
-def test_ens_name_purchase(main_window, user_account, ens_name):
+def test_ens_name_purchase(main_window, user_account):
+    ens_name = random_ens_name_for_purchase()
     user_account = wallet_send_returning_user()
     wallet_send_import_user(main_window, user_account)
 
@@ -26,6 +26,7 @@ def test_ens_name_purchase(main_window, user_account, ens_name):
         ens_settings = settings.left_panel.open_ens_usernames_settings().start()
         ens_settings.enter_user_name(ens_name)
         if driver.waitFor(lambda: 'Username already taken :(' in ens_settings.ens_text_notes(), UI_LOAD_TIMEOUT_SEC):
+            ens_name = random_ens_name_for_purchase()
             ens_settings.enter_user_name(ens_name)
 
     with step('Verify that user name is available'):
@@ -51,8 +52,17 @@ def test_ens_name_purchase(main_window, user_account, ens_name):
 
     with step('Verify ENS transaction appears in History'):
         wallet_account = open_wallet_account(main_window)
-        wallet_account.wait_for_new_history_transaction(
+        transaction = wallet_account.wait_for_new_history_transaction(
             titles=WalletHistoryTitles.ENS,
             network_name=WalletNetworkNaming.LAYER1_ETHEREUM_TESTNET.value,
             sent_at=sent_at,
+            require_settled=True,
+        )
+        assert transaction.transactionHash, 'ENS transaction hash is empty'
+        append_purchased_ens_name(
+            ens_name,
+            time.time(),
+            wallet_account.address,
+            WalletNetworkNaming.LAYER1_ETHEREUM_TESTNET.chain_id,
+            transaction.transactionHash,
         )

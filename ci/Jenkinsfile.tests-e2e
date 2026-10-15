@@ -218,6 +218,7 @@ pipeline {
               }
               timeout(time: getTestStageTimeout()) {
                 dir('test/e2e') {
+                  restorePurchasedEnsNames()
                   def flags = []
                   if (params.TEST_NAME)  { flags.add("-k=${params.TEST_NAME}") }
                   if (!params.KEYCARD_TESTS && params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
@@ -262,7 +263,7 @@ pipeline {
     always { script {
       dir('test/e2e') {
         archiveArtifacts(
-          artifacts: 'local_run_results/*.log',
+          artifacts: 'local_run_results/*.log,resources/purchased_ens_names.json',
           allowEmptyArchive: true,
         )
 
@@ -361,6 +362,24 @@ def getPytestMarkerExpr() {
 
 def getTestStageTimeout() {
   return (params.KEYCARD_TESTS || params.TEST_SCOPE_FLAG == '-m=critical') ? 30 : 120
+}
+
+def restorePurchasedEnsNames() {
+  def build = currentBuild.previousBuild
+  def attempts = 0
+  while (build != null && attempts < 20) {
+    copyArtifacts(
+      projectName: env.JOB_NAME,
+      selector: specific("${build.number}"),
+      filter: 'resources/purchased_ens_names.json',
+      optional: true,
+    )
+    if (fileExists('resources/purchased_ens_names.json')) {
+      return
+    }
+    build = build.previousBuild
+    attempts++
+  }
 }
 
 def getAgentLabel() {
