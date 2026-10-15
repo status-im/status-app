@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -34,6 +35,14 @@ StatusModal {
 
     property var formatTimestampFn: function (ts) {
         return ts
+    }
+
+    // The `content` of a result is raw message text (markdown with "@0x…" mentions),
+    // rendered as a single-line HTML preview. This returns the display names of the
+    // mentions in it ({ pubKey: name }); it is called from the delegate bindings, so
+    // the properties it reads are tracked and the previews follow name changes.
+    property var resolveMentionsFn: function (text) {
+        return ({})
     }
 
     function setSearchSelection(text = "",
@@ -274,6 +283,18 @@ StatusModal {
                 ListView {
                     id: view
                     objectName: "searchResultListView"
+
+                    // The results' stylesheet, in the colors ChatSingleLineTextView uses for
+                    // the same HTML. Built on an item: a non-visual object's attached Theme
+                    // does not follow the window's, so it would stay light in dark mode.
+                    readonly property string subTitleStyle: StringUtils.singleLineHtmlStyle({
+                        codeBackgroundColor: Theme.palette.baseColor4,
+                        codeFontFamily: Fonts.codeFont.family,
+                        linkColor: Theme.palette.primaryColor1,
+                        mentionTextColor: Theme.palette.mentionColor1,
+                        mentionBackgroundColor: Theme.palette.mentionColor4,
+                        quoteTextColor: Theme.palette.baseColor1
+                    })
                     anchors.fill: parent
                     anchors {
                         leftMargin: 0
@@ -289,9 +310,15 @@ StatusModal {
                         titleId: model.titleId
                         title: model.title
                         statusListItemTitle.color: model.title.startsWith("@") ? Theme.palette.primaryColor1 : Theme.palette.directColor1
-                        subTitle: model.content
+                        subTitle: model.content ? view.subTitleStyle
+                                                  + MarkdownUtils.singleLineHtml(model.content,
+                                                                                 root.resolveMentionsFn(model.content))
+                                                : ""
                         radius: 0
                         statusListItemSubTitle.height: model.content !== "" ? 20 : 0
+                        // the subtitle is HTML; auto-detection would show the entities of a
+                        // tagless text ("Tom &amp; Jerry") literally
+                        statusListItemSubTitle.textFormat: Text.RichText
                         statusListItemSubTitle.elide: Text.ElideRight
                         statusListItemSubTitle.color: Theme.palette.directColor1
                         asset.isLetterIdenticon: (model.image === "")

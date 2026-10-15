@@ -18,7 +18,6 @@ proc createTestMessageItem(id: string, clock: int64): Item =
     communityId = "",
     sender = ContactDetails(),
     isCurrentUser = false,
-    renderedMessageText = "",
     clearText = "",
   )
 
@@ -414,7 +413,6 @@ suite "media server port refresh":
         icon: oldBase & "/contactImages?publicKey=0xsender&imageName=thumbnail",
       ),
       isCurrentUser = false,
-      renderedMessageText = "",
       clearText = "",
       albumImages = @[oldBase & "/messages/images?messageId=" & id],
       albumMessageIds = @[id],
@@ -501,7 +499,6 @@ suite "contact updates on bridged messages":
       communityId = "",
       sender = sender,
       isCurrentUser = false,
-      renderedMessageText = "",
       clearText = "",
     )
 
@@ -579,7 +576,6 @@ suite "contact updates on bridged messages":
       communityId = "",
       sender = ContactDetails(),
       isCurrentUser = false,
-      renderedMessageText = "",
       clearText = "",
       quotedMessageAuthorDetails = ContactDetails(),
     )
@@ -625,3 +621,54 @@ suite "contact updates on bridged messages":
     check(item.senderIsAdded)
     check(item.senderTrustStatus == TrustStatus.Trusted)
     check(item.senderEnsVerified)
+
+suite "message text":
+  proc createItem(message: MessageDto): Item =
+    return message_model.createMessageItemFromDtos(
+      message = message,
+      communityId = "",
+      sender = ContactDetails(),
+      isCurrentUser = false,
+      clearText = message.text,
+    )
+
+  test "a discord message takes its text from the discord payload":
+    let item = createItem(MessageDto(
+      id: "0x1",
+      clock: 1,
+      contentType: ContentType.DiscordMessage,
+      discordMessage: DiscordMessage(timestamp: "1700000000", content: "gm from discord"),
+    ))
+
+    check(item.unparsedText == "gm from discord")
+
+  test "a reply to a discord message takes the quoted text from the discord payload":
+    let item = createItem(MessageDto(
+      id: "0x2",
+      clock: 2,
+      contentType: ContentType.Message,
+      text: "reply",
+      responseTo: "0x1",
+      quotedMessage: QuotedMessage(
+        `from`: "0xdiscord",
+        contentType: ContentType.DiscordMessage,
+        discordMessage: DiscordMessage(content: "gm from discord"),
+      ),
+    ))
+
+    check(item.quotedMessageText == "gm from discord")
+
+  test "an edit updates the text and the quotes of the replies":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[
+      createItem(MessageDto(id: "0x1", clock: 1, contentType: ContentType.Message, text: "first")),
+      createItem(MessageDto(id: "0x2", clock: 2, contentType: ContentType.Message, text: "reply",
+        responseTo: "0x1",
+        quotedMessage: QuotedMessage(`from`: "0xsender", contentType: ContentType.Message, text: "first"))),
+    ])
+
+    model.updateEditedMsg("0x1", "first, edited", ContentType.Message, mentioned = false, links = @[])
+
+    check(model.getItemWithMessageId("0x1").unparsedText == "first, edited")
+    check(model.getItemWithMessageId("0x1").isEdited)
+    check(model.getItemWithMessageId("0x2").quotedMessageText == "first, edited")

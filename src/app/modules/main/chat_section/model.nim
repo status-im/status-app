@@ -18,7 +18,7 @@ type
     Type
     LastMessageTimestamp
     SortTimestamp
-    LastMessageText
+    LastMessageUnparsedText
     HasUnreadMessages
     NotificationsCount
     Muted
@@ -121,7 +121,7 @@ QtObject:
       ModelRole.Type.int:"type",
       ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
       ModelRole.SortTimestamp.int:"sortTimestamp",
-      ModelRole.LastMessageText.int:"lastMessageText",
+      ModelRole.LastMessageUnparsedText.int:"lastMessageUnparsedText",
       ModelRole.HasUnreadMessages.int:"hasUnreadMessages",
       ModelRole.NotificationsCount.int:"notificationsCount",
       ModelRole.Muted.int:"muted",
@@ -183,8 +183,8 @@ QtObject:
       result = newQVariant(item.lastMessageTimestamp)
     of ModelRole.SortTimestamp:
       result = newQVariant(item.sortTimestamp)
-    of ModelRole.LastMessageText:
-      result = newQVariant(item.lastMessageText)
+    of ModelRole.LastMessageUnparsedText:
+      result = newQVariant(item.lastMessageUnparsedText)
     of ModelRole.HasUnreadMessages:
       result = newQVariant(item.hasUnreadMessages)
     of ModelRole.NotificationsCount:
@@ -571,9 +571,9 @@ QtObject:
       if roles.len > 0:
         roles.add(ModelRole.Hidden.int) # depends on hasUnreadMessages/notificationsCount
 
-  proc updateLastMessageOnItemById*(self: Model, id: string, lastMessageText: string, lastMessageTimestamp: int) =
+  proc updateLastMessageOnItemById*(self: Model, id: string, lastMessageUnparsedText: string, lastMessageTimestamp: int) =
     updateItemRolesAndNotify self.getItemIdxById(id):
-      updateRole(lastMessageText)
+      updateRole(lastMessageUnparsedText)
       updateRole(lastMessageTimestamp)
       updateRoleWithValue(sortTimestamp, lastMessageTimestamp)
 

@@ -62,7 +62,7 @@ ColumnLayout {
                     timestamp: model.timestamp
                     enabled: false
                     messageDetails: StatusMessageDetails {
-                        messageText: model.message
+                        unparsedText: model.message
                         contentType: model.contentType
                         sender.displayName: model.senderDisplayName
                         sender.isContact: model.isContact

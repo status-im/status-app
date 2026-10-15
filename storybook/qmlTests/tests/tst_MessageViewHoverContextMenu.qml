@@ -92,7 +92,6 @@ Item {
                 messageId: "msg-1"
                 senderId: "0xsender"
                 senderDisplayName: "Sender"
-                messageText: "first message"
                 unparsedText: "first message"
                 messageTimestamp: Date.now()
                 messageContentType: Constants.messageContentType.messageType
@@ -109,7 +108,6 @@ Item {
                 messageId: "msg-2"
                 senderId: "0xother"
                 senderDisplayName: "Other"
-                messageText: "second message"
                 unparsedText: "second message"
                 messageTimestamp: Date.now() + 1
                 messageContentType: Constants.messageContentType.messageType
@@ -132,7 +130,6 @@ Item {
                 messageId: id,
                 senderId: "0xsender",
                 senderDisplayName: "Sender",
-                messageText: "a message in a list",
                 unparsedText: "a message in a list",
                 chatLogView: list
             })
@@ -173,7 +170,6 @@ Item {
                 messageId: "msg-hover",
                 senderId: "0xsender",
                 senderDisplayName: "Sender",
-                messageText: "hover me",
                 unparsedText: "hover me"
             })
             verify(!!view)
@@ -189,7 +185,6 @@ Item {
                 messageId: "msg-pinned-popup",
                 senderId: "0xsender",
                 senderDisplayName: "Sender",
-                messageText: "pinned popup message",
                 unparsedText: "pinned popup message",
                 isInPinnedPopup: true,
                 joined: true

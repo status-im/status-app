@@ -6,6 +6,7 @@ import QtQuick.Effects
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 Control {
     id: root
@@ -156,7 +157,7 @@ Control {
                     }
 
                     function wrap(name, message, extraContent) {
-                        return `<b>${name}</b> ${message} <font color=\"${Theme.palette.baseColor1}\">${extraContent}</font>`
+                        return `<b>${name}</b> ${StringUtils.escapeHtml(message)} <font color=\"${Theme.palette.baseColor1}\">${extraContent}</font>`
                     }
 
                     const nameText = root.nameText

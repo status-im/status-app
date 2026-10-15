@@ -9,7 +9,6 @@ QtObject {
     property StatusMessageSenderDetails sender: StatusMessageSenderDetails { }
     property bool isEdited: false
     property int contentType: 0
-    property string messageText: ""
     // Raw message text (with textual "@0x…" mentions) for the client-side markdown renderer.
     property string unparsedText: ""
     // pubKey -> display name, used to resolve mentions in `unparsedText`.

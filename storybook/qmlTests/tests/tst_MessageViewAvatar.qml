@@ -45,7 +45,6 @@ Item {
             messageId: "msg-1"
             senderId: "0xsender"
             senderDisplayName: "Sender"
-            messageText: "avatar test message"
             unparsedText: "avatar test message"
             messageTimestamp: Date.now()
             messageContentType: Constants.messageContentType.messageType

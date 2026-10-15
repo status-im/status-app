@@ -122,7 +122,7 @@ Item {
 
                         Loader {
                             Layout.fillWidth: true
-                            active: !!replyDetails.messageText && replyDetails.contentType !== StatusMessage.ContentType.Sticker
+                            active: !!replyDetails.unparsedText && replyDetails.contentType !== StatusMessage.ContentType.Sticker
                             visible: active
                             sourceComponent: ChatSingleLineTextView {
                                 objectName: "StatusMessage_replyDetails_textMessage"

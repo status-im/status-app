@@ -48,14 +48,14 @@ Control {
 
         // CSS (mirrors ChatTextView.richTextFor) plus a quote color rule, prepended to the body.
         text: {
-            const style = "<style>code { background-color: " + root.codeBackgroundColor
-                        + "; font-family: '" + Fonts.codeFont.family + "' }"
-                        + " a { color: " + root.linkColor + " }"
-                        + " a.mention { color: " + root.mentionTextColor
-                        + "; background-color: " + root.mentionBackgroundColor
-                        + "; text-decoration: none }"
-                        + " span.quote { color: " + root.quoteTextColor + " }"
-                        + "</style>"
+            const style = StringUtils.singleLineHtmlStyle({
+                codeBackgroundColor: root.codeBackgroundColor,
+                codeFontFamily: Fonts.codeFont.family,
+                linkColor: root.linkColor,
+                mentionTextColor: root.mentionTextColor,
+                mentionBackgroundColor: root.mentionBackgroundColor,
+                quoteTextColor: root.quoteTextColor
+            })
             const marker = root.edited
                 ? StringUtils.editedMarker(Theme.palette.baseColor1, root.editedMarkerFontSize)
                 : ""

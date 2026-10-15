@@ -92,7 +92,7 @@ SplitView {
                 senderTrustStatus: StatusContactVerificationIcons.TrustedType.Verified
                 amISender: false
                 contentType: StatusMessage.ContentType.Text
-                messageText: "Hello, this is awesome! Feels like decentralized Discord! And it even supports HTML markup, like <b>bold</b>, <i>italics</i> or <u>underline</u>"
+                unparsedText: "Hello, this is awesome! Feels like decentralized Discord! And it even supports markdown, like **bold**, *italics* or ~~strikethrough~~"
                 message: "Hello, this is awesome! Feels like decentralized Discord! And it even supports HTML markup, like <b>bold</b>, <i>italics</i> or <u>underline</u>"
                 messageImage: ""
                 isContact: true
@@ -107,7 +107,7 @@ SplitView {
                 linkPreviewModel: null
                 links: ""
                 transactionParameters: null
-                quotedMessageParsedText: ""
+                quotedMessageText: ""
                 quotedMessageFrom: ""
                 quotedMessageContentType: StatusMessage.ContentType.Text
                 quotedMessageDeleted: false
@@ -131,7 +131,7 @@ SplitView {
                 senderTrustStatus: StatusContactVerificationIcons.TrustedType.Untrustworthy
                 amISender: false
                 contentType: StatusMessage.ContentType.Text
-                messageText: "I know a lot of you really seem to get off or be validated by arguing with strangers online but please know it's a complete waste of your time and energy"
+                unparsedText: "I know a lot of you really seem to get off or be validated by arguing with strangers online but please know it's a complete waste of your time and energy"
                 message: "I know a lot of you really seem to get off or be validated by arguing with strangers online but please know it's a complete waste of your time and energy"
                 messageImage: ""
                 isContact: false
@@ -146,7 +146,7 @@ SplitView {
                 linkPreviewModel: null
                 links: ""
                 transactionParameters: null
-                quotedMessageParsedText: ""
+                quotedMessageText: ""
                 quotedMessageFrom: ""
                 quotedMessageContentType: StatusMessage.ContentType.Text
                 quotedMessageDeleted: false
@@ -170,7 +170,7 @@ SplitView {
                 senderTrustStatus: StatusContactVerificationIcons.TrustedType.None
                 amISender: false
                 contentType: StatusMessage.ContentType.Text
-                messageText: "Test reply; the original text above should have a horizontal gradient mask"
+                unparsedText: "Test reply; the original text above should have a horizontal gradient mask"
                 message: "Test reply; the original text above should have a horizontal gradient mask"
                 messageImage: ""
                 isContact: true
@@ -185,7 +185,7 @@ SplitView {
                 linkPreviewModel: null
                 links: ""
                 transactionParameters: null
-                quotedMessageParsedText: "I know a lot of you really seem to get off or be validated by arguing with strangers online but please know it's a complete waste of your time and energy"
+                quotedMessageText: "I know a lot of you really seem to get off or be validated by arguing with strangers online but please know it's a complete waste of your time and energy"
                 quotedMessageFrom: "zqABCDEFG"
                 quotedMessageContentType: StatusMessage.ContentType.Text
                 quotedMessageDeleted: false

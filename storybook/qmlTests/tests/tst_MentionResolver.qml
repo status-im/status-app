@@ -282,6 +282,7 @@ Item {
         // the ChatMessagesView usage: a binding over resolveFor must re-evaluate
         // when a display name changes
         function test_bindingReactivity() {
+            failOnWarning(/Binding loop detected/)
             const r = createTemporaryObject(resolverComp, root)
             const holder = Qt.createQmlObject(
                 "import QtQml; QtObject { property var resolver; property var names: resolver ? resolver.resolveFor('@" + root.keyA + "') : ({}) }",

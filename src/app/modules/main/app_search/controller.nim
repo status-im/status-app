@@ -106,16 +106,14 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
-    self.delegate.updateLastMessage(args.chat.id, args.chat.communityId, args.chat.chatType, args.chat.lastMessage,
-      args.chat.timestamp.int)
+    self.delegate.updateLastMessage(args.chat.id, args.chat.lastMessage, args.chat.timestamp.int)
     self.delegate.updateLastOwnMessageTimestamp(args.chat.id, args.chat.lastOwnMessageTimestamp.int)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
     let args = MessagesArgs(e)
     if args.messages.len == 0:
       return
-    self.delegate.updateLastMessage(args.chatId, args.sectionId, args.chatType, newestMessage(args.messages),
-      args.lastMessageTimestamp)
+    self.delegate.updateLastMessage(args.chatId, newestMessage(args.messages), args.lastMessageTimestamp)
 
 proc activeSectionId*(self: Controller): string =
   return self.activeSectionId
@@ -217,9 +215,6 @@ proc resultItemClicked*(self: Controller, itemId: string) =
     messageId: itemDetails.messageId)
   self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
-  return self.messageService.getRenderedText(parsedTextArray, communityChats)
-
 proc getColorId*(self: Controller, pubkey: string): int =
   procs_from_visual_identity_service.colorIdOf(pubkey)
 
@@ -234,6 +229,3 @@ proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
 
 proc getStatusForContactWithId*(self: Controller, publicKey: string): StatusUpdateDto =
   self.contactsService.getStatusForContactWithId(publicKey)
-
-proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
-  return self.messageService.getMessagesParsedPlainText(message, communityChats)

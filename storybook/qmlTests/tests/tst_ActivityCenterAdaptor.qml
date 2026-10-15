@@ -13,6 +13,11 @@ import AppLayouts.ActivityCenter.helpers
 Item {
     id: root
 
+    // mention wire format: "@0x" + 130 lowercase hex chars
+    readonly property string aliceKey: "0x04" + "a".repeat(128)
+    readonly property string strangerKey: "0x04" + "b".repeat(128)
+    readonly property string myKey: "0x04" + "c".repeat(128)
+
     readonly property var snapshotRoles: [
         "notificationId", "notificationType", "unread", "title", "content", "primaryText",
         "actionText", "timestamp", "dismissed", "redirectToLink"
@@ -67,6 +72,55 @@ Item {
         ActivityCenterAdaptor {
             contactsModel: contactsComponent.createObject(this)
             userProfileName: "Me"
+            userProfilePubKey: root.myKey
+        }
+    }
+
+    Component {
+        id: namedContactsComponent
+
+        ListModel {
+            // mirrors the backend contacts model API used by ContactModelEntry
+            function hasUser(pubKey) {
+                return SQUtils.ModelUtils.contains(this, "pubKey", pubKey)
+            }
+
+            Component.onCompleted: append({ pubKey: root.aliceKey, preferredDisplayName: "Alice" })
+        }
+    }
+
+    Component {
+        id: messengerAdaptorComponent
+
+        ActivityCenterAdaptor {
+            contactsModel: namedContactsComponent.createObject(this)
+            userProfileName: "Me"
+            userProfilePubKey: root.myKey
+            generateAlias: publicKey => "Alias " + publicKey.substring(0, 6)
+        }
+    }
+
+    Component {
+        id: messageNotificationsComponent
+
+        ListModel {
+            function appendNotification(id, notificationType, unparsedText) {
+                append({
+                    id, notificationType,
+                    timestamp: 1700000000000, read: false, dismissed: false, accepted: false,
+                    chatId: "", communityId: "", sectionId: "",
+                    author: "0x04author", chatType: 0, name: "",
+                    membershipStatus: ActivityCenterTypes.ActivityCenterMembershipStatus.None,
+                    newsTitle: "", newsDescription: "", newsContent: "", newsImageUrl: "",
+                    newsLink: "", newsLinkLabel: "", installationId: "",
+                    message: {
+                        id: id + "-message", communityId: "", amISender: false, unparsedText,
+                        albumMessageImages: "",
+                        contactRequestState: ActivityCenterTypes.ActivityCenterContactRequestState.Pending
+                    },
+                    repliedMessage: "", tokenData: ""
+                })
+            }
         }
     }
 
@@ -83,12 +137,19 @@ Item {
                 notifications: acLoader.notifications
                 contactsModel: contactsComponent.createObject(this)
                 userProfileName: "Me"
+                userProfilePubKey: root.myKey
             }
         }
     }
 
     ObjectCounter {
         id: objectCounter
+    }
+
+    Component {
+        id: signalSpyComponent
+
+        SignalSpy {}
     }
 
     TestCase {
@@ -173,6 +234,55 @@ Item {
             // reading one row materialises exactly one row
             SQUtils.ModelUtils.get(adaptor.model, 0, "title")
             compare(objectCounter.count("QQmlPropertyMap"), 1)
+        }
+
+        function test_messageContentRenderedFromUnparsedText_data() {
+            return [
+                { tag: "mention", type: ActivityCenterTypes.NotificationType.Mention },
+                { tag: "reply", type: ActivityCenterTypes.NotificationType.Reply },
+                { tag: "contact request", type: ActivityCenterTypes.NotificationType.ContactRequest }
+            ]
+        }
+
+        function test_messageContentRenderedFromUnparsedText(data) {
+            failOnWarning(/Binding loop detected/)
+            const notifications = createTemporaryObject(messageNotificationsComponent, root)
+            notifications.appendNotification("n1", data.type,
+                                             `**hi** @${root.aliceKey} @${root.myKey} @${root.strangerKey}\nbye`)
+            const adaptor = createTemporaryObject(messengerAdaptorComponent, root, { notifications })
+
+            const content = SQUtils.ModelUtils.get(adaptor.model, 0, "content")
+            verify(content.startsWith("<b>hi</b> "), content)
+            verify(content.includes(`class="mention">@Alice</a>`), content)
+            verify(content.includes(`class="mention">@Me</a>`), content)
+            verify(content.includes(`class="mention">@Alias 0x04bb</a>`), content)
+            verify(content.endsWith(" bye"), content)
+        }
+
+        function test_mentionFollowsContactRename() {
+            failOnWarning(/Binding loop detected/)
+            const notifications = createTemporaryObject(messageNotificationsComponent, root)
+            notifications.appendNotification("n1", ActivityCenterTypes.NotificationType.Mention,
+                                             `hi @${root.aliceKey}`)
+            const adaptor = createTemporaryObject(messengerAdaptorComponent, root, { notifications })
+            const content = () => SQUtils.ModelUtils.get(adaptor.model, 0, "content")
+            verify(content().includes("@Alice<"), content())
+
+            adaptor.contactsModel.setProperty(0, "preferredDisplayName", "Alicia")
+            tryVerify(() => content().includes("@Alicia<"), 1000, content())
+        }
+
+        function test_unknownMentionRequestsContactInfo() {
+            const notifications = createTemporaryObject(messageNotificationsComponent, root)
+            notifications.appendNotification("n1", ActivityCenterTypes.NotificationType.Mention,
+                                             `hi @${root.strangerKey}`)
+            const adaptor = createTemporaryObject(messengerAdaptorComponent, root, { notifications })
+            const spy = createTemporaryObject(signalSpyComponent, root,
+                                              { target: adaptor, signalName: "contactInfoRequested" })
+
+            SQUtils.ModelUtils.get(adaptor.model, 0, "content")
+            tryCompare(spy, "count", 1)
+            compare(spy.signalArguments[0][0], root.strangerKey)
         }
 
         function test_inactiveLoaderReleasesAdaptor() {

@@ -7,6 +7,9 @@ import QtModelsToolkit
 import SortFilterProxyModel
 
 import AppLayouts.ActivityCenter.helpers
+import AppLayouts.Chat.adaptors
+
+import shared.status
 
 import utils
 
@@ -67,7 +70,6 @@ QtObject {
                                            responseTo             [string]  - identifier of the original message
                                                                                 this message is replying to
                                            communityId            [string]  - identifier of the community, if applicable
-                                           messageText            [string]  - textual content of the message
                                            contentType            [int]     - message content type
                                                                                 (enum: StatusMessage.ContentType)
                                            amISender              [bool]    - whether the current user is the sender
@@ -76,7 +78,8 @@ QtObject {
                                            albumMessageImages     [string]  - space-separated list of album image URLs
                                            albumImagesCount       [int]     - number of images in the album
                                            messageImage           [string]  - image URL for image-based messages
-                                           unparsedText           [string]  - raw/unparsed message text (if applicable)
+                                           unparsedText           [string]  - raw message text (markdown with
+                                                                                "@0x…" mentions), rendered here
                                          }
 
         timestamp            [double]  - timestamp of when the notification was created
@@ -94,7 +97,7 @@ QtObject {
                                          {
                                            contentType [int]    - type of the replied message content
                                                                  (enum: Constants.messageContentType)
-                                           messageText [string] - text content of the replied message
+                                           unparsedText [string] - raw text of the replied message
                                          }
 
         chatType             [int]     - type of chat
@@ -209,7 +212,8 @@ QtObject {
         trust status) for notifications that reference a user.
 
         Expected to be a QAbstractItemModel (or compatible) indexed
-        by public key.
+        by public key. Its `pubKey` and `preferredDisplayName` roles also
+        name the users mentioned in message texts.
     */
     required property var contactsModel
 
@@ -218,10 +222,31 @@ QtObject {
     */
     required property string userProfileName
 
+    /*!
+        Public key of the current user profile, so that mentions of the
+        current user render with their name.
+    */
+    required property string userProfilePubKey
+
     // This object holds implementation details and helper properties
     // used internally by the adapter. It is not part of the public API
     // and must not be accessed by consumers.
     readonly property QtObject d: QtObject {
+
+        // Names the users mentioned in message texts: contacts plus the current user,
+        // with a generated alias for anybody else.
+        readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
+            contactsModel: root.contactsModel
+            selfPubKey: root.userProfilePubKey
+            selfDisplayName: root.userProfileName
+        }
+
+        readonly property MentionResolver mentionResolver: MentionResolver {
+            sourceModel: d.mentionNames.model
+            nameRole: "preferredDisplayName"
+            aliasProvider: publicKey => root.generateAlias(publicKey)
+            contactInfoRequester: publicKey => root.contactInfoRequested(publicKey)
+        }
 
         // Pre-filter dismissed notifications before ObjectProxyModel to skip
         // heavy delegate processing for entries that will never be shown.
@@ -516,6 +541,7 @@ QtObject {
 
                         notification: row.notification
                         contactsModel: root.contactsModel
+                        mentionsMap: d.mentionResolver.resolveFor(notification.message?.unparsedText ?? "")
 
                         // Avatar related
                         badgeIconName: "action-mention"
@@ -545,6 +571,7 @@ QtObject {
 
                         notification: row.notification
                         contactsModel: root.contactsModel
+                        mentionsMap: d.mentionResolver.resolveFor(notification.message?.unparsedText ?? "")
 
                         // Avatar related
                         badgeIconName: "action-reply"
@@ -567,6 +594,7 @@ QtObject {
                         // Required data
                         notification: row.notification
                         contactsModel: root.contactsModel
+                        mentionsMap: d.mentionResolver.resolveFor(notification.message?.unparsedText ?? "")
 
                         onPopulateContactDetailsRequested: (contactId) => root.populateContactDetailsRequested(contactId)
                     }
@@ -1009,7 +1037,23 @@ QtObject {
     property var getChatDetails: function(chatId) { return null }
 
     /*!
+        Generates the 3-word alias for a public key, naming a mentioned
+        user who is not in the contacts model.
+
+        @param publicKey [string]
+        @return          [string] Generated alias
+    */
+    property var generateAlias: function(publicKey) { return "" }
+
+    /*!
         Requests loading of additional data for the given contact.
     */
     signal populateContactDetailsRequested(string contactId)
+
+    /*!
+        Requests the profile of a mentioned user who is not in the contacts
+        model. Once it arrives in the contacts model, the mention shows the
+        user's name.
+    */
+    signal contactInfoRequested(string publicKey)
 }

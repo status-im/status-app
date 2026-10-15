@@ -81,7 +81,6 @@ Item {
             senderId: "0xsender",
             senderDisplayName: "Sender",
             senderIsAdded: true,
-            messageText: text,
             unparsedText: text,
             timestamp: Date.now(),
             contentType: Constants.messageContentType.messageType,

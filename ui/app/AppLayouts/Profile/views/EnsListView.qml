@@ -215,8 +215,7 @@ Item {
 
             messageDetails: StatusMessageDetails {
                 contentType: StatusMessage.ContentType.Text
-                messageText: qsTr("Hey!")
-                unparsedText: messageText
+                unparsedText: qsTr("Hey!")
                 amISender: false
                 sender.displayName: root.preferredUsername
                 sender.profileImage.assetSettings.isImage: true

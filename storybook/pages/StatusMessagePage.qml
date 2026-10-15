@@ -301,9 +301,6 @@ Some other comment there`
 
                     messageDetails {
                         readonly property bool isEnsVerified: model.senderDisplayName.endsWith(".eth")
-                        messageText: model.message
-                        // StatusTextMessage renders the client-side path from unparsedText; the
-                        // sample text is plain, so feed it here too (otherwise no text shows).
                         unparsedText: model.message
                         contentType: model.contentType
                         amISender: model.amISender
@@ -330,7 +327,6 @@ Some other comment there`
                             height: 20
                             name: index % 2 ? ModelsData.icons.dribble : ModelsData.icons.socks
                         }
-                        messageText: ModelsData.descriptions.mediumLoremIpsum
                         unparsedText: "Reply with **bold**, `inline code` and a mention @0x00001 — "
                                       + ModelsData.descriptions.mediumLoremIpsum
                     }

@@ -74,8 +74,9 @@ NotificationAdaptorMessenger {
     // -------------------------
     // Content block related
     // -------------------------
-    content: !root.isOutgoingMessage ? (notification && notification.message
-                                        ? notification.message.messageText :  "") : ""
+    content: root.isOutgoingMessage ? ""
+                                    : MarkdownUtils.singleLineHtml(notification?.message?.unparsedText ?? "",
+                                                                   root.mentionsMap)
 
     // -------------------------
     // Quick actions related

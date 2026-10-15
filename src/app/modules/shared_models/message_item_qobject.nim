@@ -34,10 +34,6 @@ QtObject:
   QtProperty[string] quotedMessageText:
     read = quotedMessageText
 
-  proc quotedMessageParsedText*(self: MessageItem): string {.slot.} = result = ?.self.messageItem.quotedMessageParsedText
-  QtProperty[string] quotedMessageParsedText:
-    read = quotedMessageParsedText
-
   proc quotedMessageContentType*(self: MessageItem): int {.slot.} = result = ?.self.messageItem.quotedMessageContentType.int
   QtProperty[int] quotedMessageContentType:
     read = quotedMessageContentType
@@ -108,10 +104,6 @@ QtObject:
   proc outgoingStatus*(self: MessageItem): string {.slot.} = result = ?.self.messageItem.outgoingStatus
   QtProperty[string] outgoingStatus:
     read = outgoingStatus
-
-  proc messageText*(self: MessageItem): string {.slot.} = result = ?.self.messageItem.messageText
-  QtProperty[string] messageText:
-    read = messageText
 
   proc unparsedText*(self: MessageItem): string {.slot.} = result = ?.self.messageItem.unparsedText
   QtProperty[string] unparsedText:

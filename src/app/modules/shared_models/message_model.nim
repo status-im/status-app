@@ -28,11 +28,8 @@ type
     SenderIsAdded
     Seen
     OutgoingStatus
-    MessageText
     UnparsedText
     MessageImage
-    MessageContainsMentions # Actually we don't need to exposed this to qml since we only used it as an improved way to
-                            # check whether we need to update mentioned contact name or not.
     Timestamp
     ContentType
     MessageType
@@ -52,7 +49,6 @@ type
     Links
     LinkPreviewModel
     TransactionParameters
-    MentionedUsersPks
     SenderTrustStatus
     SenderEnsVerified
     MessageAttachments
@@ -60,7 +56,6 @@ type
     Mentioned
     QuotedMessageFrom
     QuotedMessageText
-    QuotedMessageParsedText
     QuotedMessageContentType
     QuotedMessageDeleted
     QuotedMessageAuthorName
@@ -142,10 +137,8 @@ QtObject:
       ModelRole.OutgoingStatus.int:"outgoingStatus",
       ModelRole.ResendError.int:"resendError",
       ModelRole.Mentioned.int:"mentioned",
-      ModelRole.MessageText.int:"messageText",
       ModelRole.UnparsedText.int:"unparsedText",
       ModelRole.MessageImage.int:"messageImage",
-      ModelRole.MessageContainsMentions.int:"messageContainsMentions",
       ModelRole.Timestamp.int:"timestamp",
       ModelRole.ContentType.int:"contentType",
       ModelRole.MessageType.int:"messageType",
@@ -165,13 +158,11 @@ QtObject:
       ModelRole.Links.int: "links",
       ModelRole.LinkPreviewModel.int: "linkPreviewModel",
       ModelRole.TransactionParameters.int: "transactionParameters",
-      ModelRole.MentionedUsersPks.int: "mentionedUsersPks",
       ModelRole.SenderTrustStatus.int: "senderTrustStatus",
       ModelRole.SenderEnsVerified.int: "senderEnsVerified",
       ModelRole.MessageAttachments.int: "messageAttachments",
       ModelRole.QuotedMessageFrom.int: "quotedMessageFrom",
       ModelRole.QuotedMessageText.int: "quotedMessageText",
-      ModelRole.QuotedMessageParsedText.int: "quotedMessageParsedText",
       ModelRole.QuotedMessageContentType.int: "quotedMessageContentType",
       ModelRole.QuotedMessageDeleted.int: "quotedMessageDeleted",
       ModelRole.QuotedMessageAuthorName.int: "quotedMessageAuthorName",
@@ -267,8 +258,6 @@ QtObject:
       result = newQVariant(item.quotedMessageFrom)
     of ModelRole.QuotedMessageText:
       result = newQVariant(item.quotedMessageText)
-    of ModelRole.QuotedMessageParsedText:
-      result = newQVariant(item.quotedMessageParsedText)
     of ModelRole.QuotedMessageContentType:
       result = newQVariant(item.quotedMessageContentType.int)
     of ModelRole.QuotedMessageDeleted:
@@ -287,14 +276,10 @@ QtObject:
       result = newQVariant(item.quotedMessageAlbumMessageImages.join(" "))
     of ModelRole.QuotedMessageAlbumImagesCount:
       result = newQVariant(item.quotedMessageAlbumImagesCount)
-    of ModelRole.MessageText:
-      result = newQVariant(item.messageText)
     of ModelRole.UnparsedText:
       result = newQVariant(item.unparsedText)
     of ModelRole.MessageImage:
       result = newQVariant(item.messageImage)
-    of ModelRole.MessageContainsMentions:
-      result = newQVariant(item.messageContainsMentions)
     of ModelRole.Timestamp:
       result = newQVariant(item.timestamp)
     of ModelRole.ContentType:
@@ -342,8 +327,6 @@ QtObject:
         "commandState": item.transactionParameters.commandState,
         "signature": item.transactionParameters.signature
       }))
-    of ModelRole.MentionedUsersPks:
-      result = newQVariant(item.mentionedUsersPks.join(" "))
     of ModelRole.SenderEnsVerified:
       result = newQVariant(item.senderEnsVerified)
     of ModelRole.MessageAttachments:
@@ -405,13 +388,12 @@ QtObject:
     defer: parentModelIndex.delete
 
     proc updateQuotedItem(ind: int, targetQuotedMessageFrom, targetQuotedMessageAuthorDisplayName,
-        targetQuotedMessageAuthorAvatar, targetQuotedMessageParsedText, targetQuotedMessageText: string,
+        targetQuotedMessageAuthorAvatar, targetQuotedMessageText: string,
         targetQuotedMessageContentType: ContentType) =
       updateRolesAndNotify:
         updateRoleWithValue(quotedMessageFrom, targetQuotedMessageFrom)
         updateRoleWithValue(quotedMessageAuthorDisplayName, targetQuotedMessageAuthorDisplayName)
         updateRoleWithValue(quotedMessageAuthorAvatar, targetQuotedMessageAuthorAvatar, QuotedMessageAuthorThumbnailImage)
-        updateRoleWithValue(quotedMessageParsedText, targetQuotedMessageParsedText)
         updateRoleWithValue(quotedMessageText, targetQuotedMessageText)
         updateRoleWithValue(quotedMessageContentType, targetQuotedMessageContentType)
 
@@ -424,7 +406,7 @@ QtObject:
       for newItem in items:
         if oldItem.responseToMessageWithId == newItem.id:
           updateQuotedItem(i, newItem.senderId, newItem.senderDisplayName, newItem.senderIcon,
-            newItem.messageText, newItem.unparsedText, newItem.contentType)
+            newItem.unparsedText, newItem.contentType)
 
 
     self.beginInsertRows(parentModelIndex, position, position + items.len - 1)
@@ -502,7 +484,6 @@ QtObject:
       if(self.items[ind].responseToMessageWithId == messageId):
         updateRolesAndNotify:
           updateRoleWithValue(quotedMessageText, "")
-          updateRoleWithValue(quotedMessageParsedText, "")
           updateRoleWithValue(quotedMessageDeleted, true)
 
   proc removeItem*(self: Model, messageId: string) =
@@ -533,7 +514,6 @@ QtObject:
     let targetDeletedBy = deletedBy
     let targetDeletedByContactDetails = deletedByContactDetails
     updateRolesAndNotify:
-      updateRoleWithValue(messageText, "")
       updateRoleWithValue(unparsedText, "")
       updateRoleWithValue(deleted, true)
       updateRoleWithValue(deletedBy, targetDeletedBy)
@@ -694,10 +674,6 @@ QtObject:
       let pinnedByMatches = self.items[i].pinnedBy == contactId
       let oldPinnedBy = self.items[i].pinnedBy
 
-      let messageContainsContactMention = self.items[i].messageContainsMentions and self.items[i].mentionedUsersPks.anyIt(it == contactId)
-      let oldMessageText = self.items[i].messageText
-      let oldUnparsedText = self.items[i].unparsedText
-      let oldMessageContainsMentions = self.items[i].messageContainsMentions
 
       let quotedAuthorMatches = self.items[i].quotedMessageAuthorDetails.dto.id == contactId
       let oldQuotedMessageAuthorName = self.items[i].quotedMessageAuthorDetails.dto.name
@@ -722,11 +698,6 @@ QtObject:
       if pinnedByMatches:
         addChangedRole(changedRoles, oldPinnedBy, self.items[i].pinnedBy, ModelRole.PinnedBy.int): discard
 
-      if messageContainsContactMention:
-        addChangedRole(changedRoles, oldMessageText, self.items[i].messageText, ModelRole.MessageText.int): discard
-        addChangedRole(changedRoles, oldUnparsedText, self.items[i].unparsedText, ModelRole.UnparsedText.int): discard
-        addChangedRole(changedRoles, oldMessageContainsMentions, self.items[i].messageContainsMentions, ModelRole.MessageContainsMentions.int): discard
-
       if quotedAuthorMatches:
         addChangedRole(changedRoles, oldQuotedMessageAuthorName, self.items[i].quotedMessageAuthorDetails.dto.name, ModelRole.QuotedMessageAuthorName.int): discard
         addChangedRole(changedRoles, oldQuotedMessageAuthorDisplayName, self.items[i].quotedMessageAuthorDisplayName, ModelRole.QuotedMessageAuthorDisplayName.int): discard
@@ -748,39 +719,27 @@ QtObject:
   proc updateEditedMsg*(
       self: Model,
       messageId: string,
-      updatedMsg: string,
       updatedRawMsg: string,
-      updatedParsedText: seq[ParsedText],
       contentType: ContentType,
       mentioned: bool,
-      messageContainsMentions: bool,
       links: seq[string],
-      mentionedUsersPks: seq[string]
       ) =
     let ind = self.findIndexForMessageId(messageId)
     if ind == -1:
       return
 
     updateRolesAndNotify:
-      updateRoleWithValue(messageText, updatedMsg)
       updateRoleWithValue(unparsedText, updatedRawMsg)
       updateRoleWithValue(mentioned, mentioned)
-      updateRoleWithValue(messageContainsMentions, messageContainsMentions)
       updateRoleWithValue(isEdited, true)
       updateRoleWithValue(links, links)
-      updateRoleWithValue(mentionedUsersPks, mentionedUsersPks)
-
-      if self.items[ind].parsedText != updatedParsedText:
-        self.items[ind].parsedText = updatedParsedText
 
     # Update replied to messages if there are
-    let targetQuotedMessageParsedText = updatedMsg
     let targetQuotedMessageText = updatedRawMsg
     let targetQuotedMessageContentType = contentType
     for ind in 0 ..< self.items.len:
       if self.items[ind].responseToMessageWithId == messageId:
         updateRolesAndNotify:
-          updateRoleWithValue(quotedMessageParsedText, targetQuotedMessageParsedText)
           updateRoleWithValue(quotedMessageText, targetQuotedMessageText)
           updateRoleWithValue(quotedMessageContentType, targetQuotedMessageContentType)
 
@@ -940,13 +899,11 @@ QtObject:
       communityId: string,
       sender: ContactDetails,
       isCurrentUser: bool,
-      renderedMessageText: string,
       clearText: string,
       albumImages: seq[string] = @[],
       albumMessageIds: seq[string] = @[],
       deletedByContactDetails: ContactDetails = ContactDetails(),
       quotedMessageAuthorDetails: ContactDetails = ContactDetails(),
-      quotedRenderedMessageText: string = "",
       transactionContract: string = "",
       transactionValue: string = "",
     ): Item =
@@ -971,11 +928,8 @@ QtObject:
       (isCurrentUser and message.contentType != ContentType.DiscordMessage),
       sender.dto.added,
       message.outgoingStatus,
-      renderedMessageText,
       clearText,
-      message.parsedText,
       message.image,
-      message.containsContactMentions(),
       message.seen,
       timestamp = message.timestamp,
       clock = message.clock,
@@ -994,7 +948,6 @@ QtObject:
         message.transactionParameters.transactionHash,
         message.transactionParameters.commandState,
         message.transactionParameters.signature),
-      message.mentionedUsersPks(),
       sender.dto.trustStatus,
       sender.dto.ensVerified,
       message.discordMessage,
@@ -1006,7 +959,6 @@ QtObject:
       message.mentioned,
       message.quotedMessage.`from`,
       message.quotedMessage.text,
-      quotedRenderedMessageText,
       message.quotedMessage.contentType,
       message.quotedMessage.deleted,
       message.quotedMessage.discordMessage,

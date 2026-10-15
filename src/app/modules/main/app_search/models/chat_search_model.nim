@@ -16,7 +16,7 @@ type
     SectionName
     Emoji
     ChatType
-    LastMessageText
+    LastMessageUnparsedText
     LastMessageTimestamp
     LastOwnMessageTimestamp
     CanPost
@@ -114,7 +114,7 @@ QtObject:
       ModelRole.SectionName.int:"sectionName",
       ModelRole.Emoji.int:"emoji",
       ModelRole.ChatType.int:"chatType",
-      ModelRole.LastMessageText.int:"lastMessageText",
+      ModelRole.LastMessageUnparsedText.int:"lastMessageUnparsedText",
       ModelRole.LastMessageTimestamp.int:"lastMessageTimestamp",
       ModelRole.LastOwnMessageTimestamp.int:"lastOwnMessageTimestamp",
       ModelRole.CanPost.int:"canPost",
@@ -148,8 +148,8 @@ QtObject:
         result = newQVariant(item.emoji)
       of ModelRole.ChatType:
         result = newQVariant(item.chatType)
-      of ModelRole.LastMessageText:
-        result = newQVariant(item.lastMessageText)
+      of ModelRole.LastMessageUnparsedText:
+        result = newQVariant(item.lastMessageUnparsedText)
       of ModelRole.LastMessageTimestamp:
         result = newQVariant(item.lastMessageTimestamp)
       of ModelRole.LastOwnMessageTimestamp:
@@ -172,9 +172,9 @@ QtObject:
     updateItemRolesAndNotify self.getItemIndexById(chatId):
       updateRole(sectionName)
 
-  proc updateLastMessageTextOnChatItem*(self:Model, chatId, lastMessageText: string) =
+  proc updateLastMessageUnparsedTextOnChatItem*(self:Model, chatId, lastMessageUnparsedText: string) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):
-      updateRole(lastMessageText)
+      updateRole(lastMessageUnparsedText)
 
   proc updateLastMessageTimestampOnChatItem*(self:Model, chatId: string, lastMessageTimestamp: int) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):

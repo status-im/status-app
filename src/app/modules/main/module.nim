@@ -291,7 +291,7 @@ proc newModule*[T](
     networkService, tokenService)
   result.gifsModule = gifs_module.newModule(result, events, gifService)
   result.activityCenterModule = activity_center_module.newModule(result, events, activityCenterService, contactsService,
-  messageService, chatService, communityService, devicesService, generalService)
+  chatService, communityService, devicesService, generalService)
   result.communitiesModule = communities_module.newModule(result, events, communityService, communityTokensService,
     networkService, transactionService, tokenService, chatService, walletAccountService)
   result.appSearchModule = app_search_module.newModule(result, events, contactsService, chatService, communityService,

@@ -165,7 +165,6 @@ proc currentUserWalletContainsAddress(self: Module, address: string): bool =
 # TODO: duplicates in chats and messages
 proc buildCommunityMemberMessageItem(self: Module, message: MessageDto): member_msg_item.Item =
   let contactDetails = self.controller.getContactDetails(message.`from`)
-  let communityChats = self.controller.getAllChats(self.getMySectionId())
   var quotedMessageAuthorDetails = ContactDetails()
   if message.quotedMessage.`from` != "":
     if message.`from` == message.quotedMessage.`from`:
@@ -186,13 +185,11 @@ proc buildCommunityMemberMessageItem(self: Module, message: MessageDto): member_
     message.communityId,
     contactDetails,
     isCurrentUser,
-    self.controller.getRenderedText(message.parsedText, communityChats),
     clearText = message.text,
     albumImages = @[],
     albumMessageIds = @[],
     deletedByContactDetails = ContactDetails(),
     quotedMessageAuthorDetails,
-    self.controller.getRenderedText(message.quotedMessage.parsedText, communityChats),
     transactionContract,
     transactionValue,
   )
@@ -256,7 +253,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     `type` = parentItem.`type`,
     parentItem.memberRole,
     lastMessageTimestamp = 0,
-    lastMessageText = "",
+    lastMessageUnparsedText = "",
     hasUnreadMessages = hasUnreadMessages,
     notificationsCount = notificationsCount,
     muted = false,
@@ -299,7 +296,7 @@ proc addCategoryItem(self: Module, category: Category, memberRole: MemberRole, c
         `type` = chat_item.CATEGORY_TYPE,
         memberRole,
         lastMessageTimestamp = 0,
-        lastMessageText = "",
+        lastMessageUnparsedText = "",
         hasUnreadMessages,
         notificationsCount = 0,
         muted = false,
@@ -726,11 +723,7 @@ proc updateBadgeNotifications(self: Module, chat: ChatDto, hasUnreadMessages: bo
 method updateLastMessage*(self: Module, chatId: string, lastMessageTimestamp: int, lastMessage: MessageDto) =
   self.view.chatsModel().updateLastMessageOnItemById(
     chatId,
-    if self.controller.isCommunity():
-      self.controller.getMessagesParsedPlainText(lastMessage,
-        self.controller.getMyCommunity().chats)
-    else:
-      self.controller.getMessagesParsedPlainText(lastMessage, []),
+    lastMessage.lastMessageUnparsedText,
     lastMessageTimestamp,
   )
 
@@ -907,7 +900,7 @@ proc getChatItemFromChatDto(
     chatDto.chatType.int,
     memberRole,
     chatDto.timestamp.int,
-    self.controller.getMessagesParsedPlainText(chatDto.lastMessage, community.chats),
+    chatDto.lastMessage.lastMessageUnparsedText,
     hasNotification,
     notificationsCount,
     chatDto.muted,
@@ -1456,7 +1449,7 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
     else:
       self.controller.getContactDetails(message.`from`).defaultDisplayName
 
-  let plainText = self.controller.getMessagesParsedPlainText(message, self.controller.getMyCommunity().chats)
+  let plainText = self.controller.getMessagesParsedPlainText(message)
 
   var notificationTitle = senderDisplayName
 
@@ -1588,7 +1581,7 @@ method prepareEditCategoryModel*(self: Module, categoryId: string) =
       chatDto.chatType.int,
       memberRole=MemberRole.None,
       lastMessageTimestamp=(-1),
-      lastMessageText = "", # Last message text is not needed in edit category model
+      lastMessageUnparsedText = "", # Last message text is not needed in edit category model
       hasUnreadMessages=false,
       notificationsCount=0,
       chatDto.muted,
@@ -1615,7 +1608,7 @@ method prepareEditCategoryModel*(self: Module, categoryId: string) =
       chatDto.chatType.int,
       memberRole=MemberRole.None,
       lastMessageTimestamp=(-1),
-      lastMessageText = "", # Last message text is not needed in edit category model
+      lastMessageUnparsedText = "", # Last message text is not needed in edit category model
       hasUnreadMessages=false,
       notificationsCount=0,
       chatDto.muted,

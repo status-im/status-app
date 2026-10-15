@@ -58,7 +58,7 @@ Item {
             messageId: "msg-2"
             senderId: "0xbot"
             senderDisplayName: "ForumUser42"
-            messageText: "gm"
+            unparsedText: "gm"
             messageTimestamp: root.now
             messageContentType: Constants.messageContentType.messageType
             amISender: false

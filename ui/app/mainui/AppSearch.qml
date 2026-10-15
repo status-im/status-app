@@ -15,6 +15,8 @@ Item {
     required property var getSearchLocationObjectFn
     required property var isChatKeyFn
     required property var openProfilePopupFn
+    // (text) -> { pubKey: displayName } for the mentions in a message result
+    required property var resolveMentionsFn
 
     readonly property var searchMessagesDebounced: Backpressure.debounce(searchPopup, 400, function () {
         if (searchPopup.searchText === "")
@@ -89,6 +91,7 @@ Item {
         formatTimestampFn: function (ts) {
             return LocaleUtils.formatDateTime(parseInt(ts, 10), Locale.ShortFormat)
         }
+        resolveMentionsFn: root.resolveMentionsFn
         onSearchTextChanged: {
             if (searchPopup.searchText !== "") {
                 root.searchMessagesDebounced()

@@ -10,4 +10,3 @@ NewMessagesMarker 1.0 NewMessagesMarker.qml
 NormalMessageView 1.0 NormalMessageView.qml
 ProfileContextMenu 1.0 ProfileContextMenu.qml
 ProfileHeaderContextMenuView 1.0 ProfileHeaderContextMenuView.qml
-SimplifiedMessageView 1.0 SimplifiedMessageView.qml

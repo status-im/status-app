@@ -144,8 +144,6 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
     if(index != -1):
       self.view.model().removeItem(message.replace)
 
-    var renderedMessageText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats)
-
     var transactionContract = message.transactionParameters.contract
     var transactionValue = message.transactionParameters.value
     var isCurrentUser = sender.isCurrentUser
@@ -159,13 +157,11 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
       message.communityId,
       sender,
       isCurrentUser,
-      renderedMessageText,
       clearText = message.text,
       albumImages = @[],
       albumMessageIds = @[],
       deletedByContactDetails,
       quotedMessageAuthorDetails,
-      self.controller.getRenderedText(message.quotedMessage.parsedText, self.controller.getCommunityDetails().chats),
       transactionContract,
       transactionValue,
     )
@@ -207,7 +203,6 @@ proc createFetchMoreMessagesItem(self: Module): Item =
       ),
     ),
     isCurrentUser = false,
-    renderedMessageText = "",
     clearText = "",
   )
 
@@ -239,7 +234,6 @@ proc createChatIdentifierItem(self: Module): Item =
     ),
   ),
     isCurrentUser = false,
-    renderedMessageText = "",
     clearText = "",
   )
 
@@ -370,8 +364,6 @@ method onSendingStarted*(self: Module, sendToken, text, replyTo: string, content
     responseTo: replyTo,
     contentType: toContentType(contentType),
   )
-  if text != "":
-    dto.parsedText = @[ParsedText(`type`: PARSED_TEXT_TYPE_PARAGRAPH, children: @[ParsedText(literal: text)])]
   self.messagesAdded(@[dto])
 
 method onSendingFinished*(self: Module, sendToken: string) =
@@ -577,9 +569,6 @@ method updateContactDetails*(self: Module, contactId: string) =
     if item.quotedMessageAuthorDetails.dto.id == contactId:
       item.updateQuotedAuthorDetails(updatedContact)
 
-    if item.messageContainsMentions and item.mentionedUsersPks.anyIt(it == contactId):
-      item.messageText = self.controller.getRenderedText(item.parsedText, self.controller.getCommunityDetails().chats)
-
     item.linkPreviewModel.setContactInfo(updatedContact)
 
 method onMediaServerStarted*(self: Module, port: int) =
@@ -615,25 +604,17 @@ method onMessageEdited*(self: Module, message: MessageDto) =
     self.messagesAdded(@[message])
     return
 
-  let mentionedUsersPks = itemBeforeChange.mentionedUsersPks
-
-  var updatedText = ""
-  if message.contentType == ContentType.BridgeMessage:
-    # message from bridge does not have any tags, we need to add them here to show correctly edited message
-    updatedText = "<p>" & message.bridgeMessage.content & "</p>"
-  else:
-    updatedText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats)
+  # a bridged message keeps its text in the bridge payload, as when it was added
+  let updatedText =
+    if message.contentType == ContentType.BridgeMessage: message.bridgeMessage.content
+    else: message.text
 
   self.view.model().updateEditedMsg(
     message.id,
     updatedText,
-    message.text,
-    message.parsedText,
     message.contentType,
     message.mentioned,
-    message.containsContactMentions(),
     message.links,
-    message.mentionedUsersPks
     )
 
 method onHistoryCleared*(self: Module) =

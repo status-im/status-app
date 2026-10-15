@@ -6,20 +6,11 @@ import link_preview, payment_request
 
 include ../../../common/json_utils
 
-from ../../../common/conversion import SystemTagMapping
 
-const PARSED_TEXT_TYPE_PARAGRAPH* = "paragraph"
-const PARSED_TEXT_TYPE_BLOCKQUOTE* = "blockquote"
-const PARSED_TEXT_TYPE_CODEBLOCK* = "codeblock"
-
-const PARSED_TEXT_CHILD_TYPE_CODE* = "code"
-const PARSED_TEXT_CHILD_TYPE_EMPH* = "emph"
-const PARSED_TEXT_CHILD_TYPE_STRONG* = "strong"
-const PARSED_TEXT_CHILD_TYPE_STRONG_EMPH* = "strong-emph"
-const PARSED_TEXT_CHILD_TYPE_MENTION* = "mention"
-const PARSED_TEXT_CHILD_TYPE_STATUS_TAG* = "status-tag"
-const PARSED_TEXT_CHILD_TYPE_DEL* = "del"
-const PARSED_TEXT_CHILD_TYPE_LINK* = "link"
+const PARSED_TEXT_TYPE_PARAGRAPH = "paragraph"
+const PARSED_TEXT_CHILD_TYPE_MENTION = "mention"
+const PARSED_TEXT_CHILD_TYPE_STATUS_TAG = "status-tag"
+const PARSED_TEXT_CHILD_TYPE_LINK = "link"
 
 const PARSED_TEXT_OUTGOING_STATUS_SENDING*   = "sending"
 const PARSED_TEXT_OUTGOING_STATUS_SENT*      = "sent"
@@ -27,11 +18,8 @@ const PARSED_TEXT_OUTGOING_STATUS_DELIVERED* = "delivered"
 const PARSED_TEXT_OUTGOING_STATUS_EXPIRED* = "expired"
 const PARSED_TEXT_OUTGOING_STATUS_FAILED_RESENDING* = "failedResending"
 
-type ParsedText* = object
-  `type`*: string
-  literal*: string
-  destination*: string
-  children*: seq[ParsedText]
+# How status-go lists a mention of everyone ("@0x00001") in `mentions`
+const EVERYONE_MENTION* = "0x00001"
 
 type DiscordMessageAttachment* = object
   id*: string
@@ -68,7 +56,6 @@ type BridgeMessage* = object
 type QuotedMessage* = object
   `from`*: string
   text*: string
-  parsedText*: seq[ParsedText]
   contentType*: ContentType
   deleted*: bool
   discordMessage*: DiscordMessage
@@ -106,7 +93,9 @@ type MessageDto* = object
   discordMessage*: DiscordMessage
   bridgeMessage*: BridgeMessage
   rtl*: bool
-  parsedText*: seq[ParsedText]
+  # The text as parsed by status-go: an array of markdown blocks, kept as JSON and only
+  # walked for the plain text (see plainText)
+  parsedText*: JsonNode
   lineCount*: int
   text*: string
   chatId*: string
@@ -134,19 +123,12 @@ type MessageDto* = object
   pinnedBy*: string
   transactionParameters*: TransactionParameters
   mentioned*: bool
+  # The mentions status-go found in the parsed text: public keys without the "@", and
+  # EVERYONE_MENTION for a mention of everyone. Text in a quote, bold or code is not
+  # searched for mentions.
+  mentions*: seq[string]
   replied*: bool
   paymentRequests*: seq[PaymentRequest]
-
-proc toParsedText*(jsonObj: JsonNode): ParsedText =
-  result = ParsedText()
-  discard jsonObj.getProp("type", result.type)
-  discard jsonObj.getProp("literal", result.literal)
-  discard jsonObj.getProp("destination", result.destination)
-
-  var childrenArr: JsonNode
-  if(jsonObj.getProp("children", childrenArr) and childrenArr.kind == JArray):
-    for childObj in childrenArr:
-      result.children.add(toParsedText(childObj))
 
 proc toDiscordMessageAuthor*(jsonObj: JsonNode): DiscordMessageAuthor =
   result = DiscordMessageAuthor()
@@ -201,11 +183,6 @@ proc toQuotedMessage*(jsonObj: JsonNode): QuotedMessage =
   discard jsonObj.getProp("contentType", contentType)
   result.contentType = toContentType(contentType)
   discard jsonObj.getProp("deleted", result.deleted)
-
-  var parsedTextArr: JsonNode
-  if(jsonObj.getProp("parsedText", parsedTextArr) and parsedTextArr.kind == JArray):
-    for pTextObj in parsedTextArr:
-      result.parsedText.add(toParsedText(pTextObj))
 
   var discordMessageObj: JsonNode
   if(jsonObj.getProp("discordMessage", discordMessageObj)):
@@ -284,6 +261,11 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
   discard jsonObj.getProp("mentioned", result.mentioned)
   discard jsonObj.getProp("replied", result.replied)
 
+  var mentionsArr: JsonNode
+  if jsonObj.getProp("mentions", mentionsArr) and mentionsArr.kind == JArray:
+    for mention in mentionsArr:
+      result.mentions.add(mention.getStr)
+
   var quotedMessageObj: JsonNode
   if(jsonObj.getProp("quotedMessage", quotedMessageObj)):
     result.quotedMessage = toQuotedMessage(quotedMessageObj)
@@ -325,40 +307,64 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
       result.paymentRequests.add(element.toPaymentRequest())
 
   var parsedTextArr: JsonNode
-  if(jsonObj.getProp("parsedText", parsedTextArr) and parsedTextArr.kind == JArray):
-    for pTextObj in parsedTextArr:
-      result.parsedText.add(toParsedText(pTextObj))
+  if jsonObj.getProp("parsedText", parsedTextArr) and parsedTextArr.kind == JArray:
+    result.parsedText = parsedTextArr
 
   var transactionParametersObj: JsonNode
   if(jsonObj.getProp("commandParameters", transactionParametersObj)):
     result.transactionParameters = toTransactionParameters(transactionParametersObj)
 
-proc containsContactMentions*(self: MessageDto): bool =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if (child.type == PARSED_TEXT_CHILD_TYPE_MENTION):
-        return true
-  return false
-
 proc isPersonalMention*(self: MessageDto, publicKey: string): bool =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if (child.type == PARSED_TEXT_CHILD_TYPE_MENTION and child.literal.contains(publicKey)):
-        return true
-  return false
+  return publicKey in self.mentions
 
 proc isGlobalMention*(self: MessageDto): bool =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if child.type == PARSED_TEXT_CHILD_TYPE_MENTION:
-        for pair in SystemTagMapping:
-          if child.literal.contains(pair[1]):
-            return true
+  return EVERYONE_MENTION in self.mentions
 
-  return false
+# The text a sticker, or an image without text, reads as in a one-line summary of it
+const IMAGE_PLACEHOLDER_TEXT* = "🖼️"
 
-proc mentionedUsersPks*(self: MessageDto): seq[string] =
-  for pText in self.parsedText:
-    for child in pText.children:
-      if (child.type == PARSED_TEXT_CHILD_TYPE_MENTION):
-        result.add(child.literal)
+# The markdown text of the message, which the client parses and renders. Bridged and
+# imported Discord messages keep theirs in the bridge/Discord payload.
+proc unparsedText*(self: MessageDto): string =
+  if self.contentType == ContentType.BridgeMessage:
+    return self.bridgeMessage.content
+  if self.contentType == ContentType.DiscordMessage and self.text == "":
+    return self.discordMessage.content
+  return self.text
+
+# The markdown text a chat shows for its last message: the message's text, or
+# IMAGE_PLACEHOLDER_TEXT for a sticker or an image without text
+proc lastMessageUnparsedText*(self: MessageDto): string =
+  if self.contentType == ContentType.Sticker or
+      (self.contentType == ContentType.Image and self.text == ""):
+    return IMAGE_PLACEHOLDER_TEXT
+  return self.unparsedText
+
+# The plain text of status-go's parsed text: formatting dropped, one line per block, links
+# shown as their destination and a mention as "@" and the name `mentionName` gives its
+# literal (a public key, or EVERYONE_MENTION). Mentions in quotes keep their raw key, since
+# status-go gives a quote as its literal text only.
+proc plainText*(parsedText: JsonNode, mentionName: proc(mention: string): string): string =
+  var lines: seq[string]
+  for blockNode in parsedText.getElems:
+    if blockNode{"type"}.getStr != PARSED_TEXT_TYPE_PARAGRAPH:
+      # blockquote and codeblock: their text is the literal
+      lines.add(blockNode{"literal"}.getStr.strip(leading = false))
+      continue
+
+    var line = ""
+    for child in blockNode{"children"}.getElems:
+      let literal = child{"literal"}.getStr
+      case child{"type"}.getStr
+        of PARSED_TEXT_CHILD_TYPE_MENTION:
+          line.add("@" & mentionName(literal))
+        of PARSED_TEXT_CHILD_TYPE_STATUS_TAG:
+          line.add("#" & literal)
+        of PARSED_TEXT_CHILD_TYPE_LINK:
+          line.add(child{"destination"}.getStr)
+        else:
+          # text, code, emph, strong, strong-emph and del
+          line.add(literal)
+    lines.add(line)
+
+  return lines.join("\n").strip()

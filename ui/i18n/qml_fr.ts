@@ -16163,13 +16163,6 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
 </context>
 <context>
-    <name>SimplifiedMessageView</name>
-    <message>
-        <source>You</source>
-        <translation>Vous</translation>
-    </message>
-</context>
-<context>
     <name>SlippageSelector</name>
     <message>
         <source>Custom %</source>

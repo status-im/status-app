@@ -18,7 +18,6 @@ Item {
             width: 500
             messageId: "m1"
             messageDetails: StatusMessageDetails {
-                messageText: "hello"
                 unparsedText: "hello"
             }
         }

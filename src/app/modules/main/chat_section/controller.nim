@@ -102,6 +102,9 @@ proc loadChatThreadsForChats*(self: Controller, chatIds: seq[string]) =
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
+    if ((self.isCommunitySection and args.chat.communityId != self.sectionId) or
+        (not self.isCommunitySection and args.chat.communityId != "")):
+      return
     self.delegate.updateLastMessage(args.chat.id, args.chat.timestamp.int, args.chat.lastMessage)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
@@ -699,11 +702,8 @@ proc toggleCollapsedCommunityCategoryAsync*(self: Controller, categoryId: string
 proc reorderCommunityChat*(self: Controller, categoryId: string, chatId: string, position: int) =
   self.communityService.reorderCommunityChat(self.sectionId, categoryId, chatId, position)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
-  return self.messageService.getRenderedText(parsedTextArray, communityChats)
-
-proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
-  return self.messageService.getMessagesParsedPlainText(message, communityChats)
+proc getMessagesParsedPlainText*(self: Controller, message: MessageDto): string =
+  return self.messageService.getMessagesParsedPlainText(message)
 
 proc getColorId*(self: Controller, pubkey: string): int =
   self.contactService.getContactColorId(pubkey)
