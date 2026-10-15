@@ -15,7 +15,7 @@
 -keep class org.qtproject.qt.android.** { *; }
 
 # ui/StatusQ/src/systemutilsinternal.cpp: callStaticMethod on
-# StatusQtActivity (mainWindowReady, openAppSettings, openDownloadsUi,
+# StatusQtActivity (mainWindowReady, openDownloadsUi,
 # openAccessibilitySettings, restartApplication), KeyboardUtil
 # (requestKeyboardShow, getKeyboardHeight, isKeyboardVisible), StatusBarUtil
 # (setStatusBarIconColor), ShareUtils (sharePaths), MediaStoreHelper
