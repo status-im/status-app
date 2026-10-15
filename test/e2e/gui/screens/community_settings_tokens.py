@@ -487,9 +487,10 @@ class EditCommunityTokenView(QObject):
                 lambda: expected_fee_title in str(getattr(self.object, 'feeLabel', '')),
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), f'feeLabel {getattr(self.object, "feeLabel", None)!r} does not include {expected_fee_title!r}'
+        self._scroll.vertical_scroll_down(self.preview_button)
         assert driver.waitFor(
             lambda: self.preview_button.is_enabled,
-            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+            configs.timeouts.FEES_TIMEOUT_MSEC,
         ), 'Preview button stayed disabled'
         self.preview_button.click()
         return self
@@ -565,12 +566,17 @@ class TokenDetailsView(QObject):
 
 class EditAirdropView(QObject):
     def __init__(self):
-        super().__init__(communities_names.createAirdropButton)
+        super().__init__(communities_names.airdropToAddButton)
         self.add_recipient_button = Button(communities_names.airdropToAddButton)
         self.eth_addresses_option = Button(communities_names.airdropEthAddressesOption)
         self.addresses_input = TextEdit(communities_names.airdropAddressesTextEdit)
         self.show_fees_switch = CheckBox(communities_names.airdropShowFeesSwitch)
         self.create_airdrop_button = Button(communities_names.createAirdropButton)
+
+    def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        # Create airdrop stays disabled until recipients are added; wait for the To "+" instead.
+        self.add_recipient_button.wait_until_appears(timeout_msec)
+        return self
 
     @allure.step('Add ETH recipient {1}')
     def add_eth_recipient(self, address: str):

@@ -206,11 +206,11 @@ editCommunityTokenShowFeesSwitch = {"checkable": True, "container": statusDeskto
 editCommunityTokenPreviewButton = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenPreviewButton", "type": "StatusButton", "visible": True}
 communityTokenMintButton = {"container": statusDesktop_mainWindow, "objectName": "communityTokenMintButton", "type": "StatusButton", "visible": True}
 
-# Token details footer
-sendOwnerTokenButton = {"container": statusDesktop_mainWindow, "objectName": "sendOwnerTokenButton", "type": "StatusButton", "visible": True}
-airdropTokenButton = {"container": statusDesktop_mainWindow, "objectName": "airdropTokenButton", "type": "StatusButton", "visible": True}
-remotelyDestructTokenButton = {"container": statusDesktop_mainWindow, "objectName": "remotelyDestructTokenButton", "type": "StatusButton", "visible": True}
-burnRemainingTokensButton = {"container": statusDesktop_mainWindow, "objectName": "burnRemainingTokensButton", "type": "StatusButton", "visible": True}
+# Token details footer (MintTokensFooterPanel uses StatusFlatButton)
+sendOwnerTokenButton = {"container": statusDesktop_mainWindow, "objectName": "sendOwnerTokenButton", "type": "StatusFlatButton", "visible": True}
+airdropTokenButton = {"container": statusDesktop_mainWindow, "objectName": "airdropTokenButton", "type": "StatusFlatButton", "visible": True}
+remotelyDestructTokenButton = {"container": statusDesktop_mainWindow, "objectName": "remotelyDestructTokenButton", "type": "StatusFlatButton", "visible": True}
+burnRemainingTokensButton = {"container": statusDesktop_mainWindow, "objectName": "burnRemainingTokensButton", "type": "StatusFlatButton", "visible": True}
 
 # Airdrop editor
 airdropWhatAddButton = {"container": statusDesktop_mainWindow, "objectName": "addItemButton_What", "type": "StatusRoundButton", "visible": True}
