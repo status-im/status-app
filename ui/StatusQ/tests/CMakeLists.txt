@@ -108,6 +108,15 @@ add_executable(TestStatusEmojiModel src/tst_statusemojimodel.cpp)
 target_link_libraries(TestStatusEmojiModel PRIVATE Qt::Test Qt::Qml StatusQ)
 add_test(NAME TestStatusEmojiModel COMMAND TestStatusEmojiModel)
 
+# Conformance checks for the generated COLRv0 emoji font (tools/emoji/README.md).
+qt_add_executable(TestEmojiFont src/tst_emojifont.cpp)
+target_link_libraries(TestEmojiFont PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
+target_compile_definitions(TestEmojiFont PRIVATE
+    EMOJI_LIST_JSON="${CMAKE_CURRENT_SOURCE_DIR}/../src/StatusQ/Core/Utils/emojiList.json")
+add_test(NAME TestEmojiFont COMMAND TestEmojiFont)
+# Paints glyphs, so it needs a platform plugin that works on headless builders.
+set_tests_properties(TestEmojiFont PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 add_executable(TestIncubationController src/tst_incubationcontroller.cpp)
 target_link_libraries(TestIncubationController PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationController COMMAND TestIncubationController)

@@ -4,5 +4,6 @@
         <file compression-algorithm="none">InterVariable-Italic.ttf</file>
         <file compression-algorithm="none">RobotoMono-VariableFont_wght.ttf</file>
         <file compression-algorithm="none">RobotoMono-Italic-VariableFont_wght.ttf</file>
+        <file compression-algorithm="none">StatusTwemoji-COLRv0.ttf</file>
     </qresource>
 </RCC>

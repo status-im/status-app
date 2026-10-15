@@ -68,6 +68,19 @@ void Fonts::initFonts()
     loadAndAssignFont("RobotoMono-VariableFont_wght.ttf"_L1, m_codeFont);
     loadFont("RobotoMono-Italic-VariableFont_wght.ttf"_L1);
 
+    // Emoji are rendered by a COLRv0 font generated from the Twemoji artwork
+    // (see tools/emoji). Registering it as the application emoji font makes Qt
+    // resolve emoji clusters to it instead of whatever the system happens to
+    // ship, so all platforms render the same glyphs.
+    const auto emojiFontId = loadFont("StatusTwemoji-COLRv0.ttf"_L1);
+    if (emojiFontId != -1) {
+        const auto emojiFamilies = QFontDatabase::applicationFontFamilies(emojiFontId);
+        if (emojiFamilies.isEmpty())
+            qWarning() << "!!! EMPTY EMOJI FONT ???";
+        else
+            QFontDatabase::setApplicationEmojiFontFamilies(emojiFamilies);
+    }
+
     // monoFont fine tuning (https://rsms.me/inter/#features)
     if (baseFontId != -1) {
         m_monoFont = m_baseFont;
