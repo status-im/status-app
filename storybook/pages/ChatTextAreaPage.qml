@@ -139,10 +139,9 @@ unclosed fence here (no closing triple-tick)
         return s
     }
 
-    // pubKey -> display name, for resolving textual mentions when rendering / loading. Sourced
-    // from the users model through the reusable resolver (reactive to model changes).
-    readonly property var mentionsMap: mentionResolver.map
-
+    // Names the textual mentions when rendering / loading: resolveFor(text) gives
+    // { pubKey: displayName } for the mentions in a text, from the users model. Bindings calling
+    // it re-evaluate when the model changes.
     MentionResolver {
         id: mentionResolver
         sourceModel: usersModel
@@ -153,10 +152,11 @@ unclosed fence here (no closing triple-tick)
     Component.onCompleted: {
         usersModel.initialize()
 
-        textArea.loadText("/tableflip - adds ascii emoticon at the end, /shrug is also supported\n\n" +
-                          "Mentions: @" + usersModel.get(0).pubKey +
-                          " and @0x00001 (everyone).\n\n"
-                          + root.sampleBody, root.mentionsMap)
+        const text = "/tableflip - adds ascii emoticon at the end, /shrug is also supported\n\n" +
+                     "Mentions: @" + usersModel.get(0).pubKey +
+                     " and @0x00001 (everyone).\n\n"
+                     + root.sampleBody
+        textArea.loadText(text, mentionResolver.resolveFor(text))
 
         Qt.callLater(() => {
             textArea.cursorPosition = 0
@@ -561,14 +561,14 @@ unclosed fence here (no closing triple-tick)
                             edited: editedSwitch.checked
 
                             // Rendered from the editor's plain text (mentions as "@0x…"), not the
-                            // text document — mentions are resolved via mentionsMap.
+                            // text document — mentions are resolved via mentionResolver.
                             blocks: {
                                 textArea.text // re-build on every edit
 
                                 // Expand chat slash-commands (e.g. /tableflip) as the real send path does.
                                 const text = StringUtils.expandAsciiEmoticonShortcuts(textArea.textWithMentions())
                                 return MarkdownUtils.toBlocks(text,
-                                                              root.mentionsMap,
+                                                              mentionResolver.resolveFor(text),
                                                               chatTextView.font,
                                                               textArea.formatUnclosedCodeFence,
                                                               textArea.fullLineHeightEmojis,
@@ -582,7 +582,8 @@ unclosed fence here (no closing triple-tick)
                             // Example click handling: pop a bubble showing the clicked target and
                             // highlight all occurrences of the clicked link (coexists with hover).
                             onMentionClicked: (pubKey) => {
-                                root.showClickBubble("Mention: @" + (root.mentionsMap[pubKey] || pubKey))
+                                const name = mentionResolver.resolveFor("@" + pubKey)[pubKey]
+                                root.showClickBubble("Mention: @" + (name || pubKey))
                                 chatTextView.highlightedLink = pubKey
                             }
                             onLinkClicked: (url) => {
@@ -751,10 +752,11 @@ unclosed fence here (no closing triple-tick)
 
                 html: {
                     textArea.text // rebuild on every edit
+                    const text = textArea.textWithMentions()
                     return  StringUtils.expandAsciiEmoticonShortcuts(
                                 MarkdownUtils.singleLineHtml(
-                                    textArea.textWithMentions(),
-                                    root.mentionsMap, font,
+                                    text,
+                                    mentionResolver.resolveFor(text), font,
                                     textArea.imageEmojis ? Emoji.base : ""))
                 }
             }
@@ -821,8 +823,8 @@ unclosed fence here (no closing triple-tick)
                     text: "Edited marker"
                 }
 
-                // Renames the exemplary mentioned user (row 0) in the users model. The resolver
-                // rebuilds mentionsMap reactively, so the mention in the static render updates
+                // Renames the exemplary mentioned user (row 0) in the users model. The renders
+                // resolve mentions through mentionResolver, so the mention in the static render updates
                 // live to the new name — without touching the text.
                 Button {
                     text: "Rename mentioned user"
