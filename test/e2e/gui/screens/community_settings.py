@@ -27,7 +27,7 @@ from gui.elements.scroll import Scroll
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import communities_names, names
-from gui.screens.community_settings_tokens import TokensView
+from gui.screens.community_settings_tokens import FinaliseOwnershipPopup, TokensView
 from scripts.tools.image import Image
 
 
@@ -90,6 +90,7 @@ class OverviewView(QObject):
         self._description_text_label = TextLabel(
             communities_names.communityOverviewSettingsCommunityDescription_StatusBaseText)
         self._edit_button = Button(communities_names.mainWindow_Edit_Community_StatusButton)
+        self.primary_button = Button(communities_names.overviewSettingsPrimaryButton)
 
     @property
     @allure.step('Get community name')
@@ -100,6 +101,20 @@ class OverviewView(QObject):
     @allure.step('Get community description')
     def description(self) -> str:
         return self._description_text_label.text
+
+    @allure.step('Open finalise ownership popup from overview')
+    def open_finalise_ownership(self) -> FinaliseOwnershipPopup:
+        assert driver.waitFor(
+            lambda: 'Finalise' in self.primary_button.text,
+            configs.timeouts.WALLET_HISTORY_TX_TIMEOUT_MSEC,
+        ), f'Finalise ownership button not shown, got {self.primary_button.text!r}'
+        self.primary_button.click()
+        return FinaliseOwnershipPopup().wait_until_appears()
+
+    @property
+    @allure.step('Get overview primary button text')
+    def primary_button_text(self) -> str:
+        return self.primary_button.text
 
     @allure.step('Open edit community view')
     def open_edit_community_view(self, attempts: int = 2) -> 'EditCommunityView':

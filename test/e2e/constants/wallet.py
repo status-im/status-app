@@ -170,6 +170,8 @@ class WalletHistoryTitles:
     BRIDGE = ('Bridged',)
     ENS = ('Interaction', 'Contract deployed')
     MINT = ('Interaction', 'Token minted', 'Collectible minted', 'Contract deployed')
+    DESTROY = ('Destroyed', 'Interaction')
+    BURN = ('Interaction',)
 
 
 class WalletScreensHeaders(Enum):

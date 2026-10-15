@@ -219,3 +219,11 @@ class SendPopup(QObject):
         self.open_sign_send_modal().sign_send_modal_reject_button.click()
         sign_send_modal = self.open_sign_send_modal()
         sign_send_modal.sign_send_modal_sign_button.click()
+
+    @allure.step('Sign and send pre-selected collectible to {1}')
+    def sign_and_send_preselected(self, address: str):
+        self._set_recipient_address(address, wait_for_field=True)
+        self.wait_for_review_send_ready()
+        self.open_sign_send_modal().sign_send_modal_reject_button.click()
+        sign_send_modal = self.open_sign_send_modal()
+        sign_send_modal.sign_send_modal_sign_button.click()
