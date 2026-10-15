@@ -102,6 +102,9 @@ proc loadChatThreadsForChats*(self: Controller, chatIds: seq[string]) =
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
+    if ((self.isCommunitySection and args.chat.communityId != self.sectionId) or
+        (not self.isCommunitySection and args.chat.communityId != "")):
+      return
     self.delegate.updateLastMessage(args.chat.id, args.chat.timestamp.int, args.chat.lastMessage)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
