@@ -82,7 +82,6 @@ pipeline {
     STATUS_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'apk', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
     STATUS_AAB_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'aab', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
     STATUS_MAPPING_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'apk', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}-mapping.txt"
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Enable test mode (hooks for e2e) for PR/nightly builds, but NOT for releases */
     STATUSQ_TESTMODE = "${!utils.isReleaseBuild()}"
     /* Swap */

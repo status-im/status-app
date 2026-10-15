@@ -120,7 +120,6 @@ pipeline {
     NIMBLE_DIR = "${env.WORKSPACE_TMP}/.nimble"
     /* Ensure nimcache is not shared between builds. */
     NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
-    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds".replace('\\', '/')
   }
 
   stages {
