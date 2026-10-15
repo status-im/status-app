@@ -12,7 +12,7 @@ ListModel {
         sectionId: "section1"
         sectionName: "Messages"
         emoji: ""
-        lastMessageText: ""
+        lastMessageUnparsedText: ""
     }
     ListElement {
         chatId: "id2"
@@ -24,7 +24,7 @@ ListModel {
         sectionId: "section2"
         sectionName: "ACME Community"
         emoji: "💩"
-        lastMessageText: "So long and thx for the fish..."
+        lastMessageUnparsedText: "So long and thx for the fish..."
     }
     ListElement {
         chatId: "id3"
@@ -36,6 +36,6 @@ ListModel {
         sectionId: "section3"
         sectionName: "Messages"
         emoji: ""
-        lastMessageText: ""
+        lastMessageUnparsedText: ""
     }
 }

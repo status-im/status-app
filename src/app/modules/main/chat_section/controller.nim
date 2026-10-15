@@ -699,8 +699,8 @@ proc toggleCollapsedCommunityCategoryAsync*(self: Controller, categoryId: string
 proc reorderCommunityChat*(self: Controller, categoryId: string, chatId: string, position: int) =
   self.communityService.reorderCommunityChat(self.sectionId, categoryId, chatId, position)
 
-proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
-  return self.messageService.getMessagesParsedPlainText(message, communityChats)
+proc getMessagesParsedPlainText*(self: Controller, message: MessageDto): string =
+  return self.messageService.getMessagesParsedPlainText(message)
 
 proc getColorId*(self: Controller, pubkey: string): int =
   self.contactService.getContactColorId(pubkey)

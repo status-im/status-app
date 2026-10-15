@@ -45,6 +45,10 @@ QObject {
     property bool showWallets: true
     property bool showDapps: true
 
+    // Names the users mentioned in a chat's last message: (text) -> { pubKey: displayName },
+    // e.g. MentionResolver.resolveFor. A mention it does not name shows its raw key.
+    property var resolveMentionsFn: function (text) { return ({}) }
+
     /**
       Provided models structure:
 
@@ -69,6 +73,7 @@ QObject {
       Chats:
         chatType            [int]   - type of the chat (Constants.chatType.*)
         onlineStatus        [int]   - online status of the contact (Constants.onlineStatus.*)
+        lastMessageText     [string] - plain text of the last message, mentions named by resolveMentionsFn
 
       Wallets:
         walletType          [string] - type of the wallet (Constants.*WalletType)
@@ -96,11 +101,12 @@ QObject {
     QtObject {
         id: d
 
-        readonly property var computedRolesNames: ["icon", "color", "hasNotification", "pending", "currencyBalance"]
+        readonly property var computedRolesNames: ["icon", "color", "hasNotification", "pending", "currencyBalance",
+            "lastMessageText"]
         readonly property var computedRolesInputs: [
             "sectionType", "icon", "sourceIcon", "emoji", "iconUrl", "color", "sourceColor", "colorId",
             "hasNotification", "hasUnreadMessages", "notificationsCount", "spectated", "joined",
-            "sourceCurrencyBalance"
+            "sourceCurrencyBalance", "lastMessageUnparsedText"
         ]
     }
 
@@ -345,7 +351,7 @@ QObject {
 
         markerRoleName: "sectionType"
         expectedRoles: ["key", "id", "enabled", "name", "icon", "color", "hasNotification", "notificationsCount", // common props
-            "chatType", "onlineStatus", "lastMessageText", // chat
+            "chatType", "onlineStatus", // chat
             "sectionName", // chat search
             "banner", "members", "activeMembers", "pending", "banned", // community
             "isExperimental", // settings
@@ -353,7 +359,7 @@ QObject {
             "connectorBadge", // dapp
             // inputs of the computed roles (computedRoles)
             "sourceIcon", "emoji", "iconUrl", "sourceColor", "colorId", "hasUnreadMessages",
-            "spectated", "joined", "sourceCurrencyBalance"
+            "spectated", "joined", "sourceCurrencyBalance", "lastMessageUnparsedText"
         ]
     }
 
@@ -469,6 +475,13 @@ QObject {
             readonly property string currencyBalance: sectionType === Constants.appSection.wallet
                                                       ? LocaleUtils.currencyAmountToLocaleString(model.sourceCurrencyBalance)
                                                       : ""
+            // undefined for the other entries, which have no last message
+            readonly property var lastMessageText: {
+                if (!isChat)
+                    return undefined
+                const text = model.lastMessageUnparsedText ?? ""
+                return text ? MarkdownUtils.plainText(text, root.resolveMentionsFn(text)) : ""
+            }
         }
     }
 }

@@ -27,6 +27,9 @@ Item {
         "currencyBalance", "connectorBadge", "pinned", "timestamp"
     ]
 
+    // mention wire format: "@0x" + 130 lowercase hex chars
+    readonly property string aliceKey: "0x04" + "a".repeat(128)
+
     function uniqueProfileId() {
         return "tst_HomePageAdaptor_" + Date.now() + "_" + Math.floor(Math.random() * 1e9)
     }
@@ -49,6 +52,17 @@ Item {
 
             searchPhrase: ""
             profileId: root.uniqueProfileId()
+
+            // pubKey -> name, read by resolveMentionsFn the way MentionResolver reads its model
+            property var mentionNames: ({})
+
+            resolveMentionsFn: text => {
+                const result = {}
+                for (const key in mentionNames)
+                    if (text.includes("@" + key))
+                        result[key] = mentionNames[key]
+                return result
+            }
         }
     }
 
@@ -63,7 +77,7 @@ Item {
                     append({
                         itemId: "gen" + i, type: 1, name: "Chat " + i, emoji: "", icon: "", color: "",
                         colorId: i % 10, hasUnreadMessages: false, notificationsCount: 0, onlineStatus: 0,
-                        lastMessageText: "", isCategory: false
+                        lastMessageUnparsedText: "", isCategory: false
                     })
             }
         }
@@ -396,7 +410,7 @@ Item {
             // insert a new chat before the pinned one
             chats.insert(0, { itemId: "new1", type: 1, name: "AAA new chat", emoji: "", icon: "", color: "",
                               colorId: 1, hasUnreadMessages: true, notificationsCount: 3, onlineStatus: 0,
-                              lastMessageText: "hi", isCategory: false })
+                              lastMessageUnparsedText: "hi", isCategory: false })
             tryVerify(() => SQUtils.ModelUtils.indexOf(adaptor.homePageEntriesModel, "key", "2;new1") >= 0)
             compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "2;new1", "pinned"), false)
             compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "2;new1", "hasNotification"), true)
@@ -412,6 +426,41 @@ Item {
             compare(SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", "2;id1", "pinned"), true)
             compare(adaptor.pinnedModel.ModelCount.count, 2)
             adaptor.clear()
+        }
+
+        function setLastMessage(adaptor, itemId, text) {
+            const chats = adaptor.chatsBaseModel
+            chats.setProperty(SQUtils.ModelUtils.indexOf(chats, "itemId", itemId), "lastMessageUnparsedText", text)
+        }
+
+        function lastMessageText(adaptor, key) {
+            return SQUtils.ModelUtils.getByKey(adaptor.homePageEntriesModel, "key", key, "lastMessageText")
+        }
+
+        // chats give their last message as markdown; the entries show it as plain text
+        function test_lastMessageTextIsPlainText() {
+            const adaptor = createAdaptor({ showAllChats: true })
+            setLastMessage(adaptor, "id1", "**hi** *there* `code` & <b>tags</b>\nnext line")
+            setLastMessage(adaptor, "id5", "")
+
+            tryCompare(adaptor.homePageEntriesModel.ModelCount, "count", Golden.search_allChats.length)
+            tryVerify(() => lastMessageText(adaptor, "2;id1") === "hi there code & <b>tags</b>\nnext line",
+                      1000, lastMessageText(adaptor, "2;id1"))
+            compare(lastMessageText(adaptor, "section2;id2"), "So long and thx for the fish...") // channel, from search
+            compare(lastMessageText(adaptor, "2;id4"), "bold break line italic")
+            compare(lastMessageText(adaptor, "2;id5"), "") // no last message
+            compare(lastMessageText(adaptor, "4;12"), undefined) // not a chat
+        }
+
+        function test_lastMessageMentionsFollowTheResolver() {
+            const adaptor = createAdaptor({ mentionNames: { [root.aliceKey]: "Alice" } })
+            setLastMessage(adaptor, "id1", `hi @${root.aliceKey}`)
+            tryCompare(adaptor.homePageEntriesModel.ModelCount, "count", Golden.defaultEntries.length)
+
+            tryVerify(() => lastMessageText(adaptor, "2;id1") === "hi @Alice", 1000, lastMessageText(adaptor, "2;id1"))
+
+            adaptor.mentionNames = { [root.aliceKey]: "Alicia" }
+            tryVerify(() => lastMessageText(adaptor, "2;id1") === "hi @Alicia", 1000, lastMessageText(adaptor, "2;id1"))
         }
 
         function createScaledAdaptor(chatsCount) {

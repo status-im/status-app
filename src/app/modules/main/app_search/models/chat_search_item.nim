@@ -9,14 +9,14 @@ type
     sectionName: string
     emoji: string
     chatType: int
-    lastMessageText: string
+    lastMessageUnparsedText: string
     lastMessageTimestamp: int
     lastOwnMessageTimestamp: int
     canPost: bool
     membersCount: int
     onlineStatus: int
 
-proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageText: string, lastMessageTimestamp: int, lastOwnMessageTimestamp: int, canPost: bool, membersCount: int, onlineStatus: int): ChatSearchItem =
+proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageUnparsedText: string, lastMessageTimestamp: int, lastOwnMessageTimestamp: int, canPost: bool, membersCount: int, onlineStatus: int): ChatSearchItem =
   result = ChatSearchItem()
   result.chatId = chatId
   result.name = name
@@ -27,7 +27,7 @@ proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, secti
   result.sectionName = sectionName
   result.emoji = emoji
   result.chatType = chatType
-  result.lastMessageText = lastMessageText
+  result.lastMessageUnparsedText = lastMessageUnparsedText
   result.lastMessageTimestamp = lastMessageTimestamp
   result.lastOwnMessageTimestamp = lastOwnMessageTimestamp
   result.canPost = canPost
@@ -73,11 +73,11 @@ proc emoji*(self: ChatSearchItem): string =
 proc `emoji=`*(self: ChatSearchItem, value: string) =
   self.emoji = value
 
-proc lastMessageText*(self: ChatSearchItem): string =
-  self.lastMessageText
+proc lastMessageUnparsedText*(self: ChatSearchItem): string =
+  self.lastMessageUnparsedText
 
-proc `lastMessageText=`*(self: ChatSearchItem, value: string) =
-  self.lastMessageText = value
+proc `lastMessageUnparsedText=`*(self: ChatSearchItem, value: string) =
+  self.lastMessageUnparsedText = value
 
 proc lastMessageTimestamp*(self: ChatSearchItem): int =
   self.lastMessageTimestamp

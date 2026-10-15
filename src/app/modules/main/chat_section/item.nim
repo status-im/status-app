@@ -20,7 +20,7 @@ type
     lastMessageTimestamp: int
     sortTimestamp: int
     hasUnreadMessages: bool
-    lastMessageText: string
+    lastMessageUnparsedText: string
     notificationsCount: int
     muted: bool
     blocked: bool
@@ -67,7 +67,7 @@ proc initChatItem*(
     `type`: int,
     memberRole: MemberRole,
     lastMessageTimestamp: int,
-    lastMessageText: string,
+    lastMessageUnparsedText: string,
     hasUnreadMessages: bool,
     notificationsCount: int,
     muted,
@@ -108,7 +108,7 @@ proc initChatItem*(
   result.`type` = `type`
   result.lastMessageTimestamp = lastMessageTimestamp
   result.sortTimestamp = if sortTimestamp == -1: lastMessageTimestamp else: sortTimestamp
-  result.lastMessageText = lastMessageText
+  result.lastMessageUnparsedText = lastMessageUnparsedText
   result.hasUnreadMessages = hasUnreadMessages
   result.notificationsCount = notificationsCount
   result.muted = muted
@@ -148,7 +148,7 @@ proc `$`*(self: ChatItem): string =
     description: {$self.description},
     type: {$self.`type`},
     lastMessageTimestamp: {$self.lastMessageTimestamp},
-    lastMessageText: {$self.lastMessageText},
+    lastMessageUnparsedText: {$self.lastMessageUnparsedText},
     hasUnreadMessages: {$self.hasUnreadMessages},
     notificationsCount: {$self.notificationsCount},
     muted: {$self.muted},
@@ -280,11 +280,11 @@ proc sortTimestamp*(self: ChatItem): int =
 proc `sortTimestamp=`*(self: var ChatItem, value: int) =
   self.sortTimestamp = value
 
-proc lastMessageText*(self: ChatItem): string =
-  self.lastMessageText
+proc lastMessageUnparsedText*(self: ChatItem): string =
+  self.lastMessageUnparsedText
 
-proc `lastMessageText=`*(self: var ChatItem, value: string) =
-  self.lastMessageText = value
+proc `lastMessageUnparsedText=`*(self: var ChatItem, value: string) =
+  self.lastMessageUnparsedText = value
 
 proc notificationsCount*(self: ChatItem): int =
   self.notificationsCount

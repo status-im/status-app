@@ -6,6 +6,7 @@ import StatusQ.Core.Theme
 import utils
 
 import AppLayouts.stores as AppStores
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.HomePage
@@ -13,6 +14,7 @@ import AppLayouts.Wallet
 import AppLayouts.Wallet.stores as WalletStores
 
 import mainui.adaptors
+import shared.status
 
 StatusSectionLoader {
     id: root
@@ -61,8 +63,29 @@ StatusSectionLoader {
 
             profileId: root.userUID
 
+            resolveMentionsFn: text => mentionResolver.resolveFor(text)
+
             // no automatic propagation to QtObject, needs to be specified explicitely
             Theme.style: root.Theme.style
+
+            // Names the users mentioned in the chats' last messages: contacts plus the
+            // current user, with a generated alias for anybody else
+            MentionNamesAdaptor {
+                id: mentionNames
+
+                contactsModel: root.rootChatStore.contactsModel
+                selfPubKey: root.profileStore.pubKey
+                selfDisplayName: root.profileStore.name
+            }
+
+            MentionResolver {
+                id: mentionResolver
+
+                sourceModel: mentionNames.model
+                nameRole: "preferredDisplayName"
+                aliasProvider: publicKey => root.rootChatStore.generateAlias(publicKey)
+                contactInfoRequester: publicKey => root.rootChatStore.requestContactInfo(publicKey)
+            }
         }
         onLoaded: loadSection()
     }
