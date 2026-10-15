@@ -117,6 +117,7 @@ pipeline {
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}/.cache"
     /* Nim build on Windows puts nimcache in user HOME. */
     USERPROFILE = "${env.WORKSPACE_TMP}"
+    NIMBLE_DIR = "${env.WORKSPACE_TMP}/.nimble"
     /* Ensure nimcache is not shared between builds. */
     NIMFLAGS = "${params.NIMFLAGS} --colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds".replace('\\', '/')
