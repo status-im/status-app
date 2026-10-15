@@ -1,0 +1,9 @@
+# Toolchain for building the emoji font. Pinned: these exact versions produced
+# the committed font and passed the sequence conformance test.
+nanoemoji==0.16.0
+picosvg==0.23.0
+fonttools==4.65.0
+skia-pathops==0.9.2
+ufoLib2==0.19.1
+absl-py==2.5.1
+ninja==1.13.2

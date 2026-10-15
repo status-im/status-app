@@ -1,0 +1,38 @@
+{
+  "comment": "Pinned sources for the generated emoji font and the emoji catalogue. Bump a version here, re-run fetch-sources.sh and build-font.sh, and commit the regenerated artifacts.",
+
+  "artwork": {
+    "repo": "jdecked/twemoji",
+    "tag": "v15.1.0",
+    "commit": "7407fa31c51be5ab45626b8ab5554d50cc8073f6",
+    "tarball_sha256": "ffa39215bb14fbedf29743c5e7b897c0a2f06070f27009c6ec716ff080032d19",
+    "svg_path": "assets/svg",
+    "expected_files": 3838
+  },
+
+  "metadata": {
+    "repo": "milesj/emojibase",
+    "tag": "emojibase-data@15.3.2",
+    "commit": "b7a85b9ced60a2398a7c2574237d24f379fd75ca",
+    "files": [
+      "packages/data/en/data.raw.json",
+      "packages/data/en/shortcodes/joypixels.raw.json",
+      "packages/data/en/messages.raw.json"
+    ],
+    "expected_entries": 3773,
+    "unicode_field": "raw lowercased emojibase hexcode; no twemoji filename normalization"
+  },
+
+  "font": {
+    "output": "ui/StatusQ/src/assets/fonts/StatusTwemoji-COLRv0.ttf",
+    "color_format": "glyf_colr_0",
+    "family": "Status Twemoji",
+    "upem": 1024,
+    "width": 1024,
+    "ascender": 824,
+    "descender": -200
+  },
+
+  "emoji_version": "15.1",
+  "verified_with_qt": "6.11.0"
+}
