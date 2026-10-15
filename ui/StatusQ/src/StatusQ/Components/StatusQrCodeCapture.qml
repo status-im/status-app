@@ -25,8 +25,10 @@ Item {
     // Empty means the whole frame.
     property rect captureItemRect: Qt.rect(0, 0, 0, 0)
 
-    // `captureItemRect` in normalized (0..1) video-frame coordinates, taking
-    // the aspect-ratio crop and the mirrored preview into account.
+    // `captureItemRect` in normalized (0..1) coordinates of the frame as
+    // displayed (its own rotation and mirroring applied, as on phones), taking
+    // the aspect-ratio crop and the preview's mirroring into account. Pass it
+    // to a frame tap as a display-space ROI (NimQtCamera FrameTap.setDisplayRoi).
     readonly property rect normalizedCaptureRect:
         SQUtils.Utils.mapItemRectToVideoFrame(videoOutput.contentRect, captureItemRect,
                                               videoOutput.mirrored)

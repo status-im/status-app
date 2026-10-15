@@ -65,10 +65,23 @@ public:
         return push(sink, img);
     }
 
-    // A white frame: sets the preview geometry without showing a code.
-    Q_INVOKABLE bool pushBlank(QObject* sink, int width, int height)
+    // As pushQrAt, in a frame shown rotated `rotation` degrees clockwise
+    // (QVideoFrame::setRotation), as phone cameras deliver them. x, y: raw pixels.
+    Q_INVOKABLE bool pushQrAtRotated(QObject* sink, const QString& text, int x, int y,
+                                     int width, int height, int rotation)
     {
-        return push(sink, Luma(width, height, 255));
+        auto qr = render(text, 4);
+        if (qr.size == 0)
+            return false;
+        Luma img(width, height, 255);
+        img.paste(qr, x, y);
+        return push(sink, img, rotation);
+    }
+
+    // A white frame: sets the preview geometry without showing a code.
+    Q_INVOKABLE bool pushBlank(QObject* sink, int width, int height, int rotation = 0)
+    {
+        return push(sink, Luma(width, height, 255), rotation);
     }
 
     // A large, noisy frame with a code inside: slow enough to decode that a test
@@ -126,7 +139,7 @@ private:
         return img;
     }
 
-    static bool push(QObject* sinkObject, const Luma& img)
+    static bool push(QObject* sinkObject, const Luma& img, int rotation = 0)
     {
         auto* sink = qobject_cast<QVideoSink*>(sinkObject);
         if (!sink)
@@ -138,6 +151,7 @@ private:
             std::memcpy(frame.bits(0) + y * frame.bytesPerLine(0), &img.data[y * img.w], img.w);
         std::memset(frame.bits(1), 128, frame.mappedBytes(1)); // neutral chroma
         frame.unmap();
+        frame.setRotation(QtVideo::Rotation(rotation));
         sink->setVideoFrame(frame);
         return true;
     }

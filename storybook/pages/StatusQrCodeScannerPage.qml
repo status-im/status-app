@@ -36,7 +36,7 @@ SplitView {
 
             function applyRoi() {
                 const r = scanner.normalizedCaptureRect
-                tap.setRoi(r.x, r.y, r.width, r.height)
+                tap.setDisplayRoi(r.x, r.y, r.width, r.height)
             }
 
             Component.onCompleted: applyRoi()

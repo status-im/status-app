@@ -113,6 +113,9 @@ Item {
             // area (ROI) is known before any code is shown.
             verify(fakeSource.pushBlank(output.videoSink, 1200, 1200))
             tryCompare(output.sourceRect, "width", 1200)
+            // contentRect (and so the ROI) follows on a queued update: wait for
+            // the square video laid out, cropped left and right
+            tryVerify(() => output.contentRect.width > output.width + 1)
 
             // Streamed like a camera: the tap is rate-limited (maxFps) and
             // drops frames that arrive too soon after the previous pull.
@@ -123,6 +126,37 @@ Item {
             compare(tagSpy.count, 0)
 
             verify(fakeSource.pushQr(output.videoSink, root.address, 1200, 1200))
+            tryCompare(tagSpy, "count", 1, 5000)
+        }
+
+        // Phone cameras deliver rotated frames that the preview rotates for
+        // display; the scan corners are measured on the display, so only what
+        // is inside them on screen may be decoded.
+        function test_roiFollowsScanCornersOnRotatedFrames() {
+            const output = videoOutput()
+            // raw 1600x900, shown rotated 90° clockwise: a 900x1600 portrait preview
+            verify(fakeSource.pushBlank(output.videoSink, 1600, 900, 90)) // geometry first
+            // contentRect follows a frame on a queued update (sourceRect at once):
+            // wait until the portrait video is laid out, cropped top and bottom
+            tryVerify(() => output.contentRect.height > output.height + 1)
+            const r = findChild(controlUnderTest, "statusQrCodeScanner").normalizedCaptureRect
+            // displayed scan area ≈ x 0.14..0.86, y 0.30..0.70, i.e. raw
+            // x 0.30..0.70 (480..1120 px), y 0.14..0.86 (126..774 px)
+            verify(Math.abs(r.x - 0.14) < 0.03 && Math.abs(r.y - 0.30) < 0.03,
+                   JSON.stringify(r))
+
+            // raw (280, 376), 148 px: inside the scan area if the rect were
+            // applied to the raw frame unrotated, outside it on screen
+            for (let i = 0; i < 10; ++i) {
+                verify(fakeSource.pushQrAtRotated(output.videoSink, root.address,
+                                                  280, 376, 1600, 900, 90))
+                wait(150)
+            }
+            compare(tagSpy.count, 0)
+
+            // the raw centre is the displayed centre: decodes
+            verify(fakeSource.pushQrAtRotated(output.videoSink, root.address,
+                                              726, 376, 1600, 900, 90))
             tryCompare(tagSpy, "count", 1, 5000)
         }
 
