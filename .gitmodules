@@ -127,3 +127,6 @@
 [submodule "vendor/nim-qtcamera"]
 	path = vendor/nim-qtcamera
 	url = https://github.com/status-im/nim-qtcamera.git
+[submodule "vendor/nim-qrscan"]
+	path = vendor/nim-qrscan
+	url = https://github.com/status-im/nim-qrscan.git
