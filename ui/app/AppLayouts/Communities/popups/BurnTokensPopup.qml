@@ -18,6 +18,7 @@ import shared.controls
 
 StatusDialog {
     id: root
+    objectName: "burnTokensPopup"
 
     property string communityName
     property bool isAsset // If asset isAsset = true; if collectible --> isAsset = false
@@ -121,6 +122,7 @@ StatusDialog {
 
                 StatusRadioButton {
                     id: specificAmountButton
+                    objectName: "burnSpecificAmountRadioButton"
 
                     Layout.preferredWidth: amountInput.Layout.preferredWidth
                                            + amountInput.Layout.leftMargin
@@ -155,6 +157,7 @@ StatusDialog {
 
             StatusRadioButton {
                 id: allTokensButton
+                objectName: "burnAllRemainingRadioButton"
 
                 anchors.left: specificAmountColumn.right
                 anchors.right: parent.right
@@ -174,6 +177,7 @@ StatusDialog {
 
         StatusSwitch {
             id: showFees
+            objectName: "burnTokensShowFeesSwitch"
             enabled: d.isFormValid
             text: qsTr("Show fees (will be enabled once the form is filled)")
 
@@ -247,6 +251,7 @@ StatusDialog {
             }
 
             StatusButton {
+                objectName: "burnTokensConfirmButton"
                 enabled: showFees.checked && !d.isFeeError && !root.isFeeLoading
                          && root.feeText !== ""
                 text: qsTr("Burn tokens")

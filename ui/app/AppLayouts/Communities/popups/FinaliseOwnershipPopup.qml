@@ -16,6 +16,7 @@ import utils
 
 StatusDialog {
     id: root
+    objectName: "finaliseOwnershipPopup"
 
     // Community related props:
     required property string communityName
@@ -155,6 +156,7 @@ StatusDialog {
 
             StatusButton {
                 id: acceptBtn
+                objectName: "finaliseOwnershipAcceptButton"
             }
         }
         leftButtons: ObjectModel {
@@ -300,6 +302,7 @@ StatusDialog {
 
             StatusSwitch {
                 id: showFees
+                objectName: "finaliseOwnershipShowFeesSwitch"
                 enabled: d.ackCheck
                 text: qsTr("Show fees (will be enabled once acknowledge confirmed)")
 
@@ -346,6 +349,7 @@ StatusDialog {
             }
 
             StatusCheckBox {
+                objectName: "finaliseOwnershipAckCheckBox"
                 enabled: !showFees.checked
                 Layout.topMargin: -Theme.halfPadding
                 Layout.fillWidth: true

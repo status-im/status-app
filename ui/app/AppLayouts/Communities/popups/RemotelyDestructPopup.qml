@@ -15,6 +15,7 @@ import utils
 
 StatusDialog {
     id: root
+    objectName: "remotelyDestructPopup"
 
     property alias model: tokenHoldersPanel.model
     property string collectibleName
@@ -105,6 +106,7 @@ StatusDialog {
 
         StatusSwitch {
             id: showFees
+            objectName: "remotelyDestructShowFeesSwitch"
             enabled: d.tokenCount > 0
             text: qsTr("Show fees (will be enabled once the form is filled)")
 
@@ -175,6 +177,7 @@ StatusDialog {
                 }
             }
             StatusButton {
+                objectName: "remotelyDestructConfirmButton"
                 text: qsTr("Remotely destruct %n token(s)", "", d.tokenCount)
                 enabled: showFees.checked
                 type: StatusBaseButton.Type.Danger

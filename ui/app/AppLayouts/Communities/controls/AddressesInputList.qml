@@ -168,6 +168,7 @@ Control {
 
         footer: StatusBaseInput {
             id: input
+            objectName: "airdropAddressesInput"
 
             showBackground: false
             maximumLength: 2000

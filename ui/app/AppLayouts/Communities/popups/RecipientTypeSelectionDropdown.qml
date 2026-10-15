@@ -18,6 +18,7 @@ StatusDropdown {
         spacing: 8
 
         StatusIconTextButton {
+            objectName: "airdropEthAddressesOption"
             Layout.preferredHeight: 36
             Layout.fillWidth: true
 

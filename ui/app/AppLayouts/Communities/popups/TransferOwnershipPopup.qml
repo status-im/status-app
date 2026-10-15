@@ -72,6 +72,7 @@ StatusDialog {
 
         StatusCheckBox {
             id: ackCheckBox
+            objectName: "transferOwnershipAckCheckBox"
 
             Layout.topMargin: -Theme.halfPadding
             Layout.bottomMargin: Theme.halfPadding
@@ -103,6 +104,7 @@ StatusDialog {
             }
 
             StatusButton {
+                objectName: "sendOwnerTokenConfirmButton"
                 enabled: ackCheckBox.checked
                 text: qsTr("Send %1 owner token").arg(root.communityName)
                 type: StatusBaseButton.Type.Danger

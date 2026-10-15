@@ -583,6 +583,7 @@ StatusScrollView {
 
         StatusSwitch {
             id: showFees
+            objectName: "airdropShowFeesSwitch"
 
             Layout.fillWidth: true
 
@@ -641,6 +642,7 @@ StatusScrollView {
         }
 
         StatusButton {
+            objectName: "createAirdropButton"
             Layout.preferredHeight: 44
             Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true

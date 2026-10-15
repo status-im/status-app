@@ -393,12 +393,14 @@ StackView {
 
                     StatusSwitchTabButton {
                         id: collectiblesTab
+                        objectName: "mintTokenCollectiblesTab"
 
                         text: qsTr("Collectibles")
                     }
 
                     StatusSwitchTabButton {
                         id: assetsTab
+                        objectName: "mintTokenAssetsTab"
 
                         text: qsTr("Assets")
                     }
