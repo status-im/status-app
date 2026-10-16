@@ -2,12 +2,25 @@ import time
 
 from locators.app_locators import AppLocators
 from support.element_state_checker import ElementStateChecker
+from support.platform import ios_bundle_id, is_ios
 from support.screenshot import save_page_source
 
 from .base_page import BasePage
 
 
 class App(BasePage):
+    # The navigation rail's items are not in the iOS accessibility tree
+    # (#22803), so iOS navigation taps the rail by position. Points measured
+    # on an iPhone 15 in portrait; the top items are anchored to the top of
+    # the window, the profile avatar to the bottom.
+    IOS_NAV_DRAWER_HANDLE = (
+        "xpath",
+        "//XCUIElementTypeImage[@x<=2 and @width<=12 and @height>=80]",
+    )
+    IOS_RAIL_X = 37
+    IOS_RAIL_WALLET_Y = 179
+    IOS_RAIL_AVATAR_FROM_BOTTOM = 150
+
     def __init__(self, driver):
         super().__init__(driver)
         self.locators = AppLocators()
@@ -44,6 +57,8 @@ class App(BasePage):
 
     def click_messages_button(self) -> bool:
         self.logger.info("Clicking Messages button")
+        if is_ios(self.driver):
+            return self._ios_open_messages()
         if self.active_section() == "messaging":
             self.logger.info("Already in Messages section — skipping nav")
             return True
@@ -80,6 +95,8 @@ class App(BasePage):
 
     def click_wallet_button(self) -> bool:
         self.logger.info("Clicking Wallet button")
+        if is_ios(self.driver):
+            return self._ios_open_wallet()
         if self.active_section() == "wallet":
             self.logger.info("Already in Wallet section — skipping nav")
             return True
@@ -214,6 +231,116 @@ class App(BasePage):
         "[number(substring-before(substring-after(@bounds,'['),','))<=10]",
     )
 
+    def _ios_clear_sheets(self) -> None:
+        from support.screen_identity import dismiss_backup_modal, dismiss_introduce_yourself
+        dismiss_introduce_yourself(self, timeout=1)
+        dismiss_backup_modal(self, timeout=1)
+
+    def _ios_open_drawer(self) -> bool:
+        handle = self.find_element_safe(self.IOS_NAV_DRAWER_HANDLE, timeout=3)
+        if handle is None:
+            self.logger.warning("iOS nav drawer handle not found")
+            return False
+        rect = handle.rect
+        y = int(rect["y"] + rect["height"] / 2)
+        width = self.driver.get_window_size()["width"]
+        from selenium.webdriver.common.actions import interaction
+        from selenium.webdriver.common.actions.action_builder import ActionBuilder
+        from selenium.webdriver.common.actions.pointer_input import PointerInput
+
+        actions = ActionBuilder(
+            self.driver, mouse=PointerInput(interaction.POINTER_TOUCH, "finger")
+        )
+        actions.pointer_action.move_to_location(3, y)
+        actions.pointer_action.pointer_down()
+        actions.pointer_action.pause(0.1)
+        actions.pointer_action.move_to_location(int(width * 0.35), y)
+        actions.pointer_action.move_to_location(int(width * 0.75), y)
+        actions.pointer_action.pause(0.05)
+        actions.pointer_action.pointer_up()
+        try:
+            actions.perform()
+        except Exception as exc:
+            self.logger.warning("iOS drawer drag failed: %s", exc)
+            return False
+        time.sleep(0.6)
+        return True
+
+    def _ios_rail_tap(self, y: int) -> bool:
+        if not self._ios_open_drawer():
+            return False
+        return self.gestures.tap(self.IOS_RAIL_X, y)
+
+    def _ios_open_messages(self) -> bool:
+        from support.screen_identity import SCREEN_ANCHORS
+        landmark = SCREEN_ANCHORS["messages"]
+        for attempt in range(1, 4):
+            try:
+                self.driver.execute_script(
+                    "mobile: deepLink",
+                    {"url": "status-app://chats",
+                     "bundleId": ios_bundle_id(self.driver)},
+                )
+            except Exception as exc:
+                self.logger.warning("chats deep link attempt %d failed: %s", attempt, exc)
+            self._ios_clear_sheets()
+            if self.is_on_screen(landmark, timeout=8):
+                return True
+            # An open chat covers the list in portrait; the list is off to the left.
+            if self.is_on_screen(self.locators.TOOLBAR_BACK_BUTTON, timeout=1):
+                self.try_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
+                if self.is_on_screen(landmark, timeout=5):
+                    return True
+            self.dump_page_source(f"ios_messages_not_open_a{attempt}")
+        return False
+
+    def _ios_open_wallet(self) -> bool:
+        from support.screen_identity import SCREEN_ANCHORS
+        from locators.wallet.accounts_locators import WalletAccountsLocators
+        # Portrait shows the add-account header on the account list and the
+        # send footer on an account; either means the wallet is open.
+        landmarks = (SCREEN_ANCHORS["wallet"], WalletAccountsLocators.FOOTER_SEND)
+
+        def wallet_on_screen(timeout: float) -> bool:
+            return self.wait_for_condition(
+                lambda: any(self.is_on_screen(l, timeout=0.5) for l in landmarks),
+                timeout=timeout, poll_interval=0.5,
+            )
+
+        self._ios_clear_sheets()
+        if wallet_on_screen(1):
+            return True
+        for attempt in range(1, 4):
+            if not self._ios_rail_tap(self.IOS_RAIL_WALLET_Y):
+                self.logger.warning("iOS rail tap (wallet) failed on attempt %d", attempt)
+                continue
+            if wallet_on_screen(8):
+                return True
+            self.dump_page_source(f"ios_wallet_not_open_a{attempt}")
+        return False
+
+    def _ios_open_settings(self) -> bool:
+        from support.screen_identity import SCREEN_ANCHORS
+        landmark = SCREEN_ANCHORS["settings"]
+        if self.is_on_screen(landmark, timeout=1):
+            return True
+        height = self.driver.get_window_size()["height"]
+        for attempt in range(1, 4):
+            self._ios_clear_sheets()
+            if not self._ios_rail_tap(height - self.IOS_RAIL_AVATAR_FROM_BOTTOM):
+                self.logger.warning("iOS rail tap (avatar) failed on attempt %d", attempt)
+                continue
+            if not self.is_on_screen(self.locators.SETTINGS_ACTION, timeout=5):
+                self.dump_page_source(f"ios_profile_menu_not_open_a{attempt}")
+                continue
+            # The sheet is still sliding up when its items reach the tree.
+            time.sleep(0.6)
+            self.try_click(self.locators.SETTINGS_ACTION, timeout=3, max_attempts=1)
+            if self.is_on_screen(landmark, timeout=8):
+                return True
+            self.dump_page_source(f"ios_settings_not_open_a{attempt}")
+        return False
+
     def _open_nav_drawer(self) -> bool:
         """Open the left navigation drawer in portrait mode by dragging its handle."""
         try:
@@ -251,6 +378,8 @@ class App(BasePage):
 
     def click_settings_button(self) -> bool:
         self.logger.info("Opening Settings from the profile menu")
+        if is_ios(self.driver):
+            return self._ios_open_settings()
         from support.screen_identity import SCREEN_ANCHORS, dismiss_backup_modal
         if self.is_element_visible(SCREEN_ANCHORS["settings"], timeout=1):
             self.logger.info("Already in Settings section — skipping nav")

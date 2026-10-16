@@ -1,10 +1,10 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class HomeLocators(BaseLocators):
     
-    MAIN_LAYOUT = BaseLocators.xpath("//*[contains(@resource-id, 'StatusMainLayout')]")
-    HOME_CONTAINER = BaseLocators.xpath("//*[contains(@resource-id, 'homeContainer')]")
+    MAIN_LAYOUT = BaseLocators.xpath(f"//*[{object_name_pred('StatusMainLayout')}]")
+    HOME_CONTAINER = BaseLocators.xpath(f"//*[{object_name_pred('homeContainer')}]")
 
     WALLET_BUTTON = BaseLocators.accessibility_id("Wallet")
     MESSAGES_BUTTON = BaseLocators.accessibility_id("Messages")
@@ -15,5 +15,5 @@ class HomeLocators(BaseLocators):
     SEARCH_FIELD = BaseLocators.accessibility_id(
         "Jump to a community, chat, account or a dApp..."
     )
-    SHELL_GRID = BaseLocators.xpath("//*[contains(@resource-id, 'shellGrid')]")
-    PROFILE_BUTTON = BaseLocators.xpath("//*[contains(@resource-id, 'ProfileButton')]")
+    SHELL_GRID = BaseLocators.xpath(f"//*[{object_name_pred('shellGrid')}]")
+    PROFILE_BUTTON = BaseLocators.xpath(f"//*[{object_name_pred('ProfileButton')}]")

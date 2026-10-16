@@ -32,6 +32,9 @@ class ElementStateChecker:
     @staticmethod
     def is_checked(element) -> bool:
         try:
+            if _element_is_ios(element):
+                # XCUITest has no "checked"; a checked Qt checkbox reports "selected".
+                return str(element.get_attribute("selected")).lower() == "true"
             return str(element.get_attribute("checked")).lower() == "true"
         except Exception:
             return False

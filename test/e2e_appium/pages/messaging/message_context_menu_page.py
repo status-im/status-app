@@ -10,6 +10,7 @@ from locators.messaging.message_context_menu_locators import (
     EmojiPickerLocators,
     MessageContextMenuLocators,
 )
+from support.platform import is_ios
 
 from ..base_page import BasePage
 from .chat_page import ChatPage
@@ -496,6 +497,9 @@ class MessageContextMenuPage(BasePage):
         """
         if not self.is_displayed(timeout=2):
             return True  # Already dismissed
+
+        if is_ios(self.driver):
+            return self.dismiss_popup_ios(self.locators.MENU_CONTAINER, timeout=timeout)
 
         try:
             self.driver.back()

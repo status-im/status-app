@@ -6,6 +6,8 @@ import time
 from constants.support_bot import SUPPORT_BOT_DISPLAY_NAME
 from locators.messaging.chat_locators import ChatLocators
 
+from support.platform import is_ios
+
 from ..base_page import BasePage
 
 
@@ -15,6 +17,8 @@ class ChatPage(BasePage):
         self.locators = ChatLocators()
 
     def _is_chat_list_visible(self, timeout: int = 3) -> bool:
+        if is_ios(self.driver):
+            return self.is_on_screen(self.locators.START_CHAT_BUTTON, timeout=timeout)
         return (
             self.is_element_visible(self.locators.CHAT_SEARCH_BOX, timeout=timeout)
             or self.is_element_visible(self.locators.START_CHAT_BUTTON, timeout=1)
@@ -51,21 +55,29 @@ class ChatPage(BasePage):
         except Exception as exc:
             self.logger.debug("Chat row listing failed: %s", exc)
             return rows
+        ios = is_ios(self.driver)
         for element in elements:
             try:
-                resource_id = element.get_attribute("resource-id") or ""
-                label = " ".join(
-                    value
-                    for value in (
-                        element.get_attribute("content-desc"),
-                        element.get_attribute("text"),
+                if ios:
+                    # The iOS name is the same objectName path as the Android resource-id.
+                    resource_id = element.get_attribute("name") or ""
+                    label = element.get_attribute("label") or ""
+                else:
+                    resource_id = element.get_attribute("resource-id") or ""
+                    label = " ".join(
+                        value
+                        for value in (
+                            element.get_attribute("content-desc"),
+                            element.get_attribute("text"),
+                        )
+                        if value and value != "null"
                     )
-                    if value and value != "null"
-                )
             except Exception:
                 continue
             if ".StatusDraggableListItem_" not in resource_id:
                 continue
+            if ios and "." in resource_id.split(".StatusDraggableListItem_", 1)[1]:
+                continue  # a child of the row, named by the row's path
             name = resource_id.split(".StatusDraggableListItem_", 1)[0].rsplit(".", 1)[-1]
             rows.append((resource_id, name, label))
         return rows
@@ -82,15 +94,18 @@ class ChatPage(BasePage):
         caller fails instead of opening whichever comes first.
         """
         wanted = [value for value in (chat_identifier, display_name) if value]
+        row_locator = (
+            self.locators.chat_row_ios if is_ios(self.driver) else self.locators.chat_row
+        )
         peers = []
         for resource_id, name, label in self._chat_rows():
             if any(value in name or value in label for value in wanted):
-                return self.locators.chat_row(resource_id)
+                return row_locator(resource_id)
             if SUPPORT_BOT_DISPLAY_NAME in name or SUPPORT_BOT_DISPLAY_NAME in label:
                 continue
             peers.append(resource_id)
         if len(peers) == 1:
-            return self.locators.chat_row(peers[0])
+            return row_locator(peers[0])
         if peers:
             self.logger.debug(
                 "%d chat rows besides the support bot's and none named %s",
@@ -167,7 +182,24 @@ class ChatPage(BasePage):
         )
 
     def wait_for_message_input(self, timeout: int | None = 10) -> bool:
-        return self.is_element_visible(self.locators.MESSAGE_INPUT, timeout=timeout)
+        if not is_ios(self.driver):
+            return self.is_element_visible(self.locators.MESSAGE_INPUT, timeout=timeout)
+        # In portrait a closed chat slides off to the right and XCUITest still
+        # reports its composer as visible.
+        width = self.driver.get_window_size()["width"]
+
+        def composer_on_screen() -> bool:
+            for element in self.driver.find_elements(*self.locators.MESSAGE_INPUT):
+                try:
+                    if 0 <= element.rect["x"] < width:
+                        return True
+                except Exception:
+                    continue
+            return False
+
+        return self.wait_for_condition(
+            composer_on_screen, timeout=timeout or 10, poll_interval=0.5
+        )
 
     def tap_start_chat(self, timeout: int | None = 5) -> bool:
         self.dismiss_backup_prompt(timeout=2)
@@ -188,6 +220,9 @@ class ChatPage(BasePage):
         ):
             return False
 
+        if is_ios(self.driver):
+            return self._send_typed_message_ios(message)
+
         button_clicked = self.try_click(
             self.locators.SEND_BUTTON, timeout=3, max_attempts=1,
             catch_driver_errors=True,
@@ -205,6 +240,27 @@ class ChatPage(BasePage):
         # Brief wait for Qt a11y tree to reflect the sent message.
         time.sleep(1)
         return True
+
+    def _send_typed_message_ios(self, message: str) -> bool:
+        """The toolbar buttons are not in the iOS tree (#22806), Return adds
+        a newline that is sent with the text, and the Android fallback's
+        element.clear() erases the typed text. So tap the send button where
+        it is drawn: right end of the toolbar, about 6 pt below the
+        composer's bottom edge."""
+        composer = self.find_element_safe(self.locators.MESSAGE_INPUT, timeout=2)
+        if composer is None:
+            return False
+        width = self.driver.get_window_size()["width"]
+        for attempt in range(2):
+            self._wait_for_settled_ios(composer)
+            rect = composer.rect
+            self.gestures.tap(int(width - 28), int(rect["y"] + rect["height"] + 6))
+            time.sleep(1)
+            if message.strip() not in (composer.get_attribute("value") or ""):
+                return True
+            self.logger.info("Text still in the composer after send tap %d", attempt + 1)
+        self.logger.error("Message still in the composer after two send taps")
+        return False
 
     def submit_message_edit(self, updated_text: str, timeout: int = 10) -> bool:
         """Replace current edit text and submit the edited message."""
@@ -261,6 +317,8 @@ class ChatPage(BasePage):
 
     def chat_bounds(self, timeout: int = 2) -> tuple[int, int, int] | None:
         """``(toolbar_bottom, composer_top, screen_height)`` of the open chat, or None."""
+        if is_ios(self.driver):
+            return self._chat_bounds_ios()
         toolbar = self.find_element_safe(self.locators.CHAT_TOOLBAR, timeout=timeout)
         composer = self.find_element_safe(self.locators.CHAT_INPUT_PANEL, timeout=timeout)
         if toolbar is None or composer is None:
@@ -282,6 +340,37 @@ class ChatPage(BasePage):
             screen_height,
         )
 
+    def _chat_bounds_ios(self) -> tuple[int, int, int] | None:
+        """On iOS the toolbar and the composer panel are not accessibility
+        elements; their children carry them in their name path instead."""
+        size = self.driver.get_window_size()
+        width, height = size["width"], size["height"]
+        def on_screen(elements):
+            rects = []
+            for element in elements:
+                try:
+                    rect = element.rect
+                except Exception:
+                    continue
+                if 0 <= rect["x"] < width and rect["height"] > 0:
+                    rects.append(rect)
+            return rects
+        toolbar = on_screen(self.driver.find_elements(
+            "-ios predicate string", "name CONTAINS '.statusToolBar.'"))
+        composer = on_screen(self.driver.find_elements(
+            "-ios predicate string", "name CONTAINS '.statusChatInput.'"))
+        if not toolbar or not composer:
+            self.logger.warning(
+                "Chat bounds unavailable on iOS (toolbar parts=%d, composer parts=%d)",
+                len(toolbar), len(composer),
+            )
+            return None
+        return (
+            max(r["y"] + r["height"] for r in toolbar),
+            min(r["y"] for r in composer),
+            height,
+        )
+
     def _message_elements(self, content: str) -> list:
         for locator in self._message_locators(content):
             try:
@@ -297,10 +386,14 @@ class ChatPage(BasePage):
         now, or None. Callers press this element: the one that satisfied the
         rule, not whichever match a later lookup returns first."""
         toolbar_bottom, composer_top, screen_height = bounds
+        width = self.driver.get_window_size()["width"] if is_ios(self.driver) else None
         for element in self._message_elements(content):
             try:
                 rect = element.rect
             except Exception:
+                continue
+            # XCUITest reports a pane slid off to the side as visible too.
+            if width is not None and not 0 <= rect["x"] < width:
                 continue
             if self.rect_within_list(rect, toolbar_bottom, composer_top, screen_height):
                 return element
@@ -637,7 +730,8 @@ class ChatPage(BasePage):
         """Return the count of message content elements in the chat log."""
         locator = (
             "xpath",
-            "//*[contains(@resource-id,'StatusTextMessage_chatText')]",
+            "//*[contains(@resource-id,'StatusTextMessage_chatText')"
+            " or contains(@name,'StatusTextMessage_chatText')]",
         )
         return len(self.driver.find_elements(*locator))
 

@@ -1,40 +1,30 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class WalletAccountsLocators(BaseLocators):
-    ADD_ACCOUNT_BUTTON = BaseLocators.resource_id_contains("addAccountButton")
+    ADD_ACCOUNT_BUTTON = BaseLocators.object_name_contains("addAccountButton")
     ALL_ACCOUNTS_BUTTON = BaseLocators.tid("allAccountsBtn")
     ACCOUNT_ROW_ANY = BaseLocators.tid("walletAccountListItem")
-    ACCOUNT_CONTEXT_MENU = BaseLocators.xpath(
-        "//*[contains(@resource-id,'AccountContextMenu')]"
-    )
+    ACCOUNT_CONTEXT_MENU = BaseLocators.object_name_contains("AccountContextMenu")
     ACCOUNT_MENU_DELETE = BaseLocators.xpath(
-        "//*[@content-desc='Delete' or contains(@resource-id,'AccountMenu-DeleteAction')]"
+        f"//*[@content-desc='Delete' or {object_name_pred('AccountMenu-DeleteAction')}]"
     )
     ACCOUNT_MENU_EDIT = BaseLocators.xpath(
-        "//*[@content-desc='Edit' or contains(@resource-id,'AccountMenu-EditAction')]"
+        f"//*[@content-desc='Edit' or {object_name_pred('AccountMenu-EditAction')}]"
     )
-    ACCOUNT_MENU_COPY_ADDRESS = BaseLocators.xpath(
-        "//*[contains(@resource-id,'AccountMenu-CopyAddressAction')]"
-    )
+    ACCOUNT_MENU_COPY_ADDRESS = BaseLocators.object_name_contains("AccountMenu-CopyAddressAction")
     KEYCARD_POPUP = BaseLocators.xpath(
-        "//*[contains(@resource-id,'AuthenticationPopup') or contains(@resource-id,'KeycardPopup')]"
+        f"//*[{object_name_pred('AuthenticationPopup')} or {object_name_pred('KeycardPopup')}]"
     )
     KEYCARD_PASSWORD_INPUT = BaseLocators.content_desc_exact("Password")
-    KEYCARD_PASSWORD_INPUT_FALLBACK = BaseLocators.xpath(
-        "//*[contains(@resource-id,'keycardPasswordInput')]"
-    )
+    KEYCARD_PASSWORD_INPUT_FALLBACK = BaseLocators.object_name_contains("keycardPasswordInput")
     KEYCARD_AUTHENTICATE_BUTTON = BaseLocators.tid("keycardPopupBaseSubmitButton")
     KEYCARD_CANCEL_BUTTON = BaseLocators.content_desc_exact("Cancel")
-    REMOVE_ACCOUNT_MODAL = BaseLocators.xpath(
-        "//*[contains(@resource-id,'RemoveAccountConfirmationPopup')]"
-    )
+    REMOVE_ACCOUNT_MODAL = BaseLocators.object_name_contains("RemoveAccountConfirmationPopup")
     REMOVE_ACCOUNT_ACK_CHECKBOX = BaseLocators.tid("RemoveAccountPopup-HavePenPaper")
     REMOVE_ACCOUNT_CONFIRM_BUTTON = BaseLocators.tid("RemoveAccountPopup-ConfirmButton")
     REMOVE_ACCOUNT_CANCEL_BUTTON = BaseLocators.tid("RemoveAccountPopup-CancelButton")
-    ADD_ACCOUNT_MODAL = BaseLocators.xpath(
-        "//*[contains(@resource-id,'AddAccountPopup')]"
-    )
+    ADD_ACCOUNT_MODAL = BaseLocators.object_name_contains("AddAccountPopup")
     DEFAULT_ACCOUNT_ROW = BaseLocators.tid("walletAccountListItem")
     ACCOUNT_NAME_INPUT = BaseLocators.tid("statusBaseInput")
     ADD_ACCOUNT_PRIMARY = BaseLocators.tid("AddAccountPopup-PrimaryButton")

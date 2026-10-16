@@ -1,4 +1,4 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class SeedPhraseInputLocators(BaseLocators):
@@ -10,6 +10,13 @@ class SeedPhraseInputLocators(BaseLocators):
     )
     SEED_PHRASE_INPUT_SCREEN_LOGIN = BaseLocators.accessibility_id(
         "Log in with your Status recovery phrase"
+    )
+    # iOS: the page's identifier is its object path; the title is in label.
+    SEED_PHRASE_INPUT_SCREEN_CREATE_IOS = BaseLocators.xpath(
+        "//*[contains(@name,'SeedphrasePage') and @label='Create profile using a recovery phrase']"
+    )
+    SEED_PHRASE_INPUT_SCREEN_LOGIN_IOS = BaseLocators.xpath(
+        "//*[contains(@name,'SeedphrasePage') and @label='Log in with your Status recovery phrase']"
     )
 
     @staticmethod
@@ -27,5 +34,5 @@ class SeedPhraseInputLocators(BaseLocators):
     @staticmethod
     def get_seed_word_input_field(position: int) -> tuple:
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id, 'enterSeedPhraseInputField{position}')]"
+            f"//*[{object_name_pred(f'enterSeedPhraseInputField{position}')}]"
         )

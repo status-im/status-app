@@ -1,4 +1,5 @@
 import time
+from support.platform import is_ios as _is_ios
 
 from ..base_page import BasePage
 from locators.onboarding.welcome_back_screen_locators import WelcomeBackScreenLocators
@@ -42,6 +43,9 @@ class WelcomeBackPage(BasePage):
                 self.logger.error("Password input failed on attempt %s", attempt)
                 return False
 
+            if self._submit_with_keyboard_done():
+                if self._wait_for_login_transition(timeout=15):
+                    return True
             try:
                 self.hide_keyboard()
             except Exception:
@@ -67,6 +71,29 @@ class WelcomeBackPage(BasePage):
 
         self.logger.error("Welcome back screen persisted after login retries")
         return False
+
+    def _submit_with_keyboard_done(self) -> bool:
+        """iOS: the software keyboard's Done key submits the login form and
+        dismisses the keyboard in one step; hide_keyboard() cannot dismiss it."""
+        if not _is_ios(self.driver):
+            return False
+        try:
+            keys = self.driver.find_elements(
+                "xpath",
+                "//XCUIElementTypeKeyboard//XCUIElementTypeButton"
+                "[@name='Done' or @label='done' or @name='Return' or @name='return']",
+            )
+        except Exception:
+            return False
+        if not keys:
+            return False
+        try:
+            keys[0].click()
+            self.logger.info("Submitted login with the keyboard's Done key")
+            return True
+        except Exception as e:
+            self.logger.debug("Keyboard Done key tap failed: %s", e)
+            return False
 
     def _activate_screen_if_needed(self) -> None:
         try:

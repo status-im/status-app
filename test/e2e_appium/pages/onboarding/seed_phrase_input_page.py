@@ -4,6 +4,7 @@ from typing import List, Union
 from ..base_page import BasePage
 from locators.base_locators import BaseLocators
 from locators.onboarding.seed_phrase_input_locators import SeedPhraseInputLocators
+from support.platform import is_ios
 
 
 class SeedPhraseInputPage(BasePage):
@@ -12,10 +13,17 @@ class SeedPhraseInputPage(BasePage):
         super().__init__(driver)
         self.locators = SeedPhraseInputLocators()
 
+        ios = is_ios(driver)
         if flow_type == "login":
-            self.IDENTITY_LOCATOR = self.locators.SEED_PHRASE_INPUT_SCREEN_LOGIN
+            self.IDENTITY_LOCATOR = (
+                self.locators.SEED_PHRASE_INPUT_SCREEN_LOGIN_IOS if ios
+                else self.locators.SEED_PHRASE_INPUT_SCREEN_LOGIN
+            )
         else:
-            self.IDENTITY_LOCATOR = self.locators.SEED_PHRASE_INPUT_SCREEN_CREATE
+            self.IDENTITY_LOCATOR = (
+                self.locators.SEED_PHRASE_INPUT_SCREEN_CREATE_IOS if ios
+                else self.locators.SEED_PHRASE_INPUT_SCREEN_CREATE
+            )
 
     def paste_seed_phrase_via_clipboard(self, seed_phrase: str) -> bool:
         """Enter the seed phrase by typing each word into its own field.

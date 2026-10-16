@@ -98,6 +98,7 @@ class TestMessageActions(PeerChatBase):
             )
 
     @pytest.mark.spec("SC-MACT-01")
+    @pytest.mark.xfail_ios("status-app#22806: the reply bar is not in the iOS accessibility tree")
     async def test_reply_shows_reply_corner_on_sender(self) -> None:
         """Replying marks the reply with the reply-corner indicator."""
         test_message = _unique_message("reply_test")
@@ -212,6 +213,7 @@ class TestMessageActions(PeerChatBase):
             )
 
     @pytest.mark.spec("SC-MTYP-04")
+    @pytest.mark.xfail_ios("status-app#22806: composer toolbar buttons are not in the iOS accessibility tree")
     async def test_send_emoji_via_picker(self) -> None:
         """An emoji chosen from the picker is posted to the chat."""
         chat_page = self.chat_page()

@@ -34,6 +34,7 @@ from pages.onboarding import (
 )
 from services.app_initialization_manager import AppInitializationManager
 from support.generators import generate_seed_phrase
+from support.platform import ios_bundle_id, is_ios
 from support.screen_identity import dismiss_stacked_overlays, overlay_locator
 
 NAV_EDUCATION_ID = "NavigationEducationDialog"
@@ -149,6 +150,26 @@ class OnboardingFlow:
         )
 
         try:
+            if self._login_existing_profile_if_present():
+                self._dismiss_push_notifications()
+                # The app resumes the last section it showed, so a test that
+                # ended elsewhere leaves the next session off the wallet.
+                if not self.app.click_wallet_button():
+                    raise AssertionError(
+                        "Logged in to the reused profile but could not return to the wallet"
+                    )
+                if self.config.verify_main_app:
+                    self._execute_main_app_verification()
+                execution_result = self._build_success_result()
+                execution_result["reused_profile"] = True
+                self.logger.warning(
+                    "Reused profile: user_data other than the password is not "
+                    "this device's identity"
+                )
+                self.logger.info(
+                    "✅ Existing profile logged in; onboarding skipped"
+                )
+                return execution_result
             # Step 1: Welcome Screen
             self._execute_welcome_step()
 
@@ -188,6 +209,53 @@ class OnboardingFlow:
                 step=self.current_step,
                 results=error_result,
             )
+
+    def _login_existing_profile_if_present(self) -> bool:
+        """Platforms without an app-data reset (iOS) relaunch into the
+        welcome-back screen; log the known test user in instead of failing
+        at the welcome step."""
+        from pages.onboarding.welcome_back_page import WelcomeBackPage
+
+        if not is_ios(self.driver):
+            return False
+        self.current_step = "existing_profile_login"
+        # A relaunch lands on Welcome, on Welcome back, or straight on the
+        # home screen when the app was still unlocked.
+        bundle_id = ios_bundle_id(self.driver)
+        self.driver.terminate_app(bundle_id)
+        self.driver.activate_app(bundle_id)
+        self.app.wait_for_condition(
+            lambda: len(self.app.driver.find_elements("xpath", "//*")) > 5,
+            timeout=10,
+            poll_interval=1.0,
+        )
+        welcome_back = WelcomeBackPage(self.driver)
+        if not welcome_back.is_welcome_back_screen_displayed(timeout=5):
+            from support.screen_identity import SCREEN_ANCHORS
+            home_landmarks = (WalletAccountsLocators.FOOTER_SEND, *SCREEN_ANCHORS.values())
+            if any(self.app.is_on_screen(l, timeout=1) for l in home_landmarks):
+                self.logger.info("Step 1: app already on the home screen; profile is logged in")
+                self.step_results["existing_profile_login"] = {
+                    "success": True,
+                    "timestamp": datetime.now(),
+                    "already_home": True,
+                }
+                return True
+            return False
+        self.logger.info("Step 1: Welcome-back screen; logging in the existing profile")
+        step_start = datetime.now()
+        if not welcome_back.perform_login(self.test_user.password):
+            raise AssertionError(
+                "Login to the existing profile failed. Its password may no longer "
+                "be the default (test_change_password_and_login changes it); "
+                "reinstall the app to start from a fresh profile."
+            )
+        self.step_results["existing_profile_login"] = {
+            "success": True,
+            "timestamp": datetime.now(),
+            "duration": (datetime.now() - step_start).total_seconds(),
+        }
+        return True
 
     def _execute_welcome_step(self):
         """Execute welcome screen interaction"""
@@ -418,6 +486,25 @@ class OnboardingFlow:
         if self.config.take_screenshots:
             self._take_screenshot("onboarding_completed")
 
+    def _tap_overlay_corner(self, page, object_name: str) -> bool:
+        """iOS exposes the education sheet as one accessibility node with no
+        children, so its close button cannot be located; tap where it is
+        drawn, the sheet's top-right corner."""
+        if not is_ios(self.driver):
+            return False
+        try:
+            sheet = page.find_element_safe(overlay_locator(object_name), timeout=2)
+            if not sheet:
+                return False
+            rect = sheet.rect
+            x = int(rect["x"] + rect["width"] - 32)
+            y = int(rect["y"] + 32)
+            self.logger.info("Closing %s by tapping its top-right corner (%s, %s)", object_name, x, y)
+            return bool(page.gestures.tap(x, y))
+        except Exception as e:
+            self.logger.debug("Corner tap on %s failed: %s", object_name, e)
+            return False
+
     def _dismiss_push_notifications(self):
         """Dismiss post-onboarding overlays (EnablePushNotificationsPopup +
         NavigationEducationDialog) that block the UI after the wallet
@@ -435,13 +522,16 @@ class OnboardingFlow:
         overlay_page = _BasePage(self.driver)
         nav_edu_close = (
             "xpath",
-            f"//*[contains(@resource-id,'{NAV_EDUCATION_ID}')]"
-            "//*[contains(@resource-id,'headerActionsCloseButton')]",
+            f"//*[contains(@resource-id,'{NAV_EDUCATION_ID}') or contains(@name,'{NAV_EDUCATION_ID}')]"
+            "//*[contains(@resource-id,'headerActionsCloseButton') or contains(@name,'headerActionsCloseButton')]",
         )
 
-        if not self.push_notifications_page.is_screen_displayed(timeout=30):
+        # On iOS the popup shows at once or not at all (absent on a reused
+        # iPhone profile, within ~1 s on a fresh simulator install).
+        push_timeout = 3 if is_ios(self.driver) else 30
+        if not self.push_notifications_page.is_screen_displayed(timeout=push_timeout):
             self.logger.warning(
-                "Push notifications dialog did not appear within 30s — unexpected"
+                f"Push notifications dialog did not appear within {push_timeout}s"
             )
 
         overlay_actions, error = dismiss_stacked_overlays(
@@ -456,7 +546,10 @@ class OnboardingFlow:
                     "nav_education",
                     NAV_EDUCATION_ID,
                     lambda: (
-                        overlay_page.try_click(nav_edu_close, timeout=5)
+                        (
+                            overlay_page.try_click(nav_edu_close, timeout=5)
+                            or self._tap_overlay_corner(overlay_page, NAV_EDUCATION_ID)
+                        )
                         and overlay_page.wait_for_invisibility(
                             overlay_locator(NAV_EDUCATION_ID), timeout=5
                         )

@@ -3,24 +3,16 @@ from .base_locators import BaseLocators
 
 class AppLocators(BaseLocators):
     # Left primary navigation (visible when not on Home)
-    LEFT_NAV_ANY = BaseLocators.xpath("//*[contains(@resource-id, '-navbar')]")
+    LEFT_NAV_ANY = BaseLocators.object_name_contains("-navbar")
 
-    LEFT_NAV_HOME = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'Home Page-navbar')]"
-    )
-    LEFT_NAV_WALLET = BaseLocators.xpath("//*[contains(@resource-id, 'Wallet-navbar')]")
-    LEFT_NAV_MARKET = BaseLocators.xpath("//*[contains(@resource-id, 'Market-navbar')]")
-    LEFT_NAV_MESSAGES = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'Messages-navbar')]"
-    )
-    LEFT_NAV_COMMUNITIES = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'Communities Portal-navbar')]"
-    )
+    LEFT_NAV_HOME = BaseLocators.object_name_contains("Home Page-navbar")
+    LEFT_NAV_WALLET = BaseLocators.object_name_contains("Wallet-navbar")
+    LEFT_NAV_MARKET = BaseLocators.object_name_contains("Market-navbar")
+    LEFT_NAV_MESSAGES = BaseLocators.object_name_contains("Messages-navbar")
+    LEFT_NAV_COMMUNITIES = BaseLocators.object_name_contains("Communities Portal-navbar")
 
     # Home dock (visible only on Home)
-    HOME_DOCK_CONTAINER = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'homeContainer.homeDock')]"
-    )
+    HOME_DOCK_CONTAINER = BaseLocators.object_name_contains("homeContainer.homeDock")
     DOCK_WALLET = BaseLocators.accessibility_id("Wallet")
     DOCK_MESSAGES = BaseLocators.accessibility_id("Messages")
     DOCK_COMMUNITIES = BaseLocators.accessibility_id("Communities Portal")
@@ -28,31 +20,19 @@ class AppLocators(BaseLocators):
     DOCK_SETTINGS = BaseLocators.accessibility_id("Settings")
 
     # Fallback: Settings tile on the shell grid (visible on Home)
-    HOME_GRID_SETTINGS = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'homeContainer.homeGrid')]"
-    )
+    HOME_GRID_SETTINGS = BaseLocators.object_name_contains("homeContainer.homeGrid")
 
     # Profile menu
-    PROFILE_NAV_BUTTON = BaseLocators.xpath(
-        "//*[contains(@resource-id,'statusProfileNavBarTabButton')]"
-    )
-    COPY_PROFILE_LINK_ACTION = BaseLocators.xpath(
-        "//*[contains(@resource-id,'userStatusCopyLinkAction')]"
-    )
-    SHARE_PROFILE_ACTION = BaseLocators.xpath(
-        "//*[contains(@resource-id,'userStatusShareProfileAction')]"
-    )
-    SETTINGS_ACTION = BaseLocators.xpath(
-        "//*[contains(@resource-id,'userStatusSettingsAction')]"
-    )
+    PROFILE_NAV_BUTTON = BaseLocators.object_name_contains("statusProfileNavBarTabButton")
+    COPY_PROFILE_LINK_ACTION = BaseLocators.object_name_contains("userStatusCopyLinkAction")
+    SHARE_PROFILE_ACTION = BaseLocators.object_name_contains("userStatusShareProfileAction")
+    SETTINGS_ACTION = BaseLocators.object_name_contains("userStatusSettingsAction")
     # The profile sheet's QML type name; there is no 'ProfileMenu' objectName.
-    PROFILE_MENU_CONTAINER = BaseLocators.xpath(
-        "//*[contains(@resource-id,'UserStatusContextMenu')]"
-    )
+    PROFILE_MENU_CONTAINER = BaseLocators.object_name_contains("UserStatusContextMenu")
 
     # Toolbar
     TOOLBAR_BACK_BUTTON = BaseLocators.tid("toolBarBackButton")
 
     # Toast notifications
     TOAST_MESSAGE = BaseLocators.id("QGuiApplication.mainWindow.statusToastMessage")
-    ANY_TOAST = BaseLocators.xpath("//*[contains(@resource-id, 'statusToastMessage')]")
+    ANY_TOAST = BaseLocators.object_name_contains("statusToastMessage")

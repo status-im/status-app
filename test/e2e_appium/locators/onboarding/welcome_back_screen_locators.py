@@ -7,17 +7,9 @@ class WelcomeBackScreenLocators(BaseLocators):
     """Locators for the Welcome Back (returning user) screen."""
 
     # Screen identification
-    LOGIN_SCREEN = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'LoginScreen_QMLTYPE')]"
-    )
-    ONBOARDING_LAYOUT = BaseLocators.id(
-        "QGuiApplication.mainWindow.startupOnboardingLayout"
-    )
+    LOGIN_SCREEN = BaseLocators.object_name_contains("LoginScreen_QMLTYPE")
+    ONBOARDING_LAYOUT = BaseLocators.object_name_contains("startupOnboardingLayout")
 
-    PASSWORD_INPUT = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'loginPasswordInput')]"
-    )
-    PASSWORD_INPUT_OVERLAY = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'loginPasswordInput')]"
-    )
+    PASSWORD_INPUT = BaseLocators.object_name_contains("loginPasswordInput")
+    PASSWORD_INPUT_OVERLAY = BaseLocators.object_name_contains("loginPasswordInput")
     LOGIN_BUTTON = BaseLocators.tid("loginButton")
