@@ -50,6 +50,7 @@ Control {
 
             StatusFlatButton {
                 id: sendOwnershipButton
+                objectName: "sendOwnerTokenButton"
 
                 Layout.horizontalStretchFactor: 0
                 Layout.fillWidth: true
@@ -62,6 +63,7 @@ Control {
 
             StatusFlatButton {
                 id: airdropButton
+                objectName: "airdropTokenButton"
 
                 Layout.horizontalStretchFactor: 0
                 Layout.fillWidth: true
@@ -87,6 +89,7 @@ Control {
 
             StatusFlatButton {
                 id: remotelyDestructButton
+                objectName: "remotelyDestructTokenButton"
 
                 Layout.horizontalStretchFactor: 0
                 Layout.fillWidth: true
@@ -101,6 +104,7 @@ Control {
 
             StatusFlatButton {
                 id: burnButton
+                objectName: "burnRemainingTokensButton"
 
                 Layout.horizontalStretchFactor: 0
                 Layout.fillWidth: true

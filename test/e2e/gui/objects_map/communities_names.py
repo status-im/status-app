@@ -62,6 +62,7 @@ leave_Community_StatusMenuItem = {"checkable": False, "container": statusDesktop
 
 # Tool Bar
 mainWindow_statusToolBar_StatusToolBar = {"container": statusDesktop_mainWindow, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
+communitySettingsToolBarBackButton = {"container": mainWindow_statusToolBar_StatusToolBar, "objectName": "toolBarBackButton", "type": "StatusFlatButton", "visible": True}
 statusToolBar_chatToolbarMoreOptionsButton = {"container": mainWindow_statusToolBar_StatusToolBar, "objectName": "chatToolbarMoreOptionsButton", "type": "StatusFlatRoundButton", "visible": True}
 delete_or_leave_Channel_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "deleteOrLeaveMenuItem", "type": "StatusMenuItem", "visible": True}
 edit_Channel_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "editChannelMenuItem", "type": "StatusMenuItem", "visible": True}
@@ -181,8 +182,63 @@ mainWindow_MintedTokensView = {"container": statusDesktop_mainWindow, "type": "M
 specialCollectible_PrivilegedTokenArtworkPanel = {"container": mainWindow_MintedTokensView, "id": "specialCollectible", "type": "PrivilegedTokenArtworkPanel", "unnamed": 1, "visible": True}
 specialCollectible_PrivilegedTokenArtworkPanel_2 = {"container": mainWindow_MintedTokensView, "id": "specialCollectible", "occurrence": 2, "type": "PrivilegedTokenArtworkPanel", "unnamed": 1, "visible": True}
 collectibleView_control = {"container": mainWindow_MintedTokensView, "objectName": "collectibleViewControl", "type": "CollectibleView", "visible": True}
+mintedAssetListItem = {"container": mainWindow_MintedTokensView, "type": "StatusListItem", "visible": True}
 token_sale_icon_StatusIcon = {"container": mainWindow_MintedTokensView, "objectName": "token-sale-icon", "type": "StatusIcon", "visible": True}
 crown_icon_StatusIcon = {"container": mainWindow_MintedTokensView, "objectName": "crown-icon", "type": "StatusIcon", "visible": True}
+
+# Edit community token (collectible / asset)
+editCommunityTokenView = {"container": statusDesktop_mainWindow, "type": "EditCommunityTokenView", "visible": True}
+mintTokenCollectiblesTab = {"container": statusDesktop_mainWindow, "objectName": "mintTokenCollectiblesTab", "type": "StatusSwitchTabButton", "visible": True}
+mintTokenAssetsTab = {"container": statusDesktop_mainWindow, "objectName": "mintTokenAssetsTab", "type": "StatusSwitchTabButton", "visible": True}
+editCommunityTokenArtworkPanel = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenArtworkPanel", "type": "DropAndEditImagePanel", "visible": True}
+editCommunityTokenCollectibleArtwork = {"container": statusDesktop_mainWindow, "objectName": "editCroppedImageItem_Collectible artwork", "type": "EditCroppedImagePanel", "visible": True}
+editCommunityTokenAssetIcon = {"container": statusDesktop_mainWindow, "objectName": "editCroppedImageItem_Asset icon", "type": "EditCroppedImagePanel", "visible": True}
+editCommunityTokenNameInput = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenNameInput", "type": "StatusInput", "visible": True}
+editCommunityTokenNameTextEdit = {"container": editCommunityTokenNameInput, "type": "TextEdit", "unnamed": 1, "visible": True}
+editCommunityTokenDescriptionInput = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenDescriptionInput", "type": "StatusInput", "visible": True}
+editCommunityTokenDescriptionTextEdit = {"container": editCommunityTokenDescriptionInput, "type": "TextEdit", "unnamed": 1, "visible": True}
+editCommunityTokenSymbolInput = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenSymbolInput", "type": "StatusInput", "visible": True}
+editCommunityTokenSymbolTextEdit = {"container": editCommunityTokenSymbolInput, "type": "TextEdit", "unnamed": 1, "visible": True}
+editCommunityTokenSupplyInput = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenSupplyInput", "type": "StatusInput", "visible": True}
+editCommunityTokenSupplyTextEdit = {"container": editCommunityTokenSupplyInput, "type": "TextEdit", "unnamed": 1, "visible": True}
+editCommunityTokenUnlimitedSupplySwitch = {"checkable": True, "container": statusDesktop_mainWindow, "objectName": "editCommunityTokenUnlimitedSupplySwitch", "type": "StatusSwitch", "visible": True}
+editCommunityTokenRemotelyDestructSwitch = {"checkable": True, "container": statusDesktop_mainWindow, "objectName": "editCommunityTokenRemotelyDestructSwitch", "type": "StatusSwitch", "visible": True}
+editCommunityTokenShowFeesSwitch = {"checkable": True, "container": statusDesktop_mainWindow, "objectName": "editCommunityTokenShowFeesSwitch", "type": "StatusSwitch", "visible": True}
+editCommunityTokenPreviewButton = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenPreviewButton", "type": "StatusButton", "visible": True}
+communityTokenMintButton = {"container": statusDesktop_mainWindow, "objectName": "communityTokenMintButton", "type": "StatusButton", "visible": True}
+
+# Token details footer
+sendOwnerTokenButton = {"container": statusDesktop_mainWindow, "objectName": "sendOwnerTokenButton", "type": "StatusFlatButton", "visible": True}
+airdropTokenButton = {"container": statusDesktop_mainWindow, "objectName": "airdropTokenButton", "type": "StatusFlatButton", "visible": True}
+remotelyDestructTokenButton = {"container": statusDesktop_mainWindow, "objectName": "remotelyDestructTokenButton", "type": "StatusFlatButton", "visible": True}
+burnRemainingTokensButton = {"container": statusDesktop_mainWindow, "objectName": "burnRemainingTokensButton", "type": "StatusFlatButton", "visible": True}
+
+# Airdrop editor
+airdropWhatAddButton = {"container": statusDesktop_mainWindow, "objectName": "addItemButton_What", "type": "StatusRoundButton", "visible": True}
+airdropToAddButton = {"container": statusDesktop_mainWindow, "objectName": "addItemButton_To", "type": "StatusRoundButton", "visible": True}
+airdropEthAddressesOption = {"container": statusDesktop_mainWindow_overlay, "objectName": "airdropEthAddressesOption", "type": "StatusIconTextButton", "visible": True}
+airdropAddressesInput = {"container": statusDesktop_mainWindow, "objectName": "airdropAddressesInput", "type": "StatusBaseInput", "visible": True}
+airdropAddressesTextEdit = {"container": airdropAddressesInput, "type": "TextEdit", "unnamed": 1, "visible": True}
+airdropShowFeesSwitch = {"checkable": True, "container": statusDesktop_mainWindow, "objectName": "airdropShowFeesSwitch", "type": "StatusSwitch", "visible": True}
+createAirdropButton = {"container": statusDesktop_mainWindow, "objectName": "createAirdropButton", "type": "StatusButton", "visible": True}
+
+# Remotely destruct / burn / ownership popups
+remotelyDestructPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "remotelyDestructPopup", "visible": True}
+tokenHolderSelectCheckBox = {"container": remotelyDestructPopup, "objectName": "tokenHolderSelectCheckBox", "type": "StatusCheckBox", "visible": True}
+remotelyDestructShowFeesSwitch = {"checkable": True, "container": remotelyDestructPopup, "objectName": "remotelyDestructShowFeesSwitch", "type": "StatusSwitch", "visible": True}
+remotelyDestructConfirmButton = {"container": remotelyDestructPopup, "objectName": "remotelyDestructConfirmButton", "type": "StatusButton", "visible": True}
+alertPopupAcceptButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "alertPopupAcceptButton", "type": "StatusButton", "visible": True}
+burnTokensPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "burnTokensPopup", "visible": True}
+burnAllRemainingRadioButton = {"container": burnTokensPopup, "objectName": "burnAllRemainingRadioButton", "type": "StatusRadioButton", "visible": True}
+burnTokensShowFeesSwitch = {"checkable": True, "container": burnTokensPopup, "objectName": "burnTokensShowFeesSwitch", "type": "StatusSwitch", "visible": True}
+burnTokensConfirmButton = {"container": burnTokensPopup, "objectName": "burnTokensConfirmButton", "type": "StatusButton", "visible": True}
+transferOwnershipAckCheckBox = {"container": statusDesktop_mainWindow_overlay, "objectName": "transferOwnershipAckCheckBox", "type": "StatusCheckBox", "visible": True}
+sendOwnerTokenConfirmButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "sendOwnerTokenConfirmButton", "type": "StatusButton", "visible": True}
+finaliseOwnershipPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "finaliseOwnershipPopup", "visible": True}
+finaliseOwnershipAcceptButton = {"container": finaliseOwnershipPopup, "objectName": "finaliseOwnershipAcceptButton", "type": "StatusButton", "visible": True}
+finaliseOwnershipAckCheckBox = {"container": finaliseOwnershipPopup, "objectName": "finaliseOwnershipAckCheckBox", "type": "StatusCheckBox", "visible": True}
+finaliseOwnershipShowFeesSwitch = {"checkable": True, "container": finaliseOwnershipPopup, "objectName": "finaliseOwnershipShowFeesSwitch", "type": "StatusSwitch", "visible": True}
+overviewSettingsPrimaryButton = {"container": statusDesktop_mainWindow, "objectName": "overviewSettingsPrimaryButton", "type": "StatusButton", "visible": True}
 
 # Airdrops View
 mainWindow_airdropPanel_AirdropsSettingsPanel = {"container": statusDesktop_mainWindow, "id": "airdropPanel", "type": "AirdropsSettingsPanel", "unnamed": 1, "visible": True}

@@ -88,6 +88,7 @@ StatusDialog {
 
             StatusButton {
                 id: acceptBtn
+                objectName: "alertPopupAcceptButton"
 
                 type: root.acceptBtnType
 

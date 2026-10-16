@@ -217,6 +217,7 @@ StatusScrollView {
         }
 
         StatusButton {
+            objectName: "communityTokenMintButton"
             Layout.preferredHeight: 44
             Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true

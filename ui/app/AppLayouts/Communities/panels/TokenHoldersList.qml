@@ -256,6 +256,7 @@ Item {
                     Item { Layout.preferredWidth: 28 }
                     StatusCheckBox {
                         id: checkBox
+                        objectName: "tokenHolderSelectCheckBox"
                         Layout.preferredWidth: 24
                         Layout.preferredHeight: 24
                         Layout.alignment: Qt.AlignRight

@@ -845,11 +845,11 @@ removeConfirmationConfirmButton = {"checkable": False, "container": statusDeskto
 # Testnet mode popup
 testnetAlert = {"container": statusDesktop_mainWindow_overlay, "objectName": "TestnetModePopup",
                 "type": "TestnetModePopup", "visible": True}
-turn_on_testnet_mode_StatusButton = {"container": statusDesktop_mainWindow_overlay, "id": "acceptBtn",
-                                     "text": "Turn on testnet mode", "type": "StatusButton", "unnamed": 1,
+turn_on_testnet_mode_StatusButton = {"container": statusDesktop_mainWindow_overlay,
+                                     "objectName": "alertPopupAcceptButton", "type": "StatusButton",
                                      "visible": True}
-turn_off_testnet_mode_StatusButton = {"container": statusDesktop_mainWindow_overlay, "id": "acceptBtn",
-                                      "text": "Turn off testnet mode", "type": "StatusButton", "unnamed": 1,
+turn_off_testnet_mode_StatusButton = {"container": statusDesktop_mainWindow_overlay,
+                                      "objectName": "alertPopupAcceptButton", "type": "StatusButton",
                                       "visible": True}
 testnet_mode_cancelButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusButton", "unnamed": 1,
                              "visible": True}

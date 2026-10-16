@@ -101,6 +101,7 @@ Control {
             }
 
             StatusButton {
+                objectName: "overviewSettingsPrimaryButton"
                 size: StatusBaseButton.Size.Small
                 text: d.primaryButtonText
                 onClicked: d.primaryButtonAction()

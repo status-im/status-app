@@ -1233,7 +1233,10 @@ QtObject:
   # executed when there was some change and holders needs to be fetched again
   proc refreshTokenHolders(self: Service, token: CommunityTokenDto) =
     let tokenTupleKey = (chainId: token.chainId, address: token.address)
-    self.tokenHoldersLastUpdateMap.del(tokenTupleKey)
+    const postActionDelayInSecs = int64(20)
+    const intervalInSecs = int64(5*60)
+    self.tokenHoldersLastUpdateMap[tokenTupleKey] =
+      now().toTime().toUnix() - (intervalInSecs - postActionDelayInSecs)
     if not self.tokenHoldersManagementStarted:
       # not need to get holders now
       return
