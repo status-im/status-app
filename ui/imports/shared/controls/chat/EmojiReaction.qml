@@ -2,6 +2,7 @@ import QtQuick
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Components
 
 import utils
@@ -34,7 +35,9 @@ Rectangle {
         anchors.centerIn: parent
         width: root.emojiSize
         height: root.emojiSize
-        emojiId: root.emojiId
+        // emojiId is what the backend knows this reaction by; only the display
+        // side needs the character
+        emoji: SQUtils.Emoji.getEmojiCodepoint(root.emojiId)
     }
 
     StatusMouseArea {

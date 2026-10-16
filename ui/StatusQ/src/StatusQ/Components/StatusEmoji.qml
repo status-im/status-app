@@ -12,19 +12,7 @@ Text {
     // The emoji itself, e.g. "😀".
     property string emoji
 
-    // Deprecated: codepoints in Twemoji's hex form, e.g. "1f44b-1f3fb". Kept until
-    // the remaining call sites (emoji picker, reactions) pass the character
-    // directly; remove this and the conversion below along with them.
-    property string emojiId
-
-    text: {
-        if (root.emoji)
-            return root.emoji
-        if (!root.emojiId)
-            return ""
-        return root.emojiId.split("-").map(
-            codePoint => String.fromCodePoint(parseInt(codePoint, 16))).join("")
-    }
+    text: root.emoji
 
     width: 14
     height: 14

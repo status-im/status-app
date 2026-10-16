@@ -6,6 +6,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Controls
+import StatusQ.Components
 
 import utils
 import shared
@@ -16,6 +17,8 @@ Popup {
     property var modelList
     property alias listView: listView
     property var getImageSource
+    // Optional: function(modelData) -> the emoji character to show in place of an image
+    property var getEmoji
     property var getImageComponent
     property var getText: function () {}
     property var getId: function () {}
@@ -135,13 +138,17 @@ Popup {
 
             Loader {
                 id: imageLoader
-                active: !!popup.getImageComponent || !!popup.getImageSource
+                active: !!popup.getImageComponent || !!popup.getImageSource || !!popup.getEmoji
                 width: popup.imageWidth
                 height: popup.imageHeight
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: Theme.smallPadding
-                sourceComponent: popup.getImageComponent ? customImageComponent : normalImageComponent
+                sourceComponent: {
+                    if (popup.getEmoji)
+                        return emojiComponent
+                    return popup.getImageComponent ? customImageComponent : normalImageComponent
+                }
             }
 
             Component {
@@ -154,6 +161,15 @@ Popup {
                         }
                         return popup.getImageComponent(imageComponentContainer, myData)
                     }
+                }
+            }
+
+            Component {
+                id: emojiComponent
+                StatusEmoji {
+                    width: popup.imageWidth
+                    height: popup.imageHeight
+                    emoji: popup.getEmoji ? popup.getEmoji(myData) : ""
                 }
             }
 

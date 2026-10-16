@@ -179,7 +179,7 @@ StatusDropdown {
                     delegate: StatusEmoji {
                         width: 22
                         height: 22
-                        emojiId: modelData
+                        emoji: StatusQUtils.Emoji.getEmojiCodepoint(modelData)
                         StatusMouseArea {
                             cursorShape: Qt.PointingHandCursor
                             anchors.fill: parent
@@ -200,7 +200,8 @@ StatusDropdown {
                 anchors.rightMargin: d.headerMargin
                 visible: !skinToneEmoji.expandSkinColorOptions
                 // Hand emoji 🖐️ to which we append the skin color selected by the user
-                emojiId: "1f590" + ((settings.skinColor !== "" && visible) ? ("-" + settings.skinColor) : "")
+                emoji: StatusQUtils.Emoji.getEmojiCodepoint(
+                           "1f590" + ((settings.skinColor !== "" && visible) ? ("-" + settings.skinColor) : ""))
                 StatusMouseArea {
                     cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
@@ -268,7 +269,7 @@ StatusDropdown {
                     objectName: "statusEmoji_" + model.shortname.replace(/:/g, "")
                     Accessible.role: Accessible.StaticText
                     Accessible.name: model.emoji
-                    emojiId: model.unicode
+                    emoji: model.emoji
                 }
                 onClicked: root.addEmoji(model.unicode)
                 HoverHandler {

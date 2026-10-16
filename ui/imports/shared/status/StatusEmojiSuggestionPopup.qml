@@ -15,8 +15,8 @@ StatusInputListPopup {
         return root.modelList[listView.currentIndex].unicode
     }
 
-    getImageSource: function (modelData) {
-        return Emoji.svgImage(modelData.unicode)
+    getEmoji: function (modelData) {
+        return modelData.emoji
     }
     getText: function (modelData) {
         return modelData.shortname
