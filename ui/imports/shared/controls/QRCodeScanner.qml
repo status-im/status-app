@@ -209,14 +209,15 @@ ColumnLayout {
                 maxDim: 1024
 
                 function applyRoi() {
-                    const r = scanner.normalizedCaptureRect
-                    tap.setDisplayRoi(r.x, r.y, r.width, r.height)
+                    const a = scanner.captureArea
+                    tap.setPreviewRoi(a.x, a.y, a.width, a.height, a.previewWidth,
+                                      a.previewHeight, a.fillMode, a.mirrored)
                 }
 
                 Component.onCompleted: applyRoi()
             }
 
-            onNormalizedCaptureRectChanged: tap.applyRoi()
+            onCaptureAreaChanged: tap.applyRoi()
 
             QrScanner {
                 frameSource: tap.handle

@@ -5,7 +5,7 @@ import QtMultimedia
 import StatusQ.Core.Utils as SQUtils
 
 // Camera preview for QR scanning. Qt only: decoding is done by the host, which
-// reads frames from `videoSink` and decodes the area `normalizedCaptureRect`.
+// reads frames from `videoSink` and crops them as the preview shows them.
 Item {
     id: root
 
@@ -21,17 +21,10 @@ Item {
     // Frames of the running camera, for a frame tap / decoder.
     readonly property var videoSink: videoOutput.videoSink
 
-    // The area to scan, in this item's coordinates (e.g. the scan corners).
-    // Empty means the whole frame.
-    property rect captureItemRect: Qt.rect(0, 0, 0, 0)
-
-    // `captureItemRect` in normalized (0..1) coordinates of the frame as
-    // displayed (its own rotation and mirroring applied, as on phones), taking
-    // the aspect-ratio crop and the preview's mirroring into account. Pass it
-    // to a frame tap as a display-space ROI (NimQtCamera FrameTap.setDisplayRoi).
-    readonly property rect normalizedCaptureRect:
-        SQUtils.Utils.mapItemRectToVideoFrame(videoOutput.contentRect, captureItemRect,
-                                              videoOutput.mirrored)
+    // How the preview lays out the video (VideoOutput.fillMode / mirrored),
+    // for a frame tap that crops each frame as shown.
+    readonly property int fillMode: videoOutput.fillMode
+    readonly property bool mirrored: videoOutput.mirrored
 
     // The host gates the camera (visibility, app state).
     property bool active: true

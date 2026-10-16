@@ -54,29 +54,6 @@ QtObject {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
     }
 
-    // Maps a rectangle in a VideoOutput's item coordinates to normalized
-    // (0..1) video-frame coordinates. `contentRect` is the VideoOutput's
-    // contentRect (the scaled video in item coordinates; with
-    // PreserveAspectCrop it is larger than the item). When the preview is
-    // `mirrored`, x is flipped back to frame orientation. An empty rect, or no
-    // video yet, means the whole frame.
-    function mapItemRectToVideoFrame(contentRect, itemRect, mirrored) {
-        if (contentRect.width <= 0 || contentRect.height <= 0
-                || itemRect.width <= 0 || itemRect.height <= 0)
-            return Qt.rect(0, 0, 1, 1)
-
-        const clamp = v => Math.min(1, Math.max(0, v))
-        const left = clamp((itemRect.x - contentRect.x) / contentRect.width)
-        const top = clamp((itemRect.y - contentRect.y) / contentRect.height)
-        const right = clamp((itemRect.x + itemRect.width - contentRect.x) / contentRect.width)
-        const bottom = clamp((itemRect.y + itemRect.height - contentRect.y) / contentRect.height)
-        if (right <= left || bottom <= top)
-            return Qt.rect(0, 0, 1, 1)
-
-        const x = mirrored ? 1 - right : left
-        return Qt.rect(x, top, right - left, bottom - top)
-    }
-
     function getThemeAccountColor(c, accountColors) {
         const upperCaseColor = c.toUpperCase()
         let colorIndex = accountColors.indexOf(upperCaseColor)

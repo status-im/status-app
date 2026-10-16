@@ -31,10 +31,18 @@ Item {
     readonly property size contentSize: capture.contentSize
     readonly property real sourceRatio: capture.sourceRatio
 
-    // Frames of the running camera and the scan-corner area in normalized
-    // frame coordinates, for the host's frame tap / decoder.
+    // Frames of the running camera, for the host's frame tap / decoder.
     readonly property var videoSink: capture.videoSink
-    readonly property rect normalizedCaptureRect: capture.normalizedCaptureRect
+
+    // The scan corners in this item's pixels and how the preview shows the
+    // video: what a frame tap needs to crop each frame as shown, from that
+    // frame's own size and rotation (NimQtCamera FrameTap.setPreviewRoi).
+    readonly property var captureArea: ({
+        x: scanCorners.x, y: scanCorners.y,
+        width: scanCorners.width, height: scanCorners.height,
+        previewWidth: capture.width, previewHeight: capture.height,
+        fillMode: capture.fillMode, mirrored: capture.mirrored
+    })
 
     // The camera runs while this is true, the scanner is visible and the
     // application is active (not in the background, not lost focus).
@@ -73,9 +81,6 @@ Item {
             visible: true
             clip: true
             active: root.capturing
-            // capture fills root, so scanCorners' geometry is already in its coordinates
-            captureItemRect: Qt.rect(scanCorners.x, scanCorners.y,
-                                     scanCorners.width, scanCorners.height)
         }
 
         Loader {

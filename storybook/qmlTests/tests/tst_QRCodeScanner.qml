@@ -129,6 +129,23 @@ Item {
             tryCompare(tagSpy, "count", 1, 5000)
         }
 
+        // No warm-up frame: the very first frames, before the preview has laid
+        // out the video, must already be cropped to the scan corners.
+        // 1600x900 into the ~400x430 scanner (cropped left/right): the scan
+        // corners cover raw x ≈ 0.31..0.69. A code at raw x 260..408 px
+        // (0.16..0.26) is outside them, but inside if the item rect were
+        // taken for the video (x 0.14..0.86) or the whole frame were used.
+        function test_roiAppliesFromTheFirstFrame() {
+            const sink = videoOutput().videoSink
+            for (let i = 0; i < 10; ++i) {
+                verify(fakeSource.pushQrAt(sink, root.address, 260, 376, 1600, 900))
+                wait(150)
+            }
+            compare(tagSpy.count, 0)
+            verify(fakeSource.pushQrAt(sink, root.address, 726, 376, 1600, 900))
+            tryCompare(tagSpy, "count", 1, 5000)
+        }
+
         // Phone cameras deliver rotated frames that the preview rotates for
         // display; the scan corners are measured on the display, so only what
         // is inside them on screen may be decoded.
@@ -139,12 +156,6 @@ Item {
             // contentRect follows a frame on a queued update (sourceRect at once):
             // wait until the portrait video is laid out, cropped top and bottom
             tryVerify(() => output.contentRect.height > output.height + 1)
-            const r = findChild(controlUnderTest, "statusQrCodeScanner").normalizedCaptureRect
-            // displayed scan area ≈ x 0.14..0.86, y 0.30..0.70, i.e. raw
-            // x 0.30..0.70 (480..1120 px), y 0.14..0.86 (126..774 px)
-            verify(Math.abs(r.x - 0.14) < 0.03 && Math.abs(r.y - 0.30) < 0.03,
-                   JSON.stringify(r))
-
             // raw (280, 376), 148 px: inside the scan area if the rect were
             // applied to the raw frame unrotated, outside it on screen
             for (let i = 0; i < 10; ++i) {
