@@ -1,12 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQml
 
-import StatusQ.Core
-import StatusQ.Core.Utils
-import StatusQ.Controls
-import StatusQ.Components
 import StatusQ.Core.Theme
 
 import AppLayouts.Wallet.controls
@@ -14,88 +9,75 @@ import AppLayouts.Wallet.controls
 import Models
 import Storybook
 
-import SortFilterProxyModel
-
 import utils
 
 SplitView {
     id: root
 
     Item {
-        implicitWidth: delegate.width
+        SplitView.fillWidth: true
         NetworkSelectItemDelegate {
+            anchors.centerIn: parent
             id: delegate
-            title: "Ethereum"
-            iconUrl: Assets.svg("network/ethereum")
-            showIndicator: true
-            multiSelection: true
+            text: ctrlText.text
+            icon.name: ctrlIcon.text
+            interactive: ctrlInteractive.checked
+            showIndicator: ctrlShowIndicator.checked
+            showNewIcon: ctrlShowNewIcon.checked
             checkState: checkStateSelector.checkState
-            nextCheckState: checkState === Qt.Unchecked ? Qt.PartiallyChecked :
-                        checkState === Qt.PartiallyChecked ? Qt.Checked : Qt.Unchecked
 
-            onCheckStateChanged: {
-                checkStateSelector.checkState = checkState
+            onToggled: {
+                checkStateSelector.checked = checked
             }
         }
     }
 
     Pane {
         id: pane
-        SplitView.fillWidth: true
+        SplitView.preferredWidth: 250
         ColumnLayout {
             CheckBox {
+                id: ctrlInteractive
+                text: "interactive"
+                checked: true
+            }
+
+            CheckBox {
+                id: ctrlShowIndicator
                 text: "showIndicator"
-                checked: delegate.showIndicator
-                onCheckedChanged: {
-                    delegate.showIndicator = checked
-                }
+                checked: true
             }
 
             CheckBox {
-                text: "multiSelection"
-                checked: delegate.multiSelection
-                onCheckedChanged: {
-                    delegate.multiSelection = checked
-                }
-            }
-
-            CheckBox {
+                id: ctrlShowNewIcon
                 text: "showNewIcon"
-                checked: delegate.showNewIcon
-                onCheckedChanged: {
-                    delegate.showNewIcon = checked
-                }
+                checked: false
             }
 
             Label {
                 text: "title"
             }
             TextField {
-                text: delegate.title
-                onTextChanged: {
-                    delegate.title = text
-                }
+                id: ctrlText
+                Layout.fillWidth: true
+                text: "Ethereum"
             }
 
             Label {
-                text: "iconUrl"
+                text: "icon"
             }
             TextField {
-                text: delegate.iconUrl
-                onTextChanged: {
-                    delegate.iconUrl = text
-                }
+                id: ctrlIcon
+                Layout.fillWidth: true
+                text: "ethereum"
             }
 
             CheckBox {
                 id: checkStateSelector
-                text: "checkedState"
-                tristate: true
+                text: "checked"
                 checked: true
-                onCheckStateChanged: {
-                    if(delegate.checkState !== checkState) {
-                        delegate.checkState = checkState
-                    }
+                onToggled: {
+                    delegate.checked = checked
                 }
             }
         }
@@ -103,3 +85,4 @@ SplitView {
 }
 
 // category: Controls
+// status: good

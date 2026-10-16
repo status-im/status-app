@@ -52,10 +52,13 @@ SplitView {
                 showTitle: ctrlShowTitle.checked
                 showManageNetworksButton: ctrlShowManageNetworksButton.checked
                 selectionAllowed: selectionAllowedCheckBox.checked
-                showSelectionIndicator: (ctrlShowCheckBoxes.checked && multiSelection) || (ctrlShowRadioButtons.checked && !multiSelection)
+                showSelectionIndicator: ctrlShowIndicators.checked
                 showNewChainIcon: newChainsNotificationCheckbox.checked
                 showNotificationIcon: showNotificationIconCheckbox.checked
                 showManageNetworksNotificationIcon: showManageNetworksNotificationIconCheckbox.checked
+
+                onToggleNetwork: logs.logEvent("onToggleNetwork", ["chainId", "index"], arguments)
+                onManageNetworksClicked: logs.logEvent("onManageNetworksClicked")
             }
         }
 
@@ -89,16 +92,8 @@ SplitView {
             }
 
             CheckBox {
-                id: ctrlShowCheckBoxes
-                visible: multiSelectionCheckBox.checked
-                text: "Show checkboxes"
-                checked: true
-            }
-
-            CheckBox {
-                id: ctrlShowRadioButtons
-                visible: !multiSelectionCheckBox.checked
-                text: "Show radio buttons"
+                id: ctrlShowIndicators
+                text: "Show check indicators"
                 checked: true
             }
 
@@ -172,5 +167,5 @@ SplitView {
 }
 
 // category: Components
-
+// status: good
 // https://www.figma.com/file/FkFClTCYKf83RJWoifWgoX/Wallet-v2?type=design&node-id=13179-346563&mode=design&t=RUkJVqqhgam32C1S-0

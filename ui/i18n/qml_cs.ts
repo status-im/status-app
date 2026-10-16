@@ -12308,6 +12308,10 @@ selhalo</translation>
         <source>Select networks</source>
         <translation>Vybrat sítě</translation>
     </message>
+    <message>
+        <source>All Networks</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NetworkSelectItemDelegate</name>
@@ -12318,6 +12322,10 @@ selhalo</translation>
 </context>
 <context>
     <name>NetworkSelectPopup</name>
+    <message>
+        <source>All Networks</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Manage networks</source>
         <translation>Spravovat sítě</translation>

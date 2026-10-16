@@ -101,14 +101,14 @@ StatusComboBox {
         Row {
             id: row
             spacing: -4
-            visible: chainRepeater.count > 0
+            visible: chainRepeater.count > 0 && !d.allSelected
             Repeater {
                 id: chainRepeater
                 model: SortFilterProxyModel {
                     sourceModel: root.multiSelection ? root.flatNetworks : null
                     filters: OneOfFilter {
                         roleName: "chainId"
-                        array: root.selection
+                        array: networkSelectorView.selection
                     }
                 }
                 delegate: StatusRoundedImage {
@@ -208,6 +208,7 @@ StatusComboBox {
         readonly property int networksCount: root.flatNetworks.ModelCount.count
         readonly property bool noneSelected: root.selection.length === 0
         readonly property bool oneSelected: root.selection.length === 1
+        readonly property bool allSelected: root.selection.length === networksCount
         readonly property bool selectionUnavailable: d.networksCount <= 1 && d.oneSelected
 
         // in-place commit: swapping the array pointer would detach literal
@@ -234,15 +235,13 @@ StatusComboBox {
             }
 
             if (root.multiSelection) {
-                if (d.noneSelected) {
-                    return  qsTr("Select networks")
-                }
+                if (d.noneSelected)
+                    return qsTr("Select networks")
+                if (d.allSelected)
+                    return qsTr("All Networks")
             }
 
             return ""
         }
-        property var window: root.control.Window
-        property int windowWidth: window ? window.width: Screen.width
-        property int windowHeight: window ? window.height: Screen.height
     }
 }

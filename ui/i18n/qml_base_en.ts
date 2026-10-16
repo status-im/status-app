@@ -12228,6 +12228,10 @@ to load</source>
         <source>Select networks</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>All Networks</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NetworkSelectItemDelegate</name>
@@ -12238,6 +12242,10 @@ to load</source>
 </context>
 <context>
     <name>NetworkSelectPopup</name>
+    <message>
+        <source>All Networks</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Manage networks</source>
         <translation type="unfinished"></translation>
