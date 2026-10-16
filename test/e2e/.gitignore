@@ -22,3 +22,5 @@ ext/allure_files/environment.properties
 suite_status/config.xml
 suite_status/envvars
 
+resources/purchased_ens_names.json
+

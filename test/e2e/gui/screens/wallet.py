@@ -9,7 +9,7 @@ import configs
 import constants
 import driver
 from constants import WalletAccount
-from constants.wallet import WalletNetworkSettings
+from constants.wallet import WalletNetworkSettings, WalletTransactionStatus
 from driver.objects_access import walk_children
 from gui.components.context_menu import ContextMenu
 from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPopup
@@ -317,6 +317,7 @@ class TransactionRecord:
         self.title = _qml_str(obj, 'title')
         self.toAddress = _qml_str(obj, 'toAddress')
         self.transactionValue = _qml_str(obj, 'transactionValue')
+        self.transactionHash = _qml_str(obj, 'transactionHash')
         self.timestamp = _qml_int(obj, 'timestamp')
 
     def __repr__(self):
@@ -324,7 +325,18 @@ class TransactionRecord:
 
     @property
     def failed(self) -> bool:
-        return 'failed' in self.title.lower()
+        return (
+            self.status == WalletTransactionStatus.FAILED
+            or 'failed' in self.title.lower()
+        )
+
+    @property
+    def status(self) -> int | None:
+        try:
+            value = getattr(self.object, 'transactionStatus', None)
+            return None if value is None else int(value)
+        except (RuntimeError, AttributeError, TypeError, ValueError):
+            return None
 
     def matches(
         self,
@@ -561,6 +573,7 @@ class WalletAccountView(QObject):
         to_address: str | None = None,
         amount: str | None = None,
         timeout_msec: int = configs.timeouts.WALLET_HISTORY_TX_TIMEOUT_MSEC,
+        require_settled: bool = False,
     ) -> TransactionRecord:
         records: typing.List[TransactionRecord] = []
         matched: TransactionRecord | None = None
@@ -576,9 +589,15 @@ class WalletAccountView(QObject):
                 if record.failed:
                     failed = record
                     return True
-                if record.title in titles:
-                    matched = record
-                    return True
+                if record.title not in titles:
+                    continue
+                if require_settled and record.status not in (
+                    WalletTransactionStatus.COMPLETE,
+                    WalletTransactionStatus.FINALISED,
+                ):
+                    continue
+                matched = record
+                return True
             return False
 
         found = driver.waitFor(_found, timeout_msec)

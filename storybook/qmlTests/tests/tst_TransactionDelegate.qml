@@ -38,6 +38,7 @@ Item {
         id: tx
 
         readonly property string id: "0xdeadbeef"
+        readonly property var transaction: ({hash: "0xdeadbeef"})
         readonly property int timestamp: 1714059810
         readonly property int status: Constants.TransactionStatus.Complete
         readonly property double amount: 1
@@ -97,6 +98,11 @@ Item {
 
             root.nameRecipient = false
             compare(delegate.toAddress, Utils.compactAddress(root.recipient, 4))
+        }
+
+        function test_exposesTransactionHash() {
+            const delegate = createTemporaryObject(delegateComponent, root)
+            compare(delegate.transactionHash, tx.transaction.hash)
         }
     }
 }

@@ -156,6 +156,7 @@ Item {
 
             const row = find("httpTrafficSourceRow:Balances")
             tryVerify(() => row.width > 0, 2000, "laid out")
+            tryVerify(() => !modal.walletStore.httpTrafficReadPending, 2000, "overview settled")
             row.clicked()
             compare(modal.walletStore.httpTrafficQuery.endpoints, "source")
             compare(modal.walletStore.httpTrafficQuery.key, "Balances")
@@ -164,6 +165,7 @@ Item {
             tryCompare(find("httpTrafficEndpointsLoading"), "visible", false)
 
             find("httpTrafficDetailsBack").clicked()
+            tryVerify(() => !modal.walletStore.httpTrafficReadPending, 2000, "details settled")
             mouseClick(findChild(modal.footer, "httpStatsRefreshButton"))
             compare(modal.walletStore.httpTrafficQuery.endpoints, "none", "back on the overview, none again")
         }

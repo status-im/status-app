@@ -148,6 +148,13 @@ class WalletTransactions(Enum):
     ENS_TRANSACTION_REGISTERING_TOAST_MESSAGE = 'Registering'
 
 
+class WalletTransactionStatus(IntEnum):
+    FAILED = 0
+    PENDING = 1
+    COMPLETE = 2
+    FINALISED = 3
+
+
 # Mirrors Constants.TransactionType in ui/imports/utils/Constants.qml
 class WalletTransactionType(IntEnum):
     SEND = 0
