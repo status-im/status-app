@@ -53,6 +53,14 @@ ColumnLayout {
 
     signal validTagFound(string tag)
 
+    // Starts a new scanning session: after a result (Success) or an error the
+    // scanner stays idle until reset, so a reused dialog calls this on opening.
+    function reset() {
+        errorTimer.stop()
+        d.errorMessage = ""
+        root.state = StatusQrCodeScanner.State.None
+    }
+
     spacing: Theme.padding / 1.4
 
     QtObject {

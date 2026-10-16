@@ -32,6 +32,12 @@ StatusDialog {
 
     signal tagFound(int tagType, string tag)
 
+    // Each opening is a fresh session (the dialog may be reused, not destroyed).
+    onAboutToShow: {
+        d.validTag = ""
+        qrCodeScanner.reset()
+    }
+
     enum TagType {
         Link,
         Address,
