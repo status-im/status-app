@@ -393,3 +393,22 @@ def test_identity_is_recovered_from_settings_when_the_signal_was_rebuilt_over_rp
     assert identity["fleet"] == "status.prod"
     assert identity["mnemonic"] == "m"
     assert be.settings_service.calls == 1
+
+
+# --- provisioning guard: a peer is needed by marker or by the peer_chat fixture ---
+
+class _Item:
+    def __init__(self, marked=False, fixtures=()):
+        self._marked = marked
+        self.fixturenames = list(fixtures)
+
+    def get_closest_marker(self, name):
+        return object() if self._marked and name == "backend_peer" else None
+
+
+def test_unprovisioned_peer_items_include_peer_chat_users(monkeypatch):
+    monkeypatch.delenv(peer_containers.IMAGE_ENV, raising=False)
+    marked, by_fixture, plain = _Item(marked=True), _Item(fixtures=["peer_chat_ready", "peer_chat"]), _Item()
+    assert peer_containers.unrunnable_peer_items([marked, by_fixture, plain], collectonly=False) == [
+        marked, by_fixture,
+    ]

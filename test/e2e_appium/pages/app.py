@@ -16,7 +16,7 @@ class App(BasePage):
         return self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=timeout)
 
     def active_section(self) -> str:
-        """Return current section: home, messaging, wallet, communities, market, settings, unknown."""
+        """Return current section: home, messaging, wallet, communities, market, browser, settings, unknown."""
         if self.has_left_nav(timeout=1):
             mapping = {
                 "home": self.locators.LEFT_NAV_HOME,
@@ -24,6 +24,7 @@ class App(BasePage):
                 "market": self.locators.LEFT_NAV_MARKET,
                 "messaging": self.locators.LEFT_NAV_MESSAGES,
                 "communities": self.locators.LEFT_NAV_COMMUNITIES,
+                "browser": self.locators.LEFT_NAV_BROWSER,
             }
             for name, locator in mapping.items():
                 el = self.find_element_safe(locator, timeout=1)

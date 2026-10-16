@@ -45,7 +45,10 @@ def unrunnable_peer_items(items, collectonly: bool) -> list:
         return []
     if enabled():
         return []
-    return [i for i in items if i.get_closest_marker("backend_peer")]
+    return [
+        i for i in items
+        if i.get_closest_marker("backend_peer") or "peer_chat" in getattr(i, "fixturenames", ())
+    ]
 
 
 def peer_provisioning_error(unrunnable) -> str:

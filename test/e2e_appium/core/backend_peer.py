@@ -276,16 +276,31 @@ class BackendPeer:
         return public_key
 
     def chat_messages(self, contact_key: str, limit: int = 30) -> list[dict]:
-        payload = self._sync.wakuext_service.chat_messages(
-            self.dm_chat_id(contact_key), limit=limit,
-        ) or {}
+        return self.messages_in(self.dm_chat_id(contact_key), limit=limit)
+
+    def messages_in(self, chat_id: str, limit: int = 30) -> list[dict]:
+        payload = self._sync.wakuext_service.chat_messages(chat_id, limit=limit) or {}
         return payload.get("messages") or []
+
+    def find_message_in(self, chat_id: str, text: str, limit: int = 30) -> dict | None:
+        return next((m for m in self.messages_in(chat_id, limit) if m.get("text") == text), None)
+
+    def create_group_with(self, member_key: str, name: str) -> str:
+        """A group chat this peer administers with ``member_key`` in it; returns its chat id."""
+        result = self._sync.wakuext_service.create_group_chat_with_members([member_key], name) or {}
+        chats = [c for c in result.get("chats") or [] if c.get("name") == name]
+        if not chats:
+            raise RuntimeError(
+                f"createGroupChatWithMembers returned no chat named {name!r}; "
+                f"payload held {[(c.get('id'), c.get('name')) for c in result.get('chats') or []]!r}"
+            )
+        return chats[0]["id"]
 
     def chat_message_texts(self, contact_key: str, limit: int = 20) -> list[str]:
         return [m.get("text", "") for m in self.chat_messages(contact_key, limit)]
 
     def find_message(self, contact_key: str, text: str, limit: int = 30) -> dict | None:
-        return next((m for m in self.chat_messages(contact_key, limit) if m.get("text") == text), None)
+        return self.find_message_in(self.dm_chat_id(contact_key), text, limit)
 
     async def await_chat_message(self, contact_key: str, text: str, timeout: int = 120) -> dict:
         try:
@@ -298,6 +313,13 @@ class BackendPeer:
                 f"{text!r} never reached the peer within {timeout}s; "
                 f"its last {len(texts)} message(s): {texts!r}"
             ) from None
+
+    async def await_message_in(self, chat_id: str, text: str, timeout: int = 120) -> dict:
+        """The peer's copy of ``text`` in any chat it is in, a group included."""
+        return await self._await(
+            f"{text!r} in chat {chat_id[:16]}… on the peer",
+            lambda: self.find_message_in(chat_id, text), timeout,
+        )
 
     async def await_new_message_from(
         self, contact_key: str, known_ids: set[str], timeout: int = 120,

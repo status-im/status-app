@@ -16,6 +16,7 @@ class AppLocators(BaseLocators):
     LEFT_NAV_COMMUNITIES = BaseLocators.xpath(
         "//*[contains(@resource-id, 'Communities Portal-navbar')]"
     )
+    LEFT_NAV_BROWSER = BaseLocators.xpath("//*[contains(@resource-id, 'Browser-navbar')]")
 
     # Home dock (visible only on Home)
     HOME_DOCK_CONTAINER = BaseLocators.xpath(

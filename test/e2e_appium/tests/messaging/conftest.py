@@ -37,6 +37,7 @@ from config.logging_config import get_logger
 from core.device_context import DeviceContext
 from core.multi_device_context import MultiDeviceContext
 from core.session_pool import PoolConfig, SessionPool
+from fixtures.multi_device_fixtures import _local_env_overrides
 from core.stash_keys import (
     ESTABLISHED_CHAT_BROKEN_KEY,
     ESTABLISHED_CHAT_FAILURE_COUNT_KEY,
@@ -585,7 +586,7 @@ async def _establish_phone_to_peer_contact(device: DeviceContext, peer) -> str:
     return phone_key
 
 
-async def _setup_peer_chat(pool: SessionPool, test_nodeid: str, worker: str):
+async def _setup_peer_chat(pool: SessionPool, test_nodeid: str, worker: str, test_environment: str):
     from core.backend_peer import BackendPeer
 
     peer = None
@@ -602,7 +603,9 @@ async def _setup_peer_chat(pool: SessionPool, test_nodeid: str, worker: str):
         await peer.wait_for_peers(min_peers=1, timeout=30)
 
         drivers = await pool.create_sessions(
-            count=1, test_nodeid=f"{test_nodeid}::peer_setup",
+            count=1,
+            device_overrides=_local_env_overrides(1) if test_environment == "local" else None,
+            test_nodeid=f"{test_nodeid}::peer_setup",
         )
         keepalives = [_SessionKeepAlive(d, label=n) for n, d in drivers.items()]
         for ka in keepalives:
@@ -667,7 +670,7 @@ async def peer_chat(request, test_environment) -> PeerChatContext:
         # its expiry would skip the cleanup below and leak both the container
         # and the device session. A bound of our own fails inside the coroutine.
         ctx = await asyncio.wait_for(
-            _setup_peer_chat(pool, request.node.nodeid, worker),
+            _setup_peer_chat(pool, request.node.nodeid, worker, test_environment),
             timeout=PEER_CHAT_SETUP_TIMEOUT_SECONDS,
         )
     except BaseException as exc:
