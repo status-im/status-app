@@ -41,7 +41,7 @@ Rectangle {
         anchors.centerIn: parent
         width: Math.round(parent.width / 2)
         height: Math.round(parent.height / 2)
-        emojiId: Emoji.iconId(root.emoji, root.emojiSize) || Emoji.iconHex(root.emoji) || ""
+        emoji: root.emoji
     }
 
     StatusBaseText {

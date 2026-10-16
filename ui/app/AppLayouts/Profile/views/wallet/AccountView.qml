@@ -73,7 +73,7 @@ ColumnLayout {
                 objectName: "walletAccountViewAccountImage"
                 Layout.preferredWidth: 28
                 Layout.preferredHeight: 28
-                emojiId: StatusQUtils.Emoji.iconId(!!root.account && root.account.emoji ? root.account.emoji : "", StatusQUtils.Emoji.size.big) || ""
+                emoji: !!root.account && root.account.emoji ? root.account.emoji : ""
             }
         }
         StatusButton {

@@ -282,7 +282,7 @@ AbstractButton {
                 active: root.asset.emoji && root.display !== AbstractButton.TextOnly && !root.loadingWithText
                 visible: active
                 sourceComponent: StatusEmoji {
-                    emojiId: Emoji.iconId(root.asset.emoji, root.asset.emojiSize) || ""
+                    emoji: root.asset.emoji
                     opacity: !root.enabled || !root.interactive ? 0.4 : 1
                 }
             }

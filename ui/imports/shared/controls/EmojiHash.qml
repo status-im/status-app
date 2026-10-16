@@ -30,7 +30,7 @@ Item {
             StatusEmoji {
                 width: root.size
                 height: root.size
-                emojiId: StatusQUtils.Emoji.iconId(modelData)
+                emoji: modelData
             }
         }
     }

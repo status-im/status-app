@@ -1,6 +1,7 @@
 #include "StatusQ/fonts.h"
 
 #include <QFontDatabase>
+#include <QFontMetricsF>
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QResource>
@@ -75,10 +76,24 @@ void Fonts::initFonts()
     const auto emojiFontId = loadFont("StatusTwemoji-COLRv0.ttf"_L1);
     if (emojiFontId != -1) {
         const auto emojiFamilies = QFontDatabase::applicationFontFamilies(emojiFontId);
-        if (emojiFamilies.isEmpty())
+        if (emojiFamilies.isEmpty()) {
             qWarning() << "!!! EMPTY EMOJI FONT ???";
-        else
+        } else {
             QFontDatabase::setApplicationEmojiFontFamilies(emojiFamilies);
+
+            // The artwork is taller than the em (it spans the text line box, see
+            // tools/emoji), so a caller sizing an emoji to a box needs the ratio.
+            // Measure it once rather than hardcoding what the font happens to be.
+            m_emojiFont = QFont(emojiFamilies);
+
+            constexpr auto referencePixelSize = 256;
+            QFont referenceFont = m_emojiFont;
+            referenceFont.setPixelSize(referencePixelSize);
+            const auto ink = QFontMetricsF(referenceFont)
+                                 .tightBoundingRect(QStringLiteral("\U0001F600"));
+            if (ink.height() > 0)
+                m_emojiArtRatio = ink.height() / referencePixelSize;
+        }
     }
 
     // monoFont fine tuning (https://rsms.me/inter/#features)

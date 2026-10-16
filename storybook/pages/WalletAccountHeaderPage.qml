@@ -63,7 +63,7 @@ SplitView {
 
             allAccounts: allAccountsCheckBox.checked
             name: nameTextField.text
-            emojiId: SQUtils.Emoji.iconId("⚽")
+            emoji: "⚽"
             color: "orange"
             balance: balanceTextField.text
 

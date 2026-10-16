@@ -42,7 +42,7 @@ Control {
     property string name
 
     /* Account emoji */
-    property string emojiId
+    property string emoji
 
     /* Account color */
     property color color
@@ -119,13 +119,19 @@ Control {
             StatusEmoji {
                 anchors.fill: parent
                 anchors.margins: 11
+                visible: !!root.emoji
 
-                emojiId: root.emojiId
+                emoji: root.emoji
+            }
 
-                Binding on source { // fallback when we have no emoji
-                    when: root.emojiId === ""
-                    value: Assets.svg("filled-account")
-                }
+            Image { // fallback when we have no emoji
+                anchors.fill: parent
+                anchors.margins: 11
+                visible: !root.emoji
+
+                source: Assets.svg("filled-account")
+                fillMode: Image.PreserveAspectFit
+                mipmap: true
             }
         }
 

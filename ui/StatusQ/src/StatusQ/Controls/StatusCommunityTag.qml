@@ -44,7 +44,7 @@ Rectangle {
         StatusEmoji {
             width: 18
             height: 18
-            emojiId: root.emoji != "" ? Emoji.iconHex(root.emoji) : ""
+            emoji: root.emoji
             anchors.verticalCenter: parent.verticalCenter
         }
 
