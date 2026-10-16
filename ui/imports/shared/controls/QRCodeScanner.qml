@@ -99,8 +99,9 @@ ColumnLayout {
 
     Component.onCompleted: {
         // Wait before requesting the permission, so the view comes up after
-        // the animation before the OS popup freezes the UI
-        if (!root.cameraPermissionDenied && root.cameraAccess.status === "undetermined")
+        // the animation before the OS popup freezes the UI. canRequest: also
+        // after an ordinary denial on Android, where the OS may ask again.
+        if (!root.cameraPermissionDenied && root.cameraAccess.canRequest)
             permissionTimer.start()
     }
 
@@ -159,6 +160,7 @@ ColumnLayout {
             }
 
             StatusButton {
+                objectName: "openCameraSettingsButton"
                 text: qsTr("Open settings")
                 // The OS page where camera access is granted; Linux has none
                 // (and no camera permission to deny).
