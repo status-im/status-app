@@ -39,7 +39,7 @@ Item {
     property NetworkSelectorView controlUnderTest: null
 
     TestCase {
-        name: "NetworkSelectorView"
+            name: "NetworkSelectorView"
         when: windowShown
 
         function init() {
@@ -61,13 +61,13 @@ Item {
             // - model is not empty
             // - showIndicator is true
             // - multiSelection is false
-            // - interactive is true
+            // - selectionAllowed is true
             // - selection has length 1. This is because the single selection mode is enabled by default
 
             verify(controlUnderTest.model.count > 0)
             verify(controlUnderTest.showIndicator)
             verify(!controlUnderTest.multiSelection)
-            verify(controlUnderTest.interactive)
+            verify(controlUnderTest.selectionAllowed)
             verify(controlUnderTest.selection.length === 1)
         }
 
@@ -77,7 +77,6 @@ Item {
             // - the delegate has the correct chain name
             // - the delegate has the correct icon url
             // - the delegate has the correct show indicator value
-            // - the delegate has the correct multi selection value
             // - the delegate has the correct check state
 
             for (var i = 0; i < controlUnderTest.model.count; i++) {
@@ -85,10 +84,9 @@ Item {
                 const delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + model.chainName)
 
                 verify(!!delegate)
-                compare(delegate.title, model.chainName)
-                compare(delegate.iconUrl, Assets.svg(model.iconUrl))
+                compare(delegate.text, model.chainName)
+                compare(delegate.icon.source, Assets.svg(model.iconUrl))
                 compare(delegate.showIndicator, controlUnderTest.showIndicator)
-                compare(delegate.multiSelection, controlUnderTest.multiSelection)
                 compare(delegate.checkState, controlUnderTest.selection.includes(model.chainId) ? Qt.Checked : Qt.Unchecked)
             }
 
@@ -99,7 +97,6 @@ Item {
                 const delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + model.chainName)
 
                 compare(delegate.showIndicator, controlUnderTest.showIndicator)
-                compare(delegate.multiSelection, controlUnderTest.multiSelection)
                 compare(delegate.checkState, Qt.Unchecked)
             }
         }
@@ -152,7 +149,7 @@ Item {
             // 3. toggle by click
             // 4. toggle by updating the selection property
 
-            controlUnderTest.multiSelection = true
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {multiSelection: true})
             waitForItemPolished(controlUnderTest)
 
             let delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + controlUnderTest.model.get(1).chainName)
@@ -210,7 +207,7 @@ Item {
 
             for (var i = 0; i < controlUnderTest.model.count; i++) {
                 const delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + controlUnderTest.model.get(i).chainName)
-                compare(delegate.checkState, Qt.PartiallyChecked)
+                compare(delegate.checkState, Qt.Checked)
             }
 
             // 6. set the selection to all selected
@@ -222,12 +219,12 @@ Item {
 
             for (var i = 0; i < controlUnderTest.model.count; i++) {
                 const delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + controlUnderTest.model.get(i).chainName)
-                compare(delegate.checkState, Qt.PartiallyChecked)
+                compare(delegate.checkState, Qt.Checked)
             }
 
             // 7. deselect and select again the same item
             mouseClick(findChild(controlUnderTest, "networkSelectorDelegate_" + controlUnderTest.model.get(0).chainName))
-            compare(toggleNetworkSpy.count, 1)
+            tryCompare(toggleNetworkSpy, "count", 1)
             compare(selectionChangedSpy.count, 2)
             compare(controlUnderTest.selection.length, controlUnderTest.model.count - 1)
             compare(findChild(controlUnderTest, "networkSelectorDelegate_" + controlUnderTest.model.get(0).chainName).checkState, Qt.Unchecked)
@@ -239,7 +236,7 @@ Item {
 
             for (var i = 0; i < controlUnderTest.model.count; i++) {
                 const delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + controlUnderTest.model.get(i).chainName)
-                compare(delegate.checkState, Qt.PartiallyChecked)
+                compare(delegate.checkState, Qt.Checked)
             }
 
             // 8. deselect one by setting the selection and select all again
@@ -265,7 +262,7 @@ Item {
 
             for (var i = 0; i < controlUnderTest.model.count; i++) {
                 const delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + controlUnderTest.model.get(i).chainName)
-                compare(delegate.checkState, Qt.PartiallyChecked)
+                compare(delegate.checkState, Qt.Checked)
             }
         }
 
@@ -285,11 +282,8 @@ Item {
 
                     compare(delegate.showIndicator, controlUnderTest.showIndicator)
 
-                    const checkBox = findChild(delegate, "networkSelectionCheckbox_" + model.chainName)
-                    const radioButton = findChild(delegate, "networkSelectionRadioButton_" + model.chainName)
-
-                    verify(!checkBox)
-                    verify(!radioButton)
+                    verify(!!findChild(delegate, "networkSelectionCheckbox_" + model.chainName))
+                    compare(delegate.indicator.visible, false)
                 }
             }
 
@@ -309,20 +303,14 @@ Item {
                     compare(delegate.showIndicator, controlUnderTest.showIndicator)
 
                     const checkBox = findChild(delegate, "networkSelectionCheckbox_" + model.chainName)
-                    const radioButton = findChild(delegate, "networkSelectionRadioButton_" + model.chainName)
-                    if (multiSelect) {
-                        verify(!!checkBox)
-                        verify(!radioButton)
-                    } else {
-                        verify(!checkBox)
-                        verify(!!radioButton)
-                    }
+                    verify(!!checkBox)
+                    compare(delegate.indicator.visible, controlUnderTest.selection.includes(model.chainId))
                 }
             }
         }
 
         function test_interactiveConfig() {
-            controlUnderTest.interactive = false
+            controlUnderTest.selectionAllowed = false
 
             for (var i = 0; i < controlUnderTest.model.count; i++) {
                 const model = controlUnderTest.model.get(i)
@@ -333,17 +321,16 @@ Item {
                 compare(selectionChangedSpy.count, 0)
             }
 
-            controlUnderTest.interactive = true
+            controlUnderTest.selectionAllowed = true
 
             for (var i = 0; i < controlUnderTest.model.count; i++) {
                 const model = controlUnderTest.model.get(i)
                 const delegate = findChild(controlUnderTest, "networkSelectorDelegate_" + model.chainName)
 
                 mouseClick(delegate)
-                compare(toggleNetworkSpy.count, i + 1)
-                // i == 0 re-clicks the auto-selected first chain: toggleNetwork
-                // fires but the selection content does not change
-                compare(selectionChangedSpy.count, i)
+                // The exclusive group does not toggle the already selected chain.
+                tryCompare(toggleNetworkSpy, "count", i)
+                tryCompare(selectionChangedSpy, "count", i)
             }
         }
     }

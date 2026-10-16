@@ -18,7 +18,7 @@ SplitView {
         ColumnLayout {
             anchors.fill: parent
             Label {
-                text: "Radio Buttons"
+                text: "Single selection"
                 font.bold: true
             }
 
@@ -36,7 +36,7 @@ SplitView {
             }
 
             Label {
-                text: "Checkboxes"
+                text: "Multi selection"
                 font.bold: true
             }
 
@@ -60,7 +60,7 @@ SplitView {
         id: controls
         SplitView.preferredWidth: 300
         SplitView.fillHeight: true
-        Column {
+        ColumnLayout {
             anchors.fill: parent
             Label {
                 text: "Simulate backend state"
@@ -68,12 +68,12 @@ SplitView {
             }
 
             Label {
-                text: "Radio buttons control"
+                text: "Single selection"
             }
             Repeater {
                 model: NetworksModel.flatNetworks
-                delegate: CheckBox {
-                    text: model.chainName
+                delegate: RadioButton {
+                    text: "%1 (%2)".arg(model.chainName).arg(model.chainId.toString())
                     checked: networkSelectorView.selection.includes(model.chainId)
                     onToggled: {
                         if (checked) {
@@ -84,17 +84,18 @@ SplitView {
             }
 
             Label {
-                text: "Checkboxes control"
+                Layout.topMargin: 16
+                text: "Multi selection"
             }
 
             Repeater {
                 model: NetworksModel.flatNetworks
                 delegate: CheckBox {
-                    text: model.chainName
+                    text: "%1 (%2)".arg(model.chainName).arg(model.chainId.toString())
                     checked: networkSelectorView2.selection.includes(model.chainId)
                     onToggled: {
                         if (checked) {
-                            const selection = networkSelectorView2.selection
+                            const selection = [...networkSelectorView2.selection]
                             selection.push(model.chainId)
                             networkSelectorView2.selection = selection
                         } else {

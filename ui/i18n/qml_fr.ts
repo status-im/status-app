@@ -12239,6 +12239,10 @@ chargement</translation>
         <source>Select networks</source>
         <translation>Sélectionner des réseaux</translation>
     </message>
+    <message>
+        <source>All Networks</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NetworkSelectItemDelegate</name>
@@ -12249,6 +12253,10 @@ chargement</translation>
 </context>
 <context>
     <name>NetworkSelectPopup</name>
+    <message>
+        <source>All Networks</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Manage networks</source>
         <translation>Gérer les réseaux</translation>

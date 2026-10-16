@@ -7,10 +7,8 @@ import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 import StatusQ.Components
 import StatusQ.Controls
-import StatusQ.Popups.Dialog
 
 import QtModelsToolkit
-import SortFilterProxyModel
 
 import utils
 
@@ -37,7 +35,7 @@ StatusDropdown {
 
     modal: false
 
-    padding: 4
+    padding: 8
     implicitWidth: 300
 
     // Keeps the single-selection invariant (exactly one selected network,
@@ -56,12 +54,12 @@ StatusDropdown {
         }
 
         function normalizeSelection() {
-            let selection = root.selection
-
             // an empty model (still loading or resetting) cannot validate the
             // selection; keep it untouched until rows are available again
             if (d.networksCount === 0)
                 return
+
+            let selection = root.selection
 
             if (!root.multiSelection) {
                 if (selection.length === 0)
@@ -94,12 +92,28 @@ StatusDropdown {
     contentItem: Loader {
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 4
+        anchors.margins: 8
         active: root.visible
         onLoaded: active = true // latch: keep content alive across close/reopen
         sourceComponent: ColumnLayout {
+            NetworkSelectItemDelegate {
+                Layout.fillWidth: true
+                visible: root.multiSelection
+                text: qsTr("All Networks")
+                icon.source: Assets.svg("network")
+                icon.color: Theme.palette.primaryColor1
+                checked: root.selection.length === d.networksCount
+                onToggled: {
+                    if (checked)
+                        d.commitSelection(ModelUtils.modelToFlatArray(root.flatNetworks, "chainId")) // select all
+                    else
+                        d.commitSelection([ModelUtils.get(root.flatNetworks, 0, "chainId")]) // select firsrt
+                }
+            }
+            Separator {
+                visible: root.multiSelection
+            }
             NetworkSelectorView {
-                id: scrollView
                 Layout.fillWidth: true
 
                 model: root.flatNetworks
@@ -108,8 +122,9 @@ StatusDropdown {
                 // mutations and keeps the popup -> view direction live
                 selection: [...root.selection]
                 disableChainsWithNoCommunitiesSupport: root.disableChainsWithNoCommunitiesSupport
-                interactive: root.selectionAllowed
+                selectionAllowed: root.selectionAllowed
                 multiSelection: root.multiSelection
+                selectOnlyClickedNetworkWhenAllSelected: true
                 showIndicator: root.showSelectionIndicator
                 showNewChainIcon: root.showNewChainIcon
 
@@ -120,12 +135,12 @@ StatusDropdown {
                 }
                 onSelectionChanged: d.commitSelection(selection)
             }
-
+            Separator {
+                visible: root.showManageNetworksButton
+            }
             StatusButton {
-                id: manageNetworksButton
                 visible: root.showManageNetworksButton
                 Layout.fillWidth: true
-                Layout.margins: 4
 
                 icon.name: "settings"
                 text: qsTr("Manage networks")
@@ -152,5 +167,11 @@ StatusDropdown {
                 }
             }
         }
+    }
+
+    component Separator: Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        color: Theme.palette.separator
     }
 }

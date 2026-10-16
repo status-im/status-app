@@ -13,7 +13,6 @@ import utils
 import AppLayouts.Wallet.popups
 import AppLayouts.Wallet.controls
 import AppLayouts.Wallet.views
-import AppLayouts.stores
 
 import Models
 
@@ -51,12 +50,13 @@ SplitView {
                         flatNetworks: d.activeNetworks
                         multiSelection: multiSelectionCheckbox.checked
                         showManageNetworksButton: showManageNetworksButtonCheckbox.checked
+                        selectionAllowed: allowSelection.checked
                         closePolicy: Popup.NoAutoClose
                         visible: true
                         Binding on selection {
                             value: d.selection
                         }
-                        onToggleNetwork: d.toggleNetworkEnabled(chainId)
+                        onToggleNetwork: (chainId, index) => d.toggleNetworkEnabled(chainId)
                     }
                 }
 
@@ -79,10 +79,11 @@ SplitView {
                         flatNetworks: d.activeNetworks
                         multiSelection: multiSelectionCheckbox.checked
                         showManageNetworksButton: showManageNetworksButtonCheckbox.checked
+                        selectionAllowed: allowSelection.checked
                         Binding on selection {
                             value: d.selection
                         }
-                        onToggleNetwork: d.toggleNetworkEnabled(chainId)
+                        onToggleNetwork: (chainId, index) => d.toggleNetworkEnabled(chainId)
                     }
                 }
             }
@@ -125,10 +126,10 @@ SplitView {
                     active: false
 
                     sourceComponent: NetworkSelectPopup {
-
                         directParent: singleSelectionPopupPlaceholder
                         flatNetworks: d.activeNetworks
                         selection: selectedEntry.available ? [selectedEntry.value] : []
+                        selectionAllowed: allowSelection.checked
                         onClosed: selectPopupLoader.active = false
 
                         onSelectionChanged: {
@@ -187,13 +188,13 @@ SplitView {
                                 Label { text: `ID <b>${model.chainId}</b>` }
                                 CheckBox {
                                     text: "Enabled"
-                                    checkState: model.isEnabled ? Qt.Checked : Qt.Unchecked
-                                    onToggled: d.setIsEnabled(model.chainId, checkState === Qt.Checked)
+                                    checked: model.isEnabled
+                                    onToggled: d.setIsEnabled(model.chainId, checked)
                                 }
                                 CheckBox {
                                     text: "Active"
-                                    checkState: model.isActive ? Qt.Checked : Qt.Unchecked
-                                    onToggled: d.setIsActive(model.chainId, checkState === Qt.Checked)
+                                    checked: model.isActive
+                                    onToggled: d.setIsActive(model.chainId, checked)
                                 }
                             }
                         }
@@ -231,10 +232,8 @@ SplitView {
             CheckBox {
                 id: allowSelection
                 Layout.margins: 5
-
+                checked: true
                 text: "Allow Selection"
-                checked: networkSelectPopup.selectionAllowed
-                onToggled: networkSelectPopup.selectionAllowed = checked
             }
         }
     }
@@ -291,7 +290,7 @@ SplitView {
 }
 
 // category: Popups
-
+// status: good
 // https://www.figma.com/file/FkFClTCYKf83RJWoifWgoX/Wallet-v2?node-id=13200-352357&t=jKciSCy3BVlrZmBs-0
 // https://www.figma.com/file/FkFClTCYKf83RJWoifWgoX/Wallet-v2?node-id=13185-350333&t=b2AclcJgxjXDL6Wl-0
 // https://www.figma.com/file/FkFClTCYKf83RJWoifWgoX/Wallet-v2?node-id=13187-359097&t=b2AclcJgxjXDL6Wl-0

@@ -28,7 +28,8 @@ StatusListView {
     property bool disableChainsWithNoCommunitiesSupport: false
     property bool showIndicator: true
     property bool multiSelection: false
-    property bool interactive: true
+    property bool selectOnlyClickedNetworkWhenAllSelected: false
+    property bool selectionAllowed: true
     property bool showNewChainIcon: false
 
     /**
@@ -51,34 +52,21 @@ StatusListView {
         required property var model
         required property int index
 
-        readonly property bool inSelection: root.selection.includes(model.chainId)
+        autoExclusive: !root.multiSelection
 
         objectName: "networkSelectorDelegate_" + model.chainName
-        height: 48
         width: ListView.view.width
-        enabled: !root.disableChainsWithNoCommunitiesSupport || model.communitiesSupported
-        title: model.chainName
-        iconUrl: Assets.svg(model.iconUrl)
+        text: model.chainName
+        icon.source: Assets.svg(model.iconUrl)
         showIndicator: root.showIndicator
-        multiSelection: root.multiSelection
-        interactive: root.interactive
+        interactive: root.selectionAllowed && (!root.disableChainsWithNoCommunitiesSupport || model.communitiesSupported)
         showNewIcon: root.showNewChainIcon && Constants.chains.newChains.indexOf(model.chainId) >= 0
 
-        checkState: inSelection ? (d.allSelected && root.interactive ? Qt.PartiallyChecked  : Qt.Checked) : Qt.Unchecked
-        nextCheckState: checkState
+        checked: root.selection.includes(model.chainId)
+
         onToggled: {
-            d.onToggled(checkState, model.chainId)
+            d.onToggled(checked, model.chainId)
             root.toggleNetwork(model.chainId, index)
-        }
-
-        Binding on checkState {
-            when: root.multiSelection && d.allSelected && root.interactive
-            value: Qt.PartiallyChecked
-            restoreMode: Binding.RestoreBindingOrValue
-        }
-
-        Binding on checkState {
-            value: inSelection ? (d.allSelected && root.interactive ? Qt.PartiallyChecked  : Qt.Checked) : Qt.Unchecked
         }
     }
 
@@ -92,11 +80,12 @@ StatusListView {
             d.networksCount]
         onCombinedPropertyChangedHandlerChanged: d.reprocessSelection()
 
-        readonly property bool allSelected: root.selection.length === d.networksCount
-
-        function onToggled(initialState, chainId) {
+        function onToggled(checked, chainId) {
             let selection = [...root.selection]
-            if (initialState === Qt.Unchecked && initialState !== Qt.PartiallyChecked) {
+            if (root.multiSelection && root.selectOnlyClickedNetworkWhenAllSelected
+                    && selection.length === d.networksCount) {
+                selection = [chainId]
+            } else if (checked) {
                 if (!root.multiSelection)
                     selection = []
 
@@ -109,12 +98,12 @@ StatusListView {
         }
 
         function reprocessSelection() {
-            let selection = root.selection
-
             // an empty model (still loading or resetting) cannot validate the
             // selection; keep it untouched until rows are available again
             if (d.networksCount === 0)
                 return
+
+            let selection = root.selection
 
             if (!root.multiSelection) {
                 // One and only one chain must be selected
