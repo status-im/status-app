@@ -61,6 +61,16 @@ set(_nim_args
   "--path:${STATUS_ROOT}/src/app/global"
   "-d:qrscanZxingLib=$<TARGET_FILE:ZXing>")
 
+# An x86_64 Qt kit on Apple Silicon: Storybook and ZXing build for x86_64
+# (CMAKE_OSX_ARCHITECTURES, set by the Makefile), so must the Nim archive —
+# as the app build does (Makefile, QT_ARCH != arm64).
+if (APPLE AND CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+  list(APPEND _nim_args
+    --cpu:amd64 --os:MacOSX
+    "--passC:-arch x86_64"
+    "--passL:-arch x86_64")
+endif()
+
 # seaqt locates Qt through pkg-config at Nim compile time: the Kit's own .pc
 # files, or on Windows prl-to-pc's generated tree plus its pkg-config wrapper
 # (as vendor/prl-to-pc/qt-pkgconfig.mk sets up for the app).
