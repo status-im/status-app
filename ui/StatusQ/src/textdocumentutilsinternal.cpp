@@ -117,6 +117,30 @@ void TextDocumentUtilsInternal::handleTripleBacktick(QQuickTextDocument* quickDo
     cursor.endEditBlock();
 }
 
+int TextDocumentUtilsInternal::previousGraphemeBoundary(QQuickTextDocument* quickDoc,
+                                                        int position) const
+{
+    if (!quickDoc)
+        return position;
+
+    QTextDocument* doc = quickDoc->textDocument();
+    if (!doc)
+        return position;
+
+    const int last = doc->characterCount() - 1; // last is the trailing block separator
+    position = qBound(0, position, last);
+
+    QTextCursor cursor(doc);
+    cursor.setPosition(position);
+    // PreviousCharacter moves by cursor position, which Qt places on grapheme
+    // boundaries - a whole emoji sequence counts as one step.
+    if (!cursor.movePosition(QTextCursor::PreviousCharacter))
+        return position;
+
+    // Stay inside the block: merging blocks is the text control's business.
+    return qMax(cursor.position(), cursor.block().position());
+}
+
 void TextDocumentUtilsInternal::deleteRange(QQuickTextDocument* quickDoc, int start, int end)
 {
     if (!quickDoc)

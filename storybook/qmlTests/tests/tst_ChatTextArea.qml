@@ -1304,6 +1304,142 @@ Item {
             compare(limitSpy.count, 1)
         }
 
+        // ── Backspace over emoji sequences ──────────────────────────────────────
+
+        // 👨‍👩‍👧 is 5 code points joined by ZWJ — 9 code units — but one grapheme cluster.
+        readonly property string zwjFamily: "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}"
+        readonly property string flag: "\u{1F1F5}\u{1F1F1}"        // regional indicator pair
+        readonly property string tonedThumb: "\u{1F44D}\u{1F3FD}"  // base + skin tone modifier
+
+        function backspaceAtEnd(text) {
+            control.text = text
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+            keyClick(Qt.Key_Backspace)
+        }
+
+        // Qt deletes backwards by code point, which would strip one component of a ZWJ
+        // sequence and leave a dangling joiner. The whole cluster must go at once.
+        function test_backspaceEmoji_removesZwjSequence() {
+            backspaceAtEnd("A" + zwjFamily)
+            compare(control.textWithMentions(), "A")
+        }
+
+        function test_backspaceEmoji_removesFlag() {
+            backspaceAtEnd("A" + flag)
+            compare(control.textWithMentions(), "A")
+        }
+
+        function test_backspaceEmoji_removesSkinToneModifier() {
+            backspaceAtEnd("A" + tonedThumb)
+            compare(control.textWithMentions(), "A")
+        }
+
+        // Single-unit content is untouched: it still falls through to native handling.
+        function test_backspaceEmoji_plainTextStillDeletesOneUnit() {
+            backspaceAtEnd("AB")
+            compare(control.textWithMentions(), "A")
+        }
+
+        // Forward Delete needs no handling of ours — it moves by cursor position, which Qt
+        // places on grapheme boundaries. Guards the behaviour we rely on.
+        function test_deleteEmoji_removesZwjSequenceNatively() {
+            control.text = zwjFamily + "A"
+            control.forceActiveFocus()
+            control.cursorPosition = 0
+            keyClick(Qt.Key_Delete)
+            compare(control.textWithMentions(), "A")
+        }
+
+        // A selection is deleted as a selection, cluster expansion must not interfere.
+        function test_backspaceEmoji_selectionUnaffected() {
+            control.text = "A" + zwjFamily + "B"
+            control.forceActiveFocus()
+            control.select(0, 1)
+            keyClick(Qt.Key_Backspace)
+            compare(control.textWithMentions(), zwjFamily + "B")
+        }
+
+        // Word-delete keeps its native behaviour (removes the whole preceding word).
+        function test_backspaceEmoji_ctrlBackspaceUnaffected() {
+            control.text = "hello world"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+            keyClick(Qt.Key_Backspace, Qt.ControlModifier)
+            compare(control.textWithMentions(), "hello ")
+        }
+
+        // ── Backspace over emoji: undo/redo ─────────────────────────────────────
+
+        // The interception takes the deletion out of Qt's native undo handling, so it has to
+        // still be one step: a single Ctrl+Z brings the whole sequence back, and the second
+        // one goes further back rather than finishing a half-restored emoji.
+        function test_backspaceEmoji_undoIsOneStep() {
+            control.text = "A" + zwjFamily
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Backspace)
+            compare(control.textWithMentions(), "A")
+
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "A" + zwjFamily)
+            compare(control.cursorPosition, control.length) // caret after the restored emoji
+
+            // Further undos must never expose a half-restored sequence (setting .text is
+            // not itself on the undo stack, so this one is a no-op).
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "A" + zwjFamily)
+        }
+
+        function test_backspaceEmoji_redoRemovesItAgain() {
+            control.text = "A" + zwjFamily
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Backspace)
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "A" + zwjFamily)
+
+            keySequence(StandardKey.Redo)
+            compare(control.textWithMentions(), "A")
+        }
+
+        // Pins how a run mixing native and intercepted deletions undoes, so the interaction
+        // with Qt's coalescing is recorded behaviour rather than an accident.
+        function test_backspaceEmoji_mixedRunUndoSteps() {
+            control.text = "A" + emoji + "B"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Backspace) // native: drops "B"
+            compare(control.textWithMentions(), "A" + emoji)
+            keyClick(Qt.Key_Backspace) // intercepted: drops the emoji
+            compare(control.textWithMentions(), "A")
+
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "A" + emoji)
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "A" + emoji + "B")
+        }
+
+        // Deleting an emoji that sits next to a mention still undoes as one step, so the
+        // cluster branch does not break the joinable edit the mention path relies on.
+        function test_backspaceEmoji_nextToMentionUndoesInOneStep() {
+            control.text = ""
+            control.forceActiveFocus()
+            control.insertMention(0, "@alice", "0xabc")
+            control.insert(control.length, zwjFamily)
+            const withBoth = control.textWithMentions()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Backspace)
+            verify(!control.textWithMentions().includes(zwjFamily), "emoji removed")
+
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), withBoth)
+        }
+
         // ── image emojis (Twemoji) ──────────────────────────────────────────────
 
         // 😎 is U+1F60E — a 2-unit surrogate pair in the document string.

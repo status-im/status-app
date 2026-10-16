@@ -32,6 +32,15 @@ public:
     // image-emoji modes. Non-image content is returned as-is.
     Q_INVOKABLE QString selectionText(QQuickTextDocument* document, int start, int end) const;
 
+    // Returns the position one grapheme cluster back from `position`, so a caller can
+    // delete an emoji sequence in one go. Qt's own cursor-position logic is used, the
+    // same one that already makes forward Delete and arrow keys cluster-aware, rather
+    // than a second implementation of the Unicode rules. Backspace needs it because
+    // QTextCursor::deletePreviousChar() steps back by a code point instead, splitting
+    // a ZWJ sequence and leaving a dangling joiner. Returns `position` unchanged at
+    // the start of a block, leaving block merging to the text control.
+    Q_INVOKABLE int previousGraphemeBoundary(QQuickTextDocument* document, int position) const;
+
     // Removes the characters in [start, end) as a single raw-cursor edit block.
     // Doing the deletion ourselves (instead of letting the text control delete the
     // character) produces a joinable undo command, so reactive edits triggered by it

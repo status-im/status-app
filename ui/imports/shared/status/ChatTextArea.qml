@@ -653,6 +653,24 @@ StatusTextArea {
             return
         }
 
+        // Backspace deletes by code point (QTextCursor::deletePreviousChar), so a ZWJ
+        // emoji sequence would come apart one component at a time and leave a dangling
+        // joiner. Delete needs no such help: it moves by cursor position, which Qt puts
+        // on grapheme boundaries. Only kicks in when the cluster is longer than one
+        // character, so plain text keeps falling through to native handling (and with it
+        // Qt's undo coalescing).
+        if (event.key === Qt.Key_Backspace && noSelection
+                && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))
+                && root.cursorPosition > 0) {
+            const clusterStart = TextDocumentUtils.previousGraphemeBoundary(
+                                   root.textDocument, root.cursorPosition)
+            if (root.cursorPosition - clusterStart > 1) {
+                event.accepted = true
+                root.remove(clusterStart, root.cursorPosition)
+                return
+            }
+        }
+
         // A deletion can move a mention into code (and trigger a demotion) only when it
         // removes a backtick or a mention. In that case perform it ourselves as a raw,
         // joinable edit so the reactive demotion folds into the same undo command (same

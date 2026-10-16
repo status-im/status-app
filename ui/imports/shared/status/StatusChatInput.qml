@@ -966,7 +966,6 @@ Control {
                         readonly property int extraHorizontalPadding: 12 // for the nav bar handle / scrollbar
 
                         characterLimit: root.messageLimitHard
-                        imageEmojis: true
                         asciiEmojiConversion: true
 
                         // Paddings are used only for left/right sides because
