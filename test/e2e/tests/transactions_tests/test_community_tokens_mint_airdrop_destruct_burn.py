@@ -18,17 +18,17 @@ from helpers.wallet_helper import (
     wallet_send_returning_user,
 )
 
-NFT_NAME = 'HoodiNFT'
-NFT_SYMBOL = 'HNFT'
-ASSET_NAME = 'HoodiAST'
-ASSET_SYMBOL = 'HAST'
+NFT_NAME = 'BaseNFT'
+NFT_SYMBOL = 'BNFT'
+ASSET_NAME = 'BaseAST'
+ASSET_SYMBOL = 'BAST'
 TOKEN_SUPPLY = '10'
 AIRDROP_ACCOUNT_NAME = 'Airdrop dest'
 
 
 @pytest.mark.transaction
 @pytest.mark.parametrize('network_name', [
-    pytest.param(WalletNetworkNaming.LAYER1_ETHEREUM_HOODI.value, id='hoodi'),
+    pytest.param(WalletNetworkNaming.LAYER2_BASE_SEPOLIA.value, id='base-sepolia'),
 ])
 def test_community_tokens_mint_airdrop_destruct_burn(main_window, user_account, network_name):
     user_account = wallet_send_returning_user()
@@ -56,7 +56,7 @@ def test_community_tokens_mint_airdrop_destruct_burn(main_window, user_account, 
             tokens_view,
             user_account.password,
             name=NFT_NAME,
-            description='Hoodi e2e collectible',
+            description='Base Sepolia e2e collectible',
             symbol=NFT_SYMBOL,
             supply=TOKEN_SUPPLY,
             network_name=network_name,
@@ -69,7 +69,7 @@ def test_community_tokens_mint_airdrop_destruct_burn(main_window, user_account, 
             tokens_view,
             user_account.password,
             name=ASSET_NAME,
-            description='Hoodi e2e asset',
+            description='Base Sepolia e2e asset',
             symbol=ASSET_SYMBOL,
             supply=TOKEN_SUPPLY,
             network_name=network_name,

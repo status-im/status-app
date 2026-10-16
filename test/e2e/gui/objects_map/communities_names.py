@@ -62,6 +62,7 @@ leave_Community_StatusMenuItem = {"checkable": False, "container": statusDesktop
 
 # Tool Bar
 mainWindow_statusToolBar_StatusToolBar = {"container": statusDesktop_mainWindow, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
+communitySettingsToolBarBackButton = {"container": mainWindow_statusToolBar_StatusToolBar, "objectName": "toolBarBackButton", "type": "StatusFlatButton", "visible": True}
 statusToolBar_chatToolbarMoreOptionsButton = {"container": mainWindow_statusToolBar_StatusToolBar, "objectName": "chatToolbarMoreOptionsButton", "type": "StatusFlatRoundButton", "visible": True}
 delete_or_leave_Channel_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "deleteOrLeaveMenuItem", "type": "StatusMenuItem", "visible": True}
 edit_Channel_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "editChannelMenuItem", "type": "StatusMenuItem", "visible": True}
@@ -206,7 +207,7 @@ editCommunityTokenShowFeesSwitch = {"checkable": True, "container": statusDeskto
 editCommunityTokenPreviewButton = {"container": statusDesktop_mainWindow, "objectName": "editCommunityTokenPreviewButton", "type": "StatusButton", "visible": True}
 communityTokenMintButton = {"container": statusDesktop_mainWindow, "objectName": "communityTokenMintButton", "type": "StatusButton", "visible": True}
 
-# Token details footer (MintTokensFooterPanel uses StatusFlatButton)
+# Token details footer
 sendOwnerTokenButton = {"container": statusDesktop_mainWindow, "objectName": "sendOwnerTokenButton", "type": "StatusFlatButton", "visible": True}
 airdropTokenButton = {"container": statusDesktop_mainWindow, "objectName": "airdropTokenButton", "type": "StatusFlatButton", "visible": True}
 remotelyDestructTokenButton = {"container": statusDesktop_mainWindow, "objectName": "remotelyDestructTokenButton", "type": "StatusFlatButton", "visible": True}

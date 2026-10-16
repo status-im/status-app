@@ -304,6 +304,7 @@ class MintedTokensView(QObject):
     def __init__(self):
         super().__init__(communities_names.mainWindow_MintedTokensView)
         self.collectible = QObject(communities_names.collectibleView_control)
+        self.back_button = Button(communities_names.communitySettingsToolBarBackButton)
 
     def _collectibles(self):
         return driver.findAllObjects(self.collectible.real_name)
@@ -360,6 +361,18 @@ class MintedTokensView(QObject):
                 return item
         return None
 
+    def _ensure_collectibles_list(self):
+        def list_ready() -> bool:
+            if self._collectibles():
+                return True
+            if self.back_button.is_visible:
+                self.back_button.click()
+            return False
+
+        assert driver.waitFor(list_ready, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), (
+            'Minted collectibles list did not appear'
+        )
+
     def _asset_by_title(self, title: str):
         for item in driver.findAllObjects(communities_names.mintedAssetListItem):
             if str(getattr(item, 'title', '')) == title:
@@ -404,9 +417,12 @@ class MintedTokensView(QObject):
 
     @allure.step('Open collectible {1}')
     def open_collectible(self, title: str) -> 'TokenDetailsView':
-        item = self._collectible_by_title(title)
-        assert item is not None, f'Collectible {title!r} not found in {self._collectible_titles()}'
-        QObject(item).click()
+        self._ensure_collectibles_list()
+        assert driver.waitFor(
+            lambda: self._collectible_by_title(title) is not None,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), f'Collectible {title!r} not found in {self._collectible_titles()}'
+        QObject(self._collectible_by_title(title)).click()
         return TokenDetailsView().wait_until_appears()
 
     @allure.step('Open owner token {1}')
@@ -574,7 +590,6 @@ class EditAirdropView(QObject):
         self.create_airdrop_button = Button(communities_names.createAirdropButton)
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        # Create airdrop stays disabled until recipients are added; wait for the To "+" instead.
         self.add_recipient_button.wait_until_appears(timeout_msec)
         return self
 
