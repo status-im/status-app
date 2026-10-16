@@ -84,8 +84,7 @@ Item {
                     chatTextView.font,
                     false /*formatUnclosedCodeFence*/,
                     true /*fullLineHeightEmojis*/,
-                    Theme.primaryTextFontSize /*emojiSizeOffset*/,
-                    Emoji.base)
+                    Theme.primaryTextFontSize /*emojiSizeOffset*/)
 
         // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
         onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
