@@ -13,6 +13,9 @@ import app/core/signal_handler
 import app/core/custom_urls/url_scheme_event
 import app/core/intake/pending_intake_slot
 import app/global/single_instance
+import app/global/qr_camera_frames
+import qtcamera/qml as qtcamera_qml
+import qrscan/qml as qrscan_qml
 
 when defined(ios):
   import app/core/services_pause_bridge
@@ -408,6 +411,9 @@ proc mainProc() =
     singletonInstance.engine.setRootContextProperty("keycardTestController", newQVariant(keycardTestControllerInstance))
 
   statusq_registerQmlTypes()
+  # Camera access/frames (NimQtCamera) and QR decoding (NimQrScan) QML modules.
+  qtcamera_qml.installOnEngine(singletonInstance.engine.vptr)
+  qrscan_qml.installOnEngine(singletonInstance.engine.vptr, cameraFrames())
 
   when defined(monitoring):
     statusq_registerMonitoringType()

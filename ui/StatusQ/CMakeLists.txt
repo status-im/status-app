@@ -33,7 +33,7 @@ endif()
 find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt6 COMPONENTS
-        Core CorePrivate Qml Gui GuiPrivate Quick QuickPrivate QuickLayoutsPrivate QuickControls2 WebChannel Svg Network REQUIRED)
+        Core CorePrivate Qml Gui GuiPrivate Quick QuickPrivate QuickLayoutsPrivate QuickControls2 WebChannel Svg Network Multimedia REQUIRED)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT ANDROID)
     find_package(Qt6 COMPONENTS DBus REQUIRED)
@@ -413,31 +413,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(MobileUI)
 
-# Build SCodes and ZXing as static deps so StatusQ can be shipped standalone.
-# SCodes defaults BUILD_SHARED_LIBS to ON when it is undefined.
-set(_statusq_build_shared_libs_was_defined FALSE)
-if(DEFINED BUILD_SHARED_LIBS)
-    set(_statusq_build_shared_libs_was_defined TRUE)
-    set(_statusq_build_shared_libs_backup "${BUILD_SHARED_LIBS}")
-endif()
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SCodes/ZXing as static dependencies" FORCE)
-
-FetchContent_Declare(
-  SCodes
-
-  GIT_REPOSITORY https://github.com/status-im/SCodes.git
-  GIT_TAG 2b46818ff46fd43f443ed80a056c01abcf927526
-    SOURCE_SUBDIR src
-)
-
-FetchContent_MakeAvailable(SCodes)
-
-if(_statusq_build_shared_libs_was_defined)
-    set(BUILD_SHARED_LIBS "${_statusq_build_shared_libs_backup}" CACHE BOOL "Restore original shared/static policy" FORCE)
-else()
-    unset(BUILD_SHARED_LIBS CACHE)
-endif()
-
 target_link_libraries(StatusQ PRIVATE
         Qt::Core
         Qt::Qml
@@ -447,10 +422,10 @@ target_link_libraries(StatusQ PRIVATE
         Qt::WebChannel
         Qt::Svg
         Qt::Network
+        Qt::Multimedia # audioutils (previously linked only transitively through SCodes)
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI
-        SCodes
         )
 
 if(NOT (IOS OR ANDROID))
@@ -463,22 +438,6 @@ if(NOT (IOS OR ANDROID))
         target_link_libraries(StatusQ PRIVATE Qt::WebEngineQuick)
         target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_QTWEBENGINE=1)
     endif()
-endif()
-
-if(TARGET SCodes)
-    set_target_properties(SCodes PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
-        CXX_STANDARD 17
-        CXX_STANDARD_REQUIRED ON
-    )
-endif()
-
-if(TARGET ZXing)
-    set_target_properties(ZXing PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
-        CXX_STANDARD 17
-        CXX_STANDARD_REQUIRED ON
-    )
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

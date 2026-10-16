@@ -1,10 +1,11 @@
 import QtQuick
 
 import QtMultimedia
-import com.scythestudio.scodes 1.0
 
 import StatusQ.Core.Utils as SQUtils
 
+// Camera preview for QR scanning. Qt only: decoding is done by the host, which
+// reads frames from `videoSink` and crops them as the preview shows them.
 Item {
     id: root
 
@@ -15,12 +16,18 @@ Item {
     readonly property real sourceRatio: videoOutput.sourceRect.width
                                         / videoOutput.sourceRect.height
 
-    readonly property string lastTag: d.lastTag
-
     readonly property alias contentRect: videoOutput.contentRect
 
-    required property int captureRectWidth
-    required property int captureRectHeight
+    // Frames of the running camera, for a frame tap / decoder.
+    readonly property var videoSink: videoOutput.videoSink
+
+    // How the preview lays out the video (VideoOutput.fillMode / mirrored),
+    // for a frame tap that crops each frame as shown.
+    readonly property int fillMode: videoOutput.fillMode
+    readonly property bool mirrored: videoOutput.mirrored
+
+    // The host gates the camera (visibility, app state).
+    property bool active: true
 
     readonly property var availableCameras: {
         return mediaDevices.videoInputs.map(d => ({
@@ -31,8 +38,6 @@ Item {
 
     readonly property bool cameraAvailable: camera.active
     readonly property string cameraError: camera.error === Camera.CameraError ? camera.errorString : ""
-
-    signal tagFound(string tag)
 
     function setCameraDevice(deviceId: string) {
         camera.cameraDevice = mediaDevices.videoInputs.find(
@@ -46,7 +51,6 @@ Item {
     QtObject {
         id: d
 
-        property string lastTag
         readonly property bool isFrontCamera: {
             // On desktop, cameras often report position as 0 (BackFace) or -1 (UnspecifiedPosition)
             // Default to mirroring (front camera behavior) on desktop
@@ -58,47 +62,25 @@ Item {
         }
     }
 
+    CaptureSession {
+        camera: Camera {
+            id: camera
 
-    SBarcodeScanner {
-        id: barcodeScanner
+            active: root.active
+            focusMode: Camera.FocusModeAutoNear
 
-        forwardVideoSink: videoOutput.videoSink
-        camera: camera
-        // visible is false when covered by a StackView page or an inactive StackLayout
-        // tab; keeping the pipeline running there burns a full core on frame decoding
-        scanning: root.visible
-
-        captureRect: captureRectangle
-
-        onCapturedChanged: (tag) => {
-            d.lastTag = tag
-            root.tagFound(tag)
+            Component.onDestruction: camera.active = false
         }
-    }
-
-    Camera {
-        id: camera
-
-        active: true
-        focusMode: Camera.FocusModeAutoNear
-
-        Component.onDestruction: camera.active = false
+        videoOutput: videoOutput
     }
 
     VideoOutput {
         id: videoOutput
 
+        objectName: "qrCaptureVideoOutput"
         anchors.fill: parent
         focus: visible
         mirrored: d.isFrontCamera
         fillMode: VideoOutput.PreserveAspectCrop
-    }
-
-    Rectangle {
-        id: captureRectangle
-        width: root.captureRectWidth
-        height: root.captureRectHeight
-        anchors.centerIn: parent
-        visible: false
     }
 }

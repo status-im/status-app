@@ -441,16 +441,6 @@ public class StatusQtActivity extends QtActivity {
         }
     }
 
-    // Static method to open app settings
-    public static void openAppSettings() {
-        if (sInstance != null) {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            Uri uri = Uri.fromParts("package", sInstance.getPackageName(), null);
-            intent.setData(uri);
-            sInstance.startActivity(intent);
-        }
-    }
-
     private static final String EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents";
 
     /**

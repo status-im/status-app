@@ -83,6 +83,11 @@ NIM_FLAGS=(
     --clang.linkerexe="$CC"
     --dynlibOverrideAll
     --nimcache:"$STATUS_DESKTOP"/nimcache
+    # nim-qrscan's ZXing (scripts/buildZXing.sh): linked into the Android .so;
+    # on iOS (static lib) only checked at compile time, Status.pro links it.
+    "-d:qrscanZxingLib=${ZXING_LIB:?}"
+    # The app links Qt's Darwin camera-permission plugin itself (qmake on iOS).
+    -d:qtcameraNoPermissionPlugin
 )
 
 if [ "$DEBUG" -eq 1 ]; then

@@ -536,24 +536,6 @@ void SystemUtilsInternal::downloadImageByUrl(
     });
 }
 
-void SystemUtilsInternal::openAppSettings()
-{
-#ifdef Q_OS_ANDROID
-    QJniObject::callStaticMethod<void>(
-        "app/status/mobile/StatusQtActivity",
-        "openAppSettings",
-        "()V"
-    );
-#elif defined(Q_OS_IOS)
-    // iOS implementation
-    QUrl url(QStringLiteral("app-settings:"));
-    QDesktopServices::openUrl(url);
-#else
-    // Desktop - we shouldn't be here
-    qWarning() << "openAppSettings not implemented for this platform";
-#endif
-}
-
 bool SystemUtilsInternal::isScreenReaderActive() const
 {
 #ifdef Q_OS_IOS

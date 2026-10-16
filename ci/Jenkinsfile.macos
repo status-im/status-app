@@ -130,7 +130,8 @@ pipeline {
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}/.cache"
     // Workaround for cmake 4.x dropping compatibility with cmake_minimum_required < 3.5
-    // Required by vendor/QR-Code-generator (scodes) until upstream bumps their CMakeLists.txt
+    // Added for SCodes (since removed); kept until a CI run confirms no other vendored
+    // CMake project still declares cmake_minimum_required < 3.5
     CMAKE_POLICY_VERSION_MINIMUM = 3.5
   }
 
