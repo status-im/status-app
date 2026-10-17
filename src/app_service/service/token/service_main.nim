@@ -436,14 +436,10 @@ proc getAllTokenLists*(self: Service): var seq[TokenListItem] =
 ## This is a very special function that should not be used anywhere else,
 ## it covers the backward compatibility with the old payment requests.
 ##
-## Itterates over all tokens for the given chain and returns the first token
-## that matches the symbol or name (cause some tokens have different symbols for EVM/BSC chains), case insensitive.
+## Returns the first token on the given chain that matches the symbol or name
+## (cause some tokens have different symbols for EVM/BSC chains), case insensitive.
 proc getTokenBySymbolOnChain*(self: Service, symbol: string, chainId: int): TokenItem =
-  let tokens = getTokensByChain(chainId)
-  for token in tokens:
-    if cmpIgnoreCase(token.symbol, symbol) == 0 or cmpIgnoreCase(token.name, symbol) == 0:
-      return token
-  return nil
+  return fetchTokenBySymbolOnChain(chainId, symbol)
 ################################################################################
 
 proc getTokenByKey*(self: Service, key: string): TokenItem =

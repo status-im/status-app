@@ -28,6 +28,10 @@ rpc(getTokenByChainAddress, "wallet"):
 rpc(getTokensByChain, "wallet"):
   chainId: int
 
+rpc(getTokenBySymbolOnChain, "wallet"):
+  chainId: int
+  symbol: string
+
 rpc(getTokensByKeys, "wallet"):
   keys: seq[string]
 
@@ -128,6 +132,18 @@ proc getTokensByChain*(resultOut: var JsonNode, chainId: int): string =
     return prepareResponse(resultOut, response)
   except Exception as e:
     warn "error getting tokens by chain id", err = e.msg
+    return e.msg
+
+
+## Gets the first token on the chain whose symbol or name matches `symbol` (case insensitive)
+## `resultOut` represents a json object that contains the token if found, or `nil`
+## returns the error message if any, or an empty string
+proc getTokenBySymbolOnChain*(resultOut: var JsonNode, chainId: int, symbol: string): string =
+  try:
+    let response = getTokenBySymbolOnChain(chainId, symbol)
+    return prepareResponse(resultOut, response)
+  except Exception as e:
+    warn "error getting token by symbol on chain", err = e.msg
     return e.msg
 
 
