@@ -1,4 +1,4 @@
-"""Static guard on the wakuext FFI seam.
+"""Static guard on the wakuext, wallet and accounts FFI seam.
 
 The app sends `{"method": "wakuext_<name>"}` to status-go, which resolves the
 method by name at runtime. Renaming or removing a `wakuext` method there breaks
@@ -18,6 +18,9 @@ status-go (the shipped pin) registers under the `wakuext` namespace.
 Name-existence only: a method that exists but changed its params is out of
 scope — the registered set is a superset of the truly-callable one.
 
+The `wallet` and `accounts` namespaces are checked the same way through forms
+1 and 3; the `.prefix` form is wakuext-only.
+
 Coverage is guarded from both ends: extracted names must resolve, and every
 occurrence of a private-RPC entry point must yield an argument the parser can
 classify — an unreadable one counts as unresolved and must be pinned in
@@ -27,6 +30,7 @@ composition idiom turns the gate red instead of shrinking coverage silently.
 from __future__ import annotations
 
 import os
+from collections import Counter
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -45,10 +49,16 @@ STATUS_GO_ROOT = APP_ROOT / "vendor" / "status-go"
 # status-go f9cc782a6 moved RPC services from services/ to pkg/services/.
 # Keep _mini_status_go and the wiring test on this same prefix.
 _GO_SERVICES_DIR = "pkg/services"
-_GO_API_RELPATHS = (
-    f"{_GO_SERVICES_DIR}/ext/api.go",
-    f"{_GO_SERVICES_DIR}/wakuv2ext/api.go",
-)
+# namespace -> (API source files, receiver type, service.go that registers it,
+# constructor its APIs() entry passes as Service)
+_NAMESPACES = {
+    "wakuext": (("ext/api.go", "wakuv2ext/api.go"), "PublicAPI",
+                "wakuv2ext/service.go", None),
+    "wallet": (("wallet/api.go",), "API", "wallet/service.go", "NewAPI"),
+    "accounts": (("accounts/accounts.go",), "API", "accounts/service.go",
+                 "AccountsAPI"),
+}
+_NEW_NAMESPACES = tuple(ns for ns in _NAMESPACES if ns != "wakuext")
 
 # Scan the whole tree so a call site in a new location (e.g. mobile/ios) can't
 # silently drop out; over-scanning only risks a false FAIL.
@@ -58,9 +68,16 @@ _APP_SRC_SUFFIXES = {".nim", ".java", ".kt", ".swift", ".m", ".mm", ".qml",
 _SCAN_SKIP_DIRS = {"vendor", ".git", "build", "node_modules", "result", ".cache",
                      ".claude"}
 
-_GO_METHOD_RE = re.compile(r"^func \(\w+ \*PublicAPI\) ([A-Z][A-Za-z0-9]*)\(", re.M)
-_LITERAL_RE = re.compile(r'"wakuext_([A-Za-z0-9_]+)"')
-_ANY_MENTION_RE = re.compile(r"wakuext_")
+_GO_METHOD_RES = {
+    ns: re.compile(rf"^func \(\w+ \*{recv}\) ([A-Z][A-Za-z0-9]*)\(", re.M)
+    for ns, (_, recv, _, _) in _NAMESPACES.items()
+}
+_LITERAL_RES = {ns: re.compile(rf'"{ns}_([A-Za-z0-9_]+)"') for ns in _NAMESPACES}
+# `wallet_`/`accounts_` are common identifier stems, so only a string that
+# starts with the namespace counts as a mention of the RPC name.
+_ANY_MENTION_RES = {"wakuext": re.compile(r"wakuext_")} | {
+    ns: re.compile(rf"[\"']{ns}_") for ns in _NEW_NAMESPACES
+}
 _PREFIX_SITE_RE = re.compile(r'"([A-Za-z0-9_]+)"\.prefix\b')
 # Deliberately strict about the helper's exact shape: if the definition is
 # reformatted this stops matching, the file's namespace becomes unresolvable,
@@ -99,30 +116,54 @@ _UNRESOLVED_ALLOWLIST: set[tuple[str, str]] = {
     ("src/status_go.nim", "inputJSON.cstring"),
 }
 
-# Call sites that name a method the shipped status-go genuinely does not
-# register, each pinned with its reason (cite the tracking issue once one
-# exists). The gate stays green on the known break and fails on any new one;
-# an entry whose method starts resolving is stale and fails until removed.
-_KNOWN_MISSING: dict[str, str] = {
+# Methods the shipped status-go genuinely does not register, each pinned to
+# the exact set of sites allowed to name it. A second site for the same method
+# is a new call to a method that does not exist, and fails; an entry whose
+# method starts resolving, or whose sites change, is stale and fails until
+# updated. Cite the tracking issue once one exists.
+_KNOWN_MISSING: dict[str, dict[str, frozenset[str]]] = {
+    "wallet": {
+        "checkConnected": frozenset({"src/backend/backend.nim (rpc macro)"}),
+        "getWalletToken": frozenset({"src/backend/backend.nim (rpc macro)"}),
+        "getCollectiblesByUniqueID": frozenset({"src/backend/collectibles.nim (rpc macro)"}),
+        "getCollectiblesByOwnerWithCursor": frozenset({"src/backend/collectibles.nim (rpc macro)"}),
+        "getCollectiblesByOwnerAndContractAddressWithCursor": frozenset({"src/backend/collectibles.nim (rpc macro)"}),
+    },
 }
 
-# Files where `wakuext_` appears in text beyond what the extractors account
-# for (comments, log strings), pinned with the exact expected excess so an
-# accepted mention in a file does not let a later composed call in the same
-# file pass unchecked.
-_MENTION_ALLOWLIST: dict[str, int] = {
+# (file, namespace) pairs where the namespace appears in text beyond what the
+# extractors account for (comments, log strings), pinned with the exact
+# expected excess so an accepted mention in a file does not let a later
+# composed call in the same file pass unchecked.
+_MENTION_ALLOWLIST: dict[tuple[str, str], int] = {
     # class doc comment names wakuext_sendChatMessage; the file's actual call
     # sites are clean literals and are checked
-    "mobile/android/qt6/src/app/status/mobile/ipc/NotificationReplyReceiver.java": 1,
+    ("mobile/android/qt6/src/app/status/mobile/ipc/NotificationReplyReceiver.java",
+     "wakuext"): 1,
     # error text names wakuext_peers; the actual call is checked via .prefix
-    "src/app_service/service/general/service.nim": 1,
+    ("src/app_service/service/general/service.nim", "wakuext"): 1,
 }
 
 # These floors detect parser rot; they are not coverage targets. Set at ~80%
 # of what each extraction class matches at baseline (21 / 146 / 16), so a
 # regex or walk change that drops a meaningful share of a class fails even if
 # every extracted name still resolves.
-_CLASS_FLOORS = {"literal": 16, "prefix": 120, "rpc_macro": 12}
+_CLASS_FLOORS = {
+    "wakuext": {"literal": 16, "prefix": 120, "rpc_macro": 12},
+    # measured on upstream/master 2969f8bf1d6: literal 16, rpc_macro 57
+    "wallet": {"literal": 13, "rpc_macro": 45},
+    # measured on upstream/master 2969f8bf1d6: literal 25, rpc_macro 7
+    "accounts": {"literal": 20, "rpc_macro": 5},
+}
+
+
+def _unexplained(checked: dict[str, list[str]], registered: set[str],
+                 known: dict[str, frozenset[str]]) -> dict[str, list[str]]:
+    """Names status-go does not register, unless the sites naming them are exactly
+    the pinned ones, once each. Counted, not set: a second declaration in a pinned
+    file is a new site with the same label."""
+    return {n: w for n, w in checked.items()
+            if n not in registered and Counter(w) != Counter(known.get(n, ()))}
 
 
 def _rpc_name(go_method: str) -> str:
@@ -130,12 +171,13 @@ def _rpc_name(go_method: str) -> str:
     return go_method[:1].lower() + go_method[1:]
 
 
-def registered_methods(status_go_root: Path = STATUS_GO_ROOT) -> set[str]:
+def registered_methods(status_go_root: Path = STATUS_GO_ROOT,
+                       ns: str = "wakuext") -> set[str]:
     names: set[str] = set()
-    for rel in _GO_API_RELPATHS:
-        f = status_go_root / rel
+    for rel in _NAMESPACES[ns][0]:
+        f = status_go_root / _GO_SERVICES_DIR / rel
         if f.is_file():
-            names.update(_rpc_name(m) for m in _GO_METHOD_RE.findall(f.read_text()))
+            names.update(_rpc_name(m) for m in _GO_METHOD_RES[ns].findall(f.read_text()))
     return names
 
 
@@ -171,7 +213,7 @@ def _classify_entry_arg(arg: str, file_ns: str | None):
     ("unresolved", None) when the form is not statically resolvable.
     """
     arg = arg.strip()
-    m = _LITERAL_RE.fullmatch(arg)
+    m = _LITERAL_RES["wakuext"].fullmatch(arg)
     if m:
         return "wakuext", m.group(1)
     m = _PREFIX_SITE_RE.fullmatch(arg)
@@ -194,39 +236,44 @@ def _first_line(text: str, start: int, limit: int = 60) -> str:
 def collect(app_root: Path = APP_ROOT):
     """Walk the app tree once and return everything the gates assert on:
 
-    checked        {method name: [where it is named]} — must all resolve
+    checked        {namespace: {method name: [where it is named]}} — must
+                   all resolve
     unresolved     {(relpath, site text)} — sites no extractor understands
-    mentions       {relpath: excess} — unaccounted `wakuext_` text per file
-    class_counts   {extraction class: matched site count}
+    mentions       {(relpath, namespace): excess} — unaccounted namespace text
+    class_counts   {namespace: {extraction class: matched site count}}
 
     Cached per root: the gate tests all walk the same real tree, and the
     result is read-only by convention.
     """
-    checked: dict[str, list[str]] = {}
+    checked: dict[str, dict[str, list[str]]] = {ns: {} for ns in _NAMESPACES}
     unresolved: set[tuple[str, str]] = set()
-    mentions: dict[str, int] = {}
-    class_counts = {"literal": 0, "prefix": 0, "rpc_macro": 0}
+    mentions: dict[tuple[str, str], int] = {}
+    class_counts = {ns: {"literal": 0, "prefix": 0, "rpc_macro": 0}
+                    for ns in _NAMESPACES}
 
-    def _add(name: str, where: str):
-        checked.setdefault(name, []).append(where)
+    def _add(ns: str, name: str, where: str):
+        checked[ns].setdefault(name, []).append(where)
 
     for path in _app_files(app_root):
         text = path.read_text(errors="ignore")
         rel = str(path.relative_to(app_root))
 
-        literals = _LITERAL_RE.findall(text)
-        for name in literals:
-            _add(name, f"{rel} (literal)")
-        class_counts["literal"] += len(literals)
-        accounted = len(literals) + len(_PREFIX_DEF_RE.findall(text))
+        accounted = {}
+        for lit_ns, lit_re in _LITERAL_RES.items():
+            literals = lit_re.findall(text)
+            for name in literals:
+                _add(lit_ns, name, f"{rel} (literal)")
+            class_counts[lit_ns]["literal"] += len(literals)
+            accounted[lit_ns] = len(literals)
+        accounted["wakuext"] += len(_PREFIX_DEF_RE.findall(text))
 
         if path.suffix == ".nim":
             ns = _nim_prefix_namespace(text)
             prefix_sites = _PREFIX_SITE_RE.findall(text)
             if ns == "wakuext":
                 for name in prefix_sites:
-                    _add(name, f"{rel} (.prefix)")
-                class_counts["prefix"] += len(prefix_sites)
+                    _add("wakuext", name, f"{rel} (.prefix)")
+                class_counts["wakuext"]["prefix"] += len(prefix_sites)
             elif ns is None and prefix_sites:
                 unresolved.update((rel, f'"{n}".prefix') for n in prefix_sites)
 
@@ -234,9 +281,9 @@ def collect(app_root: Path = APP_ROOT):
                 site = _RPC_MACRO_ANCHORED_RE.match(text, token.start(1))
                 if site is None:
                     unresolved.add((rel, _first_line(text, token.start(1))))
-                elif site.group(2) == "wakuext":
-                    _add(site.group(1), f"{rel} (rpc macro)")
-                    class_counts["rpc_macro"] += 1
+                elif site.group(2) in _NAMESPACES:
+                    _add(site.group(2), site.group(1), f"{rel} (rpc macro)")
+                    class_counts[site.group(2)]["rpc_macro"] += 1
 
             for token in _ENTRY_TOKEN_RE.finditer(text):
                 arg_match = _ENTRY_ARG_ANCHORED_RE.match(text, token.start())
@@ -247,9 +294,10 @@ def collect(app_root: Path = APP_ROOT):
                 if kind == "unresolved":
                     unresolved.add((rel, arg_match.group(1).strip()))
 
-        excess = len(_ANY_MENTION_RE.findall(text)) - accounted
-        if excess > 0:
-            mentions[rel] = excess
+        for mention_ns, mention_re in _ANY_MENTION_RES.items():
+            excess = len(mention_re.findall(text)) - accounted[mention_ns]
+            if excess > 0:
+                mentions[(rel, mention_ns)] = excess
 
     return checked, unresolved, mentions, class_counts
 
@@ -268,34 +316,60 @@ def test_wakuext_namespace_wiring():
     )
     assert re.search(r'Namespace:\s*"wakuext"', svc.read_text()), (
         'wakuv2ext no longer registers the "wakuext" namespace — find where '
-        "the namespace moved and update _GO_API_RELPATHS"
+        "the namespace moved and update _NAMESPACES"
     )
 
 
 @pytest.mark.gate
-def test_wakuext_call_sites_resolve():
-    registered = registered_methods()
+@pytest.mark.parametrize("ns", _NEW_NAMESPACES)
+def test_namespace_registered(ns):
+    _, recv, service_rel, ctor = _NAMESPACES[ns]
+    svc = STATUS_GO_ROOT / _GO_SERVICES_DIR / service_rel
+    assert svc.is_file(), f"{svc} missing — did the layout move?"
+    assert re.search(rf'Namespace:\s*"{ns}",[^}}]*?Service:\s*(?:s\.)?{ctor}\(',
+                     svc.read_text()), (
+        f'{service_rel} no longer registers "{ns}" with {ctor}() — find what '
+        f"serves the namespace now and update _NAMESPACES"
+    )
+    pkg = svc.parent
+    assert any(re.search(rf"^func (?:\([^)]*\) )?{ctor}\([^)]*\) \*{recv}\b",
+                         f.read_text(), re.M) for f in pkg.glob("*.go")), (
+        f"{ctor}() no longer returns *{recv} — the receiver in _NAMESPACES "
+        f"is wrong for {ns}"
+    )
+
+
+@pytest.mark.gate
+@pytest.mark.parametrize("ns", _NAMESPACES)
+def test_call_sites_resolve(ns):
+    registered = registered_methods(ns=ns)
     assert registered, (
-        f"No wakuext methods parsed from {STATUS_GO_ROOT} — is the status-go "
+        f"No {ns} methods parsed from {STATUS_GO_ROOT} — is the status-go "
         f"submodule checked out?"
     )
-    checked, _, _, _ = collect()
+    checked = collect()[0][ns]
     assert checked, (
-        f"No wakuext call sites found under {APP_ROOT} — this would silently "
+        f"No {ns} call sites found under {APP_ROOT} — this would silently "
         f"pass, failing loudly instead"
     )
-    missing = {n: w for n, w in checked.items()
-               if n not in registered and n not in _KNOWN_MISSING}
+    known = _KNOWN_MISSING.get(ns, {})
+    missing = _unexplained(checked, registered, known)
     assert not missing, (
-        "app names wakuext methods that the shipped status-go does not register "
+        f"app names {ns} methods that the shipped status-go does not register "
         "(runtime 'method not found'):\n"
-        + "\n".join(f"  wakuext_{n}  ← {', '.join(sorted(set(w)))}"
+        + "\n".join(f"  {ns}_{n}  ← {', '.join(sorted(set(w)))}"
                     for n, w in sorted(missing.items()))
     )
-    healed = {n for n in _KNOWN_MISSING if n in registered or n not in checked}
+    healed = {n for n in known if n in registered or n not in checked}
     assert not healed, (
         "stale _KNOWN_MISSING entries (method now registered, or the app call "
         "is gone) — delete them: " + ", ".join(sorted(healed))
+    )
+    moved = {n for n, sites in known.items()
+             if n in checked and n not in registered and set(checked[n]) < sites}
+    assert not moved, (
+        "stale _KNOWN_MISSING sites (a pinned site no longer names the method) "
+        "— update them: " + ", ".join(sorted(moved))
     )
 
 
@@ -313,30 +387,31 @@ def test_every_entry_arg_is_classified():
         "stale _UNRESOLVED_ALLOWLIST entries (site changed or removed) — "
         "delete them:\n" + "\n".join(f"  {f}: {a}" for f, a in sorted(stale))
     )
-    wrong_mentions = {f: n for f, n in mentions.items()
-                      if _MENTION_ALLOWLIST.get(f) != n}
+    wrong_mentions = {k: n for k, n in mentions.items()
+                      if _MENTION_ALLOWLIST.get(k) != n}
     assert not wrong_mentions, (
-        "files mention wakuext_ beyond what the extractors account for "
+        "files mention a namespace beyond what the extractors account for "
         "(comment? log string? new idiom?) — check each, then extend the "
         "parser or pin the exact excess in _MENTION_ALLOWLIST:\n  "
-        + "\n  ".join(f"{f}: excess {n} (pinned: {_MENTION_ALLOWLIST.get(f)})"
-                      for f, n in sorted(wrong_mentions.items()))
+        + "\n  ".join(f"{f} [{ns}]: excess {n} (pinned: {_MENTION_ALLOWLIST.get((f, ns))})"
+                      for (f, ns), n in sorted(wrong_mentions.items()))
     )
     stale_mentions = set(_MENTION_ALLOWLIST) - set(mentions)
     assert not stale_mentions, (
         "stale _MENTION_ALLOWLIST entries — delete them:\n  "
-        + "\n  ".join(sorted(stale_mentions))
+        + "\n  ".join(f"{f} [{ns}]" for f, ns in sorted(stale_mentions))
     )
 
 
 @pytest.mark.gate
-def test_extraction_floors():
-    _, _, _, counts = collect()
-    low = {c: (counts[c], floor) for c, floor in _CLASS_FLOORS.items()
+@pytest.mark.parametrize("ns", _NAMESPACES)
+def test_extraction_floors(ns):
+    counts = collect()[3][ns]
+    low = {c: (counts[c], floor) for c, floor in _CLASS_FLOORS[ns].items()
            if counts[c] < floor}
     assert not low, (
         "an extraction class matches far fewer sites than reality — parser "
-        "rot, not coverage change: "
+        f"rot, not coverage change ({ns}): "
         + ", ".join(f"{c}={n} (floor {f})" for c, (n, f) in sorted(low.items()))
     )
 
@@ -359,19 +434,21 @@ def _write(root: Path, rel: str, text: str):
     p.write_text(text)
 
 
-def _mini_status_go(tmp_path: Path, methods=("KeptMethod",)) -> Path:
+def _mini_status_go(tmp_path: Path, methods=("KeptMethod",), ns="wakuext") -> Path:
     go_root = tmp_path / "status-go"
-    ext = "\n".join(f"func (api *PublicAPI) {m}(ctx context.Context) {{}}" for m in methods)
-    _write(go_root, f"{_GO_SERVICES_DIR}/ext/api.go", ext + "\n")
-    _write(go_root, f"{_GO_SERVICES_DIR}/wakuv2ext/api.go",
-           "type PublicAPI struct {\n\t*ext.PublicAPI\n\tservice *Service\n}\n")
-    _write(go_root, f"{_GO_SERVICES_DIR}/wakuv2ext/service.go", 'Namespace: "wakuext",\n')
+    api_rels, recv, _, _ = _NAMESPACES[ns]
+    api = "\n".join(f"func (api *{recv}) {m}(ctx context.Context) {{}}" for m in methods)
+    _write(go_root, f"{_GO_SERVICES_DIR}/{api_rels[0]}", api + "\n")
+    if ns == "wakuext":
+        _write(go_root, f"{_GO_SERVICES_DIR}/wakuv2ext/api.go",
+               "type PublicAPI struct {\n\t*ext.PublicAPI\n\tservice *Service\n}\n")
+        _write(go_root, f"{_GO_SERVICES_DIR}/wakuv2ext/service.go", 'Namespace: "wakuext",\n')
     return go_root
 
 
-def _missing(app_root: Path, go_root: Path) -> set[str]:
-    checked, _, _, _ = collect(app_root)
-    return {n for n in checked if n not in registered_methods(go_root)}
+def _missing(app_root: Path, go_root: Path, ns: str = "wakuext") -> set[str]:
+    checked = collect(app_root)[0][ns]
+    return {n for n in checked if n not in registered_methods(go_root, ns)}
 
 
 def _unresolved(app_root: Path) -> set[tuple[str, str]]:
@@ -382,6 +459,36 @@ def test_selftest_literal_site_goes_red(tmp_path):
     _write(tmp_path / "app", "src/thing.qml", 'call("wakuext_droppedMethod")\n')
     go = _mini_status_go(tmp_path)
     assert _missing(tmp_path / "app", go) == {"droppedMethod"}
+
+
+@pytest.mark.parametrize("ns", _NEW_NAMESPACES)
+def test_selftest_namespace_site_goes_red(tmp_path, ns):
+    app = tmp_path / "app"
+    _write(app, "src/backend/backend.nim",
+           f'rpc(droppedRpc, "{ns}"):\n  discard\n'
+           f'rpc(keptMethod, "{ns}"):\n  discard\n'
+           f'let r = callPrivateRPC("{ns}_droppedLiteral", payload)\n'
+           f'let ok = callPrivateRPC("{ns}_keptMethod", payload)\n')
+    go = _mini_status_go(tmp_path, methods=("KeptMethod",), ns=ns)
+    assert _missing(app, go, ns) == {"droppedRpc", "droppedLiteral"}
+
+
+def test_selftest_known_missing_second_site_goes_red(tmp_path):
+    known = _KNOWN_MISSING["wallet"]
+    go = _mini_status_go(tmp_path, ns="wallet")
+    registered = registered_methods(go, "wallet")
+    pinned = tmp_path / "pinned"
+    _write(pinned, "src/backend/backend.nim", 'rpc(checkConnected, "wallet"):\n  discard\n')
+    assert not _unexplained(collect(pinned)[0]["wallet"], registered, known)
+    second = tmp_path / "second"
+    _write(second, "src/backend/backend.nim", 'rpc(checkConnected, "wallet"):\n  discard\n')
+    _write(second, "src/backend/other.nim", 'rpc(checkConnected, "wallet"):\n  discard\n')
+    assert set(_unexplained(collect(second)[0]["wallet"], registered, known)) == {"checkConnected"}
+    twice = tmp_path / "twice"
+    _write(twice, "src/backend/backend.nim",
+           'rpc(checkConnected, "wallet"):\n  discard\n'
+           'rpc(checkConnected, "wallet"):\n  discard\n')
+    assert set(_unexplained(collect(twice)[0]["wallet"], registered, known)) == {"checkConnected"}
 
 
 def test_selftest_prefix_site_goes_red(tmp_path):
@@ -489,4 +596,4 @@ def test_selftest_mention_excess_is_counted_per_file(tmp_path):
            "// replies go through wakuext_sendChatMessage\n"
            'String method = "wakuext_" + dynamicName;\n')
     _, _, mentions, _ = collect(app)
-    assert mentions == {"src/Replies.java": 2}
+    assert mentions == {("src/Replies.java", "wakuext"): 2}
