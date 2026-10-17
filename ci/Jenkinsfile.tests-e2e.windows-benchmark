@@ -123,6 +123,9 @@ pipeline {
 
     /* Forces QT to use OpenGL for rendering instead of default Direct3D 11 */
     QSG_RHI_BACKEND = 'opengl'
+
+    /* Tests that restore profiles from `ext/user_data` require `USER_DATA_PASSWORD` */
+    USER_DATA_PASSWORD = '1111111111'
   }
 
 

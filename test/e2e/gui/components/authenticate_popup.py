@@ -22,7 +22,7 @@ class AuthenticatePopup(QObject):
         self._password_text_edit.wait_until_appears(timeout_msec)
         return self
 
-    @allure.step('Authenticate actions with password {0}')
+    @allure.step('Authenticate actions with password')
     def authenticate(self, password: str):
         self._password_text_edit.set_text_property(password)
         # TODO https://github.com/status-im/status-app/issues/15345

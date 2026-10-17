@@ -135,6 +135,8 @@ pipeline {
     TESTRAIL_RUN_NAME = "${params.TESTRAIL_RUN_NAME}"
     LOG_LEVEL =         "${params.LOG_LEVEL}"
 
+    /* Tests that restore profiles from `ext/user_data` require `USER_DATA_PASSWORD` */
+    USER_DATA_PASSWORD = '1111111111'
   }
 
   stages {

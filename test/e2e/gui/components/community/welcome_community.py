@@ -15,7 +15,7 @@ class CommunityJoinAuthenticatePopup(AuthenticatePopup):
         super().__init__()
         self._submit_button = Button(names.submit_shared_addresses_to_join_StatusButton)
 
-    @allure.step('Authenticate and submit the join request with password {0}')
+    @allure.step('Authenticate and submit the join request with password')
     def authenticate(self, password: str):
         super().authenticate(password)
         self._submit_button.click()

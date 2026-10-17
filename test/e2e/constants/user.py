@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -33,15 +34,48 @@ class ReturningUser(UserAccount):
         )
 
 
-user_account_one = UserAccount('community_owner', '1111111111', [None], None)
-user_account_two = UserAccount('community_member', '1111111111', [None], None)
+def user_data_password() -> str:
+    password = (os.getenv('USER_DATA_PASSWORD') or '').strip()
+    if not password:
+        raise RuntimeError(
+            'USER_DATA_PASSWORD is not set. '
+            'It is the login password for profiles in ext/user_data.'
+        )
+    return password
 
-community_member = UserAccount('member', '1111111111', [None], None)
 
-wallet_load = UserAccount('wallet_load', '1111111111', [None], None)
-wallet_load_alex = UserAccount('wallet_load_alex', '1111111111', [None], None)
-funds = UserAccount('funds', '1111111111', [None], '0x44ddd47a0c7681a5b0fa080a56cbb7701db4bb43')
-status_community_member = UserAccount('status_community_member', '1111111111', [None], None)
+class PrebuiltUser(UserAccount):
+    """Profile restored from ext/user_data. Password comes from USER_DATA_PASSWORD."""
 
-message_sync_user = UserAccount('message_sync_user', '1111111111', [None], None)
-message_sync_contact = UserAccount('message_sync_contact', '1111111111', [None], None)
+    def __init__(self, name: str, status_address: Optional[str] = None):
+        super().__init__(
+            name=name,
+            password='',
+            seed_phrase=[None],
+            status_address=status_address,
+        )
+
+    @property
+    def password(self) -> str:
+        return user_data_password()
+
+    @password.setter
+    def password(self, value: str):
+        return
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(name={self.name!r}, status_address={self.status_address!r})'
+
+
+user_account_one = PrebuiltUser('community_owner')
+user_account_two = PrebuiltUser('community_member')
+
+community_member = PrebuiltUser('member')
+
+wallet_load = PrebuiltUser('wallet_load')
+wallet_load_alex = PrebuiltUser('wallet_load_alex')
+funds = PrebuiltUser('funds', '0x44ddd47a0c7681a5b0fa080a56cbb7701db4bb43')
+status_community_member = PrebuiltUser('status_community_member')
+
+message_sync_user = PrebuiltUser('message_sync_user')
+message_sync_contact = PrebuiltUser('message_sync_contact')

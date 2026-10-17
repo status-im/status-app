@@ -726,9 +726,7 @@ class ReturningLoginView(QObject):
     @allure.step('Log in with password')
     def log_in_with_password(self, password: str):
         self.login_password_input.wait_until_appears()
-        self.login_password_input.click()
-        self.login_password_input.clear()
-        self.login_password_input.type_text(password)
+        self.login_password_input.set_text_property(password)
         self.login_button.click()
         return SplashScreen()
 

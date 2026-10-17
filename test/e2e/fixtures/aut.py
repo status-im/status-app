@@ -87,6 +87,9 @@ def user_account(request) -> UserAccount:
         if request.param is FRESH_USER_ACCOUNT or request.param is None:
             return constants.user.RandomUser()
         assert isinstance(request.param, UserAccount)
+        assert request.param.password, (
+            'USER_DATA_PASSWORD is not set for the prebuilt user profile'
+        )
         return request.param
     return constants.user.RandomUser()
 

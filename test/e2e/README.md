@@ -12,6 +12,9 @@ Pick your platform below and follow the steps in order.
 2. **Get a Status app** — CI build or local dev build (see [Which app to use](#which-app-to-use)).
 3. **Install Squish** — required on all platforms ([Qt Squish](https://www.qt.io/squish)).
 
+Tests that restore profiles from `ext/user_data` require `USER_DATA_PASSWORD`.
+Set it in the terminal or pytest run configuration; CI sets it in Jenkinsfile environment.
+
 ---
 
 ## Linux
