@@ -194,8 +194,8 @@ pipeline {
           parallel {
             stage('Upload') {
               steps { script {
-                env.PKG_URL = s5cmd.upload(env.STATUS_CLIENT_DMG)
-                descLinks.Dmg = env.PKG_URL
+                env.DMG_URL = s5cmd.upload(env.STATUS_CLIENT_DMG)
+                descLinks.Dmg = env.DMG_URL
               } }
             }
             stage('Archive') {
@@ -277,7 +277,7 @@ pipeline {
               steps { script {
                 def comment = "status-desktop PR build ${env.VERSION} ${git.commit(8)}"
                 env.DIAWI_URL = status.uploadToDiawi(env.STATUS_IOS_APP_ARTIFACT, comment)
-                descLinks.Ipa = env.DIAWI_URL
+                descLinks.Diawi = env.DIAWI_URL
               } }
             }
             stage('Upload to S3') {
@@ -298,8 +298,14 @@ pipeline {
 
   post {
     always  { script { jenkins.setBuildDesc(descLinks) } }
-    success { script { github.notifyPR(true) } }
-    failure { script { github.notifyPR(false) } }
+    success { script {
+      env.PLATFORM = 'MacOS / iOS'
+      github.notifyPR(true)
+    } }
+    failure { script {
+      env.PLATFORM = 'MacOS / iOS'
+      github.notifyPR(false)
+    } }
     cleanup {
       cleanWs(disableDeferredWipeout: true)
       dir(env.WORKSPACE_TMP) { deleteDir() }
