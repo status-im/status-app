@@ -306,6 +306,7 @@ endif
 NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/vendor/nim-sds
 export NIM_SDS_SOURCE_DIR
 NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
+export NIMSDS_LIBDIR
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 ifeq ($(mkspecs),win32)
  # Nim invokes native clang.exe outside the MSYS shell. Pass the import library

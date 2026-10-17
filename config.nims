@@ -25,7 +25,8 @@ if hostOS == "macosx":
   # path), which the linker mis-parses — it consumes the next -rpath flag as its
   # argument and leaves a real path dangling as an input file
   # ("ld: file cannot be mmap()ed"). Only emit the flag when the dir is non-empty.
-  for rpathDir in [getEnv("QT_LIBDIR"), getEnv("STATUSGO_LIBDIR"), getEnv("STATUSKEYCARD_QT_LIBDIR")]:
+  for rpathDir in [getEnv("QT_LIBDIR"), getEnv("STATUSGO_LIBDIR"), getEnv("NIMSDS_LIBDIR"),
+                  getEnv("STATUSKEYCARD_QT_LIBDIR")]:
     if rpathDir.len > 0:
       switch("passL", "-rpath " & rpathDir)
   let statusqInstallPath = getEnv("STATUSQ_INSTALL_PATH")
