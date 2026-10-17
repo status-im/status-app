@@ -1,91 +1,47 @@
 const noGasErrorCode = "WR-002"
 
-# This method will group the account assets by symbol (in case of communiy, the token address)
-proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
-  var accountAddresses: seq[string] = @[]
-  var groupedAssets: seq[AssetGroupItem] = @[]
+proc applyAccountsBalances(self: Service, resultObj: JsonNode) =
+  var grouped: GroupedBalances
   defer:
-    let timestamp = getTime().toUnix()
     self.events.emit(SIGNAL_WALLET_ACCOUNT_TOKENS_REBUILT, TokensPerAccountArgs(
-      accountAddresses:accountAddresses,
-      assets: groupedAssets,
-      timestamp: timestamp
+      accountAddresses: grouped.accounts,
+      assets: grouped.assets,
+      timestamp: getTime().toUnix()
     ))
 
   try:
-    let responseObj = response.parseJson
-    var resultObj: JsonNode
-    discard responseObj.getProp("result", resultObj)
+    # Groups the account assets by crossChainId (or tokenKey if crossChainId is empty)
+    grouped = groupAccountBalances(
+      self.groupedAssets,
+      resultObj,
+      proc(key: string): TokenItem = self.tokenService.getTokenByKey(key),
+      self.tokenService.areTokensOfInterestLoaded(),
+      self.pendingBalances
+    )
+    for tokenKey in grouped.unknownTokenKeys:
+      warn "error: ", procName="applyAccountsBalances", errName="received balance for an unknown token", tokenKey
+    # set assetsLoading to false once the tokens are loaded
+    for accountAddress in grouped.accounts:
+      self.updateAssetsLoadingState(accountAddress, false)
 
-    var groupedAssetsBalances: Table[string, AssetGroupItem] # [crossChainId (or tokenKey if crossChainId is empty), AssetGroupItem]
-    # add current assets to the groupedAssetsBalances first
-    for asset in self.groupedAssets:
-      if not groupedAssetsBalances.hasKey(asset.key):
-        groupedAssetsBalances[asset.key] = asset
-      else:
-        groupedAssetsBalances[asset.key].balancesPerAccount.add(asset.balancesPerAccount)
-
-    var allTokensHaveError: bool = true
-    if resultObj.kind == JObject:
-      for accountAddress, balanceDetailsObj in resultObj:
-        accountAddresses.add(accountAddress)
-
-        # Delete all existing entries for the account for whom assets were requested,
-        # for a new account the balances per address per chain will simply be appended later
-        var assetsToBeDeleted: seq[string] = @[]
-        for _, asset in groupedAssetsBalances:
-          asset.balancesPerAccount = asset.balancesPerAccount.filter(balanceItem => balanceItem.account != accountAddress)
-          if asset.balancesPerAccount.len == 0:
-            assetsToBeDeleted.add(asset.key)
-
-        for a in assetsToBeDeleted:
-          groupedAssetsBalances.del(a)
-
-        if balanceDetailsObj.kind == JArray:
-          for balanceDetail in balanceDetailsObj.getElems():
-            let tokenItem = createTokenItem(TokenDto(
-              address: balanceDetail{"tokenAddress"}.getStr,
-              chainId: balanceDetail{"tokenChainId"}.getInt
-            ))
-
-            let token = self.tokenService.getTokenByKey(tokenItem.key)
-            if token.isNil:
-              warn "error: ", procName="onAllTokensBuilt", errName="received balance for an unknown token", tokenKey=tokenItem.key
-              continue
-
-            # Expecting "<nil>" values comming from status-go when the entry is nil, but with new format it should never be nil
-            var rawBalance: Uint256 = u256(0)
-            let rawBalanceStr = balanceDetail{"rawBalance"}.getStr
-            if not rawBalanceStr.contains("nil"):
-              rawBalance = rawBalanceStr.parse(Uint256)
-
-            let hasError = balanceDetail{"hasError"}.getBool
-            if not hasError:
-              allTokensHaveError = false
-
-            let groupKey = token.groupKey
-            if not groupedAssetsBalances.hasKey(groupKey):
-              groupedAssetsBalances[groupKey] = AssetGroupItem(key: groupKey)
-
-            groupedAssetsBalances[groupKey].balancesPerAccount.add(BalanceItem(
-              account: accountAddress,
-              groupKey: groupKey,
-              tokenKey: token.key,
-              tokenAddress: token.address,
-              chainId: token.chainId,
-              balance: rawBalance,
-              loading: hasError
-            ))
-
-        # set assetsLoading to false once the tokens are loaded
-        self.updateAssetsLoadingState(accountAddress, false)
-
-    groupedAssets = toSeq(groupedAssetsBalances.values)
-    self.groupedAssets = groupedAssets
-    if not allTokensHaveError:
+    self.groupedAssets = grouped.assets
+    if not grouped.allTokensHaveError:
       self.hasBalanceCache = true
   except Exception as e:
+    error "error: ", procName="applyAccountsBalances", errName = e.name, errDesription = e.msg
+
+proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
+  var resultObj: JsonNode
+  try:
+    discard response.parseJson.getProp("result", resultObj)
+  except Exception as e:
     error "error: ", procName="onAllTokensBuilt", errName = e.name, errDesription = e.msg
+  self.applyAccountsBalances(resultObj)
+
+proc applyPendingBalances(self: Service) =
+  if not self.pendingBalances.hasPending or not self.tokenService.areTokensOfInterestLoaded():
+    return
+  self.applyAccountsBalances(self.pendingBalances.takeAll())
 
 proc buildAllTokensInternal(self: Service, accounts: seq[string], forceRefresh: bool) =
   if not main_constants.WALLET_ENABLED or

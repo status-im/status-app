@@ -82,3 +82,23 @@ suite "refresh generation — completion":
     let c = g.onCompletion(g.currentGeneration)  # currentGeneration == 1 < 2
     check c.action == rcaDropAndRefire
     check c.gen == 2
+
+suite "refresh generation — stale result before any apply":
+  test "a stale completion is applied and re-fires when nothing was applied yet":
+    var g = initRefreshGenerationState()
+    let r1 = g.requestRefresh()         # gen 1
+    discard g.requestRefresh()          # gen 2, coalesced
+    let c1 = g.onCompletion(r1.gen, applyStale = true)
+    check c1.action == rcaApplyAndRefire
+    check c1.gen == 2                    # still re-fires with the newest generation
+    check g.inFlight
+    let c2 = g.onCompletion(c1.gen, applyStale = true)
+    check c2.action == rcaApply
+    check not g.inFlight
+
+  test "applyStale does not change a completion that is already the newest":
+    var g = initRefreshGenerationState()
+    let r = g.requestRefresh()
+    let c = g.onCompletion(r.gen, applyStale = true)
+    check c.action == rcaApply
+    check not g.inFlight

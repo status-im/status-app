@@ -217,6 +217,7 @@ proc init*(self: Service) =
     self.buildAllTokens(self.getWalletAddresses(), forceRefresh = false)
 
   self.events.on(SIGNAL_TOKENS_LIST_UPDATED) do(e:Args):
+    self.applyPendingBalances()
     self.buildAllTokens(self.getWalletAddresses(), forceRefresh = false)
 
   self.events.on(SIGNAL_PASSWORD_PROVIDED) do(e: Args):
