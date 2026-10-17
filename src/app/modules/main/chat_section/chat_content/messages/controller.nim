@@ -260,7 +260,7 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_THREAD_CREATED) do(e: Args):
     let args = ThreadCreatedArgs(e)
-    if self.chatId != args.chatId:
+    if self.chatId != args.chatId or self.threadId.len > 0:
       return
     self.delegate.onThreadCreated(args.parentMessageId, args.threads)
 
@@ -272,18 +272,21 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
     let args = ChatThreadsForChatsLoadedArgs(e)
+    if self.threadId.len > 0:
+      return
     var chatThreads: seq[ThreadDto] = @[]
     for thread in args.threads:
       if thread.chatId == self.chatId:
-        chatThreads.add(thread)
-    if chatThreads.len > 0:
-      self.delegate.onChatThreadsLoaded(chatThreads)
+        chatThreads.add(self.messageService.getThreadForParentMessage(self.chatId, thread.parentMessageId))
+    let listLoaded = args.summariesLoaded and self.chatId in args.completedChatIds
+    if chatThreads.len > 0 or listLoaded:
+      self.delegate.onChatThreadsLoaded(chatThreads, listLoaded)
 
   self.events.on(SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
     let args = ChatThreadsLoadingFailedArgs(e)
     if self.chatId != args.chatId:
       return
-    self.delegate.onChatThreadsLoadingFailed()
+    self.delegate.onChatThreadsLoadingFailed(args.summariesRequested)
 
 proc getMySectionId*(self: Controller): string =
   return self.sectionId
@@ -413,3 +416,6 @@ proc asyncGetMessageById*(self: Controller, messageId: string): UUID =
 
 proc parseSharedUrl*(self: Controller, url: string): UrlDataDto =
   return self.sharedUrlsService.parseSharedUrl(url)
+
+proc loadChatThreads*(self: Controller) =
+  self.messageService.asyncLoadChatThreadSummaries(self.chatId)

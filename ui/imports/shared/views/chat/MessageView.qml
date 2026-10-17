@@ -837,6 +837,7 @@ Loader {
                 Layout.topMargin: Theme.halfPadding
                 Layout.bottomMargin: Theme.halfPadding
                 Layout.leftMargin: Theme.padding + root.extraLeftPadding
+                Layout.rightMargin: Theme.padding
                 spacing: Theme.halfPadding
 
                 readonly property int smartIconSize: 20
@@ -899,8 +900,7 @@ Loader {
 
                 StatusTimeStampLabel {
                     Layout.alignment: Qt.AlignVCenter
-                    Layout.fillWidth: true
-                    Layout.rightMargin: Theme.padding
+                    Layout.fillWidth: false
 
                     timestamp: root.messageTimestamp
                 }

@@ -37,6 +37,7 @@ RowLayout {
 
     signal groupMembersUpdateRequested(string membersPubKeysList)
 
+    signal showPinsRequested()
     signal searchButtonClicked()
     signal displayEditChannelPopup(string chatId,
                                    string chatName,
@@ -109,17 +110,17 @@ RowLayout {
                 if(!chatContentModule)
                     return false
 
-                return chatContentModule.chatDetails.isUsersListAvailable
+                return true
             }
 
             highlighted: root.showMembersButtonHighlighted
 
-            icon.name: "group-chat"
+            icon.name: "info"
             type: StatusFlatRoundButton.Type.Secondary
             onClicked: root.toggleShowMembersRequested()
 
             // initializing the tooltip
-            tooltip.text: qsTr("Members")
+            tooltip.text: qsTr("Info")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
             tooltip.y: parent.height + 12
         }
@@ -301,14 +302,8 @@ RowLayout {
             pinnedMessagesCount: chatContentModule? chatContentModule.pinnedMessagesModel.count : 0
             muted: chatContentModule? chatContentModule.chatDetails.muted : false
 
-            onPinnedMessagesCountClicked: {
-                if(!chatContentModule) {
-                    console.warn("error on open pinned messages - chat content module is not set")
-                    return
-                }
-                const chatId = type === Constants.chatType.oneToOne ? chatContentModule.getMyChatId() : ""
-                Global.openPinnedMessagesPopupRequested(rootStore, messageStore, chatContentModule.pinnedMessagesModel, "", chatId)
-            }
+            onPinnedMessagesCountClicked: root.showPinsRequested()
+
             onUnmute: {
                 if(!chatContentModule) {
                     console.debug("error on unmute chat - chat content module is not set")

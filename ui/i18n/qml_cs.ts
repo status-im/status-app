@@ -3245,8 +3245,8 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Hledat</translation>
     </message>
     <message>
-        <source>Members</source>
-        <translation>Členové</translation>
+        <source>Info</source>
+        <translation type="unfinished">Info</translation>
     </message>
     <message>
         <source>More</source>
@@ -3259,6 +3259,53 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
             <numerusform>%n členové</numerusform>
             <numerusform>%n členů</numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>ChatInfoPanel</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished">Členové</translation>
+    </message>
+    <message>
+        <source>Threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pins</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation type="unfinished">Hledat členy...</translation>
+    </message>
+    <message>
+        <source>Search threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search pinned messages...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished">Vlákna nelze načíst</translation>
+    </message>
+    <message>
+        <source>No threads found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Threads will appear here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Zkusit znovu</translation>
     </message>
 </context>
 <context>
@@ -3332,6 +3379,14 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No pinned messages found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pinned messages will appear here.</source>
+        <translation type="unfinished">Zde se zobrazí připnuté zprávy.</translation>
     </message>
     <message>
         <source>Members</source>
@@ -13569,6 +13624,17 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>PinnedMessagesList</name>
+    <message>
+        <source>Unpin</source>
+        <translation type="unfinished">Odepnout</translation>
+    </message>
+    <message>
+        <source>Jump to</source>
+        <translation type="unfinished">Přejít na</translation>
+    </message>
+</context>
+<context>
     <name>PinnedMessagesPopup</name>
     <message>
         <source>Pin limit reached</source>
@@ -13593,14 +13659,6 @@ selhalo</translation>
     <message>
         <source>Pinned messages will appear here.</source>
         <translation>Zde se zobrazí připnuté zprávy.</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Odepnout</translation>
-    </message>
-    <message>
-        <source>Jump to</source>
-        <translation>Přejít na</translation>
     </message>
     <message>
         <source>Unpin selected message and pin new message</source>

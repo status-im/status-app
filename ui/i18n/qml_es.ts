@@ -3150,7 +3150,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Copy thread ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiar ID del hilo</translation>
     </message>
     <message>
         <source>Copy channel ID</source>
@@ -3232,8 +3232,8 @@ Do you wish to override the security check and continue?</source>
         <translation>Buscar</translation>
     </message>
     <message>
-        <source>Members</source>
-        <translation>Miembros</translation>
+        <source>Info</source>
+        <translation>Información</translation>
     </message>
     <message>
         <source>More</source>
@@ -3245,6 +3245,53 @@ Do you wish to override the security check and continue?</source>
             <numerusform>%n miembro</numerusform>
             <numerusform>%n miembros</numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>ChatInfoPanel</name>
+    <message>
+        <source>Members</source>
+        <translation>Miembros</translation>
+    </message>
+    <message>
+        <source>Threads</source>
+        <translation>Hilos</translation>
+    </message>
+    <message>
+        <source>Pins</source>
+        <translation>Fijados</translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation>Buscar miembros...</translation>
+    </message>
+    <message>
+        <source>Search threads...</source>
+        <translation>Buscar hilos...</translation>
+    </message>
+    <message>
+        <source>Search pinned messages...</source>
+        <translation>Buscar mensajes fijados...</translation>
+    </message>
+    <message>
+        <source>Loading threads...</source>
+        <translation>Cargando hilos...</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation>No se pudieron cargar los hilos</translation>
+    </message>
+    <message>
+        <source>No threads found</source>
+        <translation>No se encontraron hilos</translation>
+    </message>
+    <message>
+        <source>Threads will appear here.</source>
+        <translation>Los hilos aparecerán aquí.</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Reintentar</translation>
     </message>
 </context>
 <context>
@@ -3263,11 +3310,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron cargar los hilos</translation>
     </message>
     <message>
         <source>Couldn&apos;t create thread</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo crear el hilo</translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -3317,7 +3364,15 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>en %1</translation>
+    </message>
+    <message>
+        <source>No pinned messages found</source>
+        <translation>No se encontraron mensajes fijados</translation>
+    </message>
+    <message>
+        <source>Pinned messages will appear here.</source>
+        <translation>Los mensajes fijados aparecerán aquí.</translation>
     </message>
     <message>
         <source>Members</source>
@@ -3325,7 +3380,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Close thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Cerrar hilo</translation>
     </message>
 </context>
 <context>
@@ -11579,7 +11634,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Create Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Crear hilo</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -13500,6 +13555,17 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>PinnedMessagesList</name>
+    <message>
+        <source>Unpin</source>
+        <translation>Desfijar</translation>
+    </message>
+    <message>
+        <source>Jump to</source>
+        <translation>Ir a</translation>
+    </message>
+</context>
+<context>
     <name>PinnedMessagesPopup</name>
     <message>
         <source>Pin limit reached</source>
@@ -13523,14 +13589,6 @@ al cargar</translation>
     <message>
         <source>Pinned messages will appear here.</source>
         <translation>Los mensajes fijados aparecerán aquí.</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>Desfijar</translation>
-    </message>
-    <message>
-        <source>Jump to</source>
-        <translation>Ir a</translation>
     </message>
     <message>
         <source>Unpin selected message and pin new message</source>
@@ -16420,7 +16478,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Add a thread name (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Añadir un nombre al hilo (opcional)</translation>
     </message>
     <message>
         <source>Also send to %1</source>
@@ -16467,7 +16525,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Start a new thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar un nuevo hilo</translation>
     </message>
     <message>
         <source>Camera</source>
@@ -16499,7 +16557,7 @@ al cargar</translation>
     </message>
     <message>
         <source>Reply in thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Responder en el hilo</translation>
     </message>
 </context>
 <context>
@@ -18097,59 +18155,59 @@ Esta acción no se puede deshacer.</translation>
     <name>ThreadContextMenu</name>
     <message>
         <source>Edit name</source>
-        <translation type="unfinished"></translation>
+        <translation>Editar nombre</translation>
     </message>
     <message>
         <source>Unfollow</source>
-        <translation type="unfinished"></translation>
+        <translation>Dejar de seguir</translation>
     </message>
     <message>
         <source>Follow</source>
-        <translation type="unfinished"></translation>
+        <translation>Seguir</translation>
     </message>
     <message>
         <source>Mute thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Silenciar hilo</translation>
     </message>
     <message>
         <source>Unmute thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Activar sonido del hilo</translation>
     </message>
     <message>
         <source>Mark as read</source>
-        <translation type="unfinished">Marcar como leído</translation>
+        <translation>Marcar como leído</translation>
     </message>
     <message>
         <source>Share link</source>
-        <translation type="unfinished">Compartir enlace</translation>
+        <translation>Compartir enlace</translation>
     </message>
     <message>
         <source>Copy link</source>
-        <translation type="unfinished">Copiar enlace</translation>
+        <translation>Copiar enlace</translation>
     </message>
     <message>
         <source>Copied</source>
-        <translation type="unfinished">Copiado</translation>
+        <translation>Copiado</translation>
     </message>
     <message>
         <source>Unpin from list</source>
-        <translation type="unfinished"></translation>
+        <translation>Desfijar de la lista</translation>
     </message>
     <message>
         <source>Pin to list</source>
-        <translation type="unfinished"></translation>
+        <translation>Fijar en la lista</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Eliminar</translation>
+        <translation>Eliminar</translation>
     </message>
     <message>
         <source>Delete this thread?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Eliminar este hilo?</translation>
     </message>
     <message>
         <source>Are you sure you want to delete this thread? It may remain visible on other participants&apos; devices.</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Seguro que quieres eliminar este hilo? Puede seguir siendo visible en los dispositivos de otros participantes.</translation>
     </message>
 </context>
 <context>

@@ -15,6 +15,7 @@ import shared.status
 import shared.views.chat
 import shared.stores as SharedStores
 
+import AppLayouts.Chat.controls
 import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.stores
 
@@ -33,23 +34,6 @@ StatusDialog {
     property bool joined
 
     property bool isPinActionAvailable: true
-
-    // Resolves mention pub keys to display names for the client-side renderer, mirroring
-    // ChatMessagesView. Fed by the active chat's users model plus every known contact;
-    // without it, "@0x…" mentions render as raw keys.
-    readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
-        chatUsersModel: root.store?.usersStore.usersModel ?? null
-        contactsModel: root.store?.contactsModel ?? null
-        selfPubKey: root.store?.myPublicKey() ?? ""
-        selfDisplayName: root.store?.name ?? ""
-    }
-
-    readonly property MentionResolver mentionResolver: MentionResolver {
-        sourceModel: root.mentionNames?.model ?? null
-        nameRole: "preferredDisplayName"
-        aliasProvider: pubKey => root.store?.generateAlias(pubKey) ?? ""
-        contactInfoRequester: pubKey => root.store?.requestContactInfo(pubKey)
-    }
 
     // Unfurling related data:
     property bool gifUnfurlingEnabled
@@ -91,191 +75,26 @@ StatusDialog {
             color: Theme.palette.secondaryText
         }
 
-        ButtonGroup {
-            id: pinButtonGroup
-        }
-
-        StatusListView {
+        PinnedMessagesList {
             id: pinnedMessageListView
             objectName: "pinnedMessagesPopup_listView"
             model: root.pinnedMessagesModel
+            store: root.store
+            messageStore: root.messageStore
+            chatId: root.chatId
+            joined: root.joined
+            messageToPin: root.messageToPin
+            isPinActionAvailable: root.isPinActionAvailable
+            gifUnfurlingEnabled: root.gifUnfurlingEnabled
+            neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
             Layout.fillWidth: true
             Layout.fillHeight: count
             implicitHeight: contentHeight
-
-            delegate: Item {
-                id: messageDelegate
-
-                width: ListView.view.width
-                height: messageItem.height
-
-                MessageView {
-                    id: messageItem
-
-                    width: parent.width
-
-                    rootStore: root.store
-                    messageStore: root.messageStore
-                    chatId: root.chatId
-
-                    joined: root.joined
-                    messageId: model.id
-                    responseToMessageWithId: model.responseToMessageWithId
-                    senderId: model.senderId
-                    senderDisplayName: model.senderDisplayName
-                    senderOptionalName: model.senderOptionalName
-                    senderIsEnsVerified: model.senderEnsVerified
-                    senderIsAdded: model.senderIsAdded
-                    senderIcon: model.senderIcon
-                    senderTrustStatus: model.senderTrustStatus
-                    amISender: model.amISender
-                    messageText: model.messageText
-                    unparsedText: model.unparsedText
-                    mentionsMap: root.mentionResolver.resolveFor(model.unparsedText + " " + model.quotedMessageText)
-                    messageImage: model.messageImage
-                    messageTimestamp: model.timestamp
-                    messageOutgoingStatus: model.outgoingStatus
-                    messageContentType: model.contentType
-                    pinnedMessage: model.pinned
-                    messagePinnedBy: model.pinnedBy
-                    reactionsModel: model.reactions
-                    sticker: model.sticker
-                    stickerPack: model.stickerPack
-                    linkPreviewModel: model.linkPreviewModel
-                    links: model.links
-                    transactionParams: model.transactionParameters
-                    quotedMessageText: model.quotedMessageParsedText
-                    quotedMessageUnparsedText: model.quotedMessageText
-                    quotedMessageFrom: model.quotedMessageFrom
-                    quotedMessageContentType: model.quotedMessageContentType
-                    quotedMessageDeleted: model.quotedMessageDeleted
-                    quotedMessageAuthorDetailsName: model.quotedMessageAuthorName
-                    quotedMessageAuthorDetailsDisplayName: model.quotedMessageAuthorDisplayName
-                    quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorThumbnailImage
-                    quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorEnsVerified
-                    quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorIsContact
-                    bridgeName: model.bridgeName
-
-                    // This is possible since we have all data loaded before we load qml.
-                    // When we fetch messages to fulfill a gap we have to set them at once.
-                    prevMessageIndex: index - 1
-                    prevMessageAsJsonObj: root.messageStore ? root.messageStore.getMessageByIndexAsJson(index - 1) : {}
-                    nextMessageIndex: index + 1
-                    nextMessageAsJsonObj: root.messageStore ? root.messageStore.getMessageByIndexAsJson(index + 1) : {}
-
-                    // Additional params
-                    isInPinnedPopup: true
-                    shouldRepeatHeader: true
-
-                    // Unfurling related data:
-                    gifUnfurlingEnabled: root.gifUnfurlingEnabled
-                    neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain
-
-                    // Unfurling related requests:
-                    onSetNeverAskAboutUnfurlingAgain: root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
-
-                    onOpenGifPopupRequest: root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
-                }
-
-                StatusMouseArea {
-                    id: mouseArea
-                    objectName: "pinnedMessagesPopup_delegateMouseArea"
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    z: 55
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    onClicked: (mouse) => {
-                                   switch (mouse.button) {
-                                       case Qt.RightButton:
-                                           Global.openMenu(pinnedPopupMessageContextMenuComponent, this, {
-                                                               messageId: messageItem.messageId,
-                                                           }, Qt.point(mouse.x, mouse.y))
-                                           break
-                                       case Qt.LeftButton:
-                                           if (!!root.messageToPin) {
-                                               if (!radio.checked)
-                                                radio.checked = true
-                                           } else {
-                                               d.jumpToMessage(model.id)
-                                           }
-                                           break
-                                   }
-                    }
-                }
-
-                StatusFlatRoundButton {
-                    id: unpinButton
-                    objectName: "pinnedMessagesPopup_unpinButton"
-                    anchors.top: parent.top
-                    anchors.topMargin: Theme.bigPadding
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.bigPadding
-                    z: mouseArea.z + 1
-                    width: 32
-                    height: 32
-                    visible: root.isPinActionAvailable && !root.messageToPin && (hovered || mouseArea.containsMouse)
-                    icon.name: "unpin"
-                    tooltip.text: qsTr("Unpin")
-                    color: hovered ? Theme.palette.primaryColor2 : Theme.palette.indirectColor4
-                    onClicked: {
-                        root.unpinMessageRequested(model.id)
-                    }
-                }
-
-                StatusRadioButton {
-                    id: radio
-                    objectName: "pinnedMessagesPopup_radio"
-                    visible: root.messageToPin
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.bigPadding
-                    anchors.verticalCenter: parent.verticalCenter
-                    ButtonGroup.group: pinButtonGroup
-                    onCheckedChanged: { // NB this should be `onToggled` but StatusMouseArea above handles the whole delegate
-                        root.messageToUnpin = checked ? model.id : ""
-                    }
-                }
-
-                Component {
-                    id: pinnedPopupMessageContextMenuComponent
-
-                    StatusMenu {
-                        id: messageContextMenu
-
-                        objectName: "pinnedMessagesPopup_messageContextMenu"
-                        property string messageId
-
-                        StatusAction {
-                            objectName: "pinnedMessagesPopup_unpin"
-                            text: qsTr("Unpin")
-                            icon.name: "unpin"
-                            enabled: root.isPinActionAvailable
-                            onTriggered: {
-                                root.messageStore.unpinMessage(messageContextMenu.messageId)
-                                close()
-                            }
-                        }
-
-                        StatusAction {
-                            objectName: "pinnedMessagesPopup_jumpTo"
-                            text: qsTr("Jump to")
-                            icon.name: "arrow-up"
-                            onTriggered: {
-                                d.jumpToMessage(messageContextMenu.messageId)
-                                close()
-                            }
-                        }
-
-                        onOpened: {
-                            messageItem.setMessageActive(model.id, true)
-                        }
-                        onClosed: {
-                            messageItem.setMessageActive(model.id, false)
-                            destroy()
-                        }
-                    }
-                }
-            }
+            onMessageToUnpinChanged: root.messageToUnpin = messageToUnpin
+            onUnpinMessageRequested: messageId => root.unpinMessageRequested(messageId)
+            onJumpToMessageRequested: messageId => d.jumpToMessage(messageId)
+            onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+            onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
         }
 
         layer.enabled: root.visible && !root.messageToPin
@@ -309,7 +128,7 @@ StatusDialog {
             StatusButton {
                 objectName: "pinnedMessagesPopup_confirmPinButton"
                 visible: footer.visible
-                enabled: !!root.messageToUnpin && pinButtonGroup.checkedButton
+                enabled: !!root.messageToUnpin
                 text: qsTr("Unpin selected message and pin new message")
                 onClicked: {
                     root.unpinMessageRequested(root.messageToUnpin)

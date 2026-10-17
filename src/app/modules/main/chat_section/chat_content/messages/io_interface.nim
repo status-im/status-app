@@ -208,11 +208,14 @@ method setThreadId*(self: AccessInterface, threadId: string) {.base.} =
 method onThreadCreated*(self: AccessInterface, parentMessageId: string, threads: seq[ThreadDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onChatThreadsLoadingFailed*(self: AccessInterface) {.base.} =
+method onChatThreadsLoadingFailed*(self: AccessInterface, summariesRequested: bool = false) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onThreadCreationFailed*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onChatThreadsLoaded*(self: AccessInterface, threads: seq[ThreadDto]) {.base.} =
+method onChatThreadsLoaded*(self: AccessInterface, threads: seq[ThreadDto], listLoaded: bool = false) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method loadChatThreads*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")

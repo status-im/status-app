@@ -24,7 +24,7 @@ Column {
     LoadingSkeletonGroup {
         // list margin + StatusMemberListItem's own horizontal padding
         x: Theme.padding + Theme.halfPadding
-        width: parent.width - x
+        width: Math.max(0, parent.width - 2 * x)
         height: root.height - y
         // rows that don't fit must not bleed past the panel
         clip: true

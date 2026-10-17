@@ -3218,8 +3218,8 @@ Do you wish to override the security check and continue?</source>
         <translation>검색</translation>
     </message>
     <message>
-        <source>Members</source>
-        <translation>멤버들</translation>
+        <source>Info</source>
+        <translation type="unfinished">정보</translation>
     </message>
     <message>
         <source>More</source>
@@ -3230,6 +3230,53 @@ Do you wish to override the security check and continue?</source>
         <translation>
             <numerusform>%n명 회원</numerusform>
         </translation>
+    </message>
+</context>
+<context>
+    <name>ChatInfoPanel</name>
+    <message>
+        <source>Members</source>
+        <translation type="unfinished">멤버들</translation>
+    </message>
+    <message>
+        <source>Threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pins</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation type="unfinished">멤버 검색...</translation>
+    </message>
+    <message>
+        <source>Search threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search pinned messages...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load threads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No threads found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Threads will appear here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">다시 시도</translation>
     </message>
 </context>
 <context>
@@ -3303,6 +3350,14 @@ Do you wish to override the security check and continue?</source>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No pinned messages found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pinned messages will appear here.</source>
+        <translation type="unfinished">고정된 메시지가 여기에 표시됩니다.</translation>
     </message>
     <message>
         <source>Members</source>
@@ -13431,6 +13486,17 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>PinnedMessagesList</name>
+    <message>
+        <source>Unpin</source>
+        <translation type="unfinished">고정 해제</translation>
+    </message>
+    <message>
+        <source>Jump to</source>
+        <translation type="unfinished">바로가기</translation>
+    </message>
+</context>
+<context>
     <name>PinnedMessagesPopup</name>
     <message>
         <source>Pin limit reached</source>
@@ -13453,14 +13519,6 @@ to load</source>
     <message>
         <source>Pinned messages will appear here.</source>
         <translation>고정된 메시지가 여기에 표시됩니다.</translation>
-    </message>
-    <message>
-        <source>Unpin</source>
-        <translation>고정 해제</translation>
-    </message>
-    <message>
-        <source>Jump to</source>
-        <translation>바로가기</translation>
     </message>
     <message>
         <source>Unpin selected message and pin new message</source>

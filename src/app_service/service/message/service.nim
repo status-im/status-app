@@ -96,10 +96,12 @@ type
 
   ChatThreadsLoadingFailedArgs* = ref object of Args
     chatId*: string
+    summariesRequested*: bool
 
   ChatThreadsForChatsLoadedArgs* = ref object of Args
     threads*: seq[ThreadDto]
     completedChatIds*: seq[string]
+    summariesLoaded*: bool
 
   ThreadCreatedArgs* = ref object of Args
     chatId*: string
@@ -217,6 +219,10 @@ QtObject:
     chatThreadsByParentIdByChat: Table[string, Table[string, ThreadDto]]
     chatThreadListsLoadedChats: HashSet[string]
     chatThreadListsLoadingChats: HashSet[string]
+    chatThreadSummariesLoadedChats: HashSet[string]
+    chatThreadSummariesLoadingChats: HashSet[string]
+    chatThreadsRevision: Table[string, int]
+    chatThreadSummariesPendingUpdates: Table[string, Table[string, ThreadDto]]
 
   proc asyncLoadChatThreadsForChats*(self: Service, chatIds: seq[string])
 
@@ -245,6 +251,9 @@ QtObject:
     result.chatThreadsByParentIdByChat = initTable[string, Table[string, ThreadDto]]()
     result.chatThreadListsLoadedChats = initHashSet[string]()
     result.chatThreadListsLoadingChats = initHashSet[string]()
+    result.chatThreadSummariesLoadedChats = initHashSet[string]()
+    result.chatThreadSummariesLoadingChats = initHashSet[string]()
+    result.chatThreadsRevision = initTable[string, int]()
 
   proc mergeThreadSummary(existing, incoming: ThreadDto): ThreadDto =
     result = incoming
@@ -282,11 +291,18 @@ QtObject:
       if thread.parentMessageId.len > 0:
         self.chatThreadsByParentIdByChat[chatId][thread.parentMessageId] =
           self.mergeCachedThread(chatId, thread)
+        if chatId in self.chatThreadSummariesLoadingChats:
+          self.chatThreadSummariesPendingUpdates.mgetOrPut(chatId, initTable[string, ThreadDto]())[thread.parentMessageId] =
+            self.chatThreadsByParentIdByChat[chatId][thread.parentMessageId]
 
   proc clearChatThreadsCacheForChat(self: Service, chatId: string) =
     self.chatThreadsByParentIdByChat.del(chatId)
     self.chatThreadListsLoadedChats.excl(chatId)
     self.chatThreadListsLoadingChats.excl(chatId)
+    self.chatThreadSummariesLoadedChats.excl(chatId)
+    self.chatThreadSummariesLoadingChats.excl(chatId)
+    self.chatThreadSummariesPendingUpdates.del(chatId)
+    self.chatThreadsRevision[chatId] = self.chatThreadsRevision.getOrDefault(chatId) + 1
 
   proc loadChatThreadsForChatsIfNeeded*(self: Service, chatIds: seq[string]) =
     if not THREADS_ENABLED:
@@ -443,14 +459,38 @@ QtObject:
     if chatIds.len == 0:
       return
 
+    var revisions: seq[int]
+    for chatId in chatIds:
+      revisions.add(self.chatThreadsRevision.getOrDefault(chatId))
     let arg = AsyncFetchChatThreadsForChatsTaskArg(
       tptr: asyncFetchChatThreadsForChatsTask,
       vptr: cast[uint](self.vptr),
       slot: "onAsyncLoadChatThreadsForChats",
       chatIds: chatIds,
+      chatRevisions: revisions,
     )
 
     self.threadpool.start(arg)
+
+  proc asyncLoadChatThreadSummaries*(self: Service, chatId: string) =
+    if not THREADS_ENABLED or chatId.len == 0 or chatId in self.chatThreadSummariesLoadingChats:
+      return
+    if chatId in self.chatThreadSummariesLoadedChats:
+      var threads: seq[ThreadDto]
+      for _, thread in self.chatThreadsByParentIdByChat.getOrDefault(chatId):
+        threads.add(thread)
+      self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
+        ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: @[chatId], summariesLoaded: true))
+      return
+    self.chatThreadSummariesLoadingChats.incl(chatId)
+    self.threadpool.start(AsyncFetchChatThreadsForChatsTaskArg(
+      tptr: asyncFetchChatThreadsForChatsTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncLoadChatThreadsForChats",
+      chatIds: @[chatId],
+      includeSummaries: true,
+      chatRevisions: @[self.chatThreadsRevision.getOrDefault(chatId)],
+    ))
 
   proc asyncLoadMoreMessagesForThread*(self: Service, chatId: string, threadId: string,
       limit = MESSAGES_PER_PAGE): bool =
@@ -805,6 +845,9 @@ QtObject:
       self.resetMessageCursor(receivedData.channelId)
       discard self.asyncLoadMoreMessagesForChat(receivedData.channelId)
 
+    self.events.on(SIGNAL_CHAT_HISTORY_CLEARED) do(e: Args):
+      self.clearChatThreadsCacheForChat(ChatArgs(e).chatId)
+
     self.events.on(SIGNAL_CHAT_LEFT) do(e: Args):
       var chatArg = ChatArgs(e)
       self.resetMessageCursor(chatArg.chatId)
@@ -947,6 +990,7 @@ QtObject:
 
   proc onAsyncLoadChatThreadsForChats*(self: Service, response: string) {.slot.} =
     var chatIds: seq[string] = @[]
+    var includeSummaries = false
     try:
       let responseObj = response.parseJson
       if responseObj.kind != JObject:
@@ -956,6 +1000,12 @@ QtObject:
       if responseObj.getProp("chatIds", chatIdsArr):
         chatIds = map(chatIdsArr.getElems(), proc(x: JsonNode): string = x.getStr())
 
+      includeSummaries = responseObj{"includeSummaries"}.getBool()
+      # A batched response may contain both current and invalidated chats.
+      chatIds = chatIds.filterIt(self.chatThreadsRevision.getOrDefault(it) ==
+        responseObj{"chatRevisions", it}.getInt())
+      if chatIds.len == 0:
+        return
       let errorString = responseObj{"error"}.getStr()
       if errorString != "":
         raise newException(CatchableError, errorString)
@@ -965,10 +1015,25 @@ QtObject:
       if responseObj.getProp("threads", threadsArr):
         threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
 
+      threads = threads.filterIt(it.chatId in chatIds)
       var threadsByChat = initTable[string, seq[ThreadDto]]()
       for thread in threads:
         if thread.chatId.len > 0:
           threadsByChat.mgetOrPut(thread.chatId, @[]).add(thread)
+
+      # Updates received after the request began take precedence over its snapshot.
+      if includeSummaries:
+        threads = @[]
+        for chatId in chatIds:
+          var merged = initTable[string, ThreadDto]()
+          for thread in threadsByChat.getOrDefault(chatId):
+            merged[thread.parentMessageId] = thread
+          for parentId, thread in self.chatThreadSummariesPendingUpdates.getOrDefault(chatId):
+            merged[parentId] = mergeThreadSummary(merged.getOrDefault(parentId), thread)
+          threadsByChat[chatId] = @[]
+          for _, thread in merged:
+            threadsByChat[chatId].add(thread)
+            threads.add(thread)
 
       # Settle every requested chat, including those with no threads, so they leave the
       # loading set without waiting for a per-chat success event.
@@ -977,13 +1042,24 @@ QtObject:
         self.replaceChatThreadsCache(chatId, chatThreads)
         self.chatThreadListsLoadedChats.incl(chatId)
         self.chatThreadListsLoadingChats.excl(chatId)
+        if includeSummaries:
+          self.chatThreadSummariesLoadingChats.excl(chatId)
+          self.chatThreadSummariesPendingUpdates.del(chatId)
+          self.chatThreadSummariesLoadedChats.incl(chatId)
+        else:
+          self.chatThreadSummariesLoadedChats.excl(chatId)
       self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
-        ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: chatIds))
+        ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: chatIds,
+          summariesLoaded: includeSummaries))
     except Exception as e:
       for chatId in chatIds:
-        self.chatThreadListsLoadingChats.excl(chatId)
+        if includeSummaries:
+          self.chatThreadSummariesLoadingChats.excl(chatId)
+          self.chatThreadSummariesPendingUpdates.del(chatId)
+        else:
+          self.chatThreadListsLoadingChats.excl(chatId)
         self.events.emit(SIGNAL_CHAT_THREADS_LOADING_FAILED,
-          ChatThreadsLoadingFailedArgs(chatId: chatId))
+          ChatThreadsLoadingFailedArgs(chatId: chatId, summariesRequested: includeSummaries))
       error "error loading chat threads for chats", msg = e.msg
 
   proc onAsyncLoadMoreMessagesForThread*(self: Service, response: string) {.slot.} =

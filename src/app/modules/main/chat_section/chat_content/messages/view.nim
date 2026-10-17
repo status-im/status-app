@@ -2,14 +2,19 @@ import nimqml, json
 import ../../../../shared_models/message_model
 import ../../../../shared_models/message_item
 import ../../../../../../app_service/service/chat/dto/chat
+import ../../../../shared_models/thread_model as thread_model
 import io_interface
 
 QtObject:
   type
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
-      model: Model
+      model: message_model.Model
       modelVariant: QVariant
+      threads: thread_model.Model
+      threadsVariant: QVariant
+      threadsLoading: bool
+      threadsError: bool
       threadId: string
       messageSearchOngoing: bool
       amIChatAdmin: bool
@@ -21,13 +26,13 @@ QtObject:
       keepUnread: bool
 
   proc delete*(self: View)
-  proc newView*(delegate: io_interface.AccessInterface): View =
+  proc newView*(delegate: io_interface.AccessInterface, threadId: string = ""): View =
     new(result, delete)
     result.QObject.setup
     result.delegate = delegate
-    result.model = newModel()
+    result.model = message_model.newModel()
     result.modelVariant = newQVariant(result.model)
-    result.threadId = ""
+    result.threadId = threadId
     result.messageSearchOngoing = false
     result.amIChatAdmin = false
     result.isPinMessageAllowedForMembers = false
@@ -40,13 +45,57 @@ QtObject:
   proc load*(self: View) =
     self.delegate.viewDidLoad()
 
-  proc model*(self: View): Model =
+  proc model*(self: View): message_model.Model =
     return self.model
 
   proc getModel(self: View): QVariant {.slot.} =
     return self.modelVariant
   QtProperty[QVariant] model:
     read = getModel
+
+  proc hasThreadsModel*(self: View): bool =
+    not self.threads.isNil
+
+  proc threadsModel*(self: View): thread_model.Model =
+    if self.threadId.len > 0:
+      return nil
+    if self.threads.isNil:
+      self.threads = thread_model.newModel()
+      self.threadsVariant = newQVariant(self.threads)
+    self.threads
+
+  proc getThreadsModel(self: View): QVariant {.slot.} =
+    if self.threadsModel().isNil:
+      return newQVariant()
+    self.threadsVariant
+  QtProperty[QVariant] threadsModel:
+    read = getThreadsModel
+
+  proc threadsStateChanged(self: View) {.signal.}
+  proc getThreadsLoading(self: View): bool {.slot.} =
+    self.threadsLoading
+  QtProperty[bool] threadsLoading:
+    read = getThreadsLoading
+    notify = threadsStateChanged
+
+  proc getThreadsError(self: View): bool {.slot.} =
+    self.threadsError
+  QtProperty[bool] threadsError:
+    read = getThreadsError
+    notify = threadsStateChanged
+
+  proc setThreadsState*(self: View, loading, failed: bool) =
+    if self.threadsLoading == loading and self.threadsError == failed:
+      return
+    self.threadsLoading = loading
+    self.threadsError = failed
+    self.threadsStateChanged()
+
+  proc loadChatThreads*(self: View) {.slot.} =
+    if self.threadId.len > 0 or self.threadsLoading:
+      return
+    self.setThreadsState(true, false)
+    self.delegate.loadChatThreads()
 
   proc toggleReaction*(self: View, messageId: string, emoji: string) {.slot.} =
     self.delegate.toggleReaction(messageId, emoji)
@@ -279,4 +328,9 @@ QtObject:
     self.delegate.forceLinkPreviewsLocalData(messageId)
 
   proc delete*(self: View) =
+    if self.hasThreadsModel():
+      self.threadsVariant.delete()
+      self.threads.delete()
+      self.threadsVariant = nil
+      self.threads = nil
     self.QObject.delete

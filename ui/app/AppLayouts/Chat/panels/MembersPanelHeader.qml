@@ -28,8 +28,8 @@ Control {
 
             opacity: (root.width > 58) ? 1.0 : 0.0
             visible: (opacity > 0.1)
-            font.weight: Font.Medium
-            wrapMode: Text.Wrap
+            font.bold: true
+            elide: Text.ElideRight
         }
 
         StatusFlatButton {

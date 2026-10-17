@@ -683,9 +683,8 @@ QtObject:
       updateRole(pinned)
       updateRoleWithValue(pinnedBy, targetPinnedBy)
 
-  proc setHasThread*(self: Model, messageId: string, hasThread: bool) =
-    let ind = self.findIndexForMessageId(messageId)
-    if ind == -1:
+  proc setHasThread*(self: Model, ind: int, hasThread: bool) =
+    if ind < 0 or ind >= self.items.len:
       return
 
     if self.items[ind].hasThread == hasThread:
@@ -697,8 +696,11 @@ QtObject:
     defer: index.delete
     self.dataChanged(index, index, @[ModelRole.HasThread.int])
 
-  proc setThreadSummary*(self: Model, messageId: string, summary: ThreadSummary) =
-    updateItemRolesAndNotify self.findIndexForMessageId(messageId):
+  proc setHasThread*(self: Model, messageId: string, hasThread: bool) =
+    self.setHasThread(self.findIndexForMessageId(messageId), hasThread)
+
+  proc setThreadSummary*(self: Model, messageIndex: int, summary: ThreadSummary) =
+    updateItemRolesAndNotify messageIndex:
       let previous = self.items[ind].threadSummary
       if previous == summary:
         return
@@ -731,6 +733,9 @@ QtObject:
         ModelRole.ThreadLastMessageText.int): discard
       addChangedRole(roles, previous.lastMessageTimestamp, summary.lastMessageTimestamp,
         ModelRole.ThreadLastMessageTimestamp.int): discard
+
+  proc setThreadSummary*(self: Model, messageId: string, summary: ThreadSummary) =
+    self.setThreadSummary(self.findIndexForMessageId(messageId), summary)
 
   proc getMessageByIdAsJson*(self: Model, messageId: string): JsonNode =
     for it in self.items:
