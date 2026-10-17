@@ -32,15 +32,16 @@
         <key>NSExtensionAttributes</key>
         <dict>
             <!-- Exactly what ShareViewController extracts and chat can send:
-                 text, web URLs and images. No video/arbitrary files. No image
-                 count cap here: the app splits a share into per-message
-                 batches. -->
+                 text, web URLs and images. Any text document (.txt, .md,
+                 .html, vCard, ...) is sent as message text, never as a file.
+                 No video/arbitrary files. No image count cap here: the app
+                 splits a share into per-message batches. -->
             <!-- Predicate form: the extension is offered when at least one
-                 attachment is an image, a URL or plain text. The dictionary
-                 form required every attachment to match, which hid Status
-                 for hosts that add extra representations (e.g. a Notes link). -->
+                 attachment is an image, a URL or text. The dictionary form
+                 required every attachment to match, which hid Status for
+                 hosts that add extra representations (e.g. a Notes link). -->
             <key>NSExtensionActivationRule</key>
-            <string>SUBQUERY(extensionItems, $item, SUBQUERY($item.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text").@count &gt; 0).@count &gt; 0</string>
+            <string>SUBQUERY(extensionItems, $item, SUBQUERY($item.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text").@count &gt; 0).@count &gt; 0</string>
         </dict>
     </dict>
 </dict>
