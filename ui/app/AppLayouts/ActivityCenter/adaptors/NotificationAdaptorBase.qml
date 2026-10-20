@@ -41,6 +41,9 @@ SQUtils.QObject {
     readonly property string secondaryText: context.secondaryText ?? ""
     readonly property string separatorIconName: context.separatorIconName
 
+    readonly property string tertiaryText: context.tertiaryText
+    readonly property string tertiaryIconName: context.tertiaryIconName
+
     // Action text
     property string actionText: ""
 
@@ -53,6 +56,7 @@ SQUtils.QObject {
     property string actionId: ""
 
     // Others (navigation related data)
+    property string nestedSubsectionId: ""
     property string subsectionItemId: ""
     property bool redirectToSection: false
     property bool redirectToDetails: false

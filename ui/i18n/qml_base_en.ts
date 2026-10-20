@@ -12597,6 +12597,10 @@ to load</source>
 <context>
     <name>NotificationAdaptorMessenger</name>
     <message>
+        <source>Thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>GIF</source>
         <translation type="unfinished"></translation>
     </message>

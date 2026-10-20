@@ -138,8 +138,8 @@ proc acceptActivityCenterNotification*(self: Controller,notificationId: string) 
 proc dismissActivityCenterNotification*(self: Controller,notificationId: string) =
   self.activityCenterService.dismissActivityCenterNotification(notificationId)
 
-proc switchTo*(self: Controller, sectionId, chatId, messageId: string) =
-  let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: chatId, messageId: messageId)
+proc switchTo*(self: Controller, sectionId, subsectionId, itemId: string, nestedSubsectionId: string = "") =
+  let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: subsectionId, messageId: itemId, threadId: nestedSubsectionId)
   self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
 
 proc chatExists*(self: Controller, chatId: string): bool =

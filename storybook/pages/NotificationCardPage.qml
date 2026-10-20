@@ -73,6 +73,8 @@ SplitView {
                 primaryText: contextEditor.primartyText
                 iconName: contextEditor.iconType
                 secondaryText: contextEditor.secondaryText
+                tertiaryText: contextEditor.tertiaryText
+                tertiaryIconName: contextEditor.tertiaryText ? "thread" : ""
                 separatorIconName: contextEditor.separatorType
 
                 // Action text

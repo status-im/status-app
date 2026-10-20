@@ -2,6 +2,8 @@ import QtQml
 
 QtObject {
     required property string notificationId
+    property string threadId
+    property string threadName
     property string chatId
     property string communityId
     property int membershipStatus

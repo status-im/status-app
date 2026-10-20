@@ -41,11 +41,14 @@ QtObject {
         return root.activityCenterModuleInst.chatExists(chatId)
     }
 
-    function switchTo(sectionId, chatId, messageId) {
-        if (!root.chatExists(chatId))
+    function switchTo(sectionId, subsectionId, itemId, nestedSubsectionId = "") {
+        if (!root.chatExists(subsectionId))
             return false
 
-        root.activityCenterModuleInst.switchTo(sectionId, chatId, messageId)
+        if (nestedSubsectionId)
+            root.activityCenterModuleInst.switchToNestedSubsection(sectionId, subsectionId, itemId, nestedSubsectionId)
+        else
+            root.activityCenterModuleInst.switchTo(sectionId, subsectionId, itemId)
         return true
     }
 

@@ -9,6 +9,7 @@ Control {
 
     property alias primartyText: primaryTextField.text
     property alias isContextAvatar: isContextAvatar.checked
+    property alias tertiaryText: tertiaryTextField.text
     property alias secondaryText: secondaryTextField.text
     property alias changeIconColor: changeIconColor.checked
     property alias changePrimaryTextColor: changePrimaryTextColor.checked
@@ -79,6 +80,19 @@ Control {
             Layout.rightMargin: Theme.padding
             Layout.fillWidth: true
             text: "#design"
+        }
+
+        Label {
+            Layout.leftMargin: Theme.padding
+            text: "Tertiary context"
+        }
+
+        TextField {
+            id: tertiaryTextField
+            Layout.leftMargin: Theme.padding
+            Layout.rightMargin: Theme.padding
+            Layout.fillWidth: true
+            placeholderText: "Optional additional context"
         }
 
         Label {

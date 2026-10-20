@@ -403,6 +403,15 @@ Item {
             tryCompare(messages, "loadThreadsRequests", 1)
 
             messages.threadId = "central-thread"
+            view.activeItemName = "Release planning"
+            const column = harness.findChildByTypePrefix(view.centerPanel, "ChatColumnView")
+            verify(!!column)
+            const input = findChild(column, "statusChatInput")
+            verify(!!input)
+            tryCompare(input, "isThread", true)
+            compare(input.threadName, "Release planning")
+            view.activeItemName = "Renamed thread"
+            compare(input.threadName, "Renamed thread")
             tryCompare(tab, "visible", false)
             compare(panel.currentTab, ChatInfoPanel.Members)
             verify(waitForPolish(panel))

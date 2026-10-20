@@ -18,6 +18,8 @@ QObject {
 
         notificationId: root.notificationId
         chatId: entry.chatId ?? ""
+        threadId: entry.threadId ?? ""
+        threadName: entry.threadName ?? ""
         communityId: entry.communityId ?? ""
         membershipStatus: entry.membershipStatus ?? 0
         sectionId: entry.sectionId ?? ""

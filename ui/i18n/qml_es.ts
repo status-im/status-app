@@ -12614,6 +12614,10 @@ al cargar</translation>
 <context>
     <name>NotificationAdaptorMessenger</name>
     <message>
+        <source>Thread</source>
+        <translation type="unfinished">Hilo</translation>
+    </message>
+    <message>
         <source>GIF</source>
         <translation>GIF</translation>
     </message>

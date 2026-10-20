@@ -29,6 +29,8 @@ type
     ChatType
     TokenData
     InstallationId
+    ThreadId
+    ThreadName
 
 QtObject:
   type
@@ -63,6 +65,8 @@ QtObject:
     let activityNotificationItem = self.items[index.row]
     let notificationItemRole = role.ModelRole
     case notificationItemRole:
+      of ModelRole.ThreadId: result = newQVariant(activityNotificationItem.threadId)
+      of ModelRole.ThreadName: result = newQVariant(activityNotificationItem.threadName)
       of ModelRole.Id: result = newQVariant(activityNotificationItem.id)
       of ModelRole.ChatId: result = newQVariant(activityNotificationItem.chatId)
       of ModelRole.CommunityId: result = newQVariant(activityNotificationItem.communityId)
@@ -123,6 +127,8 @@ QtObject:
       ModelRole.ChatType.int: "chatType",
       ModelRole.TokenData.int: "tokenData",
       ModelRole.InstallationId.int: "installationId",
+      ModelRole.ThreadId.int: "threadId",
+      ModelRole.ThreadName.int: "threadName",
     }.toTable
 
   proc findNotificationIndex(self: Model, notificationId: string): int {.slot.} =
@@ -201,7 +207,7 @@ QtObject:
         id, chatId, communityId, membershipStatus, sectionId, name, newsTitle,
         newsDescription, newsContent, newsImageUrl, newsLink, newsLinkLabel,
         author, notificationType, timestamp, read, dismissed, accepted, chatType,
-        installationId)
+        installationId, threadId, threadName)
       updateRoleWithValue(messageItem, newNotification.messageItem, Message)
       updateRoleWithValue(repliedMessageItem, newNotification.repliedMessageItem, RepliedMessage)
       updateRoleWithValue(tokenDataItem, newNotification.tokenDataItem, TokenData)

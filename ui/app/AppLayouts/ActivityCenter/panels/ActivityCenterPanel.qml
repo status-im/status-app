@@ -102,7 +102,7 @@ Control {
     signal markNotificationRead(string notificationId)
     signal markNotificationUnread(string notificationId)
     signal avatarClicked(string avatarId)
-    signal redirectToDetails(string sectionId, string subsectionId, string itemId)
+    signal redirectToDetails(string sectionId, string subsectionId, string itemId, string nestedSubsectionId)
     signal redirectToSection(string sectionId)
     signal redirectToCommunitySettingsSubsection(string communityId, int subsection, int subsectionItem)
     signal redirectToPopup(var notification)
@@ -248,6 +248,8 @@ Control {
                 contextAvatar: model.contextAvatar
                 iconName: model.iconName
                 secondaryText: model.secondaryText
+                tertiaryText: model.tertiaryText ?? ""
+                tertiaryIconName: model.tertiaryIconName ?? ""
                 separatorIconName: model.separatorIconName
 
                 // Action text
@@ -272,7 +274,7 @@ Control {
 
                     // 2. Once marked as read, the corresponding navigation logic is executed.
                     if(model.redirectToDetails)
-                        return root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId)
+                        return root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId, model.nestedSubsectionId ?? "")
 
                     if (model.redirectToSection)
                         return root.redirectToSection(model.sectionId)

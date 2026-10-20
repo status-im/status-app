@@ -36,6 +36,9 @@ NotificationAdaptorSender {
     */
     property var mentionsMap: ({})
 
+    context.contextTertiaryName: notification?.threadId ? notification.threadName || qsTr("Thread") : ""
+    context.tertiaryIconName: notification?.threadId ? "thread" : ""
+
     // -------------------------
     // Header row related
     // -------------------------
@@ -70,6 +73,7 @@ NotificationAdaptorSender {
     // Navigation related
     // -------------------------
 
+    nestedSubsectionId: notification?.threadId ?? ""
     subsectionItemId: notification && notification.message ? notification.message.id : ""
     redirectToDetails: true
 }

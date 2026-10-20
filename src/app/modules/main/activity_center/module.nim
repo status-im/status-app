@@ -5,6 +5,7 @@ import ../io_interface as delegate_interface
 import ./item as notification_item
 import ../../shared_models/message_model
 import ../../shared_models/message_item_qobject as msg_item_qobj
+import ../../../global/feature_flags
 import ../../../global/global_singleton
 import ../../../global/app_sections_config as conf
 import ../../../core/eventemitter
@@ -190,6 +191,8 @@ method convertToItems*(
         chatDetails.chatType,
         tokenDataItem,
         notification.installationId,
+        threadId = if THREADS_ENABLED: notification.threadId else: "",
+        threadName = if THREADS_ENABLED: notification.threadName else: "",
       )
     )
 
@@ -270,8 +273,8 @@ method markActivityCenterNotificationUnreadDone*(self: Module, notificationIds: 
 method removeActivityCenterNotifications*(self: Module, notificationIds: seq[string]) =
   self.view.removeActivityCenterNotifications(notificationIds)
 
-method switchTo*(self: Module, sectionId, chatId, messageId: string) =
-  self.controller.switchTo(sectionId, chatId, messageId)
+method switchTo*(self: Module, sectionId, subsectionId, itemId: string, nestedSubsectionId: string = "") =
+  self.controller.switchTo(sectionId, subsectionId, itemId, nestedSubsectionId)
 
 method getDetails*(self: Module, sectionId: string, chatId: string): string =
   var jsonObject = newJObject()
