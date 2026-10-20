@@ -36,6 +36,10 @@ SQUtils.QObject {
     */
     property string contextSecondaryName: ""
 
+    // Optional additional context (e.g., a thread within a chat).
+    property string contextTertiaryName: ""
+    property string tertiaryIconName: ""
+
     // -------------------------
     // Derived context kind
     // -------------------------
@@ -61,4 +65,5 @@ SQUtils.QObject {
         return ""
     }
     readonly property string separatorIconName: root.isCommunity && secondaryText ? "arrow-next" : ""
+    readonly property string tertiaryText: root.contextTertiaryName
 }

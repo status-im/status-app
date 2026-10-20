@@ -69,6 +69,8 @@ type ActivityCenterMembershipStatus* {.pure.}= enum
 type ActivityCenterNotificationDto* = ref object of RootObj
   id*: string # ID is the id of the chat, for public chats it is the name e.g. status, for one-to-one is the hex encoded public key and for group chats is a random uuid appended with the hex encoded pk of the creator of the chat
   chatId*: string
+  threadId*: string
+  threadName*: string
   communityId*: string
   membershipStatus*: ActivityCenterMembershipStatus
   name*: string
@@ -155,6 +157,10 @@ proc toActivityCenterNotificationDto*(jsonObj: JsonNode): ActivityCenterNotifica
 
   if jsonObj.contains("message") and jsonObj{"message"}.kind != JNull:
     result.message = jsonObj["message"].toMessageDto()
+    if result.notificationType in {ActivityCenterNotificationType.Mention, ActivityCenterNotificationType.Reply}:
+      result.threadId = result.message.threadId
+      if result.threadId.len > 0:
+        discard jsonObj.getProp("threadName", result.threadName)
   elif result.notificationType == ActivityCenterNotificationType.NewOneToOne and
     jsonObj.contains("lastMessage") and jsonObj{"lastMessage"}.kind != JNull:
     result.message = jsonObj["lastMessage"].toMessageDto()

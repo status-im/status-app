@@ -858,7 +858,36 @@ ObjectProxyModel {
         ]
 
         Component.onCompleted: {
-            append(data.map((item, index) => Object.assign({}, item, {notificationId: "notif-" + index})))
+            // Thread variants reuse the existing community/group mention and reply examples.
+            const threadNotifications = data.filter(item => item.primaryText &&
+                (item.notificationType === ActivityCenterTypes.NotificationType.Mention ||
+                 item.notificationType === ActivityCenterTypes.NotificationType.Reply))
+                .map((item, index) => {
+                    const isCommunity = !!item.secondaryText
+                    const isMention = item.notificationType === ActivityCenterTypes.NotificationType.Mention
+                    return Object.assign({}, item, {
+                        notificationId: "thread-notif-" + index,
+                        nestedSubsectionId: "thread-" + index,
+                        tertiaryText: "2.39 Summary checklist",
+                        tertiaryIconName: "thread",
+                        unread: true,
+                        avatarSource: isCommunity ? ModelsData.icons.cryptPunks : Assets.png("status-logo-icon"),
+                        title: "anna.eth having long nickname",
+                        chatKey: "zAQshuV7mZextijeBSDpgaq2EvebPGEeCrkH9AgmpCM7JTA12",
+                        isContact: false,
+                        trustIndicator: 0,
+                        primaryText: isCommunity ? "🪐🌸 Status" : "Summer Vacation",
+                        iconName: "",
+                        secondaryText: isCommunity ? "#stn-holders" : "",
+                        separatorIconName: isCommunity ? "arrow-next" : "",
+                        content: (isMention ? "hey, <a href='robert.fox.eth'>@robert.fox.eth</a>, " : "") +
+                                 "Do we still plan to ship this with v2.1 or postpone to the next release cycle? we're discussed it ...",
+                        timestamp: Date.now()
+                    })
+                })
+            append(threadNotifications)
+            append(data.map((item, index) => Object.assign({nestedSubsectionId: "", tertiaryText: ""}, item,
+                                                          {notificationId: "notif-" + index})))
         }
     }
 

@@ -128,8 +128,11 @@ QtObject:
   proc resetActivityCenterNotifications*(self: View, activityCenterNotifications: seq[Item]) =
     self.model.setNewData(activityCenterNotifications)
 
-  proc switchTo*(self: View, sectionId: string, chatId: string, messageId: string) {.slot.} =
-    self.delegate.switchTo(sectionId, chatId, messageId)
+  proc switchTo*(self: View, sectionId: string, subsectionId: string, itemId: string) {.slot.} =
+    self.delegate.switchTo(sectionId, subsectionId, itemId)
+
+  proc switchToNestedSubsection*(self: View, sectionId: string, subsectionId: string, itemId: string, nestedSubsectionId: string) {.slot.} =
+    self.delegate.switchTo(sectionId, subsectionId, itemId, nestedSubsectionId)
 
   proc chatExists*(self: View, chatId: string): bool {.slot.} =
     return self.delegate.chatExists(chatId)

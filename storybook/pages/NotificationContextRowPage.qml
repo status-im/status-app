@@ -32,6 +32,8 @@ SplitView {
                 contextAvatar: editor.isContextAvatar ? "https://picsum.photos/320/240?10" : ""
                 iconName: editor.iconType
                 secondaryText: editor.secondaryText
+                tertiaryText: editor.tertiaryText
+                tertiaryIconName: editor.tertiaryText ? "thread" : ""
                 separatorIconName: editor.separatorType
 
                 // Colors setup:

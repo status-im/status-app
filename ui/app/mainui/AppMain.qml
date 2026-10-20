@@ -2204,11 +2204,11 @@ Item {
                 }
                 onMarkNotificationUnread: (notificationId) => { appMain.activityCenterStore.markActivityCenterNotificationUnread(notificationId) }
                 onAvatarClicked: (avatarId) => { Global.openProfilePopup(avatarId) }
-                onRedirectToDetails: (sectionId, subsectionId, subsectionItemId) => {
+                onRedirectToDetails: (sectionId, subsectionId, subsectionItemId, nestedSubsectionId) => {
                                          if (appMain.activityCenterStore.chatExists(subsectionId)) {
                                              d.recordActivityCenterHistory()
                                              appMain.rootStore.setNavToMsgDetailsFlag(true) // It covers in-app link navigation in portrait mode
-                                             appMain.activityCenterStore.switchTo(sectionId, subsectionId, subsectionItemId)
+                                             appMain.activityCenterStore.switchTo(sectionId, subsectionId, subsectionItemId, nestedSubsectionId)
                                          } else {
                                              Global.displayToastMessage(qsTr("This channel no longer exists"), "", "", false,
                                                                         Constants.ephemeralNotificationType.normal, "")

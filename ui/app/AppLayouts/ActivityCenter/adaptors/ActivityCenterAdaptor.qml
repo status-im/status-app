@@ -41,6 +41,8 @@ QtObject {
 
         Model structure (input):
 
+        threadId             [string]  - thread of the notifying message, empty outside threads
+        threadName           [string]  - thread title, when available
         chatId               [string]  - unique identifier of the chat related to the notification, if applicable
         communityId          [string]  - unique identifier of the community, if applicable
         membershipStatus     [int]     - membership state of the user in the community
@@ -167,6 +169,8 @@ QtObject {
         iconName             [string]  - context icon name
         secondaryText        [string]  - secondary context label
         separatorIconName    [string]  - separator icon name
+        tertiaryText         [string]  - optional tertiary context label
+        tertiaryIconName     [string]  - optional tertiary context icon
 
         actionText           [string]  - call-to-action label
 
@@ -183,6 +187,8 @@ QtObject {
         sectionId            [string]  - section identifier used for navigation
         subsectionId         [string]  - section-specific child identifier. For message
                                          redirects this is the chat id.
+        nestedSubsectionId   [string]  - optional nested child identifier. For message
+                                         redirects this is the thread id.
         subsectionItemId     [string]  - section-specific item identifier. For message
                                          redirects this is the message id.
         redirectToDetails    [bool]    - whether clicking the notification opens a
@@ -265,7 +271,7 @@ QtObject {
                 "id", "notificationType", "timestamp", "read", "dismissed", "accepted",
 
                 // Notification context
-                "chatId", "communityId", "sectionId",
+                "chatId", "communityId", "sectionId", "threadId", "threadName",
 
                 // Messenger related information
                 "message", "author", "repliedMessage", "chatType", "name",
@@ -289,7 +295,7 @@ QtObject {
                 "title", "chatKey", "isContact", "trustIndicator", "isBlocked",
 
                 // Context row related
-                "primaryText", "contextAvatar", "iconName", "secondaryText", "separatorIconName",
+                "primaryText", "contextAvatar", "iconName", "secondaryText", "separatorIconName", "tertiaryText", "tertiaryIconName",
 
                 // Action text
                 "actionText",
@@ -301,7 +307,7 @@ QtObject {
                 "timestamp",
 
                 // Passthrough for navigation/actions
-                "sectionId", "subsectionId", "subsectionItemId", "redirectToDetails", "redirectToSection",
+                "sectionId", "subsectionId", "subsectionItemId", "nestedSubsectionId", "redirectToDetails", "redirectToSection",
                 "redirectToCommunitySettingsSubsection", "communitySettingsSubsection", "communitySettingsSubsectionItem",
                 "redirectToLink", "redirectToWallet",
 
@@ -316,6 +322,8 @@ QtObject {
                 readonly property ActivityNotification notification: ActivityNotification {
                     notificationId: model.id ?? ""
                     chatId: model.chatId ?? ""
+                    threadId: model.threadId ?? ""
+                    threadName: model.threadName ?? ""
                     communityId: model.communityId ?? ""
                     membershipStatus: model.membershipStatus ?? 0
                     sectionId: model.sectionId ?? ""
@@ -459,6 +467,8 @@ QtObject {
                 // -------------------------
                 // Context row
                 // -------------------------
+                readonly property string tertiaryText: adaptor?.tertiaryText ?? ""
+                readonly property string tertiaryIconName: adaptor?.tertiaryIconName ?? ""
                 readonly property string primaryText: adaptor?.primaryText ?? ""
                 readonly property url contextAvatar: adaptor?.contextAvatar ?? ""
                 readonly property string iconName: adaptor?.iconName ?? ""
@@ -486,6 +496,7 @@ QtObject {
                 // Passthrough / navigation related
                 // ---------------------------------
                 readonly property string sectionId: model.sectionId || model.communityId
+                readonly property string nestedSubsectionId: adaptor?.nestedSubsectionId ?? ""
                 readonly property string subsectionId: model.chatId
                 readonly property string subsectionItemId: adaptor?.subsectionItemId ?? ""
                 readonly property bool dismissed: model.dismissed

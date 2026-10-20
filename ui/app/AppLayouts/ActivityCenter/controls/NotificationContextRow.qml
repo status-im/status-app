@@ -4,7 +4,7 @@
 //
 // STRUCTURE
 // ---------
-//   [icon]  PrimaryText  <separatorIcon>  SecondaryText
+//   [icon]  PrimaryText  <separatorIcon>  SecondaryText  >  [tertiaryIcon] TertiaryText
 //
 // USAGE EXAMPLES
 // --------------
@@ -16,12 +16,11 @@
 //     separatorIconName: "chevron-right"
 // }
 //
-// // DM thread with custom separator
+// // DM thread
 // NotificationContextRow {
-//     iconName: "chat"
-//     primaryText: "Alice & Bob"
-//     secondaryText: "Thread: Payment plan for Q3"
-//     separatorIconName: "dot"
+//     primaryText: ""
+//     tertiaryText: "Payment plan for Q3"
+//     tertiaryIconName: "thread"
 // }
 //
 // // Single context only (no secondary)
@@ -48,9 +47,11 @@ Control {
     // API
     // ──────────────────────────────────────────────────────────────────────────
 
-    // Main and secondary labels (e.g., Community and #channel)
+    // Context labels (e.g., community, #channel, and thread).
     required property string primaryText
     property string secondaryText
+    property string tertiaryText
+    property string tertiaryIconName
 
     // Optional icons
     property url    contextAvatar         // Primary context avatar source
@@ -104,6 +105,7 @@ Control {
 
         // Primary text
         StatusBaseText {
+            visible: root.primaryText !== ""
             width: Math.min(implicitWidth,
                             root.width - icon.width - separator.width - 2 * root.spacing)
             text: root.primaryText
@@ -135,6 +137,51 @@ Control {
             maximumLineCount: 1
             wrapMode: Text.NoWrap
             elide: Text.ElideRight
+        }
+
+        // Keep the tertiary icon with the first word while allowing the title to wrap.
+        Repeater {
+            model: root.tertiaryText.trim() ? root.tertiaryText.trim().split(/\s+/) : []
+
+            delegate: Row {
+                id: tertiaryWord
+                required property int index
+                required property string modelData
+                objectName: "tertiaryWord"
+                spacing: root.spacing
+                width: Math.min(implicitWidth, root.width)
+
+                readonly property bool hasSeparator: index === 0 && (root.primaryText !== "" || root.secondaryText !== "")
+                readonly property bool hasIcon: index === 0 && root.tertiaryIconName !== ""
+
+                StatusIcon {
+                    visible: tertiaryWord.hasSeparator
+                    icon: visible ? "arrow-next" : ""
+                    width: root.separatorSize
+                    height: width
+                    color: root.separatorColor
+                }
+
+                StatusIcon {
+                    visible: tertiaryWord.hasIcon
+                    icon: visible ? root.tertiaryIconName : ""
+                    width: root.iconSize
+                    height: width
+                    color: root.iconColor
+                }
+
+                StatusBaseText {
+                    objectName: "tertiaryText"
+                    width: Math.max(0, Math.min(implicitWidth, root.width
+                                               - (tertiaryWord.hasIcon ? root.iconSize + root.spacing : 0)
+                                               - (tertiaryWord.hasSeparator ? root.separatorSize + root.spacing : 0)))
+                    text: tertiaryWord.modelData
+                    textFormat: Text.PlainText
+                    color: root.secondaryColor
+                    font.pixelSize: Theme.fontSize(13)
+                    wrapMode: Text.WrapAnywhere
+                }
+            }
         }
     }
 }

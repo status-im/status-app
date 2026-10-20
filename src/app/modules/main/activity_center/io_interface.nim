@@ -96,7 +96,7 @@ method addActivityCenterNotifications*(self: AccessInterface, activityCenterNoti
 method resetActivityCenterNotifications*(self: AccessInterface, activityCenterNotifications: seq[ActivityCenterNotificationDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method switchTo*(self: AccessInterface, sectionId, chatId, messageId: string) {.base.} =
+method switchTo*(self: AccessInterface, sectionId, subsectionId, itemId: string, nestedSubsectionId: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method chatExists*(self: AccessInterface, chatId: string): bool {.base.} =

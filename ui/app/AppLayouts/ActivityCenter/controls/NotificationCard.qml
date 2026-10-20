@@ -116,6 +116,10 @@ Control {
     // Primary context avatar source (e.g., Community image).
     property url contextAvatar
 
+    // Optional additional breadcrumb context and icon.
+    property string tertiaryText
+    property string tertiaryIconName
+
     // Secondary context label (e.g., #channel).
     property string secondaryText
 
@@ -403,10 +407,12 @@ Control {
                         Layout.fillWidth: true
                         Layout.rightMargin: d.unreadBadgeSize / 2
                         objectName: "notificationContext"
-                        visible: root.primaryText != ""
+                        visible: root.primaryText !== "" || root.tertiaryText !== ""
                         primaryText: root.primaryText
                         contextAvatar: root.contextAvatar
                         secondaryText: root.secondaryText
+                        tertiaryText: root.tertiaryText
+                        tertiaryIconName: root.tertiaryIconName
                         iconName: root.iconName
                         separatorIconName: root.separatorIconName
                     }

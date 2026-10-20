@@ -47,7 +47,7 @@ Item {
                         read: i % 4 === 0,
                         dismissed: i % 5 === 3,
                         accepted: false,
-                        chatId: "", communityId: "", sectionId: "",
+                        chatId: "", communityId: "", sectionId: "", threadId: "", threadName: "",
                         author: "", chatType: 0, name: "",
                         membershipStatus: ActivityCenterTypes.ActivityCenterMembershipStatus.None,
                         newsTitle: "News title " + i,

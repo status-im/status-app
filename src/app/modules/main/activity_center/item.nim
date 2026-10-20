@@ -29,6 +29,8 @@ type Item* = ref object
   chatType: ChatType
   tokenDataItem: TokenDataItem
   installationId: string
+  threadId: string
+  threadName: string
 
 proc initItem*(
   id: string,
@@ -53,7 +55,9 @@ proc initItem*(
   repliedMessageItem: MessageItem,
   chatType: ChatType,
   tokenDataItem: TokenDataItem,
-  installationId: string
+  installationId: string,
+  threadId: string = "",
+  threadName: string = ""
 ): Item =
   result = Item()
   result.id = id
@@ -79,6 +83,8 @@ proc initItem*(
   result.chatType = chatType
   result.tokenDataItem = tokenDataItem
   result.installationId = installationId
+  result.threadId = threadId
+  result.threadName = threadName
 
 proc `$`*(self: Item): string =
   result = fmt"""activity_center/Item(
@@ -243,3 +249,15 @@ proc tokenDataItem*(self: Item): TokenDataItem =
 
 proc `tokenDataItem=`*(self: Item, value: TokenDataItem) =
   self.tokenDataItem = value
+
+proc threadId*(self: Item): string =
+  self.threadId
+
+proc `threadId=`*(self: Item, value: string) =
+  self.threadId = value
+
+proc threadName*(self: Item): string =
+  self.threadName
+
+proc `threadName=`*(self: Item, value: string) =
+  self.threadName = value
