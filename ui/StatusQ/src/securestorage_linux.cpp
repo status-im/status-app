@@ -54,6 +54,14 @@ struct OpResult {
     SecureStorage::Status status = SecureStorage::StatusGenericError;
     QString credential;
     FailReason reason = FailReason::None;
+
+    // Set by an op whose Finalizer MUTATES storage even on the delivered (non-timeout)
+    // path (e.g. the converge-to-absent cleanup after an ambiguous create failure).
+    // runBounded then keeps the per-account mutation slot held until that finalizer
+    // completed, so a follow-up mutation for the account cannot interleave with the
+    // pending cleanup (and be undone by it). Resource-only finalizers leave this false
+    // and keep the release-before-publication behavior.
+    bool cleanupMutatesStorage = false;
 };
 
 // -------------------------------- pending mutations ------------------------------------
@@ -221,7 +229,10 @@ using Finalizer = std::function<void(bool rollback)>;
 // `mutationAccount`, when non-empty, is released (pending-mutation registry) by the
 // worker: on the delivered path BEFORE completion is published (so a caller receiving
 // StatusSuccess can immediately start another mutation without a spurious rejection); on
-// the timeout path only after rollback/finalization fully resolves.
+// the timeout path only after rollback/finalization fully resolves. A delivered result
+// carrying `cleanupMutatesStorage` also holds the slot until its finalizer completed —
+// a storage-mutating cleanup must never run concurrently with a follow-up mutation for
+// the same account (it could silently undo it).
 //
 // `op` MUST own everything it touches (capture by value): by the time it runs, the
 // caller's stack frame may be gone.
@@ -252,8 +263,11 @@ OpResult runBounded(SecureStorage::Status timeoutStatus,
             if (!shared->timedOut) {
                 // Release the mutation slot before the caller can observe completion, so
                 // an immediate follow-up mutation is not spuriously rejected. (Lock order
-                // is shared->mutex then the registry mutex, never the reverse.)
-                if (!mutationAccount.isEmpty())
+                // is shared->mutex then the registry mutex, never the reverse.) NOT done
+                // when the finalizer still mutates storage: the slot must keep rejecting
+                // follow-up mutations until that cleanup finished, or the cleanup could
+                // delete what a later, successful mutation just stored.
+                if (!mutationAccount.isEmpty() && !result.cleanupMutatesStorage)
                     releaseMutationSlot(mutationAccount);
                 delivered = true;
                 shared->result = result;
@@ -270,7 +284,7 @@ OpResult runBounded(SecureStorage::Status timeoutStatus,
         if (finalize)
             finalize(rollback);
 
-        if (!delivered && !mutationAccount.isEmpty())
+        if (!mutationAccount.isEmpty() && (!delivered || result.cleanupMutatesStorage))
             releaseMutationSlot(mutationAccount);
     }).detach();
 
@@ -465,14 +479,56 @@ SecureStorage::Status SecureStorage::setCredential(const QString &account, const
         g_object_unref(collection);
 
         if (item == nullptr) {
-            g_object_unref(service);
-            const auto reason = promptRefused(error) ? FailReason::Locked : FailReason::None;
-            const auto status = promptRefused(error) ? SecureStorage::StatusUnavailable
-                                                     : SecureStorage::StatusGenericError;
-            qWarning() << "SecureStorage: setCredential failed:"
+            if (promptRefused(error)) {
+                // The collection is locked: creating would need an unlock prompt, which
+                // the no-prompt service refused BEFORE anything was created — a
+                // definitive failure with no server-side effects.
+                g_object_unref(service);
+                qWarning() << "SecureStorage: setCredential refused (locked collection):"
+                           << (error ? error->message : "unknown error");
+                g_clear_error(&error);
+                return {SecureStorage::StatusUnavailable, {}, FailReason::Locked};
+            }
+            // Every other failure is ambiguous: libsecret creates the item on the server
+            // BEFORE initializing its local proxy, so a cancellation (the caller timed
+            // out) or a proxy/transport error can surface as failure even though the
+            // item was committed. Converge the stored state to ABSENT via a best-effort
+            // attribute search + delete (fresh, non-cancellable) and report the mutation
+            // as indeterminate. Installed as the Finalizer, i.e. the pending-mutation
+            // slot stays held until it resolves.
+            const bool cancelled = g_cancellable_is_cancelled(cancellable);
+            qWarning() << "SecureStorage: setCredential failed (possibly committed):"
                        << (error ? error->message : "unknown error");
             g_clear_error(&error);
-            return {status, {}, reason};
+            finalize = [service, serviceUtf8, accountUtf8](bool) {
+                GError *cleanupError = nullptr;
+                GHashTable *attrs = attributesFor(serviceUtf8, accountUtf8);
+                GList *leftovers = secret_service_search_sync(service,
+                                                              storageSchema(),
+                                                              attrs,
+                                                              SECRET_SEARCH_ALL,
+                                                              nullptr,
+                                                              &cleanupError);
+                g_hash_table_unref(attrs);
+                if (cleanupError != nullptr) {
+                    qWarning() << "SecureStorage: cleanup search after failed setCredential failed:"
+                               << cleanupError->message;
+                    g_clear_error(&cleanupError);
+                } else {
+                    for (GList *iter = leftovers; iter != nullptr; iter = iter->next) {
+                        if (!secret_item_delete_sync(SECRET_ITEM(iter->data), nullptr, &cleanupError)) {
+                            qWarning() << "SecureStorage: cleanup of failed setCredential failed:"
+                                       << (cleanupError ? cleanupError->message : "unknown error");
+                            g_clear_error(&cleanupError);
+                        }
+                    }
+                }
+                g_list_free_full(leftovers, g_object_unref);
+                g_object_unref(service);
+            };
+            return {SecureStorage::StatusIndeterminate, {},
+                    cancelled ? FailReason::Timeout : FailReason::None,
+                    /*cleanupMutatesStorage=*/true};
         }
 
         // The rollback/cleanup decision is made by runBounded under the shared lock: if

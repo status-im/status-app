@@ -20,6 +20,12 @@ const DEFAULT_SEEN_NETWORK_CHAINS = "[]"
 const LS_KEY_SEEN_MANAGE_NETWORKS_CHAINS = "global/seenManageNetworksChains"
 const DEFAULT_SEEN_MANAGE_NETWORKS_CHAINS = "[]"
 const LAS_KEY_SELECTED_PROFILE_KEY_UID = "global/selected_profile_key_uid"
+# Per-profile marker set when a sign-out could not verifiably remove the "Stay logged in"
+# credential (transient secure-storage failure): startup auto-login is suppressed for
+# that profile until the next explicit login clears it, so an explicit sign-out can never
+# be undone by a recovered backend. Lives here (not in the per-account settings file)
+# because it must be readable BEFORE login.
+const LAS_KEY_AUTO_LOGIN_SUPPRESSED_PREFIX = "global/auto_login_suppressed/"
 
 when constants.IS_MOBILE:
   const DEFAULT_VISIBILITY = 4 #maximized visibility, from qml
@@ -212,3 +218,22 @@ QtObject:
     read = getSelectedProfileKeyUid
     write = setSelectedProfileKeyUid
     notify = selectedProfileKeyUidChanged
+
+  proc isAutoLoginSuppressed*(self: LocalAppSettings, keyUid: string): bool {.slot.} =
+    if self.settings.isNil or keyUid.len == 0:
+      return false
+    self.settings.value(LAS_KEY_AUTO_LOGIN_SUPPRESSED_PREFIX & keyUid, newQVariant(false)).boolVal
+
+  # Returns true only when the change verifiably reached disk: the sign-out caller may
+  # hard-exit right after (mobile logout goes through application.exit -> _exit), which
+  # would silently drop a deferred QSettings write — so the write is flushed and the
+  # QSettings status checked synchronously.
+  proc setAutoLoginSuppressed*(self: LocalAppSettings, keyUid: string, value: bool): bool {.slot.} =
+    if self.settings.isNil or keyUid.len == 0:
+      return false
+    if value:
+      self.settings.setValue(LAS_KEY_AUTO_LOGIN_SUPPRESSED_PREFIX & keyUid, newQVariant(true))
+    else:
+      self.settings.remove(LAS_KEY_AUTO_LOGIN_SUPPRESSED_PREFIX & keyUid)
+    self.settings.sync()
+    return self.settings.status() == 0 # QSettings::NoError

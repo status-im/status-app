@@ -3,6 +3,7 @@ BalancesOnScreenTracker 1.0 BalancesOnScreenTracker.qml
 GlobalBanner 1.0 GlobalBanner.qml
 SplashScreen 1.0 SplashScreen.qml
 Popups 1.0 Popups.qml
+ProfileEncryptionMigrationFlow 1.0 ProfileEncryptionMigrationFlow.qml
 SignOutConfirmationDialog 1.0 SignOutConfirmationDialog.qml
 ToastsManager 1.0 ToastsManager.qml
 StatusTrayIcon 1.0 StatusTrayIcon.qml

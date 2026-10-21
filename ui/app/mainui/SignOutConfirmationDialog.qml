@@ -11,6 +11,10 @@ ConfirmationDialog {
     required property SecureStorage secureStorage
     required property string keyUid
 
+    // The global app settings holding the per-profile auto-login suppression; a context
+    // property in the app, absent in QML tests (injectable there).
+    property var appSettings: typeof localAppSettings !== "undefined" ? localAppSettings : null
+
     signal signOutRequested()
 
     confirmButtonObjectName: "signOutConfirmation"
@@ -19,22 +23,38 @@ ConfirmationDialog {
     confirmButtonLabel: qsTr("Sign out & Quit")
 
     onConfirmButtonClicked: {
-        // Sign-out must clear the auto-login credential (delete-first: startup trusts
-        // credential presence), and may proceed ONLY on verified deletion — otherwise
-        // the next launch would silently auto-login right after an explicit sign out.
-        // The per-account preference deliberately survives (the next explicit login
-        // re-stores a fresh credential), and the biometric item is intentionally
-        // untouched.
+        // Sign-out clears the auto-login credential first (startup trusts credential
+        // presence). The per-account preference deliberately survives (the next explicit
+        // login re-stores a fresh credential), and the biometric item is intentionally
+        // untouched. NotSupported counts as verified: it only ever comes from the stub
+        // backend (no implementation on this platform), where no build could ever have
+        // stored a credential; a store THIS process merely cannot reach (e.g. an
+        // unsigned dev build) reports Unavailable and is handled below.
         const status = root.secureStorage.deleteCredential(root.keyUid)
-        if (status === SecureStorage.StatusSuccess || status === SecureStorage.StatusNotFound) {
-            root.signOutRequested()
-            return
+        const deletionVerified = status === SecureStorage.StatusSuccess
+                              || status === SecureStorage.StatusNotFound
+                              || status === SecureStorage.StatusNotSupported
+        if (!deletionVerified) {
+            // The credential may still exist (transient failure, timeout, locked
+            // keyring, inaccessible keychain). Durably suppress startup auto-login for
+            // this profile instead of trapping the user in the session — an explicit
+            // sign-out can then never be undone by a backend that becomes reachable
+            // before the next launch; the next explicit login lifts the suppression and
+            // reconciles the stored credential. The setter flushes to disk and reports
+            // whether the marker verifiably persisted (mobile logout hard-exits right
+            // after this handler): when NEITHER the deletion NOR the suppression can be
+            // confirmed, keep the session so the user can retry.
+            const suppressed = root.appSettings
+                             ? root.appSettings.setAutoLoginSuppressed(root.keyUid, true)
+                             : false
+            if (!suppressed) {
+                Global.displayToastMessage(
+                            qsTr("Failed to turn off automatic login — sign out aborted, please try again"),
+                            "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+                root.close()
+                return
+            }
         }
-
-        // Keep the session: surface the failure so the user can retry.
-        Global.displayToastMessage(
-                    qsTr("Failed to remove the Stay logged in credential — sign out aborted, please try again"),
-                    "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-        root.close()
+        root.signOutRequested()
     }
 }
