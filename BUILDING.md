@@ -105,7 +105,7 @@ Install required packages:
 
 ```bash
 sudo apt update
-sudo apt install libpcsclite-dev build-essential mesa-common-dev libglu1-mesa-dev libssl-dev cmake jq libxcb-xinerama0
+sudo apt install libpcsclite-dev build-essential mesa-common-dev libglu1-mesa-dev libssl-dev cmake jq libxcb-xinerama0 libsecret-1-dev
 ```
 
 > ⚠️ Note: `status-go` needs protoc 36 or newer, which is newer than `protobuf-compiler` in apt. `scripts/ubuntu_build_setup.sh` installs it from the upstream release.
@@ -140,7 +140,7 @@ npm install -g npm@latest
 Install required packages:
 
 ```bash
-sudo dnf install pcsc-lite-devel openssl-devel protobuf-devel protobuf-compiler
+sudo dnf install pcsc-lite-devel openssl-devel protobuf-devel protobuf-compiler libsecret-devel
 ```
 
 Install **nvm** and Node.js as per the [Ubuntu instructions above](#ubuntu).

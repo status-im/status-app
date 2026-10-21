@@ -16,6 +16,14 @@
 //  - Windows:   DPAPI-protected blob (current user scope)
 //  - Linux:     Secret Service (GNOME Keyring / KWallet) via libsecret
 //  - Android:   Keystore-wrapped entry (no user-authentication requirement)
+//
+// Latency contract: operations are local and fast on macOS/iOS/Windows/Android. On Linux
+// they cross D-Bus; each public call runs ONE worker-thread operation bounded by a single
+// short deadline (~1.5s) — a broken Secret Service can stall a UI-thread caller for at
+// most that deadline, never indefinitely. A timeout or unreachable service invalidates
+// `available` and starts a backoff window during which reads fail fast (mutations, being
+// user-initiated, still attempt). A timed-out mutation reports StatusIndeterminate — see
+// the enum note. Callers on hot paths should gate on `available`.
 class SecureStorage : public QObject {
     Q_OBJECT
 
@@ -32,6 +40,12 @@ public:
         StatusGenericError,
         StatusUnavailable,
         StatusNotFound,
+
+        // A mutation hit its deadline while possibly still in flight (Linux only): it MAY
+        // or MAY NOT take effect. The backend rolls a late commit back on a best-effort
+        // basis; callers must treat this as failure for UX purposes and reconcile the
+        // stored state (hasCredential) before relying on it.
+        StatusIndeterminate,
     };
 
     Q_ENUM(Status)
