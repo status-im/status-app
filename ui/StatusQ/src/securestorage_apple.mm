@@ -20,6 +20,12 @@ static SecureStorage::Status convertStatus(OSStatus status)
         // device-only accessibility this class guarantees (kSecAttrAccessible is only
         // supported for data-protection keychain items on macOS), so degrading would
         // silently weaken the protection of the stored credential.
+        //
+        // Unavailable, NOT NotSupported: the verdict is definitive for THIS process, but
+        // it proves nothing about the store itself — an entitled build sharing the data
+        // directory may have stored a credential this process cannot see or delete.
+        // Callers must treat it as an unverified outcome (e.g. sign-out persists the
+        // auto-login suppression instead of assuming nothing is stored).
         return SecureStorage::StatusUnavailable;
     default:
         return SecureStorage::StatusGenericError;

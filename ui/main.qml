@@ -648,6 +648,7 @@ Window {
                 // e2e runs must never auto-login: the OS secure store is not
                 // per-data-dir, so a leftover developer credential could hijack a run.
                 item.autoLoginEnabled = !localAppSettings.testEnvironment
+                                        && !localAppSettings.isAutoLoginSuppressed(localAppSettings.selectedProfileKeyUid)
                 splashScreenLoader.active = false
                 applicationWindow.contentLoaded()
                 Backpressure.debounce(applicationWindow, 750, () => {

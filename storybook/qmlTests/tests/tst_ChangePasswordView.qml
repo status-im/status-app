@@ -81,6 +81,9 @@ Item {
             property var deleteCalls: []
             property int setStatus: SecureStorage.StatusSuccess
             property int deleteStatus: SecureStorage.StatusSuccess
+            // Models the Linux timeout case: StatusIndeterminate returned to the caller
+            // while the write actually committed in the background.
+            property bool commitOnIndeterminate: false
 
             function hasCredential(account) {
                 return creds[account] !== undefined ? SecureStorage.StatusSuccess
@@ -88,7 +91,8 @@ Item {
             }
             function setCredential(account, credential) {
                 setCalls.push({ account, credential })
-                if (setStatus === SecureStorage.StatusSuccess)
+                if (setStatus === SecureStorage.StatusSuccess
+                        || (setStatus === SecureStorage.StatusIndeterminate && commitOnIndeterminate))
                     creds[account] = credential
                 return setStatus
             }
@@ -200,6 +204,11 @@ Item {
             const newPswInput = findChild(root.view, "passwordViewNewPassword")
             verify(!!newPswInput)
             newPswInput.text = "new-password-1"
+            // Request the change through the view's own modal first: the view only
+            // handles passwordChanged signals for changes it requested itself.
+            const modal = findChild(root.view, "confirmChangePasswordModal")
+            verify(!!modal)
+            modal.changePasswordRequested(false)
             root.view.privacyStore.privacyModule.passwordChanged(success, success ? "" : "some error")
         }
 
@@ -334,6 +343,36 @@ Item {
             compare(root.view.privacyStore.stayLoggedIn, false)
         }
 
+        function test_stayLoggedInEnableIndeterminate_data() {
+            return [
+                { tag: "cleanup verified -> disabled", committed: true, deleteStatus: SecureStorage.StatusSuccess, expectedPref: false, expectCredential: false },
+                { tag: "nothing committed -> disabled", committed: false, deleteStatus: SecureStorage.StatusSuccess, expectedPref: false, expectCredential: false },
+                { tag: "cleanup failed -> worst case enabled", committed: true, deleteStatus: SecureStorage.StatusGenericError, expectedPref: true, expectCredential: true },
+                { tag: "cleanup indeterminate -> worst case enabled", committed: false, deleteStatus: SecureStorage.StatusIndeterminate, expectedPref: true },
+            ]
+        }
+
+        // An indeterminate store (e.g. a Secret Service timeout — the write MAY have
+        // committed) first attempts a converging deletion. Verified deletion -> the
+        // feature stays OFF; an unverifiable cleanup leaves the preference ON
+        // (worst-case alignment: never contradict a possibly stored credential — the
+        // post-login task reconciles on the next login either way).
+        function test_stayLoggedInEnableIndeterminate(data) {
+            root.secureStorageMock.setStatus = SecureStorage.StatusIndeterminate
+            root.secureStorageMock.commitOnIndeterminate = data.committed
+            root.secureStorageMock.deleteStatus = data.deleteStatus
+
+            stayLoggedInSection().toggleStayLoggedIn(false)
+            Global.authenticationResult(Constants.authenticationReason.enableStayLoggedIn,
+                                        "password-1", "", root.testKeyUid, "")
+
+            compare(root.secureStorageMock.setCalls.length, 1)
+            compare(root.secureStorageMock.deleteCalls.length, 1) // convergence attempt
+            compare(root.view.privacyStore.stayLoggedIn, data.expectedPref)
+            if (data.expectCredential !== undefined)
+                compare(root.secureStorageMock.creds[root.testKeyUid] !== undefined, data.expectCredential)
+        }
+
         function test_stayLoggedInDisable_data() {
             return [
                 { tag: "verified deletion", deleteStatus: SecureStorage.StatusSuccess, expectedPref: false },
@@ -393,39 +432,24 @@ Item {
             compare(root.view.privacyStore.stayLoggedIn, data.expectedPref)
         }
 
-        // Migration: auth result -> same-password non-rekey change -> on success a
-        // non-dismissible restart dialog (restart is the only way out).
-        function test_migrationFlowOpensNonDismissibleRestartDialog() {
-            root.profileMigratedMock = false
-            root.view.destroy()
-            root.view = createTemporaryObject(viewComponent, root)
-            verify(!!root.view)
-
-            stayLoggedInSection().migrateRequested()
-            Global.authenticationResult(Constants.authenticationReason.migrateProfileEncryption,
-                                        "password-1", "", root.testKeyUid, "")
-
-            compare(root.changePasswordCalls.length, 1)
-            compare(root.changePasswordCalls[0].password, "password-1")
-            compare(root.changePasswordCalls[0].newPassword, "password-1")
-            compare(root.changePasswordCalls[0].rekey, false)
+        // A password change NOT requested through this view's form (e.g. the app-level
+        // encryption-migration flow, whose completion is handled by
+        // ProfileEncryptionMigrationFlow) must be ignored: handling it here would
+        // refresh the credentials from the EMPTY form fields and wrongly disable
+        // biometrics and the stay-logged-in credential.
+        function test_ignoresForeignPasswordChange() {
+            root.keychainMock.creds[root.testKeyUid] = "old-password"
+            root.view.privacyStore.setStayLoggedIn(true)
+            root.secureStorageMock.creds[root.testKeyUid] = "dek:old-dek-hex"
 
             root.view.privacyStore.privacyModule.passwordChanged(true, "")
 
-            const dialog = findChild(root.view, "migrationRestartDialog")
-            verify(!!dialog)
-            tryVerify(() => dialog.opened)
-            compare(dialog.escapeKeyCloses, false)
-            compare(dialog.closeOnOverlayClick, false)
-
-            // Any close that is not the restart action immediately reopens the dialog
-            dialog.close()
-            tryVerify(() => dialog.opened)
-
-            // Cleanup: simulate the restart action having been taken
-            dialog.restartTriggered = true
-            dialog.close()
-            tryVerify(() => !dialog.opened)
+            compare(root.keychainMock.updateCalls.length, 0)
+            compare(root.keychainMock.creds[root.testKeyUid], "old-password")
+            compare(root.secureStorageMock.setCalls.length, 0)
+            compare(root.secureStorageMock.deleteCalls.length, 0)
+            compare(root.view.privacyStore.stayLoggedIn, true)
+            compare(root.preference, "store")
         }
     }
 }

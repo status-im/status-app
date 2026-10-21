@@ -369,6 +369,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
 elseif (WIN32)
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
+        src/shareintake_other.cpp
         src/keychain_other.cpp
         src/securestorage_windows.cpp
     )
@@ -378,6 +379,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(StatusQ PRIVATE PkgConfig::LibSecret)
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
+        src/shareintake_other.cpp
         src/keychain_other.cpp
         src/securestorage_linux.cpp
     )
