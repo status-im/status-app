@@ -1,4 +1,4 @@
-FROM harbor.status.im/status-im/status-desktop-build:1.0.13-qt6.11.0
+FROM harbor.status.im/status-im/status-desktop-build:20261021-qt6.11.0
 
 USER root
 
@@ -13,7 +13,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --ba
       | tee /etc/apt/sources.list.d/docker.list > /dev/null \
 && apt-get update && apt-get install -y \
     docker-ce-cli docker-compose-plugin \
-    mesa-common-dev libglu1-mesa-dev libpcsclite-dev \
+    mesa-common-dev libglu1-mesa-dev libpcsclite-dev libsecret-1-dev \
     xvfb fluxbox libxft-dev xclip xsel nautilus \
     tesseract-ocr libzbar-dev libopenjp2-7 \
     ruby-dev ruby-bundler leiningen ghp-import git-lfs \
