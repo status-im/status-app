@@ -36,6 +36,13 @@ public:
 
     enum Status {
         StatusSuccess = 0,
+
+        // No secure-storage backend exists on this platform (stub build): no build of
+        // the app could ever have stored a credential here, so callers may treat this as
+        // "verifiably nothing stored". A backend that merely cannot be accessed by THIS
+        // process (e.g. an unsigned macOS build without keychain entitlements) reports
+        // StatusUnavailable instead — per-process inaccessibility proves nothing about
+        // what an entitled build may have stored in the same store.
         StatusNotSupported,
         StatusGenericError,
         StatusUnavailable,

@@ -84,6 +84,29 @@ QtObject {
     }
 
     readonly property KeycardMgmtStores.KeycardManagementStore keycardManagementStore: KeycardMgmtStores.KeycardManagementStore {
+        onKeycardMoveProfileKeyPairSuccess: {
+            // The profile keypair moved to a keycard — keycard profiles are out of scope
+            // for "Stay logged in". The credential was already verifiably removed when
+            // the flow started (see openKeycardManagementPopup — a prerequisite, because
+            // the rekey=false conversion keeps the same DEK); this re-delete is
+            // defense-in-depth, and the preference flips off only on a verified-absent
+            // result (delete-first ordering: startup trusts credential presence).
+            const status = root.secureStorage.deleteCredential(userProfileKeyUid)
+            if ((status === SecureStorage.StatusSuccess
+                 || status === SecureStorage.StatusNotFound
+                 || status === SecureStorage.StatusNotSupported)
+                    && typeof localAccountSettings !== "undefined") {
+                localAccountSettings.stayLoggedIn = false
+            }
+        }
+    }
+
+    // The encryption-migration flow must survive section navigation (the settings view
+    // that starts it is unloaded when leaving the Profile section), so it is owned here.
+    readonly property ProfileEncryptionMigrationFlow profileEncryptionMigrationFlow: ProfileEncryptionMigrationFlow {
+        privacyStore: root.privacyStore
+        keychain: root.keychain
+        popupParent: root.popupParent
     }
 
     property var emojiPopup: null
@@ -288,6 +311,28 @@ QtObject {
 
         if (finalFlow !== flow) {
             console.info("wrong flow for the provided keyUid: ", keyUid, " flow changed from ", flow, " to ", finalFlow)
+        }
+
+        if (finalFlow === Constants.keycard.flow.moveProfileKeyPair) {
+            // Converting the profile to Keycard must not leave a usable silent DEK
+            // behind (the rekey=false conversion rewraps the SAME DEK, so a stored
+            // credential would keep decrypting the databases without the card). Verified
+            // removal of the "Stay logged in" credential is therefore a prerequisite for
+            // starting the flow — NotSupported qualifies only because it comes solely
+            // from the stub backend (no build could ever have stored a credential);
+            // an inaccessible store (Unavailable, e.g. an unsigned dev build) blocks the
+            // conversion, since a credential stored by an entitled build may survive.
+            // The preference is flipped off only once the conversion succeeds; if the
+            // user abandons the flow, the next explicit login re-stores the credential.
+            const deleteStatus = root.secureStorage.deleteCredential(root.keycardManagementStore.userProfileKeyUid)
+            if (deleteStatus !== SecureStorage.StatusSuccess
+                    && deleteStatus !== SecureStorage.StatusNotFound
+                    && deleteStatus !== SecureStorage.StatusNotSupported) {
+                Global.displayToastMessage(
+                            qsTr("Cannot move the profile key pair to Keycard: failed to remove the Stay logged in credential, please try again"),
+                            "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+                return
+            }
         }
 
         console.info("openning keycard popup for flow: ", finalFlow, " keyUid: ", finalKeyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)

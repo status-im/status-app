@@ -58,6 +58,7 @@ Control {
             }
         }
         StatusBaseText {
+            objectName: "storageUnavailableText"
             Layout.fillWidth: true
             text: qsTr("Secure storage is unavailable on this device.")
             color: Theme.palette.directColor1
@@ -66,6 +67,7 @@ Control {
             visible: !root.storageAvailable
         }
         StatusBaseText {
+            objectName: "migrationHintText"
             Layout.fillWidth: true
             text: qsTr("To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.")
             color: Theme.palette.directColor1
@@ -80,6 +82,7 @@ Control {
             onClicked: root.migrateRequested()
         }
         StatusBaseText {
+            objectName: "migrationBusyText"
             Layout.fillWidth: true
             text: qsTr("Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.")
             color: Theme.palette.directColor1

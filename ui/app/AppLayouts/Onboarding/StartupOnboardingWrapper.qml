@@ -120,6 +120,11 @@ Item {
             // committed after its caller timed out).
             // `localAccountSettings` is a context property, absent in QML tests.
             const settings = typeof localAccountSettings !== "undefined" ? localAccountSettings : null
+            // An explicit login happened: lift any auto-login suppression recorded by a
+            // sign-out whose credential deletion could not be verified — the code below
+            // reconciles the stored credential with the preference either way.
+            const appSettings = typeof localAppSettings !== "undefined" ? localAppSettings : null
+            appSettings?.setAutoLoginSuppressed(account, false)
             if (enablePreference && settings)
                 settings.stayLoggedIn = true
             if (settings && settings.stayLoggedIn)

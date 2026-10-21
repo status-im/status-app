@@ -46,6 +46,10 @@ proc remove*(self: QSettings, key: string) =
 proc sync*(self: QSettings) =
   sqset.sync(self.inner)
 
+proc status*(self: QSettings): int =
+  ## Mirrors QSettings::status(): 0 == NoError, 1 == AccessError, 2 == FormatError.
+  int(sqset.status(self.inner))
+
 proc beginGroup*(self: QSettings, group: string) =
   sqset.beginGroup(self.inner, group)
 

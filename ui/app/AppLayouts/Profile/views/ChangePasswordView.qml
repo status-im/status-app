@@ -46,9 +46,11 @@ SettingsContentBase {
 
         // "Stay logged in" state
         property bool enablingStayLoggedIn: false
-        property bool migrationAuthPending: false
-        property bool migratingProfile: false
-        property string migrationPassword
+
+        // True between requesting a password change from this view's form and receiving
+        // its result — the passwordChanged signal is global, and changes requested
+        // elsewhere (the app-level encryption-migration flow) must be ignored here.
+        property bool ownPasswordChangePending: false
 
         readonly property bool stayLoggedInEnabled: root.privacyStore.stayLoggedIn
         readonly property bool profileMigrated: {
@@ -60,40 +62,6 @@ SettingsContentBase {
             Global.displayToastMessage(
                         qsTr("Failed to enable Stay logged in for this device"),
                         "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-        }
-
-        function handleMigrationResult(success, errorMsg) {
-            const password = d.migrationPassword
-            d.migrationPassword = ""
-            d.migratingProfile = false
-            if (!success) {
-                Global.displayToastMessage(
-                            qsTr("Failed to migrate to the new encryption format: %1").arg(errorMsg),
-                            "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-                return
-            }
-            // Refresh the biometric credential with the same password — this also
-            // upgrades a legacy (raw password) item to the wrapped DEK now that the
-            // profile is migrated.
-            if (root.keychain.hasCredential(root.privacyStore.keyUid) === Keychain.StatusSuccess) {
-                const cred = root.privacyStore.getBiometricCredentialForStorage(root.privacyStore.keyUid, password)
-                if (cred === "" || root.keychain.updateCredential(root.privacyStore.keyUid, cred) !== Keychain.StatusSuccess) {
-                    // Never leave a stale credential behind: disable biometrics
-                    d.pendingFailureDelete = true
-                    const deleteStatus = root.keychain.deleteCredential(root.privacyStore.keyUid)
-                    if (deleteStatus !== Keychain.StatusSuccess) {
-                        d.pendingFailureDelete = false
-                        root.privacyStore.setBiometricPreferenceNotNow()
-                    }
-                    Global.displayToastMessage(
-                                qsTr("Biometric login disabled — re-enable it in Settings"),
-                                "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-                }
-            }
-            d.reevaluateHasCredential()
-            // The migration re-encrypted the databases — like any deep password change,
-            // the app must restart before it can continue.
-            migrationRestartDialog.open()
         }
 
         // Set when a credential-update failure forces a deletion
@@ -153,41 +121,50 @@ SettingsContentBase {
     }
     readonly property Connections stayLoggedInAuthConnections: Connections {
         target: Global
-        enabled: d.enablingStayLoggedIn || d.migrationAuthPending
+        enabled: d.enablingStayLoggedIn
 
         function onAuthenticationResult(reason, password, pin, keyUid) {
-            if (reason === Constants.authenticationReason.enableStayLoggedIn) {
-                if (!d.enablingStayLoggedIn)
-                    return
-                d.enablingStayLoggedIn = false
-                if (keyUid === "")
-                    return // cancelled
-                if (pin !== "") {
-                    d.showStayLoggedInErrorToast() // keycard profiles are out of scope
-                    return
-                }
-                const credential = root.privacyStore.getStayLoggedInCredentialForStorage(keyUid, password)
-                if (credential === ""
-                        || root.secureStorage.setCredential(keyUid, credential) !== SecureStorage.StatusSuccess) {
+            if (reason !== Constants.authenticationReason.enableStayLoggedIn)
+                return
+            d.enablingStayLoggedIn = false
+            if (keyUid === "")
+                return // cancelled
+            if (pin !== "") {
+                d.showStayLoggedInErrorToast() // keycard profiles are out of scope
+                return
+            }
+            const credential = root.privacyStore.getStayLoggedInCredentialForStorage(keyUid, password)
+            if (credential === "") {
+                d.showStayLoggedInErrorToast()
+                return
+            }
+            const status = root.secureStorage.setCredential(keyUid, credential)
+            if (status === SecureStorage.StatusIndeterminate) {
+                // The write MAY have committed (e.g. a Secret Service timeout). Try
+                // to converge to "disabled"; when even the cleanup is unverifiable,
+                // align the preference with the worst case (enabled) rather than
+                // contradict a possibly stored credential — preference and credential
+                // are reconciled by the post-login task on the next login.
+                const cleanupStatus = root.secureStorage.deleteCredential(keyUid)
+                if (cleanupStatus === SecureStorage.StatusSuccess
+                        || cleanupStatus === SecureStorage.StatusNotFound) {
                     d.showStayLoggedInErrorToast()
                     return
                 }
                 root.privacyStore.setStayLoggedIn(true)
                 Global.displayToastMessage(
-                            qsTr("Stay logged in enabled for this device"),
-                            "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
-            } else if (reason === Constants.authenticationReason.migrateProfileEncryption) {
-                if (!d.migrationAuthPending)
-                    return
-                d.migrationAuthPending = false
-                if (keyUid === "" || pin !== "")
-                    return // cancelled, or unsupported keycard auth
-                d.migrationPassword = password
-                d.migratingProfile = true
-                // In-place migration: same password, no rekey — status-go performs the
-                // one-time legacy -> DEK re-encryption on the deep-change machinery.
-                root.privacyStore.changePassword(password, password, false)
+                            qsTr("Stay logged in could not be confirmed — it was left enabled and will be verified at your next login"),
+                            "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+                return
             }
+            if (status !== SecureStorage.StatusSuccess) {
+                d.showStayLoggedInErrorToast()
+                return
+            }
+            root.privacyStore.setStayLoggedIn(true)
+            Global.displayToastMessage(
+                        qsTr("Stay logged in enabled for this device"),
+                        "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
         }
     }
     readonly property Connections keychainConnections: Connections {
@@ -265,7 +242,6 @@ SettingsContentBase {
             storageAvailable: root.secureStorage.available
             stayLoggedInEnabled: d.stayLoggedInEnabled
             profileMigrated: d.profileMigrated
-            busy: d.migratingProfile
 
             onToggleStayLoggedIn: function(checked) {
                 // Enable flow: the password is needed to export the DEK
@@ -290,7 +266,9 @@ SettingsContentBase {
                             "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
             }
             onMigrateRequested: {
-                d.migrationAuthPending = true
+                // The migration flow itself (progress modal, completion, restart) is
+                // owned at the application level (ProfileEncryptionMigrationFlow in
+                // Popups): it must survive this view being unloaded by navigation.
                 Global.openAuthenticationPopup(Constants.authenticationReason.migrateProfileEncryption, root.privacyStore.keyUid, false)
             }
         }
@@ -353,17 +331,22 @@ SettingsContentBase {
 
         ConfirmChangePasswordModal {
             id: confirmPasswordChangePopup
+            objectName: "confirmChangePasswordModal"
             onChangePasswordRequested: function(rekey) {
+                d.ownPasswordChangePending = true
                 root.privacyStore.changePassword(choosePasswordForm.currentPswText, choosePasswordForm.newPswText, rekey);
             }
 
             Connections {
                 target: root.privacyStore.privacyModule
                 function onPasswordChanged(success: bool, errorMsg: string) {
-                    if (d.migratingProfile) {
-                        d.handleMigrationResult(success, errorMsg)
+                    // Ignore changes this view did not request (e.g. the app-level
+                    // encryption-migration flow — it owns its own completion handling):
+                    // treating them as a form-driven change would refresh credentials
+                    // from the EMPTY form fields and wrongly disable biometrics.
+                    if (!d.ownPasswordChangePending)
                         return
-                    }
+                    d.ownPasswordChangePending = false
                     if (success) {
                         confirmPasswordChangePopup.passwordSuccessfulyChanged()
                         if (root.keychain.hasCredential(root.privacyStore.keyUid) === Keychain.StatusSuccess) {
@@ -429,31 +412,6 @@ SettingsContentBase {
                     confirmPasswordChangePopup.close()
                 }
             }
-        }
-    }
-
-    ConfirmationDialog {
-        id: migrationRestartDialog
-
-        objectName: "migrationRestartDialog"
-
-        property bool restartTriggered: false
-
-        headerSettings.title: qsTr("Encryption updated")
-        confirmationText: qsTr("Your profile was migrated to the new encryption format. Status must restart to complete the process.")
-        confirmButtonLabel: qsTr("Restart Status")
-        // The migration deep-re-encrypted the databases — restarting is the only way
-        // out. Esc/overlay dismissal is disabled, and a close arriving through any
-        // other path (e.g. the header close button) immediately reopens the dialog.
-        escapeKeyCloses: false
-        closeOnOverlayClick: false
-        onConfirmButtonClicked: {
-            restartTriggered = true
-            SystemUtils.restartApplication(true)
-        }
-        onClosed: {
-            if (!restartTriggered)
-                Qt.callLater(() => migrationRestartDialog.open())
         }
     }
 
