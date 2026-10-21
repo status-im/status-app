@@ -367,6 +367,15 @@ elseif (WIN32)
         src/keychain_other.cpp
         src/securestorage_windows.cpp
     )
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(LibSecret REQUIRED IMPORTED_TARGET libsecret-1)
+    target_link_libraries(StatusQ PRIVATE PkgConfig::LibSecret)
+    target_sources(StatusQ PRIVATE
+        src/shareutils_other.cpp
+        src/keychain_other.cpp
+        src/securestorage_linux.cpp
+    )
 else ()
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
