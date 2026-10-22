@@ -198,43 +198,6 @@ SettingsContentBase {
         spacing: 12
         width: Math.min(d.maxContentWidth, root.contentWidth)
 
-        BiometricsSectionView {
-            Layout.fillWidth: true
-
-            enabled: root.keychain.available
-            biometricsAvailable: root.keychain.available
-            biometricsEnabled: d.biometricsEnabled
-            onToggleBiometrics: function(checked) {
-                // Enable Biometrics flow
-                if (!checked) {
-                    d.enablingBiometrics = true
-                    Global.openAuthenticationPopup(Constants.authenticationReason.enableBiometrics, root.privacyStore.keyUid, false)
-                    return
-                }
-
-                // Disable biometrics flow
-                const status = root.keychain.deleteCredential(root.privacyStore.keyUid)
-
-                switch (status) {
-                case Keychain.StatusSuccess:
-                    Global.displayToastMessage(
-                                qsTr("Biometric login and transaction authentication disabled for this device"),
-                                "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
-                    break
-                default:
-                    Global.displayToastMessage(
-                                qsTr("Failed to disable biometric login and transaction authentication for this device"),
-                                "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-                }
-                d.reevaluateHasCredential()
-            }
-        }
-
-        StatusModalDivider {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-        }
-
         StayLoggedInSectionView {
             objectName: "stayLoggedInSection"
             Layout.fillWidth: true
@@ -270,6 +233,43 @@ SettingsContentBase {
                 // owned at the application level (ProfileEncryptionMigrationFlow in
                 // Popups): it must survive this view being unloaded by navigation.
                 Global.openAuthenticationPopup(Constants.authenticationReason.migrateProfileEncryption, root.privacyStore.keyUid, false)
+            }
+        }
+
+        StatusModalDivider {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
+        }
+
+        BiometricsSectionView {
+            Layout.fillWidth: true
+
+            enabled: root.keychain.available
+            biometricsAvailable: root.keychain.available
+            biometricsEnabled: d.biometricsEnabled
+            onToggleBiometrics: function(checked) {
+                // Enable Biometrics flow
+                if (!checked) {
+                    d.enablingBiometrics = true
+                    Global.openAuthenticationPopup(Constants.authenticationReason.enableBiometrics, root.privacyStore.keyUid, false)
+                    return
+                }
+
+                // Disable biometrics flow
+                const status = root.keychain.deleteCredential(root.privacyStore.keyUid)
+
+                switch (status) {
+                case Keychain.StatusSuccess:
+                    Global.displayToastMessage(
+                                qsTr("Biometric login and transaction authentication disabled for this device"),
+                                "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
+                    break
+                default:
+                    Global.displayToastMessage(
+                                qsTr("Failed to disable biometric login and transaction authentication for this device"),
+                                "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+                }
+                d.reevaluateHasCredential()
             }
         }
 

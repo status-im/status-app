@@ -7,7 +7,6 @@ ConvertKeycardAccountPage 1.0 ConvertKeycardAccountPage.qml
 ConvertKeycardAccountAcksPage 1.0 ConvertKeycardAccountAcksPage.qml
 CreatePasswordPage 1.0 CreatePasswordPage.qml
 CreateProfilePage 1.0 CreateProfilePage.qml
-EnableBiometricsPage 1.0 EnableBiometricsPage.qml
 ImportLocalBackupPage 1.0 ImportLocalBackupPage.qml
 KeycardDetailsPage 1.0 KeycardDetailsPage.qml
 KeycardLostPage 1.0 KeycardLostPage.qml
