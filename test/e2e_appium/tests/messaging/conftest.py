@@ -586,17 +586,19 @@ async def _establish_phone_to_peer_contact(device: DeviceContext, peer) -> str:
     return phone_key
 
 
-def _test_device_id_overrides(test_environment: str, count: int):
-    """Resolve TEST_DEVICE_ID into pool device overrides, as the multi-device
-    fixtures do, so the peer tests pick the named device (e.g. an iPhone)
-    instead of the environment default."""
+def _selected_device_overrides(test_environment: str, count: int):
+    """Resolve TEST_DEVICE_ID or TEST_DEVICE_TAGS into pool device overrides
+    with ``select_device``, the resolver ``target_platform`` uses at
+    collection, so the peer session drives the device the ``xfail_ios``
+    marks were chosen for."""
     device_id = os.getenv("TEST_DEVICE_ID")
-    if not device_id:
+    if not device_id and not os.getenv("TEST_DEVICE_TAGS", "").strip():
         return None
     try:
+        from config.settings import select_device
         from core.config_manager import ConfigurationManager
         env_cfg = ConfigurationManager().load_environment(test_environment)
-        device = env_cfg.get_device(device_id)
+        device = select_device(env_cfg)
         defaults = env_cfg.device_defaults.get("capabilities", {})
         override = {"capabilities": device.merged_capabilities(defaults)}
         if device.provider_overrides:
@@ -605,7 +607,10 @@ def _test_device_id_overrides(test_environment: str, count: int):
     except Exception as exc:
         # Falling back to the default device would run the suite on Android
         # and still look like a run on the named device.
-        raise RuntimeError(f"TEST_DEVICE_ID={device_id} could not be resolved: {exc}") from exc
+        raise RuntimeError(
+            f"TEST_DEVICE_ID={device_id!r} TEST_DEVICE_TAGS={os.getenv('TEST_DEVICE_TAGS')!r} "
+            f"could not be resolved: {exc}"
+        ) from exc
 
 
 async def _setup_peer_chat(pool: SessionPool, test_nodeid: str, worker: str, test_environment: str):
@@ -626,7 +631,7 @@ async def _setup_peer_chat(pool: SessionPool, test_nodeid: str, worker: str, tes
 
         drivers = await pool.create_sessions(
             count=1,
-            device_overrides=_test_device_id_overrides(test_environment, 1)
+            device_overrides=_selected_device_overrides(test_environment, 1)
             or (_local_env_overrides(1) if test_environment == "local" else None),
             test_nodeid=f"{test_nodeid}::peer_setup",
         )

@@ -662,14 +662,21 @@ class BasePage:
             return False
 
     def is_on_screen(self, locator: tuple, timeout: float = 3) -> bool:
-        """Visible and horizontally inside the window. In portrait Qt slides
-        panes sideways and XCUITest still reports them as visible."""
+        """Visible, non-zero in size and horizontally inside the window. In
+        portrait Qt slides panes sideways and XCUITest still reports them as
+        visible; an element wholly off the display reports a zero rect at x=0."""
         width = self.driver.get_window_size()["width"]
 
         def inside_window() -> bool:
             for element in self.driver.find_elements(*locator):
                 try:
-                    if element.is_displayed() and 0 <= element.rect["x"] < width:
+                    rect = element.rect
+                    if (
+                        element.is_displayed()
+                        and rect["width"] > 0
+                        and rect["height"] > 0
+                        and 0 <= rect["x"] < width
+                    ):
                         return True
                 except Exception:
                     continue

@@ -326,7 +326,8 @@ class WalletLeftPanel(BasePage):
         def rows_on_screen() -> bool:
             for row in self.account_rows():
                 try:
-                    if 0 <= row.rect["x"] < width:
+                    rect = row.rect
+                    if rect["width"] > 0 and rect["height"] > 0 and 0 <= rect["x"] < width:
                         return True
                 except Exception:
                     continue

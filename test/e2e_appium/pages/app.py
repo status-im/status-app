@@ -691,17 +691,19 @@ class App(BasePage):
         return self.wait_for_toast(timeout=timeout or 3.0) is not None
 
     def get_toast_content_desc(self, timeout: int | None = 3) -> str | None:
-        """Return toast's content-desc, polling until non-empty or timeout."""
+        """Return the toast's text, polling until non-empty or timeout. iOS
+        carries it in ``label``; XCUITest rejects ``content-desc``."""
         try:
             el = self.find_element_safe(self.locators.ANY_TOAST, timeout=timeout)
             if el is None:
                 return None
 
+            attribute = "label" if is_ios(self.driver) else "content-desc"
             end = time.time() + (timeout or 0)
             last_val: str = ""
             while True:
                 try:
-                    val = el.get_attribute("content-desc") or ""
+                    val = el.get_attribute(attribute) or ""
                     if val:
                         return val
                     last_val = val
