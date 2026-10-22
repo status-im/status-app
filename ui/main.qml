@@ -523,6 +523,13 @@ Window {
             utilsStore: applicationWindow.utilsStore
 
             onLoaded: {
+                // Remember the logged-in profile as the last selected one. The login
+                // screen's profileSelected only covers profiles picked THERE — a freshly
+                // onboarded profile never passes through it, yet startup auto-login
+                // ("Stay logged in") targets exactly this key UID on the next launch.
+                if (typeof userProfile !== "undefined" && userProfile.keyUid)
+                    localAppSettings.selectedProfileKeyUid = userProfile.keyUid
+
                 appMainFadeIn.running = true
                 startupOnboardingLoader.active = false
                 splashScreenLoader.active = false
@@ -647,8 +654,12 @@ Window {
                 // attempt, which needs the key UID (and storage) already in place.
                 // e2e runs must never auto-login: the OS secure store is not
                 // per-data-dir, so a leftover developer credential could hijack a run.
-                item.autoLoginEnabled = !localAppSettings.testEnvironment
-                                        && !localAppSettings.isAutoLoginSuppressed(localAppSettings.selectedProfileKeyUid)
+                const autoLoginSuppressed = localAppSettings.isAutoLoginSuppressed(localAppSettings.selectedProfileKeyUid)
+                if (localAppSettings.testEnvironment || autoLoginSuppressed)
+                    console.info("auto-login: disabled —",
+                                 localAppSettings.testEnvironment ? "test mode"
+                                                                  : "suppressed after a sign-out")
+                item.autoLoginEnabled = !localAppSettings.testEnvironment && !autoLoginSuppressed
                 splashScreenLoader.active = false
                 applicationWindow.contentLoaded()
                 Backpressure.debounce(applicationWindow, 750, () => {

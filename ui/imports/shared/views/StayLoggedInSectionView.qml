@@ -27,7 +27,7 @@ Control {
         RowLayout {
             spacing: Theme.halfPadding
             StatusRoundIcon {
-                asset.name: "security"
+                asset.name: "password"
                 asset.color: Theme.palette.baseColor1
                 asset.bgColor: root.storageAvailable ?
                                    Theme.palette.baseColor2:
@@ -39,10 +39,21 @@ Control {
             }
             StatusBaseText {
                 Layout.fillWidth: true
-                text: qsTr("Stay logged in to skip entering your password each time you open Status")
+                text: qsTr("Save password on this device for automatic login")
                 color: root.storageAvailable && root.profileMigrated ? Theme.palette.directColor4
                                                                      : Theme.palette.baseColor1
                 wrapMode: Text.WordWrap
+            }
+            StatusFlatRoundButton {
+                objectName: "stayLoggedInInfoButton"
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: 24
+                implicitHeight: 24
+                icon.width: 16
+                icon.height: 16
+                icon.name: "info"
+                type: StatusFlatRoundButton.Type.Tertiary
+                tooltip.text: qsTr("Your password is stored using your<br/>systems' default secure storage")
             }
             StatusSwitch {
                 id: stayLoggedInSwitch

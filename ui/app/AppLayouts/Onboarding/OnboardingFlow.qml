@@ -126,19 +126,12 @@ OnboardingStackView {
         property var manageProfilesDialog: null
 
 
-        function pushOrSkipBiometricsPage() : void {
+        function finishCurrentFlow() : void {
             if (d.flow === Onboarding.OnboardingFlow.LoginWithSyncing
                     || d.flow === Onboarding.OnboardingFlow.LoginWithKeycard) {
                 root.skippedBiometricFlow()
-                root.finished(d.flow)
-                return
             }
-
-            if (root.biometricsAvailable) {
-                root.replace(null, enableBiometricsPage)
-            } else {
-                root.finished(d.flow)
-            }
+            root.finished(d.flow)
         }
 
         function openPrivacyPolicyPopup() : void {
@@ -330,12 +323,14 @@ OnboardingStackView {
         CreateNewProfileFlow {
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
             stayLoggedInAvailable: root.stayLoggedInAvailable
+            biometricsAvailable: root.biometricsAvailable
 
             onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
+            onEnableBiometricsRequested: (enable) => root.enableBiometricsRequested(enable)
             onFinished: (password) => {
                 root.setPasswordRequested(password)
                 d.flow = Onboarding.OnboardingFlow.CreateProfileWithPassword
-                d.pushOrSkipBiometricsPage()
+                d.finishCurrentFlow()
             }
         }
     }
@@ -348,6 +343,7 @@ OnboardingStackView {
             isSeedPhraseDuplicate: root.isSeedPhraseDuplicate
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
             stayLoggedInAvailable: root.stayLoggedInAvailable
+            biometricsAvailable: root.biometricsAvailable
             isProfileMigratedToDEKEncryption: {
                 const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
                 return keyUid ? root.isProfileMigratedToDEKEncryption(keyUid) : false
@@ -356,11 +352,12 @@ OnboardingStackView {
             onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)
             onSetPasswordRequested: (password) => root.setPasswordRequested(password)
             onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
+            onEnableBiometricsRequested: (enable) => root.enableBiometricsRequested(enable)
 
             onImportLocalBackupRequested: (importFilePath) => root.importLocalBackupRequested(importFilePath)
 
             onFinished: {
-                d.pushOrSkipBiometricsPage()
+                d.finishCurrentFlow()
             }
         }
     }
@@ -384,7 +381,7 @@ OnboardingStackView {
 
             onFinished: {
                 d.flow = Onboarding.OnboardingFlow.LoginWithSyncing
-                d.pushOrSkipBiometricsPage()
+                d.finishCurrentFlow()
             }
         }
     }
@@ -514,17 +511,6 @@ OnboardingStackView {
                                       keycardDetailsPage.keycardInitialized) // not root.keycardInitialized
             }
             onGoBackToLoginRequested: root.pop(null)
-        }
-    }
-
-    Component {
-        id: enableBiometricsPage
-
-        EnableBiometricsPage {
-            onEnableBiometricsRequested: (enable) => {
-                root.enableBiometricsRequested(enable)
-                root.finished(d.flow)
-            }
         }
     }
 
