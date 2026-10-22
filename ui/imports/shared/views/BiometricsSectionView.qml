@@ -41,6 +41,7 @@ Control {
             StatusSwitch {
                 id: biometricsSwitch
 
+                objectName: "biometricsSwitch"
                 Layout.alignment: Qt.AlignRight
 
                 opacity: root.biometricsAvailable ? 1 : ThemeUtils.disabledOpacity

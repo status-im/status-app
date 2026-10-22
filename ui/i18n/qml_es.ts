@@ -2990,6 +2990,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Inicio de sesión biométrico y autenticación de transacciones habilitados para este dispositivo</translation>
     </message>
     <message>
+        <source>Stay logged in could not be confirmed — it was left enabled and will be verified at your next login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Stay logged in enabled for this device</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3026,28 +3030,12 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Failed to migrate to the new encryption format: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Stay logged in disabled — re-enable it in Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Failed to update the Stay logged in credential</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Encryption updated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restart Status</source>
-        <translation type="unfinished">Reiniciar Status</translation>
     </message>
     <message>
         <source>Change</source>
@@ -6931,25 +6919,6 @@ par de claves. Se requerirá Keycard para firmar</translation>
     <message>
         <source>Retry</source>
         <translation>Reintentar</translation>
-    </message>
-</context>
-<context>
-    <name>EnableBiometricsPage</name>
-    <message>
-        <source>Enable biometrics</source>
-        <translation>Habilitar biometría</translation>
-    </message>
-    <message>
-        <source>Use biometrics to fill in your password</source>
-        <translation>Usa la biometría para completar tu contraseña</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Habilitar</translation>
-    </message>
-    <message>
-        <source>Maybe later</source>
-        <translation>Quizás más tarde</translation>
     </message>
 </context>
 <context>
@@ -13771,6 +13740,10 @@ al cargar</translation>
 <context>
     <name>Popups</name>
     <message>
+        <source>Cannot move the profile key pair to Keycard: failed to remove the Stay logged in credential, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Share addresses with %1&apos;s owner</source>
         <translation>Comparte direcciones con el propietario de %1</translation>
     </message>
@@ -13926,18 +13899,6 @@ al cargar</translation>
     <message>
         <source>Status Software Terms of Use</source>
         <translation>Términos de Uso del Software Status</translation>
-    </message>
-    <message>
-        <source>Sign out</source>
-        <translation>Cerrar sesión</translation>
-    </message>
-    <message>
-        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>Asegúrate de tener guardados la contraseña de tu cuenta y tu frase de recuperación. Sin ellos, podrías quedar bloqueado fuera de tu cuenta y perder fondos.</translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>Cerrar sesión y salir</translation>
     </message>
     <message>
         <source>Display zoom changed</source>
@@ -14217,6 +14178,37 @@ al cargar</translation>
     <message>
         <source>Web</source>
         <translation>Web</translation>
+    </message>
+</context>
+<context>
+    <name>ProfileEncryptionMigrationFlow</name>
+    <message>
+        <source>Failed to migrate to the new encryption format: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updating encryption</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encryption updated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status</source>
+        <translation type="unfinished">Reiniciar Status</translation>
     </message>
 </context>
 <context>
@@ -16281,6 +16273,25 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>SignOutConfirmationDialog</name>
+    <message>
+        <source>Sign out</source>
+        <translation type="unfinished">Cerrar sesión</translation>
+    </message>
+    <message>
+        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
+        <translation type="unfinished">Asegúrate de tener guardados la contraseña de tu cuenta y tu frase de recuperación. Sin ellos, podrías quedar bloqueado fuera de tu cuenta y perder fondos.</translation>
+    </message>
+    <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished">Cerrar sesión y salir</translation>
+    </message>
+    <message>
+        <source>Failed to turn off automatic login — sign out aborted, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SignPopup</name>
     <message>
         <source>Sign community request with %1</source>
@@ -17451,7 +17462,11 @@ al cargar</translation>
 <context>
     <name>StayLoggedInSectionView</name>
     <message>
-        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <source>Save password on this device for automatic login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your password is stored using your&lt;br/&gt;systems&apos; default secure storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

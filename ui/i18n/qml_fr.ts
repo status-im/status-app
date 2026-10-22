@@ -2993,7 +2993,7 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Failed to migrate to the new encryption format: %1</source>
+        <source>Stay logged in could not be confirmed — it was left enabled and will be verified at your next login</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3035,18 +3035,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Failed to update the Stay logged in credential</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Encryption updated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restart Status</source>
-        <translation type="unfinished">Redémarrer Status</translation>
     </message>
     <message>
         <source>Change</source>
@@ -5179,10 +5167,6 @@ Veuillez envoyer une demande de contact à la personne avec qui vous souhaitez d
         <translation>Ce mot de passe ne peut pas être récupéré</translation>
     </message>
     <message>
-        <source>Stay logged in to skip entering your password each time you open Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Confirm password</source>
         <translation>Confirmer le mot de passe</translation>
     </message>
@@ -6932,25 +6916,6 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Retry</source>
         <translation>Réessayer</translation>
-    </message>
-</context>
-<context>
-    <name>EnableBiometricsPage</name>
-    <message>
-        <source>Enable biometrics</source>
-        <translation>Activer l’authentification biométrique</translation>
-    </message>
-    <message>
-        <source>Maybe later</source>
-        <translation>Plus tard</translation>
-    </message>
-    <message>
-        <source>Use biometrics to fill in your password</source>
-        <translation>Utiliser l’authentification biométrique pour saisir votre mot de passe</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Activer</translation>
     </message>
 </context>
 <context>
@@ -13771,6 +13736,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
 <context>
     <name>Popups</name>
     <message>
+        <source>Cannot move the profile key pair to Keycard: failed to remove the Stay logged in credential, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Share addresses with %1&apos;s owner</source>
         <translation>Partager les adresses avec le propriétaire de %1</translation>
     </message>
@@ -14205,6 +14174,37 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Web</source>
         <translation>Web</translation>
+    </message>
+</context>
+<context>
+    <name>ProfileEncryptionMigrationFlow</name>
+    <message>
+        <source>Failed to migrate to the new encryption format: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updating encryption</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encryption updated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status</source>
+        <translation type="unfinished">Redémarrer Status</translation>
     </message>
 </context>
 <context>
@@ -16280,10 +16280,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Déconnexion et fermeture</translation>
     </message>
     <message>
-        <source>Failed to remove the Stay logged in credential — sign out aborted, please try again</source>
+        <source>Failed to turn off automatic login — sign out aborted, please try again</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17458,7 +17458,11 @@ avec un retour à la ligne</translation>
 <context>
     <name>StayLoggedInSectionView</name>
     <message>
-        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <source>Save password on this device for automatic login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your password is stored using your&lt;br/&gt;systems&apos; default secure storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -19355,7 +19359,7 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Déconnexion et fermeture</translation>
     </message>
     <message>
         <source>Always online</source>

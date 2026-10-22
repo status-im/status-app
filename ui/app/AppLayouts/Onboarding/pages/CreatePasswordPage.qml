@@ -19,19 +19,26 @@ OnboardingPage {
 
     // Whether the "Stay logged in" opt-in is offered (requires platform secure storage)
     property bool stayLoggedInAvailable: false
+    // Whether the biometrics opt-in is offered
+    property bool biometricsAvailable: false
 
     signal setPasswordRequested(string password)
     signal stayLoggedInRequested(bool enabled)
+    signal enableBiometricsRequested(bool enable)
 
     title: qsTr("Create profile password")
 
     QtObject {
         id: d
 
+        property bool stayLoggedIn: true // default ON for new users (per acceptance criteria)
+        property bool enableBiometrics: false // explicit opt-in
+
         function submit() : void {
             if (!passView.ready)
                 return
-            root.stayLoggedInRequested(root.stayLoggedInAvailable && stayLoggedInCheckBox.checked)
+            root.stayLoggedInRequested(root.stayLoggedInAvailable && d.stayLoggedIn)
+            root.enableBiometricsRequested(root.biometricsAvailable && d.enableBiometrics)
             root.setPasswordRequested(passView.newPswText)
         }
     }
@@ -55,14 +62,26 @@ OnboardingPage {
                 passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
                 onReturnPressed: d.submit()
             }
-            StatusCheckBox {
-                id: stayLoggedInCheckBox
-
-                objectName: "stayLoggedInCheckBox"
+            StayLoggedInSectionView {
+                objectName: "stayLoggedInSection"
                 Layout.fillWidth: true
                 visible: root.stayLoggedInAvailable
-                checked: true // default ON for new users (per acceptance criteria)
-                text: qsTr("Stay logged in to skip entering your password each time you open Status")
+                storageAvailable: root.stayLoggedInAvailable
+                profileMigrated: true // new profiles use the DEK encryption scheme from birth
+                stayLoggedInEnabled: d.stayLoggedIn
+                onToggleStayLoggedIn: (checked) => d.stayLoggedIn = !checked
+            }
+            StatusModalDivider {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
+            }
+            BiometricsSectionView {
+                objectName: "biometricsSection"
+                Layout.fillWidth: true
+                visible: root.biometricsAvailable
+                biometricsAvailable: root.biometricsAvailable
+                biometricsEnabled: d.enableBiometrics
+                onToggleBiometrics: (checked) => d.enableBiometrics = !checked
             }
             StatusButton {
                 objectName: "btnConfirmPassword"

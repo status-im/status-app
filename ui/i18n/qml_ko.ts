@@ -2976,6 +2976,10 @@ Do you wish to override the security check and continue?</source>
         <translation>이 기기에서 생체 로그인 및 트랜잭션 인증을 활성화하지 못했습니다</translation>
     </message>
     <message>
+        <source>Stay logged in could not be confirmed — it was left enabled and will be verified at your next login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
@@ -2985,10 +2989,6 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Failed to enable Stay logged in for this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to migrate to the new encryption format: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3022,18 +3022,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Failed to update the Stay logged in credential</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Encryption updated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restart Status</source>
-        <translation type="unfinished">Status 다시 시작</translation>
     </message>
     <message>
         <source>Change</source>
@@ -6902,25 +6890,6 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Retry</source>
         <translation>다시 시도</translation>
-    </message>
-</context>
-<context>
-    <name>EnableBiometricsPage</name>
-    <message>
-        <source>Enable biometrics</source>
-        <translation>생체 인증 사용</translation>
-    </message>
-    <message>
-        <source>Maybe later</source>
-        <translation>나중에</translation>
-    </message>
-    <message>
-        <source>Use biometrics to fill in your password</source>
-        <translation>생체 인증을 사용하여 비밀번호 입력</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>활성화</translation>
     </message>
 </context>
 <context>
@@ -13701,6 +13670,10 @@ to load</source>
 <context>
     <name>Popups</name>
     <message>
+        <source>Cannot move the profile key pair to Keycard: failed to remove the Stay logged in credential, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Share addresses with %1&apos;s owner</source>
         <translation>%1의 소유자와 주소 공유</translation>
     </message>
@@ -13856,18 +13829,6 @@ to load</source>
     <message>
         <source>Status Software Terms of Use</source>
         <translation>Status 소프트웨어 이용약관</translation>
-    </message>
-    <message>
-        <source>Sign out</source>
-        <translation>로그아웃</translation>
-    </message>
-    <message>
-        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation>계정 비밀번호와 복구 구문을 반드시 저장해 두세요. 저장해 두지 않으면 계정에서 잠겨 자금을 잃을 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>로그아웃 및 종료</translation>
     </message>
     <message>
         <source>Display zoom changed</source>
@@ -14146,6 +14107,37 @@ to load</source>
     <message>
         <source>Web</source>
         <translation>웹</translation>
+    </message>
+</context>
+<context>
+    <name>ProfileEncryptionMigrationFlow</name>
+    <message>
+        <source>Failed to migrate to the new encryption format: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometric login disabled — re-enable it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updating encryption</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encryption updated</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status</source>
+        <translation type="unfinished">Status 다시 시작</translation>
     </message>
 </context>
 <context>
@@ -16203,6 +16195,25 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>SignOutConfirmationDialog</name>
+    <message>
+        <source>Sign out</source>
+        <translation type="unfinished">로그아웃</translation>
+    </message>
+    <message>
+        <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
+        <translation type="unfinished">계정 비밀번호와 복구 구문을 반드시 저장해 두세요. 저장해 두지 않으면 계정에서 잠겨 자금을 잃을 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Sign out &amp; Quit</source>
+        <translation type="unfinished">로그아웃 및 종료</translation>
+    </message>
+    <message>
+        <source>Failed to turn off automatic login — sign out aborted, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SignPopup</name>
     <message>
         <source>Sign community request with %1</source>
@@ -17367,7 +17378,11 @@ to load</source>
 <context>
     <name>StayLoggedInSectionView</name>
     <message>
-        <source>Stay logged in to skip entering your password each time you open Status</source>
+        <source>Save password on this device for automatic login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your password is stored using your&lt;br/&gt;systems&apos; default secure storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

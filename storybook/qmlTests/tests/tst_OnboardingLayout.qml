@@ -481,11 +481,11 @@ Item {
             keyClick(Qt.Key_Escape) // close the popup
             tryVerify( () => passwordDetailsPopup.exit ? !passwordDetailsPopup.exit.running : true)
 
-            // "Stay logged in" opt-in: offered and CHECKED by default for new users
-            const stayLoggedInCheckBox = findChild(controlUnderTest, "stayLoggedInCheckBox")
-            verify(!!stayLoggedInCheckBox)
-            tryVerify(() => stayLoggedInCheckBox.visible)
-            compare(stayLoggedInCheckBox.checked, true)
+            // "Stay logged in" opt-in: offered and ON by default for new users
+            const stayLoggedInSwitch = findChild(controlUnderTest, "stayLoggedInSwitch")
+            verify(!!stayLoggedInSwitch)
+            tryVerify(() => stayLoggedInSwitch.visible)
+            compare(stayLoggedInSwitch.checked, true)
 
             const btnConfirmPassword = findChild(controlUnderTest, "btnConfirmPassword")
             verify(!!btnConfirmPassword)
@@ -511,18 +511,17 @@ Item {
             compare(passwordViewNewPassword.text, mockDriver.dummyNewPassword)
             compare(btnConfirmPassword.enabled, true)
 
+            // Biometrics opt-in: inline on the password page (replaces the former
+            // dedicated page); default OFF, offered only when biometrics exist
+            const biometricsSwitch = findChild(controlUnderTest, "biometricsSwitch")
+            verify(!!biometricsSwitch)
+            compare(biometricsSwitch.visible, data.biometrics)
+            compare(biometricsSwitch.checked, false)
+            if (data.biometrics && data.bioEnabled)
+                mouseClick(biometricsSwitch)
+            compare(biometricsSwitch.checked, data.biometrics && data.bioEnabled)
+
             mouseClick(btnConfirmPassword)
-
-            // PAGE 4: Enable Biometrics
-            if (data.biometrics) {
-                page = getCurrentPage(stack, EnableBiometricsPage)
-
-                const enableBioButton = findChild(controlUnderTest, data.bioEnabled ? "btnEnableBiometrics" : "btnDontEnableBiometrics")
-                dynamicSpy.setup(page, "enableBiometricsRequested")
-                mouseClick(enableBioButton)
-                tryCompare(dynamicSpy, "count", 1)
-                compare(dynamicSpy.signalArguments[0][0], data.bioEnabled)
-            }
 
             // FINISH
             tryCompare(finishedSpy, "count", 1)
@@ -579,12 +578,12 @@ Item {
 
             navigateToCreatePasswordPage()
 
-            const stayLoggedInCheckBox = findChild(controlUnderTest, "stayLoggedInCheckBox")
-            verify(!!stayLoggedInCheckBox)
-            tryVerify(() => stayLoggedInCheckBox.visible)
-            compare(stayLoggedInCheckBox.checked, true)
-            mouseClick(stayLoggedInCheckBox) // explicit opt-out
-            compare(stayLoggedInCheckBox.checked, false)
+            const stayLoggedInSwitch = findChild(controlUnderTest, "stayLoggedInSwitch")
+            verify(!!stayLoggedInSwitch)
+            tryVerify(() => stayLoggedInSwitch.visible)
+            compare(stayLoggedInSwitch.checked, true)
+            mouseClick(stayLoggedInSwitch) // explicit opt-out
+            compare(stayLoggedInSwitch.checked, false)
 
             submitCreatePassword()
 
@@ -607,9 +606,9 @@ Item {
 
             navigateToCreatePasswordPage()
 
-            const stayLoggedInCheckBox = findChild(controlUnderTest, "stayLoggedInCheckBox")
-            verify(!!stayLoggedInCheckBox)
-            verify(!stayLoggedInCheckBox.visible)
+            const stayLoggedInSwitch = findChild(controlUnderTest, "stayLoggedInSwitch")
+            verify(!!stayLoggedInSwitch)
+            verify(!stayLoggedInSwitch.visible)
 
             submitCreatePassword()
 
@@ -800,18 +799,17 @@ Item {
             compare(passwordViewNewPassword.text, mockDriver.dummyNewPassword)
             compare(btnConfirmPassword.enabled, true)
 
+            // Biometrics opt-in: inline on the password page (replaces the former
+            // dedicated page); default OFF, offered only when biometrics exist
+            const biometricsSwitch = findChild(controlUnderTest, "biometricsSwitch")
+            verify(!!biometricsSwitch)
+            compare(biometricsSwitch.visible, data.biometrics)
+            compare(biometricsSwitch.checked, false)
+            if (data.biometrics && data.bioEnabled)
+                mouseClick(biometricsSwitch)
+            compare(biometricsSwitch.checked, data.biometrics && data.bioEnabled)
+
             mouseClick(btnConfirmPassword)
-
-            // PAGE 5: Enable Biometrics
-            if (data.biometrics) {
-                page = getCurrentPage(stack, EnableBiometricsPage)
-
-                const enableBioButton = findChild(controlUnderTest, data.bioEnabled ? "btnEnableBiometrics" : "btnDontEnableBiometrics")
-                dynamicSpy.setup(page, "enableBiometricsRequested")
-                mouseClick(enableBioButton)
-                tryCompare(dynamicSpy, "count", 1)
-                compare(dynamicSpy.signalArguments[0][0], data.bioEnabled)
-            }
 
             // FINISH
             tryCompare(finishedSpy, "count", 1)
@@ -888,6 +886,16 @@ Item {
             compare(passwordViewNewPassword.text, mockDriver.dummyNewPassword)
             compare(btnConfirmPassword.enabled, true)
 
+            // Biometrics opt-in: inline on the password page (replaces the former
+            // dedicated page); default OFF, offered only when biometrics exist
+            const biometricsSwitch = findChild(controlUnderTest, "biometricsSwitch")
+            verify(!!biometricsSwitch)
+            compare(biometricsSwitch.visible, data.biometrics)
+            compare(biometricsSwitch.checked, false)
+            if (data.biometrics && data.bioEnabled)
+                mouseClick(biometricsSwitch)
+            compare(biometricsSwitch.checked, data.biometrics && data.bioEnabled)
+
             mouseClick(btnConfirmPassword)
 
             // PAGE 5: Local import
@@ -896,17 +904,6 @@ Item {
             const btnSkipImport = findChild(controlUnderTest, "btnSkipImport")
             verify(!!btnSkipImport)
             mouseClick(btnSkipImport)
-
-            // PAGE 6: Enable Biometrics
-            if (data.biometrics) {
-                page = getCurrentPage(stack, EnableBiometricsPage)
-
-                const enableBioButton = findChild(controlUnderTest, data.bioEnabled ? "btnEnableBiometrics" : "btnDontEnableBiometrics")
-                dynamicSpy.setup(page, "enableBiometricsRequested")
-                mouseClick(enableBioButton)
-                tryCompare(dynamicSpy, "count", 1)
-                compare(dynamicSpy.signalArguments[0][0], data.bioEnabled)
-            }
 
             tryCompare(finishedSpy, "count", 1)
             compare(finishedSpy.signalArguments[0][0], Onboarding.OnboardingFlow.LoginWithSeedphrase)
@@ -1533,10 +1530,9 @@ Item {
             verify(!!selector)
             compare(selector.text, "EN")
 
-            mouseClick(selector)
             const dd = findChild(selector, "statusLanguageSelectorDropdown")
             verify(!!dd)
-            tryCompare(dd, "opened", true)
+            clickUntil(selector, () => dd.opened) // first click occasionally lost (desktop input flake)
             waitForRendering(selector)
 
             const listView = findChild(dd.contentItem, "statusLanguageSelectorListView")

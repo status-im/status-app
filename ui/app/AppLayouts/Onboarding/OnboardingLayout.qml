@@ -170,31 +170,49 @@ Page {
         // shouldn't fire). Rides the exact same rails as a biometric DEK login — the
         // wrapper's onLoginRequested pushes the splash screen, so the login screen
         // never flashes.
+        // The bail reasons are logged (key UIDs are public identifiers, the credential
+        // itself is never logged) — auto-login failures are otherwise invisible: the
+        // app just shows the ordinary login screen.
         function tryAutoLogin() : void {
+            // No log for the disabled case: the attempt always runs once before
+            // main.qml enables auto-login; main.qml logs the real "disabled" reasons.
             if (d.autoLoginAttempted || !root.autoLoginEnabled)
                 return
-            if (!root.secureStorage || !root.secureStorage.available)
+            if (!root.secureStorage || !root.secureStorage.available) {
+                console.info("auto-login: secure storage unavailable")
                 return
+            }
 
             const keyUid = root.lastSelectedProfileKeyUid
-            if (keyUid === "")
+            if (keyUid === "") {
+                console.info("auto-login: no last selected profile recorded")
                 return
+            }
 
             const profile = SQUtils.ModelUtils.getByKey(root.onboardingStore.loginAccountsModel,
                                                         "keyUid", keyUid)
-            if (!profile || profile.keycardCreatedAccount)
-                return // unknown profile, or keycard (out of scope for auto-login)
+            if (!profile || profile.keycardCreatedAccount) {
+                // unknown profile, or keycard (out of scope for auto-login)
+                console.info("auto-login: profile", keyUid,
+                             !profile ? "not in the accounts model" : "is a keycard profile")
+                return
+            }
 
             const result = root.secureStorage.getCredential(keyUid)
-            if (result.status !== SecureStorage.StatusSuccess)
-                return // nothing stored (or a storage hiccup) -> normal login screen
+            if (result.status !== SecureStorage.StatusSuccess) {
+                // nothing stored (or a storage hiccup) -> normal login screen
+                console.info("auto-login: no stored credential for", keyUid, "(status:", result.status + ")")
+                return
+            }
 
             if (!result.credential.startsWith(Constants.keychain.dekPrefix)) {
                 // The silent store must only ever hold a tagged DEK — drop anything else
+                console.warn("auto-login: dropping a non-DEK credential for", keyUid)
                 root.secureStorage.deleteCredential(keyUid)
                 return
             }
 
+            console.info("auto-login: attempting silent login for", keyUid)
             d.autoLoginAttempted = true
             d.autoLoginPendingKeyUid = keyUid
             root.loginRequested(keyUid, Onboarding.LoginMethod.Password,
