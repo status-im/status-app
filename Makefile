@@ -40,6 +40,7 @@ export NIMBLE_COMMIT := v0.26.1
 	run \
 	run-linux \
 	run-macos \
+	run-macos-signed \
 	run-windows \
 	tests-nim \
 	tests-nim-linux \
@@ -1164,6 +1165,17 @@ run-macos: nim_status_client
 	echo -e "\033[92mRunning:\033[39m bin/StatusDev.app/Contents/MacOS/nim_status_client"
 	DYLD_LIBRARY_PATH="$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(DYLD_LIBRARY_PATH)" \
 	./bin/StatusDev.app/Contents/MacOS/nim_status_client $(ARGS)
+
+# Launches an already built AND signed dev bundle without rebuilding or recreating the bundle symlink (check docs/internal/macos-secure-storage-testing.md).
+run-macos-signed:
+	@[ ! -L bin/StatusDev.app/Contents/MacOS/nim_status_client ] || \
+		{ echo "bin/StatusDev.app is unsigned (binary is still a symlink) — run 'make run' once, quit, then scripts/sign-macos-dev.sh"; exit 1; }
+	echo -e "\033[92mRunning:\033[39m bin/StatusDev.app/Contents/MacOS/nim_status_client (signed)"
+	# The signed bundle holds a COPY of the binary, and dev builds derive their data dir
+	# from the executable location — pin it to the same repo-root Status/ that a plain
+	# `make run` uses, unless ARGS already picks a data dir.
+	DYLD_LIBRARY_PATH="$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(DYLD_LIBRARY_PATH)" \
+	./bin/StatusDev.app/Contents/MacOS/nim_status_client $(if $(or $(findstring -d=,$(ARGS)),$(findstring --dataDir,$(ARGS))),,-d="$(CURDIR)/Status") $(ARGS)
 
 run-windows: STATUS_RC_FILE = status-dev.rc
 run-windows: compile_windows_resources nim_status_client
