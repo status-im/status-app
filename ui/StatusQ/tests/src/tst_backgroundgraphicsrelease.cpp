@@ -1,5 +1,7 @@
 #include <QGuiApplication>
+#include <QLoggingCategory>
 #include <QQuickWindow>
+#include <QRegularExpression>
 #include <QSGRendererInterface>
 #include <QSignalSpy>
 #include <QTest>
@@ -35,6 +37,16 @@ private slots:
             QSKIP("The software scene graph has no graphics to release");
     }
 
+    void init()
+    {
+        QLoggingCategory::setFilterRules(QStringLiteral("status.backgroundGraphicsRelease.info=false"));
+    }
+
+    void cleanup()
+    {
+        QLoggingCategory::setFilterRules(QString());
+    }
+
     void suspendInvalidatesTheSceneGraphOfAnUnexposedWindow()
     {
         QQuickWindow window;
@@ -44,10 +56,30 @@ private slots:
         QSignalSpy invalidated(&window, &QQuickWindow::sceneGraphInvalidated);
         QCOMPARE(invalidated.count(), 0);
 
-        BackgroundGraphicsRelease release;
+        Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
 
         QTRY_COMPARE(invalidated.count(), 1);
+        QTRY_VERIFY(!window.rhi());
+    }
+
+    void suspendLogsReleasedAndSkippedWindows()
+    {
+        QQuickWindow hidden;
+        renderOnceThenHide(hidden);
+        if (QTest::currentTestFailed())
+            return;
+        QQuickWindow exposed;
+        exposed.resize(100, 100);
+        exposed.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&exposed));
+
+        QLoggingCategory::setFilterRules(QString());
+        QTest::ignoreMessage(QtInfoMsg, QRegularExpression(
+            QStringLiteral("^suspended: released 1 windows, skipped 1 still exposed, took \\d+ ms$")));
+
+        Status::BackgroundGraphicsRelease release;
+        release.onApplicationStateChanged(Qt::ApplicationSuspended);
     }
 
     void suspendKeepsThePersistenceFlags()
@@ -59,7 +91,7 @@ private slots:
         window.setPersistentGraphics(true);
         window.setPersistentSceneGraph(true);
 
-        BackgroundGraphicsRelease release;
+        Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
 
         QVERIFY(window.isPersistentGraphics());
@@ -76,7 +108,7 @@ private slots:
         QTRY_VERIFY(initialized.count() > 0);
         QSignalSpy invalidated(&window, &QQuickWindow::sceneGraphInvalidated);
 
-        BackgroundGraphicsRelease release;
+        Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
 
         QTest::qWait(50);
@@ -91,7 +123,7 @@ private slots:
             return;
         QSignalSpy invalidated(&window, &QQuickWindow::sceneGraphInvalidated);
 
-        BackgroundGraphicsRelease release;
+        Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationInactive);
         release.onApplicationStateChanged(Qt::ApplicationHidden);
         release.onApplicationStateChanged(Qt::ApplicationActive);
@@ -106,7 +138,7 @@ private slots:
         renderOnceThenHide(window);
         if (QTest::currentTestFailed())
             return;
-        BackgroundGraphicsRelease release;
+        Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
 
         QSignalSpy initialized(&window, &QQuickWindow::sceneGraphInitialized);
@@ -125,7 +157,7 @@ private slots:
             return;
         QSignalSpy invalidated(&window, &QQuickWindow::sceneGraphInvalidated);
 
-        BackgroundGraphicsRelease release;
+        Status::BackgroundGraphicsRelease release;
         emit qApp->applicationStateChanged(Qt::ApplicationSuspended);
 
         QTRY_COMPARE(invalidated.count(), 1);
