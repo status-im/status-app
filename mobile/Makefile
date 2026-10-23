@@ -254,6 +254,9 @@ ipc-host-tests:
 .PHONY: clean
 clean: clean-statusq clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc clean-zxing
 	@echo "Cleaning"
+	# Go marks its module cache read-only (build/<os>/qt6/.gomodcache), which plain
+	# rm -rf cannot delete ("Directory not empty") — restore write permission first.
+	-@chmod -R u+w $(ROOT_DIR)/build 2>/dev/null
 	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
 	# Best effort for empty submodules and older status-go revisions.
 	-$(MAKE) -C ../vendor/status-go clean-libtkl SHELL=/bin/sh
