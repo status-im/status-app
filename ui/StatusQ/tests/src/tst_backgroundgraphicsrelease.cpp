@@ -76,26 +76,57 @@ private slots:
 
         QLoggingCategory::setFilterRules(QString());
         QTest::ignoreMessage(QtInfoMsg, QRegularExpression(
-            QStringLiteral("^suspended: released 1 windows, skipped 1 still exposed, took \\d+ ms$")));
+            QStringLiteral("^suspended: released 1 windows, kept 0 \\(no GPU resources freed\\), "
+                           "skipped 1 still exposed, took \\d+ ms$")));
 
         Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
     }
 
-    void suspendKeepsThePersistenceFlags()
+    void suspendLogsAWindowWithoutGraphicsAsKept()
     {
         QQuickWindow window;
         renderOnceThenHide(window);
         if (QTest::currentTestFailed())
             return;
-        window.setPersistentGraphics(true);
-        window.setPersistentSceneGraph(true);
+        Status::BackgroundGraphicsRelease release;
+        release.onApplicationStateChanged(Qt::ApplicationSuspended);
+        QVERIFY(!window.rhi());
+
+        QLoggingCategory::setFilterRules(QString());
+        QTest::ignoreMessage(QtInfoMsg, QRegularExpression(
+            QStringLiteral("^suspended: released 0 windows, kept 1 \\(no GPU resources freed\\), "
+                           "skipped 0 still exposed, took \\d+ ms$")));
+
+        release.onApplicationStateChanged(Qt::ApplicationSuspended);
+    }
+
+    void suspendKeepsThePersistenceFlags_data()
+    {
+        QTest::addColumn<bool>("persistentGraphics");
+        QTest::addColumn<bool>("persistentSceneGraph");
+        QTest::newRow("both") << true << true;
+        QTest::newRow("neither") << false << false;
+        QTest::newRow("graphics only") << true << false;
+        QTest::newRow("scene graph only") << false << true;
+    }
+
+    void suspendKeepsThePersistenceFlags()
+    {
+        QFETCH(bool, persistentGraphics);
+        QFETCH(bool, persistentSceneGraph);
+        QQuickWindow window;
+        renderOnceThenHide(window);
+        if (QTest::currentTestFailed())
+            return;
+        window.setPersistentGraphics(persistentGraphics);
+        window.setPersistentSceneGraph(persistentSceneGraph);
 
         Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
 
-        QVERIFY(window.isPersistentGraphics());
-        QVERIFY(window.isPersistentSceneGraph());
+        QCOMPARE(window.isPersistentGraphics(), persistentGraphics);
+        QCOMPARE(window.isPersistentSceneGraph(), persistentSceneGraph);
     }
 
     void suspendKeepsTheSceneGraphOfAnExposedWindow()
@@ -111,7 +142,6 @@ private slots:
         Status::BackgroundGraphicsRelease release;
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
 
-        QTest::qWait(50);
         QCOMPARE(invalidated.count(), 0);
     }
 
@@ -128,7 +158,6 @@ private slots:
         release.onApplicationStateChanged(Qt::ApplicationHidden);
         release.onApplicationStateChanged(Qt::ApplicationActive);
 
-        QTest::qWait(50);
         QCOMPARE(invalidated.count(), 0);
     }
 

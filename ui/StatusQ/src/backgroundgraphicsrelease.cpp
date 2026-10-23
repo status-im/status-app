@@ -23,6 +23,7 @@ void BackgroundGraphicsRelease::onApplicationStateChanged(Qt::ApplicationState s
     QElapsedTimer timer;
     timer.start();
     int released = 0;
+    int kept = 0;
     int skipped = 0;
 
     const auto windows = QGuiApplication::topLevelWindows();
@@ -37,6 +38,7 @@ void BackgroundGraphicsRelease::onApplicationStateChanged(Qt::ApplicationState s
             continue;
         }
 
+        const bool hadGraphics = quickWindow->rhi();
         const bool persistentGraphics = quickWindow->isPersistentGraphics();
         const bool persistentSceneGraph = quickWindow->isPersistentSceneGraph();
         quickWindow->setPersistentGraphics(false);
@@ -44,11 +46,17 @@ void BackgroundGraphicsRelease::onApplicationStateChanged(Qt::ApplicationState s
         quickWindow->releaseResources();
         quickWindow->setPersistentGraphics(persistentGraphics);
         quickWindow->setPersistentSceneGraph(persistentSceneGraph);
-        ++released;
+        // Without the threaded render loop, or when nothing was rendered since
+        // the last release, only caches are dropped.
+        if (hadGraphics && !quickWindow->rhi())
+            ++released;
+        else
+            ++kept;
     }
 
     qCInfo(backgroundGraphicsRelease) << "suspended: released" << released
-                                      << "windows, skipped" << skipped
+                                      << "windows, kept" << kept
+                                      << "(no GPU resources freed), skipped" << skipped
                                       << "still exposed, took" << timer.elapsed() << "ms";
 }
 } // namespace Status
