@@ -516,10 +516,10 @@ proc sendNotification[T](self: Module[T], status: string, sendDetails: SendDetai
 
     var txToName = ""
     let txType = SendType(sendDetails.sendType)
-    if txType == SendType.Bridge:
-      txToName = "Hop" # no translations, currently we hardcode providers here, when we add more, this info should come from the status-go side.
-    elif txType == SendType.Swap:
-      txToName = "LI.FI"
+    if txType == SendType.Bridge or txType == SendType.Swap:
+      # the route's processor (e.g. "Relay", "LiFi", "Hop"); the UI maps it to the provider's name
+      if not sentTransaction.isNil:
+        txToName = sentTransaction.processorName
     else:
       accDto = self.walletAccountService.getAccountByAddress(txTo)
       if not accDto.isNil:

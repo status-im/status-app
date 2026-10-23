@@ -615,14 +615,16 @@ Item {
                 case Constants.SendType.Swap: {
                     toastTitle = qsTr("Swapping %1 to %2 in %3").arg(sentAmount).arg(receivedAmount).arg(sender)
                     if (approvalTx) {
-                        toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                        const provider = Utils.swapProviderDisplayName(txToName) || txRecipient
+                        toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(provider)
                     }
                     break
                 }
                 case Constants.SendType.Bridge: {
                     toastTitle = qsTr("Bridging %1 on %2 to %3 on %4 in %5").arg(sentAmount).arg(senderChainName).arg(receivedAmount).arg(recipientChainName).arg(sender)
                     if (approvalTx) {
-                        toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
+                        const provider = Utils.swapProviderDisplayName(txToName) || txRecipient
+                        toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(provider)
                     }
                     break
                 }

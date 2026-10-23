@@ -78,6 +78,7 @@ type
     amountOut*: UInt256 # amount that will be received
     hash*: string
     approvalTx*: bool
+    processorName*: string
 
 type
   RouterSentTransactionsDto* = ref object
@@ -185,6 +186,7 @@ proc toRouterSentTransaction*(jsonObj: JsonNode): RouterSentTransaction =
   discard jsonObj.getProp("toToken", result.toToken)
   discard jsonObj.getProp("hash", result.hash)
   discard jsonObj.getProp("approvalTx", result.approvalTx)
+  discard jsonObj.getProp("processorName", result.processorName)
   var tmpObj: JsonNode
   if jsonObj.getProp("amount", tmpObj):
     result.amount = stint.fromHex(UInt256, tmpObj.getStr)
