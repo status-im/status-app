@@ -41,10 +41,19 @@ def test_find_element_safe_raises_on_a_dead_session():
         BasePage(_dead()).find_element_safe(LOCATOR, timeout=1)
 
 
+def test_enabled_and_checked_probes_raise_on_a_dead_session():
+    page = BasePage(_dead())
+    with pytest.raises(InvalidSessionIdException):
+        page._is_element_enabled(LOCATOR)
+    with pytest.raises(InvalidSessionIdException):
+        page._is_element_checked(LOCATOR)
+
+
 def test_missing_element_is_still_false_and_none():
     page = BasePage(_driver(NoSuchElementException()))
     assert page.is_element_visible(LOCATOR, timeout=0.1) is False
     assert page.find_element_safe(LOCATOR, timeout=0.1) is None
+    assert page._is_element_enabled(LOCATOR, timeout=0.1) is False
 
 
 def test_messages_nav_raises_on_the_first_command():

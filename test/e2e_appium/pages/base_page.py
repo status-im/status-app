@@ -660,7 +660,9 @@ class BasePage:
             if not element:
                 return False
             return ElementStateChecker.is_enabled(element)
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     def _is_element_checked(self, locator: tuple) -> bool:
@@ -669,7 +671,9 @@ class BasePage:
             if not element:
                 return False
             return ElementStateChecker.is_checked(element)
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     def wait_for_element_enabled(self, locator: tuple, timeout: int | None = None) -> bool:
