@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import StatusQ
 
 import AppLayouts.Profile.views
 
@@ -19,6 +20,9 @@ Item {
 
             availableLanguages: ["en", "ko"]
             currentLanguage: "en"
+            availableSpellcheckLanguages: LanguageService.availableSpellcheckLanguages
+            activeSpellcheckLanguages: LanguageService.activeSpellcheckLanguages
+            onEnableSpellcheckLanguageRequested: (code, enabled) => LanguageService.toggleSpellcheckLanguage(code, enabled)
             currentCurrency: "USD"
             currenciesModel: ListModel {
                 ListElement {
@@ -55,8 +59,11 @@ Item {
     TestCase {
         name: "LanguageView"
         when: windowShown
+        property string originalUID
 
         function init() {
+            originalUID = LanguageService.userUID
+            LanguageService.toggleSpellcheckLanguage("cs_CZ", false)
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             verify(!!controlUnderTest)
             languageSpy.target = controlUnderTest
@@ -68,6 +75,8 @@ Item {
         }
 
         function cleanup() {
+            LanguageService.userUID = originalUID
+            LanguageService.toggleSpellcheckLanguage("cs_CZ", false)
             if (controlUnderTest) {
                 controlUnderTest.destroy()
                 controlUnderTest = null
@@ -120,7 +129,48 @@ Item {
             compare(spellCheckSpy.count, 1)
             compare(spellCheckSpy.signalArguments[0][0], false)
             controlUnderTest.spellCheckEnabled = false
-            verify(!skip.enabled)
+            verify(!skip.visible)
+        }
+
+        function test_dictionariesKeepEnglishSelected() {
+            const selector = findChild(controlUnderTest, "languageViewSpellcheckLanguageSelector")
+            verify(!!selector)
+            verify(selector.activeLanguageCodes.includes("en_US"))
+            mouseClick(selector)
+            const dropdown = findChild(selector, "statusLanguageSelectorDropdown")
+            tryCompare(dropdown, "opened", true)
+            const listView = findChild(dropdown.contentItem, "statusLanguageSelectorListView")
+            verify(waitForRendering(listView))
+            const english = findChild(listView, "itemDelegate_en_US")
+            const czech = findChild(listView, "itemDelegate_cs_CZ")
+            verify(!!english)
+            verify(!!czech)
+            verify(english.checked)
+            verify(!english.enabled)
+            mouseClick(english)
+            verify(english.checked)
+            mouseClick(czech)
+            tryVerify(() => LanguageService.activeSpellcheckLanguages.includes("cs_CZ"))
+            verify(english.checked)
+            mouseClick(czech)
+            tryVerify(() => !LanguageService.activeSpellcheckLanguages.includes("cs_CZ"))
+            verify(english.checked)
+            LanguageService.toggleSpellcheckLanguage("en_US", false)
+            verify(LanguageService.activeSpellcheckLanguages.includes("en_US"))
+            verify(english.checked)
+            dropdown.close()
+        }
+
+        function test_switchingProfilesPreservesAvailableDictionaries() {
+            LanguageService.toggleSpellcheckLanguage("cs_CZ", true)
+            LanguageService.userUID = originalUID + "-other"
+            verify(LanguageService.availableSpellcheckLanguages.includes("en_US"))
+            verify(LanguageService.availableSpellcheckLanguages.includes("cs_CZ"))
+            verify(LanguageService.activeSpellcheckLanguages.includes("en_US"))
+            verify(!LanguageService.activeSpellcheckLanguages.includes("cs_CZ"))
+            LanguageService.userUID = originalUID
+            verify(LanguageService.activeSpellcheckLanguages.includes("en_US"))
+            verify(LanguageService.activeSpellcheckLanguages.includes("cs_CZ"))
         }
 
         function test_cancel_keepsCurrentLanguage() {

@@ -5,14 +5,13 @@
 #include <QTimer>
 #include <QVariantList>
 
-#include <utility>
-
 // One editor's asynchronous spell-check session. The dictionary and worker are shared.
 class SpellChecker : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
+    Q_PROPERTY(QSet<QString> languages READ languages WRITE setLanguages NOTIFY languagesChanged)
+    Q_PROPERTY(QString spellCheckDictsDir READ spellCheckDictsDir WRITE setSpellCheckDictsDir NOTIFY spellCheckDictsDirChanged)
     Q_PROPERTY(bool skipCapitalizedWords READ skipCapitalizedWords WRITE setSkipCapitalizedWords NOTIFY skipCapitalizedWordsChanged)
     Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged)
     Q_PROPERTY(bool composing READ composing WRITE setComposing NOTIFY composingChanged)
@@ -27,8 +26,8 @@ public:
     explicit SpellChecker(QObject* parent = nullptr);
     bool enabled() const { return m_enabled; }
     void setEnabled(bool value);
-    QString language() const { return m_language; }
-    void setLanguage(const QString& value);
+    QSet<QString> languages() const { return m_languages; }
+    void setLanguages(const QSet<QString>& value);
     bool skipCapitalizedWords() const { return m_skipCapitalizedWords; }
     void setSkipCapitalizedWords(bool value);
     int cursorPosition() const { return m_cursorPosition; }
@@ -51,9 +50,12 @@ public:
     Q_INVOKABLE void requestSuggestions(int position);
     Q_INVOKABLE void clearSuggestions();
 
+    QString spellCheckDictsDir() const;
+    void setSpellCheckDictsDir(const QString &newSpellCheckDictsDir);
+
 signals:
     void enabledChanged();
-    void languageChanged();
+    void languagesChanged();
     void skipCapitalizedWordsChanged();
     void cursorPositionChanged();
     void composingChanged();
@@ -62,8 +64,11 @@ signals:
     void checkFinished();
     void suggestionsChanged();
     void errorOccurred(const QString& message);
+    void spellCheckDictsDirChanged();
 
 private:
+    void initialize();
+
     bool supported() const;
     void invalidate();
     void setCheckPending(bool value);
@@ -76,7 +81,7 @@ private:
     quint64 m_generation = 0;
     quint64 m_suggestionRequest = 0;
     bool m_enabled = true;
-    QString m_language = QStringLiteral("en_US");
+    QSet<QString> m_languages = {QStringLiteral("en_US")};
     bool m_skipCapitalizedWords = true;
     int m_cursorPosition = -1;
     int m_incompleteStart = -1;
@@ -93,4 +98,6 @@ private:
     bool m_suggestionsInFlight = false;
     int m_suggestionStart = -1;
     QString m_suggestionWord;
+    QString m_spellCheckDictsDir;
+    bool m_initialized{false};
 };

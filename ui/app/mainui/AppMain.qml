@@ -73,6 +73,7 @@ Item {
         d.lastRecordedSectionId = appMain.rootStore.activeSectionId
         // if a profile migration request emitted before AppMain existed, re-run the check now
         appMain.rootStore.checkProfileMigrationNeeded()
+        languageStore.setUserUID(d.myPublicKey)
     }
 
     // Primary store container — all additional stores should be initialized under this root

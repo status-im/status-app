@@ -25,6 +25,8 @@ StatusMenu {
 
     // There is content to select — enables Select All.
     property bool canSelectAll: true
+
+    // spellcheck related
     property bool spellingTarget: false
     property bool spellingPending: false
     property var spellingSuggestions: []

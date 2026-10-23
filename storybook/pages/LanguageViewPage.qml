@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
+
 import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Profile.views
 
@@ -14,6 +16,8 @@ SplitView {
 
     Logs { id: logs }
 
+    Component.onCompleted: LanguageService.userUID = "0xdeadbeef"
+
     SplitView {
         orientation: Qt.Vertical
         SplitView.fillWidth: true
@@ -25,6 +29,14 @@ SplitView {
 
             availableLanguages: ["de", "cs", "en", "en_CA", "ko", "ar", "fr", "fr_CA", "pt_BR", "pt", "uk", "ja", "el"]
             currentLanguage: "en"
+
+            availableSpellcheckLanguages: LanguageService.availableSpellcheckLanguages
+            activeSpellcheckLanguages: LanguageService.activeSpellcheckLanguages
+
+            onEnableSpellcheckLanguageRequested: function(code, enabled) {
+                logs.logEvent("onEnableSpellcheckLanguageRequested", ["code", "enabled"], arguments)
+                LanguageService.toggleSpellcheckLanguage(code, enabled)
+            }
 
             onChangeLanguageRequested: function(newLanguageCode) {
                 logs.logEvent("onChangeLanguageRequested", ["newLanguageCode"], arguments)
@@ -82,6 +94,10 @@ SplitView {
             SplitView.preferredHeight: 200
 
             logsView.logText: logs.logText
+
+            Label {
+                text: "Spellcheck dicts dir: '%1'".arg(LanguageService.spellCheckDictsDir)
+            }
         }
     }
 }

@@ -3,6 +3,8 @@
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QQmlEngine>
+#include <QSettings>
+#include <QTemporaryDir>
 #include <QUrl>
 #include <QtQuickTest>
 
@@ -27,12 +29,18 @@ class Setup : public QObject
 {
     Q_OBJECT
 
+    QTemporaryDir m_settingsDirectory;
+
 public slots:
     void qmlEngineAvailable(QQmlEngine *engine) {
         Q_INIT_RESOURCE(storybook);
 
         QGuiApplication::setOrganizationName(u"Status"_s);
         QGuiApplication::setOrganizationDomain(u"status.im"_s);
+        if (!m_settingsDirectory.isValid())
+            qFatal("Cannot create temporary QML test settings directory");
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_settingsDirectory.path());
 
         qputenv("QT_QUICK_CONTROLS_HOVER_ENABLED", "1"_ba);
 
@@ -57,6 +65,10 @@ public slots:
             engine->addImportPath(path);
 
         registerStatusQTypes();
+        auto* languageService = engine->singletonInstance<QObject*>("StatusQ", "LanguageService");
+        if (!languageService)
+            qFatal("Cannot initialize LanguageService for QML tests");
+        languageService->setProperty("userUID", u"qml-tests"_s);
         storybook_nim_install(engine);
 
         // Test-only helper for driving the IME/input-method path from QML tests.

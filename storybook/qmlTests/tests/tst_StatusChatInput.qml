@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtTest
+import StatusQ
 
 import StatusQ.Core.Utils as SQUtils
 
@@ -124,6 +125,9 @@ Item {
         property StatusChatInput controlUnderTest: null
 
         function init() {
+            LanguageService.spellCheckEnabled = true
+            LanguageService.spellCheckSkipCapitalizedWords = true
+            LanguageService.toggleSpellcheckLanguage("cs_CZ", false)
             wrapperUnderTest = createTemporaryObject(editModeComponent, root)
             controlUnderTest = findChild(wrapperUnderTest, "editModeInput")
             verify(!!controlUnderTest)
@@ -131,6 +135,9 @@ Item {
         }
 
         function cleanup() {
+            LanguageService.spellCheckEnabled = true
+            LanguageService.spellCheckSkipCapitalizedWords = true
+            LanguageService.toggleSpellcheckLanguage("cs_CZ", false)
             signalSpy.target = null
             signalSpy.clear()
             if (wrapperUnderTest)
@@ -213,26 +220,34 @@ Item {
             input.text = "wrld "
             input.cursorPosition = input.length
             tryVerify(() => input.spellChecker.issues.length === 1)
-            localAccountSensitiveSettings.spellCheckEnabled = false
+            LanguageService.spellCheckEnabled = false
             compare(input.spellCheckEnabled, false)
             compare(input.spellChecker.issues.length, 0)
-            localAccountSensitiveSettings.spellCheckEnabled = true
+            LanguageService.spellCheckEnabled = true
             tryVerify(() => input.spellChecker.issues.length === 1)
             input.text = "Wrld "
             input.cursorPosition = input.length
             tryVerify(() => input.spellChecker.issues.length === 0)
-            localAccountSensitiveSettings.spellCheckSkipCapitalizedWords = false
+            LanguageService.spellCheckSkipCapitalizedWords = false
             compare(input.spellCheckSkipCapitalizedWords, false)
             tryVerify(() => input.spellChecker.issues.length === 1)
-            localAccountSensitiveSettings.spellCheckSkipCapitalizedWords = true
+            LanguageService.spellCheckSkipCapitalizedWords = true
             tryVerify(() => input.spellChecker.issues.length === 0)
             input.text = "wrld "
             input.cursorPosition = input.length
             tryVerify(() => input.spellChecker.issues.length === 1)
             localAppSettings.language = "fr"
-            compare(input.spellChecker.issues.length, 0)
+            compare(input.spellChecker.issues.length, 1)
             localAppSettings.language = "en"
-            tryVerify(() => input.spellChecker.issues.length === 1)
+            input.text = "hello přítel "
+            tryVerify(() => !input.spellChecker.checkPending)
+            compare(input.spellChecker.issues.length, 1)
+            LanguageService.toggleSpellcheckLanguage("cs_CZ", true)
+            tryVerify(() => !input.spellChecker.checkPending)
+            compare(input.spellChecker.issues.length, 0)
+            LanguageService.toggleSpellcheckLanguage("cs_CZ", false)
+            tryVerify(() => !input.spellChecker.checkPending)
+            compare(input.spellChecker.issues.length, 1)
         }
 
         function openFormattingToolbar(toolBar) {

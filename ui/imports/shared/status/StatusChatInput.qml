@@ -90,7 +90,8 @@ Control {
 
     property alias textInput: messageInputField
     property alias spellCheckEnabled: messageInputField.spellCheckEnabled
-    property alias spellCheckLanguage: messageInputField.spellCheckLanguage
+    property alias spellCheckLanguages: messageInputField.spellCheckLanguages
+    property alias spellCheckDictsDir: messageInputField.spellCheckDictsDir
     property alias spellCheckSkipCapitalizedWords: messageInputField.spellCheckSkipCapitalizedWords
 
     SpellCheckStore {
@@ -976,7 +977,8 @@ Control {
                         characterLimit: root.messageLimitHard
                         asciiEmojiConversion: true
                         spellCheckEnabled: spellCheckSettings.enabled
-                        spellCheckLanguage: spellCheckSettings.language
+                        spellCheckDictsDir: spellCheckSettings.spellCheckDictsDir
+                        spellCheckLanguages: spellCheckSettings.activeLanguages
                         spellCheckSkipCapitalizedWords: spellCheckSettings.skipCapitalizedWords
 
                         // Paddings are used only for left/right sides because

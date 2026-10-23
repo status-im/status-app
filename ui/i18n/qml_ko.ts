@@ -10370,20 +10370,32 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
         <translation>언어</translation>
     </message>
     <message>
-        <source>Check spelling</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Skip capitalized words and acronyms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We need your help to translate Status, so that together we can bring privacy and free speech to the people everywhere, including those who need it most.</source>
-        <translation>우리는 Status를 번역하는 데 당신의 도움이 필요합니다. 함께 전 세계, 특히 가장 필요로 하는 이들에게 프라이버시와 표현의 자유를届け요.</translation>
+        <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Learn more</source>
-        <translation>더 알아보기</translation>
+        <source>channel</source>
+        <translation type="unfinished">채널</translation>
+    </message>
+    <message>
+        <source>Spell Check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device&apos;s keyboard, so privacy depends on its settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skips spelling checks for capitalized words and acronyms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dictionaries</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Time Format</source>
@@ -16598,7 +16610,7 @@ to load</source>
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation>검색</translation>
+        <translation type="unfinished">검색</translation>
     </message>
 </context>
 <context>
@@ -16804,7 +16816,7 @@ to load</source>
     <name>StatusLanguageSelector</name>
     <message>
         <source>Search</source>
-        <translation>검색</translation>
+        <translation type="unfinished">검색</translation>
     </message>
 </context>
 <context>

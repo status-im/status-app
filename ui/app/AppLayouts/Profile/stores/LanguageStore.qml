@@ -10,6 +10,10 @@ QtObject {
     readonly property var availableLanguages: LanguageService.availableLanguages
     readonly property SpellCheckStore spellCheckSettings: SpellCheckStore {}
 
+    function setUserUID(userUID) {
+        spellCheckSettings.setUserUID(userUID)
+    }
+
     function changeLanguage(languageCode, shouldRetranslate = false) {
         localAppSettings.language = languageCode
 

@@ -10412,20 +10412,32 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Langue</translation>
     </message>
     <message>
-        <source>Check spelling</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Skip capitalized words and acronyms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We need your help to translate Status, so that together we can bring privacy and free speech to the people everywhere, including those who need it most.</source>
-        <translation>Nous avons besoin de votre aide pour traduire Status, afin que nous puissions ensemble apporter la confidentialité et la liberté d’expression aux personnes du monde entier, y compris celles qui en ont le plus besoin.</translation>
+        <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Learn more</source>
-        <translation>En savoir plus</translation>
+        <source>channel</source>
+        <translation type="unfinished">chaîne</translation>
+    </message>
+    <message>
+        <source>Spell Check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device&apos;s keyboard, so privacy depends on its settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skips spelling checks for capitalized words and acronyms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dictionaries</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Time Format</source>
@@ -16675,7 +16687,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation>Rechercher</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16881,7 +16893,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>StatusLanguageSelector</name>
     <message>
         <source>Search</source>
-        <translation>Rechercher</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

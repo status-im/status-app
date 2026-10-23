@@ -11,8 +11,8 @@
 #include <QRegularExpression>
 #include <QTemporaryDir>
 #include <QThread>
+
 #include <algorithm>
-#include <memory>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -38,7 +38,7 @@ void excludeNodes(const Markdown::Node& node, QVector<bool>& excluded)
             excluded[i] = true;
         return;
     }
-    for (const auto& child : node.children)
+    for (const auto& child : std::as_const(node.children))
         excludeNodes(child, excluded);
 }
 
@@ -51,15 +51,33 @@ QByteArray hunspellPath(const QString& path)
 #endif
 }
 
+constexpr auto kMaxSuggestions = 5;
+
 } // namespace
 
 class SpellCheckWorker : public QObject
 {
     Q_OBJECT
 public:
+    ~SpellCheckWorker() {
+        qDeleteAll(m_dictionaries);
+    }
+
+    void configure(const QString& directory, const QSet<QString>& languages)
+    {
+        if (m_directory == QDir(directory) && m_languages == languages)
+            return;
+        qDeleteAll(m_dictionaries);
+        m_dictionaries.clear();
+        m_error.clear();
+        m_directory = QDir(directory);
+        m_languages = languages;
+    }
+
     void check(quint64 id, quint64 generation, const QString& text, int incompletePosition,
                bool skipCapitalized)
     {
+        qWarning() << "!!! CHECK:" << text;
         if (!load()) {
             emit checked(id, generation, {}, m_error);
             return;
@@ -107,12 +125,17 @@ public:
             if (!duplicate && skipCapitalized && capitalized)
                 continue;
             // Hunspell has a byte-length limit; avoid asking it about pathological tokens.
-            const auto utf8 = word.toUtf8();
-            if (utf8.size() >= MAXWORDLEN)
+            if (word.size() >= MAXWORDLEN)
                 continue;
             auto found = checkedWords.constFind(word);
-            const bool correct = found != checkedWords.cend() ? *found
-                : m_dictionary->spell(std::string(utf8.constData(), utf8.size()));
+            const auto spellcheckAny = [this](const auto& word) -> bool {
+                return std::any_of(m_dictionaries.cbegin(), m_dictionaries.cend(), [&word](auto dict) {
+                    const auto result = dict->spell(word.toStdString());
+                    qWarning() << "!!! SPELLCHECK WORD:" << word << "; with encoding:" << dict->get_dict_encoding() << "; result:" << result;
+                    return result;
+                });
+            };
+            const bool correct = found != checkedWords.cend() ? *found : spellcheckAny(word);
             checkedWords.insert(word, correct);
             if (duplicate || !correct) {
                 issues.append(QVariantMap{
@@ -125,13 +148,16 @@ public:
 
     void suggest(quint64 id, quint64 request, const QString& word)
     {
-        QStringList suggestions;
+        QStringList suggestions; // FIXME sort the suggestions by relevance, user's language first among the dictionaries
         if (load()) {
-            for (const auto& suggestion : m_dictionary->suggest(word.toStdString())) {
-                suggestions.append(QString::fromUtf8(suggestion));
-                if (suggestions.size() >= 5)
-                    break;
-            }
+            std::for_each(m_dictionaries.cbegin(), m_dictionaries.cend(), [&word, &suggestions](auto dict) {
+                const auto stdSuggestions = dict->suggest(word.toStdString());
+                for (const auto& suggestion: stdSuggestions) {
+                    suggestions.append(QString::fromStdString(suggestion));
+                }
+            });
+            if (suggestions.size() > kMaxSuggestions)
+                suggestions.resize(kMaxSuggestions);
         }
         emit suggested(id, request, suggestions, m_error);
     }
@@ -143,40 +169,39 @@ signals:
 private:
     bool load()
     {
-        if (m_dictionary)
+        qWarning() << "!!! LOADING DICTS FOR LANGS:" << m_languages;
+        if (!m_dictionaries.isEmpty())
             return true;
         if (!m_error.isEmpty())
             return false;
-        m_directory = std::make_unique<QTemporaryDir>();
-        if (!m_directory->isValid()) {
-            m_error = QStringLiteral("Cannot create spell-check dictionary directory");
-        } else {
-            for (const auto& name : {"en_US.aff"_L1, "en_US.dic"_L1}) {
-                if (!QFile::copy(":/StatusQ/dictionaries/"_L1 + name,
-                                 m_directory->filePath(name))) {
-                    m_error = QStringLiteral("Cannot extract spell-check dictionary: ") + name;
-                    break;
+        if (m_directory.isEmpty() || !m_directory.exists()) {
+            m_error = QStringLiteral("Cannot access spell-check dictionary directory");
+        }
+        if (m_error.isEmpty()) {
+            for (const auto& lang: std::as_const(m_languages)) {
+                const auto aff = hunspellPath(m_directory.filePath(lang + ".aff"_L1));
+                const auto dic = hunspellPath(m_directory.filePath(lang + ".dic"_L1));
+                auto dictionary = new Hunspell(aff.constData(), dic.constData());
+
+                if (qstricmp(dictionary->get_dic_encoding(), "UTF-8") != 0) {
+                    delete dictionary;
+                    qWarning() << "Cannot load bundled UTF-8 spell-check dictionary for language:" + lang;
+                } else {
+                    qWarning() << "!!! LOADED DICT" << lang << " with encoding" << dictionary->get_dic_encoding();
+                    m_dictionaries.emplace_back(std::move(dictionary));
                 }
             }
         }
-        if (m_error.isEmpty()) {
-            const auto aff = hunspellPath(m_directory->filePath("en_US.aff"_L1));
-            const auto dic = hunspellPath(m_directory->filePath("en_US.dic"_L1));
-            m_dictionary = std::make_unique<Hunspell>(aff.constData(), dic.constData());
-            if (qstricmp(m_dictionary->get_dic_encoding(), "UTF-8") != 0
-                || !m_dictionary->spell(std::string("hello"))) {
-                m_dictionary.reset();
-                m_error = QStringLiteral("Cannot load bundled UTF-8 English spell-check dictionary");
-            }
-        }
         if (!m_error.isEmpty())
-            qWarning().noquote() << m_error;
-        return bool(m_dictionary);
+            qWarning() << "!!! LOAD error:" << m_error;
+        qWarning() << "!!! LOADED DICTS:" << m_dictionaries;
+        return !m_dictionaries.isEmpty();
     }
 
-    std::unique_ptr<QTemporaryDir> m_directory;
-    std::unique_ptr<Hunspell> m_dictionary;
+    QList<Hunspell *> m_dictionaries;
+    QDir m_directory;
     QString m_error;
+    QSet<QString> m_languages;
 };
 
 namespace {
@@ -184,7 +209,9 @@ namespace {
 class SpellCheckEngine : public QObject
 {
 public:
-    SpellCheckEngine() : QObject(QCoreApplication::instance()), worker(new SpellCheckWorker)
+    SpellCheckEngine()
+        : QObject(QCoreApplication::instance())
+        , worker(new SpellCheckWorker)
     {
         worker->moveToThread(&thread);
         connect(&thread, &QThread::finished, worker, &QObject::deleteLater);
@@ -216,40 +243,6 @@ SpellChecker::SpellChecker(QObject* parent) : QObject(parent)
     m_timer.setSingleShot(true);
     m_timer.setInterval(30);
     connect(&m_timer, &QTimer::timeout, this, &SpellChecker::dispatch);
-    connect(worker(), &SpellCheckWorker::checked, this,
-            [this](quint64 id, quint64 generation, const QVariantList& issues, const QString& error) {
-        if (id != m_id)
-            return;
-        m_inFlight = false;
-        if (generation == m_generation && supported()) {
-            setCheckPending(false);
-            if (m_issues != issues) {
-                m_issues = issues;
-                emit issuesChanged();
-            }
-            emit checkFinished();
-            if (!error.isEmpty())
-                emit errorOccurred(error);
-        } else if (supported() && m_checkPending && !m_composing) {
-            m_timer.start();
-        }
-    });
-    connect(worker(), &SpellCheckWorker::suggested, this,
-            [this](quint64 id, quint64 request, const QStringList& suggestions, const QString& error) {
-        if (id != m_id)
-            return;
-        m_suggestionsInFlight = false;
-        if (request != m_suggestionRequest) {
-            if (m_suggestionsPending)
-                dispatchSuggestions();
-            return;
-        }
-        m_suggestionsPending = false;
-        m_suggestions = suggestions;
-        emit suggestionsChanged();
-        if (!error.isEmpty())
-            emit errorOccurred(error);
-    });
 }
 
 void SpellChecker::setCheckPending(bool value)
@@ -262,7 +255,8 @@ void SpellChecker::setCheckPending(bool value)
 
 bool SpellChecker::supported() const
 {
-    return m_enabled && (m_language == "en_US"_L1 || m_language == "en"_L1);
+    qWarning() << "!!! SUPPORTED; languages:" << m_languages << "; dir with dicts:" << m_spellCheckDictsDir;
+    return m_enabled && !m_languages.isEmpty() && !m_spellCheckDictsDir.isEmpty();
 }
 
 void SpellChecker::invalidate()
@@ -285,13 +279,16 @@ void SpellChecker::dispatch()
     if (m_inFlight || !m_checkPending || m_composing || !supported() || m_text.isEmpty())
         return;
     m_inFlight = true;
-    auto* target = worker();
+    auto target = worker();
+    const auto directory = m_spellCheckDictsDir;
+    const auto languages = m_languages;
     const auto id = m_id;
     const auto generation = m_generation;
     const auto text = m_text;
     const auto incompletePosition = m_incompleteEnd;
     const auto skip = m_skipCapitalizedWords;
     QMetaObject::invokeMethod(target, [=] {
+        target->configure(directory, languages);
         target->check(id, generation, text, incompletePosition, skip);
     }, Qt::QueuedConnection);
 }
@@ -305,13 +302,15 @@ void SpellChecker::setEnabled(bool value)
     emit enabledChanged();
 }
 
-void SpellChecker::setLanguage(const QString& value)
+void SpellChecker::setLanguages(const QSet<QString>& value)
 {
-    if (m_language == value)
+    if (m_languages == value)
         return;
-    m_language = value;
+    m_languages = value;
     invalidate();
-    emit languageChanged();
+    emit languagesChanged();
+
+    initialize();
 }
 
 void SpellChecker::setSkipCapitalizedWords(bool value)
@@ -527,11 +526,76 @@ void SpellChecker::dispatchSuggestions()
     if (m_suggestionsInFlight)
         return;
     m_suggestionsInFlight = true;
-    auto* target = worker();
+    auto target = worker();
+    const auto directory = m_spellCheckDictsDir;
+    const auto languages = m_languages;
     const auto id = m_id;
     const auto request = m_suggestionRequest;
     const auto word = m_suggestionWord;
-    QMetaObject::invokeMethod(target, [=] { target->suggest(id, request, word); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(target, [=] {
+        target->configure(directory, languages);
+        target->suggest(id, request, word);
+    }, Qt::QueuedConnection);
+}
+
+QString SpellChecker::spellCheckDictsDir() const
+{
+    return m_spellCheckDictsDir;
+}
+
+void SpellChecker::setSpellCheckDictsDir(const QString &newSpellCheckDictsDir)
+{
+    if (m_spellCheckDictsDir == newSpellCheckDictsDir)
+        return;
+    m_spellCheckDictsDir = newSpellCheckDictsDir;
+    initialize();
+    invalidate();
+    emit spellCheckDictsDirChanged();
+}
+
+void SpellChecker::initialize()
+{
+    if (m_initialized)
+        return;
+
+    if (m_spellCheckDictsDir.isEmpty() || m_languages.isEmpty())
+        return;
+
+    connect(worker(), &SpellCheckWorker::checked, this,
+            [this](quint64 id, quint64 generation, const QVariantList& issues, const QString& error) {
+                if (id != m_id)
+                    return;
+                m_inFlight = false;
+                if (generation == m_generation && supported()) {
+                    setCheckPending(false);
+                    if (m_issues != issues) {
+                        m_issues = issues;
+                        emit issuesChanged();
+                    }
+                    emit checkFinished();
+                    if (!error.isEmpty())
+                        emit errorOccurred(error);
+                } else if (supported() && m_checkPending && !m_composing) {
+                    m_timer.start();
+                }
+            });
+    connect(worker(), &SpellCheckWorker::suggested, this,
+            [this](quint64 id, quint64 request, const QStringList& suggestions, const QString& error) {
+                if (id != m_id)
+                    return;
+                m_suggestionsInFlight = false;
+                if (request != m_suggestionRequest) {
+                    if (m_suggestionsPending)
+                        dispatchSuggestions();
+                    return;
+                }
+                m_suggestionsPending = false;
+                m_suggestions = suggestions;
+                emit suggestionsChanged();
+                if (!error.isEmpty())
+                    emit errorOccurred(error);
+            });
+    m_initialized = true;
 }
 
 #include "spellchecker.moc"
