@@ -24,11 +24,11 @@ SplitView {
         StatusLanguageSelector {
             anchors.centerIn: parent
             enabled: ctrlEnabled.checked
-            currentLanguage: ctrlCurrentLanguage.text
             languageCodes: ctrlLanguageCodes.text.split(',')
+            activeLanguageCodes: [ctrlCurrentLanguage.text]
             onLanguageSelected: function(languageCode) {
                 logs.logEvent("onChangeLanguageRequested", ["languageCode"], arguments)
-                currentLanguage = languageCode
+                activeLanguageCodes = [languageCode]
             }
         }
     }
