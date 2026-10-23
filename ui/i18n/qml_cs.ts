@@ -13767,10 +13767,6 @@ selhalo</translation>
         <translation>Pokračovat</translation>
     </message>
     <message>
-        <source>Please enter your password — biometrics cannot be used for this action</source>
-        <translation>Prosím zadejte své heslo — biometriku pro tuto akci nelze použít</translation>
-    </message>
-    <message>
         <source>Failed to update stored credentials</source>
         <translation>Nepodařilo se aktualizovat uložené přihlašovací údaje</translation>
     </message>

@@ -784,7 +784,8 @@ QtObject {
                 secureStorage: root.secureStorage
                 getCredentialForStorage: (keyUid, password) => root.privacyStore.getBiometricCredentialForStorage(keyUid, password)
                 getStayLoggedInCredentialForStorage: (keyUid, credential) => root.privacyStore.getStayLoggedInCredentialForStorage(keyUid, credential)
-                requirePlainCredential: reason === Constants.authenticationReason.syncDevice
+                biometricsAllowed: reason !== Constants.authenticationReason.syncDevice
+                                   && reason !== Constants.authenticationReason.disableBiometrics
                 onAuthenticationSuccess: function(reason, password, pin, keyUid, chatPrivateKey) {
                     root.authenticationStore.passwordProvided(keyUid, password)
                     Global.authenticationResult(reason, password, pin, keyUid, chatPrivateKey)

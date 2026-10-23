@@ -134,6 +134,33 @@ Item {
             tryCompare(passwordInput, "activeFocus", true)
         }
 
+        // biometricsAllowed: false must take manual-entry-only effect even with a
+        // stored credential: no biometric auto-start (no OS prompt), no "Use
+        // biometrics" button, password input focused right away. Used by actions that
+        // exist to prove the user still KNOWS the credential (disabling biometrics).
+        function test_biometricsNotOfferedWhenDisallowed() {
+            popup = createTemporaryObject(componentUnderTest, root, {
+                                              keychain: mockKeychain,
+                                              keyUid: "key-uid-1", // has a stored credential
+                                              userProfileKeyUid: "key-uid-1",
+                                              userProfileMigratedToColdWallet: false,
+                                              isKeycardKeyPair: false,
+                                              biometricsAllowed: false,
+                                              performPasswordAction: password => true
+            })
+            verify(!!popup)
+            popup.open()
+            tryCompare(popup, "opened", true)
+
+            tryVerify(() => !!findChild(popup, "authenticationPasswordInput"))
+            const passwordInput = findChild(popup, "authenticationPasswordInput")
+            tryCompare(passwordInput, "activeFocus", true)
+
+            compare(mockKeychain.requestCount, 0) // biometrics never started
+            const bioButton = findChild(popup, "useBiometricsButton")
+            verify(!bioButton || !bioButton.visible)
+        }
+
         function test_biometricSuccessDoesNotFocusInput() {
             let providedPassword = ""
             createSoftwareWalletPopup("key-uid-1", password => {
@@ -305,25 +332,23 @@ Item {
             compare(mockKeychain.updatedCredentials[0].credential, "dek:transformed-legacy-password")
         }
 
-        // Flows that transfer the password itself (device syncing) cannot accept a DEK:
-        // the popup must fall back to manual password entry without running the action.
-        function test_requirePlainCredentialFallsBackToManualEntry() {
+        // Flows that transfer the password itself (device syncing) or that prove the
+        // user still knows it (disabling biometrics) never offer biometrics at all:
+        // no biometric request is started and the action only runs on typed input.
+        function test_biometricsDisallowedNeverStartsBiometrics() {
             let actionRuns = 0
-            popup = createPasswordPopup({ requirePlainCredential: true })
+            popup = createPasswordPopup({ biometricsAllowed: false })
             popup.performPasswordAction = (password) => {
                 actionRuns++
                 return true
             }
             popup.open()
             tryCompare(popup, "opened", true)
-            tryCompare(mockKeychain, "requestCount", 1)
-
-            mockKeychain.getCredentialRequestCompleted(Keychain.StatusSuccess, "dek:aabbcc001122")
 
             waitForRendering(popup.contentItem)
+            compare(mockKeychain.requestCount, 0) // biometrics never started
             compare(actionRuns, 0)
-            compare(mockKeychain.updatedCredentials.length, 0)
-            verify(popup.opened) // stays open for manual entry
+            verify(popup.opened) // waits for manual entry
         }
     }
 

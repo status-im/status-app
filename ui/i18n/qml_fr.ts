@@ -13693,10 +13693,6 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <translation>Continuer</translation>
     </message>
     <message>
-        <source>Please enter your password — biometrics cannot be used for this action</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Failed to update stored credentials</source>
         <translation>Échec de la mise à jour des informations d’identification enregistrées</translation>
     </message>

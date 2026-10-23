@@ -13627,10 +13627,6 @@ to load</source>
         <translation>계속</translation>
     </message>
     <message>
-        <source>Please enter your password — biometrics cannot be used for this action</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Failed to update stored credentials</source>
         <translation>저장된 자격 증명을 업데이트하지 못했습니다</translation>
     </message>

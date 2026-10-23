@@ -296,6 +296,44 @@ Item {
         }
 
         //////////////////////////////////////////////////////////////////////////
+        // Biometrics toggle flows
+        //////////////////////////////////////////////////////////////////////////
+
+        function biometricsSection() {
+            const section = findChild(root.view, "biometricsSection")
+            verify(!!section)
+            return section
+        }
+
+        // Disabling biometrics requires authentication (deliberate, although deleting
+        // the item needs no password technically): the user must prove they still know
+        // the credential they will be left with. The item is only deleted after a
+        // successful authentication result.
+        function test_biometricsDisableRequiresAuth() {
+            root.keychainMock.creds[root.testKeyUid] = "dek:stored-dek-hex"
+
+            biometricsSection().toggleBiometrics(true) // switch was checked -> disable
+            compare(root.keychainMock.creds[root.testKeyUid], "dek:stored-dek-hex") // nothing deleted yet
+
+            Global.authenticationResult(Constants.authenticationReason.disableBiometrics,
+                                        "password-1", "", root.testKeyUid, "")
+
+            compare(root.keychainMock.creds[root.testKeyUid], undefined)
+        }
+
+        // A cancelled authentication leaves biometrics enabled and the item untouched.
+        function test_biometricsDisableCancelledAuthKeepsItem() {
+            root.keychainMock.creds[root.testKeyUid] = "dek:stored-dek-hex"
+
+            biometricsSection().toggleBiometrics(true)
+            Global.authenticationResult(Constants.authenticationReason.disableBiometrics,
+                                        "", "", "", "") // cancelled
+
+            compare(root.keychainMock.creds[root.testKeyUid], "dek:stored-dek-hex")
+            compare(root.preference, "store")
+        }
+
+        //////////////////////////////////////////////////////////////////////////
         // "Stay logged in" flows
         //////////////////////////////////////////////////////////////////////////
 

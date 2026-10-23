@@ -43,6 +43,7 @@ SettingsContentBase {
         }
 
         property bool enablingBiometrics: false
+        property bool disablingBiometrics: false
 
         // "Stay logged in" state
         property bool enablingStayLoggedIn: false
@@ -84,6 +85,23 @@ SettingsContentBase {
                         "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
         }
 
+        function disableBiometrics() {
+            const status = root.keychain.deleteCredential(root.privacyStore.keyUid)
+
+            switch (status) {
+            case Keychain.StatusSuccess:
+                Global.displayToastMessage(
+                            qsTr("Biometric login and transaction authentication disabled for this device"),
+                            "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
+                break
+            default:
+                Global.displayToastMessage(
+                            qsTr("Failed to disable biometric login and transaction authentication for this device"),
+                            "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+            }
+            d.reevaluateHasCredential()
+        }
+
         function openConfirmChangePasswordPopup() {
             confirmPasswordChangePopup.fastPasswordChangePossible = root.privacyStore.isProfileMigratedToDEKEncryption()
             confirmPasswordChangePopup.open()
@@ -93,30 +111,39 @@ SettingsContentBase {
     readonly property Item biometricsPopup: titleRowComponentLoader.item
     readonly property Connections authenticationConnections: Connections {
         target: Global
-        enabled: d.enablingBiometrics
+        enabled: d.enablingBiometrics || d.disablingBiometrics
 
         function onAuthenticationResult(reason, password, pin, keyUid) {
-            if (reason !== Constants.authenticationReason.enableBiometrics)
-                return
-            d.enablingBiometrics = false
+            if (reason === Constants.authenticationReason.enableBiometrics) {
+                if (!d.enablingBiometrics)
+                    return
+                d.enablingBiometrics = false
 
-            const credential = pin !== "" ?
-                                 pin
-                               : root.privacyStore.getBiometricCredentialForStorage(keyUid, password)
-            // If credential not retrieved (cancelled, failed, or could not be prepared)
-            if (keyUid === "" || credential === "") {
-                d.showErrorToast()
-                return
+                const credential = pin !== "" ?
+                                     pin
+                                   : root.privacyStore.getBiometricCredentialForStorage(keyUid, password)
+                // If credential not retrieved (cancelled, failed, or could not be prepared)
+                if (keyUid === "" || credential === "") {
+                    d.showErrorToast()
+                    return
+                }
+
+                const status = keychain.saveCredential(keyUid, credential)
+
+                if (status !== Keychain.StatusSuccess) {
+                    d.showErrorToast()
+                    return
+                }
+
+                d.reevaluateHasCredential()
+            } else if (reason === Constants.authenticationReason.disableBiometrics) {
+                if (!d.disablingBiometrics)
+                    return
+                d.disablingBiometrics = false
+                if (keyUid === "")
+                    return // cancelled — biometrics stay enabled
+                d.disableBiometrics()
             }
-
-            const status = keychain.saveCredential(keyUid, credential)
-
-            if (status !== Keychain.StatusSuccess) {
-                d.showErrorToast()
-                return
-            }
-
-            d.reevaluateHasCredential()
         }
     }
     readonly property Connections stayLoggedInAuthConnections: Connections {
@@ -242,6 +269,7 @@ SettingsContentBase {
         }
 
         BiometricsSectionView {
+            objectName: "biometricsSection"
             Layout.fillWidth: true
 
             enabled: root.keychain.available
@@ -255,21 +283,10 @@ SettingsContentBase {
                     return
                 }
 
-                // Disable biometrics flow
-                const status = root.keychain.deleteCredential(root.privacyStore.keyUid)
-
-                switch (status) {
-                case Keychain.StatusSuccess:
-                    Global.displayToastMessage(
-                                qsTr("Biometric login and transaction authentication disabled for this device"),
-                                "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
-                    break
-                default:
-                    Global.displayToastMessage(
-                                qsTr("Failed to disable biometric login and transaction authentication for this device"),
-                                "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-                }
-                d.reevaluateHasCredential()
+                // Disable flow: deleting the item needs no password technically, but authentication is required deliberately
+                // to prove that the user knows the password.
+                d.disablingBiometrics = true
+                Global.openAuthenticationPopup(Constants.authenticationReason.disableBiometrics, root.privacyStore.keyUid, false)
             }
         }
 
