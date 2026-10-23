@@ -54,7 +54,7 @@ function Install-Dependencies {
     # WARNING: Remember to update PATH in ci/Jenkinsfile.windows.
     Scoop-Install 'status/go'            '1.24.7'
     Scoop-Install 'status/nim'           '2.2.10'
-    Scoop-Install 'status/nimble'        '0.26.0'
+    Scoop-Install 'status/nimble'        '0.26.1'
     Scoop-Install 'status/cmake'         '3.31.6'
     Scoop-Install 'status/python'        '3.13.5'
     Scoop-Install 'status/mingw-winlibs' '15.2.0-13.0.0-r5'
