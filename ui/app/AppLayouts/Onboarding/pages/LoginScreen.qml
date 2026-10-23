@@ -332,8 +332,8 @@ OnboardingPage {
     StatusLanguageSelector {
         anchors.right: parent.right
         anchors.top: parent.top
-        currentLanguage: root.currentLanguage
         languageCodes: root.availableLanguages
+        activeLanguageCodes: [root.currentLanguage]
         onLanguageSelected: (languageCode) => root.changeLanguageRequested(languageCode)
     }
 

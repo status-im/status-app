@@ -76,8 +76,6 @@ const DEFAULT_GIF_UNFURLING_ENABLED* = false
 const LSS_KEY_COPY_MESSAGE_LINKS_ENABLED* = "copyMessageLinksEnabled"
 const DEFAULT_COPY_MESSAGE_LINKS_ENABLED* = false
 const LS_KEY_LOCAL_BACKUP_CHOSEN_PATH* = "localBackupChosenPath"
-const LSS_KEY_SPELL_CHECK_ENABLED* = "spellCheckEnabled"
-const LSS_KEY_SPELL_CHECK_SKIP_CAPITALIZED_WORDS* = "spellCheckSkipCapitalizedWords"
 
 logScope:
   topics = "la-sensitive-settings"
@@ -118,17 +116,12 @@ QtObject:
     new(result, delete)
     result.setup(settingsFileDir)
 
-  proc spellCheckEnabledChanged*(self: LocalAccountSensitiveSettings) {.signal.}
-  proc spellCheckSkipCapitalizedWordsChanged*(self: LocalAccountSensitiveSettings) {.signal.}
-
   proc setFileName*(self: LocalAccountSensitiveSettings, fileName: string) =
     if(not self.settings.isNil):
       self.settings.delete
 
     let filePath = os.joinPath(self.settingsFileDir, fileName)
     self.settings = newQSettings(filePath, QSettingsFormat.IniFormat)
-    self.spellCheckEnabledChanged()
-    self.spellCheckSkipCapitalizedWordsChanged()
 
   # float type must be exposed through QVariant property.
   proc getSettingsPropQVariant(self: LocalAccountSensitiveSettings, prop: string, default: QVariant): QVariant =
@@ -218,32 +211,6 @@ QtObject:
   proc removeSectionChatRecord*(self: LocalAccountSensitiveSettings, sectionId: string) =
     self.removeSettingsGroupKey(LAST_SECTION_CHAT, sectionId)
     self.removeSectionLastOpenThread(sectionId)
-
-  proc getSpellCheckEnabled*(self: LocalAccountSensitiveSettings): bool {.slot.} =
-    getSettingsProp[bool](self, LSS_KEY_SPELL_CHECK_ENABLED, newQVariant(true))
-  proc setSpellCheckEnabled*(self: LocalAccountSensitiveSettings, value: bool) {.slot.} =
-    if self.getSpellCheckEnabled() == value:
-      return
-    setSettingsProp(self, LSS_KEY_SPELL_CHECK_ENABLED, newQVariant(value)):
-      self.spellCheckEnabledChanged()
-
-  QtProperty[bool] spellCheckEnabled:
-    read = getSpellCheckEnabled
-    write = setSpellCheckEnabled
-    notify = spellCheckEnabledChanged
-
-  proc getSpellCheckSkipCapitalizedWords*(self: LocalAccountSensitiveSettings): bool {.slot.} =
-    getSettingsProp[bool](self, LSS_KEY_SPELL_CHECK_SKIP_CAPITALIZED_WORDS, newQVariant(true))
-  proc setSpellCheckSkipCapitalizedWords*(self: LocalAccountSensitiveSettings, value: bool) {.slot.} =
-    if self.getSpellCheckSkipCapitalizedWords() == value:
-      return
-    setSettingsProp(self, LSS_KEY_SPELL_CHECK_SKIP_CAPITALIZED_WORDS, newQVariant(value)):
-      self.spellCheckSkipCapitalizedWordsChanged()
-
-  QtProperty[bool] spellCheckSkipCapitalizedWords:
-    read = getSpellCheckSkipCapitalizedWords
-    write = setSpellCheckSkipCapitalizedWords
-    notify = spellCheckSkipCapitalizedWordsChanged
 
   proc chatSplitViewChanged*(self: LocalAccountSensitiveSettings) {.signal.}
   proc getChatSplitView*(self: LocalAccountSensitiveSettings): QVariant {.slot.} =
@@ -705,8 +672,6 @@ QtObject:
       of LSS_KEY_USER_DECLINED_BACKUP_BANNER: self.userDeclinedBackupBannerChanged()
       of LSS_KEY_GIF_UNFURLING_ENABLED: self.gifUnfurlingEnabledChanged()
       of LSS_KEY_COPY_MESSAGE_LINKS_ENABLED: self.copyMessageLinksEnabledChanged()
-      of LSS_KEY_SPELL_CHECK_ENABLED: self.spellCheckEnabledChanged()
-      of LSS_KEY_SPELL_CHECK_SKIP_CAPITALIZED_WORDS: self.spellCheckSkipCapitalizedWordsChanged()
 
   proc setup(self: LocalAccountSensitiveSettings, settingsFileDir: string) =
     self.QObject.setup

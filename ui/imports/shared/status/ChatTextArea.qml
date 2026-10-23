@@ -25,7 +25,8 @@ StatusTextArea {
     property alias quoteTextColor: highlighter.quoteTextColor
     property alias spellCheckUnderlineColor: highlighter.spellCheckUnderlineColor
     property bool spellCheckEnabled: true
-    property string spellCheckLanguage: "en_US"
+    property var spellCheckLanguages: ["en_US"]
+    property string spellCheckDictsDir
     property bool spellCheckSkipCapitalizedWords: true
     readonly property alias spellChecker: highlighter.spellChecker
 
@@ -266,12 +267,13 @@ StatusTextArea {
         quoteTextColor: root.Theme.palette.baseColor1
         spellChecker {
             enabled: root.spellCheckEnabled
-            language: root.spellCheckLanguage
+            languages: root.spellCheckLanguages
+            spellCheckDictsDir: root.spellCheckDictsDir
             skipCapitalizedWords: root.spellCheckSkipCapitalizedWords
             cursorPosition: root.cursorPosition
             composing: root.preeditText.length > 0
         }
-        spellCheckUnderlineColor: Theme.palette.dangerColor1
+        spellCheckUnderlineColor: root.Theme.palette.dangerColor1
     }
 
     // Mobile quote-block continuation. The OSK new-line button commits "\n" via
