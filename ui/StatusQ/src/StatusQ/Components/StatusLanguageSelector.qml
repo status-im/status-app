@@ -22,6 +22,7 @@ Button {
     required property var activeLanguageCodes
 
     property bool selectMultiple
+    property var disabledLanguageCodes: []
 
     signal languageSelected(string languageCode)
     signal languageToggled(string languageCode, bool checked) // for selectMultiple
@@ -46,7 +47,7 @@ Button {
         id: d
 
         readonly property int maxPopupHeight: 400
-        readonly property int delegateHeight: 70
+        readonly property int delegateHeight: 60
 
         readonly property SortFilterProxyModel languageModel: SortFilterProxyModel {
             id: languageModel
@@ -80,7 +81,7 @@ Button {
         }
 
         function beautifyIsoCodes(codes) {
-            return codes.map(code => beautifyIsoCode(code)).join(",")
+            return codes.map(code => beautifyIsoCode(code)).join(", ")
         }
     }
 
@@ -162,6 +163,7 @@ Button {
                     height: d.delegateHeight
                     checked: root.activeLanguageCodes.includes(model.code)
                     checkable: root.selectMultiple
+                    enabled: !root.disabledLanguageCodes.includes(model.code)
                     background: Rectangle {
                         radius: Theme.radius
                         color: userSelectorPanel.activeFocus ? "transparent" : hovered ? Theme.palette.primaryColor2 : "transparent"

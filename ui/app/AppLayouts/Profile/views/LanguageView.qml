@@ -12,6 +12,8 @@ import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
 
+import shared.status
+
 SettingsContentBase {
     id: root
 
@@ -19,6 +21,10 @@ SettingsContentBase {
     required property var availableLanguages
     // language currently selected for translations, e.g. "cs"
     required property string currentLanguage
+
+    // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
+    required property var availableSpellcheckLanguages
+    required property var activeSpellcheckLanguages
 
     required property string currentCurrency
     required property var currenciesModel
@@ -31,6 +37,8 @@ SettingsContentBase {
     signal changeCurrencyRequested(string newCurrency)
     signal spellCheckEnabledChangeRequested(bool value)
     signal spellCheckSkipCapitalizedWordsChangeRequested(bool value)
+
+    signal enableSpellcheckLanguageRequested(string code, bool enabled)
 
     ColumnLayout {
         spacing: Constants.settingsSection.itemSpacing
@@ -66,29 +74,13 @@ SettingsContentBase {
             }
             Item { Layout.fillWidth: true }
             StatusLanguageSelector {
-                Layout.preferredWidth: currencyPicker.width
                 id: languagePicker
                 objectName: "languageViewLanguageSelector"
-                currentLanguage: root.currentLanguage
                 languageCodes: root.availableLanguages
+                activeLanguageCodes: [root.currentLanguage]
                 onLanguageSelected: (languageCode) =>
                                     languageConfirmationDialog.createObject(root, {oldCode: root.currentLanguage, newCode: languageCode}).open()
             }
-        }
-
-        StatusCheckBox {
-            objectName: "languageViewSpellCheckEnabled"
-            text: qsTr("Check spelling")
-            checked: root.spellCheckEnabled
-            onToggled: root.spellCheckEnabledChangeRequested(checked)
-        }
-
-        StatusCheckBox {
-            objectName: "languageViewSpellCheckSkipCapitalizedWords"
-            text: qsTr("Skip capitalized words and acronyms")
-            checked: root.spellCheckSkipCapitalizedWords
-            enabled: root.spellCheckEnabled
-            onToggled: root.spellCheckSkipCapitalizedWordsChangeRequested(checked)
         }
 
         StatusWarningBox {
@@ -96,18 +88,67 @@ SettingsContentBase {
             Layout.bottomMargin: Theme.padding
             borderColor: Theme.palette.baseColor2
             textColor: Theme.palette.directColor1
-            icon: "group-chat"
-            iconColor: Theme.palette.baseColor1
-            text: qsTr("We need your help to translate Status, so that together we can bring privacy and free speech to the people everywhere, including those who need it most.")
-            extraContentComponent: StatusFlatButton {
-                objectName: "languageViewLearnMoreButton"
-                icon.name: "external-link"
-                text: qsTr("Learn more")
-                size: StatusBaseButton.Size.Small
-                onClicked: Global.activateDeepLink(
-                    // Status Community's translation channel
-                    "https://status.app/cc/G-gAAORqbagnhrSvikdvJE1-f7iUTLVeGDI6uS1gbdHJClvLOIsozcOgbrhs8sVle2GBnz0QghKrJugxwVVmAGNFIcm4KPPNFIKvKdf_83iSXsosZUr1rHgLeJqn0el8TPRaMwxCExy35wPCYGG0TH9dzY_YAnS4705bQNv18a-cEVCyBKPdTgXvRJjjowqNh-zcFB9U6PpT2klNfmPCj05HNG3ShpUfTYxsXslmjKKSyWWQUsyikZIz8sV0zsia-Wwe#zQ3shZeEJqTC1xhGUjxuS4rtHSrhJ8vUYp64v6qWkLpvdy9L9"
-                )
+            textSize: Theme.secondaryTextFontSize
+            padding: Theme.halfPadding
+            text: {
+                const link = "https://status.app/cc/G-gAAORqbagnhrSvikdvJE1-f7iUTLVeGDI6uS1gbdHJClvLOIsozcOgbrhs8sVle2GBnz0QghKrJugxwVVmAGNFIcm4KPPNFIKvKdf_83iSXsosZUr1rHgLeJqn0el8TPRaMwxCExy35wPCYGG0TH9dzY_YAnS4705bQNv18a-cEVCyBKPdTgXvRJjjowqNh-zcFB9U6PpT2klNfmPCj05HNG3ShpUfTYxsXslmjKKSyWWQUsyikZIz8sV0zsia-Wwe#zQ3shZeEJqTC1xhGUjxuS4rtHSrhJ8vUYp64v6qWkLpvdy9L9"
+                return qsTr("Want to improve a translation, help add a new language, or request one? Let us know in our %1.").arg(`<a href='${link}'>` + qsTr("channel") + "</a>")
+            }
+            onLinkActivated: link => Global.requestOpenLink(link)
+        }
+
+        StatusSwitch {
+            id: btnSpellCheckEnabled
+            Layout.fillWidth: true
+            objectName: "languageViewSpellCheckEnabled"
+            text: qsTr("Spell Check")
+            leftSide: false
+            leftPadding: 0
+            checked: root.spellCheckEnabled
+            onToggled: root.spellCheckEnabledChangeRequested(checked)
+        }
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            color: Theme.palette.secondaryText
+            wrapMode: Text.Wrap
+            text: qsTr("On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device's keyboard, so privacy depends on its settings")
+        }
+
+        StatusSwitch {
+            Layout.fillWidth: true
+            objectName: "languageViewSpellCheckSkipCapitalizedWords"
+            text: qsTr("Skip capitalized words and acronyms")
+            leftSide: false
+            leftPadding: 0
+            checked: root.spellCheckSkipCapitalizedWords
+            visible: btnSpellCheckEnabled.checked
+            onToggled: root.spellCheckSkipCapitalizedWordsChangeRequested(checked)
+        }
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            color: Theme.palette.secondaryText
+            wrapMode: Text.Wrap
+            visible: btnSpellCheckEnabled.checked
+            text: qsTr("Skips spelling checks for capitalized words and acronyms")
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            visible: btnSpellCheckEnabled.checked
+            StatusBaseText {
+                Layout.fillWidth: true
+                text: qsTr("Dictionaries")
+                elide: Text.ElideRight
+            }
+            StatusLanguageSelector {
+                objectName: "languageViewSpellcheckLanguageSelector"
+                selectMultiple: true
+                languageCodes: root.availableSpellcheckLanguages
+                activeLanguageCodes: root.activeSpellcheckLanguages
+                disabledLanguageCodes: ["en_US"]
+                onLanguageToggled: (code, checked) => root.enableSpellcheckLanguageRequested(code, checked)
             }
         }
 

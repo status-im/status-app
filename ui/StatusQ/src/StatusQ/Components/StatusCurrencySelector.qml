@@ -44,7 +44,7 @@ Button {
         readonly property string selectedCurrency: root.currentCurrency || "USD"
 
         readonly property int maxPopupHeight: 400
-        readonly property int delegateHeight: 70
+        readonly property int delegateHeight: 60
 
         readonly property var currentEntry: itemData?.item ?? null
         // Fiat entries carry a flag emoji instead of an image; tokens carry an image

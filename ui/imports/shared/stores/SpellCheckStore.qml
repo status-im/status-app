@@ -1,15 +1,28 @@
 import QtQuick
 
+import StatusQ
+
 QtObject {
-    readonly property bool enabled: localAccountSensitiveSettings.spellCheckEnabled
-    readonly property bool skipCapitalizedWords: localAccountSensitiveSettings.spellCheckSkipCapitalizedWords
-    readonly property string language: localAppSettings.language || "en"
+    function setUserUID(userUID) {
+        LanguageService.userUID = userUID
+    }
+
+    readonly property bool enabled: LanguageService.spellCheckEnabled
+    readonly property string spellCheckDictsDir: LanguageService.spellCheckDictsDir
+    readonly property bool skipCapitalizedWords: LanguageService.spellCheckSkipCapitalizedWords
+
+    readonly property var availableLanguages: LanguageService.availableSpellcheckLanguages
+    readonly property var activeLanguages: LanguageService.activeSpellcheckLanguages
 
     function setEnabled(value) {
-        localAccountSensitiveSettings.spellCheckEnabled = value
+        LanguageService.spellCheckEnabled = value
     }
 
     function setSkipCapitalizedWords(value) {
-        localAccountSensitiveSettings.spellCheckSkipCapitalizedWords = value
+        LanguageService.spellCheckSkipCapitalizedWords = value
+    }
+
+    function toggleSpellcheckLanguage(langCode, enabled) {
+        LanguageService.toggleSpellcheckLanguage(langCode, enabled)
     }
 }

@@ -16,6 +16,7 @@ Item {
 
         ChatTextArea {
             anchors.fill: parent
+            spellCheckDictsDir: LanguageService.spellCheckDictsDir
         }
     }
 

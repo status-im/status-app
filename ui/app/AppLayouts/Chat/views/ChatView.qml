@@ -28,7 +28,6 @@ import AppLayouts.Communities.views
 import AppLayouts.Profile.stores
 import AppLayouts.Wallet.stores as WalletStore
 
-import StatusQ.Core.Utils as SQUtils
 import SortFilterProxyModel
 import AppLayouts.Chat.controls
 import AppLayouts.Chat.stores as ChatStores
@@ -540,7 +539,7 @@ Item {
                 model: SortFilterProxyModel {
                     id: pinsModel
                     sourceModel: root.chatContentModule?.pinnedMessagesModel ?? null
-                    filters: SQUtils.SearchFilter {
+                    filters: SearchFilter {
                         roleName: "unparsedText"
                         searchPhrase: rightPanelLoader.item?.searchText ?? ""
                     }
