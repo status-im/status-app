@@ -49,6 +49,10 @@ SplitView {
         ColumnLayout {
             Layout.fillWidth: true
 
+            Label {
+                text: "State: %1".arg(switchControl.checkState)
+            }
+
             Switch {
                 id: ctrlEnabled
                 text: "Enabled"
@@ -82,3 +86,4 @@ SplitView {
 
 // category: Controls
 // status: good
+// https://www.figma.com/design/pJgiysu3rw8XvL4wS2Us7W/DS?node-id=17726-60222&m=dev
