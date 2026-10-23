@@ -64,7 +64,12 @@ StatusDialog {
     // (e.g. device syncing, where the password itself is validated against and transferred
     // with the keystore). When the biometric secret turns out to be a DEK, the popup falls
     // back to manual password entry instead.
-    property bool requirePlainCredential: false
+    // When false, biometrics are not offered at all (no auto-start, no "Use biometrics"
+    // button) and the user must type the credential — used for actions that need the
+    // typed password itself (device syncing transfers it with the keystore) or that
+    // exist to prove the user still KNOWS it (disabling the biometric login), where
+    // even a successful biometric read would defeat the purpose.
+    property bool biometricsAllowed: true
 
     signal authorizeRequested()
 
@@ -234,17 +239,6 @@ StatusDialog {
             if (value.startsWith(Constants.keychain.dekPrefix)) {
                 value = value.slice(Constants.keychain.dekPrefix.length)
                 d.lastSecretWasLegacy = false
-                if (root.requirePlainCredential) {
-                    d.credentialCameFromBiometrics = false
-                    Global.displayToastMessage(
-                                qsTr("Please enter your password — biometrics cannot be used for this action"),
-                                "",
-                                "warning",
-                                false,
-                                Constants.ephemeralNotificationType.danger,
-                                "")
-                    return
-                }
             }
             contentLoader.item.password = value
             d.performPasswordActionInternal()
@@ -254,7 +248,8 @@ StatusDialog {
     QtObject {
         id: d
 
-        readonly property bool usingBiometrics: root.keychain.available
+        readonly property bool usingBiometrics: root.biometricsAllowed
+                                                && root.keychain.available
                                                 && !root.externalAuthorization // the authentication popup runs its own biometrics
                                                 && (!root.isKeycardKeyPair || root.keyUid === root.userProfileKeyUid)
                                                 && keychain.hasCredential(root.useKeyUid) === Keychain.StatusSuccess

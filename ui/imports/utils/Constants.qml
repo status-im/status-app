@@ -466,6 +466,7 @@ QtObject {
 
     readonly property QtObject authenticationReason: QtObject {
         readonly property string enableBiometrics: "enable-biometrics"
+        readonly property string disableBiometrics: "disable-biometrics"
         readonly property string enableStayLoggedIn: "enable-stay-logged-in"
         readonly property string migrateProfileEncryption: "migrate-profile-encryption"
         readonly property string addAccount: "add-account"
