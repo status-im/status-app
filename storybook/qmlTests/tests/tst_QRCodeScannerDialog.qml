@@ -3,17 +3,20 @@ import QtTest
 
 import StatusQ.Components
 
-import shared.popups
-
 import Storybook.Testing
 
-// The dialog's content must stay inside it when the window (and so the dialog,
-// capped at 80% of the window height) gets short.
+import shared.popups
+
 Item {
     id: root
 
     width: 1200
     height: 1000
+
+    readonly property string address: "0x1234567890abcdef1234567890abcdef12345678"
+    readonly property string sampleLink: "https://example.com/docs"
+    readonly property string sampleStatusLink: "https://status.app/c/abc"
+    readonly property string sampleWalletConnectUri: "wc:abcdef@2?relay-protocol=irn&symKey=aabb"
 
     Component {
         id: componentUnderTest
@@ -22,8 +25,6 @@ Item {
     }
 
     property QRCodeScannerDialog controlUnderTest: null
-
-    readonly property string address: "0x1234567890abcdef1234567890abcdef12345678"
 
     QtObject {
         id: grantedAccess
@@ -53,7 +54,6 @@ Item {
 
     SignalSpy {
         id: tagSpy
-        target: root.controlUnderTest
         signalName: "tagFound"
     }
 
@@ -64,12 +64,29 @@ Item {
         function init() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             scanner().cameraAccess = grantedAccess
+            tagSpy.target = controlUnderTest
+            tagSpy.clear()
         }
 
         function scanner() {
             const s = findChild(controlUnderTest.contentItem, "qrCodeScanner")
             verify(!!s)
             return s
+        }
+
+        function videoSink() {
+            let output = null
+            tryVerify(() => {
+                output = findChild(controlUnderTest, "qrCaptureVideoOutput")
+                return !!output && !!output.videoSink
+            })
+            return output.videoSink
+        }
+
+        function scanQr(text) {
+            controlUnderTest.open()
+            tryCompare(controlUnderTest, "opened", true)
+            verify(fake.pushQr(videoSink(), text, 640, 640))
         }
 
         function cleanup() {
@@ -82,7 +99,6 @@ Item {
             return r
         }
 
-        // The info rows are fully visible without scrolling.
         function verifyContentFits() {
             const view = controlUnderTest.contentItem
             const r = rows()
@@ -92,8 +108,6 @@ Item {
                    `rows end at ${bottom}, content is ${view.height} tall`)
         }
 
-        // The "Enable access to your camera" screen stands alone: what the
-        // scanner can do is shown only with the camera.
         function test_infoRowsHiddenWithoutCameraAccess() {
             scanner().cameraAccess = deniedAccess
             controlUnderTest.open()
@@ -114,26 +128,21 @@ Item {
             compare(rows().visible, true)
         }
 
-        // A reused dialog (kept instead of destroyed on close) scans again
-        // after reopening: each opening is a fresh session.
         function test_reopenStartsAFreshSession() {
-            const address = "0x1234567890abcdef1234567890abcdef12345678"
             tagSpy.clear()
             controlUnderTest.open()
             tryCompare(controlUnderTest, "opened", true)
-            const scanner = findChild(controlUnderTest.contentItem, "qrCodeScanner")
-            verify(!!scanner)
+            const qrScanner = scanner()
 
-            // what a successful camera scan leaves behind
-            scanner.state = StatusQrCodeScanner.State.Success
-            scanner.validTagFound(address)
+            qrScanner.state = StatusQrCodeScanner.State.Success
+            qrScanner.validTagFound(root.address)
             tryCompare(tagSpy, "count", 1, 2000)
             tryCompare(controlUnderTest, "opened", false)
 
             controlUnderTest.open()
             tryCompare(controlUnderTest, "opened", true)
-            compare(scanner.state, StatusQrCodeScanner.State.None)
-            scanner.validTagFound(address) // the same code again
+            compare(qrScanner.state, StatusQrCodeScanner.State.None)
+            qrScanner.validTagFound(root.address)
             tryCompare(tagSpy, "count", 2, 2000)
         }
 
@@ -141,9 +150,14 @@ Item {
             tagSpy.clear()
             controlUnderTest.open()
             tryCompare(controlUnderTest, "opened", true)
-            const scanner = findChild(controlUnderTest.contentItem, "qrCodeScanner")
-            verify(!!scanner)
-            return scanner
+            return scanner()
+        }
+
+        function expectTagFound(tagType, tag) {
+            tryCompare(tagSpy, "count", 1, 5000)
+            compare(tagSpy.signalArguments[0][0], tagType)
+            compare(tagSpy.signalArguments[0][1], tag)
+            tryCompare(controlUnderTest, "opened", false)
         }
 
         function imageUrl(name) {
@@ -152,7 +166,6 @@ Item {
             return fake.fileUrl(path)
         }
 
-        // An image still decoding when the dialog closes leads nowhere.
         function test_closeDuringImageDecodeEmitsNothing() {
             const scanner = openScanner()
             scanner.scanImageFile(imageUrl("close.png"))
@@ -162,7 +175,6 @@ Item {
             compare(tagSpy.count, 0)
         }
 
-        // ... nor in the next session, after reopening.
         function test_reopenDropsThePreviousSessionsImage() {
             const scanner = openScanner()
             scanner.scanImageFile(imageUrl("reopen.png"))
@@ -175,8 +187,6 @@ Item {
             compare(scanner.state, StatusQrCodeScanner.State.None)
         }
 
-        // Real images of a Status profile QR code: decoded like a camera code
-        // and handed on as a link (the profile flow), closing the dialog.
         readonly property string profileLink:
             "https://status.app/u/iweACg4KDHpRMy4uLlZoNG5OMwM=#zQ3shZnCMtyHdMqqBw3yEGqmzKKNUxvJorDJqMjWPEEVh4nN3"
 
@@ -205,8 +215,6 @@ Item {
             tryCompare(controlUnderTest, "opened", false)
         }
 
-        // Cut off through a finder pattern: found but unreadable; the dialog
-        // stays open for another try.
         function test_realImageCutOffCantBeRead() {
             const scanner = openScanner()
             scanner.scanImageFile(realImage("profile-partial.png"))
@@ -223,12 +231,11 @@ Item {
         }
 
         function test_contentFitsInShortWindow_data() {
-            // 680: the app's minimum window height (ThemeUtils.minimumDesktopSize)
             return [{ tag: "700", height: 700 }, { tag: "680", height: 680 }]
         }
 
         function test_contentFitsInShortWindow(data) {
-            root.height = data.height // still landscape: a centered dialog, not a sheet
+            root.height = data.height
             controlUnderTest.open()
             tryCompare(controlUnderTest, "opened", true)
             verify(!controlUnderTest.bottomSheet)
@@ -236,10 +243,7 @@ Item {
             verifyContentFits()
         }
 
-        // Below what the scanner can shrink to, the content scrolls instead of
-        // spilling out of the dialog.
         function test_contentScrollsInTinyWindow_data() {
-            // Below the app's minimum (Storybook can get there)
             return [{ tag: "560", height: 560 }, { tag: "380", height: 380 }]
         }
 
@@ -261,6 +265,29 @@ Item {
             root.height = 680
             tryVerify(() => controlUnderTest.height <= 680 * 0.8 + 1)
             verifyContentFits()
+        }
+
+        function test_scannedCodeEmitsTagFound_data() {
+            return [
+                { tag: "address", key: "address", type: QRCodeScannerDialog.TagType.Address },
+                { tag: "link", key: "sampleLink", type: QRCodeScannerDialog.TagType.Link },
+                { tag: "statusLink", key: "sampleStatusLink", type: QRCodeScannerDialog.TagType.Link },
+                { tag: "walletConnect", key: "sampleWalletConnectUri", type: QRCodeScannerDialog.TagType.WCUri },
+            ]
+        }
+
+        function test_scannedCodeEmitsTagFound(data) {
+            const text = root[data.key]
+            scanQr(text)
+            expectTagFound(data.type, text)
+        }
+
+        function test_unreadableCodeSetsError() {
+            scanQr("not-a-code")
+            const statusScanner = findChild(controlUnderTest, "statusQrCodeScanner")
+            tryCompare(statusScanner, "state", StatusQrCodeScanner.State.Error, 5000)
+            compare(tagSpy.count, 0)
+            compare(controlUnderTest.opened, true)
         }
     }
 }
