@@ -420,9 +420,11 @@ Item {
             ]
         }
 
-        // Disabling deletes the credential FIRST; the preference flips only when the
-        // deletion verifiably succeeded (Success/NotFound) — never on error or
-        // indeterminate outcomes, since startup trusts credential presence.
+        // Disabling first requires authentication (deliberate: the user must prove they
+        // still know the password they will be left with), then deletes the credential
+        // FIRST; the preference flips only when the deletion verifiably succeeded
+        // (Success/NotFound) — never on error or indeterminate outcomes, since startup
+        // trusts credential presence.
         function test_stayLoggedInDisable(data) {
             root.view.privacyStore.setStayLoggedIn(true)
             if (!data.noItem)
@@ -430,9 +432,28 @@ Item {
             root.secureStorageMock.deleteStatus = data.deleteStatus
 
             stayLoggedInSection().toggleStayLoggedIn(true) // switch was checked
+            compare(root.secureStorageMock.deleteCalls.length, 0) // nothing before auth
+
+            Global.authenticationResult(Constants.authenticationReason.disableStayLoggedIn,
+                                        "password-1", "", root.testKeyUid, "")
 
             compare(root.secureStorageMock.deleteCalls.length, 1)
             compare(root.view.privacyStore.stayLoggedIn, data.expectedPref)
+        }
+
+        // A cancelled authentication leaves the feature enabled and the credential
+        // untouched.
+        function test_stayLoggedInDisableCancelledAuthKeepsCredential() {
+            root.view.privacyStore.setStayLoggedIn(true)
+            root.secureStorageMock.creds[root.testKeyUid] = "dek:stored-dek-hex"
+
+            stayLoggedInSection().toggleStayLoggedIn(true)
+            Global.authenticationResult(Constants.authenticationReason.disableStayLoggedIn,
+                                        "", "", "", "") // cancelled
+
+            compare(root.secureStorageMock.deleteCalls.length, 0)
+            compare(root.secureStorageMock.creds[root.testKeyUid], "dek:stored-dek-hex")
+            compare(root.view.privacyStore.stayLoggedIn, true)
         }
 
         // Password change with a stored silent credential: refreshed from the DEK-only
