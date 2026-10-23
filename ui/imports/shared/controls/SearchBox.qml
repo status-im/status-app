@@ -25,7 +25,8 @@ StatusTextField {
         anchors.leftMargin: Theme.halfPadding
         anchors.verticalCenter: parent.verticalCenter
         icon: parent.iconName
-        color: Theme.palette.directColor1
+        color: parent.activeFocus ? Theme.palette.directColor1 : Theme.palette.baseColor1
+        Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
     }
 
     StatusClearButton {

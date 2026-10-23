@@ -7,6 +7,7 @@ import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Utils
 import StatusQ.Controls
+import StatusQ.Controls.private
 import StatusQ.Components
 import StatusQ.Core.Theme
 import StatusQ.Models
@@ -16,12 +17,14 @@ import SortFilterProxyModel
 Button {
     id: root
 
-    // language currently selected for translations, e.g. "cs"
-    required property string currentLanguage
     // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
     required property var languageCodes
+    required property var activeLanguageCodes
+
+    property bool selectMultiple
 
     signal languageSelected(string languageCode)
+    signal languageToggled(string languageCode, bool checked) // for selectMultiple
 
     function close() {
         dropdown.close()
@@ -37,12 +40,10 @@ Button {
 
     opacity: enabled ? 1.0 : ThemeUtils.disabledOpacity
 
-    text: d.beautifyIsoCode(d.selectedLanguage)
+    text: d.beautifyIsoCodes(activeLanguageCodes)
 
     QtObject {
         id: d
-
-        readonly property string selectedLanguage: root.currentLanguage || "en" // TODO extend with ISO code validation; fallback to "en"
 
         readonly property int maxPopupHeight: 400
         readonly property int delegateHeight: 70
@@ -76,6 +77,10 @@ Button {
 
         function beautifyIsoCode(code) {
             return code.replace('_', '-').toUpperCase()
+        }
+
+        function beautifyIsoCodes(codes) {
+            return codes.map(code => beautifyIsoCode(code)).join(",")
         }
     }
 
@@ -130,10 +135,10 @@ Button {
             StatusInput {
                 id: searchField
                 Layout.fillWidth: true
+                KeyNavigation.tab: userSelectorPanel
                 placeholderText: qsTr("Search")
                 input.asset.name: "search"
                 input.clearable: true
-                KeyNavigation.tab: userSelectorPanel
             }
             StatusListView {
                 Layout.fillWidth: true
@@ -151,10 +156,12 @@ Button {
                 }
 
                 delegate: ItemDelegate {
+                    id: delegate
                     objectName: "itemDelegate_" + model.code
                     width: ListView.view.width
                     height: d.delegateHeight
-                    checked: model.code === d.selectedLanguage
+                    checked: root.activeLanguageCodes.includes(model.code)
+                    checkable: root.selectMultiple
                     background: Rectangle {
                         radius: Theme.radius
                         color: userSelectorPanel.activeFocus ? "transparent" : hovered ? Theme.palette.primaryColor2 : "transparent"
@@ -177,17 +184,19 @@ Button {
                                 color: Theme.palette.baseColor1
                             }
                         }
-                        StatusIcon {
-                            Layout.preferredHeight: 20
+                        StatusCheckIndicator {
                             Layout.alignment: Qt.AlignRight
-                            visible: checked
-                            icon: "tiny/checkmark"
-                            color: Theme.palette.primaryColor1
+                            checkState: delegate.checked ? Qt.Checked : Qt.Unchecked
+                            mirrored: delegate.mirrored
+                            hovered: delegate.hovered
                         }
                     }
                     onClicked: {
-                        dropdown.close()
+                        if (!root.selectMultiple) dropdown.close()
                         root.languageSelected(model.code)
+                    }
+                    onToggled: {
+                        root.languageToggled(model.code, checked)
                     }
                     HoverHandler {
                         cursorShape: hovered ? Qt.PointingHandCursor : undefined
