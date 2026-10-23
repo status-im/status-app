@@ -21,12 +21,12 @@ pipeline {
     )
     string(
       name: 'DOCKER_TAG_ANDROID',
-      defaultValue: '20261015-qt6.11.0-android',
+      defaultValue: '20261023-qt6.11.0-android',
       description: 'Docker image tag for the Android image'
     )
     string(
       name: 'DOCKER_TAG_LINUX',
-      defaultValue: '20261015-qt6.11.0',
+      defaultValue: '20261023-qt6.11.0',
       description: 'Docker image tag for the Linux image'
     )
     string(
