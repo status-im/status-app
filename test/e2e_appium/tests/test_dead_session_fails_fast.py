@@ -13,6 +13,7 @@ from selenium.common.exceptions import InvalidSessionIdException, NoSuchElementE
 
 from pages.app import App
 from pages.base_page import BasePage
+from support.element_state_checker import ElementStateChecker
 
 pytestmark = [pytest.mark.gate, pytest.mark.component]
 
@@ -47,6 +48,25 @@ def test_enabled_and_checked_probes_raise_on_a_dead_session():
         page._is_element_enabled(LOCATOR)
     with pytest.raises(InvalidSessionIdException):
         page._is_element_checked(LOCATOR)
+
+
+
+def test_element_state_reads_raise_on_a_dead_session():
+    element = MagicMock()
+    element.parent.capabilities = {"platformName": "Android"}
+    element.get_attribute.side_effect = InvalidSessionIdException("invalid session id")
+    element.is_displayed.side_effect = InvalidSessionIdException("invalid session id")
+    for check in (
+        ElementStateChecker.is_enabled,
+        ElementStateChecker.is_checked,
+        ElementStateChecker.is_focused,
+        ElementStateChecker.is_displayed,
+        ElementStateChecker.get_text_content,
+        ElementStateChecker.is_password_field,
+        ElementStateChecker.is_field_empty,
+    ):
+        with pytest.raises(InvalidSessionIdException):
+            check(element)
 
 
 def test_missing_element_is_still_false_and_none():
