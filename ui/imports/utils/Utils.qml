@@ -1203,6 +1203,11 @@ QtObject {
         return undefined
     }
 
+    function swapProviderDisplayName(processorName) {
+        const details = getSwapProviderDetails(processorName)
+        return !!details ? details.name : (processorName ?? "")
+    }
+
     function getSwapProviderDappDetails(processorName) {
         const details = getSwapProviderDetails(processorName)
         if (!details)

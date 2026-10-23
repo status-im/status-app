@@ -213,5 +213,19 @@ Item {
             compare(Utils.getSwapProviderDappDetails(""), undefined)
             compare(Utils.getSwapProviderDappDetails(undefined), undefined)
         }
+
+        function test_swapProviderDisplayName_data() {
+            return [
+                { tag: "Relay", processorName: Constants.swap.relayProcessorName, expected: Constants.swap.relayName },
+                { tag: "LiFi", processorName: Constants.swap.lifiProcessorName, expected: Constants.swap.lifiName },
+                { tag: "Paraswap", processorName: Constants.swap.paraswapProcessorName, expected: Constants.swap.paraswapName },
+                { tag: "a processor without a brand name is shown as it is", processorName: "Hop", expected: "Hop" },
+                { tag: "nothing known", processorName: "", expected: "" },
+            ]
+        }
+
+        function test_swapProviderDisplayName(data) {
+            compare(Utils.swapProviderDisplayName(data.processorName), data.expected)
+        }
     }
 }
