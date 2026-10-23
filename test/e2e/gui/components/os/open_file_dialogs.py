@@ -13,9 +13,9 @@ LOG = logging.getLogger(__name__)
 
 class OpenFileDialog(Window):
 
-    def __init__(self):
-        super(OpenFileDialog, self).__init__(names.chooseAnImageALogo_QQuickWindow)
-        self._file_path_text_edit = TextEdit(names.titleBar_currentPathField_TextField)
+    def __init__(self, window_name=None, path_field_name=None):
+        super(OpenFileDialog, self).__init__(window_name or names.chooseAnImageALogo_QQuickWindow)
+        self._file_path_text_edit = TextEdit(path_field_name or names.titleBar_currentPathField_TextField)
 
     @allure.step('Open file')
     def open_file(self, fp: SystemPath):

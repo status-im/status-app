@@ -49,6 +49,7 @@ mainWindow_LeftPanelNavBar = {"container": statusDesktop_mainWindow, "objectName
 # First half of left main panel: home button, chat button, wallet button, market button
 
 homeButton = {"container": primaryNavSidebar, "objectName": "Home Page-navbar", "type": "RegularSectionButton", "visible": True}
+qrScannerButton = {"checkable": False, "container": primaryNavSidebar, "objectName": "QR Scanner-navbar", "type": "BottomSectionButton", "visible": True}
 walletChatSwapNavBarList = {"container": primaryNavSidebar, "objectName": "statusChatNavBarListView",
                             "type": "ListView", "visible": True}
 mainWalletButton = {"container": primaryNavSidebar, "objectName": "Wallet-navbar",
@@ -1189,6 +1190,11 @@ always_show_previews_StatusMenuItem = {"checkable": False, "container": statusDe
 never_show_previews_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                       "enabled": True, "text": "Never show previews", "type": "StatusMenuItem",
                                       "unnamed": 1, "visible": True}
+
+qrCodeScanner = {"container": statusDesktop_mainWindow_overlay, "objectName": "qrCodeScanner", "type": "QRCodeScanner",
+                 "visible": True}
+qrUploadImageButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "qrUploadImageButton",
+                       "type": "StatusButton", "visible": True}
 
 # OS NAMES
 # Open Files Dialog

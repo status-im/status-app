@@ -27,6 +27,7 @@ from gui.screens.community_portal import CommunitiesPortal
 from gui.screens.messages import MessagesScreen
 from gui.screens.onboarding import OnboardingWelcomeToStatusView, ReturningLoginView
 from gui.screens.settings import SettingsScreen
+from gui.components.qr_code_scanner_popup import QRCodeScannerPopup
 from gui.screens.wallet import WalletScreen
 from gui.screens.home import HomeScreen
 from helpers.onboarding_helper import skip_education_popup_if_visible
@@ -48,6 +49,7 @@ class MainLeftPanel(QObject):
         self.wallet_button = Button(names.mainWalletButton)
         self.activity_center_button = Button(names.activityCenterButton)
         self.market_button = Button(names.marketButton)
+        self.qr_scanner_button = Button(names.qrScannerButton)
 
     @allure.step('Click Wallet button and record load time until WalletScreen is visible')
     def open_wallet_and_record_load_time(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -104,6 +106,11 @@ class MainLeftPanel(QObject):
     @open_with_retries(WalletScreen)
     def open_wallet(self):
         return self.wallet_button
+
+    @allure.step('Open QR scanner')
+    @open_with_retries(QRCodeScannerPopup)
+    def open_qr_scanner(self):
+        return self.qr_scanner_button
 
     @allure.step('Click and open online identifier')
     @open_with_retries(OnlineIdentifier)
