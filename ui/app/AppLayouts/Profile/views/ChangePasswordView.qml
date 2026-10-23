@@ -47,6 +47,7 @@ SettingsContentBase {
 
         // "Stay logged in" state
         property bool enablingStayLoggedIn: false
+        property bool disablingStayLoggedIn: false
 
         // True between requesting a password change from this view's form and receiving
         // its result — the passwordChanged signal is global, and changes requested
@@ -57,6 +58,22 @@ SettingsContentBase {
         readonly property bool profileMigrated: {
             reevaluateTrigger // Reference for binding
             return root.privacyStore.isProfileMigratedToDEKEncryption()
+        }
+
+        function disableStayLoggedIn() {
+            // Delete the credential FIRST (startup trusts credential presence), then
+            // flip the preference only on verified deletion
+            const status = root.secureStorage.deleteCredential(root.privacyStore.keyUid)
+            if (status !== SecureStorage.StatusSuccess && status !== SecureStorage.StatusNotFound) {
+                Global.displayToastMessage(
+                            qsTr("Failed to disable Stay logged in for this device"),
+                            "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+                return
+            }
+            root.privacyStore.setStayLoggedIn(false)
+            Global.displayToastMessage(
+                        qsTr("Stay logged in disabled for this device"),
+                        "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
         }
 
         function showStayLoggedInErrorToast() {
@@ -148,9 +165,18 @@ SettingsContentBase {
     }
     readonly property Connections stayLoggedInAuthConnections: Connections {
         target: Global
-        enabled: d.enablingStayLoggedIn
+        enabled: d.enablingStayLoggedIn || d.disablingStayLoggedIn
 
         function onAuthenticationResult(reason, password, pin, keyUid) {
+            if (reason === Constants.authenticationReason.disableStayLoggedIn) {
+                if (!d.disablingStayLoggedIn)
+                    return
+                d.disablingStayLoggedIn = false
+                if (keyUid === "")
+                    return // cancelled — the feature stays enabled
+                d.disableStayLoggedIn()
+                return
+            }
             if (reason !== Constants.authenticationReason.enableStayLoggedIn)
                 return
             d.enablingStayLoggedIn = false
@@ -241,19 +267,10 @@ SettingsContentBase {
                     return
                 }
 
-                // Disable flow: delete the credential FIRST (startup trusts credential
-                // presence), then flip the preference
-                const status = root.secureStorage.deleteCredential(root.privacyStore.keyUid)
-                if (status !== SecureStorage.StatusSuccess && status !== SecureStorage.StatusNotFound) {
-                    Global.displayToastMessage(
-                                qsTr("Failed to disable Stay logged in for this device"),
-                                "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-                    return
-                }
-                root.privacyStore.setStayLoggedIn(false)
-                Global.displayToastMessage(
-                            qsTr("Stay logged in disabled for this device"),
-                            "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
+                // Disable flow: deleting the item needs no password technically, but authentication is required deliberately
+                // to prove that the user knows the password.
+                d.disablingStayLoggedIn = true
+                Global.openAuthenticationPopup(Constants.authenticationReason.disableStayLoggedIn, root.privacyStore.keyUid, false)
             }
             onMigrateRequested: {
                 // The migration flow itself (progress modal, completion, restart) is
