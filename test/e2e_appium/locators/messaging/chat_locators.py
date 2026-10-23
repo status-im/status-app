@@ -15,6 +15,7 @@ class ChatLocators(BaseLocators):
     CHAT_HEADER = BaseLocators.tid("ContactsColumnView_MessagesHeadline")
     TOOLBAR_BACK_BUTTON = BaseLocators.tid("toolBarBackButton")
     MESSAGE_INPUT = BaseLocators.resource_id_contains("messageInputField")
+    MESSAGE_BODY = BaseLocators.xpath("//*[contains(@resource-id,'StatusTextMessage_chatText')]")
     # Tablet's BaseProxyPanel-based input sets objectName on QML buttons
     # (matching `.NAME`); phone's StatusChatInputToolBar doesn't, so the
     # same buttons surface as auto-named class identifiers
