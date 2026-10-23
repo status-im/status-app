@@ -258,6 +258,7 @@ SettingsContentBase {
             storageAvailable: root.secureStorage.available
             stayLoggedInEnabled: d.stayLoggedInEnabled
             profileMigrated: d.profileMigrated
+            keycardProfile: root.privacyStore.migratedToColdWallet
 
             onToggleStayLoggedIn: function(checked) {
                 // Enable flow: the password is needed to export the DEK

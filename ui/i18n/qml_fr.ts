@@ -17466,6 +17466,10 @@ avec un retour à la ligne</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Not available for Keycard profiles - the Keycard is always required to log in.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.</source>
         <translation type="unfinished"></translation>
     </message>

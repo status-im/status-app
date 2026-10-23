@@ -11,6 +11,7 @@ Item {
 
     property bool availableFlag: true
     property bool migratedFlag: true
+    property bool keycardFlag: false
     property bool enabledFlag: false
     property bool busyFlag: false
 
@@ -26,6 +27,7 @@ Item {
             storageAvailable: root.availableFlag
             stayLoggedInEnabled: root.enabledFlag
             profileMigrated: root.migratedFlag
+            keycardProfile: root.keycardFlag
             busy: root.busyFlag
 
             onToggleStayLoggedIn: checked => root.toggleArgs.push(checked)
@@ -42,6 +44,7 @@ Item {
         function init() {
             root.availableFlag = true
             root.migratedFlag = true
+            root.keycardFlag = false
             root.enabledFlag = false
             root.busyFlag = false
             root.toggleArgs = []
@@ -66,6 +69,10 @@ Item {
                   switchEnabled: false, switchChecked: false, unavailableVisible: false, hintVisible: true, migrateVisible: true, busyVisible: false },
                 { tag: "migration running", available: true, migrated: false, busy: true, featureOn: false,
                   switchEnabled: false, switchChecked: false, unavailableVisible: false, hintVisible: false, migrateVisible: false, busyVisible: true },
+                { tag: "keycard profile", available: true, migrated: true, busy: false, featureOn: true, keycard: true,
+                  switchEnabled: false, switchChecked: false, unavailableVisible: false, hintVisible: false, migrateVisible: false, busyVisible: false, keycardVisible: true },
+                { tag: "keycard profile, not migrated", available: true, migrated: false, busy: false, featureOn: false, keycard: true,
+                  switchEnabled: false, switchChecked: false, unavailableVisible: false, hintVisible: false, migrateVisible: false, busyVisible: false, keycardVisible: true },
             ]
         }
 
@@ -75,6 +82,7 @@ Item {
         function test_stateMatrix(data) {
             root.availableFlag = data.available
             root.migratedFlag = data.migrated
+            root.keycardFlag = data.keycard ?? false
             root.busyFlag = data.busy
             root.enabledFlag = data.featureOn
 
@@ -87,6 +95,7 @@ Item {
             compare(findChild(section, "migrationHintText").visible, data.hintVisible)
             compare(findChild(section, "migrateToNewEncryptionButton").visible, data.migrateVisible)
             compare(findChild(section, "migrationBusyText").visible, data.busyVisible)
+            compare(findChild(section, "keycardProfileText").visible, data.keycardVisible ?? false)
         }
 
         // The switch is not checkable (state is owned by the caller): a click only emits

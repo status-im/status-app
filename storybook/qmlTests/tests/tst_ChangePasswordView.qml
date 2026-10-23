@@ -136,6 +136,7 @@ Item {
                 // The storybook PrivacyStore stub is empty; the API used by the view is
                 // declared here, following the established qmlTests store-mock pattern.
                 readonly property string keyUid: root.testKeyUid
+                readonly property bool migratedToColdWallet: false // keycard profiles never offer the toggle
 
                 property QtObject privacyModule: QtObject {
                     signal passwordChanged(success: bool, errorMsg: string)

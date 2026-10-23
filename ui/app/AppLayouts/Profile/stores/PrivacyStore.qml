@@ -9,6 +9,7 @@ QtObject {
     // Module Properties
     readonly property bool mnemonicBackedUp: privacyModule.mnemonicBackedUp
     readonly property string keyUid: userProfile.keyUid
+    readonly property bool migratedToColdWallet: userProfile.migratedToColdWallet
 
     readonly property var appSettingsInst: appSettings
 

@@ -14,6 +14,8 @@ Control {
     required property bool stayLoggedInEnabled
     required property bool profileMigrated
 
+    property bool keycardProfile: false
+
     // Migration to the new encryption format in progress (full re-encryption)
     property bool busy: false
 
@@ -40,8 +42,9 @@ Control {
             StatusBaseText {
                 Layout.fillWidth: true
                 text: qsTr("Save password on this device for automatic login")
-                color: root.storageAvailable && root.profileMigrated ? Theme.palette.directColor4
-                                                                     : Theme.palette.baseColor1
+                color: root.storageAvailable && root.profileMigrated && !root.keycardProfile
+                       ? Theme.palette.directColor4
+                       : Theme.palette.baseColor1
                 wrapMode: Text.WordWrap
             }
             StatusFlatRoundButton {
@@ -61,10 +64,11 @@ Control {
                 objectName: "stayLoggedInSwitch"
                 Layout.alignment: Qt.AlignRight
 
-                enabled: root.storageAvailable && root.profileMigrated && !root.busy
+                enabled: root.storageAvailable && root.profileMigrated && !root.keycardProfile && !root.busy
                 opacity: enabled ? 1 : ThemeUtils.disabledOpacity
                 checkable: false
-                checked: root.storageAvailable && root.profileMigrated && root.stayLoggedInEnabled
+                checked: root.storageAvailable && root.profileMigrated && !root.keycardProfile
+                         && root.stayLoggedInEnabled
                 onClicked: root.toggleStayLoggedIn(stayLoggedInSwitch.checked)
             }
         }
@@ -78,18 +82,27 @@ Control {
             visible: !root.storageAvailable
         }
         StatusBaseText {
+            objectName: "keycardProfileText"
+            Layout.fillWidth: true
+            text: qsTr("Not available for Keycard profiles - the Keycard is always required to log in.")
+            color: Theme.palette.directColor1
+            font.pixelSize: Theme.additionalTextSize
+            wrapMode: Text.WordWrap
+            visible: root.storageAvailable && root.keycardProfile
+        }
+        StatusBaseText {
             objectName: "migrationHintText"
             Layout.fillWidth: true
             text: qsTr("To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.")
             color: Theme.palette.directColor1
             font.pixelSize: Theme.additionalTextSize
             wrapMode: Text.WordWrap
-            visible: root.storageAvailable && !root.profileMigrated && !root.busy
+            visible: root.storageAvailable && !root.profileMigrated && !root.keycardProfile && !root.busy
         }
         StatusButton {
             objectName: "migrateToNewEncryptionButton"
             text: qsTr("Migrate to the new encryption format")
-            visible: root.storageAvailable && !root.profileMigrated && !root.busy
+            visible: root.storageAvailable && !root.profileMigrated && !root.keycardProfile && !root.busy
             onClicked: root.migrateRequested()
         }
         StatusBaseText {
