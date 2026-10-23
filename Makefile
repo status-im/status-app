@@ -303,9 +303,7 @@ ifeq ($(mkspecs),macx)
  endif
 endif
 
-NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/vendor/nim-sds
-export NIM_SDS_SOURCE_DIR
-NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
+NIMSDS_LIBDIR := $(GIT_ROOT)/vendor/status-go/build
 export NIMSDS_LIBDIR
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 ifeq ($(mkspecs),win32)
@@ -315,7 +313,6 @@ ifeq ($(mkspecs),win32)
 else
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
 endif
-STATUSGO_MAKE_PARAMS += NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)"
 
 # desktop only; mobile cleanup lives in mobile/Makefile
 ifneq ($(filter $(mkspecs),macx linux),)
@@ -531,7 +528,7 @@ export STATUSGO_LIBDIR
 check-status-go-tkl:
 $(STATUSGO): check-status-go-tkl | force-rebuild-status-go
 
-# Rebuild libsds independently after platform switch cleanup deletes vendor/nim-sds/build.
+# Rebuild libsds independently after platform switch cleanup deletes it.
 $(NIMSDS_LIBFILE): | platform-cleanup
 	echo -e $(BUILD_MSG) "nim-sds"
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh $(HANDLE_OUTPUT)
@@ -638,7 +635,7 @@ ifeq ($(mkspecs),win32)
  .PHONY: $(NIMSDS_IMPLIB)
  $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE) $(STATUSGO)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
-	bash scripts/gen-import-lib.sh "$(NIM_SDS_SOURCE_DIR)/library/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
+	bash scripts/gen-import-lib.sh "$(NIMSDS_LIBDIR)/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
 
  import-libs: $(WIN_IMPORT_LIBS)
 endif
