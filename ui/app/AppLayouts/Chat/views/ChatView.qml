@@ -884,6 +884,7 @@ Item {
             unlimitedChatImagesEnabled: root.unlimitedChatImagesEnabled
             extraLeftPadding: root.extraLeftPadding
             joined: root.joined
+            threadName: root.chatContentModule?.messagesModule.threadName ?? ""
 
             // Unfurling related data:
             gifUnfurlingEnabled: root.gifUnfurlingEnabled
