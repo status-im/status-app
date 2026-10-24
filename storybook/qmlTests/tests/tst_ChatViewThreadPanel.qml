@@ -50,6 +50,55 @@ Item {
 
         Component { id: searchSpyComponent; SignalSpy { signalName: "openAppSearch" } }
 
+        function test_selectedThreadInputPlaceholder_data() {
+            return [{tag: "desktop", portrait: false}, {tag: "portrait", portrait: true}]
+        }
+
+        function test_selectedThreadInputPlaceholder(data) {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            tryVerify(() => loader.status === Loader.Ready, 120000)
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
+            verify(!!view)
+            view.threadsFeatureEnabled = true
+            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, false]
+            const parentId = view.activeItemId
+            let threadId = ""
+            for (let i = 0; i < harness.mock.chatsModel.count; ++i) {
+                const row = harness.mock.chatsModel.get(i)
+                if (row.type === Constants.chatType.communityChat && row.itemId !== parentId) {
+                    threadId = row.itemId
+                    break
+                }
+            }
+            verify(!!threadId)
+            harness.mock.setActiveChat(threadId)
+            const messages = view.chatContentModule.messagesModule
+            messages.threadId = threadId
+            messages.threadName = "Selected thread"
+            compare(view.rootStore.openThreadId, "")
+            compare(view.rootStore.openThreadName, "")
+            const column = harness.findChildByTypePrefix(view.centerPanel, "ChatColumnView")
+            verify(!!column)
+            const input = findChild(column, "statusChatInput")
+            verify(!!input)
+            tryCompare(input, "isThread", true)
+            tryCompare(input, "chatInputPlaceholder", qsTr("Reply in %1").arg("\u039e Selected thread"))
+
+            messages.threadName = "Renamed thread"
+            tryCompare(input, "chatInputPlaceholder", qsTr("Reply in %1").arg("\u039e Renamed thread"))
+
+            harness.mock.setActiveChat(parentId)
+            tryCompare(input, "isThread", false)
+            tryCompare(input, "chatInputPlaceholder", qsTr("Type something"))
+
+            view.rootStore.openThreadPanel(threadId, messages.threadName, parentId)
+            tryCompare(view.rightPanel, "status", Loader.Ready)
+            tryVerify(() => !!findChild(view.rightPanel.item, "statusChatInput"))
+            const sideInput = findChild(view.rightPanel.item, "statusChatInput")
+            tryCompare(sideInput, "chatInputPlaceholder", qsTr("Reply in %1").arg("\u039e Renamed thread"))
+        }
+
         function test_threadSearchUsesItsOwnScope_data() {
             return [{tag: "desktop", portrait: false}, {tag: "portrait", portrait: true}]
         }

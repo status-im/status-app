@@ -299,6 +299,7 @@ QtObject {
                 // the last message jumped to
                 property string jumpedToMessageId
                 property string threadId: ""
+                property string threadName: ""
                 property int loadThreadsRequests: 0
                 readonly property ListModel threadsModel: ListModel {}
                 readonly property bool threadsLoading: false

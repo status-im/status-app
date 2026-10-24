@@ -32,7 +32,7 @@ QtObject {
             return !!(currentChatContentModule()?.chatDetails?.canPost ?? false)
         return true
     }
-    readonly property string chatInputPlaceHolderText: qsTr("Type something")
+    readonly property string chatInputPlaceHolderText: ""
     readonly property int activeChatType: chatCommunitySectionModule?.activeItem?.type ?? -1
     property var assetsModel: ChatStoresConfig.assetsModel
     property var collectiblesModel: ChatStoresConfig.collectiblesModel
