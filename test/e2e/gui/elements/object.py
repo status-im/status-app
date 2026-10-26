@@ -147,20 +147,23 @@ class QObject:
             button or driver.Qt.LeftButton
         )
         LOG.info('%s: is clicked with Qt.LeftButton', self)
-        # LOG.info("Checking if application context is frozen")
 
-        # if timeout is None:
-        #     pass
-
-        # if timeout is not None:
-        #     pass
-        # TODO: enable after fixing https://github.com/status-im/status-app/issues/15345
-        # if not isFrozen(timeout):
-        #    pass
-
-        # else:
-        #    LOG.info("Application context did not respond after click")
-        #    raise Exception(f'Application UI is not responding within {timeout} second(s)')
+    @allure.step('Click {0} if visible')
+    def click_if_visible(self, timeout_msec: int = 200) -> bool:
+        try:
+            obj = driver.waitForObject(self.real_name, timeout_msec)
+        except LookupError:
+            return False
+        if not obj.visible:
+            return False
+        driver.mouseClick(
+            obj,
+            int(obj.width * 0.5),
+            int(obj.height * 0.5),
+            driver.Qt.LeftButton,
+        )
+        LOG.info('%s: is clicked with Qt.LeftButton', self)
+        return True
 
     @allure.step('Native click {0}')
     def native_mouse_click(

@@ -52,9 +52,7 @@ class CommunityScreen(QObject):
                 return False
             if not str(self.tool_bar.channel_name).strip():
                 return False
-            if not self.chat._channel_name_label.is_visible:
-                return False
-            return bool(str(self.chat.channel_name).strip())
+            return self.chat.is_visible
         except Exception:
             return False
 

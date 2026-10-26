@@ -51,8 +51,8 @@ class ChatView(QObject):
         self._payment_request_card = QObject(dict(messaging_names.paymentRequestCard))
 
     def _iter_message_objects(self, index: typing.Optional[int], scroll_to_recent: bool = True):
-        if scroll_to_recent and self._recent_messages_button.is_visible:
-            self._recent_messages_button.click()
+        if scroll_to_recent:
+            self._recent_messages_button.click_if_visible()
 
         messages = sorted(
             (
@@ -130,7 +130,8 @@ class ChatView(QObject):
     def _latest_outgoing_message(self) -> typing.Optional[Message]:
         # Incoming SDS ACKs from the other AUT sit above our bubble; skip them.
         for index in range(20):
-            item = next(self._iter_message_objects(index, scroll_to_recent=index == 0), None)
+            items = self._iter_message_objects(index, scroll_to_recent=index == 0)
+            item = items[0] if items else None
             if item is None:
                 return None
             try:
