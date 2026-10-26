@@ -17,7 +17,7 @@ from gui.elements.scroll import Scroll
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import communities_names
-from helpers.wallet_helper import find_network_option_item
+from helpers.wallet_helper import select_network_in_filter
 
 
 class TokensView(QObject):
@@ -161,6 +161,7 @@ class EditOwnerTokenView(QObject):
         self._select_account_combobox = QObject(communities_names.editOwnerTokenView_CustomComboItem)
         self._select_network_filter = QObject(communities_names.editOwnerTokenView_netFilter_NetworkFilter)
         self._select_network_combobox = QObject(communities_names.editOwnerTokenView_comboBox_ComboBox)
+        self._selected_network_text = TextLabel(communities_names.editOwnerTokenView_selectedNetworkText)
         self._mainnet_network_item = CheckBox(communities_names.mainnet_StatusRadioButton)
         self.optimism_network_item = CheckBox(communities_names.optimism_StatusRadioButton)
         self.arbitrum_network_item = CheckBox(communities_names.arbitrum_StatusRadioButton)
@@ -177,6 +178,13 @@ class EditOwnerTokenView(QObject):
         self._destructible_box = QObject(communities_names.editOwnerTokenView_destructibleBox)
         self._edit_owner_token_text_object = TextLabel(communities_names.editOwnerTokenView_Owner_StatusBaseText)
         self._fees_box = QObject(communities_names.editOwnerTokenView_Fees_FeesBox)
+
+    @property
+    @allure.step('Get selected network name')
+    def selected_network_name(self) -> str:
+        if not self._selected_network_text.exists:
+            return ''
+        return self._selected_network_text.text
 
     @property
     @allure.step('Get fee title')
@@ -266,17 +274,30 @@ class EditOwnerTokenView(QObject):
         return str(destructible_box.value)
 
     @allure.step('Select network {1}')
-    def select_network(self, network_name):
+    def select_network(self, network_name: str):
         self._scroll.vertical_scroll_down(self._select_network_filter)
-        self._select_network_filter.click()
-        options = list(driver.findAllObjects(self.network_delegate.real_name)) or list(
-            driver.findAllObjects(self.network_item.real_name))
-        assert options, 'Network options are not displayed'
-        QObject(find_network_option_item(network_name, options)).click()
+        select_network_in_filter(
+            self._select_network_filter,
+            network_name,
+            self.network_delegate.real_name,
+            self.network_item.real_name,
+            selected_label=self._selected_network_text,
+        )
         assert driver.waitFor(
             lambda: network_name in self.get_fee_title,
-            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-        ), f'feeLabel did not include {network_name!r}: {self.get_fee_title!r}'
+            configs.timeouts.FEES_TIMEOUT_MSEC,
+        ), f'feeLabel {self.get_fee_title!r} does not include {network_name!r}'
+        return self
+
+    @allure.step('Wait until mint fees are loaded for {1}')
+    def wait_until_mint_fees_loaded(self, network_name: str):
+        assert driver.waitFor(
+            lambda: self.get_fee_total_value != '',
+            configs.timeouts.FEES_TIMEOUT_MSEC,
+        ), (
+            f'Fees did not load for {network_name!r}: '
+            f'feeLabel={self.get_fee_title!r}, feeText={self.get_fee_total_value!r}'
+        )
         return self
 
     @allure.step('Click mint button')
@@ -497,7 +518,10 @@ class EditCommunityTokenView(QObject):
             assert driver.waitFor(
                 lambda: expected_fee_title in str(getattr(self.object, 'feeLabel', '')),
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-            ), f'feeLabel {getattr(self.object, "feeLabel", None)!r} does not include {expected_fee_title!r}'
+            ), (
+                f'feeLabel {str(getattr(self.object, "feeLabel", ""))!r} '
+                f'does not include {expected_fee_title!r}'
+            )
         self._scroll.vertical_scroll_down(self.preview_button)
         assert driver.waitFor(
             lambda: self.preview_button.is_enabled,

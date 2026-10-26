@@ -154,6 +154,7 @@ editOwnerTokenView_Flickable = {"container": mainWindow_editOwnerTokenView_EditO
 editOwnerTokenView_CustomComboItem = {"checkable": False, "container": mainWindow_editOwnerTokenView_EditOwnerTokenView, "type": "CustomComboItem", "unnamed": 1, "visible": True}
 editOwnerTokenView_netFilter_NetworkFilter = {"container": mainWindow_editOwnerTokenView_EditOwnerTokenView, "objectName": "netFilter", "type": "NetworkFilter", "visible": True}
 editOwnerTokenView_comboBox_ComboBox = {"container": editOwnerTokenView_netFilter_NetworkFilter, "id": "comboBox", "occurrence": 2, "type": "ComboBox", "unnamed": 1, "visible": True}
+editOwnerTokenView_selectedNetworkText = {"container": editOwnerTokenView_netFilter_NetworkFilter, "objectName": "contentItemText", "type": "StatusBaseText", "visible": True}
 mainnet_NetworkSelectItemDelegate = {"container": statusDesktop_mainWindow_overlay, "index": 0, "objectName": "Mainnet", "type": "NetworkSelectItemDelegate", "visible": True}
 optimism_NetworkSelectItemDelegate = {"container": statusDesktop_mainWindow_overlay, "index": 1, "objectName": "Optimism", "type": "NetworkSelectItemDelegate", "visible": True}
 arbitrum_NetworkSelectItemDelegate = {"container": statusDesktop_mainWindow_overlay, "index": 2, "objectName": "Arbitrum", "type": "NetworkSelectItemDelegate", "visible": True}

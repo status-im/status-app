@@ -1013,6 +1013,8 @@ sendModalTokenSelector = {"container": sendModalHeader, "objectName": "tokenSele
                           "type": "TokenSelectorButton", "visible": True}
 sendModalNetworkFilter = {"container": sendModalHeader, "objectName": "networkFilter", "type": "NetworkFilter",
                           "visible": True}
+sendModalSelectedNetworkText = {"container": sendModalNetworkFilter, "objectName": "contentItemText",
+                                "type": "StatusBaseText", "visible": True}
 sendModalAmountField = {"container": statusDesktop_mainWindow_overlay, "objectName": "amountToSend_textField",
                         "type": "StatusTextField", "visible": True}
 sendModalRecipientField = {"container": statusDesktop_mainWindow_overlay, "type": "TextEdit", "unnamed": 1,

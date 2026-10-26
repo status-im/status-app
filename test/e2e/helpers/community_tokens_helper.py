@@ -2,8 +2,6 @@ import time
 
 import allure
 
-import configs
-import driver
 from constants.community import MintOwnerTokensElements
 from gui.screens.community_settings_tokens import (
     MintedTokensView,
@@ -27,10 +25,7 @@ def mint_owner_and_tokenmaster(community_setting, password: str, network_name: s
     assert edit_owner_token_view.get_fee_title == expected_fee_title, (
         f'{edit_owner_token_view.get_fee_title!r} != {expected_fee_title!r}'
     )
-    assert driver.waitFor(
-        lambda: edit_owner_token_view.get_fee_total_value != '',
-        configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-    )
+    edit_owner_token_view.wait_until_mint_fees_loaded(network_name)
     start_minting = edit_owner_token_view.mint()
     start_minting.sign_transaction(password)
     sent_at = time.time()

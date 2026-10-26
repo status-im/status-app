@@ -8,6 +8,7 @@ from constants import ReturningUser
 from constants.wallet import WalletNetworkSettings
 from gui.components.authenticate_popup import AuthenticatePopup
 from gui.components.sign_popup import SignPopup
+from gui.elements.object import QObject
 from helpers.onboarding_helper import (
     import_seed_and_log_in,
     open_create_profile_view,
@@ -47,15 +48,74 @@ def is_assets_tab_content_loaded(asset_item) -> bool:
 
 
 def find_network_option_item(network_name: str, network_options: list):
-    """Match a network selector delegate by objectName suffix (spaces omitted in QML ids)."""
+    exact = f'networkSelectorDelegate_{network_name}'
+    for item in network_options:
+        if str(getattr(item, 'objectName', '')) == exact:
+            return item
     normalized = network_name.replace(' ', '')
-    available = [str(getattr(item, 'objectName', '')) for item in network_options]
     for item in network_options:
         obj_name = str(getattr(item, 'objectName', ''))
         if obj_name.endswith(network_name) or obj_name.endswith(normalized):
             return item
+    available = [str(getattr(item, 'objectName', '')) for item in network_options]
     raise AssertionError(
         f'Network "{network_name}" not found in available networks: {available}'
+    )
+
+
+def network_selector_options(delegate_real_name, fallback_real_name=None) -> list:
+    options = list(driver.findAllObjects(delegate_real_name))
+    if not options and fallback_real_name is not None:
+        options = list(driver.findAllObjects(fallback_real_name))
+    return options
+
+
+def _click_network_option(
+        network_name: str,
+        option_delegate_real_name,
+        option_fallback_real_name=None,
+):
+    options = network_selector_options(option_delegate_real_name, option_fallback_real_name)
+    QObject(find_network_option_item(network_name, options)).click()
+
+
+def _network_selected(selected_label, network_name: str) -> bool:
+    return selected_label.exists and selected_label.text == network_name
+
+
+@step('Select network {network_name} in filter')
+def select_network_in_filter(
+        network_filter,
+        network_name: str,
+        option_delegate_real_name,
+        option_fallback_real_name=None,
+        selected_label=None,
+        timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+):
+    current = selected_label.text if selected_label is not None and selected_label.exists else ''
+
+    if current == network_name:
+        return
+
+    retry_wait_msec = min(timeout_msec, 2000)
+    for attempt in range(2):
+        network_filter.click()
+        assert driver.waitFor(
+            lambda: network_selector_options(option_delegate_real_name, option_fallback_real_name),
+            timeout_msec,
+        ), 'Network options are not displayed'
+        _click_network_option(network_name, option_delegate_real_name, option_fallback_real_name)
+
+        if selected_label is None:
+            return
+
+        wait_msec = retry_wait_msec if attempt == 0 else timeout_msec
+        if driver.waitFor(lambda: _network_selected(selected_label, network_name), wait_msec):
+            return
+
+    assert False, (
+        f'Expected network {network_name!r}, '
+        f'combo shows {selected_label.text if selected_label.exists else ""!r}'
     )
 
 

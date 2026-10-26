@@ -13,7 +13,7 @@ from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import names
-from helpers.wallet_helper import find_network_option_item
+from helpers.wallet_helper import select_network_in_filter
 
 
 class SendPopup(QObject):
@@ -27,6 +27,7 @@ class SendPopup(QObject):
         self.send_modal_token_selector = Button(names.sendModalTokenSelector)
         self.send_modal_network_filter = QObject(names.sendModalNetworkFilter)
         self.send_modal_network_item = QObject(names.sendModalNetworkSelectorItem)
+        self._send_modal_selected_network = TextLabel(names.sendModalSelectedNetworkText)
         self.send_modal_amount_field = TextEdit(names.sendModalAmountField)
         self.send_modal_recipient_field = TextEdit(names.sendModalRecipientField)
         self.send_modal_sign_txn_fees = QObject(names.sendModalSendTransactionFees)
@@ -59,11 +60,12 @@ class SendPopup(QObject):
 
     @allure.step('Select network in network selector')
     def select_network(self, network_name):
-        self.send_modal_network_filter.click()
-        network_options = driver.findAllObjects(self.send_modal_network_item.real_name)
-        assert network_options, 'Network options are not displayed'
-        QObject(find_network_option_item(network_name, network_options)).click()
-        time.sleep(0.2)
+        select_network_in_filter(
+            self.send_modal_network_filter,
+            network_name,
+            self.send_modal_network_item.real_name,
+            selected_label=self._send_modal_selected_network,
+        )
         return self
 
     @staticmethod
