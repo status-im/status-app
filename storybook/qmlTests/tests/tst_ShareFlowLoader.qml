@@ -62,7 +62,6 @@ Item {
 
         ShareFlowLoader {
             excludedChatId: "0x04me"
-            unlimitedImages: true
         }
     }
 
@@ -102,7 +101,6 @@ Item {
             launchAndOpen("https://status.app", ["/cache/a.png"])
             compare(picker().text, "https://status.app")
             compare(picker().imagePaths, ["/cache/a.png"])
-            compare(picker().unlimitedImages, true)
             // own chat and the channel without post rights are never offered
             compare(picker().model.rowCount(), 2)
             compare(rootStore.releasedPaths, [])

@@ -947,13 +947,5 @@ Item {
             tryCompare(input.fileUrlsAndSources, "length", 30)
             verify(findChild(input, "imageQtyValidator").visible)
         }
-
-        function test_imageCap_zeroMeansUnlimited() {
-            const input = createTemporaryObject(imageInputComponent, root, { maxImages: 0 })
-            waitForRendering(input)
-
-            input.validateImagesAndShowImageArea(distinctImagePaths(31))
-            tryCompare(input.fileUrlsAndSources, "length", 31)
-        }
     }
 }

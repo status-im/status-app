@@ -93,7 +93,6 @@ StackLayout {
     required property ProfileStores.AdvancedStore advancedStore
     property SharedStores.UtilsStore utilsStore
     property bool paymentRequestFeatureEnabled
-    property bool unlimitedChatImagesEnabled
 
     property var mutualContactsModel
     property var sectionItemModel
@@ -340,7 +339,6 @@ StackLayout {
             threadsFeatureEnabled: root.threadsFeatureEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
-            unlimitedChatImagesEnabled: root.unlimitedChatImagesEnabled
             extraLeftPadding: root.extraLeftPadding
             isPortraitMode: root.isPortraitMode
             showUsersList: root.showUsersList

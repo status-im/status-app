@@ -1,7 +1,6 @@
 import io_interface, tables, sets
 import std/[strutils, json, options], uuids
 
-import ../../../../../global/feature_flags
 import ../../../../../../app_service/service/chat/image_batches
 import ../../../../../../app_service/service/settings/service as settings_service
 import ../../../../../../app_service/service/message/service as message_service
@@ -122,13 +121,12 @@ proc init*(self: Controller) =
       return
     self.delegate.onSendingMessageFailure()
 
-  when UNLIMITED_CHAT_IMAGES_ENABLED:
-    self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
-      let args = SendingFinishedArgs(e)
-      if self.chatId != args.chatId:
-        return
-      if finishBatch(self.imageBatches, args.sendToken):
-        self.dispatchNextImageBatch()
+  self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
+    let args = SendingFinishedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    if finishBatch(self.imageBatches, args.sendToken):
+      self.dispatchNextImageBatch()
 
 proc getChatId*(self: Controller): string =
   return self.chatId
@@ -191,9 +189,8 @@ proc sendImages*(self: Controller,
                  paymentRequests: seq[PaymentRequest],
                  threadId: string = "") =
   self.resetLinkPreviews()
-  when UNLIMITED_CHAT_IMAGES_ENABLED:
-    if self.enqueueImageBatches(imagePathsJson, msg, replyTo, preferredUsername, linkPreviews, paymentRequests, threadId):
-      return
+  if self.enqueueImageBatches(imagePathsJson, msg, replyTo, preferredUsername, linkPreviews, paymentRequests, threadId):
+    return
   self.chatService.asyncSendImages(
     self.chatId,
     imagePathsJson,

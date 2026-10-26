@@ -30,7 +30,6 @@ Loader {
 
     // The user's own 1-1 chat, never offered as a destination
     required property string excludedChatId
-    required property bool unlimitedImages
 
     property var emojiPopup: null
     property var stickersPopup: null
@@ -136,7 +135,6 @@ Loader {
             imagePaths: d.sharedImagePaths
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
-            unlimitedImages: root.unlimitedImages
 
             onSendRequested: (destinations, text, imagePaths) => d.complete(destinations, text, imagePaths)
             onCancelRequested: d.cancel()

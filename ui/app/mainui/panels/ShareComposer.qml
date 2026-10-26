@@ -21,8 +21,6 @@ Control {
     property string text
     property var imagePaths: []
     property bool sendEnabled: true
-    // False caps attachments like the chat input; true lets the fan-out batch them.
-    property bool unlimitedImages: true
     property var emojiPopup: null
     property var stickersPopup: null
 
@@ -84,7 +82,6 @@ Control {
         padding: 0
 
         sendEnabled: root.sendEnabled
-        maxImages: root.unlimitedImages ? 0 : Constants.maxUploadFiles
         emojiPopup: root.emojiPopup
         stickersPopup: root.stickersPopup
         chatInputPlaceholder: qsTr("Message")

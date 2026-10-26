@@ -34,7 +34,6 @@ const DEFAULT_FLAG_KEYCARD_ENABLED = true
 const DEFAULT_FLAG_THREADPOOL_ENABLED = true
 const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
 const DEFAULT_FLAG_BUY_ENABLED = true
-const DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED = true
 
 const DEFAULT_FLAG_SWAP_ENABLED = true
 # Swap providers are opt-in; Swap itself is only usable when at least one is enabled.
@@ -61,7 +60,6 @@ featureFlag("THREADPOOL_ENABLED",             DEFAULT_FLAG_THREADPOOL_ENABLED, t
 featureFlag("SINGLE_STATUS_INSTANCE_ENABLED", DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED, true)
 featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
 featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
-featureFlag("UNLIMITED_CHAT_IMAGES_ENABLED",  DEFAULT_FLAG_UNLIMITED_CHAT_IMAGES_ENABLED, true)
 featureFlag("PARASWAP_ENABLED",               DEFAULT_FLAG_PARASWAP_ENABLED, true)
 featureFlag("LIFI_ENABLED",                   DEFAULT_FLAG_LIFI_ENABLED, true)
 featureFlag("RELAY_ENABLED",                  DEFAULT_FLAG_RELAY_ENABLED, true)
@@ -124,7 +122,6 @@ QtObject:
     statusSupportBotEnabled: bool
     buyEnabled: bool
     threadsEnabled: bool
-    unlimitedChatImagesEnabled: bool
     paraswapEnabled: bool
     lifiEnabled: bool
     relayEnabled: bool
@@ -147,7 +144,6 @@ QtObject:
     self.statusSupportBotEnabled = STATUS_SUPPORT_BOT_ENABLED
     self.buyEnabled = BUY_ENABLED
     self.threadsEnabled = THREADS_ENABLED
-    self.unlimitedChatImagesEnabled = UNLIMITED_CHAT_IMAGES_ENABLED
     self.paraswapEnabled = PARASWAP_PROVIDER_ENABLED
     self.lifiEnabled = LIFI_PROVIDER_ENABLED
     self.relayEnabled = RELAY_PROVIDER_ENABLED
@@ -249,12 +245,6 @@ QtObject:
 
   proc getThreadsEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.threadsEnabled
-
-  proc getUnlimitedChatImagesEnabled*(self: FeatureFlags): bool {.slot.} =
-    return self.unlimitedChatImagesEnabled
-
-  QtProperty[bool] unlimitedChatImagesEnabled:
-    read = getUnlimitedChatImagesEnabled
 
   proc getParaswapEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.paraswapEnabled

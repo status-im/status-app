@@ -72,8 +72,6 @@ Item {
     property bool threadsFeatureEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
-    // When on, the input takes any number of images; the send is split into messages of six
-    property bool unlimitedChatImagesEnabled
     property bool joined
     property string threadName
 
@@ -837,7 +835,6 @@ Item {
                     stickersPopup: root.stickersPopup
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
-                    maxImages: root.unlimitedChatImagesEnabled ? 0 : Constants.maxUploadFiles
                     threadName: root.threadName
 
                     textInput.onTextChanged: {
