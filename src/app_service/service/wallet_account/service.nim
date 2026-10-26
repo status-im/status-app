@@ -77,6 +77,7 @@ QtObject:
   proc onNonProfileColdWalletKeypairMigratedToApp*(self: Service, response: string) {.slot.}
   proc onNonProfileKeypairMigratedToColdWallet*(self: Service, response: string) {.slot.}
   proc onENSNamesFetched*(self: Service, response: string) {.slot.}
+  proc onBalancesActiveSet*(self: Service, jsonString: string) {.slot.}
 
   proc delete*(self: Service)
   proc newService*(
