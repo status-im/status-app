@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- A foreign sender's provider for the share-intake tests. -->
+        <provider
+            android:name="app.status.mobile.ShareTestProvider"
+            android:authorities="${applicationId}.sharetest"
+            android:exported="true" />
+    </application>
+</manifest>
