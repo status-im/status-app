@@ -105,8 +105,8 @@ Item {
         }
 
         function test_moreThanSixImagesStayAttached() {
-            // The share fan-out splits sends into 6-image messages, so the
-            // composer must not cap attachments like the in-chat input does.
+            // The send is split into 6-image messages; the composer itself
+            // keeps up to the 30-image limit.
             const names = ["backup-popup", "qr-scan-success", "status-gradient-dot", "status-logo-circle",
                            "status-logo-dev-circle", "status-logo-icon", "status-logo"]
             const paths = names.map(n => Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/" + n + ".png")
@@ -130,7 +130,7 @@ Item {
         }
 
         function test_cappedComposerKeepsThirtyImagesAndShowsTheLimit() {
-            const drawer = create({ text: "", imagePaths: distinctImagePaths(31), unlimitedImages: false })
+            const drawer = create({ text: "", imagePaths: distinctImagePaths(31) })
             const chatInput = findChild(drawer, "statusChatInput")
             tryCompare(chatInput.fileUrlsAndSources, "length", 30)
             verify(findChild(chatInput, "imageQtyValidator").visible)

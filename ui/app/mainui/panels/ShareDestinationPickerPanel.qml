@@ -30,7 +30,6 @@ Control {
     property var stickersPopup: null
     // Recipient cap; unticked rows are disabled once it is reached.
     property int maxDestinations: 5
-    property bool unlimitedImages: true
 
     readonly property int selectedCount: shareSelection.count
 
@@ -254,7 +253,6 @@ Control {
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
             sendEnabled: shareSelection.count > 0
-            unlimitedImages: root.unlimitedImages
             onSendRequested: (text, imagePaths) =>
                 root.sendRequested(d.selectedDestinations(), text, imagePaths)
         }

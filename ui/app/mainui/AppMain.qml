@@ -2761,7 +2761,6 @@ Item {
                             isChatSectionModule: true
                         }
                         createChatPropertiesStore: appMain.createChatPropertiesStore
-                        unlimitedChatImagesEnabled: appMain.featureFlagsStore.unlimitedChatImagesEnabled
 
                         mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
                         allContactsModel: appMain.contactsStore.contactsModel
@@ -3018,7 +3017,6 @@ Item {
         rootStore: appMain.rootStore
         rootChatStore: appMain.rootChatStore
         excludedChatId: d.myPublicKey
-        unlimitedImages: appMain.featureFlagsStore.unlimitedChatImagesEnabled
         emojiPopup: statusEmojiPopup.item
         stickersPopup: statusStickersPopupLoader.item
     }

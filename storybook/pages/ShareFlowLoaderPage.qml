@@ -71,7 +71,6 @@ SplitView {
             rootStore: rootStore
             rootChatStore: rootChatStore
             excludedChatId: "0x04me"
-            unlimitedImages: ctrlUnlimitedImages.checked
         }
 
         Label {
@@ -93,7 +92,6 @@ SplitView {
                 SpinBox { id: ctrlImages; from: 0; to: 3 }
             }
             CheckBox { id: ctrlSectionsLoaded; text: "sections loaded"; checked: true }
-            CheckBox { id: ctrlUnlimitedImages; text: "unlimited images"; checked: true }
             CheckBox { id: ctrlSendSucceeds; text: "send succeeds"; checked: true }
             Button {
                 text: "Launch share flow"
