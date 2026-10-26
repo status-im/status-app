@@ -201,7 +201,7 @@ proc init*(self: Service) =
   self.events.on(SignalType.Wallet.event) do(e:Args):
     var data = WalletSignal(e)
     case data.eventType:
-      of "wallet-tick-reload":
+      of "wallet-tick-reload", EventRequestedBalanceRefreshFinished:
         let addresses = self.getWalletAddresses()
         self.buildAllTokens(addresses, forceRefresh = true)
       of EventWatchOnlyAccountRetrieved:

@@ -572,9 +572,9 @@ method canProfileProveOwnershipOfProvidedAddresses*(self: Module, addresses: str
       return false
   return true
 
-method reloadAccountTokens*(self: Module) =
+method reloadAccountTokens*(self: Module, withCollectibles: bool) =
   self.view.setIsAccountTokensReloading(true)
-  self.controller.reloadAccountTokens()
+  self.controller.reloadAccountTokens(withCollectibles)
 
 method isChecksumValidForAddress*(self: Module, address: string): bool =
   return self.controller.isChecksumValidForAddress(address)

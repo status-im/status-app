@@ -505,7 +505,7 @@ QtObject {
         root.walletSectionInst.activityController.loadMoreItems()
     }
 
-    function reloadAccountTokens() {
-        root.walletSectionInst.reloadAccountTokens()
+    function reloadAccountTokens(withCollectibles) {
+        root.walletSectionInst.reloadAccountTokens(!!withCollectibles)
     }
 }
