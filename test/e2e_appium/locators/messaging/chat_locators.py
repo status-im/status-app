@@ -97,33 +97,34 @@ class ChatLocators(BaseLocators):
         )
         return BaseLocators.xpath(xpath)
 
+    # Message text: StatusTextMessage.qml sets Accessible.name to the plain
+    # text, so it surfaces as content-desc. The widget class and the row's
+    # resource-id path depend on how the chat log renders its rows, so
+    # neither is part of the match.
+    MESSAGE_TEXT_ID = "StatusTextMessage_chatText"
+
     @staticmethod
     def message_text(content: str) -> tuple:
-        escaped = content.replace('"', '\\"')
-        xpath = (
-            "//android.widget.EditText"
-            f"[contains(@content-desc,\"{escaped}\")]"
+        return BaseLocators.xpath(
+            f"//*[contains(@resource-id,'{ChatLocators.MESSAGE_TEXT_ID}')]"
+            f"[contains(@content-desc,{xpath_string(content)})]"
         )
-        return BaseLocators.xpath(xpath)
 
     @staticmethod
     def message_text_exact(content: str) -> tuple:
-        escaped = content.replace('"', '\\"')
-        xpath = (
-            "//android.widget.EditText"
-            f"[@content-desc=\"{escaped}\"]"
+        return BaseLocators.xpath(
+            f"//*[contains(@resource-id,'{ChatLocators.MESSAGE_TEXT_ID}')]"
+            f"[@content-desc={xpath_string(content)}]"
         )
-        return BaseLocators.xpath(xpath)
 
     @staticmethod
     def message_content_desc_any(content: str) -> tuple:
-        """Match any element whose content-desc contains the message text.
-
-        Broader fallback for devices where the sent message renders as
-        a different element type than ``EditText``.
-        """
-        escaped = content.replace('"', '\\"')
-        return BaseLocators.xpath(f"//*[contains(@resource-id,'chatMessageViewDelegate')]//*[contains(@content-desc,\"{escaped}\")]")
+        """Match any element inside a message row whose content-desc contains
+        the message text, for content that is not in StatusTextMessage."""
+        return BaseLocators.xpath(
+            f"//*[contains(@resource-id,'.StatusMessage_')]"
+            f"//*[contains(@content-desc,{xpath_string(content)})]"
+        )
 
     # Reply preview bar shown above the chat input when replying.
     # QML: StatusChatInputReplyArea (objectName "statusChatInputReplyArea")
@@ -169,10 +170,9 @@ class ChatLocators(BaseLocators):
     @staticmethod
     def message_with_edited_indicator(content: str) -> tuple:
         """Locator for a message that contains both the content and '(edited)' indicator."""
-        escaped = content.replace('"', '\\"')
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'chatMessageViewDelegate')]"
-            f"//*[contains(@content-desc,'{escaped}') "
+            f"//*[contains(@resource-id,'{ChatLocators.MESSAGE_TEXT_ID}')]"
+            f"[contains(@content-desc,{xpath_string(content)}) "
             f"and contains(@content-desc,'(edited)')]"
         )
 
@@ -225,8 +225,9 @@ class ChatLocators(BaseLocators):
         """The reaction badge on the message carrying ``content``, so a badge an
         earlier test left on another message cannot satisfy the check."""
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'chatMessageViewDelegate')]"
-            f"[.//*[contains(@content-desc,{xpath_string(content)})]]"
+            f"//*[contains(@resource-id,'.StatusMessage_')]"
+            f"[.//*[contains(@resource-id,'{ChatLocators.MESSAGE_TEXT_ID}')]"
+            f"[contains(@content-desc,{xpath_string(content)})]]"
             f"//*[contains(@resource-id,'messageReaction_{emoji_code}')]"
             f"[not(ancestor::*[contains(@resource-id,'MessageContextMenuView')])]"
         )
