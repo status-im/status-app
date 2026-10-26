@@ -22,6 +22,7 @@ type
   ImageBatchPayload = object
     msg: string
     replyTo: string
+    threadId: string
     preferredUsername: string
     linkPreviews: seq[LinkPreview]
     paymentRequests: seq[PaymentRequest]
@@ -153,10 +154,11 @@ proc dispatchNextImageBatch(self: Controller) =
   var payload: ImageBatchPayload
   discard self.imageBatchPayloads.pop(batch.token, payload)
   self.chatService.asyncSendImages(self.chatId, $(%batch.imagePaths), payload.msg, payload.replyTo,
-    payload.preferredUsername, payload.linkPreviews, payload.paymentRequests, sendToken = batch.token)
+    payload.preferredUsername, payload.linkPreviews, payload.paymentRequests,
+    threadId = payload.threadId, sendToken = batch.token)
 
 proc enqueueImageBatches(self: Controller, imagePathsJson, msg, replyTo, preferredUsername: string,
-    linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest]): bool =
+    linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest], threadId: string): bool =
   ## Splits the send into messages of IMAGES_PER_MESSAGE images; the text,
   ## reply and previews ride on the first one. The batches go out one at a
   ## time. False when there is nothing to split.
@@ -169,7 +171,7 @@ proc enqueueImageBatches(self: Controller, imagePathsJson, msg, replyTo, preferr
   if batches.len == 0:
     return false
   for batch in batches:
-    var payload = ImageBatchPayload(preferredUsername: preferredUsername)
+    var payload = ImageBatchPayload(preferredUsername: preferredUsername, threadId: threadId)
     if batch.withText:
       payload.msg = msg
       payload.replyTo = replyTo
@@ -190,7 +192,7 @@ proc sendImages*(self: Controller,
                  threadId: string = "") =
   self.resetLinkPreviews()
   when UNLIMITED_CHAT_IMAGES_ENABLED:
-    if self.enqueueImageBatches(imagePathsJson, msg, replyTo, preferredUsername, linkPreviews, paymentRequests):
+    if self.enqueueImageBatches(imagePathsJson, msg, replyTo, preferredUsername, linkPreviews, paymentRequests, threadId):
       return
   self.chatService.asyncSendImages(
     self.chatId,
