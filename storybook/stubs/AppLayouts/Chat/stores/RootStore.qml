@@ -65,6 +65,8 @@ QtObject {
         return ""
     }
 
+    function requestContactInfo(publicKey) {}
+
     function cleanMessageText(text) {
         return text
     }

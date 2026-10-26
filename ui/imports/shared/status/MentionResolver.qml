@@ -14,7 +14,9 @@ import StatusQ.Core.Utils
 // A key the model does not know takes the name the message itself carries (status-go's
 // `mentionedNames`), then falls back to `aliasProvider`, so a mention of somebody the
 // local user has never heard of reads as a name or a generated 3-word alias rather than
-// a raw key. Resolving never calls into the backend.
+// a raw key. A key left with only the alias (status-go also sends the alias for a person
+// it has never seen) is handed to `contactInfoRequester` once, which is how the alias
+// eventually becomes the real name. Resolving itself never calls into the backend.
 //
 // Cost scales with the mentions in the text: a parser scan plus one model lookup per
 // distinct unseen key, cached until the model changes. A message without mentions never
@@ -35,6 +37,11 @@ QObject {
     // microseconds, so it is not worth a cache of its own. Without a provider an unknown
     // key stays unresolved and the renderer falls back to the raw key.
     property var aliasProvider: null
+
+    // Notified once per key that only an alias can name: (pubKey) -> void, expected to be
+    // a store's mailserver profile request. It is fire-and-forget: a successful answer
+    // reaches the source model on its own and the name resolves on the next pass.
+    property var contactInfoRequester: null
 
     // The local user, resolved to this live name ahead of the model and the message:
     // neither the contacts model nor a roster snapshot carries it fresh.
@@ -88,7 +95,12 @@ QObject {
             if (name === null) {
                 if (known === undefined)
                     known = d.parseKnownNames(knownNames)
-                name = known[pubKey] || d.aliasOf(pubKey)
+                const messageName = known[pubKey] || null
+                // the alias is only worth computing to compare when somebody can be asked
+                const alias = !messageName || root.contactInfoRequester ? d.aliasOf(pubKey) : null
+                if (!messageName || messageName === alias)
+                    d.requestInfoFor(pubKey)
+                name = messageName || alias
             }
             if (name !== null)
                 result[pubKey] = name
@@ -110,6 +122,22 @@ QObject {
         property int appliedRevision: 0
 
         onAppliedRevisionChanged: cache = ({})
+
+        // Keys already handed to the requester, so each costs at most one round trip per
+        // resolver instance. A failed request is not retried here.
+        property var requested: ({})
+
+        function requestInfoFor(pubKey) {
+            if (!root.contactInfoRequester || pubKey in requested)
+                return
+
+            requested[pubKey] = true
+            // resolveFor() runs inside a QML binding, which must not call into the backend
+            Qt.callLater(() => {
+                if (root.contactInfoRequester)
+                    root.contactInfoRequester(pubKey)
+            })
+        }
 
         function parseKnownNames(knownNames) {
             if (!knownNames)

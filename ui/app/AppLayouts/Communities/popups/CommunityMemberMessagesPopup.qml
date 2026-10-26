@@ -44,6 +44,7 @@ StatusDialog {
         selfPubKey: root.rootStore?.myPublicKey() ?? ""
         selfName: root.rootStore?.name ?? ""
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
+        contactInfoRequester: pubKey => root.rootStore?.requestContactInfo(pubKey)
     }
 
 

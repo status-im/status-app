@@ -26,7 +26,8 @@ StatusListView {
 
     // Resolves mention pub keys to display names for the client-side renderer, mirroring
     // ChatMessagesView: the group chat's users (none in a community channel) plus every
-    // named contact, then the message's own mentionedNames, then an alias.
+    // named contact, then the message's own mentionedNames, then an alias (whose
+    // profile is then requested).
     readonly property MentionNamesAdaptor mentionNames: MentionNamesAdaptor {
         chatUsersModel: root.store?.usersStore.usersModel ?? null
         contactsModel: root.store?.contactsModel ?? null
@@ -38,6 +39,7 @@ StatusListView {
         selfPubKey: root.store?.myPublicKey() ?? ""
         selfName: root.store?.name ?? ""
         aliasProvider: pubKey => root.store?.generateAlias(pubKey) ?? ""
+        contactInfoRequester: pubKey => root.store?.requestContactInfo(pubKey)
     }
 
     // Unfurling related data:

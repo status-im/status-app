@@ -120,7 +120,8 @@ Item {
 
     // Resolves mention pub keys to display names. Reactive to member/contact
     // name changes; "everyone" is built in. A mention the models cannot name
-    // takes the message's own mentionedNames, then an alias.
+    // takes the message's own mentionedNames, then an alias; a key left with
+    // only the alias has its profile requested.
     MentionResolver {
         id: mentionResolver
 
@@ -130,6 +131,7 @@ Item {
         selfPubKey: root.myPublicKey
         selfName: root.rootStore?.name ?? ""
         aliasProvider: pubKey => root.rootStore?.generateAlias(pubKey) ?? ""
+        contactInfoRequester: pubKey => root.rootStore?.requestContactInfo(pubKey)
     }
 
     QtObject {

@@ -17,10 +17,15 @@ import shared.status
    (`knownNames`, status-go's mentionedNames), then falls back to aliasProvider,
    so the renderer shows a 3-word alias rather than 130 hex characters; with no
    provider it stays unresolved and the renderer falls back to the raw key
+ - a key that ends up with only an alias (no message name, or a message name
+   that is the alias itself, which is what status-go sends for a stranger) is
+   handed to contactInfoRequester exactly once per resolver, never from inside
+   the binding that discovered it; a key the model or the message names costs
+   no request
  - the local user resolves to the live own-profile name (`selfPubKey`/`selfName`),
    ahead of the model and the message: neither the contacts model nor a roster
    snapshot carries it fresh, so a self rename re-renders at once
- - resolving never calls into the backend
+ - resolving itself never calls into the backend
  - display-name changes in the model are reflected (revision tracking)
  - while `enabled` is false results are frozen; re-enabling catches up
  - resolution cost scales with the mentions IN THE TEXT, not with the size
@@ -81,6 +86,37 @@ Item {
         }
     }
 
+    // records what was asked about, and when
+    QtObject {
+        id: requesterStub
+
+        property var keys: []
+        property bool calledSynchronously: false
+        property bool resolving: false
+
+        function requestContactInfo(pubKey) {
+            if (resolving)
+                calledSynchronously = true
+            keys = keys.concat([pubKey])
+        }
+
+        function reset() {
+            keys = []
+            calledSynchronously = false
+            resolving = false
+        }
+    }
+
+    Component {
+        id: requestingResolverComp
+
+        MentionResolver {
+            sourceModel: usersModel
+            aliasProvider: pubKey => aliasStub.generateAlias(pubKey)
+            contactInfoRequester: pubKey => requesterStub.requestContactInfo(pubKey)
+        }
+    }
+
     Component {
         id: selfResolverComp
 
@@ -98,6 +134,7 @@ Item {
         // the stubs are shared, so every test starts from a clean slate
         function init() {
             aliasStub.calls = 0
+            requesterStub.reset()
             // resolving must not write state from inside the caller's binding
             failOnWarning(/Binding loop detected/)
         }
@@ -223,6 +260,81 @@ Item {
 
             usersModel.append({ pubKey: root.keyUnknown, name: "Carol" })
             compare(r.resolveFor("@" + root.keyUnknown)[root.keyUnknown], "Carol")
+            usersModel.remove(usersModel.count - 1)
+        }
+
+        // resolveFor() is called from a binding; a request must land after it returns
+        function resolveDeferred(r, text, known) {
+            requesterStub.resolving = true
+            const m = r.resolveFor(text, known)
+            requesterStub.resolving = false
+            return m
+        }
+
+        function test_unnamedStrangerIsRequested() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            compare(resolveDeferred(r, "hi @" + root.keyUnknown)[root.keyUnknown],
+                    "Alias of 0x" + "c".repeat(4))
+
+            tryVerify(() => requesterStub.keys.length === 1, 2000,
+                      "a key only an alias can name must be asked about")
+            compare(requesterStub.keys[0], root.keyUnknown)
+            verify(!requesterStub.calledSynchronously,
+                   "the request must not happen during the binding's evaluation")
+        }
+
+        // status-go names a stranger with the generated alias
+        function test_aliasNamedStrangerIsRequested() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            const known = JSON.stringify({ [root.keyUnknown]: "Alias of 0x" + "c".repeat(4) })
+            compare(resolveDeferred(r, "hi @" + root.keyUnknown, known)[root.keyUnknown],
+                    "Alias of 0x" + "c".repeat(4))
+
+            tryVerify(() => requesterStub.keys.length === 1, 2000)
+            compare(requesterStub.keys[0], root.keyUnknown)
+        }
+
+        // All requests from one resolveFor() are queued in the same event-loop turn, so a
+        // key that did arrive is a fence: anything else would have arrived with it.
+        function test_namedKeysAreNotRequested() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            const known = JSON.stringify({ [root.keyUnknown2]: "Dave" })
+            resolveDeferred(r, "@" + root.keyA + " @0x00001 @" + root.keyUnknown2
+                            + " @" + root.keyUnknown, known)
+
+            tryVerify(() => requesterStub.keys.length > 0, 2000)
+            compare(requesterStub.keys, [root.keyUnknown],
+                    "a name from the model or the message, and the everyone tag, cost no round trip")
+        }
+
+        function test_keyIsRequestedOnlyOnce() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            const text = "@" + root.keyUnknown
+            resolveDeferred(r, text)
+            tryVerify(() => requesterStub.keys.length > 0, 2000)
+
+            // re-resolving, and a model change that drops the name cache, must not re-ask
+            resolveDeferred(r, text)
+            usersModel.setProperty(0, "name", "Alicia")
+            resolveDeferred(r, text)
+            usersModel.setProperty(0, "name", "Alice")
+
+            // a fresh key fences the repeats: it arrives after anything they queued
+            resolveDeferred(r, "@" + root.keyUnknown2)
+            tryVerify(() => requesterStub.keys.length > 1, 2000)
+            compare(requesterStub.keys, [root.keyUnknown, root.keyUnknown2],
+                    "one round trip per key per resolver")
+        }
+
+        // the point of asking: the answer arrives in the model and the name takes over
+        function test_nameArrivingFromARequestWins() {
+            const r = createTemporaryObject(requestingResolverComp, root)
+            const known = JSON.stringify({ [root.keyUnknown]: "Alias of 0x" + "c".repeat(4) })
+            resolveDeferred(r, "@" + root.keyUnknown, known)
+            tryVerify(() => requesterStub.keys.length === 1, 2000)
+
+            usersModel.append({ pubKey: root.keyUnknown, name: "Carol" })
+            compare(r.resolveFor("@" + root.keyUnknown, known)[root.keyUnknown], "Carol")
             usersModel.remove(usersModel.count - 1)
         }
 
