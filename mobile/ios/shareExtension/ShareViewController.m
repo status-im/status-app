@@ -120,6 +120,9 @@ static const NSTimeInterval kImageLoadDeadlineSeconds = 120.0;
 // chat compresses image messages to ~350 KB anyway, so nothing visible is
 // lost and the host is spared decoding full-size photos.
 static const CGFloat kMaxImageEdgePx = 2048.0;
+// One over the composer's limit (Constants.maxUploadFiles): it keeps 30 and
+// the extra image makes it show the limit warning.
+static const NSUInteger kMaxSharedImages = 31;
 
 @interface ShareViewController : UIViewController
 @property (nonatomic, retain) UILabel *progressLabel;
@@ -190,9 +193,10 @@ static const CGFloat kMaxImageEdgePx = 2048.0;
             // the content being shared. URL before plain-text: a URL provider
             // may also advertise plain-text, and the link (with scheme
             // intact) is the content the user is sharing.
-            if ([provider hasItemConformingToTypeIdentifier:kTypeImage])
-                [imageProviders addObject:provider];
-            else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl])
+            if ([provider hasItemConformingToTypeIdentifier:kTypeImage]) {
+                if (imageProviders.count < kMaxSharedImages)
+                    [imageProviders addObject:provider];
+            } else if ([provider hasItemConformingToTypeIdentifier:kTypeUrl])
                 [urlProviders addObject:provider];
             else if ([provider hasItemConformingToTypeIdentifier:kTypePlainText])
                 [textProviders addObject:provider];
