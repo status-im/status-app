@@ -22,6 +22,7 @@ import backend/tokens as status_go_tokens
 import dto/types as dto_types
 import items/types as items_types
 import token_lookup_cache
+import token_group_lookup
 import token_missing_fetch
 import token_pending_fetch
 import token_refresh_generation
@@ -61,7 +62,7 @@ QtObject:
     onDemandPricesDebouncer: debouncer_service.Debouncer # coalesces a burst of by-key price requests into one fetch
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
     groupsOfInterest: seq[TokenGroupItem] # refers to groups for tokens of interest
-    allTokensByGroupKey: Table[string, seq[TokenItem]] # rebuilt in applyRefreshTokensData for getTokenByKeyOrGroupKeyFromAllTokens
+    groupTokensLookups: GroupTokensCache # groups outside the tokens of interest, fetched on demand; cleared on refresh
     groupsForChain: seq[TokenGroupItem] # groups for the source (pay) chain
     groupsForChainTo: seq[TokenGroupItem] # groups for the destination (receive) chain (swap+bridge)
     allTokenGroupsForActiveNetworks: seq[TokenGroupItem] # all token groups, fetched on demand
@@ -88,11 +89,6 @@ QtObject:
     # one apply of the newest data, no piling-up in-flight tasks.
     refreshTokensGen: RefreshGenerationState
     fetchAllTokenListsGen: RefreshGenerationState
-    # Catalogue-fetch want for refresh tasks: ORed
-    # across coalesced triggers, consumed at task start, re-fetched when a flagged
-    # task's result is dropped as stale.
-    pendingFetchAllTokens: bool
-    inFlightFetchAllTokens: bool
 
   # Forward declaration
   proc getCurrency*(self: Service): string
@@ -101,7 +97,7 @@ QtObject:
   proc scheduleMissingTokenKeysFetch(self: Service)
   proc fetchPendingMissingTokenKeys(self: Service)
   proc fetchPendingOnDemandPrices(self: Service)
-  proc startRefreshTokensTask(self: Service, generation: int, fetchAllTokens: bool = false)
+  proc startRefreshTokensTask(self: Service, generation: int)
   proc startFetchAllTokenListsTask(self: Service, generation: int)
 
   # All slots defined in included files have to be forward declared
@@ -141,7 +137,7 @@ QtObject:
     result.refreshTokensGen = initRefreshGenerationState()
     result.fetchAllTokenListsGen = initRefreshGenerationState()
     result.groupsOfInterestByKey = initTable[string, TokenGroupItem]()
-    result.allTokensByGroupKey = initTable[string, seq[TokenItem]]()
+    result.groupTokensLookups = initGroupTokensCache()
     result.tokenDetailsTable = initTable[string, TokenDetailsItem]()
     result.tokenMarketValuesTable = initTable[string, TokenMarketValuesItem]()
     result.tokenPriceTable = initTable[string, float64]()

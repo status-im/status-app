@@ -1,11 +1,11 @@
 ## Unit tests for the pure worker-side token-apply builder.
 ##
 ## This is the off-GUI-thread core that will feed the typed-completion
-## handoff: given the raw RPC response JSON (tokens-of-interest, all-tokens,
+## handoff: given the raw RPC response JSON (tokens-of-interest,
 ## token-preferences, token-lists), it produces the COMPLETE finished structures
 ## the GUI slot currently builds inline in applyRefreshTokensData /
-## applyAllTokenListsData — token items, groups-of-interest, the preferences
-## rows, and the all-tokens-by-group index — so the slot reduces to a swap+emit.
+## applyAllTokenListsData — token items, groups-of-interest and the preferences
+## rows — so the slot reduces to a swap+emit.
 ## Pure: no Service, no threadpool, no backend. Byte-identical to the current
 ## GUI-thread build (same inputs -> same structures).
 
@@ -42,9 +42,8 @@ proc symbolsOf(items: seq[TokenItem]): seq[string] =
 
 suite "token apply builder — refresh tokens":
 
-  test "builds by-key table, groups-of-interest, and all-tokens index":
-    let res = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), arr(tokenA, tokenC),
-                                      parseJson(prefsJson))
+  test "builds by-key table and groups-of-interest":
+    let res = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), parseJson(prefsJson))
     # tokens-of-interest: 3 distinct keys
     check res.tokensOfInterestCount == 3
     check res.tokensOfInterestByKey.len == 3
@@ -57,14 +56,9 @@ suite "token apply builder — refresh tokens":
     let cGroupKey = toSeq(res.groupsOfInterestByKey.keys).filterIt(it != "grp-eth")[0]
     check res.groupsOfInterestByKey[cGroupKey].tokens.len == 1
     check res.groupsOfInterestByKey[cGroupKey].tokens[0].symbol == "GAM"
-    # all-tokens index: grouped by group key, count reflects the all-tokens input
-    check res.allTokensCount == 2
-    check res.allTokensByGroupKey.len == 2
-    check res.allTokensByGroupKey["grp-eth"].len == 1
-    check res.allTokensByGroupKey["grp-eth"][0].symbol == "ALP"
 
   test "preferences are parsed to rows and the raw array is preserved":
-    let res = buildRefreshTokensApply(arr(tokenA), arr(tokenA), parseJson(prefsJson))
+    let res = buildRefreshTokensApply(arr(tokenA), parseJson(prefsJson))
     check res.tokenPreferences.len == 2
     let byKey = res.tokenPreferences.mapIt((it.key, it)).toTable
     check byKey["grp-eth"].groupPosition == 2
@@ -75,26 +69,24 @@ suite "token apply builder — refresh tokens":
     check parseJson(res.tokenPreferencesJson) == parseJson(prefsJson)
 
   test "empty / missing preferences yield an empty rows list and [] json":
-    let res = buildRefreshTokensApply(arr(tokenA), arr(tokenA), newJArray())
+    let res = buildRefreshTokensApply(arr(tokenA), newJArray())
     check res.tokenPreferences.len == 0
     check res.tokenPreferencesJson == "[]"
 
   test "empty refresh builds empty structures (slot then keeps prior via swap-not-clear)":
-    let res = buildRefreshTokensApply(newJArray(), newJArray(), newJArray())
+    let res = buildRefreshTokensApply(newJArray(), newJArray())
     check res.tokensOfInterestCount == 0
-    check res.allTokensCount == 0
     check res.tokensOfInterestByKey.len == 0
     check res.groupsOfInterestByKey.len == 0
-    check res.allTokensByGroupKey.len == 0
 
   test "deterministic: same input builds structurally identical output":
-    let a = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), arr(tokenA), parseJson(prefsJson))
-    let b = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), arr(tokenA), parseJson(prefsJson))
+    let a = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), parseJson(prefsJson))
+    let b = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), parseJson(prefsJson))
     check toSeq(a.tokensOfInterestByKey.keys).sorted == toSeq(b.tokensOfInterestByKey.keys).sorted
     check toSeq(a.groupsOfInterestByKey.keys).sorted == toSeq(b.groupsOfInterestByKey.keys).sorted
 
   test "groups-of-interest is ordered deterministically by group key":
-    let res = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), arr(tokenA), parseJson(prefsJson))
+    let res = buildRefreshTokensApply(arr(tokenA, tokenB, tokenC), parseJson(prefsJson))
     let orderKeys = res.groupsOfInterest.mapIt(it.key)
     # the exposed group seq is sorted by key (not Table hash order)...
     check orderKeys == orderKeys.sorted
@@ -132,7 +124,7 @@ const badToken = """{"chainId":0,"address":"","name":"Bad","symbol":"BAD","decim
 suite "token apply builder — worker result assembly (deadlock-safe)":
 
   test "refresh: success carries generation and the built structures":
-    let res = assembleRefreshResult(arr(tokenA, tokenB), arr(tokenA), parseJson(prefsJson),
+    let res = assembleRefreshResult(arr(tokenA, tokenB), parseJson(prefsJson),
                                     generation = 7, rpcError = "")
     check res != nil
     check res.generation == 7
@@ -140,7 +132,7 @@ suite "token apply builder — worker result assembly (deadlock-safe)":
     check res.tokensOfInterestCount == 2
 
   test "refresh: an RPC error is passed through, no build, still stamped":
-    let res = assembleRefreshResult(newJArray(), newJArray(), newJArray(),
+    let res = assembleRefreshResult(newJArray(), newJArray(),
                                     generation = 3, rpcError = "getTokens failed")
     check res != nil
     check res.generation == 3
@@ -156,7 +148,7 @@ suite "token apply builder — worker result assembly (deadlock-safe)":
     # this build path, so the Defect case is covered by the `except Exception` choice
     # plus the worker's structural try/finally (async_tasks.nim); this test exercises
     # the catch/stamp/non-nil contract via the reachable CatchableError path.
-    let res = assembleRefreshResult(arr(badToken), arr(badToken), newJArray(),
+    let res = assembleRefreshResult(arr(badToken), newJArray(),
                                     generation = 9, rpcError = "")
     check res != nil
     check res.generation == 9
