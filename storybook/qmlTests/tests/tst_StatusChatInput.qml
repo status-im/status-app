@@ -929,29 +929,31 @@ Item {
 
         // ── Attachment cap
         //
-        // Seven distinct PNGs: one over the default per-message cap.
-        function sevenImagePaths() {
+        // The input deduplicates by string, so "./" segments turn the same
+        // few fixture files into as many distinct entries as needed.
+        function distinctImagePaths(count) {
             const names = ["backup-popup", "qr-scan-success", "status-gradient-dot", "status-logo-circle",
                            "status-logo-dev-circle", "status-logo-icon", "status-logo"]
-            return names.map(n => Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/" + n + ".png")
-                                    .toString().slice("file://".length))
+            const dir = Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/").toString().slice("file://".length)
+            return Array.from({ length: count }, (_, i) =>
+                dir + "./".repeat(Math.floor(i / names.length)) + names[i % names.length] + ".png")
         }
 
-        function test_imageCap_defaultKeepsMaxUploadFiles() {
+        function test_imageCap_keepsThirtyAndShowsTheLimit() {
             const input = createTemporaryObject(imageInputComponent, root)
             waitForRendering(input)
-            compare(input.maxImages, Constants.maxUploadFiles)
 
-            input.validateImagesAndShowImageArea(sevenImagePaths())
-            tryCompare(input.fileUrlsAndSources, "length", Constants.maxUploadFiles)
+            input.validateImagesAndShowImageArea(distinctImagePaths(31))
+            tryCompare(input.fileUrlsAndSources, "length", 30)
+            verify(findChild(input, "imageQtyValidator").visible)
         }
 
         function test_imageCap_zeroMeansUnlimited() {
             const input = createTemporaryObject(imageInputComponent, root, { maxImages: 0 })
             waitForRendering(input)
 
-            input.validateImagesAndShowImageArea(sevenImagePaths())
-            tryCompare(input.fileUrlsAndSources, "length", 7)
+            input.validateImagesAndShowImageArea(distinctImagePaths(31))
+            tryCompare(input.fileUrlsAndSources, "length", 31)
         }
     }
 }

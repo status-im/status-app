@@ -800,6 +800,7 @@ Control {
                 }
                 StatusChatImageQtyValidator {
                     id: imageQtyValidator
+                    objectName: "imageQtyValidator"
                     Layout.alignment: Qt.AlignHCenter
                     maxImages: root.maxImages
                 }

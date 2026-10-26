@@ -992,7 +992,7 @@ QtObject {
                                                       ? globalUtils.getStatusSupportBotChatKey()
                                                       : ""
 
-    readonly property int maxUploadFiles: 6
+    readonly property int maxUploadFiles: 30
     readonly property double maxUploadFilesizeMB: 10
     readonly property int maxImgSizeBytes: maxUploadFilesizeMB * 1048576 /* 1 MB in bytes */
 
