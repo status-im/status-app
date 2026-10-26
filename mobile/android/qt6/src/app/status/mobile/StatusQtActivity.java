@@ -370,8 +370,12 @@ public class StatusQtActivity extends QtActivity {
         return ctx.getPackageName().equals(info.packageName);
     }
 
-    // Background thread. Copies each shared image stream into the
-    // share-intake cache dir and returns the copies' absolute paths. The
+    // One over the composer's limit (Constants.maxUploadFiles): it keeps 30
+    // and the extra image makes it show the limit warning.
+    private static final int MAX_SHARED_IMAGES = 31;
+
+    // Background thread. Copies up to MAX_SHARED_IMAGES shared image streams
+    // into the share-intake cache dir and returns the copies' absolute paths. The
     // intent's declared type is the sender's claim about the share as a
     // whole; only the provider's per-stream answer is authoritative, so every
     // stream is resolved and anything not image/* is dropped. Streams that
@@ -387,6 +391,7 @@ public class StatusQtActivity extends QtActivity {
         ContentResolver resolver = ctx.getContentResolver();
         int index = 0;
         for (Uri uri : uris) {
+            if (paths.size() == MAX_SHARED_IMAGES) break;
             String mime = resolver.getType(uri);
             if (mime == null || !mime.startsWith("image/")) {
                 Log.w(TAG, "share intake: dropping non-image stream (" + mime + ")");

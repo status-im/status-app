@@ -22,6 +22,15 @@ iOS share extension does, because neither the composer's image validator nor
 status-go decodes HEIC. Uses the `landscape-3000x2000.heic` fixture from the
 test APK's assets; the JPEG/PNG inputs are generated at runtime.
 
+## `ShareIntakeImageLimitTest`
+
+Share intake copies at most 31 images, one over the composer's 30-image limit,
+so the composer can show its limit warning without a 300-photo share being
+copied in full. Streams come from `ShareTestProvider`, declared in this source
+set's `AndroidManifest.xml`: it lives in the test APK, so to the intake it is a
+foreign sender serving images and videos (videos are dropped and must not use
+up the slots).
+
 ## Running
 
 Needs a booted emulator/device and the app built with the Qt Android toolchain
@@ -32,7 +41,7 @@ output dir, so go through the mobile build:
 GRADLE_TARGETS="assembleDebug connectedDebugAndroidTest" make mobile-build
 ```
 
-Neither test boots Qt — they call static seams (`extractStreamUris` by
-reflection, `ShareImageTranscoder` directly) — but they run under
+None of the tests boots Qt — they call static seams (`extractStreamUris` and
+`copySharedImagesToCache` by reflection, `ShareImageTranscoder` directly) — but they run under
 instrumentation because `android.net.Uri` parsing, the `PackageManager` provider
 lookup and `ImageDecoder`'s HEIF support need the real framework.
