@@ -88,9 +88,10 @@ proc applyRefreshTokensResult(self: Service, res: RefreshTokensApplyResult, acti
     self.tokensOfInterestByKey = move res.tokensOfInterestByKey
     self.groupsOfInterestByKey = move res.groupsOfInterestByKey
     self.groupsOfInterest = move res.groupsOfInterest
-    # Fresh token data invalidates prior "not found" markers: a key that was
-    # missing before may now resolve.
+    # Fresh token data invalidates prior "not found" markers and on-demand group
+    # lookups: a key that was missing before may now resolve.
     self.knownMissingKeys.clear()
+    self.groupTokensLookups.clear()
   else:
     debug "ignoring empty tokens-of-interest refresh; keeping existing token groups cache"
 
@@ -101,11 +102,6 @@ proc applyRefreshTokensResult(self: Service, res: RefreshTokensApplyResult, acti
     let key = preferences.key
     self.tokenPreferencesTable[key] = move preferences
 
-  if shouldReplaceTokensCache(res.allTokensCount, self.allTokensByGroupKey.len):
-    # Same swap-not-clear discipline as the tokens-of-interest cache above.
-    self.allTokensByGroupKey = move res.allTokensByGroupKey
-  else:
-    debug "ignoring empty all-tokens refresh; keeping existing all tokens cache"
   if action == rcaApply and res.tokensOfInterestCount == 0 and self.tokensOfInterestReadiness == tmrSuperseded:
     debug "newest tokens refresh has an empty map; token map stays superseded"
   self.tokensOfInterestReadiness = nextTokenMapReadiness(self.tokensOfInterestReadiness, action,
@@ -132,12 +128,7 @@ proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
   if c.action in {rcaDropAndRefire, rcaApplyAndRefire}:
     debug "stale async refresh tokens response; re-firing newest",
       completedGen = completedGen, applied = c.action == rcaApplyAndRefire
-    # A stale flagged result's catalogue is outdated — the re-fire must re-fetch
-    # it, in addition to any want queued by the triggers that made us stale.
-    let refireFetchAllTokens = self.pendingFetchAllTokens or self.inFlightFetchAllTokens
-    self.pendingFetchAllTokens = false
-    self.inFlightFetchAllTokens = refireFetchAllTokens
-    self.startRefreshTokensTask(c.gen, refireFetchAllTokens)
+    self.startRefreshTokensTask(c.gen)
     if c.action == rcaDropAndRefire:
       return
   if res.isNil:
@@ -224,31 +215,21 @@ proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
   except Exception as e:
     error "error processing async fetch missing tokens", msg = e.msg
 
-proc startRefreshTokensTask(self: Service, generation: int, fetchAllTokens: bool = false) =
+proc startRefreshTokensTask(self: Service, generation: int) =
   let arg = AsyncRefreshTokensTaskArg(
     tptr: asyncRefreshTokensTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncRefreshTokensDone",
     requestId: generation,
-    fetchAllTokens: fetchAllTokens,
   )
   self.threadpool.start(arg)
 
-# fetchAllTokens must be true only when the full catalogue can change (init /
-# token-lists-updated); routine refreshes skip the ~3MB getAllTokens fetch+decode.
-# The want is ORed across coalesced triggers and consumed when
-# a task actually starts, so a flagged trigger arriving while a task is in flight
-# still gets its catalogue fetch on the eventual re-fire.
-proc asyncRefreshTokens(self: Service, fetchAllTokens: bool = false) =
+proc asyncRefreshTokens(self: Service) =
   # Coalesced: bump the generation and start a task only when none is
   # in flight; an in-flight task re-fires once on completion if newer triggers came.
-  if fetchAllTokens:
-    self.pendingFetchAllTokens = true
   let (shouldStart, gen) = self.refreshTokensGen.requestRefresh()
   if shouldStart:
-    self.inFlightFetchAllTokens = self.pendingFetchAllTokens
-    self.pendingFetchAllTokens = false
-    self.startRefreshTokensTask(gen, self.inFlightFetchAllTokens)
+    self.startRefreshTokensTask(gen)
 
 proc startFetchAllTokenListsTask(self: Service, generation: int) =
   self.tokenListsLoading = true
@@ -299,7 +280,7 @@ proc init*(self: Service) =
         self.rebuildMarketData()
   # update and populate internal list and then emit signal when new custom token detected?
   self.events.on(SignalType.WalletTokensListsUpdated.event) do(e:Args):
-    self.asyncRefreshTokens(fetchAllTokens = true)
+    self.asyncRefreshTokens()
     self.asyncFetchAllTokenLists()
 
   self.events.on(SIGNAL_NETWORK_MODE_UPDATED) do(e:Args):
@@ -310,7 +291,7 @@ proc init*(self: Service) =
     self.resetMarketValuesCache()
     self.rebuildMarketData()
 
-  self.asyncRefreshTokens(fetchAllTokens = true)
+  self.asyncRefreshTokens()
   self.prefetchSwapSupport()
 
 proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
@@ -502,10 +483,15 @@ proc getTokensByGroupKey*(self: Service, groupKey: string): seq[TokenItem] =
     return @[token]
   return self.groupsOfInterestByKey[groupKey].tokens
 
+# A group outside the tokens of interest: one small synchronous backend lookup,
+# cached (empty results too) until the token lists refresh.
+proc getTokensOfGroupOnDemand(self: Service, groupKey: string): seq[TokenItem] =
+  return self.groupTokensLookups.lookup(groupKey, fetchTokensByGroupKey)
+
 ## Note: use this function in a very rare case, when you're sure the token is not present in the models.
 ## Returns a token that matches the key, or the first token in the group that matches the key.
 # Every deployment of a token by its key or group key: the tokens of interest
-# first, then the indexed all-tokens cache, then the full token list.
+# first, then an on-demand backend lookup of the group.
 proc getTokensByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): seq[TokenItem] =
   if common_utils.isTokenKey(key):
     let token = self.getTokenByKey(key)
@@ -513,11 +499,7 @@ proc getTokensByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): seq[Tok
   result = self.getTokensByGroupKey(key)
   if result.len > 0:
     return
-  if self.allTokensByGroupKey.hasKey(key):
-    result = self.allTokensByGroupKey[key]
-    if result.len > 0:
-      return
-  return getAllTokens().filter(t => t.groupKey == key)
+  return self.getTokensOfGroupOnDemand(key)
 
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenItem =
   let tokens = self.getTokensByKeyOrGroupKeyFromAllTokens(key)
@@ -529,18 +511,6 @@ proc ensurePricesForGroup*(self: Service, key: string) =
   if keys.len > 0:
     self.ensurePricesForTokens(keys)
 
-proc findTokenByGroupKeyAndChainIdInTable(
-    tokensByGroupKey: Table[string, seq[TokenItem]],
-    groupKey: string,
-    chainId: int,
-): TokenItem =
-  if not tokensByGroupKey.hasKey(groupKey):
-    return nil
-  for token in tokensByGroupKey[groupKey]:
-    if token.chainId == chainId:
-      return token
-  return nil
-
 proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int): TokenItem =
   let tokens = self.getTokensByGroupKey(groupKey)
   if tokens.len > 0:
@@ -548,9 +518,9 @@ proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int
       if token.chainId == chainId:
         return token
 
-  var token = findTokenByGroupKeyAndChainIdInTable(self.allTokensByGroupKey, groupKey, chainId)
-  if not token.isNil:
-    return token
+  for token in self.getTokensOfGroupOnDemand(groupKey):
+    if token.chainId == chainId:
+      return token
 
   for cachedToken in self.tokensOfInterestByKey.values:
     if cachedToken.groupKey == groupKey and cachedToken.chainId == chainId:

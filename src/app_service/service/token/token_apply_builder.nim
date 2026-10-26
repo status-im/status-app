@@ -11,8 +11,8 @@
 ## on the same inputs, so a token-model dump is identical pre/post migration. The
 ## swap-vs-keep decision (shouldReplaceTokensCache) stays on the GUI slot because
 ## it depends on the live prior-cache size; the builder therefore builds
-## unconditionally and carries `tokensOfInterestCount` / `allTokensCount` so the
-## slot can run that cheap gate before swapping.
+## unconditionally and carries `tokensOfInterestCount` so the slot can run that
+## cheap gate before swapping.
 ##
 ## Pure: no Service, no threadpool, no backend — unit-testable against fixture JSON.
 
@@ -33,8 +33,6 @@ type
     groupsOfInterest*: seq[TokenGroupItem]
     tokenPreferencesJson*: string                        ## backend array verbatim, for QML
     tokenPreferences*: seq[TokenPreferencesItem]         ## decoded rows, slot merges into its table
-    allTokensCount*: int                                 ## gate input for the slot
-    allTokensByGroupKey*: Table[string, seq[TokenItem]]
 
   AllTokenListsApplyResult* = ref object of RootObj
     generation*: int
@@ -69,9 +67,9 @@ proc decodeTokens(node: JsonNode): seq[TokenDtoSafe] =
     return @[]
   Json.decode($node, seq[TokenDtoSafe], allowUnknownFields = true)
 
-proc buildRefreshTokensApply*(tokensOfInterestNode, allTokensNode, tokenPrefsNode: JsonNode): RefreshTokensApplyResult =
-  ## Build the finished tokens-of-interest / groups / preferences / all-tokens
-  ## structures from the three raw RPC response nodes.
+proc buildRefreshTokensApply*(tokensOfInterestNode, tokenPrefsNode: JsonNode): RefreshTokensApplyResult =
+  ## Build the finished tokens-of-interest / groups / preferences structures from
+  ## the two raw RPC response nodes.
   result = RefreshTokensApplyResult()
 
   let tokens = decodeTokens(tokensOfInterestNode).map(t => createTokenItem(t))
@@ -96,13 +94,6 @@ proc buildRefreshTokensApply*(tokensOfInterestNode, allTokensNode, tokenPrefsNod
         groupPosition: dto.groupPosition,
         visible: dto.visible,
         communityId: dto.communityId)
-
-  let allTokens = decodeTokens(allTokensNode).map(t => createTokenItem(t))
-  result.allTokensCount = allTokens.len
-  var newAllByGroup = initTable[string, seq[TokenItem]]()
-  for item in allTokens:
-    newAllByGroup.mgetOrPut(item.groupKey, @[]).add(item)
-  result.allTokensByGroupKey = newAllByGroup
 
 proc buildTokenGroupsApply*(tokensNode: JsonNode): seq[TokenGroupItem] =
   ## Byte-identical replica of the group build the onAsyncBuildGroupsForChainDone /
@@ -138,13 +129,13 @@ proc buildAllTokenListsApply*(allTokenListsNode: JsonNode): AllTokenListsApplyRe
 # wedge permanently (no more token refreshes until app restart). The worker adds a
 # structural finally as a second guarantee (see async_tasks.nim).
 
-proc assembleRefreshResult*(tokensOfInterestNode, allTokensNode, tokenPrefsNode: JsonNode,
+proc assembleRefreshResult*(tokensOfInterestNode, tokenPrefsNode: JsonNode,
                             generation: int, rpcError: string): RefreshTokensApplyResult =
   if rpcError.len > 0:
     result = RefreshTokensApplyResult(error: rpcError)
   else:
     try:
-      result = buildRefreshTokensApply(tokensOfInterestNode, allTokensNode, tokenPrefsNode)
+      result = buildRefreshTokensApply(tokensOfInterestNode, tokenPrefsNode)
     except Exception as e:
       result = RefreshTokensApplyResult(error: "Error building refresh tokens result: " & e.msg)
   result.generation = generation
