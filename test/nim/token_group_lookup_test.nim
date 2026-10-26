@@ -1,6 +1,5 @@
-## Unit tests for the bounded on-demand token-group lookup cache that replaced
-## the full all-tokens group-key index. The backend fetch is injected, so no
-## Qt/backend is needed.
+## Unit tests for the bounded on-demand token-group lookup cache. The backend
+## fetch is injected, so no Qt/backend is needed.
 
 import unittest, sequtils
 

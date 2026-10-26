@@ -484,7 +484,7 @@ proc getTokensByGroupKey*(self: Service, groupKey: string): seq[TokenItem] =
   return self.groupsOfInterestByKey[groupKey].tokens
 
 # A group outside the tokens of interest: one small synchronous backend lookup,
-# cached (empty results too) until the token lists refresh.
+# cached (empty results too) until the next applied tokens refresh.
 proc getTokensOfGroupOnDemand(self: Service, groupKey: string): seq[TokenItem] =
   return self.groupTokensLookups.lookup(groupKey, fetchTokensByGroupKey)
 

@@ -1,9 +1,5 @@
-## Bounded cache of on-demand token-group lookups.
-##
-## Replaces the index of the whole token catalogue by group key: a group that is
-## not among the tokens of interest is fetched from the backend once, and the
-## result (an empty one included) is kept until the token lists refresh. The
-## cache holds at most `capacity` groups, evicting the oldest.
+## Bounded cache of on-demand token-group lookups: empty results are cached too,
+## failed fetches are not; at most `capacity` groups, the oldest evicted first.
 
 import tables, deques, sequtils
 
