@@ -240,6 +240,101 @@ Item {
         }
 
         // Background (mobile) / lost focus (desktop): no camera, no scanning.
+        // Counts the scanner's entries into the Error state.
+        function errorEntries() {
+            const counter = { count: 0 }
+            controlUnderTest.stateChanged.connect(() => {
+                if (controlUnderTest.state === StatusQrCodeScanner.State.Error)
+                    counter.count++
+            })
+            return counter
+        }
+
+        // Keeps the codes in view (in turn, one per frame) for `ms`.
+        function hold(sink, codes, ms) {
+            const t0 = Date.now()
+            for (let i = 0; Date.now() - t0 < ms; ++i) {
+                verify(fakeSource.pushQr(sink, codes[i % codes.length], 640, 640))
+                wait(150)
+            }
+        }
+
+        // A rejected code held in view errors (and vibrates) once, not once
+        // per 2-second error cycle (issue 22943).
+        function test_heldInvalidCodeErrorsOnce() {
+            const sink = videoOutput().videoSink
+            const errors = errorEntries()
+            hold(sink, ["not-an-address"], 3000)
+            compare(errors.count, 1)
+            compare(tagSpy.count, 0)
+        }
+
+        // Taken out of view and shown again: it errors (and vibrates) again.
+        function test_rejectedCodeShownAgainErrorsAgain() {
+            const sink = videoOutput().videoSink
+            const errors = errorEntries()
+            hold(sink, ["not-an-address"], 3000)
+            compare(errors.count, 1)
+            wait(1500) // out of view: no frame shows it
+            hold(sink, ["not-an-address"], 500)
+            compare(errors.count, 2)
+        }
+
+        function errorText() {
+            const text = findChild(controlUnderTest, "qrScannerErrorText")
+            verify(!!text)
+            return text
+        }
+
+        // The error stays while the rejected code is in view, past the
+        // 2-second Error state: the scanner is ignoring it, not scanning.
+        function test_errorStaysWhileRejectedCodeInView() {
+            const sink = videoOutput().videoSink
+            hold(sink, ["not-an-address"], 4000)
+            compare(controlUnderTest.state, StatusQrCodeScanner.State.None)
+            compare(errorText().text, "not an address")
+        }
+
+        // Taken out of view: the error clears (the hint comes back).
+        function test_errorClearsWhenRejectedCodeGone() {
+            const sink = videoOutput().videoSink
+            verify(fakeSource.pushQr(sink, "not-an-address", 640, 640))
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.Error, 5000)
+            compare(errorText().text, "not an address")
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.None, 3000)
+            tryCompare(errorText(), "text", "", 2000)
+        }
+
+        // Two rejected codes in view: one error each, not alternating forever.
+        function test_twoInvalidCodesErrorOnceEach() {
+            const sink = videoOutput().videoSink
+            const errors = errorEntries()
+            hold(sink, ["not-an-address", "not-an-address-either"], 5500)
+            compare(errors.count, 2)
+        }
+
+        // A new session (reset, e.g. the dialog reopened) checks it again.
+        function test_resetRevalidatesRejectedCode() {
+            const sink = videoOutput().videoSink
+            const errors = errorEntries()
+            verify(fakeSource.pushQr(sink, "not-an-address", 640, 640))
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.Error, 5000)
+            controlUnderTest.reset()
+            hold(sink, ["not-an-address"], 1000)
+            compare(errors.count, 2)
+        }
+
+        // A valid code after a rejected one is still accepted.
+        function test_validCodeAfterRejectedCode() {
+            const sink = videoOutput().videoSink
+            verify(fakeSource.pushQr(sink, "not-an-address", 640, 640))
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.Error, 5000)
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.None, 3000)
+            verify(fakeSource.pushQr(sink, root.address, 640, 640))
+            tryCompare(tagSpy, "count", 1, 5000)
+            compare(tagSpy.signalArguments[0][0], root.address)
+        }
+
         function test_noScanWhileAppInactive() {
             const sink = videoOutput().videoSink
             const scanner = findChild(controlUnderTest, "statusQrCodeScanner")

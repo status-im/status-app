@@ -124,6 +124,18 @@ Item {
             compare(findChild(controlUnderTest, "qrScannerErrorText").text, "not an address")
         }
 
+        // Picking an image is an explicit action: a rejected code errors again
+        // each time (only the camera ignores a code it already rejected).
+        function test_rejectedImageCodeErrorsEachTime() {
+            verify(fake.writeQrImage(file("invalid-again.png"), "not-an-address"))
+            scan(file("invalid-again.png"))
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.Error, 5000)
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.None, 3000)
+            scan(file("invalid-again.png"))
+            tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.Error, 5000)
+            compare(tagSpy.count, 0)
+        }
+
         // As for a camera code: the validator's message stays after the
         // 2-second Error state ends, until something replaces it.
         function test_validatorErrorStaysAfterErrorState() {
@@ -131,7 +143,12 @@ Item {
             scan(file("invalid-stays.png"))
             tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.Error, 5000)
             tryCompare(controlUnderTest, "state", StatusQrCodeScanner.State.None, 3000)
-            compare(findChild(controlUnderTest, "qrScannerErrorText").text, "not an address")
+            const text = findChild(controlUnderTest, "qrScannerErrorText")
+            compare(text.text, "not an address")
+            // then gone after 4 seconds in all, like the other image errors
+            wait(1000)
+            compare(text.text, "not an address")
+            tryCompare(text, "text", "", 2000)
         }
 
         // An image error replaces a lingering validator message, and leaves

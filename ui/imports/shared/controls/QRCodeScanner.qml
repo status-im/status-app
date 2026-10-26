@@ -74,6 +74,8 @@ ColumnLayout {
     function reset() {
         imageDecoder.cancel()
         errorTimer.stop()
+        errorClearTimer.stop()
+        d.rejectedTags = ({})
         d.errorMessage = ""
         d.clearImageError()
         root.state = StatusQrCodeScanner.State.None
@@ -98,6 +100,22 @@ ColumnLayout {
         property string errorMessage
         property string imageErrorMessage
         property int counter: 0
+
+        property var rejectedTags: ({})
+        readonly property int rejectedTagGoneMs: 1000
+
+        // Whether errorMessage is about a camera code: it stays while the code
+        // is in view and clears once it is gone. A rejected image code's
+        // message lasts imageErrorDurationMs, like the other image errors.
+        property bool cameraError: false
+
+        // The Error state pauses decoding: the rejected codes still in view
+        // count as seen when it ends, or the pause would read as "gone".
+        function refreshRejectedTags() {
+            const now = Date.now()
+            for (const tag in d.rejectedTags)
+                d.rejectedTags[tag] = now
+        }
 
         readonly property int imageErrorDurationMs: 4000
 
@@ -132,14 +150,18 @@ ColumnLayout {
                 if (!validator.validate(tag)) {
                     root.state = StatusQrCodeScanner.State.Error
                     d.errorMessage = validator.errorMessage
+                    errorClearTimer.stop()
                     errorTimer.start()
-                    return
+                    MobileUI.vibrate() // with the error, as on success
+                    return false
                 }
             }
             d.errorMessage = ""
-            root.validTagFound(tag)
+            // before the signal: a handler may move on and tear the scanner down
             MobileUI.vibrate()
+            root.validTagFound(tag)
             root.state = StatusQrCodeScanner.State.Success
+            return true
         }
     }
 
@@ -149,9 +171,17 @@ ColumnLayout {
         running: false
         repeat: false
         onTriggered: {
-            MobileUI.vibrate()
+            d.refreshRejectedTags()
             root.state = StatusQrCodeScanner.State.None
+            errorClearTimer.interval = d.cameraError ? d.rejectedTagGoneMs
+                                                     : d.imageErrorDurationMs - errorTimer.interval
+            errorClearTimer.restart()
         }
+    }
+
+    Timer {
+        id: errorClearTimer
+        onTriggered: d.errorMessage = ""
     }
 
     Timer {
@@ -174,6 +204,7 @@ ColumnLayout {
             }
             // The first code the validators accept; else the first one, so the
             // validator's own error shows (as for a camera code).
+            d.cameraError = false
             d.validateTag(texts.find(t => d.passesValidators(t)) ?? texts[0])
         }
 
@@ -352,8 +383,21 @@ ColumnLayout {
                 scanning: tap.enabled
                 // One code per scan: a frame can hold several.
                 onTagFound: tag => {
-                    if (root.state === StatusQrCodeScanner.State.None)
-                        d.validateTag(tag)
+                    if (root.state !== StatusQrCodeScanner.State.None)
+                        return
+                    const now = Date.now()
+                    const seen = d.rejectedTags[tag]
+                    if (seen !== undefined && now - seen <= d.rejectedTagGoneMs) {
+                        d.rejectedTags[tag] = now // still in view
+                        if (d.cameraError && errorClearTimer.running)
+                            errorClearTimer.restart() // its error stays
+                        return
+                    }
+                    d.cameraError = true
+                    if (d.validateTag(tag))
+                        delete d.rejectedTags[tag]
+                    else
+                        d.rejectedTags[tag] = now
                 }
             }
         }
@@ -368,6 +412,7 @@ ColumnLayout {
     }
 
     StatusBaseText {
+        id: errorText
         objectName: "qrScannerErrorText"
         Layout.fillWidth: true
 
@@ -383,7 +428,9 @@ ColumnLayout {
     StatusBaseText {
         Layout.fillWidth: true
 
-        visible: d.cameraReady && !!cameraLoader.item?.cameraAvailable && root.state === StatusQrCodeScanner.State.None
+        // one message at a time: not next to an error
+        visible: d.cameraReady && !!cameraLoader.item?.cameraAvailable
+                 && root.state === StatusQrCodeScanner.State.None && !errorText.visible
         wrapMode: Text.WordWrap
         color: Theme.palette.directColor1
         Layout.alignment: Qt.AlignHCenter
