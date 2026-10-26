@@ -261,6 +261,9 @@ rpc(getBalancesByChain, "wallet"):
 rpc(restartWalletReloadTimer, "wallet"):
   discard
 
+rpc(refreshBalancesAfterReconnect, "wallet"):
+  discard
+
 rpc(isChecksumValidForAddress, "wallet"):
   address: string
 

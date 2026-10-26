@@ -141,6 +141,13 @@ proc reloadAccountTokens*(self: Service) =
     let errDesription = e.msg
     error "error refetchOwnedCollectibles: ", errDesription
 
+proc refreshBalancesAfterReconnect*(self: Service) =
+  try:
+    discard backend.refreshBalancesAfterReconnect()
+  except Exception as e:
+    let errDesription = e.msg
+    error "error refreshBalancesAfterReconnect: ", errDesription
+
 proc getCurrencyValueForToken*(self: Service, tokenKey: string, amountInt: UInt256): float64 =
   return self.currencyService.getCurrencyValueForToken(tokenKey, amountInt)
 
