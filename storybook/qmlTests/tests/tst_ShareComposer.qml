@@ -119,15 +119,21 @@ Item {
             compare(sendSpy.signalArguments[0][1].length, 7)
         }
 
-        function test_cappedComposerKeepsOnlyMaxUploadFilesImages() {
+        // The input deduplicates by string, so "./" segments turn the same
+        // few fixture files into as many distinct entries as needed.
+        function distinctImagePaths(count) {
             const names = ["backup-popup", "qr-scan-success", "status-gradient-dot", "status-logo-circle",
                            "status-logo-dev-circle", "status-logo-icon", "status-logo"]
-            const paths = names.map(n => Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/" + n + ".png")
-                                          .toString().slice("file://".length))
-            const drawer = create({ text: "", imagePaths: paths, unlimitedImages: false })
+            const dir = Qt.resolvedUrl("../../../ui/StatusQ/src/assets/png/").toString().slice("file://".length)
+            return Array.from({ length: count }, (_, i) =>
+                dir + "./".repeat(Math.floor(i / names.length)) + names[i % names.length] + ".png")
+        }
+
+        function test_cappedComposerKeepsThirtyImagesAndShowsTheLimit() {
+            const drawer = create({ text: "", imagePaths: distinctImagePaths(31), unlimitedImages: false })
             const chatInput = findChild(drawer, "statusChatInput")
-            compare(chatInput.maxImages, Constants.maxUploadFiles)
-            tryCompare(chatInput.fileUrlsAndSources, "length", Constants.maxUploadFiles)
+            tryCompare(chatInput.fileUrlsAndSources, "length", 30)
+            verify(findChild(chatInput, "imageQtyValidator").visible)
         }
 
         function test_plainPathsAreAttachedAsFileUrls() {
