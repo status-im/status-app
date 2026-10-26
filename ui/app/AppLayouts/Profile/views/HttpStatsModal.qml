@@ -168,20 +168,11 @@ StatusDialog {
             // A slower answer to a page already left must not replace the one on screen.
             if (!current || endpoints !== (detailsKind || "none") || key !== detailsKey)
                 return
-            try {
-                const response = JSON.parse(report || "{}")
-                if (response.result) {
-                    d.goStats = response.result
-                    d.goError = ""
-                    d.loadedEndpoints = endpoints === "none" ? "" : endpoints + ":" + key
-                } else {
-                    d.goStats = null
-                    d.goError = error || (response.error ? response.error.message : qsTr("No data"))
-                }
-            } catch (e) {
-                d.goStats = null
-                d.goError = e.message
-            }
+            const response = Report.parseResponse(report, error, qsTr("No data"))
+            d.goStats = response.result
+            d.goError = response.error
+            if (response.result)
+                d.loadedEndpoints = endpoints === "none" ? "" : endpoints + ":" + key
             fillAllModel()
         }
 

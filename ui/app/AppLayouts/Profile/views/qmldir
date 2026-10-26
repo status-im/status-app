@@ -11,6 +11,7 @@ EnsListView 1.0 EnsListView.qml
 EnsTermsAndConditionsView 1.0 EnsTermsAndConditionsView.qml
 HttpStatsModal 1.0 HttpStatsModal.qml
 HttpTrafficDashboard 1.0 HttpTrafficDashboard.qml
+singleton TrafficFormat 1.0 TrafficFormat.qml
 LanguageView 1.0 LanguageView.qml
 LogosNetworkView 1.0 LogosNetworkView.qml
 NotificationsView 1.0 NotificationsView.qml

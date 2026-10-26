@@ -1,10 +1,37 @@
 .pragma library
 
-// Figures the HTTP statistics screen derives from a wallet_getHTTPTrafficReport
-// report. Numbers only: wording and colours stay with the views.
+// Figures and markup the traffic dashboards derive from their reports.
+// No wording: that stays with the views.
 
 function bytesOf(row) {
     return row.bytesSent + row.bytesReceived
+}
+
+//! Decimals for a byte count: two from a gigabyte, none from 100 MB, one below.
+function sizePrecision(bytes) {
+    return bytes >= 1024 * 1024 * 1024 ? 2 : (bytes >= 100 * 1024 * 1024 ? 0 : 1)
+}
+
+//! For names from the report that go into styled text.
+function escaped(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
+function colored(text, color) {
+    return "<font color=\"%1\">%2</font>".arg(String(color)).arg(text)
+}
+
+//! A JSON-RPC envelope as {result, error}: the result, or null and what went
+//! wrong — the caller's error first, then the envelope's, then `fallback`.
+function parseResponse(report, error, fallback) {
+    try {
+        const response = JSON.parse(report || "{}")
+        if (response.result)
+            return {result: response.result, error: ""}
+        return {result: null, error: error || (response.error ? response.error.message : fallback)}
+    } catch (e) {
+        return {result: null, error: e.message}
+    }
 }
 
 //! Go writes nanoseconds, which Date.parse does not take.
