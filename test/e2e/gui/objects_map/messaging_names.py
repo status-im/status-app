@@ -9,6 +9,13 @@ contactsColumnView_chatList = {"container": statusDesktop_mainWindow, "objectNam
 mainWindow_startChatButton_StatusIconTabButton = {"container": statusDesktop_mainWindow, "objectName": "startChatButton", "type": "HeaderButton", "visible": True}
 mainWindow_search_edit_TextEdit = {"container": statusDesktop_mainWindow, "id": "edit", "type": "TextEdit", "unnamed": 1, "visible": True}
 chatList_ListView = {"container": contactsColumnView_chatList, "objectName": "chatListItems", "type": "StatusListView", "visible": True}
+chatListItemDropAreaItem = {
+    "container": chatList_ListView,
+    "id": "chatListDelegate",
+    "type": "DropArea",
+    "isCategory": False,
+    "visible": True,
+}
 chatList_StatusChatListItem = {"container": chatList_ListView, "type": "StatusChatListItem", "visible": True}
 
 # Tool Bar lives in section chrome, not inside ChatView
@@ -38,6 +45,36 @@ groupMessagesItem = {"container": groupchatLogView_chatMessageViewDelegate_Messa
 chatMessageViewDelegate_ChannelIdentifierView = {"container": chatLogView_chatMessageViewDelegate_MessageView, "type": "ChannelIdentifierView", "unnamed": 1, "visible": True}
 chatLogView_Item = {"container": chatView_log, "type": "Item", "unnamed": 1, "visible": True}
 statusChatInfoButton = {"container": mainWindow_statusToolBar_StatusToolBar, "objectName": "statusChatInfoButtonNameText", "type": "TruncatedTextWithTooltip", "visible": True}
+threadHeaderTitle = {"container": mainWindow_statusToolBar_StatusToolBar, "objectName": "threadHeaderTitle", "type": "StatusBaseText", "visible": True}
+threadHeaderMenuButton = {"container": statusDesktop_mainWindow, "objectName": "threadHeaderMenuButton", "type": "StatusFlatButton", "visible": True}
+threadContextMenuFollow = {"container": statusDesktop_mainWindow_overlay, "objectName": "threadContextMenu_follow", "type": "StatusMenuItem", "visible": True, "enabled": True}
+threadContextMenuEditName = {"container": statusDesktop_mainWindow_overlay, "objectName": "threadContextMenu_editName", "type": "StatusMenuItem", "visible": True, "enabled": True}
+threadContextMenuMute = {
+    "container": statusDesktop_mainWindow_overlay,
+    "text": "Mute thread",
+    "type": "StatusMenuItem",
+    "visible": True,
+    "enabled": True,
+}
+muteChatMenuFor15Mins = {
+    "container": statusDesktop_mainWindow_overlay,
+    "objectName": "muteChatMenu_for15Mins",
+    "type": "StatusMenuItem",
+    "visible": True,
+    "enabled": True,
+}
+muteChatMenuUntilTurnedOn = {
+    "container": statusDesktop_mainWindow_overlay,
+    "objectName": "muteChatMenu_untilTurnedOn",
+    "type": "StatusMenuItem",
+    "visible": True,
+    "enabled": True,
+}
+threadNameInput = {"container": statusDesktop_mainWindow, "objectName": "threadNameInput", "type": "StatusTextArea", "visible": True}
+threadContextMenuDelete = {"container": statusDesktop_mainWindow_overlay, "objectName": "threadContextMenu_delete", "type": "StatusMenuItem", "visible": True, "enabled": True}
+threadContextMenuUnmute = {"container": statusDesktop_mainWindow_overlay, "objectName": "threadContextMenu_unmuteThread", "type": "StatusMenuItem", "visible": True, "enabled": True}
+threadDeleteConfirmPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "threadContextMenu_confirmDeletePopup", "visible": True}
+threadDeleteConfirmButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "threadContextMenu_confirmDeleteButton", "type": "StatusButton", "visible": True}
 moreOptionsButton_StatusFlatRoundButton = {"container": mainWindow_statusToolBar_StatusToolBar, "objectName": "chatToolbarMoreOptionsButton", "type": "StatusFlatRoundButton", "visible": True}
 mainWindow_Overlay = {"container": statusDesktop_mainWindow, "type": "Overlay", "unnamed": 1, "visible": True}
 edit_name_and_image_StatusMenuItem = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "editNameAndImageMenuItem", "text": "Edit name and image", "type": "StatusMenuItem", "visible": True}
@@ -56,6 +93,12 @@ paymentRequestAccountSelector = {"container": statusDesktop_mainWindow_overlay, 
 paymentRequestAddButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "addButton", "type": "StatusButton", "visible": True}
 mainWindow_imageBtn_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "id": "imageBtn", "type": "StatusFlatRoundButton", "unnamed": 1, "visible": True}
 mainWindow_statusChatInput_StatusChatInput = {"container": statusDesktop_mainWindow, "objectName": "statusChatInput", "type": "Control", "visible": True}
+threadChatInput = {"container": statusDesktop_mainWindow, "objectName": "statusChatInput", "type": "Control", "isThread": True, "visible": True}
+threadMessageInputField = {"container": threadChatInput, "objectName": "messageInputField", "type": "TextArea", "visible": True}
+threadSendButton = {"container": threadChatInput, "objectName": "statusChatInputSendButton", "type": "Control", "visible": True}
+newThreadChatInput = {"container": statusDesktop_mainWindow, "objectName": "newThreadChatInput", "type": "Control", "visible": True}
+newThreadMessageInputField = {"container": newThreadChatInput, "objectName": "messageInputField", "type": "TextArea", "visible": True}
+newThreadSendButton = {"container": newThreadChatInput, "objectName": "statusChatInputSendButton", "type": "Control", "visible": True}
 mainWindow_suggestionsBox = {"container": statusDesktop_mainWindow, "objectName": "suggestionsBox", "type": "Control", "visible": True}
 mainWindow_suggestionBoxList = {"container": mainWindow_suggestionsBox, "objectName": "suggestionBoxList", "type": "StatusListView", "visible": True}
 suggestionsBox_mentionSuggestion_Rectangle = {"container": mainWindow_suggestionBoxList, "type": "Rectangle", "visible": True}
@@ -90,7 +133,10 @@ chatMessageViewDelegate_messageContextMenuEditMenuItem = {"container": messageCo
 chatMessageViewDelegate_messageContextMenuDeleteButton = {"container": messageContextView, "objectName": "messageContextMenu_delete", "type": "StatusMenuItem", "visible": True}
 chatMessageViewDelegate_messageContextMenuReplyButton = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusFlatRoundButton", "visible": True}
 chatMessageViewDelegate_messageContextMenuReplyMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_replyTo", "type": "StatusMenuItem", "visible": True}
+chatMessageViewDelegate_messageContextMenuOpenThreadMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_openThread", "type": "StatusMenuItem", "visible": True}
+chatMessageViewDelegate_messageContextMenuCopyMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_copy", "type": "StatusMenuItem", "visible": True}
 mainWindow_replyPanel_StatusChatInputReplyPanel = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputReplyArea", "type": "StatusChatInputReplyPanel", "visible": True}
+closeThreadPanelButton = {"container": statusDesktop_mainWindow, "objectName": "closeThreadPanelButton", "type": "StatusFlatRoundButton", "visible": True}
 layout_recentMessagesButton_AnchorButton = {"checkable": False, "container": mainWindow_ChatMessagesView, "id": "recentMessagesButton", "type": "AnchorButton", "unnamed": 1, "visible": True}
 
 # Message link preview
