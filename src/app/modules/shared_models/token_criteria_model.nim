@@ -13,6 +13,7 @@ type
     ShortName
     Name
     Amount
+    Decimals
     CriteriaMet
 
 QtObject:
@@ -33,6 +34,7 @@ QtObject:
       ModelRole.ShortName.int:"shortName",
       ModelRole.Name.int:"name",
       ModelRole.Amount.int:"amount",
+      ModelRole.Decimals.int:"decimals",
       ModelRole.CriteriaMet.int:"available",
     }.toTable
 
@@ -68,6 +70,8 @@ QtObject:
         result = newQVariant(item.getName())
       of ModelRole.Amount:
         result = newQVariant(item.getAmount())
+      of ModelRole.Decimals:
+        result = newQVariant(item.getDecimals())
       of ModelRole.CriteriaMet:
         result = newQVariant(item.getCriteriaMet())
 
