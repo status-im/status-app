@@ -63,7 +63,8 @@ proc resolveCriteriaChains*(toSave: seq[SaveCriterion], stored: seq[TokenCriteri
   ## An ERC20 criterion keeps every chain a stored criterion of the same group lists
   ## (a save never narrows a permission) and gets the group's chains of the stored
   ## chains' network modes; a token not stored yet gets those of the current mode.
-  ## Other criteria pass through untouched.
+  ## status-go scopes the catalogue to the admin's active networks of the current mode,
+  ## so group chains come only from those. Other criteria pass through untouched.
   if not toSave.anyIt(it.criterion.`type` == TokenType.ERC20):
     return CriteriaChainsResult(criteria: toSave.mapIt(it.criterion))
 
@@ -84,8 +85,8 @@ proc resolveCriteriaChains*(toSave: seq[SaveCriterion], stored: seq[TokenCriteri
         let tokenKey = tokenKeyOf(c.key)
         if tokenKey.len > 0:
           keys.add(tokenKey)
-    # GetTokensByKeys applies no network-mode filter, so stored keys of the other
-    # mode still resolve to their group.
+    # Stored keys outside the active-network catalogue don't resolve and keep only
+    # their stored chains.
     for sk in storedKeys:
       keys.add(sk)
     if keys.len > 0:
