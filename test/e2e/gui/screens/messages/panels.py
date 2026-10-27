@@ -13,6 +13,7 @@ from gui.elements.text_edit import TextEdit
 from gui.objects_map import communities_names, messaging_names
 from driver.objects_access import walk_children
 from helpers.chat_helper import skip_message_backup_popup_if_visible
+from helpers.thread_helper import messages_list_notifications_count
 
 
 class LeftPanel(QObject):
@@ -35,6 +36,10 @@ class LeftPanel(QObject):
             if name:
                 chats_list.append(name)
         return chats_list
+
+    @allure.step('Get notifications count for chat list item')
+    def notifications_count(self, chat_name: str) -> int:
+        return messages_list_notifications_count(self._chat_list_item.real_name, chat_name)
 
     @allure.step('Click chat item')
     def click_chat_by_name(self, chat_name: str, attempts: int = 4):
