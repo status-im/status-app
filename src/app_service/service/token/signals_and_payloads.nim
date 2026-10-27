@@ -4,6 +4,8 @@
 
 const SIGNAL_TOKEN_HISTORICAL_DATA_LOADED* = "tokenHistoricalDataLoaded"
 const SIGNAL_TOKENS_LIST_UPDATED* = "tokensListUpdated"
+# keys whose lookup settled as missing without the token list changing
+const SIGNAL_TOKEN_KEYS_SETTLED* = "tokenKeysSettled"
 const SIGNAL_TOKENS_DETAILS_UPDATED* = "tokensDetailsUpdated"
 const SIGNAL_TOKENS_MARKET_VALUES_ABOUT_TO_BE_UPDATED* = "tokensMarketValuesAboutToBeUpdated"
 const SIGNAL_TOKENS_MARKET_VALUES_UPDATED* = "tokensMarketValuesUpdated"

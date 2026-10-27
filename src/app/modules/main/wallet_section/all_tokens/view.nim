@@ -315,6 +315,10 @@ QtObject:
       return ""
     return $(%* token)
 
+  # A Constants.TokenLookupState value; never blocks for a token key (a group key may sync-RPC).
+  proc getTokenLookupState*(self: View, key: string): int {.slot.} =
+    return self.delegate.getTokenLookupState(key).int
+
   proc ensurePricesForGroup*(self: View, key: string) {.slot.} =
     self.delegate.ensurePricesForGroup(key)
 
