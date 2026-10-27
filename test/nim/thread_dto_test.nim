@@ -3,6 +3,11 @@ import std/[json, unittest]
 import app_service/service/message/dto/thread
 
 suite "thread dto":
+  test "archive state defaults to false and parses both transitions":
+    check not parseJson("""{"threadId":"legacy"}""").toThreadDto().archived
+    check parseJson("""{"archived":true}""").toThreadDto().archived
+    check not parseJson("""{"archived":false}""").toThreadDto().archived
+
   test "accepts batch thread data without participant previews":
     let dto = parseJson("""{
       "threadId": "thread-id",

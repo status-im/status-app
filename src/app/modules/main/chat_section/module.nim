@@ -347,7 +347,7 @@ proc removeSubmodule(self: Module, chatId: string) =
   self.chatContentModules.del(chatId)
 
 proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, threadId: string,
-    threadName: string, hasUnreadMessages: bool, notificationsCount: int): ChatItem =
+    threadName: string, hasUnreadMessages: bool, notificationsCount: int, archived: bool): ChatItem =
   return chat_item.initChatItem(
     id = threadId,
     name = threadName,
@@ -376,6 +376,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     isThread = true,
     parentChatId = parentChatId,
     sortTimestamp = parentItem.lastMessageTimestamp,
+    archived = archived,
   )
 
 proc ensureThreadContentModule(self: Module, threadItem: ChatItem) =
@@ -779,7 +780,7 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
     return
 
   let threadItem = self.createThreadItem(parentItem, parentChatId, threadId, threadName,
-    hasUnreadMessages, notificationsCount)
+    hasUnreadMessages, notificationsCount, self.controller.getThreadById(parentChatId, threadId).archived)
   self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
   self.threadChatIds.incl(threadId)
   if setActive:
@@ -817,6 +818,7 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     var pendingThreadIds = initHashSet[string]()
     for thread in parentThreads:
       if not self.view.chatsModel().getItemById(thread.threadId).isNil:
+        self.view.chatsModel().updateArchivedById(thread.threadId, thread.archived)
         self.view.renameThreadItem(thread.threadId, thread.name)
         if self.view.getOpenThreadId() == thread.threadId:
           self.view.setOpenThread(thread.threadId, thread.name, parentChatId)
@@ -831,7 +833,7 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
         continue
       pendingThreadIds.incl(thread.threadId)
       items.add(self.createThreadItem(parentItem, parentChatId, thread.threadId, thread.name,
-        thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount))
+        thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount, thread.archived))
 
     self.view.chatsModel().appendItemsAfterParent(items, parentChatId)
     for item in items:
