@@ -195,6 +195,7 @@ StackView {
                 assetsLoading: root.assetsLoading
                 acquireTokenList: root.acquireTokenList
                 releaseTokenList: root.releaseTokenList
+                getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
                 collectiblesModel: nonOwnerCollectibles
                 channelsModel: allChannelsTransformed
                 communityDetails: root.communityDetails
@@ -274,7 +275,7 @@ StackView {
                     const holdings = dirtyValues.holdingsRequired ?
                                        ModelUtils.modelToArray(
                                            dirtyValues.selectedHoldingsModel,
-                                           ["key", "type", "amount", "symbol"]) : []
+                                           ["key", "type", "amount", "symbol", "name", "decimals"]) : []
                     const channels = root.showChannelSelector ?
                                    ModelUtils.modelToArray(
                                        dirtyValues.selectedChannelsModel, ["key"]) :
@@ -291,7 +292,7 @@ StackView {
                     const holdings = dirtyValues.holdingsRequired ?
                                        ModelUtils.modelToArray(
                                            dirtyValues.selectedHoldingsModel,
-                                           ["key", "type", "amount", "symbol"])
+                                           ["key", "type", "amount", "symbol", "name", "decimals"])
                                      : []
                     const channels = ModelUtils.modelToArray(
                                        dirtyValues.selectedChannelsModel, ["key"])

@@ -41,6 +41,13 @@ StatusDropdown {
     property string assetKey: ""
     property string assetAmount: "0"
     property int assetMultiplierIndex: 0
+    // Shown when assetKey is missing from assetsModel (e.g. an existing cross-chain criterion)
+    property string assetFallbackSymbol: ""
+    property string assetFallbackName: ""
+    property int assetFallbackDecimals: 0
+    // assetKey's token data is still being fetched; assetAmount is set once it lands
+    property bool assetLoading: false
+    property string assetNote: ""
 
     property string collectibleKey: ""
     property string collectibleAmount: "1"
@@ -83,6 +90,11 @@ StatusDropdown {
         d.initialHoldingMode = HoldingTypes.Mode.Add
 
         root.assetKey = ""
+        root.assetFallbackSymbol = ""
+        root.assetFallbackName = ""
+        root.assetFallbackDecimals = 0
+        root.assetLoading = false
+        root.assetNote = ""
         root.collectibleKey = ""
         root.ensDomainName = ""
 
@@ -111,6 +123,10 @@ StatusDropdown {
             return tabs
         }
         readonly property var tabsModelNoEns: [qsTr("Assets"), qsTr("Collectibles")]
+
+        readonly property ModelChangeTracker assetsChanges: ModelChangeTracker {
+            model: root.assetsModel
+        }
 
         readonly property bool assetsReady: root.assetAmount !== "0" && root.assetKey
         readonly property bool collectiblesReady: root.collectibleAmount !== "0" && root.collectibleKey
@@ -181,6 +197,7 @@ StatusDropdown {
 
         StatusIconTextButton {
             id: backButton
+            objectName: "backButton"
 
             Layout.preferredWidth: d.backButtonWidth
             Layout.preferredHeight: d.backButtonHeight
@@ -287,6 +304,7 @@ StatusDropdown {
 
         ExtendedDropdownContent {
             id: listPanel
+            objectName: "holdingsListPanel"
 
             communityId: root.communityId
             assetsModel: root.assetsModel
@@ -338,10 +356,11 @@ StatusDropdown {
                     d.updateSelected = false
                 }
 
-                if(d.extendedDropdownType === ExtendedDropdownContent.Type.Assets)
+                if(d.extendedDropdownType === ExtendedDropdownContent.Type.Assets) {
                     root.assetKey = key
-                else
-                {
+                    root.assetLoading = false
+                    root.assetNote = ""
+                } else {
                     root.collectibleKey = key
                     const item = PermissionsHelpers.getTokenByKey(root.collectiblesModel, true, root.collectibleKey)
 
@@ -404,18 +423,30 @@ StatusDropdown {
 
         TokenPanel {
             id: assetPanel
+            objectName: "assetPanel"
 
             readonly property string effectiveAmount: amountValid ? amount : "0"
+            // Re-read on assetsModel changes, e.g. when acquireTokenList fills it after opening.
+            readonly property var assetRow: {
+                d.assetsChanges.revision
+                return PermissionsHelpers.findTokenByKey(root.assetsModel, false, root.assetKey)
+            }
             property bool completed: false
 
-            tokenName: PermissionsHelpers.getTokenNameByKey(root.assetsModel, false, root.assetKey)
-            tokenShortName: PermissionsHelpers.getTokenShortNameByKey(root.assetsModel, false, root.assetKey)
-            tokenImage: PermissionsHelpers.getTokenIconByKey(root.assetsModel, false, root.assetKey)
-            tokenDecimals: PermissionsHelpers.getTokenDecimalsByKey(root.assetsModel, false, root.assetKey)
+            tokenName: assetRow ? assetRow.name : root.assetFallbackName
+            tokenShortName: assetRow ? assetRow.shortName ?? "" : root.assetFallbackSymbol
+            tokenImage: {
+                if (assetRow)
+                    return assetRow.iconSource || Assets.png(Constants.defaultTokenIcon)
+                return Constants.tokenIcon(root.assetFallbackSymbol) || Assets.png(Constants.defaultTokenIcon)
+            }
+            tokenDecimals: assetRow ? assetRow.decimals ?? 0 : root.assetFallbackDecimals
             tokenAmount: PermissionsHelpers.getTokenRemainingSupplyByKey(root.assetsModel, false, root.assetKey)
             amountText: d.assetAmountText
             tokenCategoryText: qsTr("Asset")
-            addOrUpdateButtonEnabled: d.assetsReady
+            loading: root.assetLoading
+            infoText: root.assetNote
+            addOrUpdateButtonEnabled: d.assetsReady && !root.assetLoading
             mode: d.effectiveHoldingMode
 
             ListModel {
@@ -453,6 +484,10 @@ StatusDropdown {
                     root.assetAmount = effectiveAmount
             }
 
+            onLoadingChanged: {
+                if (!assetPanel.loading && root.assetAmount !== "0")
+                    assetPanel.setAmount(root.assetAmount, root.assetMultiplierIndex)
+            }
             onMultiplierIndexChanged: root.assetMultiplierIndex = multiplierIndex
             onAmountTextChanged: d.assetAmountText = amountText
             onAddClicked: root.addAsset(root.assetKey, root.assetAmount)
