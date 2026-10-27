@@ -93,6 +93,14 @@ proc init*(self: Controller) =
     let args = ContactArgs(e)
     self.delegate.contactUpdated(args.contactId)
 
+  self.events.on(SIGNAL_CONTACT_ADDED) do(e: Args):
+    let args = ContactArgs(e)
+    self.delegate.contactUpdated(args.contactId)
+
+  self.events.on(SIGNAL_CONTACT_REMOVED) do(e: Args):
+    let args = ContactRemovedArgs(e)
+    self.delegate.contactUpdated(args.contactId)
+
   self.events.on(SIGNAL_CONTACTS_STATUS_UPDATED) do(e: Args):
     let args = ContactsStatusUpdatedArgs(e)
     self.delegate.contactsStatusUpdated(args.statusUpdates)

@@ -3,6 +3,7 @@ import json, strutils, chronicles, sequtils, tables, std/algorithm
 import io_interface
 import ../io_interface as delegate_interface
 import view, controller
+import ./chat_postability
 import ./models/[result_model, result_item, chat_search_item, chat_search_model, location_menu_model, location_menu_item, location_menu_sub_item, location_menu_sub_model]
 import ../../shared_models/message_item
 from ../../shared_models/section_item import SectionType
@@ -412,9 +413,11 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
   var colorId: int = 0
   var sectionId = personalChatSectionId
   var sectionName = personalChatSectionName
+  var contactRequestState = ContactRequestState.None
   if chat.chatType == ChatType.OneToOne:
     # TODO find a way to populate the chat with the contact details and use as single source of truth
     let contactDetails = self.controller.getContactDetails(chat.id)
+    contactRequestState = contactDetails.dto.contactRequestState
     chatName = contactDetails.defaultDisplayName
     chatImage = contactDetails.icon
     colorId = self.controller.getColorId(chat.id)
@@ -446,7 +449,7 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
       if isCommunity:
         self.controller.getCommunityById(chat.communityId).getCommunityChat(chat.id).canPost
       else:
-        chat.canPost,
+        canPostInChat(chat, contactRequestState, singletonInstance.userProfile.getPubKey()),
     membersCount = chat.members.len,
     onlineStatus = onlineStatus,
   )
@@ -496,7 +499,8 @@ method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
       # 1-1 chat properties are updated when a contact is updated, so we can skip it here
       continue
     self.view.chatSearchModel().updateChatItem(chat.id, chat.name, chat.color, chat.icon, chat.emoji)
-    self.view.chatSearchModel().updateCanPostOnChatItem(chat.id, chat.canPost)
+    self.view.chatSearchModel().updateCanPostOnChatItem(chat.id,
+      canPostInChat(chat, ContactRequestState.None, singletonInstance.userProfile.getPubKey()))
     self.view.chatSearchModel().updateMembersCountOnChatItem(chat.id, chat.members.len)
 
 method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto]) =
@@ -507,6 +511,8 @@ method contactUpdated*(self: Module, contactId: string) =
   let contactDetails = self.controller.getContactDetails(contactId)
   self.view.chatSearchModel().updateChatItem(contactId, contactDetails.defaultDisplayName, color = "",
     contactDetails.icon, emoji = "")
+  self.view.chatSearchModel().updateCanPostOnChatItem(contactId,
+    canPostInOneToOne(contactDetails.dto.contactRequestState))
 
 method communityEdited*(self: Module, community: CommunityDto) =
   self.view.chatSearchModel().updateSectionNameOnChats(community.id, community.name)
