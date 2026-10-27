@@ -27,6 +27,7 @@ Item {
 
         keycardState: ctrlState.currentText
         keycardUid: "keycard-uid-1"
+        keycardInitialized: ctrlState.currentText !== "empty-keycard"
         keyUid: ctrlOnlyPin.checked ? "" : "profile-key-uid-1"
         keycardStatusAvailable: true
         remainingPinAttempts: ctrlBlocked.checked ? 0 : 3

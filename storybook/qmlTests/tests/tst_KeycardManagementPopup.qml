@@ -23,6 +23,7 @@ Item {
         property int availableSlots: 5
         property bool pairingSupported: true
         property string keycardUid: "keycard-uid-1"
+        property bool keycardInitialized: true
         property string keyUid: "profile-key-uid"
         property string cardMetadataName: "My Keycard"
         property string cardMetadataWalletAccountsJson: "[]"
@@ -109,6 +110,7 @@ Item {
         KeycardManagementPopup {
             flow: Constants.keycard.flow.readKeycard
             keycardUid: mockStore.keycardUid
+            keycardInitialized: mockStore.keycardInitialized
             keyUid: mockStore.keyUid
             cardMetadataName: mockStore.cardMetadataName
             cardMetadataWalletAccountsJson: mockStore.cardMetadataWalletAccountsJson
@@ -298,6 +300,7 @@ Item {
 
         KeycardManagementPopup {
             keycardUid: mockStore.keycardUid
+            keycardInitialized: mockStore.keycardInitialized
             keyUid: mockStore.keyUid
             cardMetadataName: mockStore.cardMetadataName
             cardMetadataWalletAccountsJson: mockStore.cardMetadataWalletAccountsJson
@@ -720,6 +723,45 @@ Item {
                       }, 3000)
             compare(mockStore.calls.length, 0,
                     "must not start unblock until the recovery phrase is submitted")
+        }
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_importFirstPinStep"
+        when: windowShown
+
+        property var popup: null
+
+        function cleanup() {
+            if (popup)
+                popup.close()
+            mockStore.keycardUid = "keycard-uid-1"
+            mockStore.keyUid = "profile-key-uid"
+            mockStore.keycardInitialized = true
+        }
+
+        function test_firstPinStep_data() {
+            return [
+                // applet 4.x reports a keycardUid on a blank or factory-reset card
+                {tag: "blank 4.x", keycardUid: "keycard-uid-4x", initialized: false, title: "Enter new PIN"},
+                {tag: "blank 3.x", keycardUid: "", initialized: false, title: "Enter new PIN"},
+                {tag: "PIN only", keycardUid: "keycard-uid-1", initialized: true, title: "Enter Keycard PIN"},
+            ]
+        }
+
+        function test_firstPinStep(data) {
+            mockStore.keycardState = Constants.keycard.state.emptyKeycard
+            mockStore.keycardUid = data.keycardUid
+            mockStore.keyUid = ""
+            mockStore.keycardInitialized = data.initialized
+            popup = createTemporaryObject(popupFactory, root, {
+                                              flow: Constants.keycard.flow.importNewKeyPair
+                                          })
+            verify(!!popup)
+            popup.open()
+
+            tryVerify(() => !!findChild(popup, "keycardPinStepTitle"), 3000)
+            compare(findChild(popup, "keycardPinStepTitle").text, data.title)
         }
     }
 }

@@ -74,6 +74,7 @@ Item {
                 property int keycardRemainingPinAttempts: Constants.onboarding.defaultPinAttempts
                 property int keycardRemainingPukAttempts: Constants.onboarding.defaultPukAttempts
                 property bool keycardPairingSupported: true
+                readonly property bool keycardInitialized: true
                 property var loginAccountsModel: emptyModel
 
                 // password
