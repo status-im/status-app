@@ -13,7 +13,7 @@ import app/modules/shared_models/token_selector_model
 
 import ../all_tokens/module as all_tokens_module
 
-import ./io_interface, ./view, ./controller
+import ./io_interface, ./view, ./controller, ./chain_catalog
 
 export io_interface
 
@@ -21,9 +21,9 @@ export io_interface
 # TokenSelectorViewAdaptor configurations at the call sites).
 const
   KIND_SEND = 0      # owned-only list (send, swap pay side); search filtered to owned
-  KIND_SWAP = 1      # all-tokens (lazy tokenGroupsForChainModel, source chain) + search (unused)
+  KIND_SWAP = 1      # retired, built as KIND_SEND
   KIND_BUY  = 2      # all-tokens (non-lazy tokenGroupsModel), no search
-  KIND_SWAP_TO = 3   # swap receive: all-tokens on the destination (tokenGroupsForChainToModel) + search
+  KIND_SWAP_TO = 3   # swap receive: all-tokens on the destination chain (its shared model) + search
 
 type
   Module* = ref object of io_interface.AccessInterface
@@ -40,6 +40,8 @@ type
     nextModelId: int
     # swap receive models, each a holder of all token groups
     allTokenGroupsHolders: HashSet[int]
+    # the destination chain each swap receive model reads
+    catalogs: Table[int, ChainCatalog]
     # Retained until the next modal: QML tears the released list's delegates down
     # after releaseModel returns, and a modal releases its whole batch at once.
     pendingRelease: seq[TokenSelectorModel]
@@ -142,29 +144,23 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
 
   var source: TokenSelectorSource
   var mode = TokenSelectorMode.Owned
+  var catalog: ChainCatalog
   case kind:
   of KIND_SWAP_TO:
     mode = TokenSelectorMode.AllTokens
     # search against the shared, lazily paged search-result model
     source.getSearch = proc(): seq[PopularGroup] = self.toPopularGroups(searchModel.getLoadedGroups())
     source.doSearch = proc(keyword: string) = searchModel.search(keyword)
-    # The receive side draws the destination-chain catalog: lazy loading against
-    # its popular model, search against the shared search model.
-    let popularModel = atm.getTokenGroupsForChainToModelObj()
-    source.getPopular = proc(): seq[PopularGroup] = self.toPopularGroups(popularModel.getLoadedGroups())
+    # the destination chain's shared model, set by setCatalogChainId
+    catalog = newChainCatalog(proc(chainId: int): TokenGroupsModel = atm.getChainTokenGroupsModelObj(chainId))
+    catalog.wire(source, searchModel, proc(groups: seq[TokenGroupItem]): seq[PopularGroup] =
+      self.toPopularGroups(groups))
     let allChainsModel = atm.getTokenGroupsAllChainsModelObj()
     source.getPopularAllChains = proc(): seq[PopularGroup] = self.toPopularGroups(allChainsModel.getLoadedGroups())
     source.fetchMoreAllChains = proc() = allChainsModel.fetchMore()
     source.hasMoreAllChains = proc(): bool = allChainsModel.hasMoreItemsForSource()
     source.isLoadingMoreAllChains = proc(): bool =
       allChainsModel.isLoadingMoreForSource() or atm.isAllChainsTokenGroupsLoading()
-    source.pinGroup = proc(key: string): bool = popularModel.ensureKeyLoaded(key)
-    source.fetchMore = proc(searching: bool) =
-      if searching: searchModel.fetchMore() else: popularModel.fetchMore()
-    source.hasMore = proc(searching: bool): bool =
-      if searching: searchModel.hasMoreItemsForSource() else: popularModel.hasMoreItemsForSource()
-    source.isLoadingMore = proc(searching: bool): bool =
-      if searching: searchModel.isLoadingMoreForSource() else: popularModel.isLoadingMoreForSource()
   of KIND_BUY:
     mode = TokenSelectorMode.AllTokens
     let popularModel = atm.getTokenGroupsModelObj()
@@ -186,6 +182,7 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
   let (groups, networks) = self.buildOwnedSource()
   model.setOwnedSource(groups, networks)
   if kind == KIND_SWAP_TO:
+    self.catalogs[id] = catalog
     self.allTokenGroupsHolders.incl(id)
     atm.acquireAllChainsTokenGroupsForKeys(id, groups.mapIt(it.key))
   return (id, model)
@@ -196,12 +193,26 @@ method releaseModel*(self: Module, id: int) =
   let model = self.models[id]
   self.models.del(id)
   self.pendingRelease.add(model)
+  self.catalogs.del(id)
   if self.allTokenGroupsHolders.missingOrExcl(id):
     return
   self.allTokensModule.releaseAllChainsTokenGroups(id)
 
+method setCatalogChainId*(self: Module, id: int, chainId: int) =
+  self.catalogs.withValue(id, catalog):
+    if catalog[].setChain(chainId):
+      self.models[id].refresh()
+
+when defined(testing) or defined(QT_MODEL_SPY):
+  proc hasCatalogForTest*(self: Module, id: int): bool = self.catalogs.hasKey(id)
+
 method load*(self: Module) =
   singletonInstance.engine.setRootContextProperty("walletSectionTokenSelector", self.viewVariant)
+
+  self.allTokensModule.onChainTokenGroupsModelUpdated(proc(chainId: int) =
+    for id, catalog in self.catalogs:
+      if catalog.reads(chainId):
+        self.models[id].refresh())
 
   self.events.on(SIGNAL_WALLET_ACCOUNT_TOKENS_REBUILT) do(e: Args):
     self.pushOwnedSource()
@@ -211,8 +222,7 @@ method load*(self: Module) =
     self.pushOwnedSource()
   self.events.on(SIGNAL_TOKEN_CATALOGUE_CHANGED) do(e: Args):
     let args = TokenCatalogueChangedArgs(e)
-    if args.kind == tckAllTokenGroups or
-        (args.kind == tckChainTokenGroups and args.chainId == self.allTokensModule.getGroupsForChainToId()):
+    if args.kind == tckAllTokenGroups:
       self.refreshModels()
   # only the flag: a finished load also comes as changed
   self.events.on(SIGNAL_TOKEN_CATALOGUE_LOADING_CHANGED) do(e: Args):

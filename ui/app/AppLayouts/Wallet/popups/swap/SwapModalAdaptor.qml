@@ -7,6 +7,7 @@ import utils
 
 import shared.stores
 import AppLayouts.Wallet
+import AppLayouts.Wallet.helpers
 import AppLayouts.Wallet.stores as WalletStore
 
 import QtModelsToolkit
@@ -31,6 +32,15 @@ QObject {
 
     // the below property holds internal checks done by the SwapModal
     property bool amountEnteredGreaterThanBalance: false
+
+    /** the chain each side holds the token groups of, -1 for none, see holdChainTokenGroups **/
+    readonly property int fromCatalogChainId: d.fromCatalogChainId
+    readonly property int toCatalogChainId: d.toCatalogChainId
+    /** each side's held chain token groups; both sides on one chain share one model **/
+    readonly property var fromChainTokenGroupsModel: fromChainHolder.model
+    readonly property var toChainTokenGroupsModel: toChainHolder.model
+    readonly property bool fromChainTokenGroupsLoading: fromChainHolder.loading
+    readonly property bool toChainTokenGroupsLoading: toChainHolder.loading
 
     // To expose the selected from and to Token from the SwapModal. The entries cover
     // the wallet's tokens of interest and the lazily loaded window of each side's
@@ -87,6 +97,11 @@ QObject {
         id: d
 
         property string uuid
+
+        property int fromCatalogChainId: -1
+        property int toCatalogChainId: -1
+        // the wallet's group keys, loaded first in each side's chain model
+        property string mandatoryKeys
         // storing txHash to verify against tx completed event
         property string txHash
 
@@ -187,6 +202,22 @@ QObject {
         }
     }
 
+    ChainTokenGroupsHolder {
+        id: fromChainHolder
+
+        tokensStore: root.walletAssetsStore.walletTokensStore
+        chainId: d.fromCatalogChainId
+        mandatoryKeys: d.mandatoryKeys
+    }
+
+    ChainTokenGroupsHolder {
+        id: toChainHolder
+
+        tokensStore: root.walletAssetsStore.walletTokensStore
+        chainId: d.toCatalogChainId
+        mandatoryKeys: d.mandatoryKeys
+    }
+
     ModelEntry {
         id: fromTokenEntry
         sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsModel
@@ -203,14 +234,14 @@ QObject {
 
     ModelEntry {
         id: fromTokenCatalogEntry
-        sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsForChainModel
+        sourceModel: root.fromChainTokenGroupsModel
         key: "key"
         value: root.swapFormData.fromGroupKey
     }
 
     ModelEntry {
         id: toTokenCatalogEntry
-        sourceModel: root.walletAssetsStore.walletTokensStore.tokenGroupsForChainToModel
+        sourceModel: root.toChainTokenGroupsModel
         key: "key"
         value: root.swapFormData.toGroupKey
     }
@@ -303,6 +334,18 @@ QObject {
         root.approvalPending = false
         root.approvalSuccessful = false
         d.txHash = ""
+    }
+
+    /** Holds `chainId`'s token groups for one side, the wallet's groups loaded
+        first; -1 releases the side. **/
+    function holdChainTokenGroups(chainId, isToSide) {
+        // read by the side's holder when it acquires the chain
+        if (chainId > 0)
+            d.mandatoryKeys = ModelUtils.joinModelEntries(root.walletAssetsStore.groupedAccountAssetsModel, "key", "$$")
+        if (isToSide)
+            d.toCatalogChainId = chainId
+        else
+            d.fromCatalogChainId = chainId
     }
 
     function invalidateSuggestedRoute() {

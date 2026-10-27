@@ -3,10 +3,9 @@
 ## SwapModal.rebuildGroupsForChain runs once per side on open + on every in-modal
 ## network switch, each time calling
 ##   SQUtils.ModelUtils.joinModelEntries(groupedAccountAssetsModel, "key", "$$")
-## to build the mandatory-keys string it hands to TokensStore.showGroupsForChain[To],
-## which points that side's model at the chain (ChainTokenGroupsHolder holds the
-## chain's groups). groupedAccountAssetsModel has two roles:
-## "key" and "balances" (a per-row submodel). The old modelToArray fetched EVERY
+## to build the mandatory-keys string that side's ChainTokenGroupsHolder passes when
+## it acquires the chain (TokensStore.acquireChainTokenGroups).
+## groupedAccountAssetsModel has two roles: "key" and "balances" (a per-row submodel). The old modelToArray fetched EVERY
 ## role per row via QtMT.ModelQuery.get(model, i) and marshalled the whole map
 ## (incl. the balances submodel QObject) to JS, then read only "key" -> the
 ## user-profiled ~250ms `modelToArray` stall.

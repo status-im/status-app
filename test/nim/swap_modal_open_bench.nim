@@ -1,18 +1,18 @@
-## SwapModal-open integration benchmark: the real Nim `tokenGroupsForChainModel`
+## SwapModal-open integration benchmark: the real Nim chain token groups model
 ## (lazy, NoMarketDetails) driven under a real offscreen QQmlApplicationEngine with
 ## an animating "modal" panel + ListView + 16ms stall monitor
 ## (swap_modal_open_scene.qml).
 ##
 ## What opening the swap token selector does: SwapModal's ChainTokenGroupsHolder
 ## acquires the pay chain's token groups on the held token catalogue, whose load
-## starts `asyncBuildGroupsForChainTask`, and SwapModal.rebuildGroupsForChain points
-## tokenGroupsForChainModel at that chain (TokensStore.showGroupsForChain). Before the
-## typed handoff the task shipped the chain's tokens back as a RAW JSON STRING
-## envelope, and the completion slot `onAsyncBuildGroupsForChainDone` ran ON THE GUI
-## THREAD: Json.decode of the whole chain token list + createTokenItem per token +
-## group build + sort. In the same tick the catalogue reports the load
-## (SIGNAL_TOKEN_CATALOGUE_CHANGED -> view.onChainGroupsChanged ->
-## tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, mandatoryKeys)).
+## starts `asyncBuildGroupsForChainTask`, and binds the chain's shared model
+## (TokensStore.chainTokenGroupsModel). Before the typed handoff the task shipped
+## the chain's tokens back as a RAW JSON STRING envelope, and the completion slot
+## `onAsyncBuildGroupsForChainDone` ran ON THE GUI THREAD: Json.decode of the whole
+## chain token list + createTokenItem per token + group build + sort. In the same
+## tick the catalogue reports the load (SIGNAL_TOKEN_CATALOGUE_CHANGED ->
+## view.onChainGroupsChanged -> the chain's model.modelsUpdated(resetModelSize =
+## true, mandatoryKeys)).
 ## All of that landed mid-open-animation -> a visible freeze.
 ##
 ## This bench measures both regimes on the SAME real model + scene, per chain-token

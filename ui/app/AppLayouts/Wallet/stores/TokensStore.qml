@@ -38,6 +38,13 @@ QtObject {
             root._tokenSelectorModule.releaseModel(id)
     }
 
+    /* Points a swap receive picker (kind 3) at the destination chain whose
+       token groups it lists; they show while the chain is held. */
+    function setTokenSelectorCatalogChain(id, chainId) {
+        if (!!root._tokenSelectorModule && id >= 0)
+            root._tokenSelectorModule.setCatalogChainId(id, chainId)
+    }
+
     readonly property double tokenListUpdatedAt: root._allTokensModule.tokenListUpdatedAt
 
     readonly property bool marketHistoryIsLoading: Global.appIsReady ? walletSectionAllTokens.marketHistoryIsLoading : false
@@ -118,9 +125,6 @@ QtObject {
         position                    [int]       - token's position
     */
     readonly property var tokenGroupsModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsModel : null
-    readonly property var tokenGroupsForChainModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsForChainModel : null
-    // destination-chain catalog for the swap+bridge receive panel
-    readonly property var tokenGroupsForChainToModel: !!root._allTokensModule ? root._allTokensModule.tokenGroupsForChainToModel : null
     readonly property var searchResultModel: !!root._allTokensModule ? root._allTokensModule.searchResultModel : null
 
     // Property and methods below are used to apply advanced token management settings to the SendModal
@@ -130,8 +134,6 @@ QtObject {
     readonly property bool displayAssetsBelowBalance: root._allTokensModule.displayAssetsBelowBalance
     readonly property bool autoRefreshTokensLists: root._allTokensModule.autoRefreshTokensLists
     readonly property bool tokenListsLoading: !!root._allTokensModule ? root._allTokensModule.tokenListsLoading : false
-    readonly property bool groupsForChainLoading: !!root._allTokensModule ? root._allTokensModule.groupsForChainLoading : false
-    readonly property bool groupsForChainToLoading: !!root._allTokensModule ? root._allTokensModule.groupsForChainToLoading : false
 
     signal displayAssetsBelowBalanceThresholdChanged()
 
@@ -157,23 +159,25 @@ QtObject {
             root._allTokensModule.releaseAllTokenGroups()
     }
 
-    function acquireChainTokenGroups(chainId) {
+    // `mandatoryKeys`: the group keys the chain's model loads first, joined by
+    // "$$", empty for the defaults; the release passes the same.
+    function acquireChainTokenGroups(chainId, mandatoryKeys) {
         if (!!root._allTokensModule)
-            root._allTokensModule.acquireChainTokenGroups(chainId)
+            root._allTokensModule.acquireChainTokenGroups(chainId, mandatoryKeys ?? "")
     }
 
-    function releaseChainTokenGroups(chainId) {
+    function releaseChainTokenGroups(chainId, mandatoryKeys) {
         if (!!root._allTokensModule)
-            root._allTokensModule.releaseChainTokenGroups(chainId)
+            root._allTokensModule.releaseChainTokenGroups(chainId, mandatoryKeys ?? "")
     }
 
-    // Points tokenGroupsForChainModel at a chain; it stays empty unless that chain is held.
-    function showGroupsForChain(chainId, mandatoryKeys) {
-        root._allTokensModule.showGroupsForChain(chainId, mandatoryKeys ?? "")
-    }
-
-    function showGroupsForChainTo(chainId, mandatoryKeys) {
-        root._allTokensModule.showGroupsForChainTo(chainId, mandatoryKeys ?? "")
+    /* The chain's token groups model (see tokenGroupsModel), shared by all its
+       holders; null unless the chain is held. */
+    function chainTokenGroupsModel(chainId) {
+        if (!root._allTokensModule)
+            return null
+        root._allTokensModule.prepareChainTokenGroupsModel(chainId)
+        return root._allTokensModule.getPreparedChainTokenGroupsModel()
     }
 
     function ensurePricesForGroup(key) {

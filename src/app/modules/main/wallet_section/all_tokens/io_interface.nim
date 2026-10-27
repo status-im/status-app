@@ -63,13 +63,10 @@ method getTokensModelDataSource*(self: AccessInterface): TokensModelDataSource {
 method getTokenGroupsModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getTokenGroupsForChainModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
+method getTokenGroupsForChainModelDataSource*(self: AccessInterface, chainId: int): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getTokenGroupsAllChainsModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method getTokenGroupsForChainToModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getTokenMarketValuesDataSource*(self: AccessInterface): TokenMarketValuesDataSource {.base.} =
@@ -94,6 +91,9 @@ method releaseChainTokenGroups*(self: AccessInterface, chainId: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getChainTokenGroupsLoading*(self: AccessInterface, chainId: int): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isChainTokenGroupsActive*(self: AccessInterface, chainId: int): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method acquireAllTokenGroups*(self: AccessInterface) {.base.} =

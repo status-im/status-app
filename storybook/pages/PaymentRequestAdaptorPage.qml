@@ -5,6 +5,7 @@ import SortFilterProxyModel
 
 import AppLayouts.Wallet.stores
 import AppLayouts.Wallet.adaptors
+import AppLayouts.Wallet.helpers
 
 import StatusQ.Core.Utils
 
@@ -27,29 +28,24 @@ Item {
 
         readonly property var tokensStore: TokensStoreMock {
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
             searchResultModel: TokenGroupsModel {
                 skipInitialLoad: true
-                tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: d.tokensStore.tokenGroupsModel
             }
         }
 
-        onSelectedNetworkChainIdChanged: {
-            d.tokensStore.showGroupsForChain(d.selectedNetworkChainId)
+        readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
+            tokensStore: d.tokensStore
+            chainId: d.selectedNetworkChainId
         }
-    }
-
-    Component.onCompleted: {
-        Qt.callLater(() => d.tokensStore.showGroupsForChain(d.selectedNetworkChainId))
+        readonly property var tokenGroupsForChainModel: d.chainTokenGroupsHolder.model
     }
 
     PaymentRequestAdaptor {
         id: adaptor
         selectedNetworkChainId: d.selectedNetworkChainId
         flatNetworksModel: d.flatNetworks
-        tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+        tokenGroupsForChainModel: d.tokenGroupsForChainModel
         searchResultModel: d.tokensStore.searchResultModel
     }
 
@@ -115,9 +111,9 @@ Item {
                 }
 
                 GenericListView {
-                    label: "Token groups for chain model, total: " + d.tokensStore.tokenGroupsForChainModel.count
+                    label: "Token groups for chain model, total: " + (d.tokenGroupsForChainModel?.count ?? 0)
 
-                    model: d.tokensStore.tokenGroupsForChainModel
+                    model: d.tokenGroupsForChainModel
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
