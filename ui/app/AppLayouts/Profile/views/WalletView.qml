@@ -294,14 +294,16 @@ SettingsContentBase {
                                                                                  model.keyPair.keyUid,
                                                                                  "",
                                                                                  "",
-                                                                                 "[]")
+                                                                                 "[]",
+                                                                                 false)
                                            }
             onRunStopUsingKeycardFlow: (model) => {
                                            Global.openKeycardManagementPopup(Constants.keycard.flow.stopUsingKeycard,
                                                                              model.keyPair.keyUid,
                                                                              "",
                                                                              "",
-                                                                             "[]")
+                                                                             "[]",
+                                                                             false)
                                        }
             onGoToManageTokensView: priv.navigateToDetails(root.manageTokensViewIndex)
             onGoToSavedAddressesView: priv.navigateToDetails(root.savedAddressesViewIndex)
@@ -385,14 +387,16 @@ SettingsContentBase {
                                                   keyPair.keyUid,
                                                   "",
                                                   "",
-                                                  "[]")
+                                                  "[]",
+                                                  false)
             }
             onRunStopUsingKeycardFlow: {
                 Global.openKeycardManagementPopup(Constants.keycard.flow.stopUsingKeycard,
                                                   keyPair.keyUid,
                                                   "",
                                                   "",
-                                                  "[]")
+                                                  "[]",
+                                                  false)
             }
             onUpdateWatchAccountHiddenFromTotalBalance: (address, hideFromTotalBalance) => {
                 root.walletStore.updateWatchAccountHiddenFromTotalBalance(address, hideFromTotalBalance)

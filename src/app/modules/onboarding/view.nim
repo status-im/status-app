@@ -73,6 +73,12 @@ QtObject:
     read = getKeycardUID
     notify = keycardEventChanged
 
+  proc getKeycardInitialized(self: View): bool {.slot.} =
+    return self.keycardEvent.keycardInfo.initialized
+  QtProperty[bool] keycardInitialized:
+    read = getKeycardInitialized
+    notify = keycardEventChanged
+
   proc getKeycardRemainingPinAttempts(self: View): int {.slot.} =
     return self.keycardEvent.keycardStatus.remainingAttemptsPIN
   QtProperty[int] keycardRemainingPinAttempts:

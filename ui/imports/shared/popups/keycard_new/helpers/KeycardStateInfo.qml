@@ -9,6 +9,8 @@ QtObject {
 
     property string keycardState: ""
     property string keycardUid: ""
+    // PIN set on the card. Not implied by keycardUid: applet 4.x reports one on a blank card too
+    property bool keycardInitialized: false
     property string keyUid: ""
     property bool keycardStatusAvailable: false
     property int remainingPinAttempts: -1
@@ -20,7 +22,7 @@ QtObject {
 
     readonly property bool hasKeyPair: !!root.keycardUid && !!root.keyUid
 
-    readonly property bool onlyPinSet: !!root.keycardUid && !root.keyUid
+    readonly property bool onlyPinSet: root.keycardInitialized && !!root.keycardUid && !root.keyUid
 
     readonly property bool noKnownAndNoAvailablePairingSlots: {
         if (root.keycardState === Constants.keycard.state.noAvailablePairingSlots)

@@ -150,6 +150,7 @@ Page {
         keycardState: root.onboardingStore.keycardState
         keycardUID: root.onboardingStore.keycardUID
         keycardKeyUID: root.onboardingStore.keycardKeyUID
+        keycardInitialized: root.onboardingStore.keycardInitialized
         syncState: root.onboardingStore.syncState
 
         displayKeycardPromoBanner: !d.settings.keycardPromoShown

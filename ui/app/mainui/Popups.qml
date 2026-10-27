@@ -250,7 +250,8 @@ QtObject {
         openPopup(signingPopupComponent, { reason: reason, keyUid: finalKeyUid, txHash: txHash, path: path, address: address })
     }
 
-    function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson, useExistingKeycardWhenMigratingProfileToKeycard = false) {
+    function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson, keycardInitialized,
+                                        useExistingKeycardWhenMigratingProfileToKeycard = false) {
         let finalFlow = flow
         let finalKeyUid = keyUid
 
@@ -294,6 +295,7 @@ QtObject {
             flow: finalFlow,
             keyUid: finalKeyUid,
             keycardUid: keycardUid,
+            keycardInitialized: keycardInitialized,
             cardMetadataName: cardMetadataName,
             cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson,
             useExistingKeycardWhenMigratingProfileToKeycard: useExistingKeycardWhenMigratingProfileToKeycard
@@ -1357,6 +1359,7 @@ QtObject {
                                 "",
                                 "",
                                 "[]",
+                                false /* keycardInitialized */,
                                 true /* useExistingKeycardWhenMigratingProfileToKeycard */)
                 }
                 onCancelButtonClicked: close()

@@ -34,7 +34,9 @@ SettingsContentBase {
             const keycardUid = ""
             const cardMetadataName = ""
             const cardMetadataWalletAccountsJson = "[]"
-            Global.openKeycardManagementPopup(Constants.keycard.flow.readKeycard, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+            const keycardInitialized = false
+            Global.openKeycardManagementPopup(Constants.keycard.flow.readKeycard, keyUid, keycardUid, cardMetadataName,
+                                              cardMetadataWalletAccountsJson, keycardInitialized)
         }
     }
 
@@ -60,6 +62,7 @@ SettingsContentBase {
 
             property string keycardState: ""
             property string keycardUid: ""
+            property bool keycardInitialized: false
             property string keyUid: ""
             property bool keycardStatusAvailable: false
             property int remainingPinAttempts: -1
@@ -78,6 +81,7 @@ SettingsContentBase {
             function showDetailsScreen(keycardInfo) {
                 d.keycardState = keycardInfo.keycardState
                 d.keycardUid = keycardInfo.keycardUid
+                d.keycardInitialized = keycardInfo.keycardInitialized
                 d.keyUid = keycardInfo.keyUid
                 d.keycardStatusAvailable = keycardInfo.keycardStatusAvailable
                 d.remainingPinAttempts = keycardInfo.remainingPinAttempts
@@ -109,6 +113,7 @@ SettingsContentBase {
 
             keycardState: d.keycardState
             keycardUid: d.keycardUid
+            keycardInitialized: d.keycardInitialized
             keyUid: d.keyUid
             keycardStatusAvailable: d.keycardStatusAvailable
             remainingPinAttempts: d.remainingPinAttempts

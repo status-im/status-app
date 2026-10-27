@@ -31,6 +31,7 @@ QtObject {
     readonly property int keycardState: d.onboardingModuleInst.keycardState // cf. enum Onboarding.KeycardState
     readonly property string keycardUID: d.onboardingModuleInst.keycardUID
     readonly property string keycardKeyUID: d.onboardingModuleInst.keycardKeyUID
+    readonly property bool keycardInitialized: d.onboardingModuleInst.keycardInitialized
     readonly property int convertKeycardAccountState: d.onboardingModuleInst.convertKeycardAccountState // cf. enum Onboarding.ProgressState
     readonly property bool convertKeycardAccountRestartRequired: d.onboardingModuleInst.convertKeycardAccountRestartRequired
     readonly property int keycardRemainingPinAttempts: d.onboardingModuleInst.keycardRemainingPinAttempts

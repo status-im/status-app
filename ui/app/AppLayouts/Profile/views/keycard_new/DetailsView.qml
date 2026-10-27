@@ -24,6 +24,7 @@ ColumnLayout {
 
     property string keycardState: ""
     property string keycardUid: ""
+    property bool keycardInitialized: false
     property string keyUid: ""
     property bool keycardStatusAvailable
     property int remainingPinAttempts: -1
@@ -51,6 +52,7 @@ ColumnLayout {
 
         keycardState: root.keycardState
         keycardUid: root.keycardUid
+        keycardInitialized: root.keycardInitialized
         keyUid: root.keyUid
         keycardStatusAvailable: root.keycardStatusAvailable
         remainingPinAttempts: root.remainingPinAttempts
@@ -146,7 +148,8 @@ ColumnLayout {
                                               root.keyUid,
                                               root.keycardUid,
                                               root.cardMetadataName,
-                                              root.cardMetadataWalletAccountsJson)
+                                              root.cardMetadataWalletAccountsJson,
+                                              root.keycardInitialized)
         }
     }
 
