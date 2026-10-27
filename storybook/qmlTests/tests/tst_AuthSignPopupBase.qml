@@ -338,4 +338,40 @@ Item {
             compare(popup.lastUsedPin, "123456")
         }
     }
+
+    TestCase {
+        name: "AuthSignPopupBase_untrustedKeycard"
+        when: windowShown
+
+        property var popup: null
+
+        function cleanup() {
+            if (popup) {
+                popup.destroy()
+                popup = null
+            }
+        }
+
+        function test_untrustedKeycardErrorShowsKeycardAuth_data() {
+            return [
+                {tag: "library error", error: "Untrusted keycard: identity certificate not trusted"},
+                {tag: "state error", error: "Card not ready (state: untrusted-keycard)"},
+            ]
+        }
+
+        function test_untrustedKeycardErrorShowsKeycardAuth(data) {
+            popup = createTemporaryObject(componentUnderTest, root, {
+                                              keycardState: Constants.keycard.state.untrustedKeycard
+                                          })
+            verify(!!popup)
+            popup.open()
+            tryCompare(popup, "opened", true)
+
+            popup.handleKeycardError(data.error)
+
+            tryVerify(() => !!findChild(popup, "keycardAuthTitle"), 3000,
+                      "an untrusted card must show the Keycard error, not the PIN input")
+            compare(findChild(popup, "keycardAuthTitle").text, "Keycard not verified")
+        }
+    }
 }

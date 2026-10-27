@@ -31,7 +31,8 @@ Item {
         keycardStatusAvailable: true
         remainingPinAttempts: ctrlBlocked.checked ? 0 : 3
         remainingPukAttempts: 5
-        availableSlots: ctrlNoSlots.checked ? 0 : 5
+        availableSlots: ctrlNoSlots.checked || ctrlApplet4.checked ? 0 : 5
+        pairingSupported: !ctrlApplet4.checked
         cardMetadataName: "My Keycard"
         cardMetadataWalletAccountsJson: "[]"
         loginAccountsModel: ctrlProfileExists.checked ? loginAccounts : emptyLoginAccounts
@@ -57,6 +58,10 @@ Item {
             text: "no free slots"
         }
         CheckBox {
+            id: ctrlApplet4
+            text: "applet 4.x (no pairing)"
+        }
+        CheckBox {
             id: ctrlBlocked
             text: "blocked (0 PIN attempts)"
         }
@@ -64,7 +69,7 @@ Item {
             id: ctrlState
             width: 260
             model: ["ready", "empty-keycard", "blocked-pin", "blocked-puk",
-                    "no-available-pairing-slots"]
+                    "no-available-pairing-slots", "untrusted-keycard"]
         }
     }
 }

@@ -21,6 +21,7 @@ Item {
         property int remainingPinAttempts: 3
         property int remainingPukAttempts: 5
         property int availableSlots: 5
+        property bool pairingSupported: true
         property string keycardUid: "keycard-uid-1"
         property string keyUid: "profile-key-uid"
         property string cardMetadataName: "My Keycard"
@@ -208,6 +209,16 @@ Item {
 
             verify(!pairingPasswordInput(),
                    "pairing password step must not appear before the flow has attempted anything")
+        }
+
+        function test_untrustedKeycardErrorKeepsTheFlowOpen() {
+            launchReadKeycard()
+            mockStore.keycardState = Constants.keycard.state.untrustedKeycard
+            mockStore.keycardGetMetadataError("Untrusted keycard: identity certificate not trusted")
+            wait(50)
+
+            compare(metadataResultSpy.count, 0, "must not navigate to the keycard details")
+            verify(!pairingPasswordInput(), "an untrusted card has no pairing password")
         }
 
         function test_wrongPinErrorDoesNotShowPasswordStep() {

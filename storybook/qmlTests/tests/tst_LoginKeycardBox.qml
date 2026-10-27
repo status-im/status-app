@@ -139,6 +139,14 @@ Item {
             verify(pinInput().visible, "wrong-keycard extends notEmpty and keeps the PIN field")
         }
 
+        function test_untrustedKeycardShowsError() {
+            box.keycardState = Onboarding.KeycardState.UntrustedKeycard
+
+            compare(box.state, "untrustedKeycard")
+            verify(infoText().text.indexOf("could not be verified as genuine") >= 0)
+            compare(infoText().color, Theme.palette.dangerColor1)
+        }
+
         function test_blockedShowsUnblock_data() {
             return [
                 {tag: "blocked-pin", keycardState: Onboarding.KeycardState.BlockedPIN},
