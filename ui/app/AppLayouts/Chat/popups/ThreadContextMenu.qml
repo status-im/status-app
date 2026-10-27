@@ -120,6 +120,7 @@ StatusMenu {
         id: confirmDeletePopupComponent
         ConfirmationDialog {
             objectName: "threadContextMenu_confirmDeletePopup"
+            confirmButtonObjectName: "threadContextMenu_confirmDeleteButton"
             visible: true
             title: qsTr("Delete this thread?")
             confirmButtonLabel: qsTr("Delete")
