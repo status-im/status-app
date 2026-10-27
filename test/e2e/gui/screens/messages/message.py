@@ -322,6 +322,17 @@ class Message:
         self.delegate_button.click()
         return BannedCommunityScreen().wait_until_appears()
 
+    @allure.step('Thread card is shown under message')
+    def has_thread_card(self) -> bool:
+        return _find_named_descendant(self.object, 'threadCardTitleRow') is not None
+
+    @allure.step('Open thread from card under message')
+    def open_thread_from_card(self):
+        title_row = _find_named_descendant(self.object, 'threadCardTitleRow')
+        if title_row is None:
+            raise LookupError('Thread card was not found under message')
+        driver.mouseClick(title_row)
+
     @allure.step('Open message context menu')
     def open_context_menu(self):
         from gui.screens.messages.chat import MessageQuickActions
