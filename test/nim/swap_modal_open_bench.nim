@@ -3,15 +3,17 @@
 ## an animating "modal" panel + ListView + 16ms stall monitor
 ## (swap_modal_open_scene.qml).
 ##
-## What opening the swap token selector does today: SwapModal.onCompleted ->
-## TokensStore.buildGroupsForChain -> token service `buildGroupsForChain` fires
-## `asyncBuildGroupsForChainTask`, which ships the chain's tokens back as a RAW JSON
-## STRING envelope. The completion slot `onAsyncBuildGroupsForChainDone` then runs
-## ON THE GUI THREAD: Json.decode of the whole chain token list + createTokenItem
-## per token + group build + sort, and in the same tick emits
-## SIGNAL_GROUPS_FOR_CHAIN_LOADED -> view.onGroupsForChainLoaded ->
-## tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, mandatoryKeys).
-## All of that lands mid-open-animation -> a visible freeze.
+## What opening the swap token selector does: SwapModal's ChainTokenGroupsHolder
+## acquires the pay chain's token groups on the held token catalogue, whose load
+## starts `asyncBuildGroupsForChainTask`, and SwapModal.rebuildGroupsForChain points
+## tokenGroupsForChainModel at that chain (TokensStore.showGroupsForChain). Before the
+## typed handoff the task shipped the chain's tokens back as a RAW JSON STRING
+## envelope, and the completion slot `onAsyncBuildGroupsForChainDone` ran ON THE GUI
+## THREAD: Json.decode of the whole chain token list + createTokenItem per token +
+## group build + sort. In the same tick the catalogue reports the load
+## (SIGNAL_TOKEN_CATALOGUE_CHANGED -> view.onChainGroupsChanged ->
+## tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, mandatoryKeys)).
+## All of that landed mid-open-animation -> a visible freeze.
 ##
 ## This bench measures both regimes on the SAME real model + scene, per chain-token
 ## universe size (2k / 5k / 10k):
@@ -121,13 +123,13 @@ proc benchCreateGroups(tokens: seq[TokenItem]): seq[TokenGroupItem] =
   result.sort(proc(a, b: TokenGroupItem): int = a.name.cmp(b.name))
 
 proc buildGroupsFromEnvelope(envelope: string): seq[TokenGroupItem] =
-  ## Exactly what onAsyncBuildGroupsForChainDone does on the GUI thread today.
+  ## Exactly what onAsyncBuildGroupsForChainDone did on the GUI thread before the typed handoff.
   let env = Json.decode(envelope, BenchGroupsForChainResponse, allowUnknownFields = true)
   let tokens = env.tokens.map(t => createTokenItem(t))
   benchCreateGroups(tokens)
 
-# The model reads its source through this global (mirrors the service's
-# groupsForChain seq the view delegate returns).
+# The model reads its source through this global (mirrors the held chain groups
+# the view delegate returns).
 var gGroupsForChain: seq[TokenGroupItem] = @[]
 
 proc groupsForChainDataSource(): TokenGroupsModelDataSource =

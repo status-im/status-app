@@ -64,23 +64,62 @@ TokensStore {
 
     property var builtChainIds: []
 
-    // Like the real token service, each side's build touches only its own
-    // catalog — the receive panel drives buildGroupsForChainTo itself.
-    function buildGroupsForChain(chainId) {
+    // Like the real token service, each side's model shows only its own
+    // catalog — the receive panel drives showGroupsForChainTo itself. The mock
+    // fills the model at once, as if the chain were held and loaded.
+    function showGroupsForChain(chainId) {
         root.builtChainIds = root.builtChainIds.concat([chainId])
         root._buildGroupsInto(root.tokenGroupsForChainModel, chainId)
     }
 
     property var builtToChainIds: []
 
-    function buildGroupsForChainTo(chainId) {
+    function showGroupsForChainTo(chainId) {
         root.builtToChainIds = root.builtToChainIds.concat([chainId])
         root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
     }
 
-    // The real store triggers the on-demand cross-chain catalog fetch here;
-    // in storybook the mock models are static, so this only records the call.
-    property int fetchAllChainsTokenGroupsCallCount: 0
+    // Holder counts by resource, as the real token service keeps them. The
+    // mock models are static, so holds only get counted.
+    property var chainTokenGroupsHolders: ({})
+    property int allTokenGroupsHolders: 0
+    property int tokenListsHolders: 0
+
+    function chainTokenGroupsHolderCount(chainId) {
+        return root.chainTokenGroupsHolders[chainId] ?? 0
+    }
+
+    function _addChainTokenGroupsHolders(chainId, delta) {
+        const holders = Object.assign({}, root.chainTokenGroupsHolders)
+        holders[chainId] = (holders[chainId] ?? 0) + delta
+        if (holders[chainId] < 0)
+            console.warn("releaseChainTokenGroups: chain not held", chainId)
+        root.chainTokenGroupsHolders = holders
+    }
+
+    function acquireChainTokenGroups(chainId) {
+        root._addChainTokenGroupsHolders(chainId, 1)
+    }
+
+    function releaseChainTokenGroups(chainId) {
+        root._addChainTokenGroupsHolders(chainId, -1)
+    }
+
+    function acquireAllTokenGroups() {
+        root.allTokenGroupsHolders++
+    }
+
+    function releaseAllTokenGroups() {
+        root.allTokenGroupsHolders--
+    }
+
+    function acquireTokenLists() {
+        root.tokenListsHolders++
+    }
+
+    function releaseTokenLists() {
+        root.tokenListsHolders--
+    }
     // Tokens outside every model, keyed by token or group key, that the last-resort
     // lookup below can still resolve (the real store asks the backend's full list).
     property var allTokensByKey: ({})
@@ -109,18 +148,14 @@ TokensStore {
         return { key: "", groupKey: "", symbol: "", name: "", decimals: 0, chainId: 0 }
     }
 
-    function fetchAllChainsTokenGroups(mandatoryKeys) {
-        root.fetchAllChainsTokenGroupsCallCount++
-    }
-
     function _buildGroupsInto(targetModel, chainId) {
         if (!root.tokenGroupsModel || chainId <= 0) {
-            console.warn("buildGroupsForChain: invalid parameters", chainId)
+            console.warn("showGroupsForChain: invalid parameters", chainId)
             return
         }
 
         if (!targetModel) {
-            console.warn("buildGroupsForChain: target model is not set")
+            console.warn("showGroupsForChain: target model is not set")
             return
         }
 

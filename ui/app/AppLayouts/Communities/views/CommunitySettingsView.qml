@@ -379,7 +379,8 @@ StatusSectionLayout {
 
                 assetsModel: rootStore.assetsModel
                 assetsLoading: rootStore.tokenListLoading
-                loadTokenList: rootStore.loadTokenList
+                acquireTokenList: rootStore.acquireTokenList
+                releaseTokenList: rootStore.releaseTokenList
 
                 collectiblesModel: rootStore.collectiblesModel
                 channelsModel: rootStore.chatCommunitySectionModule.model

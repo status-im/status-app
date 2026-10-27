@@ -64,7 +64,13 @@ StatusDialog {
         return amountToSendInput.amount
     }
 
-    signal buildGroupsForChain()
+    // The modal holds the selected chain's token groups (the asset list) and all
+    // token groups (the search) while it exists.
+    signal showGroupsForChainRequested(int chainId)
+    signal chainTokenGroupsAcquireRequested(int chainId)
+    signal chainTokenGroupsReleaseRequested(int chainId)
+    signal allTokenGroupsAcquireRequested()
+    signal allTokenGroupsReleaseRequested()
 
     objectName: "paymentRequestModal"
 
@@ -77,8 +83,19 @@ StatusDialog {
 
     title: qsTr("Payment request")
 
-    Component.onCompleted: {
-        root.buildGroupsForChain()
+    Component.onCompleted: root.showGroupsForChainRequested(root.selectedNetworkChainId)
+    onSelectedNetworkChainIdChanged: root.showGroupsForChainRequested(root.selectedNetworkChainId)
+
+    SQUtils.ResourceHolder {
+        key: root.selectedNetworkChainId > 0 ? String(root.selectedNetworkChainId) : ""
+        onAcquireRequested: key => root.chainTokenGroupsAcquireRequested(parseInt(key))
+        onReleaseRequested: key => root.chainTokenGroupsReleaseRequested(parseInt(key))
+    }
+
+    SQUtils.ResourceHolder {
+        key: "allTokenGroups"
+        onAcquireRequested: root.allTokenGroupsAcquireRequested()
+        onReleaseRequested: root.allTokenGroupsReleaseRequested()
     }
 
     onAboutToShow: {
@@ -329,7 +346,6 @@ StatusDialog {
 
                 onClicked: {
                     root.selectedNetworkChainId = model.chainId
-                    root.buildGroupsForChain()
                     root.selectedTokenGroupKey = root.defaultTokenGroupKey
                     networkSelector.popup.close()
                 }

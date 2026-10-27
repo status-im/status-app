@@ -187,7 +187,7 @@ Item {
         function test_fiatDisplayModeKeepsTheCryptoAmount() {
             // the panel's amount is a crypto one whatever unit the input displays
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             tryCompare(controlUnderTest, "selectedHoldingId", ethGroupKey)
 
@@ -222,7 +222,7 @@ Item {
         function test_selectionIsKeptUntilTheCatalogSettles() {
             const store = d.adaptor.walletAssetsStore.walletTokensStore
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
-            store.buildGroupsForChain(d.goOptChainId)
+            store.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
 
@@ -253,7 +253,7 @@ Item {
         function test_chainFilterBrowsingKeepsTheSelection() {
             const store = d.adaptor.walletAssetsStore.walletTokensStore
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
-            store.buildGroupsForChain(d.goOptChainId)
+            store.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
 
@@ -285,7 +285,7 @@ Item {
         function test_absentSelectionNeverRemapsToASameSymbolImpostor() {
             const store = d.adaptor.walletAssetsStore.walletTokensStore
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
-            store.buildGroupsForChain(d.goOptChainId)
+            store.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
 
@@ -411,7 +411,7 @@ Item {
 
         function test_fiatEquivalentAndBalanceLineShareALine() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
@@ -461,7 +461,7 @@ Item {
                                                                  tokenAmount: "10000000.0000001"
                                                          })
 
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
 
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
@@ -526,7 +526,7 @@ Item {
         function test_selectedHoldingWithoutLogoFallsBackToTheSymbolIcon() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root,
                                                      {groupKey: noLogoGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
 
             const entry = ModelUtils.getByKey(controlUnderTest.tokenSelectorModel,
@@ -561,7 +561,7 @@ Item {
             const tokenGroupKey = sttGroupKey
 
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             controlUnderTest.groupKey = tokenGroupKey
             controlUnderTest.tokenAmount = tokenAmount
@@ -585,7 +585,7 @@ Item {
 
         function test_enterTokenAmountLocalizedNumber() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: sttGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
             tryCompare(controlUnderTest, "selectedHoldingId", sttGroupKey)
@@ -620,7 +620,7 @@ Item {
 
         function test_selectSTTHoldingAndTypeAmount() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
 
             const holdingSelector = findChild(controlUnderTest, "swapPayHoldingSelector")
@@ -667,7 +667,7 @@ Item {
 
         function test_balanceLineFiatCurrencySymbol() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
             controlUnderTest.fiatInputInteractive = true
@@ -687,7 +687,7 @@ Item {
 
         function test_balanceLineNoCryptoCurrencySymbol() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: ethGroupKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
@@ -805,7 +805,7 @@ Item {
                                                          groupKey: tokenKeyToTest,
                                                          tokenAmount: numberTestedString
                                                      })
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
@@ -846,7 +846,7 @@ Item {
         function test_cryptoAmountLineShowsTheHoldingSymbolNotItsKey() {
             const tokenKey = "11155420-0x6b175474e89094c44da98b954eedeac495271e0f" // ZRX, chain-scoped key
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {groupKey: tokenKey})
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             tryCompare(controlUnderTest, "selectedHoldingId", tokenKey)
 
@@ -877,7 +877,7 @@ Item {
                                                          groupKey: tokenKeyToTest,
                                                          tokenAmount: numberTestedString
                                                      })
-            d.adaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(d.goOptChainId)
+            d.adaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(d.goOptChainId)
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 

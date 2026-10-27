@@ -8,10 +8,10 @@ const SIGNAL_TOKENS_DETAILS_UPDATED* = "tokensDetailsUpdated"
 const SIGNAL_TOKENS_MARKET_VALUES_ABOUT_TO_BE_UPDATED* = "tokensMarketValuesAboutToBeUpdated"
 const SIGNAL_TOKENS_MARKET_VALUES_UPDATED* = "tokensMarketValuesUpdated"
 const SIGNAL_TOKEN_PREFERENCES_UPDATED* = "tokenPreferencesUpdated"
-const SIGNAL_TOKEN_LISTS_LOADED* = "tokenListsLoaded"
-const SIGNAL_GROUPS_FOR_CHAIN_LOADED* = "groupsForChainLoaded"
-const SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED* = "groupsForChainToLoaded"
-const SIGNAL_ALL_TOKEN_GROUPS_LOADED* = "allTokenGroupsLoaded"
+# a held catalogue copy loaded or was dropped
+const SIGNAL_TOKEN_CATALOGUE_CHANGED* = "tokenCatalogueChanged"
+# a held catalogue copy started or stopped loading
+const SIGNAL_TOKEN_CATALOGUE_LOADING_CHANGED* = "tokenCatalogueLoadingChanged"
 
 #################################################
 # Payload sent via above defined signals
@@ -24,3 +24,10 @@ type
 type
   TokenHistoricalDataArgs* = ref object of Args
     result*: string
+
+type
+  TokenCatalogueChangedArgs* = ref object of Args
+    kind*: TokenCatalogueKind
+    chainId*: int # tckChainTokenGroups only
+    # the copy was dropped, not loaded (SIGNAL_TOKEN_CATALOGUE_CHANGED only)
+    dropped*: bool

@@ -1641,10 +1641,11 @@ QtObject {
                 tokenGroupsForChainModel: WalletStores.RootStore.tokensStore.tokenGroupsForChainModel
                 searchResultModel: WalletStores.RootStore.tokensStore.searchResultModel
 
-                onBuildGroupsForChain: {
-                    WalletStores.RootStore.tokensStore.buildGroupsForChain(selectedNetworkChainId, "")
-                    WalletStores.RootStore.tokensStore.fetchAllChainsTokenGroups("")
-                }
+                onShowGroupsForChainRequested: chainId => WalletStores.RootStore.tokensStore.showGroupsForChain(chainId, "")
+                onChainTokenGroupsAcquireRequested: chainId => WalletStores.RootStore.tokensStore.acquireChainTokenGroups(chainId)
+                onChainTokenGroupsReleaseRequested: chainId => WalletStores.RootStore.tokensStore.releaseChainTokenGroups(chainId)
+                onAllTokenGroupsAcquireRequested: WalletStores.RootStore.tokensStore.acquireAllTokenGroups()
+                onAllTokenGroupsReleaseRequested: WalletStores.RootStore.tokensStore.releaseAllTokenGroups()
 
                 onAccepted: {
                     paymentRequested(selectedAccountAddress, amount,

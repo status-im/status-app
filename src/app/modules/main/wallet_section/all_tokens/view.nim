@@ -1,10 +1,12 @@
-import nimqml, sequtils, strutils, json, chronicles
+import nimqml, sequtils, strutils, json, chronicles, tables, sets
 
 import io_interface, token_lists_model, token_groups_model
 
 const
   LAZY_LOADING_BATCH_SIZE = 100
   LAZY_LOADING_INITIAL_COUNT = 100
+  # all QML holders of the all-chains groups share one entry; they pin the default keys
+  QML_ALL_CHAINS_HOLDER = -1
 
 QtObject:
   type
@@ -14,9 +16,15 @@ QtObject:
       tokenListsLoading: bool
       groupsForChainLoading: bool
       groupsForChainToLoading: bool
+      # the chain each side's model reads; a holder elsewhere keeps it loaded
+      groupsForChainId: int
+      groupsForChainToId: int
       pendingMandatoryGroupKeys: seq[string]
       pendingMandatoryGroupKeysTo: seq[string]
       pendingMandatoryGroupKeysAllChains: seq[string]
+      # the keys each holder pins in the all-chains model
+      allChainsHolderKeys: OrderedTable[int, seq[string]]
+      allChainsQmlHolders: int
 
       tokenListsModel: TokenListsModel
       tokenGroupsModel: TokenGroupsModel # refers to tokens of interest for active networks mode
@@ -139,7 +147,7 @@ QtObject:
     notify = tokenGroupsModelChanged
 
   proc groupsForChainLoadingChanged*(self: View) {.signal.}
-  proc getGroupsForChainLoading(self: View): bool {.slot.} =
+  proc getGroupsForChainLoading*(self: View): bool {.slot.} =
     return self.groupsForChainLoading
   proc setGroupsForChainLoading*(self: View, loading: bool) =
     if self.groupsForChainLoading == loading:
@@ -151,7 +159,7 @@ QtObject:
     notify = groupsForChainLoadingChanged
 
   proc groupsForChainToLoadingChanged*(self: View) {.signal.}
-  proc getGroupsForChainToLoading(self: View): bool {.slot.} =
+  proc getGroupsForChainToLoading*(self: View): bool {.slot.} =
     return self.groupsForChainToLoading
   proc setGroupsForChainToLoading*(self: View, loading: bool) =
     if self.groupsForChainToLoading == loading:
@@ -162,46 +170,98 @@ QtObject:
     read = getGroupsForChainToLoading
     notify = groupsForChainToLoadingChanged
 
-  proc buildGroupsForChain*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
-    if mandatoryGroupKeysString.len > 0:
-      self.pendingMandatoryGroupKeys = mandatoryGroupKeysString.split("$$")
-    else:
-      self.pendingMandatoryGroupKeys = self.delegate.getMandatoryTokenGroupKeys()
-    self.setGroupsForChainLoading(true)
-    self.delegate.buildGroupsForChain(chainId)
+  proc getGroupsForChainId*(self: View): int =
+    self.groupsForChainId
 
-  proc onGroupsForChainLoaded*(self: View) =
-    self.setGroupsForChainLoading(false)
+  proc getGroupsForChainToId*(self: View): int =
+    self.groupsForChainToId
+
+  proc updateGroupsForChainLoading(self: View) =
+    self.setGroupsForChainLoading(self.delegate.getChainTokenGroupsLoading(self.groupsForChainId))
+    self.setGroupsForChainToLoading(self.delegate.getChainTokenGroupsLoading(self.groupsForChainToId))
+
+  proc mandatoryGroupKeys(self: View, mandatoryGroupKeysString: string): seq[string] =
+    if mandatoryGroupKeysString.len > 0:
+      return mandatoryGroupKeysString.split("$$")
+    return self.delegate.getMandatoryTokenGroupKeys()
+
+  proc resetGroupsForChainModel(self: View) =
     self.tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeys)
     self.tokenGroupsForChainModelChanged()
 
-  proc buildGroupsForChainTo*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
-    if mandatoryGroupKeysString.len > 0:
-      self.pendingMandatoryGroupKeysTo = mandatoryGroupKeysString.split("$$")
-    else:
-      self.pendingMandatoryGroupKeysTo = self.delegate.getMandatoryTokenGroupKeys()
-    self.setGroupsForChainToLoading(true)
-    self.delegate.buildGroupsForChainTo(chainId)
-
-  proc onGroupsForChainToLoaded*(self: View) =
-    self.setGroupsForChainToLoading(false)
+  proc resetGroupsForChainToModel(self: View) =
     self.tokenGroupsForChainToModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeysTo)
     self.tokenGroupsForChainToModelChanged()
 
-  proc fetchAllChainsTokenGroupsForKeys*(self: View, mandatoryGroupKeys: seq[string]) =
+  proc showGroupsForChain*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
+    self.groupsForChainId = chainId
+    self.pendingMandatoryGroupKeys = self.mandatoryGroupKeys(mandatoryGroupKeysString)
+    self.resetGroupsForChainModel()
+    self.updateGroupsForChainLoading()
+
+  proc showGroupsForChainTo*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
+    self.groupsForChainToId = chainId
+    self.pendingMandatoryGroupKeysTo = self.mandatoryGroupKeys(mandatoryGroupKeysString)
+    self.resetGroupsForChainToModel()
+    self.updateGroupsForChainLoading()
+
+  proc acquireChainTokenGroups*(self: View, chainId: int) {.slot.} =
+    self.delegate.acquireChainTokenGroups(chainId)
+    self.updateGroupsForChainLoading()
+
+  proc releaseChainTokenGroups*(self: View, chainId: int) {.slot.} =
+    self.delegate.releaseChainTokenGroups(chainId)
+
+  proc onChainGroupsChanged*(self: View, chainId: int) =
+    if chainId == self.groupsForChainId:
+      self.resetGroupsForChainModel()
+    if chainId == self.groupsForChainToId:
+      self.resetGroupsForChainToModel()
+    self.updateGroupsForChainLoading()
+
+  proc applyAllChainsMandatoryKeys(self: View) =
+    var keys: seq[string]
+    var seen: HashSet[string]
+    for holderKeys in self.allChainsHolderKeys.values:
+      for key in holderKeys:
+        if not seen.containsOrIncl(key):
+          keys.add(key)
+    if keys == self.pendingMandatoryGroupKeysAllChains:
+      return
+    self.pendingMandatoryGroupKeysAllChains = keys
+    # loaded groups fire no event for a new holder
+    self.tokenGroupsAllChainsModel.modelsUpdated(resetModelSize = true, keys)
+
+  proc acquireAllChainsTokenGroupsForKeys*(self: View, holder: int, mandatoryGroupKeys: seq[string]) =
+    ## `holder` is unique per holder and not negative.
     if mandatoryGroupKeys.len > 0:
-      self.pendingMandatoryGroupKeysAllChains = mandatoryGroupKeys
+      self.allChainsHolderKeys[holder] = mandatoryGroupKeys
     else:
-      self.pendingMandatoryGroupKeysAllChains = self.delegate.getMandatoryTokenGroupKeys()
-    self.delegate.fetchAllChainsTokenGroups()
+      self.allChainsHolderKeys[holder] = self.delegate.getMandatoryTokenGroupKeys()
+    self.applyAllChainsMandatoryKeys()
+    self.delegate.acquireAllTokenGroups()
 
-  proc fetchAllChainsTokenGroups*(self: View, mandatoryGroupKeysString: string) {.slot.} =
-    var keys: seq[string] = @[]
-    if mandatoryGroupKeysString.len > 0:
-      keys = mandatoryGroupKeysString.split("$$")
-    self.fetchAllChainsTokenGroupsForKeys(keys)
+  proc releaseAllChainsTokenGroups*(self: View, holder: int) =
+    if not self.allChainsHolderKeys.hasKey(holder):
+      return
+    self.allChainsHolderKeys.del(holder)
+    self.applyAllChainsMandatoryKeys()
+    self.delegate.releaseAllTokenGroups()
 
-  proc onAllChainsGroupsLoaded*(self: View) =
+  proc acquireAllTokenGroups*(self: View) {.slot.} =
+    inc self.allChainsQmlHolders
+    self.acquireAllChainsTokenGroupsForKeys(QML_ALL_CHAINS_HOLDER, @[])
+
+  proc releaseAllTokenGroups*(self: View) {.slot.} =
+    if self.allChainsQmlHolders == 0:
+      return
+    dec self.allChainsQmlHolders
+    if self.allChainsQmlHolders > 0:
+      self.delegate.releaseAllTokenGroups()
+    else:
+      self.releaseAllChainsTokenGroups(QML_ALL_CHAINS_HOLDER)
+
+  proc onAllChainsGroupsChanged*(self: View) =
     self.searchResultModel.refreshSearch()
     self.tokenGroupsAllChainsModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeysAllChains)
 
@@ -230,7 +290,7 @@ QtObject:
   proc modelsUpdated*(self: View) =
     self.tokenGroupsModel.modelsUpdated()
 
-  proc tokenListsUpdated*(self: View) =
+  proc tokenListsUpdated(self: View) =
     self.tokenListsModel.modelsUpdated()
     self.tokenListsModelChanged()
 
@@ -339,9 +399,9 @@ QtObject:
     notify = autoRefreshTokensListsChanged
 
   proc tokenListsLoadingChanged*(self: View) {.signal.}
-  proc getTokenListsLoading(self: View): bool {.slot.} =
+  proc getTokenListsLoading*(self: View): bool {.slot.} =
     return self.tokenListsLoading
-  proc setTokenListsLoading*(self: View, loading: bool) =
+  proc setTokenListsLoading(self: View, loading: bool) =
     if self.tokenListsLoading == loading:
       return
     self.tokenListsLoading = loading
@@ -350,8 +410,20 @@ QtObject:
     read = getTokenListsLoading
     notify = tokenListsLoadingChanged
 
-  proc loadTokenLists*(self: View) {.slot.} =
-    self.delegate.loadTokenLists()
+  proc acquireTokenLists*(self: View) {.slot.} =
+    self.delegate.acquireTokenLists()
+    self.setTokenListsLoading(self.delegate.getTokenListsLoading())
+
+  proc releaseTokenLists*(self: View) {.slot.} =
+    self.delegate.releaseTokenLists()
+
+  proc onTokenListsChanged*(self: View) =
+    self.setTokenListsLoading(self.delegate.getTokenListsLoading())
+    self.tokenListsUpdated()
+
+  proc onCatalogueLoadingChanged*(self: View) =
+    self.updateGroupsForChainLoading()
+    self.setTokenListsLoading(self.delegate.getTokenListsLoading())
 
   proc isChainSupportedForSwap*(self: View, chainId: int): bool {.slot.} =
     return self.delegate.isChainSupportedForSwap(chainId)

@@ -56,17 +56,11 @@ Item {
             tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
             searchResultModel: d.tokensStore.searchResultModel
 
-            Component.onCompleted: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
-
-            onBuildGroupsForChain: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
-
-            onSelectedNetworkChainIdChanged: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
+            onShowGroupsForChainRequested: chainId => d.tokensStore.showGroupsForChain(chainId)
+            onChainTokenGroupsAcquireRequested: chainId => d.tokensStore.acquireChainTokenGroups(chainId)
+            onChainTokenGroupsReleaseRequested: chainId => d.tokensStore.releaseChainTokenGroups(chainId)
+            onAllTokenGroupsAcquireRequested: d.tokensStore.acquireAllTokenGroups()
+            onAllTokenGroupsReleaseRequested: d.tokensStore.releaseAllTokenGroups()
         }
     }
 
@@ -225,6 +219,31 @@ Item {
             compare(networkSelector.control.contentItem.title, network.chainName)
 
             closeAndVerfyModal()
+        }
+
+        function test_holds_the_token_groups_it_shows() {
+            const store = d.tokensStore
+            const firstChainId = Constants.chains.mainnetChainId
+            const secondChainId = d.flatNetworks.get(1).chainId
+            verify(firstChainId !== secondChainId)
+            compare(store.allTokenGroupsHolders, 0)
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 0)
+
+            launchAndVerfyModal()
+            compare(store.allTokenGroupsHolders, 1)
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 1)
+            compare(store.builtChainIds[store.builtChainIds.length - 1], firstChainId)
+
+            controlUnderTest.selectedNetworkChainId = secondChainId
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 0)
+            compare(store.chainTokenGroupsHolderCount(secondChainId), 1)
+            compare(store.builtChainIds[store.builtChainIds.length - 1], secondChainId)
+            compare(store.allTokenGroupsHolders, 1)
+
+            // destroyed on close
+            controlUnderTest.close()
+            tryVerify(() => store.allTokenGroupsHolders === 0)
+            compare(store.chainTokenGroupsHolderCount(secondChainId), 0)
         }
 
         function test_symbol_initial_selection_when_not_available_in_chain() {

@@ -70,11 +70,11 @@ proc getHistoricalDataForToken*(self: Controller, tokenKey: string, currency: st
 proc getAllTokenLists*(self: Controller): var seq[TokenListItem] =
   return self.tokenService.getAllTokenLists()
 
-proc buildGroupsForChain*(self: Controller, chainId: int) =
-  self.tokenService.buildGroupsForChain(chainId)
+proc acquireChainTokenGroups*(self: Controller, chainId: int) =
+  self.tokenService.acquireChainTokenGroups(chainId)
 
-proc buildGroupsForChainTo*(self: Controller, chainId: int) =
-  self.tokenService.buildGroupsForChainTo(chainId)
+proc releaseChainTokenGroups*(self: Controller, chainId: int) =
+  self.tokenService.releaseChainTokenGroups(chainId)
 
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): TokenItem =
   return self.tokenService.getTokenByKeyOrGroupKeyFromAllTokens(key)
@@ -82,17 +82,17 @@ proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): Token
 proc ensurePricesForGroup*(self: Controller, key: string) =
   self.tokenService.ensurePricesForGroup(key)
 
-proc getGroupsForChain*(self: Controller): var seq[TokenGroupItem] =
-  return self.tokenService.getGroupsForChain()
-
-proc getGroupsForChainTo*(self: Controller): var seq[TokenGroupItem] =
-  return self.tokenService.getGroupsForChainTo()
+proc getChainTokenGroups*(self: Controller, chainId: int): var seq[TokenGroupItem] =
+  return self.tokenService.getChainTokenGroups(chainId)
 
 proc getAllChainsTokenGroups*(self: Controller): var seq[TokenGroupItem] =
   return self.tokenService.getAllTokenGroups()
 
-proc fetchAllChainsTokenGroups*(self: Controller) =
-  self.tokenService.asyncFetchAllTokenGroups()
+proc acquireAllTokenGroups*(self: Controller) =
+  self.tokenService.acquireAllTokenGroups()
+
+proc releaseAllTokenGroups*(self: Controller) =
+  self.tokenService.releaseAllTokenGroups()
 
 proc getAllChainsTokenGroupsLoading*(self: Controller): bool =
   return self.tokenService.getAllTokenGroupsLoading()
@@ -171,14 +171,17 @@ proc getMandatoryTokenGroupKeys*(self: Controller): seq[string] =
 proc isChainSupportedForSwap*(self: Controller, chainId: int): bool =
   return self.tokenService.isChainSupportedForSwap(chainId)
 
-proc loadTokenLists*(self: Controller) =
-  self.tokenService.asyncFetchAllTokenLists()
+proc acquireTokenLists*(self: Controller) =
+  self.tokenService.acquireTokenLists()
+
+proc releaseTokenLists*(self: Controller) =
+  self.tokenService.releaseTokenLists()
 
 proc getTokenListsLoading*(self: Controller): bool =
   return self.tokenService.getTokenListsLoading()
 
-proc getGroupsForChainLoading*(self: Controller): bool =
-  return self.tokenService.getGroupsForChainLoading()
+proc getChainTokenGroupsLoading*(self: Controller, chainId: int): bool =
+  return self.tokenService.getChainTokenGroupsLoading(chainId)
 
-proc getGroupsForChainToLoading*(self: Controller): bool =
-  return self.tokenService.getGroupsForChainToLoading()
+proc isChainTokenGroupsActive*(self: Controller, chainId: int): bool =
+  return self.tokenService.isChainTokenGroupsActive(chainId)

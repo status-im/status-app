@@ -21,6 +21,7 @@ import shared.panels
 
 import AppLayouts.Wallet
 import AppLayouts.Wallet.controls
+import AppLayouts.Wallet.helpers
 import AppLayouts.Wallet.panels
 import AppLayouts.Wallet.popups.buy
 import AppLayouts.Wallet.adaptors
@@ -240,10 +241,21 @@ StatusDialog {
                 d.lastRequestedChainId = chainId
             const keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
             if (isToSide)
-                walletTokensStore.buildGroupsForChainTo(chainId, keys)
+                walletTokensStore.showGroupsForChainTo(chainId, keys)
             else
-                walletTokensStore.buildGroupsForChain(chainId, keys)
+                walletTokensStore.showGroupsForChain(chainId, keys)
         }
+    }
+
+    // both sides on one chain share one held entry
+    ChainTokenGroupsHolder {
+        tokensStore: root.swapAdaptor.walletAssetsStore.walletTokensStore
+        chainId: d.lastRequestedChainId
+    }
+
+    ChainTokenGroupsHolder {
+        tokensStore: root.swapAdaptor.walletAssetsStore.walletTokensStore
+        chainId: d.lastRequestedChainIdTo
     }
 
     ModelEntry {

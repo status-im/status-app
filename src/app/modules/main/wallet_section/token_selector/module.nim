@@ -1,4 +1,4 @@
-import nimqml, tables, sequtils
+import nimqml, tables, sets, sequtils
 
 import app/global/global_singleton
 import app/core/eventemitter
@@ -38,6 +38,8 @@ type
     # model (createModelForKind adds, releaseModel removes).
     models: Table[int, TokenSelectorModel]
     nextModelId: int
+    # swap receive models, each a holder of all token groups
+    allTokenGroupsHolders: HashSet[int]
     # Retained until the next modal: QML tears the released list's delegates down
     # after releaseModel returns, and a modal releases its whole batch at once.
     pendingRelease: seq[TokenSelectorModel]
@@ -184,7 +186,8 @@ method createModelForKind*(self: Module, kind: int): tuple[id: int, model: Token
   let (groups, networks) = self.buildOwnedSource()
   model.setOwnedSource(groups, networks)
   if kind == KIND_SWAP_TO:
-    atm.fetchAllChainsTokenGroupsForKeys(groups.mapIt(it.key))
+    self.allTokenGroupsHolders.incl(id)
+    atm.acquireAllChainsTokenGroupsForKeys(id, groups.mapIt(it.key))
   return (id, model)
 
 method releaseModel*(self: Module, id: int) =
@@ -193,6 +196,9 @@ method releaseModel*(self: Module, id: int) =
   let model = self.models[id]
   self.models.del(id)
   self.pendingRelease.add(model)
+  if self.allTokenGroupsHolders.missingOrExcl(id):
+    return
+  self.allTokensModule.releaseAllChainsTokenGroups(id)
 
 method load*(self: Module) =
   singletonInstance.engine.setRootContextProperty("walletSectionTokenSelector", self.viewVariant)
@@ -203,10 +209,16 @@ method load*(self: Module) =
     self.pushOwnedSource()
   self.events.on(SIGNAL_TOKEN_PREFERENCES_UPDATED) do(e: Args):
     self.pushOwnedSource()
-  self.events.on(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED) do(e: Args):
-    self.refreshModels()
-  self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):
-    self.refreshModels()
+  self.events.on(SIGNAL_TOKEN_CATALOGUE_CHANGED) do(e: Args):
+    let args = TokenCatalogueChangedArgs(e)
+    if args.kind == tckAllTokenGroups or
+        (args.kind == tckChainTokenGroups and args.chainId == self.allTokensModule.getGroupsForChainToId()):
+      self.refreshModels()
+  # only the flag: a finished load also comes as changed
+  self.events.on(SIGNAL_TOKEN_CATALOGUE_LOADING_CHANGED) do(e: Args):
+    if TokenCatalogueChangedArgs(e).kind == tckAllTokenGroups:
+      for m in self.models.values:
+        m.isLoadingMoreChanged()
 
   self.controller.init()
   self.view.load()

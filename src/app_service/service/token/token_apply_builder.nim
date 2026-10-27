@@ -41,11 +41,11 @@ type
 
   TokenGroupsApplyResult* = ref object of RootObj
     ## Finished, name-sorted token groups for the two on-demand group fetches
-    ## (getTokensByChain / getTokensForActiveNetworksMode). No generation stamp:
-    ## those tasks gate on a plain loading bool, not the refresh coordinator.
+    ## (getTokensByChain / getTokensForActiveNetworksMode).
+    generation*: int                                     ## the held resource's load, echoed back to it
     error*: string                                       ## non-empty -> slot skips apply
     groups*: seq[TokenGroupItem]
-    chainId*: int                                        ## chain the groups were built for; 0 for the all-networks fetch. Lets the slot drop completions superseded by a newer request
+    chainId*: int                                        ## chain the groups were built for; 0 for the all-networks fetch
 
 proc createTokenGroupsFromTokens(tokens: seq[TokenItem], groupsByKey: var Table[string, TokenGroupItem]) =
   # Byte-identical replica of the private helper in service_main.nim (grouping by
@@ -142,8 +142,8 @@ proc assembleRefreshResult*(tokensOfInterestNode, tokenPrefsNode: JsonNode,
 
 proc assembleTokenGroupsResult*(tokensNode: JsonNode, rpcError: string): TokenGroupsApplyResult =
   ## Same non-nil / never-raise guarantee as the refresh assembler: the worker
-  ## always finishTyped's a result, so the loading bool the slot clears never
-  ## stays stuck true (no permanently-spinning picker).
+  ## always finishTyped's a result, so the held load always completes (no
+  ## permanently-spinning picker).
   if rpcError.len > 0:
     result = TokenGroupsApplyResult(error: rpcError)
   else:
