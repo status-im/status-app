@@ -29,6 +29,9 @@ ColumnLayout {
     property alias addOrUpdateButtonEnabled: addOrUpdateButton.enabled
     property alias allowDecimals: amountInput.allowDecimals
     readonly property bool amountValid: amountInput.valid && !!amountInput.text
+    // token data not known yet: placeholder instead of the token, no editing
+    property bool loading: false
+    property string infoText
 
     property var networksModel
 
@@ -74,6 +77,16 @@ ColumnLayout {
 
         Layout.fillWidth: true
         enabled: false
+        visible: !root.loading
+    }
+
+    LoadingComponent {
+        objectName: "tokenLoadingIndicator"
+
+        Layout.fillWidth: true
+        Layout.preferredHeight: d.defaultHeight
+        radius: 8
+        visible: root.loading
     }
 
     Loader {
@@ -118,8 +131,10 @@ ColumnLayout {
 
     AmountInput {
         id: amountInput
+        objectName: "amountInput"
 
         Layout.fillWidth: true
+        enabled: !root.loading
         Layout.bottomMargin: (validationError !== "") ? root.spacing * 2 : 0
         customHeight: d.defaultHeight
         allowDecimals: true
@@ -162,8 +177,15 @@ ColumnLayout {
         }
     }
 
+    CustomText {
+        text: root.infoText
+        visible: !!root.infoText
+        wrapMode: Text.Wrap
+    }
+
     StatusButton {
         id: addOrUpdateButton
+        objectName: "addOrUpdateButton"
 
         text: root.mode === HoldingTypes.Mode.Add ? qsTr("Add")
                                                   : qsTr("Update")

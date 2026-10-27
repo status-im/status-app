@@ -26,6 +26,8 @@ StatusScrollView {
     // the wallet tokens of assetsModel are held while the view exists
     property var acquireTokenList: function() {}
     property var releaseTokenList: function() {}
+    // Returns token that matches provided key (key can be token or group key). Used only for criteria saved without their own token data.
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
     required property var collectiblesModel
     required property var channelsModel
 
@@ -111,6 +113,14 @@ StatusScrollView {
 
         readonly property int maxHoldingsItems: 5
 
+        // Token data read when an asset chip was clicked (or when its pending lookup
+        // landed), so the write uses the same decimals even if assetsModel fills in meanwhile.
+        property var editedAsset: null
+
+        readonly property ModelChangeTracker assetsChanges: ModelChangeTracker {
+            model: root.assetsModel
+        }
+
         readonly property int dropdownHorizontalOffset: 4
         readonly property int dropdownVerticalOffset: 1
 
@@ -152,10 +162,40 @@ StatusScrollView {
             }
 
             function getEnsNames() {
-                return ModelUtils.modelToArray(selectedHoldingsModel, ["type", "name"])
+                return ModelUtils.modelToArray(selectedHoldingsModel, ["type", "key"])
                     .filter(item => item.type === Constants.TokenType.ENS)
-                    .map(item => item.name)
+                    .map(item => item.key)
             }
+        }
+
+        // The assetsModel row wins; a criterion missing from it (e.g. cross-chain) carries its own data.
+        function getAssetData(key, holding) {
+            const row = PermissionsHelpers.findTokenByKey(root.assetsModel, false, key)
+            if (row)
+                return { symbol: row.symbol || row.shortName || "", name: row.name ?? "",
+                         decimals: row.decimals ?? 0, state: Constants.TokenLookupState.Resolved }
+            if (holding && holding.key === key)
+                return PermissionsHelpers.getAssetCriterionData(
+                            key, holding.symbol, holding.name, holding.decimals,
+                            root.getTokenByKeyOrGroupKeyFromAllTokens)
+            return { symbol: "", name: "", decimals: 0 }
+        }
+
+        function editAsset(holding) {
+            const asset = d.getAssetData(holding.key, holding)
+            d.editedAsset = Object.assign({ key: holding.key }, asset)
+            const pending = asset.state === Constants.TokenLookupState.Pending
+
+            dropdown.assetKey = holding.key
+            dropdown.assetFallbackSymbol = asset.symbol
+            dropdown.assetFallbackName = (asset.name || asset.symbol) ? asset.name : holding.key
+            dropdown.assetFallbackDecimals = asset.decimals
+            dropdown.assetNote = asset.state === Constants.TokenLookupState.Missing
+                    ? qsTr("Unknown token — amount in smallest units") : ""
+            // a raw amount must never reach the input while the decimals are unknown
+            dropdown.assetAmount = pending ? "0"
+                                           : AmountsArithmetic.toNumber(holding.amount, asset.decimals)
+            dropdown.assetLoading = pending
         }
 
         function loadInitValues() {
@@ -163,7 +203,7 @@ StatusScrollView {
             d.dirtyValues.selectedHoldingsModel.clear()
             d.dirtyValues.selectedHoldingsModel.append(
                         ModelUtils.modelToArray(root.selectedHoldingsModel,
-                                                ["type", "key", "amount"]))
+                                                ["type", "key", "amount", "symbol", "name", "decimals"]))
 
             // Permissions:
             d.dirtyValues.permissionType = root.permissionType
@@ -226,6 +266,7 @@ StatusScrollView {
 
                 assetsModel: root.assetsModel
                 collectiblesModel: root.collectiblesModel
+                getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             }
 
             label.enabled: whoHoldsSwitch.checked
@@ -258,6 +299,7 @@ StatusScrollView {
 
             HoldingsDropdown {
                 id: dropdown
+                objectName: "holdingsDropdown"
 
                 directParent: tokensSelector.addButton
 
@@ -300,10 +342,13 @@ StatusScrollView {
                 }
 
                 onAddAsset: function (key, amount) {
-                    const modelItem = PermissionsHelpers.getTokenByKey(
-                                        root.assetsModel, false, key)
+                    const asset = d.getAssetData(key)
 
-                    addItem(Constants.TokenType.ERC20, modelItem, AmountsArithmetic.fromNumber(amount, modelItem.decimals).toFixed())
+                    d.dirtyValues.selectedHoldingsModel.append({
+                        type: Constants.TokenType.ERC20, key,
+                        amount: AmountsArithmetic.fromNumber(amount, asset.decimals).toFixed(),
+                        symbol: asset.symbol, name: asset.name, decimals: asset.decimals
+                    })
                     dropdown.close()
                 }
 
@@ -321,12 +366,24 @@ StatusScrollView {
                     dropdown.close()
                 }
 
-                onUpdateAsset: {
+                onUpdateAsset: function (key, amount) {
                     const itemIndex = prepareUpdateIndex(key)
-                    const modelItem = PermissionsHelpers.getTokenByKey(root.assetsModel, false, key)
+                    const holding = d.dirtyValues.selectedHoldingsModel.get(itemIndex)
 
-                    d.dirtyValues.selectedHoldingsModel.set(
-                                itemIndex, { type: Constants.TokenType.ERC20, key, amount: AmountsArithmetic.fromNumber(amount, modelItem.decimals).toFixed() })
+                    let asset
+                    if (d.editedAsset && d.editedAsset.key === key)
+                        asset = d.editedAsset
+                    else if (holding && holding.key === key)
+                        asset = d.getAssetData(key, holding)
+                    else
+                        asset = d.getAssetData(key)
+
+                    // the decimals the amount is scaled with travel with it
+                    d.dirtyValues.selectedHoldingsModel.set(itemIndex, {
+                        type: Constants.TokenType.ERC20, key,
+                        amount: AmountsArithmetic.fromNumber(amount, asset.decimals).toFixed(),
+                        symbol: asset.symbol, name: asset.name, decimals: asset.decimals
+                    })
                     dropdown.close()
                 }
 
@@ -353,6 +410,18 @@ StatusScrollView {
                     dropdown.close()
                 }
 
+                // the token list rebuild after a pending lookup lands resolves it
+                Connections {
+                    target: d.assetsChanges
+                    enabled: dropdown.assetLoading && tokensSelector.editedIndex !== -1
+                             && dropdown.assetKey === ModelUtils.get(tokensSelector.model,
+                                                                     tokensSelector.editedIndex, "key")
+
+                    function onRevisionChanged() {
+                        d.editAsset(tokensSelector.model.get(tokensSelector.editedIndex))
+                    }
+                }
+
                 onNavigateToMintTokenSettings: {
                     root.navigateToMintTokenSettings(isAssetType)
                     close()
@@ -365,6 +434,7 @@ StatusScrollView {
                 dropdown.open()
 
                 editedIndex = -1
+                d.editedAsset = null
             }
 
             onItemClicked: function (item, index, mouse) {
@@ -379,9 +449,7 @@ StatusScrollView {
 
                 switch(modelItem.type) {
                     case Constants.TokenType.ERC20:
-                        dropdown.assetKey = modelItem.key
-                        const decimals = PermissionsHelpers.getTokenByKey(root.assetsModel, false, modelItem.key).decimals
-                        dropdown.assetAmount = AmountsArithmetic.toNumber(modelItem.amount, decimals)
+                        d.editAsset(modelItem)
                         break
                     case Constants.TokenType.ERC721:
                         dropdown.collectibleKey = modelItem.key
