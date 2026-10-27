@@ -59,6 +59,7 @@ Item {
                     emoji: "",
                     color: "",
                     colorId: i % 10,
+                    sortTimestamp: 0,
                     categoryOpened: true,
                     hidden: false,
                     usesDefaultName: false,
@@ -66,6 +67,9 @@ Item {
                     requiresPermissions: false,
                     locked: false,
                     isCategory: false,
+                    isThread: false,
+                    archived: false,
+                    followed: false,
                     position: i,
                     categoryPosition: -1
                 })
