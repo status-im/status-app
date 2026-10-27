@@ -7,6 +7,7 @@ import ./dto/sign_params as sign_params_dto
 import ./dto/roster as roster_dto
 import ./roster_sync
 import ./roster_order
+import ./permission_chains
 import ../community_tokens/dto/community_token as community_token_dto
 
 import ../activity_center/service as activity_center_service
@@ -24,12 +25,13 @@ import ../../../app/core/tasks/[qt, threadpool]
 import ../../../backend/communities as status_go
 import ../../../backend/shared_urls as shared_urls
 import ../../../backend/community_tokens as tokens_backend
+import ../../../backend/tokens as wallet_tokens_backend
 
 import ../../../app_service/common/types
 
 include ./async_tasks
 
-export community_dto, sign_params_dto, roster_dto, roster_order
+export community_dto, sign_params_dto, roster_dto, roster_order, permission_chains
 
 logScope:
   topics = "community-service"
@@ -2350,29 +2352,29 @@ QtObject:
     except Exception as e:
       error "Error canceling discord channel import", msg = e.msg
 
-  proc createOrEditCommunityTokenPermission*(self: Service, communityId: string, tokenPermission: CommunityTokenPermissionDto) =
-    let editing = tokenPermission.id != ""
-    try:
-      var response: RpcResponse[JsonNode]
-      if editing:
-        response = status_go.editCommunityTokenPermission(communityId, tokenPermission.id, int(tokenPermission.`type`), Json.encode(tokenPermission.tokenCriteria), tokenPermission.chatIDs, tokenPermission.isPrivate)
+  proc createOrEditCommunityTokenPermission*(self: Service, communityId: string, tokenPermission: CommunityTokenPermissionDto,
+      toSave: seq[SaveCriterion], storedCriteria: seq[TokenCriteriaDto], modes: ModeChains) =
+    ## Resolves the ERC20 criteria chains and saves on a worker.
+    let arg = newSaveCommunityTokenPermissionTaskArg(communityId, tokenPermission, toSave, storedCriteria, modes)
+    arg.tptr = asyncSaveCommunityTokenPermissionTask
+    arg.vptr = cast[uint](self.vptr)
+    arg.slot = "onAsyncCommunityTokenPermissionSaved"
+    self.threadpool.start(arg)
+
+  proc onAsyncCommunityTokenPermissionSaved*(self: Service, response: string) {.slot.} =
+    let res = takeTyped[PermissionSaveResult](response)
+    if res.isNil:
+      return
+    let args = CommunityTokenPermissionArgs(communityId: res.communityId, tokenPermission: res.permission)
+    if res.error.len > 0:
+      error "Error creating/editing community token permission", msg = res.error
+      if res.permission.id != "":
+        self.events.emit(SIGNAL_COMMUNITY_TOKEN_PERMISSION_UPDATE_FAILED, args)
       else:
-        response = status_go.createCommunityTokenPermission(communityId, int(tokenPermission.`type`), Json.encode(tokenPermission.tokenCriteria), tokenPermission.chatIDs, tokenPermission.isPrivate)
-
-      if response.result != nil and response.result.kind != JNull:
-        self.handleCommunityRosterDeltas(parseRosterDeltas(response.result{"communityChanges"}))
-        self.events.emit(SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_OR_UPDATE_SUCCEEDED, CommunityTokenPermissionArgs(communityId: communityId, tokenPermission: tokenPermission))
-        return
-
-      raise newException(RpcException, "No result returned from create/edit community token permission")
-    except Exception as e:
-      error "Error creating/editing community token permission", msg = e.msg
-
-      var signal = SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_FAILED
-      if editing:
-        signal = SIGNAL_COMMUNITY_TOKEN_PERMISSION_UPDATE_FAILED
-
-      self.events.emit(signal, CommunityTokenPermissionArgs(communityId: communityId, tokenPermission: tokenPermission))
+        self.events.emit(SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_FAILED, args)
+      return
+    self.handleCommunityRosterDeltas(res.rosterDeltas)
+    self.events.emit(SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_OR_UPDATE_SUCCEEDED, args)
 
   proc deleteCommunityTokenPermission*(self: Service, communityId: string, permissionId: string) =
     try:

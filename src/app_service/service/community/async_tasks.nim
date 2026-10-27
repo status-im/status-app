@@ -362,3 +362,79 @@ proc asyncLoadCommunityRosterTask(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     res.error = e.msg
   arg.finishTyped(res)
+
+type
+  AsyncSaveCommunityTokenPermissionTaskArg* = ref object of QObjectTaskArg
+    communityId*: string
+    permission*: CommunityTokenPermissionDto
+    keys*: seq[string]
+    criteriaJson*: string
+    storedCriteriaJson*: string
+    modes*: ModeChains
+
+  SavePermissionId = object
+    id: string
+
+  # Whatever a save arg that fails to decode still reports its failure with.
+  SaveCommunityTokenPermissionTaskHeader = ref object of QObjectTaskArg
+    communityId: string
+    permission: SavePermissionId
+
+proc newSaveCommunityTokenPermissionTaskArg*(communityId: string, permission: CommunityTokenPermissionDto,
+    toSave: seq[SaveCriterion], storedCriteria: seq[TokenCriteriaDto], modes: ModeChains): AsyncSaveCommunityTokenPermissionTaskArg =
+  result = AsyncSaveCommunityTokenPermissionTaskArg(
+    communityId: communityId,
+    permission: permission,
+    keys: toSave.mapIt(it.key),
+    criteriaJson: criteriaToJson(toSave.mapIt(it.criterion)),
+    storedCriteriaJson: criteriaToJson(storedCriteria),
+    modes: modes,
+  )
+  # Criteria only travel as criteriaJson: the task arg decoder rejects their TokenType.
+  result.permission.tokenCriteria = @[]
+
+proc toCatalogueTokens(response: JsonNode, err: string): seq[CatalogueToken] =
+  if err.len > 0:
+    raise newException(CatchableError, err)
+  if response.isNil or response.kind != JArray:
+    raise newException(CatchableError, "unexpected tokens response")
+  for token in response:
+    result.add(toCatalogueToken(token))
+
+proc backendTokenCatalogue(): TokenCatalogue =
+  TokenCatalogue(
+    byKeys: proc(keys: seq[string]): seq[CatalogueToken] {.closure, gcsafe.} =
+      var response: JsonNode
+      let err = wallet_tokens_backend.getTokensByKeys(response, keys)
+      toCatalogueTokens(response, err),
+    byGroupKeys: proc(groupKeys: seq[string]): seq[CatalogueToken] {.closure, gcsafe.} =
+      var response: JsonNode
+      let err = wallet_tokens_backend.getTokensByGroupKeys(response, groupKeys)
+      toCatalogueTokens(response, err),
+  )
+
+proc saveTokenPermissionRpc(communityId: string, permission: CommunityTokenPermissionDto): JsonNode {.gcsafe.} =
+  let criteria = Json.encode(permission.tokenCriteria)
+  if permission.id != "":
+    return status_go.editCommunityTokenPermission(communityId, permission.id, int(permission.`type`), criteria,
+      permission.chatIDs, permission.isPrivate).result
+  return status_go.createCommunityTokenPermission(communityId, int(permission.`type`), criteria,
+    permission.chatIDs, permission.isPrivate).result
+
+proc runSaveCommunityTokenPermissionTask*(argEncoded: string, catalogue: TokenCatalogue,
+    save: SavePermissionRpc): (QObjectTaskArg, PermissionSaveResult) =
+  let header = decode[SaveCommunityTokenPermissionTaskHeader](argEncoded)
+  try:
+    let arg = decode[AsyncSaveCommunityTokenPermissionTaskArg](argEncoded)
+    var toSave: seq[SaveCriterion]
+    for i, criterion in criteriaFromJson(arg.criteriaJson):
+      toSave.add(SaveCriterion(key: arg.keys[i], criterion: criterion))
+    return (header.QObjectTaskArg, saveTokenPermission(arg.communityId, arg.permission, toSave,
+      criteriaFromJson(arg.storedCriteriaJson), arg.modes, catalogue, save))
+  except Exception as e:
+    return (header.QObjectTaskArg, PermissionSaveResult(communityId: header.communityId,
+      permission: CommunityTokenPermissionDto(id: header.permission.id), error: e.msg))
+
+proc asyncSaveCommunityTokenPermissionTask(argEncoded: string) {.gcsafe, nimcall.} =
+  var (arg, res) = runSaveCommunityTokenPermissionTask(argEncoded, backendTokenCatalogue(), saveTokenPermissionRpc)
+  arg.finishTyped(move res)
