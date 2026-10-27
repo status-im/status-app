@@ -1,6 +1,5 @@
 import logging
 import time
-import typing
 
 import allure
 import object as squish_object
@@ -51,12 +50,8 @@ class ActivityCenter(QObject):
         self.activity_center_notification_card = QObject(activity_center_names.activityCenterNotificationCard)
         self.scroll = Scroll(activity_center_names.activityCenterScrollView)
         self.navigation_button = Button(activity_center_names.activityCenterNavigationButton)
+        self.replies_button = Button(activity_center_names.activityCenterRepliesButton)
         self._close_button = Button(activity_center_names.activityCenterCloseButton)
-
-    @property
-    @allure.step('Get contact items')
-    def contact_items(self) -> typing.List[ContactRequest]:
-        return [ContactRequest(item) for item in driver.findAllObjects(self.activity_center_notification_card.real_name)]
 
     @allure.step('Click activity center button')
     def click_activity_center_button(self, text: str):
@@ -70,28 +65,45 @@ class ActivityCenter(QObject):
         self.activity_center_button.click()
         return self
 
+    @staticmethod
+    def _card_text(card, attr: str) -> str:
+        try:
+            value = getattr(card, attr, None)
+            return str(value).strip() if value not in (None, '') else ''
+        except Exception:
+            return ''
+
+    @staticmethod
+    def _label_matches(actual: str, expected: str) -> bool:
+        if not actual:
+            return False
+        if actual == expected or expected in actual:
+            return True
+        visible = actual.replace('…', '').replace('...', '').strip()
+        return len(visible) >= 4 and (expected.startswith(visible) or visible.startswith(expected))
+
+    @allure.step('Find notification with {attr} {text}')
+    def find_notification(
+            self, text: str, attr: str = 'title',
+            timeout_sec: int = configs.timeouts.MESSAGING_TIMEOUT_SEC):
+        deadline = time.monotonic() + timeout_sec
+        while time.monotonic() < deadline:
+            for card in driver.findAllObjects(self.activity_center_notification_card.real_name):
+                if self._label_matches(self._card_text(card, attr), text):
+                    return card
+            time.sleep(0.25)
+        raise TimeoutError(f'Notification with {attr} {text!r} not found')
+
     @allure.step('Find contact request')
     def find_contact_request_in_list(
             self, contact: str, timeout_sec: int = configs.timeouts.MESSAGING_TIMEOUT_SEC):
-        started_at = time.monotonic()
-        last_log_at = started_at
-        while time.monotonic() - started_at < timeout_sec:
-            requests = self.contact_items
-            for _request in requests:
-                if _request.contact_request == contact:
-                    LOG.info('find_contact_request_in_list: matched %r', contact)
-                    return _request
-            now = time.monotonic()
-            if now - last_log_at >= 5.0:
-                last_log_at = now
-                titles = [r.contact_request for r in requests]
-                LOG.info(
-                    'find_contact_request_in_list: still waiting for %r (%d cards: %s)',
-                    contact,
-                    len(requests),
-                    titles,
-                )
-        raise TimeoutError(f'Timed out after {timeout_sec} seconds: Contact request "{contact}" not found.')
+        return ContactRequest(self.find_notification(contact, 'title', timeout_sec))
+
+    @allure.step('Open notification card from activity center')
+    def open_notification_card(self, card):
+        self._scroll_notification_into_view(card)
+        driver.mouseClick(card)
+        return self
 
     @allure.step('Close activity center')
     def close(self):
