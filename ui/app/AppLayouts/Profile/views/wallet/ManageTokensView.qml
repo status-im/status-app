@@ -8,6 +8,7 @@ import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Models
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Popups.Dialog
 
 import shared.controls
@@ -153,7 +154,11 @@ Item {
             ColumnLayout {
                 id: advancedSettings
 
-                Component.onCompleted: root.tokensStore.loadTokenLists()
+                SQUtils.ResourceHolder {
+                    key: "tokenLists"
+                    onAcquireRequested: root.tokensStore.acquireTokenLists()
+                    onReleaseRequested: root.tokensStore?.releaseTokenLists()
+                }
 
                 function saveSettings() {
                     if (showCommunityAssetsSwitch.checked !== root.tokensStore.showCommunityAssetsInSend)

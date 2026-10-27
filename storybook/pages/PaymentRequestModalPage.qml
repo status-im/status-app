@@ -101,12 +101,13 @@ SplitView {
                         paymentRequestModal.selectedNetworkChainId = d.selectedNetworkChainId
                     if (!!d.selectedAccountAddress)
                         paymentRequestModal.selectedAccountAddress = d.selectedAccountAddress
-                    popupBg.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
                 }
 
-                onBuildGroupsForChain: {
-                    popupBg.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-                }
+                onShowGroupsForChainRequested: chainId => popupBg.tokensStore.showGroupsForChain(chainId)
+                onChainTokenGroupsAcquireRequested: chainId => popupBg.tokensStore.acquireChainTokenGroups(chainId)
+                onChainTokenGroupsReleaseRequested: chainId => popupBg.tokensStore.releaseChainTokenGroups(chainId)
+                onAllTokenGroupsAcquireRequested: popupBg.tokensStore.acquireAllTokenGroups()
+                onAllTokenGroupsReleaseRequested: popupBg.tokensStore.releaseAllTokenGroups()
             }
         }
     }

@@ -221,7 +221,7 @@ QtObject:
   # so the granular emissions above still hold end to end.
 
   proc hasMoreItemsChanged(self: TokenSelectorModel) {.signal.}
-  proc isLoadingMoreChanged(self: TokenSelectorModel) {.signal.}
+  proc isLoadingMoreChanged*(self: TokenSelectorModel) {.signal.}
 
   proc allChainsScope(self: TokenSelectorModel): bool =
     self.mode == TokenSelectorMode.AllTokens and

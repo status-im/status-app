@@ -175,8 +175,13 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED) do(e: Args):
     self.delegate.onWalletAccountTokensRebuilt()
 
-  self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):
-    self.delegate.onAllTokenGroupsLoaded()
+  self.events.on(SIGNAL_TOKEN_CATALOGUE_CHANGED) do(e: Args):
+    if TokenCatalogueChangedArgs(e).kind == tckAllTokenGroups:
+      self.delegate.onAllTokenGroupsChanged()
+
+  self.events.on(SIGNAL_TOKEN_CATALOGUE_LOADING_CHANGED) do(e: Args):
+    if TokenCatalogueChangedArgs(e).kind == tckAllTokenGroups:
+      self.delegate.onAllTokenGroupsLoadingChanged()
 
 
   self.events.on(SIGNAL_CHECK_PERMISSIONS_TO_JOIN_FAILED) do(e: Args):
@@ -323,11 +328,17 @@ proc requestCancelDiscordCommunityImport*(self: Controller, id: string) =
 proc requestCancelDiscordChannelImport*(self: Controller, discordChannelId: string) =
   self.communityService.requestCancelDiscordChannelImport(discordChannelId)
 
-proc getAllTokenGroupsForActiveNetworksMode*(self: Controller): seq[TokenGroupItem] =
-  return self.tokenService.getAllTokenGroupsForActiveNetworksMode()
+proc getAllTokenGroups*(self: Controller): var seq[TokenGroupItem] =
+  return self.tokenService.getAllTokenGroups()
 
-proc fetchAllTokenGroups*(self: Controller) =
-  self.tokenService.asyncFetchAllTokenGroups()
+proc getAllTokenGroupsLoading*(self: Controller): bool =
+  return self.tokenService.getAllTokenGroupsLoading()
+
+proc acquireAllTokenGroups*(self: Controller) =
+  self.tokenService.acquireAllTokenGroups()
+
+proc releaseAllTokenGroups*(self: Controller) =
+  self.tokenService.releaseAllTokenGroups()
 
 proc getCommunityTokens*(self: Controller, communityId: string): seq[CommunityTokenDto] =
   self.communityTokensService.getCommunityTokens(communityId)

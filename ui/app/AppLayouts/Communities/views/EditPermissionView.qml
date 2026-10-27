@@ -23,7 +23,9 @@ StatusScrollView {
 
     required property var assetsModel
     property bool assetsLoading: false
-    property var loadTokenList: function() {}
+    // the wallet tokens of assetsModel are held while the view exists
+    property var acquireTokenList: function() {}
+    property var releaseTokenList: function() {}
     required property var collectiblesModel
     required property var channelsModel
 
@@ -96,6 +98,12 @@ StatusScrollView {
 
         roles: ["key"]
         mode: ModelsComparator.CompareMode.Set
+    }
+
+    ResourceHolder {
+        key: "tokenList"
+        onAcquireRequested: root.acquireTokenList()
+        onReleaseRequested: root.releaseTokenList()
     }
 
     QtObject {
@@ -287,7 +295,6 @@ StatusScrollView {
                 }
 
                 onOpened: {
-                    root.loadTokenList()
                     usedTokens = d.dirtyValues.getTokenKeysAndAmounts()
                     usedEnsNames = d.dirtyValues.getEnsNames().filter(item => item !== ensDomainName)
                 }

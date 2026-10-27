@@ -71,15 +71,18 @@ method load*(self: Module) =
     self.view.currencyFormatsUpdated()
   self.events.on(SIGNAL_AUTO_REFRESH_TOKENS_UPDATED) do(e:Args):
     self.view.emitAutoRefreshTokensListsChanged()
-  self.events.on(SIGNAL_TOKEN_LISTS_LOADED) do(e: Args):
-    self.view.setTokenListsLoading(false)
-    self.view.tokenListsUpdated()
-  self.events.on(SIGNAL_GROUPS_FOR_CHAIN_LOADED) do(e: Args):
-    self.view.onGroupsForChainLoaded()
-  self.events.on(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED) do(e: Args):
-    self.view.onGroupsForChainToLoaded()
-  self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):
-    self.view.onAllChainsGroupsLoaded()
+  self.events.on(SIGNAL_TOKEN_CATALOGUE_CHANGED) do(e: Args):
+    let args = TokenCatalogueChangedArgs(e)
+    case args.kind
+    of tckTokenLists:
+      self.view.onTokenListsChanged()
+    of tckAllTokenGroups:
+      self.view.onAllChainsGroupsChanged()
+    of tckChainTokenGroups:
+      self.view.onChainGroupsChanged(args.chainId)
+  self.events.on(SIGNAL_TOKEN_CATALOGUE_LOADING_CHANGED) do(e: Args):
+    if TokenCatalogueChangedArgs(e).kind != tckAllTokenGroups:
+      self.view.onCatalogueLoadingChanged()
 
   self.controller.init()
   self.view.load()
@@ -123,7 +126,8 @@ method getTokenGroupsModelDataSource*(self: Module): TokenGroupsModelDataSource 
 
 method getTokenGroupsForChainModelDataSource*(self: Module): TokenGroupsModelDataSource =
   return (
-    getAllTokenGroups: proc(): var seq[TokenGroupItem] = self.controller.getGroupsForChain(),
+    getAllTokenGroups: proc(): var seq[TokenGroupItem] =
+      self.controller.getChainTokenGroups(self.view.getGroupsForChainId()),
     getTokenDetails: proc(tokenKey: string): TokenDetailsItem = self.controller.getTokenDetails(tokenKey),
     getTokenPreferences: proc(groupKey: string): TokenPreferencesItem = self.controller.getTokenPreferences(groupKey),
     getCommunityTokenDescription: proc(chainId: int, address: string): string = self.controller.getCommunityTokenDescription(chainId, address),
@@ -133,7 +137,8 @@ method getTokenGroupsForChainModelDataSource*(self: Module): TokenGroupsModelDat
 
 method getTokenGroupsForChainToModelDataSource*(self: Module): TokenGroupsModelDataSource =
   return (
-    getAllTokenGroups: proc(): var seq[TokenGroupItem] = self.controller.getGroupsForChainTo(),
+    getAllTokenGroups: proc(): var seq[TokenGroupItem] =
+      self.controller.getChainTokenGroups(self.view.getGroupsForChainToId()),
     getTokenDetails: proc(tokenKey: string): TokenDetailsItem = self.controller.getTokenDetails(tokenKey),
     getTokenPreferences: proc(groupKey: string): TokenPreferencesItem = self.controller.getTokenPreferences(groupKey),
     getCommunityTokenDescription: proc(chainId: int, address: string): string = self.controller.getCommunityTokenDescription(chainId, address),
@@ -151,8 +156,11 @@ method getTokenGroupsAllChainsModelDataSource*(self: Module): TokenGroupsModelDa
     getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
   )
 
-method fetchAllChainsTokenGroups*(self: Module) =
-  self.controller.fetchAllChainsTokenGroups()
+method acquireAllTokenGroups*(self: Module) =
+  self.controller.acquireAllTokenGroups()
+
+method releaseAllTokenGroups*(self: Module) =
+  self.controller.releaseAllTokenGroups()
 
 method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSource =
   return (
@@ -162,11 +170,14 @@ method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSourc
     getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
   )
 
-method buildGroupsForChain*(self: Module, chainId: int) =
-  self.controller.buildGroupsForChain(chainId)
+method acquireChainTokenGroups*(self: Module, chainId: int) =
+  self.controller.acquireChainTokenGroups(chainId)
 
-method buildGroupsForChainTo*(self: Module, chainId: int) =
-  self.controller.buildGroupsForChainTo(chainId)
+method releaseChainTokenGroups*(self: Module, chainId: int) =
+  self.controller.releaseChainTokenGroups(chainId)
+
+method getChainTokenGroupsLoading*(self: Module, chainId: int): bool =
+  return self.controller.getChainTokenGroupsLoading(chainId)
 
 # Non-QML accessors so the token-selector producer can snapshot the lazy popular
 # and search lists and drive their fetchMore/search directly.
@@ -182,8 +193,12 @@ proc getTokenGroupsAllChainsModelObj*(self: Module): TokenGroupsModel =
   self.view.getTokenGroupsAllChainsModelObj()
 proc isAllChainsTokenGroupsLoading*(self: Module): bool =
   self.controller.getAllChainsTokenGroupsLoading()
-proc fetchAllChainsTokenGroupsForKeys*(self: Module, mandatoryGroupKeys: seq[string]) =
-  self.view.fetchAllChainsTokenGroupsForKeys(mandatoryGroupKeys)
+proc acquireAllChainsTokenGroupsForKeys*(self: Module, holder: int, mandatoryGroupKeys: seq[string]) =
+  self.view.acquireAllChainsTokenGroupsForKeys(holder, mandatoryGroupKeys)
+proc releaseAllChainsTokenGroups*(self: Module, holder: int) =
+  self.view.releaseAllChainsTokenGroups(holder)
+proc getGroupsForChainToId*(self: Module): int =
+  self.view.getGroupsForChainToId()
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)
@@ -253,6 +268,11 @@ method getMandatoryTokenGroupKeys*(self: Module): seq[string] =
 method isChainSupportedForSwap*(self: Module, chainId: int): bool =
   return self.controller.isChainSupportedForSwap(chainId)
 
-method loadTokenLists*(self: Module) =
-  self.view.setTokenListsLoading(true)
-  self.controller.loadTokenLists()
+method acquireTokenLists*(self: Module) =
+  self.controller.acquireTokenLists()
+
+method releaseTokenLists*(self: Module) =
+  self.controller.releaseTokenLists()
+
+method getTokenListsLoading*(self: Module): bool =
+  return self.controller.getTokenListsLoading()

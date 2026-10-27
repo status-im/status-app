@@ -92,9 +92,15 @@ QtObject {
 
     readonly property bool tokenListLoading: !!communitiesModuleInst ? communitiesModuleInst.tokenListLoading : false
 
-    function loadTokenList() {
+    // the wallet tokens of assetsModel are loaded only while held; every acquire needs one release
+    function acquireTokenList() {
         if (communitiesModuleInst)
-            communitiesModuleInst.loadTokenList()
+            communitiesModuleInst.acquireTokenList()
+    }
+
+    function releaseTokenList() {
+        if (communitiesModuleInst)
+            communitiesModuleInst.releaseTokenList()
     }
 
     property var assetsModel: SortFilterProxyModel {

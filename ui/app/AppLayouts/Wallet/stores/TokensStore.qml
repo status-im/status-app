@@ -135,21 +135,45 @@ QtObject {
 
     signal displayAssetsBelowBalanceThresholdChanged()
 
-    function loadTokenLists() {
-        if (root._allTokensModule)
-            root._allTokensModule.loadTokenLists()
+    // The token lists, all token groups and each chain's token groups are loaded
+    // only while held (see ResourceHolder); every acquire needs one release.
+    function acquireTokenLists() {
+        if (!!root._allTokensModule)
+            root._allTokensModule.acquireTokenLists()
     }
 
-    function buildGroupsForChain(chainId, mandatoryKeys) {
-        root._allTokensModule.buildGroupsForChain(chainId, mandatoryKeys)
+    function releaseTokenLists() {
+        if (!!root._allTokensModule)
+            root._allTokensModule.releaseTokenLists()
     }
 
-    function buildGroupsForChainTo(chainId, mandatoryKeys) {
-        root._allTokensModule.buildGroupsForChainTo(chainId, mandatoryKeys)
+    function acquireAllTokenGroups() {
+        if (!!root._allTokensModule)
+            root._allTokensModule.acquireAllTokenGroups()
     }
 
-    function fetchAllChainsTokenGroups(mandatoryKeys) {
-        root._allTokensModule.fetchAllChainsTokenGroups(mandatoryKeys)
+    function releaseAllTokenGroups() {
+        if (!!root._allTokensModule)
+            root._allTokensModule.releaseAllTokenGroups()
+    }
+
+    function acquireChainTokenGroups(chainId) {
+        if (!!root._allTokensModule)
+            root._allTokensModule.acquireChainTokenGroups(chainId)
+    }
+
+    function releaseChainTokenGroups(chainId) {
+        if (!!root._allTokensModule)
+            root._allTokensModule.releaseChainTokenGroups(chainId)
+    }
+
+    // Points tokenGroupsForChainModel at a chain; it stays empty unless that chain is held.
+    function showGroupsForChain(chainId, mandatoryKeys) {
+        root._allTokensModule.showGroupsForChain(chainId, mandatoryKeys ?? "")
+    }
+
+    function showGroupsForChainTo(chainId, mandatoryKeys) {
+        root._allTokensModule.showGroupsForChainTo(chainId, mandatoryKeys ?? "")
     }
 
     function ensurePricesForGroup(key) {

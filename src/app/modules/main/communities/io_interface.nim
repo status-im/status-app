@@ -207,10 +207,16 @@ method onCommunityTokenMetadataAdded*(self: AccessInterface, communityId: string
 method onWalletAccountTokensRebuilt*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onAllTokenGroupsLoaded*(self: AccessInterface) {.base.} =
+method onAllTokenGroupsChanged*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method loadTokenList*(self: AccessInterface) {.base.} =
+method onAllTokenGroupsLoadingChanged*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method acquireTokenList*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseTokenList*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method shareCommunityUrlWithChatKey*(self: AccessInterface, communityId: string): string {.base.} =

@@ -165,7 +165,7 @@ Item {
         // helper functions -------------------------------------------------------------
 
         function init() {
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(1)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(1)
 
             swapAdaptor.swapFormData = root.swapFormData
             controlUnderTest = createTemporaryObject(componentUnderTest, root, { swapInputParamsForm: root.swapFormData})
@@ -234,7 +234,7 @@ Item {
             waitForRendering(receivePanel)
             formValuesChanged.wait()
             root.swapFormData.selectedNetworkChainId = 11155420
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             formValuesChanged.wait()
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             formValuesChanged.wait()
@@ -666,7 +666,7 @@ Item {
             waitForRendering(receivePanel)
             formValuesChanged.wait()
             root.swapFormData.selectedNetworkChainId = 11155420
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             formValuesChanged.wait()
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             formValuesChanged.wait()
@@ -983,7 +983,7 @@ Item {
             if (root.swapFormData.selectedNetworkChainId === -1) {
                 root.swapFormData.selectedNetworkChainId = 1
             }
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
 
             // Launch popup
             launchAndVerfyModal()
@@ -1034,7 +1034,7 @@ Item {
 
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.fromGroupKey = sttGroupKey
             root.swapFormData.fromTokenAmount = valueToExchangeString
 
@@ -1095,7 +1095,7 @@ Item {
                 // try setting value before popup is launched and check values
                 root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
                 root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
-                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
                 root.swapFormData.fromGroupKey = ""
                 root.swapFormData.fromTokenAmount = invalidValue
 
@@ -1144,7 +1144,7 @@ Item {
             let valueToExchangeString = valueToExchange.toString()
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.fromGroupKey = sttGroupKey
             root.swapFormData.fromTokenAmount = valueToExchangeString
 
@@ -1201,7 +1201,7 @@ Item {
             if (root.swapFormData.selectedNetworkChainId === -1) {
                 root.swapFormData.selectedNetworkChainId = 1
             }
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
 
             // Launch popup
             launchAndVerfyModal()
@@ -1242,7 +1242,7 @@ Item {
             // try setting value before popup is launched and check values
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.selectedNetworkChainId = 11155420
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.toGroupKey = sttGroupKey
             root.swapFormData.toTokenAmount = valueToReceiveString
 
@@ -1295,7 +1295,7 @@ Item {
             formValuesChanged.clear()
 
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.fromGroupKey = ethGroupKey
             root.swapFormData.toGroupKey = sttGroupKey
@@ -1360,7 +1360,7 @@ Item {
                 root.swapFormData.fromTokenAmount = valueToExchangeString
                 root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
                 root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
-                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
                 root.swapFormData.fromGroupKey = sttGroupKey
 
                 // Launch popup
@@ -1417,7 +1417,7 @@ Item {
             const walletAccounts = getProcessedAccountsModel()
             root.swapAdaptor.reset()
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.fromGroupKey = sttGroupKey
             root.swapFormData.toGroupKey = ethGroupKey
@@ -1545,7 +1545,7 @@ Item {
 
             // set network and address by default same
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.fromGroupKey = data.fromToken
             // the handler names the pay token through the default too, which keeps
@@ -1677,7 +1677,7 @@ Item {
             root.swapFormData.fromTokenAmount = "0.001"
             formValuesChanged.wait()
             root.swapFormData.selectedNetworkChainId = 11155420
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             formValuesChanged.wait()
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             formValuesChanged.wait()
@@ -1841,7 +1841,7 @@ Item {
 
                 payPanel.listChainFilter = chainId
                 root.swapFormData.selectedNetworkChainId = chainId
-                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId)
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(chainId)
 
                 waitForRendering(payPanel)
 
@@ -1887,7 +1887,7 @@ Item {
 
                 receivePanel.listChainFilter = chainId
                 root.swapFormData.toNetworkChainId = chainId
-                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId)
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(chainId)
 
                 waitForRendering(receivePanel)
 
@@ -2015,7 +2015,7 @@ Item {
             root.swapFormData.fromTokenAmount = "0.0001"
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             root.swapFormData.selectedNetworkChainId = 11155111
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.fromGroupKey = ethGroupKey
             root.swapFormData.toGroupKey = sttGroupKey
 
@@ -2069,7 +2069,7 @@ Item {
         }
 
         function test_exchange_rate() {
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(11155111)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(11155111)
 
             root.swapFormData.fromTokenAmount = "1"
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
@@ -2154,7 +2154,7 @@ Item {
         }
 
         function test_exchange_rate_loading_without_prices() {
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(11155420)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(11155420)
 
             const zrxKey = "11155420-0x6b175474e89094c44da98b954eedeac495271e0f"
             const omgKey = "11155420-0x6b175474e89094c44da98b954eedeac495271p0f" // no market price
@@ -2203,7 +2203,7 @@ Item {
         // Without an amount no route is requested, so a token without a market price has no
         // rate on its way: say so instead of loading forever.
         function test_exchange_rate_unavailable_without_amount() {
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(11155420)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(11155420)
 
             const zrxKey = "11155420-0x6b175474e89094c44da98b954eedeac495271e0f"
             const omgKey = "11155420-0x6b175474e89094c44da98b954eedeac495271p0f" // no market price
@@ -2404,6 +2404,25 @@ Item {
             closeAndVerfyModal()
         }
 
+        function test_holdsTheCatalogChainOfEachSide() {
+            const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const otherChainId = 11155420
+
+            launchAndVerfyModal()
+            const payChainId = root.swapFormData.selectedNetworkChainId
+            verify(payChainId !== otherChainId)
+            compare(store.chainTokenGroupsHolderCount(payChainId), 2, "both sides hold the shared chain")
+
+            root.swapFormData.toNetworkChainId = otherChainId
+            compare(store.chainTokenGroupsHolderCount(payChainId), 1)
+            compare(store.chainTokenGroupsHolderCount(otherChainId), 1, "the receive side moved its hold")
+
+            closeAndVerfyModal()
+            tryVerify(() => store.chainTokenGroupsHolderCount(payChainId) === 0
+                      && store.chainTokenGroupsHolderCount(otherChainId) === 0,
+                      5000, "released on close: " + JSON.stringify(store.chainTokenGroupsHolders))
+        }
+
         // Filtering the PAY list to another chain must not disturb the receive side.
         // Reported against BSC, where it bites hardest: USDC has its own group key
         // there (usd-coin-bsc), so a receive token carried over from another chain
@@ -2419,7 +2438,7 @@ Item {
             root.swapFormData.fromTokenAmount = "0.001"
             formValuesChanged.wait()
             root.swapFormData.selectedNetworkChainId = 11155420
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(root.swapFormData.selectedNetworkChainId)
             formValuesChanged.wait()
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             formValuesChanged.wait()
@@ -2850,13 +2869,13 @@ Item {
                 root.swapFormData.selectedNetworkChainId = spec.fromChain
                 formValuesChanged.wait()
             }
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(spec.fromChain)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(spec.fromChain)
             if (root.swapFormData.toNetworkChainId !== spec.toChain) {
                 root.swapFormData.toNetworkChainId = spec.toChain
                 formValuesChanged.wait()
             }
             if (spec.toChain !== spec.fromChain) {
-                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(spec.toChain)
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.showGroupsForChain(spec.toChain)
             }
 
             fetchSuggestedRoutesCalled.wait()

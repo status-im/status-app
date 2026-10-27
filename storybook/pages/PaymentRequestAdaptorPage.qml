@@ -37,12 +37,12 @@ Item {
         }
 
         onSelectedNetworkChainIdChanged: {
-            d.tokensStore.buildGroupsForChain(d.selectedNetworkChainId)
+            d.tokensStore.showGroupsForChain(d.selectedNetworkChainId)
         }
     }
 
     Component.onCompleted: {
-        Qt.callLater(() => d.tokensStore.buildGroupsForChain(d.selectedNetworkChainId))
+        Qt.callLater(() => d.tokensStore.showGroupsForChain(d.selectedNetworkChainId))
     }
 
     PaymentRequestAdaptor {

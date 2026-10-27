@@ -1,9 +1,11 @@
 ## Request-side harvest benchmark (companion to swap_modal_open_bench).
 ##
-## SwapModal.rebuildGroupsForChain runs twice per open + on every in-modal network
-## switch, each time calling
+## SwapModal.rebuildGroupsForChain runs once per side on open + on every in-modal
+## network switch, each time calling
 ##   SQUtils.ModelUtils.joinModelEntries(groupedAccountAssetsModel, "key", "$$")
-## to build the mandatory-keys string. groupedAccountAssetsModel has two roles:
+## to build the mandatory-keys string it hands to TokensStore.showGroupsForChain[To],
+## which points that side's model at the chain (ChainTokenGroupsHolder holds the
+## chain's groups). groupedAccountAssetsModel has two roles:
 ## "key" and "balances" (a per-row submodel). The old modelToArray fetched EVERY
 ## role per row via QtMT.ModelQuery.get(model, i) and marshalled the whole map
 ## (incl. the balances submodel QObject) to JS, then read only "key" -> the

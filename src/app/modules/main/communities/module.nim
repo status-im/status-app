@@ -652,8 +652,7 @@ proc buildTokensAndCollectiblesFromWallet(self: Module) =
 
   # Common ERC20 tokens
   let allNetworks = self.controller.getCurrentNetworksChainIds()
-  let tokenGroups = self.controller.getAllTokenGroupsForActiveNetworksMode()
-  for tokenGroup in tokenGroups:
+  for tokenGroup in self.controller.getAllTokenGroups():
     let tokensForSelectedChains = tokenGroup.tokens.filter(t => allNetworks.contains(t.chainId))
     if tokensForSelectedChains.len <= 0:
       continue
@@ -700,16 +699,20 @@ method onWalletAccountTokensRebuilt*(self: Module) =
   # Rebuild from cached data only - does NOT trigger a new fetch
   self.buildTokensAndCollectiblesFromWallet()
 
-method onAllTokenGroupsLoaded*(self: Module) =
-  info "onAllTokenGroupsLoaded - building tokens from wallet"
+method onAllTokenGroupsChanged*(self: Module) =
+  # all wallet rows go once the groups are dropped; community-minted rows stay
   self.buildTokensAndCollectiblesFromWallet()
-  info "onAllTokenGroupsLoaded - setting tokenListLoading to false"
-  self.view.setTokenListLoading(false)
+  self.view.setTokenListLoading(self.controller.getAllTokenGroupsLoading())
 
-method loadTokenList*(self: Module) =
-  info "loadTokenList - setting tokenListLoading to true and fetching"
-  self.view.setTokenListLoading(true)
-  self.controller.fetchAllTokenGroups()
+method onAllTokenGroupsLoadingChanged*(self: Module) =
+  self.view.setTokenListLoading(self.controller.getAllTokenGroupsLoading())
+
+method acquireTokenList*(self: Module) =
+  self.controller.acquireAllTokenGroups()
+  self.view.setTokenListLoading(self.controller.getAllTokenGroupsLoading())
+
+method releaseTokenList*(self: Module) =
+  self.controller.releaseAllTokenGroups()
 
 method onCommunityTokenMetadataAdded*(self: Module, communityId: string, tokenMetadata: CommunityTokensMetadataDto) =
   let communityTokens = self.controller.getCommunityTokens(communityId)
