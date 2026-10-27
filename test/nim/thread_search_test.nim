@@ -309,6 +309,46 @@ suite "thread search result navigation":
     else:
       skip()
 
+  test "archiving retains selected and panel threads and cached opening respects archive state":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.chatsLoaded = true
+    let content = ContentStub()
+    section.chatContentModules["thread"] = content
+    section.onChatThreadsForChatsLoaded(@[
+      ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root",
+        name: "Thread", archived: true)], @[])
+    let row = section.view.chatsModel().getItemById("thread")
+    require not row.isNil
+    check row.archived
+    section.view.setOpenThread("thread", "Thread", "parent")
+    section.pendingThreadId = "saved-thread"
+    section.pendingThreadParentChatId = "parent"
+    for archived in [false, true, true, false]:
+      section.onChatThreadsForChatsLoaded(@[
+        ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root",
+          name: "Thread", archived: archived)], @[])
+      check row.archived == archived
+      check section.view.chatsModel().getItemById("thread") == row
+      check section.view.chatsModel().rowCount() == 2
+      check section.view.getOpenThreadId() == "thread"
+      check section.chatContentModules["thread"] == content
+      check section.isChatThread("thread")
+      check section.activated.len == 0
+      check not section.panelClosed
+      check section.pendingThreadId == "saved-thread"
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["parent"], "threads": [{"chatId": "parent", "threadId": "cached",
+        "parentMessageId": "cached-root", "name": "Archived", "archived": true}]
+    }))
+    section.openThreadAsChat("parent", "cached", "Archived", "cached-root")
+    check section.view.chatsModel().getItemById("cached").archived
+    section.openThreadAsChat("parent", "cached", "Archived", "cached-root")
+    check section.view.chatsModel().rowCount() == 3
+    check section.view.chatsModel().getItemById("cached").archived
+
   test "a newer parent or cached thread result cancels deferred navigation":
     if THREADS_ENABLED:
       for nextThreadId in ["", "cached-thread"]:
