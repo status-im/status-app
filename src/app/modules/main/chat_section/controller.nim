@@ -771,8 +771,12 @@ proc getTokensByGroupKey*(self: Controller, groupKey: string): seq[TokenItem] =
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): TokenItem =
   return self.tokenService.getTokenByKeyOrGroupKeyFromAllTokens(key)
 
-proc createOrEditCommunityTokenPermission*(self: Controller, tokenPermission: CommunityTokenPermissionDto) =
-  self.communityService.createOrEditCommunityTokenPermission(self.sectionId, tokenPermission)
+proc createOrEditCommunityTokenPermission*(self: Controller, tokenPermission: CommunityTokenPermissionDto, toSave: seq[SaveCriterion]) =
+  var storedCriteria: seq[TokenCriteriaDto]
+  if tokenPermission.id != "":
+    storedCriteria = self.getMyCommunity().tokenPermissions.getOrDefault(tokenPermission.id).tokenCriteria
+  self.communityService.createOrEditCommunityTokenPermission(self.sectionId, tokenPermission, toSave, storedCriteria,
+    ModeChains(current: self.networkService.getCurrentModeChainIds(), other: self.networkService.getOtherModeChainIds()))
 
 proc deleteCommunityTokenPermission*(self: Controller, permissionId: string) =
   self.communityService.deleteCommunityTokenPermission(self.sectionId, permissionId)

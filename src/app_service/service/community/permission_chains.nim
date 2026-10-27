@@ -1,6 +1,8 @@
-import std/[tables, sets, sequtils]
+import std/[json, tables, sets, sequtils, strutils]
+import json_serialization, json_serialization/std/tables as ser_tables
 
 import ./dto/community
+import ./dto/roster
 import ../../common/types
 import ../../common/utils as common_utils
 
@@ -31,6 +33,15 @@ type
 
   CriteriaChainsResult* = object
     criteria*: seq[TokenCriteriaDto]
+    error*: string
+
+  # Creates or edits the permission, returning the RPC result; raises on failure.
+  SavePermissionRpc* = proc(communityId: string, permission: CommunityTokenPermissionDto): JsonNode {.closure, gcsafe.}
+
+  PermissionSaveResult* {.acyclic.} = ref object of RootObj
+    communityId*: string
+    permission*: CommunityTokenPermissionDto
+    rosterDeltas*: seq[RosterDelta]
     error*: string
 
 proc tokenKeyOf(key: string): string =
@@ -150,3 +161,42 @@ proc resolveCriteriaChains*(toSave: seq[SaveCriterion], stored: seq[TokenCriteri
     criterion.contractAddresses = addresses
     criteria.add(criterion)
   return CriteriaChainsResult(criteria: criteria)
+
+# The worker hand-off can't use json_serialization for criteria: it doesn't read
+# back the numeric TokenType it writes.
+proc criteriaToJson*(criteria: seq[TokenCriteriaDto]): string =
+  Json.encode(criteria)
+
+proc criteriaFromJson*(json: string): seq[TokenCriteriaDto] =
+  for criterion in parseJson(json):
+    result.add(criterion.toTokenCriteriaDto)
+
+proc toCatalogueToken*(json: JsonNode): CatalogueToken =
+  result.chainId = json{"chainId"}.getInt
+  result.address = json{"address"}.getStr
+  result.name = json{"name"}.getStr
+  result.symbol = json{"symbol"}.getStr
+  result.decimals = json{"decimals"}.getInt
+  result.communityId = json{"communityData"}{"id"}.getStr
+  result.key = common_utils.createTokenKey(result.chainId, result.address)
+  result.groupKey = json{"crossChainId"}.getStr
+  if result.groupKey.isEmptyOrWhitespace:
+    result.groupKey = result.key
+
+proc saveTokenPermission*(communityId: string, permission: CommunityTokenPermissionDto,
+    toSave: seq[SaveCriterion], stored: seq[TokenCriteriaDto], modes: ModeChains,
+    catalogue: TokenCatalogue, save: SavePermissionRpc): PermissionSaveResult =
+  result = PermissionSaveResult(communityId: communityId, permission: permission)
+  let resolved = resolveCriteriaChains(toSave, stored, modes, catalogue)
+  if resolved.error.len > 0:
+    result.error = resolved.error
+    return
+  result.permission.tokenCriteria = resolved.criteria
+  try:
+    let response = save(communityId, result.permission)
+    if response.isNil or response.kind == JNull:
+      result.error = "no result returned from create/edit community token permission"
+      return
+    result.rosterDeltas = parseRosterDeltas(response{"communityChanges"})
+  except CatchableError as e:
+    result.error = e.msg

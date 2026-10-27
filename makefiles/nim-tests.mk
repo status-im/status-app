@@ -21,6 +21,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	collectibles_selector_bench \
 	collectibles_selector_model_bench \
 	community_accept_request_test \
+	community_permission_save_test \
 	message_history_paging_test \
 	send_handler_adaptors_bench \
 	send_handler_lookup_bench \
