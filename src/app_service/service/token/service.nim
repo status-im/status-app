@@ -65,6 +65,7 @@ QtObject:
     knownMissingKeys: HashSet[string] # keys the backend confirmed as "not found"; skip re-fetching until a refresh applies
     pendingTokenFetch: PendingTokenFetch # missing keys awaiting an async batch fetch (replaces the sync GUI-thread RPC)
     missingTokenKeysFetchDebouncer: debouncer_service.Debouncer # coalesces a burst of misses into one batch
+    missingTokenKeysRetryDebouncers: seq[debouncer_service.Debouncer] # one per MissingTokenFetchRetryDelaysMs tier
     onDemandPrices: OnDemandPriceRequests # prices asked for by key (catalog tokens the periodic refresh doesn't cover)
     onDemandPricesDebouncer: debouncer_service.Debouncer # coalesces a burst of by-key price requests into one fetch
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]

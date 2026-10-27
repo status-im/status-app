@@ -79,6 +79,9 @@ proc releaseChainTokenGroups*(self: Controller, chainId: int) =
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): TokenItem =
   return self.tokenService.getTokenByKeyOrGroupKeyFromAllTokens(key)
 
+proc getTokenLookupState*(self: Controller, key: string): TokenLookupState =
+  return self.tokenService.getTokenLookupState(key)
+
 proc ensurePricesForGroup*(self: Controller, key: string) =
   self.tokenService.ensurePricesForGroup(key)
 

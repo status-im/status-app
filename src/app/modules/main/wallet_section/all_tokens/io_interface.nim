@@ -1,8 +1,9 @@
 import app_service/service/token/items/types as token_items
 import app_service/service/currency/dto as currency_dto
 import app/modules/shared_models/currency_amount
+from app_service/service/token/token_lookup_cache import TokenLookupState
 
-export token_items, currency_dto
+export token_items, currency_dto, TokenLookupState
 
 type
   TokenListsModelDataSource* = tuple[
@@ -103,6 +104,9 @@ method releaseAllTokenGroups*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: AccessInterface, key: string): TokenItem {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getTokenLookupState*(self: AccessInterface, key: string): TokenLookupState {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method ensurePricesForGroup*(self: AccessInterface, key: string) {.base.} =

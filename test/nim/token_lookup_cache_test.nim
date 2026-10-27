@@ -6,6 +6,7 @@
 import unittest, tables, sets
 
 import app_service/service/token/token_lookup_cache
+import app_service/service/token/token_pending_fetch
 import app_service/service/token/items/token
 import app_service/service/token/dto/token as token_dto
 
@@ -67,3 +68,56 @@ suite "token refresh swap-not-clear guard":
 
   test "building from no tokens yields an empty table":
     check buildTokensByKey(newSeq[TokenItem]()).len == 0
+
+suite "token lookup state":
+  test "a cached key is resolved and enqueues nothing":
+    let key = "1-0xbeef"
+    let byKey = {key: testToken(1, "0xbeef")}.toTable
+    var fetch = initPendingTokenFetch()
+
+    let (state, scheduleFetch) = lookupTokenState(byKey, initHashSet[string](), fetch, key)
+    check state == TokenLookupState.Resolved
+    check not scheduleFetch
+    check not fetch.hasPending()
+
+  test "a key the backend reported missing is missing and enqueues nothing":
+    let key = "1-0xdead"
+    var fetch = initPendingTokenFetch()
+
+    let (state, scheduleFetch) = lookupTokenState(
+      initTable[string, TokenItem](), [key].toHashSet, fetch, key)
+    check state == TokenLookupState.Missing
+    check not scheduleFetch
+    check not fetch.hasPending()
+
+  test "an unknown key is pending and enqueued once across repeated reads":
+    let key = "1-0xcafe"
+    let byKey = initTable[string, TokenItem]()
+    let missing = initHashSet[string]()
+    var fetch = initPendingTokenFetch()
+
+    let (first, firstSchedules) = lookupTokenState(byKey, missing, fetch, key)
+    check first == TokenLookupState.Pending
+    check firstSchedules
+
+    let (again, againSchedules) = lookupTokenState(byKey, missing, fetch, key)
+    check again == TokenLookupState.Pending
+    check not againSchedules
+    check fetch.takeBatch() == @[key]
+
+  test "a key whose batch is in flight stays pending without a re-enqueue":
+    let key = "1-0xcafe"
+    var fetch = initPendingTokenFetch()
+    discard fetch.enqueue(key)
+    discard fetch.takeBatch()
+
+    let (state, scheduleFetch) = lookupTokenState(
+      initTable[string, TokenItem](), initHashSet[string](), fetch, key)
+    check state == TokenLookupState.Pending
+    check not scheduleFetch
+    check not fetch.hasPending()
+
+  test "states keep the values QML compares against":
+    check TokenLookupState.Resolved.int == 0
+    check TokenLookupState.Pending.int == 1
+    check TokenLookupState.Missing.int == 2

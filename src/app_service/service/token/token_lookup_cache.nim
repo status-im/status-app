@@ -9,6 +9,7 @@
 import tables, sets
 
 import items/token
+import token_pending_fetch
 
 type TokenLookupOutcome* {.pure.} = enum
   Hit          ## token is cached -> return it, no RPC
@@ -27,6 +28,27 @@ proc classifyTokenLookup*(
   if key in knownMissingKeys:
     return TokenLookupOutcome.KnownMissing
   return TokenLookupOutcome.NeedsFetch
+
+type TokenLookupState* {.pure.} = enum
+  ## What a by-key lookup currently knows; in sync with Constants.TokenLookupState in QML.
+  Resolved = 0
+  Pending = 1  ## a batch fetch for the key is queued or in flight
+  Missing = 2
+
+proc lookupTokenState*(
+    tokensByKey: Table[string, TokenItem],
+    knownMissingKeys: HashSet[string],
+    fetch: var PendingTokenFetch,
+    key: string): tuple[state: TokenLookupState, scheduleFetch: bool] =
+  ## An unknown key is enqueued (deduped against queued and in-flight keys), so
+  ## reading the state of a key nobody fetched yet still gets it fetched.
+  case classifyTokenLookup(tokensByKey, knownMissingKeys, key)
+  of TokenLookupOutcome.Hit:
+    return (TokenLookupState.Resolved, false)
+  of TokenLookupOutcome.KnownMissing:
+    return (TokenLookupState.Missing, false)
+  of TokenLookupOutcome.NeedsFetch:
+    return (TokenLookupState.Pending, fetch.enqueue(key))
 
 proc shouldReplaceTokensCache*(newTokenCount: int, priorCacheCount: int): bool =
   ## Swap-not-clear guard for applying a token refresh. Replace the cache only
