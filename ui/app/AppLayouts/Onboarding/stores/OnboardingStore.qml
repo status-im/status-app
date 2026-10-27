@@ -37,6 +37,7 @@ QtObject {
     readonly property int keycardRemainingPukAttempts: d.onboardingModuleInst.keycardRemainingPukAttempts
     readonly property bool keycardStatusAvailable: d.onboardingModuleInst.keycardStatusAvailable
     readonly property int keycardAvailableSlots: d.onboardingModuleInst.keycardAvailableSlots
+    readonly property bool keycardPairingSupported: d.onboardingModuleInst.keycardPairingSupported
     readonly property string keycardCardMetadataName: d.onboardingModuleInst.keycardCardMetadataName
     readonly property string keycardCardMetadataWalletAccountsJson: d.onboardingModuleInst.keycardCardMetadataWalletAccountsJson
 

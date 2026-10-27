@@ -25,6 +25,9 @@ QtObject {
         readonly property string blockedPuk: Constants.keycard.state.blockedPUK
         readonly property string noAvailablePairingSlots: Constants.keycard.state.noAvailablePairingSlots
         readonly property string pairingError: Constants.keycard.state.pairingError
+        // "Card not ready (state: untrusted-keycard)" and the library's "Untrusted keycard: ..." text
+        readonly property string untrustedKeycard1: Constants.keycard.state.untrustedKeycard
+        readonly property string untrustedKeycard2: "Untrusted keycard"
     }
 
     readonly property bool internalError: root.errorText.toLowerCase().indexOf(errKeyword.internalError.toLowerCase()) > -1
@@ -44,4 +47,6 @@ QtObject {
     readonly property bool blockedPukError: root.errorText.toLowerCase().indexOf(errKeyword.blockedPuk.toLowerCase()) > -1
     readonly property bool noAvailablePairingSlotsError: root.errorText.toLowerCase().indexOf(errKeyword.noAvailablePairingSlots.toLowerCase()) > -1
     readonly property bool pairingPasswordRequiredError: root.errorText.toLowerCase().indexOf(errKeyword.pairingError.toLowerCase()) > -1
+    readonly property bool untrustedKeycardError: root.errorText.toLowerCase().indexOf(errKeyword.untrustedKeycard1.toLowerCase()) > -1
+                                                  || root.errorText.toLowerCase().indexOf(errKeyword.untrustedKeycard2.toLowerCase()) > -1
 }

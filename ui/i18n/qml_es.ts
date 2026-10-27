@@ -9536,6 +9536,14 @@ app: %2</source>
         <translation>Esto no es un Keycard</translation>
     </message>
     <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Connection error</source>
         <translation>Error de conexión</translation>
     </message>
@@ -10125,6 +10133,14 @@ la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status.</tran
         <translation>Esto no es una Keycard</translation>
     </message>
     <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Connection error</source>
         <translation>Error de conexión</translation>
     </message>
@@ -10710,6 +10726,10 @@ al cargar</translation>
     <message>
         <source>Reading Keycard...</source>
         <translation>Leyendo Keycard...</translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine.&lt;br&gt;Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>

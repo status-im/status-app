@@ -21,6 +21,7 @@ type StateString* = enum
   Ready = "ready"
   Authorized = "authorized"
   Cancelled = "cancelled" #user cancelled the operation
+  UntrustedKeycard = "untrusted-keycard" # applet 4.x certificate not signed by a trusted CA
 
 
 # NOTE: Keep in sync with KeycardState in ui/StatusQ/src/onboarding/enums.h
@@ -39,7 +40,8 @@ type KeycardState* = enum
   Empty,
   Authorized,
   Cancelled,
-  PairingPasswordRequired
+  PairingPasswordRequired,
+  UntrustedKeycard
 
 type KeycardInfoDto* = object
   initialized*: bool
@@ -47,6 +49,8 @@ type KeycardInfoDto* = object
   version*: string
   availableSlots*: int
   keyUID*: string
+  secureChannelVersion*: int # 1 = password pairing (applet 3.x), 2 = no pairing (applet 4.x);
+                             # 0 (not reported) also means password pairing
 
 type KeycardStatusDto* = object
   remainingAttemptsPIN*: int
@@ -142,15 +146,24 @@ proc fromStringStateToInt*(state: StateString): KeycardState =
     result = KeycardState.Authorized
   of StateString.Cancelled:
     result = KeycardState.Cancelled
+  of StateString.UntrustedKeycard:
+    result = KeycardState.UntrustedKeycard
   else:
     result = KeycardState.UnknownReaderState
 
+const SecureChannelVersionNoPairing* = 2
+
+proc pairingSupported*(info: KeycardInfoDto): bool =
+  ## Applet 4.x cards have no pairing: no slots, no pairing password, nothing stored per card
+  return info.secureChannelVersion < SecureChannelVersionNoPairing
+
 proc toKeycardInfoDto*(jsonObj: JsonNode): KeycardInfoDto =
-  result = KeycardInfoDto()
+  result = KeycardInfoDto(secureChannelVersion: 1)
   discard jsonObj.getProp("initialized", result.initialized)
   discard jsonObj.getProp("instanceUID", result.instanceUID)
   discard jsonObj.getProp("version", result.version)
   discard jsonObj.getProp("availableSlots", result.availableSlots)
+  discard jsonObj.getProp("secureChannelVersion", result.secureChannelVersion)
   if jsonObj.getProp("keyUID", result.keyUID) and
     result.keyUID.len > 0 and
     not result.keyUID.startsWith("0x"):

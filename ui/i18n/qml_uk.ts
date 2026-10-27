@@ -9584,6 +9584,14 @@ app: %2</source>
         <translation>Це не Keycard</translation>
     </message>
     <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Connection error</source>
         <translation>Помилка підключення</translation>
     </message>
@@ -10171,6 +10179,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>This is not a Keycard</source>
         <translation>Це не Keycard</translation>
+    </message>
+    <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Connection error</source>
@@ -10766,6 +10782,10 @@ to load</source>
     <message>
         <source>Reading Keycard...</source>
         <translation>Зчитування Keycard...</translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine.&lt;br&gt;Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>

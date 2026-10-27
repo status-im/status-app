@@ -43,6 +43,7 @@ OnboardingStackView {
     required property int remainingPukAttempts
     required property bool keycardStatusAvailable
     required property int keycardAvailableSlots
+    required property bool keycardPairingSupported
     required property string keycardCardMetadataName
     required property string keycardCardMetadataWalletAccountsJson
 
@@ -237,6 +238,7 @@ OnboardingStackView {
                     remainingPinAttempts: root.remainingPinAttempts,
                     remainingPukAttempts: root.remainingPukAttempts,
                     availableSlots: root.keycardAvailableSlots,
+                    pairingSupported: root.keycardPairingSupported,
                     cardMetadataName: root.keycardCardMetadataName,
                     cardMetadataWalletAccountsJson: root.keycardCardMetadataWalletAccountsJson
                 })
@@ -401,25 +403,13 @@ OnboardingStackView {
 
             destroyOnClose: true
 
-            onMetadataResult: function(state, kcUid, kUid, statusAvailable, pinAttempts, pukAttempts, slots, name, accountsJson) {
-                const args = {
-                    keycardState: state,
-                    keycardUid: kcUid,
-                    keyUid: kUid,
-                    keycardStatusAvailable: statusAvailable,
-                    remainingPinAttempts: pinAttempts,
-                    remainingPukAttempts: pukAttempts,
-                    availableSlots: slots,
-                    cardMetadataName: name,
-                    cardMetadataWalletAccountsJson: accountsJson
-                }
-
+            onMetadataResult: function(keycardInfo) {
                 const top = root.currentItem
                 if (top && top.objectName === "keycardDetailsPage") {
-                    for (const k in args)
-                        top[k] = args[k]
+                    for (const k in keycardInfo)
+                        top[k] = keycardInfo[k]
                 } else {
-                    root.push(keycardDetailsComponent, args)
+                    root.push(keycardDetailsComponent, keycardInfo)
                 }
             }
 

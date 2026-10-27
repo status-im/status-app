@@ -73,7 +73,8 @@ public:
         Empty,
         Authorized,
         Cancelled,
-        PairingPasswordRequired
+        PairingPasswordRequired,
+        UntrustedKeycard // applet 4.x certificate not signed by a trusted CA
     };
 
     enum class ProgressState {

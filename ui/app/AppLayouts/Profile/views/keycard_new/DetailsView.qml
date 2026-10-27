@@ -29,6 +29,7 @@ ColumnLayout {
     property int remainingPinAttempts: -1
     property int remainingPukAttempts: -1
     property int availableSlots: -1
+    property bool pairingSupported: true
     property string cardMetadataName: ""
     property string cardMetadataWalletAccountsJson: "[]"
 
@@ -55,6 +56,7 @@ ColumnLayout {
         remainingPinAttempts: root.remainingPinAttempts
         remainingPukAttempts: root.remainingPukAttempts
         availableSlots: root.availableSlots
+        pairingSupported: root.pairingSupported
         cardMetadataWalletAccountsJson: root.cardMetadataWalletAccountsJson
         knownPairingExists: d.pairingExists
     }
@@ -80,7 +82,9 @@ ColumnLayout {
         property bool allNonProfileKeyPairsMigrated: false
 
         function refresh() {
-            d.pairingExists = !!root.keycardUid
+            // Skip the pairing-file read: applet 4.x cards have no pairing
+            d.pairingExists = root.pairingSupported
+                              && !!root.keycardUid
                               && root.keycardStore.keycardPairingExists(root.keycardUid)
             d.isKnownKeyPair = d.hasKeyPair
                                && root.keycardStore.isKnownKeyUid(root.keyUid)

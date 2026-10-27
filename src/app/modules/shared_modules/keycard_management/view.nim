@@ -11,6 +11,7 @@ QtObject:
       remainingPinAttempts: int
       remainingPukAttempts: int
       availableSlots: int
+      pairingSupported: bool
       keycardUid: string
       keyUid: string
       cardMetadataName: string
@@ -32,6 +33,7 @@ QtObject:
     result.remainingPinAttempts = 0
     result.remainingPukAttempts = 0
     result.availableSlots = 0
+    result.pairingSupported = true
     result.keycardUid = ""
     result.keyUid = ""
     result.cardMetadataName = ""
@@ -258,6 +260,18 @@ QtObject:
   QtProperty[int] availableSlots:
     read = getAvailableSlots
     notify = availableSlotsChanged
+
+  proc pairingSupportedChanged*(self: View) {.signal.}
+  proc getPairingSupported*(self: View): bool {.slot.} =
+    return self.pairingSupported
+  proc setPairingSupported*(self: View, value: bool) =
+    if self.pairingSupported == value:
+      return
+    self.pairingSupported = value
+    self.pairingSupportedChanged()
+  QtProperty[bool] pairingSupported:
+    read = getPairingSupported
+    notify = pairingSupportedChanged
 
   proc keycardUidChanged*(self: View) {.signal.}
   proc getKeycardUid*(self: View): string {.slot.} =

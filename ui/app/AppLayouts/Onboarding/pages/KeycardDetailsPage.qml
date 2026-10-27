@@ -23,6 +23,7 @@ OnboardingPage {
     required property int remainingPinAttempts
     required property int remainingPukAttempts
     required property int availableSlots
+    required property bool pairingSupported
     required property string cardMetadataName
     required property string cardMetadataWalletAccountsJson
 
@@ -50,6 +51,7 @@ OnboardingPage {
         remainingPinAttempts: root.remainingPinAttempts
         remainingPukAttempts: root.remainingPukAttempts
         availableSlots: root.availableSlots
+        pairingSupported: root.pairingSupported
         cardMetadataWalletAccountsJson: root.cardMetadataWalletAccountsJson
 
         readonly property var matchedProfile: stateInfo.hasKeyPair && root.loginAccountsModel
