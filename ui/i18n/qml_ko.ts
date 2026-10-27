@@ -6774,6 +6774,10 @@ key pair. Keycard will be required for signing</source>
 <context>
     <name>EditPermissionView</name>
     <message>
+        <source>Unknown token — amount in smallest units</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Anyone</source>
         <translation>누구든지</translation>
     </message>
@@ -8560,6 +8564,13 @@ Are you sure you want to do this?</source>
     <message>
         <source>or</source>
         <translation>또는</translation>
+    </message>
+</context>
+<context>
+    <name>HoldingsSelectionModel</name>
+    <message>
+        <source>Loading…</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -6831,6 +6831,10 @@ Keycard bude vyžadována pro podepisování</translation>
 <context>
     <name>EditPermissionView</name>
     <message>
+        <source>Unknown token — amount in smallest units</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Anyone</source>
         <translation>Kdokoli</translation>
     </message>
@@ -8627,6 +8631,13 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>or</source>
         <translation>nebo</translation>
+    </message>
+</context>
+<context>
+    <name>HoldingsSelectionModel</name>
+    <message>
+        <source>Loading…</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
