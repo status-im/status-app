@@ -38,6 +38,7 @@ Item {
 
             keycardState: Constants.keycard.state.ready
             keycardUid: "keycard-uid-1"
+            keycardInitialized: true
             keyUid: root.profileKeyUid
             keycardStatusAvailable: true
             remainingPinAttempts: 3
@@ -108,6 +109,21 @@ Item {
     TestCase {
         name: "KeycardDetailsPage_edgeStates"
         when: windowShown
+
+        function test_blankApplet4CardIsNotOnlyPinSet() {
+            // applet 4.x reports a keycardUid on a blank card
+            const page = createTemporaryObject(componentUnderTest, root, {
+                                                   keycardState: Constants.keycard.state.emptyKeycard,
+                                                   keyUid: "",
+                                                   keycardInitialized: false,
+                                                   pairingSupported: false,
+                                                   availableSlots: 0,
+                                                   loginAccountsModel: emptyLoginAccounts
+                                               })
+            verify(!!page)
+
+            compare(findChild(page, "keycardDetailsTitle").text, "Keycard is empty")
+        }
 
         function test_onlyPinSet() {
             const page = createTemporaryObject(componentUnderTest, root, {

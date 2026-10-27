@@ -80,6 +80,7 @@ SplitView {
         property int availableSlots: 5
         property bool pairingSupported: true
         property string keycardUid: "keycard-uid-1"
+        property bool keycardInitialized: true
         property string keyUid: "profile-key-uid"
         property string cardMetadataName: "My Keycard"
         property string cardMetadataWalletAccountsJson: "[]"
@@ -234,6 +235,7 @@ SplitView {
 
             flow: root.currentFlow
             keycardUid: mockStore.keycardUid
+            keycardInitialized: mockStore.keycardInitialized
             keyUid: mockStore.keyUid
             cardMetadataName: mockStore.cardMetadataName
             cardMetadataWalletAccountsJson: mockStore.cardMetadataWalletAccountsJson
