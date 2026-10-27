@@ -1,6 +1,5 @@
 import logging
 import time
-import typing
 
 import allure
 import object as squish_object
@@ -10,8 +9,7 @@ import driver
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from gui.elements.button import Button
 from gui.elements.object import QObject
-from gui.elements.scroll import Scroll
-from gui.objects_map import names, activity_center_names
+from gui.objects_map import activity_center_names
 
 LOG = logging.getLogger(__name__)
 
@@ -47,51 +45,67 @@ class ActivityCenter(QObject):
 
     def __init__(self):
         super().__init__(activity_center_names.activityCenterPanel)
-        self.activity_center_button = Scroll(names.activityCenterStatusFlatButton)
         self.activity_center_notification_card = QObject(activity_center_names.activityCenterNotificationCard)
-        self.scroll = Scroll(activity_center_names.activityCenterScrollView)
+        self._group_tab = Button(activity_center_names.activityCenterGroupButton)
         self.navigation_button = Button(activity_center_names.activityCenterNavigationButton)
         self._close_button = Button(activity_center_names.activityCenterCloseButton)
 
-    @property
-    @allure.step('Get contact items')
-    def contact_items(self) -> typing.List[ContactRequest]:
-        return [ContactRequest(item) for item in driver.findAllObjects(self.activity_center_notification_card.real_name)]
-
-    @allure.step('Click activity center button')
+    @allure.step('Click activity center tab {text}')
     def click_activity_center_button(self, text: str):
-        started_at = time.monotonic()
-        self.activity_center_button.real_name['text'] = text
+        self._group_tab.real_name['text'] = text
 
-        while not self.activity_center_button.is_visible:
-            if time.monotonic() - started_at > 5:
-                raise TimeoutError(f'Activity center button with text "{text}" not found after {5} seconds')
-            self.navigation_button.click()
-        self.activity_center_button.click()
+        def tab_ready() -> bool:
+            if self._group_tab.is_visible and self._group_tab.is_enabled:
+                return True
+            if not self._group_tab.is_visible:
+                self.navigation_button.click()
+            return False
+
+        assert driver.waitFor(tab_ready, configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000), (
+            f'Activity center tab {text!r} did not become enabled'
+        )
+        self._group_tab.click()
         return self
+
+    @staticmethod
+    def _card_text(card, attr: str) -> str:
+        try:
+            value = getattr(card, attr, None)
+            return str(value).strip() if value not in (None, '') else ''
+        except Exception:
+            return ''
+
+    @staticmethod
+    def _label_matches(actual: str, expected: str) -> bool:
+        if not actual:
+            return False
+        if actual == expected or expected in actual:
+            return True
+        visible = actual.replace('…', '').replace('...', '').strip()
+        return len(visible) >= 4 and (expected.startswith(visible) or visible.startswith(expected))
+
+    @allure.step('Find notification with {attr} {text}')
+    def find_notification(
+            self, text: str, attr: str = 'title',
+            timeout_sec: int = configs.timeouts.MESSAGING_TIMEOUT_SEC):
+        deadline = time.monotonic() + timeout_sec
+        while time.monotonic() < deadline:
+            for card in driver.findAllObjects(self.activity_center_notification_card.real_name):
+                if self._label_matches(self._card_text(card, attr), text):
+                    return card
+            time.sleep(0.25)
+        raise TimeoutError(f'Notification with {attr} {text!r} not found')
 
     @allure.step('Find contact request')
     def find_contact_request_in_list(
             self, contact: str, timeout_sec: int = configs.timeouts.MESSAGING_TIMEOUT_SEC):
-        started_at = time.monotonic()
-        last_log_at = started_at
-        while time.monotonic() - started_at < timeout_sec:
-            requests = self.contact_items
-            for _request in requests:
-                if _request.contact_request == contact:
-                    LOG.info('find_contact_request_in_list: matched %r', contact)
-                    return _request
-            now = time.monotonic()
-            if now - last_log_at >= 5.0:
-                last_log_at = now
-                titles = [r.contact_request for r in requests]
-                LOG.info(
-                    'find_contact_request_in_list: still waiting for %r (%d cards: %s)',
-                    contact,
-                    len(requests),
-                    titles,
-                )
-        raise TimeoutError(f'Timed out after {timeout_sec} seconds: Contact request "{contact}" not found.')
+        return ContactRequest(self.find_notification(contact, 'title', timeout_sec))
+
+    @allure.step('Open notification card from activity center')
+    def open_notification_card(self, card):
+        self._scroll_notification_into_view(card)
+        driver.mouseClick(card)
+        return self
 
     @allure.step('Close activity center')
     def close(self):
