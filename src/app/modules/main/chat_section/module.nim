@@ -39,7 +39,6 @@ import app_service/service/community_tokens/service as community_tokens_service
 import app_service/service/shared_urls/service as shared_urls_service
 import app_service/service/contacts/dto/contacts as contacts_dto
 import app/core/signals/types
-import backend/collectibles_types
 
 export io_interface
 
@@ -1491,6 +1490,7 @@ proc updateTokenPermissionModel*(self: Module, permissions: Table[string, CheckP
           tokenCriteriaItem.symbol,
           tokenCriteriaItem.name,
           tokenCriteriaItem.amount,
+          tokenCriteriaItem.decimals,
           tokenCriteriaItem.`type`,
           tokenCriteriaItem.ensPattern,
           criteriaResult.criteria[index],
@@ -2065,30 +2065,18 @@ method createOrEditCommunityTokenPermission*(self: Module, permissionId: string,
           return
         for token in tokens:
           contractAddresses[token.chainId] = token.address
-          tokenCriteriaDto.name = token.name
-          tokenCriteriaDto.symbol = token.symbol
-          tokenCriteriaDto.decimals = token.decimals
+        tokenCriteriaDto.applyResolvedTokenData(tokens[^1].name, tokens[^1].symbol, tokens[^1].decimals)
       else:
         let tokenKey = service_common_utils.communityKeyToTokenKey(key)
-        var token = self.controller.getTokenByKey(tokenKey)
-        if token.isNil and tokenCriteriaDto.`type` != TokenType.ENS:
-          # if tokens is nil, could be that it's a collectible and we figure out the contract addresses from the key
-          try:
-            let contractId = toContractID(key)
-            token = createTokenItem(TokenDto(
-                address: contractId.address,
-                chainId: contractId.chainID,
-                decimals: 0
-              ), TokenType.ERC721)
-          except Exception:
-            discard
+        let token = self.controller.getTokenByKey(tokenKey)
         if token.isNil:
-          emitUnexistingKeyError(key)
-          return
-        contractAddresses[token.chainId] = token.address
-        tokenCriteriaDto.name = token.name
-        tokenCriteriaDto.symbol = token.symbol
-        tokenCriteriaDto.decimals = token.decimals
+          if not tokenCriteriaDto.applyUnresolvedTokenKey(key):
+            emitUnexistingKeyError(key)
+            return
+          contractAddresses = tokenCriteriaDto.contractAddresses
+        else:
+          contractAddresses[token.chainId] = token.address
+          tokenCriteriaDto.applyResolvedTokenData(token.name, token.symbol, token.decimals)
 
     tokenCriteriaDto.amountInWei = tokenCriteria{"amount"}.getStr
     tokenCriteriaDto.contractAddresses = contractAddresses

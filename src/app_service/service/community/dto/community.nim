@@ -309,6 +309,34 @@ proc toTokenCriteriaDto*(jsonObj: JsonNode): TokenCriteriaDto =
         # overwrite only if key does not contain contractID
         result.symbol = tmpSymbol
 
+# For a per-chain token key the token service doesn't know (yet). An asset keeps the
+# criterion's own symbol, name and decimals; anything else is a collectible.
+proc applyUnresolvedTokenKey*(criteria: var TokenCriteriaDto, key: string): bool =
+  var contractId: ContractID
+  try:
+    contractId = toContractID(key)
+  except Exception:
+    return false
+  if contractId.chainID <= 0 or contractId.address.isEmptyOrWhitespace:
+    return false
+
+  criteria.contractAddresses = {contractId.chainID: contractId.address}.toTable
+  if criteria.`type` != TokenType.ERC20:
+    criteria.name = ""
+    criteria.symbol = ""
+    criteria.decimals = 0
+  return true
+
+# The resolved token's non-empty name and symbol win. Set decimals stay: the
+# criterion's amount was scaled with them.
+proc applyResolvedTokenData*(criteria: var TokenCriteriaDto, name, symbol: string, decimals: int) =
+  if name.len > 0:
+    criteria.name = name
+  if symbol.len > 0:
+    criteria.symbol = symbol
+  if criteria.decimals == 0:
+    criteria.decimals = decimals
+
 proc toCommunityTokenPermissionDto*(jsonObj: JsonNode): CommunityTokenPermissionDto =
   result = CommunityTokenPermissionDto()
   discard jsonObj.getProp("id", result.id)
