@@ -93,6 +93,11 @@ Item {
             compare(holds("c2"), 0)
         }
 
+        function test_onlyTheCommunityIdPicksTheRoster() {
+            const holder = createTemporaryObject(holderComponent, root)
+            compare(holder.key, undefined)
+        }
+
         function test_twoHoldersCountTwice() {
             const first = createTemporaryObject(holderComponent, root)
             const second = createTemporaryObject(holderComponent, root)

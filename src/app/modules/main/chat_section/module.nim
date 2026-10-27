@@ -12,7 +12,7 @@ import app/modules/shared_models/message_model as member_msg_model
 import app/modules/shared_models/user_item as user_item
 import app/modules/shared_models/user_model as user_model
 import app/modules/shared_models/[token_permissions_model, token_permission_item, token_criteria_item, token_criteria_model, token_permission_chat_list_model, contacts_utils]
-import app/modules/shared_models/[community_roster_model, community_roster_holders]
+import app/modules/shared_models/community_roster_model
 import app/modules/shared_models/[member_model, member_item]
 import admin_members
 
@@ -20,6 +20,7 @@ import chat_content/module as chat_content_module
 
 import app/global/global_singleton
 import app/core/eventemitter
+import app/core/held_resource_qtimer
 import app/core/unique_event_emitter
 import app/core/notifications/details as notification_details
 import app_service/common/types
@@ -76,9 +77,9 @@ type
     # community sections only: the on-demand member roster and its holders
     roster: CommunityRosterModel
     rosterVariant: QVariant
-    rosterHolders: RosterHolders
-    rosterReleaseTimer: QTimer
-    rosterRetryTimer: QTimer
+    rosterHolders: HeldResource
+    # the service reports the outcome of the latest roster load only
+    rosterLoadGeneration: int
     # admin settings only: requests to join, banned and awaiting-address members
     adminMembers: member_model.Model
     adminMembersVariant: QVariant
@@ -225,35 +226,15 @@ proc setupRoster(self: Module) =
   self.adminMembers = member_model.newModel()
   self.adminMembersVariant = newQVariant(self.adminMembers)
   self.adminMembersState = newAdminMembers(self.adminMembers)
-  self.rosterReleaseTimer = QTimer.create()
-  self.rosterReleaseTimer.setSingleShot(true)
-  self.rosterRetryTimer = QTimer.create()
-  self.rosterRetryTimer.setSingleShot(true)
-  self.rosterHolders = newRosterHolders(
-    RosterTimer(
-      start: proc(ms: int) = m.rosterReleaseTimer.start(ms.cint),
-      stop: proc() = m.rosterReleaseTimer.stop(),
-    ),
-    RosterTimer(
-      start: proc(ms: int) = m.rosterRetryTimer.start(ms.cint),
-      stop: proc() = m.rosterRetryTimer.stop(),
-    ),
-    onLoad = proc() = m.controller.loadCommunityRoster(proc(): RosterOrderInputs = m.rosterOrderInputs()),
+  self.rosterHolders = newHeldResourceWithQTimers("community roster",
+    onLoad = proc(generation: int) =
+      m.rosterLoadGeneration = generation
+      m.controller.loadCommunityRoster(proc(): RosterOrderInputs = m.rosterOrderInputs()),
     onDrop = proc() =
       m.controller.releaseCommunityRoster()
       m.roster.clear()
       debug "community roster released", sectionId = m.controller.getMySectionId()
   )
-  self.rosterReleaseTimer.onTimeout(proc() {.closure, raises: [].} =
-    try:
-      m.rosterHolders.onReleaseTimeout()
-    except Exception as e:
-      error "community roster release failed", msg = e.msg)
-  self.rosterRetryTimer.onTimeout(proc() {.closure, raises: [].} =
-    try:
-      m.rosterHolders.onRetryTimeout()
-    except Exception as e:
-      error "community roster load retry failed", msg = e.msg)
 
 proc currentUserWalletContainsAddress(self: Module, address: string): bool =
   if (address.len == 0):
@@ -298,8 +279,7 @@ proc buildCommunityMemberMessageItem(self: Module, message: MessageDto): member_
 
 method delete*(self: Module) =
   if not self.rosterHolders.isNil:
-    self.rosterReleaseTimer.stop()
-    self.rosterRetryTimer.stop()
+    self.rosterHolders.dispose()
     self.controller.releaseCommunityRoster()
     self.rosterVariant.delete
     self.adminMembersVariant.delete
@@ -611,7 +591,7 @@ method onCommunityRosterLoaded*(self: Module, snapshot: sink RosterSnapshot, del
   if self.roster.isNil:
     return
   if not self.rosterHolders.isNil:
-    self.rosterHolders.onLoadSucceeded()
+    self.rosterHolders.onLoadSucceeded(self.rosterLoadGeneration)
   self.roster.load(snapshot)
   for delta in deltas:
     self.roster.applyDelta(delta)
@@ -626,7 +606,7 @@ method onCommunityRosterChanged*(self: Module, deltas: seq[RosterDelta]) =
 
 method onCommunityRosterLoadFailed*(self: Module) =
   if not self.rosterHolders.isNil:
-    self.rosterHolders.onLoadFailed()
+    self.rosterHolders.onLoadFailed(self.rosterLoadGeneration)
 
 method onRosterMediaServerStarted*(self: Module) =
   if not self.roster.isNil:
