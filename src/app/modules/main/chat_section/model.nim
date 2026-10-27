@@ -48,6 +48,7 @@ type
            # (depends on CategoryOpened, Active, Muted, HasUnreadMessages, NotificationsCount)
     IsThread
     ParentChatId
+    Archived
 
 QtObject:
   type
@@ -149,6 +150,7 @@ QtObject:
       ModelRole.Hidden.int:"hidden",
       ModelRole.IsThread.int:"isThread",
       ModelRole.ParentChatId.int:"parentChatId",
+      ModelRole.Archived.int:"archived",
 
     }.toTable
 
@@ -239,6 +241,8 @@ QtObject:
       return newQVariant(item.isThread)
     of ModelRole.ParentChatId:
       return newQVariant(item.parentChatId)
+    of ModelRole.Archived:
+      return newQVariant(item.archived)
 
   proc getItemIdxById(items: seq[ChatItem], id: string): int =
     var idx = 0
@@ -574,6 +578,10 @@ QtObject:
     updateItemRolesAndNotify self.getItemIdxById(id):
       updateRole(onlineStatus)
 
+  proc updateArchivedById*(self: Model, id: string, archived: bool) =
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(archived)
+
   proc updateNotificationsForItemById*(self: Model, id: string, hasUnreadMessages: bool,
       notificationsCount: int) =
     updateItemRolesAndNotify self.getItemIdxById(id):
@@ -663,4 +671,3 @@ QtObject:
 
   proc setup(self: Model) =
     self.QAbstractListModel.setup
-

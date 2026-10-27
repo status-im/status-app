@@ -63,6 +63,7 @@ Item {
                     emoji: "",
                     color: "",
                     colorId: i % 10,
+                    sortTimestamp: 1000000 - i,
                     categoryOpened: true,
                     hidden: false,
                     usesDefaultName: false,
@@ -70,6 +71,9 @@ Item {
                     requiresPermissions: false,
                     locked: false,
                     isCategory: false,
+                    isThread: false,
+                    archived: false,
+                    followed: false,
                     position: i,
                     categoryPosition: -1,
                     lastMessageTimestamp: 1000000 - i

@@ -4,6 +4,7 @@ ListModel {
     ListElement {
         itemId: "_welcome"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: ""
@@ -16,6 +17,7 @@ ListModel {
     ListElement {
         itemId: "_announcements"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: ""
@@ -32,6 +34,7 @@ ListModel {
         categoryId: "_discussion"
         name: "discussion"
         isThread: false
+        archived: false
         emoji: ""
         color: ""
         icon: ""
@@ -40,6 +43,7 @@ ListModel {
     ListElement {
         itemId: "_general"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_discussion"
@@ -52,6 +56,7 @@ ListModel {
     ListElement {
         itemId: "_help"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_discussion"
@@ -68,6 +73,7 @@ ListModel {
         categoryId: "_support"
         name: "support"
         isThread: false
+        archived: false
         emoji: ""
         color: ""
         icon: ""
@@ -76,6 +82,7 @@ ListModel {
     ListElement {
         itemId: "_faq"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -88,6 +95,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -100,6 +108,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam2"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -112,6 +121,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam3"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -124,6 +134,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam4"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -136,6 +147,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam5"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -148,6 +160,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam6"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -160,6 +173,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam7"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -172,6 +186,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam8"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -184,6 +199,7 @@ ListModel {
     ListElement {
         itemId: "_report-scam9"
         isThread: false
+        archived: false
         isCategory: false
         type: 0
         categoryId: "_support"
@@ -200,6 +216,7 @@ ListModel {
         categoryId: "_faq"
         name: "faq"
         isThread: false
+        archived: false
         emoji: ""
         color: ""
         icon: ""
