@@ -89,6 +89,25 @@ Item {
             return null
         }
 
+        function test_badgeNamesArePlainText() {
+            const name = "<b>bold</b> & <a href='https://example.com'>link</a>"
+            const badge = createTemporaryObject(badgeComponentUnderTest, root, {
+                primaryText: name,
+                secondaryText: name
+            })
+            function checkLabels(item) {
+                let count = 0
+                if (item instanceof StatusBaseText && item.text === name) {
+                    compare(item.textFormat, Text.PlainText)
+                    count++
+                }
+                for (const child of item.children)
+                    count += checkLabels(child)
+                return count
+            }
+            compare(checkLabels(badge), 2)
+        }
+
         // The whole point of the deferral: the two tag scroll views are a
         // Flickable each, and an item with no tags must build neither.
         function test_itemWithoutTagsBuildsNoScrollView() {

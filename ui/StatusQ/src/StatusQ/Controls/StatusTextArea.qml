@@ -56,6 +56,10 @@ TextArea {
     */
     property bool valid: true
 
+    // Configure the placeholder independently of the editable text.
+    property alias placeholderTextFormat: placeholder.textFormat
+    property alias placeholderWrapMode: placeholder.wrapMode
+
     // Workaround to make selection working on Android. Otherwise
     // selection is dropped right after selection.
     //
@@ -114,6 +118,7 @@ TextArea {
     // blocks native context menu on iOS.
     StatusBaseText {
         id: placeholder
+        objectName: "statusTextAreaPlaceholder"
 
         x: root.leftPadding
         y: root.topPadding

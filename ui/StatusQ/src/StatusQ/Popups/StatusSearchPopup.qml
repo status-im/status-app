@@ -276,6 +276,7 @@ StatusModal {
                                     elide: Text.ElideRight
                                     visible: !!searchOptionsMenuButton.threadText
                                     text: searchOptionsMenuButton.threadText
+                                    textFormat: Text.PlainText
                                     color: Theme.palette.directColor1
                                     font.weight: Font.Medium
                                     font.pixelSize: Theme.additionalTextSize
