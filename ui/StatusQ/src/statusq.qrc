@@ -217,6 +217,7 @@
         <file>StatusQ/Core/Utils/OperatorsUtils.qml</file>
         <file>StatusQ/Core/Utils/QObject.qml</file>
         <file>StatusQ/Core/Utils/RecursiveStackView.qml</file>
+        <file>StatusQ/Core/Utils/ResourceHolder.qml</file>
         <file>StatusQ/Core/Utils/SearchFilter.qml</file>
         <file>StatusQ/Core/Utils/StackViewStates.qml</file>
         <file>StatusQ/Core/Utils/StatesStack.qml</file>
