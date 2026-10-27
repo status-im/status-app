@@ -43,6 +43,7 @@ Item {
             remainingPinAttempts: 3
             remainingPukAttempts: 5
             availableSlots: 5
+            pairingSupported: true
             cardMetadataName: "My Keycard"
             cardMetadataWalletAccountsJson: "[]"
             loginAccountsModel: loginAccounts
@@ -121,6 +122,30 @@ Item {
             verify(findChild(page, "keycardDetailsFactoryReset").visible)
             verify(!findChild(page, "keycardDetailsLoginWithThisKeycard").visible)
             verify(!findChild(page, "keycardDetailsGoBackToLogin").visible)
+        }
+
+        function test_applet4ZeroSlotsIsNotNoFreePairingSlots() {
+            // Applet 4.x reports no pairing slots because it has no pairing at all
+            const page = createTemporaryObject(componentUnderTest, root, {
+                                                   availableSlots: 0,
+                                                   pairingSupported: false,
+                                                   loginAccountsModel: emptyLoginAccounts
+                                               })
+            verify(!!page)
+
+            compare(findChild(page, "keycardDetailsTitle").text, "Keycard stores key pair")
+            verify(findChild(page, "keycardDetailsLoginWithThisKeycard").visible)
+        }
+
+        function test_applet3ZeroSlotsIsNoFreePairingSlots() {
+            const page = createTemporaryObject(componentUnderTest, root, {
+                                                   availableSlots: 0,
+                                                   pairingSupported: true,
+                                                   loginAccountsModel: emptyLoginAccounts
+                                               })
+            verify(!!page)
+
+            compare(findChild(page, "keycardDetailsTitle").text, "No free pairing slots")
         }
 
         function test_noFreePairingSlots() {

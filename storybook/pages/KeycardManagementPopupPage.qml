@@ -78,6 +78,7 @@ SplitView {
         property int remainingPinAttempts: 3
         property int remainingPukAttempts: 5
         property int availableSlots: 5
+        property bool pairingSupported: true
         property string keycardUid: "keycard-uid-1"
         property string keyUid: "profile-key-uid"
         property string cardMetadataName: "My Keycard"
@@ -243,9 +244,9 @@ SplitView {
 
             closePolicy: Popup.NoAutoClose
 
-            onMetadataResult: function(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts, remainingPukAttempts,
-                                       availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
-                logs.logEvent("onMetadataResult(state=%1, keycardUid=%2, keyUid=%3)".arg(keycardState).arg(keycardUid).arg(keyUid))
+            onMetadataResult: function(keycardInfo) {
+                logs.logEvent("onMetadataResult(state=%1, keycardUid=%2, keyUid=%3)"
+                              .arg(keycardInfo.keycardState).arg(keycardInfo.keycardUid).arg(keycardInfo.keyUid))
             }
             onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {
                 logs.logEvent("onKeycardFlowCompleted(flow=%1, success=%2)".arg(flow).arg(success))
@@ -324,6 +325,11 @@ SplitView {
                     value: mockStore.availableSlots
                     onValueModified: mockStore.availableSlots = value
                 }
+            }
+            CheckBox {
+                text: "pairing supported (off = applet 4.x)"
+                checked: mockStore.pairingSupported
+                onToggled: mockStore.pairingSupported = checked
             }
 
             Label { text: "Simulate flow result:" }

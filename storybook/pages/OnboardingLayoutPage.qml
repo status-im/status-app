@@ -92,6 +92,7 @@ SplitView {
 
             property int keycardRemainingPinAttempts: Constants.onboarding.defaultPinAttempts
             property int keycardRemainingPukAttempts: Constants.onboarding.defaultPukAttempts
+            property bool keycardPairingSupported: true
 
             // password
             function getPasswordStrengthScore(password: string): int {

@@ -73,6 +73,7 @@ Item {
                 readonly property string keycardKeyUID: "uid_4"
                 property int keycardRemainingPinAttempts: Constants.onboarding.defaultPinAttempts
                 property int keycardRemainingPukAttempts: Constants.onboarding.defaultPukAttempts
+                property bool keycardPairingSupported: true
                 property var loginAccountsModel: emptyModel
 
                 // password
