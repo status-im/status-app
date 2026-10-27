@@ -1,8 +1,8 @@
-import nimqml, strutils, sequtils, sugar, tables, stint, chronicles, json
+import nimqml, strutils, sequtils, sugar, tables, sets, stint, chronicles, json
 
 import ./io_interface
 import ../io_interface as delegate_interface
-import ./view, ./controller
+import ./view, ./controller, ./community_token_rows
 import ./models/curated_community_item
 import ./models/curated_community_model
 import ./models/discord_category_item
@@ -582,38 +582,6 @@ method requestCancelDiscordCommunityImport*(self: Module, id: string) =
 method requestCancelDiscordChannelImport*(self: Module, discordChannelId: string) =
   self.controller.requestCancelDiscordChannelImport(discordChannelId)
 
-proc createCommunityTokenItem(self: Module, token: CommunityTokensMetadataDto, communityId: string, supply: string,
-    infiniteSupply: bool, privilegesLevel: int): token_list_item.TokenListItem =
-  let communityTokenDecimals = if token.tokenType == TokenType.ERC20: 18 else: 0
-  let key = token.getContractIdFromFirstAddress()
-  result = initTokenListItem(
-    key = key,
-    name = token.name,
-    symbol = token.symbol,
-    color = "", # community tokens don't have `color`
-    image = token.image,
-    category = ord(TokenListItemCategory.Community),
-    communityId = communityId,
-    supply,
-    infiniteSupply,
-    communityTokenDecimals,
-    privilegesLevel
-  )
-
-proc buildCommunityTokenItemFallback(self: Module, communityTokens: seq[CommunityTokenDto],
-    token: CommunityTokensMetadataDto, communityId: string): token_list_item.TokenListItem =
-  # Set fallback supply to infinite in case we don't have it
-  var supply = "1"
-  var infiniteSupply = true
-  var privilegesLevel = PrivilegesLevel.Community.int
-  for communityToken in communityTokens:
-    if communityToken.symbol == token.symbol:
-      supply = communityToken.supply.toString(10)
-      infiniteSupply = communityToken.infiniteSupply
-      privilegesLevel = communityToken.privilegesLevel.int
-      break
-  return self.createCommunityTokenItem(token, communityId, supply, infiniteSupply, privilegesLevel)
-
 proc buildTokensAndCollectiblesFromCommunities(self: Module, communities: seq[CommunityDto]) =
   var tokenListItems: seq[token_list_item.TokenListItem]
   var collectiblesListItems: seq[token_list_item.TokenListItem]
@@ -621,26 +589,25 @@ proc buildTokensAndCollectiblesFromCommunities(self: Module, communities: seq[Co
   let communityTokens = self.controller.getAllCommunityTokens()
   for community in communities:
     for tokenMetadata in community.communityTokensMetadata:
-      var communityTokenItem = self.buildCommunityTokenItemFallback(communityTokens, tokenMetadata, community.id)
+      let communityTokenItem = communityTokenRow(tokenMetadata, community.id, communityTokens)
 
-      if tokenMetadata.tokenType == TokenType.ERC20 and
-        not self.view.tokenListModel().hasItem(tokenMetadata.symbol, community.id):
       # Community ERC20 tokens
+      if tokenMetadata.tokenType == TokenType.ERC20:
         tokenListItems.add(communityTokenItem)
 
-      if tokenMetadata.tokenType == TokenType.ERC721 and
-        not self.view.collectiblesListModel().hasItem(tokenMetadata.symbol, community.id):
       # Community collectibles (ERC721 and others)
+      if tokenMetadata.tokenType == TokenType.ERC721:
         collectiblesListItems.add(communityTokenItem)
 
-  self.view.tokenListModel.addItems(tokenListItems)
-  self.view.collectiblesListModel.addItems(collectiblesListItems)
+  self.view.tokenListModel.addUnlistedItems(tokenListItems)
+  self.view.collectiblesListModel.addUnlistedItems(collectiblesListItems)
 
 proc buildTokensAndCollectiblesFromAllCommunities(self: Module) =
   let communities = self.controller.getAllCommunities()
   self.buildTokensAndCollectiblesFromCommunities(communities)
 
-proc buildTokensAndCollectiblesFromWallet(self: Module) =
+proc buildTokensAndCollectiblesFromWallet(self: Module): HashSet[(string, string)] {.discardable.} =
+  ## Returns the community-issued wallet rows that went, see setWalletTokenItems
   var tokenListItems: seq[token_list_item.TokenListItem]
 
   # TODO: needs to be revisited, cause the UI displays tokens by symbol, while we're working with groups of tokens
@@ -693,15 +660,20 @@ proc buildTokensAndCollectiblesFromWallet(self: Module) =
     )
     tokenListItems.add(tokenListItem)
 
-  self.view.tokenListModel.setWalletTokenItems(tokenListItems)
+  return self.view.tokenListModel.setWalletTokenItems(tokenListItems)
 
 method onWalletAccountTokensRebuilt*(self: Module) =
   # Rebuild from cached data only - does NOT trigger a new fetch
-  self.buildTokensAndCollectiblesFromWallet()
+  let dropped = self.buildTokensAndCollectiblesFromWallet()
+  # a community's own row skipped for a wallet row that is gone now comes back
+  if dropped.len > 0:
+    self.view.tokenListModel.addUnlistedItems(droppedCommunityTokenRows(dropped, self.controller))
 
 method onAllTokenGroupsChanged*(self: Module) =
   # all wallet rows go once the groups are dropped; community-minted rows stay
   self.buildTokensAndCollectiblesFromWallet()
+  # a community's own row skipped for a wallet row of the same token comes back
+  self.buildTokensAndCollectiblesFromAllCommunities()
   self.view.setTokenListLoading(self.controller.getAllTokenGroupsLoading())
 
 method onAllTokenGroupsLoadingChanged*(self: Module) =
@@ -716,7 +688,7 @@ method releaseTokenList*(self: Module) =
 
 method onCommunityTokenMetadataAdded*(self: Module, communityId: string, tokenMetadata: CommunityTokensMetadataDto) =
   let communityTokens = self.controller.getCommunityTokens(communityId)
-  var tokenListItem = self.buildCommunityTokenItemFallback(communityTokens, tokenMetadata, communityId)
+  let tokenListItem = communityTokenRow(tokenMetadata, communityId, communityTokens)
 
   if tokenMetadata.tokenType == TokenType.ERC721 and
       not self.view.collectiblesListModel().hasItem(tokenMetadata.symbol, communityId):
