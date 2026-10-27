@@ -1,4 +1,4 @@
-import std/[importutils, json, tables, sets, unittest]
+import std/[importutils, json, os, tables, sets, tempfiles, unittest]
 import nimqml
 
 import app/core/eventemitter
@@ -15,6 +15,8 @@ import app_service/service/chat/service as chat_service
 import app_service/service/chat/dto/chat
 
 import app/global/feature_flags
+import app/global/global_singleton
+import app/global/qt_settings
 import app/modules/main/chat_section/module as section_module
 import app/modules/main/chat_section/controller as section_controller
 import app/modules/main/chat_section/view as section_view
@@ -27,6 +29,7 @@ privateAccess(search_module.Module)
 privateAccess(view.View)
 privateAccess(message_service.Service)
 privateAccess(chat_service.Service)
+privateAccess(LocalAccountSensitiveSettings)
 
 type SearchDelegate = ref object of search_interface.AccessInterface
   completions: seq[seq[MessageDto]]
@@ -253,6 +256,59 @@ proc newSectionHarness(service: message_service.Service, events: EventEmitter): 
     categoryOpened: true)])
 
 suite "thread search result navigation":
+  test "an uncached result survives a cached list and opens on an incremental update":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.controller.init()
+      service.init()
+      let content = ContentStub()
+      section.chatContentModules["thread"] = content
+
+      let settings = singletonInstance.localAccountSensitiveSettings
+      let previousSettings = settings.settings
+      let settingsDir = createTempDir("thread-search-", "")
+      let settingsFile = settingsDir / "settings.ini"
+      settings.settings = newQSettings(settingsFile, QSettingsFormat.IniFormat)
+      defer:
+        settings.settings.delete()
+        settings.settings = previousSettings
+        removeFile(settingsFile)
+        removeDir(settingsDir)
+      settings.setSectionLastOpenThread("section", "saved-thread", "parent", THREAD_PRESENTATION_SELECTED_CHAT)
+      let savedThread = settings.getSectionLastOpenThread("section")
+
+      # This list is already loaded, so opening the result synchronously replays it.
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["parent"], "threads": []
+      }))
+      check section.openCommunityChatAndScrollToMessage("parent", "target", "thread")
+      check section.pendingThreadId == "thread"
+      check section.pendingThreadMessageId == "target"
+      check settings.getSectionLastOpenThread("section") == savedThread
+      check section.activated == @["parent"]
+
+      events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
+        ThreadDto(chatId: "parent", threadId: "other-thread", parentMessageId: "other-root", name: "Other")
+      ]))
+      check section.pendingThreadMessageId == "target"
+      check content.scrolledTo.len == 0
+
+      events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
+        ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root", name: "Thread")
+      ]))
+      check section.activated == @["parent", "thread"]
+      check section.panelClosed
+      check content.scrolledTo == @["target"]
+      check section.pendingThreadId == ""
+      check section.pendingThreadMessageId == ""
+      check settings.getSectionLastOpenThread("section") == savedThread
+    else:
+      skip()
+
   test "a newer parent or cached thread result cancels deferred navigation":
     if THREADS_ENABLED:
       for nextThreadId in ["", "cached-thread"]:

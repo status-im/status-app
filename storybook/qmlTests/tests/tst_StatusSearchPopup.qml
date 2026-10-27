@@ -83,6 +83,18 @@ Item {
             return findSubtitles(popup.contentItem)[index].text
         }
 
+        function test_threadScopeNameIsPlainText() {
+            const popup = createTemporaryObject(popupComponent, root)
+            popup.open()
+            const name = "<b>bold</b> & <a href='https://example.com'>link</a>"
+            popup.setSearchSelection("Community", "general", "", false, "", "transparent", false, 0, name)
+
+            const label = findChild(popup.contentItem, "searchScopeThreadText")
+            verify(!!label)
+            compare(label.text, name)
+            compare(label.textFormat, Text.PlainText)
+        }
+
         function test_rendersMessageTextAsStyledText() {
             const results = createTemporaryObject(resultsComponent, root)
             results.appendResult("m1", "Messages", "**hi** Tom & Jerry\nbye")

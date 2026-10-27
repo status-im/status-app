@@ -837,14 +837,20 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     for item in items:
       self.threadChatIds.incl(item.id)
 
+  let pendingMessageNavigation = self.pendingThreadMessageId.len > 0
+  let pendingThreadUpdated = pendingMessageNavigation and completedChatIds.len == 0 and threads.anyIt(
+    it.chatId == self.pendingThreadParentChatId and it.threadId == self.pendingThreadId)
   if self.pendingThreadId.len == 0 or
-      self.pendingThreadParentChatId notin completedChatIds:
+      (self.pendingThreadParentChatId notin completedChatIds and not pendingThreadUpdated):
     return
 
   let threadItem = self.view.chatsModel().getItemById(self.pendingThreadId)
   if threadItem.isNil or not threadItem.isThread or
       threadItem.parentChatId != self.pendingThreadParentChatId:
-    self.clearPendingThreadRestore(clearSettings = true)
+    # A cached list may predate a search result or notification. Wait for its metadata
+    # without discarding the previously saved thread.
+    if not pendingMessageNavigation:
+      self.clearPendingThreadRestore(clearSettings = true)
     return
 
   let presentation = self.pendingThreadPresentation

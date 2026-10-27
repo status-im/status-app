@@ -166,9 +166,11 @@ Control {
             }
 
             StatusBaseText {
+                objectName: "threadCardTitle"
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 text: root.title
+                textFormat: Text.PlainText
                 elide: Text.ElideRight
                 color: Theme.palette.directColor1
                 font.pixelSize: Theme.primaryTextFontSize

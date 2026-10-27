@@ -523,6 +523,59 @@ Item {
             compare(signalSpy.signalArguments[0][2], false) // alsoReplyToParentChat
         }
 
+        function test_threadPlaceholderEscapesNames_data() {
+            return [
+                { tag: "thread only", alsoReply: false },
+                { tag: "also reply to channel", alsoReply: true }
+            ]
+        }
+
+        function test_threadPlaceholderEscapesNames(data) {
+            controlUnderTest.threadsEnabled = true
+            controlUnderTest.isThread = true
+            controlUnderTest.threadName = "<b>Bold</b> & <img src='thread.png'>"
+            controlUnderTest.chatName = "<i>general</i> & channel"
+            getToolBar().threadReplyButton.checked = data.alsoReply
+
+            const expected = "Reply in Ξ " + controlUnderTest.threadName
+                           + (data.alsoReply ? ", also send to #" + controlUnderTest.chatName : "")
+            compare(SQUtils.StringUtils.plainText(controlUnderTest.chatInputPlaceholder), expected)
+            const placeholder = findChild(controlUnderTest.textInput, "statusTextAreaPlaceholder")
+            verify(!!placeholder)
+            compare(placeholder.text, controlUnderTest.chatInputPlaceholder)
+            compare(placeholder.textFormat, Text.StyledText)
+        }
+
+        function test_longThreadPlaceholderElides_data() {
+            return [
+                { tag: "narrow thread", inputWidth: 240, alsoReply: false },
+                { tag: "wide thread", inputWidth: 400, alsoReply: false },
+                { tag: "narrow thread and channel", inputWidth: 240, alsoReply: true },
+                { tag: "wide thread and channel", inputWidth: 400, alsoReply: true }
+            ]
+        }
+
+        function test_longThreadPlaceholderElides(data) {
+            wrapperUnderTest.width = data.inputWidth
+            controlUnderTest.threadsEnabled = true
+            controlUnderTest.isThread = true
+            controlUnderTest.threadName = "f9N6HbnqU8gcIRl15x8P9ZTnbqgH123456789012345678901234".slice(0, 50)
+            controlUnderTest.chatName = "general"
+            getToolBar().threadReplyButton.checked = data.alsoReply
+
+            const input = controlUnderTest.textInput
+            const placeholder = findChild(input, "statusTextAreaPlaceholder")
+            verify(!!placeholder)
+            tryCompare(placeholder, "lineCount", 1)
+            tryCompare(placeholder, "truncated", true)
+            verify(placeholder.contentHeight <= placeholder.height + 1)
+            compare(input.wrapMode, TextEdit.Wrap)
+
+            controlUnderTest.setText("first line\nsecond line")
+            tryCompare(placeholder, "visible", false)
+            tryVerify(() => input.lineCount >= 2)
+        }
+
         function test_threads_threadReplyButton_send_emitsSendMessageRequestedWithParams() {
             const threadName = "coolThread"
             const chatName = "general"

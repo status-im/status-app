@@ -58,6 +58,7 @@ Control {
                 font.weight: Font.Medium
                 color: Theme.palette.baseColor1
                 text: root.primaryText
+                textFormat: Text.PlainText
             }
             StatusIcon {
                 Layout.alignment: Qt.AlignVCenter
@@ -70,6 +71,7 @@ Control {
                 color: Theme.palette.baseColor1
                 visible: !!root.secondaryText
                 text: root.secondaryText
+                textFormat: Text.PlainText
             }
         }
     }

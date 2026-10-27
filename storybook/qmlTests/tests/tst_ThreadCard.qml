@@ -55,6 +55,16 @@ Item {
             clickedSpy.clear()
         }
 
+        function test_titleDisplaysMarkupLiterally() {
+            const name = "<b>Bold</b> & <a href='https://example.com'>link</a>"
+            controlUnderTest.title = name
+
+            const title = findChild(controlUnderTest, "threadCardTitle")
+            verify(!!title)
+            compare(title.text, name)
+            compare(title.textFormat, Text.PlainText)
+        }
+
         function test_limitsParticipantsAndShowsRemainder() {
             const repeater = findChild(controlUnderTest, "threadCardParticipantsRepeater")
             verify(!!repeater)

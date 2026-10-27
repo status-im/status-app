@@ -74,10 +74,11 @@ Control {
     property string chatInputPlaceholder: defaultChatInputPlaceholder
     readonly property string defaultChatInputPlaceholder: {
         if (threadsEnabled && isThread && !isEdit) {
+            const escapedThreadName = StatusQUtils.StringUtils.escapeHtml(threadName)
             if (toolBar.threadReplyButton.checked)
-                return qsTr("Reply in %1, also send to %2").arg(d.inlineThreadIcon + threadName + "<font color='%1'>".arg(Theme.palette.primaryColor1))
-                                                           .arg('#' + chatName + "</font>")
-            return qsTr("Reply in %1").arg(d.inlineThreadIcon + threadName)
+                return qsTr("Reply in %1, also send to %2").arg(d.inlineThreadIcon + escapedThreadName + "<font color='%1'>".arg(Theme.palette.primaryColor1))
+                                                           .arg('#' + StatusQUtils.StringUtils.escapeHtml(chatName) + "</font>")
+            return qsTr("Reply in %1").arg(d.inlineThreadIcon + escapedThreadName)
         }
         return qsTr("Type something")
     }
@@ -1010,6 +1011,8 @@ Control {
                         }
 
                         placeholderText: root.chatInputPlaceholder
+                        placeholderTextFormat: Text.StyledText
+                        placeholderWrapMode: Text.NoWrap
 
                         // Emoji shortcode suggestions: ChatTextArea exposes enteringEmoji/emojiFilter
                         // (>= 2 chars); feed the emoji suggestion popup off it.
