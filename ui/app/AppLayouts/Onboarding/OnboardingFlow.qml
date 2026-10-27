@@ -37,6 +37,7 @@ OnboardingStackView {
 
     required property int keycardState
     required property string keycardUID
+    required property bool keycardInitialized
     required property string keycardKeyUID
     required property int syncState
     required property int remainingPinAttempts
@@ -233,6 +234,7 @@ OnboardingStackView {
                 root.push(keycardDetailsComponent, {
                     keycardState: stateStr,
                     keycardUid: root.keycardUID,
+                    keycardInitialized: root.keycardInitialized,
                     keyUid: root.keycardKeyUID,
                     keycardStatusAvailable: root.keycardStatusAvailable,
                     remainingPinAttempts: root.remainingPinAttempts,
@@ -275,7 +277,7 @@ OnboardingStackView {
                           { type: UseRecoveryPhraseFlow.Type.NewProfile })
             }
             onCreateProfileWithEmptyKeycardRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]")
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]", false)
             }
         }
     }
@@ -290,7 +292,7 @@ OnboardingStackView {
 
             onLoginWithSyncingRequested: root.push(logInBySyncingFlow)
             onLoginWithKeycardRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]")
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]", false)
             }
 
             onLoginWithSeedphraseRequested: {
@@ -308,12 +310,12 @@ OnboardingStackView {
 
             onReadSpareKeycardRequested: {
                 const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
-                root.openKeycardPopup(Constants.keycard.flow.readKeycard, keyUid, "", "", "[]")
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, keyUid, "", "", "[]", false)
             }
 
             onStopUsingKeycardForProfileRequested: {
                 const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
-                root.openKeycardPopup(Constants.keycard.flow.startUsingProfileWithoutKeycard, keyUid, "", "", "[]")
+                root.openKeycardPopup(Constants.keycard.flow.startUsingProfileWithoutKeycard, keyUid, "", "", "[]", false)
             }
         }
     }
@@ -383,12 +385,14 @@ OnboardingStackView {
         id: onboardingKeycardStore
     }
 
-    function openKeycardPopup(flow: string, keyUid: string, keycardUid: string, cardMetadataName: string, cardMetadataWalletAccountsJson: string) : void {
+    function openKeycardPopup(flow: string, keyUid: string, keycardUid: string, cardMetadataName: string, cardMetadataWalletAccountsJson: string,
+                              keycardInitialized: bool) : void {
         console.info("onboarding - openning keycard popup for flow: ", flow, " keyUid: ", keyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)
         keycardManagementPopupComponent.createObject(root, {
             flow: flow,
             keyUid: keyUid || "",
             keycardUid: keycardUid || "",
+            keycardInitialized: keycardInitialized,
             cardMetadataName: cardMetadataName || "",
             cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson || "[]"
         }).open()
@@ -465,6 +469,7 @@ OnboardingStackView {
         id: keycardDetailsComponent
 
         KeycardDetailsPage {
+            id: keycardDetailsPage
             objectName: "keycardDetailsPage"
 
             loginAccountsModel: root.loginAccountsModel
@@ -477,22 +482,28 @@ OnboardingStackView {
                     root.pop(null)
                     return
                 }
-                root.openKeycardPopup(Constants.keycard.flow.onboardingLoginWithKeycard, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+                root.openKeycardPopup(Constants.keycard.flow.onboardingLoginWithKeycard, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson,
+                                      keycardDetailsPage.keycardInitialized) // not root.keycardInitialized
             }
             onImportNewKeyPairAndCreateProfileRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.onboardingImportNewKeyPair, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+                root.openKeycardPopup(Constants.keycard.flow.onboardingImportNewKeyPair, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson,
+                                      keycardDetailsPage.keycardInitialized) // not root.keycardInitialized
             }
             onImportFromRecoveryPhraseRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.onboardingImportSeedPhrase, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+                root.openKeycardPopup(Constants.keycard.flow.onboardingImportSeedPhrase, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson,
+                                      keycardDetailsPage.keycardInitialized) // not root.keycardInitialized
             }
             onUnblockWithRecoveryPhraseRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.unblockWithRecoveryPhrase, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+                root.openKeycardPopup(Constants.keycard.flow.unblockWithRecoveryPhrase, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson,
+                                      keycardDetailsPage.keycardInitialized) // not root.keycardInitialized
             }
             onUnblockWithPukRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.unblockWithPuk, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+                root.openKeycardPopup(Constants.keycard.flow.unblockWithPuk, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson,
+                                      keycardDetailsPage.keycardInitialized) // not root.keycardInitialized
             }
             onFactoryResetRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.factoryReset, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+                root.openKeycardPopup(Constants.keycard.flow.factoryReset, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson,
+                                      keycardDetailsPage.keycardInitialized) // not root.keycardInitialized
             }
             onGoBackToLoginRequested: root.pop(null)
         }

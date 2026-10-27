@@ -7,6 +7,7 @@ QtObject {
 
     readonly property string keycardState: backend ? backend.keycardState : ""
     readonly property bool keycardStatusAvailable: backend ? backend.keycardStatusAvailable : false
+    readonly property bool keycardInitialized: backend ? backend.keycardInitialized : false
     readonly property int remainingPinAttempts: backend ? backend.remainingPinAttempts : -1
     readonly property int remainingPukAttempts: backend ? backend.remainingPukAttempts : -1
     readonly property int availableSlots: backend ? backend.availableSlots : -1

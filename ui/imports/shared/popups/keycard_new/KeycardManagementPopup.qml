@@ -25,6 +25,7 @@ StatusDialog {
     required property string flow
     required property string keycardUid
     required property string keyUid
+    required property bool keycardInitialized
 
     required property string cardMetadataName
     required property string cardMetadataWalletAccountsJson
@@ -37,7 +38,7 @@ StatusDialog {
 
     property var passwordStrengthScoreFunction: (password) => { console.error("passwordStrengthScoreFunction: IMPLEMENT ME") }
 
-    // keycardInfo: { keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts,
+    // keycardInfo: { keycardState, keycardUid, keycardInitialized, keyUid, keycardStatusAvailable, remainingPinAttempts,
     //                remainingPukAttempts, availableSlots, pairingSupported, cardMetadataName,
     //                cardMetadataWalletAccountsJson } - named like the keycard details view properties
     signal metadataResult(var keycardInfo)
@@ -133,12 +134,13 @@ StatusDialog {
     QtObject {
         id: d
 
-        readonly property bool keycardHasOnlyPinSet: !!root.keycardUid && !root.keyUid
+        readonly property bool keycardHasOnlyPinSet: root.keycardInitialized && !!root.keycardUid && !root.keyUid
 
         function keycardInfoSnapshot() {
             return {
                 keycardState: root.store.keycardState,
                 keycardUid: root.store.keycardUid,
+                keycardInitialized: root.store.keycardInitialized,
                 keyUid: root.store.keyUid,
                 keycardStatusAvailable: root.store.keycardStatusAvailable,
                 remainingPinAttempts: root.store.remainingPinAttempts,

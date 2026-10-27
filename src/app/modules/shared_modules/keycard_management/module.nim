@@ -112,6 +112,7 @@ proc createWalletAccountsJson*[T](self: Module[T], walletAccounts: seq[keycard_s
 method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setKeycardState($kcEvent.stateString)
   self.view.setKeycardStatusAvailable(kcEvent.keycardStatus.keyInitialized)
+  self.view.setKeycardInitialized(kcEvent.keycardInfo.initialized)
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
   self.view.setRemainingPukAttempts(kcEvent.keycardStatus.remainingAttemptsPUK)
   self.view.setAvailableSlots(kcEvent.keycardInfo.availableSlots)

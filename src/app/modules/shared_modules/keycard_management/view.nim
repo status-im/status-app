@@ -8,6 +8,7 @@ QtObject:
       delegate: io_interface.AccessInterface
       keycardState: string
       keycardStatusAvailable: bool
+      keycardInitialized: bool
       remainingPinAttempts: int
       remainingPukAttempts: int
       availableSlots: int
@@ -30,6 +31,7 @@ QtObject:
     result.delegate = delegate
     result.keycardState = ""
     result.keycardStatusAvailable = false
+    result.keycardInitialized = false
     result.remainingPinAttempts = 0
     result.remainingPukAttempts = 0
     result.availableSlots = 0
@@ -224,6 +226,19 @@ QtObject:
   QtProperty[bool] keycardStatusAvailable:
     read = getKeycardStatusAvailable
     notify = keycardStatusAvailableChanged
+
+  # PIN set on the card. Not implied by keycardUid: applet 4.x reports one on a blank card too
+  proc keycardInitializedChanged*(self: View) {.signal.}
+  proc getKeycardInitialized*(self: View): bool {.slot.} =
+    return self.keycardInitialized
+  proc setKeycardInitialized*(self: View, value: bool) =
+    if self.keycardInitialized == value:
+      return
+    self.keycardInitialized = value
+    self.keycardInitializedChanged()
+  QtProperty[bool] keycardInitialized:
+    read = getKeycardInitialized
+    notify = keycardInitializedChanged
 
   proc remainingPinAttemptsChanged*(self: View) {.signal.}
   proc getRemainingPinAttempts*(self: View): int {.slot.} =

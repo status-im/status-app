@@ -225,8 +225,9 @@ Loader {
         function onOpenSigningPopup(reason, keyUid, txHash, path, address) {
             root.invoke(() => root.item.openSigningPopup(reason, keyUid, txHash, path, address))
         }
-        function onOpenKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
-            root.invoke(() => root.item.openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson))
+        function onOpenKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson, keycardInitialized) {
+            root.invoke(() => root.item.openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson,
+                                                                   keycardInitialized))
         }
         function onOpenPinnedMessagesPopupRequested(store, messageStore, pinnedMessagesModel, messageToPin, chatId) {
             root.invoke(() => root.item.openPinnedMessagesPopup(store, messageStore, pinnedMessagesModel, messageToPin, chatId))

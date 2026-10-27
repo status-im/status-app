@@ -18,6 +18,7 @@ OnboardingPage {
 
     required property string keycardState
     required property string keycardUid
+    required property bool keycardInitialized
     required property string keyUid
     required property bool keycardStatusAvailable
     required property int remainingPinAttempts
@@ -46,6 +47,7 @@ OnboardingPage {
 
         keycardState: root.keycardState
         keycardUid: root.keycardUid
+        keycardInitialized: root.keycardInitialized
         keyUid: root.keyUid
         keycardStatusAvailable: root.keycardStatusAvailable
         remainingPinAttempts: root.remainingPinAttempts

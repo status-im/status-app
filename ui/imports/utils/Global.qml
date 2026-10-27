@@ -122,7 +122,8 @@ QtObject {
 
     ///////////////// Global Keycard Management popup //////////////
     signal openKeycardManagementPopup(string flow, string keyUid, string keycardUid,
-                                      string cardMetadataName, string cardMetadataWalletAccountsJson)
+                                      string cardMetadataName, string cardMetadataWalletAccountsJson,
+                                      bool keycardInitialized)
     // keycardInfo: see KeycardManagementPopup.metadataResult
     signal keycardManagementResult(var keycardInfo)
     signal keycardFlowDone(string flow, string keyUid, string keycardUid, bool success)
