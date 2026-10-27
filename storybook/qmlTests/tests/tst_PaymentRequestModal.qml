@@ -11,6 +11,7 @@ import QtQuick.Controls
 import utils
 
 import AppLayouts.Wallet.adaptors
+import AppLayouts.Wallet.helpers
 import AppLayouts.Chat.popups
 import shared.stores as SharedStores
 
@@ -31,12 +32,9 @@ Item {
 
         readonly property var tokensStore: TokensStoreMock {
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
             searchResultModel: TokenGroupsModel {
                 skipInitialLoad: true
-                tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: d.tokensStore.tokenGroupsModel
             }
         }
     }
@@ -48,17 +46,19 @@ Item {
             destroyOnClose: true
 
             readonly property SharedStores.CurrenciesStore currencyStore: SharedStores.CurrenciesStore {}
+            // as its owner holds the selected chain
+            readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
+                tokensStore: d.tokensStore
+                chainId: paymentRequestModal.selectedNetworkChainId
+            }
 
             currentCurrency: currencyStore.currentCurrency
             formatCurrencyAmount: currencyStore.formatCurrencyAmount
             flatNetworksModel: d.flatNetworks
             accountsModel: d.accounts
-            tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+            tokenGroupsForChainModel: chainTokenGroupsHolder.model
             searchResultModel: d.tokensStore.searchResultModel
 
-            onShowGroupsForChainRequested: chainId => d.tokensStore.showGroupsForChain(chainId)
-            onChainTokenGroupsAcquireRequested: chainId => d.tokensStore.acquireChainTokenGroups(chainId)
-            onChainTokenGroupsReleaseRequested: chainId => d.tokensStore.releaseChainTokenGroups(chainId)
             onAllTokenGroupsAcquireRequested: d.tokensStore.acquireAllTokenGroups()
             onAllTokenGroupsReleaseRequested: d.tokensStore.releaseAllTokenGroups()
         }
@@ -221,7 +221,7 @@ Item {
             closeAndVerfyModal()
         }
 
-        function test_holds_the_token_groups_it_shows() {
+        function test_shows_the_held_token_groups_of_its_chain() {
             const store = d.tokensStore
             const firstChainId = Constants.chains.mainnetChainId
             const secondChainId = d.flatNetworks.get(1).chainId
@@ -232,12 +232,13 @@ Item {
             launchAndVerfyModal()
             compare(store.allTokenGroupsHolders, 1)
             compare(store.chainTokenGroupsHolderCount(firstChainId), 1)
-            compare(store.builtChainIds[store.builtChainIds.length - 1], firstChainId)
+            verify(!!controlUnderTest.tokenGroupsForChainModel)
+            verify(controlUnderTest.tokenGroupsForChainModel === store.chainTokenGroupsModel(firstChainId))
 
             controlUnderTest.selectedNetworkChainId = secondChainId
             compare(store.chainTokenGroupsHolderCount(firstChainId), 0)
             compare(store.chainTokenGroupsHolderCount(secondChainId), 1)
-            compare(store.builtChainIds[store.builtChainIds.length - 1], secondChainId)
+            verify(controlUnderTest.tokenGroupsForChainModel === store.chainTokenGroupsModel(secondChainId))
             compare(store.allTokenGroupsHolders, 1)
 
             // destroyed on close

@@ -21,15 +21,9 @@ Item {
 
         walletTokensStore: TokensStoreMock {
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
-            tokenGroupsForChainToModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
             searchResultModel: TokenGroupsModel {
                 skipInitialLoad: true
-                tokenGroupsForChainModel: thisWalletAssetStore.walletTokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: thisWalletAssetStore.walletTokensStore.tokenGroupsModel
             }
             _displayAssetsBelowBalanceThresholdDisplayAmountFunc: () => 0
         }

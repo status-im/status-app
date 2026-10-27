@@ -46,8 +46,11 @@ QObject {
     */
 
     // Input API
-    /** Token groups for chain, loaded on demand, without balances **/
+    /** Token groups for chain, loaded on demand, without balances; the
+        selected chain's model, so it changes with the chain **/
     required property var tokenGroupsForChainModel
+    onTokenGroupsForChainModelChanged: d.syncFullOutputLazyState()
+    Component.onCompleted: d.syncFullOutputLazyState()
     /** token groups that match the search keyword **/
     property var searchResultModel
     /** All networks model **/
@@ -79,6 +82,11 @@ QObject {
 
         property string searchKeyword: ""
 
+        function syncFullOutputLazyState() {
+            d.fullOutputModel.hasMoreItems = !!root.tokenGroupsForChainModel && root.tokenGroupsForChainModel.hasMoreItems
+            d.fullOutputModel.isLoadingMore = !!root.tokenGroupsForChainModel && root.tokenGroupsForChainModel.isLoadingMore
+        }
+
         // output model - lazy loaded full model
         readonly property GroupsModel fullOutputModel: GroupsModel {
             modelObjectName: "TokenSelectorViewAdaptor_allTokensModel"
@@ -87,7 +95,7 @@ QObject {
             flatNetworksModel: root.flatNetworksModel
             selectedNetworkChainId: root.selectedNetworkChainId
             onFetchMoreCallback: function() {
-                root.tokenGroupsForChainModel.fetchMore()
+                root.tokenGroupsForChainModel?.fetchMore()
             }
             sourceModelConnectionTarget: root.tokenGroupsForChainModel
         }
@@ -114,11 +122,11 @@ QObject {
         target: root.tokenGroupsForChainModel
 
         function onHasMoreItemsChanged() {
-            d.fullOutputModel.hasMoreItems = root.tokenGroupsForChainModel.hasMoreItems
+            d.syncFullOutputLazyState()
         }
 
         function onIsLoadingMoreChanged() {
-            d.fullOutputModel.isLoadingMore = root.tokenGroupsForChainModel.isLoadingMore
+            d.syncFullOutputLazyState()
         }
     }
 

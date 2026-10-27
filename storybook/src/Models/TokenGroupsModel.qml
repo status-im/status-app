@@ -407,6 +407,8 @@ ListModel {
 
     property bool hasMoreItems: false
     property bool isLoadingMore: false
+    // whether the groups are being loaded (a chain's model)
+    property bool loading: false
 
     property var tokenGroupsForChainModel // used for search only
 

@@ -21,7 +21,6 @@ import shared.panels
 
 import AppLayouts.Wallet
 import AppLayouts.Wallet.controls
-import AppLayouts.Wallet.helpers
 import AppLayouts.Wallet.panels
 import AppLayouts.Wallet.popups.buy
 import AppLayouts.Wallet.adaptors
@@ -68,8 +67,6 @@ StatusDialog {
     QtObject {
         id: d
 
-        readonly property string mandatoryKeysSeparator: "$$"
-
         readonly property int panelMargin: 2 // so the card's shape stroke isn't clipped
 
         // closePolicy only covers Key_Escape (verified on Qt 6.11), so Android's Back would
@@ -82,11 +79,16 @@ StatusDialog {
             root.closeHandler()
         }
 
-        property int lastRequestedChainId: -1
-        property int lastRequestedChainIdTo: -1
-
         property var payTokenSelector: null
         property var receiveTokenSelector: null
+
+        // the receive picker lists the receive chain's shared model
+        readonly property int receiveCatalogChainId: !!d.receiveTokenSelector ? root.swapAdaptor.toCatalogChainId : -1
+        onReceiveCatalogChainIdChanged: {
+            if (!!d.receiveTokenSelector)
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.setTokenSelectorCatalogChain(
+                    d.receiveTokenSelector.id, d.receiveCatalogChainId)
+        }
 
         function createPickers() {
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
@@ -206,12 +208,8 @@ StatusDialog {
             // Skip the redundant harvest + async fetch when this side's chain hasn't
             // changed (Component.onCompleted + the chain-changed handler both fire for
             // the same chain on open). Tracked per side; reset on close.
-            if (isToSide) {
-                if (chainId === d.lastRequestedChainIdTo)
-                    return
-            } else if (chainId === d.lastRequestedChainId) {
+            if (chainId === (isToSide ? root.swapAdaptor.toCatalogChainId : root.swapAdaptor.fromCatalogChainId))
                 return
-            }
 
             const walletTokensStore = root.swapAdaptor.walletAssetsStore.walletTokensStore
             const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwap(chainId)
@@ -235,27 +233,8 @@ StatusDialog {
                 return
             }
 
-            if (isToSide)
-                d.lastRequestedChainIdTo = chainId
-            else
-                d.lastRequestedChainId = chainId
-            const keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
-            if (isToSide)
-                walletTokensStore.showGroupsForChainTo(chainId, keys)
-            else
-                walletTokensStore.showGroupsForChain(chainId, keys)
+            root.swapAdaptor.holdChainTokenGroups(chainId, isToSide)
         }
-    }
-
-    // both sides on one chain share one held entry
-    ChainTokenGroupsHolder {
-        tokensStore: root.swapAdaptor.walletAssetsStore.walletTokensStore
-        chainId: d.lastRequestedChainId
-    }
-
-    ChainTokenGroupsHolder {
-        tokensStore: root.swapAdaptor.walletAssetsStore.walletTokensStore
-        chainId: d.lastRequestedChainIdTo
     }
 
     ModelEntry {
@@ -342,8 +321,8 @@ StatusDialog {
         onTriggered: d.createPickers()
     }
     onClosed: {
-        d.lastRequestedChainId = -1
-        d.lastRequestedChainIdTo = -1
+        root.swapAdaptor.holdChainTokenGroups(-1, false)
+        root.swapAdaptor.holdChainTokenGroups(-1, true)
         root.swapAdaptor.resetData()
     }
 
@@ -474,7 +453,7 @@ StatusDialog {
                     }
 
                     onListCatalogChainIdChanged: d.rebuildGroupsForChain(listCatalogChainId)
-                    catalogChainId: d.lastRequestedChainId
+                    catalogChainId: root.swapAdaptor.fromCatalogChainId
 
                     selectedAccountAddress: root.swapInputParamsForm.selectedAccountAddress
                     nonInteractiveGroupKey: receivePanel.selectedHoldingId
@@ -488,7 +467,7 @@ StatusDialog {
                     swapSide: SwapInputPanel.SwapSide.Pay
                     swapExchangeButtonWidth: swapExchangeButton.width
 
-                    tokenSelectorLoading: root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
+                    tokenSelectorLoading: root.swapAdaptor.fromChainTokenGroupsLoading
                     bottomTextLoading: root.swapAdaptor.swapProposalLoading
 
                     onSelectedHoldingIdChanged: root.swapInputParamsForm.fromGroupKey = selectedHoldingId
@@ -532,7 +511,7 @@ StatusDialog {
                         payPanel.forceActiveFocus()
                     }
 
-                    catalogChainId: d.lastRequestedChainIdTo
+                    catalogChainId: root.swapAdaptor.toCatalogChainId
                     onListCatalogChainIdChanged: d.rebuildGroupsForChain(listCatalogChainId, true)
 
                     selectedAccountAddress: root.swapInputParamsForm.toAccountAddress || root.swapInputParamsForm.selectedAccountAddress
@@ -549,7 +528,7 @@ StatusDialog {
                     swapSide: SwapInputPanel.SwapSide.Receive
                     swapExchangeButtonWidth: swapExchangeButton.width
 
-                    tokenSelectorLoading: root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainToLoading
+                    tokenSelectorLoading: root.swapAdaptor.toChainTokenGroupsLoading
                     mainInputLoading: root.swapAdaptor.swapProposalLoading
                     bottomTextLoading: root.swapAdaptor.swapProposalLoading
 

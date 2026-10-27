@@ -11,6 +11,7 @@ import StatusQ.Core.Utils
 import utils
 
 import AppLayouts.Wallet.adaptors
+import AppLayouts.Wallet.helpers
 import AppLayouts.Wallet.stores
 import AppLayouts.Chat.popups
 import shared.stores as SharedStores
@@ -60,12 +61,9 @@ SplitView {
 
         readonly property var tokensStore: TokensStoreMock {
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
             searchResultModel: TokenGroupsModel {
                 skipInitialLoad: true
-                tokenGroupsForChainModel: popupBg.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: popupBg.tokensStore.tokenGroupsModel
             }
         }
 
@@ -78,12 +76,16 @@ SplitView {
                 destroyOnClose: true
 
                 readonly property SharedStores.CurrenciesStore currenciesStore: SharedStores.CurrenciesStore {}
+                readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
+                    tokensStore: popupBg.tokensStore
+                    chainId: paymentRequestModal.selectedNetworkChainId
+                }
 
                 currentCurrency: currenciesStore.currentCurrency
                 formatCurrencyAmount: currenciesStore.formatCurrencyAmount
                 flatNetworksModel: d.flatNetworks
                 accountsModel: d.accounts
-                tokenGroupsForChainModel: popupBg.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: chainTokenGroupsHolder.model
                 searchResultModel: popupBg.tokensStore.searchResultModel
 
                 Connections {
@@ -103,9 +105,6 @@ SplitView {
                         paymentRequestModal.selectedAccountAddress = d.selectedAccountAddress
                 }
 
-                onShowGroupsForChainRequested: chainId => popupBg.tokensStore.showGroupsForChain(chainId)
-                onChainTokenGroupsAcquireRequested: chainId => popupBg.tokensStore.acquireChainTokenGroups(chainId)
-                onChainTokenGroupsReleaseRequested: chainId => popupBg.tokensStore.releaseChainTokenGroups(chainId)
                 onAllTokenGroupsAcquireRequested: popupBg.tokensStore.acquireAllTokenGroups()
                 onAllTokenGroupsReleaseRequested: popupBg.tokensStore.releaseAllTokenGroups()
             }

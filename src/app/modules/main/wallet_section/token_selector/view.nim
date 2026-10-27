@@ -46,6 +46,9 @@ QtObject:
   QtProperty[int] lastPreparedModelId:
     read = getLastPreparedModelId
 
+  proc setCatalogChainId*(self: View, id: int, chainId: int) {.slot.} =
+    self.delegate.setCatalogChainId(id, chainId)
+
   proc releaseModel*(self: View, id: int) {.slot.} =
     self.delegate.releaseModel(id)
     if self.modelVariants.hasKey(id):

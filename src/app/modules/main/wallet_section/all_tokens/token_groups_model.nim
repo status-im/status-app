@@ -4,6 +4,9 @@ import nimqml, tables, strutils, algorithm, sequtils
 
 import io_interface, tokens_model, market_details_item
 
+when defined(QT_MODEL_SPY):
+  import app/modules/shared/qt_model_spy
+
 type
   ModelMode* {.pure.} = enum
     NoMarketDetails
@@ -68,6 +71,8 @@ QtObject:
     lazyLoadingBatchSize: int
     lazyLoadingInitialCount: int
     isLoadingMore: bool # only used with UseLazyLoading model mode
+    # whether the groups the model reads are being loaded
+    loading: bool
     searchKeyword: string
     fullSearchResults: seq[TokenGroupItem] # only used with IsSearchResult model mode
     loadedItems: seq[TokenGroupItem] # only used with UseLazyLoading model mode
@@ -133,6 +138,18 @@ QtObject:
   QtProperty[bool] isLoadingMore:
     read = getIsLoadingMore
     notify = isLoadingMoreChanged
+
+  proc loadingChanged(self: TokenGroupsModel) {.signal.}
+  proc setLoading*(self: TokenGroupsModel, value: bool) =
+    if value == self.loading:
+      return
+    self.loading = value
+    self.loadingChanged()
+  proc getLoading*(self: TokenGroupsModel): bool {.slot.} =
+    return self.loading
+  QtProperty[bool] loading:
+    read = getLoading
+    notify = loadingChanged
 
   method roleNames(self: TokenGroupsModel): Table[int, string] =
     {
@@ -376,12 +393,16 @@ QtObject:
         self.tokensModels.del(key)
       return
 
+    when defined(QT_MODEL_SPY):
+      recordBeginResetModel()
     self.beginResetModel()
     defer:
       # First-registered defer runs LAST — after endResetModel below.
       self.resetTokensSubmodels()
     defer:
       self.endResetModel()
+      when defined(QT_MODEL_SPY):
+        recordEndResetModel()
       self.hasMoreItemsChanged()
 
     # if resetModelSize is false, the model remains as it was in terms of the number of items and the items themselves

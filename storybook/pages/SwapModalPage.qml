@@ -119,8 +119,6 @@ SplitView {
         TokensStoreMock {
             id: tokensStore
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: ListModel {}
-            tokenGroupsForChainToModel: ListModel {}
             _displayAssetsBelowBalanceThresholdDisplayAmountFunc: () => 0
         }
 

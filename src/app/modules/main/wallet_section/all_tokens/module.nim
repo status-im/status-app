@@ -26,6 +26,23 @@ type
     moduleLoaded: bool
     addresses: seq[string]
 
+proc init*(
+  self: Module,
+  delegate: delegate_interface.AccessInterface,
+  events: EventEmitter,
+  tokenService: token_service.Service,
+  walletAccountService: wallet_account_service.Service,
+  settingsService: settings_service.Service,
+  communityTokensService: community_tokens_service.Service
+) =
+  self.delegate = delegate
+  self.events = events
+  self.view = newView(self)
+  self.viewVariant = newQVariant(self.view)
+  self.controller = controller.newController(self, events, tokenService, walletAccountService, settingsService, communityTokensService)
+  self.moduleLoaded = false
+  self.addresses = @[]
+
 proc newModule*(
   delegate: delegate_interface.AccessInterface,
   events: EventEmitter,
@@ -35,13 +52,10 @@ proc newModule*(
   communityTokensService: community_tokens_service.Service
 ): Module =
   result = Module()
-  result.delegate = delegate
-  result.events = events
-  result.view = newView(result)
-  result.viewVariant = newQVariant(result.view)
-  result.controller = controller.newController(result, events, tokenService, walletAccountService, settingsService, communityTokensService)
-  result.moduleLoaded = false
-  result.addresses = @[]
+  result.init(delegate, events, tokenService, walletAccountService, settingsService, communityTokensService)
+
+when defined(testing) or defined(QT_MODEL_SPY):
+  proc getViewForTest*(self: Module): View = self.view
 
 method delete*(self: Module) =
   self.viewVariant.delete
@@ -57,6 +71,7 @@ method load*(self: Module) =
     self.view.emitTokenListUpdatedAtSignal()
   self.events.on(SIGNAL_WALLET_ACCOUNT_TOKENS_REBUILT) do(e:Args):
     self.view.modelsUpdated()
+    self.view.onWalletTokensRebuilt()
   self.events.on(SIGNAL_TOKENS_DETAILS_UPDATED) do(e: Args):
     self.view.tokensDetailsUpdated()
   self.events.on(SIGNAL_TOKENS_MARKET_VALUES_ABOUT_TO_BE_UPDATED) do(e: Args):
@@ -79,7 +94,7 @@ method load*(self: Module) =
     of tckAllTokenGroups:
       self.view.onAllChainsGroupsChanged()
     of tckChainTokenGroups:
-      self.view.onChainGroupsChanged(args.chainId)
+      self.view.onChainGroupsChanged(args.chainId, args.dropped)
   self.events.on(SIGNAL_TOKEN_CATALOGUE_LOADING_CHANGED) do(e: Args):
     if TokenCatalogueChangedArgs(e).kind != tckAllTokenGroups:
       self.view.onCatalogueLoadingChanged()
@@ -124,21 +139,9 @@ method getTokenGroupsModelDataSource*(self: Module): TokenGroupsModelDataSource 
     getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
   )
 
-method getTokenGroupsForChainModelDataSource*(self: Module): TokenGroupsModelDataSource =
+method getTokenGroupsForChainModelDataSource*(self: Module, chainId: int): TokenGroupsModelDataSource =
   return (
-    getAllTokenGroups: proc(): var seq[TokenGroupItem] =
-      self.controller.getChainTokenGroups(self.view.getGroupsForChainId()),
-    getTokenDetails: proc(tokenKey: string): TokenDetailsItem = self.controller.getTokenDetails(tokenKey),
-    getTokenPreferences: proc(groupKey: string): TokenPreferencesItem = self.controller.getTokenPreferences(groupKey),
-    getCommunityTokenDescription: proc(chainId: int, address: string): string = self.controller.getCommunityTokenDescription(chainId, address),
-    getTokensDetailsLoading: proc(): bool = self.controller.getTokensDetailsLoading(),
-    getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
-  )
-
-method getTokenGroupsForChainToModelDataSource*(self: Module): TokenGroupsModelDataSource =
-  return (
-    getAllTokenGroups: proc(): var seq[TokenGroupItem] =
-      self.controller.getChainTokenGroups(self.view.getGroupsForChainToId()),
+    getAllTokenGroups: proc(): var seq[TokenGroupItem] = self.controller.getChainTokenGroups(chainId),
     getTokenDetails: proc(tokenKey: string): TokenDetailsItem = self.controller.getTokenDetails(tokenKey),
     getTokenPreferences: proc(groupKey: string): TokenPreferencesItem = self.controller.getTokenPreferences(groupKey),
     getCommunityTokenDescription: proc(chainId: int, address: string): string = self.controller.getCommunityTokenDescription(chainId, address),
@@ -179,14 +182,17 @@ method releaseChainTokenGroups*(self: Module, chainId: int) =
 method getChainTokenGroupsLoading*(self: Module, chainId: int): bool =
   return self.controller.getChainTokenGroupsLoading(chainId)
 
+method isChainTokenGroupsActive*(self: Module, chainId: int): bool =
+  return self.controller.isChainTokenGroupsActive(chainId)
+
 # Non-QML accessors so the token-selector producer can snapshot the lazy popular
 # and search lists and drive their fetchMore/search directly.
 proc getTokenGroupsModelObj*(self: Module): TokenGroupsModel =
   self.view.getTokenGroupsModelObj()
-proc getTokenGroupsForChainModelObj*(self: Module): TokenGroupsModel =
-  self.view.getTokenGroupsForChainModelObj()
-proc getTokenGroupsForChainToModelObj*(self: Module): TokenGroupsModel =
-  self.view.getTokenGroupsForChainToModelObj()
+proc getChainTokenGroupsModelObj*(self: Module, chainId: int): TokenGroupsModel =
+  self.view.getChainTokenGroupsModelObj(chainId)
+proc onChainTokenGroupsModelUpdated*(self: Module, listener: proc(chainId: int)) =
+  self.view.onChainTokenGroupsModelUpdated(listener)
 proc getSearchResultModelObj*(self: Module): TokenGroupsModel =
   self.view.getSearchResultModelObj()
 proc getTokenGroupsAllChainsModelObj*(self: Module): TokenGroupsModel =
@@ -197,8 +203,6 @@ proc acquireAllChainsTokenGroupsForKeys*(self: Module, holder: int, mandatoryGro
   self.view.acquireAllChainsTokenGroupsForKeys(holder, mandatoryGroupKeys)
 proc releaseAllChainsTokenGroups*(self: Module, holder: int) =
   self.view.releaseAllChainsTokenGroups(holder)
-proc getGroupsForChainToId*(self: Module): int =
-  self.view.getGroupsForChainToId()
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)

@@ -161,8 +161,6 @@ Window {
         }
         function releaseTokenSelectorModel(id) {}
         function isChainSupportedForSwap(chainId) { return true }
-        function showGroupsForChain(chainId, keys) {}
-        function showGroupsForChainTo(chainId, keys) {}
     }
 
     WalletStores.WalletAssetsStore {

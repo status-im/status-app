@@ -8,19 +8,20 @@ const
   # all QML holders of the all-chains groups share one entry; they pin the default keys
   QML_ALL_CHAINS_HOLDER = -1
 
+type
+  ChainTokenGroups = object
+    model: TokenGroupsModel
+    variant: QVariant
+    # the keys each holder pins, by the holder's keys string, with its count
+    holderKeys: OrderedTable[string, int]
+    pinnedKeys: seq[string]
+
 QtObject:
   type
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       marketHistoryIsLoading: bool
       tokenListsLoading: bool
-      groupsForChainLoading: bool
-      groupsForChainToLoading: bool
-      # the chain each side's model reads; a holder elsewhere keeps it loaded
-      groupsForChainId: int
-      groupsForChainToId: int
-      pendingMandatoryGroupKeys: seq[string]
-      pendingMandatoryGroupKeysTo: seq[string]
       pendingMandatoryGroupKeysAllChains: seq[string]
       # the keys each holder pins in the all-chains model
       allChainsHolderKeys: OrderedTable[int, seq[string]]
@@ -28,8 +29,11 @@ QtObject:
 
       tokenListsModel: TokenListsModel
       tokenGroupsModel: TokenGroupsModel # refers to tokens of interest for active networks mode
-      tokenGroupsForChainModel: TokenGroupsModel # all tokens for the source (pay) chain
-      tokenGroupsForChainToModel: TokenGroupsModel # all tokens for the destination (receive) chain (swap+bridge)
+      # One model per chain, shared by every holder of the chain. It lives while
+      # the chain is held or its groups stay loaded.
+      chainModels: Table[int, ChainTokenGroups]
+      chainModelListeners: seq[proc(chainId: int)]
+      preparedChainId: int
       tokenGroupsAllChainsModel: TokenGroupsModel # ALL tokens across the active chains (on-demand fetch), for the "All" chip
       searchResultModel: TokenGroupsModel # tokens matching the search keyword, scanned over the same cross-chain catalog
 
@@ -46,19 +50,6 @@ QtObject:
     result.tokenGroupsModel = newTokenGroupsModel(
       delegate.getTokenGroupsModelDataSource(),
       delegate.getTokenMarketValuesDataSource())
-    result.tokenGroupsForChainModel = newTokenGroupsModel(
-      delegate.getTokenGroupsForChainModelDataSource(),
-      delegate.getTokenMarketValuesDataSource(),
-      modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],  # We allow empty market details for the tokenGroupsForChainModel, because
-                                                                            # it is used for the swap input panel where market details are not needed.
-      lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
-      lazyLoadingInitialCount = LAZY_LOADING_INITIAL_COUNT)
-    result.tokenGroupsForChainToModel = newTokenGroupsModel(
-      delegate.getTokenGroupsForChainToModelDataSource(),
-      delegate.getTokenMarketValuesDataSource(),
-      modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],
-      lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
-      lazyLoadingInitialCount = LAZY_LOADING_INITIAL_COUNT)
     result.tokenGroupsAllChainsModel = newTokenGroupsModel(
       delegate.getTokenGroupsAllChainsModelDataSource(),
       delegate.getTokenMarketValuesDataSource(),
@@ -118,20 +109,6 @@ QtObject:
     read = getTokenListsModel
     notify = tokenListsModelChanged
 
-  proc tokenGroupsForChainModelChanged*(self: View) {.signal.}
-  proc getTokenGroupsForChainModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.tokenGroupsForChainModel)
-  QtProperty[QVariant] tokenGroupsForChainModel:
-    read = getTokenGroupsForChainModel
-    notify = tokenGroupsForChainModelChanged
-
-  proc tokenGroupsForChainToModelChanged*(self: View) {.signal.}
-  proc getTokenGroupsForChainToModel(self: View): QVariant {.slot.} =
-    return newQVariant(self.tokenGroupsForChainToModel)
-  QtProperty[QVariant] tokenGroupsForChainToModel:
-    read = getTokenGroupsForChainToModel
-    notify = tokenGroupsForChainToModelChanged
-
   proc searchResultModelChanged*(self: View) {.signal.}
   proc getSearchResultModel(self: View): QVariant {.slot.} =
     return newQVariant(self.searchResultModel)
@@ -146,78 +123,145 @@ QtObject:
     read = getTokenGroupsModel
     notify = tokenGroupsModelChanged
 
-  proc groupsForChainLoadingChanged*(self: View) {.signal.}
-  proc getGroupsForChainLoading*(self: View): bool {.slot.} =
-    return self.groupsForChainLoading
-  proc setGroupsForChainLoading*(self: View, loading: bool) =
-    if self.groupsForChainLoading == loading:
+  proc getChainTokenGroupsModelObj*(self: View, chainId: int): TokenGroupsModel =
+    ## nil unless the chain is held or its groups stay loaded
+    self.chainModels.withValue(chainId, entry):
+      return entry.model
+    nil
+
+  proc chainTokenGroupsModel*(self: View, chainId: int): QVariant =
+    ## The chain's shared model, null unless held. Nim keeps the model.
+    self.chainModels.withValue(chainId, entry):
+      return entry.variant
+    newQVariant()
+
+  # nimqml cannot return a QVariant from a slot that takes arguments, hence the
+  # prepare-then-get pair; the store wraps the two calls.
+  proc prepareChainTokenGroupsModel*(self: View, chainId: int) {.slot.} =
+    self.preparedChainId = chainId
+
+  proc getPreparedChainTokenGroupsModel*(self: View): QVariant {.slot.} =
+    self.chainTokenGroupsModel(self.preparedChainId)
+
+  proc onChainTokenGroupsModelUpdated*(self: View, listener: proc(chainId: int)) =
+    ## Called after a chain's model is created, reset or deleted.
+    self.chainModelListeners.add(listener)
+
+  proc notifyChainModelUpdated(self: View, chainId: int) =
+    for listener in self.chainModelListeners:
+      listener(chainId)
+
+  proc resetChainModel(self: View, chainId: int) =
+    self.chainModels.withValue(chainId, entry):
+      entry.model.modelsUpdated(resetModelSize = true, entry.pinnedKeys)
+      self.notifyChainModelUpdated(chainId)
+
+  proc chainHolders(self: View, chainId: int): int =
+    self.chainModels.withValue(chainId, entry):
+      for count in entry.holderKeys.values:
+        result += count
+
+  proc updateChainModelsLoading(self: View) =
+    for chainId, entry in self.chainModels:
+      entry.model.setLoading(self.delegate.getChainTokenGroupsLoading(chainId))
+
+  proc applyChainPinnedKeys(self: View, chainId: int, defaultKeys: seq[string]): bool =
+    ## Whether the chain's pinned keys changed; a holder passing "" pins `defaultKeys`.
+    self.chainModels.withValue(chainId, entry):
+      var keys: seq[string]
+      var seen: HashSet[string]
+      for holderKeys in entry.holderKeys.keys:
+        let holderPins = if holderKeys.len > 0: holderKeys.split("$$") else: defaultKeys
+        for key in holderPins:
+          if not seen.containsOrIncl(key):
+            keys.add(key)
+      if keys.toHashSet == entry.pinnedKeys.toHashSet:
+        return false
+      entry.pinnedKeys = keys
+      return true
+    false
+
+  proc hasDefaultKeysHolder(self: View, chainId: int): bool =
+    self.chainModels.withValue(chainId, entry):
+      return entry.holderKeys.hasKey("")
+    false
+
+  proc applyChainPinnedKeys(self: View, chainId: int): bool =
+    var defaultKeys: seq[string]
+    if self.hasDefaultKeysHolder(chainId):
+      defaultKeys = self.delegate.getMandatoryTokenGroupKeys()
+    self.applyChainPinnedKeys(chainId, defaultKeys)
+
+  proc deleteChainModel(self: View, chainId: int) =
+    var entry: ChainTokenGroups
+    if not self.chainModels.pop(chainId, entry):
       return
-    self.groupsForChainLoading = loading
-    self.groupsForChainLoadingChanged()
-  QtProperty[bool] groupsForChainLoading:
-    read = getGroupsForChainLoading
-    notify = groupsForChainLoadingChanged
+    entry.variant.delete
+    entry.model.delete
+    self.notifyChainModelUpdated(chainId)
 
-  proc groupsForChainToLoadingChanged*(self: View) {.signal.}
-  proc getGroupsForChainToLoading*(self: View): bool {.slot.} =
-    return self.groupsForChainToLoading
-  proc setGroupsForChainToLoading*(self: View, loading: bool) =
-    if self.groupsForChainToLoading == loading:
+  proc acquireChainTokenGroups*(self: View, chainId: int, mandatoryGroupKeys: string) {.slot.} =
+    ## `mandatoryGroupKeys` joined by "$$", empty for the default keys; the
+    ## release passes the same.
+    if chainId <= 0:
       return
-    self.groupsForChainToLoading = loading
-    self.groupsForChainToLoadingChanged()
-  QtProperty[bool] groupsForChainToLoading:
-    read = getGroupsForChainToLoading
-    notify = groupsForChainToLoadingChanged
-
-  proc getGroupsForChainId*(self: View): int =
-    self.groupsForChainId
-
-  proc getGroupsForChainToId*(self: View): int =
-    self.groupsForChainToId
-
-  proc updateGroupsForChainLoading(self: View) =
-    self.setGroupsForChainLoading(self.delegate.getChainTokenGroupsLoading(self.groupsForChainId))
-    self.setGroupsForChainToLoading(self.delegate.getChainTokenGroupsLoading(self.groupsForChainToId))
-
-  proc mandatoryGroupKeys(self: View, mandatoryGroupKeysString: string): seq[string] =
-    if mandatoryGroupKeysString.len > 0:
-      return mandatoryGroupKeysString.split("$$")
-    return self.delegate.getMandatoryTokenGroupKeys()
-
-  proc resetGroupsForChainModel(self: View) =
-    self.tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeys)
-    self.tokenGroupsForChainModelChanged()
-
-  proc resetGroupsForChainToModel(self: View) =
-    self.tokenGroupsForChainToModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeysTo)
-    self.tokenGroupsForChainToModelChanged()
-
-  proc showGroupsForChain*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
-    self.groupsForChainId = chainId
-    self.pendingMandatoryGroupKeys = self.mandatoryGroupKeys(mandatoryGroupKeysString)
-    self.resetGroupsForChainModel()
-    self.updateGroupsForChainLoading()
-
-  proc showGroupsForChainTo*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
-    self.groupsForChainToId = chainId
-    self.pendingMandatoryGroupKeysTo = self.mandatoryGroupKeys(mandatoryGroupKeysString)
-    self.resetGroupsForChainToModel()
-    self.updateGroupsForChainLoading()
-
-  proc acquireChainTokenGroups*(self: View, chainId: int) {.slot.} =
     self.delegate.acquireChainTokenGroups(chainId)
-    self.updateGroupsForChainLoading()
+    var created = false
+    if not self.chainModels.hasKey(chainId):
+      let model = newTokenGroupsModel(
+        self.delegate.getTokenGroupsForChainModelDataSource(chainId),
+        self.delegate.getTokenMarketValuesDataSource(),
+        # the swap and payment request pickers need no market details
+        modelModes = @[ModelMode.NoMarketDetails, ModelMode.UseLazyLoading],
+        lazyLoadingBatchSize = LAZY_LOADING_BATCH_SIZE,
+        lazyLoadingInitialCount = LAZY_LOADING_INITIAL_COUNT)
+      self.chainModels[chainId] = ChainTokenGroups(model: model, variant: newQVariant(model))
+      created = true
+    self.chainModels[chainId].holderKeys.mgetOrPut(mandatoryGroupKeys, 0).inc
+    # loaded groups fire no event for a new holder
+    if self.applyChainPinnedKeys(chainId) or created:
+      self.resetChainModel(chainId)
+    self.chainModels[chainId].model.setLoading(self.delegate.getChainTokenGroupsLoading(chainId))
 
-  proc releaseChainTokenGroups*(self: View, chainId: int) {.slot.} =
+  proc releaseChainTokenGroups*(self: View, chainId: int, mandatoryGroupKeys: string) {.slot.} =
+    var held = false
+    self.chainModels.withValue(chainId, entry):
+      let count = entry.holderKeys.getOrDefault(mandatoryGroupKeys)
+      held = count > 0
+      if count > 1:
+        entry.holderKeys[mandatoryGroupKeys] = count - 1
+      elif held:
+        entry.holderKeys.del(mandatoryGroupKeys)
+    if not held:
+      return
     self.delegate.releaseChainTokenGroups(chainId)
+    if self.chainHolders(chainId) > 0:
+      if self.applyChainPinnedKeys(chainId):
+        self.resetChainModel(chainId)
+    # dropped while held, as on background: no drop follows
+    elif not self.delegate.isChainTokenGroupsActive(chainId):
+      self.deleteChainModel(chainId)
+    # else unread until the next holder, which applies its keys
 
-  proc onChainGroupsChanged*(self: View, chainId: int) =
-    if chainId == self.groupsForChainId:
-      self.resetGroupsForChainModel()
-    if chainId == self.groupsForChainToId:
-      self.resetGroupsForChainToModel()
-    self.updateGroupsForChainLoading()
+  proc onChainGroupsChanged*(self: View, chainId: int, dropped: bool) =
+    if dropped and self.chainHolders(chainId) == 0:
+      self.deleteChainModel(chainId)
+    else:
+      self.resetChainModel(chainId)
+    self.updateChainModelsLoading()
+
+  proc onWalletTokensRebuilt*(self: View) =
+    ## The default keys follow the wallet's tokens.
+    var chainIds: seq[int]
+    for chainId in self.chainModels.keys:
+      if self.hasDefaultKeysHolder(chainId):
+        chainIds.add(chainId)
+    if chainIds.len == 0:
+      return
+    let defaultKeys = self.delegate.getMandatoryTokenGroupKeys()
+    for chainId in chainIds:
+      if self.applyChainPinnedKeys(chainId, defaultKeys):
+        self.resetChainModel(chainId)
 
   proc applyAllChainsMandatoryKeys(self: View) =
     var keys: seq[string]
@@ -226,7 +270,7 @@ QtObject:
       for key in holderKeys:
         if not seen.containsOrIncl(key):
           keys.add(key)
-    if keys == self.pendingMandatoryGroupKeysAllChains:
+    if keys.toHashSet == self.pendingMandatoryGroupKeysAllChains.toHashSet:
       return
     self.pendingMandatoryGroupKeysAllChains = keys
     # loaded groups fire no event for a new holder
@@ -278,10 +322,6 @@ QtObject:
     ## Non-QML accessor: the raw model instances, so a sibling producer can
     ## snapshot their loaded rows and drive their lazy loading directly.
     self.tokenGroupsModel
-  proc getTokenGroupsForChainModelObj*(self: View): TokenGroupsModel =
-    self.tokenGroupsForChainModel
-  proc getTokenGroupsForChainToModelObj*(self: View): TokenGroupsModel =
-    self.tokenGroupsForChainToModel
   proc getSearchResultModelObj*(self: View): TokenGroupsModel =
     self.searchResultModel
   proc getTokenGroupsAllChainsModelObj*(self: View): TokenGroupsModel =
@@ -422,7 +462,7 @@ QtObject:
     self.tokenListsUpdated()
 
   proc onCatalogueLoadingChanged*(self: View) =
-    self.updateGroupsForChainLoading()
+    self.updateChainModelsLoading()
     self.setTokenListsLoading(self.delegate.getTokenListsLoading())
 
   proc isChainSupportedForSwap*(self: View, chainId: int): bool {.slot.} =

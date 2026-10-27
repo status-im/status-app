@@ -44,7 +44,7 @@ ListModel {
     // is set.
     property var sourceData: []
 
-    // Live token-groups source (e.g. tokenGroupsForChainModel / tokenGroupsModel);
+    // Live token-groups source (e.g. a chain's model / tokenGroupsModel);
     // its rows are mapped to terminal roles and rebuilt when it changes.
     property var sourceModel: null
 
@@ -161,7 +161,7 @@ ListModel {
     onSourceDataChanged: _reload()
     onSourceModelChanged: _reload()
 
-    // Rebuild whenever the source's row count changes (e.g. showGroupsForChain
+    // Rebuild whenever the source's row count changes (e.g. a chain's model
     // clears + repopulates the chain-scoped groups). A bound property is reliably
     // reactive here (a Connections wrapped in a property on a ListModel is not).
     readonly property int _sourceCount: !!sourceModel ? sourceModel.count : 0
