@@ -23,7 +23,9 @@ from gui.elements.object import QObject
 from gui.elements.scroll import Scroll, row_vertically_usable_in_scroll_viewport
 from gui.elements.text_label import TextLabel
 from gui.objects_map import names, communities_names, messaging_names
+from gui.components.messaging.message_context_menu_popup import MessageContextMenuPopup
 from gui.screens.community_settings import CommunitySettingsScreen
+from helpers.thread_helper import list_item_notifications_count
 from scripts.tools.image import Image
 from scripts.utils.parsers import remove_tags
 
@@ -345,7 +347,11 @@ class CommunityLeftPanel(QObject):
     def is_add_channels_button_visible(self) -> bool:
         return self._add_channels_button.is_visible
 
-    @allure.step('Select channel')
+    @allure.step('Get notifications count for channel or thread list item')
+    def notifications_count(self, name: str) -> int:
+        return list_item_notifications_count(self.chatListItemDropAreaItem.real_name, name)
+
+    @allure.step('Select channel or thread in community list')
     def select_channel(self, name: str):
         deadline = time.monotonic() + max(15.0, configs.timeouts.UI_LOAD_TIMEOUT_SEC * 3)
         scroll_obj = self._channels_scroll.object

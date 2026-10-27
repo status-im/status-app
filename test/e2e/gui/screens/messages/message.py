@@ -322,6 +322,40 @@ class Message:
         self.delegate_button.click()
         return BannedCommunityScreen().wait_until_appears()
 
+    @allure.step('Thread card is shown under message')
+    def has_thread_card(self) -> bool:
+        return _find_named_descendant(self.object, 'threadCardTitleRow') is not None
+
+    def _thread_card_text(self, object_name: str) -> str:
+        node = _find_named_descendant(self.object, object_name)
+        if node is None:
+            raise LookupError(f'{object_name} was not found under the message')
+        return str(getattr(node, 'text', ''))
+
+    @allure.step('Thread card title')
+    def thread_card_title(self) -> str:
+        return self._thread_card_text('threadCardTitle')
+
+    @allure.step('Thread card message count')
+    def thread_card_count(self) -> str:
+        return self._thread_card_text('threadCardMessagesCount')
+
+    @allure.step('Thread card preview')
+    def thread_card_preview(self) -> str:
+        return self._thread_card_text('threadCardMessagePreview')
+
+    @allure.step('Thread card title row is visible')
+    def thread_card_title_visible(self) -> bool:
+        node = _find_named_descendant(self.object, 'threadCardTitleRow')
+        return node is not None and bool(getattr(node, 'visible', False))
+
+    @allure.step('Open thread from card under message')
+    def open_thread_from_card(self):
+        title_row = _find_named_descendant(self.object, 'threadCardTitleRow')
+        if title_row is None:
+            raise LookupError('Thread card was not found under message')
+        driver.click(title_row)
+
     @allure.step('Open message context menu')
     def open_context_menu(self):
         from gui.screens.messages.chat import MessageQuickActions
