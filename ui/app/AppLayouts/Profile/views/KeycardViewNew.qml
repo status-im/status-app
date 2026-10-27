@@ -65,6 +65,7 @@ SettingsContentBase {
             property int remainingPinAttempts: -1
             property int remainingPukAttempts: -1
             property int availableSlots: -1
+            property bool pairingSupported: true
             property string cardMetadataName: ""
             property string cardMetadataWalletAccountsJson: "[]"
 
@@ -74,17 +75,17 @@ SettingsContentBase {
                 root.backButtonNameRequested("")
             }
 
-            function showDetailsScreen(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts,
-                                       remainingPukAttempts, availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
-                d.keycardState = keycardState
-                d.keycardUid = keycardUid
-                d.keyUid = keyUid
-                d.keycardStatusAvailable = keycardStatusAvailable
-                d.remainingPinAttempts = remainingPinAttempts
-                d.remainingPukAttempts = remainingPukAttempts
-                d.availableSlots = availableSlots
-                d.cardMetadataName = cardMetadataName
-                d.cardMetadataWalletAccountsJson = cardMetadataWalletAccountsJson
+            function showDetailsScreen(keycardInfo) {
+                d.keycardState = keycardInfo.keycardState
+                d.keycardUid = keycardInfo.keycardUid
+                d.keyUid = keycardInfo.keyUid
+                d.keycardStatusAvailable = keycardInfo.keycardStatusAvailable
+                d.remainingPinAttempts = keycardInfo.remainingPinAttempts
+                d.remainingPukAttempts = keycardInfo.remainingPukAttempts
+                d.availableSlots = keycardInfo.availableSlots
+                d.pairingSupported = keycardInfo.pairingSupported
+                d.cardMetadataName = keycardInfo.cardMetadataName
+                d.cardMetadataWalletAccountsJson = keycardInfo.cardMetadataWalletAccountsJson
 
                 detailsView.refresh()
 
@@ -113,6 +114,7 @@ SettingsContentBase {
             remainingPinAttempts: d.remainingPinAttempts
             remainingPukAttempts: d.remainingPukAttempts
             availableSlots: d.availableSlots
+            pairingSupported: d.pairingSupported
             cardMetadataName: d.cardMetadataName
             cardMetadataWalletAccountsJson: d.cardMetadataWalletAccountsJson
         }
@@ -121,10 +123,8 @@ SettingsContentBase {
     Connections {
         target: Global
 
-        function onKeycardManagementResult(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts,
-                                           remainingPukAttempts, availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
-            d.showDetailsScreen(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts, remainingPukAttempts,
-                                availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
+        function onKeycardManagementResult(keycardInfo) {
+            d.showDetailsScreen(keycardInfo)
         }
 
         function onKeycardFlowDone(flow, keyUid, keycardUid, success) {

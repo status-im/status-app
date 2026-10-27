@@ -14,15 +14,21 @@ QtObject {
     property int remainingPinAttempts: -1
     property int remainingPukAttempts: -1
     property int availableSlots: -1
+    // false for applet 4.x cards: they have no pairing, so availableSlots carries no meaning
+    property bool pairingSupported: true
     property string cardMetadataWalletAccountsJson: "[]"
 
     readonly property bool hasKeyPair: !!root.keycardUid && !!root.keyUid
 
     readonly property bool onlyPinSet: !!root.keycardUid && !root.keyUid
 
-    readonly property bool noKnownAndNoAvailablePairingSlots:
-        root.keycardState === Constants.keycard.state.noAvailablePairingSlots
-        || (!!root.keycardUid && root.availableSlots === 0 && !root.knownPairingExists)
+    readonly property bool noKnownAndNoAvailablePairingSlots: {
+        if (root.keycardState === Constants.keycard.state.noAvailablePairingSlots)
+            return true
+        if (!root.pairingSupported)
+            return false
+        return !!root.keycardUid && root.availableSlots === 0 && !root.knownPairingExists
+    }
 
     readonly property bool isBlockedPIN: !root.isEmpty
                                          && (root.keycardState === Constants.keycard.state.blockedPIN

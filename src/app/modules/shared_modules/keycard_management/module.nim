@@ -115,6 +115,7 @@ method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
   self.view.setRemainingPukAttempts(kcEvent.keycardStatus.remainingAttemptsPUK)
   self.view.setAvailableSlots(kcEvent.keycardInfo.availableSlots)
+  self.view.setPairingSupported(kcEvent.keycardInfo.pairingSupported())
   self.view.setKeyUid(kcEvent.keycardInfo.keyUID)
   self.view.setKeycardUid(kcEvent.keycardInfo.instanceUID)
   self.view.setCardMetadataName(kcEvent.metadata.name)

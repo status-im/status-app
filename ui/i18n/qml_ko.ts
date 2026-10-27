@@ -9489,6 +9489,14 @@ app: %2</source>
         <translation>이건 Keycard가 아닙니다</translation>
     </message>
     <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Connection error</source>
         <translation>연결 오류</translation>
     </message>
@@ -10078,6 +10086,14 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
         <translation>이건 Keycard가 아닙니다</translation>
     </message>
     <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Connection error</source>
         <translation>연결 오류</translation>
     </message>
@@ -10655,6 +10671,10 @@ to load</source>
     <message>
         <source>Reading Keycard...</source>
         <translation>Keycard 읽는 중...</translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine.&lt;br&gt;Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>

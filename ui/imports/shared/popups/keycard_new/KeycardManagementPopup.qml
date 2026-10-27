@@ -37,8 +37,10 @@ StatusDialog {
 
     property var passwordStrengthScoreFunction: (password) => { console.error("passwordStrengthScoreFunction: IMPLEMENT ME") }
 
-    signal metadataResult(string keycardState, string keycardUid, string keyUid, bool keycardStatusAvailable, int remainingPinAttempts,
-                          int remainingPukAttempts, int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
+    // keycardInfo: { keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts,
+    //                remainingPukAttempts, availableSlots, pairingSupported, cardMetadataName,
+    //                cardMetadataWalletAccountsJson } - named like the keycard details view properties
+    signal metadataResult(var keycardInfo)
     signal keycardFlowCompleted(string flow, string keyUid, string keycardUid, bool success)
 
     signal keycardFlowCompletedWithData(string flow, string dataJson)
@@ -132,6 +134,21 @@ StatusDialog {
         id: d
 
         readonly property bool keycardHasOnlyPinSet: !!root.keycardUid && !root.keyUid
+
+        function keycardInfoSnapshot() {
+            return {
+                keycardState: root.store.keycardState,
+                keycardUid: root.store.keycardUid,
+                keyUid: root.store.keyUid,
+                keycardStatusAvailable: root.store.keycardStatusAvailable,
+                remainingPinAttempts: root.store.remainingPinAttempts,
+                remainingPukAttempts: root.store.remainingPukAttempts,
+                availableSlots: root.store.availableSlots,
+                pairingSupported: root.store.pairingSupported,
+                cardMetadataName: root.store.cardMetadataName,
+                cardMetadataWalletAccountsJson: root.store.cardMetadataWalletAccountsJson
+            }
+        }
 
         property bool keycardInteractionCompleted: false
         property bool processing: false
@@ -780,15 +797,7 @@ StatusDialog {
             }
 
             d.success = true
-            root.metadataResult(root.store.keycardState,
-                                root.store.keycardUid,
-                                root.store.keyUid,
-                                root.store.keycardStatusAvailable,
-                                root.store.remainingPinAttempts,
-                                root.store.remainingPukAttempts,
-                                root.store.availableSlots,
-                                root.store.cardMetadataName,
-                                root.store.cardMetadataWalletAccountsJson)
+            root.metadataResult(d.keycardInfoSnapshot())
             root.close()
         }
 
@@ -805,20 +814,13 @@ StatusDialog {
                     || keycardErrors.connectionKeycardError1
                     || keycardErrors.connectionKeycardError2
                     || d.pairingPasswordRequired
-                    || keycardErrors.notKeycardError) {
+                    || keycardErrors.notKeycardError
+                    || keycardErrors.untrustedKeycardError) {
                 // in these cases the flow remains open, not a valid state to proceed to keycard details view
                 return
             }
 
-            root.metadataResult(root.store.keycardState,
-                                root.store.keycardUid,
-                                root.store.keyUid,
-                                root.store.keycardStatusAvailable,
-                                root.store.remainingPinAttempts,
-                                root.store.remainingPukAttempts,
-                                root.store.availableSlots,
-                                root.store.cardMetadataName,
-                                root.store.cardMetadataWalletAccountsJson)
+            root.metadataResult(d.keycardInfoSnapshot())
             root.close()
         }
 

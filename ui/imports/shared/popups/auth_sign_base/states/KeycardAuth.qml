@@ -195,6 +195,28 @@ Control {
             }
         },
         State {
+            name: "untrusted-keycard"
+            when: root.keycardState === Constants.keycard.state.untrustedKeycard
+            PropertyChanges {
+                target: image
+                source: Assets.png("keycard/wrong_card/not-keycard")
+            }
+            PropertyChanges {
+                target: title
+                text: qsTr("Keycard not verified")
+                color: Theme.palette.dangerColor1
+            }
+            PropertyChanges {
+                target: message
+                text: qsTr("This Keycard could not be verified as genuine. Try again with another Keycard.")
+                color: Theme.palette.dangerColor1
+            }
+            PropertyChanges {
+                target: keyPairLoader
+                visible: true
+            }
+        },
+        State {
             name: "connection-error"
             when: root.keycardState === Constants.keycard.state.connectionError
                   || root.keycardState === Constants.keycard.state.readerConnectionError

@@ -112,6 +112,7 @@ StatusDialog {
                             || keycardErrors.wrongKeycardProfileError
                             || keycardErrors.emptyKeycardError
                             || keycardErrors.notKeycardError
+                            || keycardErrors.untrustedKeycardError
                             || keycardErrors.connectionKeycardError1
                             || keycardErrors.connectionKeycardError2
                             || keycardErrors.wrongPinError1

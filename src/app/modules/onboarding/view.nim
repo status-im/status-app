@@ -1,6 +1,6 @@
 import nimqml, json
 import io_interface, states
-from app_service/service/keycardV2/dto import KeycardEventDto
+from app_service/service/keycardV2/dto import KeycardEventDto, pairingSupported
 from app_service/service/devices/dto/local_pairing_status import LocalPairingState
 
 import models/login_account_model as login_acc_model
@@ -95,6 +95,12 @@ QtObject:
     return self.keycardEvent.keycardInfo.availableSlots
   QtProperty[int] keycardAvailableSlots:
     read = getKeycardAvailableSlots
+    notify = keycardEventChanged
+
+  proc getKeycardPairingSupported(self: View): bool {.slot.} =
+    return self.keycardEvent.keycardInfo.pairingSupported()
+  QtProperty[bool] keycardPairingSupported:
+    read = getKeycardPairingSupported
     notify = keycardEventChanged
 
   proc getKeycardCardMetadataName(self: View): string {.slot.} =

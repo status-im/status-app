@@ -211,6 +211,15 @@ Control {
             }
         },
         State {
+            name: "untrustedKeycard"
+            when: root.keycardState === Onboarding.KeycardState.UntrustedKeycard
+            extend: "notEmpty"
+            PropertyChanges {
+                infoText.color: root.Theme.palette.dangerColor1
+                infoText.text: qsTr("This Keycard could not be verified as genuine.<br>Try again with another Keycard.")
+            }
+        },
+        State {
             name: "wrongKeycard"
             when: root.isWrongKeycard
             extend: "notEmpty"

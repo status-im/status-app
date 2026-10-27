@@ -170,6 +170,7 @@ Page {
         remainingPukAttempts: root.onboardingStore.keycardRemainingPukAttempts
         keycardStatusAvailable: root.onboardingStore.keycardStatusAvailable
         keycardAvailableSlots: root.onboardingStore.keycardAvailableSlots
+        keycardPairingSupported: root.onboardingStore.keycardPairingSupported
         keycardCardMetadataName: root.onboardingStore.keycardCardMetadataName
         keycardCardMetadataWalletAccountsJson: root.onboardingStore.keycardCardMetadataWalletAccountsJson
 

@@ -546,6 +546,7 @@ QtObject {
             readonly property string ready: "ready"
             readonly property string authorized: "authorized"
             readonly property string cancelled: "cancelled"
+            readonly property string untrustedKeycard: "untrusted-keycard"
         }
 
         readonly property QtObject flow: QtObject {

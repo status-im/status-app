@@ -9584,6 +9584,14 @@ app: %2</source>
         <translation>Toto není Keycard</translation>
     </message>
     <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Connection error</source>
         <translation>Chyba připojení</translation>
     </message>
@@ -10170,6 +10178,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>This is not a Keycard</source>
         <translation>Toto není Keycard</translation>
+    </message>
+    <message>
+        <source>Keycard not verified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Connection error</source>
@@ -10765,6 +10781,10 @@ selhalo</translation>
     <message>
         <source>Reading Keycard...</source>
         <translation>Načítání Keycard...</translation>
+    </message>
+    <message>
+        <source>This Keycard could not be verified as genuine.&lt;br&gt;Try again with another Keycard.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>

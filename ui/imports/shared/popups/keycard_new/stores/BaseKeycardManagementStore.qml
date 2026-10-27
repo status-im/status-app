@@ -10,6 +10,8 @@ QtObject {
     readonly property int remainingPinAttempts: backend ? backend.remainingPinAttempts : -1
     readonly property int remainingPukAttempts: backend ? backend.remainingPukAttempts : -1
     readonly property int availableSlots: backend ? backend.availableSlots : -1
+    // false for applet 4.x cards: no pairing slots and no pairing password
+    readonly property bool pairingSupported: backend ? backend.pairingSupported : true
     readonly property string keycardUid: backend ? backend.keycardUid : ""
     readonly property string keyUid: backend ? backend.keyUid : ""
     readonly property string cardMetadataName: backend ? backend.cardMetadataName : ""
