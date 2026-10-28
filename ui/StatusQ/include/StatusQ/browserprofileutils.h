@@ -5,6 +5,8 @@
 #include <QObject>
 #include <QUrl>
 
+#include <QtWebEngineCore/QWebEngineCertificateError>
+
 class QWebEngineDownloadRequest;
 class QWebEnginePage;
 class QWebEngineUrlRequestInterceptor;
@@ -24,6 +26,10 @@ class BrowserProfileUtils : public QObject
 public:
     explicit BrowserProfileUtils(QObject *parent = nullptr);
     ~BrowserProfileUtils() override;
+
+    // Returns true if `error`'s certificate chain matches the distrust rules in
+    // `BrowserCertDistrust`.
+    Q_INVOKABLE bool isDistrustedCertificateError(const QWebEngineCertificateError &error) const;
 
     // Subscribe to cookieAdded on the profile's cookie store and keep a live
     // set of cookie names. Must be called once when the profile is created

@@ -27,6 +27,7 @@
 
 #ifdef STATUSQ_HAS_QTWEBENGINE
 #include <QtWebEngineQuick>
+#include <StatusQ/browsercertdistrust.h>
 #endif
 
 // --- Qt/QML message-handler forwarding (ported from DOtherSide myMessageOutput) ----------
@@ -71,6 +72,7 @@ Q_DECL_EXPORT void statusq_setupNetworkAccessManagerFactory(void* engine, const 
 
 Q_DECL_EXPORT void statusq_initializeWebEngine() {
 #ifdef STATUSQ_HAS_QTWEBENGINE
+    BrowserCertDistrust::applyChromiumFlags();
     QtWebEngineQuick::initialize();
 #endif
 }
