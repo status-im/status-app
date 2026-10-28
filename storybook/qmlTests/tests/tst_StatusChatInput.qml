@@ -186,6 +186,41 @@ Item {
             compare(getInputText(), "hello wrld friend ")
         }
 
+        function test_spellingMenu_lastCharacter_data() {
+            return [
+                {tag: "left quarter", position: 9, fraction: 0.25, expectedStart: 6},
+                {tag: "right quarter", position: 9, fraction: 0.75, expectedStart: 6},
+                {tag: "following space", position: 10, fraction: 0.25, expectedStart: -1},
+                {tag: "following word", position: 11, fraction: 0.25, expectedStart: -1},
+                {tag: "end of text", text: "hello wrld", position: 9, fraction: 0.75, expectedStart: 6},
+                {tag: "past end of text", text: "hello wrld", position: 9, fraction: 1.75, expectedStart: -1}
+            ]
+        }
+
+        function test_spellingMenu_lastCharacter(data) {
+            const input = controlUnderTest.textInput
+            input.forceActiveFocus()
+            input.text = data.text || "hello wrld friend "
+            input.cursorPosition = input.length
+            tryVerify(() => input.spellChecker.issues.length === 1)
+            verify(waitForRendering(input))
+            const start = input.positionToRectangle(data.position)
+            const end = input.positionToRectangle(data.position + 1)
+            const point = Qt.point(start.x + data.fraction * (end.x - start.x),
+                                   start.y + start.height / 2)
+            documentTester.requestContextMenu(input, point)
+            const menu = findChild(controlUnderTest, "chatInputEditMenu")
+            verify(menu)
+            tryCompare(menu, "opened", true)
+            tryCompare(input.spellChecker, "suggestionsPending", false)
+            compare(input.spellChecker.suggestionStart, data.expectedStart)
+            if (data.expectedStart >= 0)
+                verify(menu.spellingSuggestions.includes("world"))
+            else
+                compare(menu.spellingSuggestions.length, 0)
+            menu.close()
+        }
+
         function test_spellingMenu_noSuggestions() {
             const menu = openSpellingMenu("zzzzqqqqzzzzqqqq ", 3)
             compare(menu.spellingSuggestions.length, 0)
