@@ -9532,11 +9532,11 @@ app: %2</source>
     </message>
     <message>
         <source>Keycard not verified</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard non vérifiée</translation>
     </message>
     <message>
         <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de vérifier l’authenticité de cette Keycard. Veuillez réessayer avec une autre Keycard.</translation>
     </message>
     <message>
         <source>Connection error</source>
@@ -10128,11 +10128,11 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Keycard not verified</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard non vérifiée</translation>
     </message>
     <message>
         <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de vérifier l’authenticité de cette Keycard. Veuillez réessayer avec une autre Keycard.</translation>
     </message>
     <message>
         <source>Connection error</source>
@@ -10222,7 +10222,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Tag 4.0: SecureChannel V2, no pairing. The simulator runs applet 4.0.1 (status-keycard #37393a2).</source>
-        <translation type="unfinished"></translation>
+        <translation>Tag 4.0 : SecureChannel V2, sans appairage. Le simulateur exécute l’applet 4.0.1 (status-keycard #37393a2).</translation>
     </message>
     <message>
         <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
@@ -10250,11 +10250,11 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Identity certificate no trusted CA signed</source>
-        <translation type="unfinished"></translation>
+        <translation>Certificat d’identité non signé par une AC de confiance</translation>
     </message>
     <message>
         <source>The card&apos;s identity certificate is signed by the simulator&apos;s untrusted CA, so the app treats it like a development or custom-made card</source>
-        <translation type="unfinished"></translation>
+        <translation>Le certificat d’identité de la carte est signé par l’AC non fiable du simulateur ; l’application la traite donc comme une carte de développement ou faite sur mesure</translation>
     </message>
     <message>
         <source>Create Empty Keycard</source>
@@ -10341,7 +10341,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <name>KeycardStateInfo</name>
     <message>
         <source>This Keycard isn&apos;t certified by Keycard. It may be a development or custom-made card. Use it only if you trust where it came from.</source>
-        <translation type="unfinished"></translation>
+        <translation>Cette Keycard n’est pas certifiée par Keycard. Il peut s’agir d’une carte de développement ou faite sur mesure. Utilisez-la uniquement si vous avez confiance en sa provenance.</translation>
     </message>
 </context>
 <context>
@@ -10738,7 +10738,7 @@ chargement</translation>
     </message>
     <message>
         <source>This Keycard could not be verified as genuine.&lt;br&gt;Try again with another Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de vérifier l’authenticité de cette Keycard.&lt;br&gt;Veuillez réessayer avec une autre Keycard.</translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>
