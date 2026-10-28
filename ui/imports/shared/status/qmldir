@@ -3,7 +3,6 @@ ChatTextAreaMentionPill 1.0 ChatTextAreaMentionPill.qml
 ChatTextAreaQuoteBar 1.0 ChatTextAreaQuoteBar.qml
 MentionResolver 1.0 MentionResolver.qml
 StatusChatCommandPopup 1.0 StatusChatCommandPopup.qml
-StatusChatImage 1.0 StatusChatImage.qml
 StatusChatImageExtensionValidator 1.0 StatusChatImageExtensionValidator.qml
 StatusChatImageLoader 1.0 StatusChatImageLoader.qml
 StatusChatImageQtyValidator 1.0 StatusChatImageQtyValidator.qml

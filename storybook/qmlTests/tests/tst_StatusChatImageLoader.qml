@@ -28,13 +28,14 @@ Item {
             return Math.ceil(imageWidth * Screen.devicePixelRatio / 128) * 128
         }
 
+        // a still decodes as StatusImage: sourceSize is logical
         function test_stillBuildsOnlyABoundedImage() {
             const control = createTemporaryObject(componentUnderTest, root, { source: root.stillSource })
             verify(control)
             tryVerify(() => control.imageAlias !== null)
             verify(control.imageAlias instanceof Image)
             verify(!(control.imageAlias instanceof AnimatedImage))
-            compare(control.imageAlias.sourceSize.width, decodeWidthFor(300))
+            compare(control.imageAlias.sourceSize.width, 300)
             compare(control.imageAlias.cache, false)
             tryCompare(control, "imageLoaded", true)
             verify(control.imageAlias.width <= 300)
@@ -56,13 +57,24 @@ Item {
             verify(control.height > 0)
         }
 
-        function test_decodeWidthIsSteppedAndFollowsAsynchronous() {
+        function test_decodeFollowsImageWidthAndAsynchronous() {
             const control = createTemporaryObject(componentUnderTest, root,
                                                   { source: root.stillSource, asynchronous: false })
             verify(control)
             verify(control.imageAlias)
             compare(control.imageAlias.asynchronous, false)
-            compare(control.imageAlias.sourceSize.width, decodeWidthFor(300))
+            compare(control.imageAlias.sourceSize.width, 300)
+
+            control.imageWidth = 310
+            compare(control.imageAlias.sourceSize.width, 310)
+        }
+
+        // a gif's decode is in pixels, in 128 px steps
+        function test_gifDecodeWidthIsStepped() {
+            const control = createTemporaryObject(componentUnderTest, root,
+                                                  { source: root.gifSource, asynchronous: false })
+            verify(control)
+            verify(control.imageAlias)
 
             control.imageWidth = 310
             compare(control.imageAlias.sourceSize.width, decodeWidthFor(310))
