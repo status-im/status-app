@@ -37,7 +37,6 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 
 import StatusQ.Components
 import StatusQ.Core.Theme
@@ -175,42 +174,19 @@ Control {
         id: avatarImgComponent
 
         // ──────────────────────────────────────────────────────────────────────────
-        // Content image (single source for both masked and unmasked paths)
+        // Content image, made circular in the pass drawing its own texture
+        // (no layer, no mask); square when not circular
         // ──────────────────────────────────────────────────────────────────────────
-        Image {
-            id: avatarImg
+        StatusRoundedImage {
             anchors.top: parent.top
             anchors.left: parent.left
             width: d.avatarSize
             height: width
             source: root.avatarSource
+            asynchronous: true
             fillMode: Image.PreserveAspectCrop
-            smooth: true
-            mipmap: true
-
-            layer.enabled: root.circular
-            layer.effect: MultiEffect {
-                source: avatarImg
-
-                maskEnabled: root.circular
-                maskSource: circleMask
-
-                visible: root.circular
-                enabled: root.circular
-
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
-            }
-
-            // Mask geometry
-            Rectangle {
-                id: circleMask
-                anchors.fill: avatarImg
-                radius: width / 2
-                visible: false
-                layer.enabled: true
-
-            }
+            radius: root.circular ? width / 2 : 0
+            unsetBorderWidth: 0
         }
     }
 
