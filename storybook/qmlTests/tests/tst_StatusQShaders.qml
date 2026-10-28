@@ -17,6 +17,7 @@ Item {
                 "roundedrendersizedimage.frag",
                 "roundedrendersizedimage.vert",
                 "roundedrendersizedimageborder.frag",
+                "skeletonmask.frag",
             ].map(name => ({ tag: name, path: `:/StatusQ/shaders/${name}.qsb` }))
         }
 
