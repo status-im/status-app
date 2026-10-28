@@ -145,8 +145,8 @@ Loader {
         anchors.right: root.right
         anchors.rightMargin: -border.width
         anchors.bottomMargin: -border.width
-        implicitHeight: 20
-        implicitWidth: 20
+        width: 20
+        height: 20
         border.width: 3
         border.color: Theme.palette.statusBadge.foregroundColor
         z: root.dZ

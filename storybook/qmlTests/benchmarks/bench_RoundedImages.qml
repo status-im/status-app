@@ -11,6 +11,7 @@ import Benchmark
     chat    200 images of 144 px, 16 px corners, a 4 px bubble tail
     gif     the same, animated GIFs
     avatar  500 circles of 40 px
+    avatarBordered  the same, with a 2 px border
 */
 Item {
     id: root
@@ -22,6 +23,7 @@ Item {
     property bool animated: false
     property bool circular: false
     property real tailRadius: 4
+    property real borderWidth: 0
 
     readonly property real dpr: Window.window ? Window.window.devicePixelRatio : 1
     readonly property url stillSource: Qt.resolvedUrl("../../testData/image_example.png")
@@ -42,6 +44,7 @@ Item {
             animated: root.animated
             circular: root.circular
             tailRadius: root.tailRadius
+            borderWidth: root.borderWidth
             // decoded for the unresized cell: resizing must not re-decode
             sourceSize: Qt.size(Math.ceil(runner.cellWidth * root.dpr),
                                 Math.ceil(runner.cellHeight * root.dpr))
@@ -58,9 +61,11 @@ Item {
         function bench(preset, technique) {
             root.technique = technique
             root.animated = preset === "gif"
-            root.circular = preset === "avatar"
-            runner.count = preset === "avatar" ? 500 : 200
-            runner.cellWidth = preset === "avatar" ? 40 : 144
+            const avatar = preset.startsWith("avatar")
+            root.circular = avatar
+            root.borderWidth = preset === "avatarBordered" ? 2 : 0
+            runner.count = avatar ? 500 : 200
+            runner.cellWidth = avatar ? 40 : 144
             runner.scenarios = preset === "gif" ? ["animated", "scroll"]
                                                 : ["static", "scroll", "resize"]
             runner.start()
@@ -77,5 +82,6 @@ Item {
         function test_avatar_plain() { bench("avatar", "plain") }
         function test_avatar_avatar() { bench("avatar", "avatar") }
         function test_avatar_item() { bench("avatar", "item") }
+        function test_avatarBordered_avatar() { bench("avatarBordered", "avatar") }
     }
 }

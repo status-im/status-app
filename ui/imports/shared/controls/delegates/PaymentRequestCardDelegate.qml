@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import QtQuick.Window
 import StatusQ.Core
 
-import QtQuick.Effects
 
 import StatusQ.Core.Theme
 import StatusQ.Components
@@ -77,31 +76,16 @@ CalloutCard {
                     image.source: root.logoUri || Constants.tokenIcon(root.symbol)
                     width: 44
                     height: width
-                    image.layer.enabled: true
-                    image.layer.effect: MultiEffect {
-                        maskEnabled: true
-                        maskThresholdMin: 0.5
-                        maskSpreadAtMin: 1.0
-                        id: mask
-                        maskInverted: true
-
-                        maskSource: Item {
-                            parent: root
-                            layer.enabled: true
-                            visible: false
-                            width: mask.width + 2
-                            height: mask.height + 2
-
-                            Rectangle {
-                                anchors.centerIn: parent
-                                anchors.horizontalCenterOffset: symbolImage.width + iconRow.spacing - 2
-
-                                width: parent.width
-                                height: width
-                                radius: width / 2
-                            }
-                        }
-                    }
+                    // Cut where the recipient's icon overlaps, by the image
+                    // itself. The circle the inverted mask had: the size of
+                    // the image within the unset border, shifted right by the
+                    // overlap (scaled, as the 2 px larger mask was stretched
+                    // over the image).
+                    readonly property real imageWidth: width - 2
+                    readonly property real cutoutShift: (width + iconRow.spacing - 2)
+                                                        * imageWidth / width
+                    image.cutoutCenter: Qt.point(width / 2 + cutoutShift, height / 2)
+                    image.cutoutRadius: imageWidth / 2
                 }
 
                 StatusSmartIdenticon {
