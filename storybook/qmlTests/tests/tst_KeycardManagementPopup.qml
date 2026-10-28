@@ -22,6 +22,7 @@ Item {
         property int remainingPukAttempts: 5
         property int availableSlots: 5
         property bool pairingSupported: true
+        property bool certificateTrusted: true
         property string keycardUid: "keycard-uid-1"
         property bool keycardInitialized: true
         property string keyUid: "profile-key-uid"

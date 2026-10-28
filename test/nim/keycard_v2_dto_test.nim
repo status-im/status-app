@@ -34,6 +34,23 @@ suite "keycardV2 dto: secure channel generation":
     check info.secureChannelVersion == 1
     check info.pairingSupported()
 
+suite "keycardV2 dto: certificate trust":
+  test "card from an unknown CA is reported, not refused":
+    let info = toKeycardInfoDto(%*{"instanceUID": "44", "secureChannelVersion": 2, "certificateTrusted": false})
+    check info.certificateUntrusted
+    check not info.pairingSupported()
+
+  test "trusted card":
+    check not toKeycardInfoDto(%*{"instanceUID": "66", "certificateTrusted": true}).certificateUntrusted
+
+  test "missing or null field means no warning (applet 3.x, older library)":
+    check not toKeycardInfoDto(%*{"instanceUID": "55"}).certificateUntrusted
+    check not toKeycardInfoDto(%*{"instanceUID": "55", "certificateTrusted": nil}).certificateUntrusted
+
+  test "event without keycardInfo means no warning":
+    check not toKeycardEventDto(%*{"state": "waiting-for-card"}).keycardInfo.certificateUntrusted
+    check not KeycardEventDto().keycardInfo.certificateUntrusted
+
 suite "keycardV2 dto: untrusted keycard state":
   test "maps to KeycardState.UntrustedKeycard":
     check parseEnum[StateString]("untrusted-keycard") == StateString.UntrustedKeycard

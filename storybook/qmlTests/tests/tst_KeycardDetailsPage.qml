@@ -45,6 +45,7 @@ Item {
             remainingPukAttempts: 5
             availableSlots: 5
             pairingSupported: true
+            certificateTrusted: true
             cardMetadataName: "My Keycard"
             cardMetadataWalletAccountsJson: "[]"
             loginAccountsModel: loginAccounts
@@ -138,6 +139,30 @@ Item {
             verify(findChild(page, "keycardDetailsFactoryReset").visible)
             verify(!findChild(page, "keycardDetailsLoginWithThisKeycard").visible)
             verify(!findChild(page, "keycardDetailsGoBackToLogin").visible)
+        }
+
+        function test_unknownCaShowsWarningButKeepsTheCardUsable() {
+            const page = createTemporaryObject(componentUnderTest, root, {
+                                                   pairingSupported: false,
+                                                   availableSlots: 0,
+                                                   certificateTrusted: false,
+                                                   loginAccountsModel: emptyLoginAccounts
+                                               })
+            verify(!!page)
+
+            const warning = findChild(page, "keycardDetailsCertificateWarning")
+            verify(warning.visible)
+            verify(warning.text.indexOf("isn't certified by Keycard") >= 0)
+            compare(findChild(page, "keycardDetailsTitle").text, "Keycard stores key pair")
+            verify(findChild(page, "keycardDetailsLoginWithThisKeycard").visible)
+        }
+
+        function test_trustedCardShowsNoWarning() {
+            const page = createTemporaryObject(componentUnderTest, root, {
+                                                   loginAccountsModel: emptyLoginAccounts
+                                               })
+            verify(!!page)
+            verify(!findChild(page, "keycardDetailsCertificateWarning").visible)
         }
 
         function test_applet4ZeroSlotsIsNotNoFreePairingSlots() {
