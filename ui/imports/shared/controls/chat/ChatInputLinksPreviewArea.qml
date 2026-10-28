@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
 
 import StatusQ
+import StatusQ.Components
 import StatusQ.Core
 
 import shared.status
@@ -69,7 +69,14 @@ Control {
         implicitWidth: flickable.implicitWidth
         implicitHeight: flickable.implicitHeight
 
-        opacity: 0
+        // The previews fade out into the side paddings, and are clipped to
+        // them: computed by the shader on this item's layer, with no second
+        // layer for a mask
+        layer.enabled: true
+        layer.effect: StatusEdgeFadeEffect {
+            leftFade: root.horizontalPadding
+            rightFade: root.horizontalPadding
+        }
 
         WheelHandler {
             target: flickable
@@ -162,29 +169,6 @@ Control {
         }
     }
     
-    Rectangle {
-        id: horizontalClipMask
-        anchors.fill: opacityMaskWrapper
-        visible: false
-        layer.enabled: true
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
-            GradientStop { position: 0.0; color: "transparent" }
-            GradientStop { position: root.horizontalPadding / horizontalClipMask.width; color: "white" }
-            GradientStop { position: 1 - root.horizontalPadding / horizontalClipMask.width; color: "white" }
-            GradientStop { position: 1; color: "transparent" }
-        }
-    }
-    
-    MultiEffect {
-        maskEnabled: true
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1.0
-        anchors.fill: opacityMaskWrapper
-        source: opacityMaskWrapper
-        maskSource: horizontalClipMask
-    }
-
     QtObject {
         id: d
         property string hoveredUrl: ""
