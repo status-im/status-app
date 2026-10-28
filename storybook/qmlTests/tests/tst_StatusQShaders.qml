@@ -12,6 +12,7 @@ Item {
         function test_shaderIsBuiltIntoStatusQ_data() {
             return [
                 "edgefade.frag",
+                "ripple.frag",
                 "roundedimage.frag",
                 "roundedrendersizedimage.frag",
                 "roundedrendersizedimage.vert",
