@@ -260,6 +260,7 @@ QtObject:
     imagePath: string,
     imageCropRectangle: ImageCropRectangle,
     keycardInstanceUID: string,
+    keycardSecureChannelV2: bool,
     thirdpartyServicesEnabled: bool
   ): string =
 
@@ -268,12 +269,14 @@ QtObject:
       createAccountRequest: buildCreateAccountRequest(password, displayName, imagePath, imageCropRectangle, thirdpartyServicesEnabled),
     )
     request.createAccountRequest.keycardInstanceUID = keycardInstanceUID
+    request.createAccountRequest.keycardSecureChannelV2 = keycardSecureChannelV2
 
     self.restoreAccountAndLogin(request)
 
   proc restoreKeycardAccountAndLoginV2*(self: Service,
     keyUid: string,
     instanceUid: string,
+    keycardSecureChannelV2: bool,
     keycardKeys: KeycardExportedKeysDto,
     thirdpartyServicesEnabled: bool
     ): string =
@@ -304,6 +307,7 @@ QtObject:
       ),
     )
     request.createAccountRequest.keycardInstanceUID = instanceUid
+    request.createAccountRequest.keycardSecureChannelV2 = keycardSecureChannelV2
 
     return self.restoreAccountAndLogin(request)
 
@@ -489,14 +493,17 @@ QtObject:
       error "error: ", procName="isProfileMigratedToDEKEncryption", errName = e.name, errDesription = e.msg
     return false
 
-  proc convertRegularProfileKeypairToKeycard*(self: Service, keycardUid, currentPassword: string, newPassword: string) =
+  proc convertRegularProfileKeypairToKeycard*(self: Service, keycardUid, currentPassword: string, newPassword: string,
+      keycardSecureChannelV2: bool) =
     var accountDataJson = %* {
       "key-uid": self.getLoggedInAccount().keyUid,
       "kdfIterations": KDF_ITERATIONS
     }
     var settingsJson = %* { }
 
-    self.addKeycardDetails(keycardUid, settingsJson, accountDataJson)
+    # An applet 4.x keycard has no pairing to copy; status-go marks the account itself
+    if not keycardSecureChannelV2:
+      self.addKeycardDetails(keycardUid, settingsJson, accountDataJson)
 
     let hashedCurrentPassword = hashPassword(currentPassword)
     let arg = ConvertRegularProfileKeypairToKeycardTaskArg(
@@ -507,7 +514,8 @@ QtObject:
       settingsJson: settingsJson,
       keycardUid: keycardUid,
       hashedCurrentPassword: hashedCurrentPassword,
-      newPassword: newPassword
+      newPassword: newPassword,
+      keycardSecureChannelV2: keycardSecureChannelV2,
     )
 
     if not self.isProfileMigratedToDEKEncryption(self.getLoggedInAccount().keyUid):

@@ -848,6 +848,7 @@ StatusDialog {
                     flow: root.flow,
                     keyUid: d.seedPhraseKeyUid,
                     keycardUid: root.store.keycardUid,
+                    keycardSecureChannelV2: !root.store.pairingSupported,
                     keyPairName: d.keyPairName,
                     seedPhrase: d.seedPhrase
                 })

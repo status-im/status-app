@@ -226,6 +226,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
           password,
           mnemonic,
           keycardInstanceUID = "",
+          keycardSecureChannelV2 = false,
           thirdpartyServicesEnabled,
         )
       of OnboardingFlow.CreateProfileWithKeycardNewSeedphrase:
@@ -239,6 +240,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
           password,
           mnemonic,
           keycardInstanceUID = "",
+          keycardSecureChannelV2 = false,
           thirdpartyServicesEnabled,
         )
       of OnboardingFlow.LoginWithSyncing:
@@ -282,6 +284,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
         err = self.controller.restoreKeycardAccountAndLogin(
           payloadKeyUid,
           payloadKeycardUid,
+          keycardSecureChannelV2 = payload{"keycardSecureChannelV2"}.getBool,
           exportedKeys,
           thirdpartyServicesEnabled,
         )
@@ -313,6 +316,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
             password = "",
             mnemonic = payloadSeedPhrase,
             keycardInstanceUID = payloadKeycardUid,
+            keycardSecureChannelV2 = payload{"keycardSecureChannelV2"}.getBool,
             thirdpartyServicesEnabled,
           )
       else:

@@ -50,6 +50,8 @@ type
 
     keycardInstanceUID*: string
     keycardPairingDataFile*: string
+    # applet 4.x keycard: no pairing, so status-go must not look for a pairings file entry
+    keycardSecureChannelV2*: bool
 
     thirdpartyServicesEnabled*: bool
 
@@ -76,6 +78,7 @@ proc toJson*(self: CreateAccountRequest): JsonNode =
     "upstreamConfig": self.upstreamConfig,
     "keycardInstanceUID": self.keycardInstanceUID,
     "keycardPairingDataFile": self.keycardPairingDataFile,
+    "keycardSecureChannelV2": self.keycardSecureChannelV2,
     "apiConfig": self.apiConfig,
     "wakuV2EnableStoreConfirmationForMessagesSent": self.wakuV2EnableStoreConfirmationForMessagesSent,
     "wakuV2EnableMissingMessageVerification": self.wakuV2EnableMissingMessageVerification,

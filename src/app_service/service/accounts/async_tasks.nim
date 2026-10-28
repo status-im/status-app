@@ -9,6 +9,7 @@ type
     keycardUid: string
     hashedCurrentPassword: string
     newPassword: string
+    keycardSecureChannelV2: bool
 
 proc convertRegularProfileKeypairToKeycardTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[ConvertRegularProfileKeypairToKeycardTaskArg](argEncoded)
@@ -30,7 +31,7 @@ proc convertRegularProfileKeypairToKeycardTask*(argEncoded: string) {.gcsafe, ni
       error "error: ", errDescription=errMsg
     else:
       response = status_account.convertRegularProfileKeypairToKeycard(arg.accountDataJson, arg.settingsJson,
-      arg.keycardUid, arg.hashedCurrentPassword, arg.newPassword)
+      arg.keycardUid, arg.hashedCurrentPassword, arg.newPassword, arg.keycardSecureChannelV2)
     arg.finish(response)
   except Exception as e:
     error "error converting profile keypair to keycard keypair: ", errDescription=e.msg

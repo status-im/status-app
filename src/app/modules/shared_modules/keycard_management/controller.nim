@@ -186,10 +186,11 @@ proc createAccountFromMnemonic*(self: Controller, mnemonic: string, includeEncry
     return
   return self.accountsService.createAccountFromMnemonic(mnemonic, includeEncryption = includeEncryption)
 
-proc convertRegularProfileKeypairToKeycard*(self: Controller, keycardUid, currentPassword, newPassword: string) =
+proc convertRegularProfileKeypairToKeycard*(self: Controller, keycardUid, currentPassword, newPassword: string,
+    keycardSecureChannelV2: bool) =
   if not serviceApplicable(self.accountsService):
     return
-  self.accountsService.convertRegularProfileKeypairToKeycard(keycardUid, currentPassword, newPassword)
+  self.accountsService.convertRegularProfileKeypairToKeycard(keycardUid, currentPassword, newPassword, keycardSecureChannelV2)
 
 proc convertKeycardProfileKeypairToRegular*(self: Controller, mnemonic, currentPassword, newPassword: string) =
   if not serviceApplicable(self.accountsService):

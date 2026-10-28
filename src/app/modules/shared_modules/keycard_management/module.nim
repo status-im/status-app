@@ -109,6 +109,10 @@ proc createWalletAccountsJson*[T](self: Module[T], walletAccounts: seq[keycard_s
     })
   return walletsJson
 
+proc keycardUsesSecureChannelV2[T](self: Module[T]): bool =
+  ## The last read card is applet 4.x: no pairing, so status-go must not look for one
+  return not self.view.getPairingSupported()
+
 method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setKeycardState($kcEvent.stateString)
   self.view.setKeycardStatusAvailable(kcEvent.keycardStatus.keyInitialized)
@@ -116,7 +120,10 @@ method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
   self.view.setRemainingPukAttempts(kcEvent.keycardStatus.remainingAttemptsPUK)
   self.view.setAvailableSlots(kcEvent.keycardInfo.availableSlots)
-  self.view.setPairingSupported(kcEvent.keycardInfo.pairingSupported())
+  # Keep the last read card's generation through events without card info (card pulled, reader change):
+  # a flow completing right after one must still know the card had no pairing
+  if kcEvent.keycardInfo.instanceUID.len > 0:
+    self.view.setPairingSupported(kcEvent.keycardInfo.pairingSupported())
   self.view.setCertificateTrusted(not kcEvent.keycardInfo.certificateUntrusted)
   self.view.setKeyUid(kcEvent.keycardInfo.keyUID)
   self.view.setKeycardUid(kcEvent.keycardInfo.instanceUID)
@@ -475,7 +482,8 @@ method onKeycardAsyncLoginFinished*[T](self: Module[T], exportedKeys: KeycardExp
       return
     self.controller.setStoreToKeychainValueNotNow()
     let keycardUid = self.view.getKeycardUid()
-    self.controller.convertRegularProfileKeypairToKeycard(keycardUid, self.tmpPassword, newPassword)
+    self.controller.convertRegularProfileKeypairToKeycard(keycardUid, self.tmpPassword, newPassword,
+      keycardSecureChannelV2 = self.keycardUsesSecureChannelV2())
     return
   if self.tmpFlowType != FlowType.AsyncLogin:
     return
@@ -502,6 +510,7 @@ method onKeycardAsyncLoginFinished*[T](self: Module[T], exportedKeys: KeycardExp
       "flow": "onboarding-login-with-keycard",
       "keyUid": self.tmpKeyUid,
       "keycardUid": self.view.getKeycardUid(),
+      "keycardSecureChannelV2": self.keycardUsesSecureChannelV2(),
       "exportedKeys": exportedKeysJsonObj
     }
     self.view.keycardAsyncLoginSuccess($payload)
@@ -592,7 +601,8 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], exportedKeys: Keycar
     # regardless if the key pair is migrated to a cold wallet device or not, just need to ensure that every (old - already added) key pair has xpub set
     self.controller.setStoreToKeychainValueNotNow()
     let keycardUid = self.view.getKeycardUid()
-    self.controller.convertRegularProfileKeypairToKeycard(keycardUid, self.tmpPassword, newPassword)
+    self.controller.convertRegularProfileKeypairToKeycard(keycardUid, self.tmpPassword, newPassword,
+      keycardSecureChannelV2 = self.keycardUsesSecureChannelV2())
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
