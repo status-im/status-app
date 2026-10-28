@@ -147,7 +147,7 @@ proc createAccountAndLogin*(self: Controller, password: string, thirdpartyServic
   )
 
 proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string,
-  keycardInstanceUID: string, thirdpartyServicesEnabled: bool): string =
+  keycardInstanceUID: string, keycardSecureChannelV2: bool, thirdpartyServicesEnabled: bool): string =
   return self.accountsService.importAccountAndLogin(
     mnemonic,
     password,
@@ -155,17 +155,19 @@ proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string,
     imagePath = "",
     ImageCropRectangle(),
     keycardInstanceUID,
+    keycardSecureChannelV2,
     thirdpartyServicesEnabled,
   )
 
 proc deleteMultiaccount*(self: Controller, keyUid: string): string =
   return self.accountsService.deleteMultiaccount(keyUid)
 
-proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: string, keycardKeys: KeycardExportedKeysDto,
-  thirdpartyServicesEnabled: bool): string =
+proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: string, keycardSecureChannelV2: bool,
+  keycardKeys: KeycardExportedKeysDto, thirdpartyServicesEnabled: bool): string =
   return self.accountsService.restoreKeycardAccountAndLoginV2(
     keyUid,
     instanceUid,
+    keycardSecureChannelV2,
     keycardKeys,
     thirdpartyServicesEnabled,
   )

@@ -202,8 +202,8 @@ proc validateNodeConfig*(configJSON: string): string =
   defer: go_shim.free(funcOut)
   return $funcOut
 
-proc convertToKeycardAccount*(accountData: string, settingsJSON: string, keycardUid: string, password: string, newPassword: string): string =
-  var funcOut = go_shim.convertToKeycardAccount(accountData.cstring, settingsJSON.cstring, keycardUid.cstring, password.cstring, newPassword.cstring)
+proc convertToKeycardAccountV2*(requestJSON: string): string =
+  var funcOut = go_shim.convertToKeycardAccountV2(requestJSON.cstring)
   defer: go_shim.free(funcOut)
   return $funcOut
 

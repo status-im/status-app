@@ -353,10 +353,18 @@ proc deleteMultiaccount*(keyUid: string, keyStoreDir: string): RpcResponse[JsonN
     error "error doing rpc request", methodName = "deleteMultiaccount", exception=e.msg
     raise newException(RpcException, e.msg)
 
-proc convertRegularProfileKeypairToKeycard*(account: JsonNode, settings: JsonNode, keycardUid: string, password: string, newPassword: string):
-  RpcResponse[JsonNode] =
+proc convertRegularProfileKeypairToKeycard*(account: JsonNode, settings: JsonNode, keycardUid: string, password: string, newPassword: string,
+  keycardSecureChannelV2: bool): RpcResponse[JsonNode] =
   try:
-    let response = status_go.convertToKeycardAccount($account, $settings, keycardUid, password, newPassword)
+    let request = %* {
+      "account": account,
+      "settings": settings,
+      "keycardUID": keycardUid,
+      "oldPassword": password,
+      "newPassword": newPassword,
+      "keycardSecureChannelV2": keycardSecureChannelV2,
+    }
+    let response = status_go.convertToKeycardAccountV2($request)
     result.result = Json.decode(response, JsonNode)
   except RpcException as e:
     error "error doing rpc request", methodName = "convertRegularProfileKeypairToKeycard", exception=e.msg
