@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 
+import StatusQ.Components
 import StatusQ.Core.Theme
 
 import utils
@@ -49,27 +49,13 @@ Control {
                         id: gradient
                         orientation: Gradient.Horizontal
                     }
-                    visible: false
-                }
 
-                Rectangle {
-                    id: mask
-                    anchors.fill: parent
+                    // fading out from the top down: computed by the shader on
+                    // this item's layer, with no second layer for a mask
                     layer.enabled: true
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color:  Theme.palette.statusAppLayout.rightPanelBackgroundColor}
-                        GradientStop { position: 1.0; color: "transparent" }
+                    layer.effect: StatusEdgeFadeEffect {
+                        bottomFade: base.height
                     }
-                    visible: false
-                }
-
-                MultiEffect {
-                    maskEnabled: true
-                    maskThresholdMin: 0.5
-                    maskSpreadAtMin: 1.0
-                    anchors.fill: base
-                    source: base
-                    maskSource: mask
                 }
             }
         }
