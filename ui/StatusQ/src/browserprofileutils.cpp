@@ -1,4 +1,5 @@
 #include "StatusQ/browserprofileutils.h"
+#include "StatusQ/browsercertdistrust.h"
 
 #include <QtWebEngineQuick/qquickwebengineprofile.h>
 #include <QtWebEngineCore/QWebEngineCookieStore>
@@ -323,6 +324,11 @@ struct BrowserProfileUtils::DownloadHelper
 BrowserProfileUtils::BrowserProfileUtils(QObject *parent)
     : QObject(parent)
 {
+}
+
+bool BrowserProfileUtils::isDistrustedCertificateError(const QWebEngineCertificateError &error) const
+{
+    return BrowserCertDistrust::isDistrustedCertificateError(error);
 }
 
 BrowserProfileUtils::~BrowserProfileUtils()

@@ -269,7 +269,14 @@ AbstractWebView {
                 root.newWindowRequested(makeCurrent, request.requestedUrl, (tab) => tab.acceptAsNewWindow(request))
             }
         }
-        onCertificateError: (error) => root.certificateError(error)
+        onCertificateError: function(error) {
+            if (BrowserProfileUtils.isDistrustedCertificateError(error)) {
+                console.warn("Rejecting distrusted certificate chain for", error.url, "-", error.description)
+                error.rejectCertificate()
+                return
+            }
+            root.certificateError(error)
+        }
         onJavaScriptDialogRequested: (request) => root.javaScriptDialogRequested(request)
         onFindTextFinished: (result) => root.findTextFinished(result)
         onPermissionRequested: function(permission) {

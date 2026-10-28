@@ -127,7 +127,7 @@ target_link_libraries(TestIncubationController PRIVATE Qt::Test Qt::Gui Qt::Qml 
 add_test(NAME TestIncubationController COMMAND TestIncubationController)
 
 if(NOT ANDROID AND NOT IOS)
-    qt_add_executable(TestRestartApplication src/tst_restartapplication.cpp)
-    target_link_libraries(TestRestartApplication PRIVATE Qt::Test Qt::Network Qt::Quick StatusQ)
-    add_test(NAME TestRestartApplication COMMAND TestRestartApplication)
+    qt_add_executable(TestBrowserCertDistrust src/tst_browsercertdistrust.cpp)
+    target_link_libraries(TestBrowserCertDistrust PRIVATE Qt::Test Qt::Network Qt::WebEngineQuick StatusQ)
+    add_test(NAME TestBrowserCertDistrust COMMAND TestBrowserCertDistrust)
 endif()

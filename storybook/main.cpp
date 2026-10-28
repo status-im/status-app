@@ -19,6 +19,7 @@
 
 extern "C" void statusq_installBoostedIncubationController(void* engine, int msPerTick,
                                                            int gentlePeriodMs, int boostGapMs);
+extern "C" void statusq_initializeWebEngine();
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
     }
 
     // Required by the WalletConnectSDK view
+    statusq_initializeWebEngine();
     QtWebView::initialize();
 
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
