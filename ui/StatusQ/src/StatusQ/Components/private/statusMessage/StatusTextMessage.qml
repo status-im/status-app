@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Components
@@ -77,7 +76,12 @@ Item {
         selectable: !root.isMobile
         font.pixelSize: Theme.primaryTextFontSize
 
-        opacity: !showMoreMaskEffect.active ? 1 : 0
+        // Collapsed: the last 15% fade out, computed by the shader on the
+        // text's layer, with no second layer for a mask
+        layer.enabled: showMoreButtonLoader.active && !d.readMore
+        layer.effect: StatusEdgeFadeEffect {
+            bottomFade: height * 0.15
+        }
 
         edited: root.isEdited
         blocks: MarkdownUtils.toBlocks(
@@ -105,35 +109,7 @@ Item {
         }
     }
 
-    // Vertical "show more" mask + button
-    Loader {
-        id: showMoreMaskGradient
-        anchors.fill: chatTextView
-        active: showMoreButtonLoader.active && !d.readMore
-        visible: false
-        layer.enabled: active
-        sourceComponent: Rectangle {
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: StatusColors.white }
-                GradientStop { position: 0.85; color: StatusColors.white }
-                GradientStop { position: 1; color: StatusColors.transparent }
-            }
-        }
-    }
-
-    Loader {
-        id: showMoreMaskEffect
-        active: showMoreButtonLoader.active && !d.readMore
-        anchors.fill: chatTextView
-        sourceComponent: MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            source: chatTextView
-            maskSource: showMoreMaskGradient
-        }
-    }
-
+    // "show more" button
     Loader {
         id: showMoreButtonLoader
         active: root.allowShowMore && chatTextView.implicitHeight > d.maxHeight
