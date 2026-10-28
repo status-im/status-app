@@ -41,8 +41,8 @@ HomePageGridItem {
         bridgeBadge {
             image.source: root.connectorBadge
             border.width: 0
-            implicitHeight: 16
-            implicitWidth: 16
+            width: 16
+            height: 16
             anchors.rightMargin: 1
             anchors.bottomMargin: 1
         }

@@ -256,11 +256,11 @@ Control {
             }
 
             header: StatusDialogHeader {
+                // sized here: the header's Loader takes the item's size, and
+                // the implicit size is the image's own
                 leftComponent: StatusRoundedImage {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.margins: Theme.padding
-                    Layout.preferredWidth: 68
-                    Layout.preferredHeight: Layout.preferredWidth
+                    width: 40
+                    height: 40
                     radius: visitComunityPopup.isAssetType ? width / 2 : 8
                     image.source: visitComunityPopup.tokenImage
                     showLoadingIndicator: false

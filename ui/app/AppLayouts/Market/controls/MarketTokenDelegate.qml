@@ -106,8 +106,10 @@ StatusItemDelegate {
                 Layout.leftMargin: Theme.padding
 
                 image.source: root.iconSource
+                // round itself: StatusRoundedImage does not clip children
                 LoadingComponent {
                     anchors.fill: parent
+                    radius: width / 2
                     visible: root.loading
                 }
             }

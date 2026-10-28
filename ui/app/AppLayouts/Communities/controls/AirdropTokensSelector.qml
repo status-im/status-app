@@ -36,8 +36,8 @@ StatusFlowSelector {
             id: delegateRoot
 
             component Icon: StatusRoundedImage {
-                implicitWidth: d.iconSize
-                implicitHeight: d.iconSize
+                Layout.preferredWidth: d.iconSize
+                Layout.preferredHeight: d.iconSize
 
                 image.mipmap: true
             }

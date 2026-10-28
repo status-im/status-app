@@ -50,6 +50,8 @@ StatusDialog {
         headline.title: d.headerTitle
         actions.closeButton.onClicked: root.close()
         leftComponent: StatusRoundedImage {
+            width: 40
+            height: 40
             image.source: root.communityLogo
         }
     }

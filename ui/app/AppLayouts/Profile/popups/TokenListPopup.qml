@@ -216,6 +216,8 @@ StatusAdaptiveDialog {
                 spacing: Theme.padding
 
                 StatusRoundedImage {
+                    Layout.preferredWidth: 40
+                    Layout.preferredHeight: 40
                     image.source: customDelegate.image || Constants.tokenIcon(customDelegate.symbol)
                 }
 
