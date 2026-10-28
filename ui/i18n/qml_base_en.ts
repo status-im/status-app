@@ -10320,6 +10320,13 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
 </context>
 <context>
+    <name>KeycardStateInfo</name>
+    <message>
+        <source>This Keycard isn&apos;t certified by Keycard. It may be a development or custom-made card. Use it only if you trust where it came from.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>

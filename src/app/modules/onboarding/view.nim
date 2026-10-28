@@ -109,6 +109,12 @@ QtObject:
     read = getKeycardPairingSupported
     notify = keycardEventChanged
 
+  proc getKeycardCertificateTrusted(self: View): bool {.slot.} =
+    return not self.keycardEvent.keycardInfo.certificateUntrusted
+  QtProperty[bool] keycardCertificateTrusted:
+    read = getKeycardCertificateTrusted
+    notify = keycardEventChanged
+
   proc getKeycardCardMetadataName(self: View): string {.slot.} =
     return self.keycardEvent.metadata.name
   QtProperty[string] keycardCardMetadataName:

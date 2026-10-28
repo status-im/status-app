@@ -18,7 +18,13 @@ QtObject {
     property int availableSlots: -1
     // false for applet 4.x cards: they have no pairing, so availableSlots carries no meaning
     property bool pairingSupported: true
+    // false for applet 4.x cards whose certificate no trusted CA signed: they work, but get a warning
+    property bool certificateTrusted: true
     property string cardMetadataWalletAccountsJson: "[]"
+
+    readonly property string certificateWarning: root.certificateTrusted
+        ? ""
+        : qsTr("This Keycard isn't certified by Keycard. It may be a development or custom-made card. Use it only if you trust where it came from.")
 
     readonly property bool hasKeyPair: !!root.keycardUid && !!root.keyUid
 

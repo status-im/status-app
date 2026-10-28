@@ -31,6 +31,7 @@ ColumnLayout {
     property int remainingPukAttempts: -1
     property int availableSlots: -1
     property bool pairingSupported: true
+    property bool certificateTrusted: true
     property string cardMetadataName: ""
     property string cardMetadataWalletAccountsJson: "[]"
 
@@ -59,6 +60,7 @@ ColumnLayout {
         remainingPukAttempts: root.remainingPukAttempts
         availableSlots: root.availableSlots
         pairingSupported: root.pairingSupported
+        certificateTrusted: root.certificateTrusted
         cardMetadataWalletAccountsJson: root.cardMetadataWalletAccountsJson
         knownPairingExists: d.pairingExists
     }
@@ -175,6 +177,14 @@ ColumnLayout {
 
             return finalText
         }
+    }
+
+    KeycardCertificateWarning {
+        Layout.fillWidth: true
+        Layout.leftMargin: Theme.padding
+        Layout.rightMargin: Theme.padding
+        Layout.topMargin: Theme.padding
+        text: stateInfo.certificateWarning
     }
 
     StatusBaseText {

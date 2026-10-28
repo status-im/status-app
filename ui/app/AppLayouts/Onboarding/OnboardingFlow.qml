@@ -45,6 +45,7 @@ OnboardingStackView {
     required property bool keycardStatusAvailable
     required property int keycardAvailableSlots
     required property bool keycardPairingSupported
+    required property bool keycardCertificateTrusted
     required property string keycardCardMetadataName
     required property string keycardCardMetadataWalletAccountsJson
 
@@ -241,6 +242,7 @@ OnboardingStackView {
                     remainingPukAttempts: root.remainingPukAttempts,
                     availableSlots: root.keycardAvailableSlots,
                     pairingSupported: root.keycardPairingSupported,
+                    certificateTrusted: root.keycardCertificateTrusted,
                     cardMetadataName: root.keycardCardMetadataName,
                     cardMetadataWalletAccountsJson: root.keycardCardMetadataWalletAccountsJson
                 })
