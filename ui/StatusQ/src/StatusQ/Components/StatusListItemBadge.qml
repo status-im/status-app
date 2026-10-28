@@ -38,8 +38,8 @@ Control {
             anchors.horizontalCenterOffset: -spacing
             spacing: 2
             StatusRoundedImage {
-                implicitWidth: root.asset.width
-                implicitHeight: root.asset.height
+                Layout.preferredWidth: root.asset.width
+                Layout.preferredHeight: root.asset.height
                 visible: !root.asset.isLetterIdenticon
                 image.source: root.asset.name
                 border.color: Theme.palette.baseColor1

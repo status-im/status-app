@@ -231,8 +231,8 @@ CalloutCard {
                 id: thumbnailImage
                 Layout.alignment: Qt.AlignRight
                 Layout.rightMargin: 4
-                implicitWidth: 34
-                implicitHeight: 34
+                Layout.preferredWidth: 34
+                Layout.preferredHeight: 34
                 radius: 4
                 visible: false
             }

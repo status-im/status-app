@@ -12,8 +12,8 @@ import StatusQ.Components.private
     layer    the image rendered into a layer, a mask into a second one, and
              a MultiEffect combining them - what chat images did
              (StatusImageMessage, StatusChatImageLoader)
-    avatar   StatusRoundedImage - the same layer + mask, on the component's
-             root, as avatars use it (StatusSmartIdenticon); stills only
+    avatar   StatusRoundedImage, as avatars use it (StatusSmartIdenticon),
+             with borderWidth; stills only
     item     RoundedRenderSizedImage - an Image drawing itself rounded with its
              own scene graph node - or RoundedAnimatedImage for animated
              sources
@@ -33,6 +33,8 @@ Loader {
     property bool circular: false
     // the chat bubble's tail: the bottom-left corner
     property real tailRadius: radius
+    // avatar only
+    property real borderWidth: 0
 
     readonly property real cornerRadius: circular ? Math.min(width, height) / 2 : radius
     readonly property real bottomLeftRadius: circular ? cornerRadius : Math.min(tailRadius, cornerRadius)
@@ -139,9 +141,9 @@ Loader {
 
         // as StatusSmartIdenticon builds it; one radius, so no tail
         StatusRoundedImage {
-            readonly property int status: image.status
-
             radius: root.cornerRadius
+            border.width: root.borderWidth
+            border.color: "#4360df"
             image.source: root.source
             image.fillMode: root.fillMode
             // as the others: StatusImage is synchronous by default, which

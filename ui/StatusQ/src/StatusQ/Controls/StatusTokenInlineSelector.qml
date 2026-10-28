@@ -119,8 +119,9 @@ RowLayout {
 
                 StatusRoundedImage {
                     id: roundedImage
-                    Layout.maximumHeight: text.height + 2
-                    Layout.maximumWidth: text.height + 2
+                    // sized before it loads: its implicit size is the image's
+                    Layout.preferredWidth: text.height + 2
+                    Layout.preferredHeight: text.height + 2
                     image.source: tokenImageSource
                 }
 
