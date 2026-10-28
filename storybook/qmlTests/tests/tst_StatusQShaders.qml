@@ -11,6 +11,7 @@ Item {
 
         function test_shaderIsBuiltIntoStatusQ_data() {
             return [
+                "roundedimage.frag",
                 "roundedrendersizedimage.frag",
                 "roundedrendersizedimage.vert",
                 "roundedrendersizedimageborder.frag",
