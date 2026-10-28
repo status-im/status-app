@@ -35,6 +35,28 @@ The replacement's standard streams are redirected to the null device so closing
 the launcher's output pipes (for example, Qt Creator's) cannot terminate it.
 Replacement console output will not appear in the original run output.
 
+## Benchmarks
+
+`qmlTests/benchmarks/bench_*.qml` measure what N instances of a component
+cost: GPU memory and RSS added, build time, and GPU and CPU time per frame
+while the scene is redrawn, scrolled, resized or animating
+(`Benchmark.BenchmarkRunner`). They are not part of the test run (their names
+do not start with `tst_`). `run_benchmark.py` runs each variant in its own
+`QmlTests` process in a real window, at several scale factors and repeatedly,
+and prints a comparison table:
+
+```
+qmlTests/benchmarks/run_benchmark.py run qmlTests/benchmarks/bench_Foo.qml \
+    --variant a --scales 1 2 --runs 3 --label before --out before.json
+# ...change the component, rebuild if C++ changed...
+qmlTests/benchmarks/run_benchmark.py run ... --label after --out after.json
+qmlTests/benchmarks/run_benchmark.py table before.json after.json
+```
+
+GPU figures come from the DRM fdinfo (Linux, i915/xe/amdgpu and others);
+elsewhere they read `n/a`. Keep the screen unlocked and awake: a run that
+presents too few frames is marked invalid and retried.
+
 
 # Building Storybook with Webassembly and Qt 5.14
 
