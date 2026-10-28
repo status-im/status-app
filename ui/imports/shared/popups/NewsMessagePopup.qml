@@ -65,13 +65,17 @@ StatusAdaptiveDialog {
 
             Layout.bottomMargin: active ? Theme.padding : 0
             Layout.fillWidth: true
-            Layout.maximumHeight: active ? 300 : 0
+            Layout.preferredHeight: active && item ? item.implicitHeight : 0
 
             sourceComponent: StatusRoundedImage {
+                readonly property real aspectRatio: image.implicitWidth > 0
+                                                    ? image.implicitHeight / image.implicitWidth
+                                                    : 0
+
                 implicitWidth: parent.width
-                implicitHeight: image.implicitHeight
+                implicitHeight: Math.min(300, width * aspectRatio)
                 image.source: root.notification ? root.notification.newsImageUrl : ""
-                image.fillMode: Image.PreserveAspectCrop
+                image.fillMode: Image.PreserveAspectFit
                 color: "transparent"
                 border.color: Theme.palette.directColor8
                 border.width: 1
