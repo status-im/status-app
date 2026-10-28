@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -51,30 +50,12 @@ Item {
             }
         }
 
+        // Cut around the badge, badgeMargin wide: computed by the shader on
+        // this item's layer, with no second layer for a mask
         layer.enabled: badge.visible
-        layer.effect: MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            id: mask
-            maskInverted: true
-
-            maskSource: Item {
-                parent: root
-                layer.enabled: true
-                visible: false
-                width: mask.width
-                height: mask.height
-
-                Rectangle {
-                    x: badge.x - badgeMargin
-                    y: badge.y - badgeMargin
-
-                    width: badge.width + badgeMargin * 2
-                    height: badge.width + badgeMargin * 2
-                    radius: width / 2
-                }
-            }
+        layer.effect: StatusRoundedCornersEffect {
+            cutoutCenter: Qt.point(badge.x + badge.width / 2, badge.y + badge.height / 2)
+            cutoutRadius: badge.width / 2 + root.badgeMargin
         }
     }
 

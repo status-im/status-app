@@ -68,19 +68,6 @@ Item {
             compare(reopenedImage.height, image.height)
         }
 
-        function verifyMask(popup, maskName, owner) {
-            verify(!!popup)
-            popup.open()
-            tryCompare(popup, "opened", true)
-            tryVerify(() => owner.children.some(item => item.objectName === maskName))
-            const mask = owner.children.find(item => item.objectName === maskName)
-            verify(!!mask)
-            compare(mask.parent, owner)
-            verify(mask.layer.enabled)
-            verify(!mask.visible)
-            verifyRendersAndReopens(popup)
-        }
-
         // A layer-effect-rounded item: its layer is on, and the popup renders.
         function verifyRoundedLayer(popup, owner) {
             verify(!!popup)
@@ -105,10 +92,10 @@ Item {
             verifyRoundedLayer(popup, popup.contentItem)
         }
 
-        function test_signTransactionMask() {
+        function test_signTransactionFromImageCutout() {
             const popup = createTemporaryObject(signComponent, root)
             verify(!!popup)
-            verifyMask(popup, "signTransactionFromImageMask", popup.fromImageSmartIdenticon)
+            verifyRoundedLayer(popup, popup.fromImageSmartIdenticon)
         }
     }
 }
