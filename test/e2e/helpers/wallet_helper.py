@@ -1,5 +1,7 @@
 from allure_commons._allure import step
 
+import time
+
 import configs
 import driver
 from configs import WALLET_SEED
@@ -99,6 +101,9 @@ def select_network_in_filter(
 
     retry_wait_msec = min(timeout_msec, 2000)
     for attempt in range(2):
+        if attempt > 0:
+            driver.type(network_filter.object, '<Escape>')
+            time.sleep(0.1)
         network_filter.click()
         assert driver.waitFor(
             lambda: network_selector_options(option_delegate_real_name, option_fallback_real_name),
