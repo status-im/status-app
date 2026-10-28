@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
-import QtQuick.Effects
 
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -97,26 +97,12 @@ StatusDialog {
             onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
         }
 
+        // The list's bottom corners follow the dialog's: computed by the
+        // shader on the column's layer, with no second layer for a mask
         layer.enabled: root.visible && !root.messageToPin
-        layer.effect: MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            maskSource: Rectangle {
-                objectName: "pinnedMessagesMask"
-                parent: column
-                layer.enabled: true
-                visible: false
-                width: column.width
-                height: column.height
-                radius: background.radius
-
-                Rectangle {
-                    width: parent.width
-                    height: parent.radius
-                    anchors.top: parent.top
-                }
-            }
+        layer.effect: StatusRoundedCornersEffect {
+            bottomLeftRadius: background.radius
+            bottomRightRadius: background.radius
         }
     }
 

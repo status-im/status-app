@@ -53,16 +53,8 @@ Item {
             failOnWarning(/QQuickShaderEffectSource::textureProvider/)
         }
 
-        function verifyMask(popup, maskName, owner) {
-            verify(!!popup)
-            popup.open()
-            tryCompare(popup, "opened", true)
-            tryVerify(() => owner.children.some(item => item.objectName === maskName))
-            const mask = owner.children.find(item => item.objectName === maskName)
-            verify(!!mask)
-            compare(mask.parent, owner)
-            verify(mask.layer.enabled)
-            verify(!mask.visible)
+        // The popup renders, and renders the same after being reopened.
+        function verifyRendersAndReopens(popup) {
             verify(waitForPolish(popup.contentItem))
             const image = grabImage(popup.contentItem)
             verify(image.width > 0 && image.height > 0)
@@ -76,18 +68,41 @@ Item {
             compare(reopenedImage.height, image.height)
         }
 
-        function test_receiveMask() {
+        function verifyMask(popup, maskName, owner) {
+            verify(!!popup)
+            popup.open()
+            tryCompare(popup, "opened", true)
+            tryVerify(() => owner.children.some(item => item.objectName === maskName))
+            const mask = owner.children.find(item => item.objectName === maskName)
+            verify(!!mask)
+            compare(mask.parent, owner)
+            verify(mask.layer.enabled)
+            verify(!mask.visible)
+            verifyRendersAndReopens(popup)
+        }
+
+        // A layer-effect-rounded item: its layer is on, and the popup renders.
+        function verifyRoundedLayer(popup, owner) {
+            verify(!!popup)
+            popup.open()
+            tryCompare(popup, "opened", true)
+            verify(owner.layer.enabled)
+            verify(!!owner.layer.effect)
+            verifyRendersAndReopens(popup)
+        }
+
+        function test_receiveQrCorners() {
             const popup = createTemporaryObject(receiveComponent, root)
             verify(!!popup)
             const qrImage = findChild(popup, "qrCodeImage")
             verify(!!qrImage)
-            verifyMask(popup, "receiveModalQrMask", qrImage.parent)
+            verifyRoundedLayer(popup, qrImage.parent)
         }
 
-        function test_pinnedMessagesMask() {
+        function test_pinnedMessagesCorners() {
             const popup = createTemporaryObject(pinnedComponent, root)
             verify(!!popup)
-            verifyMask(popup, "pinnedMessagesMask", popup.contentItem)
+            verifyRoundedLayer(popup, popup.contentItem)
         }
 
         function test_signTransactionMask() {
