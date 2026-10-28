@@ -32,6 +32,7 @@
         <file>StatusQ/Components/StatusDescriptionListItem.qml</file>
         <file>StatusQ/Components/StatusDotsLoadingIndicator.qml</file>
         <file>StatusQ/Components/StatusDraggableListItem.qml</file>
+        <file>StatusQ/Components/StatusEdgeFadeEffect.qml</file>
         <file>StatusQ/Components/StatusEmoji.qml</file>
         <file>StatusQ/Components/StatusFlowSelector.qml</file>
         <file>StatusQ/Components/StatusGroupBox.qml</file>

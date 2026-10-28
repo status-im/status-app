@@ -30,6 +30,7 @@ StatusDatePicker 0.1 StatusDatePicker.qml
 StatusDescriptionListItem 0.1 StatusDescriptionListItem.qml
 StatusDotsLoadingIndicator 0.1 StatusDotsLoadingIndicator.qml
 StatusDraggableListItem 0.1 StatusDraggableListItem.qml
+StatusEdgeFadeEffect 0.1 StatusEdgeFadeEffect.qml
 StatusEmoji 0.1 StatusEmoji.qml
 StatusFlowSelector 0.1 StatusFlowSelector.qml
 StatusGroupBox 0.1 StatusGroupBox.qml
