@@ -1,6 +1,7 @@
 import QtQuick
-import QtQuick.Effects
 
+import StatusQ.Components
+import StatusQ.Components.private
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -13,9 +14,9 @@ Item {
         RIGHT_ROUNDED = 2
     }
 
-    // Only the needed kind is built: stills decode at a bounded size (an
-    // album can hold dozens of photos and a full decode of each exhausts
-    // memory); gifs need AnimatedImage, which cannot bound its decode.
+    // The rounded image, built asynchronously: a StatusRoundedImage, or a
+    // RoundedAnimatedImage for a gif. Both decode at a bounded size (an album
+    // can hold dozens of photos and a full decode of each exhausts memory).
     readonly property Item imageAlias: imageLoader.item
 
     property bool isAppWindowActive: false
@@ -52,20 +53,27 @@ Item {
         id: _internal
         readonly property bool isAnimated: !!source && source.toString().endsWith('.gif')
         readonly property int imageStatus: imageContainer.imageAlias ? imageContainer.imageAlias.status : Image.Loading
-        // Decode width in 128px steps so a layout-driven imageWidth (albums on
-        // narrow screens, rotation) doesn't re-decode every visible image.
+        // A gif's decode width, in pixels: in 128px steps so a layout-driven
+        // imageWidth (albums on narrow screens, rotation) doesn't re-decode
+        // every visible gif. A still decodes for imageWidth in StatusImage's
+        // own steps.
         readonly property int decodeWidth: Math.ceil(imageContainer.imageWidth * Screen.devicePixelRatio / 128) * 128
         // Crop mode fills a square box, so bound both sides or landscape
         // photos decode too short and get upscaled.
         readonly property int decodeHeight: imageContainer.isFillCropMode ? decodeWidth : 0
+        readonly property real bottomLeftRadius: imageContainer.shapeType === StatusImageMessage.ShapeType.LEFT_ROUNDED ? 4 : 16
+        readonly property real bottomRightRadius: imageContainer.shapeType === StatusImageMessage.ShapeType.RIGHT_ROUNDED ? 4 : 16
+        readonly property int fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
         property bool pausePlaying: false
 
-        function boxHeight(image) {
+        // The box for a decoded image of implicit size iw x ih, shown at
+        // width w: square for crop, the image's aspect ratio for fit.
+        function boxHeight(w, iw, ih) {
             if (imageContainer.isFillCropMode)
-                return image.width // Fixed box for crop
-            if (image.implicitWidth > 0)
-                return Math.round(image.width * image.implicitHeight / image.implicitWidth) // Fit by width / Preserve aspect ratio
-            return image.implicitHeight // Before image is loaded
+                return w // Fixed box for crop
+            if (iw > 0)
+                return Math.round(w * ih / iw) // Fit by width / Preserve aspect ratio
+            return ih // Before image is loaded
         }
     }
 
@@ -75,48 +83,10 @@ Item {
         width: imageContainer.imageAlias ? imageContainer.imageAlias.width : 0
         height: imageContainer.imageAlias ? imageContainer.imageAlias.height : 0
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            maskSource: Item {
-                parent: root
-                layer.enabled: true
-                visible: false
-                width: imageBox.width
-                height: imageBox.height
-
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    width: imageBox.width
-                    height: imageBox.height
-                    radius: 16
-                }
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
-                    width: 32
-                    height: 32
-                    radius: 4
-                    visible: shapeType === StatusImageMessage.ShapeType.LEFT_ROUNDED //!isLeftCorner && !allCornersRounded
-                }
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.right: parent.right
-                    width: 32
-                    height: 32
-                    radius: 4
-                    visible: shapeType === StatusImageMessage.ShapeType.RIGHT_ROUNDED  //isLeftCorner && !allCornersRounded
-                }
-            }
-        }
-
         Loader {
             id: imageLoader
             asynchronous: true
-            sourceComponent: _internal.isAnimated ? animatedComponent : stillComponent
+            sourceComponent: _internal.isAnimated ? animatedImageComponent : stillImageComponent
         }
 
         HoverHandler {
@@ -146,16 +116,25 @@ Item {
         }
     }
 
+    // Rounded in the pass drawing the image's own texture; the bubble's tail
+    // is the small corner. Only the needed kind of image is built.
     Component {
-        id: stillComponent
+        id: stillImageComponent
 
-        Image {
-            id: imageMessage
+        StatusRoundedImage {
             width: Math.min(implicitWidth, imageContainer.imageWidth)
-            height: _internal.boxHeight(imageMessage)
-            fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
-            sourceSize.width: _internal.decodeWidth
-            sourceSize.height: _internal.decodeHeight
+            height: _internal.boxHeight(width, implicitWidth, implicitHeight)
+
+            radius: 16
+            bottomLeftRadius: _internal.bottomLeftRadius
+            bottomRightRadius: _internal.bottomRightRadius
+            unsetBorderWidth: 0
+
+            // the box has the image's aspect ratio to the pixel: filling it
+            // leaves no sliver uncovered by the decode's rounded aspect
+            fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.Stretch
+            sourceSize: Qt.size(imageContainer.imageWidth,
+                                imageContainer.isFillCropMode ? imageContainer.imageWidth : 0)
             asynchronous: true
             source: imageContainer.source
             cache: false
@@ -163,18 +142,21 @@ Item {
     }
 
     Component {
-        id: animatedComponent
+        id: animatedImageComponent
 
-        AnimatedImage {
-            id: imageMessage
+        RoundedAnimatedImage {
             width: Math.min(implicitWidth, imageContainer.imageWidth)
-            height: _internal.boxHeight(imageMessage)
-            fillMode: imageContainer.isFillCropMode ? Image.PreserveAspectCrop : Image.PreserveAspectFit
-            sourceSize.width: _internal.decodeWidth
-            sourceSize.height: _internal.decodeHeight
+            height: _internal.boxHeight(width, implicitWidth, implicitHeight)
+
+            radius: 16
+            bottomLeftRadius: _internal.bottomLeftRadius
+            bottomRightRadius: _internal.bottomRightRadius
+
+            playing: imageContainer.isAppWindowActive && !_internal.pausePlaying
+            fillMode: _internal.fillMode
+            sourceSize: Qt.size(_internal.decodeWidth, _internal.decodeHeight)
             asynchronous: true
             source: imageContainer.source
-            playing: isAppWindowActive && !_internal.pausePlaying
             cache: false
         }
     }

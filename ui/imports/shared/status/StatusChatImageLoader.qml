@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Window
-import QtQuick.Effects
 
+import StatusQ.Components
+import StatusQ.Components.private
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -18,9 +19,9 @@ Item {
     property bool playing: Window.window.active
 
     property bool isAnimated: !!source && source.toString().endsWith('.gif')
-    // Only the needed kind is built: stills decode at a bounded size (a chat
-    // can hold dozens of photos and a full decode of each exhausts memory);
-    // gifs need AnimatedImage, which cannot bound its decode.
+    // The rounded image: a StatusRoundedImage, or a RoundedAnimatedImage for
+    // a gif. Both decode at a bounded size (a chat can hold dozens of photos
+    // and a full decode of each exhausts memory).
     readonly property Item imageAlias: imageLoader.item
     property bool allCornersRounded: false
     property bool isOnline: true // TODO: mark as required when migrating to 5.15 or above
@@ -40,7 +41,7 @@ Item {
             return
 
         if (d.imageStatus === Image.Error) {
-            root.imageAlias.reloadImage()
+            d.reloadImage()
         }
     }
 
@@ -48,9 +49,20 @@ Item {
         id: d
 
         readonly property int imageStatus: root.imageAlias ? root.imageAlias.status : Image.Loading
-        // Decode width in 128px steps so a layout-driven imageWidth doesn't
-        // re-decode every visible image on rotation.
+        // A gif's decode width, in pixels: in 128px steps so a layout-driven
+        // imageWidth doesn't re-decode every visible gif on rotation. A
+        // still decodes for imageWidth in StatusImage's own steps.
         readonly property int decodeWidth: Math.ceil(root.imageWidth * Screen.devicePixelRatio / 128) * 128
+
+        // the bubble's tail is the small corner
+        readonly property real bottomLeftRadius: root.leftTail && !root.allCornersRounded ? 4 : 16
+        readonly property real bottomRightRadius: !root.leftTail && !root.allCornersRounded ? 4 : 16
+
+        function reloadImage() {
+            const image = root.imageAlias
+            image.source = ""
+            image.source = Qt.binding(() => root.source)
+        }
 
         function scheduleRetry(status) {
             if (status === Image.Error && !retryTimer.running) {
@@ -67,7 +79,7 @@ Item {
 
         onTriggered: {
             if (d.imageStatus === Image.Error && root.isOnline) {
-                root.imageAlias.reloadImage()
+                d.reloadImage()
                 interval *= 2
                 restart()
             }
@@ -80,49 +92,10 @@ Item {
         width: root.imageAlias ? root.imageAlias.width : 0
         height: root.imageAlias ? root.imageAlias.paintedHeight : 0
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            maskSource: Item {
-                parent: root
-                layer.enabled: true
-                visible: false
-                width: imageBox.width
-                height: imageBox.height
-
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    width: imageBox.width
-                    height: imageBox.height
-                    radius: 16
-                }
-
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
-                    width: 32
-                    height: 32
-                    radius: 4
-                    visible: root.leftTail && !allCornersRounded
-                }
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.right: parent.right
-                    width: 32
-                    height: 32
-                    radius: 4
-                    visible: !root.leftTail && !allCornersRounded
-                }
-            }
-        }
-
         Loader {
             id: imageLoader
             asynchronous: root.asynchronous
-            sourceComponent: root.isAnimated ? animatedComponent : stillComponent
+            sourceComponent: root.isAnimated ? animatedImageComponent : stillImageComponent
         }
 
         StatusMouseArea {
@@ -133,53 +106,54 @@ Item {
         }
     }
 
+    // Rounded in the pass drawing the image's own texture, fitted by width:
+    // the box has the image's aspect ratio. Only the needed kind of image is
+    // built.
     Component {
-        id: stillComponent
+        id: stillImageComponent
 
-        Image {
-            id: imageMessage
+        StatusRoundedImage {
             width: Math.min(implicitWidth, root.imageWidth)
-            fillMode: Image.PreserveAspectFit
-            sourceSize.width: d.decodeWidth
+            height: implicitWidth > 0 ? Math.round(width * implicitHeight / implicitWidth) : 0
+
+            radius: 16
+            bottomLeftRadius: d.bottomLeftRadius
+            bottomRightRadius: d.bottomRightRadius
+            unsetBorderWidth: 0
+
+            // the box has the image's aspect ratio to the pixel: filling it
+            // leaves no sliver uncovered by the decode's rounded aspect
+            fillMode: Image.Stretch
+            sourceSize: Qt.size(root.imageWidth, 0)
             asynchronous: root.asynchronous
-            mipmap: true
             cache: root.cacheImage
             source: root.source
 
             onStatusChanged: d.scheduleRetry(status)
-
-            function reloadImage() {
-                imageMessage.source = ""
-                imageMessage.source = Qt.binding(() => root.source)
-            }
-
-            Component.onDestruction: imageMessage.source = ""
+            Component.onDestruction: source = ""
         }
     }
 
     Component {
-        id: animatedComponent
+        id: animatedImageComponent
 
-        AnimatedImage {
-            id: imageMessage
+        RoundedAnimatedImage {
             width: Math.min(implicitWidth, root.imageWidth)
-            fillMode: Image.PreserveAspectFit
-            sourceSize.width: d.decodeWidth
-            sourceSize.height: d.decodeWidth
-            asynchronous: root.asynchronous
-            source: root.source
+            height: implicitWidth > 0 ? Math.round(width * implicitHeight / implicitWidth) : 0
+
+            radius: 16
+            bottomLeftRadius: d.bottomLeftRadius
+            bottomRightRadius: d.bottomRightRadius
+
             playing: root.playing
-            mipmap: true
+            fillMode: Image.PreserveAspectFit
+            sourceSize: Qt.size(d.decodeWidth, d.decodeWidth)
+            asynchronous: root.asynchronous
             cache: root.cacheImage
+            source: root.source
 
             onStatusChanged: d.scheduleRetry(status)
-
-            function reloadImage() {
-                imageMessage.source = ""
-                imageMessage.source = Qt.binding(() => root.source)
-            }
-
-            Component.onDestruction: imageMessage.source = ""
+            Component.onDestruction: source = ""
         }
     }
 
