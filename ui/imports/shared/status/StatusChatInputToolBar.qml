@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts
 
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
@@ -87,29 +87,8 @@ Control {
         id: d
 
         readonly property int padding: 10
-    }
-
-    Rectangle {
-        id: gradientMask
-
-        width: flickable.width + gradient.fadePixelSize * 2
-        height: flickable.height
-
-        visible: false
-        layer.enabled: true
-        gradient: Gradient {
-            id: gradient
-
-            orientation: Gradient.Horizontal
-
-            readonly property int fadePixelSize: 7
-            readonly property real relativeFadeSize: fadePixelSize / gradientMask.width
-
-            GradientStop {position: 0; color: Qt.rgba(1, 1, 1, 0)}
-            GradientStop {position: gradient.relativeFadeSize; color: Qt.rgba(0, 0, 0)}
-            GradientStop {position: 1 - gradient.relativeFadeSize; color: Qt.rgba(0, 0, 0)}
-            GradientStop {position: 1; color: Qt.rgba(1, 1, 1, 0)}
-        }
+        // width of the faded edges, outside the flickable
+        readonly property int fadePixelSize: 7
     }
 
     contentItem: RowLayout {
@@ -121,27 +100,30 @@ Control {
         Item {
             id: flickableWrapper
 
-            Layout.preferredWidth: flickable.contentWidth + gradient.fadePixelSize * 2
+            Layout.preferredWidth: flickable.contentWidth + d.fadePixelSize * 2
             Layout.preferredHeight: Math.max(content.childrenRect.height, sendButton.implicitHeight)
-            Layout.leftMargin: -gradient.fadePixelSize
-            Layout.rightMargin: -gradient.fadePixelSize
+            Layout.leftMargin: -d.fadePixelSize
+            Layout.rightMargin: -d.fadePixelSize
             Layout.fillWidth: true
 
+            // The edges fade out where the actions overflow: computed by the
+            // shader on this item's layer, with no second layer for a mask.
+            // The layer stays on while everything fits: switching it off as
+            // this item is resized - the flickable's anchors resize it in this
+            // item's geometry notification - deletes the layer's texture
+            // source while Qt still notifies it, a use-after-free.
             layer.enabled: true
-            layer.effect: MultiEffect {
-                source: flickableWrapper
-                maskEnabled: true
-                maskSource: gradientMask
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
+            layer.effect: StatusEdgeFadeEffect {
+                leftFade: d.fadePixelSize
+                rightFade: d.fadePixelSize
             }
 
             Flickable {
                 id: flickable
 
                 anchors.fill: parent
-                anchors.leftMargin: gradient.fadePixelSize
-                anchors.rightMargin: gradient.fadePixelSize
+                anchors.leftMargin: d.fadePixelSize
+                anchors.rightMargin: d.fadePixelSize
 
                 flickableDirection: Flickable.AutoFlickIfNeeded
 
