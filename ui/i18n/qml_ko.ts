@@ -9490,11 +9490,11 @@ app: %2</source>
     </message>
     <message>
         <source>Keycard not verified</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 확인되지 않음</translation>
     </message>
     <message>
         <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard가 정품인지 확인할 수 없습니다. 다른 Keycard로 다시 시도하세요.</translation>
     </message>
     <message>
         <source>Connection error</source>
@@ -10087,11 +10087,11 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     </message>
     <message>
         <source>Keycard not verified</source>
-        <translation type="unfinished"></translation>
+        <translation>Keycard가 확인되지 않음</translation>
     </message>
     <message>
         <source>This Keycard could not be verified as genuine. Try again with another Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard가 정품인지 확인할 수 없습니다. 다른 Keycard로 다시 시도하세요.</translation>
     </message>
     <message>
         <source>Connection error</source>
@@ -10180,7 +10180,7 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     </message>
     <message>
         <source>Tag 4.0: SecureChannel V2, no pairing. The simulator runs applet 4.0.1 (status-keycard #37393a2).</source>
-        <translation type="unfinished"></translation>
+        <translation>태그 4.0: SecureChannel V2, 페어링 없음. 시뮬레이터는 애플릿 4.0.1(status-keycard #37393a2)을 실행합니다.</translation>
     </message>
     <message>
         <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
@@ -10208,11 +10208,11 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     </message>
     <message>
         <source>Identity certificate no trusted CA signed</source>
-        <translation type="unfinished"></translation>
+        <translation>신뢰할 수 있는 CA가 서명하지 않은 신원 인증서</translation>
     </message>
     <message>
         <source>The card&apos;s identity certificate is signed by the simulator&apos;s untrusted CA, so the app treats it like a development or custom-made card</source>
-        <translation type="unfinished"></translation>
+        <translation>카드의 신원 인증서가 시뮬레이터의 신뢰할 수 없는 CA로 서명되어 있으므로, 앱은 이 카드를 개발용 또는 맞춤 제작 카드로 취급합니다</translation>
     </message>
     <message>
         <source>Create Empty Keycard</source>
@@ -10299,7 +10299,7 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     <name>KeycardStateInfo</name>
     <message>
         <source>This Keycard isn&apos;t certified by Keycard. It may be a development or custom-made card. Use it only if you trust where it came from.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard는 Keycard의 인증을 받지 않았습니다. 개발용 또는 맞춤 제작 카드일 수 있습니다. 출처를 신뢰할 수 있는 경우에만 사용하세요.</translation>
     </message>
 </context>
 <context>
@@ -10689,7 +10689,7 @@ to load</source>
     </message>
     <message>
         <source>This Keycard could not be verified as genuine.&lt;br&gt;Try again with another Keycard.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 Keycard가 정품인지 확인할 수 없습니다.&lt;br&gt;다른 Keycard로 다시 시도하세요.</translation>
     </message>
     <message>
         <source>Wrong Keycard for this profile</source>
