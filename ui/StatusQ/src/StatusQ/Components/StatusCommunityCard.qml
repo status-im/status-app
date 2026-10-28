@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 
+import StatusQ.Components.private
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -231,9 +232,6 @@ Rectangle {
         height: d.bannerHeight
 
         Rectangle {
-            id: mask
-            layer.enabled: true
-
             anchors.fill: parent
 
             radius: d.bannerRadius
@@ -243,27 +241,21 @@ Rectangle {
             visible: !root.loaded || image.status !== Image.Ready
         }
 
-        StatusImage {
+        // rounded in the pass drawing the image's own texture: no layer
+        RoundedRenderSizedImage {
             id: image
 
             anchors.fill: parent
 
             source: root.banner
             fillMode: Image.PreserveAspectCrop
+            // as StatusImage: decoded for the rendered size
+            sourceSize: Qt.size(Math.ceil(width), Math.ceil(height))
             smooth: true
-            visible: false
-            cache: false
-        }
-
-        MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            anchors.fill: image
-
             visible: root.loaded
-            source: image
-            maskSource: mask
+            cache: false
+            radius: d.bannerRadius
+            roundedArea: RoundedRenderSizedImage.ItemArea
         }
     }
 

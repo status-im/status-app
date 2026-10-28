@@ -1,7 +1,8 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 
+import StatusQ.Components
+import StatusQ.Components.private
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -81,27 +82,17 @@ Control {
             }
         }
 
-        Image {
+        // circular, cut in the pass drawing the image's own texture: no
+        // layer. The item's circle, as before, also for PreserveAspectFit
+        RoundedRenderSizedImage {
             id: image
 
             anchors.centerIn: parent
             width: d.imageSize
             height: width
             fillMode: root.fillMode
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                maskEnabled: true
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
-                maskSource: Rectangle {
-                    parent: root
-                    layer.enabled: true
-                    visible: false
-                    width: image.width
-                    height: width
-                    radius: width / 2
-                }
-            }
+            radius: width / 2
+            roundedArea: RoundedRenderSizedImage.ItemArea
         }
 
         StatusIcon {
