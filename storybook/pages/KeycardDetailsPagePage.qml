@@ -34,6 +34,7 @@ Item {
         remainingPukAttempts: 5
         availableSlots: ctrlNoSlots.checked || ctrlApplet4.checked ? 0 : 5
         pairingSupported: !ctrlApplet4.checked
+        certificateTrusted: !ctrlUnknownCa.checked
         cardMetadataName: "My Keycard"
         cardMetadataWalletAccountsJson: "[]"
         loginAccountsModel: ctrlProfileExists.checked ? loginAccounts : emptyLoginAccounts
@@ -61,6 +62,10 @@ Item {
         CheckBox {
             id: ctrlApplet4
             text: "applet 4.x (no pairing)"
+        }
+        CheckBox {
+            id: ctrlUnknownCa
+            text: "unknown CA (dev/custom card)"
         }
         CheckBox {
             id: ctrlBlocked
