@@ -1,4 +1,4 @@
-FROM harbor.status.im/infra/ci-build-containers:linux-base-1.0.1
+FROM harbor.status.im/infra/ci-build-containers:linux-base-1.1.2
 
 USER root
 
