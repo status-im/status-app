@@ -1,5 +1,6 @@
 EnterPairingPassword 1.0 EnterPairingPassword.qml
 KeyPairCompactItem 1.0 KeyPairCompactItem.qml
 KeyPairItem 1.0 KeyPairItem.qml
+KeycardCertificateWarning 1.0 KeycardCertificateWarning.qml
 KeycardStateInfo 1.0 KeycardStateInfo.qml
 TitleText 1.0 TitleText.qml

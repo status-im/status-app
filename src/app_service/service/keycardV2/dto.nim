@@ -51,6 +51,9 @@ type KeycardInfoDto* = object
   keyUID*: string
   secureChannelVersion*: int # 1 = password pairing (applet 3.x), 2 = no pairing (applet 4.x);
                              # 0 (not reported) also means password pairing
+  certificateUntrusted*: bool # applet 4.x: no trusted CA signed the card's certificate (development
+                              # or custom-made card); the card works normally. Negative so that the
+                              # zero value (no card info, or not reported) is the no-warning state
 
 type KeycardStatusDto* = object
   remainingAttemptsPIN*: int
@@ -164,6 +167,9 @@ proc toKeycardInfoDto*(jsonObj: JsonNode): KeycardInfoDto =
   discard jsonObj.getProp("version", result.version)
   discard jsonObj.getProp("availableSlots", result.availableSlots)
   discard jsonObj.getProp("secureChannelVersion", result.secureChannelVersion)
+  let certificateTrusted = jsonObj{"certificateTrusted"}
+  result.certificateUntrusted = not certificateTrusted.isNil and
+    certificateTrusted.kind == JBool and not certificateTrusted.getBool
   if jsonObj.getProp("keyUID", result.keyUID) and
     result.keyUID.len > 0 and
     not result.keyUID.startsWith("0x"):

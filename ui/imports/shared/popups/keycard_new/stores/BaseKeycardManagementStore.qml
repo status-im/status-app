@@ -13,6 +13,8 @@ QtObject {
     readonly property int availableSlots: backend ? backend.availableSlots : -1
     // false for applet 4.x cards: no pairing slots and no pairing password
     readonly property bool pairingSupported: backend ? backend.pairingSupported : true
+    // false for development or custom-made applet 4.x cards (no trusted CA signed them)
+    readonly property bool certificateTrusted: backend ? backend.certificateTrusted : true
     readonly property string keycardUid: backend ? backend.keycardUid : ""
     readonly property string keyUid: backend ? backend.keyUid : ""
     readonly property string cardMetadataName: backend ? backend.cardMetadataName : ""

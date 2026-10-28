@@ -25,6 +25,7 @@ OnboardingPage {
     required property int remainingPukAttempts
     required property int availableSlots
     required property bool pairingSupported
+    required property bool certificateTrusted
     required property string cardMetadataName
     required property string cardMetadataWalletAccountsJson
 
@@ -54,6 +55,7 @@ OnboardingPage {
         remainingPukAttempts: root.remainingPukAttempts
         availableSlots: root.availableSlots
         pairingSupported: root.pairingSupported
+        certificateTrusted: root.certificateTrusted
         cardMetadataWalletAccountsJson: root.cardMetadataWalletAccountsJson
 
         readonly property var matchedProfile: stateInfo.hasKeyPair && root.loginAccountsModel
@@ -152,6 +154,11 @@ OnboardingPage {
                     text: stateInfo.nameAndUidLine
                     color: Theme.palette.baseColor1
                     wrapMode: Text.WordWrap
+                }
+
+                KeycardCertificateWarning {
+                    Layout.fillWidth: true
+                    text: stateInfo.certificateWarning
                 }
 
                 StatusBaseText {

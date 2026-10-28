@@ -13,6 +13,7 @@ QtObject:
       remainingPukAttempts: int
       availableSlots: int
       pairingSupported: bool
+      certificateTrusted: bool
       keycardUid: string
       keyUid: string
       cardMetadataName: string
@@ -36,6 +37,7 @@ QtObject:
     result.remainingPukAttempts = 0
     result.availableSlots = 0
     result.pairingSupported = true
+    result.certificateTrusted = true
     result.keycardUid = ""
     result.keyUid = ""
     result.cardMetadataName = ""
@@ -287,6 +289,18 @@ QtObject:
   QtProperty[bool] pairingSupported:
     read = getPairingSupported
     notify = pairingSupportedChanged
+
+  proc certificateTrustedChanged*(self: View) {.signal.}
+  proc getCertificateTrusted*(self: View): bool {.slot.} =
+    return self.certificateTrusted
+  proc setCertificateTrusted*(self: View, value: bool) =
+    if self.certificateTrusted == value:
+      return
+    self.certificateTrusted = value
+    self.certificateTrustedChanged()
+  QtProperty[bool] certificateTrusted:
+    read = getCertificateTrusted
+    notify = certificateTrustedChanged
 
   proc keycardUidChanged*(self: View) {.signal.}
   proc getKeycardUid*(self: View): string {.slot.} =

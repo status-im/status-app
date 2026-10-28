@@ -172,6 +172,7 @@ Page {
         keycardStatusAvailable: root.onboardingStore.keycardStatusAvailable
         keycardAvailableSlots: root.onboardingStore.keycardAvailableSlots
         keycardPairingSupported: root.onboardingStore.keycardPairingSupported
+        keycardCertificateTrusted: root.onboardingStore.keycardCertificateTrusted
         keycardCardMetadataName: root.onboardingStore.keycardCardMetadataName
         keycardCardMetadataWalletAccountsJson: root.onboardingStore.keycardCardMetadataWalletAccountsJson
 

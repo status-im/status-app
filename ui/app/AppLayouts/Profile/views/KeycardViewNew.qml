@@ -69,6 +69,7 @@ SettingsContentBase {
             property int remainingPukAttempts: -1
             property int availableSlots: -1
             property bool pairingSupported: true
+            property bool certificateTrusted: true
             property string cardMetadataName: ""
             property string cardMetadataWalletAccountsJson: "[]"
 
@@ -88,6 +89,7 @@ SettingsContentBase {
                 d.remainingPukAttempts = keycardInfo.remainingPukAttempts
                 d.availableSlots = keycardInfo.availableSlots
                 d.pairingSupported = keycardInfo.pairingSupported
+                d.certificateTrusted = keycardInfo.certificateTrusted
                 d.cardMetadataName = keycardInfo.cardMetadataName
                 d.cardMetadataWalletAccountsJson = keycardInfo.cardMetadataWalletAccountsJson
 
@@ -120,6 +122,7 @@ SettingsContentBase {
             remainingPukAttempts: d.remainingPukAttempts
             availableSlots: d.availableSlots
             pairingSupported: d.pairingSupported
+            certificateTrusted: d.certificateTrusted
             cardMetadataName: d.cardMetadataName
             cardMetadataWalletAccountsJson: d.cardMetadataWalletAccountsJson
         }

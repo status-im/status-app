@@ -39,7 +39,7 @@ StatusDialog {
     property var passwordStrengthScoreFunction: (password) => { console.error("passwordStrengthScoreFunction: IMPLEMENT ME") }
 
     // keycardInfo: { keycardState, keycardUid, keycardInitialized, keyUid, keycardStatusAvailable, remainingPinAttempts,
-    //                remainingPukAttempts, availableSlots, pairingSupported, cardMetadataName,
+    //                remainingPukAttempts, availableSlots, pairingSupported, certificateTrusted, cardMetadataName,
     //                cardMetadataWalletAccountsJson } - named like the keycard details view properties
     signal metadataResult(var keycardInfo)
     signal keycardFlowCompleted(string flow, string keyUid, string keycardUid, bool success)
@@ -147,6 +147,7 @@ StatusDialog {
                 remainingPukAttempts: root.store.remainingPukAttempts,
                 availableSlots: root.store.availableSlots,
                 pairingSupported: root.store.pairingSupported,
+                certificateTrusted: root.store.certificateTrusted,
                 cardMetadataName: root.store.cardMetadataName,
                 cardMetadataWalletAccountsJson: root.store.cardMetadataWalletAccountsJson
             }

@@ -10288,6 +10288,13 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     </message>
 </context>
 <context>
+    <name>KeycardStateInfo</name>
+    <message>
+        <source>This Keycard isn&apos;t certified by Keycard. It may be a development or custom-made card. Use it only if you trust where it came from.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
