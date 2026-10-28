@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 
 import StatusQ
 import StatusQ.Core
@@ -532,19 +531,10 @@ Pane {
         }
     }
 
+    // clip to the background's corners: computed by the shader on the
+    // view's layer, with no second layer for a mask
     layer.enabled: !root.readOnly // profile preview has its own layer.effect
-    layer.effect: MultiEffect {
-        maskEnabled: true
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1.0
-        maskSource: Rectangle {
-            parent: root
-            layer.enabled: true
-            visible: false
-            anchors.centerIn: parent
-            width: column.width
-            height: column.height
-            radius: background.radius
-        }
+    layer.effect: StatusRoundedCornersEffect {
+        radius: background.radius
     }
 }

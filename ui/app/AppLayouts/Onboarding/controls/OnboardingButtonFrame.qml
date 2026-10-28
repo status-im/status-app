@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 
+import StatusQ.Components
 import StatusQ.Core.Theme
 
 Frame {
@@ -19,18 +19,10 @@ Frame {
         color: Theme.palette.background
     }
 
+    // clip the content to the background's corners: computed by the shader
+    // on the frame's layer, with no second layer for a mask
     layer.enabled: true
-    layer.effect: MultiEffect {
-        maskEnabled: true
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1.0
-        maskSource: Rectangle {
-            parent: root
-            layer.enabled: true
-            visible: false
-            width: root.width
-            height: root.height
-            radius: background.radius
-        }
+    layer.effect: StatusRoundedCornersEffect {
+        radius: background.radius
     }
 }
