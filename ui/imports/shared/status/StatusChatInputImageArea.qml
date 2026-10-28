@@ -1,13 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 
 import utils
 import shared
-import shared.controls.chat
 import shared.panels
 
 Row {
@@ -28,28 +28,24 @@ Row {
             height: chatImage.height
             width: chatImage.width
 
-            Image {
+            // Decoded for its size, not the full photo: a share can attach
+            // dozens of camera images and full decodes exhaust memory. The
+            // callout's shape, as CalloutCard's, is cut in the pass drawing
+            // the image: no layer.
+            StatusRoundedImage {
                 id: chatImage
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 width: 64
                 height: 64
-                fillMode: Image.PreserveAspectCrop
-                // Decode a thumbnail, not the full photo: a share can attach
-                // dozens of camera images and full decodes exhaust memory.
-                sourceSize: Qt.size(256, 256)
                 asynchronous: true
-                mipmap: true
-                smooth: false
-                antialiasing: true
                 cache: false
                 source: modelData
-                layer.enabled: true
-                layer.effect: CalloutOpacityMask {
-                    width: parent.width
-                    height: parent.height
-                    leftTail: imageArea.leftTail
-                }
+                fillMode: Image.PreserveAspectCrop
+                radius: Theme.radius * 2
+                bottomLeftRadius: imageArea.leftTail ? Theme.radius / 2 : Theme.radius * 2
+                bottomRightRadius: imageArea.leftTail ? Theme.radius * 2 : Theme.radius / 2
+                unsetBorderWidth: 0
             }
 
             StatusMouseArea {

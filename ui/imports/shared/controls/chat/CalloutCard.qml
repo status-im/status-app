@@ -20,12 +20,6 @@ Control {
     property bool dropShadow: false
     property real borderWidth: 1
 
-    readonly property Component clippingEffect: CalloutOpacityMask {
-        width: parent.width
-        height: parent.height
-        leftTail: root.leftTail
-    }
-
     background: ShapeRectangle {
         path.fillColor: root.backgroundColor
         path.strokeColor: root.borderColor
