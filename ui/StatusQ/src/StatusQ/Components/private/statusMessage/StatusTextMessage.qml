@@ -1,20 +1,18 @@
 import QtQuick
-import QtQuick.Effects
 
-import StatusQ
 import StatusQ.Components
-import StatusQ.Controls
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
 
+// DEMO: the raw message (unparsedText) in one plain Text. No markdown, mentions,
+// links, emoji sizing, selection, "show more" or "(edited)" marker.
 Item {
     id: root
 
-    readonly property alias hoveredLink: chatTextView.hoveredLink
-    readonly property string selectedText: chatTextView.selectedText
+    readonly property string hoveredLink: ""
+    readonly property string selectedText: ""
 
-    property alias highlightedLink: chatTextView.highlightedLink
-    property alias clearSelectionOnLostFocus: chatTextView.clearSelectionOnLostFocus
+    property string highlightedLink
+    property bool clearSelectionOnLostFocus
     property bool linkAddressAndEnsName
     property string disabledTooltipText
 
@@ -24,128 +22,26 @@ Item {
 
     property bool isMobile
 
-    property alias textField: chatTextView
+    property alias textField: text
 
     signal linkActivated(string link)
 
-    implicitHeight: chatTextView.height + d.showMoreHeight / 2
+    implicitHeight: text.implicitHeight
 
-    QtObject {
-        id: d
-        property bool readMore: false
-        readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
-        readonly property int maxHeight: 200
-
-        // Plain message body for accessibility. The rendered text is RichText
-        // (HTML), which Qt's Android a11y backend does not surface, so the body
-        // is otherwise invisible to screen readers and e2e. Expose the unstyled
-        // text via Accessible.name on the text element instead.
-        readonly property string plainText: {
-            // Plain text of the same source ChatTextView renders (unparsedText), with mentions
-            // resolved to display names.
-            const base = MarkdownUtils.plainText(root.messageDetails.unparsedText,
-                                                 root.messageDetails.mentionsMap)
-            // The "(edited)" indicator is only a visual HTML span in the rendered
-            // text; append it here so it reaches Accessible.name too.
-            return root.isEdited ? base + " " + qsTr("(edited)") : base
-        }
-
-        function showDisabledTooltipForAddressEnsName(link) {
-            return link.startsWith('//send-via-personal-chat//') && !!root.disabledTooltipText
-        }
-    }
-
-    // Client-side markdown render path (main desktop bubble): renders `unparsedText` via the
-    // StatusQ parser + ChatTextView, matching the editor. Quote bars, code frames and link-hover
-    // are drawn inside ChatTextView.
-    ChatTextView {
-        id: chatTextView
+    Text {
+        id: text
         objectName: "StatusTextMessage_chatText"
-        readonly property string text: d.plainText // for e2e / a11y read
         Accessible.role: Accessible.StaticText
-        Accessible.name: d.plainText
+        Accessible.name: text.text
 
-        readonly property int effectiveHeight:
-            showMoreButtonLoader.active && !d.readMore ? d.maxHeight : implicitHeight
-
-        height: effectiveHeight + d.showMoreHeight / 2
         anchors.left: parent.left
         anchors.right: parent.right
 
-        selectable: !root.isMobile
+        textFormat: Text.PlainText
+        wrapMode: Text.Wrap
+        color: Theme.palette.directColor1
+        font.family: Fonts.baseFont.family
         font.pixelSize: Theme.primaryTextFontSize
-
-        opacity: !showMoreMaskEffect.active ? 1 : 0
-
-        edited: root.isEdited
-        blocks: MarkdownUtils.toBlocks(
-                    root.messageDetails.unparsedText,
-                    root.messageDetails.mentionsMap,
-                    chatTextView.font,
-                    false /*formatUnclosedCodeFence*/,
-                    true /*fullLineHeightEmojis*/,
-                    Theme.primaryTextFontSize /*emojiSizeOffset*/)
-
-        // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
-        onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
-        onLinkClicked: (url) => {
-                           if(d.showDisabledTooltipForAddressEnsName(url)) {
-                               return
-                           }
-                           root.linkActivated(url)
-                       }
-        onHoveredLinkChanged: disabledLinkTooltip.visible = d.showDisabledTooltipForAddressEnsName(hoveredLink)
-
-        StatusToolTip {
-            id: disabledLinkTooltip
-            text: root.disabledTooltipText
-            delay: 100
-        }
-    }
-
-    // Vertical "show more" mask + button
-    Loader {
-        id: showMoreMaskGradient
-        anchors.fill: chatTextView
-        active: showMoreButtonLoader.active && !d.readMore
-        visible: false
-        layer.enabled: active
-        sourceComponent: Rectangle {
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: StatusColors.white }
-                GradientStop { position: 0.85; color: StatusColors.white }
-                GradientStop { position: 1; color: StatusColors.transparent }
-            }
-        }
-    }
-
-    Loader {
-        id: showMoreMaskEffect
-        active: showMoreButtonLoader.active && !d.readMore
-        anchors.fill: chatTextView
-        sourceComponent: MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            source: chatTextView
-            maskSource: showMoreMaskGradient
-        }
-    }
-
-    Loader {
-        id: showMoreButtonLoader
-        active: root.allowShowMore && chatTextView.implicitHeight > d.maxHeight
-        visible: active
-        anchors.verticalCenter: chatTextView.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        sourceComponent: StatusButton {
-            type: StatusBaseButton.Type.Primary
-            size: StatusBaseButton.Size.Small
-            spacing: 1
-            icon.name: d.readMore ? "chevron-up": "chevron-down"
-            onClicked: {
-                d.readMore = !d.readMore
-            }
-        }
+        text: root.messageDetails.unparsedText
     }
 }
