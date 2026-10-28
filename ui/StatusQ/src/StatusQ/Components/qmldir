@@ -60,6 +60,7 @@ StatusQrCodeCapture 0.1 StatusQrCodeCapture.qml
 StatusQrCodeScanner 0.1 StatusQrCodeScanner.qml
 StatusRoundIcon 0.1 StatusRoundIcon.qml
 StatusRoundedComponent 0.1 StatusRoundedComponent.qml
+StatusRoundedCornersEffect 0.1 StatusRoundedCornersEffect.qml
 StatusRoundedImage 0.1 StatusRoundedImage.qml
 StatusRoundedMedia 0.1 StatusRoundedMedia.qml
 StatusScanCorners 0.1 StatusScanCorners.qml

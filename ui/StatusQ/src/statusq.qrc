@@ -59,6 +59,7 @@
         <file>StatusQ/Components/StatusQrCodeScanner.qml</file>
         <file>StatusQ/Components/StatusRoundIcon.qml</file>
         <file>StatusQ/Components/StatusRoundedComponent.qml</file>
+        <file>StatusQ/Components/StatusRoundedCornersEffect.qml</file>
         <file>StatusQ/Components/StatusRoundedImage.qml</file>
         <file>StatusQ/Components/StatusRoundedMedia.qml</file>
         <file>StatusQ/Components/StatusScanCorners.qml</file>
