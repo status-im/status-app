@@ -187,31 +187,18 @@ StatusDialog {
                             asset.color: "transparent"
                             asset.bgColor: "transparent"
                             visible: !!asset.name
+                            // Cut where the "to" icon overlaps: computed by the
+                            // shader on this icon's layer, with no second layer
+                            // for a mask. The circle the inverted mask had: the
+                            // icon's size, shifted right by the overlap (scaled,
+                            // as the 4 px larger mask was stretched over it).
                             layer.enabled: toImageSmartIdenticon.visible
-                            layer.effect: MultiEffect {
-                                maskEnabled: true
-                                maskThresholdMin: 0.5
-                                maskSpreadAtMin: 1.0
-                                id: mask
-                                maskInverted: true
+                            layer.effect: StatusRoundedCornersEffect {
+                                readonly property real shift: (toImageSmartIdenticon.width - 10)
+                                                              * width / (width + 4)
 
-                                maskSource: Item {
-                                    objectName: "signTransactionFromImageMask"
-                                    parent: fromImageSmartIdenticon
-                                    layer.enabled: true
-                                    visible: false
-                                    width: mask.width + 4
-                                    height: mask.height + 4
-
-                                    Rectangle {
-                                        anchors.centerIn: parent
-                                        anchors.horizontalCenterOffset: toImageSmartIdenticon.width - 10
-
-                                        width: parent.width
-                                        height: width
-                                        radius: width / 2
-                                    }
-                                }
+                                cutoutCenter: Qt.point(width / 2 + shift, height / 2)
+                                cutoutRadius: width / 2
                             }
                         }
 
