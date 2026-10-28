@@ -21,6 +21,8 @@
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
 #include "StatusQ/rendersizedimage.h"
+#include "StatusQ/roundedanimatedimage.h"
+#include "StatusQ/roundedrendersizedimage.h"
 #include "StatusQ/delegatepool.h"
 #include "StatusQ/rowbinder.h"
 #include "StatusQ/rxvalidator.h"
@@ -172,6 +174,9 @@ void registerStatusQTypes() {
 
     qmlRegisterType<LocalNetworkPermission>("StatusQ.Core", 0, 1, "LocalNetworkPermission");
     qmlRegisterType<RenderSizedImage>("StatusQ.Components.private", 0, 1, "RenderSizedImage");
+    qmlRegisterType<RoundedRenderSizedImage>("StatusQ.Components.private", 0, 1, "RoundedRenderSizedImage");
+    qmlRegisterType<RoundedAnimatedImage>("StatusQ.Components.private", 0, 1, "RoundedAnimatedImage");
+    qmlRegisterAnonymousType<RoundedImageBorder>("StatusQ.Components.private", 0);
 
     // onboarding
     qmlRegisterSingletonType<OnboardingEnums>("AppLayouts.Onboarding.enums", 1, 0,
@@ -254,6 +259,7 @@ void registerStatusQTypes() {
     Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(statusq_dictionaries);
     Q_INIT_RESOURCE(statusq_shaders);
+    Q_INIT_RESOURCE(statusq_shaders_border);
 
     qtmt::registerQmlTypes();
     qqsfpm::registerTypes();

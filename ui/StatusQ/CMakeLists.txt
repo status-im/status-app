@@ -214,6 +214,9 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/oneoffilter.h
         include/StatusQ/permissionutilsinternal.h
         include/StatusQ/rendersizedimage.h
+        include/StatusQ/roundedanimatedimage.h
+        include/StatusQ/roundedimagebase.h
+        include/StatusQ/roundedrendersizedimage.h
         include/StatusQ/rowbinder.h
         include/StatusQ/rxvalidator.h
         include/StatusQ/shareutils.h
@@ -266,6 +269,9 @@ add_library(StatusQ ${LIB_TYPE}
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp
         src/rendersizedimage.cpp
+        src/roundedanimatedimage.cpp
+        src/roundedimagebase.cpp
+        src/roundedrendersizedimage.cpp
         src/rowbinder.cpp
         src/rxvalidator.cpp
         src/stablearraysorter.cpp
@@ -429,11 +435,25 @@ qt_add_resources(StatusQ "statusq_dictionaries"
         src/assets/dictionaries/SOURCES
 )
 qt_add_shaders(StatusQ "statusq_shaders"
+    # the batch renderer needs this variant of material vertex shaders
+    BATCHABLE
     PREFIX "/StatusQ/shaders"
     BASE "${CMAKE_CURRENT_SOURCE_DIR}/src/assets/shaders"
     FILES
+        src/assets/shaders/roundedrendersizedimage.frag
+        src/assets/shaders/roundedrendersizedimage.vert
         src/assets/shaders/skeletontile.frag
         src/assets/shaders/skeletontile.vert
+)
+# A rounded image's border alone, for when there is no image
+qt_add_shaders(StatusQ "statusq_shaders_border"
+    PREFIX "/StatusQ/shaders"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/src/assets/shaders"
+    DEFINES NO_TEXTURE
+    FILES
+        src/assets/shaders/roundedrendersizedimage.frag
+    OUTPUTS
+        roundedrendersizedimageborder.frag.qsb
 )
 
 if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
