@@ -1,3 +1,4 @@
 module Benchmark
 BenchmarkRunner 1.0 BenchmarkRunner.qml
 GpuStats 1.0 GpuStats.qml
+RoundedImageTechnique 1.0 RoundedImageTechnique.qml
