@@ -10179,8 +10179,8 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
         <translation>애플릿 태그 4.0 사용 (SecureChannel V2)</translation>
     </message>
     <message>
-        <source>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</source>
-        <translation>태그 4.0에는 keycard-qt SecureChannel V2 지원이 필요합니다 — 아직 앱에서 구동할 수 없으며, #72e9574 커밋 이후의 status-keycard를 나타냅니다.</translation>
+        <source>Tag 4.0: SecureChannel V2, no pairing. The simulator runs applet 4.0.1 (status-keycard #37393a2).</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
@@ -10205,6 +10205,14 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     <message>
         <source>Card id:</source>
         <translation>카드 ID:</translation>
+    </message>
+    <message>
+        <source>Identity certificate no trusted CA signed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The card&apos;s identity certificate is signed by the simulator&apos;s untrusted CA, so the app treats it like a development or custom-made card</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Create Empty Keycard</source>

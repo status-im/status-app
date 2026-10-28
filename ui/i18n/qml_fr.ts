@@ -10221,8 +10221,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Utiliser la balise d’applet 4.0 (Secure Channel V2)</translation>
     </message>
     <message>
-        <source>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</source>
-        <translation>La balise 4.0 nécessite la prise en charge de Secure Channel V2 par keycard-qt&#xa0;; elle n’est pas encore gérée par l’application et fait référence à status-keycard après le commit #72e9574.</translation>
+        <source>Tag 4.0: SecureChannel V2, no pairing. The simulator runs applet 4.0.1 (status-keycard #37393a2).</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
@@ -10247,6 +10247,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>Card id:</source>
         <translation>ID de la carte&#xa0;:</translation>
+    </message>
+    <message>
+        <source>Identity certificate no trusted CA signed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The card&apos;s identity certificate is signed by the simulator&apos;s untrusted CA, so the app treats it like a development or custom-made card</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Create Empty Keycard</source>

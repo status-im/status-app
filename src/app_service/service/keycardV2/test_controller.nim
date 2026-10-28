@@ -1,7 +1,7 @@
 import nimqml
 
 when defined(useSimulatedKeycard):
-  import std/[os, osproc, strutils, json]
+  import std/[os, osproc, strutils, json, net]
   import chronicles
   import keycard_go
   import constants as status_const
@@ -50,6 +50,37 @@ when defined(useSimulatedKeycard):
       if t.startsWith("mainClass="):
         return t[len("mainClass=") .. ^1].strip()
     return ""
+
+  proc simulatorEndpoint(): tuple[host: string, port: int] =
+    let parts = getEnv("STATUS_KEYCARD_SIM_ENDPOINT", KEYCARD_SIMULATOR_DEFAULT_SIMULATOR_ADDRESS).rsplit(":", 1)
+    try:
+      return (parts[0], parseInt(parts[^1]))
+    except ValueError:
+      return ("127.0.0.1", 9025)
+
+  proc simulatorCommand(line: string): string =
+    ## Sends one line of the simulator control protocol (test/keycard-simulator/README.md) on its own
+    ## connection, beside the keycard lib's, and returns the reply, or an error description.
+    let (host, port) = simulatorEndpoint()
+    let socket = newSocket()
+    defer: socket.close()
+    try:
+      socket.connect(host, Port(port), timeout = 3000)
+      socket.send(line & "\n")
+      return socket.recvLine(timeout = 5000)
+    except CatchableError as e:
+      return "ERR " & e.msg
+
+  proc createSimulatorCard(cardId: string, untrusted: bool): string =
+    ## An untrusted card's identity certificate is signed by the simulator's untrusted CA (applet 4.x
+    ## only), so the app reports it as not certified. Returns an error, empty on success.
+    if not untrusted:
+      discard keycard_go.keycardTestCreateCard(cardId)
+      return ""
+    let reply = simulatorCommand("CREATE " & cardId & " UNTRUSTED")
+    if reply.startsWith("OK"):
+      return ""
+    return reply.strip()
 
   proc buildClasspath(simDir, version: string): string =
     var entries = @[simDir / "out" / "core", simDir / "versions" / version / "out"]
@@ -213,9 +244,11 @@ when defined(useSimulatedKeycard):
         error "failed to start keycard simulator", err = e.msg
         return "failed to start keycard simulator: " & e.msg
 
-    proc createCard*(self: KeycardTestController, cardId: string) {.slot.} =
-      info "creating a new keycard with id: ", cardId
-      discard keycard_go.keycardTestCreateCard(cardId)
+    proc createCard*(self: KeycardTestController, cardId: string, untrusted: bool): string {.slot.} =
+      info "creating a new keycard", cardId, untrusted
+      result = createSimulatorCard(cardId, untrusted)
+      if result.len > 0:
+        error "failed to create keycard", cardId, err = result
 
     proc cardCreationFinished*(self: KeycardTestController, error: string) {.signal.}
 
@@ -253,7 +286,13 @@ when defined(useSimulatedKeycard):
         error "failed to clear keycard pairings", err = e.msg
 
     proc createKeycardWithSeed*(self: KeycardTestController, cardId: string, mnemonic: string, pin: string, puk: string,
-      metadataName: string, metadataPaths: string, pairingPassword: string = "") {.slot.} =
+      metadataName: string, metadataPaths: string, pairingPassword: string, untrusted: bool) {.slot.} =
+      let createErr = createSimulatorCard(cardId, untrusted)
+      if createErr.len > 0:
+        error "createKeycardWithSeed: card not created", cardId, err = createErr
+        self.cardCreationFinished(createErr)
+        return
+
       ignoreKeycardLibSignals = true
 
       var paths: seq[string]
@@ -262,7 +301,6 @@ when defined(useSimulatedKeycard):
         if t.len > 0:
           paths.add(t)
 
-      discard keycard_go.keycardTestCreateCard(cardId)
       discard keycard_go.keycardTestPlugReader()
       discard keycard_go.keycardTestInsertCard(cardId)
 

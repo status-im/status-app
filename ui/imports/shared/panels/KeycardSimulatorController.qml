@@ -18,8 +18,8 @@ ApplicationWindow {
     title: qsTr("Keycard Simulator Controller")
     width: 380
     minimumWidth: 380
-    height: 890
-    minimumHeight: 890
+    height: 930
+    minimumHeight: 930
 
     x: mainWindow ? Math.max(0, mainWindow.x + mainWindow.width + 4) : 100
     y: mainWindow ? mainWindow.y + 32 : 100
@@ -109,7 +109,7 @@ ApplicationWindow {
             font.pixelSize: 12
             color: Theme.palette.baseColor1
             text: useTag40Check.checked
-                  ? qsTr("Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.")
+                  ? qsTr("Tag 4.0: SecureChannel V2, no pairing. The simulator runs applet 4.0.1 (status-keycard #37393a2).")
                   : qsTr("Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.")
         }
 
@@ -155,6 +155,15 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
         }
+        CheckBox {
+            id: untrustedCaCheck
+            objectName: "keycardSimUntrustedCa"
+            text: qsTr("Identity certificate no trusted CA signed")
+            checked: false
+            enabled: d.simulatorStarted
+            ToolTip.text: qsTr("The card's identity certificate is signed by the simulator's untrusted CA, so the app treats it like a development or custom-made card")
+            ToolTip.visible: hovered
+        }
 
         StatusButton {
             objectName: "keycardSimCreateEmptyButton"
@@ -165,8 +174,11 @@ ApplicationWindow {
                      && d.cardIds.indexOf(cardIdField.text.trim()) === -1
             onClicked: {
                 const id = cardIdField.text.trim()
-                root.controller.createCard(id)
-                d.cardIds = d.cardIds.concat([id])
+                const error = root.controller.createCard(id, untrustedCaCheck.checked)
+                d.creationFailed = !!error
+                d.creationStatus = !!error ? qsTr("Keycard \"%1\" not created: %2").arg(id).arg(error) : ""
+                if (!error)
+                    d.cardIds = d.cardIds.concat([id])
                 cardIdField.clear()
             }
         }
@@ -255,12 +267,15 @@ ApplicationWindow {
                 d.creatingCard = true
                 d.creationStatus = ""
                 d.pendingCardId = id
-                root.controller.createKeycardWithSeed(id, seedField.text.trim(),
-                                                      pinField.text, pukField.text, nameField.text.trim(), pathsField.text.trim(),
-                                                      pairingPasswordField.text)
+                // Added before the call: a card that cannot be created is reported (and removed) synchronously
                 d.cardIds = d.cardIds.concat([id])
+                const seed = seedField.text.trim()
                 cardIdField.clear()
                 seedField.clear()
+                root.controller.createKeycardWithSeed(id, seed,
+                                                      pinField.text, pukField.text, nameField.text.trim(), pathsField.text.trim(),
+                                                      pairingPasswordField.text,
+                                                      untrustedCaCheck.checked)
             }
         }
         StatusBaseText {
