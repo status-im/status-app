@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -480,28 +479,15 @@ Control {
         spacing: root.spacing
         interactive: contentHeight > height
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            source: sidebarLV
-            maskEnabled: true
-            maskSource: gradientMask
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-        }
-
-        // Mask geometry
-        Rectangle {
-            id: gradientMask
-            anchors.fill: sidebarLV
-            visible: false
-            layer.enabled: true
-            gradient: Gradient {
-                orientation: Gradient.Vertical
-                GradientStop {position: 0; color: !sidebarLV.atYBeginning ? Qt.rgba(1, 1, 1, 0) : Qt.rgba(0, 0, 0)}
-                GradientStop {position: 0.1; color: Qt.rgba(0, 0, 0)}
-                GradientStop {position: 0.9; color: Qt.rgba(0, 0, 0)}
-                GradientStop {position: 1; color: !sidebarLV.atYEnd ? Qt.rgba(1, 1, 1, 0) : Qt.rgba(0, 0, 0)}
-            }
+        // Fade out the scrolled-away ends: computed by the shader on the
+        // list's layer, with no second layer for a mask; no layer at all
+        // while nothing is scrolled away
+        layer.enabled: !atYBeginning || !atYEnd
+        layer.effect: StatusEdgeFadeEffect {
+            topFade: sidebarLV.height * 0.1
+            bottomFade: sidebarLV.height * 0.1
+            topEdgeOpacity: sidebarLV.atYBeginning ? 1 : 0
+            bottomEdgeOpacity: sidebarLV.atYEnd ? 1 : 0
         }
     }
 
