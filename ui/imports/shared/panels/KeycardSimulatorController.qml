@@ -18,8 +18,8 @@ ApplicationWindow {
     title: qsTr("Keycard Simulator Controller")
     width: 380
     minimumWidth: 380
-    height: 930
-    minimumHeight: 930
+    height: 990
+    minimumHeight: 990
 
     x: mainWindow ? Math.max(0, mainWindow.x + mainWindow.width + 4) : 100
     y: mainWindow ? mainWindow.y + 32 : 100
@@ -37,6 +37,9 @@ ApplicationWindow {
         property bool creationFailed: false
         property string creationStatus: ""
         property string pendingCardId: ""
+
+        property bool counterfeitFailed: false
+        property string counterfeitStatus: ""
 
         readonly property string keycardVersion32: "3.2"
         readonly property string keycardVersion40: "4.0"
@@ -312,6 +315,31 @@ ApplicationWindow {
                                                  : d.selectedCardId
             Component.onCompleted: currentIndex = -1
             onCountChanged: currentIndex = -1
+            onCurrentIndexChanged: d.counterfeitStatus = ""
+        }
+        StatusButton {
+            objectName: "keycardSimCounterfeitButton"
+            Layout.fillWidth: true
+            text: qsTr("Make selected keycard counterfeit")
+            ToolTip.text: qsTr("Swaps the keycard's identity key but keeps its certificate, keys and PIN, like a genuine certificate copied onto another card. Applet 4.x then refuses the keycard (untrusted keycard), applet 3.x reports it as not certified.")
+            ToolTip.visible: hovered
+            enabled: d.simulatorStarted && !d.creatingCard && !d.cardInserted && d.selectedCardId !== ""
+            onClicked: {
+                const id = d.selectedCardId
+                const error = root.controller.counterfeitCard(id)
+                d.counterfeitFailed = !!error
+                d.counterfeitStatus = !!error ? qsTr("Keycard \"%1\" not changed: %2").arg(id).arg(error)
+                                              : qsTr("Keycard \"%1\" is now counterfeit").arg(id)
+            }
+        }
+        StatusBaseText {
+            objectName: "keycardSimCounterfeitStatus"
+            Layout.fillWidth: true
+            visible: !!d.counterfeitStatus
+            wrapMode: Text.WordWrap
+            font.pixelSize: 12
+            color: d.counterfeitFailed ? Theme.palette.dangerColor1 : Theme.palette.baseColor1
+            text: d.counterfeitStatus
         }
 
         Separator {}

@@ -10267,6 +10267,22 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
         <translation>&lt;선택된 Keycard 없음&gt;</translation>
     </message>
     <message>
+        <source>Make selected keycard counterfeit</source>
+        <translation>선택한 Keycard를 위조 카드로 만들기</translation>
+    </message>
+    <message>
+        <source>Swaps the keycard&apos;s identity key but keeps its certificate, keys and PIN, like a genuine certificate copied onto another card. Applet 4.x then refuses the keycard (untrusted keycard), applet 3.x reports it as not certified.</source>
+        <translation>Keycard의 신원 키를 교체하지만 인증서, 키, PIN은 그대로 유지합니다. 정품 인증서를 다른 카드에 복사한 것과 같습니다. 그러면 애플릿 4.x는 Keycard를 거부하고(신뢰할 수 없는 Keycard), 애플릿 3.x는 인증되지 않은 카드로 표시합니다.</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; not changed: %2</source>
+        <translation>Keycard &quot;%1&quot;이(가) 변경되지 않음: %2</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; is now counterfeit</source>
+        <translation>Keycard &quot;%1&quot;이(가) 이제 위조 카드입니다</translation>
+    </message>
+    <message>
         <source>4. Reader &amp; card</source>
         <translation>4. 리더 및 카드</translation>
     </message>

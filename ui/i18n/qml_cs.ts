@@ -10363,6 +10363,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>&lt;nebyla vybrána žádná klíčová karta&gt;</translation>
     </message>
     <message>
+        <source>Make selected keycard counterfeit</source>
+        <translation>Udělat z vybrané Keycard padělek</translation>
+    </message>
+    <message>
+        <source>Swaps the keycard&apos;s identity key but keeps its certificate, keys and PIN, like a genuine certificate copied onto another card. Applet 4.x then refuses the keycard (untrusted keycard), applet 3.x reports it as not certified.</source>
+        <translation>Vymění klíč identity Keycard, ale ponechá její certifikát, klíče a PIN, jako by byl pravý certifikát zkopírován na jinou kartu. Applet 4.x pak Keycard odmítne (nedůvěryhodná Keycard), applet 3.x ji označí jako necertifikovanou.</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; not changed: %2</source>
+        <translation>Keycard „%1“ nebyla změněna: %2</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; is now counterfeit</source>
+        <translation>Keycard „%1“ je nyní padělek</translation>
+    </message>
+    <message>
         <source>4. Reader &amp; card</source>
         <translation>4. Čtečka a karta</translation>
     </message>

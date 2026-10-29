@@ -10315,6 +10315,22 @@ la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status.</tran
         <translation>&lt;ninguna Keycard seleccionada&gt;</translation>
     </message>
     <message>
+        <source>Make selected keycard counterfeit</source>
+        <translation>Convertir el Keycard seleccionado en una falsificación</translation>
+    </message>
+    <message>
+        <source>Swaps the keycard&apos;s identity key but keeps its certificate, keys and PIN, like a genuine certificate copied onto another card. Applet 4.x then refuses the keycard (untrusted keycard), applet 3.x reports it as not certified.</source>
+        <translation>Cambia la clave de identidad del Keycard pero conserva su certificado, sus claves y su PIN, como si un certificado auténtico se hubiera copiado en otra tarjeta. El applet 4.x rechaza entonces el Keycard (Keycard no confiable) y el applet 3.x lo marca como no certificado.</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; not changed: %2</source>
+        <translation>Keycard «%1» no modificado: %2</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; is now counterfeit</source>
+        <translation>Keycard «%1» ahora es una falsificación</translation>
+    </message>
+    <message>
         <source>4. Reader &amp; card</source>
         <translation>4. Lector y tarjeta</translation>
     </message>

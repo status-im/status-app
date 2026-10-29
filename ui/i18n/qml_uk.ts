@@ -10364,6 +10364,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>&lt;Keycard не вибрано&gt;</translation>
     </message>
     <message>
+        <source>Make selected keycard counterfeit</source>
+        <translation>Зробити вибрану Keycard підробкою</translation>
+    </message>
+    <message>
+        <source>Swaps the keycard&apos;s identity key but keeps its certificate, keys and PIN, like a genuine certificate copied onto another card. Applet 4.x then refuses the keycard (untrusted keycard), applet 3.x reports it as not certified.</source>
+        <translation>Замінює ключ ідентичності Keycard, але зберігає її сертифікат, ключі та PIN-код, ніби справжній сертифікат скопіювали на іншу картку. Тоді аплет 4.x відхиляє Keycard (недовірена Keycard), а аплет 3.x позначає її як несертифіковану.</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; not changed: %2</source>
+        <translation>Keycard «%1» не змінено: %2</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; is now counterfeit</source>
+        <translation>Keycard «%1» тепер підробка</translation>
+    </message>
+    <message>
         <source>4. Reader &amp; card</source>
         <translation>4. Зчитувач і картка</translation>
     </message>
