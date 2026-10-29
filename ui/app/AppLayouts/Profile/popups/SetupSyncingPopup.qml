@@ -16,15 +16,15 @@ import utils
 import shared.controls
 import shared.views
 
-import "../stores"
+import AppLayouts.Profile.stores as ProfileStores
 
 StatusDialog {
     id: root
 
     required property string rawConnectionString
 
-    property DevicesStore devicesStore
-    property ProfileStore profileStore
+    property ProfileStores.DevicesStore devicesStore
+    property ProfileStores.ProfileStore profileStore
 
     width: 480
     padding: 16
