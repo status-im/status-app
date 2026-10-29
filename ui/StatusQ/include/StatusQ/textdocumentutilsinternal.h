@@ -27,14 +27,20 @@ public:
     // `position`. The caller is expected to gate this on the actual keystroke.
     Q_INVOKABLE void handleTripleBacktick(QQuickTextDocument* document, int position);
 
-    // Returns the position one grapheme cluster back from `position`, so a caller can
-    // delete an emoji sequence in one go. Qt's own cursor-position logic is used, the
-    // same one that already makes forward Delete and arrow keys cluster-aware, rather
-    // than a second implementation of the Unicode rules. Backspace needs it because
-    // QTextCursor::deletePreviousChar() steps back by a code point instead, splitting
-    // a ZWJ sequence and leaving a dangling joiner. Returns `position` unchanged at
-    // the start of a block, leaving block merging to the text control.
-    Q_INVOKABLE int previousGraphemeBoundary(QQuickTextDocument* document, int position) const;
+    // Returns the start of the emoji (ZWJ sequence, flag, keycap, modifier or
+    // variation selector sequence) that ends at `position`, so a caller can delete
+    // it in one go. Backspace needs it because QTextCursor::deletePreviousChar()
+    // steps back by a code point, splitting a ZWJ sequence and leaving a dangling
+    // joiner. The cluster comes from Qt's own cursor-position logic, the same one
+    // that makes forward Delete and arrow keys cluster-aware, rather than a second
+    // implementation of the Unicode rules.
+    //
+    // Other clusters are left alone: an Indic syllable, a Thai vowel sign or a letter
+    // with combining accents is one cluster too, but Backspace there conventionally
+    // removes only the last code point, so `position` is returned unchanged. Also
+    // returns `position` unchanged at the start of a block, leaving block merging to
+    // the text control.
+    Q_INVOKABLE int previousEmojiClusterStart(QQuickTextDocument* document, int position) const;
 
     // Removes the characters in [start, end) as a single raw-cursor edit block.
     // Doing the deletion ourselves (instead of letting the text control delete the
