@@ -152,6 +152,11 @@ Loader {
     property bool isEdited: false
 
     property bool deleted: false
+
+    // Built once and rebound from one message to the next, as a pooled row is:
+    // the message's optional parts stay built, so a rebind changes values
+    // rather than building and destroying items.
+    property bool reusable: false
     property string deletedBy: ""
     property string deletedByContactDisplayName: ""
     property string deletedByContactIcon: ""
@@ -1059,6 +1064,7 @@ Loader {
                             // bridged messages share the relaying account's senderId
                             root.isBridgeMessage ||
                             root.senderId !== root.prevMessageSenderId || root.prevMessageDeleted
+                keepOptionalPartsLoaded: root.reusable
                 isActiveMessage: d.isMessageActive
                 leftPadding: root.extraLeftPadding
                 topPadding: showHeader ? Theme.halfPadding : 0
