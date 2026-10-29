@@ -106,6 +106,7 @@ Item {
         }
 
         function test_draws_rounded_tile_with_moving_band() {
+            skip("shimmer UniformAnimator temporarily disabled (Windows hang investigation)")
             const frame = createTemporaryObject(tileComp, root)
             verify(!!frame)
             const tile = frame.tile
@@ -132,6 +133,7 @@ Item {
         }
 
         function test_band_sweeps_across_group_tiles_in_turn() {
+            skip("shimmer UniformAnimator temporarily disabled (Windows hang investigation)")
             const frame = createTemporaryObject(groupComp, root)
             verify(!!frame)
             const tiles = [frame.leftTile, frame.rightTile]

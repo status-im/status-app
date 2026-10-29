@@ -63,8 +63,10 @@ ShaderEffect {
         }
     }
 
+    // UniformAnimator disabled: suspected Windows GUI freeze with
+    // QSG_RENDER_LOOP=threaded (nightly e2e hangs on community/wallet load).
     Loader {
-        active: root.visible
+        active: false
         sourceComponent: UniformAnimator {
             objectName: "shimmerAnimator"
 

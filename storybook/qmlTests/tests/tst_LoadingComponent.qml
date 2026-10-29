@@ -52,6 +52,7 @@ Item {
         }
 
         function test_shimmer_present_and_running_when_visible() {
+            skip("shimmer UniformAnimator temporarily disabled (Windows hang investigation)")
             const comp = createTemporaryObject(loadingComp, root, {visible: true})
             verify(!!comp)
 
@@ -65,6 +66,7 @@ Item {
         }
 
         function test_shimmer_stops_and_is_removed_when_hidden() {
+            skip("shimmer UniformAnimator temporarily disabled (Windows hang investigation)")
             const comp = createTemporaryObject(loadingComp, root, {visible: true})
             verify(!!comp)
             tryVerify(() => !!findChild(comp, "shimmerAnimator"), 1000)
@@ -78,7 +80,6 @@ Item {
         function test_no_offscreen_render_passes() {
             const comp = createTemporaryObject(loadingComp, root)
             verify(!!comp)
-            tryVerify(() => !!findChild(comp, "shimmerAnimator"), 1000)
 
             for (const item of descendants(comp)) {
                 verify(!(item instanceof MultiEffect), "MultiEffect found")

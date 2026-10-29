@@ -84,7 +84,6 @@ Item {
         function test_no_offscreen_render_passes() {
             const group = createTemporaryObject(groupComp, root)
             verify(!!group)
-            tryVerify(() => animators(group).length === 3)
 
             for (const item of descendants(group)) {
                 verify(!(item instanceof MultiEffect), "MultiEffect found")
@@ -141,6 +140,7 @@ Item {
         }
 
         function test_animation_only_while_visible() {
+            skip("shimmer UniformAnimator temporarily disabled (Windows hang investigation)")
             const group = createTemporaryObject(groupComp, root, {visible: false})
             verify(!!group)
             compare(animators(group).length, 0,
