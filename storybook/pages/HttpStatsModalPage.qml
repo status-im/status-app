@@ -28,7 +28,7 @@ SplitView {
                                   bytesReceived: Math.round(receivedMb * 1024 * 1024)}, rest)
         }
 
-        // Shaped like wakuext_getTrafficReport, with invented numbers.
+        // Shaped like the getTrafficReport answer, with invented numbers.
         readonly property var wakuSnapshot: ({
             since: "2026-10-13T13:00:00.663257+04:00",
             until: "2026-10-13T14:12:00.715962+04:00",
@@ -176,7 +176,7 @@ SplitView {
                                       : JSON.stringify({result: fixture.snapshot})
                 onHttpTrafficStatsReset: logs.logEvent("walletStore.resetHttpTrafficStats")
                 wakuTrafficStatsJson: noStatusGoCheckBox.checked
-                                      ? JSON.stringify({error: {message: "the method wakuext_getTrafficReport does not exist"}})
+                                      ? JSON.stringify({error: {message: "the method getTrafficReport does not exist"}})
                                       : JSON.stringify({result: fixture.wakuSnapshot})
                 onWakuTrafficStatsReset: logs.logEvent("walletStore.resetWakuTrafficStats")
             }

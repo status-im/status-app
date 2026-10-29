@@ -13,7 +13,7 @@ SplitView {
 
     orientation: Qt.Horizontal
 
-    // Shaped like wakuext_getTrafficReport, with invented numbers of a 72 min session.
+    // Shaped like the getTrafficReport answer, with invented numbers of a 72 min session.
     QtObject {
         id: fixture
 

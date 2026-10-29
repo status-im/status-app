@@ -27,7 +27,7 @@ type HttpTrafficReportArgs* = ref object of Args
   key*: string
 
 type WakuTrafficReportArgs* = ref object of Args
-  ## The JSON-RPC envelope status-go answered wakuext_getTrafficReport with.
+  ## The JSON-RPC envelope status-go answered getTrafficReport with.
   report*: string
   error*: string
 

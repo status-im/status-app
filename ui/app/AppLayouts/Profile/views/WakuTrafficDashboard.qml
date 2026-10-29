@@ -17,7 +17,7 @@ import "HttpTrafficReport.js" as Report
 Item {
     id: root
 
-    //! A wakuext_getTrafficReport report, or null.
+    //! A getTrafficReport report, or null.
     property var stats: null
 
     readonly property real elapsedSeconds: Report.elapsedSeconds(stats)
