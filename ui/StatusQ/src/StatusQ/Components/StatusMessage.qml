@@ -68,6 +68,13 @@ Control {
     property int maxEmojiReactionsPerMessage
 
     property bool showHeader: true
+
+    // Keeps the header, avatar, reply and reactions built while they are not
+    // shown, and only hides them. For an item rebound from one message to the
+    // next: switching one of them on would otherwise build it synchronously,
+    // in the middle of the rebind.
+    property bool keepOptionalPartsLoaded: false
+
     property bool isActiveMessage: false
     property bool disableHover: false
     property bool disableEmojis: false
@@ -213,13 +220,8 @@ Control {
 
             Loader {
                 Layout.fillWidth: true
-                active: isAReply &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessagePinnedMessage &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventSent &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventAccepted &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventRemoved
-
-                visible: active
+                active: d.replyShown || root.keepOptionalPartsLoaded
+                visible: d.replyShown
                 sourceComponent: StatusMessageReply {
                     objectName: "StatusMessage_replyDetails"
                     isMobile: root.isMobile
@@ -256,8 +258,8 @@ Control {
                         // of the heaviest parts of a row; incubate it off the
                         // creation path behind a fixed-size skeleton.
                         asynchronous: true
-                        active: root.showHeader
-                        visible: active
+                        active: root.showHeader || root.keepOptionalPartsLoaded
+                        visible: root.showHeader
                         name: root.messageDetails.sender.displayName
                         usesDefaultName: root.messageDetails.sender.usesDefaultName
                         userColor: root.messageDetails.sender.profileImage.assetSettings.color
@@ -275,7 +277,7 @@ Control {
                             anchors.fill: parent
                             radius: width / 2
                             color: Theme.palette.statusLoadingHighlight
-                            visible: profileImage.active && profileImage.status !== Loader.Ready
+                            visible: profileImage.visible && profileImage.status !== Loader.Ready
                         }
                     }
 
@@ -311,8 +313,8 @@ Control {
                     }
                     Loader {
                         Layout.fillWidth: true
-                        active: root.showHeader
-                        visible: active
+                        active: root.showHeader || root.keepOptionalPartsLoaded
+                        visible: root.showHeader
                         sourceComponent: StatusMessageHeader {
                             sender: root.messageDetails.sender
                             amISender: root.messageDetails.amISender
@@ -416,8 +418,8 @@ Control {
                     }
 
                     Loader {
-                        active: !!root.reactionsModel && root.reactionsModel.ModelCount.count > 0
-                        visible: active
+                        active: d.reactionsShown || root.keepOptionalPartsLoaded
+                        visible: d.reactionsShown
                         Layout.fillWidth: true
                         Layout.bottomMargin: root.editMode ? Theme.halfPadding : 0
                         sourceComponent: StatusMessageEmojiReactions {
@@ -486,6 +488,15 @@ Control {
         property string selectedText
 
         readonly property int threadMarkerSize: 20
+
+        // Whether the optional parts are shown - with keepOptionalPartsLoaded
+        // they are built either way
+        readonly property bool replyShown: root.isAReply &&
+            root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessagePinnedMessage &&
+            root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventSent &&
+            root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventAccepted &&
+            root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventRemoved
+        readonly property bool reactionsShown: !!root.reactionsModel && root.reactionsModel.ModelCount.count > 0
 
         // Hover must be reported for real pointing devices only. A touch tap makes Qt synthesize a
         // mouse move (a "core pointer" event, indistinguishable from a real mouse by
