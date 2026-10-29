@@ -676,13 +676,14 @@ StatusTextArea {
         // Backspace deletes by code point (QTextCursor::deletePreviousChar), so a ZWJ
         // emoji sequence would come apart one component at a time and leave a dangling
         // joiner. Delete needs no such help: it moves by cursor position, which Qt puts
-        // on grapheme boundaries. Only kicks in when the cluster is longer than one
-        // character, so plain text keeps falling through to native handling (and with it
-        // Qt's undo coalescing).
+        // on grapheme boundaries. Only emoji are expanded: an Indic syllable or a letter
+        // with combining accents keeps losing its last code point, as in a plain TextEdit.
+        // Only kicks in when the emoji is longer than one character, so plain text keeps
+        // falling through to native handling (and with it Qt's undo coalescing).
         if (event.key === Qt.Key_Backspace && noSelection
                 && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))
                 && root.cursorPosition > 0) {
-            const clusterStart = TextDocumentUtils.previousGraphemeBoundary(
+            const clusterStart = TextDocumentUtils.previousEmojiClusterStart(
                                    root.textDocument, root.cursorPosition)
             if (root.cursorPosition - clusterStart > 1) {
                 event.accepted = true
