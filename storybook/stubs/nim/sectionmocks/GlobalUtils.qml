@@ -26,4 +26,8 @@ QtObject {
     function getStatusSupportBotChatKey() {
         return "0xdeadb07"
     }
+
+    function qrCode(content) {
+        return ""
+    }
 }
