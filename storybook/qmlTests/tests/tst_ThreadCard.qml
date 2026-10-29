@@ -107,11 +107,11 @@ Item {
             compare(count.text, qsTr("%n message(s)", "", 13))
             compare(badge.value, 2)
             compare(badge.visible, true)
-            verify(preview.text.includes("Alice"))
-            verify(preview.text.includes("New reply"))
+            compare(findChild(controlUnderTest, "threadCardMessageSender").text, "Alice")
+            tryVerify(() => preview.text.includes("New reply"))
 
             controlUnderTest.lastMessage = { sender: { name: "Alice" }, text: "Edited reply" }
-            verify(preview.text.includes("Edited reply"))
+            tryVerify(() => preview.text.includes("Edited reply"))
             verify(!preview.text.includes("New reply"))
 
             controlUnderTest.messagesCount = 12
@@ -119,7 +119,7 @@ Item {
             controlUnderTest.lastMessage = { sender: { name: "Bob" }, text: "Previous reply" }
             compare(count.text, qsTr("%n message(s)", "", 12))
             compare(badge.visible, false)
-            verify(preview.text.includes("Previous reply"))
+            tryVerify(() => preview.text.includes("Previous reply"))
         }
 
         function test_switchesToDeletedSummary() {
@@ -130,14 +130,99 @@ Item {
             controlUnderTest.lastMessage = { sender: { name: "Alice" }, text: "Active reply" }
             controlUnderTest.deletedMessage = { sender: { name: "Bob" } }
             controlUnderTest.threadState = ThreadCard.State.Deleted
-            verify(preview.text.includes("Bob"))
-            verify(preview.text.includes(qsTr("deleted this thread")))
+            compare(findChild(controlUnderTest, "threadCardMessageSender").text, "Bob")
+            tryVerify(() => preview.text.includes(qsTr("deleted this thread")))
             verify(!preview.text.includes("Active reply"))
             compare(count.visible, false)
 
             controlUnderTest.threadState = ThreadCard.State.Active
-            verify(preview.text.includes("Active reply"))
+            tryVerify(() => preview.text.includes("Active reply"))
             compare(count.visible, true)
+        }
+
+        function test_previewLayout_data() {
+            const rows = []
+            const cases = [
+                { tag: "short", name: "Alice", text: "OK", twoRows: false },
+                { tag: "medium", name: "Alice", text: "We can review these changes tomorrow morning.", twoRows: true },
+                { tag: "long", name: "Alice", text: "A long message with words ".repeat(20), twoRows: true },
+                { tag: "unbroken", name: "Alice", text: "W".repeat(200), twoRows: true },
+                { tag: "long-name", name: "xg28gZQS5pk5UjMudU9B".repeat(4), text: "W".repeat(200), twoRows: true },
+                { tag: "emoji", name: "Alice", text: "👩‍💻 hello 🌍 ".repeat(30), twoRows: true }
+            ]
+            for (const width of [296, 320, 420]) {
+                for (const entry of cases)
+                    rows.push({ tag: width + "-" + entry.tag, width: width, name: entry.name,
+                                text: entry.text, twoRows: entry.twoRows })
+            }
+            return rows
+        }
+
+        function test_previewLayout(data) {
+            const preview = findChild(controlUnderTest, "threadCardMessagePreview")
+            const sender = findChild(controlUnderTest, "threadCardMessageSender")
+            const timestamp = findChild(controlUnderTest, "threadCardTimestamp")
+            const lines = []
+            preview.lineLaidOut.connect(line => {
+                lines[line.number] = { x: line.x, y: line.y, width: line.width, height: line.height }
+            })
+            controlUnderTest.width = data.width
+            controlUnderTest.lastMessage = {
+                sender: { name: data.name }, text: data.text, timestamp: Date.now()
+            }
+            tryVerify(() => lines.length > 0 && timestamp.text.length > 0)
+            compare(timestamp.width, timestamp.implicitWidth)
+            verify(timestamp.visible)
+            compare(timestamp.y, sender.y + (data.twoRows ? sender.height : 0))
+            compare(timestamp.baselineOffset, sender.baselineOffset)
+            verify(preview.lineCount <= 2)
+            verify(sender.width <= sender.parent.width / 2)
+            for (const line of lines) {
+                if (Math.abs(preview.y + line.y - timestamp.y) < 1)
+                    verify(line.x + line.width + Theme.halfPadding <= timestamp.x + 1)
+            }
+            verify(timestamp.y + timestamp.height <= timestamp.parent.height + 1)
+            if (data.tag.endsWith("long-name"))
+                verify(sender.truncated)
+        }
+
+        function test_shortNarrowCharactersAreNotCappedAtFifty() {
+            controlUnderTest.lastMessage = {
+                sender: { name: "A" }, text: "i".repeat(60), timestamp: Date.now()
+            }
+            const preview = findChild(controlUnderTest, "threadCardMessagePreview")
+            tryVerify(() => preview.text.includes("i".repeat(60)))
+            const sender = findChild(controlUnderTest, "threadCardMessageSender")
+            const timestamp = findChild(controlUnderTest, "threadCardTimestamp")
+            tryCompare(timestamp, "y", sender.y)
+        }
+
+        function test_relayoutsWhenSenderOrWidthChanges() {
+            const preview = findChild(controlUnderTest, "threadCardMessagePreview")
+            const sender = findChild(controlUnderTest, "threadCardMessageSender")
+            const timestamp = findChild(controlUnderTest, "threadCardTimestamp")
+            let firstLineX = -1
+            preview.lineLaidOut.connect(line => {
+                if (line.number === 0)
+                    firstLineX = line.x
+            })
+            const text = "i".repeat(60)
+            const time = Date.now()
+            controlUnderTest.lastMessage = { sender: { name: "A" }, text: text, timestamp: time }
+            tryVerify(() => firstLineX === sender.width + Theme.halfPadding)
+            tryCompare(timestamp, "y", sender.y)
+
+            controlUnderTest.lastMessage = { sender: { name: "Long sender name".repeat(5) },
+                                            text: text, timestamp: time }
+            tryVerify(() => sender.truncated && firstLineX === sender.width + Theme.halfPadding)
+            tryCompare(timestamp, "y", sender.y + sender.height)
+
+            controlUnderTest.lastMessage = { sender: { name: "A" }, text: text, timestamp: time }
+            tryCompare(timestamp, "y", sender.y)
+            controlUnderTest.width = 296
+            tryCompare(timestamp, "y", sender.y + sender.height)
+            controlUnderTest.width = 420
+            tryCompare(timestamp, "y", sender.y)
         }
 
         function test_connectorTracksRowGeometry_data() {

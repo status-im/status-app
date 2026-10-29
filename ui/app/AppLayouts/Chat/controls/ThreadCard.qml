@@ -9,7 +9,6 @@ import QtModelsToolkit
 import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils as SQUtils
 
 /*!
    Compact summary of a chat thread in active or deleted state.
@@ -115,10 +114,7 @@ Control {
         readonly property var bodyMessage: deleted ? (root.deletedMessage || {}) : (root.lastMessage || {})
         readonly property var bodySender: bodyMessage.sender || {}
         readonly property string bodyMessageText: deleted ? qsTr("deleted this thread") : (bodyMessage.text || "")
-        readonly property int bodyMessageCharacterLimit: 50
-        readonly property string bodyPreviewText: bodyMessageText.length > bodyMessageCharacterLimit
-                                                  ? bodyMessageText.slice(0, bodyMessageCharacterLimit - 1) + "…"
-                                                  : bodyMessageText
+        readonly property string bodyPreviewText: bodyMessageText.replace(/\s+/g, " ").trim()
         readonly property double bodyTimestamp: bodyMessage.timestamp || 0
         readonly property string formattedBodyTimestamp: bodyTimestamp > 0
                                                          ? LocaleUtils.formatRelativeTimestamp(bodyTimestamp)
@@ -334,60 +330,65 @@ Control {
                 Layout.minimumWidth: 0
                 Layout.alignment: Qt.AlignVCenter
                 implicitHeight: Math.max(d.avatarSize,
-                                         d.bodyTopMargin + (timestampSharesLine
-                                                            ? bodyLabel.implicitHeight
-                                                            : Math.max(bodyLabel.implicitHeight,
-                                                                       2 * d.bodyLineHeight)))
+                                         d.bodyTopMargin + (timestampSharesLine ? 1 : 2) * d.bodyLineHeight)
 
-                readonly property bool timestampSharesLine: bodyNameMetrics.advanceWidth
+                readonly property bool timestampSharesLine: bodySenderLabel.width + Theme.halfPadding
                                                               + bodyMessageMetrics.advanceWidth
-                                                              + Theme.halfPadding
-                                                              + bodyTimestampLabel.width <= width
-
-                TextMetrics {
-                    id: bodyNameMetrics
-
-                    text: d.bodySender.name || ""
-                    font.family: bodyLabel.font.family
-                    font.pixelSize: bodyLabel.font.pixelSize
-                    font.weight: Font.Bold
-                }
+                                                              + bodyTimestampLabel.width + Theme.halfPadding <= width
 
                 TextMetrics {
                     id: bodyMessageMetrics
 
-                    text: " " + d.bodyPreviewText
-                    font.family: bodyLabel.font.family
-                    font.pixelSize: bodyLabel.font.pixelSize
-                    font.weight: Font.Normal
+                    text: d.bodyPreviewText
+                    font: bodyLabel.font
+                }
+
+                StatusBaseText {
+                    id: bodySenderLabel
+                    objectName: "threadCardMessageSender"
+
+                    y: d.bodyTopMargin
+                    width: Math.min(implicitWidth, parent.width / 2)
+                    height: d.bodyLineHeight
+                    text: d.bodySender.name || ""
+                    textFormat: Text.PlainText
+                    elide: Text.ElideRight
+                    color: Theme.palette.directColor1
+                    font.pixelSize: Theme.additionalTextSize
+                    font.weight: Font.Bold
+                    lineHeight: d.bodyLineHeight
+                    lineHeightMode: Text.FixedHeight
                 }
 
                 StatusBaseText {
                     id: bodyLabel
                     objectName: "threadCardMessagePreview"
 
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.topMargin: d.bodyTopMargin
-                    text: `<b><font color="${Theme.palette.directColor1}">` +
-                          `${SQUtils.StringUtils.escapeHtml(d.bodySender.name || "")}</font></b> ` +
-                          `<font color="${Theme.palette.directColor5}">` +
-                          `${SQUtils.StringUtils.escapeHtml(d.bodyPreviewText)}</font>`
-                    textFormat: Text.StyledText
+                    readonly property real firstLineX: bodySenderLabel.width + Theme.halfPadding
+                    readonly property real firstLineWidth: Math.max(0, bodyContent.width - firstLineX
+                        - (bodyContent.timestampSharesLine ? bodyTimestampLabel.width + Theme.halfPadding : 0))
+
+                    onFirstLineXChanged: forceLayout()
+                    onFirstLineWidthChanged: forceLayout()
+
+                    y: d.bodyTopMargin
+                    // The final line always leaves room for the timestamp.
+                    width: Math.max(0, parent.width - bodyTimestampLabel.width - Theme.halfPadding)
+                    text: d.bodyPreviewText
+                    textFormat: Text.PlainText
                     wrapMode: Text.Wrap
                     maximumLineCount: 2
                     elide: Text.ElideRight
+                    color: Theme.palette.directColor5
+                    font.pixelSize: Theme.additionalTextSize
                     lineHeight: d.bodyLineHeight
                     lineHeightMode: Text.FixedHeight
-                    font.pixelSize: Theme.additionalTextSize
-                    font.weight: Font.Normal
 
-                    // Reserve timestamp space only on the line where it is rendered.
                     onLineLaidOut: line => {
-                        const timestampLine = bodyContent.timestampSharesLine ? 0 : 1
-                        if (line.number === timestampLine)
-                            line.width = Math.max(0, width - bodyTimestampLabel.width - Theme.halfPadding)
+                        if (line.number !== 0)
+                            return
+                        line.x = firstLineX
+                        line.width = firstLineWidth
                     }
                 }
 
@@ -395,14 +396,16 @@ Control {
                     id: bodyTimestampLabel
 
                     anchors.right: parent.right
-                    y: bodyContent.timestampSharesLine ? d.bodyTopMargin : parent.height - height
-                    width: Math.min(implicitWidth, parent.width / 2)
+                    objectName: "threadCardTimestamp"
+
+                    y: d.bodyTopMargin + (bodyContent.timestampSharesLine ? 0 : d.bodyLineHeight)
+                    width: implicitWidth
                     height: d.bodyLineHeight
                     text: d.formattedBodyTimestamp
                     color: Theme.palette.directColor5
-                    elide: Text.ElideRight
                     horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
+                    lineHeight: d.bodyLineHeight
+                    lineHeightMode: Text.FixedHeight
                     font.pixelSize: Theme.additionalTextSize
                     font.weight: Font.Normal
                 }
