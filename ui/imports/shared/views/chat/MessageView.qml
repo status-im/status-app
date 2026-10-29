@@ -119,6 +119,10 @@ Loader {
 
     property string quotedMessageAlbumMessageImages: ""
     property int quotedMessageAlbumImagesCount: 0
+    // From the original message, while it is loaded: the quotedMessage payload
+    // has no edited flag, nor the sticker or image content.
+    property bool quotedMessageEdited: false
+    property string quotedMessageContent: ""
 
     // External behavior changers
     property bool isInPinnedPopup: false // The pinned popup limits the number of buttons shown
@@ -1212,26 +1216,8 @@ Loader {
                 }
 
                 replyDetails: StatusMessageDetails {
-                    // Look up the original message (when loaded) to recover data the quotedMessage
-                    // payload lacks: sticker/image content and the edited state.
-                    readonly property var responseMessage: !!root.responseToMessageWithId && !!root.messageStore
-                                                           ? root.messageStore.getMessageByIdAsJson(root.responseToMessageWithId)
-                                                           : null
-                    // The quotedMessage payload has no edited flag; derive it from the original.
-                    isEdited: !!responseMessage && !!responseMessage.isEdited
-                    messageContent: {
-                        if (!responseMessage)
-                            return ""
-
-                        switch (contentType) {
-                        case StatusMessage.ContentType.Sticker:
-                            return responseMessage.sticker
-                        case StatusMessage.ContentType.Image:
-                            return responseMessage.messageImage
-                        default:
-                            return ""
-                        }
-                    }
+                    isEdited: root.quotedMessageEdited
+                    messageContent: root.quotedMessageContent
 
                     unparsedText: {
                         if (messageDeleted)
@@ -1243,17 +1229,9 @@ Loader {
                         return root.quotedMessageUnparsedText
                     }
                     mentionsMap: root.mentionsMap
-                    album: {
-                        if (responseMessage && contentType === StatusMessage.ContentType.Image)
-                            return responseMessage.albumMessageImages
-                        return root.quotedMessageAlbumMessageImages
-                               ? root.quotedMessageAlbumMessageImages.split(" ") : []
-                    }
-                    albumCount: {
-                        if (responseMessage && contentType === StatusMessage.ContentType.Image)
-                            return responseMessage.albumImagesCount
-                        return root.quotedMessageAlbumImagesCount
-                    }
+                    album: root.quotedMessageAlbumMessageImages
+                           ? root.quotedMessageAlbumMessageImages.split(" ") : []
+                    albumCount: root.quotedMessageAlbumImagesCount
                     messageDeleted: root.quotedMessageDeleted
                     contentType: d.convertContentType(root.quotedMessageContentType)
                     amISender: root.quotedMessageFrom === root.myPublicKey

@@ -248,6 +248,25 @@ QtObject {
         return tokens[0] === "" ? [] : tokens.filter(isGifLink)
     }
 
+    // What a reply shows of the message it responds to, taken from that
+    // message (as getMessageByIdAsJson returns it) - for a list whose own
+    // model does not hold the original. The chat's messages model provides
+    // the same as roles.
+    function quotedOriginalDetails(original, quotedContentType) {
+        const isImage = quotedContentType === Constants.messageContentType.imageType
+        const isSticker = quotedContentType === Constants.messageContentType.stickerType
+
+        if (!original)
+            return { edited: false, content: "", albumImages: "", albumImagesCount: 0 }
+
+        return {
+            edited: !!original.isEdited,
+            content: isSticker ? original.sticker : isImage ? original.messageImage : "",
+            albumImages: isImage ? original.albumMessageImages.join(" ") : "",
+            albumImagesCount: isImage ? original.albumImagesCount : 0
+        }
+    }
+
     function isGifOnlyText(text) {
         if (text === null || text === undefined)
             return false
