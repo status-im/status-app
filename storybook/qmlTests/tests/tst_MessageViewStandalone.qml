@@ -77,13 +77,6 @@ Item {
 
     ChatStores.MessageStore {
         id: messageStoreMock
-
-        // resolved originals for replies, keyed by message id
-        property var messagesById: ({})
-
-        function getMessageByIdAsJson(id) {
-            return messagesById[id] ?? null
-        }
     }
 
     QtObject {
@@ -201,8 +194,11 @@ Item {
             quotedMessageAuthorDetailsThumbnailImage: "",
             quotedMessageAuthorDetailsEnsVerified: false,
             quotedMessageAuthorDetailsIsContact: true,
-            quotedMessageAlbumMessageImages: "",
-            quotedMessageAlbumImagesCount: 0,
+            // what the messages model takes from the loaded original
+            quotedMessageAlbumMessageImages: photoA + " " + photoB,
+            quotedMessageAlbumImagesCount: 2,
+            quotedMessageEdited: false,
+            quotedMessageContent: photoA,
             bridgeName: "",
             gapFrom: 0,
             gapTo: 0,
@@ -265,6 +261,8 @@ Item {
             quotedMessageAuthorDetailsIsContact: false,
             quotedMessageAlbumMessageImages: "",
             quotedMessageAlbumImagesCount: 0,
+            quotedMessageEdited: false,
+            quotedMessageContent: "",
             bridgeName: "",
             gapFrom: 0,
             gapTo: 0,
@@ -329,6 +327,8 @@ Item {
             quotedMessageAuthorDetailsIsContact: true,
             quotedMessageAlbumMessageImages: photoA + " " + photoB + " " + photoA,
             quotedMessageAlbumImagesCount: 3,
+            quotedMessageEdited: false,
+            quotedMessageContent: "",
             bridgeName: "",
             gapFrom: 0,
             gapTo: 0,
@@ -349,18 +349,6 @@ Item {
             const warmup = createTemporaryObject(fontWarmupComp, root)
             verify(!!warmup)
             wait(100)
-        }
-
-        function init() {
-            messageStoreMock.messagesById = {
-                "orig-img": {
-                    isEdited: false,
-                    sticker: "",
-                    messageImage: photoA,
-                    albumImagesCount: 2,
-                    albumMessageImages: [photoA, photoB]
-                }
-            }
         }
 
         function rebind(view, data) {
@@ -533,8 +521,8 @@ Item {
             tryVerify(() => textMessage.textField.text.indexOf("bravo message text") >= 0)
             verify(textMessage.textField.text.indexOf("alpha") < 0)
 
-            // Retarget to C: reply album must come from C's quoted payload,
-            // not from A's resolved original
+            // Retarget to C, whose original is not loaded: reply album must
+            // come from C's quoted payload, nothing from A's original
             rebind(view, messageC)
 
             verify(msg.isAReply)

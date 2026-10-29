@@ -124,6 +124,16 @@ StatusDialog {
                     quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorThumbnailImage
                     quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorEnsVerified
                     quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorIsContact
+                    // this list's model does not hold the original, the chat's does
+                    readonly property var quotedOriginal: Utils.quotedOriginalDetails(
+                                                              !!model.responseToMessageWithId
+                                                              ? root.rootStore.messageStore.getMessageByIdAsJson(model.responseToMessageWithId)
+                                                              : null,
+                                                              model.quotedMessageContentType)
+                    quotedMessageEdited: quotedOriginal.edited
+                    quotedMessageContent: quotedOriginal.content
+                    quotedMessageAlbumMessageImages: quotedOriginal.albumImages
+                    quotedMessageAlbumImagesCount: quotedOriginal.albumImagesCount
                     bridgeName: model.bridgeName
                     isViewMemberMessagesePopup: true
                     shouldRepeatHeader: true

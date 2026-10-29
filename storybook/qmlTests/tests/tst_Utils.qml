@@ -228,4 +228,42 @@ Item {
             compare(Utils.swapProviderDisplayName(data.processorName), data.expected)
         }
     }
+
+    TestCase {
+        name: "Utils_quotedOriginalDetails"
+
+        readonly property var original: ({
+            isEdited: true,
+            sticker: "sticker-url",
+            messageImage: "image-1",
+            albumMessageImages: ["image-1", "image-2"],
+            albumImagesCount: 2
+        })
+
+        function test_imageReplyTakesTheImageAndAlbum() {
+            compare(Utils.quotedOriginalDetails(original, Constants.messageContentType.imageType),
+                    { edited: true, content: "image-1", albumImages: "image-1 image-2", albumImagesCount: 2 })
+        }
+
+        function test_stickerReplyTakesTheSticker() {
+            compare(Utils.quotedOriginalDetails(original, Constants.messageContentType.stickerType),
+                    { edited: true, content: "sticker-url", albumImages: "", albumImagesCount: 0 })
+        }
+
+        function test_textReplyTakesOnlyTheEditedState() {
+            compare(Utils.quotedOriginalDetails(original, Constants.messageContentType.messageType),
+                    { edited: true, content: "", albumImages: "", albumImagesCount: 0 })
+        }
+
+        // getMessageByIdAsJson gives null or false when the original is not loaded
+        function test_noOriginalGivesNothing_data() {
+            return [{ tag: "null", original: null }, { tag: "undefined", original: undefined },
+                    { tag: "false", original: false }]
+        }
+
+        function test_noOriginalGivesNothing(data) {
+            compare(Utils.quotedOriginalDetails(data.original, Constants.messageContentType.imageType),
+                    { edited: false, content: "", albumImages: "", albumImagesCount: 0 })
+        }
+    }
 }

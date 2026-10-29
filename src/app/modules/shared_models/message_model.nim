@@ -66,6 +66,8 @@ type
     QuotedMessageAuthorIsContact
     QuotedMessageAlbumMessageImages
     QuotedMessageAlbumImagesCount
+    QuotedMessageEdited
+    QuotedMessageContent
     AlbumMessageImages
     AlbumImagesCount
     BridgeName
@@ -186,6 +188,8 @@ QtObject:
       ModelRole.QuotedMessageAuthorIsContact.int: "quotedMessageAuthorIsContact",
       ModelRole.QuotedMessageAlbumMessageImages.int: "quotedMessageAlbumMessageImages",
       ModelRole.QuotedMessageAlbumImagesCount.int: "quotedMessageAlbumImagesCount",
+      ModelRole.QuotedMessageEdited.int: "quotedMessageEdited",
+      ModelRole.QuotedMessageContent.int: "quotedMessageContent",
       ModelRole.AlbumMessageImages.int: "albumMessageImages",
       ModelRole.AlbumImagesCount.int: "albumImagesCount",
       ModelRole.BridgeName.int: "bridgeName",
@@ -205,6 +209,37 @@ QtObject:
       ModelRole.ThreadLastMessageText.int: "threadLastMessageText",
       ModelRole.ThreadLastMessageTimestamp.int: "threadLastMessageTimestamp",
     }.toTable
+
+  # The message a reply responds to, when this model has it loaded: the
+  # quotedMessage payload lacks its edited state and its sticker and image
+  # content. Nil otherwise.
+  proc quotedOriginal(self: Model, item: Item): Item =
+    let messageId = item.responseToMessageWithId
+    if messageId.len == 0:
+      return
+    for it in self.items:
+      if it.id == messageId:
+        return it
+
+  # Its album is taken from the original as well, for an image reply.
+  proc quotedImageOriginal(self: Model, item: Item): Item =
+    if item.quotedMessageContentType == ContentType.Image:
+      result = self.quotedOriginal(item)
+
+  # The roles a reply reads from its original (see quotedOriginal) change
+  # whenever the original does - also when it is loaded or removed - while
+  # nothing changes in the reply's own item.
+  proc notifyRepliesTo(self: Model, messageIds: HashSet[string]) =
+    if messageIds.len == 0:
+      return
+    for i in 0 ..< self.items.len:
+      if self.items[i].responseToMessageWithId in messageIds:
+        notifyRangeRolesChanged(i, i, @[
+          ModelRole.QuotedMessageEdited.int,
+          ModelRole.QuotedMessageContent.int,
+          ModelRole.QuotedMessageAlbumMessageImages.int,
+          ModelRole.QuotedMessageAlbumImagesCount.int,
+        ])
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
     guardModelData(index, self.items.len, role, ModelRole)
@@ -299,9 +334,33 @@ QtObject:
     of ModelRole.QuotedMessageAuthorIsContact:
       result = newQVariant(item.quotedMessageAuthorDetails.dto.isContact())
     of ModelRole.QuotedMessageAlbumMessageImages:
-      result = newQVariant(item.quotedMessageAlbumMessageImages.join(" "))
+      let original = self.quotedImageOriginal(item)
+      if original != nil:
+        result = newQVariant(original.albumMessageImages.join(" "))
+      else:
+        result = newQVariant(item.quotedMessageAlbumMessageImages.join(" "))
     of ModelRole.QuotedMessageAlbumImagesCount:
-      result = newQVariant(item.quotedMessageAlbumImagesCount)
+      let original = self.quotedImageOriginal(item)
+      if original != nil:
+        result = newQVariant(original.albumImagesCount)
+      else:
+        result = newQVariant(item.quotedMessageAlbumImagesCount)
+    of ModelRole.QuotedMessageEdited:
+      let original = self.quotedOriginal(item)
+      result = newQVariant(original != nil and original.isEdited)
+    of ModelRole.QuotedMessageContent:
+      result = newQVariant("")
+      case item.quotedMessageContentType:
+      of ContentType.Sticker:
+        let original = self.quotedOriginal(item)
+        if original != nil:
+          result = newQVariant(original.sticker)
+      of ContentType.Image:
+        let original = self.quotedImageOriginal(item)
+        if original != nil:
+          result = newQVariant(original.messageImage)
+      else:
+        discard
     of ModelRole.UnparsedText:
       result = newQVariant(item.unparsedText)
     of ModelRole.MessageImage:
@@ -469,6 +528,8 @@ QtObject:
     self.items.insert(items, position)
     self.endInsertRows()
 
+    self.notifyRepliesTo(items.mapIt(it.id).toHashSet)
+
     self.updateAdjacentMessageRolesAtIndex(position - 1)
     self.updateAdjacentMessageRolesAtIndex(position + items.len)
     self.countChanged()
@@ -561,6 +622,7 @@ QtObject:
 
     self.countChanged()
     self.updateMessagesWhenQuotedMessageDeleted(messageId)
+    self.notifyRepliesTo([messageId].toHashSet)
 
   proc messageRemoved*(self: Model, messageId: string, deletedBy: string, deletedByContactDetails: ContactDetails) =
     let ind = self.findIndexForMessageId(messageId)
@@ -740,9 +802,11 @@ QtObject:
     ## Re-points every cached media-server URL at the freshly bound port
     ## after a media-server restart (mobile suspend/resume). Rows whose
     ## URLs changed re-emit their image-carrying roles so delegates reload.
+    var changedIds = initHashSet[string]()
     for i in 0 ..< self.items.len:
       if not self.items[i].updateMediaServerPort(port):
         continue
+      changedIds.incl(self.items[i].id)
       let index = self.createIndex(i, 0, nil)
       defer: index.delete
       self.dataChanged(index, index, @[
@@ -755,6 +819,7 @@ QtObject:
         ModelRole.AlbumMessageImages.int,
         ModelRole.MessageAttachments.int,
       ])
+    self.notifyRepliesTo(changedIds)
 
   iterator modelContactUpdateIterator*(self: Model, contactId: string): Item =
     for i in 0 ..< self.items.len:
@@ -840,6 +905,7 @@ QtObject:
         updateRolesAndNotify:
           updateRoleWithValue(quotedMessageText, targetQuotedMessageText)
           updateRoleWithValue(quotedMessageContentType, targetQuotedMessageContentType)
+          roles.add(ModelRole.QuotedMessageEdited.int)
 
   proc clear*(self: Model) =
     self.beginResetModel()
@@ -989,6 +1055,7 @@ QtObject:
           updateRoleWithValue(albumMessageImages, targetAlbumMessageImages)
           if self.items[ind].albumMessageIds != targetAlbumMessageIds:
             self.items[ind].albumMessageIds = targetAlbumMessageIds
+        self.notifyRepliesTo([item.id].toHashSet)
         return true
     return false
 

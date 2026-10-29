@@ -807,3 +807,96 @@ suite "message text":
     check(model.getItemWithMessageId("0x1").unparsedText == "first, edited")
     check(model.getItemWithMessageId("0x1").isEdited)
     check(model.getItemWithMessageId("0x2").quotedMessageText == "first, edited")
+
+# A reply's edited state, sticker or image and album come from its original
+# while the original is loaded, so the reply's row changes whenever the
+# original does, although nothing changes in the reply's own item.
+suite "replies to a loaded message":
+  const stickerUrl = "https://localhost:34567/ipfs?hash=0xdeadbeef"
+
+  proc createItem(message: MessageDto): Item =
+    return message_model.createMessageItemFromDtos(
+      message = message,
+      communityId = "",
+      sender = ContactDetails(),
+      isCurrentUser = false,
+      clearText = "",
+    )
+
+  proc original(): Item =
+    createItem(MessageDto(id: "0x1", clock: 1, contentType: ContentType.Sticker,
+      sticker: Sticker(url: stickerUrl)))
+
+  proc reply(): Item =
+    createItem(MessageDto(id: "0x2", clock: 2, contentType: ContentType.Message, text: "nice",
+      responseTo: "0x1",
+      quotedMessage: QuotedMessage(`from`: "0xsender", contentType: ContentType.Sticker)))
+
+  proc roleOf(model: Model, name: string): cint =
+    for role, roleName in model.roleNames().pairs:
+      if roleName == name:
+        return role.cint
+    return -1
+
+  proc dataOf(model: Model, messageId: string, roleName: string): QVariant =
+    let row = model.findIndexForMessageId(messageId)
+    require(row != -1)
+    model.data(model.createIndex(row, 0, nil), model.roleOf(roleName))
+
+  # All roles notified by dataChanged, from any row
+  proc spyChangedRoles(model: Model): ref seq[cint] =
+    let changed = new(seq[cint])
+    let qtModel = gen_qabstractitemmodel_types.QAbstractItemModel(h: model.vptr, owned: false)
+    gen_qabstractitemmodel.onDataChanged(qtModel,
+      proc(topLeft, bottomRight: gen_qabstractitemmodel_types.QModelIndex, roles: openArray[cint]) =
+        changed[].add(@roles))
+    return changed
+
+  test "reads the sticker and the edited state from the original":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[original(), reply()])
+
+    check(model.dataOf("0x2", "quotedMessageContent").stringVal == stickerUrl)
+    check(not model.dataOf("0x2", "quotedMessageEdited").boolVal)
+
+  test "notifies the reply when its original is loaded later":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[reply()])
+    check(model.dataOf("0x2", "quotedMessageContent").stringVal == "")
+    let changed = model.spyChangedRoles()
+
+    model.insertItemsBasedOnClock(@[original()])
+
+    check(model.roleOf("quotedMessageContent") in changed[])
+    check(model.dataOf("0x2", "quotedMessageContent").stringVal == stickerUrl)
+
+  test "notifies the reply when its original is edited":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[original(), reply()])
+    let changed = model.spyChangedRoles()
+
+    model.updateEditedMsg("0x1", "edited", ContentType.Sticker, mentioned = false, links = @[],
+      mentionedNames = initTable[string, string]())
+
+    check(model.roleOf("quotedMessageEdited") in changed[])
+    check(model.dataOf("0x2", "quotedMessageEdited").boolVal)
+
+  test "notifies the reply when its original is removed":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[original(), reply()])
+    let changed = model.spyChangedRoles()
+
+    model.removeItem("0x1")
+
+    check(model.roleOf("quotedMessageContent") in changed[])
+    check(model.dataOf("0x2", "quotedMessageContent").stringVal == "")
+
+  test "notifies the reply when its original's media URLs move to a new port":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[original(), reply()])
+    let changed = model.spyChangedRoles()
+
+    model.updateMediaServerPort(40000)
+
+    check(model.roleOf("quotedMessageContent") in changed[])
+    check(model.dataOf("0x2", "quotedMessageContent").stringVal == "https://localhost:40000/ipfs?hash=0xdeadbeef")
