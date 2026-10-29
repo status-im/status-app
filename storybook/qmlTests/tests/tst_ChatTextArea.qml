@@ -1589,6 +1589,29 @@ Item {
             compare(control.textWithMentions(), "Aक्ष")
         }
 
+        // Undo restoring a vowel sign after a flagged consonant must not leave the stale
+        // underline ending inside the syllable: that split shapes the vowel sign apart,
+        // widens the line and puts the caret past the end of the text.
+        function test_backspaceNonEmojiCluster_undoKeepsCaretAtTextEnd() {
+            const checker = control.spellChecker
+            control.text = "किx" // "किx"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+            tryVerify(() => !checker.checkPending && checker.issues.length === 1)
+            const endX = control.cursorRectangle.x
+
+            keyClick(Qt.Key_Backspace)
+            keyClick(Qt.Key_Backspace)
+            compare(control.textWithMentions(), "क")
+            tryVerify(() => !checker.checkPending && checker.issues.length === 1)
+            compare(checker.issues[0].word, "क")
+
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "किx")
+            compare(control.cursorPosition, 3)
+            compare(control.cursorRectangle.x, endX)
+        }
+
         // Forward Delete needs no handling of ours — it moves by cursor position, which Qt
         // places on grapheme boundaries. Guards the behaviour we rely on.
         function test_deleteEmoji_removesZwjSequenceNatively() {
