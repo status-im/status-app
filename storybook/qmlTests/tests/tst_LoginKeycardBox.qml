@@ -140,11 +140,14 @@ Item {
         }
 
         function test_untrustedKeycardShowsError() {
+            box.isBiometricsLogin = true
             box.keycardState = Onboarding.KeycardState.UntrustedKeycard
 
             compare(box.state, "untrustedKeycard")
             verify(infoText().text.indexOf("could not be verified as genuine") >= 0)
             compare(infoText().color, Theme.palette.dangerColor1)
+            verify(!pinInput().visible, "a card that failed its identity check must not ask for the PIN")
+            verify(!findChild(box, "touchIdIcon").visible, "nor offer biometrics, which would submit the stored PIN")
         }
 
         function test_blockedShowsUnblock_data() {
