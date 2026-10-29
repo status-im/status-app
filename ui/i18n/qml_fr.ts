@@ -10309,6 +10309,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>&lt;aucune Keycard sélectionnée&gt;</translation>
     </message>
     <message>
+        <source>Make selected keycard counterfeit</source>
+        <translation>Transformer la Keycard sélectionnée en contrefaçon</translation>
+    </message>
+    <message>
+        <source>Swaps the keycard&apos;s identity key but keeps its certificate, keys and PIN, like a genuine certificate copied onto another card. Applet 4.x then refuses the keycard (untrusted keycard), applet 3.x reports it as not certified.</source>
+        <translation>Remplace la clé d’identité de la Keycard mais conserve son certificat, ses clés et son code PIN, comme si un certificat authentique avait été copié sur une autre carte. L’applet 4.x refuse alors la Keycard (Keycard non fiable), l’applet 3.x la signale comme non certifiée.</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; not changed: %2</source>
+        <translation>Keycard « %1 » non modifiée : %2</translation>
+    </message>
+    <message>
+        <source>Keycard &quot;%1&quot; is now counterfeit</source>
+        <translation>La Keycard « %1 » est maintenant une contrefaçon</translation>
+    </message>
+    <message>
         <source>4. Reader &amp; card</source>
         <translation>4. Lecteur et carte</translation>
     </message>

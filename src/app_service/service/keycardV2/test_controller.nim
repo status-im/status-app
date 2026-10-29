@@ -250,6 +250,16 @@ when defined(useSimulatedKeycard):
       if result.len > 0:
         error "failed to create keycard", cardId, err = result
 
+    proc counterfeitCard*(self: KeycardTestController, cardId: string): string {.slot.} =
+      ## Swaps the card's identity key and keeps its certificate and state, like a genuine card's
+      ## certificate copied onto another card. Returns an error, empty on success.
+      info "turning a keycard into a counterfeit", cardId
+      let reply = simulatorCommand("COUNTERFEIT " & cardId).strip()
+      if reply.startsWith("OK"):
+        return ""
+      result = if reply.len > 0: reply else: "no reply from the keycard simulator"
+      error "failed to counterfeit keycard", cardId, err = result
+
     proc cardCreationFinished*(self: KeycardTestController, error: string) {.signal.}
 
     proc onLoadCardDone(self: KeycardTestController, response: string) {.slot.} =
