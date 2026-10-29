@@ -72,7 +72,9 @@ Control {
     // Keeps the header, avatar, reply and reactions built while they are not
     // shown, and only hides them. For an item rebound from one message to the
     // next: switching one of them on would otherwise build it synchronously,
-    // in the middle of the rebind.
+    // in the middle of the rebind. They are then also built asynchronously,
+    // so building the item does not come as one long piece of work - a
+    // reused item is built once, ahead of being shown.
     property bool keepOptionalPartsLoaded: false
 
     property bool isActiveMessage: false
@@ -220,6 +222,7 @@ Control {
 
             Loader {
                 Layout.fillWidth: true
+                asynchronous: root.keepOptionalPartsLoaded
                 active: d.replyShown || root.keepOptionalPartsLoaded
                 visible: d.replyShown
                 sourceComponent: StatusMessageReply {
@@ -313,6 +316,7 @@ Control {
                     }
                     Loader {
                         Layout.fillWidth: true
+                        asynchronous: root.keepOptionalPartsLoaded
                         active: root.showHeader || root.keepOptionalPartsLoaded
                         visible: root.showHeader
                         sourceComponent: StatusMessageHeader {
@@ -418,6 +422,7 @@ Control {
                     }
 
                     Loader {
+                        asynchronous: root.keepOptionalPartsLoaded
                         active: d.reactionsShown || root.keepOptionalPartsLoaded
                         visible: d.reactionsShown
                         Layout.fillWidth: true
