@@ -374,6 +374,11 @@ void SpellChecker::setText(const QString& text)
     // word. A single typed or deleted character only edits the word around it.
     const bool complete = inserted.size() > 1 || boundary.matchView(inserted).hasMatch();
     const auto [tokenStart, tokenEnd] = complete ? std::pair{-1, -1} : tokenAt(newEnd);
+    // An issue touching the edit is still edited when the edit continues its word, e.g.
+    // an undo restoring a vowel sign and more after a flagged consonant. Kept as is, its
+    // underline would end inside the word, splitting a grapheme cluster's shaping.
+    const bool joinsBefore = tokenAt(start).second > start;
+    const bool joinsAfter = tokenAt(newEnd).first < newEnd;
 
     QVariantList retained;
     QVariantMap flagged;
@@ -385,10 +390,12 @@ void SpellChecker::setText(const QString& text)
         const bool after = issueStart >= oldEnd;
         const int mappedStart = after ? issueStart + delta : issueStart;
         const int mappedEnd = before ? issueEnd : issueEnd + delta;
+        const bool joined = (issueEnd == start && joinsBefore)
+                || (issueStart == oldEnd && joinsAfter);
         if (mappedStart < tokenEnd && mappedEnd > tokenStart) {
             if (flagged.isEmpty())
                 flagged = issue;
-        } else if (before || after) {
+        } else if ((before || after) && !joined) {
             issue.insert("start"_L1, mappedStart);
             retained.append(issue);
         }
