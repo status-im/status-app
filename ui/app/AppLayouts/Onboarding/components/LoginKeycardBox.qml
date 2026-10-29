@@ -77,6 +77,7 @@ Control {
         spacing: 12
         LoginTouchIdIndicator {
             id: touchIdIcon
+            objectName: "touchIdIcon"
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: Theme.halfPadding
             visible: false
@@ -213,10 +214,15 @@ Control {
         State {
             name: "untrustedKeycard"
             when: root.keycardState === Onboarding.KeycardState.UntrustedKeycard
-            extend: "notEmpty"
             PropertyChanges {
                 infoText.color: root.Theme.palette.dangerColor1
                 infoText.text: qsTr("This Keycard could not be verified as genuine.<br>Try again with another Keycard.")
+            }
+            // The card failed its own identity check (possibly counterfeit): ask for no PIN, typed or biometric
+            PropertyChanges {
+                pinInputField.enabled: false
+                pinInputField.visible: false
+                touchIdIcon.visible: false
             }
         },
         State {
