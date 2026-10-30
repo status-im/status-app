@@ -11,7 +11,8 @@ import app_service/service/settings/service as settings_service
 
 import app/core/eventemitter
 import app/core/held_resource_qtimer
-from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop
+from seaqt/qtimer import QTimer, create, setSingleShot, setTimerType, onTimeout, start, stop
+from seaqt/QtCore/gen_qnamespace import TimerTypeEnum, PreciseTimer
 import app/core/tasks/[qt, threadpool]
 import app/core/signals/types
 import app/global/feature_flags
@@ -175,6 +176,8 @@ QtObject:
   include service_main
 
   proc delete*(self: Service) =
+    if not self.missingTokenKeysRetryTimer.h.isNil:
+      self.missingTokenKeysRetryTimer.stop()
     if not self.catalogue.isNil:
       self.catalogue.dispose()
     self.QObject.delete

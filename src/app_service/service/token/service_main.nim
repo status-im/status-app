@@ -258,6 +258,7 @@ proc init*(self: Service) =
 
   self.missingTokenKeysRetryTimer = QTimer.create()
   self.missingTokenKeysRetryTimer.setSingleShot(true)
+  self.missingTokenKeysRetryTimer.setTimerType(TimerTypeEnum.PreciseTimer.cint)
   self.missingTokenKeysRetryTimer.onTimeout(proc() {.closure, raises: [].} =
     try:
       self.onMissingTokenKeysRetryTimeout()
