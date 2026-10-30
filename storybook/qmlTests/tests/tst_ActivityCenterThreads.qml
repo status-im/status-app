@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import QtTest
 
 import StatusQ.Core.Utils as SQUtils
@@ -71,6 +72,27 @@ Item {
     Component {
         id: spyComponent
         SignalSpy {}
+    }
+
+    Component {
+        id: overlayHarnessComponent
+        Item {
+            id: overlayHarness
+            width: 480
+            height: 300
+            property alias target: proxy.target
+            property int chatClicks: 0
+            Item {
+                anchors.fill: parent
+                TapHandler {
+                    onTapped: overlayHarness.chatClicks++
+                }
+            }
+            LayoutItemProxy {
+                id: proxy
+                anchors.fill: parent
+            }
+        }
     }
 
     TestCase {
@@ -182,6 +204,63 @@ Item {
             mouseClick(card)
             compare(spy.count, 2)
             compare(spy.signalArguments[1][3], "")
+        }
+
+        function test_clickKeepsDestinationWhenMarkingReadRefreshesModel_data() {
+            return [{ tag: "updated-row", reset: false }, { tag: "reset-model", reset: true }]
+        }
+
+        function test_proxiedNotificationDoesNotClickUnderlyingChat() {
+            const source = createTemporaryObject(notificationsComponent, root)
+            source.append(notification(ActivityCenterTypes.NotificationType.Mention,
+                                       Constants.chatType.communityChat, "thread", "Planning"))
+            const adaptor = createTemporaryObject(adaptorComponent, root, { notifications: source })
+            const panel = createTemporaryObject(panelComponent, root, {
+                x: 600, notificationsModel: adaptor.model
+            })
+            const overlay = createTemporaryObject(overlayHarnessComponent, root, { target: panel })
+            const spy = createTemporaryObject(spyComponent, root, { target: panel, signalName: "redirectToDetails" })
+            const list = findChild(panel, "listView")
+            verify(!!list)
+            tryVerify(() => list.itemAtIndex(0) !== null)
+            const card = list.itemAtIndex(0)
+            const point = card.mapToItem(panel, card.width / 2, card.height / 2)
+            mouseClick(overlay, point.x, point.y)
+            tryCompare(spy, "count", 1)
+            tryCompare(overlay, "chatClicks", 0)
+            mouseClick(overlay, point.x, point.y)
+            tryCompare(spy, "count", 2)
+            tryCompare(overlay, "chatClicks", 0)
+        }
+
+        function test_clickKeepsDestinationWhenMarkingReadRefreshesModel(data) {
+            const source = createTemporaryObject(notificationsComponent, root)
+            source.append(notification(ActivityCenterTypes.NotificationType.Mention,
+                                       Constants.chatType.communityChat, "target-thread", "Target"))
+            const adaptor = createTemporaryObject(adaptorComponent, root, { notifications: source })
+            const panel = createTemporaryObject(panelComponent, root, { notificationsModel: adaptor.model })
+            const spy = createTemporaryObject(spyComponent, root, { target: panel, signalName: "redirectToDetails" })
+            panel.markNotificationRead.connect(() => {
+                if (data.reset) {
+                    source.clear()
+                    source.append(notification(ActivityCenterTypes.NotificationType.Mention,
+                                               Constants.chatType.communityChat, "other-thread", "Other"))
+                } else {
+                    source.setProperty(0, "sectionId", "other-section")
+                    source.setProperty(0, "chatId", "other-chat")
+                    source.setProperty(0, "message", { id: "other-message" })
+                    source.setProperty(0, "threadId", "other-thread")
+                }
+            })
+            const list = findChild(panel, "listView")
+            verify(!!list)
+            tryVerify(() => list.itemAtIndex(0) !== null)
+            mouseClick(list.itemAtIndex(0))
+            tryCompare(spy, "count", 1)
+            compare(spy.signalArguments[0][0], "section")
+            compare(spy.signalArguments[0][1], "chat")
+            compare(spy.signalArguments[0][2], "message")
+            compare(spy.signalArguments[0][3], "target-thread")
         }
 
         function test_directMessageThreadBreadcrumb() {

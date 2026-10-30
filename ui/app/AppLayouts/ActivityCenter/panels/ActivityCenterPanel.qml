@@ -268,13 +268,19 @@ Control {
 
                 // Interactions
                 onClicked: {
+                    // Marking read can synchronously replace the notification row.
+                    const redirectToDetails = model.redirectToDetails
+                    const sectionId = model.sectionId
+                    const subsectionId = model.subsectionId
+                    const itemId = model.subsectionItemId
+                    const nestedSubsectionId = model.nestedSubsectionId ?? ""
 
                     // 1. When a notification is clicked, it is immediately marked as read
                     root.markNotificationRead(model.notificationId)
 
                     // 2. Once marked as read, the corresponding navigation logic is executed.
-                    if(model.redirectToDetails)
-                        return root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId, model.nestedSubsectionId ?? "")
+                    if (redirectToDetails)
+                        return root.redirectToDetails(sectionId, subsectionId, itemId, nestedSubsectionId)
 
                     if (model.redirectToSection)
                         return root.redirectToSection(model.sectionId)
