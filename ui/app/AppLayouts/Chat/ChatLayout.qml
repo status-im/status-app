@@ -285,6 +285,7 @@ StackLayout {
             viewAndPostHoldingsModel: root.communityPermissionsStore.viewAndPostPermissionsModel
             assetsModel: root.rootStore.assetsModel
             collectiblesModel: root.rootStore.collectiblesModel
+            getTokenByKeyOrGroupKeyFromAllTokens: root.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
             requestToJoinState: root.rootStore.chatCommunitySectionModule.requestToJoinState
             onRequestToJoinClicked: {
                 Global.communityIntroPopupRequested(joinCommunityView.communityId, sectionItemModel.name,
@@ -389,6 +390,7 @@ StackLayout {
             viewAndPostPermissionsModel: !!root.communityPermissionsStore ? root.communityPermissionsStore.viewAndPostPermissionsModel : null
             assetsModel: root.rootStore.assetsModel
             collectiblesModel: root.rootStore.collectiblesModel
+            getTokenByKeyOrGroupKeyFromAllTokens: root.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
             requestToJoinState: sectionItem.requestToJoinState
             ensCommunityPermissionsEnabled: root.advancedStore.ensCommunityPermissionsEnabled
 

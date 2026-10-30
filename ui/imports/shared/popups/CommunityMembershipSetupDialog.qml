@@ -45,6 +45,7 @@ StatusStackModal {
     required property var permissionsModel  // id, key, permissionType, holdingsListModel, channelsListModel, isPrivate, tokenCriteriaMet
     required property var assetsModel
     required property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     property var keypairSigningModel: []
 
@@ -317,6 +318,7 @@ StatusStackModal {
             permissionsModel: root.permissionsModel
             assetsModel: root.assetsModel
             collectiblesModel: root.collectiblesModel
+            getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
 
             onClose: {
                 root.close()

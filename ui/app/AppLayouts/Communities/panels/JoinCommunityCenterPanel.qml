@@ -33,6 +33,7 @@ ColumnLayout {
     property var moderateHoldingsModel
     property var assetsModel
     property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     property string chatDateTimeText
     property string listUsersText
@@ -163,6 +164,7 @@ ColumnLayout {
                     moderateHoldingsModel: root.moderateHoldingsModel
                     assetsModel: root.assetsModel
                     collectiblesModel: root.collectiblesModel
+                    getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
 
                     onRequestToJoinClicked: root.requestToJoinClicked()
                     onInvitationPendingClicked: root.invitationPendingClicked()

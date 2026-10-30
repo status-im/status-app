@@ -46,6 +46,7 @@ Control {
 
     required property var assetsModel
     required property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     readonly property string title: isEditMode ? qsTr("Edit which addresses you share with %1").arg(root.communityName)
                                                : qsTr("Select addresses to share with %1").arg(root.communityName)
@@ -288,6 +289,7 @@ Control {
             permissionsModel: root.permissionsModel
             assetsModel: root.assetsModel
             collectiblesModel: root.collectiblesModel
+            getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             requirementsCheckPending: root.requirementsCheckPending
             checkingPermissionToJoinInProgress: root.checkingPermissionToJoinInProgress
             joinPermissionsCheckCompletedWithoutErrors: root.joinPermissionsCheckCompletedWithoutErrors

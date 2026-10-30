@@ -38,6 +38,7 @@ Control {
 
     property var assetsModel
     property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     signal requestToJoinClicked
     signal invitationPendingClicked
@@ -116,6 +117,7 @@ Control {
 
             assetsModel: root.assetsModel
             collectiblesModel: root.collectiblesModel
+            getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
 
             spacing: root.spacing
         }
