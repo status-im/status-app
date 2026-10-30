@@ -285,6 +285,18 @@ RowLayout {
             pending: messageStore.threadEditPending
             onEditNameRequested: root.editThreadRequested(messageStore.threadId)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(messageStore.chatId, messageStore.threadId)
+            deletePending: messageStore.threadDeletePending
+            onDeleteRequested: messageStore.deleteThread()
+            onRenameRequested: name => messageStore.editThread(name)
+            Connections {
+                target: messageStore.messageModule
+                function onThreadDeleteFinished(error: string) {
+                    selectedThreadHeader.deleteFinished(messageStore.threadDeleteErrorMessage(error))
+                }
+                function onThreadEditFinished(error: string) {
+                    selectedThreadHeader.editFinished(error)
+                }
+            }
         }
     }
 

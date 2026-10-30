@@ -23,6 +23,7 @@ import shared.stores
 import shared.views.chat
 
 import AppLayouts.Chat.stores as ChatStores
+import AppLayouts.Chat.popups
 import AppLayouts.Communities.popups
 import AppLayouts.Communities.panels
 import AppLayouts.Communities.stores as CommunitiesStores
@@ -70,6 +71,7 @@ Item {
     signal infoButtonClicked
     signal manageButtonClicked
     signal chatItemClicked(string id)
+    signal renameThreadRequested(string threadId, string threadName, string parentChatId)
     signal shareOwnProfileRequested
 
     // Permissions Related requests:
@@ -312,7 +314,7 @@ Item {
                     }
                 }
 
-                threadListPopupMenu: root.threadContextMenu
+                threadPopupMenu: root.threadContextMenu
 
                 chatListPopupMenu: ChatContextMenuView {
                     id: chatContextMenuView

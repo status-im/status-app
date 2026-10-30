@@ -106,3 +106,11 @@ suite "thread dto":
     let dto = (%* {"muted": true, "muteRevision": 42, "muteTill": "0001-01-01T00:00:00Z"}).toThreadDto()
     check dto.muteRevision == 42
     check dto.muted
+
+  test "parses deletion actor and wall-clock timestamp independently of ordering":
+    let dto = (%* {"threadId": "thread", "deleted": true, "deletedBy": "admin",
+      "deletedClock": 200, "deletedAt": 190}).toThreadDto()
+    check dto.deleted
+    check dto.deletedBy == "admin"
+    check dto.deletedClock == 200
+    check dto.deletedAt == 190
