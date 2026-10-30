@@ -63,6 +63,7 @@ Loader {
     property string senderOptionalName: ""
     property bool senderIsEnsVerified: false
     property string senderIcon: ""
+    property int senderColorId: 0
     property bool amISender: false
     property bool amIChatAdmin: messageStore && messageStore.amIChatAdmin
     property bool senderIsAdded: false
@@ -112,6 +113,7 @@ Loader {
     property string quotedMessageAuthorDetailsThumbnailImage: ""
     property bool quotedMessageAuthorDetailsEnsVerified: false
     property bool quotedMessageAuthorDetailsIsContact: false
+    property int quotedMessageAuthorColorId: 0
 
     // Space-joined image lists, as the model exposes them, so a plain roles
     // rebind retargets the view; the arrays derive from them.
@@ -153,6 +155,7 @@ Loader {
     property string deletedBy: ""
     property string deletedByContactDisplayName: ""
     property string deletedByContactIcon: ""
+    property int deletedByContactColorId: 0
 
     property bool shouldRepeatHeader: d.shouldRepeatHeader
 
@@ -287,7 +290,7 @@ Loader {
             compressedPubKey: contactDetails.compressedPubKey,
             displayName: isReply ? quotedMessageAuthorDetailsDisplayName : root.senderDisplayName,
             userIcon: isReply ? quotedMessageAuthorDetailsThumbnailImage : root.senderIcon,
-            colorId: Utils.colorIdForPubkey(pubKey),
+            colorId: isReply ? root.quotedMessageAuthorColorId : root.senderColorId,
             trustStatus: contactDetails.trustStatus,
             onlineStatus: contactDetails.onlineStatus,
             usesDefaultName: contactDetails.usesDefaultName,
@@ -914,7 +917,7 @@ Loader {
                 spacing: Theme.halfPadding
 
                 readonly property int smartIconSize: 20
-                readonly property int colorId: Utils.colorIdForPubkey(root.deletedBy)
+                readonly property int colorId: root.deletedByContactColorId
                 readonly property var messageDetails: StatusMessageDetails {
                     sender.profileImage {
                         width: deletedMessage.smartIconSize
@@ -1220,7 +1223,7 @@ Loader {
                         height: 40
                         name: root.senderIcon || ""
                         pubkey: root.senderId
-                        color: root.Theme.palette.userCustomizationColors[Utils.colorIdForPubkey(root.senderId)]
+                        color: root.Theme.palette.userCustomizationColors[root.senderColorId]
                     }
                     sender.badgeImage: Assets.svg(Utils.bridgeBadgeAsset(root.bridgeName))
                 }
@@ -1256,7 +1259,7 @@ Loader {
                         name: root.quotedMessageAuthorDetailsThumbnailImage
                         assetSettings.isImage: root.quotedMessageAuthorDetailsThumbnailImage
                         pubkey: sender.id
-                        color: root.Theme.palette.userCustomizationColors[Utils.colorIdForPubkey(sender.id)]
+                        color: root.Theme.palette.userCustomizationColors[root.quotedMessageAuthorColorId]
                     }
                 }
 
@@ -1268,7 +1271,7 @@ Loader {
                         gifLinks: root.gifLinks
                         senderName: root.senderDisplayName
                         senderThumbnailImage: root.senderIcon || ""
-                        senderColorId: Utils.colorIdForPubkey(root.senderId)
+                        senderColorId: root.senderColorId
                         paymentRequestModel: root.paymentRequestModel
                         playAnimations: root.Window.active && (root.messageStore?.isChatActive ?? false)
                         isOnline: root.messageStore?.isOnline ?? true
