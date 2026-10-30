@@ -13,12 +13,13 @@ const MissingTokenFetchRetryDelaysMs* = [2000, 5000, 15000]
 
 type PendingTokenFetch* = object
   pending: HashSet[string]  ## keys awaiting the next batch fetch
-  inFlight: HashSet[string] ## keys handed to a batch already running (dedup across the fetch window)
+  inFlight: Table[string, int] ## key -> id of the running batch it was handed to (dedup across the fetch window)
+  lastBatchId: int
   awaitingRetry: array[MissingTokenFetchRetryDelaysMs.len, HashSet[string]] ## per backoff tier
   failedAttempts: Table[string, int] ## failed fetches of a key since it last settled
 
 proc initPendingTokenFetch*(): PendingTokenFetch =
-  PendingTokenFetch(pending: initHashSet[string](), inFlight: initHashSet[string]())
+  PendingTokenFetch(pending: initHashSet[string]())
 
 proc isAwaitingRetry*(self: PendingTokenFetch, key: string): bool =
   for tier in self.awaitingRetry:
@@ -30,7 +31,7 @@ proc enqueue*(self: var PendingTokenFetch, key: string): bool =
   ## Record a missing key. Returns true only when the key is newly pending — the
   ## caller uses that to schedule (debounce) a batch exactly once per burst. Keys
   ## already pending or already in flight dedup and return false.
-  if key in self.pending or key in self.inFlight or self.isAwaitingRetry(key):
+  if key in self.pending or self.inFlight.hasKey(key) or self.isAwaitingRetry(key):
     return false
   self.pending.incl(key)
   return true
@@ -38,30 +39,35 @@ proc enqueue*(self: var PendingTokenFetch, key: string): bool =
 proc hasPending*(self: PendingTokenFetch): bool =
   self.pending.len > 0
 
-proc takeBatch*(self: var PendingTokenFetch): seq[string] =
+proc takeBatch*(self: var PendingTokenFetch): tuple[id: int, keys: seq[string]] =
   ## Drain the pending keys into the in-flight set and return them as the batch to
   ## fetch. Draining is atomic from the GUI thread's view: after this the pending
   ## set is empty and the same keys will not be re-enqueued while in flight.
-  let batch = toSeq(self.pending)
-  for key in batch:
-    self.inFlight.incl(key)
+  inc self.lastBatchId
+  result = (self.lastBatchId, toSeq(self.pending))
+  for key in result.keys:
+    self.inFlight[key] = result.id
   self.pending.clear()
-  return batch
 
-proc completeBatch*(self: var PendingTokenFetch, keys: seq[string]) =
-  ## Release the keys of a finished batch from the in-flight set. After this a
-  ## fresh miss of the same key may enqueue again (the caches/markers updated by
-  ## the completion normally make that unnecessary).
-  for key in keys:
-    self.inFlight.excl(key)
+proc completeBatch*(self: var PendingTokenFetch, batchId: int): seq[string] =
+  ## Release the keys of a finished batch from the in-flight set and return them:
+  ## only those still owned by this batch, so a batch drained meanwhile releases
+  ## nothing. After this a fresh miss of the same key may enqueue again (the
+  ## caches/markers updated by the completion normally make that unnecessary).
+  for key, id in self.inFlight:
+    if id == batchId:
+      result.add(key)
+  for key in result:
+    self.inFlight.del(key)
 
 proc drainInFlight*(self: var PendingTokenFetch): seq[string] =
   ## Release every in-flight key and return them. For the failure path where a
   ## batch's own key list is unknown (its envelope was undecodable): the batch
   ## cannot be released by completeBatch, so drain everything rather than leave
-  ## its keys wedged as permanently in flight. Over-releasing a concurrently
-  ## running batch is benign — worst case one duplicate fetch of its keys.
-  result = toSeq(self.inFlight)
+  ## its keys wedged as permanently in flight. A running batch drained with it
+  ## releases nothing when it completes (see completeBatch), so its keys are
+  ## retried once, not twice.
+  result = toSeq(self.inFlight.keys)
   self.inFlight.clear()
 
 proc failBatch*(self: var PendingTokenFetch, keys: seq[string]):

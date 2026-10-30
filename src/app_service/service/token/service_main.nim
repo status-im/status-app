@@ -128,14 +128,15 @@ proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
 proc fetchPendingMissingTokenKeys(self: Service) =
   # Debounced: drain every key that missed since the last batch and fetch them in
   # one async RPC on the threadpool.
-  let keys = self.pendingTokenFetch.takeBatch()
-  if keys.len == 0:
+  let batch = self.pendingTokenFetch.takeBatch()
+  if batch.keys.len == 0:
     return
   let arg = AsyncFetchMissingTokensTaskArg(
     tptr: asyncFetchMissingTokensTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncFetchMissingTokensDone",
-    keys: keys,
+    batchId: batch.id,
+    keys: batch.keys,
   )
   self.threadpool.start(arg)
 
@@ -164,15 +165,15 @@ proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
   # Decode the envelope and release the batch's keys from the in-flight set
   # regardless of outcome — an undecodable envelope must not leave its keys
   # wedged as permanently in flight (they could never re-enqueue).
-  let (env, decodeError) = decodeAndCompleteBatch(self.pendingTokenFetch, response)
+  let (env, releasedKeys, decodeError) = decodeAndCompleteBatch(self.pendingTokenFetch, response)
   if decodeError.len > 0:
     error "error decoding async fetch missing tokens response", msg = decodeError
-    self.retryFailedMissingTokenKeys(env.requestedKeys)
+    self.retryFailedMissingTokenKeys(releasedKeys)
     return
   if env.error.len > 0:
     # Transient backend failure: retry rather than caching a false "missing" right away.
     error "async fetch missing tokens failed", errDescription = env.error
-    self.retryFailedMissingTokenKeys(env.requestedKeys)
+    self.retryFailedMissingTokenKeys(releasedKeys)
     return
   var notice: MissingFetchNotice
   try:
@@ -183,7 +184,7 @@ proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
       sortTokenGroupsByKey(self.groupsOfInterest)
   except Exception as e:
     error "error processing async fetch missing tokens", msg = e.msg
-    self.retryFailedMissingTokenKeys(env.requestedKeys)
+    self.retryFailedMissingTokenKeys(releasedKeys)
     return
   # Notify consumers so they re-read: late tokens resolve, missing ones stop showing as pending.
   # Outside the try: handlers run synchronously, and one raising must not retry a committed batch.

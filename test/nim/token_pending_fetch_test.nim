@@ -20,7 +20,7 @@ suite "pending token fetch — enqueue and batching":
     for _ in 0 ..< 5:
       discard p.enqueue("1-0xbbb")
     let batch = p.takeBatch()
-    check batch == @["1-0xbbb"]
+    check batch.keys == @["1-0xbbb"]
     check not p.hasPending()  # draining clears the pending set
 
   test "takeBatch returns every distinct pending key":
@@ -28,7 +28,7 @@ suite "pending token fetch — enqueue and batching":
     discard p.enqueue("1-0xaaa")
     discard p.enqueue("10-0xbbb")
     let batch = p.takeBatch()
-    check batch.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
+    check batch.keys.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
     check not p.hasPending()
 
 suite "pending token fetch — in-flight window":
@@ -43,9 +43,41 @@ suite "pending token fetch — in-flight window":
     var p = initPendingTokenFetch()
     discard p.enqueue("1-0xaaa")
     let batch = p.takeBatch()
-    p.completeBatch(batch)                 # batch done -> in-flight cleared
+    check p.completeBatch(batch.id) == @["1-0xaaa"]  # batch done -> in-flight cleared
     check p.enqueue("1-0xaaa") == true     # a fresh miss of the same key is allowed again
     check p.hasPending()
+
+  test "completing a batch releases only its own keys":
+    var p = initPendingTokenFetch()
+    discard p.enqueue("1-0xaaa")
+    let first = p.takeBatch()
+    discard p.enqueue("10-0xbbb")
+    let second = p.takeBatch()
+    check first.id != second.id
+    check p.completeBatch(first.id) == @["1-0xaaa"]
+    check p.enqueue("10-0xbbb") == false   # still in flight with its own batch
+    check p.completeBatch(second.id) == @["10-0xbbb"]
+
+  test "a batch completing after a drain releases nothing":
+    var p = initPendingTokenFetch()
+    discard p.enqueue("1-0xaaa")
+    let first = p.takeBatch()
+    discard p.enqueue("10-0xbbb")
+    let second = p.takeBatch()
+    check p.drainInFlight().toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
+    check p.completeBatch(second.id).len == 0
+    check p.completeBatch(first.id).len == 0
+
+  test "a drained key fetched again belongs to its new batch, not the old one":
+    var p = initPendingTokenFetch()
+    discard p.enqueue("1-0xaaa")
+    let stale = p.takeBatch()
+    discard p.drainInFlight()
+    discard p.enqueue("1-0xaaa")
+    let fresh = p.takeBatch()
+    check p.completeBatch(stale.id).len == 0
+    check p.enqueue("1-0xaaa") == false    # still in flight with the fresh batch
+    check p.completeBatch(fresh.id) == @["1-0xaaa"]
 
   test "draining the in-flight set releases every key but leaves pending keys queued":
     var p = initPendingTokenFetch()
@@ -55,7 +87,7 @@ suite "pending token fetch — in-flight window":
     discard p.drainInFlight()              # failure path: batch keys unknown
     check p.enqueue("1-0xaaa") == true     # released -> may re-enqueue
     check p.enqueue("10-0xbbb") == false   # still pending -> still dedups
-    check p.takeBatch().len == 2
+    check p.takeBatch().keys.len == 2
 
 suite "pending token fetch — negative-marker feed":
   test "keys requested but not returned by a batch are the ones to mark missing":
@@ -72,8 +104,8 @@ suite "pending token fetch — failed batch retries":
   proc failOnce(p: var PendingTokenFetch, key: string): tuple[retryTiers: seq[int], gaveUp: seq[string]] =
     discard p.enqueue(key)
     let batch = p.takeBatch()
-    p.completeBatch(batch)
-    return p.failBatch(batch)
+    discard p.completeBatch(batch.id)
+    return p.failBatch(batch.keys)
 
   test "retry delays back off over three tries":
     check MissingTokenFetchRetryDelaysMs == [2000, 5000, 15000]
@@ -85,7 +117,7 @@ suite "pending token fetch — failed batch retries":
       check retryTiers == @[tier]
       check gaveUp.len == 0
       check p.releaseRetries(tier)
-      check p.takeBatch() == @["1-0xaaa"]
+      check p.takeBatch().keys == @["1-0xaaa"]
 
   test "a key waiting for a retry stays pending and dedups lookups":
     var p = initPendingTokenFetch()
@@ -101,14 +133,14 @@ suite "pending token fetch — failed batch retries":
     check p.releaseRetries(0)
     check not p.isAwaitingRetry("1-0xaaa")
     check not p.releaseRetries(0)          # already released
-    check p.takeBatch() == @["1-0xaaa"]
+    check p.takeBatch().keys == @["1-0xaaa"]
 
   test "a key failing every retry gives up and stops being fetched":
     var p = initPendingTokenFetch()
     for tier in 0 ..< MissingTokenFetchRetryDelaysMs.len:
       discard p.failBatch(@["1-0xaaa"])
       discard p.releaseRetries(tier)
-      p.completeBatch(p.takeBatch())
+      discard p.completeBatch(p.takeBatch().id)
     let (retryTiers, gaveUp) = p.failBatch(@["1-0xaaa"])
     check retryTiers.len == 0
     check gaveUp == @["1-0xaaa"]
@@ -120,13 +152,13 @@ suite "pending token fetch — failed batch retries":
     let (retryTiers, _) = p.failBatch(@["1-0xaaa", "10-0xbbb"])
     check retryTiers == @[0]
     check p.releaseRetries(0)
-    check p.takeBatch().toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
+    check p.takeBatch().keys.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
 
   test "a settled key starts its next failure from the first tier":
     var p = initPendingTokenFetch()
     discard p.failOnce("1-0xaaa")
     discard p.releaseRetries(0)
-    p.completeBatch(p.takeBatch())
+    discard p.completeBatch(p.takeBatch().id)
     p.settleKeys(@["1-0xaaa"])             # the retry answered
     let (retryTiers, _) = p.failOnce("1-0xaaa")
     check retryTiers == @[0]
@@ -135,7 +167,7 @@ suite "pending token fetch — failed batch retries":
     var p = initPendingTokenFetch()
     discard p.failBatch(@["1-0xaaa", "10-0xbbb"])
     check p.releaseRetries(0, isSettled = proc(key: string): bool = key == "1-0xaaa")
-    check p.takeBatch() == @["10-0xbbb"]
+    check p.takeBatch().keys == @["10-0xbbb"]
 
   test "a tier whose keys all settled during the backoff schedules nothing":
     var p = initPendingTokenFetch()

@@ -103,7 +103,7 @@ suite "token lookup state":
     let (again, againSchedules) = lookupTokenState(byKey, missing, fetch, key)
     check again == TokenLookupState.Pending
     check not againSchedules
-    check fetch.takeBatch() == @[key]
+    check fetch.takeBatch().keys == @[key]
 
   test "a key whose batch is in flight stays pending without a re-enqueue":
     let key = "1-0xcafe"

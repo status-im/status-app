@@ -5,7 +5,7 @@
 ## in-flight set — a key stuck in flight can never re-enqueue, so the token
 ## wedges (stops resolving) for the rest of the session. No Qt/backend.
 
-import unittest, sets, strutils, tables
+import unittest, json, sets, strutils, tables
 
 import app_service/common/utils as common_utils
 import app_service/service/token/dto/token as token_dto
@@ -13,49 +13,81 @@ import app_service/service/token/items/token_group
 import app_service/service/token/token_missing_fetch
 import app_service/service/token/token_pending_fetch
 
+proc response(batchId: int, keys: seq[string], error = ""): string =
+  $(%*{"batchId": batchId, "requestedKeys": keys, "tokens": [], "error": error})
+
 suite "missing-tokens batch — decoded envelope":
   test "a clean envelope yields its keys and releases them from the in-flight set":
     var p = initPendingTokenFetch()
     discard p.enqueue("1-0xaaa")
-    discard p.takeBatch()                 # 1-0xaaa is now in flight
-    let response = """{"requestedKeys":["1-0xaaa"],"tokens":[],"error":""}"""
-    let (env, decodeError) = decodeAndCompleteBatch(p, response)
+    let batch = p.takeBatch()             # 1-0xaaa is now in flight
+    let (env, releasedKeys, decodeError) = decodeAndCompleteBatch(p, response(batch.id, batch.keys))
     check decodeError.len == 0
     check env.requestedKeys == @["1-0xaaa"]
+    check releasedKeys == @["1-0xaaa"]
     check env.error.len == 0
     check p.enqueue("1-0xaaa") == true    # released -> a fresh miss may re-enqueue
 
   test "a backend-error envelope still releases the batch's keys":
     var p = initPendingTokenFetch()
     discard p.enqueue("1-0xaaa")
-    discard p.takeBatch()
-    let response = """{"requestedKeys":["1-0xaaa"],"tokens":[],"error":"boom"}"""
-    let (env, decodeError) = decodeAndCompleteBatch(p, response)
+    let batch = p.takeBatch()
+    let (env, releasedKeys, decodeError) = decodeAndCompleteBatch(p, response(batch.id, batch.keys, "boom"))
     check decodeError.len == 0
     check env.error == "boom"
+    check releasedKeys == @["1-0xaaa"]
     check p.enqueue("1-0xaaa") == true    # transient failure -> retry allowed
+
+  test "an envelope releases only its own batch's keys":
+    var p = initPendingTokenFetch()
+    discard p.enqueue("1-0xaaa")
+    let first = p.takeBatch()
+    discard p.enqueue("10-0xbbb")
+    discard p.takeBatch()
+    let (_, releasedKeys, _) = decodeAndCompleteBatch(p, response(first.id, first.keys, "boom"))
+    check releasedKeys == @["1-0xaaa"]
+    check p.enqueue("10-0xbbb") == false  # its own batch is still running
 
 suite "missing-tokens batch — undecodable envelope":
   test "a raised decode still releases the in-flight keys instead of wedging them":
     var p = initPendingTokenFetch()
     discard p.enqueue("1-0xaaa")
     discard p.takeBatch()                 # 1-0xaaa is now in flight
-    let (env, decodeError) = decodeAndCompleteBatch(p, "not json at all")
+    let (_, releasedKeys, decodeError) = decodeAndCompleteBatch(p, "not json at all")
     check decodeError.len > 0
     # The batch's keys are unknown when the envelope itself is undecodable, so
     # everything in flight must be released — otherwise these keys stay "in
     # flight" forever and can never be fetched again this session. The released
     # keys stand in for the batch's, so the caller can retry them.
-    check env.requestedKeys == @["1-0xaaa"]
+    check releasedKeys == @["1-0xaaa"]
     check p.enqueue("1-0xaaa") == true
 
   test "an empty response (drained handoff) releases the in-flight keys too":
     var p = initPendingTokenFetch()
     discard p.enqueue("10-0xbbb")
     discard p.takeBatch()
-    let (_, decodeError) = decodeAndCompleteBatch(p, "")
+    let (_, _, decodeError) = decodeAndCompleteBatch(p, "")
     check decodeError.len > 0
     check p.enqueue("10-0xbbb") == true
+
+  test "a batch failing after an undecodable one drained it retries its keys once":
+    var p = initPendingTokenFetch()
+    var knownMissing = initHashSet[string]()
+    discard p.enqueue("1-0xaaa")
+    discard p.takeBatch()
+    discard p.enqueue("10-0xbbb")
+    let running = p.takeBatch()
+    let (_, drained, _) = decodeAndCompleteBatch(p, "not json at all")
+    check drained.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
+    discard failMissingTokensBatch(p, drained, knownMissing)
+    let (_, releasedKeys, _) = decodeAndCompleteBatch(p, response(running.id, running.keys, "boom"))
+    check releasedKeys.len == 0
+    let (retryTiers, gaveUp, _) = failMissingTokensBatch(p, releasedKeys, knownMissing)
+    check retryTiers.len == 0
+    check gaveUp.len == 0
+    check p.releaseRetries(0)
+    check p.takeBatch().keys.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
+    check not p.releaseRetries(1)
 
 suite "missing-tokens batch — notification":
   test "found tokens refresh the token list":
@@ -140,15 +172,15 @@ suite "missing-tokens batch — caching the result":
     discard p.enqueue(keyA)
     discard p.enqueue(keyB)
     let batch = p.takeBatch()
-    p.completeBatch(batch)
+    let releasedKeys = p.completeBatch(batch.id)
     expect ValueError:
       discard c.apply(p, envelope(@[keyA, keyB], @[dto(1, "0xaaa"), dto(1, "0xbbb")]), raisingOn("0xbbb"))
-    let (retryTiers, gaveUp, notice) = failMissingTokensBatch(p, batch, c.knownMissingKeys)
+    let (retryTiers, gaveUp, notice) = failMissingTokensBatch(p, releasedKeys, c.knownMissingKeys)
     check retryTiers == @[0]
     check gaveUp.len == 0
     check notice == MissingFetchNotice.None
     check p.releaseRetries(0, c.isSettled) == true
-    check p.takeBatch().toHashSet == [keyA, keyB].toHashSet
+    check p.takeBatch().keys.toHashSet == [keyA, keyB].toHashSet
 
   test "a persistently raising batch gives up after the first try and every retry":
     var c = Caches()
@@ -159,13 +191,13 @@ suite "missing-tokens batch — caching the result":
     var gaveUpKeys: seq[string]
     while true:
       let batch = p.takeBatch()
-      if batch.len == 0:
+      if batch.keys.len == 0:
         break
-      p.completeBatch(batch)
+      let releasedKeys = p.completeBatch(batch.id)
       inc attempts
       expect ValueError:
-        discard c.apply(p, envelope(batch, @[dto(1, "0xaaa")]), raisingOn("0xaaa"))
-      let (retryTiers, gaveUp, notice) = failMissingTokensBatch(p, batch, c.knownMissingKeys)
+        discard c.apply(p, envelope(batch.keys, @[dto(1, "0xaaa")]), raisingOn("0xaaa"))
+      let (retryTiers, gaveUp, notice) = failMissingTokensBatch(p, releasedKeys, c.knownMissingKeys)
       lastNotice = notice
       gaveUpKeys = gaveUp
       for tier in retryTiers:
