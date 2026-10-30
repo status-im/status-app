@@ -172,6 +172,10 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_TOKENS_LIST_UPDATED) do(e: Args):
     self.delegate.onWalletAccountTokensRebuilt()
 
+  # a criterion's token lookup settled as missing: the chips and editor re-read it
+  self.events.on(SIGNAL_TOKEN_KEYS_SETTLED) do(e: Args):
+    self.delegate.onWalletAccountTokensRebuilt()
+
   self.events.on(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED) do(e: Args):
     self.delegate.onWalletAccountTokensRebuilt()
 

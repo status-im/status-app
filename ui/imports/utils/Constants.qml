@@ -1230,6 +1230,13 @@ QtObject {
         ENS = 5
     }
 
+    // in sync with app_service/service/token/token_lookup_cache.nim
+    enum TokenLookupState {
+        Resolved = 0,
+        Pending = 1,
+        Missing = 2
+    }
+
     enum TokenPrivilegesLevel {
         Owner = 0,
         TMaster = 1,

@@ -6,24 +6,6 @@ proc rebuildMarketDataInternal(self: Service) =
 proc rebuildMarketData*(self: Service) =
   self.rebuildMarketDataDebouncer.call()
 
-proc createTokenGroupsFromTokens(tokens: seq[TokenItem], groupsByKey: var Table[string, TokenGroupItem]) =
-  for token in tokens:
-    let groupKey = token.groupKey
-    if not groupsByKey.hasKey(groupKey):
-      groupsByKey[groupKey] = TokenGroupItem(
-        key: groupKey,
-        name: token.name,
-        symbol: token.symbol,
-        decimals: token.decimals,
-        logoUri: token.logoUri
-      )
-    groupsByKey[groupKey].addToken(token)
-
-proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
-  createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
-  self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
-  sortTokenGroupsByKey(self.groupsOfInterest)  # deterministic order
-
 proc prefetchSwapSupport(self: Service, chainIds: seq[int] = @[]) =
   if not SWAP_PROVIDER_ENABLED:
     return
@@ -160,6 +142,24 @@ proc fetchPendingMissingTokenKeys(self: Service) =
 proc scheduleMissingTokenKeysFetch(self: Service) =
   self.missingTokenKeysFetchDebouncer.call()
 
+proc emitBatchNotice(self: Service, notice: MissingFetchNotice) =
+  case notice
+  of MissingFetchNotice.TokensListUpdated:
+    self.events.emit(SIGNAL_TOKENS_LIST_UPDATED, Args())
+  of MissingFetchNotice.KeysSettled:
+    self.events.emit(SIGNAL_TOKEN_KEYS_SETTLED, Args())
+  of MissingFetchNotice.None:
+    discard
+
+proc retryFailedMissingTokenKeys(self: Service, keys: seq[string]) =
+  # Back off and re-fetch; keys out of tries settle as missing until the next refresh.
+  let (retryTiers, gaveUp, notice) = failMissingTokensBatch(self.pendingTokenFetch, keys, self.knownMissingKeys)
+  for tier in retryTiers:
+    self.missingTokenKeysRetryDebouncers[tier].call()
+  if gaveUp.len > 0:
+    warn "giving up fetching missing tokens", keys = gaveUp
+  self.emitBatchNotice(notice)
+
 proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
   # Decode the envelope and release the batch's keys from the in-flight set
   # regardless of outcome — an undecodable envelope must not leave its keys
@@ -167,39 +167,27 @@ proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.} =
   let (env, decodeError) = decodeAndCompleteBatch(self.pendingTokenFetch, response)
   if decodeError.len > 0:
     error "error decoding async fetch missing tokens response", msg = decodeError
+    self.retryFailedMissingTokenKeys(env.requestedKeys)
     return
   if env.error.len > 0:
-    # Transient backend failure: leave the keys unmarked so a later lookup retries
-    # (async, off the GUI thread) rather than caching a false "missing".
+    # Transient backend failure: retry rather than caching a false "missing" right away.
     error "async fetch missing tokens failed", errDescription = env.error
+    self.retryFailedMissingTokenKeys(env.requestedKeys)
     return
+  var notice: MissingFetchNotice
   try:
-    # Index the returned tokens by their (lower-cased) key so each requested key is
-    # cached under the exact string that was looked up. This preserves the old
-    # getTokenByKey semantics (store under the requested key) even when the request
-    # used a checksummed/mixed-case address, so the next lookup Hits instead of
-    # re-enqueuing forever.
-    var tokenByLowerKey = initTable[string, TokenItem]()
-    for token in env.tokens.map(t => createTokenItem(t)):
-      tokenByLowerKey[token.key.toLowerAscii] = token
-    var foundTokens: seq[TokenItem]
-    var foundKeys = initHashSet[string]()
-    for requestedKey in env.requestedKeys:
-      let matched = tokenByLowerKey.getOrDefault(requestedKey.toLowerAscii)
-      if not matched.isNil:
-        self.tokensOfInterestByKey[requestedKey] = matched
-        foundTokens.add(matched)
-        foundKeys.incl(requestedKey)
-    if foundTokens.len > 0:
-      self.addNewTokensToGroupsOfInterest(foundTokens)
-    # Keys the backend did not return are genuinely missing -> feed the negative-cache markers.
-    for key in missingFromBatch(env.requestedKeys, foundKeys):
-      self.knownMissingKeys.incl(key)
-    if foundTokens.len > 0:
-      # Notify consumers so they re-read and the late tokens resolve.
-      self.events.emit(SIGNAL_TOKENS_LIST_UPDATED, Args())
+    notice = applyMissingTokensBatch(self.pendingTokenFetch, env, self.tokensOfInterestByKey,
+      self.groupsOfInterestByKey, self.knownMissingKeys)
+    if notice == MissingFetchNotice.TokensListUpdated:
+      self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
+      sortTokenGroupsByKey(self.groupsOfInterest)
   except Exception as e:
     error "error processing async fetch missing tokens", msg = e.msg
+    self.retryFailedMissingTokenKeys(env.requestedKeys)
+    return
+  # Notify consumers so they re-read: late tokens resolve, missing ones stop showing as pending.
+  # Outside the try: handlers run synchronously, and one raising must not retry a committed batch.
+  self.emitBatchNotice(notice)
 
 proc startRefreshTokensTask(self: Service, generation: int) =
   let arg = AsyncRefreshTokensTaskArg(
@@ -235,6 +223,14 @@ proc releaseTokenLists*(self: Service) =
 proc getTokenListsLoading*(self: Service): bool =
   return self.catalogue.tokenLists.isLoading
 
+proc newMissingTokenKeysRetryDebouncer(self: Service, tier: int, delayMs: int): debouncer_service.Debouncer =
+  result = debouncer_service.newDebouncer(self.threadpool, delayMs = delayMs, checkIntervalMs = 500)
+  result.registerCall0(callback = proc() =
+    let isSettled = proc(key: string): bool =
+      isMissingKeySettled(key, self.tokensOfInterestByKey, self.knownMissingKeys)
+    if self.pendingTokenFetch.releaseRetries(tier, isSettled):
+      self.scheduleMissingTokenKeysFetch())
+
 proc init*(self: Service) =
   self.rebuildMarketDataDebouncer = debouncer_service.newDebouncer(
     self.threadpool,
@@ -252,6 +248,9 @@ proc init*(self: Service) =
     delayMs = 200,
     checkIntervalMs = 100)
   self.missingTokenKeysFetchDebouncer.registerCall0(callback = proc() = self.fetchPendingMissingTokenKeys())
+
+  for tier, delayMs in MissingTokenFetchRetryDelaysMs:
+    self.missingTokenKeysRetryDebouncers.add(self.newMissingTokenKeysRetryDebouncer(tier, delayMs))
 
   self.onDemandPricesDebouncer = debouncer_service.newDebouncer(
     self.threadpool,
@@ -464,6 +463,19 @@ proc getTokensByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): seq[Tok
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenItem =
   let tokens = self.getTokensByKeyOrGroupKeyFromAllTokens(key)
   return if tokens.len > 0: tokens[0] else: nil
+
+# Never blocks for a token key: an unknown one is queued for the async batch fetch.
+# A group key may hit getTokensOfGroupOnDemand, a sync RPC.
+proc getTokenLookupState*(self: Service, key: string): TokenLookupState =
+  if not common_utils.isTokenKey(key):
+    if self.getTokenByKeyOrGroupKeyFromAllTokens(key).isNil:
+      return TokenLookupState.Missing
+    return TokenLookupState.Resolved
+  let (state, scheduleFetch) = lookupTokenState(
+    self.tokensOfInterestByKey, self.knownMissingKeys, self.pendingTokenFetch, key)
+  if scheduleFetch:
+    self.scheduleMissingTokenKeysFetch()
+  return state
 
 proc ensurePricesForGroup*(self: Service, key: string) =
   let keys = if common_utils.isTokenKey(key): @[key]

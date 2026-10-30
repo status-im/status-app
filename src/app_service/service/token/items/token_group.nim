@@ -19,6 +19,11 @@ type TokenGroupItem* {.acyclic.} = ref object of RootObj
   logoUri*: string
   tokens*: seq[TokenItem]
 
+proc copyGroup*(self: TokenGroupItem): TokenGroupItem =
+  ## Field-wise copy with its own tokens seq (the TokenItems stay shared).
+  result = TokenGroupItem()
+  result[] = self[]
+
 # Group token type is the type of the first token in the group
 proc `type`*(self: TokenGroupItem): common_types.TokenType =
   if self.tokens.len == 0:
