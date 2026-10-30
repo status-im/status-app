@@ -70,6 +70,14 @@ Item {
 
         property PaymentRequestModal controlUnderTest: null
 
+        function cleanup() {
+            const chainModels = d.tokensStore._chainModels
+            for (const chainId in chainModels) {
+                chainModels[chainId].loading = false
+                d.tokensStore._buildGroupsInto(chainModels[chainId], parseInt(chainId))
+            }
+        }
+
         // helper functions -------------------------------------------------------------
         function launchAndVerfyModal() {
             controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root)
@@ -292,9 +300,6 @@ Item {
             compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
             chainModel.loading = false
             tryCompare(controlUnderTest, "selectedTokenGroupKey", Constants.ethGroupKey)
-
-            // the store keeps the chain's model for the next test
-            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId)
         }
 
         function test_symbol_initial_selection_when_not_available_in_chain() {
