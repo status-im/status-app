@@ -38,7 +38,8 @@ StatusDialog {
         color    [string] - account's wallet color
     **/
     required property var accountsModel
-    /** Expected model structure: see SearchableAssetsPanel::model **/
+    /** The selected chain's token groups, held by the owner while the modal
+        shows that chain. Expected model structure: see SearchableAssetsPanel::model **/
     required property var tokenGroupsForChainModel
     required property var searchResultModel
     required property string currentCurrency
@@ -64,7 +65,9 @@ StatusDialog {
         return amountToSendInput.amount
     }
 
-    signal buildGroupsForChain()
+    // The modal holds all token groups (the search) while it exists.
+    signal allTokenGroupsAcquireRequested()
+    signal allTokenGroupsReleaseRequested()
 
     objectName: "paymentRequestModal"
 
@@ -77,8 +80,10 @@ StatusDialog {
 
     title: qsTr("Payment request")
 
-    Component.onCompleted: {
-        root.buildGroupsForChain()
+    SQUtils.ResourceHolder {
+        key: "allTokenGroups"
+        onAcquireRequested: root.allTokenGroupsAcquireRequested()
+        onReleaseRequested: root.allTokenGroupsReleaseRequested()
     }
 
     onAboutToShow: {
@@ -329,7 +334,6 @@ StatusDialog {
 
                 onClicked: {
                     root.selectedNetworkChainId = model.chainId
-                    root.buildGroupsForChain()
                     root.selectedTokenGroupKey = root.defaultTokenGroupKey
                     networkSelector.popup.close()
                 }

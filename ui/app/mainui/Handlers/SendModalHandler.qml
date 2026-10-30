@@ -475,13 +475,7 @@ QtObject {
                 root.launchBuyFlowRequested(selectedAccountAddress, selectedChainId, selectedGroupKey)
             }
 
-            onSearchInAssets: (keyword) => {
-                if (handler.assetsSelectorModel.searchString === "" && keyword !== "") {
-                    // Request searchable assets
-                    WalletStores.RootStore.tokensStore.buildGroupsForChain(simpleSendModal.selectedChainId)
-                }
-                handler.assetsSelectorModel.search(keyword)
-            }
+            onSearchInAssets: (keyword) => handler.assetsSelectorModel.search(keyword)
 
             onFetchMoreAssets: {
                 handler.assetsSelectorModel.fetchMore()

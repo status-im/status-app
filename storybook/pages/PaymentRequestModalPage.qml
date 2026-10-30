@@ -11,6 +11,7 @@ import StatusQ.Core.Utils
 import utils
 
 import AppLayouts.Wallet.adaptors
+import AppLayouts.Wallet.helpers
 import AppLayouts.Wallet.stores
 import AppLayouts.Chat.popups
 import shared.stores as SharedStores
@@ -60,12 +61,9 @@ SplitView {
 
         readonly property var tokensStore: TokensStoreMock {
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
             searchResultModel: TokenGroupsModel {
                 skipInitialLoad: true
-                tokenGroupsForChainModel: popupBg.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: popupBg.tokensStore.tokenGroupsModel
             }
         }
 
@@ -78,12 +76,16 @@ SplitView {
                 destroyOnClose: true
 
                 readonly property SharedStores.CurrenciesStore currenciesStore: SharedStores.CurrenciesStore {}
+                readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
+                    tokensStore: popupBg.tokensStore
+                    chainId: paymentRequestModal.selectedNetworkChainId
+                }
 
                 currentCurrency: currenciesStore.currentCurrency
                 formatCurrencyAmount: currenciesStore.formatCurrencyAmount
                 flatNetworksModel: d.flatNetworks
                 accountsModel: d.accounts
-                tokenGroupsForChainModel: popupBg.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: chainTokenGroupsHolder.model
                 searchResultModel: popupBg.tokensStore.searchResultModel
 
                 Connections {
@@ -101,12 +103,10 @@ SplitView {
                         paymentRequestModal.selectedNetworkChainId = d.selectedNetworkChainId
                     if (!!d.selectedAccountAddress)
                         paymentRequestModal.selectedAccountAddress = d.selectedAccountAddress
-                    popupBg.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
                 }
 
-                onBuildGroupsForChain: {
-                    popupBg.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-                }
+                onAllTokenGroupsAcquireRequested: popupBg.tokensStore.acquireAllTokenGroups()
+                onAllTokenGroupsReleaseRequested: popupBg.tokensStore.releaseAllTokenGroups()
             }
         }
     }

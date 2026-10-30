@@ -6,12 +6,12 @@ import QtModelsToolkit
 
 import AppLayouts.Wallet.stores
 
+import Models
+
 TokensStore {
     id: root
 
     property var tokenGroupsModel
-    property var tokenGroupsForChainModel
-    property var tokenGroupsForChainToModel
     property var searchResultModel
     property bool showCommunityAssetsInSend
     property bool displayAssetsBelowBalance
@@ -35,23 +35,38 @@ TokensStore {
     function createTokenSelectorModel(kind) {
         root.createdKinds = root.createdKinds.concat([kind])
         // Mirror the producer's per-kind source: swap receive (3) uses the
-        // destination-chain groups, owned (0: send, swap pay) / buy (2) the full
-        // groups. (The real producer additionally
-        // swaps in the cross-chain groups while no chain filter is set — the
-        // "All" chip; that path is covered by the Nim model tests.) If a caller
-        // pre-seeded tokenSelectorStubData, use that static set instead.
+        // shared model of the chain set by setTokenSelectorCatalogChain, owned
+        // (0: send, swap pay) / buy (2) the full groups. (The real producer
+        // additionally swaps in the cross-chain groups while no chain filter is
+        // set — the "All" chip; that path is covered by the Nim model tests.) If
+        // a caller pre-seeded tokenSelectorStubData, use that static set instead.
         let props = { ownedOnly: kind === 0, emptyAccounts: root.tokenSelectorEmptyAccounts }
-        if (!!root.tokenSelectorStubData && root.tokenSelectorStubData.length > 0)
+        const stubbed = !!root.tokenSelectorStubData && root.tokenSelectorStubData.length > 0
+        if (stubbed)
             props.sourceData = root.tokenSelectorStubData
-        else if (kind === 3)
-            props.sourceModel = root.tokenGroupsForChainToModel
-        else
+        else if (kind !== 3)
             props.sourceModel = root.tokenGroupsModel
         const model = _tokenSelectorModelMockComponent.createObject(root, props)
-        return { model: model, id: root._tokenSelectorIdCounter++ }
+        const id = root._tokenSelectorIdCounter++
+        if (kind === 3 && !stubbed)
+            root._catalogPickers[id] = { model: model, chainId: -1 }
+        return { model: model, id: id }
     }
 
-    function releaseTokenSelectorModel(id) {}
+    function releaseTokenSelectorModel(id) {
+        delete root._catalogPickers[id]
+    }
+
+    // swap receive pickers by id, with the chain each lists
+    property var _catalogPickers: ({})
+
+    function setTokenSelectorCatalogChain(id, chainId) {
+        const picker = root._catalogPickers[id]
+        if (!picker)
+            return
+        picker.chainId = chainId
+        picker.model.sourceModel = root.chainTokenGroupsModel(chainId)
+    }
 
     property var swapUnsupportedChainIds: []
     function isChainSupportedForSwap(chainId) {
@@ -62,25 +77,75 @@ TokensStore {
         return _displayAssetsBelowBalanceThresholdDisplayAmountFunc()
     }
 
-    property var builtChainIds: []
+    // every chain acquired, in order, so tests can assert which chains a
+    // consumer holds and when; tests reset it to [] to scope a window
+    property var acquiredChainIds: []
+    // every acquire and release with the keys it passed, as [op, chainId, keys]
+    property var chainTokenGroupsCalls: []
 
-    // Like the real token service, each side's build touches only its own
-    // catalog — the receive panel drives buildGroupsForChainTo itself.
-    function buildGroupsForChain(chainId) {
-        root.builtChainIds = root.builtChainIds.concat([chainId])
-        root._buildGroupsInto(root.tokenGroupsForChainModel, chainId)
+    // One model per chain, built on its first holder and kept, as the real one
+    // is within the idle delay. The mock fills it at once, as if loaded.
+    property var _chainModels: ({})
+    readonly property Component _chainModelComponent: Component { TokenGroupsModel { skipInitialLoad: true } }
+
+    function chainTokenGroupsModel(chainId) {
+        return root._chainModels[chainId] ?? null
     }
 
-    property var builtToChainIds: []
+    // Holder counts by resource, as the real token service keeps them. The
+    // mock models are static, so holds only get counted.
+    property var chainTokenGroupsHolders: ({})
+    property int allTokenGroupsHolders: 0
+    property int tokenListsHolders: 0
 
-    function buildGroupsForChainTo(chainId) {
-        root.builtToChainIds = root.builtToChainIds.concat([chainId])
-        root._buildGroupsInto(root.tokenGroupsForChainToModel, chainId)
+    function chainTokenGroupsHolderCount(chainId) {
+        return root.chainTokenGroupsHolders[chainId] ?? 0
     }
 
-    // The real store triggers the on-demand cross-chain catalog fetch here;
-    // in storybook the mock models are static, so this only records the call.
-    property int fetchAllChainsTokenGroupsCallCount: 0
+    function _addChainTokenGroupsHolders(chainId, delta) {
+        const holders = Object.assign({}, root.chainTokenGroupsHolders)
+        holders[chainId] = (holders[chainId] ?? 0) + delta
+        if (holders[chainId] < 0)
+            console.warn("releaseChainTokenGroups: chain not held", chainId)
+        root.chainTokenGroupsHolders = holders
+    }
+
+    function acquireChainTokenGroups(chainId, mandatoryKeys) {
+        root.acquiredChainIds = root.acquiredChainIds.concat([chainId])
+        root.chainTokenGroupsCalls = root.chainTokenGroupsCalls.concat([["acquire", chainId, mandatoryKeys ?? ""]])
+        root._addChainTokenGroupsHolders(chainId, 1)
+        if (!!root._chainModels[chainId])
+            return
+        const model = root._chainModelComponent.createObject(root)
+        root._buildGroupsInto(model, chainId)
+        root._chainModels[chainId] = model
+        for (const id in root._catalogPickers) {
+            const picker = root._catalogPickers[id]
+            if (picker.chainId === chainId)
+                picker.model.sourceModel = model
+        }
+    }
+
+    function releaseChainTokenGroups(chainId, mandatoryKeys) {
+        root.chainTokenGroupsCalls = root.chainTokenGroupsCalls.concat([["release", chainId, mandatoryKeys ?? ""]])
+        root._addChainTokenGroupsHolders(chainId, -1)
+    }
+
+    function acquireAllTokenGroups() {
+        root.allTokenGroupsHolders++
+    }
+
+    function releaseAllTokenGroups() {
+        root.allTokenGroupsHolders--
+    }
+
+    function acquireTokenLists() {
+        root.tokenListsHolders++
+    }
+
+    function releaseTokenLists() {
+        root.tokenListsHolders--
+    }
     // Tokens outside every model, keyed by token or group key, that the last-resort
     // lookup below can still resolve (the real store asks the backend's full list).
     property var allTokensByKey: ({})
@@ -109,18 +174,14 @@ TokensStore {
         return { key: "", groupKey: "", symbol: "", name: "", decimals: 0, chainId: 0 }
     }
 
-    function fetchAllChainsTokenGroups(mandatoryKeys) {
-        root.fetchAllChainsTokenGroupsCallCount++
-    }
-
     function _buildGroupsInto(targetModel, chainId) {
         if (!root.tokenGroupsModel || chainId <= 0) {
-            console.warn("buildGroupsForChain: invalid parameters", chainId)
+            console.warn("acquireChainTokenGroups: invalid parameters", chainId)
             return
         }
 
         if (!targetModel) {
-            console.warn("buildGroupsForChain: target model is not set")
+            console.warn("acquireChainTokenGroups: target model is not set")
             return
         }
 

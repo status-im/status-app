@@ -13,6 +13,8 @@ logScope:
   topics = "network-service"
 
 const SIGNAL_NETWORK_ENDPOINT_UPDATED* = "networkEndPointUpdated"
+# a chain was activated or deactivated
+const SIGNAL_NETWORK_ACTIVE_UPDATED* = "networkActiveUpdated"
 const EXPLORER_TX_PATH* = "/tx"
 const EXPLORER_ADDRESS_PATH* = "/address"
 
@@ -96,9 +98,12 @@ proc setNetworksState*(self: Service, chainIds: seq[int], enabled: bool) =
 proc setNetworkActive*(self: Service, chainId: int, active: bool) =
   let network = self.getNetworkByChainId(chainId)
 
-  if not network.isNil and network.isActive != active:
+  let changed = not network.isNil and network.isActive != active
+  if changed:
     discard backend.setChainActive(chainId, active)
   self.fetchNetworks()
+  if changed:
+    self.events.emit(SIGNAL_NETWORK_ACTIVE_UPDATED, Args())
 
 ## This procedure retuns the network to be used based on the app mode (testnet/mainnet).
 ## We don't need to check if retuned network is nil cause it should never be, but if somehow it is, the app will be closed.

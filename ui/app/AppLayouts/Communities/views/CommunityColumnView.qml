@@ -509,7 +509,8 @@ Item {
             tokensStore: root.walletAssetsStore.walletTokensStore
             assetsModel: root.store.assetsModel
             assetsLoading: root.store.tokenListLoading
-            loadTokenList: root.store.loadTokenList
+            acquireTokenList: root.store.acquireTokenList
+            releaseTokenList: root.store.releaseTokenList
             collectiblesModel: root.store.collectiblesModel
             ensCommunityPermissionsEnabled: root.ensCommunityPermissionsEnabled
             permissionsModel: {

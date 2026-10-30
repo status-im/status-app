@@ -11,6 +11,7 @@ import QtQuick.Controls
 import utils
 
 import AppLayouts.Wallet.adaptors
+import AppLayouts.Wallet.helpers
 import AppLayouts.Chat.popups
 import shared.stores as SharedStores
 
@@ -31,12 +32,9 @@ Item {
 
         readonly property var tokensStore: TokensStoreMock {
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
             searchResultModel: TokenGroupsModel {
                 skipInitialLoad: true
-                tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: d.tokensStore.tokenGroupsModel
             }
         }
     }
@@ -48,25 +46,21 @@ Item {
             destroyOnClose: true
 
             readonly property SharedStores.CurrenciesStore currencyStore: SharedStores.CurrenciesStore {}
+            // as its owner holds the selected chain
+            readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
+                tokensStore: d.tokensStore
+                chainId: paymentRequestModal.selectedNetworkChainId
+            }
 
             currentCurrency: currencyStore.currentCurrency
             formatCurrencyAmount: currencyStore.formatCurrencyAmount
             flatNetworksModel: d.flatNetworks
             accountsModel: d.accounts
-            tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+            tokenGroupsForChainModel: chainTokenGroupsHolder.model
             searchResultModel: d.tokensStore.searchResultModel
 
-            Component.onCompleted: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
-
-            onBuildGroupsForChain: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
-
-            onSelectedNetworkChainIdChanged: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
+            onAllTokenGroupsAcquireRequested: d.tokensStore.acquireAllTokenGroups()
+            onAllTokenGroupsReleaseRequested: d.tokensStore.releaseAllTokenGroups()
         }
     }
 
@@ -225,6 +219,32 @@ Item {
             compare(networkSelector.control.contentItem.title, network.chainName)
 
             closeAndVerfyModal()
+        }
+
+        function test_shows_the_held_token_groups_of_its_chain() {
+            const store = d.tokensStore
+            const firstChainId = Constants.chains.mainnetChainId
+            const secondChainId = d.flatNetworks.get(1).chainId
+            verify(firstChainId !== secondChainId)
+            compare(store.allTokenGroupsHolders, 0)
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 0)
+
+            launchAndVerfyModal()
+            compare(store.allTokenGroupsHolders, 1)
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 1)
+            verify(!!controlUnderTest.tokenGroupsForChainModel)
+            verify(controlUnderTest.tokenGroupsForChainModel === store.chainTokenGroupsModel(firstChainId))
+
+            controlUnderTest.selectedNetworkChainId = secondChainId
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 0)
+            compare(store.chainTokenGroupsHolderCount(secondChainId), 1)
+            verify(controlUnderTest.tokenGroupsForChainModel === store.chainTokenGroupsModel(secondChainId))
+            compare(store.allTokenGroupsHolders, 1)
+
+            // destroyed on close
+            controlUnderTest.close()
+            tryVerify(() => store.allTokenGroupsHolders === 0)
+            compare(store.chainTokenGroupsHolderCount(secondChainId), 0)
         }
 
         function test_symbol_initial_selection_when_not_available_in_chain() {

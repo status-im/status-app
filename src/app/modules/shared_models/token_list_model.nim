@@ -1,5 +1,5 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables
+import nimqml, tables, sequtils, sets
 import token_list_item
 
 type
@@ -42,12 +42,23 @@ QtObject:
     self.endResetModel()
     self.countChanged()
 
-  proc setWalletTokenItems*(self: TokenListModel, items: seq[TokenListItem]) =
+  proc setWalletTokenItems*(self: TokenListModel, items: seq[TokenListItem]): HashSet[(string, string)] {.discardable.} =
+    ## Returns the (symbol, communityId) of the community-issued wallet rows that
+    ## went, whose community's own row is not listed then
     var newItems = items
+    var walletKeys = initHashSet[(string, string)](items.len)
+    for it in items:
+      walletKeys.incl((it.getSymbol(), it.getCommunityId()))
     for item in self.items:
-      # Add back the community tokens
-      if item.communityId != "":
-        newItems.add(item)
+      # wallet rows are General, also those of community-issued tokens; a community's
+      # own row a wallet row covers goes, as the communities never add it then
+      if item.category != ord(TokenListItemCategory.General):
+        if (item.getSymbol(), item.getCommunityId()) notin walletKeys:
+          newItems.add(item)
+      elif item.getCommunityId().len > 0:
+        let itemKey = (item.getSymbol(), item.getCommunityId())
+        if itemKey notin walletKeys:
+          result.incl(itemKey)
     self.beginResetModel()
     self.items = newItems
     self.endResetModel()
@@ -76,6 +87,12 @@ QtObject:
     self.items.add(items)
     self.endInsertRows()
     self.countChanged()
+
+  proc addUnlistedItems*(self: TokenListModel, items: seq[TokenListItem]) =
+    var listed = initHashSet[(string, string)](self.items.len)
+    for it in self.items:
+      listed.incl((it.getSymbol(), it.getCommunityId()))
+    self.addItems(items.filterIt((it.getSymbol(), it.getCommunityId()) notin listed))
 
   method roleNames(self: TokenListModel): Table[int, string] =
     {

@@ -33,6 +33,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	swap_modal_instantiation_bench \
 	thread_navigation_test \
 	thread_search_test \
+	token_selector_module_test \
 	typed_completion_test \
 	url_scheme_event_test \
 	wallet_connect_controller_test
@@ -76,6 +77,7 @@ NIM_TESTS_MODEL_SPY := \
 	token_lists_model_test \
 	token_selector_model_bench \
 	token_selector_model_test \
+	token_selector_module_test \
 	token_selector_producer_view_test
 
 NIM_MODEL_SPY_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_MODEL_SPY))

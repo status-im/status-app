@@ -545,19 +545,15 @@ Item {
             // try to find it in token groups
             let [symbol, decimals] = getSymbolAndDecimalsForTokenFomModel(WalletStore.RootStore.tokensStore.tokenGroupsModel, key);
             if (!symbol) {
-                // fallback and try to find it in token groups for chain (in case it's swap, payment request...)
-                [symbol, decimals] = getSymbolAndDecimalsForTokenFomModel(WalletStore.RootStore.tokensStore.tokenGroupsForChainModel, key);
+                // fallback and try to find it in search result model (in case of lazy loading the token is not displayed from the start
+                // but is displayed cause it matched the search criteria)
+                [symbol, decimals] = getSymbolAndDecimalsForTokenFomModel(WalletStore.RootStore.tokensStore.searchResultModel, key);
                 if (!symbol) {
-                    // fallback and try to find it in search result model (in case of lazy loading the token is not displayed from the start
-                    // but is displayed cause it matched the search criteria)
-                    [symbol, decimals] = getSymbolAndDecimalsForTokenFomModel(WalletStore.RootStore.tokensStore.searchResultModel, key);
-                    if (!symbol) {
-                        // fallback and fetch details from the backend, this call fetch all tokens from statusgo and
-                        // searchs for the token that matches the key (this is definitely the last resort)
-                        const token = WalletStore.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens(key)
-                        symbol = token.symbol
-                        decimals = token.decimals
-                    }
+                    // fallback and fetch details from the backend, this call fetch all tokens from statusgo and
+                    // searchs for the token that matches the key (this is definitely the last resort)
+                    const token = WalletStore.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens(key)
+                    symbol = token.symbol
+                    decimals = token.decimals
                 }
             }
 

@@ -23,6 +23,7 @@ import AppLayouts.Communities.popups
 import AppLayouts.Communities.helpers
 import AppLayouts.Wallet.popups.buy
 import AppLayouts.Wallet.popups
+import AppLayouts.Wallet.helpers
 import AppLayouts.Communities.stores
 import AppLayouts.Profile.helpers
 import AppLayouts.Wallet.services.dapps
@@ -1638,13 +1639,17 @@ QtObject {
                 flatNetworksModel: root.networksStore.activeNetworks
                 accountsModel: WalletStores.RootStore.nonWatchAccounts
 
-                tokenGroupsForChainModel: WalletStores.RootStore.tokensStore.tokenGroupsForChainModel
+                // the selected chain's token groups, held while the modal shows it
+                readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
+                    tokensStore: WalletStores.RootStore.tokensStore
+                    chainId: paymentRequestModal.selectedNetworkChainId
+                }
+
+                tokenGroupsForChainModel: chainTokenGroupsHolder.model
                 searchResultModel: WalletStores.RootStore.tokensStore.searchResultModel
 
-                onBuildGroupsForChain: {
-                    WalletStores.RootStore.tokensStore.buildGroupsForChain(selectedNetworkChainId, "")
-                    WalletStores.RootStore.tokensStore.fetchAllChainsTokenGroups("")
-                }
+                onAllTokenGroupsAcquireRequested: WalletStores.RootStore.tokensStore.acquireAllTokenGroups()
+                onAllTokenGroupsReleaseRequested: WalletStores.RootStore.tokensStore.releaseAllTokenGroups()
 
                 onAccepted: {
                     paymentRequested(selectedAccountAddress, amount,

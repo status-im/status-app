@@ -26,6 +26,11 @@ method createModelForKind*(self: AccessInterface, kind: int): tuple[id: int, mod
 method releaseModel*(self: AccessInterface, id: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+# Points a swap receive model at the destination chain whose shared token groups
+# it lists.
+method setCatalogChainId*(self: AccessInterface, id: int, chainId: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 # View Delegate Interface
 method viewDidLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
