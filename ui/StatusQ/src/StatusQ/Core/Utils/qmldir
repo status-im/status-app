@@ -14,6 +14,7 @@ ModelsComparator 0.1 ModelsComparator.qml
 NavigationHistory 0.1 NavigationHistory.qml
 QObject 0.1 QObject.qml
 RecursiveStackView 0.1 RecursiveStackView.qml
+ResourceHolder 0.1 ResourceHolder.qml
 SearchFilter 0.1 SearchFilter.qml
 StackViewStates 0.1 StackViewStates.qml
 StatesStack 0.1 StatesStack.qml
