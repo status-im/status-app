@@ -64,6 +64,20 @@ QtObject {
         httpTrafficStatsEnabledSet(enabled)
     }
 
+    //! The report fetchWakuTrafficReport() answers with, as the JSON-RPC
+    //! envelope status-go returns.
+    property string wakuTrafficStatsJson: JSON.stringify({result: null, error: {message: "not mocked"}})
+    property int wakuTrafficStatsReads: 0
+
+    signal wakuTrafficReportFetched(string report, string error)
+    signal wakuTrafficStatsReset()
+
+    function fetchWakuTrafficReport() {
+        wakuTrafficStatsReads++
+        Qt.callLater(() => wakuTrafficReportFetched(wakuTrafficStatsJson, ""))
+    }
+    function resetWakuTrafficStats() { wakuTrafficStatsReset() }
+
     function authenticateLoggedInUser(_requestedBy) {}
     function deleteAccount(_address, _password) { return "" }
     function updateAccount(_address, _accountName, _colorId, _emoji) { return "" }

@@ -71,6 +71,15 @@ method resetHttpTrafficStats*(self: AccessInterface) {.base.} =
 method setHttpTrafficStatsEnabled*(self: AccessInterface, enabled: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method fetchWakuTrafficReport*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onWakuTrafficReportFetched*(self: AccessInterface, report: string, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method resetWakuTrafficStats*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method refetchTxHistory*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

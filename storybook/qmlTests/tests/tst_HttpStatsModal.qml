@@ -47,6 +47,17 @@ Item {
         ]
     })
 
+    readonly property var wakuSnapshot: ({
+        since: "2026-10-13T13:00:00.663257+04:00",
+        until: "2026-10-13T13:30:00.715962+04:00",
+        totals: {bytesSent: 1000000, bytesReceived: 9000000},
+        protocols: [
+            {protocol: "/vac/waku/relay/2.0.0", bytesSent: 900000, bytesReceived: 7100000},
+            {protocol: "/vac/waku/store-query/3.0.0", bytesSent: 100000, bytesReceived: 1900000}
+        ],
+        peers: [{peer: "16Uiu2HAmAlice", bytesSent: 1000000, bytesReceived: 9000000}]
+    })
+
     function source(name, requests, notModified, failed, sent, received) {
         return {source: name, requests: requests, notModified: notModified, failed: failed,
                 bytesSent: sent, bytesReceived: received}
@@ -73,6 +84,7 @@ Item {
             appActive: true
             walletStore: WalletStore {
                 httpTrafficStatsJson: JSON.stringify({result: root.snapshot})
+                wakuTrafficStatsJson: JSON.stringify({result: root.wakuSnapshot})
             }
         }
     }
@@ -80,6 +92,11 @@ Item {
     SignalSpy {
         id: resetSpy
         signalName: "httpTrafficStatsReset"
+    }
+
+    SignalSpy {
+        id: wakuResetSpy
+        signalName: "wakuTrafficStatsReset"
     }
 
     SignalSpy {
@@ -116,8 +133,8 @@ Item {
 
         function test_leadsWithTotalsAndShowsRatesAsChips() {
             const total = find("httpTrafficKpiTotal:bytesSent")
+            tryVerify(() => total.text.indexOf("MB") > 0, 2000, total.text)
             verify(total.text.indexOf("/h") < 0, "the headline is the total: " + total.text)
-            verify(total.text.indexOf("MB") > 0, total.text)
             const rate = find("httpTrafficKpiRate:bytesSent")
             verify(rate.text.indexOf("/h") > 0, rate.text)
             verify(find("httpTrafficSparkline:bytesSent").visible)
@@ -293,13 +310,40 @@ Item {
             verify(row.contentItem.children[2].text.indexOf("in background") >= 0, row.contentItem.children[2].text)
         }
 
-        function test_wakuAndWebviewsAreDisabledTabs() {
-            for (const name of ["httpStatsWakuTab", "httpStatsWebviewsTab"]) {
-                const tab = find(name)
-                verify(!tab.enabled, name)
-                mouseClick(tab)
-            }
+        function test_webviewsIsADisabledTab() {
+            const tab = find("httpStatsWebviewsTab")
+            verify(!tab.enabled)
+            mouseClick(tab)
             compare(find("httpStatsTabBar").currentIndex, 0, "a disabled tab cannot be selected")
+        }
+
+        function test_wakuTabShowsTheWakuReport() {
+            const reads = modal.walletStore.wakuTrafficStatsReads
+            mouseClick(find("httpStatsWakuTab"))
+            tryVerify(() => modal.walletStore.wakuTrafficStatsReads > reads, 2000, "opening the tab asks for the report")
+            const answer = find("wakuTrafficAnswer")
+            tryVerify(() => answer.text.indexOf("<b>Relay</b>") >= 0, 2000, answer.text)
+            verify(!find("httpStatsCollectSwitch").visible, "Waku traffic is always counted")
+            tryVerify(() => find("httpStatsLiveLabel").text.indexOf("measuring 30m") >= 0, 2000, find("httpStatsLiveLabel").text)
+        }
+
+        function test_resetOnTheWakuTabLeavesHttpAlone() {
+            resetSpy.target = modal.walletStore
+            wakuResetSpy.target = modal.walletStore
+            wakuResetSpy.clear()
+            resetSpy.clear()
+            mouseClick(find("httpStatsWakuTab"))
+            mouseClick(findChild(modal.footer, "httpStatsResetButton"))
+            compare(wakuResetSpy.count, 1)
+            compare(resetSpy.count, 0)
+        }
+
+        function test_reportsMissingWakuStats() {
+            modal.walletStore.wakuTrafficStatsJson = JSON.stringify({error: {message: "method not found"}})
+            mouseClick(find("httpStatsWakuTab"))
+            const error = find("httpStatsWakuError")
+            tryVerify(() => error.visible && error.text.indexOf("method not found") >= 0, 2000, error.text)
+            verify(!find("wakuTrafficDashboard").visible)
         }
 
         function test_collectionCanBeTurnedOnAndOff() {

@@ -36,46 +36,19 @@ Item {
 
     readonly property int collapsedSources: 5
 
-    readonly property color sentColor: Theme.palette.dangerColor1
-    readonly property color receivedColor: Theme.palette.primaryColor1
     readonly property color cachedColor: Theme.palette.successColor1
     readonly property color failedColor: Theme.palette.warningColor1
-    readonly property var hostColors: [Theme.palette.miscColor2, Theme.palette.miscColor6,
-                                       Theme.palette.miscColor3, Theme.palette.baseColor1]
-
-    function formatBytes(bytes) {
-        const precision = bytes >= 1024 * 1024 * 1024 ? 2 : (bytes >= 100 * 1024 * 1024 ? 0 : 1)
-        return LocaleUtils.formattedDataSize(bytes, precision)
-    }
 
     function formatRate(bytes, seconds = elapsedSeconds) {
-        const rate = Report.hourly(bytes, seconds)
-        return rate < 0 ? qsTr("—/h") : qsTr("%1/h").arg(formatBytes(rate))
-    }
-
-    //! For names from the report that go into styled text.
-    function escaped(text) {
-        return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    }
-
-    function colored(text, color) {
-        return "<font color=\"%1\">%2</font>".arg(String(color)).arg(text)
-    }
-
-    function sentText(bytes) {
-        return colored(qsTr("↑ %1").arg(formatBytes(bytes)), sentColor)
-    }
-
-    function receivedText(bytes) {
-        return colored(qsTr("↓ %1").arg(formatBytes(bytes)), receivedColor)
+        return TrafficFormat.formatRate(bytes, seconds)
     }
 
     function countsText(requests, notModified, failed) {
         const parts = [qsTr("%1 req").arg(requests)]
         if (notModified > 0)
-            parts.push(colored(qsTr("%1 cached").arg(notModified), cachedColor))
+            parts.push(Report.colored(qsTr("%1 cached").arg(notModified), cachedColor))
         if (failed > 0)
-            parts.push(colored(qsTr("%1 failed").arg(failed), failedColor))
+            parts.push(Report.colored(qsTr("%1 failed").arg(failed), failedColor))
         return parts.join(" · ")
     }
 
@@ -93,7 +66,7 @@ Item {
 
     function backgroundText(bg) {
         const bytes = bg ? bg.bytesSent + bg.bytesReceived : 0
-        return bytes > 0 ? qsTr("%1 in background").arg(formatBytes(bytes)) : ""
+        return bytes > 0 ? qsTr("%1 in background").arg(TrafficFormat.formatBytes(bytes)) : ""
     }
 
     readonly property var sources: stats ? (stats.sources || []) : []
@@ -112,32 +85,32 @@ Item {
         if (!top)
             return qsTr("No HTTP traffic yet.")
         const topBytes = top.bytesSent + top.bytesReceived
-        const total = facts.topUpload ? sentText(top.bytesSent) : receivedText(top.bytesReceived)
+        const total = facts.topUpload ? TrafficFormat.sentText(top.bytesSent) : TrafficFormat.receivedText(top.bytesReceived)
         let text = qsTr("<b>%1</b> — <b>%2</b> (%3), <b>%4%</b> of all traffic.")
-                      .arg(escaped(facts.topSource)).arg(total).arg(formatRate(topBytes)).arg(Math.round(100 * facts.topShare))
+                      .arg(Report.escaped(facts.topSource)).arg(total).arg(formatRate(topBytes)).arg(Math.round(100 * facts.topShare))
 
         if (facts.bytesPerRequest > 0) {
             if (facts.topUpload) {
                 text += " " + qsTr("Mostly <b>%1</b>: ~%2 per request")
-                                .arg(colored(qsTr("upload"), sentColor)).arg(formatBytes(facts.bytesPerRequest))
+                                .arg(Report.colored(qsTr("upload"), TrafficFormat.sentColor)).arg(TrafficFormat.formatBytes(facts.bytesPerRequest))
                 if (facts.callsPerBundle > 0)
                     text += qsTr(" (%n call(s) bundled)", "", facts.callsPerBundle)
                 text += "."
             } else {
                 text += " " + qsTr("Mostly <b>%1</b>: ~%2 per response.")
-                                .arg(colored(qsTr("download"), receivedColor)).arg(formatBytes(facts.bytesPerRequest))
+                                .arg(Report.colored(qsTr("download"), TrafficFormat.receivedColor)).arg(TrafficFormat.formatBytes(facts.bytesPerRequest))
             }
         }
         if (facts.nextSource)
-            text += " " + qsTr("Next: <b>%1</b> %2.").arg(escaped(facts.nextSource)).arg(formatBytes(facts.nextBytes))
+            text += " " + qsTr("Next: <b>%1</b> %2.").arg(Report.escaped(facts.nextSource)).arg(TrafficFormat.formatBytes(facts.nextBytes))
         return text
     }
 
     //! The hosts the bar shows on their own; the rest are pooled as "other".
     function hostShares() {
-        return Report.hostShares(hosts, hostColors.length - 1).map((h, i) => ({
+        return Report.hostShares(hosts, TrafficFormat.shareColors.length - 1).map((h, i) => ({
             label: h.host || qsTr("%n other host(s)", "", h.others),
-            kind: h.host ? "host" : "", key: h.host, color: hostColors[i], share: h.share
+            kind: h.host ? "host" : "", key: h.host, color: TrafficFormat.shareColors[i], share: h.share
         }))
     }
 
@@ -151,164 +124,17 @@ Item {
         root.detailsClosed()
     }
 
-    // Two bars side by side in one track: sent, then received.
-    component SplitBar: Rectangle {
-        id: splitBar
-
-        property real sent
-        property real received
-        property real fullBytes: 1
-
-        implicitHeight: 8
-        radius: height / 2
-        color: Theme.palette.baseColor2
-        clip: true
-
-        Row {
-            height: splitBar.height
-            Rectangle {
-                width: splitBar.width * Math.min(1, splitBar.sent / Math.max(splitBar.fullBytes, 1))
-                height: splitBar.height
-                color: root.sentColor
-            }
-            Rectangle {
-                width: splitBar.width * Math.min(1, splitBar.received / Math.max(splitBar.fullBytes, 1))
-                height: splitBar.height
-                color: root.receivedColor
-            }
-        }
-    }
-
-    component Chip: Rectangle {
-        id: chip
-
-        property alias text: chipText.text
-        property color textColor: Theme.palette.directColor1
-
-        implicitWidth: chipText.implicitWidth + 12
-        implicitHeight: chipText.implicitHeight + 4
-        radius: height / 2
-        color: Theme.palette.baseColor2
-
-        StatusBaseText {
-            id: chipText
-            anchors.centerIn: parent
-            font.pixelSize: Theme.tertiaryTextFontSize
-            color: chip.textColor
-        }
-    }
-
-    // The per-hour rate, secondary to the total it sits next to.
-    component RateChip: Chip {
-        property real bytes
-
-        text: root.formatRate(bytes)
-        textColor: Theme.palette.baseColor1
-    }
-
-    // What a source or an endpoint moved: name, rate, total, the split bar and a line of details.
-    component TrafficRow: ColumnLayout {
-        id: trafficRow
-
-        property string label
-        property real sent
-        property real received
-        property real fullBytes: 1
-        property string details
-        property bool monospace: false
-        property bool chevron: false
-
-        spacing: 3
-
-        RowLayout {
-            Layout.fillWidth: true
-            StatusBaseText {
-                Layout.fillWidth: true
-                text: trafficRow.label
-                textFormat: Text.PlainText
-                font.family: trafficRow.monospace ? Fonts.monoFont.family : Fonts.baseFont.family
-                font.pixelSize: trafficRow.monospace ? Theme.additionalTextSize : Theme.primaryTextFontSize
-                font.weight: trafficRow.monospace ? Font.Normal : Font.Medium
-                elide: trafficRow.monospace ? Text.ElideMiddle : Text.ElideRight
-            }
-            RateChip {
-                bytes: trafficRow.sent + trafficRow.received
-            }
-            StatusBaseText {
-                text: root.formatBytes(trafficRow.sent + trafficRow.received)
-                font.bold: true
-            }
-            StatusBaseText {
-                visible: trafficRow.chevron
-                text: "›"
-                color: Theme.palette.baseColor1
-            }
-        }
-        SplitBar {
-            Layout.fillWidth: true
-            sent: trafficRow.sent
-            received: trafficRow.received
-            fullBytes: trafficRow.fullBytes
-        }
-        StatusBaseText {
-            Layout.fillWidth: true
-            text: trafficRow.details
-            textFormat: Text.StyledText
-            font.pixelSize: Theme.tertiaryTextFontSize
-            color: Theme.palette.baseColor1
-            wrapMode: Text.WordWrap
-        }
-    }
-
-    component Card: Rectangle {
-        default property alias content: cardColumn.data
-        property color tint: "transparent"
-
-        implicitHeight: cardColumn.implicitHeight + 16
-        radius: Theme.radius
-        color: tint
-        border.width: tint.a === 0 ? 1 : 0
-        border.color: Theme.palette.baseColor2
-
-        ColumnLayout {
-            id: cardColumn
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: 2
-        }
-    }
-
-    component Caption: StatusBaseText {
-        Layout.fillWidth: true
-        font.pixelSize: Theme.tertiaryTextFontSize
-        font.capitalization: Font.AllUppercase
-        color: Theme.palette.baseColor1
-    }
-
-    component KpiCard: Card {
+    component KpiCard: TrafficKpiCard {
         id: kpi
 
-        property string label
         property real bytes
-        property color accent
         property string seriesRole
 
-        Layout.fillWidth: true
+        totalText: TrafficFormat.formatBytes(bytes)
+        rateText: root.formatRate(bytes)
+        totalObjectName: "httpTrafficKpiTotal:" + seriesRole
+        rateObjectName: "httpTrafficKpiRate:" + seriesRole
 
-        Caption {
-            text: kpi.label
-        }
-        StatusBaseText {
-            objectName: "httpTrafficKpiTotal:" + kpi.seriesRole
-            text: root.formatBytes(kpi.bytes)
-            font.pixelSize: 22
-            font.bold: true
-            color: kpi.accent
-        }
-        RateChip {
-            objectName: "httpTrafficKpiRate:" + kpi.seriesRole
-            bytes: kpi.bytes
-        }
         // One bar per sampled minute, newest on the right.
         Row {
             id: spark
@@ -371,20 +197,20 @@ Item {
                     KpiCard {
                         label: qsTr("↑ Sent")
                         bytes: root.stats ? root.stats.totals.bytesSent : 0
-                        accent: root.sentColor
+                        accent: TrafficFormat.sentColor
                         tint: Theme.palette.dangerColor3
                         seriesRole: "bytesSent"
                     }
                     KpiCard {
                         label: qsTr("↓ Received")
                         bytes: root.stats ? root.stats.totals.bytesReceived : 0
-                        accent: root.receivedColor
+                        accent: TrafficFormat.receivedColor
                         tint: Theme.palette.primaryColor3
                         seriesRole: "bytesReceived"
                     }
                 }
 
-                Card {
+                TrafficCard {
                     id: backgroundCard
 
                     readonly property var bg: root.background
@@ -394,20 +220,20 @@ Item {
                     visible: root.backgroundSeconds > 0 || bg.bytesSent + bg.bytesReceived > 0
                     tint: Theme.palette.baseColor2
 
-                    Caption {
+                    TrafficCaption {
                         text: root.stats && root.stats.totals.inBackground
                               ? qsTr("In background · %1 · now").arg(root.formatDuration(root.backgroundSeconds))
                               : qsTr("In background · %1").arg(root.formatDuration(root.backgroundSeconds))
                     }
                     StatusBaseText {
                         objectName: "httpTrafficBackgroundTotal"
-                        text: "%1   %2".arg(root.sentText(backgroundCard.bg.bytesSent))
-                                      .arg(root.receivedText(backgroundCard.bg.bytesReceived))
+                        text: "%1   %2".arg(TrafficFormat.sentText(backgroundCard.bg.bytesSent))
+                                      .arg(TrafficFormat.receivedText(backgroundCard.bg.bytesReceived))
                         textFormat: Text.StyledText
                         font.pixelSize: 18
                         font.bold: true
                     }
-                    Chip {
+                    TrafficChip {
                         readonly property real bytes: backgroundCard.bg.bytesSent + backgroundCard.bg.bytesReceived
 
                         objectName: "httpTrafficBackgroundRate"
@@ -417,42 +243,17 @@ Item {
                     }
                 }
 
-                Rectangle {
+                TrafficAnswerCard {
                     Layout.fillWidth: true
-                    implicitHeight: answerColumn.implicitHeight + 16
-                    radius: Theme.radius
-                    color: Theme.palette.baseColor2
-
-                    Rectangle {
-                        width: 3
-                        height: parent.height
-                        color: root.sources.length > 0 && root.sources[0].bytesSent >= root.sources[0].bytesReceived
-                               ? root.sentColor : root.receivedColor
-                    }
-
-                    ColumnLayout {
-                        id: answerColumn
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        anchors.leftMargin: 12
-                        spacing: 2
-
-                        Caption {
-                            text: qsTr("Where does the traffic go?")
-                        }
-                        StatusBaseText {
-                            objectName: "httpTrafficAnswer"
-                            Layout.fillWidth: true
-                            text: root.answerText()
-                            textFormat: Text.StyledText
-                            wrapMode: Text.WordWrap
-                        }
-                    }
+                    text: root.answerText()
+                    accent: root.sources.length > 0 && root.sources[0].bytesSent >= root.sources[0].bytesReceived
+                            ? TrafficFormat.sentColor : TrafficFormat.receivedColor
+                    textObjectName: "httpTrafficAnswer"
                 }
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Caption {
+                    TrafficCaption {
                         text: qsTr("Top consumers")
                     }
                     StatusBaseText {
@@ -491,12 +292,14 @@ Item {
 
                         contentItem: TrafficRow {
                             label: sourceRow.modelData.source
+                            rateText: root.formatRate(sent + received)
+                            totalText: TrafficFormat.formatBytes(sent + received)
                             sent: sourceRow.modelData.bytesSent
                             received: sourceRow.modelData.bytesReceived
                             fullBytes: root.maxSourceBytes
                             chevron: true
-                            details: [root.sentText(sourceRow.modelData.bytesSent),
-                                      root.receivedText(sourceRow.modelData.bytesReceived),
+                            details: [TrafficFormat.sentText(sourceRow.modelData.bytesSent),
+                                      TrafficFormat.receivedText(sourceRow.modelData.bytesReceived),
                                       root.countsText(sourceRow.modelData.requests,
                                                       sourceRow.modelData.notModified || 0,
                                                       sourceRow.modelData.failed),
@@ -515,87 +318,25 @@ Item {
                     text: overview.showAllSources
                           ? qsTr("Show fewer sources")
                           : qsTr("+ %n more source(s) · %1 together", "", rest.length)
-                            .arg(root.formatBytes(rest.reduce((sum, s) => sum + s.bytesSent + s.bytesReceived, 0)))
+                            .arg(TrafficFormat.formatBytes(rest.reduce((sum, s) => sum + s.bytesSent + s.bytesReceived, 0)))
                     onClicked: overview.showAllSources = !overview.showAllSources
                 }
 
-                Caption {
+                TrafficCaption {
                     Layout.topMargin: 4
                     text: qsTr("Where it goes")
                 }
 
-                Row {
-                    id: hostBar
-
-                    readonly property var shares: root.hostShares()
-
+                TrafficShares {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 12
-
-                    Repeater {
-                        model: hostBar.shares
-                        delegate: Rectangle {
-                            required property var modelData
-                            width: hostBar.width * modelData.share
-                            height: hostBar.height
-                            color: modelData.color
-                        }
-                    }
+                    shares: root.hostShares()
+                    rowObjectNamePrefix: "httpTrafficHostRow:"
+                    onShareClicked: (kind, key) => root.openDetails(kind, key)
                 }
 
-                Repeater {
-                    model: hostBar.shares
-
-                    delegate: AbstractButton {
-                        id: hostRow
-
-                        required property var modelData
-
-                        objectName: "httpTrafficHostRow:" + modelData.label
-                        Layout.fillWidth: true
-                        padding: 2
-                        enabled: modelData.kind !== ""
-                        Accessible.name: modelData.label
-
-                        HoverHandler {
-                            cursorShape: hostRow.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        }
-
-                        onClicked: root.openDetails(modelData.kind, modelData.key)
-
-                        contentItem: RowLayout {
-                            spacing: 6
-                            Rectangle {
-                                Layout.preferredWidth: 10
-                                Layout.preferredHeight: 10
-                                radius: 3
-                                color: hostRow.modelData.color
-                            }
-                            StatusBaseText {
-                                Layout.fillWidth: true
-                                text: hostRow.modelData.label
-                                font.pixelSize: Theme.additionalTextSize
-                                elide: Text.ElideMiddle
-                            }
-                            StatusBaseText {
-                                text: qsTr("%1%").arg((100 * hostRow.modelData.share).toFixed(hostRow.modelData.share < 0.1 ? 1 : 0))
-                                font.pixelSize: Theme.additionalTextSize
-                                font.bold: true
-                            }
-                        }
-                    }
-                }
-
-                StatusBaseText {
-                    Layout.fillWidth: true
+                TrafficLegend {
                     Layout.topMargin: 4
-                    text: qsTr("%1 sent · %2 received · bold = total since start · chip = per hour · grey bars = in background")
-                            .arg(root.colored(qsTr("↑"), root.sentColor))
-                            .arg(root.colored(qsTr("↓"), root.receivedColor))
-                    textFormat: Text.StyledText
-                    font.pixelSize: Theme.tertiaryTextFontSize
-                    color: Theme.palette.baseColor1
-                    wrapMode: Text.WordWrap
+                    note: qsTr("grey bars = in background")
                 }
             }
         }
@@ -642,21 +383,22 @@ Item {
                     }
                 }
 
-                Card {
+                TrafficCard {
                     Layout.fillWidth: true
-                    Caption {
+                    TrafficCaption {
                         text: qsTr("Total · %1% of all traffic").arg(Math.round(100 * details.summary.share))
                     }
                     StatusBaseText {
                         objectName: "httpTrafficDetailsTotal"
-                        text: "%1   %2".arg(root.sentText(details.summary.bytesSent))
-                                      .arg(root.receivedText(details.summary.bytesReceived))
+                        text: "%1   %2".arg(TrafficFormat.sentText(details.summary.bytesSent))
+                                      .arg(TrafficFormat.receivedText(details.summary.bytesReceived))
                         textFormat: Text.StyledText
                         font.pixelSize: 18
                         font.bold: true
                     }
-                    RateChip {
-                        bytes: details.summary.bytesSent + details.summary.bytesReceived
+                    TrafficChip {
+                        text: root.formatRate(details.summary.bytesSent + details.summary.bytesReceived)
+                        textColor: Theme.palette.baseColor1
                     }
                     StatusBaseText {
                         visible: text !== ""
@@ -666,19 +408,19 @@ Item {
                     }
                 }
 
-                Card {
+                TrafficCard {
                     objectName: "httpTrafficWhyCard"
                     Layout.fillWidth: true
                     // A connection-only host has bytes but no requests to divide them by.
                     visible: details.summary.requests > 0
-                    Caption {
+                    TrafficCaption {
                         text: details.summary.upload ? qsTr("Why so much upload") : qsTr("Per response")
                     }
                     StatusBaseText {
                         objectName: "httpTrafficPerRequest"
                         text: details.summary.upload
-                              ? qsTr("%1 per request").arg(root.formatBytes(details.summary.perRequest))
-                              : qsTr("%1 per response").arg(root.formatBytes(details.summary.perRequest))
+                              ? qsTr("%1 per request").arg(TrafficFormat.formatBytes(details.summary.perRequest))
+                              : qsTr("%1 per response").arg(TrafficFormat.formatBytes(details.summary.perRequest))
                         font.pixelSize: 18
                         font.bold: true
                     }
@@ -690,9 +432,9 @@ Item {
                     }
                 }
 
-                Card {
+                TrafficCard {
                     Layout.fillWidth: true
-                    Caption {
+                    TrafficCaption {
                         text: qsTr("How often")
                     }
                     StatusBaseText {
@@ -700,14 +442,14 @@ Item {
                         font.pixelSize: 18
                         font.bold: true
                     }
-                    Chip {
+                    TrafficChip {
                         visible: Report.hourly(details.summary.requests, root.elapsedSeconds) >= 0
                         text: qsTr("%1 req/h").arg(Math.round(Report.hourly(details.summary.requests, root.elapsedSeconds)))
                         textColor: Theme.palette.baseColor1
                     }
                 }
 
-                Caption {
+                TrafficCaption {
                     text: qsTr("Endpoints")
                 }
 
@@ -732,7 +474,7 @@ Item {
                 Repeater {
                     model: details.own
 
-                    delegate: Card {
+                    delegate: TrafficCard {
                         id: endpointCard
 
                         required property var modelData
@@ -748,31 +490,33 @@ Item {
 
                             Layout.fillWidth: true
                             label: endpointCard.modelData.method + " " + endpointCard.label
+                            rateText: root.formatRate(sent + received)
+                            totalText: TrafficFormat.formatBytes(sent + received)
                             monospace: true
                             sent: endpointCard.modelData.requestBytes
                             received: endpointCard.modelData.responseBytes
                             fullBytes: sent + received
                             details: [root.countsText(endpointCard.modelData.requests, endpointCard.modelData.notModified,
                                                       endpointCard.modelData.failed),
-                                      root.colored(qsTr("↑ %1/req").arg(root.formatBytes(sent / requests)), root.sentColor),
-                                      root.colored(qsTr("↓ %1/req").arg(root.formatBytes(received / requests)), root.receivedColor)]
+                                      Report.colored(qsTr("↑ %1/req").arg(TrafficFormat.formatBytes(sent / requests)), TrafficFormat.sentColor),
+                                      Report.colored(qsTr("↓ %1/req").arg(TrafficFormat.formatBytes(received / requests)), TrafficFormat.receivedColor)]
                                        .join(" · ")
                         }
                         Flow {
                             Layout.fillWidth: true
                             spacing: 4
 
-                            Chip {
+                            TrafficChip {
                                 text: qsTr("⏱ %1 ms · p95 %2 ms").arg(endpointCard.modelData.latencyMs.p50).arg(endpointCard.modelData.latencyMs.p95)
                             }
-                            Chip {
+                            TrafficChip {
                                 visible: endpointCard.modelData.bundles > 0
                                 text: qsTr("Multicall3 · %n call(s)", "", Math.round(endpointCard.modelData.bundledCalls
                                                                                          / Math.max(endpointCard.modelData.bundles, 1)))
                             }
                             Repeater {
                                 model: Object.keys(endpointCard.modelData.statusCodes || {}).sort()
-                                delegate: Chip {
+                                delegate: TrafficChip {
                                     required property string modelData
                                     readonly property bool failure: modelData === "error" || Number(modelData) >= 400
                                     text: qsTr("%1 × %2").arg(modelData).arg(endpointCard.modelData.statusCodes[modelData])

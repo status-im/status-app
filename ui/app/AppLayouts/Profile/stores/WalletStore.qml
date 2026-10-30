@@ -188,6 +188,24 @@ QtObject {
         root.walletModule.setHttpTrafficStatsEnabled(enabled)
     }
 
+    //! Answers with wakuTrafficReportFetched.
+    function fetchWakuTrafficReport() {
+        root.walletModule.fetchWakuTrafficReport()
+    }
+
+    signal wakuTrafficReportFetched(string report, string error)
+
+    readonly property Connections _wakuTrafficConnections: Connections {
+        target: root.walletModule
+        function onWakuTrafficReportFetched(report, error) {
+            root.wakuTrafficReportFetched(report, error)
+        }
+    }
+
+    function resetWakuTrafficStats() {
+        root.walletModule.resetWakuTrafficStats()
+    }
+
     function setAutoApplyKeypairMigrations(enabled) {
         root.walletModule.setAutoApplyKeypairMigrations(enabled)
     }

@@ -20,6 +20,12 @@ proc resetHttpTrafficStats*() =
 proc setHttpTrafficStatsEnabled*(enabled: bool) =
     discard callPrivateRPCNoDecode("wallet_setHTTPTrafficStatsEnabled", %*[enabled])
 
+proc getWakuTrafficReport*(): string =
+    result = callPrivateRPCNoDecode("wakuext_getTrafficReport")
+
+proc resetWakuTrafficStats*() =
+    discard callPrivateRPCNoDecode("wakuext_resetTrafficStats")
+
 proc getConnectionStatus*(): bool =
     try:
         let response = callPrivateRPC("connectionStatus".prefix, %*[])

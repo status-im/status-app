@@ -16,3 +16,18 @@ proc fetchHttpTrafficReportTask*(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     output["error"] = %e.msg
   arg.finish(output)
+
+type
+  FetchWakuTrafficReportTaskArg = ref object of QObjectTaskArg
+
+proc fetchWakuTrafficReportTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[FetchWakuTrafficReportTaskArg](argEncoded)
+  let output = %* {
+    "error": "",
+    "report": ""
+  }
+  try:
+    output["report"] = %status_node.getWakuTrafficReport()
+  except Exception as e:
+    output["error"] = %e.msg
+  arg.finish(output)
