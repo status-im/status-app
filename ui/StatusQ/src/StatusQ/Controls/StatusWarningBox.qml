@@ -84,6 +84,8 @@ Control {
     */
     property Component extraContentComponent
 
+    signal linkActivated(string link)
+
     background: Rectangle {
         radius: 8
         opacity: 0.5
@@ -103,6 +105,7 @@ Control {
             Layout.alignment: root.iconAlignment
             icon: root.icon
             color: root.iconColor
+            visible: !!icon
         }
         Loader {
             Layout.fillWidth: true
@@ -120,6 +123,7 @@ Control {
                 wrapMode: Text.WordWrap
                 font.pixelSize: root.textSize
                 color: root.textColor
+                onLinkActivated: link => root.linkActivated(link)
             }
             Loader {
                 sourceComponent: extraContentComponent
@@ -137,6 +141,7 @@ Control {
                 wrapMode: Text.WordWrap
                 font.pixelSize: root.textSize
                 color: root.textColor
+                onLinkActivated: link => root.linkActivated(link)
             }
             Loader {
                 sourceComponent: extraContentComponent

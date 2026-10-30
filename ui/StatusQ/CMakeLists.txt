@@ -394,7 +394,8 @@ qt_add_resources(StatusQ "statusq_dictionaries"
     FILES
         src/assets/dictionaries/en_US.aff
         src/assets/dictionaries/en_US.dic
-        src/assets/dictionaries/README_en_US.txt
+        src/assets/dictionaries/cs_CZ.aff
+        src/assets/dictionaries/cs_CZ.dic
         src/assets/dictionaries/HUNSPELL_COPYING.MPL
         src/assets/dictionaries/SOURCES
 )

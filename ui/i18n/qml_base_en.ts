@@ -10402,19 +10402,31 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Check spelling</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Skip capitalized words and acronyms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We need your help to translate Status, so that together we can bring privacy and free speech to the people everywhere, including those who need it most.</source>
+        <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Learn more</source>
+        <source>channel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Spell Check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device&apos;s keyboard, so privacy depends on its settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skips spelling checks for capitalized words and acronyms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dictionaries</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -60,6 +60,10 @@ add_executable(MarkdownUtilsTest src/tst_markdownutils.cpp)
 target_link_libraries(MarkdownUtilsTest PRIVATE Qt::Test Qt::Gui StatusQ)
 add_test(NAME MarkdownUtilsTest COMMAND MarkdownUtilsTest)
 
+qt_add_executable(TestSpellChecker src/tst_spellchecker.cpp)
+target_link_libraries(TestSpellChecker PRIVATE Qt::Test StatusQ)
+add_test(NAME TestSpellChecker COMMAND TestSpellChecker)
+
 # Parser benchmark — a reference point for optimisation. Labelled "benchmark" so it can be
 # excluded from a normal run (ctest -LE benchmark) or run alone (ctest -R MarkdownParserBenchmark).
 add_executable(MarkdownParserBenchmark src/tst_markdownparser_benchmark.cpp)

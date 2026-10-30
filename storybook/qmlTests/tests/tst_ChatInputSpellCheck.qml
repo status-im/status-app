@@ -21,6 +21,7 @@ Item {
                 id: highlighter
                 quickTextDocument: documentEditor.textDocument
                 textColor: documentEditor.color
+                spellChecker.spellCheckDictsDir: LanguageService.spellCheckDictsDir
             }
         }
     }
@@ -284,16 +285,27 @@ Item {
             compare(checker.issues[0].duplicate, true)
         }
 
-        function test_disableAndUnsupportedLanguage() {
+        function test_disableAndEmptyLanguages() {
             load("wrld ", 1)
             checker.enabled = false
             compare(checker.issues.length, 0)
             checker.enabled = true
             tryVerify(() => checker.issues.length === 1)
-            checker.language = "fr"
+            checker.languages = []
             compare(checker.issues.length, 0)
-            checker.language = "en_US"
+            checker.languages = ["en_US"]
             tryVerify(() => checker.issues.length === 1)
+        }
+
+        function test_multipleDictionaries() {
+            load("hello přítel ", 1)
+            checker.languages = ["en_US", "cs_CZ"]
+            tryVerify(() => !checker.checkPending)
+            compare(checker.issues.length, 0)
+            checker.languages = ["en_US"]
+            tryVerify(() => !checker.checkPending)
+            compare(checker.issues.length, 1)
+            compare(checker.issues[0].word, "přítel")
         }
 
         function test_suggestionsAndUndo() {

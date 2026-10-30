@@ -10467,20 +10467,32 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Мова</translation>
     </message>
     <message>
-        <source>Check spelling</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Skip capitalized words and acronyms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We need your help to translate Status, so that together we can bring privacy and free speech to the people everywhere, including those who need it most.</source>
-        <translation>Допоможіть нам перекласти Status, щоб разом ми могли забезпечити приватність і свободу слова для людей у всьому світі, зокрема для тих, хто найбільше цього потребує.</translation>
+        <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Learn more</source>
-        <translation>Докладніше</translation>
+        <source>channel</source>
+        <translation type="unfinished">канал</translation>
+    </message>
+    <message>
+        <source>Spell Check</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device&apos;s keyboard, so privacy depends on its settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skips spelling checks for capitalized words and acronyms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dictionaries</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Time Format</source>
@@ -16765,7 +16777,7 @@ to load</source>
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation>Пошук</translation>
+        <translation type="unfinished">Пошук</translation>
     </message>
 </context>
 <context>
@@ -16971,7 +16983,7 @@ to load</source>
     <name>StatusLanguageSelector</name>
     <message>
         <source>Search</source>
-        <translation>Пошук</translation>
+        <translation type="unfinished">Пошук</translation>
     </message>
 </context>
 <context>

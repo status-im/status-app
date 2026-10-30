@@ -72,18 +72,18 @@ additional mask or color-overlay effect.
 
 `ChatInputHighlighter.spellChecker` exposes each editor's configuration, issues,
 and asynchronous suggestions. Hunspell is a pinned, private static FetchContent
-dependency; its dictionary is shared on one worker thread. The bundled `en_US`
-dictionary and license notices are always Qt resources, including hot-reload
-builds. Hunspell requires filesystem paths, so the worker extracts only these
-public dictionary assets into a private temporary directory for its lifetime.
+dependency; its dictionaries are shared on one worker thread. Bundled dictionaries
+and license notices are always Qt resources, including hot-reload builds.
+Hunspell requires filesystem paths, so `LanguageService` extracts these public
+dictionary assets into a private temporary directory for its lifetime.
 Message text is never written to disk or sent over the network by spell checking.
 
-The application passes the display language and per-profile preferences through
-`SpellCheckStore`. Preferences live in `LocalAccountSensitiveSettings`, while the
-display language remains in `LocalAppSettings`. Only `en` and `en_US` enable the
-current dictionary; other languages disable checking without falling back to
-English. Both spell checking
-and skipping capitalized words default to enabled. The latter is a heuristic:
+The application passes the dictionary directory, active dictionaries, and
+preferences from `LanguageService` through `SpellCheckStore`. Dictionary selections
+are per profile and independent of the display language. `en_US` stays selected
+and cannot be toggled off while available; additional dictionaries can be toggled
+independently. Standalone editors must also receive a dictionary directory.
+Both spell checking and skipping capitalized words default to enabled. The latter is a heuristic:
 it skips any token containing uppercase letters, not named-entity recognition.
 
 Checks are coalesced with a 30 ms timer and run off the UI thread. Document and

@@ -18,6 +18,7 @@ OTHER_FILES += $$files("$$PWD/*.js", true)
 OTHER_FILES += $$files("$$PWD/*.mm", true)
 OTHER_FILES += $$files("$$PWD/../mobile/android/*.java", true)
 OTHER_FILES += $$files("$$PWD/../src/*.nim", true)
+OTHER_FILES += $$files("$$PWD/../test/*.nim", true)
 OTHER_FILES += $$files("$$PWD/../monitoring/*.qml", true)
 
 OTHER_FILES += $$files("$$PWD/../vendor/SortFilterProxyModel/*.cpp", true)

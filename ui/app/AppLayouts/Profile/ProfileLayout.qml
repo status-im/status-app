@@ -436,16 +436,21 @@ StatusSectionLayout {
         Component {
             id: languageViewComp
             LanguageView {
-                spellCheckEnabled: root.languageStore.spellCheckSettings.enabled
-                spellCheckSkipCapitalizedWords: root.languageStore.spellCheckSettings.skipCapitalizedWords
-                onSpellCheckEnabledChangeRequested: value => root.languageStore.spellCheckSettings.setEnabled(value)
-                onSpellCheckSkipCapitalizedWordsChangeRequested: value => root.languageStore.spellCheckSettings.setSkipCapitalizedWords(value)
-                currentLanguage: root.languageStore.currentLanguage
-                availableLanguages: root.languageStore.availableLanguages
-                currentCurrency: root.currencyStore.currentCurrency
-                currenciesModel: root.currencyStore.currenciesModel
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.language)
                 contentWidth: d.contentWidth
+
+                // spellcheck
+                spellCheckEnabled: root.languageStore.spellCheckSettings.enabled
+                spellCheckSkipCapitalizedWords: root.languageStore.spellCheckSettings.skipCapitalizedWords
+                availableSpellcheckLanguages: root.languageStore.spellCheckSettings.availableLanguages
+                activeSpellcheckLanguages: root.languageStore.spellCheckSettings.activeLanguages
+                onSpellCheckEnabledChangeRequested: value => root.languageStore.spellCheckSettings.setEnabled(value)
+                onSpellCheckSkipCapitalizedWordsChangeRequested: value => root.languageStore.spellCheckSettings.setSkipCapitalizedWords(value)
+                onEnableSpellcheckLanguageRequested: (code, enabled) => root.languageStore.spellCheckSettings.toggleSpellcheckLanguage(code, enabled)
+
+                // language
+                currentLanguage: root.languageStore.currentLanguage
+                availableLanguages: root.languageStore.availableLanguages
                 onChangeLanguageRequested: function (newLanguageCode) {
                     const result = root.languageStore.changeLanguage(newLanguageCode, false /*shouldRetranslate*/)
                     if (result)
@@ -453,6 +458,10 @@ StatusSectionLayout {
                     else
                         console.warn("Failed setting language to:", newLanguageCode)
                 }
+
+                //currencies
+                currentCurrency: root.currencyStore.currentCurrency
+                currenciesModel: root.currencyStore.currenciesModel
                 onChangeCurrencyRequested: shortName => root.currencyStore.updateCurrency(shortName)
             }
         }

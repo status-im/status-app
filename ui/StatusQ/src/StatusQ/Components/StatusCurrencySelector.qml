@@ -7,6 +7,7 @@ import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Utils
 import StatusQ.Controls
+import StatusQ.Controls.private
 import StatusQ.Components
 import StatusQ.Core.Theme
 
@@ -43,7 +44,7 @@ Button {
         readonly property string selectedCurrency: root.currentCurrency || "USD"
 
         readonly property int maxPopupHeight: 400
-        readonly property int delegateHeight: 70
+        readonly property int delegateHeight: 60
 
         readonly property var currentEntry: itemData?.item ?? null
         // Fiat entries carry a flag emoji instead of an image; tokens carry an image
@@ -137,10 +138,10 @@ Button {
             StatusInput {
                 id: searchField
                 Layout.fillWidth: true
+                KeyNavigation.tab: currencySelectorPanel
                 placeholderText: qsTr("Search")
                 input.asset.name: "search"
                 input.clearable: true
-                KeyNavigation.tab: currencySelectorPanel
             }
             StatusListView {
                 Layout.fillWidth: true
@@ -158,6 +159,7 @@ Button {
                 }
 
                 delegate: ItemDelegate {
+                    id: delegate
                     objectName: "itemDelegate_" + model.shortName
                     width: ListView.view.width
                     height: d.delegateHeight
@@ -198,12 +200,11 @@ Button {
                                 color: Theme.palette.baseColor1
                             }
                         }
-                        StatusIcon {
-                            Layout.preferredHeight: 20
+                        StatusCheckIndicator {
                             Layout.alignment: Qt.AlignRight
-                            visible: checked
-                            icon: "tiny/checkmark"
-                            color: Theme.palette.primaryColor1
+                            checkState: delegate.checked ? Qt.Checked : Qt.Unchecked
+                            mirrored: delegate.mirrored
+                            hovered: delegate.hovered
                         }
                     }
                     onClicked: {

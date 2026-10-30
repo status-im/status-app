@@ -1,0 +1,3 @@
+module StatusQ.Controls.private
+
+StatusCheckIndicator 0.1 StatusCheckIndicator.qml

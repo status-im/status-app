@@ -16,14 +16,20 @@ Item {
             width: 280
             height: 44
 
-            currentLanguage: "en"
+
             languageCodes: ["de", "en", "ko", "cs"]
+            activeLanguageCodes: ["en"]
         }
     }
 
     SignalSpy {
         id: languageSpy
         signalName: "languageSelected"
+    }
+
+    SignalSpy {
+        id: languageToggledSpy
+        signalName: "languageToggled"
     }
 
     property StatusLanguageSelector controlUnderTest: null
@@ -36,6 +42,8 @@ Item {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             languageSpy.target = controlUnderTest
             languageSpy.clear()
+            languageToggledSpy.target = controlUnderTest
+            languageToggledSpy.clear()
         }
 
         function test_basicGeometry() {
@@ -49,9 +57,67 @@ Item {
             compare(controlUnderTest.text, "EN")
 
             const withUnderscore = createTemporaryObject(componentUnderTest, root, {
-                currentLanguage: "en_CA"
+                activeLanguageCodes: ["en_CA"]
             })
             compare(withUnderscore.text, "EN-CA")
+        }
+
+        function test_invalidLanguage_isExcluded() {
+            controlUnderTest.languageCodes = ["de", "xx_XX", "en", "ko", "cs"]
+            mouseClick(controlUnderTest)
+            const dd = findChild(controlUnderTest, "statusLanguageSelectorDropdown")
+            verify(!!dd)
+            tryCompare(dd, "opened", true)
+            const listView = findChild(dd.contentItem, "statusLanguageSelectorListView")
+            verify(!!listView)
+            tryCompare(listView, "count", 4)
+            waitForItemPolished(listView)
+
+            compare(findChild(listView, "itemDelegate_xx_XX"), null)
+            for (const code of ["de", "en", "ko", "cs"]) {
+                const delegate = findChild(listView, "itemDelegate_" + code)
+                verify(!!delegate)
+            }
+        }
+
+        function test_multipleSelection_togglesLanguagesWithoutClosing() {
+            controlUnderTest.selectMultiple = true
+            mouseClick(controlUnderTest)
+            const dd = findChild(controlUnderTest, "statusLanguageSelectorDropdown")
+            verify(!!dd)
+            tryCompare(dd, "opened", true)
+            const listView = findChild(dd.contentItem, "statusLanguageSelectorListView")
+            verify(!!listView)
+            waitForItemPolished(listView)
+            const delegateDe = findChild(listView, "itemDelegate_de")
+            const delegateEn = findChild(listView, "itemDelegate_en")
+            verify(!!delegateDe)
+            verify(!!delegateEn)
+            compare(delegateDe.checked, false)
+            compare(delegateEn.checked, true)
+
+            mouseClick(delegateDe)
+            tryCompare(delegateDe, "checked", true)
+            tryCompare(delegateEn, "checked", true)
+            tryCompare(languageToggledSpy, "count", 1)
+            compare(languageToggledSpy.signalArguments[0][0], "de")
+            compare(languageToggledSpy.signalArguments[0][1], true)
+            tryCompare(dd, "opened", true)
+
+            mouseClick(delegateEn)
+            tryCompare(delegateEn, "checked", false)
+            tryCompare(delegateDe, "checked", true)
+            tryCompare(languageToggledSpy, "count", 2)
+            compare(languageToggledSpy.signalArguments[1][0], "en")
+            compare(languageToggledSpy.signalArguments[1][1], false)
+            tryCompare(dd, "opened", true)
+
+            mouseClick(delegateDe)
+            tryCompare(delegateDe, "checked", false)
+            tryCompare(languageToggledSpy, "count", 3)
+            compare(languageToggledSpy.signalArguments[2][0], "de")
+            compare(languageToggledSpy.signalArguments[2][1], false)
+            tryCompare(dd, "opened", true)
         }
 
         function test_disabled_doesNotOpenDropdown() {

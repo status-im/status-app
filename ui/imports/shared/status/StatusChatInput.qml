@@ -91,7 +91,8 @@ Control {
 
     property alias textInput: messageInputField
     property alias spellCheckEnabled: messageInputField.spellCheckEnabled
-    property alias spellCheckLanguage: messageInputField.spellCheckLanguage
+    property alias spellCheckLanguages: messageInputField.spellCheckLanguages
+    property alias spellCheckDictsDir: messageInputField.spellCheckDictsDir
     property alias spellCheckSkipCapitalizedWords: messageInputField.spellCheckSkipCapitalizedWords
 
     SpellCheckStore {
@@ -978,7 +979,8 @@ Control {
                         characterLimit: root.messageLimitHard
                         asciiEmojiConversion: true
                         spellCheckEnabled: spellCheckSettings.enabled
-                        spellCheckLanguage: spellCheckSettings.language
+                        spellCheckDictsDir: spellCheckSettings.spellCheckDictsDir
+                        spellCheckLanguages: spellCheckSettings.activeLanguages
                         spellCheckSkipCapitalizedWords: spellCheckSettings.skipCapitalizedWords
 
                         // Paddings are used only for left/right sides because
@@ -1352,9 +1354,21 @@ Control {
             const rect = messageInputField.cursorRectangle
             const point = keyboard ? Qt.point(rect.x, rect.y + rect.height) : position
             let character = keyboard ? messageInputField.cursorPosition
-                                     : messageInputField.positionAt(point.x, point.y, TextEdit.CursorOnCharacter)
-            if (keyboard && character > 0 && Object.keys(messageInputField.spellChecker.issueAt(character)).length === 0)
-                character--
+                                     : messageInputField.positionAt(point.x, point.y)
+            if (character > 0 && Object.keys(messageInputField.spellChecker.issueAt(character)).length === 0) {
+                if (keyboard) {
+                    character--
+                } else {
+                    // positionAt returns the nearest caret, not the character under the pointer.
+                    const before = messageInputField.positionToRectangle(character - 1)
+                    const after = messageInputField.positionToRectangle(character)
+                    if (before.y === after.y
+                            && point.y >= before.y && point.y < before.y + before.height
+                            && point.x >= Math.min(before.x, after.x)
+                            && point.x < Math.max(before.x, after.x))
+                        character--
+                }
+            }
             if (!messageInputField.readOnly)
                 messageInputField.spellChecker.requestSuggestions(character)
             contextMenuLoader.item.popup(messageInputField, point)

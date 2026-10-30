@@ -8,6 +8,7 @@ import Models
 import utils
 import shared.status
 
+import StatusQ
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 
@@ -15,6 +16,8 @@ SplitView {
     id: root
 
     orientation: Qt.Vertical
+
+    Component.onCompleted: LanguageService.userUID = "0xdeadbeef"
 
     function openGifTestPopup(params, cbOnGifSelected, cbOnClose)
     {
