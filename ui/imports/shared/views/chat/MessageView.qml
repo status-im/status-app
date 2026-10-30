@@ -222,8 +222,11 @@ Loader {
         }
     }
 
+    // Lazy as well: only the quoted author's profile context menu needs it,
+    // the reply itself shows the quotedMessageAuthorDetails* roles. Active, it
+    // would be built, re-resolved or destroyed on every rebind of a reply.
     property var quotedMessageFromContactEntryLoader: Loader {
-        active: !!root.quotedMessageFrom
+        active: false
         sourceComponent: ContactModelEntry {
             publicKey: root.quotedMessageFrom
             contactsModel: root.rootStore?.contactsModel ?? null
@@ -244,6 +247,9 @@ Loader {
     onMessageIdChanged: {
         d.contextMenu?.close()
         d.activeMessage = ""
+        // a pooled row must not keep resolving the contacts of every message it shows
+        root.senderContactEntry.active = false
+        root.quotedMessageFromContactEntryLoader.active = false
     }
 
     function openProfileContextMenu(x, y, isReply = false) {
@@ -259,7 +265,9 @@ Loader {
         const isBridgedAccount = isReply ? (quotedMessageContentType === Constants.messageContentType.bridgeMessageType)
                                          : root.isBridgeMessage
 
-        if (!isReply)
+        if (isReply)
+            root.quotedMessageFromContactEntryLoader.active = true
+        else
             root.senderContactEntry.active = true
 
         const contactDetails = isReply ? root.quotedMessageFromContactEntryLoader.item.contactDetails
