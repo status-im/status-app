@@ -1526,10 +1526,90 @@ Item {
             compare(control.textWithMentions(), "A")
         }
 
+        function test_backspaceEmoji_removesWholeSequence_data() {
+            return [
+                { tag: "keycap 1", text: "1️⃣" },
+                { tag: "keycap #", text: "#️⃣" },
+                { tag: "heart + VS16", text: "❤️" },
+                { tag: "punctuation base + VS16 (‼️)", text: "‼️" },
+                { tag: "letter base + VS16 (ℹ️)", text: "ℹ️" },
+                { tag: "tag sequence flag (England)",
+                  text: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+                { tag: "ZWJ sequence with skin tone", text: "\u{1F469}\u{1F3FD}‍\u{1F4BB}" },
+            ]
+        }
+
+        function test_backspaceEmoji_removesWholeSequence(data) {
+            backspaceAtEnd("A" + data.text)
+            compare(control.textWithMentions(), "A")
+        }
+
+        // Two adjacent flags are two clusters: one Backspace removes only the last flag.
+        function test_backspaceEmoji_adjacentFlagsRemovedOneAtATime() {
+            backspaceAtEnd("A" + flag + "\u{1F1E9}\u{1F1EA}")
+            compare(control.textWithMentions(), "A" + flag)
+        }
+
         // Single-unit content is untouched: it still falls through to native handling.
         function test_backspaceEmoji_plainTextStillDeletesOneUnit() {
             backspaceAtEnd("AB")
             compare(control.textWithMentions(), "A")
+        }
+
+        // Clusters other than emoji keep the native behaviour: Backspace removes only the
+        // last code point, so a wrong vowel sign or accent can be corrected without
+        // retyping its base letter.
+        function test_backspaceNonEmojiCluster_removesLastCodePoint_data() {
+            return [
+                { tag: "devanagari ki", text: "कि", expected: "क" },
+                { tag: "devanagari conjunct ksa", text: "क्ष",
+                  expected: "क्" },
+                { tag: "devanagari conjunct with ZWJ", text: "क्‍ष",
+                  expected: "क्‍" },
+                { tag: "thai ko kai + sara am", text: "กำ", expected: "ก" },
+                { tag: "e + combining acute", text: "é", expected: "e" },
+                { tag: "e + two combining marks", text: "ẹ́", expected: "é" },
+                { tag: "hangul jamo", text: "각", expected: "가" },
+            ]
+        }
+
+        function test_backspaceNonEmojiCluster_removesLastCodePoint(data) {
+            backspaceAtEnd("A" + data.text)
+            compare(control.textWithMentions(), "A" + data.expected)
+        }
+
+        // Being left to native handling, such deletions keep Qt's undo coalescing.
+        function test_backspaceNonEmojiCluster_undoIsOneStep() {
+            backspaceAtEnd("Aक्ष")
+            keyClick(Qt.Key_Backspace)
+            keyClick(Qt.Key_Backspace)
+            compare(control.textWithMentions(), "A")
+
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "Aक्ष")
+        }
+
+        // Undo restoring a vowel sign after a flagged consonant must not leave the stale
+        // underline ending inside the syllable: that split shapes the vowel sign apart,
+        // widens the line and puts the caret past the end of the text.
+        function test_backspaceNonEmojiCluster_undoKeepsCaretAtTextEnd() {
+            const checker = control.spellChecker
+            control.text = "किx" // "किx"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+            tryVerify(() => !checker.checkPending && checker.issues.length === 1)
+            const endX = control.cursorRectangle.x
+
+            keyClick(Qt.Key_Backspace)
+            keyClick(Qt.Key_Backspace)
+            compare(control.textWithMentions(), "क")
+            tryVerify(() => !checker.checkPending && checker.issues.length === 1)
+            compare(checker.issues[0].word, "क")
+
+            keySequence(StandardKey.Undo)
+            compare(control.textWithMentions(), "किx")
+            compare(control.cursorPosition, 3)
+            compare(control.cursorRectangle.x, endX)
         }
 
         // Forward Delete needs no handling of ours — it moves by cursor position, which Qt

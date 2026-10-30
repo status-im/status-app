@@ -207,6 +207,37 @@ Item {
             verify(documentTester.formatAt(editor.textDocument, 7).spelling)
         }
 
+        // A multi-character edit (paste, IME commit, undo) continuing a flagged word edits
+        // that word, so its old underline must not be kept: it would end inside the new
+        // word. An edit separated from the word by a boundary leaves the underline alone.
+        function test_multiCharacterEditNextToIssue_data() {
+            return [
+                {tag: "joins suffix", position: 4, insertion: "xy", expected: "wrldxy ",
+                    start: -1, word: "wrldxy"},
+                {tag: "joins prefix", position: 0, insertion: "xy", expected: "xywrld ",
+                    start: -1, word: "xywrld"},
+                {tag: "separated suffix", position: 4, insertion: " xy", expected: "wrld xy ",
+                    start: 0, word: "wrld"},
+                {tag: "separated prefix", position: 0, insertion: "xy ", expected: "xy wrld ",
+                    start: 3, word: "wrld"}
+            ]
+        }
+
+        function test_multiCharacterEditNextToIssue(data) {
+            load("wrld ", 1)
+            editor.insert(data.position, data.insertion)
+            compare(editor.text, data.expected)
+            if (data.start < 0) {
+                compare(checker.issues.length, 0)
+                verify(!documentTester.formatAt(editor.textDocument, 0).spelling)
+                tryVerify(() => checker.issues.length === 1)
+            } else {
+                compare(checker.issues.length, 1)
+                compare(checker.issues[0].start, data.start)
+            }
+            compare(checker.issues[0].word, data.word)
+        }
+
         function test_editingFlaggedWordRechecksIt_data() {
             return [
                 {tag: "corrected suffix", text: "improv ", position: 6, insertion: "e",
