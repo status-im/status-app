@@ -204,10 +204,14 @@ QtObject {
             lookupState: Constants.TokenLookupState.Missing
         }
 
-        const jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
+        let jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
         if (!jsonToken) {
             defaultValue.lookupState = root._allTokensModule.getTokenLookupState(key)
-            return defaultValue
+            // a group key's state query repeats a failed lookup, which may resolve it
+            if (defaultValue.lookupState === Constants.TokenLookupState.Resolved)
+                jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
+            if (!jsonToken)
+                return defaultValue
         }
 
         try {
