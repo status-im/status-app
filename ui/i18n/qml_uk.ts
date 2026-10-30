@@ -19323,7 +19323,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Вийти й закрити</translation>
+        <translation>Вийти й закрити</translation>
     </message>
     <message>
         <source>Always online</source>
