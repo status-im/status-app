@@ -179,6 +179,7 @@ add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
         ${STATUSQ_TESTCONFIG_RCC}
         include/StatusQ/audioutils.h
+        include/StatusQ/backgroundgraphicsrelease.h
         include/StatusQ/browserbackendcapabilities.h
         include/StatusQ/chatinputhighlighter.h
         include/StatusQ/clipboardutils.h
@@ -229,6 +230,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/urlutils.h
         include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
+        src/backgroundgraphicsrelease.cpp
         src/browserbackendcapabilities.cpp
         src/chatinputhighlighter.cpp
         src/spellchecker.cpp

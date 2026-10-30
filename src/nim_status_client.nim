@@ -396,6 +396,10 @@ proc mainProc() =
   # chrome's panel-switch signals (StatusQ.IncubationHints) — incubate gently
   # so slide animations stay fluid.
   statusq_installBoostedIncubationController(singletonInstance.engine.vptr, 12, 300, 2)
+  when defined(android):
+    # A backgrounded Android window stays visible, so Qt would keep its scene
+    # graph and GL context (and the driver's pools) for as long as it lives.
+    statusq_installBackgroundGraphicsRelease()
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)

@@ -122,6 +122,10 @@ add_test(NAME TestEmojiFont COMMAND TestEmojiFont)
 # Paints glyphs, so it needs a platform plugin that works on headless builders.
 set_tests_properties(TestEmojiFont PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+add_executable(TestBackgroundGraphicsRelease src/tst_backgroundgraphicsrelease.cpp)
+target_link_libraries(TestBackgroundGraphicsRelease PRIVATE Qt::Test Qt::Gui Qt::Quick StatusQ)
+add_test(NAME TestBackgroundGraphicsRelease COMMAND TestBackgroundGraphicsRelease)
+
 add_executable(TestIncubationController src/tst_incubationcontroller.cpp)
 target_link_libraries(TestIncubationController PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationController COMMAND TestIncubationController)
