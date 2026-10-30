@@ -94,8 +94,15 @@ StatusDialog {
     QtObject {
         id: d
 
-        function resetSelectedToken() {
-            root.selectedTokenGroupKey = root.defaultTokenGroupKey
+        // the held chain groups are dropped on background and reload empty first
+        readonly property bool chainGroupsReady: !!root.tokenGroupsForChainModel
+                                                 && root.tokenGroupsForChainModel.ModelCount.count > 0
+                                                 && !root.tokenGroupsForChainModel.loading
+        onChainGroupsReadyChanged: Qt.callLater(d.resetUnavailableToken)
+
+        function resetUnavailableToken() {
+            if (d.chainGroupsReady && !d.selectedHolding.available)
+                root.selectedTokenGroupKey = root.defaultTokenGroupKey
         }
 
         property string selectedTokenKey: ""
@@ -136,8 +143,8 @@ StatusDialog {
             onValueChanged: {
                 if (available) {
                     Qt.callLater(d.updateSelectedTokenKey)
-                } else if (root.selectedTokenGroupKey !== root.defaultTokenGroupKey) {
-                    Qt.callLater(d.resetSelectedToken)
+                } else {
+                    Qt.callLater(d.resetUnavailableToken)
                 }
             }
             onAvailableChanged: {
@@ -145,9 +152,7 @@ StatusDialog {
                     Qt.callLater(d.updateSelectedTokenKey)
                 } else {
                     d.clearSelectedToken()
-                    if (root.selectedTokenGroupKey !== root.defaultTokenGroupKey) {
-                        Qt.callLater(d.resetSelectedToken)
-                    }
+                    Qt.callLater(d.resetUnavailableToken)
                 }
             }
         }

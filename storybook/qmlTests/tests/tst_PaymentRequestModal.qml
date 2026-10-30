@@ -247,6 +247,56 @@ Item {
             compare(store.chainTokenGroupsHolderCount(secondChainId), 0)
         }
 
+        function test_selection_kept_while_the_chain_groups_reload() {
+            controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root, { selectedTokenGroupKey: Constants.daiGroupKey })
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+
+            // dropped on background
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            chainModel.clear()
+            wait(0)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            verify(!controlUnderTest.tokenSelectionReady)
+
+            // reloading on foreground
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId)
+            chainModel.loading = false
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+        }
+
+        function test_selection_falls_back_once_a_reload_lacks_it() {
+            controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root, { selectedTokenGroupKey: Constants.daiGroupKey })
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            chainModel.clear()
+            wait(0)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId)
+            const daiIndex = SQUtils.ModelUtils.indexOf(chainModel, "key", Constants.daiGroupKey)
+            verify(daiIndex >= 0)
+            ignoreWarning("cannot relove the token group for the group key dai")
+            chainModel.remove(daiIndex)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            chainModel.loading = false
+            tryCompare(controlUnderTest, "selectedTokenGroupKey", Constants.ethGroupKey)
+
+            // the store keeps the chain's model for the next test
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId)
+        }
+
         function test_symbol_initial_selection_when_not_available_in_chain() {
             const assetGroupKey = Constants.sttGroupKey
             controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root, { selectedTokenGroupKey: assetGroupKey, selectedNetworkChainId: Constants.chains.mainnetChainId })
