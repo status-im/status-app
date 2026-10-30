@@ -42,6 +42,7 @@ type
     amISender: bool
     senderIsAdded: bool
     senderIcon: string
+    senderColorId: int
     seen: bool
     outgoingStatus: string
     unparsedText: string
@@ -64,6 +65,7 @@ type
     deleted: bool
     deletedBy: string
     deletedByContactDetails: ContactDetails
+    deletedByContactColorId: int
     links: seq[string]
     linkPreviewModel: link_preview_model.Model
     transactionParameters: TransactionParametersItem
@@ -79,6 +81,7 @@ type
     quotedMessageAuthorDisplayName: string
     quotedMessageAuthorAvatar: string
     quotedMessageAuthorDetails: ContactDetails
+    quotedMessageAuthorColorId: int
     quotedMessageAlbumMessageImages: seq[string]
     quotedMessageAlbumImagesCount: int
     albumId: string
@@ -90,6 +93,18 @@ type
     hasThread: bool
     threadSummary: ThreadSummary
     threadParticipantsModel: thread_participant_model.Model
+
+# The colour id of an account's identicon: from its contact details when they
+# are the account's, otherwise derived from its key. Ids that are no Status
+# keys (a Discord author's) have none.
+proc colorIdFor*(publicKey: string, details: ContactDetails): int =
+  if publicKey.len == 0:
+    return 0
+  if details.dto.id == publicKey:
+    return details.colorId
+  if not singletonInstance.utils.isChatKey(publicKey):
+    return 0
+  return singletonInstance.utils.getColorId(publicKey)
 
 proc initMessageItem*(
     id,
@@ -142,6 +157,7 @@ proc initMessageItem*(
     quotedBridgeMessage: BridgeMessage,
     paymentRequests: seq[PaymentRequest],
     hasThread: bool = false,
+    senderColorId: int = 0,
     ): Item =
   result = Item()
   result.id = id
@@ -155,6 +171,7 @@ proc initMessageItem*(
   result.amISender = amISender
   result.senderIsAdded = senderIsAdded
   result.senderIcon = senderIcon
+  result.senderColorId = senderColorId
   result.seen = seen
   result.outgoingStatus = outgoingStatus
   result.unparsedText = unparsedText
@@ -173,6 +190,7 @@ proc initMessageItem*(
   result.deleted = deleted
   result.deletedBy = deletedBy
   result.deletedByContactDetails = deletedByContactDetails
+  result.deletedByContactColorId = colorIdFor(deletedBy, deletedByContactDetails)
   result.pinnedBy = pinnedBy
   if pinnedBy != "":
     result.pinned = true
@@ -191,6 +209,7 @@ proc initMessageItem*(
   result.quotedMessageContentType = quotedMessageContentType
   result.quotedMessageDeleted = quotedMessageDeleted
   result.quotedMessageAuthorDetails = quotedMessageAuthorDetails
+  result.quotedMessageAuthorColorId = colorIdFor(quotedMessageFrom, quotedMessageAuthorDetails)
   result.quotedMessageAlbumMessageImages = quotedMessageAlbumMessageImages
   result.quotedMessageAlbumImagesCount = quotedMessageAlbumImagesCount
   result.albumId = albumId
@@ -221,6 +240,7 @@ proc initMessageItem*(
     if result.unparsedText == "":
       result.unparsedText = discordMessage.content
     result.senderId = discordMessage.author.id
+    result.senderColorId = 0
     result.senderDisplayName = discordMessage.author.name
     result.senderIcon = discordMessage.author.localUrl
     result.senderOptionalName = ""
@@ -377,6 +397,9 @@ proc `senderUsesDefaultName=`*(self: Item, value: bool) {.inline.} =
 
 proc senderIcon*(self: Item): string {.inline.} =
   self.senderIcon
+
+proc senderColorId*(self: Item): int {.inline.} =
+  self.senderColorId
 
 proc `senderIcon=`*(self: Item, value: string) {.inline.} =
   self.senderIcon = value
@@ -660,6 +683,11 @@ proc deletedByContactDetails*(self: Item): ContactDetails {.inline.} =
 proc `deletedByContactDetails=`*(self: Item, value: ContactDetails) {.inline.} =
   self.deletedByContactDetails = value
 
+proc deletedByContactColorId*(self: Item): int {.inline.} =
+  self.deletedByContactColorId
+proc `deletedByContactColorId=`*(self: Item, value: int) {.inline.} =
+  self.deletedByContactColorId = value
+
 proc `deletedBy=`*(self: Item, value: string) {.inline.} =
   self.deletedBy = value
 
@@ -717,6 +745,11 @@ proc quotedMessageAuthorDetails*(self: Item): ContactDetails {.inline.} =
   self.quotedMessageAuthorDetails
 proc `quotedMessageAuthorDetails=`*(self: Item, value: ContactDetails) {.inline.} =
   self.quotedMessageAuthorDetails = value
+
+proc quotedMessageAuthorColorId*(self: Item): int {.inline.} =
+  self.quotedMessageAuthorColorId
+proc `quotedMessageAuthorColorId=`*(self: Item, value: int) {.inline.} =
+  self.quotedMessageAuthorColorId = value
 
 proc quotedMessageAlbumMessageImages*(self: Item): seq[string] {.inline.} =
   self.quotedMessageAlbumMessageImages

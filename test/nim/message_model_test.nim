@@ -900,3 +900,78 @@ suite "replies to a loaded message":
 
     check(model.roleOf("quotedMessageContent") in changed[])
     check(model.dataOf("0x2", "quotedMessageContent").stringVal == "https://localhost:40000/ipfs?hash=0xdeadbeef")
+
+# The identicon colours are resolved once, from the contact details the item
+# is built from, instead of asking status-go from every binding showing them.
+suite "colour ids":
+  proc createItem(message: MessageDto, sender = ContactDetails(),
+                  quotedMessageAuthorDetails = ContactDetails()): Item =
+    return message_model.createMessageItemFromDtos(
+      message = message,
+      communityId = "",
+      sender = sender,
+      isCurrentUser = false,
+      clearText = "",
+      quotedMessageAuthorDetails = quotedMessageAuthorDetails,
+    )
+
+  proc contact(id: string, colorId: int): ContactDetails =
+    ContactDetails(colorId: colorId, dto: ContactsDto(id: id))
+
+  proc roleOf(model: Model, name: string): cint =
+    for role, roleName in model.roleNames().pairs:
+      if roleName == name:
+        return role.cint
+    return -1
+
+  proc intOf(model: Model, messageId: string, roleName: string): int =
+    let row = model.findIndexForMessageId(messageId)
+    require(row != -1)
+    model.data(model.createIndex(row, 0, nil), model.roleOf(roleName)).intVal
+
+  test "takes the sender's and the quoted author's colour from their contact details":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[
+      createItem(MessageDto(id: "0x2", clock: 2, `from`: "0xalice", responseTo: "0x1",
+                            quotedMessage: QuotedMessage(`from`: "0xbob")),
+                 sender = contact("0xalice", 3), quotedMessageAuthorDetails = contact("0xbob", 7)),
+    ])
+
+    check(model.intOf("0x2", "senderColorId") == 3)
+    check(model.intOf("0x2", "quotedMessageAuthorColorId") == 7)
+
+  test "has no colour for a Discord author":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[
+      createItem(MessageDto(id: "0x1", clock: 1, `from`: "0xalice", contentType: ContentType.DiscordMessage,
+                            discordMessage: DiscordMessage(timestamp: "1",
+                                                          author: DiscordMessageAuthor(id: "discord-user"))),
+                 sender = contact("0xalice", 3)),
+    ])
+
+    check(model.intOf("0x1", "senderColorId") == 0)
+
+  test "takes the quoted author's colour from the original when it arrives later":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[
+      createItem(MessageDto(id: "0x2", clock: 2, `from`: "0xalice", responseTo: "0x1"),
+                 sender = contact("0xalice", 3)),
+    ])
+    check(model.intOf("0x2", "quotedMessageAuthorColorId") == 0)
+
+    model.insertItemsBasedOnClock(@[
+      createItem(MessageDto(id: "0x1", clock: 1, `from`: "0xbob", contentType: ContentType.Message),
+                 sender = contact("0xbob", 7)),
+    ])
+
+    check(model.intOf("0x2", "quotedMessageAuthorColorId") == 7)
+
+  test "takes the colour of who deleted a message":
+    let model = newModel()
+    model.insertItemsBasedOnClock(@[
+      createItem(MessageDto(id: "0x1", clock: 1, `from`: "0xalice"), sender = contact("0xalice", 3)),
+    ])
+
+    model.messageRemoved("0x1", "0xcarol", contact("0xcarol", 9))
+
+    check(model.intOf("0x1", "deletedByContactColorId") == 9)

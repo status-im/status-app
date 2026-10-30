@@ -99,6 +99,7 @@ StatusDialog {
                     senderIsEnsVerified: model.senderEnsVerified
                     senderIsAdded: model.senderIsAdded
                     senderIcon: model.senderIcon
+                    senderColorId: model.senderColorId
                     senderTrustStatus: model.senderTrustStatus
                     amISender: model.amISender
                     unparsedText: model.unparsedText
@@ -124,6 +125,7 @@ StatusDialog {
                     quotedMessageAuthorDetailsThumbnailImage: model.quotedMessageAuthorThumbnailImage
                     quotedMessageAuthorDetailsEnsVerified: model.quotedMessageAuthorEnsVerified
                     quotedMessageAuthorDetailsIsContact: model.quotedMessageAuthorIsContact
+                    quotedMessageAuthorColorId: model.quotedMessageAuthorColorId
                     // this list's model does not hold the original, the chat's does
                     readonly property var quotedOriginal: Utils.quotedOriginalDetails(
                                                               !!model.responseToMessageWithId

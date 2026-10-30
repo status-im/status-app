@@ -24,6 +24,7 @@ type
     UsesDefaultName
     SenderOptionalName
     SenderIcon
+    SenderColorId
     AmISender
     SenderIsAdded
     Seen
@@ -46,6 +47,7 @@ type
     DeletedBy
     DeletedByContactDisplayName
     DeletedByContactIcon
+    DeletedByContactColorId
     Links
     LinkPreviewModel
     TransactionParameters
@@ -64,6 +66,7 @@ type
     QuotedMessageAuthorThumbnailImage
     QuotedMessageAuthorEnsVerified
     QuotedMessageAuthorIsContact
+    QuotedMessageAuthorColorId
     QuotedMessageAlbumMessageImages
     QuotedMessageAlbumImagesCount
     QuotedMessageEdited
@@ -146,6 +149,7 @@ QtObject:
       ModelRole.UsesDefaultName.int:"usesDefaultName",
       ModelRole.SenderOptionalName.int:"senderOptionalName",
       ModelRole.SenderIcon.int:"senderIcon",
+      ModelRole.SenderColorId.int: "senderColorId",
       ModelRole.AmISender.int:"amISender",
       ModelRole.SenderIsAdded.int:"senderIsAdded",
       ModelRole.Seen.int:"seen",
@@ -170,6 +174,7 @@ QtObject:
       ModelRole.DeletedBy.int: "deletedBy",
       ModelRole.DeletedByContactDisplayName.int: "deletedByContactDisplayName",
       ModelRole.DeletedByContactIcon.int: "deletedByContactIcon",
+      ModelRole.DeletedByContactColorId.int: "deletedByContactColorId",
       ModelRole.Links.int: "links",
       ModelRole.LinkPreviewModel.int: "linkPreviewModel",
       ModelRole.TransactionParameters.int: "transactionParameters",
@@ -186,6 +191,7 @@ QtObject:
       ModelRole.QuotedMessageAuthorThumbnailImage.int: "quotedMessageAuthorThumbnailImage",
       ModelRole.QuotedMessageAuthorEnsVerified.int: "quotedMessageAuthorEnsVerified",
       ModelRole.QuotedMessageAuthorIsContact.int: "quotedMessageAuthorIsContact",
+      ModelRole.QuotedMessageAuthorColorId.int: "quotedMessageAuthorColorId",
       ModelRole.QuotedMessageAlbumMessageImages.int: "quotedMessageAlbumMessageImages",
       ModelRole.QuotedMessageAlbumImagesCount.int: "quotedMessageAlbumImagesCount",
       ModelRole.QuotedMessageEdited.int: "quotedMessageEdited",
@@ -303,6 +309,8 @@ QtObject:
       result = newQVariant(item.senderOptionalName)
     of ModelRole.SenderIcon:
       result = newQVariant(item.senderIcon)
+    of ModelRole.SenderColorId:
+      result = newQVariant(item.senderColorId)
     of ModelRole.AmISender:
       result = newQVariant(item.amISender)
     of ModelRole.SenderIsAdded:
@@ -333,6 +341,8 @@ QtObject:
       result = newQVariant(item.quotedMessageAuthorDetails.dto.ensVerified)
     of ModelRole.QuotedMessageAuthorIsContact:
       result = newQVariant(item.quotedMessageAuthorDetails.dto.isContact())
+    of ModelRole.QuotedMessageAuthorColorId:
+      result = newQVariant(item.quotedMessageAuthorColorId)
     of ModelRole.QuotedMessageAlbumMessageImages:
       let original = self.quotedImageOriginal(item)
       if original != nil:
@@ -397,6 +407,8 @@ QtObject:
       result = newQVariant(item.deletedByContactDetails.dto.userDefaultDisplayName())
     of ModelRole.DeletedByContactIcon:
       result = newQVariant(item.deletedByContactDetails.dto.image.thumbnail)
+    of ModelRole.DeletedByContactColorId:
+      result = newQVariant(item.deletedByContactColorId)
     of ModelRole.Links:
       result = newQVariant(item.links.join(" "))
     of ModelRole.LinkPreviewModel:
@@ -504,9 +516,10 @@ QtObject:
 
     proc updateQuotedItem(ind: int, targetQuotedMessageFrom, targetQuotedMessageAuthorDisplayName,
         targetQuotedMessageAuthorAvatar, targetQuotedMessageText: string,
-        targetQuotedMessageContentType: ContentType) =
+        targetQuotedMessageContentType: ContentType, targetQuotedMessageAuthorColorId: int) =
       updateRolesAndNotify:
         updateRoleWithValue(quotedMessageFrom, targetQuotedMessageFrom)
+        updateRoleWithValue(quotedMessageAuthorColorId, targetQuotedMessageAuthorColorId)
         updateRoleWithValue(quotedMessageAuthorDisplayName, targetQuotedMessageAuthorDisplayName)
         updateRoleWithValue(quotedMessageAuthorAvatar, targetQuotedMessageAuthorAvatar, QuotedMessageAuthorThumbnailImage)
         updateRoleWithValue(quotedMessageText, targetQuotedMessageText)
@@ -521,7 +534,7 @@ QtObject:
       for newItem in items:
         if oldItem.responseToMessageWithId == newItem.id:
           updateQuotedItem(i, newItem.senderId, newItem.senderDisplayName, newItem.senderIcon,
-            newItem.unparsedText, newItem.contentType)
+            newItem.unparsedText, newItem.contentType, newItem.senderColorId)
 
 
     self.beginInsertRows(parentModelIndex, position, position + items.len - 1)
@@ -639,6 +652,8 @@ QtObject:
         self.items[ind].deletedByContactDetails = targetDeletedByContactDetails
         roles.add(ModelRole.DeletedByContactDisplayName.int)
         roles.add(ModelRole.DeletedByContactIcon.int)
+      let targetDeletedByContactColorId = colorIdFor(targetDeletedBy, targetDeletedByContactDetails)
+      updateRoleWithValue(deletedByContactColorId, targetDeletedByContactColorId)
 
     self.updateMessagesWhenQuotedMessageDeleted(messageId)
 
@@ -1138,5 +1153,6 @@ QtObject:
       message.quotedMessage.bridgeMessage,
       message.paymentRequests,
       hasThread = false,
+      senderColorId = colorIdFor(message.`from`, sender),
     )
     result.mentionedNames = message.mentionedNames
