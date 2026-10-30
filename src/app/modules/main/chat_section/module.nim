@@ -6,6 +6,7 @@ import ../io_interface as delegate_interface
 import view, controller, active_item
 import model as chats_model
 import item as chat_item
+import pending_navigation
 
 import app/modules/shared_models/message_item as member_msg_item
 import app/modules/shared_models/message_model as member_msg_model
@@ -52,6 +53,7 @@ type
     chatContentModules: OrderedTable[string, chat_content_module.AccessInterface]
     moduleLoaded: bool
     chatsLoaded: bool
+    pendingNavigation: ChatNavigation
     membersListModule: users_module.AccessInterface
     # defers the first-activation model build off the tap handler (seaqt
     # QTimer, auto-destroyed via =destroy)
@@ -267,12 +269,13 @@ proc buildChatSectionUI(
     mailserversService: mailservers_service.Service,
     sharedUrlsService: shared_urls_service.Service,
   ) =
-  var selectedItemId = ""
   # a chat requested before the build (deep link / switchTo while the build
   # was still pending) wins over the restored last-open chat
   var sectionLastOpenChat = self.controller.getActiveChatId()
   if sectionLastOpenChat == "":
     sectionLastOpenChat = singletonInstance.localAccountSensitiveSettings.getSectionLastOpenChat(self.controller.getMySectionId())
+  let navigation = self.pendingNavigation.resolveInitialNavigation(
+    chats.mapIt(it.id), sectionLastOpenChat)
   var items: seq[ChatItem] = @[]
   let community {.cursor.} = self.controller.getCommunityById(communityId)
   for categoryDto in community.categories:
@@ -281,13 +284,6 @@ proc buildChatSectionUI(
 
   for chatDto in chats:
     # Add an empty chat item that has the category info
-    var isActive = false
-    # restore on a startup last open channel for the section or
-    # make the first channel which doesn't belong to any category active
-    if (selectedItemId.len == 0 and sectionLastOpenChat.len == 0) or chatDto.id == sectionLastOpenChat:
-      selectedItemId = chatDto.id
-      isActive = true
-
     items.add(self.addOrUpdateChat(
       chatDto,
       communityId,
@@ -307,7 +303,9 @@ proc buildChatSectionUI(
     ))
 
   self.view.chatsModel.setData(items)
-  self.setActiveItem(selectedItemId)
+  self.setActiveItem(navigation.chatId)
+  if navigation.messageId.len > 0:
+    self.chatContentModules[navigation.chatId].scrollToMessage(navigation.messageId)
 
 proc createItemFromPublicKey(self: Module, publicKey: string): UserItem =
   let contactDetails = self.controller.getContactDetails(publicKey)
@@ -449,6 +447,8 @@ method chatContentDidLoad*(self: Module) =
   self.checkIfModuleDidLoad()
 
 method setActiveItem*(self: Module, itemId: string) =
+  # Explicit channel selection supersedes a queued link navigation.
+  self.pendingNavigation.clear()
   self.controller.setActiveItem(itemId)
 
 proc updateActiveChatMembership*(self: Module) =
@@ -643,6 +643,7 @@ method onSectionTransitionSettled*(self: Module) =
 
 method onActiveSectionChange*(self: Module, sectionId: string) =
   if sectionId != self.controller.getMySectionId():
+    self.pendingNavigation.clear()
     self.controller.setIsCurrentSectionActive(false)
     return
   self.controller.setIsCurrentSectionActive(true)
@@ -1671,6 +1672,15 @@ method communityContainsChat*(self: Module, chatId: string): bool =
   return self.chatContentModules.hasKey(chatId)
 
 method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messageId: string): bool =
+  if chatId.len == 0:
+    return false
+
+  if not self.chatsLoaded:
+    # An empty module map before the first build says nothing about whether
+    # the channel exists. Keep the newest request until the build can decide.
+    self.pendingNavigation = ChatNavigation(chatId: chatId, messageId: messageId)
+    return true
+
   if chatId notin self.chatContentModules:
     return false
 

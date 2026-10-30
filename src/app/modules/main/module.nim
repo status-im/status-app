@@ -2006,6 +2006,7 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
 
       if item.isEmpty():
         if self.controller.getCommunityById(communityId).id != "":
+          self.setCommunityIdToSpectate(communityId, channelId)
           self.controller.spectateCommunity(communityId)
           return
         self.communitiesModule.startPendingCommunityFetch(communityId, channelUuid = channelId)
