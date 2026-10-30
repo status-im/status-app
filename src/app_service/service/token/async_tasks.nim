@@ -16,10 +16,6 @@ type
 type
   AsyncRefreshTokensTaskArg = ref object of QObjectTaskArg
     requestId: int
-    # When false, the full token catalogue (~3MB) is NOT fetched and "allTokens" stays
-    # empty, so the main-thread slot keeps the existing cache and skips the heavy decode.
-    # Only init / token-lists-updated set this to true.
-    fetchAllTokens: bool
 
 proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncRefreshTokensTaskArg](argEncoded)
@@ -30,7 +26,6 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   # so the generation gate never wedges.
   var tokensOfInterestNode: JsonNode = newJArray()
   var tokenPrefsNode: JsonNode = newJArray()
-  var allTokensNode: JsonNode = newJArray()
   var errorMsg = ""
   try:
     var tokensOfInterestResponse: JsonNode
@@ -46,19 +41,6 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     errorMsg = fmt"Error refreshing tokens: {e.msg}"
 
-  # fetch all tokens for the group-key index only when the catalogue may have
-  # changed: routine refreshes skip the ~3MB getAllTokens fetch.
-  if arg.fetchAllTokens:
-    try:
-      var allTokensResponse: JsonNode
-      let allTokensErr = status_go_tokens.getAllTokens(allTokensResponse)
-      if allTokensErr.len > 0:
-        warn "asyncRefreshTokensTask: getAllTokens failed", err = allTokensErr
-      elif not allTokensResponse.isNil:
-        allTokensNode = allTokensResponse
-    except Exception as e:
-      warn "asyncRefreshTokensTask: getAllTokens exception", err = e.msg
-
   # Liveness invariant: finishTyped MUST run on every task invocation, with a
   # non-nil result, or the generation in-flight gate wedges permanently (tokens
   # never refresh again until app restart). assembleRefreshResult is written to
@@ -66,7 +48,7 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   # liveness must not depend on a catch-clause choice in another file.
   var res: RefreshTokensApplyResult
   try:
-    res = assembleRefreshResult(tokensOfInterestNode, allTokensNode, tokenPrefsNode,
+    res = assembleRefreshResult(tokensOfInterestNode, tokenPrefsNode,
                                 arg.requestId, errorMsg)
   finally:
     if res.isNil:
