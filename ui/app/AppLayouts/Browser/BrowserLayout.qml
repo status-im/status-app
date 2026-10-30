@@ -36,6 +36,10 @@ import AppLayouts.Browser.webview
 StatusSectionLayout {
     id: root
 
+    objectName: "browserLayout"
+    // Active tab document.title; Squish cannot read web page content.
+    readonly property string currentTitle: favoritesContext.currentTitle
+
     required property bool isMobile
     required property bool thirdpartyServicesEnabled
     required property bool dappsEnabled

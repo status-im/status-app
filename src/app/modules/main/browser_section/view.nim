@@ -1,6 +1,7 @@
 import nimqml
 import json
 import io_interface
+
 import ../wallet_section/activity/controller as activity_controller
 
 QtObject:

@@ -4,20 +4,7 @@ import QtQml.Models
 QtObject {
     id: root
 
-    property var bookmarksModel: ListModel {
-        ListElement {
-            name: "Status Hub"
-            url: "https://hub.status.network/" // Constants.browserDefaultHomepage
-        }
-        ListElement {
-            name: "Status App"
-            url: "https://status.app/"
-        }
-        ListElement {
-            name: "Seznam"
-            url: "https://www.seznam.cz/"
-        }
-    }
+    property var bookmarksModel: ListModel {}
 
     function addBookmark(url, name) {
         bookmarksModel.append({url, name})

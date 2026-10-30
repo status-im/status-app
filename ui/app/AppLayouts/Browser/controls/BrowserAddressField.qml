@@ -10,6 +10,8 @@ import utils
 StatusTextField {
     id: root
 
+    objectName: "browserAddressField"
+
     required property url url
     required property bool incognitoMode
     required property color bgColor

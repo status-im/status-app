@@ -26,6 +26,7 @@ Rectangle {
 
     StatusListView {
         id: bookmarkList
+        objectName: "browserFavoritesListView"
         anchors.fill: parent
         anchors.leftMargin: Theme.halfPadding
         anchors.rightMargin: Theme.halfPadding
