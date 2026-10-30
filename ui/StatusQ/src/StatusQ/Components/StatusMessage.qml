@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -379,6 +381,8 @@ Control {
                             Repeater {
                                 model: attachmentsModel
                                 delegate: StatusImageMessage {
+                                    required property var model
+
                                     source: model.source
                                     onClicked: (image, mouse, imageSource, pos) => root.imageClicked(image, mouse, imageSource, pos)
                                     shapeType: StatusImageMessage.ShapeType.LEFT_ROUNDED

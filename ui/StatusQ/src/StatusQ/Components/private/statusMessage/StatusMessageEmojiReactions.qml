@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -60,6 +62,9 @@ Flow {
 
         StatusButton {
             id: reactionDelegate
+
+            required property var model
+
             objectName: "messageReaction_" + model.emoji
 
             Accessible.role: Accessible.Button
