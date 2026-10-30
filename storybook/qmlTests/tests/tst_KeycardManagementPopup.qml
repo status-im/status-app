@@ -217,7 +217,7 @@ Item {
         function test_untrustedKeycardErrorKeepsTheFlowOpen() {
             launchReadKeycard()
             mockStore.keycardState = Constants.keycard.state.untrustedKeycard
-            mockStore.keycardGetMetadataError("Untrusted keycard: identity certificate not trusted")
+            mockStore.keycardGetMetadataError("Keycard authentication failed: secure channel not signed by the card's identity key")
             wait(50)
 
             compare(metadataResultSpy.count, 0, "must not navigate to the keycard details")
@@ -530,6 +530,27 @@ Item {
                           return !!title && title.text === "Keycard has been renamed"
                       }, 3000)
             compare(findChild(popup, "keycardProgressMessage").text, "New name: Renamed Card")
+        }
+
+        function test_untrustedKeycardRenameShowsNotVerified() {
+            // The card failed its identity check while storing the new name: say so, not "Something went wrong"
+            const pinInput = findChild(popup, "keycardManagementPinInput")
+            verify(!!pinInput)
+            pinInput.setPin(currentPin)
+            tryVerify(() => !!findChild(popup, "keycardKeyPairNameInput"), 3000)
+            findChild(popup, "keycardKeyPairNameInput").text = newName
+            const next = findChild(popup, "keycardManagementNextButton")
+            tryVerify(() => next.visible && next.enabled, 3000)
+            next.clicked()
+            tryVerify(() => mockStore.calls.length === 1, 3000)
+
+            mockStore.keycardState = "ready" // the error can outlive the session state
+            mockStore.keycardRenameError("store keycard metadata response error: Keycard authentication failed: secure channel not signed by the card's identity key")
+            tryVerify(() => {
+                          const title = findChild(popup, "keycardProgressTitle")
+                          return !!title && title.text === "Keycard not verified"
+                      }, 3000)
+            verify(findChild(popup, "keycardProgressMessage").text.indexOf("could not be verified as genuine") >= 0)
         }
     }
 

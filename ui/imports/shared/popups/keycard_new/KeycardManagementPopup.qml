@@ -1496,6 +1496,7 @@ StatusDialog {
         KeycardProgressState {
             keycardInternalError: keycardErrors.internalError
             keycardNotEmptyError: keycardErrors.notEmptyKeycardError
+            untrustedKeycardError: keycardErrors.untrustedKeycardError
             wrongKeycard: keycardErrors.wrongKeycardError
             wrongKeycardProfile: keycardErrors.wrongKeycardProfileError
             wrongPin: keycardErrors.wrongPinError1
