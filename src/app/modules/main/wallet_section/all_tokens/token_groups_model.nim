@@ -439,7 +439,7 @@ QtObject:
 
     self.rebuildMarketDetails(self.getDisplayModel())
 
-  proc ensureKeyLoaded*(self: TokenGroupsModel, key: string): bool =
+  proc ensureKeyLoaded*(self: TokenGroupsModel, key: string): bool {.slot.} =
     if ModelMode.UseLazyLoading notin self.modelModes:
       for item in self.getDisplayModel():
         if item.key == key:

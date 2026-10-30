@@ -76,6 +76,8 @@ QObject {
 
     // output model - lazy loaded subset for display
     readonly property var outputModel: !!d.searchKeyword ? d.searchModel : d.fullOutputModel
+    /** the selected chain's groups, also while searching **/
+    readonly property var chainOutputModel: d.fullOutputModel
 
     QtObject {
         id: d

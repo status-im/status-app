@@ -7,6 +7,7 @@ import QtModelsToolkit
 import utils
 
 ListModel {
+    id: root
 
     readonly property string ethIcon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png"
 
@@ -409,6 +410,14 @@ ListModel {
     property bool isLoadingMore: false
     // whether the groups are being loaded (a chain's model)
     property bool loading: false
+    // loads a group not listed yet (a chain's model), see ensureKeyLoaded
+    property var groupLoader: null
+
+    function ensureKeyLoaded(key) {
+        if (ModelUtils.indexOf(root, "key", key) >= 0)
+            return true
+        return !!groupLoader && groupLoader(key)
+    }
 
     property var tokenGroupsForChainModel // used for search only
 

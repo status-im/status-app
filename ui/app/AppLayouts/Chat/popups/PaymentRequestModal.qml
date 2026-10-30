@@ -100,8 +100,11 @@ StatusDialog {
         onChainGroupsReadyChanged: Qt.callLater(d.resetUnavailableToken)
 
         function resetUnavailableToken() {
-            if (d.chainGroupsReady && !d.selectedHolding.available)
-                root.selectedTokenGroupKey = root.defaultTokenGroupKey
+            if (!d.chainGroupsReady || d.selectedHolding.available)
+                return
+            if (root.tokenGroupsForChainModel.ensureKeyLoaded?.(root.selectedTokenGroupKey))
+                return
+            root.selectedTokenGroupKey = root.defaultTokenGroupKey
         }
 
         property string selectedTokenKey: ""
@@ -115,7 +118,7 @@ StatusDialog {
         }
 
         function updateSelectedTokenKey() {
-            const tokenGroup = SQUtils.ModelUtils.getByKey(holdingSelector.model, "key", root.selectedTokenGroupKey)
+            const tokenGroup = SQUtils.ModelUtils.getByKey(d.adaptor.chainOutputModel, "key", root.selectedTokenGroupKey)
             if (!tokenGroup) {
                 console.warn("cannot relove the token group for the group key", root.selectedTokenGroupKey)
                 d.clearSelectedToken()
@@ -136,7 +139,7 @@ StatusDialog {
         }
 
         readonly property ModelEntry selectedHolding: ModelEntry {
-            sourceModel: holdingSelector.model
+            sourceModel: d.adaptor.chainOutputModel
             key: "key"
             value: root.selectedTokenGroupKey
             onValueChanged: {

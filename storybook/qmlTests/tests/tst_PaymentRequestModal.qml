@@ -71,11 +71,8 @@ Item {
         property PaymentRequestModal controlUnderTest: null
 
         function cleanup() {
-            const chainModels = d.tokensStore._chainModels
-            for (const chainId in chainModels) {
-                chainModels[chainId].loading = false
-                d.tokensStore._buildGroupsInto(chainModels[chainId], parseInt(chainId))
-            }
+            d.tokensStore._reloadChainModels()
+            d.tokensStore.searchResultModel.clear()
         }
 
         // helper functions -------------------------------------------------------------
@@ -291,15 +288,65 @@ Item {
             wait(0)
             compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
 
+            // the chain no longer lists it at all
+            chainModel.groupLoader = key => false
             chainModel.loading = true
-            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId)
-            const daiIndex = SQUtils.ModelUtils.indexOf(chainModel, "key", Constants.daiGroupKey)
-            verify(daiIndex >= 0)
-            ignoreWarning("cannot relove the token group for the group key dai")
-            chainModel.remove(daiIndex)
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId,
+                                           { skippedKeys: [Constants.daiGroupKey] })
             compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
             chainModel.loading = false
             tryCompare(controlUnderTest, "selectedTokenGroupKey", Constants.ethGroupKey)
+        }
+
+        function test_selection_kept_when_a_reload_lists_it_beyond_the_first_page() {
+            controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root, { selectedTokenGroupKey: Constants.daiGroupKey })
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            chainModel.clear()
+            wait(0)
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId,
+                                           { skippedKeys: [Constants.daiGroupKey] })
+            chainModel.loading = false
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+        }
+
+        function test_search_selection_kept_while_the_groups_reload() {
+            launchAndVerfyModal()
+            waitForDefaultTokenSelection()
+
+            const chainId = controlUnderTest.selectedNetworkChainId
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            d.tokensStore._buildGroupsInto(chainModel, chainId, { skippedKeys: [Constants.daiGroupKey] })
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+
+            const assetSelector = findChild(controlUnderTest, "assetSelector")
+            verify(!!assetSelector)
+            assetSelector.search("dai")
+            verify(SQUtils.ModelUtils.indexOf(d.tokensStore.searchResultModel, "key", Constants.daiGroupKey) >= 0)
+            controlUnderTest.selectedTokenGroupKey = Constants.daiGroupKey
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+
+            // dropped on background, both the chain's groups and the search's
+            chainModel.clear()
+            d.tokensStore.searchResultModel.clear()
+            wait(0)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+
+            // the chain's groups reload before the search's
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, chainId, { skippedKeys: [Constants.daiGroupKey] })
+            chainModel.loading = false
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            compare(controlUnderTest.selectedSymbol, "DAI")
         }
 
         function test_symbol_initial_selection_when_not_available_in_chain() {

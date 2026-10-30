@@ -117,7 +117,7 @@ TokensStore {
         if (!!root._chainModels[chainId])
             return
         const model = root._chainModelComponent.createObject(root)
-        root._buildGroupsInto(model, chainId)
+        root._loadChainModel(model, chainId)
         root._chainModels[chainId] = model
         for (const id in root._catalogPickers) {
             const picker = root._catalogPickers[id]
@@ -174,7 +174,23 @@ TokensStore {
         return { key: "", groupKey: "", symbol: "", name: "", decimals: 0, chainId: 0 }
     }
 
-    function _buildGroupsInto(targetModel, chainId) {
+    function _loadChainModel(model, chainId) {
+        model.loading = false
+        model.groupLoader = key => root._buildGroupsInto(model, chainId, { onlyKey: key })
+        root._buildGroupsInto(model, chainId)
+    }
+
+    // restores the chain models a test changed
+    function _reloadChainModels() {
+        for (const chainId in root._chainModels)
+            root._loadChainModel(root._chainModels[chainId], parseInt(chainId))
+    }
+
+    // `options.skippedKeys`: groups left out, as beyond a lazy model's first page;
+    // `options.onlyKey`: appends just that group, returning whether it is on the chain
+    function _buildGroupsInto(targetModel, chainId, options) {
+        const skippedKeys = options?.skippedKeys ?? []
+        const onlyKey = options?.onlyKey ?? ""
         if (!root.tokenGroupsModel || chainId <= 0) {
             console.warn("acquireChainTokenGroups: invalid parameters", chainId)
             return
@@ -185,10 +201,13 @@ TokensStore {
             return
         }
 
-        targetModel.clear()
+        if (onlyKey === "")
+            targetModel.clear()
 
         for (let i = 0; i < root.tokenGroupsModel.ModelCount.count; i++) {
             const group = ModelUtils.get(root.tokenGroupsModel, i)
+            if (onlyKey !== "" ? group.key !== onlyKey : skippedKeys.includes(group.key))
+                continue
 
             if (!group.tokens || group.tokens.ModelCount.count === 0) {
                 continue
@@ -227,7 +246,10 @@ TokensStore {
                     detailsLoading: group.detailsLoading || false,
                     marketDetailsLoading: group.marketDetailsLoading || false
                 })
+                if (onlyKey !== "")
+                    return true
             }
         }
+        return false
     }
 }
