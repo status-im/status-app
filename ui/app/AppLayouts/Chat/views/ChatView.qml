@@ -881,6 +881,7 @@ Item {
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding
             joined: root.joined
+            threadName: root.chatContentModule?.messagesModule.threadName ?? ""
 
             // Unfurling related data:
             gifUnfurlingEnabled: root.gifUnfurlingEnabled
