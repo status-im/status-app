@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtTest
 
 import StatusQ.Components
@@ -68,6 +69,33 @@ Item {
         }
     }
 
+    // many running tiles, to give the render thread work while they are removed
+    Component {
+        id: gridComp
+
+        Loader {
+            active: false
+            sourceComponent: Grid {
+                columns: 12
+
+                Repeater {
+                    model: 120
+
+                    LoadingSkeletonTile {
+                        width: 30
+                        height: 16
+                    }
+                }
+            }
+        }
+    }
+
+    SignalSpy {
+        id: frameSpy
+        target: root.Window.window
+        signalName: "frameSwapped"
+    }
+
     TestCase {
         name: "LoadingSkeletonTileRendering"
         when: windowShown
@@ -111,9 +139,6 @@ Item {
             const tile = frame.tile
 
             waitForRendering(frame)
-            // only the first effect to load a shader reports Compiled; later
-            // ones reuse the cached shader and stay Uncompiled
-            verify(tile.status !== ShaderEffect.Error, tile.log)
 
             const image = grabImage(tile)
             const scale = image.width / tile.width
@@ -161,6 +186,37 @@ Item {
             }, 3000, "the band must light each tile in some frame")
             verify(!bothInOneFrame,
                    "the band must not light tiles far apart in the same frame")
+        }
+
+        // QTBUG-151922: UniformAnimator crashed the render thread here
+        function test_tiles_can_leave_the_window_while_sweeping() {
+            const loader = createTemporaryObject(gridComp, root)
+            verify(!!loader)
+
+            for (let i = 0; i < 40; ++i) {
+                loader.active = true
+                wait(150)
+                loader.active = false
+                wait(10)
+            }
+        }
+
+        function test_requests_frames_only_while_visible() {
+            const frame = createTemporaryObject(tileComp, root)
+            verify(!!frame)
+            waitForRendering(frame)
+
+            frameSpy.clear()
+            tryVerify(() => frameSpy.count > 3, 2000,
+                      "a visible tile must keep the window rendering")
+
+            frame.tile.visible = false
+            // let the frames already in flight finish
+            wait(100)
+            frameSpy.clear()
+            wait(300)
+            verify(frameSpy.count <= 2,
+                   `a hidden tile must not request frames, got ${frameSpy.count}`)
         }
     }
 }

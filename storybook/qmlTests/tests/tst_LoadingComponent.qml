@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import QtTest
 
+import StatusQ
 import StatusQ.Components
 
 Item {
@@ -36,49 +37,26 @@ Item {
             return result
         }
 
-        function shaderOf(comp) {
-            return descendants(comp).find(o => o instanceof ShaderEffect)
+        function tileOf(comp) {
+            return descendants(comp).find(o => o instanceof SkeletonTileItem)
         }
 
         function init() {
             failOnWarning(/.*/)
         }
 
-        function test_shimmer_absent_when_not_visible() {
-            const comp = createTemporaryObject(loadingComp, root, {visible: false})
+        function test_uses_no_animator_objects() {
+            const comp = createTemporaryObject(loadingComp, root)
             verify(!!comp)
+
+            verify(!!tileOf(comp), "the placeholder must be a skeleton tile")
             verify(!findChild(comp, "shimmerAnimator"),
-                   "no animation object should exist while hidden")
-        }
-
-        function test_shimmer_present_and_running_when_visible() {
-            const comp = createTemporaryObject(loadingComp, root, {visible: true})
-            verify(!!comp)
-
-            tryVerify(() => !!findChild(comp, "shimmerAnimator"), 1000,
-                      "animation object must exist while visible")
-            const anim = findChild(comp, "shimmerAnimator")
-            compare(anim.running, true, "shimmer must be animating while visible")
-            verify(anim instanceof UniformAnimator,
-                   "the sweep must be animated on the render thread")
-            compare(anim.target, shaderOf(comp))
-        }
-
-        function test_shimmer_stops_and_is_removed_when_hidden() {
-            const comp = createTemporaryObject(loadingComp, root, {visible: true})
-            verify(!!comp)
-            tryVerify(() => !!findChild(comp, "shimmerAnimator"), 1000)
-
-            comp.visible = false
-
-            tryVerify(() => !findChild(comp, "shimmerAnimator"), 1000,
-                      "no animation object should linger once hidden")
+                   "the sweep must run on the scene graph side")
         }
 
         function test_no_offscreen_render_passes() {
             const comp = createTemporaryObject(loadingComp, root)
             verify(!!comp)
-            tryVerify(() => !!findChild(comp, "shimmerAnimator"), 1000)
 
             for (const item of descendants(comp)) {
                 verify(!(item instanceof MultiEffect), "MultiEffect found")
@@ -93,18 +71,18 @@ Item {
             const comp = createTemporaryObject(loadingComp, root, {radius: 8})
             verify(!!comp)
 
-            const shader = shaderOf(comp)
-            verify(!!shader, "the placeholder must be drawn by a shader")
-            compare(shader.radius, 8)
-            compare(shader.width, 120)
-            compare(shader.height, 16)
+            const tile = tileOf(comp)
+            verify(!!tile, "the placeholder must be a skeleton tile")
+            compare(tile.radius, 8)
+            compare(tile.width, 120)
+            compare(tile.height, 16)
 
             comp.radius = 2
             comp.width = 60
             comp.height = 30
-            compare(shader.radius, 2)
-            compare(shader.width, 60)
-            compare(shader.height, 30)
+            compare(tile.radius, 2)
+            compare(tile.width, 60)
+            compare(tile.height, 30)
         }
     }
 }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import QtTest
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Core
 
@@ -66,12 +67,6 @@ Item {
             return result
         }
 
-        function animators(group) {
-            return ["avatarTile", "titleTile", "subtitleTile"]
-                .map(name => findChild(findChild(group, name), "shimmerAnimator"))
-                .filter(anim => !!anim)
-        }
-
         function init() {
             failOnWarning(/.*/)
         }
@@ -79,12 +74,13 @@ Item {
         function test_shader_is_built_in() {
             verify(SystemUtils.fileExists(":/StatusQ/shaders/skeletontile.frag.qsb"),
                    "the compiled tile shader must be a StatusQ resource")
+            verify(SystemUtils.fileExists(":/StatusQ/shaders/skeletontile.vert.qsb"),
+                   "the compiled tile shader must be a StatusQ resource")
         }
 
         function test_no_offscreen_render_passes() {
             const group = createTemporaryObject(groupComp, root)
             verify(!!group)
-            tryVerify(() => animators(group).length === 3)
 
             for (const item of descendants(group)) {
                 verify(!(item instanceof MultiEffect), "MultiEffect found")
@@ -95,23 +91,19 @@ Item {
             }
         }
 
-        function test_tiles_are_shaders_following_radius_and_size() {
+        function test_tiles_follow_radius_and_size() {
             const group = createTemporaryObject(groupComp, root)
             verify(!!group)
 
             const avatar = findChild(group, "avatarTile")
-            verify(avatar instanceof ShaderEffect)
+            verify(avatar instanceof SkeletonTileItem)
             compare(avatar.radius, 20)
             compare(avatar.width, 40)
 
             const title = findChild(group, "titleTile")
-            verify(title instanceof ShaderEffect)
+            verify(title instanceof SkeletonTileItem)
             compare(title.radius, 4)
 
-            compare(title.itemSize, Qt.size(100, 14))
-            title.width = 150
-            title.height = 20
-            compare(title.itemSize, Qt.size(150, 20))
             compare(title.sweepSize, Qt.size(300, 200),
                     "a grouped tile sweeps across the group, not itself")
         }
@@ -138,23 +130,6 @@ Item {
             group.width = 500
             for (const tile of [avatar, title, subtitle])
                 compare(tile.sweepSize, Qt.size(500, 200))
-        }
-
-        function test_animation_only_while_visible() {
-            const group = createTemporaryObject(groupComp, root, {visible: false})
-            verify(!!group)
-            compare(animators(group).length, 0,
-                    "no animation object should exist while hidden")
-
-            group.visible = true
-            tryVerify(() => animators(group).length === 3)
-            for (const anim of animators(group)) {
-                verify(anim instanceof UniformAnimator)
-                compare(anim.running, true)
-            }
-
-            group.visible = false
-            tryVerify(() => animators(group).length === 0)
         }
     }
 }

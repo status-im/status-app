@@ -1,40 +1,34 @@
 import QtQuick
 
+import StatusQ
 import StatusQ.Core.Theme
 
 /*!
    \qmltype LoadingSkeletonTile
-   \inherits ShaderEffect
+   \inherits SkeletonTileItem
    \inqmlmodule StatusQ.Components
    \since StatusQ.Components 0.1
    \brief A rounded skeleton shape with a shimmer sweep, drawn in a single
    pass without offscreen layers.
 
    Inside a LoadingSkeletonGroup the sweep runs across the whole group,
-   otherwise across the tile itself. Each tile runs its own sweep phase, so a
-   tile that starts after the rest of its group (added later by a Repeater,
-   or made visible later) restarts its phase and can be out of step with the
-   band.
+   otherwise across the tile itself. All tiles share one clock, so a tile that
+   appears later stays in step with the band.
 
    Nothing is drawn under the software scene graph; there is no fallback, as
    the app never selects it.
 
-   Only \c color and \c radius are meant to be set; \c phase, \c sweepOrigin,
-   \c sweepSize, \c itemSize, \c pixelRatio and \c highlightColor are internal
-   shader inputs.
+   Only \c color and \c radius are meant to be set; \c sweepOrigin, \c sweepSize
+   and \c highlightColor are internal shader inputs.
 */
-ShaderEffect {
+SkeletonTileItem {
     id: root
 
-    property color color: Theme.palette.statusLoadingHighlight
-    property real radius: 4
-
-    readonly property color highlightColor: Theme.palette.statusLoadingHighlight2
-    readonly property size itemSize: Qt.size(width, height)
-    readonly property real pixelRatio: Screen.devicePixelRatio
+    color: Theme.palette.statusLoadingHighlight
+    highlightColor: Theme.palette.statusLoadingHighlight2
 
     // position and size of the area the sweep travels across
-    readonly property point sweepOrigin: {
+    sweepOrigin: {
         if (!d.group)
             return Qt.point(0, 0)
         let x = 0
@@ -45,11 +39,8 @@ ShaderEffect {
         }
         return Qt.point(x, y)
     }
-    readonly property size sweepSize: d.group ? Qt.size(d.group.width, d.group.height)
-                                              : itemSize
-    property real phase: 0
-
-    fragmentShader: "qrc:/StatusQ/shaders/skeletontile.frag.qsb"
+    sweepSize: d.group ? Qt.size(d.group.width, d.group.height)
+                       : Qt.size(width, height)
 
     QtObject {
         id: d
@@ -60,21 +51,6 @@ ShaderEffect {
                     return p
             }
             return null
-        }
-    }
-
-    Loader {
-        active: root.visible
-        sourceComponent: UniformAnimator {
-            objectName: "shimmerAnimator"
-
-            target: root
-            uniform: "phase"
-            from: 0
-            to: 1
-            duration: 1000
-            loops: Animation.Infinite
-            running: true
         }
     }
 }
