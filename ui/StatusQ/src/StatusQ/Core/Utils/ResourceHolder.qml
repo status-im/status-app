@@ -9,7 +9,9 @@ QObject {
     property string key
     property bool active: true
 
-    readonly property bool holding: d.heldKey !== ""
+    // turns true after acquireRequested and false after releaseRequested: it is
+    // false inside the acquire handler and true inside the release handler
+    readonly property alias holding: d.holding
 
     signal acquireRequested(string key)
     signal releaseRequested(string key)
@@ -24,6 +26,9 @@ QObject {
 
         property bool completed
         property string heldKey
+        // updated only after the matching request, so holdingChanged handlers
+        // never run between taking the key and requesting it
+        property bool holding
 
         function wantedKey() {
             return completed && root.active ? root.key : ""
@@ -38,8 +43,10 @@ QObject {
             if (heldKey !== "" || wantedKey() !== wanted)
                 return
             heldKey = wanted
-            if (wanted !== "")
-                root.acquireRequested(wanted)
+            if (wanted === "")
+                return
+            root.acquireRequested(wanted)
+            holding = heldKey !== ""
         }
 
         function release() {
@@ -48,6 +55,7 @@ QObject {
             const key = heldKey
             heldKey = ""
             root.releaseRequested(key)
+            holding = heldKey !== ""
         }
     }
 
@@ -55,5 +63,9 @@ QObject {
         d.completed = true
         d.sync()
     }
-    Component.onDestruction: d.release()
+    Component.onDestruction: {
+        // a release handler changing `key` must not acquire again
+        d.completed = false
+        d.release()
+    }
 }

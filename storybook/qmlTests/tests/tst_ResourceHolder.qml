@@ -161,6 +161,100 @@ Item {
             verify(!holder.holding)
         }
 
+        function test_holdingHandlerDeactivatingReleasesAfterAcquire() {
+            const holder = createTemporaryObject(holderComponent, root, { active: false })
+            const events = []
+            holder.acquireRequested.connect(key => events.push("acquire " + key))
+            holder.releaseRequested.connect(key => events.push("release " + key))
+            holder.holdingChanged.connect(() => {
+                events.push("holding " + holder.holding)
+                if (holder.holding)
+                    holder.active = false
+            })
+            holder.active = true
+            compare(events, ["acquire k1", "holding true", "release k1", "holding false"])
+            compare(holds("k1"), 0)
+            verify(!holder.holding)
+        }
+
+        function test_holdingHandlerChangingTheKeyMovesTheHold() {
+            const holder = createTemporaryObject(holderComponent, root, { active: false })
+            const events = []
+            holder.acquireRequested.connect(key => events.push("acquire " + key))
+            holder.releaseRequested.connect(key => events.push("release " + key))
+            holder.holdingChanged.connect(() => {
+                if (holder.holding && holder.key === "k1")
+                    holder.key = "k2"
+            })
+            holder.active = true
+            compare(events, ["acquire k1", "release k1", "acquire k2"])
+            compare(holds("k1"), 0)
+            compare(holds("k2"), 1)
+            verify(holder.holding)
+
+            holder.key = ""
+            compare(holds("k2"), 0)
+            verify(!holder.holding)
+        }
+
+        function test_releaseHandlerChangingTheKeyOnDestructionAcquiresNothing() {
+            const holder = createTemporaryObject(holderComponent, root)
+            const acquired = createTemporaryObject(signalSpy, root, { target: holder, signalName: "acquireRequested" })
+            const released = createTemporaryObject(signalSpy, root, { target: holder, signalName: "releaseRequested" })
+            holder.releaseRequested.connect(() => holder.key = "k2")
+            holder.destroy()
+            tryCompare(released, "count", 1)
+            compare(acquired.count, 0)
+            compare(holds("k1"), 0)
+            compare(holds("k2"), 0)
+        }
+
+        function test_acquireHandlerDeactivatingReleasesAfterAcquire() {
+            const holder = createTemporaryObject(holderComponent, root, { active: false })
+            const events = []
+            holder.acquireRequested.connect(key => {
+                events.push("acquire " + key)
+                holder.active = false
+            })
+            holder.releaseRequested.connect(key => events.push("release " + key))
+            const holdingChanged = createTemporaryObject(signalSpy, root, { target: holder, signalName: "holdingChanged" })
+            holder.active = true
+            compare(events, ["acquire k1", "release k1"])
+            compare(holds("k1"), 0)
+            verify(!holder.holding)
+            compare(holdingChanged.count, 0)
+        }
+
+        function test_acquireHandlerChangingTheKeyMovesTheHold() {
+            const holder = createTemporaryObject(holderComponent, root, { active: false })
+            const events = []
+            holder.acquireRequested.connect(key => {
+                events.push("acquire " + key)
+                if (key === "k1")
+                    holder.key = "k2"
+            })
+            holder.releaseRequested.connect(key => events.push("release " + key))
+            holder.active = true
+            compare(events, ["acquire k1", "release k1", "acquire k2"])
+            compare(holds("k1"), 0)
+            compare(holds("k2"), 1)
+            verify(holder.holding)
+
+            holder.key = ""
+            compare(holds("k2"), 0)
+            verify(!holder.holding)
+        }
+
+        function test_holdingInsideTheHandlers() {
+            const holder = createTemporaryObject(holderComponent, root, { active: false })
+            const seen = []
+            holder.acquireRequested.connect(() => seen.push("acquire " + holder.holding))
+            holder.releaseRequested.connect(() => seen.push("release " + holder.holding))
+            holder.active = true
+            holder.active = false
+            compare(seen, ["acquire false", "release true"])
+        }
+
         function test_twoHoldersCountTwice() {
             const first = createTemporaryObject(holderComponent, root)
             const second = createTemporaryObject(holderComponent, root)
