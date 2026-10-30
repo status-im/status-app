@@ -63,6 +63,7 @@ nim-test-run/test/nim/qml_libs_resources_test.nim: | rcc
 # per-file, NOT globally
 NIM_TESTS_MODEL_SPY := \
 	admin_members_test \
+	all_tokens_view_test \
 	assets_adaptor_model_test \
 	chat_search_model_bulk_load_test \
 	collectibles_model_test \
