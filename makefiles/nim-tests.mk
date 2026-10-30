@@ -15,6 +15,7 @@ NIM_BENCHES := $(addprefix nim-test-run/,$(NIM_BENCH_FILES))
 # need it built first.
 NIM_TESTS_LINK_STATUSQ := \
 	asset_proxy_chain_bench \
+	browser_section_open_url_test \
 	chat_search_model_bulk_load_test \
 	chat_search_model_proxy_test \
 	chat_search_model_test \

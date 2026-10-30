@@ -83,7 +83,7 @@ SplitView {
 
         leftPortraitPadding: 0
 
-        bookmarksStore: BrowserStores.BookmarksStore {}
+        bookmarksStore: BookmarksStoreMock {}
         browserPreferencesStore: BrowserStores.BrowserPreferencesStore { id: browserPrefsStore }
         downloadsStore: BrowserStores.DownloadsStore {
             // Stub is empty; provide the real Download Records API for Storybook.

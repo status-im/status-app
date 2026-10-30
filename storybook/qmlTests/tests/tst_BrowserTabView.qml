@@ -3,6 +3,8 @@ import QtTest
 
 import AppLayouts.Browser.panels
 
+import "helpers/BrowserToolbarTestUtils.js" as BrowserToolbarTestUtils
+
 /**
  * BrowserTabView: the tab strip doubles as the macOS titlebar, so three
  * mechanisms share the same 44px band — the tab bar ListView (flickable only
@@ -143,6 +145,15 @@ Item {
 
         function test_dragArea_hidden_whenOverflowing() {
             compare(dragArea(createView(12)).visible, false)
+        }
+
+        function test_addTabButton_emitsOpenNewTab() {
+            const view = createView(1)
+            const spy = newTabSpy(view)
+            const addBtn = BrowserToolbarTestUtils.flatButtonByIcon(view, "add")
+            verify(!!addBtn)
+            mouseClick(addBtn, addBtn.width / 2, addBtn.height / 2)
+            compare(spy.count, 1)
         }
     }
 }
