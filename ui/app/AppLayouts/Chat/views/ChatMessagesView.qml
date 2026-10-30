@@ -756,7 +756,8 @@ Item {
                     || !chatLogView.visible || d.keepUnread)
                 return
 
-            if (d.chatDetails && d.chatDetails.active
+            // A visible thread panel is read alongside the selected parent chat.
+            if (d.chatDetails && (d.chatDetails.active || root.isThreadView)
                     && (d.chatDetails.hasUnreadMessages || d.chatDetails.highlight)
                     && !root.messageStore.loading)
                 root.chatContentModule.markAllMessagesRead()
@@ -972,6 +973,8 @@ Item {
         function onHasUnreadMessagesChanged() {
             if (!d.chatDetails.hasUnreadMessages)
                 return
+
+            Qt.callLater(d.markAllMessagesReadIfMostRecentMessageIsInViewport)
 
             // HACK: we call `addNewMessagesMarker` later because messages model
             // may not be yet propagated with unread messages when this signal is emitteds

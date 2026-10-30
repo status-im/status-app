@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtTest
+import Storybook.Testing
 
 import StatusQ
 
@@ -29,6 +30,7 @@ Item {
     height: 600
 
     ChatStores.RootStore { id: rootStoreMock }
+    AppStateDriver { id: appState }
 
     ListModel { id: messagesA }
     ListModel { id: messagesB }
@@ -71,7 +73,7 @@ Item {
         readonly property var chatDetails: QtObject {
             readonly property string id: moduleMock.mockChatId
             readonly property int type: Constants.chatType.communityChat
-            readonly property bool active: true
+            property bool active: true
             readonly property bool highlight: false
             property bool hasUnreadMessages: false
             readonly property bool canPost: true
@@ -251,6 +253,7 @@ Item {
         property var pool: null
 
         function init() {
+            appState.setActive(true)
             fill(messagesA, "a", 200)
             fill(messagesB, "b", 200)
             moduleA.historyLeft = 0
@@ -261,8 +264,15 @@ Item {
             moduleB.messagesModule.loading = false
             moduleA.chatDetails.hasUnreadMessages = false
             moduleB.chatDetails.hasUnreadMessages = false
+            moduleA.chatDetails.active = true
+            moduleA.messagesModule.threadId = ""
+            moduleA.messagesModule.keepUnread = false
             moduleA.messagesModule.editModeOffCalls = []
             moduleB.messagesModule.editModeOffCalls = []
+        }
+
+        function cleanup() {
+            appState.setActive(true)
         }
 
         function readyCount() {
@@ -695,6 +705,52 @@ Item {
             verify(lv.atBottom, "back at the newest message")
             tryVerify(() => moduleA.markAllMessagesReadCalls > marked, 5000,
                       "chat a is read")
+        }
+
+        function test_arrivingUnreadMessages_data() {
+            return [
+                { tag: "selected-chat", thread: false, active: true, hidden: false, keepUnread: false, read: true },
+                { tag: "selected-thread", thread: true, active: true, hidden: false, keepUnread: false, read: true },
+                { tag: "thread-panel", thread: true, active: false, hidden: false, keepUnread: false, read: true },
+                { tag: "inactive-chat", thread: false, active: false, hidden: false, keepUnread: false, read: false },
+                { tag: "hidden-thread", thread: true, active: false, hidden: true, keepUnread: false, read: false },
+                { tag: "keep-thread-unread", thread: true, active: false, hidden: false, keepUnread: true, read: false },
+                { tag: "thread-reading-history", thread: true, active: false, above: true, read: false },
+                { tag: "thread-in-background", thread: true, active: false, background: true, read: false }
+            ]
+        }
+
+        function test_arrivingUnreadMessages(data) {
+            prewarmedPool()
+            moduleA.chatDetails.active = data.active
+            moduleA.messagesModule.threadId = data.thread ? "thread-a" : ""
+            moduleA.messagesModule.keepUnread = !!data.keepUnread
+            const view = openView({ isThreadView: data.thread })
+            verify(view.chatLogView.atBottom)
+            compare(view.messageStore.keepUnread, !!data.keepUnread)
+
+            // The reply is already rendered when its unread summary arrives.
+            messagesA.insert(0, makeMessage("a", -1))
+            settle(view)
+            waitForRendering(view.chatLogView)
+            if (data.above)
+                readAboveTheNewestMessage(view)
+            if (data.background)
+                appState.setActive(false)
+            view.visible = !data.hidden
+            const marked = moduleA.markAllMessagesReadCalls
+            moduleA.chatDetails.hasUnreadMessages = true
+
+            if (data.read) {
+                tryVerify(() => moduleA.markAllMessagesReadCalls > marked, 3000,
+                          "the visible reply must be marked read without scrolling")
+            } else {
+                // Process the queued read check before asserting no read was requested.
+                let readCheckProcessed = false
+                Qt.callLater(() => readCheckProcessed = true)
+                tryVerify(() => readCheckProcessed)
+                compare(moduleA.markAllMessagesReadCalls, marked)
+            }
         }
 
         // ---- editing ----------------------------------------------------------------
