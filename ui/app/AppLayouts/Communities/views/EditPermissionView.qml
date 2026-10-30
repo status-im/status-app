@@ -177,7 +177,6 @@ StatusScrollView {
             return { symbol: "", name: "", decimals: 0 }
         }
 
-        // The dropdown's token data is what its amount was entered in, so it is written with it.
         function getEnteredAssetData(key, holding) {
             if (dropdown.assetKey === key)
                 return { symbol: dropdown.assetSymbol, name: dropdown.assetName,

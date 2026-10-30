@@ -131,6 +131,7 @@ StatusDropdown {
         }
 
         readonly property bool assetsReady: root.assetAmount !== "0" && root.assetKey
+        readonly property bool collectiblesReady: root.collectibleAmount !== "0" && root.collectibleKey
 
         function takeAssetData(key) {
             const row = PermissionsHelpers.findTokenByKey(root.assetsModel, false, key) ?? {}
@@ -138,7 +139,6 @@ StatusDropdown {
             root.assetName = row.name ?? ""
             root.assetDecimals = row.decimals ?? 0
         }
-        readonly property bool collectiblesReady: root.collectibleAmount !== "0" && root.collectibleKey
 
         readonly property bool ensReady: d.ensDomainNameValid
 
@@ -489,7 +489,7 @@ StatusDropdown {
                         name: chainName,
                         icon: chainIcon,
                         amount: asset.remainingSupply,
-                        decimals: root.assetDecimals,
+                        decimals: asset.decimals,
                         multiplierIndex: asset.multiplierIndex,
                         infiniteAmount: asset.infiniteSupply
                     })

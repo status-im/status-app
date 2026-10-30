@@ -132,3 +132,12 @@ suite "resolved token key criterion":
     }, name = "Status", symbol = "SNT", decimals = 18)
 
     check criteria.decimals == 0
+
+  test "a criterion's decimals without a symbol stay":
+    let criteria = resolve(%*{
+      "type": 1, "key": "status-group", "symbol": "", "name": "", "decimals": 6,
+      "amount": "10000000",
+    }, name = "Status", symbol = "SNT", decimals = 18)
+
+    check criteria.symbol == "SNT"
+    check criteria.decimals == 6
