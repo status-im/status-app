@@ -1,4 +1,5 @@
 #include "StatusQ/audioutils.h"
+#include "StatusQ/skeletontileitem.h"
 #include "StatusQ/browserbackendcapabilities.h"
 #include "StatusQ/clipboardutils.h"
 #include "StatusQ/incubationhints.h"
@@ -86,6 +87,7 @@ void registerStatusQTypes() {
                 QStringLiteral("InputMethodEvent is created by InputMethodEventFilter"));
     qmlRegisterType<RXValidator>("StatusQ", 0, 1, "RXValidator");
     qmlRegisterType<RowBinder>("StatusQ", 0, 1, "RowBinder");
+    qmlRegisterType<SkeletonTileItem>("StatusQ", 0, 1, "SkeletonTileItem");
     qmlRegisterType<DelegatePool>("StatusQ", 0, 1, "DelegatePool");
     qmlRegisterType<DelegatePoolKind>("StatusQ", 0, 1, "DelegatePoolKind");
 
