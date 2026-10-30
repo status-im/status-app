@@ -1,4 +1,8 @@
 import unittest
+import std/[json, tables]
+import nimqml
+from seaqt/QtCore/gen_qabstractitemmodel import nil
+from seaqt/QtCore/gen_qabstractitemmodel_types import nil
 
 import app/modules/main/chat_section/[model, Item]
 
@@ -47,6 +51,37 @@ suite "updating chat items":
     let model = newModel()
     model.setData(@[chatA, catA, chatB])
     check(model.rowCount() == 3)
+
+  test "archive updates preserve identity and notify only the archive role":
+    var thread = createTestChatItem("thread", isThread = true, parentChatId = "parent")
+    check not thread.archived
+    check not thread.toJsonNode()["archived"].getBool()
+    model.appendItem(thread)
+    var archiveRole: cint
+    for role, name in model.roleNames():
+      if name == "archived": archiveRole = role.cint
+    check archiveRole != 0
+    let qtModel = gen_qabstractitemmodel_types.QAbstractItemModel(h: model.vptr, owned: false)
+    var changed: seq[seq[cint]]
+    var resets = 0
+    gen_qabstractitemmodel.onDataChanged(qtModel,
+      proc(topLeft, bottomRight: gen_qabstractitemmodel_types.QModelIndex, roles: openArray[cint]) =
+        changed.add(@roles))
+    gen_qabstractitemmodel.onModelReset(qtModel, proc() = inc resets)
+    for archived in [true, false]:
+      model.updateArchivedById("thread", archived)
+      model.updateArchivedById("thread", archived)
+      check thread.archived == archived
+      check thread.toJsonNode()["archived"].getBool() == archived
+      let index = model.createIndex(model.getItemIdxById("thread"), 0, nil)
+      let value = model.data(index, archiveRole.int)
+      check value.boolVal == archived
+      value.delete()
+      index.delete()
+      check model.getItemById("thread") == thread
+      check model.rowCount() == 4
+    check changed == @[@[archiveRole], @[archiveRole]]
+    check resets == 0
 
   test "thread rename preserves parent and unread counters":
     var thread = createTestChatItem("thread", isThread = true, parentChatId = "parent")

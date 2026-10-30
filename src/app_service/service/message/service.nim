@@ -234,6 +234,7 @@ QtObject:
     chatThreadSummariesLoadingChats: HashSet[string]
     chatThreadsRevision: Table[string, int]
     chatThreadSummariesPendingUpdates: Table[string, Table[string, ThreadDto]]
+    chatThreadListsPendingUpdates: Table[string, Table[string, ThreadDto]]
     # Read-only sentinel returned via `lent` borrow when a thread lookup misses.
     # Mutating it would affect every subsequent miss result.
     emptyThread: ThreadDto
@@ -309,6 +310,10 @@ QtObject:
       if thread.parentMessageId.len > 0:
         self.chatThreadsByParentIdByChat[chatId][thread.parentMessageId] =
           self.mergeCachedThread(chatId, thread)
+        if chatId in self.chatThreadListsLoadingChats:
+          let previousPending = self.chatThreadListsPendingUpdates.getOrDefault(chatId).getOrDefault(thread.parentMessageId)
+          self.chatThreadListsPendingUpdates.mgetOrPut(chatId, initTable[string, ThreadDto]())[thread.parentMessageId] =
+            mergeThreadSummary(previousPending, thread)
         if chatId in self.chatThreadSummariesLoadingChats:
           let previousPending = self.chatThreadSummariesPendingUpdates.getOrDefault(chatId).getOrDefault(thread.parentMessageId)
           self.chatThreadSummariesPendingUpdates.mgetOrPut(chatId, initTable[string, ThreadDto]())[thread.parentMessageId] =
@@ -321,6 +326,7 @@ QtObject:
     self.chatThreadSummariesLoadedChats.excl(chatId)
     self.chatThreadSummariesLoadingChats.excl(chatId)
     self.chatThreadSummariesPendingUpdates.del(chatId)
+    self.chatThreadListsPendingUpdates.del(chatId)
     self.chatThreadsRevision[chatId] = self.chatThreadsRevision.getOrDefault(chatId) + 1
 
   proc loadChatThreadsForChatsIfNeeded*(self: Service, chatIds: seq[string]) =
@@ -1061,6 +1067,10 @@ QtObject:
       # A lightweight request can finish after the richer summary snapshot.
       # Its older list must not replace that snapshot or invalidate its cache.
       if not includeSummaries:
+        for chatId in chatIds:
+          if chatId in self.chatThreadSummariesLoadedChats:
+            self.chatThreadListsLoadingChats.excl(chatId)
+            self.chatThreadListsPendingUpdates.del(chatId)
         chatIds = chatIds.filterIt(it notin self.chatThreadSummariesLoadedChats)
       if chatIds.len == 0:
         return
@@ -1080,16 +1090,17 @@ QtObject:
           threadsByChat.mgetOrPut(thread.chatId, @[]).add(thread)
 
       # Updates received after the request began take precedence over its snapshot.
-      if includeSummaries:
-        for chatId in chatIds:
-          var merged = initTable[string, ThreadDto]()
-          for thread in threadsByChat.getOrDefault(chatId):
-            merged[thread.parentMessageId] = thread
-          for parentId, thread in self.chatThreadSummariesPendingUpdates.getOrDefault(chatId):
-            merged[parentId] = mergeThreadSummary(merged.getOrDefault(parentId), thread)
-          threadsByChat[chatId] = @[]
-          for _, thread in merged:
-            threadsByChat[chatId].add(thread)
+      for chatId in chatIds:
+        var merged = initTable[string, ThreadDto]()
+        for thread in threadsByChat.getOrDefault(chatId):
+          merged[thread.parentMessageId] = thread
+        let pending = if includeSummaries: self.chatThreadSummariesPendingUpdates.getOrDefault(chatId)
+                      else: self.chatThreadListsPendingUpdates.getOrDefault(chatId)
+        for parentId, thread in pending:
+          merged[parentId] = mergeThreadSummary(merged.getOrDefault(parentId), thread)
+        threadsByChat[chatId] = @[]
+        for _, thread in merged:
+          threadsByChat[chatId].add(thread)
 
       # Settle every requested chat, including those with no threads, so they leave the
       # loading set without waiting for a per-chat success event.
@@ -1098,12 +1109,13 @@ QtObject:
         let chatThreads = threadsByChat.getOrDefault(chatId, @[])
         threads.add(self.replaceChatThreadsCache(chatId, chatThreads))
         self.chatThreadListsLoadedChats.incl(chatId)
-        self.chatThreadListsLoadingChats.excl(chatId)
         if includeSummaries:
           self.chatThreadSummariesLoadingChats.excl(chatId)
           self.chatThreadSummariesPendingUpdates.del(chatId)
           self.chatThreadSummariesLoadedChats.incl(chatId)
         else:
+          self.chatThreadListsLoadingChats.excl(chatId)
+          self.chatThreadListsPendingUpdates.del(chatId)
           self.chatThreadSummariesLoadedChats.excl(chatId)
       self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
         ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: chatIds,
@@ -1115,6 +1127,7 @@ QtObject:
           self.chatThreadSummariesPendingUpdates.del(chatId)
         else:
           self.chatThreadListsLoadingChats.excl(chatId)
+          self.chatThreadListsPendingUpdates.del(chatId)
         self.events.emit(SIGNAL_CHAT_THREADS_LOADING_FAILED,
           ChatThreadsLoadingFailedArgs(chatId: chatId, summariesRequested: includeSummaries))
       error "error loading chat threads for chats", msg = e.msg
