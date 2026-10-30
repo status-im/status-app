@@ -2,15 +2,9 @@
 
 # By default adding the status-devs team to review any changes
 *           @status-im/status-devs
-Makefile    @status-im/devops @status-im/status-devs
 
 # Any change in the ci requires approval from DevOps team
 /ci/        @status-im/devops
-/nix/       @status-im/devops
-/scripts/   @status-im/devops
-/fastlane/  @status-im/devops
-/fdroid/    @status-im/devops
-/flatpak/   @status-im/devops
 
 # Default squish/appium tests owners
 /test/e2e/         @status-im/desktop-qa
