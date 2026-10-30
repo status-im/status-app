@@ -165,8 +165,7 @@ if (${STATUSQ_SHADOW_BUILD})
     endif()
 endif()
 
-# static resources (emojis, fonts, ...)
-list(APPEND STATUSQ_QRC_STATIC "src/StatusQ/Core/Utils/emojiList.qrc")
+# static resources (fonts, ...)
 list(APPEND STATUSQ_QRC_STATIC "src/assets/fonts/fonts.qrc")
 if (ANDROID OR IOS)
     # qt_add_big_resources() not supported on iOS/Android
@@ -265,6 +264,8 @@ add_library(StatusQ ${LIB_TYPE}
         src/rxvalidator.cpp
         src/stablearraysorter.cpp
         src/statuscolors.cpp
+        src/emojitable.h
+        src/emojitable_data.cpp
         src/statusemojimodel.cpp
         src/stringutilsinternal.cpp
         src/systemutilsinternal.cpp

@@ -111,6 +111,9 @@ add_test(NAME TestIncubationCadence COMMAND TestIncubationCadence)
 
 add_executable(TestStatusEmojiModel src/tst_statusemojimodel.cpp)
 target_link_libraries(TestStatusEmojiModel PRIVATE Qt::Test Qt::Qml StatusQ)
+target_include_directories(TestStatusEmojiModel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+target_compile_definitions(TestStatusEmojiModel PRIVATE
+    EMOJI_LIST_JSON="${CMAKE_CURRENT_SOURCE_DIR}/../src/StatusQ/Core/Utils/emojiList.json")
 add_test(NAME TestStatusEmojiModel COMMAND TestStatusEmojiModel)
 
 # Conformance checks for the generated COLRv0 emoji font (tools/emoji/README.md).

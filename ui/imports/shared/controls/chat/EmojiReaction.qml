@@ -32,6 +32,7 @@ Rectangle {
 
     StatusEmoji {
         id: statusEmoji
+        objectName: "emojiReaction_statusEmoji"
         anchors.centerIn: parent
         width: root.emojiSize
         height: root.emojiSize

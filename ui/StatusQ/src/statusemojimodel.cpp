@@ -1,13 +1,15 @@
 #include "StatusQ/statusemojimodel.h"
 
-#include <QDebug>
-#include <QFile>
+#include "emojitable.h"
+
 #include <QJsonObject>
-#include <QJsonDocument>
+#include <QRandomGenerator>
 #include <QSettings>
 
-#include <array>
 #include <algorithm>
+#include <array>
+#include <cstring>
+#include <string_view>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -33,6 +35,9 @@ constexpr auto kRecentCategoryName = "recent"_L1;
 
 constexpr auto kRecentEmojisSettingsEntry = "recentEmojis"_L1;
 
+constexpr std::uint8_t kNoSkins = 0;
+constexpr std::uint8_t kBaseSkin = 1;
+
 // The spelling-insensitive form of a hexcode: no variation selectors, no leading zeros.
 // The catalogue follows emojibase, which writes "0031-fe0f-20e3"; ids persisted by older
 // versions and ids seen on the wire use Twemoji's filename spelling, "31-20e3". Both must
@@ -50,47 +55,110 @@ QString canonicalForm(const QString &hexcode)
     }
     return parts.join(u'-');
 }
+
+// StatusEmojiModel::categories(); EmojiTable::Entry::category indexes it past "recent".
+const QStringList &categoryNames()
+{
+    static const QStringList categories{kRecentCategoryName,
+        "smileys, people & body"_L1,
+        "animals & nature"_L1,
+        "food & drink"_L1,
+        "travel & places"_L1,
+        "activities"_L1,
+        "objects"_L1,
+        "symbols"_L1,
+        "flags"_L1
+    };
+    return categories;
+}
+
+const char *text(EmojiTable::StringRef ref)
+{
+    return reinterpret_cast<const char *>(EmojiTable::strings + ref);
+}
+
+QString string(EmojiTable::StringRef ref)
+{
+    return QString::fromUtf8(text(ref));
+}
+
+template <typename F>
+void forEachItem(EmojiTable::ListRef ref, F &&f)
+{
+    const auto count = EmojiTable::lists[ref];
+    for (std::uint32_t i = 1; i <= count; ++i)
+        f(EmojiTable::lists[ref + i]);
+}
+
+QStringList stringList(EmojiTable::ListRef ref)
+{
+    QStringList result;
+    forEachItem(ref, [&result](auto item) { result.append(string(item)); });
+    return result;
+}
+
+QJsonArray jsonArray(EmojiTable::ListRef ref)
+{
+    QJsonArray result;
+    forEachItem(ref, [&result](auto item) { result.append(string(item)); });
+    return result;
+}
+
+const EmojiTable::Entry &entry(int index)
+{
+    return EmojiTable::entries[index];
+}
+
+// Binary search of a table index sorted bytewise by `field`.
+template <typename Index, typename Field>
+const Index *findSorted(const Index *begin, const Index *end, const QByteArray &key, Field field)
+{
+    const auto it = std::lower_bound(begin, end, key, [&field](const Index &index, const QByteArray &wanted) {
+        return std::strcmp(text(field(index)), wanted.constData()) < 0;
+    });
+    if (it != end && key == text(field(*it)))
+        return it;
+    return end;
+}
+
+int findEntry(const std::uint16_t *index, const QString &value, EmojiTable::StringRef EmojiTable::Entry::*field)
+{
+    const auto end = index + EmojiTable::entryCount;
+    const auto it = findSorted(index, end, value.toUtf8(),
+                               [field](std::uint16_t i) { return entry(i).*field; });
+    return it != end ? *it : -1;
+}
+
+QJsonObject jsonObject(const EmojiTable::Entry &emoji)
+{
+    return {
+        {kAliases, jsonArray(emoji.aliases)},
+        {kAliasesAscii, jsonArray(emoji.aliasesAscii)},
+        {kCategory, categoryNames().at(emoji.category + 1)},
+        {kEmoji, string(emoji.emoji)},
+        {kEmojiOrder, emoji.order},
+        {kHasSkins, emoji.skin == kBaseSkin},
+        {kKeywords, jsonArray(emoji.keywords)},
+        {kName, string(emoji.name)},
+        {kShortname, string(emoji.shortname)},
+        {kUnicode, string(emoji.unicode)},
+    };
+}
 }
 
 StatusEmojiModel::StatusEmojiModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-    // lazy load the emoji_json from the QRC resource, not to block the CTOR
-    QMetaObject::invokeMethod(this, [this]() { ensureLoaded(); }, Qt::QueuedConnection);
-}
-
-// Parses the catalogue if the queued load has not run yet. Queries must not depend on that
-// timing: a lookup made before it (an emoticon typed right after the input appears, say) would
-// otherwise silently answer "no such emoji".
-void StatusEmojiModel::ensureLoaded() const
-{
-    if (!m_emojiJson.isEmpty())
-        return;
-
-    QFile f(":/StatusQ/Core/Utils/emojiList.json"_L1);
-    if (!f.open(QFile::ReadOnly | QFile::Text)) {
-        qWarning() << "Failed to open EmojiJSON DB from file:" << f.fileName();
-        return;
-    }
-    const auto jsonDB = f.readAll();
-    QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(jsonDB, &err);
-    if (err.error != QJsonParseError::NoError) {
-        qWarning() << "Failed to parse EmojiJSON:" << err.error << err.errorString() << "; at offset:" << err.offset;
-        return;
-    }
-    if (!doc.isArray()) {
-        qWarning() << "Malformed EmojiJSON, not a JSON array: " << f.fileName();
-        return;
-    }
-    auto* self = const_cast<StatusEmojiModel*>(this);
-    self->setEmojiJson(doc.array());
-    self->addRecentEmojisToModel(m_recentEmojis);
 }
 
 int StatusEmojiModel::rowCount(const QModelIndex &parent) const
 {
-    return m_recentEmojiJson.size() + m_emojiJson.size();
+    return m_recentEntries.size() + EmojiTable::entryCount;
+}
+
+int StatusEmojiModel::entryForRow(int row) const
+{
+    return row < m_recentEntries.size() ? m_recentEntries.at(row) : row - m_recentEntries.size();
 }
 
 QVariant StatusEmojiModel::data(const QModelIndex &index, int role) const
@@ -99,42 +167,34 @@ QVariant StatusEmojiModel::data(const QModelIndex &index, int role) const
     if (row < 0 || row >= rowCount())
         return {};
 
-    const auto &emoji = row < m_recentEmojiJson.size()
-                            ? m_recentEmojiJson.at(row).toObject()
-                            : m_emojiJson.at(row - m_recentEmojiJson.size()).toObject();
-    const auto unicodeValue = emoji.value(kUnicode).toString();
+    const auto isRecent = row < m_recentEntries.size();
+    const auto &emoji = entry(entryForRow(row));
 
     switch (static_cast<EmojiRoles>(role)) {
     case AliasesRole:
-        return emoji.value(kAliases).toArray();
+        return stringList(emoji.aliases);
     case AliasesAsciiRole:
-        return emoji.value(kAliasesAscii).toArray();
+        return stringList(emoji.aliasesAscii);
     case CategoryRole:
-        return emoji.value(kCategory).toString();
+        return isRecent ? QString(kRecentCategoryName) : categoryNames().at(emoji.category + 1);
     case EmojiRole:
-        return emoji.value(kEmoji).toString();
+        return string(emoji.emoji);
     case EmojiOrderRole:
-        return emoji.value(kEmojiOrder).toInt();
+        return isRecent ? 0 : emoji.order; // recents sort by insertion order, before the rest
     case KeywordsRole:
-        return emoji.value(kKeywords).toArray();
+        return stringList(emoji.keywords);
     case NameRole:
-        return emoji.value(kName).toString();
+        return string(emoji.name);
     case ShortnameRole:
-        return emoji.value(kShortname).toString();
+        return string(emoji.shortname);
     case UnicodeRole:
-        return unicodeValue;
+        return string(emoji.unicode);
     case SkinColorRole:
-        const auto colorIt = std::find_if(skinColors.cbegin(),
-                                          skinColors.cend(),
-                                          [unicodeValue](const auto &skinColor) {
-                                              return unicodeValue.contains(skinColor);
-                                          });
-        if (colorIt != skinColors.cend())
-            return *colorIt;
-
-        if (emoji.value(kHasSkins).toBool(false))
-            return kBaseColor;
-        return QString();
+        if (emoji.skin == kNoSkins)
+            return QString();
+        if (emoji.skin == kBaseSkin)
+            return QString::fromLatin1(kBaseColor);
+        return QString::fromLatin1(skinColors.at(emoji.skin - 2));
     }
 
     return {};
@@ -158,162 +218,86 @@ QHash<int, QByteArray> StatusEmojiModel::roleNames() const
     return roles;
 }
 
-QJsonArray StatusEmojiModel::emojiJson() const
-{
-    return m_emojiJson;
-}
-
-void StatusEmojiModel::setEmojiJson(const QJsonArray &newEmojiJson)
-{
-    if (newEmojiJson == m_emojiJson)
-        return;
-
-    beginResetModel();
-    m_emojiJson = newEmojiJson;
-    rebuildLookupIndexes();
-    emit emojiJsonChanged();
-    endResetModel();
-}
-
 QString StatusEmojiModel::getEmojiUnicodeFromShortname(const QString &shortname) const
 {
-    ensureLoaded();
-    const auto it = std::find_if(m_emojiJson.cbegin(),
-                                 m_emojiJson.cend(),
-                                 [&shortname](const auto &emoji) {
-                                     return emoji.isObject()
-                                            && emoji.toObject().value(kShortname).toString()
-                                                   == shortname;
-                                 });
-    if (it != m_emojiJson.cend())
-        return it->toObject().value(kUnicode).toString();
-    return {};
+    const auto index = findEntry(EmojiTable::byShortname, shortname, &EmojiTable::Entry::shortname);
+    return index >= 0 ? string(entry(index).unicode) : QString();
 }
 
 QString StatusEmojiModel::getEmojiFromAsciiAlias(const QString &alias) const
 {
-    ensureLoaded();
-    return m_asciiAliasToEmoji.value(alias);
+    const auto end = EmojiTable::asciiAliases + EmojiTable::asciiAliasCount;
+    const auto it = findSorted(EmojiTable::asciiAliases, end, alias.toUtf8(),
+                               [](const EmojiTable::AsciiAlias &a) { return a.alias; });
+    return it != end ? string(entry(it->entry).emoji) : QString();
 }
 
 QString StatusEmojiModel::getEmojiFromHexcode(const QString &hexcode) const
 {
-    ensureLoaded();
-    const auto entry = entryForHexcode(hexcode);
-    return entry.isObject() ? entry.toObject().value(kEmoji).toString() : QString();
+    const auto index = entryForHexcode(hexcode);
+    return index >= 0 ? string(entry(index).emoji) : QString();
 }
 
 QString StatusEmojiModel::canonicalUnicode(const QString &hexcode) const
 {
-    ensureLoaded();
-    const auto entry = entryForHexcode(hexcode);
-    return entry.isObject() ? entry.toObject().value(kUnicode).toString() : QString();
+    const auto index = entryForHexcode(hexcode);
+    return index >= 0 ? string(entry(index).unicode) : QString();
 }
 
-QJsonValue StatusEmojiModel::entryForHexcode(const QString &hexcode) const
+int StatusEmojiModel::entryForHexcode(const QString &hexcode) const
 {
-    auto it = m_hexcodeToIndex.constFind(hexcode);
-    if (it == m_hexcodeToIndex.cend()) {
-        const auto known = m_canonicalToHexcode.value(canonicalForm(hexcode));
-        if (known.isEmpty())
-            return {QJsonValue::Null};
-        it = m_hexcodeToIndex.constFind(known);
-        if (it == m_hexcodeToIndex.cend())
-            return {QJsonValue::Null};
-    }
-    return m_emojiJson.at(*it);
+    if (hexcode.isEmpty())
+        return -1;
+    const auto index = findEntry(EmojiTable::byUnicode, hexcode, &EmojiTable::Entry::unicode);
+    if (index >= 0)
+        return index;
+    return findEntry(EmojiTable::byCanonical, canonicalForm(hexcode), &EmojiTable::Entry::canonical);
 }
 
 QJsonArray StatusEmojiModel::getSuggestions(const QString &name) const
 {
-    ensureLoaded();
-    const auto anyContains = [&name](const QJsonArray &values) {
-        return std::any_of(values.cbegin(), values.cend(), [&name](const auto &value) {
-            return value.toString().contains(name);
-        });
+    // UTF-8 is self-synchronising, so a byte match is a character match.
+    const auto needle = name.toUtf8();
+    const std::string_view key(needle.constData(), needle.size());
+    const auto contains = [&key](EmojiTable::StringRef ref) {
+        return std::string_view(text(ref)).find(key) != std::string_view::npos;
+    };
+    const auto anyContains = [&contains](EmojiTable::ListRef ref) {
+        bool found = false;
+        forEachItem(ref, [&](auto item) { found = found || contains(item); });
+        return found;
     };
 
     QJsonArray result;
-    for (const auto &emojiValue : std::as_const(m_emojiJson)) {
-        if (!emojiValue.isObject())
-            continue;
-
-        const auto emoji = emojiValue.toObject();
-        if (emoji.value(kName).toString().contains(name)
-            || emoji.value(kShortname).toString().contains(name)
-            || anyContains(emoji.value(kAliases).toArray())
-            || anyContains(emoji.value(kKeywords).toArray()))
-            result.append(emoji);
+    for (int i = 0; i < EmojiTable::entryCount; ++i) {
+        const auto &emoji = entry(i);
+        if (contains(emoji.name) || contains(emoji.shortname) || anyContains(emoji.aliases)
+            || anyContains(emoji.keywords))
+            result.append(jsonObject(emoji));
     }
     return result;
 }
 
 int StatusEmojiModel::maxAsciiEmojiAliasLength() const
 {
-    ensureLoaded();
-    return m_maxAsciiEmojiAliasLength;
+    return EmojiTable::maxAsciiAliasLength;
 }
 
-void StatusEmojiModel::rebuildLookupIndexes()
+QString StatusEmojiModel::getRandomEmoji() const
 {
-    m_asciiAliasToEmoji.clear();
-    m_hexcodeToIndex.clear();
-    m_canonicalToHexcode.clear();
-    m_maxAsciiEmojiAliasLength = 0;
-    for (int i = 0; i < m_emojiJson.size(); ++i) {
-        const auto emojiValue = m_emojiJson.at(i);
-        if (!emojiValue.isObject())
-            continue;
-
-        const auto emoji = emojiValue.toObject();
-        const auto emojiStr = emoji.value(kEmoji).toString();
-        const auto hexcode = emoji.value(kUnicode).toString();
-        m_hexcodeToIndex.insert(hexcode, i);
-        m_canonicalToHexcode.insert(canonicalForm(hexcode), hexcode);
-
-        const auto aliases = emoji.value(kAliasesAscii).toArray();
-        if (aliases.isEmpty())
-            continue;
-        for (const auto &aliasValue : aliases) {
-            const auto alias = aliasValue.toString();
-            // first occurrence wins, same as the former linear search
-            if (!m_asciiAliasToEmoji.contains(alias))
-                m_asciiAliasToEmoji.insert(alias, emojiStr);
-            m_maxAsciiEmojiAliasLength = qMax(m_maxAsciiEmojiAliasLength, alias.size());
-        }
-    }
+    const auto index = QRandomGenerator::global()->bounded(int(EmojiTable::firstFlagEntry));
+    return string(entry(index).emoji);
 }
 
 int StatusEmojiModel::getCategoryOffset(int categoryIndex) const {
     if (categoryIndex <= 0 || categoryIndex >= categories().size())
         return 0;
-
-    const auto categoryName = categories().at(categoryIndex);
-    const auto catIt = std::find_if(m_emojiJson.cbegin(),
-                                    m_emojiJson.cend(),
-                                    [categoryName](const auto &emoji) {
-                                        return emoji.isObject()
-                                        && emoji.toObject().value(kCategory).toString()
-                                            == categoryName;
-                                    });
-    if (catIt != m_emojiJson.cend())
-        return std::distance(m_emojiJson.cbegin(), catIt) + m_recentEmojiJson.size();
-    return 0;
+    return EmojiTable::categoryStart[categoryIndex - 1] + m_recentEntries.size();
 }
 
 QStringList StatusEmojiModel::categories() const
 {
-    static const QStringList categories{kRecentCategoryName,
-        "smileys, people & body"_L1,
-        "animals & nature"_L1,
-        "food & drink"_L1,
-        "travel & places"_L1,
-        "activities"_L1,
-        "objects"_L1,
-        "symbols"_L1,
-        "flags"_L1
-    };
-    return categories;
+    return categoryNames();
 }
 
 QStringList StatusEmojiModel::categoryIcons() const
@@ -362,9 +346,9 @@ void StatusEmojiModel::cleanAndResizeRecentEmojis()
     // Rewrite ids an older version stored under a different spelling, so the list
     // self-heals and the two spellings cannot both sit in it.
     for (auto &hexcode : m_recentEmojis) {
-        const auto entry = entryForHexcode(hexcode);
-        if (entry.isObject())
-            hexcode = entry.toObject().value(kUnicode).toString();
+        const auto index = entryForHexcode(hexcode);
+        if (index >= 0)
+            hexcode = string(entry(index).unicode);
     }
     m_recentEmojis.removeDuplicates();
     if (m_recentEmojis.size() > MAX_EMOJI_NUMBER) {
@@ -375,19 +359,15 @@ void StatusEmojiModel::cleanAndResizeRecentEmojis()
 
 void StatusEmojiModel::addRecentEmojisToModel(const QStringList &emojiHexcodes)
 {
-    QJsonArray recentEmojiArr;
+    QList<int> recentEntries;
     for (const auto &hexcode : emojiHexcodes) {
-        const auto emoji = entryForHexcode(hexcode);
-        if (!emoji.isNull() && emoji.isObject()) {
-            auto emojiObj = emoji.toObject();
-            emojiObj[kCategory] = kRecentCategoryName;
-            emojiObj[kEmojiOrder] = 0; // sort by insertion order, before any regular ones
-            recentEmojiArr.append(emojiObj);
-        }
+        const auto index = entryForHexcode(hexcode);
+        if (index >= 0)
+            recentEntries.append(index);
     }
 
     beginResetModel();
-    m_recentEmojiJson = recentEmojiArr;
+    m_recentEntries = recentEntries;
     endResetModel();
 }
 

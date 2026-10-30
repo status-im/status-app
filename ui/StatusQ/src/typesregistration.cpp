@@ -246,7 +246,6 @@ void registerStatusQTypes() {
 #endif
 #endif
 
-    Q_INIT_RESOURCE(emojiList);
     Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(statusq_dictionaries);
     Q_INIT_RESOURCE(statusq_shaders);
