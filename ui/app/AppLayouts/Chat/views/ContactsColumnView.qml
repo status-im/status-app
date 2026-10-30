@@ -50,6 +50,7 @@ Item {
     signal openAppSearch()
     signal addRemoveGroupMemberClicked()
     signal chatItemClicked(string id)
+    signal renameThreadRequested(string threadId, string threadName, string parentChatId)
 
     // main layout
     ColumnLayout {

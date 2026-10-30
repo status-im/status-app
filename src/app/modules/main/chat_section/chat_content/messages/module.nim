@@ -49,6 +49,7 @@ type
     firstUnseenMessageState: FirstUnseenMessageState
     getMessageRequestId: UUID
     threadEditRequestId: string
+    threadDeleteRequestId: string
     threadCanView: Option[bool]
 
 proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitter, sectionId: string, chatId: string,
@@ -305,6 +306,8 @@ method reevaluateViewLoadingState*(self: Module) =
   self.view.setLoading(loading)
 
 method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: seq[ReactionDto]) =
+  if self.controller.getThread().deleted:
+    return
   let threadId = self.controller.getMyThreadId()
   let filtered = if THREADS_ENABLED: messages.filterIt(it.threadId == threadId) else: messages
 
@@ -334,6 +337,8 @@ method newMessagesLoaded*(self: Module, messages: seq[MessageDto], reactions: se
   self.view.emitMoreMessagesLoadedSignal()
 
 method messagesAdded*(self: Module, messages: seq[MessageDto]) =
+  if self.controller.getThread().deleted:
+    return
   let threadId = self.controller.getMyThreadId()
   let filtered = if THREADS_ENABLED: messages.filterIt(it.threadId == threadId) else: messages
 
@@ -488,6 +493,8 @@ method setThreadId*(self: Module, threadId: string) =
   self.controller.setThreadId(threadId)
   self.view.setThreadId(threadId)
   self.threadEditRequestId = ""
+  self.threadDeleteRequestId = ""
+  self.view.setThreadDeletePending(false)
   self.view.setThreadEditPending(false)
   self.updateThreadDetails()
   self.initialMessagesLoaded = false
@@ -513,14 +520,49 @@ method updateThreadDetails*(self: Module) =
       chat.name
   self.view.setThreadDetails(thread.name, parentName,
     THREADS_ENABLED and thread_permissions.canEditThread(thread, chat,
-      singletonInstance.userProfile.getPubKey(), community))
+      singletonInstance.userProfile.getPubKey(), community), thread.deleted)
+  if thread.deleted:
+    self.view.model().clear()
+    self.view.setMessageSearchOngoing(false)
 
 method updateThreadCanView*(self: Module, canView: bool) =
   self.threadCanView = some(canView)
   self.updateThreadDetails()
 
+method canManageThreadById*(self: Module, threadId: string): bool =
+  let thread = self.controller.getThreadById(threadId)
+  var chat = self.controller.getChatDetails()
+  if self.threadCanView.isSome:
+    chat.canView = self.threadCanView.get()
+  let community = if chat.chatType == ChatType.CommunityChat:
+      self.controller.getCommunityDetails()
+    else:
+      CommunityDto()
+  return THREADS_ENABLED and thread_permissions.canEditThread(thread, chat,
+    singletonInstance.userProfile.getPubKey(), community)
+
+method deleteThreadById*(self: Module, threadId: string) =
+  if self.threadDeleteRequestId.len > 0 or self.threadEditRequestId.len > 0:
+    return
+  if not self.canManageThreadById(threadId):
+    self.view.emitThreadDeleteFinished("only the thread creator or an admin can delete this thread")
+    return
+  self.threadDeleteRequestId = $genUUID()
+  self.view.setThreadDeletePending(true)
+  self.controller.deleteThread(threadId, self.threadDeleteRequestId)
+
+method deleteThread*(self: Module) =
+  self.deleteThreadById(self.controller.getMyThreadId())
+
+method onThreadDeleteFinished*(self: Module, requestId, error: string) =
+  if requestId.len == 0 or requestId != self.threadDeleteRequestId:
+    return
+  self.threadDeleteRequestId = ""
+  self.view.setThreadDeletePending(false)
+  self.view.emitThreadDeleteFinished(error)
+
 method editThread*(self: Module, name: string) =
-  if self.threadEditRequestId.len > 0:
+  if self.threadEditRequestId.len > 0 or self.threadDeleteRequestId.len > 0:
     return
   self.updateThreadDetails()
   if not self.view.getCanEditThread():
@@ -541,6 +583,8 @@ method onThreadEditFinished*(self: Module, requestId, error: string) =
 method createThread*(self: Module, parentMessageId: string) =
   if self.controller.hasThreadForParentMessage(parentMessageId):
     let thread = self.controller.getThreadForParentMessage(parentMessageId)
+    if thread.deleted:
+      return
     if thread.threadId.len > 0:
       self.delegate.openThreadAsChat(thread.threadId, thread.name, thread.parentMessageId,
         setActive = false,
@@ -583,6 +627,15 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
   summary.threadId = thread.threadId
   summary.originalMessageId = thread.parentMessageId
   summary.title = thread.name
+  summary.deleted = thread.deleted
+  if thread.deleted:
+    let actor = self.controller.getContactDetails(thread.deletedBy)
+    summary.lastMessageSenderId = thread.deletedBy
+    summary.lastMessageSenderName = actor.defaultDisplayName
+    summary.lastMessageSenderImage = actor.icon
+    summary.lastMessageSenderColorId = actor.colorId
+    summary.lastMessageTimestamp = thread.deletedAt
+    return summary
   summary.messagesCount = thread.messagesCount
   # Mentions and replies are messages, so adding their counters would count
   # the same unseen activity more than once.
@@ -612,11 +665,11 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
 proc updateThreadSummary(self: Module, thread: ThreadDto, parentIndex: int) =
   let parentLoaded = parentIndex >= 0
   let showInInfo = self.view.hasThreadsModel()
-  if showInInfo or (parentLoaded and thread.messagesCount > 0):
+  if showInInfo or (parentLoaded and (thread.deleted or thread.messagesCount > 0)):
     let summary = self.threadSummary(thread)
     if showInInfo:
       self.view.threadsModel().upsert(summary)
-    if parentLoaded and thread.messagesCount > 0:
+    if parentLoaded and (thread.deleted or thread.messagesCount > 0):
       self.view.model().setThreadSummary(parentIndex, summary)
   if parentLoaded:
     self.view.model().setHasThread(parentIndex, true)

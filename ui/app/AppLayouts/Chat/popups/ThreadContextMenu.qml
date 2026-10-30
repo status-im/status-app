@@ -22,6 +22,7 @@ StatusMenu {
     property bool editEnabled: false
     property bool followEnabled: true
     property bool muteEnabled: true
+    property string threadId: ""
 
     signal editNameRequested()
     signal followRequested()
@@ -73,7 +74,6 @@ StatusMenu {
 
     StatusSuccessAction {
         objectName: "threadContextMenu_copyShare"
-        enabled: !!root.threadLinkToCopyShare
 
         readonly property string shareIcon: root.isMobile
                                             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")
@@ -82,6 +82,7 @@ StatusMenu {
 
         icon.name: shareIcon
         text: shareLabel
+        enabled: !!root.threadLinkToCopyShare
         successText: qsTr("Copied")
         autoDismissMenu: true
         timeout: root.isMobile ? 0 : 1250
@@ -125,8 +126,16 @@ StatusMenu {
             confirmationText: qsTr("Are you sure you want to delete this thread? It may remain visible on other participants' devices.")
             destroyOnClose: true
             doNotShowAgainOptionVisible: true
-            onAboutToShow: doNotShowAgainChecked = false
+            property string threadIdAtOpen: ""
+            onAboutToShow: {
+                doNotShowAgainChecked = false
+                threadIdAtOpen = root.threadId
+            }
             onConfirmButtonClicked: {
+                if (!root.deleteEnabled || threadIdAtOpen !== root.threadId) {
+                    close()
+                    return
+                }
                 if (doNotShowAgainChecked) {
                     localAccountSensitiveSettings.showDeleteThreadWarning = false
                 }

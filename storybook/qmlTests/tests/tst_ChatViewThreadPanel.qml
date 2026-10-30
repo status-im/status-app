@@ -58,11 +58,13 @@ Item {
                 property string threadParentChatName: "Parent chat"
                 property bool canEditThread: true
                 property bool threadEditPending: false
+                property bool threadDeletePending: false
                 property var model: null
                 property string requestedName
                 property string parentChatId: "parent-chat"
                 signal threadEditFinished(string error)
                 function getChatId() { return parentChatId }
+                function canManageThreadById(id) { return id === threadId && canEditThread }
                 function editThread(name) { requestedName = name }
             }
         }
@@ -97,6 +99,12 @@ Item {
                         messages.threadId = row.itemId
                         threadName = row.name
                         model.setProperty(i, "isThread", true)
+                        model.setProperty(i, "parentChatId", view.activeItemId)
+                        harness.mock.d.chatInfo[row.itemId] = Object.assign(
+                                    {}, harness.mock.d.chatInfo[row.itemId], {
+                                        isThread: true,
+                                        parentChatId: view.activeItemId
+                                    })
                         break
                     }
                 }
@@ -176,7 +184,7 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 120000)
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             view.threadsFeatureEnabled = true
-            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, false]
+            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, true]
             const model = view.rootStore.chatCommunitySectionModule.model
             let threadId = ""
             for (let i = 0; i < model.count; ++i) {
@@ -192,6 +200,10 @@ Item {
             harness.mock.setActiveChat(parentChatId)
             view.rootStore.openThreadPanel(threadId, "Thread", parentChatId)
             tryCompare(view.rightPanel, "status", Loader.Ready)
+            tryCompare(view.sectionLayout, "isPortrait", data.portrait)
+            tryCompare(view.threadToolbarHeader, "active", data.portrait)
+            if (!data.portrait)
+                compare(view.threadToolbarHeader.item, null)
             if (data.portrait)
                 view.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
             const header = data.portrait ? view.threadToolbarHeader : view.rightPanel.item

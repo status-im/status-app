@@ -248,6 +248,7 @@ Item {
                         root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
                 })
         }
+
         // The thread closes when the active chat changes, so the parent is always the active one
         readonly property string openThreadParentChatName: {
             if (!openThreadId)
@@ -396,6 +397,8 @@ Item {
             parentChatName: d.openThreadParentChatName
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
+            deletePending: threadMessageStore.threadDeletePending
+            onDeleteRequested: threadMessageStore.deleteThread()
             onEditNameRequested: Qt.callLater(panelThreadHeader.beginEditing)
             onRenameRequested: name => threadMessageStore.editThread(name)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(d.openThreadParentChatId, d.openThreadId)
@@ -409,6 +412,9 @@ Item {
 
             Connections {
                 target: threadMessageStore.messageModule
+                function onThreadDeleteFinished(error: string) {
+                    panelThreadHeader.deleteFinished(error)
+                }
                 function onThreadEditFinished(error: string) {
                     panelThreadHeader.editFinished(error)
                 }
@@ -935,6 +941,9 @@ Item {
 
             onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+            onRenameThreadRequested: (threadId, threadName) => {
+                d.editThreadName(threadId, threadName, root.activeItemId)
+            }
             onOpenThreadRequested: (threadId, threadName) => {
                 d.threadOpenedFromInfo = false
                 d.openThreadPanel(threadId, threadName)
@@ -990,32 +999,11 @@ Item {
     Component {
         id: threadListContextMenuComponent
 
-        ThreadContextMenu {
+        ThreadListContextMenu {
             objectName: "threadListContextMenu"
-            isMobile: SQUtils.Utils.isMobile
-            followed: false
-            muted: false
-            pinned: false
-            followEnabled: false
-            muteEnabled: false
-            pinEnabled: false
-            deleteEnabled: false
-            threadLinkToCopyShare: ""
-            editEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending
-            openHandler: function(threadId) { threadMenuData.threadId = threadId }
-            onEditNameRequested: d.editThreadName(threadMenuData.threadId, listedThreadMessages.threadName, listedThreadMessages.chatId)
-            onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(listedThreadMessages.chatId, threadMenuData.threadId)
-
-            QtObject {
-                id: threadMenuData
-                property string threadId
-            }
-
-            ChatStores.MessageStore {
-                id: listedThreadMessages
-                objectName: "threadListMessageStore"
-                messageModule: d.getThreadMessageModule(threadMenuData.threadId)
-            }
+            sectionModule: root.rootStore.chatCommunitySectionModule
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                d.editThreadName(threadId, threadName, parentChatId)
         }
     }
 
@@ -1025,7 +1013,6 @@ Item {
             threadContextMenu: threadListContextMenuComponent
             chatSectionModule: root.rootStore.chatCommunitySectionModule
             store: root.rootStore
-
             onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
             onOpenAppSearch: {
                 root.openAppSearch("", "")
