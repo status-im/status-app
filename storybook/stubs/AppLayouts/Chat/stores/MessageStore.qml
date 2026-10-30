@@ -22,7 +22,7 @@ QtObject {
     readonly property int chatType: messageModule?.chatType ?? 0
     readonly property string chatColor: "#4360DF"
     readonly property string chatIcon: ""
-    readonly property bool keepUnread: false
+    readonly property bool keepUnread: messageModule?.keepUnread ?? false
     readonly property bool isChatActive: true
     readonly property string threadId: messageModule?.threadId ?? ""
     readonly property string threadName: messageModule?.threadName ?? ""
