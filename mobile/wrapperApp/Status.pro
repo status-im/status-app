@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += quick gui qml webview svg widgets multimedia
+QT += quick gui qml webview svg multimedia
 
 CONFIG += qtquickcompiler
 # Per-binding AOT stats, written next to each generated .cpp
