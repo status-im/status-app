@@ -4,6 +4,7 @@
 import std/[unittest, sets, tables, sequtils]
 
 import app/modules/shared_models/token_list_item
+import app/modules/shared_models/token_list_model
 import app/modules/main/communities/community_token_rows
 import app_service/common/types
 import app_service/service/community/dto/community
@@ -63,6 +64,23 @@ suite "dropped community token rows":
     let src = source()
     check droppedCommunityTokenRows(toHashSet([("ctok", "c9")]), src).len == 0
     check src.tokenReads.len == 0
+
+  test "dropping all wallet rows brings back the covered community rows and reads only their communities":
+    let src = source()
+    let model = newTokenListModel()
+    let wallet = @[
+      initTokenListItem(key = "eth", name = "eth", symbol = "eth", color = "", image = "",
+        category = ord(TokenListItemCategory.General), communityId = "", decimals = 18, privilegesLevel = 0),
+      initTokenListItem(key = "ctok", name = "ctok", symbol = "ctok", color = "", image = "",
+        category = ord(TokenListItemCategory.General), communityId = "c2", decimals = 18, privilegesLevel = 0)]
+    model.setWalletTokenItems(wallet)
+    model.addUnlistedItems(droppedCommunityTokenRows(model.setWalletTokenItems(@[]), src))
+    check model.items.mapIt((it.symbol, it.communityId)) == @[("ctok", "c2")]
+    check model.items[0].category == ord(TokenListItemCategory.Community)
+    check src.communityReads == @["c2"]
+    check droppedCommunityTokenRows(model.setWalletTokenItems(wallet), src).len == 0
+    check model.items.mapIt((it.symbol, it.communityId)) == @[("eth", ""), ("ctok", "c2")]
+    check src.communityReads == @["c2"]
 
 suite "community token row":
 

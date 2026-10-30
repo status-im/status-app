@@ -671,9 +671,7 @@ method onWalletAccountTokensRebuilt*(self: Module) =
 
 method onAllTokenGroupsChanged*(self: Module) =
   # all wallet rows go once the groups are dropped; community-minted rows stay
-  self.buildTokensAndCollectiblesFromWallet()
-  # a community's own row skipped for a wallet row of the same token comes back
-  self.buildTokensAndCollectiblesFromAllCommunities()
+  self.onWalletAccountTokensRebuilt()
   self.view.setTokenListLoading(self.controller.getAllTokenGroupsLoading())
 
 method onAllTokenGroupsLoadingChanged*(self: Module) =
