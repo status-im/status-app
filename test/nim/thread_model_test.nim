@@ -130,3 +130,14 @@ suite "chat info threads":
     check(muted.boolVal)
     muted.delete()
     check(model.rowCount(nil) == 1)
+
+  test "deleted threads are removed from the info list without removing other threads":
+    let model = thread_model.newModel()
+    defer: model.delete()
+    model.upsert(ThreadSummary(threadId: "deleted", title: "Deleted"))
+    model.upsert(ThreadSummary(threadId: "keep", title: "Keep"))
+    model.upsert(ThreadSummary(threadId: "deleted", deleted: true))
+    check model.rowCount(nil) == 1
+    let remaining = model.value(0, "key")
+    check remaining.stringVal == "keep"
+    remaining.delete()

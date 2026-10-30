@@ -38,8 +38,9 @@ Item {
     property alias statusChatListItems: statusChatListItems
     property alias footer: statusChatListItems.footer
 
-    property alias threadPopupMenu: threadPopupMenuSlot.sourceComponent
     property alias popupMenu: popupMenuSlot.sourceComponent
+    // Falls back to popupMenu when no thread-specific menu is provided.
+    property alias threadPopupMenu: threadPopupMenuSlot.sourceComponent
     property alias categoryPopupMenu: categoryPopupMenuSlot.sourceComponent
 
     signal chatItemSelected(string categoryId, string id)
