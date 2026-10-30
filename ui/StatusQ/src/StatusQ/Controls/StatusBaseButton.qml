@@ -196,8 +196,8 @@ AbstractButton {
         scale: d.pressFeedbackActive ? root.pressedScale : 1
         color: {
             if ((!root.enabled || !root.interactive) && !root.checked)
-                return disabledColor
-            return !root.loading && !root.loadingWithText && (pointerHoverHandler.hovered || root.highlighted || root.checked) ? hoverColor : normalColor
+                return root.disabledColor
+            return !root.loading && !root.loadingWithText && (pointerHoverHandler.hovered || root.highlighted || root.checked) ? root.hoverColor : root.normalColor
         }
 
         Behavior on scale {
