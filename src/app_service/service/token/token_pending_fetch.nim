@@ -15,17 +15,14 @@ type PendingTokenFetch* = object
   pending: HashSet[string]  ## keys awaiting the next batch fetch
   inFlight: Table[string, int] ## key -> id of the running batch it was handed to (dedup across the fetch window)
   lastBatchId: int
-  awaitingRetry: array[MissingTokenFetchRetryDelaysMs.len, HashSet[string]] ## per backoff tier
+  awaitingRetry: Table[string, int64] ## key -> when its backoff ends (ms)
   failedAttempts: Table[string, int] ## failed fetches of a key since it last settled
 
 proc initPendingTokenFetch*(): PendingTokenFetch =
   PendingTokenFetch(pending: initHashSet[string]())
 
 proc isAwaitingRetry*(self: PendingTokenFetch, key: string): bool =
-  for tier in self.awaitingRetry:
-    if key in tier:
-      return true
-  return false
+  self.awaitingRetry.hasKey(key)
 
 proc enqueue*(self: var PendingTokenFetch, key: string): bool =
   ## Record a missing key. Returns true only when the key is newly pending — the
@@ -70,35 +67,42 @@ proc drainInFlight*(self: var PendingTokenFetch): seq[string] =
   result = toSeq(self.inFlight.keys)
   self.inFlight.clear()
 
-proc failBatch*(self: var PendingTokenFetch, keys: seq[string]):
-    tuple[retryTiers: seq[int], gaveUp: seq[string]] =
-  ## Park the (already released) keys of a failed batch on their next backoff
-  ## tier. Returns the tiers the caller must arm a timer for, and the keys out
-  ## of tries, which the caller settles as missing.
+proc failBatch*(self: var PendingTokenFetch, keys: seq[string], nowMs: int64): seq[string] =
+  ## Park the (already released) keys of a failed batch until their next backoff
+  ## ends. Returns the keys out of tries, which the caller settles as missing.
   for key in keys:
     let attempt = self.failedAttempts.getOrDefault(key) + 1
     if attempt > MissingTokenFetchRetryDelaysMs.len:
       self.failedAttempts.del(key)
-      result.gaveUp.add(key)
+      result.add(key)
       continue
     self.failedAttempts[key] = attempt
-    let tier = attempt - 1
-    self.awaitingRetry[tier].incl(key)
-    if tier notin result.retryTiers:
-      result.retryTiers.add(tier)
+    self.awaitingRetry[key] = nowMs + MissingTokenFetchRetryDelaysMs[attempt - 1]
 
-proc releaseRetries*(self: var PendingTokenFetch, tier: int,
+proc nextRetryInMs*(self: PendingTokenFetch, nowMs: int64): int =
+  ## Time until the earliest backoff ends (0 when one is overdue), -1 when no key awaits a retry.
+  result = -1
+  for dueMs in self.awaitingRetry.values:
+    let remainingMs = max(0, int(dueMs - nowMs))
+    if result < 0 or remainingMs < result:
+      result = remainingMs
+
+proc releaseDueRetries*(self: var PendingTokenFetch, nowMs: int64,
     isSettled: proc(key: string): bool = nil): bool =
-  ## A tier's backoff elapsed: queue its keys for the next batch, skipping those
+  ## Queue the keys whose backoff ended for the next batch, skipping those
   ## `isSettled` reports as cached or known-missing meanwhile. Returns true when
   ## any key was queued (the caller schedules the batch).
-  for key in self.awaitingRetry[tier]:
+  var dueKeys: seq[string]
+  for key, dueMs in self.awaitingRetry:
+    if dueMs <= nowMs:
+      dueKeys.add(key)
+  for key in dueKeys:
+    self.awaitingRetry.del(key)
     if not isSettled.isNil and isSettled(key):
       self.failedAttempts.del(key)
       continue
     self.pending.incl(key)
     result = true
-  self.awaitingRetry[tier].clear()
 
 proc settleKeys*(self: var PendingTokenFetch, keys: seq[string]) =
   ## The backend answered for these keys (found or missing): reset their retries.

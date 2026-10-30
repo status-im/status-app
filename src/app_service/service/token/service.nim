@@ -11,6 +11,7 @@ import app_service/service/settings/service as settings_service
 
 import app/core/eventemitter
 import app/core/held_resource_qtimer
+from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop
 import app/core/tasks/[qt, threadpool]
 import app/core/signals/types
 import app/global/feature_flags
@@ -65,7 +66,7 @@ QtObject:
     knownMissingKeys: HashSet[string] # keys the backend confirmed as "not found"; skip re-fetching until a refresh applies
     pendingTokenFetch: PendingTokenFetch # missing keys awaiting an async batch fetch (replaces the sync GUI-thread RPC)
     missingTokenKeysFetchDebouncer: debouncer_service.Debouncer # coalesces a burst of misses into one batch
-    missingTokenKeysRetryDebouncers: seq[debouncer_service.Debouncer] # one per MissingTokenFetchRetryDelaysMs tier
+    missingTokenKeysRetryTimer: QTimer # fires when the earliest failed key's backoff ends
     onDemandPrices: OnDemandPriceRequests # prices asked for by key (catalog tokens the periodic refresh doesn't cover)
     onDemandPricesDebouncer: debouncer_service.Debouncer # coalesces a burst of by-key price requests into one fetch
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]

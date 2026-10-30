@@ -79,15 +79,14 @@ suite "missing-tokens batch — undecodable envelope":
     let running = p.takeBatch()
     let (_, drained, _) = decodeAndCompleteBatch(p, "not json at all")
     check drained.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
-    discard failMissingTokensBatch(p, drained, knownMissing)
+    discard failMissingTokensBatch(p, drained, 1000, knownMissing)
     let (_, releasedKeys, _) = decodeAndCompleteBatch(p, response(running.id, running.keys, "boom"))
     check releasedKeys.len == 0
-    let (retryTiers, gaveUp, _) = failMissingTokensBatch(p, releasedKeys, knownMissing)
-    check retryTiers.len == 0
+    let (gaveUp, _) = failMissingTokensBatch(p, releasedKeys, 1000, knownMissing)
     check gaveUp.len == 0
-    check p.releaseRetries(0)
+    check p.releaseDueRetries(3000)
     check p.takeBatch().keys.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
-    check not p.releaseRetries(1)
+    check p.nextRetryInMs(3000) == -1
 
 suite "missing-tokens batch — notification":
   test "found tokens refresh the token list":
@@ -175,11 +174,11 @@ suite "missing-tokens batch — caching the result":
     let releasedKeys = p.completeBatch(batch.id)
     expect ValueError:
       discard c.apply(p, envelope(@[keyA, keyB], @[dto(1, "0xaaa"), dto(1, "0xbbb")]), raisingOn("0xbbb"))
-    let (retryTiers, gaveUp, notice) = failMissingTokensBatch(p, releasedKeys, c.knownMissingKeys)
-    check retryTiers == @[0]
+    let (gaveUp, notice) = failMissingTokensBatch(p, releasedKeys, 0, c.knownMissingKeys)
     check gaveUp.len == 0
     check notice == MissingFetchNotice.None
-    check p.releaseRetries(0, c.isSettled) == true
+    check p.nextRetryInMs(0) == MissingTokenFetchRetryDelaysMs[0]
+    check p.releaseDueRetries(MissingTokenFetchRetryDelaysMs[0], c.isSettled) == true
     check p.takeBatch().keys.toHashSet == [keyA, keyB].toHashSet
 
   test "a persistently raising batch gives up after the first try and every retry":
@@ -189,6 +188,7 @@ suite "missing-tokens batch — caching the result":
     var attempts = 0
     var lastNotice = MissingFetchNotice.None
     var gaveUpKeys: seq[string]
+    var now = 0'i64
     while true:
       let batch = p.takeBatch()
       if batch.keys.len == 0:
@@ -197,11 +197,13 @@ suite "missing-tokens batch — caching the result":
       inc attempts
       expect ValueError:
         discard c.apply(p, envelope(batch.keys, @[dto(1, "0xaaa")]), raisingOn("0xaaa"))
-      let (retryTiers, gaveUp, notice) = failMissingTokensBatch(p, releasedKeys, c.knownMissingKeys)
+      let (gaveUp, notice) = failMissingTokensBatch(p, releasedKeys, now, c.knownMissingKeys)
       lastNotice = notice
       gaveUpKeys = gaveUp
-      for tier in retryTiers:
-        discard p.releaseRetries(tier, c.isSettled)
+      let delayMs = p.nextRetryInMs(now)
+      if delayMs >= 0:
+        now += delayMs
+        discard p.releaseDueRetries(now, c.isSettled)
     check attempts == 1 + MissingTokenFetchRetryDelaysMs.len
     check gaveUpKeys == @[keyA]
     check lastNotice == MissingFetchNotice.KeysSettled

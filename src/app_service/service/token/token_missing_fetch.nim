@@ -102,14 +102,14 @@ proc applyMissingTokensBatch*(fetch: var PendingTokenFetch, env: FetchMissingTok
   fetch.settleKeys(env.requestedKeys)
   return batchNotice(foundKeys.len, missingKeys.len)
 
-proc failMissingTokensBatch*(fetch: var PendingTokenFetch, keys: seq[string],
-    knownMissingKeys: var HashSet[string]): tuple[retryTiers: seq[int], gaveUp: seq[string], notice: MissingFetchNotice] =
+proc failMissingTokensBatch*(fetch: var PendingTokenFetch, keys: seq[string], nowMs: int64,
+    knownMissingKeys: var HashSet[string]): tuple[gaveUp: seq[string], notice: MissingFetchNotice] =
   ## Park a failed batch's keys for a retry; those out of tries settle as missing
   ## until the next refresh.
-  let (retryTiers, gaveUp) = fetch.failBatch(keys)
+  let gaveUp = fetch.failBatch(keys, nowMs)
   for key in gaveUp:
     knownMissingKeys.incl(key)
-  return (retryTiers, gaveUp, batchNotice(foundCount = 0, settledMissingCount = gaveUp.len))
+  return (gaveUp, batchNotice(foundCount = 0, settledMissingCount = gaveUp.len))
 
 proc isMissingKeySettled*(key: string, tokensByKey: Table[string, TokenItem],
     knownMissingKeys: HashSet[string]): bool =

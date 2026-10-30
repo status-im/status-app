@@ -101,22 +101,26 @@ suite "pending token fetch — negative-marker feed":
     check missingFromBatch(requested, ["1-0xaaa"].toHashSet).len == 0
 
 suite "pending token fetch — failed batch retries":
-  proc failOnce(p: var PendingTokenFetch, key: string): tuple[retryTiers: seq[int], gaveUp: seq[string]] =
+  const t0 = 1_000_000'i64
+
+  proc failOnce(p: var PendingTokenFetch, key: string, nowMs = t0): seq[string] =
     discard p.enqueue(key)
     let batch = p.takeBatch()
     discard p.completeBatch(batch.id)
-    return p.failBatch(batch.keys)
+    return p.failBatch(batch.keys, nowMs)
 
   test "retry delays back off over three tries":
     check MissingTokenFetchRetryDelaysMs == [2000, 5000, 15000]
 
-  test "each failure of a key waits on the next, longer retry tier":
+  test "each failure of a key waits the next, longer backoff":
     var p = initPendingTokenFetch()
-    for tier in 0 ..< MissingTokenFetchRetryDelaysMs.len:
-      let (retryTiers, gaveUp) = p.failBatch(@["1-0xaaa"])
-      check retryTiers == @[tier]
-      check gaveUp.len == 0
-      check p.releaseRetries(tier)
+    var now = t0
+    for delayMs in MissingTokenFetchRetryDelaysMs:
+      check p.failBatch(@["1-0xaaa"], now).len == 0
+      check p.nextRetryInMs(now) == delayMs
+      check not p.releaseDueRetries(now + delayMs - 1)
+      now += delayMs
+      check p.releaseDueRetries(now)
       check p.takeBatch().keys == @["1-0xaaa"]
 
   test "a key waiting for a retry stays pending and dedups lookups":
@@ -126,54 +130,78 @@ suite "pending token fetch — failed batch retries":
     check not p.hasPending()
     check p.isAwaitingRetry("1-0xaaa")
 
-  test "a released tier queues its keys for the next batch exactly once":
+  test "a due retry queues its key for the next batch exactly once":
     var p = initPendingTokenFetch()
     discard p.failOnce("1-0xaaa")
-    check not p.releaseRetries(1)          # other tiers hold nothing
-    check p.releaseRetries(0)
+    check p.releaseDueRetries(t0 + 2000)
     check not p.isAwaitingRetry("1-0xaaa")
-    check not p.releaseRetries(0)          # already released
+    check p.nextRetryInMs(t0 + 2000) == -1
+    check not p.releaseDueRetries(t0 + 4000)   # already released
     check p.takeBatch().keys == @["1-0xaaa"]
+
+  test "a batch failing just before an earlier one's retry still waits its full backoff":
+    var p = initPendingTokenFetch()
+    discard p.failOnce("1-0xaaa", t0)
+    discard p.failOnce("10-0xbbb", t0 + 1900)
+    check p.releaseDueRetries(t0 + 2000)
+    check p.takeBatch().keys == @["1-0xaaa"]
+    check p.isAwaitingRetry("10-0xbbb")
+    check p.nextRetryInMs(t0 + 2000) == 1900
+    check p.releaseDueRetries(t0 + 3900)
+    check p.takeBatch().keys == @["10-0xbbb"]
+
+  test "the next retry is the earliest one due across backoff tiers":
+    var p = initPendingTokenFetch()
+    discard p.failOnce("1-0xaaa", t0)
+    check p.releaseDueRetries(t0 + 2000)
+    discard p.completeBatch(p.takeBatch().id)
+    discard p.failBatch(@["1-0xaaa"], t0 + 2000)   # second try: due at +5s
+    discard p.failOnce("10-0xbbb", t0 + 3000)     # first try: due at +2s
+    check p.nextRetryInMs(t0 + 3000) == 2000
+    check p.releaseDueRetries(t0 + 5000)
+    check p.takeBatch().keys == @["10-0xbbb"]
+    check p.nextRetryInMs(t0 + 5000) == 2000
+    check p.nextRetryInMs(t0 + 9000) == 0
 
   test "a key failing every retry gives up and stops being fetched":
     var p = initPendingTokenFetch()
-    for tier in 0 ..< MissingTokenFetchRetryDelaysMs.len:
-      discard p.failBatch(@["1-0xaaa"])
-      discard p.releaseRetries(tier)
+    var now = t0
+    for delayMs in MissingTokenFetchRetryDelaysMs:
+      discard p.failBatch(@["1-0xaaa"], now)
+      now += delayMs
+      discard p.releaseDueRetries(now)
       discard p.completeBatch(p.takeBatch().id)
-    let (retryTiers, gaveUp) = p.failBatch(@["1-0xaaa"])
-    check retryTiers.len == 0
-    check gaveUp == @["1-0xaaa"]
+    check p.failBatch(@["1-0xaaa"], now) == @["1-0xaaa"]
     check not p.isAwaitingRetry("1-0xaaa")
+    check p.nextRetryInMs(now) == -1
     check not p.hasPending()
 
-  test "keys of one failed batch share a tier; the tier is armed once":
+  test "keys of one failed batch are retried together":
     var p = initPendingTokenFetch()
-    let (retryTiers, _) = p.failBatch(@["1-0xaaa", "10-0xbbb"])
-    check retryTiers == @[0]
-    check p.releaseRetries(0)
+    discard p.failBatch(@["1-0xaaa", "10-0xbbb"], t0)
+    check p.releaseDueRetries(t0 + 2000)
     check p.takeBatch().keys.toHashSet == ["1-0xaaa", "10-0xbbb"].toHashSet
 
-  test "a settled key starts its next failure from the first tier":
+  test "a settled key starts its next failure from the first backoff":
     var p = initPendingTokenFetch()
     discard p.failOnce("1-0xaaa")
-    discard p.releaseRetries(0)
+    discard p.releaseDueRetries(t0 + 2000)
     discard p.completeBatch(p.takeBatch().id)
     p.settleKeys(@["1-0xaaa"])             # the retry answered
-    let (retryTiers, _) = p.failOnce("1-0xaaa")
-    check retryTiers == @[0]
+    discard p.failOnce("1-0xaaa", t0 + 3000)
+    check p.nextRetryInMs(t0 + 3000) == 2000
 
   test "a retry skips keys that resolved or settled during the backoff":
     var p = initPendingTokenFetch()
-    discard p.failBatch(@["1-0xaaa", "10-0xbbb"])
-    check p.releaseRetries(0, isSettled = proc(key: string): bool = key == "1-0xaaa")
+    discard p.failBatch(@["1-0xaaa", "10-0xbbb"], t0)
+    check p.releaseDueRetries(t0 + 2000, isSettled = proc(key: string): bool = key == "1-0xaaa")
     check p.takeBatch().keys == @["10-0xbbb"]
 
-  test "a tier whose keys all settled during the backoff schedules nothing":
+  test "a retry whose keys all settled during the backoff schedules nothing":
     var p = initPendingTokenFetch()
     discard p.failOnce("1-0xaaa")
-    check not p.releaseRetries(0, isSettled = proc(key: string): bool = true)
+    check not p.releaseDueRetries(t0 + 2000, isSettled = proc(key: string): bool = true)
     check not p.hasPending()
     check not p.isAwaitingRetry("1-0xaaa")
-    let (retryTiers, _) = p.failOnce("1-0xaaa")   # settled: its next failure restarts the backoff
-    check retryTiers == @[0]
+    discard p.failOnce("1-0xaaa", t0 + 3000)   # settled: its next failure restarts the backoff
+    check p.nextRetryInMs(t0 + 3000) == 2000

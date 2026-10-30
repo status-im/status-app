@@ -152,11 +152,25 @@ proc emitBatchNotice(self: Service, notice: MissingFetchNotice) =
   of MissingFetchNotice.None:
     discard
 
+proc armMissingTokenKeysRetryTimer(self: Service) =
+  let delayMs = self.pendingTokenFetch.nextRetryInMs(monotonicMs())
+  if delayMs < 0:
+    self.missingTokenKeysRetryTimer.stop()
+  else:
+    self.missingTokenKeysRetryTimer.start(delayMs.cint)
+
+proc onMissingTokenKeysRetryTimeout(self: Service) =
+  let isSettled = proc(key: string): bool =
+    isMissingKeySettled(key, self.tokensOfInterestByKey, self.knownMissingKeys)
+  if self.pendingTokenFetch.releaseDueRetries(monotonicMs(), isSettled):
+    self.scheduleMissingTokenKeysFetch()
+  self.armMissingTokenKeysRetryTimer()
+
 proc retryFailedMissingTokenKeys(self: Service, keys: seq[string]) =
   # Back off and re-fetch; keys out of tries settle as missing until the next refresh.
-  let (retryTiers, gaveUp, notice) = failMissingTokensBatch(self.pendingTokenFetch, keys, self.knownMissingKeys)
-  for tier in retryTiers:
-    self.missingTokenKeysRetryDebouncers[tier].call()
+  let (gaveUp, notice) = failMissingTokensBatch(self.pendingTokenFetch, keys, monotonicMs(),
+    self.knownMissingKeys)
+  self.armMissingTokenKeysRetryTimer()
   if gaveUp.len > 0:
     warn "giving up fetching missing tokens", keys = gaveUp
   self.emitBatchNotice(notice)
@@ -224,14 +238,6 @@ proc releaseTokenLists*(self: Service) =
 proc getTokenListsLoading*(self: Service): bool =
   return self.catalogue.tokenLists.isLoading
 
-proc newMissingTokenKeysRetryDebouncer(self: Service, tier: int, delayMs: int): debouncer_service.Debouncer =
-  result = debouncer_service.newDebouncer(self.threadpool, delayMs = delayMs, checkIntervalMs = 500)
-  result.registerCall0(callback = proc() =
-    let isSettled = proc(key: string): bool =
-      isMissingKeySettled(key, self.tokensOfInterestByKey, self.knownMissingKeys)
-    if self.pendingTokenFetch.releaseRetries(tier, isSettled):
-      self.scheduleMissingTokenKeysFetch())
-
 proc init*(self: Service) =
   self.rebuildMarketDataDebouncer = debouncer_service.newDebouncer(
     self.threadpool,
@@ -250,8 +256,13 @@ proc init*(self: Service) =
     checkIntervalMs = 100)
   self.missingTokenKeysFetchDebouncer.registerCall0(callback = proc() = self.fetchPendingMissingTokenKeys())
 
-  for tier, delayMs in MissingTokenFetchRetryDelaysMs:
-    self.missingTokenKeysRetryDebouncers.add(self.newMissingTokenKeysRetryDebouncer(tier, delayMs))
+  self.missingTokenKeysRetryTimer = QTimer.create()
+  self.missingTokenKeysRetryTimer.setSingleShot(true)
+  self.missingTokenKeysRetryTimer.onTimeout(proc() {.closure, raises: [].} =
+    try:
+      self.onMissingTokenKeysRetryTimeout()
+    except Exception as e:
+      error "missing token keys retry failed", msg = e.msg)
 
   self.onDemandPricesDebouncer = debouncer_service.newDebouncer(
     self.threadpool,
