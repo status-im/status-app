@@ -14,7 +14,7 @@ def isPRBuild = utils.isPRBuild()
 
 pipeline {
   agent {
-    label "${getAgentLabels().join(' && ')} && qt-${QT_VERSION} && go-1.26 && xcode-26.4"
+    label "macos-vm"
   }
 
   parameters {
@@ -155,8 +155,8 @@ pipeline {
     stage('macOS') {
       when { expression { params.BUILD_MACOS } }
       environment {
-        QMAKE = "/Users/admin/${QT_VERSION}/macos/bin/qmake"
-        QTDIR = "/Users/admin/${QT_VERSION}/macos"
+        QMAKE = "${env.HOME}/${QT_VERSION}/macos/bin/qmake"
+        QTDIR = "${env.HOME}/${QT_VERSION}/macos"
         PLATFORM = "macos/${getArch()}"
         PATH = "${NIM_BIN}:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:${QTDIR}/bin:${QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}"
         STATUS_CLIENT_DMG = "pkg/${utils.pkgFilename(ext: 'dmg', arch: getArch(), version: env.VERSION, type: env.APP_TYPE)}"
@@ -218,9 +218,9 @@ pipeline {
     stage('iOS') {
       when { expression { params.BUILD_IOS } }
       environment {
-        QMAKE = "/Users/admin/${QT_VERSION}/ios/bin/qmake"
-        QTDIR = "/Users/admin/${QT_VERSION}/ios"
-        QT_HOST_PATH = "/Users/admin/${QT_VERSION}/macos"
+        QMAKE = "${env.HOME}/${QT_VERSION}/ios/bin/qmake"
+        QTDIR = "${env.HOME}/${QT_VERSION}/ios"
+        QT_HOST_PATH = "${env.HOME}/${QT_VERSION}/macos"
         PLATFORM = "ios/arm64"
         PATH = "${NIM_BIN}:${QTDIR}/bin:${QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}:/run/current-system/sw/bin"
         IPHONE_SDK = "iphoneos"
