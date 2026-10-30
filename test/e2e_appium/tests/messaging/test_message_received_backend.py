@@ -7,6 +7,8 @@ import pytest
 from pages.messaging.message_context_menu_page import MessageContextMenuPage
 from tests.messaging.peer_base import PeerChatBase
 
+THUMBS_UP = "\U0001f44d"
+
 
 def _unique_message(prefix: str = "test") -> str:
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
@@ -94,13 +96,19 @@ class TestMessageActionsReceived(PeerChatBase):
             count_before = chat_page.message_count()
 
         async with self.step("Peer sends an emoji message"):
-            self.send_from_peer("\U0001f44d")
+            self.send_from_peer(THUMBS_UP)
 
         async with self.step("Phone's chat grows by one"):
             await self.await_on_phone(
                 chat_page, "emoji",
                 probe=lambda t: chat_page.wait_for_message_count(count_before + 1, timeout=t),
                 describe="Emoji message from the peer",
+            )
+
+        async with self.step("The newest message reads as the emoji"):
+            assert chat_page.wait_for_newest_message_body(THUMBS_UP), (
+                f"The newest message should read {THUMBS_UP!r}, "
+                f"it reads {chat_page.newest_message_body()!r}"
             )
 
     @pytest.mark.spec("SC-MACT-05")

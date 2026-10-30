@@ -8,6 +8,8 @@ from pages.messaging.chat_page import ChatPage
 from pages.messaging.message_context_menu_page import MessageContextMenuPage
 from tests.messaging.peer_base import PeerChatBase
 
+THUMBS_UP = "\U0001f44d"
+
 
 def _unique_message(prefix: str = "test") -> str:
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
@@ -227,8 +229,15 @@ class TestMessageActions(PeerChatBase):
             assert chat_page.wait_for_message_count(
                 count_before + 1, timeout=self.UI_TIMEOUT,
             ), "Emoji message should appear in the chat"
+            assert chat_page.wait_for_newest_message_body(THUMBS_UP), (
+                f"The newest message should read {THUMBS_UP!r}, "
+                f"it reads {chat_page.newest_message_body()!r}"
+            )
 
         async with self.step("Verify it reached the other participant"):
             # The picker chooses the text, so the peer is matched on "new from
             # the phone" rather than on a sentinel.
-            await self.await_new_message_on_peer(known)
+            received = await self.await_new_message_on_peer(known)
+            assert ChatPage.normalise_body(received.get("text")) == THUMBS_UP, (
+                f"The peer received {received.get('text')!r}, expected {THUMBS_UP!r}"
+            )
