@@ -121,6 +121,18 @@ method updateThreadDetails*(self: AccessInterface) {.base.} =
 method updateThreadCanView*(self: AccessInterface, canView: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method canManageThreadById*(self: AccessInterface, threadId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method deleteThreadById*(self: AccessInterface, threadId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method deleteThread*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onThreadDeleteFinished*(self: AccessInterface, requestId, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method editThread*(self: AccessInterface, name: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

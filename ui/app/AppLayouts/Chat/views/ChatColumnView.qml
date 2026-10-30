@@ -92,6 +92,7 @@ Item {
     signal openStickerPackPopup(string stickerPackId)
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
     signal openThreadRequested(string threadId, string threadName)
+    signal renameThreadRequested(string threadId, string threadName)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -721,6 +722,8 @@ Item {
                 myPublicKey: root.myPublicKey
 
                 onShowReplyArea: (messageId, author) => d.showReplyArea(messageId)
+                onRenameThreadRequested: (threadId, threadName, parentMessageId) =>
+                    root.renameThreadRequested(threadId, threadName)
                 onOpenThread: (threadId, threadName, parentMessageId) => {
                     if (root.threadsFeatureEnabled
                             && Utils.isThreadSupportedChatType(root.activeChatType)

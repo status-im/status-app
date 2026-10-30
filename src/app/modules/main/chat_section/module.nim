@@ -759,6 +759,9 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
   if threadId.len == 0:
     return
 
+  if self.controller.getThreadById(parentChatId, threadId).deleted:
+    return
+
   # If the thread row already exists, just update it and activate it if needed.
   if not self.view.chatsModel().getItemById(threadId).isNil:
     self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages, notificationsCount)
@@ -816,6 +819,18 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     var items: seq[ChatItem] = @[]
     var pendingThreadIds = initHashSet[string]()
     for thread in parentThreads:
+      if thread.deleted:
+        if self.pendingThreadId == thread.threadId:
+          self.clearPendingThreadRestore(clearSettings = true)
+        if self.view.getOpenThreadId() == thread.threadId:
+          self.closeThreadPanel()
+        if self.controller.getActiveChatId() == thread.threadId:
+          self.setActiveItem(parentChatId)
+        self.view.chatsModel().removeItemById(thread.threadId)
+        self.threadChatIds.excl(thread.threadId)
+        # Cached modules also receive the tombstone, clearing loaded replies
+        # and rejecting subsequent operations.
+        continue
       if not self.view.chatsModel().getItemById(thread.threadId).isNil:
         self.view.renameThreadItem(thread.threadId, thread.name)
         if self.view.getOpenThreadId() == thread.threadId:
@@ -2186,6 +2201,9 @@ method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messag
     if self.chatsLoaded and self.view.chatsModel().getItemById(chatId).isNil:
       return false
     let thread = self.controller.getThreadById(chatId, threadId)
+    if thread.deleted:
+      self.setActiveItem(chatId)
+      return false
     if not self.chatsLoaded or thread.threadId.len == 0:
       # Reuse deferred thread restoration for results whose section/list is not loaded yet.
       self.pendingThreadId = threadId

@@ -301,6 +301,19 @@ Item {
 
         // TDD: discrete true/false coverage of the "do not show again"
         // persisted setting gating the delete confirmation dialog.
+        function test_deleteConfirmationDoesNotFollowNavigation() {
+            const menu = createMenu({ deleteEnabled: true, showDeleteThreadWarning: true, threadId: "first" })
+            deleteSpy.target = menu
+            deleteSpy.clear()
+            findEntry(menu, "threadContextMenu_delete").trigger()
+            tryVerify(() => !!root.activePopup)
+            tryCompare(root.activePopup, "opened", true)
+            menu.threadId = "second"
+            root.activePopup.confirmButtonClicked()
+            compare(deleteSpy.count, 0)
+            menu.close()
+        }
+
         function test_04_delete_confirmation_gated_by_showDeleteThreadWarning_data() {
             return [
                 { tag: "warning enabled: confirmation dialog gates delete", showDeleteThreadWarning: true },

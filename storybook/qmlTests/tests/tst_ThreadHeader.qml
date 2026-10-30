@@ -56,6 +56,18 @@ Item {
             return input
         }
 
+        function test_deletionPendingBlocksRenameAndReportsFailure() {
+            header.deletePending = true
+            header.beginEditing()
+            compare(header.editing, false)
+            compare(findChild(header, "threadHeaderMenuButton").enabled, false)
+            header.deletePending = false
+            header.deleteFinished("permission denied")
+            const error = findChild(header, "threadNameError")
+            verify(error.visible)
+            verify(error.text.includes("permission denied"))
+        }
+
         function test_enterSubmitsAndSuccessClosesEditor() {
             const input = edit("Updated")
             keyClick(Qt.Key_Return)

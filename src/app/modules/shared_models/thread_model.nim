@@ -69,7 +69,16 @@ QtObject:
     of ModelRole.LastMessageTimestamp: result = newQVariant(row.summary.lastMessageTimestamp)
     else: result = newQVariant()
 
+  proc retain*(self: Model, threadIds: seq[string])
+
   proc upsert*(self: Model, summary: ThreadSummary) =
+    if summary.deleted:
+      var remaining: seq[string]
+      for row in self.items:
+        if row.summary.threadId != summary.threadId:
+          remaining.add(row.summary.threadId)
+      self.retain(remaining)
+      return
     if summary.threadId.len == 0:
       return
     let i = self.indices.getOrDefault(summary.threadId, -1)

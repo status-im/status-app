@@ -34,6 +34,7 @@ type
     controller: controller.Controller
     names: seq[string]
     namesAtCompletion: seq[string]
+    deletions: seq[string]
     summaries: seq[ThreadDto]
 
 method updateThreadDetails(self: ThreadDetailsDelegate) =
@@ -41,6 +42,9 @@ method updateThreadDetails(self: ThreadDetailsDelegate) =
 
 method onThreadEditFinished(self: ThreadDetailsDelegate, requestId, error: string) =
   self.namesAtCompletion.add(self.names[^1])
+
+method onThreadDeleteFinished(self: ThreadDetailsDelegate, requestId, error: string) =
+  self.deletions.add(requestId)
 
 method onChatThreadsLoaded(self: ThreadDetailsDelegate, threads: seq[ThreadDto], listLoaded: bool = false) =
   self.summaries = threads
@@ -456,3 +460,52 @@ suite "thread navigation":
       service.asyncLoadChatThreadSummaries("chat-id")
       check(completed.len == 0)
       check("chat-id" in service.chatThreadSummariesLoadedChats)
+
+  test "deleted threads keep the parent card and reject stale reply pages":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let module = messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, nil, nil, service, nil, nil)
+    defer: module.delete()
+    let parent = createMessageItemFromDtos(MessageDto(id: "parent", clock: 1), "",
+      ContactDetails(), false, "")
+    module.view.model().insertItemBasedOnClock(parent)
+    module.onChatThreadsLoaded(@[ThreadDto(threadId: "dead", parentMessageId: "parent",
+      deleted: true, deletedAt: 100)], listLoaded = true)
+    check parent.hasThread
+    check parent.threadSummary.deleted
+    check parent.threadSummary.lastMessageTimestamp == 100
+    check module.view.threadsModel().rowCount(nil) == 0
+    check module.view.model().findIndexForMessageId("parent") >= 0
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat-id"], "threads": [{"threadId": "dead", "chatId": "chat-id",
+      "parentMessageId": "parent", "deleted": true}]
+    }))
+    let thread = messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, nil, nil, service, nil, nil, threadId = "dead")
+    defer: thread.delete()
+    thread.messagesAdded(@[MessageDto(id: "late", threadId: "dead")])
+    thread.newMessagesLoaded(@[MessageDto(id: "stale", threadId: "dead")], @[])
+    check thread.view.model().rowCount(nil) == 0
+    module.createThread("parent")
+
+  test "summary deletions complete in their parent chat as well as the selected thread":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    var delegates: seq[ThreadDetailsDelegate]
+    for (chatId, threadId) in [("chat", ""), ("chat", "target"), ("chat", "other"), ("elsewhere", "")]:
+      let delegate = ThreadDetailsDelegate()
+      delegate.controller = controller.newController(delegate, events, "section", chatId,
+        false, nil, nil, nil, service, nil, nil, threadId = threadId)
+      delegate.controller.init()
+      delegates.add(delegate)
+    defer:
+      for delegate in delegates:
+        delegate.controller.delete()
+    events.emit(SIGNAL_THREAD_DELETE_FINISHED,
+      ThreadDeleteFinishedArgs(chatId: "chat", threadId: "target", requestId: "request"))
+    check delegates[0].deletions == @["request"]
+    check delegates[1].deletions == @["request"]
+    check delegates[2].deletions.len == 0
+    check delegates[3].deletions.len == 0

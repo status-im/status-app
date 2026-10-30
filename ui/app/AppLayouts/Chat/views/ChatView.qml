@@ -220,6 +220,7 @@ Item {
         property int threadPanelRevision: 0
         property int infoTab: ChatInfoPanel.Default
         property bool threadOpenedFromInfo: false
+        property string threadIdToRename: ""
 
         function openThreadPanel(threadId, threadName) {
             threadPanelRevision++
@@ -358,11 +359,21 @@ Item {
 
         ThreadHeader {
             id: panelThreadHeader
+            Timer {
+                interval: 0
+                running: !!d.threadIdToRename && d.threadIdToRename === panelThreadHeader.threadId && panelThreadHeader.canEdit
+                onTriggered: {
+                    d.threadIdToRename = ""
+                    panelThreadHeader.beginEditing()
+                }
+            }
             threadId: d.openThreadId
             threadName: threadMessageStore.threadName
             parentChatName: d.openThreadParentChatName
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
+            deletePending: threadMessageStore.threadDeletePending
+            onDeleteRequested: threadMessageStore.deleteThread()
             onRenameRequested: name => threadMessageStore.editThread(name)
 
             ChatStores.MessageStore {
@@ -378,6 +389,9 @@ Item {
 
             Connections {
                 target: threadMessageStore.messageModule
+                function onThreadDeleteFinished(error: string) {
+                    panelThreadHeader.deleteFinished(error)
+                }
                 function onThreadEditFinished(error: string) {
                     panelThreadHeader.editFinished(error)
                 }
@@ -895,6 +909,11 @@ Item {
 
             onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+            onRenameThreadRequested: (threadId, threadName) => {
+                d.threadOpenedFromInfo = false
+                d.threadIdToRename = threadId
+                d.openThreadPanel(threadId, threadName)
+            }
             onOpenThreadRequested: (threadId, threadName) => {
                 d.threadOpenedFromInfo = false
                 d.openThreadPanel(threadId, threadName)

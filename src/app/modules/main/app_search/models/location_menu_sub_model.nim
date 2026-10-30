@@ -1,5 +1,5 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables, strutils, std/strformat
+import nimqml, tables, strutils, std/strformat, sequtils
 
 import location_menu_sub_item
 
@@ -108,6 +108,10 @@ QtObject:
     self.beginResetModel()
     self.items = items
     self.endResetModel()
+
+  proc removeItemForValue*(self: SubModel, value: string) =
+    if self.items.anyIt(it.value == value):
+      self.setItems(self.items.filterIt(it.value != value))
 
   proc getItemForValue*(self: SubModel, value: string): SubItem =
     for i in self.items:

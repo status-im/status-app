@@ -2,6 +2,7 @@ import std/[json, unittest]
 import app/core/eventemitter
 import app/core/signals/types
 import app_service/service/message/service as message_service
+import app_service/service/activity_center/service as activity_service
 
 suite "thread edit metadata handling":
   setup:
@@ -119,3 +120,80 @@ suite "thread edit metadata handling":
     check completions[0].error.len > 0
     check completions[1].error.len > 0
     check updates.len == 0
+
+  test "deletion clears summaries and survives stale metadata and snapshots":
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root", name: "Thread",
+        messagesCount: 3, unviewedMessagesCount: 2, participantsCount: 2,
+        participantsPreviewIds: @["creator"], lastMessage: ThreadLastMessageDto(text: "Private reply")),
+    ]))
+    var deletedCompletions: seq[ThreadDeleteFinishedArgs]
+    events.on(SIGNAL_THREAD_DELETE_FINISHED) do(args: Args):
+      deletedCompletions.add(ThreadDeleteFinishedArgs(args))
+    service.onAsyncDeleteThread($ %* {
+      "chatId": "chat", "threadId": "thread", "requestId": "delete-request", "error": "",
+      "threads": [{"chatId": "chat", "threadId": "thread", "parentMessageId": "root",
+        "deleted": true, "deletedBy": "admin", "deletedClock": 20, "deletedAt": 18}],
+    })
+    check deletedCompletions.len == 1
+    check deletedCompletions[0].error == ""
+    check deletedCompletions[0].requestId == "delete-request"
+    var cached = service.getThreadById("chat", "thread")
+    check cached.deleted
+    check cached.deletedBy == "admin"
+    check cached.messagesCount == 0
+    check cached.participantsPreviewIds.len == 0
+    check cached.lastMessage.text == ""
+    check cached.unviewedMessagesCount == 0
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root",
+        name: "Old metadata", messagesCount: 3),
+    ]))
+    check service.getThreadById("chat", "thread").deleted
+    service.onAsyncLoadChatThreadsForChats($ %* {
+      "chatIds": ["chat"], "threads": [], "includeSummaries": true,
+      "chatRevisions": [0], "error": "",
+    })
+    cached = service.getThreadById("chat", "thread")
+    check cached.deleted
+    check cached.deletedAt == 18
+    check cached.messagesCount == 0
+
+  test "failed or malformed deletion never changes the cached thread":
+    var errors: seq[string]
+    events.on(SIGNAL_THREAD_DELETE_FINISHED) do(args: Args):
+      errors.add(ThreadDeleteFinishedArgs(args).error)
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root", name: "Thread"),
+    ]))
+    for reply in [
+      %* {"chatId": "chat", "threadId": "thread", "requestId": "denied", "error": "permission denied"},
+      %* {"chatId": "chat", "threadId": "thread", "requestId": "missing", "error": "", "threads": []},
+      %* {"chatId": "chat", "threadId": "thread", "requestId": "active", "error": "",
+        "threads": [{"chatId": "chat", "threadId": "thread", "parentMessageId": "root", "deleted": false}]},
+    ]:
+      service.onAsyncDeleteThread($reply)
+      check not service.getThreadById("chat", "thread").deleted
+    check errors.len == 3
+    for error in errors:
+      check error.len > 0
+
+  test "deletion removes loaded activity notifications and filters late updates":
+    let activity = activity_service.newService(events, nil, nil)
+    activity.init()
+    var received: seq[string]
+    var removed: seq[string]
+    events.on(activity_service.SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_RECEIVED) do(args: Args):
+      for notification in ActivityCenterNotificationsArgs(args).activityCenterNotifications:
+        received.add(notification.id)
+    events.on(activity_service.SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_REMOVED) do(args: Args):
+      removed.add(ActivityCenterNotificationIdsArgs(args).notificationIds)
+    let notification = ActivityCenterNotificationDto(id: "notification", chatId: "chat", threadId: "thread",
+      notificationType: ActivityCenterNotificationType.Mention)
+    events.emit(SignalType.Message.event, MessageSignal(activityCenterNotifications: @[notification]))
+    check received == @["notification"]
+    events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED, ChatThreadsForChatsLoadedArgs(threads: @[
+      ThreadDto(chatId: "chat", threadId: "thread", parentMessageId: "root", deleted: true)]))
+    check removed == @["notification"]
+    events.emit(SignalType.Message.event, MessageSignal(activityCenterNotifications: @[notification]))
+    check received == @["notification"]

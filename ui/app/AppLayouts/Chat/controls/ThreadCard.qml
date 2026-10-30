@@ -86,6 +86,7 @@ Control {
        Emitted when the user requests to open the thread.
     */
     signal clicked(string threadId, string originalMessageId)
+    signal contextMenuRequested(point position)
 
     padding: Theme.padding
     implicitWidth: 296
@@ -124,10 +125,17 @@ Control {
         readonly property string messagesCountText: qsTr("%n message(s)", "", root.messagesCount)
     }
 
-    HoverHandler { cursorShape: Qt.PointingHandCursor }
+    HoverHandler { cursorShape: d.deleted ? Qt.ArrowCursor : Qt.PointingHandCursor }
 
     TapHandler {
+        enabled: !d.deleted
         onTapped: root.clicked(root.threadId, root.originalMessageId)
+    }
+
+    TapHandler {
+        enabled: !d.deleted
+        acceptedButtons: Qt.RightButton
+        onTapped: eventPoint => root.contextMenuRequested(eventPoint.position)
     }
 
     background: Rectangle {

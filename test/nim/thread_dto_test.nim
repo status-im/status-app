@@ -71,3 +71,11 @@ suite "thread dto":
     check(dto.lastMessage.`from` == "")
     check(dto.lastMessage.text == "")
     check(dto.lastMessage.timestamp == 0)
+
+  test "parses deletion actor and wall-clock timestamp independently of ordering":
+    let dto = (%* {"threadId": "thread", "deleted": true, "deletedBy": "admin",
+      "deletedClock": 200, "deletedAt": 190}).toThreadDto()
+    check dto.deleted
+    check dto.deletedBy == "admin"
+    check dto.deletedClock == 200
+    check dto.deletedAt == 190

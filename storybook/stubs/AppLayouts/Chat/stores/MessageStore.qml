@@ -30,6 +30,23 @@ QtObject {
     readonly property bool canEditThread: messageModule?.canEditThread ?? false
     readonly property bool threadEditPending: messageModule?.threadEditPending ?? false
 
+    readonly property bool threadDeletePending: messageModule?.threadDeletePending ?? false
+    readonly property bool threadDeleted: messageModule?.threadDeleted ?? false
+
+    function canManageThreadById(threadId) {
+        return !!root.messageModule?.canManageThreadById && root.messageModule.canManageThreadById(threadId)
+    }
+
+    function deleteThreadById(threadId) {
+        if (root.messageModule?.deleteThreadById)
+            root.messageModule.deleteThreadById(threadId)
+    }
+
+    function deleteThread() {
+        if (root.messageModule?.deleteThread)
+            root.messageModule.deleteThread()
+    }
+
     function editThread(name) {
         if (!root.messageModule || !root.messageModule.editThread) {
             console.error("editThread: mock message module is not set")

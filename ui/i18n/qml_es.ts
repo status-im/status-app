@@ -11743,6 +11743,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>MessageStore</name>
+    <message>
+        <source>Couldn&apos;t delete thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -18352,6 +18359,10 @@ Esta acción no se puede deshacer.</translation>
 <context>
     <name>ThreadHeader</name>
     <message>
+        <source>Couldn&apos;t delete thread: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Couldn&apos;t rename thread: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18366,6 +18377,10 @@ Esta acción no se puede deshacer.</translation>
     </message>
     <message>
         <source>Renaming...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleting...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -24,6 +24,7 @@ import StatusQ.Components
 
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Chat.controls
+import AppLayouts.Chat.popups
 import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Profile.helpers
 
@@ -160,6 +161,7 @@ Loader {
     property string threadId: ""
     property string threadOriginalMessageId: ""
     property string threadTitle: ""
+    property bool threadDeleted: false
     property int threadMessagesCount: 0
     property int threadNotificationCount: 0
     property var threadParticipantsModel: null
@@ -395,6 +397,7 @@ Loader {
 
     signal showReplyArea(string messageId, string author)
     signal openThread(string threadId, string threadName, string parentMessageId)
+    signal renameThreadRequested(string threadId, string threadName, string parentMessageId)
 
 
     function startMessageFoundAnimation() {
@@ -1336,11 +1339,21 @@ Loader {
 
                     ThreadCard {
                         id: threadCard
+                        objectName: "messageThreadSummary"
 
                         width: Math.min(maximumWidth, parent.width)
                         threadId: root.threadId || root.messageId
                         originalMessageId: root.threadOriginalMessageId || root.messageId
                         title: root.threadTitle
+                        threadState: root.threadDeleted ? ThreadCard.State.Deleted : ThreadCard.State.Active
+                        deletedMessage: ({
+                            sender: {
+                                name: root.threadLastMessageSenderName,
+                                image: root.threadLastMessageSenderImage,
+                                colorId: root.threadLastMessageSenderColorId
+                            },
+                            timestamp: root.threadLastMessageTimestamp
+                        })
                         messagesCount: root.threadMessagesCount
                         notificationCount: root.threadNotificationCount
                         participantsPreviewModel: root.threadParticipantsModel
@@ -1354,8 +1367,44 @@ Loader {
                             text: root.threadLastMessageText,
                             timestamp: root.threadLastMessageTimestamp
                         })
+                        onContextMenuRequested: position => {
+                            d.contextMenu?.close()
+                            threadSummaryMenuLoader.active = true
+                            d.contextMenu = threadSummaryMenuLoader.item
+                            d.contextMenu.canManage = root.messageStore?.canManageThreadById(threadCard.threadId) ?? false
+                            d.contextMenuClosesOnHoverExit = false
+                            d.contextMenuOpenedFromHover = false
+                            d.contextMenu.popup(threadCard.mapToItem(root, position))
+                        }
                         onClicked: (threadId, originalMessageId) =>
                             root.openThread(threadId, root.threadTitle, originalMessageId)
+                    }
+
+                    Loader {
+                        id: threadSummaryMenuLoader
+                        active: false
+                        sourceComponent: ThreadContextMenu {
+                            id: summaryMenu
+                            parent: root
+                            objectName: "threadSummaryContextMenu"
+                            threadId: threadCard.threadId
+                            isMobile: StatusQUtils.Utils.isMobile
+                            followed: false
+                            muted: false
+                            pinned: false
+                            pinEnabled: false
+                            threadLinkToCopyShare: ""
+                            property bool canManage: false
+                            deleteEnabled: canManage && !root.threadDeleted && !(root.messageStore?.threadDeletePending ?? false)
+                            editEnabled: deleteEnabled
+                            onDeleteRequested: root.messageStore.deleteThreadById(threadId)
+                            onEditNameRequested: root.renameThreadRequested(threadId, root.threadTitle,
+                                                                          threadCard.originalMessageId)
+                            onClosed: {
+                                if (d.contextMenu === summaryMenu)
+                                    d.contextMenu = null
+                            }
+                        }
                     }
                 }
             }

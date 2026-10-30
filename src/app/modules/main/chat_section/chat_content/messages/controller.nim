@@ -292,6 +292,11 @@ proc init*(self: Controller) =
       return
     self.delegate.onChatThreadsLoadingFailed(args.summariesRequested)
 
+  self.events.on(SIGNAL_THREAD_DELETE_FINISHED) do(e: Args):
+    let args = ThreadDeleteFinishedArgs(e)
+    if self.chatId == args.chatId and (self.threadId == args.threadId or self.threadId.len == 0):
+      self.delegate.onThreadDeleteFinished(args.requestId, args.error)
+
   self.events.on(SIGNAL_THREAD_EDIT_FINISHED) do(e: Args):
     let args = ThreadEditFinishedArgs(e)
     if self.chatId == args.chatId and self.threadId == args.threadId:
@@ -325,6 +330,12 @@ proc getThreadForParentMessage*(self: Controller, parentMessageId: string): Thre
 
 proc getThread*(self: Controller): lent ThreadDto =
   self.messageService.getThreadById(self.chatId, self.threadId)
+
+proc getThreadById*(self: Controller, threadId: string): ThreadDto =
+  self.messageService.getThreadById(self.chatId, threadId)
+
+proc deleteThread*(self: Controller, threadId, requestId: string) =
+  self.messageService.asyncDeleteThread(self.chatId, threadId, requestId)
 
 proc editThread*(self: Controller, name, requestId: string) =
   self.messageService.asyncEditThread(self.chatId, self.threadId, name, requestId)

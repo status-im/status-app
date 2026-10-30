@@ -29,6 +29,31 @@ QtObject {
     readonly property bool canEditThread: messageModule ? messageModule.canEditThread : false
     readonly property bool threadEditPending: messageModule ? messageModule.threadEditPending : false
 
+    readonly property bool threadDeleted: messageModule?.threadDeleted ?? false
+    readonly property bool threadDeletePending: messageModule?.threadDeletePending ?? false
+
+    function canManageThreadById(threadId: string): bool {
+        return root.messageModule?.canManageThreadById(threadId) ?? false
+    }
+
+    function deleteThreadById(threadId: string) {
+        root.messageModule?.deleteThreadById(threadId)
+    }
+
+    readonly property Connections threadDeletionConnections: Connections {
+        target: root.messageModule
+        function onThreadDeleteFinished(error: string) {
+            if (error && !root.threadId)
+                Global.displayToastMessage(qsTr("Couldn't delete thread"), error, "warning", false,
+                                           Constants.ephemeralNotificationType.danger, "")
+        }
+    }
+
+    function deleteThread() {
+        if (root.messageModule)
+            root.messageModule.deleteThread()
+    }
+
     function editThread(name: string) {
         if (!root.messageModule) {
             console.error("editThread: message module is not set")

@@ -11804,6 +11804,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>MessageStore</name>
+    <message>
+        <source>Couldn&apos;t delete thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -18438,6 +18445,10 @@ Tuto akci nelze vzít zpět.</translation>
 <context>
     <name>ThreadHeader</name>
     <message>
+        <source>Couldn&apos;t delete thread: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Couldn&apos;t rename thread: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18452,6 +18463,10 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Renaming...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleting...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

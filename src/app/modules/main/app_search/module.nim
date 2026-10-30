@@ -189,11 +189,17 @@ method prepareThreadLocationMenuModel*(self: Module, chatId: string) =
     self.controller.loadThreadLocations(chatId)
 
 method onThreadLocationsLoaded*(self: Module, threads: seq[ThreadDto], completedChatIds: seq[string]) =
+  for thread in threads:
+    if thread.deleted:
+      self.view.searchResultModel().removeItems(self.controller.forgetThreadResults(thread.chatId, thread.threadId))
+      if thread.chatId == self.threadLocationChatId:
+        self.view.threadLocationMenuModel().removeItemForValue(thread.threadId)
+
   var availability = initTable[string, bool]()
   for chatId in completedChatIds:
     availability[chatId] = false
   for thread in threads:
-    if availability.hasKey(thread.chatId):
+    if not thread.deleted and availability.hasKey(thread.chatId):
       availability[thread.chatId] = true
   self.view.locationMenuModel().updateThreadAvailability(availability)
 
@@ -201,7 +207,7 @@ method onThreadLocationsLoaded*(self: Module, threads: seq[ThreadDto], completed
     return
   var items: seq[location_menu_sub_item.SubItem]
   for thread in threads:
-    if thread.chatId != self.threadLocationChatId:
+    if thread.deleted or thread.chatId != self.threadLocationChatId:
       continue
     items.add(location_menu_sub_item.initSubItem(thread.threadId, thread.name, "", "thread", "",
       false, false, 0, 0))

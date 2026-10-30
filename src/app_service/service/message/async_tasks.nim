@@ -37,6 +37,11 @@ type
     chatId: string
     parentMessageId: string
 
+  AsyncDeleteThreadTaskArg = ref object of QObjectTaskArg
+    chatId: string
+    threadId: string
+    requestId: string
+
   AsyncEditThreadTaskArg = ref object of QObjectTaskArg
     chatId: string
     threadId: string
@@ -193,6 +198,28 @@ proc asyncEditThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
     if response.result.isNil or not response.result.getProp("threads", threads) or threads.kind != JArray:
       raise newException(ValueError, "edit thread response is missing thread metadata")
     responseJson["threads"] = threads
+  except CatchableError as e:
+    responseJson["error"] = %e.msg
+  arg.finish(responseJson)
+
+proc asyncDeleteThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncDeleteThreadTaskArg](argEncoded)
+  var responseJson = %* {
+    "chatId": arg.chatId,
+    "threadId": arg.threadId,
+    "requestId": arg.requestId,
+    "error": "",
+  }
+  try:
+    let response = status_go_chat.deleteThread(arg.chatId, arg.threadId)
+    if not response.error.isNil:
+      raise newException(RpcException, response.error.message)
+    var threads: JsonNode
+    if response.result.isNil or not response.result.getProp("threads", threads) or threads.kind != JArray:
+      raise newException(ValueError, "delete thread response is missing thread metadata")
+    responseJson["threads"] = threads
+    if response.result.hasKey("chats"):
+      responseJson["chats"] = response.result["chats"]
   except CatchableError as e:
     responseJson["error"] = %e.msg
   arg.finish(responseJson)
