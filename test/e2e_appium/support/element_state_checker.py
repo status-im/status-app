@@ -1,3 +1,4 @@
+from support.exceptions import is_session_fatal
 from support.platform import is_ios as _is_ios_driver
 
 
@@ -26,14 +27,18 @@ class ElementStateChecker:
         try:
             value = element.get_attribute("enabled")
             return value is not None and str(value).lower() == "true"
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     @staticmethod
     def is_checked(element) -> bool:
         try:
             return str(element.get_attribute("checked")).lower() == "true"
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     @staticmethod
@@ -47,14 +52,18 @@ class ElementStateChecker:
             return False
         try:
             return str(element.get_attribute("focused")).lower() == "true"
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     @staticmethod
     def is_displayed(element) -> bool:
         try:
             return element.is_displayed()
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     @staticmethod
@@ -75,7 +84,9 @@ class ElementStateChecker:
                 if value and value.strip():
                     return value.strip()
             return ""
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return ""
 
     @staticmethod
@@ -106,7 +117,9 @@ class ElementStateChecker:
                 "password" in resource_id.lower()
                 or content_desc.lower() == "type password"
             )
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     @staticmethod
@@ -126,5 +139,7 @@ class ElementStateChecker:
                 if val and len(val.strip()) > 0:
                     return False
             return True
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return True

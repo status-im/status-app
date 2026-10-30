@@ -147,7 +147,9 @@ class BasePage:
                 wait = self._create_wait(timeout, "element_find")
                 wait.until(EC.visibility_of_element_located(loc))
                 return True
-            except Exception:
+            except Exception as e:
+                if is_session_fatal(e):
+                    raise
                 continue
         return False
 
@@ -274,7 +276,10 @@ class BasePage:
             return False
 
     def find_element_safe(self, locator: tuple, timeout: int | None = None) -> WebElement | None:
-        """Find element and return None instead of raising on failure."""
+        """Find element and return None instead of raising on failure.
+
+        Session-fatal errors propagate: a dead session is not a missing element.
+        """
         try:
             wait = self._create_wait(timeout, "element_find")
             result = wait.until(EC.presence_of_element_located(locator))
@@ -287,7 +292,9 @@ class BasePage:
                 )
                 return None
             return result
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return None
 
     def hide_keyboard(self) -> bool:
@@ -653,7 +660,9 @@ class BasePage:
             if not element:
                 return False
             return ElementStateChecker.is_enabled(element)
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     def _is_element_checked(self, locator: tuple) -> bool:
@@ -662,7 +671,9 @@ class BasePage:
             if not element:
                 return False
             return ElementStateChecker.is_checked(element)
-        except Exception:
+        except Exception as e:
+            if is_session_fatal(e):
+                raise
             return False
 
     def wait_for_element_enabled(self, locator: tuple, timeout: int | None = None) -> bool:
