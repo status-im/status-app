@@ -15,6 +15,7 @@ import message_reaction_model, message_transaction_parameters_item, contacts_uti
 
 type
   ThreadSummary* = object
+    deleted*: bool
     threadId*: string
     originalMessageId*: string
     title*: string
@@ -631,6 +632,7 @@ proc toJsonNode*(self: Item): JsonNode =
     "threadId": self.threadSummary.threadId,
     "threadOriginalMessageId": self.threadSummary.originalMessageId,
     "threadTitle": self.threadSummary.title,
+    "threadDeleted": self.threadSummary.deleted,
     "threadMessagesCount": self.threadSummary.messagesCount,
     "threadNotificationCount": self.threadSummary.notificationCount,
     "threadParticipantsCount": self.threadSummary.participantsCount,

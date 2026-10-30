@@ -60,7 +60,7 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 120000)
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             view.threadsFeatureEnabled = true
-            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, false]
+            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, true]
             const model = view.rootStore.chatCommunitySectionModule.model
             let threadId = ""
             for (let i = 0; i < model.count; ++i) {
@@ -76,6 +76,10 @@ Item {
             harness.mock.setActiveChat(parentChatId)
             view.rootStore.openThreadPanel(threadId, "Thread", parentChatId)
             tryCompare(view.rightPanel, "status", Loader.Ready)
+            tryCompare(view.sectionLayout, "isPortrait", data.portrait)
+            tryCompare(view.threadToolbarHeader, "active", data.portrait)
+            if (!data.portrait)
+                compare(view.threadToolbarHeader.item, null)
             if (data.portrait)
                 view.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
             const header = data.portrait ? view.threadToolbarHeader : view.rightPanel.item

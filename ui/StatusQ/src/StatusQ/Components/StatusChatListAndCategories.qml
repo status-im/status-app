@@ -24,6 +24,7 @@ Item {
 
     property Component categoryPopupMenu
     property Component chatListPopupMenu
+    property alias threadPopupMenu: statusChatList.threadPopupMenu
     property alias popupMenu: popupMenuSlot.sourceComponent
 
     signal chatItemSelected(string categoryId, string id)

@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import QtModelsToolkit
 
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -86,6 +87,7 @@ Control {
        Emitted when the user requests to open the thread.
     */
     signal clicked(string threadId, string originalMessageId)
+    signal contextMenuRequested(point position)
 
     padding: Theme.padding
     implicitWidth: 296
@@ -124,10 +126,16 @@ Control {
         readonly property string messagesCountText: qsTr("%n message(s)", "", root.messagesCount)
     }
 
-    HoverHandler { cursorShape: Qt.PointingHandCursor }
+    HoverHandler { cursorShape: d.deleted ? Qt.ArrowCursor : Qt.PointingHandCursor }
 
     TapHandler {
+        enabled: !d.deleted
         onTapped: root.clicked(root.threadId, root.originalMessageId)
+    }
+
+    StatusSecondaryActionHandler {
+        enabled: !d.deleted
+        onTriggered: (position, source) => root.contextMenuRequested(position)
     }
 
     background: Rectangle {

@@ -118,3 +118,14 @@ suite "chat info threads":
     model.upsert(summary)
     check(changed == @[@[unreadRole], @[timestampRole]])
     check(resetCount == 0)
+
+  test "deleted threads are removed from the info list without removing other threads":
+    let model = thread_model.newModel()
+    defer: model.delete()
+    model.upsert(ThreadSummary(threadId: "deleted", title: "Deleted"))
+    model.upsert(ThreadSummary(threadId: "keep", title: "Keep"))
+    model.upsert(ThreadSummary(threadId: "deleted", deleted: true))
+    check model.rowCount(nil) == 1
+    let remaining = model.value(0, "key")
+    check remaining.stringVal == "keep"
+    remaining.delete()

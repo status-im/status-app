@@ -37,6 +37,10 @@ Item {
             id: renameSpy
             signalName: "renameRequested"
         }
+        SignalSpy {
+            id: deleteSpy
+            signalName: "deleteRequested"
+        }
         InputMethodTester { id: ime }
 
         function init() {
@@ -44,6 +48,8 @@ Item {
             verify(!!header)
             renameSpy.target = header
             renameSpy.clear()
+            deleteSpy.target = header
+            deleteSpy.clear()
         }
 
         function edit(text) {
@@ -54,6 +60,18 @@ Item {
             input.selectAll()
             ime.commit(input, text)
             return input
+        }
+
+        function test_deletionPendingBlocksRenameAndReportsFailure() {
+            header.deletePending = true
+            header.beginEditing()
+            compare(header.editing, false)
+            compare(findChild(header, "threadHeaderMenuButton").enabled, false)
+            header.deletePending = false
+            header.deleteFinished("permission denied")
+            const error = findChild(header, "threadNameError")
+            verify(error.visible)
+            verify(error.text.includes("permission denied"))
         }
 
         function test_enterSubmitsAndSuccessClosesEditor() {
@@ -128,6 +146,28 @@ Item {
             compare(renameSpy.count, 2)
             header.editFinished("")
             compare(header.editing, false)
+        }
+
+        function test_deleteCancelsSubmittedRenameEditor() {
+            edit("Draft")
+            keyClick(Qt.Key_Return)
+            compare(renameSpy.count, 1)
+
+            mouseClick(findChild(header, "threadHeaderMenuButton"))
+            const menu = findChild(header, "threadHeaderContextMenu")
+            verify(!!menu)
+            menu.deleteRequested()
+
+            compare(deleteSpy.count, 1)
+            compare(header.editing, false)
+            header.editFinished("rename rejected during deletion")
+            header.beginEditing()
+            const retryInput = findChild(header, "threadNameInput")
+            verify(!!retryInput)
+            retryInput.text = "Retry"
+            keyClick(Qt.Key_Return)
+            compare(renameSpy.count, 2)
+            compare(renameSpy.signalArguments[1][0], "Retry")
         }
 
         function test_remoteRenameDoesNotOverwriteDraftOrCompleteRequest() {

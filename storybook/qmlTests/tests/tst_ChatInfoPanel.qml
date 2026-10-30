@@ -12,10 +12,47 @@ Item {
     ListModel { id: threads }
     ListModel { id: participants }
 
+    QtObject {
+        id: messageModule
+        property var model: null
+        property int chatType: 1
+        property string chatColor: "#4360df"
+        property string chatIcon: ""
+        property bool keepUnread: false
+        property string threadId: ""
+        property string threadName: ""
+        property string threadParentChatName: ""
+        property bool canEditThread: false
+        property bool threadEditPending: false
+        property bool threadDeletePending: false
+        function getChatId() { return "parent" }
+        function canManageThreadById(threadId) { return true }
+    }
+
+    QtObject {
+        id: chatContent
+        readonly property var messagesModule: messageModule
+    }
+
+    QtObject {
+        id: testChatSectionModule
+        property string requestedChatId
+        property string requestedThreadId
+        function getItemAsJson(id) {
+            requestedThreadId = id
+            return JSON.stringify({
+                itemId: id, isThread: true, parentChatId: "parent", name: "Thread"
+            })
+        }
+        function prepareChatContentModuleForChatId(id) { requestedChatId = id }
+        function getChatContentModule() { return chatContent }
+    }
+
     Component {
         id: panelComponent
         ChatInfoPanel {
             anchors.fill: parent
+            sectionModule: testChatSectionModule
             onTabRequested: tab => requestedTab = tab
             threadsModel: threads
             membersContent: Component { Item {} }
@@ -25,6 +62,7 @@ Item {
 
     SignalSpy { id: openSpy; signalName: "openThreadRequested" }
     SignalSpy { id: loadSpy; signalName: "loadThreadsRequested" }
+    SignalSpy { id: contextMenuSpy; signalName: "contextMenuRequested" }
 
     TestCase {
         name: "ChatInfoPanel"
@@ -157,6 +195,47 @@ Item {
             tryCompare(openSpy, "count", 1)
             compare(openSpy.signalArguments[0][0], "newer")
             compare(threads.get(1).archived, true)
+        }
+
+        function test_rightClickOpensThreadContextMenu() {
+            panel.requestedTab = ChatInfoPanel.Threads
+            const list = findChild(panel, "chatInfoThreadsList")
+            tryCompare(list, "count", 2)
+            verify(waitForPolish(panel))
+            const card = list.itemAtIndex(0)
+            contextMenuSpy.target = card
+            contextMenuSpy.clear()
+            mouseClick(card, card.width / 2, card.height / 2, Qt.RightButton)
+
+            tryCompare(contextMenuSpy, "count", 1)
+            const menu = findChild(panel, "chatInfoThreadContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            tryCompare(testChatSectionModule, "requestedChatId", "parent")
+            compare(testChatSectionModule.requestedThreadId, card.threadId)
+            compare(openSpy.count, 0)
+        }
+
+        function test_touchLongPressOpensThreadContextMenu() {
+            panel.requestedTab = ChatInfoPanel.Threads
+            const list = findChild(panel, "chatInfoThreadsList")
+            tryCompare(list, "count", 2)
+            verify(waitForPolish(panel))
+            const card = list.itemAtIndex(0)
+            contextMenuSpy.target = card
+            contextMenuSpy.clear()
+            const touch = touchEvent(card)
+            touch.press(0, card, card.width / 2, card.height / 2).commit()
+            wait(1000)
+            touch.release(0, card, card.width / 2, card.height / 2).commit()
+
+            tryCompare(contextMenuSpy, "count", 1)
+            const menu = findChild(panel, "chatInfoThreadContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            tryCompare(testChatSectionModule, "requestedChatId", "parent")
+            compare(testChatSectionModule.requestedThreadId, card.threadId)
+            compare(openSpy.count, 0)
         }
 
         function test_directMessageAndFeatureFlag() {

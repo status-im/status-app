@@ -11,6 +11,7 @@ import StatusQ.Controls
 import shared
 import shared.controls
 import AppLayouts.Chat.controls
+import AppLayouts.Chat.popups
 
 ColumnLayout {
     id: root
@@ -21,6 +22,7 @@ ColumnLayout {
     property bool membersAvailable: true
     property bool threadsEnabled: true
     property var threadsModel
+    property var sectionModule
     property bool threadsLoading
     property bool threadsError
     property Component membersContent
@@ -51,6 +53,7 @@ ColumnLayout {
     signal tabRequested(int tab)
     signal loadThreadsRequested()
     signal openThreadRequested(string threadId)
+    signal renameThreadRequested(string threadId, string threadName, string parentChatId)
 
     spacing: 0
 
@@ -63,8 +66,41 @@ ColumnLayout {
     QtObject {
         id: d
         property bool initialized: false
+        property bool threadMenuPending: false
+        property string threadMenuThreadId: ""
+        property point threadMenuPosition
         readonly property int defaultTab: root.membersAvailable ? ChatInfoPanel.Members :
                                           root.threadsEnabled ? ChatInfoPanel.Threads : ChatInfoPanel.Pins
+
+        function showThreadMenu() {
+            if (!threadMenuPending || threadContextMenuLoader.status !== Loader.Ready)
+                return
+
+            const menu = threadContextMenuLoader.item
+            const threadId = threadMenuThreadId
+            threadMenuPending = false
+            threadMenuThreadId = ""
+
+            const originalOpenHandler = menu.openHandler
+            menu.openHandler = function() {
+                if (originalOpenHandler)
+                    originalOpenHandler(threadId)
+            }
+            menu.popup(threadMenuPosition.x + 4, threadMenuPosition.y + 6)
+            menu.openHandler = originalOpenHandler
+        }
+
+        function openThreadMenu(threadId, position) {
+            if (!root.sectionModule) {
+                console.error("Cannot open thread menu: missing chat section module")
+                return
+            }
+            threadMenuPending = true
+            threadMenuThreadId = threadId
+            threadMenuPosition = position
+            threadContextMenuLoader.active = true
+            showThreadMenu()
+        }
 
         function loadThreadsIfSelected() {
             if (root.currentTab === ChatInfoPanel.Threads)
@@ -87,6 +123,18 @@ ColumnLayout {
     Component.onCompleted: {
         d.initialized = true
         Qt.callLater(d.loadThreadsIfSelected)
+    }
+
+    Loader {
+        id: threadContextMenuLoader
+        active: false
+        sourceComponent: ThreadListContextMenu {
+            objectName: "chatInfoThreadContextMenu"
+            sectionModule: root.sectionModule
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                root.renameThreadRequested(threadId, threadName, parentChatId)
+        }
+        onLoaded: d.showThreadMenu()
     }
 
     LayoutItemProxy {
@@ -145,6 +193,7 @@ ColumnLayout {
                 ]
             }
             delegate: ThreadCard {
+                id: threadCard
                 // Keep equal panel margins, with the scrollbar in the right gutter.
                 width: Math.max(0, threadsList.width - Theme.padding)
                 threadId: model.key
@@ -164,6 +213,8 @@ ColumnLayout {
                     timestamp: model.lastMessageTimestamp
                 })
                 onClicked: (threadId, originalMessageId) => root.openThreadRequested(threadId)
+                onContextMenuRequested: position =>
+                    d.openThreadMenu(threadId, threadCard.mapToItem(root, position.x, position.y))
             }
         }
 
