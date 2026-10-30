@@ -8752,6 +8752,10 @@ app: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>status-go does not report its Waku traffic: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Refresh</source>
         <translation>새로고침</translation>
     </message>
@@ -8770,22 +8774,6 @@ app: %2</source>
 </context>
 <context>
     <name>HttpTrafficDashboard</name>
-    <message>
-        <source>—/h</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1/h</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>↑ %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>↓ %1</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>%1 req</source>
         <translation type="unfinished"></translation>
@@ -8848,6 +8836,10 @@ app: %2</source>
             <numerusform></numerusform>
         </translation>
     </message>
+    <message>
+        <source>grey bars = in background</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>Multicall3 · %n call(s) bundled per request</source>
         <translation type="unfinished">
@@ -8889,10 +8881,6 @@ app: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Where does the traffic go?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Top consumers</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8906,22 +8894,6 @@ app: %2</source>
     </message>
     <message>
         <source>Where it goes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1%</source>
-        <translation type="unfinished">%1%</translation>
-    </message>
-    <message>
-        <source>%1 sent · %2 received · bold = total since start · chip = per hour · grey bars = in background</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>↑</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>↓</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -18635,6 +18607,54 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>TrafficAnswerCard</name>
+    <message>
+        <source>Where does the traffic go?</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TrafficFormat</name>
+    <message>
+        <source>—/h</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1/h</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↑ %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↓ %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TrafficLegend</name>
+    <message>
+        <source>%1 sent · %2 received · bold = total since start · chip = per hour</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↑</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↓</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TrafficShares</name>
+    <message>
+        <source>%1%</source>
+        <translation type="unfinished">%1%</translation>
+    </message>
+</context>
+<context>
     <name>TransactionContextMenu</name>
     <message>
         <source>View on %1</source>
@@ -19520,6 +19540,139 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Unexpected error occurred. Try again.</source>
         <translation>예기치 않은 오류가 발생했습니다. 다시 시도하세요.</translation>
+    </message>
+</context>
+<context>
+    <name>WakuTrafficDashboard</name>
+    <message>
+        <source>Relay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>messages of every chat on your shards pass through you</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Store</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>history fetched after start and after reconnects</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter</source>
+        <translation type="unfinished">필터 방법</translation>
+    </message>
+    <message>
+        <source>messages of your chats, pushed by a service node</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Filter subscriptions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>telling a service node which chats you follow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lightpush</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>your messages, handed to a service node to publish</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Peer exchange</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>asking peers for more peers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Metadata</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>comparing shards with a new peer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Identify</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>peers telling each other what they support</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ping</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>keeping connections alive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Protocol negotiation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>streams that have not agreed on a protocol yet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No Waku traffic yet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mostly &lt;b&gt;%1&lt;/b&gt;: %2.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>upload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>download</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n other peer(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>↑ Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>↓ Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Protocols</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Which peers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>counted inside libp2p streams, without encryption and connection overhead</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
