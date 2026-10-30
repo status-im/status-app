@@ -2065,7 +2065,8 @@ method createOrEditCommunityTokenPermission*(self: Module, permissionId: string,
           return
         for token in tokens:
           contractAddresses[token.chainId] = token.address
-        tokenCriteriaDto.applyResolvedTokenData(tokens[^1].name, tokens[^1].symbol, tokens[^1].decimals)
+        tokenCriteriaDto.applyResolvedTokenData(tokens[^1].name, tokens[^1].symbol, tokens[^1].decimals,
+          tokenCriteria.hasOwnTokenData)
       else:
         let tokenKey = service_common_utils.communityKeyToTokenKey(key)
         let token = self.controller.getTokenByKey(tokenKey)
@@ -2076,7 +2077,8 @@ method createOrEditCommunityTokenPermission*(self: Module, permissionId: string,
           contractAddresses = tokenCriteriaDto.contractAddresses
         else:
           contractAddresses[token.chainId] = token.address
-          tokenCriteriaDto.applyResolvedTokenData(token.name, token.symbol, token.decimals)
+          tokenCriteriaDto.applyResolvedTokenData(token.name, token.symbol, token.decimals,
+            tokenCriteria.hasOwnTokenData)
 
     tokenCriteriaDto.amountInWei = tokenCriteria{"amount"}.getStr
     tokenCriteriaDto.contractAddresses = contractAddresses

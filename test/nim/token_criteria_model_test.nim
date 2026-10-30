@@ -75,46 +75,60 @@ suite "unresolved token key criterion":
     check not criteria.applyUnresolvedTokenKey("SNT")
 
 suite "resolved token key criterion":
-  proc legacyCriterion(): TokenCriteriaDto =
-    (%*{
-      "type": 1, "key": "1-0x744d70fdbe2ba4cf95131626614a1763df805b9e",
-      "symbol": "", "name": "", "decimals": 0, "amount": "10000000000000000000",
-    }).toTokenCriteriaDto
+  proc resolve(criterionJson: JsonNode, name, symbol: string, decimals: int): TokenCriteriaDto =
+    result = criterionJson.toTokenCriteriaDto
+    result.applyResolvedTokenData(name, symbol, decimals, criterionJson.hasOwnTokenData)
 
   test "fills a legacy criterion with the resolved token's data":
-    var criteria = legacyCriterion()
-    criteria.applyResolvedTokenData(name = "Status", symbol = "SNT", decimals = 18)
+    let criteria = resolve(%*{
+      "type": 1, "key": "1-0x744d70fdbe2ba4cf95131626614a1763df805b9e",
+      "symbol": "", "name": "", "decimals": 0, "amount": "10000000000000000000",
+    }, name = "Status", symbol = "SNT", decimals = 18)
 
     check criteria.symbol == "SNT"
     check criteria.name == "Status"
     check criteria.decimals == 18
 
+  test "fills a legacy group key criterion with the resolved token's decimals":
+    let criteria = resolve(%*{
+      "type": 1, "key": "status-group", "symbol": "", "name": "", "decimals": 0,
+      "amount": "10000000000000000000",
+    }, name = "Status", symbol = "SNT", decimals = 18)
+
+    check criteria.symbol == "SNT"
+    check criteria.decimals == 18
+
   test "the resolved token's name and symbol win":
-    var criteria = (%*{
+    let criteria = resolve(%*{
       "type": 1, "key": "1-0x744d70fdbe2ba4cf95131626614a1763df805b9e",
       "symbol": "OLD", "name": "Old", "decimals": 18, "amount": "10000000000000000000",
-    }).toTokenCriteriaDto
-    criteria.applyResolvedTokenData(name = "Status", symbol = "SNT", decimals = 18)
+    }, name = "Status", symbol = "SNT", decimals = 18)
 
     check criteria.symbol == "SNT"
     check criteria.name == "Status"
     check criteria.decimals == 18
 
   test "an empty resolved name or symbol doesn't blank the criterion's":
-    var criteria = (%*{
+    let criteria = resolve(%*{
       "type": 1, "key": "1-0x744d70fdbe2ba4cf95131626614a1763df805b9e",
       "symbol": "SNT", "name": "Status", "decimals": 18, "amount": "10000000000000000000",
-    }).toTokenCriteriaDto
-    criteria.applyResolvedTokenData(name = "", symbol = "", decimals = 18)
+    }, name = "", symbol = "", decimals = 18)
 
     check criteria.symbol == "SNT"
     check criteria.name == "Status"
 
   test "the criterion's decimals stay, since its amount was scaled with them":
-    var criteria = (%*{
+    let criteria = resolve(%*{
       "type": 1, "key": "1-0x744d70fdbe2ba4cf95131626614a1763df805b9e",
       "symbol": "SNT", "name": "Status", "decimals": 6, "amount": "10000000",
-    }).toTokenCriteriaDto
-    criteria.applyResolvedTokenData(name = "Status", symbol = "SNT", decimals = 18)
+    }, name = "Status", symbol = "SNT", decimals = 18)
 
     check criteria.decimals == 6
+
+  test "a criterion's explicit zero decimals stay":
+    let criteria = resolve(%*{
+      "type": 1, "key": "1-0x744d70fdbe2ba4cf95131626614a1763df805b9e",
+      "symbol": "SNT", "name": "Status", "decimals": 0, "amount": "10",
+    }, name = "Status", symbol = "SNT", decimals = 18)
+
+    check criteria.decimals == 0

@@ -327,14 +327,20 @@ proc applyUnresolvedTokenKey*(criteria: var TokenCriteriaDto, key: string): bool
     criteria.decimals = 0
   return true
 
-# The resolved token's non-empty name and symbol win. Set decimals stay: the
-# criterion's amount was scaled with them.
-proc applyResolvedTokenData*(criteria: var TokenCriteriaDto, name, symbol: string, decimals: int) =
+# Same rule as PermissionsHelpers.getAssetCriterionData: a criterion with a symbol or
+# decimals carries its own token data, and its amount was scaled with those decimals.
+proc hasOwnTokenData*(criterionJson: JsonNode): bool =
+  criterionJson{"symbol"}.getStr.len > 0 or criterionJson{"decimals"}.getInt != 0
+
+# The resolved token's non-empty name and symbol win. Decimals are filled in only for a
+# criterion without its own token data.
+proc applyResolvedTokenData*(criteria: var TokenCriteriaDto, name, symbol: string, decimals: int,
+    hasOwnTokenData: bool) =
   if name.len > 0:
     criteria.name = name
   if symbol.len > 0:
     criteria.symbol = symbol
-  if criteria.decimals == 0:
+  if not hasOwnTokenData:
     criteria.decimals = decimals
 
 proc toCommunityTokenPermissionDto*(jsonObj: JsonNode): CommunityTokenPermissionDto =
