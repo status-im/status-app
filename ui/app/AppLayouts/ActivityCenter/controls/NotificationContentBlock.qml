@@ -58,7 +58,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -121,42 +120,21 @@ Control {
     // ──────────────────────────────────────────────────────────────────────────
     contentItem: ColumnLayout {
 
-        // Pre-message image (Optional)
-        Image {
+        // Pre-message image (Optional), its corners rounded in the pass
+        // drawing its own texture. Decoded at its native size, as before:
+        // the layout sizes it from its natural size.
+        StatusRoundedImage {
             id: preImage
-
-            readonly property bool applyMask: root.preImageRadius !== 0
 
             Layout.fillWidth: true
             Layout.maximumHeight: root.maxPreImageHeight
             visible: root.preImageSource != ""
             source: root.preImageSource
+            sourceSize: undefined
+            asynchronous: true
             fillMode: Image.PreserveAspectCrop
-            smooth: true
-            mipmap: true
-
-            layer.enabled: applyMask
-            layer.effect: MultiEffect {
-                source: preImage
-
-                maskEnabled: preImage.applyMask
-                maskSource: mask
-
-                visible: preImage.applyMask
-                enabled: preImage.applyMask
-
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
-            }
-
-            // Mask geometry
-            Rectangle {
-                id: mask
-                anchors.fill: preImage
-                radius: root.preImageRadius
-                visible: false
-                layer.enabled: true
-            }
+            radius: root.preImageRadius
+            unsetBorderWidth: 0
         }
 
         // Text Content

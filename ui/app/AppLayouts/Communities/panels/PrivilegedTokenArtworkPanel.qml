@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -88,19 +88,11 @@ Control {
             width: d.imageSize
             height: width
             fillMode: root.fillMode
+            // circular, cut by the shader on the image's layer: no second
+            // layer for a mask
             layer.enabled: true
-            layer.effect: MultiEffect {
-                maskEnabled: true
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
-                maskSource: Rectangle {
-                    parent: root
-                    layer.enabled: true
-                    visible: false
-                    width: image.width
-                    height: width
-                    radius: width / 2
-                }
+            layer.effect: StatusRoundedCornersEffect {
+                radius: width / 2
             }
         }
 

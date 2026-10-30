@@ -63,17 +63,18 @@ StatusAdaptiveDialog {
 
             Layout.bottomMargin: active ? Theme.padding : 0
             Layout.fillWidth: true
+            Layout.preferredHeight: item ? item.naturalHeight : 0
             Layout.maximumHeight: active ? 300 : 0
 
             sourceComponent: StatusRoundedImage {
                 objectName: "newsImage"
 
-                // StatusImage decodes at its rendered size, so its implicit size follows its own
+                // The image decodes at its rendered size, so its implicit size follows its own
                 // geometry; derive the height from the aspect ratio only to avoid a resize loop
-                readonly property real imageAspectRatio: image.implicitWidth > 0 ? image.implicitHeight / image.implicitWidth : 0
+                readonly property real imageAspectRatio: implicitWidth > 0 ? implicitHeight / implicitWidth : 0
+                readonly property real naturalHeight:
+                    Math.round((width - 2 * border.width) * imageAspectRatio) + 2 * border.width
 
-                implicitWidth: parent.width
-                implicitHeight: Math.round((width - 2 * border.width) * imageAspectRatio) + 2 * border.width
                 image.source: root.notification ? root.notification.newsImageUrl : ""
                 image.fillMode: Image.PreserveAspectCrop
                 color: "transparent"

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -72,19 +71,11 @@ Control {
                 sourceClipRect: imageCropRect ? imageCropRect : undefined
             }
 
+            // clipped to the artwork's corners by the shader on its layer: no
+            // second layer for a mask
             layer.enabled: true
-            layer.effect: MultiEffect {
-                maskEnabled: true
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
-                maskSource: Rectangle {
-                    parent: root
-                    width: artwork.width
-                    height: artwork.height
-                    radius: artwork.radius
-                    visible: false
-                    layer.enabled: true
-                }
+            layer.effect: StatusRoundedCornersEffect {
+                radius: artwork.radius
             }
         }
 

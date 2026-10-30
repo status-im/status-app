@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
@@ -65,9 +64,10 @@ Item {
     readonly property real pressY: d.pressY
 
     /*!
-       Current radius of the ripple circle.
+       Radius of the ripple circle. It is animated on the render thread, so
+       this is its value at rest, or where an animation stopped.
     */
-    readonly property real rippleRadius: d.rippleRadius
+    readonly property real rippleRadius: rippleLoader.item ? rippleLoader.item.rippleRadius : 0
 
     /*!
        True while the ripple is being held after a press.
@@ -90,8 +90,7 @@ Item {
             d.pressY = Math.max(0, Math.min(height, y))
         }
         d.pressed = true
-        d.rippleRadius = 0
-        ripple.opacity = maxOpacity
+        d.opacity = maxOpacity
         collapseAnimation.stop()
         expandAnimation.restart()
     }
@@ -128,41 +127,50 @@ Item {
         readonly property real defaultMaxOpacity: 0.18
         property real pressX: root.width / 2
         property real pressY: root.height / 2
-        property real rippleRadius: 0
         property bool pressed: false
+        property real opacity: 0
     }
 
-    visible: ripple.opacity > 0
-    layer.enabled: visible
-    layer.effect: MultiEffect {
-        maskEnabled: true
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1.0
-        maskSource: Rectangle {
-            parent: root
-            layer.enabled: true
-            visible: false
-            width: root.width
-            height: root.height
-            radius: root.radius
+    visible: d.opacity > 0
+
+    // The circle, clipped to the rounded bounds, in one shader pass: no
+    // offscreen layer and no mask texture. Built only while the ripple
+    // shows, as controls create their ripple whether pressed or not.
+    Loader {
+        id: rippleLoader
+
+        anchors.fill: parent
+        active: root.visible
+        sourceComponent: rippleComponent
+    }
+
+    Component {
+        id: rippleComponent
+
+        ShaderEffect {
+            opacity: d.opacity
+
+            property size itemSize: Qt.size(width, height)
+            property real radius: Math.max(0, Math.min(root.radius, width / 2, height / 2))
+            property point centre: Qt.point(root.pressX, root.pressY)
+            // animated by the UniformAnimators below, which write their end
+            // value back: not bound
+            property real rippleRadius: 0
+            property color color: root.color
+            property real edgeWidth: 1 / (root.Window.window ? root.Window.window.devicePixelRatio
+                                                             : Screen.devicePixelRatio)
+
+            fragmentShader: "qrc:/StatusQ/shaders/ripple.frag.qsb"
         }
     }
 
-    Rectangle {
-        id: ripple
-        x: root.pressX - root.rippleRadius
-        y: root.pressY - root.rippleRadius
-        width: root.rippleRadius * 2
-        height: width
-        radius: width / 2
-        color: root.color
-        opacity: 0
-    }
-
-    NumberAnimation {
+    // On the render thread: they keep going while a press makes the GUI thread
+    // busy (opening what was pressed), and a frame takes no binding update.
+    UniformAnimator {
         id: expandAnimation
-        target: d
-        property: "rippleRadius"
+        target: rippleLoader.item
+        uniform: "rippleRadius"
+        from: 0
         to: root.endRadius
         duration: root.expandDuration
         easing.type: Easing.OutCubic
@@ -173,17 +181,17 @@ Item {
         }
     }
 
-    NumberAnimation {
+    UniformAnimator {
         id: collapseAnimation
-        target: d
-        property: "rippleRadius"
+        target: rippleLoader.item
+        uniform: "rippleRadius"
         to: 0
         duration: root.collapseDuration
         easing.type: Easing.InOutQuad
 
         onStopped: {
             if (!root.pressed && root.rippleRadius === 0)
-                ripple.opacity = 0
+                d.opacity = 0
         }
     }
 }

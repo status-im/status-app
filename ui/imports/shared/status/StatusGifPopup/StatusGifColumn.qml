@@ -1,8 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 
+import StatusQ.Components
+import StatusQ.Components.private
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
@@ -82,28 +83,20 @@ Column {
                                        : qsTr("Add to favorites")
             }
 
-            AnimatedImage {
+            // Rounded in the pass drawing the GIF's own texture. Decoded at
+            // its native size, shown at the column's width and the GIF's
+            // aspect ratio, as before.
+            RoundedAnimatedImage {
                 id: animation
+
                 visible: animation.status == Image.Ready
                 source: model.tinyUrl
+                asynchronous: true
                 width: root.gifWidth
+                height: implicitWidth > 0 ? width * implicitHeight / implicitWidth : 0
                 fillMode: Image.PreserveAspectFit
+                radius: Theme.radius
                 z: 0
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    maskEnabled: true
-                    maskThresholdMin: 0.5
-                    maskSpreadAtMin: 1.0
-                    opacity: model.id === root.lastHoveredId ? 0.6 : 1
-                    maskSource: Rectangle {
-                        parent: root
-                        layer.enabled: true
-                        visible: false
-                        width: animation.width
-                        height: animation.height
-                        radius: Theme.radius
-                    }
-                }
             }
 
             StatusMouseArea {

@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import QtQuick.Layouts
 import QtQuick.Controls
 import SortFilterProxyModel
@@ -162,40 +161,12 @@ StatusModal {
             width: 320
             anchors.horizontalCenter: parent.horizontalCenter
 
+            // Rounded top-left and bottom-right, square elsewhere: computed by
+            // the shader on this item's layer, with no second layer for a mask
             layer.enabled: true
-            layer.effect: MultiEffect {
-                maskEnabled: true
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
-                maskSource: Item {
-                    objectName: "receiveModalQrMask"
-                    parent: qrCode
-                    layer.enabled: true
-                    visible: false
-                    width: qrCode.width
-                    height: qrCode.height
-                    Rectangle {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        width: qrCode.width
-                        height: qrCode.height
-                        radius: Theme.bigPadding
-                        border.width: 1
-                        border.color: Theme.palette.border
-                    }
-                    Rectangle {
-                        anchors.top: parent.top
-                        anchors.right: parent.right
-                        width: Theme.bigPadding
-                        height: Theme.bigPadding
-                    }
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left
-                        width: Theme.bigPadding
-                        height: Theme.bigPadding
-                    }
-                }
+            layer.effect: StatusRoundedCornersEffect {
+                topLeftRadius: Theme.bigPadding
+                bottomRightRadius: Theme.bigPadding
             }
 
             Image {

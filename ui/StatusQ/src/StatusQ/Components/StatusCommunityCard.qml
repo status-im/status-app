@@ -231,9 +231,6 @@ Rectangle {
         height: d.bannerHeight
 
         Rectangle {
-            id: mask
-            layer.enabled: true
-
             anchors.fill: parent
 
             radius: d.bannerRadius
@@ -251,19 +248,15 @@ Rectangle {
             source: root.banner
             fillMode: Image.PreserveAspectCrop
             smooth: true
-            visible: false
-            cache: false
-        }
-
-        MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            anchors.fill: image
-
             visible: root.loaded
-            source: image
-            maskSource: mask
+            cache: false
+
+            // rounded by the shader on the image's layer, with no second
+            // layer for a mask
+            layer.enabled: visible
+            layer.effect: StatusRoundedCornersEffect {
+                radius: d.bannerRadius
+            }
         }
     }
 

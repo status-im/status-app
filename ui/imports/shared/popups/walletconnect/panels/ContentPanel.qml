@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 
+import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -39,24 +39,11 @@ Rectangle {
 
         wrapMode: Text.Wrap
 
+        // Collapsed: the bottom 60 px of the panel fade out, computed by the
+        // shader on the text's layer, with no second layer for a mask
         layer.enabled: !d.expanded && d.canExpand
-        layer.effect: MultiEffect {
-            maskEnabled: true
-            maskThresholdMin: 0.5
-            maskSpreadAtMin: 1.0
-            maskSource: Rectangle {
-                parent: root
-                layer.enabled: true
-                visible: false
-                width: root.width
-                height: root.height
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0 }
-                    GradientStop { position: (root.height - 60) / root.height }
-                    GradientStop { position: 1; color: "transparent" }
-                }
-            }
+        layer.effect: StatusEdgeFadeEffect {
+            bottomFade: 60 * contentText.height / root.height
         }
     }
 

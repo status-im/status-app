@@ -57,12 +57,15 @@ Slider {
         implicitHeight: root.handleSize
         radius: root.handleSize / 2
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            autoPaddingEnabled: true
-            shadowEnabled: true
-            shadowVerticalOffset: 2
-            shadowColor: Theme.palette.dropShadow3
+        // The shadow is computed by Qt's RectangularShadow shader, behind the
+        // handle: no layer, no blur passes
+        RectangularShadow {
+            anchors.fill: parent
+            z: -1
+            radius: parent.radius
+            offset.y: 2
+            blur: 24
+            color: Theme.palette.dropShadow3
         }
     }
 

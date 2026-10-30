@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Effects
 
+import StatusQ.Components
 import StatusQ.Core.Theme
 
 import utils
@@ -20,20 +20,11 @@ Rectangle {
     height: 24
     color: Theme.palette.background
 
-    // apply rounded corners mask
+    // round the corners: computed by the shader on this item's layer, with no
+    // second layer for a mask
     layer.enabled: true
-    layer.effect: MultiEffect {
-        maskEnabled: true
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1.0
-        maskSource: Rectangle {
-            parent: root
-            layer.enabled: true
-            visible: false
-            width: root.width
-            height: root.height
-            radius: root.radius
-        }
+    layer.effect: StatusRoundedCornersEffect {
+        radius: root.radius
     }
 
     ImageLoader {

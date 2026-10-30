@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import StatusQ.Core
 import StatusQ.Core.Theme
 
@@ -64,21 +63,12 @@ Rectangle {
     color: StatusColors.transparent
     radius: width / 2
 
-    // Invisible instances (e.g. an unused badge) must not render the mask effect.
+    // Clip the content to the rounded shape: computed by the shader on this
+    // item's layer, with no second layer for a mask. Invisible instances (e.g.
+    // an unused badge) must not render a layer.
     layer.enabled: root.visible
-    layer.effect: MultiEffect {
-        maskEnabled: true
-        maskThresholdMin: 0.5
-        maskSpreadAtMin: 1.0
-
-        maskSource: Rectangle {
-            parent: root
-            width: root.width
-            height: root.height
-            radius: root.radius
-            visible: false
-            layer.enabled: true
-        }
+    layer.effect: StatusRoundedCornersEffect {
+        radius: root.radius
     }
 
     Loader {
