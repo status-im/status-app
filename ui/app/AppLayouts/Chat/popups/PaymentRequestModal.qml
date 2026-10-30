@@ -94,7 +94,6 @@ StatusDialog {
     QtObject {
         id: d
 
-        // the held chain groups are dropped on background and reload empty first
         readonly property bool chainGroupsReady: !!root.tokenGroupsForChainModel
                                                  && root.tokenGroupsForChainModel.ModelCount.count > 0
                                                  && !root.tokenGroupsForChainModel.loading
