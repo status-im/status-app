@@ -86,7 +86,7 @@ proc resolveCriteriaChains*(toSave: seq[SaveCriterion], stored: seq[TokenCriteri
     for sk in storedKeys:
       if tokenKey in sk:
         for k in sk:
-          if tokensByKey.hasKey(k):
+          if tokensByKey.hasKey(k) and tokensByKey[k].communityId.len == 0:
             siblingGroups.incl(tokensByKey[k].groupKey)
     if siblingGroups.len == 1: toSeq(siblingGroups)[0] else: tokenKey
 
@@ -97,8 +97,8 @@ proc resolveCriteriaChains*(toSave: seq[SaveCriterion], stored: seq[TokenCriteri
         let tokenKey = tokenKeyOf(c.key)
         if tokenKey.len > 0:
           keys.add(tokenKey)
-    # Stored keys outside the active-network catalogue don't resolve and keep only
-    # their stored chains.
+    # Stored keys outside the active-network catalogue don't resolve; their criterion
+    # keeps its stored chains and takes its group from resolvable siblings.
     for sk in storedKeys:
       keys.add(sk)
     if keys.len > 0:

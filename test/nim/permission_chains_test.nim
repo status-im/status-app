@@ -309,3 +309,17 @@ suite "permission criteria combined edit":
     check res.error == ""
     check res.criteria[0].chains == [1, 10, 42161, 8453].toHashSet
     check res.criteria[0].contractAddresses[8453] == "0xsntbase"
+
+  test "a stored inactive-network key whose siblings disagree on the group keeps its stored chains":
+    let fake = newFake()
+    let stored = @[storedErc20({1: "0xsntmainnet", 10: "0xusdcoptimism", 8453: "0xsntbase"})]
+    let res = resolveCriteriaChains(@[erc20("8453-0xsntbase")], stored, mainnet, fake.catalogue)
+    check res.error == ""
+    check res.criteria[0].contractAddresses == {1: "0xsntmainnet", 10: "0xusdcoptimism", 8453: "0xsntbase"}.toTable
+
+  test "a community-minted stored sibling doesn't decide an inactive-network key's group":
+    let fake = newFake()
+    let stored = @[storedErc20({1: "0xminted", 10: "0xsntoptimism", 8453: "0xsntbase"})]
+    let res = resolveCriteriaChains(@[erc20("8453-0xsntbase")], stored, mainnet, fake.catalogue)
+    check res.error == ""
+    check res.criteria[0].chains == [1, 10, 42161, 8453].toHashSet
