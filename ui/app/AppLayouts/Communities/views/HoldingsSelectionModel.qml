@@ -16,6 +16,7 @@ SortFilterProxyModel {
     property var assetsModel
     property var collectiblesModel
     // Returns token that matches provided key (key can be token or group key). Use it as a last option (may affect app performances, because it fetches all tokens from stautsgo).
+    // Assets use it only for criteria saved without their own token data.
     property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     readonly property ModelChangeTracker _assetsChanges: ModelChangeTracker {
@@ -36,31 +37,42 @@ SortFilterProxyModel {
                 return item ? item.symbol || item.shortName || item.name : ""
             }
 
-            function getDecimals(type, item) {
-                if (type !== Constants.TokenType.ERC20)
-                    return 0
-                return item.decimals
+            function getAssetText(key, amount, symbol, criterionName, criterionDecimals) {
+                const item = PermissionsHelpers.findTokenByKey(assetsModel, false, key)
+                if (!item) {
+                    const data = PermissionsHelpers.getAssetCriterionData(
+                                   key, symbol, criterionName, criterionDecimals,
+                                   root.getTokenByKeyOrGroupKeyFromAllTokens)
+                    if (data.state === Constants.TokenLookupState.Pending)
+                        return qsTr("Loading…")
+                    return PermissionsHelpers.setHoldingsTextFormat(
+                                Constants.TokenType.ERC20, data.symbol || data.name || key,
+                                amount, data.decimals)
+                }
+
+                let name = getName(Constants.TokenType.ERC20, item, key)
+                if (name === "")
+                    name = symbol
+
+                return PermissionsHelpers.setHoldingsTextFormat(
+                            Constants.TokenType.ERC20, name, amount, item.decimals)
             }
 
-            function getText(type, key, amount, defaultText) {
-                const collectibles = type !== Constants.TokenType.ERC20
-                const model = type === Constants.TokenType.ERC20
-                            ? assetsModel
-                            : collectiblesModel
+            function getText(type, key, amount, defaultText, criterionName, criterionDecimals) {
+                if (type === Constants.TokenType.ERC20)
+                    return getAssetText(key, amount, defaultText, criterionName, criterionDecimals)
 
-                let item = PermissionsHelpers.getTokenByKey(model, collectibles, key)
-                if (Object.keys(item).length === 0) {
+                let item = PermissionsHelpers.findTokenByKey(collectiblesModel, true, key)
+                if (!item) {
                     item = root.getTokenByKeyOrGroupKeyFromAllTokens(key)
                 }
 
                 let name = getName(type, item, key)
-                const decimals = getDecimals(type, item)
 
                 if (name === "")
                     name = defaultText
 
-                return PermissionsHelpers.setHoldingsTextFormat(
-                            type, name, amount, decimals)
+                return PermissionsHelpers.setHoldingsTextFormat(type, name, amount, 0)
             }
 
             // Direct call for singleton function is not handled properly by
@@ -68,22 +80,31 @@ SortFilterProxyModel {
             expression: {
                 _assetsChanges.revision
                 _collectiblesChanges.revision
-                return getText(model.type, model.key, model.amount, model.symbol)
+                return getText(model.type, model.key, model.amount, model.symbol,
+                               model.name, model.decimals)
             }
-            expectedRoles: ["type", "key", "amount", "symbol", "shortName"]
+            expectedRoles: ["type", "key", "amount", "symbol", "shortName", "name", "decimals"]
         },
         FastExpressionRole {
             name: "imageSource"
 
-            function getIcon(type, key) {
+            function getIcon(type, key, symbol, criterionName, criterionDecimals) {
                 if (type === Constants.TokenType.ENS)
                     return Assets.png("tokens/ENS")
 
-                const collectibles = type !== Constants.TokenType.ERC20
-                const model = type === Constants.TokenType.ERC20
-                            ? assetsModel : collectiblesModel
+                if (type === Constants.TokenType.ERC20) {
+                    const item = PermissionsHelpers.findTokenByKey(assetsModel, false, key)
+                    if (item)
+                        return item.iconSource || Assets.png(Constants.defaultTokenIcon)
 
-                let icon = PermissionsHelpers.getTokenIconByKey(model, collectibles, key)
+                    const data = PermissionsHelpers.getAssetCriterionData(
+                                   key, symbol, criterionName, criterionDecimals,
+                                   root.getTokenByKeyOrGroupKeyFromAllTokens)
+                    return data.icon || Constants.tokenIcon(data.symbol)
+                            || Assets.png(Constants.defaultTokenIcon)
+                }
+
+                let icon = PermissionsHelpers.getTokenIconByKey(collectiblesModel, true, key)
                 if (Constants.isDefaultTokenIcon(icon)) {
                     const item = root.getTokenByKeyOrGroupKeyFromAllTokens(key)
                     if (!!item){
@@ -97,9 +118,10 @@ SortFilterProxyModel {
             expression: {
                 _assetsChanges.revision
                 _collectiblesChanges.revision
-                return getIcon(model.type, model.key)
+                return getIcon(model.type, model.key, model.symbol, model.name,
+                               model.decimals)
             }
-            expectedRoles: ["type", "key"]
+            expectedRoles: ["type", "key", "symbol", "name", "decimals"]
         },
         FastExpressionRole {
             name: "operator"

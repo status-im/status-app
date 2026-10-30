@@ -78,6 +78,7 @@ proc buildTokenPermissionItem*(tokenPermission: CommunityTokenPermissionDto, cha
       tc.symbol,
       tc.name,
       tc.amountInWei,
+      tc.decimals,
       tc.`type`.int,
       tc.ensPattern,
       false, # tokenCriteriaMet will be updated by a call to checkPermissionsToJoin

@@ -32,6 +32,28 @@ QtObject {
         return item
     }
 
+    // Returns the model row for the key, or null when the model lacks it.
+    function findTokenByKey(model, isCollectible, key) {
+        const item = getTokenByKey(model, isCollectible, key)
+        return item && Object.keys(item).length > 0 ? item : null
+    }
+
+    // Criteria saved without token data (no symbol, 0 decimals) fall back to
+    // getTokenFromAllTokens, which yields empty data while a token is unresolved;
+    // state tells a lookup still in flight (pending) from an unknown token (missing).
+    function getAssetCriterionData(key, symbol, name, decimals, getTokenFromAllTokens) {
+        if (!symbol && !decimals) {
+            const token = getTokenFromAllTokens(key) ?? {}
+            const state = token.lookupState
+                    ?? ((token.symbol || token.decimals) ? Constants.TokenLookupState.Resolved
+                                                         : Constants.TokenLookupState.Missing)
+            return { symbol: token.symbol ?? "", name: token.name ?? "",
+                     decimals: token.decimals ?? 0, icon: token.logoUri ?? "", state }
+        }
+        return { symbol: symbol ?? "", name: name ?? "", decimals: decimals ?? 0, icon: "",
+                 state: Constants.TokenLookupState.Resolved }
+    }
+
     function getTokenNameByKey(model, isCollectible, key) {
         const item = getTokenByKey(model, isCollectible, key)
         if (item)
