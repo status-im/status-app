@@ -113,10 +113,6 @@ StatusScrollView {
 
         readonly property int maxHoldingsItems: 5
 
-        // Token data read when an asset chip was clicked (or when its pending lookup
-        // landed), so the write uses the same decimals even if assetsModel fills in meanwhile.
-        property var editedAsset: null
-
         readonly property ModelChangeTracker assetsChanges: ModelChangeTracker {
             model: root.assetsModel
         }
@@ -181,15 +177,22 @@ StatusScrollView {
             return { symbol: "", name: "", decimals: 0 }
         }
 
+        // The dropdown's token data is what its amount was entered in, so it is written with it.
+        function getEnteredAssetData(key, holding) {
+            if (dropdown.assetKey === key)
+                return { symbol: dropdown.assetSymbol, name: dropdown.assetName,
+                         decimals: dropdown.assetDecimals }
+            return d.getAssetData(key, holding)
+        }
+
         function editAsset(holding) {
             const asset = d.getAssetData(holding.key, holding)
-            d.editedAsset = Object.assign({ key: holding.key }, asset)
             const pending = asset.state === Constants.TokenLookupState.Pending
 
             dropdown.assetKey = holding.key
-            dropdown.assetFallbackSymbol = asset.symbol
-            dropdown.assetFallbackName = (asset.name || asset.symbol) ? asset.name : holding.key
-            dropdown.assetFallbackDecimals = asset.decimals
+            dropdown.assetSymbol = asset.symbol
+            dropdown.assetName = asset.name
+            dropdown.assetDecimals = asset.decimals
             dropdown.assetNote = asset.state === Constants.TokenLookupState.Missing
                     ? qsTr("Unknown token — amount in smallest units") : ""
             // a raw amount must never reach the input while the decimals are unknown
@@ -342,7 +345,7 @@ StatusScrollView {
                 }
 
                 onAddAsset: function (key, amount) {
-                    const asset = d.getAssetData(key)
+                    const asset = d.getEnteredAssetData(key)
 
                     d.dirtyValues.selectedHoldingsModel.append({
                         type: Constants.TokenType.ERC20, key,
@@ -370,13 +373,7 @@ StatusScrollView {
                     const itemIndex = prepareUpdateIndex(key)
                     const holding = d.dirtyValues.selectedHoldingsModel.get(itemIndex)
 
-                    let asset
-                    if (d.editedAsset && d.editedAsset.key === key)
-                        asset = d.editedAsset
-                    else if (holding && holding.key === key)
-                        asset = d.getAssetData(key, holding)
-                    else
-                        asset = d.getAssetData(key)
+                    const asset = d.getEnteredAssetData(key, holding)
 
                     // the decimals the amount is scaled with travel with it
                     d.dirtyValues.selectedHoldingsModel.set(itemIndex, {
@@ -434,7 +431,6 @@ StatusScrollView {
                 dropdown.open()
 
                 editedIndex = -1
-                d.editedAsset = null
             }
 
             onItemClicked: function (item, index, mouse) {

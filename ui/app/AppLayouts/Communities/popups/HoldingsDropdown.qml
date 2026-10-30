@@ -41,10 +41,12 @@ StatusDropdown {
     property string assetKey: ""
     property string assetAmount: "0"
     property int assetMultiplierIndex: 0
-    // Shown when assetKey is missing from assetsModel (e.g. an existing cross-chain criterion)
-    property string assetFallbackSymbol: ""
-    property string assetFallbackName: ""
-    property int assetFallbackDecimals: 0
+    // Token data assetAmount is entered in: taken from the assetsModel row when assetKey is set
+    // or selected; an opener may set it after assetKey for an existing criterion. Name and symbol
+    // are shown when assetKey is missing from assetsModel (e.g. an existing cross-chain criterion).
+    property string assetSymbol: ""
+    property string assetName: ""
+    property int assetDecimals: 0
     // assetKey's token data is still being fetched; assetAmount is set once it lands
     property bool assetLoading: false
     property string assetNote: ""
@@ -90,9 +92,9 @@ StatusDropdown {
         d.initialHoldingMode = HoldingTypes.Mode.Add
 
         root.assetKey = ""
-        root.assetFallbackSymbol = ""
-        root.assetFallbackName = ""
-        root.assetFallbackDecimals = 0
+        root.assetSymbol = ""
+        root.assetName = ""
+        root.assetDecimals = 0
         root.assetLoading = false
         root.assetNote = ""
         root.collectibleKey = ""
@@ -129,6 +131,13 @@ StatusDropdown {
         }
 
         readonly property bool assetsReady: root.assetAmount !== "0" && root.assetKey
+
+        function takeAssetData(key) {
+            const row = PermissionsHelpers.findTokenByKey(root.assetsModel, false, key) ?? {}
+            root.assetSymbol = row.symbol || row.shortName || ""
+            root.assetName = row.name ?? ""
+            root.assetDecimals = row.decimals ?? 0
+        }
         readonly property bool collectiblesReady: root.collectibleAmount !== "0" && root.collectibleKey
 
         readonly property bool ensReady: d.ensDomainNameValid
@@ -298,6 +307,7 @@ StatusDropdown {
 
     onClosed: root.reset()
     onIsENSTabChanged: root.reset()
+    onAssetKeyChanged: d.takeAssetData(root.assetKey)
 
     Component {
         id: listLayout
@@ -339,10 +349,15 @@ StatusDropdown {
                 d.assetAmountText = ""
                 d.collectibleAmountText = ""
 
+                if (d.extendedDropdownType === ExtendedDropdownContent.Type.Assets)
+                    d.takeAssetData(key)
+
                 if (checkedKeys.includes(key)) {
 
                     const amountBasicUnit = root.usedTokens.find(entry => entry.key === key).amount
-                    const decimals = PermissionsHelpers.getTokenByKey(root.assetsModel, false, key).decimals
+                    const decimals = d.extendedDropdownType === ExtendedDropdownContent.Type.Assets
+                            ? root.assetDecimals
+                            : PermissionsHelpers.getTokenByKey(root.assetsModel, false, key).decimals
                     const amount = AmountsArithmetic.toNumber(amountBasicUnit, decimals)
 
                     if(d.extendedDropdownType === ExtendedDropdownContent.Type.Assets)
@@ -433,14 +448,18 @@ StatusDropdown {
             }
             property bool completed: false
 
-            tokenName: assetRow ? assetRow.name : root.assetFallbackName
-            tokenShortName: assetRow ? assetRow.shortName ?? "" : root.assetFallbackSymbol
+            tokenName: {
+                if (assetRow)
+                    return assetRow.name
+                return (root.assetName || root.assetSymbol) ? root.assetName : root.assetKey
+            }
+            tokenShortName: assetRow ? assetRow.shortName ?? "" : root.assetSymbol
             tokenImage: {
                 if (assetRow)
                     return assetRow.iconSource || Assets.png(Constants.defaultTokenIcon)
-                return Constants.tokenIcon(root.assetFallbackSymbol) || Assets.png(Constants.defaultTokenIcon)
+                return Constants.tokenIcon(root.assetSymbol) || Assets.png(Constants.defaultTokenIcon)
             }
-            tokenDecimals: assetRow ? assetRow.decimals ?? 0 : root.assetFallbackDecimals
+            tokenDecimals: root.assetDecimals
             tokenAmount: PermissionsHelpers.getTokenRemainingSupplyByKey(root.assetsModel, false, root.assetKey)
             amountText: d.assetAmountText
             tokenCategoryText: qsTr("Asset")
@@ -470,7 +489,7 @@ StatusDropdown {
                         name: chainName,
                         icon: chainIcon,
                         amount: asset.remainingSupply,
-                        decimals: asset.decimals,
+                        decimals: root.assetDecimals,
                         multiplierIndex: asset.multiplierIndex,
                         infiniteAmount: asset.infiniteSupply
                     })

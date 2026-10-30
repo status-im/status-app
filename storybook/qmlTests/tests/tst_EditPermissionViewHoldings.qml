@@ -495,6 +495,42 @@ Item {
             verify(!view.dirty)
         }
 
+        function test_inputPrecisionStaysWithTheSnapshotDecimals() {
+            const view = createView(fooCriteria, lateAssets)
+            const panel = openAssetPanel(clickHolding(view, 0))
+            compare(findChild(panel, "amountInput").tokenDecimals, 6)
+
+            lateAssets.append({
+                key: root.fooTokenKey, name: "Late", symbol: "LATE", shortName: "LATE",
+                decimals: 18, iconSource: Assets.png("tokens/ENS"), category: TokenCategories.Category.General
+            })
+
+            compare(panel.tokenDecimals, "6")
+            compare(findChild(panel, "amountInput").tokenDecimals, 6)
+        }
+
+        function test_reselectingAResolvedPendingTokenWritesWithItsDecimals() {
+            appendFoo()
+            const view = createView(legacyCriteria, lateAssets, root.pendingLookup)
+            const dropdown = clickHolding(view, 0)
+            pickOtherAsset(dropdown, root.fooTokenKey)
+
+            deliverSnt()
+            lateAssets.append({
+                key: root.sntTokenKey, name: "Status", symbol: "SNT", shortName: "SNT", decimals: 18,
+                iconSource: Assets.png("tokens/SNT"), category: TokenCategories.Category.General
+            })
+            const panel = pickOtherAsset(dropdown, root.sntTokenKey)
+            compare(findChild(panel, "amountInput").tokenDecimals, 18)
+
+            dropdown.updateAsset(dropdown.assetKey, "5")
+
+            const holding = view.dirtyValues.selectedHoldingsModel.get(0)
+            compare(holding.amount, "5000000000000000000")
+            compare(holding.symbol, "SNT")
+            compare(holding.decimals, 18)
+        }
+
         function test_assetPanelFollowsAssetsModelUpdates() {
             const view = createView(fooCriteria, lateAssets)
             const panel = openAssetPanel(clickHolding(view, 0))
