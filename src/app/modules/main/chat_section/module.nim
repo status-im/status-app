@@ -2045,11 +2045,18 @@ method createOrEditCommunityTokenPermission*(self: Module, permissionId: string,
       return
     self.onCommunityTokenPermissionUpdateFailed(communityId)
 
+  var toSave: seq[SaveCriterion]
   let tokenCriteriaJsonObj = tokenCriteriaJson.parseJson
   for tokenCriteria in tokenCriteriaJsonObj:
     let key = tokenCriteria{"key"}.getStr() # can be group key or token key or community token key or collectible key
     var contractAddresses = initTable[int, string]()
     var tokenCriteriaDto = tokenCriteria.toTokenCriteriaDto
+    tokenCriteriaDto.amountInWei = tokenCriteria{"amount"}.getStr
+
+    # The worker resolves ERC20 chains from the token group.
+    if tokenCriteriaDto.`type` == TokenType.ERC20:
+      toSave.add(SaveCriterion(key: key, criterion: tokenCriteriaDto))
+      continue
 
     if tokenCriteriaDto.`type` != TokenType.ENS:
       if not service_common_utils.isTokenKey(key):
@@ -2078,11 +2085,10 @@ method createOrEditCommunityTokenPermission*(self: Module, permissionId: string,
           contractAddresses[token.chainId] = token.address
           tokenCriteriaDto.applyResolvedTokenData(token.name, token.symbol, token.decimals)
 
-    tokenCriteriaDto.amountInWei = tokenCriteria{"amount"}.getStr
     tokenCriteriaDto.contractAddresses = contractAddresses
-    tokenPermission.tokenCriteria.add(tokenCriteriaDto)
+    toSave.add(SaveCriterion(key: key, criterion: tokenCriteriaDto))
 
-  self.controller.createOrEditCommunityTokenPermission(tokenPermission)
+  self.controller.createOrEditCommunityTokenPermission(tokenPermission, toSave)
 
 method deleteCommunityTokenPermission*(self: Module, permissionId: string) =
   self.controller.deleteCommunityTokenPermission(permissionId)
