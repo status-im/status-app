@@ -15,6 +15,8 @@ Control {
     required property string keycardState
     required property bool keycardInternalError
     required property bool keycardNotEmptyError
+    // The operation failed because the card could not prove it holds its certificate's identity key
+    property bool untrustedKeycardError: false
     required property bool wrongKeycard
     required property bool wrongKeycardProfile
     required property bool wrongPin
@@ -238,8 +240,8 @@ Control {
             },
             State {
                 name: "untrusted-keycard"
-                when: !root.failure
-                      && root.keycardState === Constants.keycard.state.untrustedKeycard
+                when: (!root.failure && root.keycardState === Constants.keycard.state.untrustedKeycard)
+                      || (root.failure && root.untrustedKeycardError)
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/not-keycard")

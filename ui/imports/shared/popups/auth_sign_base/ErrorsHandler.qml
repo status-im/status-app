@@ -25,9 +25,10 @@ QtObject {
         readonly property string blockedPuk: Constants.keycard.state.blockedPUK
         readonly property string noAvailablePairingSlots: Constants.keycard.state.noAvailablePairingSlots
         readonly property string pairingError: Constants.keycard.state.pairingError
-        // "Card not ready (state: untrusted-keycard)" and the library's "Untrusted keycard: ..." text
+        // "Card not ready (state: untrusted-keycard)", and the library's error when the card's secure
+        // channel is not signed by its own identity key (keycard-qt Errors::CardAuthenticationFailed)
         readonly property string untrustedKeycard1: Constants.keycard.state.untrustedKeycard
-        readonly property string untrustedKeycard2: "Untrusted keycard"
+        readonly property string untrustedKeycard2: "Keycard authentication failed"
     }
 
     readonly property bool internalError: root.errorText.toLowerCase().indexOf(errKeyword.internalError.toLowerCase()) > -1

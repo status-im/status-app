@@ -354,7 +354,7 @@ Item {
 
         function test_untrustedKeycardErrorShowsKeycardAuth_data() {
             return [
-                {tag: "library error", error: "Untrusted keycard: identity certificate not trusted"},
+                {tag: "library error", error: "Keycard authentication failed: secure channel not signed by the card's identity key"},
                 {tag: "state error", error: "Card not ready (state: untrusted-keycard)"},
             ]
         }
