@@ -125,21 +125,29 @@ proc getTokenBalance*(self: Service, walletAccount: string, tokenKey: string): f
       return self.getCurrencyValueForToken(balanceItem.tokenKey, balanceItem.balance)
   return 0.0
 
-proc reloadAccountTokens*(self: Service) =
+# Tokens are rebuilt once status-go tells the requested refresh has ended.
+proc reloadAccountTokens*(self: Service, withCollectibles: bool) =
   try:
     discard backend.restartWalletReloadTimer()
   except Exception as e:
     let errDesription = e.msg
     error "error restartWalletReloadTimer: ", errDesription
+    self.buildAllTokens(self.getWalletAddresses(), forceRefresh = true)
 
-  let addresses = self.getWalletAddresses()
-  self.buildAllTokens(addresses, forceRefresh = true)
-
+  if not withCollectibles:
+    return
   try:
     discard collectibles.refetchOwnedCollectibles()
   except Exception as e:
     let errDesription = e.msg
     error "error refetchOwnedCollectibles: ", errDesription
+
+proc refreshBalancesAfterReconnect*(self: Service) =
+  try:
+    discard backend.refreshBalancesAfterReconnect()
+  except Exception as e:
+    let errDesription = e.msg
+    error "error refreshBalancesAfterReconnect: ", errDesription
 
 proc getCurrencyValueForToken*(self: Service, tokenKey: string, amountInt: UInt256): float64 =
   return self.currencyService.getCurrencyValueForToken(tokenKey, amountInt)

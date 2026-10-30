@@ -10,6 +10,7 @@ const
   EventPendingTransactionUpdate* = "pending-transaction-update"
   EventPendingTransactionStatusChanged* = "pending-transaction-status-changed"
   EventWatchOnlyAccountRetrieved* = "wallet-watch-only-account-retrieved"
+  EventRequestedBalanceRefreshFinished* = "wallet-requested-balance-refresh-finished"
 
 type WalletSignal* = ref object of Signal
   content*: string

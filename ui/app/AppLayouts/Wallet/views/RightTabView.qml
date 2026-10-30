@@ -158,7 +158,8 @@ RightTabBaseView {
             if (showNetworksNotificationIcon)
                 localAppSettings.seenNetworkChains = header.markNewChainsSeen(localAppSettings.seenNetworkChains)
         }
-        onReloadRequested: root.walletRootStore.reloadAccountTokens()
+        onReloadRequested: root.walletRootStore.reloadAccountTokens(
+                               root.currentTabIndex === RightTabView.TabIndex.Collectibles)
     }
 
     header: stack.currentIndex === 0 ? header : null

@@ -124,7 +124,7 @@ method resetRpcStats*(self: AccessInterface) {.base.} =
 method canProfileProveOwnershipOfProvidedAddresses*(self: AccessInterface, addresses: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method reloadAccountTokens*(self: AccessInterface) {.base.} =
+method reloadAccountTokens*(self: AccessInterface, withCollectibles: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method isChecksumValidForAddress*(self: AccessInterface, address: string): bool {.base.} =
