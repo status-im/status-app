@@ -26,8 +26,14 @@ import AppLayouts.Chat.stores as ChatStores
     implementation detail).
 
  2. quotedMessageFromContactEntryLoader — author of the quoted (replied-to)
-    message. Already Loader-gated: active only when quotedMessageFrom is set.
-    Consumers: openProfileContextMenu(isReply=true).
+    message. Lazy like the sender's: activated by
+    openProfileContextMenu(isReply=true), its only consumer. The reply shows
+    the quotedMessageAuthorDetails* model roles. Same prefetch contract as the
+    sender's for an unknown author.
+
+ Both lazy entries are deactivated when the row is rebound to another
+ message (messageId changes), so a pooled row does not keep resolving the
+ contacts of every message it shows.
 
  3. messagePinnedByContactEntryLoader — who pinned the message. Already
     Loader-gated: active only when messagePinnedBy is set. Consumer: the
@@ -39,9 +45,11 @@ import AppLayouts.Chat.stores as ChatStores
 
  Row configurations covered:
  - plain text row (no reply, no pin)   → tests 1, 2
- - reply row (quotedMessageFrom set)   → test 3
- - pinned row (messagePinnedBy set)    → test 4
- - unknown sender (hasUser false)      → test 5
+ - reply row (quotedMessageFrom set)   → tests 3, 4
+ - pinned row (messagePinnedBy set)    → test 5
+ - unknown sender (hasUser false)      → test 6
+ - unknown quoted author               → test 7
+ - row rebound to another message      → test 8
 */
 Item {
     id: root
@@ -180,21 +188,42 @@ Item {
                 menu.close()
         }
 
-        // Reply rows activate the quoted-author entry; plain rows do not
-        function test_quotedAuthorEntryGating() {
-            const plain = createTemporaryObject(messageViewComp, root)
-            tryVerify(() => plain.status === Loader.Ready)
-            compare(plain.quotedMessageFromContactEntryLoader.active, false)
-
+        // INTENT (perf): building a reply row must not touch the contacts
+        // model either — the quoted author's entry is needed only when its
+        // profile context menu opens
+        function test_replyRowDoesNotLookupContacts() {
             const reply = createTemporaryObject(messageViewComp, root, {
                 quotedMessageFrom: "0xsender",
                 responseToMessageWithId: "msg-0"
             })
             tryVerify(() => reply.status === Loader.Ready)
+            wait(50)
+
+            compare(reply.quotedMessageFromContactEntryLoader.active, false)
+            compare(contactsModel.hasUserCalls.length, 0,
+                    "reply row creation must not query the contacts model, got: "
+                    + JSON.stringify(contactsModel.hasUserCalls))
+        }
+
+        // Opening the quoted author's profile context menu resolves the
+        // author through the contacts model
+        function test_quotedAuthorEntryOnMenuOpen() {
+            const reply = createTemporaryObject(messageViewComp, root, {
+                quotedMessageFrom: "0xsender",
+                responseToMessageWithId: "msg-0"
+            })
+            tryVerify(() => reply.status === Loader.Ready)
+
+            const opened = reply.openProfileContextMenu(10, 10, true)
+            verify(opened !== false, "menu must open for a quoted author")
             compare(reply.quotedMessageFromContactEntryLoader.active, true)
-            tryVerify(() => !!reply.quotedMessageFromContactEntryLoader.item)
+            verify(!!reply.quotedMessageFromContactEntryLoader.item)
             compare(reply.quotedMessageFromContactEntryLoader.item.contactDetails.displayName,
                     "Sender Contact")
+
+            const menu = findChild(root, "profileContextMenu")
+            if (menu)
+                menu.close()
         }
 
         // Pinned rows activate the pinned-by entry; plain rows do not
@@ -227,6 +256,49 @@ Item {
             view.openProfileContextMenu(10, 10)
             verify(rootStoreMock.populateRequests.indexOf("0xunknown") >= 0,
                    "unknown sender details must be requested by menu-open time")
+
+            const menu = findChild(root, "profileContextMenu")
+            if (menu)
+                menu.close()
+        }
+
+        // Unknown quoted author: same contract as for the sender
+        function test_unknownQuotedAuthorPrefetchByMenuOpen() {
+            const reply = createTemporaryObject(messageViewComp, root, {
+                quotedMessageFrom: "0xunknownauthor",
+                responseToMessageWithId: "msg-0"
+            })
+            tryVerify(() => reply.status === Loader.Ready)
+            compare(rootStoreMock.populateRequests.indexOf("0xunknownauthor"), -1,
+                    "nothing must be requested before the menu opens")
+
+            reply.openProfileContextMenu(10, 10, true)
+            verify(rootStoreMock.populateRequests.indexOf("0xunknownauthor") >= 0,
+                   "unknown quoted author details must be requested by menu-open time")
+
+            const menu = findChild(root, "profileContextMenu")
+            if (menu)
+                menu.close()
+        }
+
+        // A pooled row rebound to another message drops the entries the
+        // previous message's menus activated
+        function test_rebindDeactivatesContactEntries() {
+            const reply = createTemporaryObject(messageViewComp, root, {
+                quotedMessageFrom: "0xsender",
+                responseToMessageWithId: "msg-0"
+            })
+            tryVerify(() => reply.status === Loader.Ready)
+
+            reply.openProfileContextMenu(10, 10, false)
+            reply.openProfileContextMenu(10, 10, true)
+            compare(reply.senderContactEntry.active, true)
+            compare(reply.quotedMessageFromContactEntryLoader.active, true)
+
+            reply.messageId = "msg-2"
+
+            compare(reply.senderContactEntry.active, false)
+            compare(reply.quotedMessageFromContactEntryLoader.active, false)
 
             const menu = findChild(root, "profileContextMenu")
             if (menu)
