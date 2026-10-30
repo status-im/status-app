@@ -78,6 +78,18 @@ proc resolveCriteriaChains*(toSave: seq[SaveCriterion], stored: seq[TokenCriteri
   proc groupOf(tokenKey: string): string =
     if tokensByKey.hasKey(tokenKey): tokensByKey[tokenKey].groupKey else: tokenKey
 
+  # A key outside the catalogue takes the group its resolvable stored siblings agree on.
+  proc inferredGroupOf(tokenKey: string): string =
+    if tokensByKey.hasKey(tokenKey):
+      return tokensByKey[tokenKey].groupKey
+    var siblingGroups: HashSet[string]
+    for sk in storedKeys:
+      if tokenKey in sk:
+        for k in sk:
+          if tokensByKey.hasKey(k):
+            siblingGroups.incl(tokensByKey[k].groupKey)
+    if siblingGroups.len == 1: toSeq(siblingGroups)[0] else: tokenKey
+
   try:
     var keys: seq[string]
     for c in toSave:
@@ -100,7 +112,7 @@ proc resolveCriteriaChains*(toSave: seq[SaveCriterion], stored: seq[TokenCriteri
       if tokenKey.len == 0:
         groups[i] = c.key
       elif tokensByKey.getOrDefault(tokenKey).communityId.len == 0:
-        groups[i] = groupOf(tokenKey)
+        groups[i] = inferredGroupOf(tokenKey)
     let groupKeys = groups.filterIt(it.len > 0).deduplicate
     if groupKeys.len > 0:
       for token in catalogue.byGroupKeys(groupKeys):

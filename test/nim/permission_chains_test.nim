@@ -301,3 +301,11 @@ suite "permission criteria combined edit":
     let res = resolveCriteriaChains(@[erc20("84532-0xgone")], stored, mainnet, fake.catalogue)
     check res.error == ""
     check res.criteria[0].contractAddresses == {84532: "0xgone", 11155420: "0xgone2"}.toTable
+
+  test "a stored inactive-network key takes its group from a resolvable stored sibling":
+    let fake = newFake()
+    let stored = @[storedErc20({1: "0xsntmainnet", 8453: "0xsntbase"})]
+    let res = resolveCriteriaChains(@[erc20("8453-0xsntbase")], stored, mainnet, fake.catalogue)
+    check res.error == ""
+    check res.criteria[0].chains == [1, 10, 42161, 8453].toHashSet
+    check res.criteria[0].contractAddresses[8453] == "0xsntbase"
