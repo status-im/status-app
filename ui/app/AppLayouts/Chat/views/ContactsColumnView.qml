@@ -50,6 +50,7 @@ Item {
     signal openAppSearch()
     signal addRemoveGroupMemberClicked()
     signal chatItemClicked(string id)
+    signal renameThreadRequested(string threadId, string threadName, string parentChatId)
 
     // main layout
     ColumnLayout {
@@ -145,6 +146,12 @@ Item {
             }
             onChatItemClicked: (id) => root.chatItemClicked(id)
             onChatItemUnmuted: (id) => root.chatSectionModule.unmuteChat(id)
+
+            threadPopupMenu: ThreadListContextMenu {
+                sectionModule: root.chatSectionModule
+                onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                    root.renameThreadRequested(threadId, threadName, parentChatId)
+            }
 
             popupMenu: ChatContextMenuView {
                 id: chatContextMenuView
