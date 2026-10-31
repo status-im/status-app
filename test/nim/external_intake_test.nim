@@ -100,6 +100,18 @@ suite "external_intake dispatch":
     check capture.browserTabs == @["https://example.com/article"]
     check capture.deepLinks.len == 0
 
+  test "browser tab url is ignored when no browser-tab handler is wired":
+    let capture = Capture()
+    let intake = newExternalIntake()
+    intake.onDeepLinkUrl = proc(url: string) =
+      capture.deepLinks.add url
+    intake.setReady()
+
+    intake.submit(urlIntake("https://example.com/article"))
+
+    check capture.browserTabs.len == 0
+    check capture.deepLinks.len == 0
+
 suite "external_intake share events":
 
   test "share text reaches the share handler once ready":
