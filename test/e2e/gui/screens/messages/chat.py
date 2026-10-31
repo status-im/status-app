@@ -30,6 +30,7 @@ from gui.objects_map import messaging_names
 from gui.screens.community import BannedCommunityScreen, CommunityScreen
 from gui.screens.messages.message import Message, _nudge_outgoing_header, _qml_int
 from helpers.chat_helper import plain_text_from_message_object
+from scripts.utils.parsers import remove_tags
 from scripts.utils.generators import random_sticker
 
 
@@ -39,6 +40,21 @@ def _message_row(item) -> float:
     except (RuntimeError, AttributeError):
         row = None
     return row if row is not None else float('inf')
+
+
+def _item_contains_message_text(item, message_text: str) -> bool:
+    plain = plain_text_from_message_object(item)
+    if message_text in plain:
+        return True
+    # Chat bubbles expose markdown plain text, so a literal "<mark>…" body is read back without the tag.
+    visible = remove_tags(message_text).strip()
+    if visible and visible != message_text and visible in plain:
+        return True
+    for attr in ('unparsedText', 'messageText'):
+        raw = getattr(item, attr, None)
+        if raw and (message_text in str(raw) or (visible and visible in str(raw))):
+            return True
+    return False
 
 
 class ChatView(QObject):
@@ -98,7 +114,7 @@ class ChatView(QObject):
         indexes = (index, None) if index is not None else (None,)
         for current_index in indexes:
             for item in self._iter_message_objects(current_index, scroll_to_recent):
-                if message_text in plain_text_from_message_object(item):
+                if _item_contains_message_text(item, message_text):
                     return Message(item)
         return None
 
@@ -692,8 +708,9 @@ class MessageQuickActions(QObject):
         self._delete_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuDeleteButton)
         self._reply_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuReplyButton)
         self._reply_menu_item = Button(messaging_names.chatMessageViewDelegate_messageContextMenuReplyMenuItem)
+        self._open_thread_menu_item = Button(
+            messaging_names.chatMessageViewDelegate_messageContextMenuOpenThreadMenuItem)
         self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
-        self._edit_message_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
         self._edit_message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
@@ -763,18 +780,34 @@ class MessageQuickActions(QObject):
         self._unpin_button.wait_until_appears().click()
 
     @allure.step('Edit message and save changes')
-    def edit_message(self, text: str):
+    def edit_message(self, text: str, thread_panel: bool = False):
         self._open_context_menu()
         self._edit_action().wait_until_appears().click()
-        self._edit_message_input.wait_until_appears()
-        self._edit_message_field.set_text_property(text)
-        self._send_message_button.wait_until_enabled().click()
+        if thread_panel:
+            field = TextEdit(messaging_names.threadMessageInputField)
+            send_button = Button(messaging_names.threadSendButton)
+        else:
+            field = self._edit_message_field
+            send_button = self._send_message_button
+        field.wait_until_appears()
+        field.set_text_property(text)
+        send_button.wait_until_enabled().click()
 
     @allure.step('Delete message')
     def delete_message(self):
         self.expand()
         self._delete_button.click()
         ConfirmationMessagePopup().wait_until_appears().delete_button.click()
+
+    @allure.step('Create thread from message')
+    def create_thread(self):
+        self._open_context_menu()
+        self._expand_collapsed_menu()
+        self._open_thread_menu_item.wait_until_appears().click()
+
+    @allure.step('Pin action is visible in message context menu')
+    def is_pin_action_visible(self) -> bool:
+        return self._context_menu_action_visible(self._pin_button)
 
     @allure.step('Reply to own message')
     def reply_own_message(self, text: str):
@@ -788,18 +821,18 @@ class MessageQuickActions(QObject):
         ), 'Send button stayed disabled after reply text'
         self._send_message_button.click()
 
-    def _dismiss_context_menu(self):
-        MessageContextMenuPopup().dismiss_if_visible(self._message_input_area)
+    def _context_menu_action_visible(self, action: Button) -> bool:
+        try:
+            self._open_context_menu()
+            self._expand_collapsed_menu()
+        except (LookupError, TimeoutError):
+            return False
+        try:
+            return action.is_visible
+        finally:
+            MessageContextMenuPopup().close_via_copy()
 
     @allure.step('Delete button is visible')
     def is_delete_button_visible(self) -> bool:
-        try:
-            self.expand()
-        except (LookupError, TimeoutError):
-            self._dismiss_context_menu()
-            return False
-        try:
-            return self._delete_button.is_visible
-        finally:
-            self._dismiss_context_menu()
+        return self._context_menu_action_visible(self._delete_button)
 

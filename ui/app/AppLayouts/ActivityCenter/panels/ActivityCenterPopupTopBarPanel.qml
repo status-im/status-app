@@ -49,7 +49,9 @@ StatusRollArea {
                 { text: qsTr("System"), group: ActivityCenterTypes.ActivityCenterGroup.System, visible: root.hasSystem, enabled: root.hasSystem } ]
 
             StatusFlatButton {
-                objectName: "activityCenterGroupButton"
+                objectName: modelData.group === ActivityCenterTypes.ActivityCenterGroup.Replies
+                            ? "activityCenterRepliesButton"
+                            : "activityCenterGroupButton"
                 enabled: modelData.enabled
                 visible: modelData.visible
                 text: modelData.text
