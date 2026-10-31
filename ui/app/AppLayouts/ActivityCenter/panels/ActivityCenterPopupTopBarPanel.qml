@@ -42,14 +42,16 @@ StatusRollArea {
                 { text: qsTr("News"), group: ActivityCenterTypes.ActivityCenterGroup.NewsMessage, visible: true, enabled: root.hasNews || root.newsDisabledBySettings },
                 { text: qsTr("Admin"), group: ActivityCenterTypes.ActivityCenterGroup.Admin, visible: root.hasAdmin, enabled: root.hasAdmin },
                 { text: qsTr("Mentions"), group: ActivityCenterTypes.ActivityCenterGroup.Mentions, visible: true, enabled: root.hasMentions },
-                { text: qsTr("Replies"), group: ActivityCenterTypes.ActivityCenterGroup.Replies, visible: true, enabled: root.hasReplies, buttonName: "activityCenterRepliesButton" },
+                { text: qsTr("Replies"), group: ActivityCenterTypes.ActivityCenterGroup.Replies, visible: true, enabled: root.hasReplies },
                 { text: qsTr("Contact requests"), group: ActivityCenterTypes.ActivityCenterGroup.ContactRequests, visible: true, enabled: root.hasContactRequests },
                 { text: qsTr("Transactions"), group: ActivityCenterTypes.ActivityCenterGroup.Transactions, visible: false, enabled: true },
                 { text: qsTr("Membership"), group: ActivityCenterTypes.ActivityCenterGroup.Membership, visible: true, enabled: root.hasMembership },
                 { text: qsTr("System"), group: ActivityCenterTypes.ActivityCenterGroup.System, visible: root.hasSystem, enabled: root.hasSystem } ]
 
             StatusFlatButton {
-                objectName: modelData.buttonName || "activityCenterGroupButton"
+                objectName: modelData.group === ActivityCenterTypes.ActivityCenterGroup.Replies
+                            ? "activityCenterRepliesButton"
+                            : "activityCenterGroupButton"
                 enabled: modelData.enabled
                 visible: modelData.visible
                 text: modelData.text
