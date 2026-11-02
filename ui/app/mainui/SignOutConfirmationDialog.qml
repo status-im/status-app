@@ -8,6 +8,8 @@ import StatusQ
 ConfirmationDialog {
     id: root
 
+    objectName: "SignOutConfirmationDialog"
+
     required property SecureStorage secureStorage
     required property string keyUid
 
