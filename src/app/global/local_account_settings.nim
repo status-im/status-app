@@ -28,10 +28,18 @@ QtObject:
     new(result, delete)
     result.setup(settingsFileDir)
 
+  proc releaseSettings(self: LocalAccountSettings) =
+    # Deleting the QSettings flushes its pending writes to the file.
+    if not self.settings.isNil:
+      self.settings.delete
+      self.settings = nil
+
   proc setFileName*(self: LocalAccountSettings, fileName: string) =
     let
       currentFilePath = os.joinPath(self.settingsFileDir, self.currentFileName)
       newFilePath = os.joinPath(self.settingsFileDir, fileName)
+    # Flush before a rename, so the moved file carries every write.
+    self.releaseSettings()
     try:
       if self.currentFileName.len > 0 and currentFilePath != newFilePath:
         moveFile(currentFilePath, newFilePath)
@@ -117,6 +125,16 @@ QtObject:
     read = getStayLoggedIn
     write = setStayLoggedIn
     notify = stayLoggedInChanged
+
+  proc detach*(self: LocalAccountSettings) =
+    ## Unbinds the current account's file on logout. Unlike binding another file with
+    ## `setFileName`, which renames the bound file (the account changed its name),
+    ## this leaves it in place: the next account to log in starts from its own file.
+    self.releaseSettings()
+    self.currentFileName = ""
+    self.storeToKeychainValueChanged()
+    self.stayLoggedInChanged()
+    self.freshProfileChanged()
 
   proc setup(self: LocalAccountSettings, settingsFileDir: string) =
     self.QObject.setup

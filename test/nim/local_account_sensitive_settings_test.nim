@@ -1,4 +1,5 @@
 import unittest, os
+from std/tempfiles import createTempDir
 import app/global/local_account_sensitive_settings
 import constants
 
@@ -31,3 +32,26 @@ suite "Last section thread record":
       check record.threadId == ""
       check record.parentChatId == ""
       check record.presentation == ""
+
+suite "LocalAccountSensitiveSettings detach":
+  var settingsDir: string
+
+  setup:
+    settingsDir = createTempDir("sensitive_settings_detach_test_", "")
+
+  teardown:
+    removeDir(settingsDir)
+
+  test "detach serves defaults until the next profile binds its own file":
+    let settings = newLocalAccountSensitiveSettings(settingsDir)
+    settings.setFileName("profile")
+    settings.setExpandUsersList(false) # the default is true
+    settings.detach()
+    check settings.getExpandUsersList()
+
+    settings.setFileName("other_profile")
+    check settings.getExpandUsersList()
+
+    settings.detach()
+    settings.setFileName("profile")
+    check not settings.getExpandUsersList()
