@@ -122,7 +122,6 @@ proc runPostOnboardingTasks(self: AppController)
 proc onboardingDidLoad*(self: AppController)
 proc userLoggedIn*(self: AppController): string
 proc appReady*(self: AppController)
-proc logout*(self: AppController)
 proc finishAppLoading*(self: AppController)
 
 # Main Module Delegate Interface
@@ -305,7 +304,7 @@ proc delete*(self: AppController) =
       info "Skipping logout on AppController.delete (Android keepalive enabled)"
   else:
     info "logging out..."
-    self.generalService.logout()
+    discard self.generalService.logout()
 
   singletonInstance.delete
   self.notificationsManager.delete
@@ -489,8 +488,6 @@ proc finishAppLoading*(self: AppController) =
 
   self.notificationsManager.onAppReady()
 
-proc logout*(self: AppController) =
-  self.generalService.logout()
 
 proc buildAndRegisterLocalAccountSensitiveSettings(self: AppController) =
   var pubKey = self.settingsService.getPublicKey()

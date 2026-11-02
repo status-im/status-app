@@ -64,9 +64,6 @@ QtObject:
 
     self.events.emit(signal.signalType.event, signal)
 
-  proc receiveSignal(self: SignalsManager, signal: string) {.slot.} =
-    self.processSignal(signal)
-
   proc decode(self: SignalsManager, jsonSignal: JsonNode): Signal =
     let signalString = jsonSignal{"type"}.getStr
     var signalType: SignalType

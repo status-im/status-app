@@ -29,7 +29,7 @@ requires "https://github.com/pragmagic/uuids.git#42052ba362a9cd4685463edb3781bee
 requires "https://github.com/status-im/nim-keycard-go.git#de7eec7d550161b8fac3d5f19b8c752d5e6d689f"  # keycard_go
 requires "https://github.com/status-im/nim-taskpools.git#4acdc6ef005a93dba09f902ed75197548cf7b451"  # taskpools
 requires "https://github.com/seaqt/nim-seaqt.git#7d40abd7b493036b4ede5b111fc4260237504796"  # seaqt (branch qt-6.8)
-requires "https://github.com/seaqt/nimqml-seaqt.git#fa084a8d9bcf00c9ed4c2adf857793fcc059357f"  # nimqml
+requires "https://github.com/seaqt/nimqml-seaqt.git#1b0050b8d49623296f9982845cabf71ec70cb2a0"  # nimqml
 requires "https://github.com/status-im/nim-qtcamera#01fcedd967abc35d5255a008b9008177926ba2cc"  # qtcamera
 requires "https://github.com/status-im/nim-qrscan#5e66fe20d1a7913d25599515cc6faad2aeae7a2b"  # qrscan
 # Transitive packages, pinned to the revisions the app was built with as submodules.
