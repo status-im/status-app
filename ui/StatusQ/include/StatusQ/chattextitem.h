@@ -406,4 +406,5 @@ private:
     QPointF m_pressPoint;
     qreal m_contentHeight = 0;
     bool m_layoutDirty = true;
+    bool m_formatsDirty = true;
 };
