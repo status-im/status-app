@@ -29,6 +29,7 @@ from gui.screens.onboarding import OnboardingWelcomeToStatusView, ReturningLogin
 from gui.screens.settings import SettingsScreen
 from gui.components.qr_code_scanner_popup import QRCodeScannerPopup
 from gui.screens.wallet import WalletScreen
+from gui.screens.browser import BrowserScreen
 from gui.screens.home import HomeScreen
 from helpers.onboarding_helper import skip_education_popup_if_visible
 from scripts.tools.image import Image
@@ -47,6 +48,7 @@ class MainLeftPanel(QObject):
         self.communities_portal_button = Button(names.communitiesPortalButton)
         self.community_template_button = Button(names.statusCommunityMainNavBarListView_CommunityNavBarButton)
         self.wallet_button = Button(names.mainWalletButton)
+        self.browser_button = Button(names.browserButton)
         self.activity_center_button = Button(names.activityCenterButton)
         self.market_button = Button(names.marketButton)
         self.qr_scanner_button = Button(names.qrScannerButton)
@@ -106,6 +108,11 @@ class MainLeftPanel(QObject):
     @open_with_retries(WalletScreen)
     def open_wallet(self):
         return self.wallet_button
+
+    @allure.step('Click Browser button and open the in-app browser')
+    @open_with_retries(BrowserScreen)
+    def open_browser(self):
+        return self.browser_button
 
     @allure.step('Open QR scanner')
     @open_with_retries(QRCodeScannerPopup)

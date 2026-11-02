@@ -57,6 +57,8 @@ mainWalletButton = {"container": primaryNavSidebar, "objectName": "Wallet-navbar
 chatButton = {"container": primaryNavSidebar, "objectName": "Messages-navbar", "type": "PrimaryNavSidebarButton",
               "visible": True}
 marketButton = {"container": primaryNavSidebar, "objectName": "Market-navbar", "type": "RegularSectionButton", "visible": True}
+browserButton = {"container": primaryNavSidebar, "objectName": "Browser-navbar",
+                 "type": "RegularSectionButton", "visible": True}
 
 # Second half of left main panel: communities button
 communitiesSettingsNavBarList = {"container": statusDesktop_mainWindow, "objectName": "statusMainNavBarListView",

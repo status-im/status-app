@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head><title>E2E Sign</title></head>
+<body>
+<script>
+async function signOnce() {
+  const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+  const signature = await window.ethereum.request({
+    method: 'personal_sign',
+    params: ['0x68656c6c6f', accounts[0]],
+  });
+  document.title = 'signed:' + signature;
+}
+
+async function sign() {
+  try {
+    await signOnce();
+  } catch (error) {
+    document.title = 'rejected';
+    try {
+      await signOnce();
+    } catch (error) {
+      document.title = 'sign-failed';
+    }
+  }
+}
+
+function whenEthereumReady(triesLeft) {
+  if (window.ethereum) {
+    sign();
+    return;
+  }
+  if (triesLeft > 0)
+    setTimeout(() => whenEthereumReady(triesLeft - 1), 100);
+  else
+    document.title = 'no-provider';
+}
+
+whenEthereumReady(100);
+</script>
+</body>
+</html>

@@ -38,6 +38,7 @@ LOG.info('Logging to stderr and %s (level=%s)', configs.PYTEST_LOG, _log_level_n
 
 pytest_plugins = [
     'fixtures.aut',
+    'fixtures.browser',
     'fixtures.keycard',
     'fixtures.path',
     'fixtures.squish',
