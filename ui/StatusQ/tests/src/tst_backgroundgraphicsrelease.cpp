@@ -37,11 +37,6 @@ private slots:
             QSKIP("The software scene graph has no graphics to release");
     }
 
-    void init()
-    {
-        QLoggingCategory::setFilterRules(QStringLiteral("status.backgroundGraphicsRelease.info=false"));
-    }
-
     void cleanup()
     {
         QLoggingCategory::setFilterRules(QString());
@@ -74,7 +69,7 @@ private slots:
         exposed.show();
         QVERIFY(QTest::qWaitForWindowExposed(&exposed));
 
-        QLoggingCategory::setFilterRules(QString());
+        QLoggingCategory::setFilterRules(QStringLiteral("status.backgroundGraphicsRelease.info=true"));
         QTest::ignoreMessage(QtInfoMsg, QRegularExpression(
             QStringLiteral("^suspended: released 1 windows, kept 0 \\(no GPU resources freed\\), "
                            "skipped 1 still exposed, took \\d+ ms$")));
@@ -93,7 +88,7 @@ private slots:
         release.onApplicationStateChanged(Qt::ApplicationSuspended);
         QVERIFY(!window.rhi());
 
-        QLoggingCategory::setFilterRules(QString());
+        QLoggingCategory::setFilterRules(QStringLiteral("status.backgroundGraphicsRelease.info=true"));
         QTest::ignoreMessage(QtInfoMsg, QRegularExpression(
             QStringLiteral("^suspended: released 0 windows, kept 1 \\(no GPU resources freed\\), "
                            "skipped 0 still exposed, took \\d+ ms$")));

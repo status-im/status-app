@@ -2,9 +2,10 @@
 
 #include <QElapsedTimer>
 #include <QGuiApplication>
+#include <QLoggingCategory>
 #include <QQuickWindow>
 
-Q_LOGGING_CATEGORY(backgroundGraphicsRelease, "status.backgroundGraphicsRelease", QtInfoMsg)
+Q_STATIC_LOGGING_CATEGORY(backgroundGraphicsRelease, "status.backgroundGraphicsRelease", QtWarningMsg)
 
 namespace Status
 {
