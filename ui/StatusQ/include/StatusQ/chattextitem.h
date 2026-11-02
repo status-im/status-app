@@ -405,6 +405,7 @@ private:
     bool m_mousePressActive = false;
     QPointF m_pressPoint;
     qreal m_contentHeight = 0;
+    quint64 m_layoutRevision = 0;
     bool m_layoutDirty = true;
     bool m_formatsDirty = true;
 };
