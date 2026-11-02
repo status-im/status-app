@@ -4,6 +4,7 @@ import app_service/service/message/dto/urls_unfurling_plan
 import app_service/service/message/dto/link_preview
 import app_service/service/settings/dto/settings
 import app_service/service/chat/image_batches
+import app_service/service/message/dto/payment_request
 
 const SHARE_LINK_PREVIEWS_LIMIT* = 5  # same cap as the in-chat input area
 const SHARE_MAX_DESTINATIONS* = 5     # the picker disables rows past this; enforced here too
@@ -19,12 +20,18 @@ type
     chatId*: string
     imagePaths*: seq[string]
     withText*: bool
+    paymentRequests*: seq[PaymentRequest]
+
+  TextSend* = object
+    chatId*: string
+    paymentRequests*: seq[PaymentRequest]
 
   PendingShare* = object
     token*: string
     destinations*: seq[ShareDestination]
     text*: string
     imagePaths*: seq[string]
+    paymentRequests*: seq[PaymentRequest]
     contentType*: int
     planRequestUuid*: string
     unfurlRequestUuid*: string
@@ -38,6 +45,7 @@ type
     chatId*: string
     imagePaths*: seq[string]
     withText*: bool
+    paymentRequests*: seq[PaymentRequest]
     releaseCachedFiles*: bool
 
 proc parseShareDestinations*(destinationsJson: string): seq[ShareDestination] =
@@ -81,15 +89,24 @@ proc orderedLinkPreviews*(urls: seq[string], previews: Table[string, LinkPreview
   return ordered
 
 proc imageSendPlan*(destinations: seq[ShareDestination], imagePaths: seq[string], shareToken: string,
-    perMessage = SHARE_IMAGES_PER_MESSAGE): seq[ImageSend] =
+    perMessage = SHARE_IMAGES_PER_MESSAGE, paymentRequests: seq[PaymentRequest] = @[]): seq[ImageSend] =
   ## One message per destination per chunk of `perMessage` images, in
-  ## destination order; the text rides on each destination's first chunk.
+  ## destination order; the text and payment requests ride on each
+  ## destination's first chunk.
   ## Each send gets its own token so it can be dispatched and finished on its own.
   var sends: seq[ImageSend] = @[]
   for dest in destinations:
     for batch in imageBatches(imagePaths, shareToken, perMessage, firstIndex = sends.len):
       sends.add(ImageSend(token: batch.token, chatId: dest.chatId, imagePaths: batch.imagePaths,
-        withText: batch.withText))
+        withText: batch.withText,
+        paymentRequests: if batch.withText: paymentRequests else: @[]))
+  return sends
+
+proc textSendPlan*(destinations: seq[ShareDestination], paymentRequests: seq[PaymentRequest]): seq[TextSend] =
+  ## One message per destination, each carrying the same payment requests.
+  var sends: seq[TextSend] = @[]
+  for dest in destinations:
+    sends.add(TextSend(chatId: dest.chatId, paymentRequests: paymentRequests))
   return sends
 
 proc needsUnfurl*(mode: UrlUnfurlingMode, text: string): bool =
@@ -120,7 +137,8 @@ proc takeNextImageDispatch*(queue: var seq[PendingShare]): Option[ImageDispatch]
   queue[0].nextImageSend = i + 1
   let send = active.imageSends[i]
   return some(ImageDispatch(token: send.token, chatId: send.chatId, imagePaths: send.imagePaths,
-    withText: send.withText, releaseCachedFiles: i == active.imageSends.len - 1))
+    withText: send.withText, paymentRequests: send.paymentRequests,
+    releaseCachedFiles: i == active.imageSends.len - 1))
 
 proc matchesActiveImageSend*(queue: seq[PendingShare], chatId, sendToken: string): bool =
   ## True iff the finished signal belongs to the active share's current image send:

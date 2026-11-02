@@ -4,6 +4,7 @@ import app/modules/main/share_send
 import app_service/service/message/dto/urls_unfurling_plan
 import app_service/service/message/dto/link_preview
 import app_service/service/settings/dto/settings
+import app_service/service/message/dto/payment_request
 
 proc meta(url: string, permission: UrlUnfurlingPermission, status = false): UrlUnfurlingMetadata =
   result = UrlUnfurlingMetadata()
@@ -150,3 +151,47 @@ suite "share send - queue":
 
     let third = takeNextImageDispatch(queue)
     check(third.isNone)
+
+suite "share send - payment requests":
+  let requests = @[newPaymentRequest("0xabc", "1.5", "eth-key", "ETH", "logo-eth"),
+    newPaymentRequest("0xabc", "10", "snt-key", "SNT", "logo-snt")]
+  let dests = @[ShareDestination(chatId: "a"), ShareDestination(chatId: "b"), ShareDestination(chatId: "c")]
+
+  test "test_textOnlyShareCarriesRequestsOncePerDestination":
+    let sends = textSendPlan(dests, requests)
+    check(sends.mapIt(it.chatId) == @["a", "b", "c"])
+    for send in sends:
+      check(send.paymentRequests == requests)
+
+  test "test_paymentRequestOnlyShareSendsToEveryDestination":
+    let sends = textSendPlan(dests, requests)
+    check(sends.len == dests.len)
+    check(sends.allIt(it.paymentRequests.len == 2))
+
+  test "test_batchedImagesCarryRequestsOnTheTextMessageOnly":
+    var paths: seq[string] = @[]
+    for i in 0 ..< 13: paths.add("/cache/" & $i & ".png")
+    let sends = imageSendPlan(dests, paths, "t", paymentRequests = requests)
+    check(sends.len == 9)
+    for dest in dests:
+      let destSends = sends.filterIt(it.chatId == dest.chatId)
+      check(destSends.mapIt(it.paymentRequests.len) == @[2, 0, 0])
+      check(destSends[0].withText)
+      check(destSends[0].paymentRequests == requests)
+
+  test "test_imageDispatchHandsOverTheSendRequests":
+    var queue: seq[PendingShare] = @[]
+    let two = dests[0 .. 1]
+    discard enqueueShare(queue, PendingShare(token: "t", destinations: two, paymentRequests: requests,
+      imagePaths: @["/cache/img.png"],
+      imageSends: imageSendPlan(two, @["/cache/img.png"], "t", paymentRequests = requests)))
+    var dispatched: seq[seq[PaymentRequest]] = @[]
+    while true:
+      let d = takeNextImageDispatch(queue)
+      if d.isNone: break
+      dispatched.add(d.get().paymentRequests)
+    check(dispatched == @[requests, requests])
+
+  test "test_noRequestsByDefault":
+    check(imageSendPlan(dests, @["/cache/img.png"], "t").allIt(it.paymentRequests.len == 0))
+    check(textSendPlan(dests, @[]).allIt(it.paymentRequests.len == 0))

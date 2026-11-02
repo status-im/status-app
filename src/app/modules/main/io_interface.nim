@@ -17,6 +17,7 @@ import app_service/service/network/service as network_service
 import app_service/service/network/network_item
 import app_service/service/message/dto/link_preview
 import app_service/service/message/dto/urls_unfurling_plan
+import app_service/service/message/dto/payment_request
 from app_service/common/types import StatusType, ContractTransactionStatus, MembershipRequestState, RequestToJoinState
 
 import app/global/app_signals
@@ -363,7 +364,8 @@ method launchShareFlow*(self: AccessInterface, text: string, imagePaths: seq[str
 method releaseShareIntakeFiles*(self: AccessInterface, imagePathsJson: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method sendSharedContent*(self: AccessInterface, destinationsJson, text, imagePathsJson: string, contentType: int) {.base.} =
+method sendSharedContent*(self: AccessInterface, destinationsJson, text, imagePathsJson: string, contentType: int,
+    paymentRequests: seq[PaymentRequest]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onShareUnfurlingPlanReady*(self: AccessInterface, requestUuid: string, plan: UrlsUnfurlingPlan) {.base.} =
