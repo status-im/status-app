@@ -40,8 +40,11 @@ Loader {
 
     active: false
 
-    // Last-wins: a new share while the picker is open replaces the payload.
+    // The share takes over the screen: open popups are dismissed, except the
+    // picker itself (NoAutoClose). Last-wins: a new share while the picker is
+    // open replaces the payload.
     function launch(text: string, imagePaths) {
+        SystemUtils.tryCloseActivePopups()
         d.releaseImages()
         root.rootChatStore.clearSharePaymentRequests()
         d.sharedText = text
