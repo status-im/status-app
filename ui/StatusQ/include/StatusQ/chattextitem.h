@@ -391,6 +391,8 @@ private:
     qreal m_codeBlockRadius = 6;
     qreal m_emojiOnlyPixelSize = 0;
     bool m_emojiOnly = false;
+    bool m_hasQuotes = false;
+    bool m_hasCodeBlocks = false;
 
     // Fragments whose format we changed for link highlighting, with the
     // format they had before, so the highlight can be taken off again without

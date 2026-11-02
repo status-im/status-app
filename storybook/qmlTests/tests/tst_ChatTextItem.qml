@@ -1367,6 +1367,54 @@ Item {
             compare(item.selectedText, "")
         }
 
+        function test_cachedDecorationsFollowAppearanceAndReplacement() {
+            const item = createItem()
+            item.segments = [{text: "WWWWWW", codeBlock: true, quoteLevel: 1}]
+            item.quoteBarColor = "lime"
+            item.codeBackground = "blue"
+            item.codeBorderColor = "blue"
+            let image = grabImage(item)
+            const bar = item.quoteBarRects()[0]
+            const frame = item.codeBlockRects()[0]
+            verify(colourShare(image, bar, Qt.color("lime")) > 0.5)
+            verify(colourShare(image, frame, Qt.color("blue")) > 0.5)
+            item.select(0, 3)
+            image = grabImage(item)
+            verify(colourShare(image, bar, Qt.color("lime")) > 0.5)
+            item.clearSelection()
+            item.quoteBarColor = "red"
+            item.codeBackground = "yellow"
+            image = grabImage(item)
+            verify(colourShare(image, bar, Qt.color("red")) > 0.5)
+            verify(colourShare(image, frame, Qt.color("yellow")) > 0.5)
+            item.segments = [{text: "plain"}]
+            image = grabImage(item)
+            compare(colourShare(image, Qt.rect(0, 0, item.width, item.contentHeight), Qt.color("yellow")), 0)
+        }
+
+        function test_plainFastPathResetsDecorationState() {
+            const item = createItem()
+            item.segments = [{text: "plain"}]
+            const plainHeight = item.contentHeight
+            item.segments = [{text: "code", codeBlock: true, quoteLevel: 2}]
+            verify(item.codeBlockRects().length > 0)
+            verify(item.quoteBarRects().length > 0)
+            item.segments = [{text: "plain"}]
+            compare(item.contentHeight, plainHeight)
+            compare(item.codeBlockRects().length, 0)
+            compare(item.quoteBarRects().length, 0)
+            item.quoteBarWidth = 5
+            item.quoteSpacing = 15
+            item.codeBlockPadding = 12
+            compare(item.contentHeight, plainHeight)
+            item.segments = [{text: "code", codeBlock: true, quoteLevel: 2}]
+            verify(item.codeBlockRects().length > 0)
+            compare(item.quoteBarRects()[0].width, 5)
+            verify(item.contentHeight > plainHeight + 12)
+            item.segments = [{text: "plain"}]
+            compare(item.contentHeight, plainHeight)
+        }
+
         function test_replacementPublishesFinalGeometryImmediately() {
             const item = createItem()
             item.segments = [{text: "quoted", quoteLevel: 1},

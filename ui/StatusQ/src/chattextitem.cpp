@@ -367,6 +367,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
 {
     m_formatsDirty = true;
     m_appearanceRanges.clear();
+    m_hasQuotes = false;
+    m_hasCodeBlocks = false;
     m_highlighted.clear();
     const bool clearHoveredLink = !preserveInteraction && !m_hoveredLink.isEmpty();
     if (!preserveInteraction) {
@@ -412,6 +414,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     for (const QVariant& entry : std::as_const(m_segments)) {
         const QVariantMap segment = entry.toMap();
         const bool codeBlock = segment.value(QStringLiteral("codeBlock")).toBool();
+        m_hasCodeBlocks |= codeBlock;
+        m_hasQuotes |= segment.value(QStringLiteral("quoteLevel")).toInt() > 0;
 
         // A code block is always a paragraph of its own, so whatever follows
         // one starts a new paragraph too.
@@ -568,7 +572,7 @@ void ChatTextItem::applyEmojiSizing()
             emojiOnly = !formatted && Markdown::isOnlyEmoji(source);
         }
     }
-    const qreal size = effectiveEmojiSize(emojiOnly);
+    qreal size = 0;
 
     // Collected first and applied after: setting a format splits fragments,
     // which would invalidate the iteration.
@@ -576,13 +580,16 @@ void ChatTextItem::applyEmojiSizing()
     QVector<Change> changes;
 
     {
-        const int pixelSize = qRound(size);
+        int pixelSize = 0;
 
         for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
             if (isCodeBlock(block))
                 continue;
 
             const QString text = block.text();
+            // Most messages need no grapheme segmentation at all.
+            if (!Markdown::clusterHasEmoji(text))
+                continue;
             QVector<QPair<int, int>> emojiRanges;
             int rangeStart = -1;
 
@@ -601,6 +608,10 @@ void ChatTextItem::applyEmojiSizing()
 
             if (emojiRanges.isEmpty())
                 continue;
+            if (pixelSize == 0) {
+                size = effectiveEmojiSize(emojiOnly);
+                pixelSize = qRound(size);
+            }
 
             // One change per fragment a segment overlaps, keeping the fragment's
             // own format (a link, bold) and replacing only its size. Point size
@@ -693,6 +704,8 @@ qreal ChatTextItem::quoteIndent() const
 // end of the document gets its padding from the root frame instead.
 void ChatTextItem::applyBlockMargins()
 {
+    if (!m_hasQuotes && !m_hasCodeBlocks)
+        return;
     QTextCursor cursor(m_document.get());
     cursor.beginEditBlock();
 
@@ -774,6 +787,8 @@ std::pair<qreal, qreal> ChatTextItem::blockExtent(const QTextBlock& block) const
 // capped at the available width; the text wraps at the available content width.
 QVector<QRectF> ChatTextItem::computeCodeFrames() const
 {
+    if (!m_hasCodeBlocks)
+        return {};
     QVector<QRectF> frames;
     const qreal indent = quoteIndent();
 
@@ -819,6 +834,8 @@ QVariantList ChatTextItem::codeBlockRects() const
 // margins.
 QVector<QRectF> ChatTextItem::computeQuoteBars() const
 {
+    if (!m_hasQuotes)
+        return {};
     QVector<QRectF> bars;
     QVector<QRectF> open; // open[i] is the bar of level i + 1 still growing
 
