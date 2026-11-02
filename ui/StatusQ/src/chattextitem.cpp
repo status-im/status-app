@@ -298,6 +298,7 @@ void ChatTextItem::setEditedMarkerColor(const QColor& color)
 // cursor. Styling uses format properties; no HTML is produced or parsed.
 void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
 {
+    m_formatsDirty = true;
     m_highlighted.clear();
     const bool clearHoveredLink = !preserveInteraction && !m_hoveredLink.isEmpty();
     if (!preserveInteraction) {
@@ -795,18 +796,22 @@ void ChatTextItem::ensureLayout()
     // addTextLayout reads brushes from additional formats rather than walking
     // document fragments. Mirror those formats on the GUI thread; unchanged
     // layouts keep their existing shaping and line breaks.
-    for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
-        QList<QTextLayout::FormatRange> formats;
-        for (auto it = block.begin(); !it.atEnd(); ++it) {
-            const QTextFragment fragment = it.fragment();
-            const QTextCharFormat format = fragment.charFormat();
-            if (!format.isEmpty())
-                formats.append({fragment.position() - block.position(), fragment.length(), format});
+    if (m_formatsDirty) {
+        for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+            QList<QTextLayout::FormatRange> formats;
+            for (auto it = block.begin(); !it.atEnd(); ++it) {
+                const QTextFragment fragment = it.fragment();
+                const QTextCharFormat format = fragment.charFormat();
+                if (!format.isEmpty())
+                    formats.append({fragment.position() - block.position(), fragment.length(), format});
+            }
+            if (block.layout()->formats() != formats) {
+                block.layout()->setFormats(formats);
+                m_document->markContentsDirty(block.position(), block.length());
+            }
         }
-        if (block.layout()->formats() != formats) {
-            block.layout()->setFormats(formats);
-            m_document->markContentsDirty(block.position(), block.length());
-        }
+
+        m_formatsDirty = false;
     }
 
     // Only when it actually changed. QTextDocument::setTextWidth goes straight
@@ -1603,6 +1608,7 @@ void ChatTextItem::applyLinkHighlights()
     // must not invalidate the traversal, including repeated links.
     QTextCursor cursor(m_document.get());
     cursor.beginEditBlock();
+    m_formatsDirty = !m_highlighted.isEmpty() || m_formatsDirty;
     QTextCharFormat highlight;
     highlight.setBackground(m_hoverHighlightColor);
     for (const HighlightedRange& range : std::as_const(m_highlighted)) {
@@ -1620,6 +1626,7 @@ void ChatTextItem::clearLinkHighlights()
 {
     if (m_highlighted.isEmpty())
         return;
+    m_formatsDirty = true;
 
     QTextCursor cursor(m_document.get());
     cursor.beginEditBlock();
