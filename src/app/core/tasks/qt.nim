@@ -17,13 +17,25 @@ type
     vptr*: uint
     slot*: string
 
+export signal_handler.currentSessionGeneration, signal_handler.advanceSessionGeneration
+
+proc isStale(arg: QObjectTaskArg): bool =
+  ## The app is quitting or the session that submitted the task has ended. The GUI
+  ## thread re-checks the generation on delivery, for completions queued before that.
+  ## An arg completed without going through `ThreadPool.start` keeps generation 0 and
+  ## is stale once the first session has ended.
+  isShuttingDown() or arg.generation != currentSessionGeneration()
+
+proc deliver(arg: QObjectTaskArg, payload: cstring) =
+  signal_handler_in_generation(cast[pointer](arg.vptr), payload, cstring(arg.slot), arg.generation)
+
 proc finish*[T](arg: QObjectTaskArg, payload: T) =
-  if isShuttingDown(): return
-  signal_handler(cast[pointer](arg.vptr), cstring(Json.encode(payload)), cstring(arg.slot))
+  if arg.isStale(): return
+  arg.deliver(cstring(Json.encode(payload)))
 
 proc finish*(arg: QObjectTaskArg, payload: string) =
-  if isShuttingDown(): return
-  signal_handler(cast[pointer](arg.vptr), cstring(payload), cstring(arg.slot))
+  if arg.isStale(): return
+  arg.deliver(cstring(payload))
 
 proc finishTyped*[T](arg: QObjectTaskArg, payload: sink T) =
   ## Opt-in typed completion path — the companion to `finish`.
@@ -35,12 +47,13 @@ proc finishTyped*[T](arg: QObjectTaskArg, payload: sink T) =
   ## Ownership: `payload` must be isolated — the sole reference at the call site.
   ## After this call the worker MUST NOT touch it. The receiving slot claims it via
   ## `takeTyped[T](response)`; the object is then destroyed on the GUI thread. On
-  ## shutdown the object is destroyed here on the worker thread (still exclusively
-  ## owned — safe) and no slot is invoked; a handoff already parked when shutdown
-  ## races in is swept by `drainHandoffs` at task-infra teardown.
-  if isShuttingDown(): return
+  ## shutdown, or once the submitting session has ended, the object is destroyed here
+  ## on the worker thread (still exclusively owned — safe) and no slot is invoked. A
+  ## handoff parked before that, whose delivery the GUI thread then drops, is swept by
+  ## `drainHandoffs` when the session's pool is torn down (`ThreadPool.teardown`).
+  if arg.isStale(): return
   let handle = parkHandoff(payload)
-  signal_handler(cast[pointer](arg.vptr), cstring($handle), cstring(arg.slot))
+  arg.deliver(cstring($handle))
 
 proc takeTyped*[T](response: string): T =
   ## Claim the object delivered by `finishTyped`. Call from the completion slot,
