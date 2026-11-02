@@ -80,6 +80,8 @@ Control {
         id: chatInput
 
         padding: 0
+        Theme.padding: Theme.defaultPadding
+        textInput.leftPadding: 12
 
         sendEnabled: root.sendEnabled
         emojiPopup: root.emojiPopup

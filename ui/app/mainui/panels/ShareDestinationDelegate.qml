@@ -43,8 +43,8 @@ StatusListItem {
     }
 
     implicitHeight: 56
-    leftPadding: 12
-    rightPadding: 12
+    leftPadding: Theme.halfPadding
+    rightPadding: Theme.halfPadding - checkBox.rightPadding
 
     title: d.isChannel ? "#" + root.name : root.name
     // People and groups read as names; channels (and threads later) don't.
@@ -83,6 +83,7 @@ StatusListItem {
 
     components: [
         StatusCheckBox {
+            id: checkBox
             objectName: "shareDestinationCheckBox"
             Accessible.name: root.name
             checkable: false

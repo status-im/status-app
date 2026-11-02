@@ -48,6 +48,8 @@ Control {
     QtObject {
         id: d
 
+        readonly property int contentInset: 12
+
         property bool searchActive: false
         property bool selectedOnly: false
 
@@ -93,6 +95,8 @@ Control {
         selection: shareSelection
         selectedOnly: d.selectedOnly
         searchPhrase: searchBox.text
+        leftPadding: d.contentInset - Theme.halfPadding
+        rightPadding: d.contentInset - Theme.halfPadding
         onToggleRequested: chatId => shareSelection.toggle(chatId)
     }
 
@@ -103,7 +107,7 @@ Control {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
+            Layout.leftMargin: d.contentInset
             Layout.preferredHeight: 56
             spacing: 0
 
@@ -174,8 +178,8 @@ Control {
             id: searchBox
             objectName: "shareDestinationPickerSearchBox"
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.halfPadding
-            Layout.rightMargin: Theme.halfPadding
+            Layout.leftMargin: d.contentInset
+            Layout.rightMargin: d.contentInset
             Layout.bottomMargin: Theme.halfPadding
             visible: d.searchActive
             placeholderText: qsTr("Search chats and channels")
@@ -185,8 +189,8 @@ Control {
             id: tabBar
             objectName: "shareDestinationPickerTabBar"
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.halfPadding
-            Layout.rightMargin: Theme.halfPadding
+            Layout.leftMargin: d.contentInset
+            Layout.rightMargin: d.contentInset
             position: {
                 const view = swipeView.contentItem
                 if (!view || swipeView.width <= 0)
