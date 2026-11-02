@@ -310,6 +310,14 @@ suite "held resource":
     check not timer.running
     check not retryTimer.running
 
+  test "foregrounding without a prior background keeps the retry backoff":
+    holders.acquire()
+    holders.onLoadFailed(gen)
+    holders.onForegrounded()
+    check loads == 1
+    check retryTimer.running
+    check not holders.isActive
+
 suite "held resource invalidation":
   setup:
     let timer = FakeTimer()
@@ -622,6 +630,25 @@ suite "held resources by key":
     check loads.toHashSet == ["a", "b", "c"].toHashSet
     check loads.len == 5
     check chained.isActive("c")
+
+  test "a drop callback invalidating a key on background loads nothing":
+    var chained: HeldResources[string]
+    chained = newHeldResources[string](timer.fake(), retryTimer.fake(),
+      now = (proc(): int64 = clock),
+      onLoad = (proc(key: string, generation: int) =
+        loads.add key
+        gens[key] = generation),
+      onDrop = (proc(key: string) =
+        drops.add key
+        chained.invalidate("a")
+        chained.invalidate("b")))
+    chained.acquire("a")
+    chained.acquire("b")
+    chained.onBackgrounded()
+    check loads == @["a", "b"]
+    check drops.len == 2
+    check not chained.isActive("a")
+    check not chained.isActive("b")
 
   test "a failed load retries per key with its own backoff":
     registry.acquire("a")

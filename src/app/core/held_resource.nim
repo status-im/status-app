@@ -116,6 +116,8 @@ proc invalidate*(self: HeldResource) =
   if self.disposed:
     return
   if self.count > 0:
+    if self.backgrounded:
+      return
     if self.active:
       self.load()
     elif self.failedLoads > 0:
@@ -147,6 +149,8 @@ proc onBackgrounded*(self: HeldResource) =
   self.drop()
 
 proc onForegrounded*(self: HeldResource) =
+  if not self.backgrounded:
+    return
   self.backgrounded = false
   if not self.disposed and self.count > 0 and not self.active:
     self.load()
@@ -321,6 +325,8 @@ proc invalidateAll*[K](self: HeldResources[K]) =
 
 proc onBackgrounded*[K](self: HeldResources[K]) =
   self.backgrounded = true
+  for entry in self.entries.values:
+    entry.resource.backgrounded = true
   for key in toSeq(self.entries.keys):
     self.withEntry(key):
       entry.resource.onBackgrounded()
