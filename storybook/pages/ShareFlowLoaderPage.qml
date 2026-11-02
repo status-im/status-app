@@ -46,6 +46,9 @@ SplitView {
         function releaseShareIntakeFiles(imagePaths) {
             logs.logEvent("releaseShareIntakeFiles: " + imagePaths.length + " image(s)")
         }
+        function setNavToMsgDetailsFlag(navigate) {
+            logs.logEvent("setNavToMsgDetailsFlag: " + navigate)
+        }
         function setActiveSectionChat(sectionId, chatId) {
             logs.logEvent("setActiveSectionChat: " + sectionId + " / " + chatId)
         }

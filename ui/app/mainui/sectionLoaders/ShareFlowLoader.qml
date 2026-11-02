@@ -25,7 +25,8 @@ import utils
 Loader {
     id: root
 
-    // sectionsLoaded, chatSearchModel, setActiveSectionChat, releaseShareIntakeFiles
+    // sectionsLoaded, chatSearchModel, setNavToMsgDetailsFlag, setActiveSectionChat,
+    // releaseShareIntakeFiles
     required property AppStores.RootStore rootStore
     // sendSharedContent, share payment requests
     required property ChatStores.RootStore rootChatStore
@@ -83,8 +84,10 @@ Loader {
             if (removedCached.length > 0)
                 root.rootStore.releaseShareIntakeFiles(removedCached)
             root.item.close()
-            if (destinations.length > 0)
+            if (destinations.length > 0) {
+                root.rootStore.setNavToMsgDetailsFlag(true)
                 root.rootStore.setActiveSectionChat(destinations[0].sectionId, destinations[0].chatId)
+            }
             if (!root.rootChatStore.sendSharedContent(destinations, text, imagePaths)) {
                 if (keptCached.length > 0)
                     root.rootStore.releaseShareIntakeFiles(keptCached)
