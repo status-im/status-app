@@ -3,10 +3,11 @@ import QtQml
 // Holds the resource under `key` while it exists and is active. It requests an
 // acquire on activation and a release on deactivation, on a key change and on
 // destruction, so every acquire request is paired with exactly one release.
+// An empty key holds nothing.
 QObject {
     id: root
 
-    property string key
+    required property string key
     property bool active: true
 
     // turns true after acquireRequested and false after releaseRequested: it is
