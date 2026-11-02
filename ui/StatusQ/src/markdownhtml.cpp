@@ -9,10 +9,7 @@ namespace {
 
 using Markdown::Node;
 using Markdown::NodeKind;
-
-// Prefix applied to a WalletLink's raw destination (address / ENS name) so that activating the
-// rendered <a> invokes the "send via personal chat" flow (see MessageView.onLinkActivated).
-constexpr auto kSendViaChatPrefix = "//send-via-personal-chat//"_L1;
+using Markdown::kSendViaChatPrefix;
 
 QString escape(QStringView s)
 {

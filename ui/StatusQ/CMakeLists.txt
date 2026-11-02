@@ -187,6 +187,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/constantrole.h
         include/StatusQ/contextmenueventfilter.h
         include/StatusQ/delegatepool.h
+        include/StatusQ/chattextitem.h
         include/StatusQ/fastexpressionfilter.h
         include/StatusQ/fastexpressionrole.h
         include/StatusQ/fastexpressionsorter.h
@@ -243,6 +244,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/incubationhints.cpp
         src/constantrole.cpp
         src/delegatepool.cpp
+        src/chattextitem.cpp
         src/externc.cpp
         src/fastexpressionfilter.cpp
         src/fastexpressionrole.cpp
