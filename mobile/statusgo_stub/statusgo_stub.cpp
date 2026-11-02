@@ -31,11 +31,23 @@ static SignalCallback g_signalCb = nullptr;
 static void loge(const char* msg) {
   __android_log_write(ANDROID_LOG_ERROR, "statusgo-stub", msg);
 }
+// Detaches a native thread this stub attached when the thread exits: ART aborts the
+// process when an attached thread exits without detaching. Worker threads come and go
+// (each session's thread pool, the logout thread), so this is not only a shutdown case.
+struct AttachedThread {
+  bool attached = false;
+  ~AttachedThread() {
+    if (attached && g_vm) g_vm->DetachCurrentThread();
+  }
+};
+static thread_local AttachedThread t_attachedThread;
+
 static JNIEnv* getEnv() {
   if (!g_vm) return nullptr;
   JNIEnv* env = nullptr;
   if (g_vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
     if (g_vm->AttachCurrentThread(&env, nullptr) != JNI_OK) return nullptr;
+    t_attachedThread.attached = true;
   }
   return env;
 }

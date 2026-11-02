@@ -596,7 +596,7 @@ proc isMessagingNetworkConnected*(self: Controller): bool =
   self.nodeService.isConnected()
 
 proc logout*(self: Controller) =
-  self.generalService.logout()
+  discard self.generalService.logout()
 
 proc urlUnfurlingMode*(self: Controller): UrlUnfurlingMode =
   self.settingsService.urlUnfurlingMode()

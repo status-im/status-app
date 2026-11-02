@@ -169,10 +169,26 @@ public final class StatusGoService extends Service {
      * consumes this response to update chat state; status-go does not emit messages.new for
      * locally initiated sends.
      */
-    public static boolean publishNotificationReplyResult(String rpcResponseJson) {
+    public static boolean publishNotificationReplyResult(String rpcResponseJson, long signalEpoch) {
         final StatusGoService service = sInstance;
         if (service == null || rpcResponseJson == null || rpcResponseJson.isEmpty()) return false;
-        return service.publishNotificationReplyResultInternal(rpcResponseJson);
+        return service.publishNotificationReplyResultInternal(rpcResponseJson, signalEpoch);
+    }
+
+    /**
+     * Epoch status-go stamps on the signals it sends now (0 if unknown). The frontend only
+     * accepts signals of the backend session it is logged in to, so signals built here
+     * carry the epoch of the session they belong to.
+     */
+    public static long currentSignalEpoch() {
+        final String response = callRpc("SignalEpoch", "[]");
+        if (response == null || response.isEmpty()) return 0;
+        try {
+            return new JSONObject(response).optLong("signalEpoch", 0);
+        } catch (Throwable t) {
+            Log.w(TAG, "unreadable SignalEpoch response", t);
+            return 0;
+        }
     }
 
     /**
@@ -253,15 +269,18 @@ public final class StatusGoService extends Service {
                 ByteBuffer.wrap(jsonSignal.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private boolean publishNotificationReplyResultInternal(String rpcResponseJson) {
+    private boolean publishNotificationReplyResultInternal(String rpcResponseJson, long signalEpoch) {
         final String signal;
         try {
-            JSONObject envelope = new JSONObject();
-            envelope.put("type", "notification.reply.sent");
-            envelope.put("event", new JSONObject(rpcResponseJson));
-            signal = envelope.toString();
+            // Parsing validates the response JSON.
+            signal = NotificationReplySignal.envelope(
+                    new JSONObject(rpcResponseJson).toString(), signalEpoch);
         } catch (Throwable t) {
             Log.w(TAG, "failed to create notification reply frontend signal", t);
+            return false;
+        }
+        if (signal == null) {
+            Log.w(TAG, "notification reply result without a signal epoch, not published");
             return false;
         }
 

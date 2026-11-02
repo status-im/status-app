@@ -325,6 +325,14 @@ Q_DECL_EXPORT void statusq_invoke_method_queued_in_generation(void* obj, const c
         Qt::QueuedConnection);
 }
 
+// Delivers "<tag>|<arg>". Lets a callback on a foreign thread stamp its payload without
+// allocating on the caller's side.
+Q_DECL_EXPORT void statusq_invoke_method_queued_tagged(void* obj, const char* method, const char* arg,
+                                                       quint64 tag) {
+    QMetaObject::invokeMethod(static_cast<QObject*>(obj), method, Qt::QueuedConnection,
+                              Q_ARG(QString, QString::number(tag) + QLatin1Char('|') + QString::fromUtf8(arg)));
+}
+
 Q_DECL_EXPORT void* statusq_urlscheme_create() {
     auto* ev = new Status::UrlSchemeEvent();
     ev->registerUrlHandler();

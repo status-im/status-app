@@ -6,6 +6,8 @@ import
   regex
 
 import status_go
+import results
+import std/atomics
 import app/core/main
 import constants as main_constants
 import statusq_bridge
@@ -33,11 +35,11 @@ import app/global/app_lifecycle
 import app/global/log_cleanup
 import app/global/log_cleanup_tasks
 import app/boot/app_controller
+import app/boot/session_host
+from app_service/service/keycardV2/service import receiveKeycardSignalV2
 
 featureGuard KEYCARD_ENABLED:
   import keycard_go
-
-  var keycardServiceV2QObjPointer: pointer
 
 when defined(macosx) and defined(arm64):
   import posix
@@ -83,7 +85,9 @@ when defined(USE_QML_SERVER):
 logScope:
   topics = "status-app"
 
-var signalsManagerQObjPointer: pointer
+# The process-lifetime SessionHost receives the status-go and keycard callbacks and
+# forwards them to the current app session.
+var sessionHostQObjPointer: Atomic[pointer]
 
 proc isExperimental(): string =
   result = if getEnv("EXPERIMENTAL") == "1": "1" else: "0" # value explicity passed to avoid trusting input
@@ -142,8 +146,9 @@ proc setupRemoteSignalsHandling() =
   # we cannot capture any local variables here (we must rely on globals)
   var callbackStatusGo: status_go.SignalCallback = proc(p0: cstring) {.cdecl.} =
     if isShuttingDown(): return
-    if signalsManagerQObjPointer != nil:
-      signal_handler(signalsManagerQObjPointer, p0, "receiveSignal")
+    let host = sessionHostQObjPointer.load()
+    if host != nil:
+      signal_handler(host, p0, "receiveSignal")
   status_go.setSignalEventCallback(callbackStatusGo)
 
   featureGuard KEYCARD_ENABLED:
@@ -154,8 +159,9 @@ proc setupRemoteSignalsHandling() =
         if test_controller.shouldIgnoreKeycardLibSignals():
           return
 
-      if keycardServiceV2QObjPointer != nil:
-        signal_handler(keycardServiceV2QObjPointer, p0, "receiveKeycardSignalV2")
+      let host = sessionHostQObjPointer.load()
+      if host != nil:
+        deliverKeycardSignal(host, p0)
 
     keycard_go.setSignalEventCallback(callbackKeycardGo)
 
@@ -381,6 +387,18 @@ proc mainProc() =
 
   let appController = newAppController(statusFoundation)
 
+  let sessionHost = newSessionHost()
+  let signalEpochRead = sessionHost.readBackendSignalEpoch()
+  if signalEpochRead.isErr:
+    # SessionHost then adopts the epoch of the first stamped signal.
+    error "reading the backend signal epoch failed", error = signalEpochRead.error
+  sessionHost.attachSession(SessionReceivers(
+    signal: proc(signal: string) = statusFoundation.signalsManager.processSignal(signal),
+    keycardSignal: proc(signal: string) =
+      featureGuard KEYCARD_ENABLED:
+        appController.keycardServiceV2.receiveKeycardSignalV2(signal)
+  ))
+
   let isProductionQVariant = newQVariant(if defined(production): true else: false)
   let isExperimentalQVariant = newQVariant(isExperimental)
   let signalsManagerQVariant = newQVariant(statusFoundation.signalsManager)
@@ -440,9 +458,8 @@ proc mainProc() =
 
   defer:
     info "shutting down..."
-    signalsManagerQObjPointer = nil
-    featureGuard KEYCARD_ENABLED:
-      keycardServiceV2QObjPointer = nil
+    sessionHostQObjPointer.store(nil)
+    sessionHost.detachSession()
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
     signalsManagerQVariant.delete()
@@ -454,6 +471,7 @@ proc mainProc() =
     statusFoundation.delete()
     when defined(ios):
       servicesPauseBridge.delete()
+    sessionHost.delete()
     singleInstance.delete()
     app.delete()
 
@@ -463,11 +481,9 @@ proc mainProc() =
       info "Terminating the app as the second instance"
       quit()
 
-  # We need these global variables in order to be able to access the application
-  # from the non-closure callback passed to `statusgo_backend.setSignalEventCallback`
-  signalsManagerQObjPointer = cast[pointer](statusFoundation.signalsManager.vptr)
-  featureGuard KEYCARD_ENABLED:
-    keycardServiceV2QObjPointer = cast[pointer](appController.keycardServiceV2.vptr)
+  # We need this global variable in order to be able to access the application
+  # from the non-closure callbacks passed to `setSignalEventCallback`
+  sessionHostQObjPointer.store(cast[pointer](sessionHost.vptr))
 
   setupRemoteSignalsHandling()
 

@@ -16,6 +16,7 @@ done
 # Pure-Java IPC helpers (no Android classes), compiled straight against JUnit 4.
 JAVA_ROOT="$HERE/../../android/qt6"
 JAVA_SOURCES=(
+  "$JAVA_ROOT/src/app/status/mobile/ipc/NotificationReplySignal.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalEnvelope.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalFanout.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalTypeResolver.java"
