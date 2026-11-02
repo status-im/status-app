@@ -3,7 +3,6 @@
 import importlib.util
 import json
 import os
-import tempfile
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -154,16 +153,9 @@ class Validation(unittest.TestCase):
         self.rows, self.dropped = minimal_rows()
         self.dropped["regional indicators"] = 26
         self.manifest = {"metadata": {"expected_entries": len(self.rows)}}
-        qml = tempfile.NamedTemporaryFile("w", suffix=".qml", delete=False)
-        qml.write("readonly property int firstFlagIndex: 2\n"
-                  "readonly property int lastFlagIndex: 2\n")
-        qml.close()
-        self.qml = qml.name
-        self.addCleanup(os.unlink, self.qml)
 
     def validate(self, rows=None, manifest=None):
-        bc.validate(rows or self.rows, manifest or self.manifest, self.dropped,
-                    emoji_qml=self.qml)
+        bc.validate(rows or self.rows, manifest or self.manifest, self.dropped)
 
     def assertRejects(self, fragment, rows=None, manifest=None):
         with self.assertRaises(SystemExit) as caught:
@@ -217,12 +209,6 @@ class Validation(unittest.TestCase):
     def test_rejects_flags_that_are_not_last(self):
         rows = list(reversed(json.loads(json.dumps(self.rows))))
         self.assertRejects("flags are not the last block", rows)
-
-    def test_rejects_flag_indices_that_disagree_with_qml(self):
-        with open(self.qml, "w") as f:
-            f.write("readonly property int firstFlagIndex: 3504\n"
-                    "readonly property int lastFlagIndex: 3772\n")
-        self.assertRejects("update Emoji.qml")
 
     def test_rejects_a_base_entry_carrying_a_tone(self):
         rows = json.loads(json.dumps(self.rows))

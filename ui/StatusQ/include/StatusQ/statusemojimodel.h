@@ -1,16 +1,13 @@
 #pragma once
 
 #include <QAbstractListModel>
-#include <QHash>
 #include <QJsonArray>
-#include <QJsonValue>
 
 class StatusEmojiModel : public QAbstractListModel
 {
     Q_OBJECT
 
     Q_PROPERTY(QString userUID READ userUID WRITE setUserUID NOTIFY userUIDChanged FINAL)
-    Q_PROPERTY(QJsonArray emojiJson READ emojiJson NOTIFY emojiJsonChanged FINAL)
     Q_PROPERTY(QStringList categories READ categories CONSTANT FINAL)
     Q_PROPERTY(QStringList categoryIcons READ categoryIcons CONSTANT FINAL)
     Q_PROPERTY(QStringList recentEmojis READ recentEmojis WRITE setRecentEmojis NOTIFY
@@ -54,32 +51,20 @@ public:
     Q_INVOKABLE QJsonArray getSuggestions(const QString& name) const;
     Q_INVOKABLE int maxAsciiEmojiAliasLength() const;
     Q_INVOKABLE int getCategoryOffset(int categoryIndex) const;
+    // A random emoji character, never a flag.
+    Q_INVOKABLE QString getRandomEmoji() const;
 
     Q_INVOKABLE void addRecentEmoji(const QString &hexcode);
 
 signals:
-    void emojiJsonChanged();
     void recentEmojisChanged();
     void userUIDChanged();
 
 private:
-    QJsonArray emojiJson() const;
-    void setEmojiJson(const QJsonArray &newEmojiJson);
-    QJsonArray m_emojiJson;
-
-    // Parses the catalogue if the queued load has not happened yet; every query calls it so
-    // results never depend on load timing.
-    void ensureLoaded() const;
-
-    void rebuildLookupIndexes();
-    QHash<QString, QString> m_asciiAliasToEmoji;
-    QHash<QString, int> m_hexcodeToIndex;
-    // normalised id -> the id the catalogue uses, so every spelling resolves
-    QHash<QString, QString> m_canonicalToHexcode;
-    int m_maxAsciiEmojiAliasLength = 0;
-
-    // The catalogue entry for any spelling of `hexcode`, or a null value.
-    QJsonValue entryForHexcode(const QString &hexcode) const;
+    // Catalogue entry index for any spelling of `hexcode`, or -1.
+    int entryForHexcode(const QString &hexcode) const;
+    // Catalogue entry index behind a model row.
+    int entryForRow(int row) const;
 
     QStringList categories() const;
     QStringList categoryIcons() const;
@@ -87,7 +72,7 @@ private:
     QStringList recentEmojis() const;
     void setRecentEmojis(const QStringList &newRecentEmojis);
     QStringList m_recentEmojis;
-    QJsonArray m_recentEmojiJson;
+    QList<int> m_recentEntries;
 
     void cleanAndResizeRecentEmojis();
     void addRecentEmojisToModel(const QStringList &emojiHexcodes);

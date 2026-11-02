@@ -28,7 +28,6 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 CATALOGUE = os.path.join(REPO, "ui/StatusQ/src/StatusQ/Core/Utils/emojiList.json")
 # The e2e suite reads its own copy; keeping it generated stops the two drifting.
 E2E_COPY = os.path.join(REPO, "test/e2e/ext/test_files/emojis_unicodes_list.json")
-EMOJI_QML = os.path.join(REPO, "ui/StatusQ/src/StatusQ/Core/Utils/Emoji.qml")
 
 # StatusEmojiModel::categories() hard-codes this list, and the picker's tab row
 # is index-aligned with it. "recent" is synthesised at runtime.
@@ -160,7 +159,7 @@ def canonical(unicode_id):
     return "-".join(p.lstrip("0") or "0" for p in parts)
 
 
-def validate(rows, manifest, dropped, emoji_qml=EMOJI_QML):
+def validate(rows, manifest, dropped):
     """Fail loudly rather than ship a catalogue the app cannot use."""
     problems = []
 
@@ -205,18 +204,9 @@ def validate(rows, manifest, dropped, emoji_qml=EMOJI_QML):
               if i == 0 or rows[i - 1]["category"] != r["category"]]
     check(len(blocks) == len(set(blocks)), f"categories are not contiguous: {blocks}")
 
-    # Emoji.qml hard-codes where the flags are, to exclude them from the random
-    # account emoji; tst_Emoji.qml asserts the same numbers.
+    # The random account emoji excludes flags by taking only what comes before them.
     flags = [i for i, r in enumerate(rows) if r["category"] == "flags"]
     check(flags and flags[-1] == len(rows) - 1, "flags are not the last block")
-    if flags:
-        with open(emoji_qml, encoding="utf-8") as f:
-            qml = f.read()
-        for name, value in (("firstFlagIndex", flags[0]), ("lastFlagIndex", flags[-1])):
-            declared = re.search(rf"{name}:\s*(\d+)", qml)
-            check(declared and int(declared.group(1)) == value,
-                  f"{name} is {declared and declared.group(1)} in Emoji.qml, "
-                  f"the catalogue has {value}; update Emoji.qml and tst_Emoji.qml")
 
     # skinColor is derived by looking for a tone codepoint inside the id.
     tones = tuple(f"1f3f{c}" for c in "bcdef")
