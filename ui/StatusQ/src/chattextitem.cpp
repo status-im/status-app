@@ -34,6 +34,14 @@ namespace {
 constexpr int CodeBlockProperty = QTextFormat::UserProperty + 1; // int, code-block identity
 constexpr int CodeSpanProperty = QTextFormat::UserProperty + 2;  // bool, characters
 
+// Cache paint inputs on the render thread, alongside the nodes they describe.
+class ChatPaintNode : public QSGNode {
+public:
+    QVariantList textKey;
+    QVariantList frameKey;
+    QVariantList barKey;
+};
+
 // Theme bindings may replace segment colors without changing document positions.
 // Text, anchors and paragraph structure identify the content; character styling
 // can change while preserving the existing selection and pointer interaction.
@@ -792,6 +800,7 @@ void ChatTextItem::ensureLayout()
         return;
 
     m_layoutDirty = false;
+    ++m_layoutRevision;
 
     // addTextLayout reads brushes from additional formats rather than walking
     // document fragments. Mirror those formats on the GUI thread; unchanged
@@ -1665,9 +1674,9 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
 
     // Three children, in paint order: the code frames, behind the text; the
     // text; the quote bars.
-    QSGNode* root = oldNode;
+    auto* root = static_cast<ChatPaintNode*>(oldNode);
     if (root == nullptr) {
-        root = new QSGNode;
+        root = new ChatPaintNode;
         root->appendChildNode(new QSGNode);
         root->appendChildNode(window()->createTextNode());
         root->appendChildNode(new QSGNode);
@@ -1677,65 +1686,80 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
     auto* node = static_cast<QSGTextNode*>(framesNode->nextSibling());
     QSGNode* barsNode = node->nextSibling();
 
-    node->setColor(m_color);
-    node->setLinkColor(m_linkColor);
-    node->setSelectionColor(m_selectionColor);
-    if (m_selectionTextColor.isValid())
-        node->setSelectionTextColor(m_selectionTextColor);
-    node->setViewport(boundingRect());
+    const QVariantList textKey{QVariant::fromValue(m_layoutRevision), boundingRect(),
+                               m_color, m_linkColor, m_selectionColor, m_selectionTextColor,
+                               m_selectionStart, m_selectionEnd};
+    if (root->textKey != textKey) {
+        root->textKey = textKey;
+        node->setColor(m_color);
+        node->setLinkColor(m_linkColor);
+        node->setSelectionColor(m_selectionColor);
+        node->setSelectionTextColor(m_selectionTextColor.isValid() ? m_selectionTextColor : QColor(Qt::white));
+        node->setViewport(boundingRect());
 
-    node->clear();
+        node->clear();
 
-    // QSGTextNode::addTextDocument documents its last argument as a count of
-    // selected characters, but QSGInternalTextNode -- the node every backend's
-    // createTextNode() returns -- takes it as the inclusive position of the
-    // last one (qsginternaltextnode.cpp:157), which is how QQuickTextEdit
-    // passes it (qquicktextedit.cpp:2684). A count drew the selection from its
-    // start to position `count`, and nothing at all once the start passed it.
-    int selectionStart = -1;
-    int selectionLast = -1;
-    if (m_selectionStart >= 0 && m_selectionEnd >= 0 && m_selectionStart != m_selectionEnd) {
-        selectionStart = qMin(m_selectionStart, m_selectionEnd);
-        selectionLast = qMax(m_selectionStart, m_selectionEnd) - 1;
+        // QSGTextNode::addTextDocument documents its last argument as a count of
+        // selected characters, but QSGInternalTextNode -- the node every backend's
+        // createTextNode() returns -- takes it as the inclusive position of the
+        // last one (qsginternaltextnode.cpp:157), which is how QQuickTextEdit
+        // passes it (qquicktextedit.cpp:2684). A count drew the selection from its
+        // start to position `count`, and nothing at all once the start passed it.
+        int selectionStart = -1;
+        int selectionLast = -1;
+        if (m_selectionStart >= 0 && m_selectionEnd >= 0 && m_selectionStart != m_selectionEnd) {
+            selectionStart = qMin(m_selectionStart, m_selectionEnd);
+            selectionLast = qMax(m_selectionStart, m_selectionEnd) - 1;
+        }
+
+        // Qt's document renderer batches glyph runs across paragraphs, but its
+        // selected-glyph overlap check compares paragraph-relative text ranges.
+        // Different fonts at the same offsets in different paragraphs can then be
+        // mistaken for duplicate glyphs and disappear behind the selection fill.
+        // Each call gets its own renderer engine, so paragraph-local ranges remain
+        // local. Keep the original document layouts: no copying or extra shaping.
+        for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+            const int start = qMax(selectionStart, block.position());
+            const int last = qMin(selectionLast, block.position() + block.length() - 2);
+            const bool selected = selectionStart >= 0 && start <= last;
+            node->addTextLayout(block.layout()->position(), block.layout(),
+                                selected ? start - block.position() : -1,
+                                selected ? last - block.position() : -1);
+        }
+
     }
 
-    // Qt's document renderer batches glyph runs across paragraphs, but its
-    // selected-glyph overlap check compares paragraph-relative text ranges.
-    // Different fonts at the same offsets in different paragraphs can then be
-    // mistaken for duplicate glyphs and disappear behind the selection fill.
-    // Each call gets its own renderer engine, so paragraph-local ranges remain
-    // local. Keep the original document layouts: no copying or extra shaping.
-    for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
-        const int start = qMax(selectionStart, block.position());
-        const int last = qMin(selectionLast, block.position() + block.length() - 2);
-        const bool selected = selectionStart >= 0 && start <= last;
-        node->addTextLayout(block.layout()->position(), block.layout(),
-                            selected ? start - block.position() : -1,
-                            selected ? last - block.position() : -1);
-    }
-
-    // Rebuilt rather than diffed: there are a handful per message at most.
+    // Selection and text-color updates retain the decoration layers.
     const bool software = window()->rendererInterface()->graphicsApi()
             == QSGRendererInterface::Software;
 
-    deleteChildren(framesNode);
-    for (const QRectF& rect : computeCodeFrames()) {
-        framesNode->appendChildNode(
-                    software ? createSquareFrameNode(window(), rect, 1, m_codeBackground,
-                                                     m_codeBorderColor)
-                             : createRoundedRectNode(rect, m_codeBlockRadius, 1, m_codeBackground,
-                                                     m_codeBorderColor));
-    }
-
-    deleteChildren(barsNode);
-    if (m_quoteBarColor.alpha() > 0) {
-        for (const QRectF& rect : computeQuoteBars()) {
-            QSGRectangleNode* bar = window()->createRectangleNode();
-            bar->setRect(rect);
-            bar->setColor(m_quoteBarColor);
-            barsNode->appendChildNode(bar);
+    const QVariantList frameKey{QVariant::fromValue(m_layoutRevision), m_codeBackground,
+                                m_codeBorderColor, m_codeBlockRadius};
+    if (root->frameKey != frameKey) {
+        root->frameKey = frameKey;
+        deleteChildren(framesNode);
+        for (const QRectF& rect : computeCodeFrames()) {
+            framesNode->appendChildNode(
+                        software ? createSquareFrameNode(window(), rect, 1, m_codeBackground,
+                                                         m_codeBorderColor)
+                                 : createRoundedRectNode(rect, m_codeBlockRadius, 1, m_codeBackground,
+                                                         m_codeBorderColor));
         }
-    }
 
+    }
+    const QVariantList barKey{QVariant::fromValue(m_layoutRevision), m_quoteBarColor};
+    if (root->barKey != barKey) {
+        root->barKey = barKey;
+        deleteChildren(barsNode);
+        if (m_quoteBarColor.alpha() > 0) {
+            for (const QRectF& rect : computeQuoteBars()) {
+                QSGRectangleNode* bar = window()->createRectangleNode();
+                bar->setRect(rect);
+                bar->setColor(m_quoteBarColor);
+                barsNode->appendChildNode(bar);
+            }
+        }
+
+    }
     return root;
 }
