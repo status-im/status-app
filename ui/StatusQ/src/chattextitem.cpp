@@ -237,6 +237,8 @@ ChatTextItem::~ChatTextItem() = default;
 
 void ChatTextItem::applyDocumentDefaults()
 {
+    // Text and formatting updates are internal; no undo history is needed.
+    m_document->setUndoRedoEnabled(false);
     m_document->setDefaultFont(m_font);
     m_document->setDocumentMargin(0);
 }
