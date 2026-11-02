@@ -1329,6 +1329,22 @@ Item {
             compare(item.selectedText, "")
         }
 
+        function test_replacementPublishesFinalGeometryImmediately() {
+            const item = createItem()
+            item.segments = [{text: "quoted", quoteLevel: 1},
+                         {text: "first\nsecond", codeBlock: true},
+                         {text: "end", newBlock: true}]
+            const decoratedHeight = item.contentHeight
+            verify(decoratedHeight > 4 * item.lineHeight)
+            compare(item.implicitHeight, decoratedHeight)
+            item.segments = [{text: "https://status.app", href: "https://status.app"}]
+            verify(item.contentHeight < decoratedHeight)
+            compare(item.implicitHeight, item.contentHeight)
+            compare(item.linkAt(5, 8), "https://status.app")
+            compare(item.quoteBarRects().length, 0)
+            compare(item.codeBlockRects().length, 0)
+        }
+
         function test_clickOnLinkActivatesItAndDoesNotSelect() {
             const item = createItem()
             const spy = createTemporaryObject(
