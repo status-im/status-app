@@ -5,6 +5,7 @@
 #include "StatusQ/incubationhints.h"
 #include "StatusQ/constantrole.h"
 #include "StatusQ/contextmenueventfilter.h"
+#include "StatusQ/chattextitem.h"
 #include "StatusQ/fastexpressionfilter.h"
 #include "StatusQ/fastexpressionrole.h"
 #include "StatusQ/fastexpressionsorter.h"
@@ -93,6 +94,7 @@ void registerStatusQTypes() {
     qmlRegisterType<SkeletonTileItem>("StatusQ", 0, 1, "SkeletonTileItem");
     qmlRegisterType<DelegatePool>("StatusQ", 0, 1, "DelegatePool");
     qmlRegisterType<DelegatePoolKind>("StatusQ", 0, 1, "DelegatePoolKind");
+    qmlRegisterType<ChatTextItem>("StatusQ", 0, 1, "ChatTextItem");
 
     qmlRegisterUncreatableType<QValidator>(
                 "StatusQ", 0, 1,

@@ -17,6 +17,10 @@
 //  - mentions are rendered as regular links.
 namespace Markdown {
 
+// Prefix applied to a WalletLink's raw destination (address / ENS name) so that activating the
+// link invokes the "send via personal chat" flow (see MessageView.onLinkActivated).
+inline constexpr QLatin1StringView kSendViaChatPrefix{"//send-via-personal-chat//"};
+
 // `mentions` maps a Mention node's start position (in the parsed text) to the pair
 // {displayName, href}. Mentions without an entry fall back to a generic link.
 // When `emojiPx > 0`, emoji runs in plain text are wrapped in a font-size span of that
