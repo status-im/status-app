@@ -1,8 +1,9 @@
 ## A held resource exists only while a holder needs it. The first holder loads
 ## it; at zero holders it is dropped after the idle delay (Idle release), and at
-## once when the app goes to the background. A failed load is retried with
-## backoff while holders remain; once they go, or on background, the resource is
-## dropped (a failed reload leaves the data of the previous load).
+## once when the app goes to the background, where nothing loads until the
+## foreground. A failed load is retried with backoff while holders remain; once
+## they go, or on background, the resource is dropped (a failed reload leaves the
+## data of the previous load).
 ##
 ## Every load gets a generation, and results are reported with it. Only results
 ## of the latest load count. That load stays current after a success, so a later
@@ -34,6 +35,7 @@ type
     generations: LoadGenerations
     # the latest load's generation, 0 once dropped or once its failure is taken
     latestLoad: int
+    backgrounded: bool
     disposed: bool
     idleReleaseMs: int
     releaseTimer: HeldResourceTimer
@@ -47,13 +49,13 @@ const
   LoadRetryDelaysMs* = [2_000, 5_000, 15_000, 60_000]
 
 proc newHeldResource(releaseTimer, retryTimer: HeldResourceTimer, onLoad: proc(generation: int),
-    onDrop: proc(), idleReleaseMs: int, generations: LoadGenerations): HeldResource =
+    onDrop: proc(), idleReleaseMs: int, generations: LoadGenerations, backgrounded: bool): HeldResource =
   HeldResource(releaseTimer: releaseTimer, retryTimer: retryTimer, onLoad: onLoad, onDrop: onDrop,
-    idleReleaseMs: idleReleaseMs, generations: generations)
+    idleReleaseMs: idleReleaseMs, generations: generations, backgrounded: backgrounded)
 
 proc newHeldResource*(releaseTimer, retryTimer: HeldResourceTimer, onLoad: proc(generation: int),
     onDrop: proc(), idleReleaseMs = DefaultIdleReleaseMs): HeldResource =
-  newHeldResource(releaseTimer, retryTimer, onLoad, onDrop, idleReleaseMs, LoadGenerations())
+  newHeldResource(releaseTimer, retryTimer, onLoad, onDrop, idleReleaseMs, LoadGenerations(), false)
 
 proc holderCount*(self: HeldResource): int =
   self.count
@@ -91,7 +93,7 @@ proc acquire*(self: HeldResource) =
   if self.count > 1:
     return
   self.releaseTimer.stop()
-  if not self.active:
+  if not self.active and not self.backgrounded:
     self.stopRetrying()
     self.load()
 
@@ -128,12 +130,13 @@ proc onReleaseTimeout*(self: HeldResource) =
     self.drop()
 
 proc onRetryTimeout*(self: HeldResource) =
-  if not self.disposed and self.count > 0 and not self.active:
+  if not self.disposed and not self.backgrounded and self.count > 0 and not self.active:
     self.load()
 
 proc onBackgrounded*(self: HeldResource) =
   if self.disposed:
     return
+  self.backgrounded = true
   let stale = self.retryPending()
   self.stopRetrying()
   if not self.active:
@@ -144,6 +147,7 @@ proc onBackgrounded*(self: HeldResource) =
   self.drop()
 
 proc onForegrounded*(self: HeldResource) =
+  self.backgrounded = false
   if not self.disposed and self.count > 0 and not self.active:
     self.load()
 
@@ -194,6 +198,7 @@ type
     releaseArmed: int64
     retryArmed: int64
     generations: LoadGenerations
+    backgrounded: bool
     disposed: bool
     now: proc(): int64
     onLoad: proc(key: K, generation: int)
@@ -257,6 +262,7 @@ proc newEntry[K](self: HeldResources[K], key: K): HeldEntry =
     idleReleaseMs = self.idleReleaseMs,
     # shared, so a key held again does not reuse a dropped load's generation
     generations = self.generations,
+    backgrounded = self.backgrounded,
   )
   entry
 
@@ -314,11 +320,13 @@ proc invalidateAll*[K](self: HeldResources[K]) =
     self.invalidate(key)
 
 proc onBackgrounded*[K](self: HeldResources[K]) =
+  self.backgrounded = true
   for key in toSeq(self.entries.keys):
     self.withEntry(key):
       entry.resource.onBackgrounded()
 
 proc onForegrounded*[K](self: HeldResources[K]) =
+  self.backgrounded = false
   for key in toSeq(self.entries.keys):
     self.withEntry(key):
       entry.resource.onForegrounded()

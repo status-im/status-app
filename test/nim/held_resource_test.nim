@@ -398,6 +398,34 @@ suite "held resource invalidation":
     holders.onForegrounded()
     check loads == 2
 
+  test "a holder acquiring while backgrounded waits for the foreground":
+    holders.onBackgrounded()
+    holders.acquire()
+    check loads == 0
+    check not holders.isActive
+    holders.onForegrounded()
+    check loads == 1
+    check holders.isActive
+
+  test "a holder gone before the foreground loads nothing":
+    holders.onBackgrounded()
+    holders.acquire()
+    holders.release()
+    holders.onForegrounded()
+    check loads == 0
+    check drops == 0
+    check not timer.running
+
+  test "a retry timeout arriving while backgrounded loads nothing":
+    holders.acquire()
+    holders.onLoadFailed(gen)
+    holders.onBackgrounded()
+    holders.onRetryTimeout()
+    check loads == 1
+    check not holders.isActive
+    holders.onForegrounded()
+    check loads == 2
+
 suite "held resources by key":
   setup:
     let timer = FakeTimer()
@@ -541,6 +569,59 @@ suite "held resources by key":
     registry.onForegrounded()
     check loads == @["a", "b", "a"]
     check registry.isActive("a")
+
+  test "a key acquired while backgrounded waits for the foreground":
+    registry.onBackgrounded()
+    registry.acquire("a")
+    check loads.len == 0
+    check registry.holderCount("a") == 1
+    check not registry.isActive("a")
+    registry.onForegrounded()
+    check loads == @["a"]
+    check registry.isActive("a")
+
+  test "invalidating keys acquired while backgrounded loads nothing":
+    registry.acquire("a")
+    registry.onBackgrounded()
+    registry.acquire("a")
+    registry.acquire("b")
+    registry.invalidateAll()
+    check loads == @["a"]
+    check registry.holderCount("a") == 2
+    check registry.holderCount("b") == 1
+    registry.onForegrounded()
+    check loads.toHashSet == ["a", "b"].toHashSet
+    check loads.len == 3
+
+  test "a key released while backgrounded leaves the table":
+    registry.onBackgrounded()
+    registry.acquire("a")
+    registry.release("a")
+    check registry.len == 0
+    registry.onForegrounded()
+    check loads.len == 0
+
+  test "a drop callback acquiring a key on background waits for the foreground":
+    var chained: HeldResources[string]
+    chained = newHeldResources[string](timer.fake(), retryTimer.fake(),
+      now = (proc(): int64 = clock),
+      onLoad = (proc(key: string, generation: int) =
+        loads.add key
+        gens[key] = generation),
+      onDrop = (proc(key: string) =
+        drops.add key
+        chained.acquire("a")
+        chained.acquire("c")))
+    chained.acquire("a")
+    chained.acquire("b")
+    chained.onBackgrounded()
+    check loads == @["a", "b"]
+    check not chained.isActive("a")
+    check not chained.isActive("c")
+    chained.onForegrounded()
+    check loads.toHashSet == ["a", "b", "c"].toHashSet
+    check loads.len == 5
+    check chained.isActive("c")
 
   test "a failed load retries per key with its own backoff":
     registry.acquire("a")
