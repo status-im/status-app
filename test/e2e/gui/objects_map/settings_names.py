@@ -143,8 +143,8 @@ settings_Sync_New_Device_SubTitle = {"container": settingsContentBase_ScrollView
 unpairButton = {"container": settingsContentBase_ScrollView, "objectName": "unpairStatusButton", "type": "StatusButton", "visible": True}
 enableMessageSyncingCheckBox = {"checkable": True, "container": settingsContentBase_ScrollView, "objectName": "enableMessageSyncingCheckBox", "type": "StatusCheckBox", "visible": True}
 
-#Sing out and quit View
-signOutDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "ConfirmationDialog", "type": "PopupItem", "visible": True}
+# Sign out and quit
+signOutDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "SignOutConfirmationDialog", "type": "PopupItem", "visible": True}
 signOutConfirmationButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "signOutConfirmation", "type": "StatusButton", "visible": True}
 
 # ENS usernames View
