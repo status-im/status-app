@@ -125,6 +125,10 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 args.put(rpcRequest.toString());
                 String argsJson = args.toString();
 
+                // The reply belongs to the backend session it is sent in. Read the epoch
+                // first: if a logout lands while the send is in flight, the result keeps the
+                // old epoch and the next session drops it.
+                final long signalEpoch = StatusGoService.currentSignalEpoch();
                 String result = StatusGoService.callRpc("CallPrivateRPC", argsJson);
                 boolean failed = false;
                 String errorMsg = null;
@@ -147,7 +151,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                                 || !(sendResult.opt("messages") instanceof JSONArray)) {
                             failed = true;
                             errorMsg = "missing send result";
-                        } else if (!StatusGoService.publishNotificationReplyResult(response.toString())) {
+                        } else if (!StatusGoService.publishNotificationReplyResult(response.toString(), signalEpoch)) {
                             // The message has already been persisted and sent. A later cold start
                             // will reload it from status-go, so this is not a send failure.
                             Log.w(TAG, "sent reply but could not queue frontend update");
@@ -229,6 +233,10 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
             JSONArray args = new JSONArray();
             args.put(rpcRequest.toString());
 
+            // The result belongs to the backend session the call runs in. Read the epoch
+            // first: if a logout lands while the call is in flight, the result keeps the old
+            // epoch and the next session drops it.
+            final long signalEpoch = StatusGoService.currentSignalEpoch();
             String result = StatusGoService.callRpc("CallPrivateRPC", args.toString());
             if (result == null || result.isEmpty()) {
                 Log.w(TAG, method + " failed: empty response");
@@ -240,7 +248,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 return;
             }
             if (!StatusGoService.publishNotificationConversationRead(
-                    conversationId, threadId, response.toString())) {
+                    conversationId, threadId, response.toString(), signalEpoch)) {
                 Log.w(TAG, "marked conversation read but could not queue frontend update");
             }
         } catch (Throwable t) {
@@ -282,6 +290,10 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 args.put(rpcRequest.toString());
                 String argsJson = args.toString();
 
+                // The reply belongs to the backend session it is sent in. Read the epoch
+                // first: if a logout lands while the send is in flight, the result keeps the
+                // old epoch and the next session drops it.
+                final long signalEpoch = StatusGoService.currentSignalEpoch();
                 String result = StatusGoService.callRpc("CallPrivateRPC", argsJson);
                 boolean failed = false;
                 String errorMsg = null;

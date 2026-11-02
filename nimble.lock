@@ -611,15 +611,15 @@
       }
     },
     "nimqml": {
-      "version": "#fa084a8d9bcf00c9ed4c2adf857793fcc059357f",
-      "vcsRevision": "fa084a8d9bcf00c9ed4c2adf857793fcc059357f",
+      "version": "#1b0050b8d49623296f9982845cabf71ec70cb2a0",
+      "vcsRevision": "1b0050b8d49623296f9982845cabf71ec70cb2a0",
       "url": "https://github.com/seaqt/nimqml-seaqt.git",
       "downloadMethod": "git",
       "dependencies": [
         "nim"
       ],
       "checksums": {
-        "sha1": "9b585e7085fd92b997b68a8f8d0617ad2f606019"
+        "sha1": "ebc25062ee7fe96eb8ba12d4475973d812c24121"
       }
     },
     "taskpools": {

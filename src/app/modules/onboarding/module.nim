@@ -458,7 +458,7 @@ method onKeycardAccountConverted*[T](self: Module[T], success: bool) =
   debug "keycard account converted", success, restartRequired
   self.view.setConvertKeycardAccountRestartRequired(restartRequired)
   self.view.setConvertKeycardAccountState(state)
-  self.generalService.logout()
+  discard self.generalService.logout()
   if success and not restartRequired:
     self.postLoginTasks = newSeq[PostOnboardingTask]()
     self.accountsService.clearOpenedAccountsCache()

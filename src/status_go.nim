@@ -139,6 +139,11 @@ proc logout*(): string =
   defer: go_shim.free(funcOut)
   return $funcOut
 
+proc signalEpoch*(): string =
+  var funcOut = go_shim.signalEpoch()
+  defer: go_shim.free(funcOut)
+  return $funcOut
+
 proc changeDatabasePasswordV2*(paramsJSON: string): string =
   var funcOut = go_shim.changeDatabasePasswordV2(paramsJSON.cstring)
   defer: go_shim.free(funcOut)

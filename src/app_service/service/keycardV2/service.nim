@@ -129,7 +129,7 @@ QtObject:
     result.events = events
     result.threadpool = threadpool
 
-  proc receiveKeycardSignalV2(self: Service, signal: string) {.slot, featureGuard(KEYCARD_ENABLED).} =
+  proc receiveKeycardSignalV2*(self: Service, signal: string) {.featureGuard(KEYCARD_ENABLED).} =
     try:
       # Since only one service can register to signals, we pass the signal to the old service too
       var jsonSignal = signal.parseJson

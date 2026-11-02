@@ -21,6 +21,9 @@ proc statusq_invoke_method_queued*(obj: pointer, meth: cstring, arg: cstring) {.
 proc statusq_invoke_method_queued_in_generation*(obj: pointer, meth: cstring, arg: cstring,
   generation: uint64) {.cdecl, importc.}
 proc statusq_set_session_generation*(generation: uint64) {.cdecl, importc.}
+# Delivers "<tag>|<arg>" to the slot; the payload is built on the C++ side.
+proc statusq_invoke_method_queued_tagged*(obj: pointer, meth: cstring, arg: cstring, tag: uint64)
+  {.cdecl, importc.}
 
 proc statusq_urlscheme_create*(): pointer {.cdecl, importc.}
 proc statusq_urlscheme_set_instance*(obj: pointer) {.cdecl, importc.}
