@@ -328,13 +328,30 @@ QtObject {
         return result
     }
 
+    // The share flow's payment requests, sent with the share to every destination
+    readonly property var sharePaymentRequestModel: root.mainModuleInst.sharePaymentRequestModel
+
+    function addSharePaymentRequest(receiver, amount, tokenKey, symbol, logoUri) {
+        root.mainModuleInst.addSharePaymentRequest(receiver, amount, tokenKey, symbol, logoUri)
+    }
+
+    function removeSharePaymentRequest(index) {
+        root.mainModuleInst.removeSharePaymentRequest(index)
+    }
+
+    function clearSharePaymentRequests() {
+        root.mainModuleInst.clearSharePaymentRequests()
+    }
+
     // Share-flow send: one payload, many destinations. The Nim side fans it
     // out through the chat service (no section activation needed).
     function sendSharedContent(destinations, text, imagePaths = []) {
         const textMsg = cleanMessageText(text)
         if (destinations.length === 0)
             return false
-        if (imagePaths.length === 0 && textMsg.trim() === "")
+        const hasPaymentRequests = !!root.sharePaymentRequestModel
+                && root.sharePaymentRequestModel.ModelCount.count > 0
+        if (imagePaths.length === 0 && textMsg.trim() === "" && !hasPaymentRequests)
             return false
         const contentType = Utils.isOnlyEmoji(textMsg) ? Constants.messageContentType.emojiType
                                                        : Constants.messageContentType.messageType

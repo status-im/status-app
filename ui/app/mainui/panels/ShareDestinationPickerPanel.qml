@@ -28,6 +28,9 @@ Control {
     property var imagePaths: []
     property var emojiPopup: null
     property var stickersPopup: null
+    property var paymentRequestModel: null
+    property bool paymentRequestFeatureEnabled: false
+    property bool areTestNetworksEnabled: false
     // Recipient cap; unticked rows are disabled once it is reached.
     property int maxDestinations: 5
     // On-screen keyboard state; the composer hides while it is up for the search box.
@@ -37,6 +40,8 @@ Control {
 
     signal sendRequested(var destinations, string text, var imagePaths)
     signal cancelRequested()
+    signal paymentRequestModalRequested(var callback)
+    signal paymentRequestRemoveRequested(int index)
 
     function reset() {
         shareSelection.clear()
@@ -270,7 +275,12 @@ Control {
             imagePaths: root.imagePaths
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
+            paymentRequestModel: root.paymentRequestModel
+            paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
+            areTestNetworksEnabled: root.areTestNetworksEnabled
             sendEnabled: shareSelection.count > 0
+            onPaymentRequestModalRequested: callback => root.paymentRequestModalRequested(callback)
+            onPaymentRequestRemoveRequested: index => root.paymentRequestRemoveRequested(index)
             onSendRequested: (text, imagePaths) =>
                 root.sendRequested(d.selectedDestinations(), text, imagePaths)
         }

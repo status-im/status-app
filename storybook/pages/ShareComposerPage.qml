@@ -19,6 +19,8 @@ SplitView {
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYPgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
     ]
 
+    ListModel { id: paymentRequestModel }
+
     Pane {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
@@ -37,6 +39,18 @@ SplitView {
                 text: ctrlText.text
                 imagePaths: root.sampleImages.slice(0, ctrlImages.value)
                 sendEnabled: ctrlSendEnabled.checked
+                paymentRequestModel: paymentRequestModel
+                paymentRequestFeatureEnabled: ctrlPaymentRequestEnabled.checked
+                areTestNetworksEnabled: ctrlTestNetworks.checked
+                onPaymentRequestModalRequested: {
+                    logs.logEvent("paymentRequestModalRequested")
+                    paymentRequestModel.append({ receiver: "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240",
+                                                 amount: "1.5", tokenKey: "eth", symbol: "ETH", logoUri: "" })
+                }
+                onPaymentRequestRemoveRequested: index => {
+                    logs.logEvent("paymentRequestRemoveRequested: " + index)
+                    paymentRequestModel.remove(index)
+                }
                 onSendRequested: (text, imagePaths) =>
                     logs.logEvent("sendRequested: " + text + " / " + imagePaths.length + " image(s)")
             }
@@ -56,6 +70,8 @@ SplitView {
                 SpinBox { id: ctrlImages; from: 0; to: 3 }
             }
             CheckBox { id: ctrlSendEnabled; text: "send enabled (selection non-empty)"; checked: true }
+            CheckBox { id: ctrlPaymentRequestEnabled; text: "payment request feature enabled"; checked: true }
+            CheckBox { id: ctrlTestNetworks; text: "test networks enabled" }
         }
     }
 }

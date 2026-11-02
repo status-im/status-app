@@ -3021,6 +3021,8 @@ Item {
         excludedChatId: d.myPublicKey
         emojiPopup: statusEmojiPopup.item
         stickersPopup: statusStickersPopupLoader.item
+        paymentRequestFeatureEnabled: appMain.featureFlagsStore.paymentRequestEnabled
+        areTestNetworksEnabled: appMain.networksStore.areTestNetworksEnabled
     }
 
     Loader {

@@ -6,6 +6,8 @@ import AppLayouts.Chat.stores as ChatStores
 
 import mainui.sectionLoaders
 
+import utils
+
 Item {
     id: root
     width: 480
@@ -49,6 +51,19 @@ Item {
         ChatStores.RootStore {
             property bool sendResult: true
             property var sends: []
+            property int clearCount: 0
+            property var sharePaymentRequestModel: ListModel {}
+
+            function addSharePaymentRequest(receiver, amount, tokenKey, symbol, logoUri) {
+                sharePaymentRequestModel.append({ receiver, amount, tokenKey, symbol, logoUri })
+            }
+            function removeSharePaymentRequest(index) {
+                sharePaymentRequestModel.remove(index)
+            }
+            function clearSharePaymentRequests() {
+                clearCount++
+                sharePaymentRequestModel.clear()
+            }
 
             function sendSharedContent(destinations, text, imagePaths) {
                 sends = sends.concat([{ destinations, text, imagePaths }])
@@ -63,6 +78,12 @@ Item {
         ShareFlowLoader {
             excludedChatId: "0x04me"
         }
+    }
+
+    SignalSpy {
+        id: openModalSpy
+        target: Global
+        signalName: "openPaymentRequestModalRequested"
     }
 
     TestCase {
@@ -155,6 +176,37 @@ Item {
             picker().sendRequested([], "hi", [])
             compare(rootStore.activatedChats, [])
             compare(rootStore.releasedPaths, [])
+            waitForUnload()
+        }
+
+        function test_paymentRequestWiringReachesTheStore() {
+            loader.paymentRequestFeatureEnabled = true
+            launchAndOpen("hi", [])
+            compare(picker().paymentRequestModel, rootChatStore.sharePaymentRequestModel)
+            verify(picker().paymentRequestFeatureEnabled)
+            openModalSpy.clear()
+            const callback = () => {}
+            picker().paymentRequestModalRequested(callback)
+            compare(openModalSpy.count, 1)
+            compare(openModalSpy.signalArguments[0][1], callback)
+            openModalSpy.signalArguments[0][0]("0xabc", "1.5", "eth-key", "ETH", "logo")
+            compare(rootChatStore.sharePaymentRequestModel.count, 1)
+            compare(rootChatStore.sharePaymentRequestModel.get(0).symbol, "ETH")
+            picker().paymentRequestRemoveRequested(0)
+            compare(rootChatStore.sharePaymentRequestModel.count, 0)
+        }
+
+        function test_launchAndCancelClearPaymentRequests() {
+            launchAndOpen("first", [])
+            compare(rootChatStore.clearCount, 1)
+            rootChatStore.addSharePaymentRequest("0xabc", "1", "k", "ETH", "")
+            loader.launch("second", [])
+            compare(rootChatStore.clearCount, 2)
+            compare(rootChatStore.sharePaymentRequestModel.count, 0)
+            rootChatStore.addSharePaymentRequest("0xabc", "1", "k", "ETH", "")
+            picker().cancelRequested()
+            compare(rootChatStore.clearCount, 3)
+            compare(rootChatStore.sharePaymentRequestModel.count, 0)
             waitForUnload()
         }
 
