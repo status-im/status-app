@@ -407,6 +407,7 @@ suite "held token catalogue":
     catalogue.chainTokenGroups.release(1)
     catalogue.onBackgrounded()
     catalogue.chainTokenGroups.acquire(1)
+    catalogue.onForegrounded()
     check h.fetchesOf(tckChainTokenGroups, 1).len == 1
     check catalogue.chainTokenGroups.isLoading(1)
     catalogue.chainTokenGroups.complete(1, first, ok = true, @[group("old")])
