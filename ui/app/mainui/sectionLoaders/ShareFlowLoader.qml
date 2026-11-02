@@ -145,6 +145,7 @@ Loader {
             keyboardVisible: SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible
                              || Qt.inputMethod.visible
             paymentRequestModel: root.rootChatStore?.sharePaymentRequestModel ?? null
+            formatBalance: (amount, tokenKey) => root.rootChatStore.formatTokenAmount(amount, tokenKey)
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             areTestNetworksEnabled: root.areTestNetworksEnabled
 

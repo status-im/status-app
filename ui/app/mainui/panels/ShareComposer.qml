@@ -28,6 +28,8 @@ Control {
     property var emojiPopup: null
     property var stickersPopup: null
     property var paymentRequestModel: null
+    // (amount, tokenKey) => display amount of a payment request
+    property var formatBalance: null
     property bool paymentRequestFeatureEnabled: false
     property bool areTestNetworksEnabled: false
 
@@ -103,6 +105,7 @@ Control {
         paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
         areTestNetworksEnabled: root.areTestNetworksEnabled
         paymentRequestModel: root.paymentRequestModel
+        formatBalance: root.formatBalance
         usersModel: ListModel {}
 
         onOpenPaymentRequestModal: callback => root.paymentRequestModalRequested(callback)

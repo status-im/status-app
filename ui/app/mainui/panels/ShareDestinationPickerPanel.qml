@@ -29,6 +29,7 @@ Control {
     property var emojiPopup: null
     property var stickersPopup: null
     property var paymentRequestModel: null
+    property var formatBalance: null
     property bool paymentRequestFeatureEnabled: false
     property bool areTestNetworksEnabled: false
     // Recipient cap; unticked rows are disabled once it is reached.
@@ -276,6 +277,7 @@ Control {
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
             paymentRequestModel: root.paymentRequestModel
+            formatBalance: root.formatBalance
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             areTestNetworksEnabled: root.areTestNetworksEnabled
             sendEnabled: shareSelection.count > 0

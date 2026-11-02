@@ -215,9 +215,18 @@ Item {
             tryVerify(() => !!findChild(drawer, "paymentRequestMiniCard"))
             const card = findChild(drawer, "paymentRequestMiniCard")
             compare(card.symbol, "ETH")
+            compare(card.amount, "1.5")
             card.close()
             compare(removeSpy.count, 1)
             compare(removeSpy.signalArguments[0][0], 0)
+        }
+
+        function test_paymentRequestPreviewUsesTheHostFormatter() {
+            const requests = createTemporaryObject(paymentRequestModelComponent, root)
+            const drawer = create({ paymentRequestModel: requests,
+                                    formatBalance: (amount, key) => "formatted " + amount + " " + key })
+            tryVerify(() => !!findChild(drawer, "paymentRequestMiniCard"))
+            compare(findChild(drawer, "paymentRequestMiniCard").amount, "formatted 1.5 eth-key")
         }
 
         function test_paymentRequestAloneIsSendable() {

@@ -186,6 +186,7 @@ Item {
             compare(picker().paymentRequestModel, rootChatStore.sharePaymentRequestModel)
             verify(picker().paymentRequestFeatureEnabled)
             verify(picker().areTestNetworksEnabled)
+            compare(picker().formatBalance("10000000000000000", "eth-key"), "10000000000000000")
             openModalSpy.clear()
             const callback = () => {}
             picker().paymentRequestModalRequested(callback)

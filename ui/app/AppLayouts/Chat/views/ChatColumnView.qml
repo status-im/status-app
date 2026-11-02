@@ -25,7 +25,6 @@ import AppLayouts.Chat.adaptors
 import AppLayouts.Communities.popups
 import AppLayouts.Communities.panels
 import AppLayouts.Chat.stores as ChatStores
-import AppLayouts.Wallet.stores as WalletStore
 
 import "../helpers"
 import "../controls"
@@ -522,51 +521,8 @@ Item {
         }
 
         // key can be either a group key or token key
-        function getSymbolAndDecimalsForTokenFomModel(model, key) {
-            let decimals = 0
-            let symbol = ""
-            const tokenGroup = SQUtils.ModelUtils.getByKey(model, "key", key)
-            if (!!tokenGroup) {
-                return [tokenGroup.symbol, tokenGroup.decimals]
-            } else {
-                for (let i = 0; i < model.ModelCount.count; i++) {
-                    let tG = SQUtils.ModelUtils.get(model, i)
-                    const token = SQUtils.ModelUtils.getByKey(tG.tokens, "key", key)
-                    if (!!token) {
-                        return [token.symbol, token.decimals]
-                    }
-                }
-            }
-            return ["", 0]
-        }
-
-        // key can be either a group key or token key
         function formatBalance(amount, key) {
-            // try to find it in token groups
-            let [symbol, decimals] = getSymbolAndDecimalsForTokenFomModel(WalletStore.RootStore.tokensStore.tokenGroupsModel, key);
-            if (!symbol) {
-                // fallback and try to find it in token groups for chain (in case it's swap, payment request...)
-                [symbol, decimals] = getSymbolAndDecimalsForTokenFomModel(WalletStore.RootStore.tokensStore.tokenGroupsForChainModel, key);
-                if (!symbol) {
-                    // fallback and try to find it in search result model (in case of lazy loading the token is not displayed from the start
-                    // but is displayed cause it matched the search criteria)
-                    [symbol, decimals] = getSymbolAndDecimalsForTokenFomModel(WalletStore.RootStore.tokensStore.searchResultModel, key);
-                    if (!symbol) {
-                        // fallback and fetch details from the backend, this call fetch all tokens from statusgo and
-                        // searchs for the token that matches the key (this is definitely the last resort)
-                        const token = WalletStore.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens(key)
-                        symbol = token.symbol
-                        decimals = token.decimals
-                    }
-                }
-            }
-
-            if (!symbol) {
-                return "0"
-            }
-
-            const num = SQUtils.AmountsArithmetic.toNumber(amount, decimals)
-            return root.rootStore.currencyStore.formatCurrencyAmount(num, symbol, {noSymbol: true})
+            return root.rootStore.formatTokenAmount(amount, key)
         }
     }
 
