@@ -1,4 +1,4 @@
-import json, tables, strutils, options
+import json, tables, strutils, options, sequtils
 
 import app_service/service/message/dto/urls_unfurling_plan
 import app_service/service/message/dto/link_preview
@@ -53,7 +53,7 @@ proc parseShareDestinations*(destinationsJson: string): seq[ShareDestination] =
     if destinations.len >= SHARE_MAX_DESTINATIONS:
       break
     let chatId = entry{"chatId"}.getStr()
-    if chatId == "":
+    if chatId == "" or destinations.anyIt(it.chatId == chatId):
       continue
     destinations.add(ShareDestination(sectionId: entry{"sectionId"}.getStr(), chatId: chatId))
   return destinations

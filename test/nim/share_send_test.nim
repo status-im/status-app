@@ -22,6 +22,20 @@ suite "share send - destinations":
     check(parseShareDestinations("not json").len == 0)
     check(parseShareDestinations("""[{"sectionId":"c1"}]""").len == 0)
 
+  test "a chat listed twice is kept once, at its first position":
+    let dests = parseShareDestinations("""[{"sectionId":"p","chatId":"0x04a"},{"sectionId":"c1","chatId":"ch1"},{"sectionId":"p","chatId":"0x04a"}]""")
+    check(dests.len == 2)
+    check(dests[0].chatId == "0x04a")
+    check(dests[1].chatId == "ch1")
+
+  test "duplicates do not count towards SHARE_MAX_DESTINATIONS":
+    var entries: seq[string] = @["""{"sectionId":"p","chatId":"chat-0"}"""]
+    for i in 0 ..< SHARE_MAX_DESTINATIONS:
+      entries.add("""{"sectionId":"p","chatId":"chat-""" & $i & "\"}")
+    let dests = parseShareDestinations("[" & entries.join(",") & "]")
+    check(dests.len == SHARE_MAX_DESTINATIONS)
+    check(dests.mapIt(it.chatId).deduplicate().len == SHARE_MAX_DESTINATIONS)
+
   test "keeps only the first SHARE_MAX_DESTINATIONS destinations":
     var entries: seq[string] = @[]
     for i in 0 ..< SHARE_MAX_DESTINATIONS + 2:
