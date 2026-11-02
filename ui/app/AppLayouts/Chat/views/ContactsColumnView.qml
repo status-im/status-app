@@ -108,9 +108,15 @@ Item {
             model: SortFilterProxyModel {
                 sourceModel: root.chatSectionModule.model
                 filters: [
-                    FastExpressionFilter {
-                        expectedRoles: ["isThread", "archived"]
-                        expression: !model.isThread || !model.archived
+                    AnyOf {
+                        ValueFilter {
+                            roleName: "isThread"
+                            value: false
+                        }
+                        ValueFilter {
+                            roleName: "archived"
+                            value: false
+                        }
                     },
                     SQUtils.SearchFilter {
                         roleName: "name"
