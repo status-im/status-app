@@ -64,6 +64,8 @@ QtObject:
       self.built = true
 
   proc addItem*(self: Model, item: ChatSearchItem) =
+    if not self.built:
+      return
     if self.getItemIndexById(item.chatId) != -1:
       return  # ChatSearchItem already exists, do not add it again
     let parentModelIndex = newQModelIndex()

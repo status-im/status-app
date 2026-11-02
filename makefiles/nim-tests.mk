@@ -16,6 +16,7 @@ NIM_BENCHES := $(addprefix nim-test-run/,$(NIM_BENCH_FILES))
 NIM_TESTS_LINK_STATUSQ := \
 	asset_proxy_chain_bench \
 	chat_search_model_bulk_load_test \
+	chat_search_model_proxy_test \
 	chat_search_model_test \
 	collectibles_request_ids_test \
 	collectibles_selector_bench \
@@ -64,6 +65,7 @@ NIM_TESTS_MODEL_SPY := \
 	admin_members_test \
 	assets_adaptor_model_test \
 	chat_search_model_bulk_load_test \
+	chat_search_model_proxy_test \
 	collectibles_model_test \
 	collectibles_selector_model_test \
 	community_roster_model_test \
