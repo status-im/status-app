@@ -10,6 +10,7 @@ Item {
     id: root
     width: 600
     height: 400
+    TextDocumentTester { id: documentTester }
 
     Component {
         id: componentUnderTest
@@ -123,6 +124,56 @@ Item {
             tryVerify(() => !control.spellChecker.checkPending)
             compare(control.spellChecker.issues.length, 1)
             compare(control.spellChecker.issues[0].word, "threeee")
+        }
+
+        function test_spellCheck_ignoresStrikethrough() {
+            control.text = "~~wrld~~ wrld "
+            control.cursorPosition = control.length
+            tryVerify(() => control.spellChecker.issues.length === 1)
+            compare(control.spellChecker.issues[0].start, 9)
+            verify(!documentTester.formatAt(control.textDocument, 4).spelling)
+            verify(documentTester.formatAt(control.textDocument, 4).strikethrough)
+        }
+
+        function test_spellCheck_preservesInlineMentionGeometry() {
+            control.spellCheckEnabled = false
+            control.text = "hello "
+            control.insertMention(control.length, "@alice", "0xabc")
+            control.insert(control.length, " wrld ")
+            control.cursorPosition = control.length
+            let pill = null
+            tryVerify(() => (pill = findChild(control, "chatTextAreaMentionPill")) && pill.width > 0)
+            const before = [pill.x, pill.y, pill.width, pill.height]
+
+            control.spellCheckEnabled = true
+            tryVerify(() => control.spellChecker.issues.length === 1)
+            waitForRendering(control)
+            pill = findChild(control, "chatTextAreaMentionPill")
+            verify(pill)
+            compare([pill.x, pill.y, pill.width, pill.height], before)
+        }
+
+        function test_spellCheck_preservesQuoteBarGeometry() {
+            control.text = "> hello world\n> breaksss "
+            control.cursorPosition = control.length
+            tryVerify(() => control.spellChecker.issues.length === 1)
+            waitForRendering(control)
+            let quoteBar = null
+            tryVerify(() => (quoteBar = findChild(control, "chatTextAreaQuoteBar")) !== null)
+            compare(quoteBar.startPosition, 0)
+            compare(quoteBar.endPosition, control.length)
+            verify(quoteBar.lastRect.y > quoteBar.startRect.y,
+                   "Last quoted line should be below the first line")
+            verify(quoteBar.height >= control.font.pixelSize * 2,
+                   "Quote bar must span both lines in a quote block: %1".arg(quoteBar.height))
+            const before = [quoteBar.x, quoteBar.y, quoteBar.width, quoteBar.height]
+
+            control.spellCheckEnabled = false
+            tryVerify(() => control.spellChecker.issues.length === 0)
+            waitForRendering(control)
+            quoteBar = findChild(control, "chatTextAreaQuoteBar")
+            verify(quoteBar)
+            compare([quoteBar.x, quoteBar.y, quoteBar.width, quoteBar.height], before)
         }
 
         function test_spellCheck_undoRedo_data() {

@@ -497,6 +497,7 @@ StatusTextArea {
 
         delegate: ChatTextAreaQuoteBar {
             required property var modelData
+            objectName: "chatTextAreaQuoteBar"
 
             readonly property int lastLinePosition:
                 Math.max(startPosition, endPosition - 1)
@@ -536,6 +537,7 @@ StatusTextArea {
         model: highlighter.mentionsModel
 
         delegate: ChatTextAreaMentionPill {
+            objectName: "chatTextAreaMentionPill"
             readonly property int position: model.position
 
             selected: root.selectionStart <= position && position < root.selectionEnd

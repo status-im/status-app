@@ -632,11 +632,15 @@ ChatInputHighlighter::ChatInputHighlighter(QObject* parent)
     connect(m_spellChecker, &SpellChecker::issuesChanged, this, [this] {
         if (!document())
             return;
-        // Apply all block underlines before laying out the document again.
+        // Batch layout work, but deliver contentsChanged only after layout is
+        // restored so Qt Quick's overlays never query an incomplete layout.
+        QTextCursor cursor(document());
+        cursor.beginEditBlock();
         const bool layoutEnabled = document()->isLayoutEnabled();
         document()->setLayoutEnabled(false);
         rehighlight();
         document()->setLayoutEnabled(layoutEnabled);
+        cursor.endEditBlock();
     }, Qt::QueuedConnection);
 }
 

@@ -32,6 +32,7 @@ void excludeNodes(const Markdown::Node& node, QVector<bool>& excluded)
     const bool url = node.kind == NodeKind::Link
         && (node.children.isEmpty() || node.children.first().kind != NodeKind::Delimiter);
     if (node.kind == NodeKind::CodeBlock || node.kind == NodeKind::CodeSpan
+        || node.kind == NodeKind::Strikethrough // excluded because the decoration color is shared
         || url || node.kind == NodeKind::WalletLink
         || node.kind == NodeKind::Mention || node.kind == NodeKind::Delimiter) {
         for (qsizetype i = node.start; i < node.end && i < excluded.size(); ++i)
@@ -77,7 +78,6 @@ public:
     void check(quint64 id, quint64 generation, const QString& text, int incompletePosition,
                bool skipCapitalized)
     {
-        qWarning() << "!!! CHECK:" << text;
         if (!load()) {
             emit checked(id, generation, {}, m_error);
             return;
@@ -131,7 +131,6 @@ public:
             const auto spellcheckAny = [this](const auto& word) -> bool {
                 return std::any_of(m_dictionaries.cbegin(), m_dictionaries.cend(), [&word](auto dict) {
                     const auto result = dict->spell(word.toStdString());
-                    qWarning() << "!!! SPELLCHECK WORD:" << word << "; with encoding:" << dict->get_dict_encoding() << "; result:" << result;
                     return result;
                 });
             };
@@ -169,7 +168,6 @@ signals:
 private:
     bool load()
     {
-        qWarning() << "!!! LOADING DICTS FOR LANGS:" << m_languages;
         if (!m_dictionaries.isEmpty())
             return true;
         if (!m_error.isEmpty())
@@ -187,14 +185,12 @@ private:
                     delete dictionary;
                     qWarning() << "Cannot load bundled UTF-8 spell-check dictionary for language:" + lang;
                 } else {
-                    qWarning() << "!!! LOADED DICT" << lang << " with encoding" << dictionary->get_dic_encoding();
                     m_dictionaries.emplace_back(std::move(dictionary));
                 }
             }
         }
         if (!m_error.isEmpty())
-            qWarning() << "!!! LOAD error:" << m_error;
-        qWarning() << "!!! LOADED DICTS:" << m_dictionaries;
+            qWarning() << Q_FUNC_INFO << m_error;
         return !m_dictionaries.isEmpty();
     }
 
@@ -255,7 +251,6 @@ void SpellChecker::setCheckPending(bool value)
 
 bool SpellChecker::supported() const
 {
-    qWarning() << "!!! SUPPORTED; languages:" << m_languages << "; dir with dicts:" << m_spellCheckDictsDir;
     return m_enabled && !m_languages.isEmpty() && !m_spellCheckDictsDir.isEmpty();
 }
 
