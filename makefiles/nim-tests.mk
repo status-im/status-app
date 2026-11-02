@@ -36,6 +36,8 @@ NIM_TESTS_LINK_STATUSQ := \
 	thread_edit_service_test \
 	swap_key_harvest_bench \
 	swap_modal_instantiation_bench \
+	task_session_generation_test \
+	threadpool_admission_test \
 	thread_navigation_test \
 	thread_notifications_test \
 	thread_search_test \

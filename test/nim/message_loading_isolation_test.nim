@@ -4,7 +4,7 @@ import taskpools
 import app/core/tasks/[qt, threadpool]
 from seaqt/qcoreapplication import QCoreApplication, create, processEvents
 
-privateAccess(ThreadPool)
+privateAccess(ThreadPoolObj)
 
 type
   BlockingTaskArg = ref object of TaskArg
@@ -62,7 +62,7 @@ suite "local message read isolation":
     let path = createTempDir("status-message-reads-", "") / "messages"
     writeFile(path, "already on this device")
     # Worker zero is the GUI/submitting thread and must not help execute tasks.
-    let pool = ThreadPool(pool: Taskpool.new(num_threads = 3))
+    let pool = newThreadPool(numThreads = 3)
     blockersStarted.store(0)
     releaseBlockers.store(false)
     readsFinished.store(0)
@@ -87,7 +87,7 @@ suite "local message read isolation":
   test "teardown drains accepted local reads and can be repeated":
     let path = createTempDir("status-message-drain-", "") / "messages"
     writeFile(path, "already on this device")
-    let pool = ThreadPool(pool: Taskpool.new(num_threads = 2))
+    let pool = newThreadPool(numThreads = 2)
     readsFinished.store(0)
     readsCorrect.store(true)
     try:
@@ -97,8 +97,9 @@ suite "local message read isolation":
       pool.teardown()
       check readsFinished.load() == 20
       check readsCorrect.load()
-      expect ValueError:
-        pool.startLocalRead(LocalReadTaskArg(tptr: localRead, path: path))
+      # A torn-down pool is closed: the read is dropped, not run.
+      pool.startLocalRead(LocalReadTaskArg(tptr: localRead, path: path))
+      check readsFinished.load() == 20
     finally:
       pool.teardown()
       removeFile(path)
@@ -107,7 +108,7 @@ suite "local message read isolation":
   test "local read completion reaches its QObject on the GUI thread":
     let path = createTempDir("status-message-completion-", "") / "messages"
     writeFile(path, "already on this device")
-    let pool = ThreadPool(pool: Taskpool.new(num_threads = 2))
+    let pool = newThreadPool(numThreads = 2)
     let receiver = newReceiver()
     readsFinished.store(0)
     readsCorrect.store(true)
@@ -130,7 +131,7 @@ suite "local message read isolation":
       removeDir(parentDir(path))
 
   test "teardown without any local reads does not create a worker":
-    let pool = ThreadPool(pool: Taskpool.new(num_threads = 2))
+    let pool = newThreadPool(numThreads = 2)
     check pool.localReads == nil
     pool.teardown()
     pool.teardown()
