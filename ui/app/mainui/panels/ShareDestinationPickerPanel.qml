@@ -30,6 +30,8 @@ Control {
     property var stickersPopup: null
     // Recipient cap; unticked rows are disabled once it is reached.
     property int maxDestinations: 5
+    // On-screen keyboard state; the composer hides while it is up for the search box.
+    property bool keyboardVisible: false
 
     readonly property int selectedCount: shareSelection.count
 
@@ -52,6 +54,14 @@ Control {
 
         property bool searchActive: false
         property bool selectedOnly: false
+        readonly property bool searchKeyboardUp: root.keyboardVisible && searchBox.activeFocus
+
+        function dismissSearchKeyboard() {
+            if (!searchBox.activeFocus)
+                return
+            searchBox.focus = false
+            Qt.inputMethod.hide()
+        }
 
         // Selected destinations in the model's (ranking) order
         function selectedDestinations() {
@@ -97,7 +107,10 @@ Control {
         searchPhrase: searchBox.text
         leftPadding: d.contentInset - Theme.halfPadding
         rightPadding: d.contentInset - Theme.halfPadding
-        onToggleRequested: chatId => shareSelection.toggle(chatId)
+        onToggleRequested: chatId => {
+            d.dismissSearchKeyboard()
+            shareSelection.toggle(chatId)
+        }
     }
 
     padding: 0
@@ -252,6 +265,7 @@ Control {
             id: composer
             objectName: "shareDestinationPickerComposer"
             Layout.fillWidth: true
+            visible: !d.searchKeyboardUp
             text: root.text
             imagePaths: root.imagePaths
             emojiPopup: root.emojiPopup

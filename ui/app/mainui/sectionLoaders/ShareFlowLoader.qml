@@ -136,6 +136,8 @@ Loader {
             imagePaths: d.sharedImagePaths
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
+            keyboardVisible: SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible
+                             || Qt.inputMethod.visible
 
             onSendRequested: (destinations, text, imagePaths) => d.complete(destinations, text, imagePaths)
             onCancelRequested: d.cancel()
