@@ -3,7 +3,7 @@ import allure
 import configs
 from gui.elements.button import Button
 from gui.elements.object import QObject, set_text_property_on_object
-from gui.objects_map import dapps_names
+from gui.objects_map import dapps_names, names
 
 
 class DappsWorkflow:
@@ -14,6 +14,7 @@ class DappsWorkflow:
         self._wc_uri_input = QObject(dapps_names.wc_uri_input)
         self._connect_primary_button = Button(dapps_names.connect_dapp_primary_button)
         self._sign_button = Button(dapps_names.dapp_sign_button)
+        self._sign_reject_button = Button(names.signSendModalRejectButton)
 
     @allure.step('Open WalletConnect connect dApp flow')
     def open_connect_dapp_flow(self, dapps_combo: QObject) -> 'DappsWorkflow':
@@ -46,6 +47,12 @@ class DappsWorkflow:
         self._connect_primary_button.wait_until_enabled(timeout_msec)
         self._connect_primary_button.click()
         self._sign_button.wait_until_appears(timeout_msec)
+        return self
+
+    @allure.step('Reject dApp sign request')
+    def reject_sign_request(self, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC) -> 'DappsWorkflow':
+        self._sign_reject_button.wait_until_appears(timeout_msec)
+        self._sign_reject_button.click()
         return self
 
     @allure.step('Approve WalletConnect sign request')
