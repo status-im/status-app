@@ -84,6 +84,9 @@ Control {
             }
         }
         StatusBaseText {
+            objectName: "loginPasswordErrorText"
+            Accessible.role: Accessible.StaticText
+            Accessible.name: SQUtils.Utils.formatAccessibleName(SQUtils.StringUtils.plainText(root.validationError), objectName)
             Layout.fillWidth: true
             elide: Text.ElideRight
             text: root.validationError
