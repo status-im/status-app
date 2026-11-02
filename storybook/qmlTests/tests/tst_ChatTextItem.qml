@@ -313,6 +313,44 @@ Item {
             compare(item.contentHeight, height)
         }
 
+        function test_appearanceOverridesSurviveHighlightRestoration() {
+            const item = createItem()
+            item.segments = [{text: "WWWWWW", href: "https://a.test", color: "blue"},
+                         {text: "WWWWWW", href: "https://b.test", newBlock: true},
+                         {text: "WWWWWW", code: true, background: "blue", newBlock: true},
+                         {text: "WWWWWW", code: true, newBlock: true}]
+            item.hoverHighlightColor = "yellow"
+            item.highlightedLink = "https://a.test"
+            item.linkColor = "red"
+            item.codeBackground = "lime"
+            item.highlightedLink = ""
+            verify(rowColorShare(item, 0, "blue") > 0.01)
+            verify(rowColorShare(item, 1, "red") > 0.01)
+            verify(rowColorShare(item, 2, "blue") > 0.1)
+            verify(rowColorShare(item, 3, "lime") > 0.1)
+        }
+
+        function test_emojiSizeFollowsFontAndEmojiOnlyFallback() {
+            const item = createItem()
+            item.font.pixelSize = 12
+            item.segments = [{text: "hello 😎"}]
+            item.selectAll()
+            const selected = item.selectedText
+            const natural = item.contentHeight
+            item.font.pixelSize = 32
+            verify(item.contentHeight > natural)
+            compare(item.selectedText, selected)
+            item.font.pixelSize = 12
+            compare(item.contentHeight, natural)
+            item.segments = [{text: "😎"}]
+            item.emojiOnlyPixelSize = 70
+            const enlarged = item.contentHeight
+            item.font.pixelSize = 20
+            compare(item.contentHeight, enlarged)
+            item.emojiOnlyPixelSize = 0
+            verify(item.contentHeight < enlarged)
+        }
+
         function test_editedMarkerAppearance() {
             const item = createItem()
             item.segments = [{text: "Hello"}]
@@ -481,7 +519,7 @@ Item {
             compare(item.selectionEnd, 4)
             item.clearSelection()
             verify(rowColorShare(item, 0, "yellow") > 0.1)
-            item.linkColor = "red" // appearance rebuild must reapply external highlight
+            item.linkColor = "red" // changing the base color keeps the active highlight
             verify(rowColorShare(item, 0, "yellow") > 0.1)
             item.hoverAt(10, 33)
             item.segments = [{text: "plain"}]
