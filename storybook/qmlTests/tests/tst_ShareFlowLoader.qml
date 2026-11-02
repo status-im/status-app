@@ -181,9 +181,11 @@ Item {
 
         function test_paymentRequestWiringReachesTheStore() {
             loader.paymentRequestFeatureEnabled = true
+            loader.areTestNetworksEnabled = true
             launchAndOpen("hi", [])
             compare(picker().paymentRequestModel, rootChatStore.sharePaymentRequestModel)
             verify(picker().paymentRequestFeatureEnabled)
+            verify(picker().areTestNetworksEnabled)
             openModalSpy.clear()
             const callback = () => {}
             picker().paymentRequestModalRequested(callback)
@@ -194,6 +196,18 @@ Item {
             compare(rootChatStore.sharePaymentRequestModel.get(0).symbol, "ETH")
             picker().paymentRequestRemoveRequested(0)
             compare(rootChatStore.sharePaymentRequestModel.count, 0)
+        }
+
+        function test_paymentRequestOnlySendReachesTheStore() {
+            launchAndOpen("", [])
+            rootChatStore.addSharePaymentRequest("0xabc", "1", "k", "ETH", "")
+            const destinations = [{ sectionId: "personal", chatId: "0x04alice" }]
+            picker().sendRequested(destinations, "", [])
+            compare(rootChatStore.sends.length, 1)
+            compare(rootChatStore.sends[0].text, "")
+            compare(rootChatStore.sends[0].imagePaths, [])
+            compare(rootStore.activatedChats, [{ sectionId: "personal", chatId: "0x04alice" }])
+            waitForUnload()
         }
 
         function test_launchAndCancelClearPaymentRequests() {

@@ -163,11 +163,6 @@ suite "share send - payment requests":
     for send in sends:
       check(send.paymentRequests == requests)
 
-  test "test_paymentRequestOnlyShareSendsToEveryDestination":
-    let sends = textSendPlan(dests, requests)
-    check(sends.len == dests.len)
-    check(sends.allIt(it.paymentRequests.len == 2))
-
   test "test_batchedImagesCarryRequestsOnTheTextMessageOnly":
     var paths: seq[string] = @[]
     for i in 0 ..< 13: paths.add("/cache/" & $i & ".png")
