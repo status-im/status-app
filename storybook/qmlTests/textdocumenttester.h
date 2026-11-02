@@ -34,7 +34,8 @@ public:
         const auto block = quickDocument->textDocument()->findBlock(position);
         if (!block.isValid() || !block.layout())
             return {};
-        for (const auto& range : block.layout()->formats()) {
+        const auto formats = block.layout()->formats();
+        for (const auto& range : formats) {
             const int offset = position - block.position();
             if (offset >= range.start && offset < range.start + range.length) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 12, 0)
@@ -49,7 +50,8 @@ public:
                              ? range.format.foreground().color()
                              : quickDocument->parent()->property("color").value<QColor>()},
                         {QStringLiteral("bold"), range.format.fontWeight() >= QFont::Bold},
-                        {QStringLiteral("italic"), range.format.fontItalic()}};
+                        {QStringLiteral("italic"), range.format.fontItalic()},
+                        {QStringLiteral("strikethrough"), range.format.fontStrikeOut()}};
             }
         }
         return {};
