@@ -214,9 +214,15 @@ Item {
                 model: SortFilterProxyModel {
                     sourceModel: root.communitySectionModule.model
                     filters: [
-                        FastExpressionFilter {
-                            expectedRoles: ["isThread", "archived"]
-                            expression: !model.isThread || !model.archived
+                        AnyOf {
+                            ValueFilter {
+                                roleName: "isThread"
+                                value: false
+                            }
+                            ValueFilter {
+                                roleName: "archived"
+                                value: false
+                            }
                         },
                         SQUtils.SearchFilter {
                             roleName: "name"
