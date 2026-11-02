@@ -308,6 +308,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         m_selectionAnchor = -1;
         clearSelection();
     }
+    // Keep intermediate edits from repeatedly laying out the document.
+    m_document->setLayoutEnabled(false);
     m_document->clear();
 
     QTextCursor cursor(m_document.get());
@@ -818,6 +820,7 @@ void ChatTextItem::ensureLayout()
     if (m_document->textWidth() != newTextWidth)
         m_document->setTextWidth(newTextWidth);
 
+    m_document->setLayoutEnabled(true);
     const qreal height = m_segments.isEmpty() ? 0
             : m_document->documentLayout()->documentSize().height();
 
