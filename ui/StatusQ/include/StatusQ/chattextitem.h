@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QVariantList>
 
+#include <functional>
 #include <memory>
 #include <utility>
 
@@ -331,7 +332,13 @@ private:
     // including an active drag, without transient selectionChanged signals.
     void rebuildFromSegments(bool preserveInteraction = false);
     void applyDocumentDefaults();
+    void updateAppearance(int kind, const std::function<void(QTextCharFormat&)>& change);
+    void updateEmojiAppearance();
     qreal effectiveEmojiSize(bool emojiOnly) const;
+    enum AppearanceKind { LinkAppearance = 1, CodeBackgroundAppearance = 2,
+                          CodeFontAppearance = 4, MarkerAppearance = 8, EmojiAppearance = 16 };
+    struct AppearanceRange { int start; int length; int kinds; };
+    QVector<AppearanceRange> m_appearanceRanges;
 
     // Sizes emoji sequences, and updates emojiOnly.
     void applyEmojiSizing();

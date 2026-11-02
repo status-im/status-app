@@ -285,8 +285,9 @@ void ChatTextItem::setEditedMarkerFontSize(int size)
     if (m_editedMarkerFontSize == size)
         return;
     m_editedMarkerFontSize = size;
-    if (m_edited)
-        rebuildFromSegments(true);
+    updateAppearance(MarkerAppearance, [this](QTextCharFormat& format) {
+        format.setProperty(QTextFormat::FontPixelSize, m_editedMarkerFontSize);
+    });
     emit editedMarkerFontSizeChanged();
 }
 
@@ -297,9 +298,67 @@ void ChatTextItem::setEditedMarkerColor(const QColor& color)
     if (m_editedMarkerColor == color)
         return;
     m_editedMarkerColor = color;
-    if (m_edited)
-        rebuildFromSegments(true);
+    updateAppearance(MarkerAppearance, [this](QTextCharFormat& format) {
+        format.setForeground(m_editedMarkerColor);
+    });
     emit editedMarkerColorChanged();
+}
+
+// Preserve text positions and unrelated styles while changing only the ranges
+// that inherit an appearance setting. Collect edits before splitting fragments.
+void ChatTextItem::updateAppearance(int kind, const std::function<void(QTextCharFormat&)>& change)
+{
+    bool relevant = false;
+    for (const auto& range : std::as_const(m_appearanceRanges))
+        relevant |= (range.kinds & kind) != 0;
+    if (!relevant)
+        return;
+
+    m_document->setLayoutEnabled(false);
+    clearLinkHighlights();
+    struct Change { int start; int end; QTextCharFormat format; };
+    QVector<Change> changes;
+    for (const auto& range : std::as_const(m_appearanceRanges)) {
+        if (!(range.kinds & kind))
+            continue;
+        const int end = range.start + range.length;
+        for (QTextBlock block = m_document->findBlock(range.start);
+             block.isValid() && block.position() < end; block = block.next()) {
+            for (auto it = block.begin(); !it.atEnd(); ++it) {
+                const QTextFragment fragment = it.fragment();
+                const int from = qMax(range.start, fragment.position());
+                const int to = qMin(end, fragment.position() + fragment.length());
+                if (from >= to)
+                    continue;
+                QTextCharFormat format = fragment.charFormat();
+                change(format);
+                if (format != fragment.charFormat())
+                    changes.append({from, to, format});
+            }
+        }
+    }
+    QTextCursor cursor(m_document.get());
+    cursor.beginEditBlock();
+    for (const auto& change : std::as_const(changes)) {
+        cursor.setPosition(change.start);
+        cursor.setPosition(change.end, QTextCursor::KeepAnchor);
+        cursor.setCharFormat(change.format);
+    }
+    cursor.endEditBlock();
+    m_formatsDirty |= !changes.isEmpty();
+    applyLinkHighlights();
+    markLayoutDirty();
+}
+
+void ChatTextItem::updateEmojiAppearance()
+{
+    const qreal size = effectiveEmojiSize(m_emojiOnly);
+    updateAppearance(EmojiAppearance, [size](QTextCharFormat& format) {
+        format.clearProperty(QTextFormat::FontPointSize);
+        format.clearProperty(QTextFormat::FontPixelSize);
+        if (size > 0)
+            format.setProperty(QTextFormat::FontPixelSize, qRound(size));
+    });
 }
 
 // Builds the document directly: one QTextCharFormat per segment, inserted with a
@@ -307,6 +366,7 @@ void ChatTextItem::setEditedMarkerColor(const QColor& color)
 void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
 {
     m_formatsDirty = true;
+    m_appearanceRanges.clear();
     m_highlighted.clear();
     const bool clearHoveredLink = !preserveInteraction && !m_hoveredLink.isEmpty();
     if (!preserveInteraction) {
@@ -418,13 +478,13 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         // linkColor does not reach document text: addTextBlock picks the anchor
         // colour for a fragment with no foreground
         // (qquicktextnodeengine.cpp:1105), but addText() then resets it to the
-        // plain text colour (qquicktextnodeengine.cpp:138). So setLinkColor()
-        // rebuilds the segments.
+        // plain text colour (qquicktextnodeengine.cpp:138). Track these ranges
+        // so changing the link color only updates their foreground.
         const QString href = segment.value(QStringLiteral("href")).toString();
         if (!href.isEmpty()) {
             format.setAnchor(true);
             format.setAnchorHref(href);
-            if (!color.isValid())
+            if (!color.value<QColor>().isValid())
                 format.setForeground(m_linkColor);
         }
 
@@ -433,7 +493,20 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         if (codeBlock)
             text.replace(QLatin1Char('\n'), QChar::LineSeparator);
 
+        const int start = cursor.position();
         cursor.insertText(text, format);
+        int kinds = 0;
+        if (!href.isEmpty() && !color.value<QColor>().isValid())
+            kinds |= LinkAppearance;
+        if (segment.value(QStringLiteral("code")).toBool()) {
+            kinds |= CodeFontAppearance;
+            if (!background.value<QColor>().isValid())
+                kinds |= CodeBackgroundAppearance;
+        }
+        if (codeBlock)
+            kinds |= CodeFontAppearance;
+        if (kinds && cursor.position() > start)
+            m_appearanceRanges.append({start, cursor.position() - start, kinds});
     }
 
     cursor.endEditBlock();
@@ -450,7 +523,9 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         marker.setForeground(m_editedMarkerColor);
         marker.setProperty(QTextFormat::FontPixelSize, m_editedMarkerFontSize);
         // Reuse the existing QML StringUtils translation context/catalogue.
+        const int start = cursor.position();
         cursor.insertText(QLatin1Char(' ') + QCoreApplication::translate("StringUtils", "(edited)"), marker);
+        m_appearanceRanges.append({start, cursor.position() - start, MarkerAppearance});
     }
     applyBlockMargins();
     applyLinkHighlights();
@@ -500,7 +575,7 @@ void ChatTextItem::applyEmojiSizing()
     struct Change { int start; int end; QTextCharFormat format; };
     QVector<Change> changes;
 
-    if (size > 0) {
+    {
         const int pixelSize = qRound(size);
 
         for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
@@ -547,7 +622,11 @@ void ChatTextItem::applyEmojiSizing()
 
                     QTextCharFormat format = fragment.charFormat();
                     format.clearProperty(QTextFormat::FontPointSize);
-                    format.setProperty(QTextFormat::FontPixelSize, pixelSize);
+                    if (size > 0)
+                        format.setProperty(QTextFormat::FontPixelSize, pixelSize);
+                    m_appearanceRanges.append({block.position() + from, to - from, EmojiAppearance});
+                    if (size <= 0)
+                        continue;
                     changes.append({block.position() + from, block.position() + to, format});
                 }
             }
@@ -588,8 +667,7 @@ void ChatTextItem::setEmojiOnlyPixelSize(qreal size)
         return;
 
     m_emojiOnlyPixelSize = size;
-    if (!m_segments.isEmpty())
-        rebuildFromSegments(true);
+    updateEmojiAppearance();
     emit emojiOnlyPixelSizeChanged();
 }
 
@@ -859,9 +937,13 @@ void ChatTextItem::setFont(const QFont& font)
     m_font = font;
     m_document->setDefaultFont(font);
 
-    // Emoji carry explicit sizes and must follow changes to the default font.
-    if (!m_segments.isEmpty())
-        rebuildFromSegments(true);
+    // Ordinary spans inherit the new default font. Emoji carry an explicit
+    // size, so update their formats while preserving selection and hover.
+    bool hasEmoji = false;
+    for (const auto& range : std::as_const(m_appearanceRanges))
+        hasEmoji |= (range.kinds & EmojiAppearance) != 0;
+    if (hasEmoji)
+        updateEmojiAppearance();
     else
         markLayoutDirty();
 
@@ -894,8 +976,9 @@ void ChatTextItem::setLinkColor(const QColor& color)
         return;
 
     m_linkColor = color;
-    if (!m_segments.isEmpty())
-        rebuildFromSegments(true);
+    updateAppearance(LinkAppearance, [this](QTextCharFormat& format) {
+        format.setForeground(m_linkColor);
+    });
     update();
     emit linkColorChanged();
 }
@@ -911,8 +994,9 @@ void ChatTextItem::setCodeBackground(const QColor& color)
         return;
 
     m_codeBackground = color;
-    if (!m_segments.isEmpty())
-        rebuildFromSegments(true);
+    updateAppearance(CodeBackgroundAppearance, [this](QTextCharFormat& format) {
+        format.setBackground(m_codeBackground);
+    });
     update();
     emit codeBackgroundChanged();
 }
@@ -928,8 +1012,26 @@ void ChatTextItem::setLineHeight(int lineHeight)
         return;
 
     m_lineHeight = lineHeight;
-    if (!m_segments.isEmpty())
-        rebuildFromSegments(true);
+    m_document->setLayoutEnabled(false);
+    QTextCursor cursor(m_document.get());
+    cursor.beginEditBlock();
+    for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+        if (isCodeBlock(block))
+            continue;
+        QTextBlockFormat format = block.blockFormat();
+        if (m_lineHeight > 0)
+            format.setLineHeight(m_lineHeight, QTextBlockFormat::MinimumHeight);
+        else {
+            format.clearProperty(QTextFormat::LineHeight);
+            format.clearProperty(QTextFormat::LineHeightType);
+        }
+        if (format != block.blockFormat()) {
+            cursor.setPosition(block.position());
+            cursor.setBlockFormat(format);
+        }
+    }
+    cursor.endEditBlock();
+    markLayoutDirty();
     emit lineHeightChanged();
 }
 
@@ -1522,8 +1624,9 @@ void ChatTextItem::setCodeFontFamily(const QString& family)
         return;
 
     m_codeFontFamily = family;
-    if (!m_segments.isEmpty())
-        rebuildFromSegments(true);
+    updateAppearance(CodeFontAppearance, [this](QTextCharFormat& format) {
+        format.setFontFamilies({m_codeFontFamily});
+    });
     emit codeFontFamilyChanged();
 }
 
