@@ -169,18 +169,35 @@ public final class StatusGoService extends Service {
      * consumes this response to update chat state; status-go does not emit messages.new for
      * locally initiated sends.
      */
-    public static boolean publishNotificationReplyResult(String rpcResponseJson) {
+    public static boolean publishNotificationReplyResult(String rpcResponseJson, long signalEpoch) {
         final StatusGoService service = sInstance;
         if (service == null || rpcResponseJson == null || rpcResponseJson.isEmpty()) return false;
-        return service.publishNotificationReplyResultInternal(rpcResponseJson);
+        return service.publishNotificationReplyResultInternal(rpcResponseJson, signalEpoch);
+    }
+
+    /**
+     * Epoch status-go stamps on the signals it sends now (0 if unknown). The frontend only
+     * accepts signals of the backend session it is logged in to, so signals built here
+     * carry the epoch of the session they belong to.
+     */
+    public static long currentSignalEpoch() {
+        final String response = callRpc("SignalEpoch", "[]");
+        if (response == null || response.isEmpty()) return 0;
+        try {
+            return new JSONObject(response).optLong("signalEpoch", 0);
+        } catch (Throwable t) {
+            Log.w(TAG, "unreadable SignalEpoch response", t);
+            return 0;
+        }
     }
 
     /**
      * Queues the successful mark-read JSON-RPC response from an Android notification
-     * action so the frontend clears the conversation's unread state.
+     * action so the frontend clears the conversation's unread state. `signalEpoch` is the
+     * backend session the mark-read ran in (read before the call).
      */
     public static boolean publishNotificationConversationRead(String chatId, String threadId,
-            String rpcResponseJson) {
+            String rpcResponseJson, long signalEpoch) {
         final StatusGoService service = sInstance;
         if (service == null || chatId == null || chatId.isEmpty()
                 || rpcResponseJson == null || rpcResponseJson.isEmpty()) return false;
@@ -194,7 +211,8 @@ public final class StatusGoService extends Service {
             Log.w(TAG, "failed to create notification conversation read event", t);
             return false;
         }
-        return service.queueNotificationActionSignal("notification.conversation.read", event);
+        return service.queueNotificationActionSignal("notification.conversation.read", event,
+                signalEpoch);
     }
 
     /**
@@ -275,7 +293,7 @@ public final class StatusGoService extends Service {
                 ByteBuffer.wrap(jsonSignal.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private boolean publishNotificationReplyResultInternal(String rpcResponseJson) {
+    private boolean publishNotificationReplyResultInternal(String rpcResponseJson, long signalEpoch) {
         final JSONObject event;
         try {
             event = new JSONObject(rpcResponseJson);
@@ -283,19 +301,23 @@ public final class StatusGoService extends Service {
             Log.w(TAG, "failed to create notification reply frontend signal", t);
             return false;
         }
-        return queueNotificationActionSignal("notification.reply.sent", event);
+        return queueNotificationActionSignal(NotificationReplySignal.TYPE, event, signalEpoch);
     }
 
-    /** Delivers a notification-action result to the frontend, or queues it until the UI is visible. */
-    private boolean queueNotificationActionSignal(String type, JSONObject event) {
+    /**
+     * Delivers a notification-action result to the frontend, or queues it until the UI is
+     * visible. `signalEpoch` is the backend session the action ran in.
+     */
+    private boolean queueNotificationActionSignal(String type, JSONObject event, long signalEpoch) {
         final String signal;
         try {
-            JSONObject envelope = new JSONObject();
-            envelope.put("type", type);
-            envelope.put("event", event);
-            signal = envelope.toString();
+            signal = NotificationReplySignal.envelope(type, event.toString(), signalEpoch);
         } catch (Throwable t) {
             Log.w(TAG, "failed to create " + type + " frontend signal", t);
+            return false;
+        }
+        if (signal == null) {
+            Log.w(TAG, type + " without a signal epoch, not published");
             return false;
         }
 

@@ -60,6 +60,8 @@ proc login*(accountData: cstring, password: cstring): cstring {.importc: "Login"
 
 proc logout*(): cstring {.importc: "Logout".}
 
+proc signalEpoch*(): cstring {.importc: "SignalEpoch".}
+
 proc changeDatabasePasswordV2*(paramsJSON: cstring): cstring {.importc: "ChangeDatabasePasswordV2".}
 
 proc getProfileEncryptionInfo*(paramsJSON: cstring): cstring {.importc: "GetProfileEncryptionInfo".}
