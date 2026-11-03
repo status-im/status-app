@@ -69,6 +69,15 @@ proc getCurrentNetworks*(self: Service): seq[NetworkItem] =
 proc getCurrentNetworksChainIds*(self: Service): seq[int] =
   return self.getCurrentNetworks().map(n => n.chainId)
 
+# every chain of the user's test/mainnet choice, active or not
+proc getCurrentModeChainIds*(self: Service): seq[int] =
+  let testEnabled = self.settingsService.areTestNetworksEnabled()
+  self.flatNetworks.filter(n => n.isTest == testEnabled).map(n => n.chainId)
+
+proc getOtherModeChainIds*(self: Service): seq[int] =
+  let testEnabled = self.settingsService.areTestNetworksEnabled()
+  self.flatNetworks.filter(n => n.isTest != testEnabled).map(n => n.chainId)
+
 proc getEnabledChainIds*(self: Service): seq[int] =
   return self.getCurrentNetworks().filter(n => n.isEnabled).map(n => n.chainId)
 
