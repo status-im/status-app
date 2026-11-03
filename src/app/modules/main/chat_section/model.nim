@@ -49,6 +49,7 @@ type
     IsThread
     ParentChatId
     Archived
+    Followed
 
 QtObject:
   type
@@ -151,6 +152,7 @@ QtObject:
       ModelRole.IsThread.int:"isThread",
       ModelRole.ParentChatId.int:"parentChatId",
       ModelRole.Archived.int:"archived",
+      ModelRole.Followed.int:"followed",
 
     }.toTable
 
@@ -243,6 +245,8 @@ QtObject:
       return newQVariant(item.parentChatId)
     of ModelRole.Archived:
       return newQVariant(item.archived)
+    of ModelRole.Followed:
+      return newQVariant(item.followed)
 
   proc getItemIdxById(items: seq[ChatItem], id: string): int =
     var idx = 0
@@ -581,6 +585,10 @@ QtObject:
   proc updateArchivedById*(self: Model, id: string, archived: bool) =
     updateItemRolesAndNotify self.getItemIdxById(id):
       updateRole(archived)
+
+  proc updateFollowedById*(self: Model, id: string, followed: bool) =
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(followed)
 
   proc updateNotificationsForItemById*(self: Model, id: string, hasUnreadMessages: bool,
       notificationsCount: int) =

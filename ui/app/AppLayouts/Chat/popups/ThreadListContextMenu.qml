@@ -16,7 +16,7 @@ ThreadContextMenu {
     signal renameThreadRequested(string threadId, string threadName, string parentChatId)
 
     isMobile: SQUtils.Utils.isMobile
-    followed: false
+    followed: d.followed
     muted: false
     pinned: false
     pinEnabled: false
@@ -36,6 +36,7 @@ ThreadContextMenu {
             root.threadId = item.itemId
             root.parentChatId = item.parentChatId
             root.threadName = item.name
+            d.followed = !!item.followed
             root.sectionModule.prepareChatContentModuleForChatId(root.parentChatId)
             const contentModule = root.sectionModule.getChatContentModule()
             if (!contentModule) {
@@ -52,8 +53,15 @@ ThreadContextMenu {
     }
 
     onMarkAsReadRequested: root.sectionModule.markAllMessagesRead(root.parentChatId, root.threadId)
+    onFollowRequested: messageStore.setThreadFollowedById(root.threadId, true)
+    onUnfollowRequested: messageStore.setThreadFollowedById(root.threadId, false)
     onDeleteRequested: messageStore.deleteThreadById(root.threadId)
     onEditNameRequested: root.renameThreadRequested(root.threadId, root.threadName, root.parentChatId)
+
+    QtObject {
+        id: d
+        property bool followed: false
+    }
 
     MessageStore {
         id: messageStore

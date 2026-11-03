@@ -3412,6 +3412,14 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 <context>
     <name>ChatView</name>
     <message>
+        <source>Couldn&apos;t follow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t unfollow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Hledat</translation>
     </message>

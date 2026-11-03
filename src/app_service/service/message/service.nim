@@ -51,6 +51,7 @@ const SIGNAL_THREAD_CREATED* = "threadCreated"
 const SIGNAL_THREAD_CREATION_FAILED* = "threadCreationFailed"
 const SIGNAL_THREAD_EDIT_FINISHED* = "threadEditFinished"
 const SIGNAL_THREAD_DELETE_FINISHED* = "threadDeleteFinished"
+const SIGNAL_THREAD_FOLLOW_FINISHED* = "threadFollowFinished"
 const SIGNAL_PINNED_MESSAGES_LOADED* = "pinnedMessagesLoaded"
 const SIGNAL_REACTIONS_FOR_MESSAGE_LOADED* = "signalReactionsForMessageLoaded"
 const SIGNAL_FIRST_UNSEEN_MESSAGE_LOADED* = "firstUnseenMessageLoaded"
@@ -118,6 +119,12 @@ type
     chatId*: string
     threadId*: string
     requestId*: string
+    error*: string
+
+  ThreadFollowFinishedArgs* = ref object of Args
+    chatId*: string
+    threadId*: string
+    followed*: bool
     error*: string
 
   ThreadEditFinishedArgs* = ref object of Args
@@ -406,6 +413,40 @@ QtObject:
         return self.chatThreadsByParentIdByChat[chatId][parentMessageId]
     return self.emptyThread
 
+  # Only followed, active threads participate in chat-list and section unread markers.
+  proc threadCountsTowardUnread*(thread: ThreadDto): bool =
+    THREADS_ENABLED and thread.followed and not thread.archived and not thread.deleted
+
+  proc sectionThreadsUnreadMessagesAndMentionsCount*(self: Service, sectionId: string, sectionIsMuted: bool):
+      tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
+    if self.chatService.isNil:
+      return
+    let communityId = if sectionId == singletonInstance.userProfile.getPubKey(): "" else: sectionId
+    for chatId, threadsByParentId in self.chatThreadsByParentIdByChat:
+      let chat = self.chatService.getChatById(chatId, showWarning = false)
+      if chat.id.len == 0 or chat.communityId != communityId:
+        continue
+      for _, thread in threadsByParentId:
+        if not threadCountsTowardUnread(thread):
+          continue
+        result.unviewedMentionsCount += thread.unviewedMentionsCount
+        if thread.unviewedMentionsCount == 0 and (chat.muted or sectionIsMuted):
+          continue
+        result.unviewedMessagesCount += thread.unviewedMessagesCount
+
+  proc categoryThreadsHaveUnreadMessages*(self: Service, communityId: string, categoryId: string): bool =
+    if self.chatService.isNil or communityId.len == 0 or categoryId.len == 0:
+      return false
+    for chatId, threadsByParentId in self.chatThreadsByParentIdByChat:
+      let chat = self.chatService.getChatById(chatId, showWarning = false)
+      if chat.id.len == 0 or chat.communityId != communityId or chat.categoryId != categoryId:
+        continue
+      for _, thread in threadsByParentId:
+        if threadCountsTowardUnread(thread) and
+            ((not chat.muted and thread.unviewedMessagesCount > 0) or thread.unviewedMentionsCount > 0):
+          return true
+    return false
+
   proc handleThreadsUpdate(self: Service, threads: seq[ThreadDto]) =
     var mergedThreads: seq[ThreadDto]
     for thread in threads:
@@ -604,6 +645,22 @@ QtObject:
       threadId: threadId,
       name: name,
       requestId: requestId,
+    ))
+
+  proc asyncSetThreadFollowed*(self: Service, chatId, threadId: string, followed: bool) =
+    if chatId.len == 0 or threadId.len == 0:
+      error "invalid thread follow identifiers", chatId, threadId
+      self.events.emit(SIGNAL_THREAD_FOLLOW_FINISHED,
+        ThreadFollowFinishedArgs(chatId: chatId, threadId: threadId, followed: followed,
+          error: "follow-thread: invalid request"))
+      return
+    self.threadpool.start(AsyncSetThreadFollowedTaskArg(
+      tptr: asyncSetThreadFollowedTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncSetThreadFollowed",
+      chatId: chatId,
+      threadId: threadId,
+      followed: followed,
     ))
 
   proc asyncDeleteThread*(self: Service, chatId, threadId, requestId: string) =
@@ -1251,6 +1308,32 @@ QtObject:
     if args.error.len > 0:
       error "error editing thread", chatId = args.chatId, threadId = args.threadId, msg = args.error
     self.events.emit(SIGNAL_THREAD_EDIT_FINISHED, args)
+
+  proc onAsyncSetThreadFollowed*(self: Service, response: string) {.slot.} =
+    var args = ThreadFollowFinishedArgs()
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(ValueError, "follow thread response is not a json object")
+      discard responseObj.getProp("chatId", args.chatId)
+      discard responseObj.getProp("threadId", args.threadId)
+      discard responseObj.getProp("followed", args.followed)
+      args.error = responseObj{"error"}.getStr()
+      if args.error.len == 0:
+        let threadsArr = responseObj{"threads"}
+        if threadsArr.isNil or threadsArr.kind != JArray:
+          raise newException(ValueError, "follow thread response is missing thread metadata")
+        let threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
+        if not threads.anyIt(it.chatId == args.chatId and it.threadId == args.threadId and
+            it.parentMessageId.len > 0):
+          raise newException(ValueError, "follow thread response is missing the thread")
+        self.handleThreadsUpdate(threads)
+    except CatchableError as e:
+      args.error = e.msg
+    if args.error.len > 0:
+      error "error updating thread follow state", chatId = args.chatId, threadId = args.threadId,
+        followed = args.followed, msg = args.error
+    self.events.emit(SIGNAL_THREAD_FOLLOW_FINISHED, args)
 
   proc onAsyncDeleteThread*(self: Service, response: string) {.slot.} =
     var args = ThreadDeleteFinishedArgs()
