@@ -144,11 +144,13 @@ proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
 
 type
   AsyncFetchMissingTokensTaskArg = ref object of QObjectTaskArg
+    batchId: int
     keys: seq[string]
 
 proc asyncFetchMissingTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchMissingTokensTaskArg](argEncoded)
   var output = %*{
+    "batchId": arg.batchId,
     "requestedKeys": arg.keys,
     "tokens": newJArray(),
     "error": ""

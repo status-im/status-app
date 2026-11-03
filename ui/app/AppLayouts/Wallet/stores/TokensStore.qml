@@ -200,15 +200,22 @@ QtObject {
             logoUri: "",
             customToken:false,
             communityId: "",
-            type: ""
+            type: "",
+            lookupState: Constants.TokenLookupState.Missing
         }
 
-        const jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
-        if (!jsonToken)
-            return defaultValue
+        let jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
+        if (!jsonToken) {
+            defaultValue.lookupState = root._allTokensModule.getTokenLookupState(key)
+            if (defaultValue.lookupState === Constants.TokenLookupState.Resolved)
+                jsonToken = root._allTokensModule.getTokenByKeyOrGroupKeyFromAllTokens(key)
+            if (!jsonToken)
+                return defaultValue
+        }
 
         try {
-            return JSON.parse(jsonToken)
+            return Object.assign(JSON.parse(jsonToken),
+                                 { lookupState: Constants.TokenLookupState.Resolved })
         }
         catch (e) {
             console.warn("error parsing token for the key: ", key)
