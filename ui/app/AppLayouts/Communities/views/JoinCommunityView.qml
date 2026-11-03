@@ -45,6 +45,7 @@ StatusSectionLayout {
     property var moderateHoldingsModel
     property var assetsModel
     property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     // Blur view properties:
     property int membersCount
@@ -138,6 +139,7 @@ StatusSectionLayout {
         moderateHoldingsModel: root.moderateHoldingsModel
         assetsModel: root.assetsModel
         collectiblesModel: root.collectiblesModel
+        getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
 
         chatDateTimeText: root.chatDateTimeText
         listUsersText: root.listUsersText

@@ -124,6 +124,7 @@ Item {
     property var viewAndPostPermissionsModel
     property var assetsModel
     property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
@@ -706,6 +707,7 @@ Item {
                     emojiPopup: root.emojiPopup
                     stickersPopup: root.stickersPopup
                     viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
+                    getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
                     canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost
                     amISectionAdmin: root.amISectionAdmin
                     amIBanned: root.sectionItemModel ? root.sectionItemModel.amIBanned : false
@@ -872,6 +874,7 @@ Item {
             stickersPopup: root.stickersPopup
             rowPool: root.rowPool
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
+            getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost
             amISectionAdmin: root.amISectionAdmin
             amIBanned: root.sectionItemModel ? root.sectionItemModel.amIBanned : false
@@ -934,6 +937,7 @@ Item {
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             assetsModel: root.assetsModel
             collectiblesModel: root.collectiblesModel
+            getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             requestToJoinState: root.requestToJoinState
             requiresRequest: !root.amIMember
             requirementsMet: root.missingEncryptionKey ||

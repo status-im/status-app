@@ -64,6 +64,7 @@ Item {
     property bool stickersLoaded: false
     property bool canPost: true
     property var viewAndPostHoldingsModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
     property bool amISectionAdmin: false
     property bool amIBanned: false
     property bool sendViaPersonalChatEnabled
@@ -908,6 +909,7 @@ Item {
                               && !root.amISectionAdmin && !root.canPost)
                     assetsModel: root.rootStore.assetsModel
                     collectiblesModel: root.rootStore.collectiblesModel
+                    getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
                     holdingsModel: root.viewAndPostHoldingsModel
                 }
             }

@@ -6,6 +6,7 @@ type
     symbol*: string
     name*: string
     amount*: string
+    decimals*: int
     `type`*: int
     ensPattern*: string
     criteriaMet*: bool
@@ -15,6 +16,7 @@ proc initTokenCriteriaItem*(
   symbol: string,
   name: string,
   amount: string,
+  decimals: int,
   `type`: int,
   ensPattern: string,
   criteriaMet: bool,
@@ -25,6 +27,7 @@ proc initTokenCriteriaItem*(
   result.`type` = `type`
   result.ensPattern = ensPattern
   result.amount = amount
+  result.decimals = decimals
   result.criteriaMet = criteriaMet
   result.addresses = addresses
 
@@ -33,6 +36,7 @@ proc `$`*(self: TokenCriteriaItem): string =
     symbol: {self.symbol},
     name: {self.name},
     amount: {self.amount},
+    decimals: {self.decimals},
     type: {self.type},
     ensPattern: {self.ensPattern},
     criteriaMet: {self.criteriaMet},
@@ -50,6 +54,9 @@ proc getName*(self: TokenCriteriaItem): string =
 
 proc getAmount*(self: TokenCriteriaItem): string =
   return self.amount
+
+proc getDecimals*(self: TokenCriteriaItem): int =
+  return self.decimals
 
 proc getEnsPattern*(self: TokenCriteriaItem): string =
   return self.ensPattern

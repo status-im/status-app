@@ -6831,6 +6831,10 @@ key pair. Keycard will be required for signing</source>
 <context>
     <name>EditPermissionView</name>
     <message>
+        <source>Unknown token — amount in smallest units</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Anyone</source>
         <translation>Будь-хто</translation>
     </message>
@@ -8627,6 +8631,13 @@ Are you sure you want to do this?</source>
     <message>
         <source>or</source>
         <translation>або</translation>
+    </message>
+</context>
+<context>
+    <name>HoldingsSelectionModel</name>
+    <message>
+        <source>Loading…</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -18,6 +18,7 @@ Control {
 
     property var assetsModel
     property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     property var model
     property string introText
@@ -63,6 +64,7 @@ Control {
 
                                 assetsModel: root.assetsModel
                                 collectiblesModel: root.collectiblesModel
+                                getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
                             }
 
                             StatusListItemTag {

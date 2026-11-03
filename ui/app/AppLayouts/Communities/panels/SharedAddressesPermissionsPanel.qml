@@ -30,6 +30,7 @@ Rectangle {
     property var permissionsModel
     property var assetsModel
     property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     property bool requirementsCheckPending
     property bool checkingPermissionToJoinInProgress
@@ -319,6 +320,7 @@ Rectangle {
                 sourceModel: model.holdingsListModel
                 assetsModel: root.assetsModel
                 collectiblesModel: root.collectiblesModel
+                getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             }
             delegate: Row {
                 spacing: 4

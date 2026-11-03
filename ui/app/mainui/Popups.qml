@@ -1037,6 +1037,7 @@ QtObject {
                 }
                 assetsModel: root.rootStore.assetsModel
                 collectiblesModel: root.rootStore.collectiblesModel
+                getTokenByKeyOrGroupKeyFromAllTokens: WalletStores.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
 
                 getCurrencyAmount: (balance, key) => {
                     return currencyStore.getCurrencyAmount(balance, key)
@@ -1267,6 +1268,7 @@ QtObject {
                 }
                 assetsModel: chatStore.assetsModel
                 collectiblesModel: chatStore.collectiblesModel
+                getTokenByKeyOrGroupKeyFromAllTokens: WalletStores.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
 
                 getCurrencyAmount: (balance, key) => {
                     return root.currencyStore.getCurrencyAmount(balance, key)

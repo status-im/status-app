@@ -15,6 +15,7 @@ Item {
     property var holdingsModel
     property var assetsModel
     property var collectiblesModel
+    property var getTokenByKeyOrGroupKeyFromAllTokens: function(key){ return {}}
 
     QtObject {
         id: d
@@ -50,6 +51,7 @@ Item {
                                     sourceModel: holdingsListModel
                                     assetsModel: root.assetsModel
                                     collectiblesModel: root.collectiblesModel
+                                    getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
                                 }
                                 StatusListItemTag {
                                     height: 20
