@@ -13,6 +13,7 @@
 #include <QQmlIncubator>
 #include <QTimerEvent>
 
+#include <StatusQ/backgroundgraphicsrelease.h>
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
 #include <StatusQ/osnotification.h>
@@ -257,6 +258,10 @@ Q_DECL_EXPORT bool statusq_incubationDebugStats(void* engine, int* count, int* p
     *gentleIntervalMs = controller->debugGentleIntervalMs();
     *gentleBudgetMs = controller->debugGentleBudgetMs();
     return true;
+}
+
+Q_DECL_EXPORT void statusq_installBackgroundGraphicsRelease() {
+    new Status::BackgroundGraphicsRelease(qApp);
 }
 
 Q_DECL_EXPORT void* statusq_osnotification_create() {
