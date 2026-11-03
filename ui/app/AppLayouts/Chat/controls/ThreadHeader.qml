@@ -19,6 +19,7 @@ RowLayout {
     required property bool canEdit
     required property bool pending
     property bool deletePending: false
+    property bool followed: false
 
     readonly property bool editing: d.editing
     readonly property StatusTextField editor: inputLoader.status === Loader.Ready
@@ -26,6 +27,8 @@ RowLayout {
 
     signal renameRequested(string name)
     signal deleteRequested()
+    signal followRequested()
+    signal unfollowRequested()
 
     function deleteFinished(error: string) {
         if (error)
@@ -153,7 +156,6 @@ RowLayout {
     StatusFlatButton {
         id: menuButton
         objectName: "threadHeaderMenuButton"
-        visible: root.canEdit
         enabled: !root.pending && !root.deletePending
         icon.name: "more"
         type: StatusFlatButton.Type.Secondary
@@ -173,7 +175,9 @@ RowLayout {
                 objectName: "threadHeaderContextMenu"
                 threadId: root.threadId
                 isMobile: SQUtils.Utils.isMobile
-                followed: false
+                followed: root.followed
+                onFollowRequested: root.followRequested()
+                onUnfollowRequested: root.unfollowRequested()
                 muted: false
                 pinned: false
                 pinEnabled: false

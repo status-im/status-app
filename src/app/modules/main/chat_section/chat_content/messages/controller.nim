@@ -337,6 +337,9 @@ proc getThreadById*(self: Controller, threadId: string): ThreadDto =
 proc deleteThread*(self: Controller, threadId, requestId: string) =
   self.messageService.asyncDeleteThread(self.chatId, threadId, requestId)
 
+proc setThreadFollowed*(self: Controller, threadId: string, followed: bool) =
+  self.messageService.asyncSetThreadFollowed(self.chatId, threadId, followed)
+
 proc editThread*(self: Controller, name, requestId: string) =
   self.messageService.asyncEditThread(self.chatId, self.threadId, name, requestId)
 

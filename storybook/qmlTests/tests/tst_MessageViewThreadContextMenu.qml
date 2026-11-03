@@ -35,6 +35,12 @@ Item {
         function getChatId() { return "chat" }
         function canManageThreadById(id) { return id === "thread" }
         function deleteThreadById(id) { deletedThreadId = id }
+        property string followedThreadId: ""
+        property var followedValue: undefined
+        function setThreadFollowedById(id, followed) {
+            followedThreadId = id
+            followedValue = followed
+        }
     }
     ChatStores.MessageStore {
         id: messageStoreMock
@@ -108,6 +114,38 @@ Item {
             menu.close()
             root.activePopup.confirmButtonClicked()
             compare(moduleMock.deletedThreadId, "thread")
+        }
+
+        function test_followToggle_data() {
+            return [
+                { tag: "follow", followed: false, label: qsTr("Follow") },
+                { tag: "unfollow", followed: true, label: qsTr("Unfollow") }
+            ]
+        }
+
+        function test_followToggle(data) {
+            moduleMock.followedThreadId = ""
+            moduleMock.followedValue = undefined
+            const view = createTemporaryObject(viewComponent, root, { threadFollowed: data.followed })
+            verify(!!view)
+            tryCompare(view, "status", Loader.Ready)
+            let card
+            tryVerify(() => { card = findChild(view, "messageThreadSummary"); return !!card && card.height > 0 })
+            mouseClick(card, card.width / 2, card.height / 2, Qt.RightButton)
+            let menu
+            tryVerify(() => { menu = findChild(view, "threadSummaryContextMenu"); return !!menu && menu.opened })
+            compare(menu.followed, data.followed)
+            let followAction
+            for (let i = 0; i < menu.count; ++i) {
+                const action = menu.actionAt(i)
+                if (action?.objectName === "threadContextMenu_follow")
+                    followAction = action
+            }
+            verify(!!followAction)
+            compare(followAction.text, data.label)
+            followAction.trigger()
+            compare(moduleMock.followedThreadId, "thread")
+            compare(moduleMock.followedValue, !data.followed)
         }
     }
 }

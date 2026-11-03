@@ -424,6 +424,7 @@ QtObject {
                 isCategory: isCategory,
                 isThread: false,
                 archived: false,
+                followed: false,
                 parentChatId: "",
                 loaderActive: false,
                 locked: isPrivate && !root.canViewPrivateChannels,

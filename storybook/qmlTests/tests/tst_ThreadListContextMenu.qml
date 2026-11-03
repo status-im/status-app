@@ -41,6 +41,8 @@ Item {
         property bool threadDeletePending: false
         property bool threadEditPending: false
         property string deletedId
+        property string followedId
+        property var followedValue: undefined
         property bool messageSearchOngoing: false
         property bool loading: false
         property bool amIChatAdmin: false
@@ -58,6 +60,10 @@ Item {
         function getSectionId() { return "" }
         function canManageThreadById(id) { return allowed && id === "thread" }
         function deleteThreadById(id) { deletedId = id }
+        function setThreadFollowedById(id, followed) {
+            followedId = id
+            followedValue = followed
+        }
     }
 
     QtObject {
@@ -93,9 +99,10 @@ Item {
         property string requestedChatId
         property string readChatId
         property string readThreadId
+        property bool followed: false
         function getItemAsJson(id) {
             return JSON.stringify({
-                itemId: id, isThread: true, parentChatId: "parent", name: "Thread"
+                itemId: id, isThread: true, parentChatId: "parent", name: "Thread", followed: followed
             })
         }
         function prepareChatContentModuleForChatId(id) { requestedChatId = id }
@@ -225,6 +232,9 @@ Item {
             messages.threadDeletePending = false
             messages.threadEditPending = false
             messages.deletedId = ""
+            messages.followedId = ""
+            messages.followedValue = undefined
+            section.followed = false
             section.readChatId = ""
             section.readThreadId = ""
             root.openedMenu = null
@@ -300,6 +310,23 @@ Item {
             action(menu, "threadContextMenu_markAsRead").trigger()
             tryCompare(section, "readChatId", "parent")
             tryCompare(section, "readThreadId", "thread")
+        }
+
+        function test_followTogglesClickedThread_data() {
+            return [
+                { tag: "follow", followed: false, label: qsTr("Follow") },
+                { tag: "unfollow", followed: true, label: qsTr("Unfollow") }
+            ]
+        }
+
+        function test_followTogglesClickedThread(data) {
+            section.followed = data.followed
+            const menu = openThreadMenu(contactsComponent)
+            const entry = action(menu, "threadContextMenu_follow")
+            tryCompare(entry, "text", data.label)
+            entry.trigger()
+            tryCompare(messages, "followedId", "thread")
+            compare(messages.followedValue, !data.followed)
         }
 
         function test_renameTargetsClickedThread() {

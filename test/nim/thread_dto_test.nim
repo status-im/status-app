@@ -8,6 +8,11 @@ suite "thread dto":
     check parseJson("""{"archived":true}""").toThreadDto().archived
     check not parseJson("""{"archived":false}""").toThreadDto().archived
 
+  test "follow state defaults to false and parses both values":
+    check not parseJson("""{"threadId":"legacy"}""").toThreadDto().followed
+    check parseJson("""{"followed":true}""").toThreadDto().followed
+    check not parseJson("""{"followed":false}""").toThreadDto().followed
+
   test "accepts batch thread data without participant previews":
     let dto = parseJson("""{
       "threadId": "thread-id",

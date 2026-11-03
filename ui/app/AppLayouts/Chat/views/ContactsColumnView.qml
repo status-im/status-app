@@ -108,14 +108,27 @@ Item {
             model: SortFilterProxyModel {
                 sourceModel: root.chatSectionModule.model
                 filters: [
+                    // Non-archived threads are listed when followed or currently opened.
                     AnyOf {
                         ValueFilter {
                             roleName: "isThread"
                             value: false
                         }
-                        ValueFilter {
-                            roleName: "archived"
-                            value: false
+                        AllOf {
+                            ValueFilter {
+                                roleName: "archived"
+                                value: false
+                            }
+                            AnyOf {
+                                ValueFilter {
+                                    roleName: "followed"
+                                    value: true
+                                }
+                                ValueFilter {
+                                    roleName: "active"
+                                    value: true
+                                }
+                            }
                         }
                     },
                     SQUtils.SearchFilter {
