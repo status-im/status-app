@@ -19,6 +19,7 @@ RowLayout {
     required property bool canEdit
     required property bool pending
     property bool deletePending: false
+    property bool followed: false
 
     readonly property bool editing: d.editing
     readonly property StatusTextField editor: inputLoader.status === Loader.Ready
@@ -31,6 +32,8 @@ RowLayout {
     signal editNameRequested()
     signal markAsReadRequested()
     signal deleteRequested()
+    signal followRequested()
+    signal unfollowRequested()
 
     function deleteFinished(error: string) {
         if (error)
@@ -178,8 +181,9 @@ RowLayout {
                 objectName: "threadHeaderContextMenu"
                 threadId: root.threadId
                 isMobile: SQUtils.Utils.isMobile
-                followEnabled: false
-                followed: false
+                followed: root.followed
+                onFollowRequested: root.followRequested()
+                onUnfollowRequested: root.unfollowRequested()
                 muted: root.muted
                 onMuteRequested: interval => root.muteRequested(interval)
                 onUnmuteRequested: root.unmuteRequested()

@@ -38,6 +38,7 @@ QtObject {
     }
 
     readonly property bool threadDeleted: messageModule?.threadDeleted ?? false
+    readonly property bool threadFollowed: messageModule?.threadFollowed ?? false
     readonly property bool threadDeletePending: (root.messageModule?.threadDeletePending ?? false) ||
                                                 root.threadDeleteRequestedById
     property bool threadDeleteRequestedById: false
@@ -51,6 +52,18 @@ QtObject {
         if (error === "thread-delete-permission-denied")
             return qsTr("Only the thread creator or an admin can delete this thread")
         return error
+    }
+
+    function setThreadFollowedById(threadId: string, followed: bool) {
+        if (!root.messageModule) {
+            console.error("setThreadFollowedById: message module is not set")
+            return
+        }
+        root.messageModule.setThreadFollowedById(threadId, followed)
+    }
+
+    function setThreadFollowed(followed: bool) {
+        root.setThreadFollowedById(root.threadId, followed)
     }
 
     function deleteThreadById(threadId: string) {
