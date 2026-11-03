@@ -63,16 +63,10 @@ method getTokensModelDataSource*(self: AccessInterface): TokensModelDataSource {
 method getTokenGroupsModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getTokenGroupsForChainModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
+method getTokenGroupsForChainModelDataSource*(self: AccessInterface, chainId: int): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getTokenGroupsAllChainsModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method fetchAllChainsTokenGroups*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method getTokenGroupsForChainToModelDataSource*(self: AccessInterface): TokenGroupsModelDataSource {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getTokenMarketValuesDataSource*(self: AccessInterface): TokenMarketValuesDataSource {.base.} =
@@ -90,10 +84,22 @@ method getTokenPreferencesJson*(self: AccessInterface): string {.base.} =
 method viewDidLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method buildGroupsForChain*(self: AccessInterface, chainId: int) {.base.} =
+method acquireChainTokenGroups*(self: AccessInterface, chainId: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method buildGroupsForChainTo*(self: AccessInterface, chainId: int) {.base.} =
+method releaseChainTokenGroups*(self: AccessInterface, chainId: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getChainTokenGroupsLoading*(self: AccessInterface, chainId: int): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isChainTokenGroupsActive*(self: AccessInterface, chainId: int): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method acquireAllTokenGroups*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseAllTokenGroups*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: AccessInterface, key: string): TokenItem {.base.} =
@@ -153,5 +159,11 @@ method getMandatoryTokenGroupKeys*(self: AccessInterface): seq[string] {.base.} 
 method isChainSupportedForSwap*(self: AccessInterface, chainId: int): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method loadTokenLists*(self: AccessInterface) {.base.} =
+method acquireTokenLists*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method releaseTokenLists*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getTokenListsLoading*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")

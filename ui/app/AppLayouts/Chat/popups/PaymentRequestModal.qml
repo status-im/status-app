@@ -38,7 +38,8 @@ StatusDialog {
         color    [string] - account's wallet color
     **/
     required property var accountsModel
-    /** Expected model structure: see SearchableAssetsPanel::model **/
+    /** The selected chain's token groups, held by the owner while the modal
+        shows that chain. Expected model structure: see SearchableAssetsPanel::model **/
     required property var tokenGroupsForChainModel
     required property var searchResultModel
     required property string currentCurrency
@@ -64,7 +65,9 @@ StatusDialog {
         return amountToSendInput.amount
     }
 
-    signal buildGroupsForChain()
+    // The modal holds all token groups (the search) while it exists.
+    signal allTokenGroupsAcquireRequested()
+    signal allTokenGroupsReleaseRequested()
 
     objectName: "paymentRequestModal"
 
@@ -77,8 +80,10 @@ StatusDialog {
 
     title: qsTr("Payment request")
 
-    Component.onCompleted: {
-        root.buildGroupsForChain()
+    SQUtils.ResourceHolder {
+        key: "allTokenGroups"
+        onAcquireRequested: root.allTokenGroupsAcquireRequested()
+        onReleaseRequested: root.allTokenGroupsReleaseRequested()
     }
 
     onAboutToShow: {
@@ -89,7 +94,16 @@ StatusDialog {
     QtObject {
         id: d
 
-        function resetSelectedToken() {
+        readonly property bool chainGroupsReady: !!root.tokenGroupsForChainModel
+                                                 && root.tokenGroupsForChainModel.ModelCount.count > 0
+                                                 && !root.tokenGroupsForChainModel.loading
+        onChainGroupsReadyChanged: Qt.callLater(d.resetUnavailableToken)
+
+        function resetUnavailableToken() {
+            if (!d.chainGroupsReady || d.selectedHolding.available)
+                return
+            if (root.tokenGroupsForChainModel.ensureKeyLoaded?.(root.selectedTokenGroupKey))
+                return
             root.selectedTokenGroupKey = root.defaultTokenGroupKey
         }
 
@@ -104,7 +118,7 @@ StatusDialog {
         }
 
         function updateSelectedTokenKey() {
-            const tokenGroup = SQUtils.ModelUtils.getByKey(holdingSelector.model, "key", root.selectedTokenGroupKey)
+            const tokenGroup = SQUtils.ModelUtils.getByKey(d.adaptor.chainOutputModel, "key", root.selectedTokenGroupKey)
             if (!tokenGroup) {
                 console.warn("cannot relove the token group for the group key", root.selectedTokenGroupKey)
                 d.clearSelectedToken()
@@ -125,14 +139,14 @@ StatusDialog {
         }
 
         readonly property ModelEntry selectedHolding: ModelEntry {
-            sourceModel: holdingSelector.model
+            sourceModel: d.adaptor.chainOutputModel
             key: "key"
             value: root.selectedTokenGroupKey
             onValueChanged: {
                 if (available) {
                     Qt.callLater(d.updateSelectedTokenKey)
-                } else if (root.selectedTokenGroupKey !== root.defaultTokenGroupKey) {
-                    Qt.callLater(d.resetSelectedToken)
+                } else {
+                    Qt.callLater(d.resetUnavailableToken)
                 }
             }
             onAvailableChanged: {
@@ -140,9 +154,7 @@ StatusDialog {
                     Qt.callLater(d.updateSelectedTokenKey)
                 } else {
                     d.clearSelectedToken()
-                    if (root.selectedTokenGroupKey !== root.defaultTokenGroupKey) {
-                        Qt.callLater(d.resetSelectedToken)
-                    }
+                    Qt.callLater(d.resetUnavailableToken)
                 }
             }
         }
@@ -329,7 +341,6 @@ StatusDialog {
 
                 onClicked: {
                     root.selectedNetworkChainId = model.chainId
-                    root.buildGroupsForChain()
                     root.selectedTokenGroupKey = root.defaultTokenGroupKey
                     networkSelector.popup.close()
                 }

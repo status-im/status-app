@@ -10,9 +10,13 @@ import app_service/service/network/service as network_service
 import app_service/service/settings/service as settings_service
 
 import app/core/eventemitter
+import app/core/held_resource_qtimer
 import app/core/tasks/[qt, threadpool]
 import app/core/signals/types
 import app/global/feature_flags
+import constants as main_constants
+when main_constants.IS_MOBILE:
+  import app/global/app_signals
 import app_service/common/cache
 
 import json_serialization
@@ -29,6 +33,9 @@ import token_refresh_generation
 import token_apply_builder
 import token_market_values_apply
 import token_price_requests
+import held_token_catalogue
+
+export held_token_catalogue
 
 export dto_types, items_types
 
@@ -63,16 +70,8 @@ QtObject:
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
     groupsOfInterest: seq[TokenGroupItem] # refers to groups for tokens of interest
     groupTokensLookups: GroupTokensCache # groups outside the tokens of interest, fetched on demand; cleared on refresh
-    groupsForChain: seq[TokenGroupItem] # groups for the source (pay) chain
-    groupsForChainTo: seq[TokenGroupItem] # groups for the destination (receive) chain (swap+bridge)
-    allTokenGroupsForActiveNetworks: seq[TokenGroupItem] # all token groups, fetched on demand
-    allTokenGroupsLoading: bool
-    allTokenLists: seq[TokenListItem] # fetched on demand, not at startup
-    tokenListsLoading: bool
-    groupsForChainLoading: bool
-    groupsForChainToLoading: bool
-    groupsForChainRequestedChainId: int
-    groupsForChainToRequestedChainId: int
+    # token lists, all token groups and groups per chain, loaded only while held
+    catalogue: HeldTokenCatalogue
     tokenDetailsTable: Table[string, TokenDetailsItem] # [tokenKey, TokenDetailsItem]
     tokenMarketValuesTable: Table[string, TokenMarketValuesItem] # [tokenKey, TokenMarketValuesItem]
     tokenPriceTable: Table[string, float64] # [tokenKey, price]
@@ -85,10 +84,9 @@ QtObject:
     hasMarketDetailsCache: bool
     hasPriceValuesCache: bool
     tokenListUpdatedAt: int64
-    # Generation coalescing for the two heavy async tasks: N queued triggers ->
-    # one apply of the newest data, no piling-up in-flight tasks.
+    # Generation coalescing for the tokens refresh: N queued triggers -> one apply
+    # of the newest data, no piling-up in-flight tasks.
     refreshTokensGen: RefreshGenerationState
-    fetchAllTokenListsGen: RefreshGenerationState
 
   # Forward declaration
   proc getCurrency*(self: Service): string
@@ -99,6 +97,8 @@ QtObject:
   proc fetchPendingOnDemandPrices(self: Service)
   proc startRefreshTokensTask(self: Service, generation: int)
   proc startFetchAllTokenListsTask(self: Service, generation: int)
+  proc startFetchAllTokenGroupsTask(self: Service, generation: int)
+  proc startFetchChainTokenGroupsTask(self: Service, chainId: int, generation: int)
 
   # All slots defined in included files have to be forward declared
   proc tokensMarketValuesRetrieved(self: Service, response: string) {.slot.}
@@ -110,7 +110,6 @@ QtObject:
   proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchMissingTokensDone(self: Service, response: string) {.slot.}
   proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.}
-  proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.}
   proc prefetchSwapSupportRetrieved(self: Service, response: string) {.slot.}
 
@@ -135,7 +134,26 @@ QtObject:
     result.pendingTokenFetch = initPendingTokenFetch()
     result.onDemandPrices = initOnDemandPriceRequests()
     result.refreshTokensGen = initRefreshGenerationState()
-    result.fetchAllTokenListsGen = initRefreshGenerationState()
+    let service = result
+    result.catalogue = newHeldTokenCatalogue(
+      makeResource = proc(name: string, onLoad: proc(generation: int), onDrop: proc()): HeldResource =
+        newHeldResourceWithQTimers(name, onLoad, onDrop),
+      makeKeyedResources = proc(name: string, onLoad: proc(key: int, generation: int),
+          onDrop: proc(key: int)): HeldResources[int] =
+        newHeldResourcesWithQTimers[int](name, onLoad, onDrop),
+      fetches = TokenCatalogueFetches(
+        tokenLists: proc(generation: int) = service.startFetchAllTokenListsTask(generation),
+        allTokenGroups: proc(generation: int) = service.startFetchAllTokenGroupsTask(generation),
+        chainTokenGroups: proc(chainId: int, generation: int) =
+          service.startFetchChainTokenGroupsTask(chainId, generation),
+      ),
+      changed = proc(kind: TokenCatalogueKind, chainId: int, dropped: bool) =
+        service.events.emit(SIGNAL_TOKEN_CATALOGUE_CHANGED,
+          TokenCatalogueChangedArgs(kind: kind, chainId: chainId, dropped: dropped)),
+      loadingChanged = proc(kind: TokenCatalogueKind, chainId: int) =
+        service.events.emit(SIGNAL_TOKEN_CATALOGUE_LOADING_CHANGED,
+          TokenCatalogueChangedArgs(kind: kind, chainId: chainId)),
+    )
     result.groupsOfInterestByKey = initTable[string, TokenGroupItem]()
     result.groupTokensLookups = initGroupTokensCache()
     result.tokenDetailsTable = initTable[string, TokenDetailsItem]()
@@ -155,4 +173,6 @@ QtObject:
   include service_main
 
   proc delete*(self: Service) =
+    if not self.catalogue.isNil:
+      self.catalogue.dispose()
     self.QObject.delete

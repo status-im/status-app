@@ -24,11 +24,6 @@ proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
   self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
   sortTokenGroupsByKey(self.groupsOfInterest)  # deterministic order
 
-proc applyAllTokenListsResult(self: Service, res: AllTokenListsApplyResult) =
-  # Slim GUI-thread apply: the worker already built the token-list items; MOVE
-  # them in (never copy — see applyRefreshTokensResult).
-  self.allTokenLists = move res.allTokenLists
-
 proc prefetchSwapSupport(self: Service, chainIds: seq[int] = @[]) =
   if not SWAP_PROVIDER_ENABLED:
     return
@@ -139,23 +134,14 @@ proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
   self.applyRefreshTokensResult(res, c.action)
 
 proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
+  # `res` is nil only if the handoff was drained at shutdown
   let res = takeTyped[AllTokenListsApplyResult](response)
-  let completedGen = if not res.isNil: res.generation else: self.fetchAllTokenListsGen.currentGeneration
-  let c = self.fetchAllTokenListsGen.onCompletion(completedGen)
-  if c.action == rcaDropAndRefire:
-    debug "dropping stale async fetch all token lists response; re-firing newest",
-      completedGen = completedGen
-    self.startFetchAllTokenListsTask(c.gen) # keeps tokenListsLoading true
-    return
-  # rcaApply: newest generation, nothing more in flight.
-  self.tokenListsLoading = false
   if res.isNil:
     return
   if res.error.len > 0:
     error "async fetch all token lists failed", errDescription = res.error
-    return
-  self.applyAllTokenListsResult(res)
-  self.events.emit(SIGNAL_TOKEN_LISTS_LOADED, Args())
+  # MOVE the worker-built items in, never copy (see applyRefreshTokensResult)
+  self.catalogue.tokenLists.complete(res.generation, ok = res.error.len == 0, move res.allTokenLists)
 
 proc fetchPendingMissingTokenKeys(self: Service) =
   # Debounced: drain every key that missed since the last batch and fetch them in
@@ -232,7 +218,6 @@ proc asyncRefreshTokens(self: Service) =
     self.startRefreshTokensTask(gen)
 
 proc startFetchAllTokenListsTask(self: Service, generation: int) =
-  self.tokenListsLoading = true
   let arg = AsyncFetchAllTokenListsTaskArg(
     tptr: asyncFetchAllTokenListsTask,
     vptr: cast[uint](self.vptr),
@@ -241,13 +226,14 @@ proc startFetchAllTokenListsTask(self: Service, generation: int) =
   )
   self.threadpool.start(arg)
 
-proc asyncFetchAllTokenLists*(self: Service) =
-  let (shouldStart, gen) = self.fetchAllTokenListsGen.requestRefresh()
-  if shouldStart:
-    self.startFetchAllTokenListsTask(gen)
+proc acquireTokenLists*(self: Service) =
+  self.catalogue.tokenLists.acquire()
+
+proc releaseTokenLists*(self: Service) =
+  self.catalogue.tokenLists.release()
 
 proc getTokenListsLoading*(self: Service): bool =
-  return self.tokenListsLoading
+  return self.catalogue.tokenLists.isLoading
 
 proc init*(self: Service) =
   self.rebuildMarketDataDebouncer = debouncer_service.newDebouncer(
@@ -281,11 +267,22 @@ proc init*(self: Service) =
   # update and populate internal list and then emit signal when new custom token detected?
   self.events.on(SignalType.WalletTokensListsUpdated.event) do(e:Args):
     self.asyncRefreshTokens()
-    self.asyncFetchAllTokenLists()
+    self.catalogue.onTokenListsUpdated()
 
   self.events.on(SIGNAL_NETWORK_MODE_UPDATED) do(e:Args):
     self.asyncRefreshTokens()
     self.prefetchSwapSupport()
+    self.catalogue.onNetworkModeUpdated()
+
+  self.events.on(SIGNAL_NETWORK_ACTIVE_UPDATED) do(e:Args):
+    self.catalogue.onActiveNetworksUpdated()
+
+  when main_constants.IS_MOBILE:
+    self.events.on(SIGNAL_APP_BACKGROUNDED) do(e: Args):
+      self.catalogue.onBackgrounded()
+
+    self.events.on(SIGNAL_APP_FOREGROUNDED) do(e: Args):
+      self.catalogue.onForegrounded()
 
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
     self.resetMarketValuesCache()
@@ -308,17 +305,13 @@ proc getCurrency*(self: Service): string =
 proc getGroupsOfInterest*(self: Service): var seq[TokenGroupItem] =
   return self.groupsOfInterest
 
-proc buildGroupsForChain*(self: Service, chainId: int) =
-  if chainId <= 0:
-    warn "invalid chainId", chainId = chainId
-    return
-  self.groupsForChainRequestedChainId = chainId
-  self.groupsForChainLoading = true
+proc startFetchChainTokenGroupsTask(self: Service, chainId: int, generation: int) =
   let arg = AsyncBuildGroupsForChainTaskArg(
     tptr: asyncBuildGroupsForChainTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncBuildGroupsForChainDone",
     chainId: chainId,
+    generation: generation,
   )
   self.threadpool.start(arg)
 
@@ -327,98 +320,65 @@ proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.} =
   # (never copy — see applyRefreshTokensResult) with no GUI-thread JSON parse or
   # group build. `res` is nil only if the handoff was drained at shutdown.
   let res = takeTyped[TokenGroupsApplyResult](response)
-  if not res.isNil and res.chainId != self.groupsForChainRequestedChainId:
-    return
-  self.groupsForChainLoading = false
   if res.isNil:
-    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
     return
   if res.error.len > 0:
     error "async build groups for chain failed", errDescription = res.error
-    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
-    return
-  self.groupsForChain = move res.groups
-  self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
+  self.catalogue.chainTokenGroups.complete(res.chainId, res.generation, ok = res.error.len == 0, move res.groups)
 
-proc getGroupsForChainLoading*(self: Service): bool =
-  return self.groupsForChainLoading
-
-proc buildGroupsForChainTo*(self: Service, chainId: int) =
+proc acquireChainTokenGroups*(self: Service, chainId: int) =
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
     return
-  self.groupsForChainToRequestedChainId = chainId
-  self.groupsForChainToLoading = true
-  let arg = AsyncBuildGroupsForChainTaskArg(
-    tptr: asyncBuildGroupsForChainTask,
-    vptr: cast[uint](self.vptr),
-    slot: "onAsyncBuildGroupsForChainToDone",
-    chainId: chainId,
-  )
-  self.threadpool.start(arg)
+  self.catalogue.chainTokenGroups.acquire(chainId)
 
-proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.} =
-  # Same typed handoff as the source-chain slot: the worker already built the
-  # name-sorted groups; MOVE them into state (never copy).
-  let res = takeTyped[TokenGroupsApplyResult](response)
-  if not res.isNil and res.chainId != self.groupsForChainToRequestedChainId:
-    return
-  self.groupsForChainToLoading = false
-  if res.isNil:
-    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
-    return
-  if res.error.len > 0:
-    error "async build groups for chain (to) failed", errDescription = res.error
-    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
-    return
-  self.groupsForChainTo = move res.groups
-  self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED, Args())
+proc releaseChainTokenGroups*(self: Service, chainId: int) =
+  self.catalogue.chainTokenGroups.release(chainId)
 
-proc getGroupsForChainToLoading*(self: Service): bool =
-  return self.groupsForChainToLoading
+proc getChainTokenGroups*(self: Service, chainId: int): var seq[TokenGroupItem] =
+  ## Empty unless the chain's groups are held and loaded.
+  return self.catalogue.chainTokenGroups.items(chainId)
 
-proc asyncFetchAllTokenGroups*(self: Service) =
-  if self.allTokenGroupsLoading:
-    return
-  self.allTokenGroupsLoading = true
+proc getChainTokenGroupsLoading*(self: Service, chainId: int): bool =
+  return self.catalogue.chainTokenGroups.isLoading(chainId)
+
+proc isChainTokenGroupsActive*(self: Service, chainId: int): bool =
+  return self.catalogue.chainTokenGroups.isActive(chainId)
+
+proc startFetchAllTokenGroupsTask(self: Service, generation: int) =
   let arg = AsyncFetchAllTokenGroupsTaskArg(
     tptr: asyncFetchAllTokenGroupsTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncFetchAllTokenGroupsDone",
+    generation: generation,
   )
   self.threadpool.start(arg)
 
 proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.} =
   # Worker-built, name-sorted groups moved into state (see onAsyncBuildGroupsForChainDone).
-  self.allTokenGroupsLoading = false
   let res = takeTyped[TokenGroupsApplyResult](response)
   if res.isNil:
-    self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
     return
   if res.error.len > 0:
     error "async fetch all token groups failed", errDescription = res.error
-    self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
-    return
-  self.allTokenGroupsForActiveNetworks = move res.groups
-  self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
+  self.catalogue.allTokenGroups.complete(res.generation, ok = res.error.len == 0, move res.groups)
 
-proc getAllTokenGroupsForActiveNetworksMode*(self: Service): seq[TokenGroupItem] =
-  return self.allTokenGroupsForActiveNetworks
+proc acquireAllTokenGroups*(self: Service) =
+  self.catalogue.allTokenGroups.acquire()
+
+proc releaseAllTokenGroups*(self: Service) =
+  self.catalogue.allTokenGroups.release()
 
 proc getAllTokenGroups*(self: Service): var seq[TokenGroupItem] =
-  return self.allTokenGroupsForActiveNetworks
+  ## Empty unless held and loaded.
+  return self.catalogue.allTokenGroups.items
 
 proc getAllTokenGroupsLoading*(self: Service): bool =
-  return self.allTokenGroupsLoading
-
-proc getGroupsForChain*(self: Service): var seq[TokenGroupItem] =
-  return self.groupsForChain
-
-proc getGroupsForChainTo*(self: Service): var seq[TokenGroupItem] =
-  return self.groupsForChainTo
+  return self.catalogue.allTokenGroups.isLoading
 
 proc getAllTokenLists*(self: Service): var seq[TokenListItem] =
-  return self.allTokenLists
+  ## Empty unless held and loaded.
+  return self.catalogue.tokenLists.items
 
 ################################################################################
 ## This is a very special function that should not be used anywhere else,

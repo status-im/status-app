@@ -745,8 +745,11 @@ QtObject:
     read = getTokenListLoading
     notify = tokenListLoadingChanged
 
-  proc loadTokenList*(self: View) {.slot.} =
-    self.delegate.loadTokenList()
+  proc acquireTokenList*(self: View) {.slot.} =
+    self.delegate.acquireTokenList()
+
+  proc releaseTokenList*(self: View) {.slot.} =
+    self.delegate.releaseTokenList()
 
   proc collectiblesListModel*(self: View): TokenListModel =
     result = self.collectiblesListModel

@@ -1,7 +1,7 @@
 // SwapModal-open benchmark scene. Models the real thing the picker sees when the
 // swap token selector opens: a panel that animates in (the "open" window) with a
 // ListView bound DIRECTLY to the real Nim `groupsForChainModel` (the
-// tokenGroupsForChainModel a swap uses, lazy-loaded, NoMarketDetails), plus a
+// chain token groups model a swap uses, lazy-loaded, NoMarketDetails), plus a
 // looping animation and a 16ms stall monitor so a GUI-thread block during the
 // open window shows up as a dropped-frame tick delta.
 //

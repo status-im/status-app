@@ -75,7 +75,7 @@ proc asyncFetchAllTokenListsTask*(argEncoded: string) {.gcsafe, nimcall.} =
   except Exception as e:
     errorMsg = fmt"Error fetching all token lists: {e.msg}"
   # Same liveness invariant as asyncRefreshTokensTask: finishTyped always fires with
-  # a non-nil result (structural finally), so the 0004 gate can never wedge.
+  # a non-nil result (structural finally), so the held load always completes.
   var res: AllTokenListsApplyResult
   try:
     res = assembleAllTokenListsResult(allTokenListsNode, arg.requestId, errorMsg)
@@ -87,14 +87,14 @@ proc asyncFetchAllTokenListsTask*(argEncoded: string) {.gcsafe, nimcall.} =
 
 type
   AsyncFetchAllTokenGroupsTaskArg = ref object of QObjectTaskArg
-    discard
+    generation: int
 
 proc asyncFetchAllTokenGroupsTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncFetchAllTokenGroupsTaskArg](argEncoded)
   # Decode + build the name-sorted groups off the GUI thread and hand them over via
   # finishTyped (no multi-MB JSON crosses the boundary, no group build on the GUI
-  # slot). Always finishes with a non-nil result (structural finally) so the
-  # allTokenGroupsLoading bool the slot clears can never stay stuck true.
+  # slot). Always finishes with a non-nil result (structural finally) so the held
+  # load always completes.
   var tokensNode: JsonNode = newJArray()
   var errorMsg = ""
   try:
@@ -111,11 +111,13 @@ proc asyncFetchAllTokenGroupsTask*(argEncoded: string) {.gcsafe, nimcall.} =
   finally:
     if res.isNil:
       res = TokenGroupsApplyResult(error: "internal: token groups result assembly produced no result")
+    res.generation = arg.generation
     arg.finishTyped(res)
 
 type
   AsyncBuildGroupsForChainTaskArg = ref object of QObjectTaskArg
     chainId: int
+    generation: int
 
 proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncBuildGroupsForChainTaskArg](argEncoded)
@@ -137,6 +139,7 @@ proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
     if res.isNil:
       res = TokenGroupsApplyResult(error: "internal: groups-for-chain result assembly produced no result")
     res.chainId = arg.chainId
+    res.generation = arg.generation
     arg.finishTyped(res)
 
 type

@@ -11,6 +11,7 @@ import QtQuick.Controls
 import utils
 
 import AppLayouts.Wallet.adaptors
+import AppLayouts.Wallet.helpers
 import AppLayouts.Chat.popups
 import shared.stores as SharedStores
 
@@ -31,12 +32,9 @@ Item {
 
         readonly property var tokensStore: TokensStoreMock {
             tokenGroupsModel: TokenGroupsModel {}
-            tokenGroupsForChainModel: TokenGroupsModel {
-                skipInitialLoad: true
-            }
             searchResultModel: TokenGroupsModel {
                 skipInitialLoad: true
-                tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+                tokenGroupsForChainModel: d.tokensStore.tokenGroupsModel
             }
         }
     }
@@ -48,25 +46,21 @@ Item {
             destroyOnClose: true
 
             readonly property SharedStores.CurrenciesStore currencyStore: SharedStores.CurrenciesStore {}
+            // as its owner holds the selected chain
+            readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
+                tokensStore: d.tokensStore
+                chainId: paymentRequestModal.selectedNetworkChainId
+            }
 
             currentCurrency: currencyStore.currentCurrency
             formatCurrencyAmount: currencyStore.formatCurrencyAmount
             flatNetworksModel: d.flatNetworks
             accountsModel: d.accounts
-            tokenGroupsForChainModel: d.tokensStore.tokenGroupsForChainModel
+            tokenGroupsForChainModel: chainTokenGroupsHolder.model
             searchResultModel: d.tokensStore.searchResultModel
 
-            Component.onCompleted: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
-
-            onBuildGroupsForChain: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
-
-            onSelectedNetworkChainIdChanged: {
-                d.tokensStore.buildGroupsForChain(paymentRequestModal.selectedNetworkChainId)
-            }
+            onAllTokenGroupsAcquireRequested: d.tokensStore.acquireAllTokenGroups()
+            onAllTokenGroupsReleaseRequested: d.tokensStore.releaseAllTokenGroups()
         }
     }
 
@@ -75,6 +69,11 @@ Item {
         when: windowShown
 
         property PaymentRequestModal controlUnderTest: null
+
+        function cleanup() {
+            d.tokensStore._reloadChainModels()
+            d.tokensStore.searchResultModel.clear()
+        }
 
         // helper functions -------------------------------------------------------------
         function launchAndVerfyModal() {
@@ -225,6 +224,129 @@ Item {
             compare(networkSelector.control.contentItem.title, network.chainName)
 
             closeAndVerfyModal()
+        }
+
+        function test_shows_the_held_token_groups_of_its_chain() {
+            const store = d.tokensStore
+            const firstChainId = Constants.chains.mainnetChainId
+            const secondChainId = d.flatNetworks.get(1).chainId
+            verify(firstChainId !== secondChainId)
+            compare(store.allTokenGroupsHolders, 0)
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 0)
+
+            launchAndVerfyModal()
+            compare(store.allTokenGroupsHolders, 1)
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 1)
+            verify(!!controlUnderTest.tokenGroupsForChainModel)
+            verify(controlUnderTest.tokenGroupsForChainModel === store.chainTokenGroupsModel(firstChainId))
+
+            controlUnderTest.selectedNetworkChainId = secondChainId
+            compare(store.chainTokenGroupsHolderCount(firstChainId), 0)
+            compare(store.chainTokenGroupsHolderCount(secondChainId), 1)
+            verify(controlUnderTest.tokenGroupsForChainModel === store.chainTokenGroupsModel(secondChainId))
+            compare(store.allTokenGroupsHolders, 1)
+
+            // destroyed on close
+            controlUnderTest.close()
+            tryVerify(() => store.allTokenGroupsHolders === 0)
+            compare(store.chainTokenGroupsHolderCount(secondChainId), 0)
+        }
+
+        function test_selection_kept_while_the_chain_groups_reload() {
+            controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root, { selectedTokenGroupKey: Constants.daiGroupKey })
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+
+            // dropped on background
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            chainModel.clear()
+            wait(0)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            verify(!controlUnderTest.tokenSelectionReady)
+
+            // reloading on foreground
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId)
+            chainModel.loading = false
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+        }
+
+        function test_selection_falls_back_once_a_reload_lacks_it() {
+            controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root, { selectedTokenGroupKey: Constants.daiGroupKey })
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            chainModel.clear()
+            wait(0)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+
+            // the chain no longer lists it at all
+            chainModel.groupLoader = key => false
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId,
+                                           { skippedKeys: [Constants.daiGroupKey] })
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            chainModel.loading = false
+            tryCompare(controlUnderTest, "selectedTokenGroupKey", Constants.ethGroupKey)
+        }
+
+        function test_selection_kept_when_a_reload_lists_it_beyond_the_first_page() {
+            controlUnderTest = createTemporaryObject(paymentRequestModalComponent, root, { selectedTokenGroupKey: Constants.daiGroupKey })
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened)
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            chainModel.clear()
+            wait(0)
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, controlUnderTest.selectedNetworkChainId,
+                                           { skippedKeys: [Constants.daiGroupKey] })
+            chainModel.loading = false
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+        }
+
+        function test_search_selection_kept_while_the_groups_reload() {
+            launchAndVerfyModal()
+            waitForDefaultTokenSelection()
+
+            const chainId = controlUnderTest.selectedNetworkChainId
+            const chainModel = controlUnderTest.tokenGroupsForChainModel
+            d.tokensStore._buildGroupsInto(chainModel, chainId, { skippedKeys: [Constants.daiGroupKey] })
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+
+            const assetSelector = findChild(controlUnderTest, "assetSelector")
+            verify(!!assetSelector)
+            assetSelector.search("dai")
+            verify(SQUtils.ModelUtils.indexOf(d.tokensStore.searchResultModel, "key", Constants.daiGroupKey) >= 0)
+            controlUnderTest.selectedTokenGroupKey = Constants.daiGroupKey
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedSymbol, "DAI")
+
+            // dropped on background, both the chain's groups and the search's
+            chainModel.clear()
+            d.tokensStore.searchResultModel.clear()
+            wait(0)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+
+            // the chain's groups reload before the search's
+            chainModel.loading = true
+            d.tokensStore._buildGroupsInto(chainModel, chainId, { skippedKeys: [Constants.daiGroupKey] })
+            chainModel.loading = false
+            tryVerify(() => controlUnderTest.tokenSelectionReady)
+            compare(controlUnderTest.selectedTokenGroupKey, Constants.daiGroupKey)
+            compare(controlUnderTest.selectedSymbol, "DAI")
         }
 
         function test_symbol_initial_selection_when_not_available_in_chain() {
