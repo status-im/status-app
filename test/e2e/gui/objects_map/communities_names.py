@@ -40,7 +40,7 @@ channel_identicon_StatusSmartIdenticon = {"container": None, "id": "identicon", 
 channel_name_StatusBaseText = {"container": None, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 mainWindow_createChannelOrCategoryBtn_StatusBaseText = {"container": mainWindow_communityColumnView_CommunityColumnView, "objectName": "createChannelOrCategoryBtn", "type": "StatusBaseText", "visible": True}
 create_channel_StatusMenuItem = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "createCommunityChannelBtn", "type": "StatusMenuItem", "visible": True}
-mainWindow_Join_Community_StatusButton = {"container": statusDesktop_mainWindow, "type": "StatusButton", "unnamed": 1, "visible": True}
+mainWindow_Join_Community_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "communityColumnJoinButton", "type": "StatusButton", "visible": True}
 
 # Banned Panel
 mainWindow_CommunityBannedMemberPanel = {"container": statusDesktop_mainWindow, "objectName": "communityBannedMemberPanel", "type": "CommunityBannedMemberCenterPanel", "visible": True}
