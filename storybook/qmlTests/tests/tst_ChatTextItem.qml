@@ -471,6 +471,28 @@ Item {
             }
         }
 
+        // Frame edges are antialiased over one device pixel, so a 1 px border
+        // keeps a band in its own colour on a high-DPI screen.
+        function test_codeFrameBorderIsSolidOnHighDpi() {
+            const item = createItem()
+            item.codeBackground = "white"
+            item.codeBorderColor = "blue"
+            item.segments = [{text: "before"}, {text: "a long enough line of code", codeBlock: true}]
+            const frame = item.codeBlockRects()[0]
+            const image = grabImage(item)
+            const scale = image.width / item.width
+            if (scale < 2)
+                skip("needs a device pixel ratio of at least 2")
+            const x = Math.round((frame.x + frame.width / 2) * scale)
+            const top = Math.floor(frame.y * scale)
+            let solid = false
+            for (let y = top - 2; y <= top + 2 * scale; ++y) {
+                const c = image.pixel(x, y)
+                solid |= c.a > 0.95 && c.r < 0.05 && c.g < 0.05 && c.b > 0.95
+            }
+            verify(solid, "the top border has a pixel in exactly its colour")
+        }
+
         function highlightItem() {
             const item = createItem()
             item.hoverHighlightColor = "lime"

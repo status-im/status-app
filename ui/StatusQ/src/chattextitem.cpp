@@ -26,7 +26,10 @@
 #include <QTextCursor>
 #include <QTextDocument>
 
+#include <array>
 #include <cmath>
+#include <optional>
+#include <tuple>
 
 namespace {
 
@@ -35,12 +38,63 @@ namespace {
 constexpr int CodeBlockProperty = QTextFormat::UserProperty + 1; // int, code-block identity
 constexpr int CodeSpanProperty = QTextFormat::UserProperty + 2;  // bool, characters
 
+// A paint key's colour, compared as one QRgb. An invalid colour means "use the
+// default" and must not compare equal to opaque black, which its rgba() is.
+struct KeyColor {
+    QRgb rgba = 0;
+    bool valid = false;
+
+    constexpr KeyColor() = default;
+    KeyColor(const QColor& color) : rgba(color.rgba()), valid(color.isValid()) {}
+
+    constexpr bool operator==(const KeyColor& other) const {
+        return rgba == other.rgba && valid == other.valid;
+    }
+};
+
 // Cache paint inputs on the render thread, alongside the nodes they describe.
+struct TextPaintKey {
+    quint64 revision;
+    QRectF bounds;
+    KeyColor color, linkColor, selectionColor, selectionTextColor;
+    int selectionStart, selectionEnd;
+
+    constexpr bool operator==(const TextPaintKey& other) const {
+        return std::tie(revision, bounds, color, linkColor, selectionColor, selectionTextColor,
+                        selectionStart, selectionEnd)
+                == std::tie(other.revision, other.bounds, other.color, other.linkColor,
+                            other.selectionColor, other.selectionTextColor,
+                            other.selectionStart, other.selectionEnd);
+    }
+};
+
+struct FramePaintKey {
+    quint64 revision;
+    KeyColor background, border;
+    qreal radius;
+    qreal devicePixelRatio;
+
+    constexpr bool operator==(const FramePaintKey& other) const {
+        return std::tie(revision, background, border, radius, devicePixelRatio)
+                == std::tie(other.revision, other.background, other.border, other.radius,
+                            other.devicePixelRatio);
+    }
+};
+
+struct BarPaintKey {
+    quint64 revision;
+    KeyColor color;
+
+    constexpr bool operator==(const BarPaintKey& other) const {
+        return revision == other.revision && color == other.color;
+    }
+};
+
 class ChatPaintNode : public QSGNode {
 public:
-    QVariantList textKey;
-    QVariantList frameKey;
-    QVariantList barKey;
+    std::optional<TextPaintKey> textKey;
+    std::optional<FramePaintKey> frameKey;
+    std::optional<BarPaintKey> barKey;
 };
 
 bool isCodeBlock(const QTextBlock& block)
@@ -82,24 +136,44 @@ QSGGeometry::ColoredPoint2D vertex(QPointF point, const QColor& color)
 // The shape is a set of concentric contours, each some distance inside the
 // outer edge. Neighbouring contours are joined into strips and the innermost is
 // filled as a fan -- a rounded rectangle is convex, so a fan from its centre
-// covers it. Every edge gets a one-pixel ramp to transparent (or from border to
-// fill) across it, which is what antialiases it.
+// covers it. Every edge gets a one-device-pixel ramp to transparent (or from
+// border to fill) across it, which is what antialiases it: ramps in logical
+// pixels would leave a 1 px border no solid band on a high-DPI screen.
 QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal border,
-                                       const QColor& fill, const QColor& borderColor)
+                                       const QColor& fill, const QColor& borderColor,
+                                       qreal devicePixelRatio)
 {
     constexpr int segmentsPerCorner = 8;
     constexpr int pointsPerContour = 4 * (segmentsPerCorner + 1);
 
+    // The angular subdivisions are identical for every frame and contour.
+    static const auto directions = [] {
+        std::array<QPointF, pointsPerContour> result;
+        int index = 0;
+        for (int corner = 0; corner < 4; ++corner) {
+            for (int step = 0; step <= segmentsPerCorner; ++step) {
+                const qreal angle = M_PI * (1 + corner * 0.5 + 0.5 * step / segmentsPerCorner);
+                result[index++] = QPointF(std::cos(angle), std::sin(angle));
+            }
+        }
+        return result;
+    }();
+
     const qreal r = qBound<qreal>(0, radius, qMin(rect.width(), rect.height()) / 2);
 
     struct Contour { qreal inset; QColor color; };
-    QVector<Contour> contours;
+    std::array<Contour, 4> contours;
+    int contourCount;
     const QColor clear(0, 0, 0, 0);
+    const qreal aa = 0.5 / qMax<qreal>(1, devicePixelRatio);
     if (border > 0 && borderColor.alpha() > 0) {
-        contours = {{-0.5, clear}, {0.5, borderColor},
-                    {qMax<qreal>(0.5, border - 0.5), borderColor}, {border + 0.5, fill}};
+        contours = {{{-aa, clear}, {aa, borderColor},
+                     {qMax<qreal>(aa, border - aa), borderColor}, {border + aa, fill}}};
+        contourCount = 4;
     } else {
-        contours = {{-0.5, clear}, {0.5, fill}};
+        contours[0] = {-aa, clear};
+        contours[1] = {aa, fill};
+        contourCount = 2;
     }
 
     const QPointF centres[4] = {
@@ -109,8 +183,8 @@ QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal b
         {rect.left() + r, rect.bottom() - r},  // bottom left, 90..180
     };
 
-    const int vertexCount = int(contours.size()) * pointsPerContour + 1;
-    const int indexCount = (int(contours.size()) - 1) * pointsPerContour * 6 + pointsPerContour * 3;
+    const int vertexCount = contourCount * pointsPerContour + 1;
+    const int indexCount = (contourCount - 1) * pointsPerContour * 6 + pointsPerContour * 3;
 
     auto* geometry = new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(),
                                      vertexCount, indexCount, QSGGeometry::UnsignedShortType);
@@ -118,28 +192,29 @@ QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal b
 
     auto* vertices = geometry->vertexDataAsColoredPoint2D();
     int v = 0;
-    for (const Contour& contour : std::as_const(contours)) {
+    for (int contourIndex = 0; contourIndex < contourCount; ++contourIndex) {
+        const Contour& contour = contours[contourIndex];
         const qreal cornerRadius = qMax<qreal>(0, r - contour.inset);
+        const qreal shrink = qMax<qreal>(0, contour.inset - r);
         for (int corner = 0; corner < 4; ++corner) {
+            // Each corner centre moves inward when the radius is used up.
+            const QPointF centre = centres[corner]
+                    + QPointF(corner == 0 || corner == 3 ? shrink : -shrink,
+                              corner < 2 ? shrink : -shrink);
+            const int firstDirection = corner * (segmentsPerCorner + 1);
             for (int step = 0; step <= segmentsPerCorner; ++step) {
-                const qreal angle = M_PI * (1 + corner * 0.5 + 0.5 * step / segmentsPerCorner);
-                // Each corner centre moves inward with the inset when the
-                // radius is used up, so the contour stays inside the last one.
-                const qreal shrink = qMax<qreal>(0, contour.inset - r);
-                const QPointF centre = centres[corner]
-                        + QPointF(corner == 0 || corner == 3 ? shrink : -shrink,
-                                  corner < 2 ? shrink : -shrink);
-                vertices[v++] = vertex(centre + cornerRadius * QPointF(std::cos(angle), std::sin(angle)),
+                vertices[v++] = vertex(centre + cornerRadius * directions[firstDirection + step],
                                        contour.color);
             }
         }
     }
+
     const int centre = v;
-    vertices[v++] = vertex(rect.center(), contours.constLast().color);
+    vertices[v++] = vertex(rect.center(), contours[contourCount - 1].color);
 
     auto* indices = geometry->indexDataAsUShort();
     int i = 0;
-    for (int c = 0; c + 1 < contours.size(); ++c) {
+    for (int c = 0; c + 1 < contourCount; ++c) {
         const int outer = c * pointsPerContour;
         const int inner = outer + pointsPerContour;
         for (int p = 0; p < pointsPerContour; ++p) {
@@ -152,7 +227,7 @@ QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal b
             indices[i++] = ushort(inner + p);
         }
     }
-    const int innermost = (int(contours.size()) - 1) * pointsPerContour;
+    const int innermost = (contourCount - 1) * pointsPerContour;
     for (int p = 0; p < pointsPerContour; ++p) {
         indices[i++] = ushort(centre);
         indices[i++] = ushort(innermost + p);
@@ -265,7 +340,7 @@ void ChatTextItem::setSegments(const QList<ChatTextSegment>& segments)
 {
     bool preserveInteraction = m_segments.size() == segments.size();
     for (qsizetype i = 0; preserveInteraction && i < segments.size(); ++i)
-        preserveInteraction = m_segments[i].sameContent(segments[i]);
+        preserveInteraction = m_segments.at(i).sameContent(segments.at(i));
     m_segments = segments;
     rebuildFromSegments(preserveInteraction);
     emit segmentsChanged();
@@ -476,19 +551,22 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         else if (role == ChatTextFormat::ForegroundRole::Quote) format.setForeground(m_quoteColor);
 
         // Link foreground must be explicit for QSGTextNode::addTextLayout.
-        const QString href = segment.href;
+        const QString& href = segment.href;
         if (!href.isEmpty()) {
             format.setAnchor(true);
             format.setAnchorHref(href);
         }
 
-        QString text = segment.text;
-        // Code keeps its lines inside the one paragraph, so it frames as one.
-        if (codeBlock)
-            text.replace(QLatin1Char('\n'), QChar::LineSeparator);
-
         const int start = cursor.position();
-        cursor.insertText(text, format);
+        if (codeBlock) {
+            // Code keeps its lines inside one paragraph. Only this path needs
+            // a mutable copy; ordinary spans can borrow the segment's text.
+            QString text = segment.text;
+            text.replace(QLatin1Char('\n'), QChar::LineSeparator);
+            cursor.insertText(text, format);
+        } else {
+            cursor.insertText(segment.text, format);
+        }
         int kinds = 0;
         if (role == ChatTextFormat::ForegroundRole::Mention)
             kinds |= MentionForegroundAppearance | MentionBackgroundAppearance;
@@ -540,7 +618,7 @@ void ChatTextItem::applyEmojiSizing()
 {
     bool emojiOnly = false;
     if (!m_segments.isEmpty()) {
-        const Segment& first = m_segments.first();
+        const Segment& first = m_segments.constFirst();
         if ((first.present & Segment::SourceIsOnlyEmoji)) {
             emojiOnly = first.has(Segment::SourceIsOnlyEmoji);
         } else {
@@ -1769,6 +1847,13 @@ int ChatTextItem::positionAt(qreal x, qreal y) const
     return m_document->documentLayout()->hitTest(QPointF(x, y), Qt::FuzzyHit);
 }
 
+void ChatTextItem::itemChange(ItemChange change, const ItemChangeData& value)
+{
+    QQuickItem::itemChange(change, value);
+    if (change == ItemDevicePixelRatioHasChanged)
+        update(); // frame antialiasing is sized in device pixels
+}
+
 void ChatTextItem::geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry)
 {
     QQuickItem::geometryChange(newGeometry, oldGeometry);
@@ -1800,10 +1885,10 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
     auto* node = static_cast<QSGTextNode*>(framesNode->nextSibling());
     QSGNode* barsNode = node->nextSibling();
 
-    const QVariantList textKey{QVariant::fromValue(m_layoutRevision), boundingRect(),
+    const TextPaintKey textKey{m_layoutRevision, boundingRect(),
                                m_color, m_linkColor, m_selectionColor, m_selectionTextColor,
                                m_selectionStart, m_selectionEnd};
-    if (root->textKey != textKey) {
+    if (!root->textKey || !(*root->textKey == textKey)) {
         root->textKey = textKey;
         node->setColor(m_color);
         node->setLinkColor(m_linkColor);
@@ -1847,9 +1932,11 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
     const bool software = window()->rendererInterface()->graphicsApi()
             == QSGRendererInterface::Software;
 
-    const QVariantList frameKey{QVariant::fromValue(m_layoutRevision), m_codeBackground,
-                                m_codeBorderColor, m_codeBlockRadius};
-    if (root->frameKey != frameKey) {
+    const qreal devicePixelRatio = window()->effectiveDevicePixelRatio();
+    const FramePaintKey frameKey{m_layoutRevision, m_codeBackground,
+                                m_codeBorderColor, m_codeBlockRadius,
+                                devicePixelRatio};
+    if (!root->frameKey || !(*root->frameKey == frameKey)) {
         root->frameKey = frameKey;
         deleteChildren(framesNode);
         for (const QRectF& rect : computeCodeFrames()) {
@@ -1857,12 +1944,13 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
                         software ? createSquareFrameNode(window(), rect, 1, m_codeBackground,
                                                          m_codeBorderColor)
                                  : createRoundedRectNode(rect, m_codeBlockRadius, 1, m_codeBackground,
-                                                         m_codeBorderColor));
+                                                         m_codeBorderColor,
+                                                         devicePixelRatio));
         }
 
     }
-    const QVariantList barKey{QVariant::fromValue(m_layoutRevision), m_quoteBarColor};
-    if (root->barKey != barKey) {
+    const BarPaintKey barKey{m_layoutRevision, m_quoteBarColor};
+    if (!root->barKey || !(*root->barKey == barKey)) {
         root->barKey = barKey;
         deleteChildren(barsNode);
         if (m_quoteBarColor.alpha() > 0) {
