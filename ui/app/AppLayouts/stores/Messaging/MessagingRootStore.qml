@@ -11,6 +11,8 @@ StatusQUtils.QObject {
     // ** Public API for UI region:
     // **
 
+    readonly property ThreadReplyStore threadReplyStore: ThreadReplyStore {}
+
     readonly property MessagingSettingsStore messagingSettingsStore: MessagingSettingsStore {}
 
     // Dynamic `CommunityRootStore` instance creation logic.

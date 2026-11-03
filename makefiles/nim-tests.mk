@@ -25,6 +25,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	community_accept_request_test \
 	community_permission_save_test \
 	contact_info_requests_test \
+	input_area_text_send_test \
 	message_history_paging_test \
 	message_loading_isolation_test \
 	send_handler_adaptors_bench \
