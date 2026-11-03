@@ -30,6 +30,7 @@ QtObject {
     readonly property bool threadEditPending: messageModule ? messageModule.threadEditPending : false
 
     readonly property bool threadDeleted: messageModule?.threadDeleted ?? false
+    readonly property bool threadFollowed: messageModule?.threadFollowed ?? false
     readonly property bool threadDeletePending: (root.messageModule?.threadDeletePending ?? false) ||
                                                 root.threadDeleteRequestedById
     property bool threadDeleteRequestedById: false
@@ -37,6 +38,18 @@ QtObject {
 
     function canManageThreadById(threadId: string): bool {
         return root.messageModule?.canManageThreadById(threadId) ?? false
+    }
+
+    function setThreadFollowedById(threadId: string, followed: bool) {
+        if (!root.messageModule) {
+            console.error("setThreadFollowedById: message module is not set")
+            return
+        }
+        root.messageModule.setThreadFollowedById(threadId, followed)
+    }
+
+    function setThreadFollowed(followed: bool) {
+        root.setThreadFollowedById(root.threadId, followed)
     }
 
     function deleteThreadById(threadId: string) {

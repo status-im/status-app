@@ -49,6 +49,14 @@ Item {
             id: deleteSpy
             signalName: "deleteRequested"
         }
+        SignalSpy {
+            id: followSpy
+            signalName: "followRequested"
+        }
+        SignalSpy {
+            id: unfollowSpy
+            signalName: "unfollowRequested"
+        }
         InputMethodTester { id: ime }
 
         function init() {
@@ -62,6 +70,10 @@ Item {
             editSpy.clear()
             deleteSpy.target = header
             deleteSpy.clear()
+            followSpy.target = header
+            followSpy.clear()
+            unfollowSpy.target = header
+            unfollowSpy.clear()
         }
 
         function edit(text) {
@@ -207,6 +219,45 @@ Item {
             compare(header.editing, false)
             compare(findChild(header, "threadHeaderMenuButton").visible, true)
             compare(renameSpy.count, 0)
+        }
+
+        function openMenu() {
+            mouseClick(findChild(header, "threadHeaderMenuButton"))
+            const menu = findChild(header, "threadHeaderContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            return menu
+        }
+
+        function findMenuEntry(menu, objectName) {
+            for (let i = 0; i < menu.count; ++i) {
+                const action = menu.actionAt(i)
+                if (action?.objectName === objectName)
+                    return action
+            }
+            return null
+        }
+
+        function test_followAvailableWithoutEditPermission_data() {
+            return [
+                { tag: "follow", followed: false, label: qsTr("Follow") },
+                { tag: "unfollow", followed: true, label: qsTr("Unfollow") }
+            ]
+        }
+
+        function test_followAvailableWithoutEditPermission(data) {
+            header.canEdit = false
+            header.followed = data.followed
+            compare(findChild(header, "threadHeaderMenuButton").visible, true)
+            const menu = openMenu()
+            const follow = findMenuEntry(menu, "threadContextMenu_follow")
+            verify(!!follow)
+            compare(follow.text, data.label)
+            compare(findMenuEntry(menu, "threadContextMenu_editName").enabled, false)
+            compare(findMenuEntry(menu, "threadContextMenu_delete").enabled, false)
+            follow.trigger()
+            compare(followSpy.count, data.followed ? 0 : 1)
+            compare(unfollowSpy.count, data.followed ? 1 : 0)
         }
 
         function test_menuRequestsEditingWithoutStartingInlineEditor() {

@@ -132,5 +132,79 @@ Item {
             tryCompare(list.model.ModelCount, "count", 0)
             compare(model.get(threadIndex).archived, true)
         }
+
+        function test_followVisibility_data() {
+            return [{tag: "community", contacts: false}, {tag: "private-and-group", contacts: true}]
+        }
+
+        function test_followVisibility(data) {
+            const model = harness.mock.chatsModel
+            let threadIndex = -1
+            let parentId = ""
+            for (let i = 0; i < model.count; ++i) {
+                if (!model.get(i).isCategory) {
+                    if (!parentId)
+                        parentId = model.get(i).itemId
+                    else {
+                        threadIndex = i
+                        break
+                    }
+                }
+            }
+            verify(threadIndex >= 0)
+            const threadId = model.get(threadIndex).itemId
+            model.setProperty(threadIndex, "isThread", true)
+            model.setProperty(threadIndex, "parentChatId", parentId)
+            model.setProperty(threadIndex, "followed", false)
+            const sourceCount = model.count
+
+            harness.loader.active = true
+            const loader = harness.loader.item
+            tryVerify(() => loader.status === Loader.Ready, 120000)
+            const chatView = harness.findChildByTypePrefix(loader, "ChatView")
+            verify(!!chatView)
+            harness.mock.setActiveChat(parentId)
+            let list
+            if (data.contacts) {
+                contactsView = createTemporaryObject(contactsComponent, root, {
+                    chatSectionModule: harness.mock.sectionModule,
+                    store: chatView.rootStore
+                })
+                verify(!!contactsView)
+                list = findChild(contactsView, "ContactsColumnView_chatList")
+            } else {
+                list = findChild(chatView, "statusChatListAndCategoriesChatList")
+            }
+            verify(!!list)
+            function threadVisible() {
+                for (let i = 0; i < list.model.ModelCount.count; ++i)
+                    if (SQUtils.ModelUtils.get(list.model, i, "itemId") === threadId)
+                        return true
+                return false
+            }
+
+            // Not followed and not opened: hidden
+            tryCompare(list.model.ModelCount, "count", sourceCount - 1)
+            compare(threadVisible(), false)
+
+            model.setProperty(threadIndex, "followed", true)
+            tryCompare(list.model.ModelCount, "count", sourceCount)
+            compare(threadVisible(), true)
+
+            // Archived threads stay hidden even when followed
+            model.setProperty(threadIndex, "archived", true)
+            tryCompare(list.model.ModelCount, "count", sourceCount - 1)
+            model.setProperty(threadIndex, "archived", false)
+            tryCompare(list.model.ModelCount, "count", sourceCount)
+
+            // Unfollowed while opened: kept visible until navigating away
+            harness.mock.setActiveChat(threadId)
+            model.setProperty(threadIndex, "followed", false)
+            wait(0)
+            compare(threadVisible(), true)
+            harness.mock.setActiveChat(parentId)
+            tryCompare(list.model.ModelCount, "count", sourceCount - 1)
+            compare(threadVisible(), false)
+        }
     }
 }
