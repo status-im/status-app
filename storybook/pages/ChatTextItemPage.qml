@@ -15,8 +15,6 @@ SplitView {
     QtObject {
         id: d
 
-        readonly property color mentionColor: root.Theme.palette.primaryColor1
-        readonly property color mentionBackground: root.Theme.palette.baseColor2
         readonly property int emojiOnlyPx: Math.round(documentItem.font.pixelSize * 2.2)
         readonly property var samples: [
             everythingSegments,
@@ -26,13 +24,13 @@ SplitView {
         readonly property var everythingSegments: [
             { text: "Hey " },
             { text: "@Bob", href: "//0xc0ffee",
-              color: d.mentionColor, background: d.mentionBackground },
+              mention: true },
             { text: ", " },
             { text: "@Alice", href: "//0xa11ce",
-              color: d.mentionColor, background: d.mentionBackground },
+              mention: true },
             { text: " and " },
             { text: "@Mina", href: "//0x1234",
-              color: d.mentionColor, background: d.mentionBackground },
+              mention: true },
             { text: " 👋🏽" },
             { text: "The ", newBlock: true },
             { text: "release build", bold: true },
@@ -47,7 +45,7 @@ SplitView {
             { text: " before you push." },
             { text: "You asked earlier:", newBlock: true },
             { text: "@Alice", href: "//0xa11ce", newBlock: true, quoteLevel: 1,
-              color: d.mentionColor, background: d.mentionBackground },
+              mention: true },
             { text: ": is anyone looking at the " },
             { text: "nightly", italic: true },
             { text: " build? It has been red since Friday 😬 🛠️" },
@@ -57,7 +55,7 @@ SplitView {
             { text: "if (!card.ready)\n    return retry(3) // 🙈 not again", codeBlock: true },
             { text: "Thanks for the review, " },
             { text: "@Bob", href: "//0xc0ffee",
-              color: d.mentionColor, background: d.mentionBackground },
+              mention: true },
             { text: "! 👩🏽‍💻 🙏🏽 Double-check the " },
             { text: "build results", href: "https://status.app/build/1234", underline: true },
             { text: " and " },
@@ -117,6 +115,9 @@ SplitView {
                 codeBackground: Theme.palette.baseColor4
                 codeBorderColor: Theme.palette.baseColor2
                 codeFontFamily: Fonts.codeFont.family
+                mentionColor: Theme.palette.primaryColor1
+                mentionBackground: Theme.palette.baseColor2
+                quoteColor: Theme.palette.baseColor1
                 emojiOnlyPixelSize: d.emojiOnlyPx
                 quoteBarColor: Theme.palette.baseColor1
                 quoteBarWidth: ctrlQuoteBarWidth.value

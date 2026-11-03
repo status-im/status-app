@@ -85,12 +85,35 @@ Item {
 
         name: "ChatTextItem"
         when: windowShown
+        property list<chatTextSegment> initialSegments
 
         function createItem() {
             const item = createTemporaryObject(itemComponent, root)
             verify(!!item)
             verify(item.contentHeight > 0)
             return item
+        }
+
+        function test_semanticForegroundPrecedence() {
+            const item = createItem()
+            item.color = "black"
+            item.quoteColor = "red"
+            item.linkColor = "blue"
+            item.mentionColor = "lime"
+            item.mentionBackground = "transparent"
+            item.segments = [
+                {text: "WWWW ", quoteLevel: 1},
+                {text: "WWWW ", quoteLevel: 1, href: "https://status.app"},
+                {text: "WWWW", quoteLevel: 1, href: "https://status.app", mention: true}
+            ]
+            let image = grabImage(item)
+            for (const color of ["red", "blue", "lime"])
+                verify(colourShare(image, Qt.rect(0, 0, item.width, item.contentHeight), Qt.color(color)) > 0.001, "Missing semantic foreground " + color)
+            item.quoteColor = "magenta"
+            item.mentionColor = "yellow"
+            image = grabImage(item)
+            for (const color of ["magenta", "blue", "yellow"])
+                verify(colourShare(image, Qt.rect(0, 0, item.width, item.contentHeight), Qt.color(color)) > 0.001, "Missing updated foreground " + color)
         }
 
         function test_selectAll() {
@@ -116,6 +139,9 @@ Item {
         function test_appearanceChangesPreserveSelection_data() {
             const changes = [
                 {property: "linkColor", value: "red"},
+                {property: "mentionColor", value: "red"},
+                {property: "mentionBackground", value: "blue"},
+                {property: "quoteColor", value: "green"},
                 {property: "codeBackground", value: "cyan"},
                 {property: "lineHeight", value: 30},
                 {property: "emojiOnlyPixelSize", value: 42},
@@ -134,7 +160,7 @@ Item {
                 {property: "selectionTextColor", value: "yellow"},
                 {property: "hoverHighlightColor", value: "cyan"},
                 {property: "width", value: 160},
-                {property: "segments", value: "colors"},
+                {property: "segments", value: "mention"},
                 {property: "segments", value: "emphasis"}
             ]
             const rows = []
@@ -173,7 +199,7 @@ Item {
                                                {target: item, signalName: "selectionChanged"})
 
             if (data.property === "segments") {
-                const style = data.value === "colors" ? {color: "red", background: "blue"}
+                const style = data.value === "mention" ? {mention: true}
                                                        : {bold: true, italic: true, strikethrough: true}
                 item.segments = item.segments.map(segment => Object.assign({}, segment, style))
             } else {
@@ -267,7 +293,7 @@ Item {
             item.edited = true
             item.selectAll()
             compare(item.selectedText, data.expected)
-            compare(item.segments, data.segments) // the input remains untouched
+            compareSegmentFields(item.segments, data.segments) // the input remains untouched
             compare(item.quoteBarRects(), bars)
             compare(item.codeBlockRects(), frames)
             if (data.separate)
@@ -313,11 +339,13 @@ Item {
             compare(item.contentHeight, height)
         }
 
-        function test_appearanceOverridesSurviveHighlightRestoration() {
+        function test_mentionAppearanceSurvivesHighlightRestoration() {
             const item = createItem()
-            item.segments = [{text: "WWWWWW", href: "https://a.test", color: "blue"},
+            item.mentionColor = "blue"
+            item.mentionBackground = "blue"
+            item.segments = [{text: "WWWWWW", href: "https://a.test", mention: true},
                          {text: "WWWWWW", href: "https://b.test", newBlock: true},
-                         {text: "WWWWWW", code: true, background: "blue", newBlock: true},
+                         {text: "WWWWWW", code: true, mention: true, newBlock: true},
                          {text: "WWWWWW", code: true, newBlock: true}]
             item.hoverHighlightColor = "yellow"
             item.highlightedLink = "https://a.test"
@@ -446,9 +474,10 @@ Item {
         function highlightItem() {
             const item = createItem()
             item.hoverHighlightColor = "lime"
+            item.mentionBackground = "blue"
             item.segments = [
                 {text: "WWWWWW", href: "https://a.test"},
-                {text: "WWWWWW", href: "https://b.test", background: "blue", newBlock: true},
+                {text: "WWWWWW", href: "https://b.test", mention: true, newBlock: true},
                 {text: "WWWWWW", href: "https://a.test", quoteLevel: 1, newBlock: true},
                 {text: "WWWWWW", newBlock: true}
             ]
@@ -854,7 +883,7 @@ Item {
             else
                 item.selectAll()
             compare(item.selectedText, data.expected)
-            compare(item.segments, data.segments)
+            compareSegmentFields(item.segments, data.segments)
 
             // Check both public copy routes, not just the selectedText getter.
             // Offscreen tests use a process-local clipboard.
@@ -1390,6 +1419,64 @@ Item {
             item.segments = [{text: "plain"}]
             image = grabImage(item)
             compare(colourShare(image, Qt.rect(0, 0, item.width, item.contentHeight), Qt.color("yellow")), 0)
+        }
+
+        function compareSegmentFields(actual, expected) {
+            compare(actual.length, expected.length)
+            for (let i = 0; i < expected.length; ++i) {
+                for (const key of Object.keys(expected[i]))
+                    compare(actual[i][key], expected[i][key])
+            }
+        }
+
+        function test_typedSegmentCopyPreservesMissingClassification() {
+            const item = createItem()
+            item.segments = [{text: "😎"}]
+            verify(item.emojiOnly)
+            compare(item.segments[0].hasSourceClassification, false)
+            item.segments = item.segments.map(segment => Object.assign({}, segment))
+            verify(item.emojiOnly)
+            item.segments = [{text: "😎", sourceIsOnlyEmoji: false}]
+            compare(item.emojiOnly, false)
+            item.segments = item.segments.map(segment => Object.assign({}, segment))
+            compare(item.emojiOnly, false)
+        }
+
+        function test_typedInitialPropertiesPreserveSegments() {
+            initialSegments = [{text: "hello", bold: true, mention: true},
+                               {text: "world", newBlock: true, code: true}]
+            const item = createTemporaryObject(itemComponent, root,
+                {segments: initialSegments})
+            verify(!!item)
+            compare(item.segments[0].text, "hello")
+            compare(item.segments[0].bold, true)
+            verify(item.segments[0].mention)
+            compare(item.segments[1].text, "world")
+            compare(item.segments[1].code, true)
+            item.selectAll()
+            compare(item.selectedText, "hello\nworld")
+        }
+
+        function test_segmentPropertyRoundTrip() {
+            const item = createItem()
+            item.segments = [{text: "😎", sourceIsOnlyEmoji: false, bold: false},
+                         {text: "link", href: "https://status.app", mention: true,
+                          italic: true, underline: true,
+                          strikethrough: true, newBlock: true, quoteLevel: 2},
+                         {text: "code", code: true},
+                         {text: "block", codeBlock: true}]
+            const segments = item.segments
+            compare(segments.length, 4)
+            compare(segments[0].sourceIsOnlyEmoji, false)
+            compare(segments[0].bold, false)
+            compare(segments[0].italic, false)
+            compare(segments[1].href, "https://status.app")
+            verify(segments[1].mention)
+            compare(segments[1].quoteLevel, 2)
+            verify(segments[1].italic && segments[1].underline && segments[1].strikethrough)
+            verify(segments[1].newBlock && segments[2].code && segments[3].codeBlock)
+            item.segments = segments
+            compare(item.segments[1].text, "link")
         }
 
         function test_plainFastPathResetsDecorationState() {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StatusQ/chattextsegment.h"
+
 #include <QFont>
 #include <QObject>
 #include <QString>
@@ -62,11 +64,9 @@ public:
     // resolved from `mentions` as in toBlocks. See Markdown::toPlainText.
     Q_INVOKABLE QString plainText(const QString& text, const QVariantMap& mentions = {}) const;
 
-    // Structured spans for ChatTextItem. Colors accepts quote, mention and
-    // mentionBackground; emoji sizing remains the item's responsibility. The
+    // Logical spans for chat renderers; appearance is resolved by each item. The
     // first segment carries sourceIsOnlyEmoji, classified from the original text.
-    Q_INVOKABLE QVariantList toChatTextSegments(const QString& text, const QVariantMap& mentions = {},
-                                    const QVariantMap& colors = {},
+    Q_INVOKABLE QList<ChatTextSegment> toChatTextSegments(const QString& text, const QVariantMap& mentions = {},
                                     bool formatUnclosedCodeFence = false) const;
 
     // True when `text` contains at least one emoji code point. See Markdown::clusterHasEmoji.

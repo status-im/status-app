@@ -188,6 +188,8 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/contextmenueventfilter.h
         include/StatusQ/delegatepool.h
         include/StatusQ/chattextitem.h
+        include/StatusQ/chattextformat.h
+        include/StatusQ/chattextsegment.h
         include/StatusQ/fastexpressionfilter.h
         include/StatusQ/fastexpressionrole.h
         include/StatusQ/fastexpressionsorter.h

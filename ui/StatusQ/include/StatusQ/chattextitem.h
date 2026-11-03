@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StatusQ/chattextsegment.h"
+
 #include <QColor>
 #include <QElapsedTimer>
 #include <QQuickItem>
@@ -29,7 +31,7 @@ class ChatTextItem : public QQuickItem
 {
     Q_OBJECT
 
-    // The content. `segments` is a list of maps, each describing one formatted span
+    // The content. `segments` is a list of chatTextSegment values, each describing one formatted span
     // appended in order:
     //   { text: string,
     //     bold: bool, italic: bool, strikethrough: bool, underline: bool,
@@ -46,7 +48,9 @@ class ChatTextItem : public QQuickItem
     //                              // paragraph only, 0 or absent for none
     //     sourceIsOnlyEmoji: bool } // optional document-wide classification on
     //                              // the first segment, before markdown is removed
-    Q_PROPERTY(QVariantList segments READ segments WRITE setSegments NOTIFY segmentsChanged)
+    // `hasSourceClassification` distinguishes a supplied false classification
+    // from an unspecified one when values are copied through QML.
+    Q_PROPERTY(QList<ChatTextSegment> segments READ segments WRITE setSegments NOTIFY segmentsChanged)
 
     // Localized, selectable " (edited)" suffix. Inline after normal text;
     // outside the decoration after a trailing quote or code block. Empty
@@ -57,6 +61,9 @@ class ChatTextItem : public QQuickItem
     Q_PROPERTY(QColor editedMarkerColor READ editedMarkerColor WRITE setEditedMarkerColor
                NOTIFY editedMarkerColorChanged)
 
+    Q_PROPERTY(QColor mentionColor READ mentionColor WRITE setMentionColor NOTIFY mentionColorChanged)
+    Q_PROPERTY(QColor mentionBackground READ mentionBackground WRITE setMentionBackground NOTIFY mentionBackgroundChanged)
+    Q_PROPERTY(QColor quoteColor READ quoteColor WRITE setQuoteColor NOTIFY quoteColorChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
     Q_PROPERTY(QColor linkColor READ linkColor WRITE setLinkColor NOTIFY linkColorChanged)
@@ -168,8 +175,8 @@ public:
     explicit ChatTextItem(QQuickItem* parent = nullptr);
     ~ChatTextItem() override;
 
-    QVariantList segments() const;
-    void setSegments(const QVariantList& segments);
+    QList<ChatTextSegment> segments() const;
+    void setSegments(const QList<ChatTextSegment>& segments);
 
     bool edited() const;
     void setEdited(bool edited);
@@ -178,6 +185,12 @@ public:
     QColor editedMarkerColor() const;
     void setEditedMarkerColor(const QColor& color);
 
+    QColor mentionColor() const { return m_mentionColor; }
+    void setMentionColor(const QColor& color);
+    QColor mentionBackground() const { return m_mentionBackground; }
+    void setMentionBackground(const QColor& color);
+    QColor quoteColor() const { return m_quoteColor; }
+    void setQuoteColor(const QColor& color);
     QFont font() const;
     void setFont(const QFont& font);
 
@@ -282,6 +295,9 @@ signals:
     void editedChanged();
     void editedMarkerFontSizeChanged();
     void editedMarkerColorChanged();
+    void mentionColorChanged();
+    void mentionBackgroundChanged();
+    void quoteColorChanged();
     void fontChanged();
     void colorChanged();
     void linkColorChanged();
@@ -336,7 +352,9 @@ private:
     void updateEmojiAppearance();
     qreal effectiveEmojiSize(bool emojiOnly) const;
     enum AppearanceKind { LinkAppearance = 1, CodeBackgroundAppearance = 2,
-                          CodeFontAppearance = 4, MarkerAppearance = 8, EmojiAppearance = 16 };
+                          CodeFontAppearance = 4, MarkerAppearance = 8, EmojiAppearance = 16,
+                          MentionForegroundAppearance = 32, MentionBackgroundAppearance = 64,
+                          QuoteAppearance = 128 };
     struct AppearanceRange { int start; int length; int kinds; };
     QVector<AppearanceRange> m_appearanceRanges;
 
@@ -370,10 +388,14 @@ private:
     void updateCursorShape();
 
     std::unique_ptr<QTextDocument> m_document;
-    QVariantList m_segments;
+    using Segment = ChatTextSegment;
+    QVector<Segment> m_segments;
     bool m_edited = false;
     int m_editedMarkerFontSize = 12;
     QColor m_editedMarkerColor{Qt::gray};
+    QColor m_mentionColor{QColor(0x43, 0x60, 0xDF)};
+    QColor m_mentionBackground{QColor(0, 0, 0, 20)};
+    QColor m_quoteColor{QColor(Qt::gray)};
     QFont m_font;
     QColor m_color{Qt::black};
     QColor m_linkColor{QColor(0x43, 0x60, 0xDF)};

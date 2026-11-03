@@ -13,6 +13,31 @@ Item {
         name: "ChatTextSegments"
         when: windowShown
 
+        function test_conversionCodeFenceOption() {
+            const source = "```\nunfinished"
+            verify(MarkdownUtils.toChatTextSegments(source, {}, true).some(segment => segment.codeBlock))
+            verify(!MarkdownUtils.toChatTextSegments(source, {}, false).some(segment => segment.codeBlock))
+        }
+
+        function test_semanticMentions() {
+            const key = "0x" + "a".repeat(130)
+            const names = ({[key]: "Alice"})
+            const segments = MarkdownUtils.toChatTextSegments("> @" + key + " @0x00001 [link](https://status.app) `@" + key + "`", names)
+            const mentions = segments.filter(segment => segment.mention)
+            compare(mentions.length, 2)
+            compare(mentions[0].text, "@Alice")
+            compare(mentions[0].href, key)
+            compare(mentions[1].text, "@everyone")
+            compare(mentions[1].href, "")
+            verify(mentions.every(segment => segment.quoteLevel > 0))
+            verify(segments.some(segment => !segment.mention && segment.href === "https://status.app"))
+            verify(segments.filter(segment => segment.code).every(segment => !segment.mention))
+            const unresolved = MarkdownUtils.toChatTextSegments("@" + key)
+            verify(unresolved[0].mention)
+            compare(unresolved[0].color, undefined)
+            compare(unresolved[0].background, undefined)
+        }
+
         function test_segmentsPreserveFormattingAndLiteralText() {
             const segments = MarkdownUtils.toChatTextSegments("**bold** & <text> `code`")
             compare(segments.map(r => r.text).join(""), "bold & <text> code")
@@ -66,7 +91,7 @@ Item {
             })
             verify(!!item)
             const height = item.contentHeight
-            item.segments = item.segments.map(segment => Object.assign({}, segment, {bold: true, color: "red"}))
+            item.segments = item.segments.map(segment => Object.assign({}, segment, {bold: true}))
             verify(item.emojiOnly, "appearance changes must retain the original source classification")
             item.edited = true
             verify(item.emojiOnly)
