@@ -254,6 +254,7 @@ StatusSectionLoader {
             sectionLayout: sectionLayout,
             showUsersList:                  Qt.binding(() => d.showUsersPanel),
             rootStore:                      Qt.binding(() => d.chatRootStore),
+            threadReplyStore:               Qt.binding(() => root.rootStore.messagingRootStore.threadReplyStore),
             createChatPropertiesStore:      Qt.binding(() => root.createChatPropertiesStore),
             tokensStore:                    Qt.binding(() => root.tokensStore),
             transactionStore:               Qt.binding(() => root.transactionStore),

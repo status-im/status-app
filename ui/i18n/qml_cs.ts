@@ -3412,8 +3412,16 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 <context>
     <name>ChatView</name>
     <message>
+        <source>Couldn&apos;t send thread reply. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Hledat</translation>
+    </message>
+    <message>
+        <source>New thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>No pinned messages found</source>
@@ -11768,6 +11776,10 @@ selhalo</translation>
         <translation>Vytvořit vlákno</translation>
     </message>
     <message>
+        <source>Open thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit</source>
         <translation>Upravit</translation>
     </message>
@@ -18523,6 +18535,25 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>More</source>
         <translation type="unfinished">Více</translation>
+    </message>
+</context>
+<context>
+    <name>ThreadReplyStore</name>
+    <message>
+        <source>Couldn&apos;t open thread. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t send message. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t rename thread: %1</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

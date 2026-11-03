@@ -1,3 +1,4 @@
 MessagingRootStore 1.0 MessagingRootStore.qml
 MessagingSettingsStore 1.0 MessagingSettingsStore.qml
 singleton MessagingStoresConfig 1.0 MessagingStoresConfig.qml
+ThreadReplyStore 1.0 ThreadReplyStore.qml

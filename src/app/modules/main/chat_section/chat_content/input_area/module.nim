@@ -90,6 +90,7 @@ method sendChatMessage*(
     paymentRequests: seq[PaymentRequest],
     startNewThread: bool,
     newThreadName: string,
+    sendToken: string = "",
   ) =
   self.controller.sendChatMessage(
     msg = msg,
@@ -101,10 +102,14 @@ method sendChatMessage*(
     threadId = self.threadId,
     startNewThread = startNewThread,
     newThreadName = newThreadName,
+    sendToken = sendToken,
   )
 
 method getThreadId*(self: Module): string =
   return self.threadId
+
+method onTextMessageSent*(self: Module, requestId, error: string) =
+  self.view.textMessageSent(requestId, error)
 
 method setText*(self: Module, text: string, unfurlNewUrls: bool) =
   self.controller.setText(text, unfurlNewUrls)
