@@ -30,6 +30,8 @@ Control {
     property var stickersPopup: null
     // Recipient cap; unticked rows are disabled once it is reached.
     property int maxDestinations: 5
+    // On-screen keyboard state; the composer hides while it is up for the search box.
+    property bool keyboardVisible: false
 
     readonly property int selectedCount: shareSelection.count
 
@@ -48,8 +50,18 @@ Control {
     QtObject {
         id: d
 
+        readonly property int contentInset: 12
+
         property bool searchActive: false
         property bool selectedOnly: false
+        readonly property bool searchKeyboardUp: root.keyboardVisible && searchBox.activeFocus
+
+        function dismissSearchKeyboard() {
+            if (!searchBox.activeFocus)
+                return
+            searchBox.focus = false
+            Qt.inputMethod.hide()
+        }
 
         // Selected destinations in the model's (ranking) order
         function selectedDestinations() {
@@ -93,7 +105,12 @@ Control {
         selection: shareSelection
         selectedOnly: d.selectedOnly
         searchPhrase: searchBox.text
-        onToggleRequested: chatId => shareSelection.toggle(chatId)
+        leftPadding: d.contentInset - Theme.halfPadding
+        rightPadding: d.contentInset - Theme.halfPadding
+        onToggleRequested: chatId => {
+            d.dismissSearchKeyboard()
+            shareSelection.toggle(chatId)
+        }
     }
 
     padding: 0
@@ -103,7 +120,7 @@ Control {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
+            Layout.leftMargin: d.contentInset
             Layout.preferredHeight: 56
             spacing: 0
 
@@ -174,8 +191,8 @@ Control {
             id: searchBox
             objectName: "shareDestinationPickerSearchBox"
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.halfPadding
-            Layout.rightMargin: Theme.halfPadding
+            Layout.leftMargin: d.contentInset
+            Layout.rightMargin: d.contentInset
             Layout.bottomMargin: Theme.halfPadding
             visible: d.searchActive
             placeholderText: qsTr("Search chats and channels")
@@ -185,8 +202,8 @@ Control {
             id: tabBar
             objectName: "shareDestinationPickerTabBar"
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.halfPadding
-            Layout.rightMargin: Theme.halfPadding
+            Layout.leftMargin: d.contentInset
+            Layout.rightMargin: d.contentInset
             position: {
                 const view = swipeView.contentItem
                 if (!view || swipeView.width <= 0)
@@ -248,6 +265,7 @@ Control {
             id: composer
             objectName: "shareDestinationPickerComposer"
             Layout.fillWidth: true
+            visible: !d.searchKeyboardUp
             text: root.text
             imagePaths: root.imagePaths
             emojiPopup: root.emojiPopup

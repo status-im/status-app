@@ -100,13 +100,14 @@ Loader {
         fullScreenSheet: true
         closePolicy: Popup.NoAutoClose
         standardButtons: Dialog.NoButton
+        padding: 0
 
         // The picker carries its own header row, so the fullscreen sheet is
         // header-less: keep that row out of the notch/status-bar area
         // (StatusDialog only safe-area-pads the bottom).
         Binding on topPadding {
             when: shareFlowPopup.bottomSheet
-            value: shareFlowPopup.padding + shareFlowPopup.parent.SafeArea.margins.top
+            value: shareFlowPopup.parent.SafeArea.margins.top
         }
 
         onClosed: root.active = false
@@ -135,6 +136,8 @@ Loader {
             imagePaths: d.sharedImagePaths
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
+            keyboardVisible: SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible
+                             || Qt.inputMethod.visible
 
             onSendRequested: (destinations, text, imagePaths) => d.complete(destinations, text, imagePaths)
             onCancelRequested: d.cancel()

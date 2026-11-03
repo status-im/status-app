@@ -108,6 +108,7 @@ SplitView {
                 anchors.fill: parent
                 model: adaptor.model
                 text: "https://youtu.be/d3wHC956WLk"
+                keyboardVisible: keyboardCheckBox.checked
                 onSendRequested: (destinations, text, imagePaths) =>
                     logs.logEvent("sendRequested: " + JSON.stringify(destinations) + " / " + text
                                   + " / " + imagePaths.length + " image(s)")
@@ -130,6 +131,10 @@ SplitView {
                 onActivated: index => states.apply(index)
             }
             Label { text: "selected: " + panel.selectedCount }
+            CheckBox {
+                id: keyboardCheckBox
+                text: "On-screen keyboard visible"
+            }
         }
     }
 }

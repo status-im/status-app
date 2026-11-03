@@ -153,6 +153,63 @@ Item {
             verify(findChild(picker, "shareDestinationPickerTabBar").visible)
         }
 
+        function openSearch(picker) {
+            mouseClick(findChild(picker, "shareDestinationPickerSearchToggle"))
+            const searchBox = findChild(picker, "shareDestinationPickerSearchBox")
+            tryVerify(() => searchBox.visible && searchBox.activeFocus)
+            return searchBox
+        }
+
+        function test_composerHiddenWhileSearchingWithKeyboardUp() {
+            const picker = createPicker({ keyboardVisible: true })
+            const composer = findChild(picker, "shareDestinationPickerComposer")
+            verify(composer.visible)
+            openSearch(picker)
+            tryVerify(() => !composer.visible)
+            picker.keyboardVisible = false
+            tryVerify(() => composer.visible)
+            picker.keyboardVisible = true
+            tryVerify(() => !composer.visible)
+        }
+
+        function test_composerStaysWhileSearchingWithKeyboardDown() {
+            const picker = createPicker({ keyboardVisible: false })
+            openSearch(picker)
+            verify(findChild(picker, "shareDestinationPickerComposer").visible)
+        }
+
+        function test_composerStaysWhileTypingMessageWithKeyboardUp() {
+            const picker = createPicker({ keyboardVisible: true })
+            openSearch(picker)
+            const composer = findChild(picker, "shareDestinationPickerComposer")
+            tryVerify(() => !composer.visible)
+            picker.keyboardVisible = false
+            tryVerify(() => composer.visible)
+            const messageField = findChild(picker, "messageInputField")
+            messageField.forceActiveFocus()
+            picker.keyboardVisible = true
+            verify(messageField.activeFocus)
+            verify(composer.visible)
+        }
+
+        function test_tappingRowWhileSearchingDismissesKeyboardAndKeepsState() {
+            const picker = createPicker({ keyboardVisible: true })
+            switchTab(picker, ShareDestinationTabBar.Tab.Communities)
+            const searchBox = openSearch(picker)
+            searchBox.text = "pe"
+            tryCompare(currentList(picker), "count", 1)
+            const composer = findChild(picker, "shareDestinationPickerComposer")
+            tryVerify(() => !composer.visible)
+            mouseClick(findChild(currentList(picker), "shareDestinationDelegate_channel-pets"))
+            tryVerify(() => !searchBox.activeFocus)
+            tryVerify(() => composer.visible)
+            compare(picker.selectedCount, 1)
+            verify(searchBox.visible)
+            compare(searchBox.text, "pe")
+            compare(findChild(picker, "shareDestinationPickerTabBar").currentIndex, ShareDestinationTabBar.Tab.Communities)
+            tryCompare(currentList(picker), "count", 1)
+        }
+
         function test_cancelEmitsIntent() {
             const picker = createPicker()
             mouseClick(findChild(picker, "shareDestinationPickerCancelButton"))
