@@ -349,6 +349,11 @@ Item {
         function onActiveItemChanged() {
             Global.closeCreateChatView()
         }
+
+        function onThreadFollowFailed(threadId: string, followed: bool, error: string) {
+            Global.displayToastMessage(followed ? qsTr("Couldn't follow thread") : qsTr("Couldn't unfollow thread"),
+                                       error, "warning", false, Constants.ephemeralNotificationType.danger, "")
+        }
     }
 
     readonly property Item headerContent: Loader {
@@ -418,6 +423,9 @@ Item {
             pending: threadMessageStore.threadEditPending
             onEditNameRequested: Qt.callLater(panelThreadHeader.beginEditing)
             deletePending: threadMessageStore.threadDeletePending
+            followed: threadMessageStore.threadFollowed
+            onFollowRequested: threadMessageStore.setThreadFollowed(true)
+            onUnfollowRequested: threadMessageStore.setThreadFollowed(false)
             onDeleteRequested: threadMessageStore.deleteThread()
             onRenameRequested: name => threadMessageStore.editThread(name)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(d.openThreadParentChatId, d.openThreadId)

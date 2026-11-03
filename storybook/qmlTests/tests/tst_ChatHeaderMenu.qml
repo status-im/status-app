@@ -199,6 +199,7 @@ Item {
             compare(menu.actionAt(0).enabled, false)
             verify(findChild(menu, "threadContextMenu_markAsRead").enabled)
             compare(editThreadSpy.count, 1)
+            compare(findChild(menu, "threadContextMenu_delete").enabled, false)
             menu.close()
             tryCompare(menu, "opened", false)
             messages.threadId = ""
@@ -230,6 +231,7 @@ Item {
             compare(muteSpy.count, 1)
             compare(muteSpy.signalArguments[0][0], Constants.MutingVariations.For24hr)
             menu.close()
+            tryCompare(menu, "opened", false)
             messages.threadId = ""
             messages.canEditThread = true
         }

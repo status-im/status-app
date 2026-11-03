@@ -81,6 +81,7 @@ type
     ThreadOriginalMessageId
     ThreadTitle
     ThreadDeleted
+    ThreadFollowed
     ThreadMessagesCount
     ThreadNotificationCount
     ThreadMuted
@@ -208,6 +209,7 @@ QtObject:
       ModelRole.ThreadOriginalMessageId.int: "threadOriginalMessageId",
       ModelRole.ThreadTitle.int: "threadTitle",
       ModelRole.ThreadDeleted.int: "threadDeleted",
+      ModelRole.ThreadFollowed.int: "threadFollowed",
       ModelRole.ThreadMessagesCount.int: "threadMessagesCount",
       ModelRole.ThreadMuted.int: "threadMuted",
       ModelRole.ThreadNotificationCount.int: "threadNotificationCount",
@@ -453,6 +455,8 @@ QtObject:
       result = newQVariant(item.threadSummary.originalMessageId)
     of ModelRole.ThreadDeleted:
       result = newQVariant(item.threadSummary.deleted)
+    of ModelRole.ThreadFollowed:
+      result = newQVariant(item.threadSummary.followed)
     of ModelRole.ThreadTitle:
       result = newQVariant(item.threadSummary.title)
     of ModelRole.ThreadMessagesCount:
@@ -783,6 +787,7 @@ QtObject:
       addChangedRole(roles, previous.originalMessageId, summary.originalMessageId,
         ModelRole.ThreadOriginalMessageId.int): discard
       addChangedRole(roles, previous.deleted, summary.deleted, ModelRole.ThreadDeleted.int): discard
+      addChangedRole(roles, previous.followed, summary.followed, ModelRole.ThreadFollowed.int): discard
       addChangedRole(roles, previous.title, summary.title, ModelRole.ThreadTitle.int):
         discard
       addChangedRole(roles, previous.messagesCount, summary.messagesCount,

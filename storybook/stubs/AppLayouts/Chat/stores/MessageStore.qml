@@ -39,6 +39,7 @@ QtObject {
 
     readonly property bool threadDeletePending: messageModule?.threadDeletePending ?? false
     readonly property bool threadDeleted: messageModule?.threadDeleted ?? false
+    readonly property bool threadFollowed: messageModule?.threadFollowed ?? false
 
     function canManageThreadById(threadId) {
         return !!root.messageModule?.canManageThreadById && root.messageModule.canManageThreadById(threadId)
@@ -47,6 +48,15 @@ QtObject {
     function deleteThreadById(threadId) {
         if (root.messageModule?.deleteThreadById)
             root.messageModule.deleteThreadById(threadId)
+    }
+
+    function setThreadFollowedById(threadId, followed) {
+        if (root.messageModule?.setThreadFollowedById)
+            root.messageModule.setThreadFollowedById(threadId, followed)
+    }
+
+    function setThreadFollowed(followed) {
+        root.setThreadFollowedById(root.threadId, followed)
     }
 
     function deleteThread() {

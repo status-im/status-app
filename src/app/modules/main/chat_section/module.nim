@@ -330,8 +330,11 @@ proc removeSubmodule(self: Module, chatId: string) =
     return
   self.chatContentModules.del(chatId)
 
+proc updateThreadsBadgeNotifications(self: Module, parentChatIds: seq[string])
+
 proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, threadId: string,
-    threadName: string, hasUnreadMessages: bool, notificationsCount: int, archived: bool, muted: bool): ChatItem =
+    threadName: string, hasUnreadMessages: bool, notificationsCount: int, archived: bool,
+    muted: bool, followed: bool): ChatItem =
   return chat_item.initChatItem(
     id = threadId,
     name = threadName,
@@ -361,6 +364,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     parentChatId = parentChatId,
     sortTimestamp = parentItem.lastMessageTimestamp,
     archived = archived,
+    followed = followed,
   )
 
 proc ensureThreadContentModule(self: Module, threadItem: ChatItem) =
@@ -756,6 +760,7 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
   # If the thread row already exists, just update it and activate it if needed.
   if not self.view.chatsModel().getItemById(threadId).isNil:
     self.view.chatsModel().changeMutedOnItemById(threadId, self.controller.getThreadById(parentChatId, threadId).muted)
+    self.view.chatsModel().updateFollowedById(threadId, self.controller.getThreadById(parentChatId, threadId).followed)
     self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages, notificationsCount)
     if self.chatContentModules.contains(threadId):
       self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages, notificationsCount)
@@ -773,9 +778,9 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
     error "openThreadAsChat: unknown parent chat index", parentChatId, methodName="openThreadAsChat"
     return
 
+  let thread = self.controller.getThreadById(parentChatId, threadId)
   let threadItem = self.createThreadItem(parentItem, parentChatId, threadId, threadName,
-    hasUnreadMessages, notificationsCount, self.controller.getThreadById(parentChatId, threadId).archived,
-    self.controller.getThreadById(parentChatId, threadId).muted)
+    hasUnreadMessages, notificationsCount, thread.archived, thread.muted, thread.followed)
   self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
   self.threadChatIds.incl(threadId)
   if setActive:
@@ -828,6 +833,7 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
       if not self.view.chatsModel().getItemById(thread.threadId).isNil:
         self.view.chatsModel().updateArchivedById(thread.threadId, thread.archived)
         self.view.chatsModel().changeMutedOnItemById(thread.threadId, thread.muted)
+        self.view.chatsModel().updateFollowedById(thread.threadId, thread.followed)
         self.view.renameThreadItem(thread.threadId, thread.name)
         if self.view.getOpenThreadId() == thread.threadId:
           self.view.setOpenThread(thread.threadId, thread.name, parentChatId)
@@ -842,14 +848,18 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
         continue
       pendingThreadIds.incl(thread.threadId)
       items.add(self.createThreadItem(parentItem, parentChatId, thread.threadId, thread.name,
-        thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount, thread.archived, thread.muted))
+        thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount, thread.archived, thread.muted, thread.followed))
 
     self.view.chatsModel().appendItemsAfterParent(items, parentChatId)
     for item in items:
       self.threadChatIds.incl(item.id)
 
+  if threadsByChat.len > 0:
+    self.updateThreadsBadgeNotifications(toSeq(threadsByChat.keys))
+
   let pendingNavigation = self.pendingThreadNavigation
-  let pendingThreadUpdated = pendingNavigation and completedChatIds.len == 0 and threads.anyIt(
+  let pendingMessageNavigation = self.pendingThreadMessageId.len > 0
+  let pendingThreadUpdated = (pendingNavigation or pendingMessageNavigation) and completedChatIds.len == 0 and threads.anyIt(
     it.chatId == self.pendingThreadParentChatId and it.threadId == self.pendingThreadId)
   if self.pendingThreadId.len == 0 or
       (self.pendingThreadParentChatId notin completedChatIds and not pendingThreadUpdated):
@@ -1010,6 +1020,22 @@ proc updateParentBadgeNotifications(self: Module) =
     unviewedMessagesCount > 0,
     unviewedMentionsCount
   )
+
+# Followed threads contribute to the section and category markers, so refresh
+# them whenever thread follow, archive or unread state changes.
+proc updateThreadsBadgeNotifications(self: Module, parentChatIds: seq[string]) =
+  self.updateParentBadgeNotifications()
+  if not self.isCommunity:
+    return
+  let communityId = self.controller.getMySectionId()
+  var categoryIds = initHashSet[string]()
+  for chatId in parentChatIds:
+    let categoryId = self.controller.getChatDetails(chatId).categoryId
+    if categoryId.len > 0:
+      categoryIds.incl(categoryId)
+  for categoryId in categoryIds:
+    self.view.chatsModel().setCategoryHasUnreadMessages(categoryId,
+      self.controller.categoryHasUnreadMessages(communityId, categoryId))
 
 proc updateChatLocked(self: Module, communityChat: ChatDto) =
   if not self.controller.isCommunity():
@@ -1681,6 +1707,18 @@ method onSectionMutedChanged*(self: Module) =
 method markAllMessagesRead*(self: Module, chatId: string, threadId: string = "") =
   self.controller.markAllMessagesRead(chatId, threadId)
 
+method onThreadFollowFinished*(self: Module, parentChatId: string, threadId: string,
+    followed: bool, error: string) =
+  let threadItem = self.view.chatsModel().getItemById(threadId)
+  if threadItem.isNil or not threadItem.isThread or threadItem.parentChatId != parentChatId:
+    return
+  if error.len > 0:
+    self.view.emitThreadFollowFailed(threadId, followed, error)
+    return
+  # An unfollowed thread leaves the chat list, so stop showing it as the selected chat.
+  if not followed and self.controller.getActiveChatId() == threadId:
+    self.setActiveItem(parentChatId)
+
 method clearChatHistory*(self: Module, chatId: string) =
   self.controller.clearChatHistory(chatId)
 
@@ -1767,7 +1805,9 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
     # No need to send a notification
     return
 
-  if chatDetails.categoryId != "":
+  let countsTowardCategory = displayChatId == chatIdMsgBelongsTo or
+    threadCountsTowardUnread(self.controller.getThreadById(chatIdMsgBelongsTo, displayChatId))
+  if chatDetails.categoryId != "" and countsTowardCategory:
     self.view.chatsModel().setCategoryHasUnreadMessages(chatDetails.categoryId, true)
 
   if displayChatId == chatIdMsgBelongsTo:

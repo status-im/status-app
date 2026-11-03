@@ -19,6 +19,7 @@ type
     muted*: bool
     muteTill*: int64
 
+    followed*: bool
     deleted*: bool
     deletedBy*: string
     deletedClock*: int64
@@ -47,6 +48,7 @@ proc toThreadDto*(jsonObj: JsonNode): ThreadDto =
   let muteTill = jsonObj{"muteTill"}.getStr()
   if muteTill.len > 0 and muteTill != "0001-01-01T00:00:00Z":
     result.muteTill = parse(muteTill, "yyyy-MM-dd'T'HH:mm:sszzz").toTime().toUnix() * 1000
+  discard jsonObj.getProp("followed", result.followed)
   discard jsonObj.getProp("unviewedMessagesCount", result.unviewedMessagesCount)
   discard jsonObj.getProp("unviewedMentionsCount", result.unviewedMentionsCount)
   discard jsonObj.getProp("messagesCount", result.messagesCount)
