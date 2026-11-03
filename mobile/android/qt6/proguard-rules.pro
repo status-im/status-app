@@ -36,6 +36,7 @@
 # by name, instance methods by name, RegisterNatives for the nativeCredential*
 # callbacks.
 -keep class app.status.mobile.SecureAndroidAuthentication { *; }
+-keep class app.status.mobile.SecureStorageHelper { *; }
 
 # ui/StatusQ/src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp and
 # NativeIndicatorItem_android.cpp: constructed by name with a (J, Activity)
