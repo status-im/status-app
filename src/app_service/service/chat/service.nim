@@ -56,6 +56,7 @@ type
   SendingFinishedArgs* = ref object of Args
     chatId*: string
     sendToken*: string
+    error*: string
 
   MessageSendingSuccess* = ref object of Args
     chat*: ChatDto
@@ -480,9 +481,9 @@ QtObject:
       if args.chatId == chatId:
         result.add(args)
 
-  proc finishSending(self: Service, chatId, sendToken: string) =
+  proc finishSending(self: Service, chatId, sendToken: string, error: string = "") =
     self.pendingSends.del(sendToken)
-    self.events.emit(SIGNAL_SENDING_FINISHED, SendingFinishedArgs(chatId: chatId, sendToken: sendToken))
+    self.events.emit(SIGNAL_SENDING_FINISHED, SendingFinishedArgs(chatId: chatId, sendToken: sendToken, error: error))
 
   proc asyncSendImages*(self: Service,
                    chatId: string,
@@ -596,10 +597,11 @@ QtObject:
     except Exception as e:
       error "Error sending message", msg = e.msg
       self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: chatId, error: e.msg))
-      self.finishSending(chatId, token)
+      self.finishSending(chatId, token, e.msg)
 
   proc onAsyncSendMessageDone*(self: Service, rpcResponseJson: string) {.slot.} =
     var rpcResponseObj: JsonNode = newJObject()
+    var sendError = ""
     try:
       rpcResponseObj = rpcResponseJson.parseJson
 
@@ -619,9 +621,10 @@ QtObject:
         self.events.emit(SIGNAL_THREAD_METADATA_RECEIVED, ThreadMetadataArgs(threads: threadDtos))
     except Exception as e:
       error "Error sending message", msg = e.msg
+      sendError = e.msg
       self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: rpcResponseObj{"chatId"}.getStr, error: e.msg))
     finally:
-      self.finishSending(rpcResponseObj{"chatId"}.getStr, rpcResponseObj{"sendToken"}.getStr)
+      self.finishSending(rpcResponseObj{"chatId"}.getStr, rpcResponseObj{"sendToken"}.getStr, sendError)
 
   proc muteChat*(self: Service, chatId: string, interval: int) =
     try:

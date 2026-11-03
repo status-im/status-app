@@ -177,6 +177,13 @@ Item {
         SignalSpy {}
     }
 
+    Component { id: threadSpyComponent; SignalSpy { signalName: "openThread" } }
+    QtObject {
+        id: threadMessageModule
+        readonly property int chatType: Constants.chatType.oneToOne
+        function getChatId() { return "chat-1" }
+    }
+
     TestCase {
         name: "MessageViewHoverContextMenu"
         when: windowShown
@@ -229,6 +236,51 @@ Item {
             return delegate
         }
 
+        function test_threadActionRoutesParentAndExistingThread_data() {
+            return [
+                {tag: "create-hover", expanded: false, hasThread: false},
+                {tag: "open-hover", expanded: false, hasThread: true},
+                {tag: "create-menu", expanded: true, hasThread: false},
+                {tag: "open-menu", expanded: true, hasThread: true}
+            ]
+        }
+
+        function test_threadActionRoutesParentAndExistingThread(data) {
+            messageStoreMock.messageModule = threadMessageModule
+            const view = createTemporaryObject(messageViewComp, root, {
+                messageId: "parent", unparsedText: "Parent message", threadsFeatureEnabled: true,
+                hasThread: data.hasThread, threadId: "existing-thread", threadTitle: "Existing title"
+            })
+            verify(!!view)
+            tryVerify(() => messageViewReady(view), 5000)
+            const spy = createTemporaryObject(threadSpyComponent, root, {target: view})
+            view.openMessageContextMenu(null, Qt.point(0, 0), "", {openExpanded: data.expanded})
+            const menu = findChild(view, "MessageContextMenuView")
+            verify(!!menu)
+            if (data.expanded) {
+                let triggered = false
+                for (let i = 0; i < menu.count; ++i) {
+                    const action = menu.actionAt(i)
+                    if (action?.objectName === "messageContextMenu_openThread") {
+                        verify(action.enabled)
+                        action.trigger()
+                        triggered = true
+                        break
+                    }
+                }
+                verify(triggered)
+            } else {
+                const row = findChild(menu, "messageContextMenu_singleRowActions")
+                const thread = findChild(row, "messageContextMenu_openThread")
+                verify(thread.visible)
+                mouseClick(thread)
+            }
+            compare(spy.count, 1)
+            compare(spy.signalArguments[0][0], data.hasThread ? "existing-thread" : "")
+            compare(spy.signalArguments[0][2], "parent")
+            messageStoreMock.messageModule = null
+        }
+
         function test_mouseHoverOpensQuickActionsMenu() {
             const view = createTemporaryObject(messageViewComp, root, {
                 messageId: "msg-hover",
@@ -256,8 +308,9 @@ Item {
             verify(!!view)
             tryVerify(() => messageViewReady(view), 5000, "MessageView must be ready")
 
-            hoverMessageDelegate(view)
-            wait(500)
+            const delegate = hoverMessageDelegate(view)
+            verify(delegate.disableHover)
+            delegate.hoverChanged(view.messageId, true)
             verify(!hasQuickActionsMenu(view),
                    "hover must not open the chat quick-actions menu inside a pinned popup")
         }

@@ -46,6 +46,7 @@ type
     unfurlingPlan: UrlsUnfurlingPlan
     imageBatches: ImageBatchQueue
     imageBatchPayloads: Table[string, ImageBatchPayload]
+    textSendTokens: HashSet[string]
 
 proc newController*(
     delegate: io_interface.AccessInterface,
@@ -125,6 +126,9 @@ proc init*(self: Controller) =
     let args = SendingFinishedArgs(e)
     if self.chatId != args.chatId:
       return
+    if args.sendToken in self.textSendTokens:
+      self.textSendTokens.excl(args.sendToken)
+      self.delegate.onTextMessageSent(args.sendToken, args.error)
     if finishBatch(self.imageBatches, args.sendToken):
       self.dispatchNextImageBatch()
 
@@ -211,8 +215,13 @@ proc sendChatMessage*(self: Controller,
                       paymentRequests: seq[PaymentRequest],
                       threadId: string,
                       startNewThread: bool,
-                      newThreadName: string) =
-  self.resetLinkPreviews()
+                      newThreadName: string,
+                      sendToken: string = "") =
+  if sendToken.len == 0:
+    self.resetLinkPreviews()
+  else:
+    # Correlated text sends belong to a separate draft, not this composer.
+    self.textSendTokens.incl(sendToken)
   self.chatService.asyncSendChatMessage(self.chatId,
     msg,
     replyTo,
@@ -222,7 +231,8 @@ proc sendChatMessage*(self: Controller,
     paymentRequests,
     threadId = threadId,
     startNewThread = startNewThread,
-    newThreadName = newThreadName
+    newThreadName = newThreadName,
+    sendToken = sendToken
   )
 
 proc getLinkPreviewEnabled*(self: Controller): bool =

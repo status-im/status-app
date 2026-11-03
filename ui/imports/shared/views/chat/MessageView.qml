@@ -1452,7 +1452,8 @@ Loader {
                 root.showReplyArea(messageContextMenuView.messageId, senderId)
             }
             onOpenThread: {
-                root.openThread("", "", messageContextMenuView.messageId)
+                root.openThread(root.hasThread ? (root.threadId || root.messageId) : "",
+                                root.threadTitle, messageContextMenuView.messageId)
             }
             onCopyToClipboard: (text) => {
                 ClipboardUtils.setText(text)

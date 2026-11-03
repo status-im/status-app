@@ -336,6 +336,7 @@ StatusSectionLoader {
                                                          && (root.rootStore.isProduction && root.networksStore.areTestNetworksEnabled)),
             newCommunityStore:              Qt.binding(() => d.newCommunityStore),
             rootStore:                      Qt.binding(() => d.chatRootStore),
+            threadReplyStore:               Qt.binding(() => root.messagingRootStore.threadReplyStore),
             tokensStore:                    Qt.binding(() => root.tokensStore),
             transactionStore:               Qt.binding(() => root.transactionStore),
             walletAssetsStore:              Qt.binding(() => root.walletAssetsStore),
