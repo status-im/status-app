@@ -31,6 +31,16 @@ QtObject {
 
     readonly property var loginAccountsModel: d.onboardingModuleInst.loginAccountsModel
 
+    readonly property bool stayLoggedIn: localAccountSettings.stayLoggedIn
+
+    function setStayLoggedIn(value) {
+        localAccountSettings.stayLoggedIn = value
+    }
+
+    function setAutoLoginSuppressed(keyUid, value) {
+        return localAppSettings.setAutoLoginSuppressed(keyUid, value)
+    }
+
     // keycard
     readonly property int keycardState: d.onboardingModuleInst.keycardState // cf. enum Onboarding.KeycardState
     readonly property string keycardUID: d.onboardingModuleInst.keycardUID

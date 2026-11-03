@@ -74,6 +74,8 @@ QtObject:
   proc setLocalAccountSettingsFile(self: Service) =
     if self.loggedInAccount.isValid():
       singletonInstance.localAccountSettings.setFileName(self.loggedInAccount.name)
+      # The file is per display name (not unique) — keyUid-namespaced settings need this
+      singletonInstance.localAccountSettings.setKeyUid(self.loggedInAccount.keyUid)
 
   proc getLoggedInAccount*(self: Service): AccountDto =
     return self.loggedInAccount

@@ -571,10 +571,6 @@ class OnboardingCreatePasswordView(OnboardingView):
         self.set_password_in_first_field(value)
         self.set_password_in_repeat_field(value)
         self.confirm_password_button.click()
-        if configs.system.get_platform() == "Darwin":
-            biometrics_view = OnboardingBiometricsView().wait_until_appears()
-            assert biometrics_view.yes_use_biometrics_button.is_visible, f"Use biometrics button is not found"
-            biometrics_view.maybe_later()
 
     @allure.step('Fill in choose password field')
     def set_password_in_first_field(self, value: str):
@@ -678,19 +674,6 @@ class BiometricsView(OnboardingView):
     @allure.step('Verify TouchID button')
     def is_touch_id_button_visible(self):
         return self._yes_use_touch_id_button.is_visible
-
-
-class OnboardingBiometricsView(OnboardingView):
-
-    def __init__(self):
-        super(OnboardingBiometricsView, self).__init__(onboarding_names.enableBiometricsView)
-        self.yes_use_biometrics_button = Button(onboarding_names.enableBiometricsButton)
-        self.maybe_later_button = Button(onboarding_names.dontEnableBiometricsButton)
-
-    @allure.step('Select maybe later option')
-    def maybe_later(self):
-        self.object.enableBiometricsRequested(False)
-        self.wait_until_hidden()
 
 
 class ReturningLoginView(QObject):

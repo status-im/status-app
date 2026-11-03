@@ -66,19 +66,19 @@ SettingsContentBase {
             const status = root.secureStorage.deleteCredential(root.privacyStore.keyUid)
             if (status !== SecureStorage.StatusSuccess && status !== SecureStorage.StatusNotFound) {
                 Global.displayToastMessage(
-                            qsTr("Failed to disable Stay logged in for this device"),
+                            qsTr("Failed to remove the saved password"),
                             "", "warning", false, Constants.ephemeralNotificationType.danger, "")
                 return
             }
             root.privacyStore.setStayLoggedIn(false)
             Global.displayToastMessage(
-                        qsTr("Stay logged in disabled for this device"),
+                        qsTr("Saved password removed — automatic login disabled"),
                         "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
         }
 
         function showStayLoggedInErrorToast() {
             Global.displayToastMessage(
-                        qsTr("Failed to enable Stay logged in for this device"),
+                        qsTr("Failed to save the password for automatic login"),
                         "", "warning", false, Constants.ephemeralNotificationType.danger, "")
         }
 
@@ -206,7 +206,7 @@ SettingsContentBase {
                 }
                 root.privacyStore.setStayLoggedIn(true)
                 Global.displayToastMessage(
-                            qsTr("Stay logged in could not be confirmed — it was left enabled and will be verified at your next login"),
+                            qsTr("Saving the password could not be confirmed — the option was left enabled and will be verified at your next login"),
                             "", "warning", false, Constants.ephemeralNotificationType.danger, "")
                 return
             }
@@ -216,7 +216,7 @@ SettingsContentBase {
             }
             root.privacyStore.setStayLoggedIn(true)
             Global.displayToastMessage(
-                        qsTr("Stay logged in enabled for this device"),
+                        qsTr("Password saved on this device for automatic login"),
                         "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
         }
     }
@@ -425,14 +425,14 @@ SettingsContentBase {
                                         || silentDeleteStatus === SecureStorage.StatusNotFound) {
                                     root.privacyStore.setStayLoggedIn(false)
                                     Global.displayToastMessage(
-                                                qsTr("Stay logged in disabled — re-enable it in Settings"),
+                                                qsTr("Automatic login disabled — the saved password could not be updated"),
                                                 "", "warning", false, Constants.ephemeralNotificationType.danger, "")
                                 } else {
                                     // Preference stays ON: the stored (possibly stale)
                                     // credential is reconciled by the post-login task /
                                     // auto-login failure fallback.
                                     Global.displayToastMessage(
-                                                qsTr("Failed to update the Stay logged in credential"),
+                                                qsTr("Failed to update the saved password"),
                                                 "", "warning", false, Constants.ephemeralNotificationType.danger, "")
                                 }
                             }

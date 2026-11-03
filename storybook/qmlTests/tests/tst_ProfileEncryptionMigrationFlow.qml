@@ -4,6 +4,8 @@ import QtTest
 
 import StatusQ
 
+import AppLayouts.Profile.stores
+
 import mainui
 import utils
 
@@ -64,7 +66,7 @@ Item {
             popupParent: root
             keychain: root.keychainMock
 
-            privacyStore: QtObject {
+            privacyStore: PrivacyStore {
                 readonly property string keyUid: root.testKeyUid
 
                 property QtObject privacyModule: QtObject {

@@ -150,10 +150,14 @@ SecureStorage::Status SecureStorage::hasCredential(const QString &account) const
 
     const auto status = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
 
-    // An access-controlled or invalidated item was never written by this class — report it
-    // as absent rather than as something a prompt-free read could ever return.
+    // Items written by this class carry NO access control, so for them a prompt-blocked
+    // read means "keychain locked right now" (e.g. locked device), NOT "absent" —
+    // reported as Unavailable so callers never mistake a transient lock for a missing
+    // credential (and e.g. delete state or skip a refresh based on it). A foreign
+    // access-controlled item under our service also reads as Unavailable, which is the
+    // safe direction.
     if (status == errSecInteractionNotAllowed || status == errSecAuthFailed)
-        return StatusNotFound;
+        return StatusUnavailable;
 
     return convertStatus(status);
 }
@@ -174,9 +178,13 @@ QVariantMap SecureStorage::getCredential(const QString &account) const
     CFDataRef data = NULL;
     auto status = SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef *) &data);
 
-    // See hasCredential: never surface access-controlled items through the silent path.
-    if (status == errSecInteractionNotAllowed || status == errSecAuthFailed)
-        status = errSecItemNotFound;
+    // See hasCredential: a prompt-blocked read means "locked right now", not "absent".
+    if (status == errSecInteractionNotAllowed || status == errSecAuthFailed) {
+        if (data)
+            CFRelease(data);
+        return {{QStringLiteral("status"), static_cast<int>(StatusUnavailable)},
+                {QStringLiteral("credential"), credential}};
+    }
 
     if (status == errSecSuccess && data != NULL) {
         NSString *dataString = [[[NSString alloc] initWithData:(__bridge NSData *) data

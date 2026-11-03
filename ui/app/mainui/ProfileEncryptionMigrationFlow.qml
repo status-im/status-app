@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import AppLayouts.Profile.stores as ProfileStores
+
 import shared.popups
 import utils
 
@@ -18,7 +20,7 @@ import StatusQ.Popups.Dialog
 QtObject {
     id: root
 
-    required property var privacyStore
+    required property ProfileStores.PrivacyStore privacyStore
     required property Keychain keychain
     required property var popupParent
 
@@ -118,6 +120,7 @@ QtObject {
         title: qsTr("Updating encryption")
         standardButtons: Dialog.NoButton
         closePolicy: Popup.NoAutoClose
+        closeHandler: () => {}
 
         StatusBaseText {
             anchors.fill: parent

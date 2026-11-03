@@ -56,7 +56,7 @@ Control {
                 icon.height: 16
                 icon.name: "info"
                 type: StatusFlatRoundButton.Type.Tertiary
-                tooltip.text: qsTr("Your password is stored using your<br/>systems' default secure storage")
+                tooltip.text: qsTr("Your password is stored using your<br/>system's default secure storage")
             }
             StatusSwitch {
                 id: stayLoggedInSwitch

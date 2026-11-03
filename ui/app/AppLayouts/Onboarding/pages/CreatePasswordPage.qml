@@ -74,6 +74,7 @@ OnboardingPage {
             StatusModalDivider {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
+                visible: root.stayLoggedInAvailable && root.biometricsAvailable
             }
             BiometricsSectionView {
                 objectName: "biometricsSection"

@@ -19,6 +19,12 @@ type
     NativeFormat = 0
     IniFormat = 1
 
+  QSettingsStatus* {.pure.} = enum
+    ## Mirrors QSettings::Status.
+    NoError = 0
+    AccessError = 1
+    FormatError = 2
+
   QSettings* = ref object
     ## Wrapper around a seaqt-backed QSettings instance.
     ## The inner seaqt QSettings is a move-only value with automatic =destroy.
@@ -46,9 +52,8 @@ proc remove*(self: QSettings, key: string) =
 proc sync*(self: QSettings) =
   sqset.sync(self.inner)
 
-proc status*(self: QSettings): int =
-  ## Mirrors QSettings::status(): 0 == NoError, 1 == AccessError, 2 == FormatError.
-  int(sqset.status(self.inner))
+proc status*(self: QSettings): QSettingsStatus =
+  QSettingsStatus(sqset.status(self.inner))
 
 proc beginGroup*(self: QSettings, group: string) =
   sqset.beginGroup(self.inner, group)

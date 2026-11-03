@@ -2989,18 +2989,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Échec de l’activation de la connexion biométrique et de l’authentification des transactions pour cet appareil</translation>
     </message>
     <message>
-        <source>Failed to enable Stay logged in for this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Stay logged in could not be confirmed — it was left enabled and will be verified at your next login</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Stay logged in enabled for this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Biometric login and transaction authentication disabled for this device</source>
         <translation>La connexion biométrique et l’authentification des transactions sont désactivées pour cet appareil</translation>
     </message>
@@ -3009,11 +2997,23 @@ Do you wish to override the security check and continue?</source>
         <translation>Échec de la désactivation de la connexion biométrique et de l’authentification des transactions pour cet appareil</translation>
     </message>
     <message>
-        <source>Failed to disable Stay logged in for this device</source>
+        <source>Failed to remove the saved password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Stay logged in disabled for this device</source>
+        <source>Saved password removed — automatic login disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to save the password for automatic login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password saved on this device for automatic login</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3029,11 +3029,11 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Stay logged in disabled — re-enable it in Settings</source>
+        <source>Automatic login disabled — the saved password could not be updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Failed to update the Stay logged in credential</source>
+        <source>Failed to update the saved password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17441,7 +17441,7 @@ avec un retour à la ligne</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Your password is stored using your&lt;br/&gt;systems&apos; default secure storage</source>
+        <source>Your password is stored using your&lt;br/&gt;system&apos;s default secure storage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

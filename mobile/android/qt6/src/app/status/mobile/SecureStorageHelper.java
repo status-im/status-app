@@ -49,8 +49,8 @@ public final class SecureStorageHelper {
     private static final String KEY_IV_PREFIX = "iv_"; // iv
 
     // Status codes (kept in sync with securestorage_android.cpp).
-    public static final int STATUS_OK = 0;
-    public static final int STATUS_NOT_FOUND = 1;
+    public static final int STATUS_OK = 1;
+    public static final int STATUS_NOT_FOUND = 2;
     public static final int STATUS_ERROR = -1;
 
     // Android Keystore-generated AES/GCM IVs are exactly this long; any other decoded
@@ -163,9 +163,12 @@ public final class SecureStorageHelper {
             try {
                 out[0] = new String(dec.doFinal(ct), StandardCharsets.UTF_8);
                 return STATUS_OK;
-            } catch (Exception e) {
-                // Wrong key for this blob (e.g. restored from another device despite the
-                // backup exclusions) or corrupted data — unusable either way.
+            } catch (javax.crypto.AEADBadTagException | javax.crypto.IllegalBlockSizeException e) {
+                // Only these prove the BLOB is bad for this key: wrong key (e.g. restored
+                // from another device despite the backup exclusions) or corrupted data —
+                // unusable either way. Transient keystore failures (busy backend, pruned
+                // operation, daemon restart) must NOT wipe a valid credential: they fall
+                // through to the outer catch and report STATUS_ERROR.
                 Log.w(TAG, "getCredential: undecryptable blob, wiping entry", e);
                 return wipeEntry(account) ? STATUS_NOT_FOUND : STATUS_ERROR;
             }

@@ -119,6 +119,7 @@ Page {
         // silent auto-login (one-shot per app run — deliberately NOT reset in resetState)
         property bool autoLoginAttempted
         property string autoLoginPendingKeyUid // set with the attempt, consumed on its failure
+        property bool autoLoginErrorPending: false
 
         // login screen state
         property string selectedProfileKeyId
@@ -215,6 +216,7 @@ Page {
             console.info("auto-login: attempting silent login for", keyUid)
             d.autoLoginAttempted = true
             d.autoLoginPendingKeyUid = keyUid
+            d.autoLoginErrorPending = true
             root.loginRequested(keyUid, Onboarding.LoginMethod.Password,
                                 { dek: result.credential.slice(Constants.keychain.dekPrefix.length) })
         }
@@ -318,7 +320,10 @@ Page {
         }
 
         onSkippedBiometricFlow: root.skippedBiometricFlow()
-        onDeleteMultiaccountRequested: keyUid => root.onboardingStore.deleteMultiaccountRequested(keyUid)
+        onDeleteMultiaccountRequested: keyUid => {
+            root.secureStorage?.deleteCredential(keyUid)
+            root.onboardingStore.deleteMultiaccountRequested(keyUid)
+        }
     }
 
     // needs to be on top of the stack
@@ -379,6 +384,11 @@ Page {
         target: root.onboardingStore
 
         function onAccountLoginError(error: string, wrongPassword: bool) : void {
+            if (d.autoLoginErrorPending) {
+                d.autoLoginErrorPending = false
+                console.info("auto-login: silent attempt failed (", error, ") — falling back to the login screen")
+                return
+            }
             const loginScreen = onboardingFlow.loginScreen
             if (loginScreen) {
                 loginScreen.setAccountLoginError(error, wrongPassword)

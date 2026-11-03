@@ -32,9 +32,9 @@ Item {
             }
             keyUid: "key-uid-1"
 
-            // The per-profile auto-login suppression store (localAppSettings in the app);
+            // Store wrapping the auto-login suppression (PrivacyStore in the app);
             // the real setter flushes to disk and reports whether the marker persisted.
-            appSettings: QtObject {
+            privacyStore: QtObject {
                 property bool suppressionResult: true
                 function setAutoLoginSuppressed(keyUid, value) {
                     root.callLog.push("suppress:" + keyUid + ":" + value)
@@ -82,7 +82,7 @@ Item {
             dialog = createTemporaryObject(dialogComponent, root)
             verify(!!dialog)
             dialog.secureStorage.deleteStatus = data.status
-            dialog.appSettings.suppressionResult = !data.suppressionFails
+            dialog.privacyStore.suppressionResult = !data.suppressionFails
             dialog.open()
             tryVerify(() => dialog.opened)
 

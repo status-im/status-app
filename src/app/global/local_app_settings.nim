@@ -236,4 +236,4 @@ QtObject:
     else:
       self.settings.remove(LAS_KEY_AUTO_LOGIN_SUPPRESSED_PREFIX & keyUid)
     self.settings.sync()
-    return self.settings.status() == 0 # QSettings::NoError
+    return self.settings.status() == QSettingsStatus.NoError
