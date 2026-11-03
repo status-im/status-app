@@ -5,6 +5,7 @@ import io_interface, view, controller
 import share_send
 import app_service/service/message/dto/link_preview
 import app_service/service/message/dto/urls_unfurling_plan
+import app_service/service/message/dto/payment_request
 import app_service/service/settings/dto/settings
 import ephemeral_notification_item, ephemeral_notification_model
 import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details]
@@ -2281,18 +2282,20 @@ proc dispatchNextShareImageSend[T](self: Module[T]) =
   self.controller.sendSharedImages(d.chatId, d.imagePaths,
     text = if d.withText: share.text else: "",
     linkPreviews = if d.withText: share.linkPreviews else: @[],
+    paymentRequests = d.paymentRequests,
     releaseCachedFiles = d.releaseCachedFiles, sendToken = d.token,
     releasePaths = if d.releaseCachedFiles: share.imagePaths else: @[])
 
 proc dispatchShareSend[T](self: Module[T]) =
   let share = self.shareQueue[0]
   if share.imagePaths.len > 0:
-    self.shareQueue[0].imageSends = imageSendPlan(share.destinations, share.imagePaths, share.token)
+    self.shareQueue[0].imageSends = imageSendPlan(share.destinations, share.imagePaths, share.token,
+      paymentRequests = share.paymentRequests)
     self.shareQueue[0].nextImageSend = 0
     self.dispatchNextShareImageSend()
     return
-  for dest in share.destinations:
-    self.controller.sendSharedText(dest.chatId, share.text, share.contentType, share.linkPreviews)
+  for send in textSendPlan(share.destinations, share.paymentRequests):
+    self.controller.sendSharedText(send.chatId, share.text, share.contentType, share.linkPreviews, send.paymentRequests)
   self.finishActiveShare()
 
 proc startActiveShare[T](self: Module[T]) =
@@ -2306,14 +2309,15 @@ proc finishActiveShare[T](self: Module[T]) =
   if finishActiveShare(self.shareQueue):
     self.startActiveShare()
 
-method sendSharedContent*[T](self: Module[T], destinationsJson, text, imagePathsJson: string, contentType: int) =
+method sendSharedContent*[T](self: Module[T], destinationsJson, text, imagePathsJson: string, contentType: int,
+    paymentRequests: seq[PaymentRequest]) =
   let destinations = parseShareDestinations(destinationsJson)
   let imagePaths = parseImagePathsJson(imagePathsJson)
   if destinations.len == 0:
     releaseCachedShareFiles(imagePaths)
     return
   let share = PendingShare(token: $genUUID(), destinations: destinations, text: text,
-    imagePaths: imagePaths, contentType: contentType)
+    imagePaths: imagePaths, paymentRequests: paymentRequests, contentType: contentType)
   if enqueueShare(self.shareQueue, share):
     self.startActiveShare()
 

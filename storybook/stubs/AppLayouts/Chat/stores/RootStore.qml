@@ -53,6 +53,10 @@ QtObject {
     property UsersStore usersStore: UsersStore {}
     property StickersStore stickersStore: StickersStore {}
 
+    function formatTokenAmount(amount, key) {
+        return amount
+    }
+
     function currentChatContentModule() {
         return ChatStoresConfig.currentChatContentModule
     }

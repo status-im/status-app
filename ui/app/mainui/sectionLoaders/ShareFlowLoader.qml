@@ -12,6 +12,8 @@ import AppLayouts.Chat.stores as ChatStores
 import mainui
 import mainui.adaptors
 
+import utils
+
 /**
   * External intake, share route: content shared to Status from another app
   * opens the one-screen destination picker; sending fans the payload out to
@@ -25,7 +27,7 @@ Loader {
 
     // sectionsLoaded, chatSearchModel, setActiveSectionChat, releaseShareIntakeFiles
     required property AppStores.RootStore rootStore
-    // sendSharedContent
+    // sendSharedContent, share payment requests
     required property ChatStores.RootStore rootChatStore
 
     // The user's own 1-1 chat, never offered as a destination
@@ -33,12 +35,15 @@ Loader {
 
     property var emojiPopup: null
     property var stickersPopup: null
+    property bool paymentRequestFeatureEnabled: false
+    property bool areTestNetworksEnabled: false
 
     active: false
 
     // Last-wins: a new share while the picker is open replaces the payload.
     function launch(text: string, imagePaths) {
         d.releaseImages()
+        root.rootChatStore.clearSharePaymentRequests()
         d.sharedText = text
         d.sharedImagePaths = imagePaths
         if (!root.active)
@@ -58,6 +63,7 @@ Loader {
         // user lands back in the source app.
         function cancel() {
             releaseImages()
+            root.rootChatStore.clearSharePaymentRequests()
             root.item.close()
             if (SQUtils.Utils.isAndroid)
                 SystemUtils.moveAppTaskToBack()
@@ -138,7 +144,17 @@ Loader {
             stickersPopup: root.stickersPopup
             keyboardVisible: SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible
                              || Qt.inputMethod.visible
+            paymentRequestModel: root.rootChatStore?.sharePaymentRequestModel ?? null
+            formatBalance: (amount, tokenKey) => root.rootChatStore.formatTokenAmount(amount, tokenKey)
+            paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
+            areTestNetworksEnabled: root.areTestNetworksEnabled
 
+            onPaymentRequestModalRequested: callback => Global.openPaymentRequestModalRequested(
+                                                (receiver, amount, tokenKey, symbol, logoUri) =>
+                                                root.rootChatStore.addSharePaymentRequest(
+                                                    receiver, amount, tokenKey, symbol, logoUri),
+                                                callback)
+            onPaymentRequestRemoveRequested: index => root.rootChatStore.removeSharePaymentRequest(index)
             onSendRequested: (destinations, text, imagePaths) => d.complete(destinations, text, imagePaths)
             onCancelRequested: d.cancel()
         }

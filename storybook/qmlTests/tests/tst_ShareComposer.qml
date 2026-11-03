@@ -37,6 +37,24 @@ Item {
         signalName: "sendRequested"
     }
 
+    SignalSpy {
+        id: modalSpy
+        signalName: "paymentRequestModalRequested"
+    }
+
+    SignalSpy {
+        id: removeSpy
+        signalName: "paymentRequestRemoveRequested"
+    }
+
+    Component {
+        id: paymentRequestModelComponent
+
+        ListModel {
+            ListElement { receiver: "0xabc"; amount: "1.5"; tokenKey: "eth-key"; symbol: "ETH"; logoUri: "" }
+        }
+    }
+
     TestCase {
         name: "ShareComposer"
         when: windowShown
@@ -161,12 +179,64 @@ Item {
             compare(chatInput.getPlainText(), "Look at this https://example.com/article")
         }
 
-        function test_gifStickerAndPaymentButtonsHidden() {
+        function test_gifAndStickerButtonsHidden() {
             const drawer = create()
             const chatInput = findChild(drawer, "statusChatInput")
             verify(!chatInput.gifButtonVisible)
             verify(!chatInput.stickersButtonVisible)
-            verify(!chatInput.paymentRequestButtonVisible)
+        }
+
+        function test_paymentRequestButtonFollowsFeatureFlagAndTestNetworks() {
+            const drawer = create()
+            const tokenButton = findChild(drawer, "statusChatInputTokenButton")
+            verify(!tokenButton.visible)
+            drawer.paymentRequestFeatureEnabled = true
+            tryVerify(() => tokenButton.visible)
+            drawer.areTestNetworksEnabled = true
+            tryVerify(() => !tokenButton.visible)
+        }
+
+        function test_paymentRequestButtonAsksHostToOpenTheModal() {
+            const drawer = create({ paymentRequestFeatureEnabled: true })
+            modalSpy.target = drawer
+            modalSpy.clear()
+            const tokenButton = findChild(drawer, "statusChatInputTokenButton")
+            tryVerify(() => tokenButton.visible)
+            mouseClick(tokenButton)
+            compare(modalSpy.count, 1)
+            compare(typeof modalSpy.signalArguments[0][0], "function")
+        }
+
+        function test_paymentRequestPreviewShownAndRemovable() {
+            const requests = createTemporaryObject(paymentRequestModelComponent, root)
+            const drawer = create({ paymentRequestModel: requests })
+            removeSpy.target = drawer
+            removeSpy.clear()
+            tryVerify(() => !!findChild(drawer, "paymentRequestMiniCard"))
+            const card = findChild(drawer, "paymentRequestMiniCard")
+            compare(card.symbol, "ETH")
+            compare(card.amount, "1.5")
+            card.close()
+            compare(removeSpy.count, 1)
+            compare(removeSpy.signalArguments[0][0], 0)
+        }
+
+        function test_paymentRequestPreviewUsesTheHostFormatter() {
+            const requests = createTemporaryObject(paymentRequestModelComponent, root)
+            const drawer = create({ paymentRequestModel: requests,
+                                    formatBalance: (amount, key) => "formatted " + amount + " " + key })
+            tryVerify(() => !!findChild(drawer, "paymentRequestMiniCard"))
+            compare(findChild(drawer, "paymentRequestMiniCard").amount, "formatted 1.5 eth-key")
+        }
+
+        function test_paymentRequestAloneIsSendable() {
+            const requests = createTemporaryObject(paymentRequestModelComponent, root)
+            const drawer = create({ text: "", paymentRequestModel: requests })
+            const sendButton = findChild(drawer, "statusChatInputSendButton")
+            tryVerify(() => sendButton.enabled)
+            mouseClick(sendButton)
+            compare(sendSpy.count, 1)
+            compare(sendSpy.signalArguments[0][1].length, 0)
         }
     }
 }

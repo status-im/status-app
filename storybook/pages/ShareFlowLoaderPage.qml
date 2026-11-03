@@ -54,10 +54,33 @@ SplitView {
     ChatStores.RootStore {
         id: rootChatStore
 
+        readonly property var sharePaymentRequestModel: ListModel {}
+
+        function addSharePaymentRequest(receiver, amount, tokenKey, symbol, logoUri) {
+            sharePaymentRequestModel.append({ receiver, amount, tokenKey, symbol, logoUri })
+        }
+        function removeSharePaymentRequest(index) {
+            sharePaymentRequestModel.remove(index)
+        }
+        function clearSharePaymentRequests() {
+            sharePaymentRequestModel.clear()
+        }
         function sendSharedContent(destinations, text, imagePaths) {
             logs.logEvent("sendSharedContent: " + JSON.stringify(destinations) + " / " + text
-                          + " / " + imagePaths.length + " image(s) -> " + ctrlSendSucceeds.checked)
+                          + " / " + imagePaths.length + " image(s) / "
+                          + sharePaymentRequestModel.count + " payment request(s) -> " + ctrlSendSucceeds.checked)
+            clearSharePaymentRequests()
             return ctrlSendSucceeds.checked
+        }
+    }
+
+    // Stands in for the payment request modal: adds a fixed request
+    Connections {
+        target: Global
+
+        function onOpenPaymentRequestModalRequested(onPaymentRequested, callback) {
+            logs.logEvent("openPaymentRequestModalRequested")
+            onPaymentRequested("0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240", "1.5", "eth", "ETH", "")
         }
     }
 
@@ -71,6 +94,7 @@ SplitView {
             rootStore: rootStore
             rootChatStore: rootChatStore
             excludedChatId: "0x04me"
+            paymentRequestFeatureEnabled: ctrlPaymentRequestEnabled.checked
         }
 
         Label {
@@ -93,6 +117,7 @@ SplitView {
             }
             CheckBox { id: ctrlSectionsLoaded; text: "sections loaded"; checked: true }
             CheckBox { id: ctrlSendSucceeds; text: "send succeeds"; checked: true }
+            CheckBox { id: ctrlPaymentRequestEnabled; text: "payment request feature enabled"; checked: true }
             Button {
                 text: "Launch share flow"
                 onClicked: shareFlowLoader.launch(ctrlText.text, root.sampleImages.slice(0, ctrlImages.value))

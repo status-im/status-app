@@ -27,6 +27,7 @@ import app_service/service/network/network_item
 import app_service/service/community_tokens/community_collectible_owner
 import app_service/service/message/dto/link_preview
 import app_service/service/message/dto/urls_unfurling_plan
+import app_service/service/message/dto/payment_request
 import app_service/service/settings/dto/settings
 
 import io_interface
@@ -606,10 +607,13 @@ proc requestTextUrlsToUnfurl*(self: Controller, text: string): string =
 proc requestUnfurlUrls*(self: Controller, urls: seq[string]): string =
   self.messageService.asyncUnfurlUrls(urls)
 
-proc sendSharedText*(self: Controller, chatId, text: string, contentType: int, linkPreviews: seq[LinkPreview]) =
-  self.chatService.asyncSendChatMessage(chatId, text, "", contentType, singletonInstance.userProfile.getPreferredName(), linkPreviews, @[])
+proc sendSharedText*(self: Controller, chatId, text: string, contentType: int, linkPreviews: seq[LinkPreview],
+    paymentRequests: seq[PaymentRequest]) =
+  self.chatService.asyncSendChatMessage(chatId, text, "", contentType, singletonInstance.userProfile.getPreferredName(),
+    linkPreviews, paymentRequests)
 
 proc sendSharedImages*(self: Controller, chatId: string, imagePaths: seq[string], text: string,
-    linkPreviews: seq[LinkPreview], releaseCachedFiles: bool, sendToken: string, releasePaths: seq[string]) =
+    linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest], releaseCachedFiles: bool, sendToken: string,
+    releasePaths: seq[string]) =
   self.chatService.asyncSendImages(chatId, $(%imagePaths), text, "", singletonInstance.userProfile.getPreferredName(),
-    linkPreviews, @[], releaseCachedFiles = releaseCachedFiles, sendToken = sendToken, releasePaths = releasePaths)
+    linkPreviews, paymentRequests, releaseCachedFiles = releaseCachedFiles, sendToken = sendToken, releasePaths = releasePaths)

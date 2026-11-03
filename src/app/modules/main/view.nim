@@ -3,6 +3,7 @@ import app/global/global_singleton
 import app/modules/shared_models/section_model
 import app/modules/shared_models/section_item
 import app/modules/shared_models/section_details
+import app/modules/shared_models/payment_request_model as payment_request_model
 import io_interface
 import ephemeral_notification_model
 from app_service/common/conversion import intToEnum
@@ -21,6 +22,8 @@ QtObject:
       activeSectionVariant: QVariant
       ephemeralNotificationModel: ephemeralNotification_model.Model
       ephemeralNotificationModelVariant: QVariant
+      sharePaymentRequestModel: payment_request_model.Model
+      sharePaymentRequestModelVariant: QVariant
       tmpCommunityId: string # shouldn't be used anywhere except in prepareCommunitySectionModuleForCommunityId/getCommunitySectionModule procs
       mainLoaded: bool
 
@@ -41,6 +44,8 @@ QtObject:
     result.activeSectionVariant = newQVariant(result.activeSection)
     result.ephemeralNotificationModel = ephemeralNotification_model.newModel()
     result.ephemeralNotificationModelVariant = newQVariant(result.ephemeralNotificationModel)
+    result.sharePaymentRequestModel = newPaymentRequestModel()
+    result.sharePaymentRequestModelVariant = newQVariant(result.sharePaymentRequestModel)
     result.mainLoaded = false
 
   proc load*(self: View) =
@@ -448,10 +453,28 @@ QtObject:
     ## (JSON array of absolute paths, as delivered by launchShareFlow).
     self.delegate.releaseShareIntakeFiles(imagePathsJson)
 
+  proc getSharePaymentRequestModel(self: View): QVariant {.slot.} =
+    return self.sharePaymentRequestModelVariant
+
+  QtProperty[QVariant] sharePaymentRequestModel:
+    read = getSharePaymentRequestModel
+
+  proc addSharePaymentRequest*(self: View, receiver: string, amount: string, tokenKey: string, symbol: string, logoUri: string) {.slot.} =
+    self.sharePaymentRequestModel.addPaymentRequest(receiver, amount, tokenKey, symbol, logoUri)
+
+  proc removeSharePaymentRequest*(self: View, index: int) {.slot.} =
+    self.sharePaymentRequestModel.removeItemWithIndex(index)
+
+  proc clearSharePaymentRequests*(self: View) {.slot.} =
+    self.sharePaymentRequestModel.clearItems()
+
   proc sendSharedContent*(self: View, destinationsJson: string, text: string, imagePathsJson: string, contentType: int) {.slot.} =
-    ## Share-flow send: fans the shared content out to every destination
-    ## (JSON array of {sectionId, chatId}) through the chat service.
-    self.delegate.sendSharedContent(destinationsJson, text, imagePathsJson, contentType)
+    ## Share-flow send: fans the shared content and the share's payment
+    ## requests out to every destination (JSON array of {sectionId, chatId})
+    ## through the chat service.
+    let paymentRequests = self.sharePaymentRequestModel.getPaymentRequests()
+    self.sharePaymentRequestModel.clearItems()
+    self.delegate.sendSharedContent(destinationsJson, text, imagePathsJson, contentType, paymentRequests)
 
   proc navigateToMessageDetails*(self: View) {.signal.}
   proc emitNavigateToMessageDetailsSignal*(self: View) =
