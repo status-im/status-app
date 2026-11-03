@@ -7,6 +7,7 @@ import app_service/service/transaction/service as transaction_service
 import app_service/service/network/service as networks_service
 import app_service/service/community/service as community_service
 import app_service/service/accounts/utils as utl
+import app_service/common/local_path
 import app_service/common/types
 import app_service/common/utils
 import app/core/eventemitter
@@ -293,6 +294,8 @@ proc getWalletAndAmountListFromJson(self: Module, collectiblesToBurnJsonString: 
     let amount = collectibleToBurn["amount"].getInt
     result.add(WalletAndAmount(walletAddress: walletAddress, amount: amount))
 
+proc setDeploymentArtworkFromCropInfo(params: var DeploymentParameters, imageCropInfoJson: string) =
+  (params.croppedImageJson, params.base64image) = normalizeImageCropInfoJson(imageCropInfoJson)
 
 method computeDeployCollectiblesFee*(self: Module, uuid: string, communityId: string, fromAddress: string, name: string,
   symbol: string, description: string, supply: string, infiniteSupply: bool, transferable: bool, selfDestruct: bool,
@@ -319,10 +322,7 @@ method computeDeployCollectiblesFee*(self: Module, uuid: string, communityId: st
   self.tempDeploymentParams.tokenType = TokenType.ERC721
   self.tempDeploymentParams.description = description
 
-  let croppedImage = imageCropInfoJson.parseJson
-  let base65Image = singletonInstance.utils.fromPathUri(croppedImage["imagePath"].getStr)
-  self.tempDeploymentParams.croppedImageJson = imageCropInfoJson
-  self.tempDeploymentParams.base64image = base65Image
+  setDeploymentArtworkFromCropInfo(self.tempDeploymentParams, imageCropInfoJson)
 
   self.tempDeploymentParams.communityId = communityId
   self.tempContractAction = ContractAction.Deploy
@@ -376,10 +376,7 @@ method computeDeployAssetsFee*(self: Module, uuid: string, communityId: string, 
   self.tempDeploymentParams.tokenType = TokenType.ERC20
   self.tempDeploymentParams.description = description
 
-  let croppedImage = imageCropInfoJson.parseJson
-  let base65Image = singletonInstance.utils.fromPathUri(croppedImage["imagePath"].getStr)
-  self.tempDeploymentParams.croppedImageJson = imageCropInfoJson
-  self.tempDeploymentParams.base64image = base65Image
+  setDeploymentArtworkFromCropInfo(self.tempDeploymentParams, imageCropInfoJson)
 
   self.tempDeploymentParams.communityId = communityId
   self.tempContractAction = ContractAction.Deploy
