@@ -94,6 +94,7 @@ void registerStatusQTypes() {
     qmlRegisterType<SkeletonTileItem>("StatusQ", 0, 1, "SkeletonTileItem");
     qmlRegisterType<DelegatePool>("StatusQ", 0, 1, "DelegatePool");
     qmlRegisterType<DelegatePoolKind>("StatusQ", 0, 1, "DelegatePoolKind");
+    qmlRegisterTypesAndRevisions<ChatTextSegment>("StatusQ", 0);
     qmlRegisterType<ChatTextItem>("StatusQ", 0, 1, "ChatTextItem");
 
     qmlRegisterUncreatableType<QValidator>(

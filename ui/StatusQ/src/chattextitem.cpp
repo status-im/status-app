@@ -1,4 +1,5 @@
 #include "StatusQ/chattextitem.h"
+#include "StatusQ/chattextformat.h"
 
 #include "StatusQ/markdownast.h"
 
@@ -41,26 +42,6 @@ public:
     QVariantList frameKey;
     QVariantList barKey;
 };
-
-// Theme bindings may replace segment colors without changing document positions.
-// Text, anchors and paragraph structure identify the content; character styling
-// can change while preserving the existing selection and pointer interaction.
-bool sameSegmentContent(const QVariantList& first, const QVariantList& second)
-{
-    if (first.size() != second.size())
-        return false;
-    for (qsizetype i = 0; i < first.size(); ++i) {
-        const QVariantMap a = first[i].toMap();
-        const QVariantMap b = second[i].toMap();
-        if (a.value(QStringLiteral("text")).toString() != b.value(QStringLiteral("text")).toString()
-                || a.value(QStringLiteral("href")).toString() != b.value(QStringLiteral("href")).toString()
-                || a.value(QStringLiteral("newBlock")).toBool() != b.value(QStringLiteral("newBlock")).toBool()
-                || a.value(QStringLiteral("codeBlock")).toBool() != b.value(QStringLiteral("codeBlock")).toBool()
-                || a.value(QStringLiteral("quoteLevel")).toInt() != b.value(QStringLiteral("quoteLevel")).toInt())
-            return false;
-    }
-    return true;
-}
 
 bool isCodeBlock(const QTextBlock& block)
 {
@@ -251,18 +232,42 @@ void ChatTextItem::applyDocumentDefaults()
     m_document->setDocumentMargin(0);
 }
 
-QVariantList ChatTextItem::segments() const
+QList<ChatTextSegment> ChatTextItem::segments() const
 {
     return m_segments;
 }
 
-void ChatTextItem::setSegments(const QVariantList& segments)
+void ChatTextItem::setMentionColor(const QColor& color)
 {
-    const bool preserveInteraction = sameSegmentContent(m_segments, segments);
+    if (m_mentionColor == color) return;
+    m_mentionColor = color;
+    updateAppearance(MentionForegroundAppearance, [color](QTextCharFormat& format) { format.setForeground(color); });
+    emit mentionColorChanged();
+}
+
+void ChatTextItem::setMentionBackground(const QColor& color)
+{
+    if (m_mentionBackground == color) return;
+    m_mentionBackground = color;
+    updateAppearance(MentionBackgroundAppearance, [color](QTextCharFormat& format) { format.setBackground(color); });
+    emit mentionBackgroundChanged();
+}
+
+void ChatTextItem::setQuoteColor(const QColor& color)
+{
+    if (m_quoteColor == color) return;
+    m_quoteColor = color;
+    updateAppearance(QuoteAppearance, [color](QTextCharFormat& format) { format.setForeground(color); });
+    emit quoteColorChanged();
+}
+
+void ChatTextItem::setSegments(const QList<ChatTextSegment>& segments)
+{
+    bool preserveInteraction = m_segments.size() == segments.size();
+    for (qsizetype i = 0; preserveInteraction && i < segments.size(); ++i)
+        preserveInteraction = m_segments[i].sameContent(segments[i]);
     m_segments = segments;
-
     rebuildFromSegments(preserveInteraction);
-
     emit segmentsChanged();
 }
 
@@ -398,11 +403,11 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     // code settings without a rebuild. A code block keeps the font's natural
     // line height.
     int codeBlockId = 0;
-    const auto blockFormatFor = [&blockFormat, &codeBlockId](const QVariantMap& segment, bool codeBlock) {
+    const auto blockFormatFor = [&blockFormat, &codeBlockId](const Segment& segment, bool codeBlock) {
         QTextBlockFormat format = codeBlock ? QTextBlockFormat() : blockFormat;
         if (codeBlock)
             format.setProperty(CodeBlockProperty, ++codeBlockId);
-        const int level = segment.value(QStringLiteral("quoteLevel")).toInt();
+        const int level = segment.quoteLevel;
         if (level > 0)
             format.setProperty(QTextFormat::BlockQuoteLevel, level);
         return format;
@@ -411,17 +416,16 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     bool firstBlock = true;
     bool afterCodeBlock = false;
 
-    for (const QVariant& entry : std::as_const(m_segments)) {
-        const QVariantMap segment = entry.toMap();
-        const bool codeBlock = segment.value(QStringLiteral("codeBlock")).toBool();
+    for (const Segment& segment : std::as_const(m_segments)) {
+        const bool codeBlock = segment.has(Segment::CodeBlock);
         m_hasCodeBlocks |= codeBlock;
-        m_hasQuotes |= segment.value(QStringLiteral("quoteLevel")).toInt() > 0;
+        m_hasQuotes |= segment.quoteLevel > 0;
 
         // A code block is always a paragraph of its own, so whatever follows
         // one starts a new paragraph too.
         if (firstBlock)
             cursor.setBlockFormat(blockFormatFor(segment, codeBlock));
-        else if (codeBlock || afterCodeBlock || segment.value(QStringLiteral("newBlock")).toBool())
+        else if (codeBlock || afterCodeBlock || segment.has(Segment::NewBlock))
             cursor.insertBlock(blockFormatFor(segment, codeBlock));
 
         firstBlock = false;
@@ -444,17 +448,17 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         // colour change no longer needs the document rebuilt.
         QTextCharFormat format;
 
-        if (segment.value(QStringLiteral("bold")).toBool())
+        if (segment.has(Segment::Bold))
             format.setFontWeight(QFont::Bold);
 
-        if (segment.value(QStringLiteral("italic")).toBool())
+        if (segment.has(Segment::Italic))
             format.setFontItalic(true);
-        if (segment.value(QStringLiteral("strikethrough")).toBool())
+        if (segment.has(Segment::Strikethrough))
             format.setFontStrikeOut(true);
-        if (segment.value(QStringLiteral("underline")).toBool())
+        if (segment.has(Segment::Underline))
             format.setFontUnderline(true);
 
-        if (segment.value(QStringLiteral("code")).toBool()) {
+        if (segment.has(Segment::Code)) {
             setCodeFont(format, m_codeFontFamily);
             format.setBackground(m_codeBackground);
             format.setProperty(CodeSpanProperty, true);
@@ -465,34 +469,20 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         if (codeBlock)
             setCodeFont(format, m_codeFontFamily);
 
-        // An explicit background is what a mention pill needs; today that is
-        // `a.mention { background-color }` in a stylesheet.
-        const QVariant background = segment.value(QStringLiteral("background"));
-        if (background.isValid() && background.value<QColor>().isValid())
-            format.setBackground(background.value<QColor>());
+        const auto role = ChatTextFormat::foregroundRole(segment, quoteLevelOf(cursor.block()));
+        if (segment.mention()) format.setBackground(m_mentionBackground);
+        if (role == ChatTextFormat::ForegroundRole::Mention) format.setForeground(m_mentionColor);
+        else if (role == ChatTextFormat::ForegroundRole::Link) format.setForeground(m_linkColor);
+        else if (role == ChatTextFormat::ForegroundRole::Quote) format.setForeground(m_quoteColor);
 
-        const QVariant color = segment.value(QStringLiteral("color"));
-        if (color.isValid() && color.value<QColor>().isValid())
-            format.setForeground(color.value<QColor>());
-
-        // A real anchor, so documentLayout()->anchorAt() can find it. The input
-        // highlighter skips this because you do not click links while typing.
-        //
-        // Unlike plain text, a link needs its colour in the segment. QSGTextNode's
-        // linkColor does not reach document text: addTextBlock picks the anchor
-        // colour for a fragment with no foreground
-        // (qquicktextnodeengine.cpp:1105), but addText() then resets it to the
-        // plain text colour (qquicktextnodeengine.cpp:138). Track these ranges
-        // so changing the link color only updates their foreground.
-        const QString href = segment.value(QStringLiteral("href")).toString();
+        // Link foreground must be explicit for QSGTextNode::addTextLayout.
+        const QString href = segment.href;
         if (!href.isEmpty()) {
             format.setAnchor(true);
             format.setAnchorHref(href);
-            if (!color.value<QColor>().isValid())
-                format.setForeground(m_linkColor);
         }
 
-        QString text = segment.value(QStringLiteral("text")).toString();
+        QString text = segment.text;
         // Code keeps its lines inside the one paragraph, so it frames as one.
         if (codeBlock)
             text.replace(QLatin1Char('\n'), QChar::LineSeparator);
@@ -500,11 +490,15 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         const int start = cursor.position();
         cursor.insertText(text, format);
         int kinds = 0;
-        if (!href.isEmpty() && !color.value<QColor>().isValid())
+        if (role == ChatTextFormat::ForegroundRole::Mention)
+            kinds |= MentionForegroundAppearance | MentionBackgroundAppearance;
+        else if (role == ChatTextFormat::ForegroundRole::Quote)
+            kinds |= QuoteAppearance;
+        if (role == ChatTextFormat::ForegroundRole::Link)
             kinds |= LinkAppearance;
-        if (segment.value(QStringLiteral("code")).toBool()) {
+        if (segment.has(Segment::Code)) {
             kinds |= CodeFontAppearance;
-            if (!background.value<QColor>().isValid())
+            if (!segment.mention())
                 kinds |= CodeBackgroundAppearance;
         }
         if (codeBlock)
@@ -546,28 +540,28 @@ void ChatTextItem::applyEmojiSizing()
 {
     bool emojiOnly = false;
     if (!m_segments.isEmpty()) {
-        const QVariantMap first = m_segments.first().toMap();
-        if (first.contains(QStringLiteral("sourceIsOnlyEmoji"))) {
-            emojiOnly = first.value(QStringLiteral("sourceIsOnlyEmoji")).toBool();
+        const Segment& first = m_segments.first();
+        if ((first.present & Segment::SourceIsOnlyEmoji)) {
+            emojiOnly = first.has(Segment::SourceIsOnlyEmoji);
         } else {
             // Structured samples may not originate from markdown. Reconstruct
             // their plain source and reject markup-bearing segments, rather than
             // classifying text after formatting has been stripped.
             QString source;
             bool formatted = false;
-            for (const QVariant& entry : std::as_const(m_segments)) {
-                const QVariantMap segment = entry.toMap();
-                if (segment.value(QStringLiteral("newBlock")).toBool())
+            for (const Segment& segment : std::as_const(m_segments)) {
+                if (segment.has(Segment::NewBlock))
                     source += QLatin1Char('\n');
-                source += segment.value(QStringLiteral("text")).toString();
-                formatted |= segment.value(QStringLiteral("bold")).toBool()
-                        || segment.value(QStringLiteral("italic")).toBool()
-                        || segment.value(QStringLiteral("strikethrough")).toBool()
-                        || segment.value(QStringLiteral("underline")).toBool()
-                        || segment.value(QStringLiteral("code")).toBool()
-                        || segment.value(QStringLiteral("codeBlock")).toBool()
-                        || segment.value(QStringLiteral("quoteLevel")).toInt() > 0
-                        || !segment.value(QStringLiteral("href")).toString().isEmpty();
+                source += segment.text;
+                formatted |= segment.has(Segment::Bold)
+                        || segment.has(Segment::Italic)
+                        || segment.has(Segment::Strikethrough)
+                        || segment.has(Segment::Underline)
+                        || segment.has(Segment::Code)
+                        || segment.has(Segment::CodeBlock)
+                        || segment.quoteLevel > 0
+                        || segment.mention()
+                        || !segment.href.isEmpty();
             }
             emojiOnly = !formatted && Markdown::isOnlyEmoji(source);
         }
@@ -1642,7 +1636,7 @@ void ChatTextItem::setCodeFontFamily(const QString& family)
 
     m_codeFontFamily = family;
     updateAppearance(CodeFontAppearance, [this](QTextCharFormat& format) {
-        format.setFontFamilies({m_codeFontFamily});
+        setCodeFont(format, m_codeFontFamily);
     });
     emit codeFontFamilyChanged();
 }

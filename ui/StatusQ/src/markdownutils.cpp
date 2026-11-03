@@ -64,8 +64,8 @@ MarkdownUtils::MarkdownUtils(QObject* parent)
 {
 }
 
-QVariantList MarkdownUtils::toChatTextSegments(const QString& text, const QVariantMap& mentions,
-                                  const QVariantMap& colors, bool formatUnclosedCodeFence) const
+QList<ChatTextSegment> MarkdownUtils::toChatTextSegments(const QString& text, const QVariantMap& mentions,
+                                  bool formatUnclosedCodeFence) const
 {
     using Markdown::Node;
     using Markdown::NodeKind;
@@ -74,7 +74,7 @@ QVariantList MarkdownUtils::toChatTextSegments(const QString& text, const QVaria
     const Node ast = Markdown::parse(text, options);
     QHash<int, QPair<QString, QString>> names;
     collectTextMentions(ast, mentions, names);
-    QVariantList segments;
+    QList<ChatTextSegment> segments;
     bool newBlock = false;
     bool afterCode = false;
 
@@ -84,65 +84,52 @@ QVariantList MarkdownUtils::toChatTextSegments(const QString& text, const QVaria
     const auto finishParagraph = [&segments, &newBlock]() {
         if (segments.isEmpty() || newBlock)
             return;
-        QVariantMap last = segments.last().toMap();
-        if (last.value("codeBlock"_L1).toBool())
+        ChatTextSegment& last = segments.last();
+        if (last.has(ChatTextSegment::CodeBlock))
             return;
-        QString content = last.value("text"_L1).toString();
-        if (content.endsWith('\n')) {
+        QString& content = last.text;
+        if (content.endsWith('\n'))
             content.chop(1);
-            last.insert("text"_L1, content);
-            segments.last() = last;
-        }
     };
 
-    const auto applyColor = [&colors](QVariantMap& format, QLatin1StringView target,
-                                      QLatin1StringView source) {
-        const QColor color = QColor::fromString(colorAt(colors, source));
-        if (color.isValid())
-            format.insert(target, color);
-    };
-    std::function<void(const Node&, QVariantMap, int)> walk;
-    walk = [&](const Node& node, QVariantMap format, int quoteLevel) {
+    std::function<void(const Node&, ChatTextSegment, int)> walk;
+    walk = [&](const Node& node, ChatTextSegment format, int quoteLevel) {
         if (node.kind == NodeKind::Delimiter)
             return;
-        if (node.kind == NodeKind::Strong) format.insert("bold"_L1, true);
-        if (node.kind == NodeKind::Emphasis) format.insert("italic"_L1, true);
-        if (node.kind == NodeKind::Strikethrough) format.insert("strikethrough"_L1, true);
-        if (node.kind == NodeKind::CodeSpan) format.insert("code"_L1, true);
+        if (node.kind == NodeKind::Strong) format.setBold(true);
+        if (node.kind == NodeKind::Emphasis) format.setItalic(true);
+        if (node.kind == NodeKind::Strikethrough) format.setStrikethrough(true);
+        if (node.kind == NodeKind::CodeSpan) format.setCode(true);
         if (node.kind == NodeKind::QuoteBlock) {
             finishParagraph();
             ++quoteLevel;
             newBlock = !segments.isEmpty();
-            applyColor(format, "color"_L1, "quote"_L1);
         }
         if (node.kind == NodeKind::Link || node.kind == NodeKind::WalletLink) {
-            format.insert("href"_L1, node.kind == NodeKind::WalletLink
-                          ? Markdown::kSendViaChatPrefix + node.destination : node.destination);
-            format.insert("underline"_L1, true);
-            format.remove("color"_L1);
+            format.href = node.kind == NodeKind::WalletLink
+                          ? Markdown::kSendViaChatPrefix + node.destination : node.destination;
+            format.setUnderline(true);
         }
         if (node.kind == NodeKind::Text || node.kind == NodeKind::Mention
                 || node.kind == NodeKind::CodeBlock) {
             QString content = node.literal;
             if (node.kind == NodeKind::Mention) {
+                format.setMention(true);
                 const auto mention = names.value(int(node.start), {"@mention"_L1, {}});
                 content = mention.first;
-                if (mention.second != "0x00001"_L1)
-                    format.insert("href"_L1, mention.second);
-                applyColor(format, "color"_L1, "mention"_L1);
-                applyColor(format, "background"_L1, "mentionBackground"_L1);
+                format.href = mention.second == "0x00001"_L1 ? QString() : mention.second;
             } else if (node.kind == NodeKind::CodeBlock) {
                 finishParagraph();
                 content = Markdown::toPlainText(node);
-                format.insert("codeBlock"_L1, true);
+                format.setCodeBlock(true);
             }
             if (afterCode && content.startsWith('\n'))
                 content.remove(0, 1);
             afterCode = false;
             if (!content.isEmpty() || node.kind == NodeKind::CodeBlock) {
-                format.insert("text"_L1, content);
-                format.insert("quoteLevel"_L1, quoteLevel);
-                format.insert("newBlock"_L1, newBlock);
+                format.text = content;
+                format.quoteLevel = quoteLevel;
+                format.setNewBlock(newBlock);
                 segments.append(format);
                 newBlock = false;
             }
@@ -161,9 +148,7 @@ QVariantList MarkdownUtils::toChatTextSegments(const QString& text, const QVaria
     // Keep the source classification before delimiters and quote markers are
     // removed. Formatting-only emoji messages must not get extra enlargement.
     if (!segments.isEmpty()) {
-        QVariantMap first = segments.first().toMap();
-        first.insert("sourceIsOnlyEmoji"_L1, Markdown::isOnlyEmoji(text));
-        segments.first() = first;
+        segments.first().setSourceIsOnlyEmoji(Markdown::isOnlyEmoji(text));
     }
     return segments;
 }
