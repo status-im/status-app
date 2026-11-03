@@ -79,7 +79,7 @@ void LanguageService::fetchAvailableSpellcheckLanguages()
 
     if (m_availableSpellcheckLanguages.isEmpty())
         qCWarning(languageService) << Q_FUNC_INFO << "!!! Didn't find any dictionary files to offer";
-
+    qCDebug(languageService) << Q_FUNC_INFO << "!!! Available spellcheck languages:" << m_availableSpellcheckLanguages;
     emit availableSpellcheckLanguagesChanged();
 }
 
@@ -97,12 +97,19 @@ void LanguageService::setActiveSpellcheckLanguages(const QSet<QString>& dictLang
     if (active == m_activeSpellcheckLanguages)
         return;
     m_activeSpellcheckLanguages = active;
+    qCDebug(languageService) << Q_FUNC_INFO << "!!! Active spellcheck languages:" << m_activeSpellcheckLanguages;
     emit activeSpellcheckLanguagesChanged();
 }
 
-QSet<QString> LanguageService::activeSpellcheckLanguages() const
+QStringList LanguageService::activeSpellcheckLanguages() const
 {
-    return m_activeSpellcheckLanguages;
+    QStringList result{m_activeSpellcheckLanguages.cbegin(), m_activeSpellcheckLanguages.cend()};
+    std::sort(result.begin(), result.end(), [](const auto& leftCode, const auto& rightCode) {
+        QLocale locLeft(leftCode);
+        QLocale locRight(rightCode);
+        return QString::localeAwareCompare(locLeft.nativeLanguageName(), locRight.nativeLanguageName()) < 0;
+    });
+    return result;
 }
 
 void LanguageService::toggleSpellcheckLanguage(const QString &code, bool enabled)
@@ -169,8 +176,6 @@ void LanguageService::load()
         activeDicts.append("en_US"_L1);
     }
     settings.endGroup();
-
-    qCDebug(languageService) << Q_FUNC_INFO << "!!! Active spellcheck languages:" << activeDicts;
 
     setActiveSpellcheckLanguages({activeDicts.cbegin(), activeDicts.cend()});
 }

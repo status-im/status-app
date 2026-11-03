@@ -427,13 +427,22 @@ qt_add_resources(StatusQ "statusq_dictionaries"
     PREFIX "/StatusQ/dictionaries"
     BASE "${CMAKE_CURRENT_SOURCE_DIR}/src/assets/dictionaries"
     FILES
-        src/assets/dictionaries/en_US.aff
-        src/assets/dictionaries/en_US.dic
         src/assets/dictionaries/cs_CZ.aff
         src/assets/dictionaries/cs_CZ.dic
+        src/assets/dictionaries/en_US.aff
+        src/assets/dictionaries/en_US.dic
+        src/assets/dictionaries/es_ES.aff
+        src/assets/dictionaries/es_ES.dic
+        src/assets/dictionaries/fr.aff
+        src/assets/dictionaries/fr.dic
+        src/assets/dictionaries/ko_KR.aff
+        src/assets/dictionaries/ko_KR.dic
+        src/assets/dictionaries/uk_UA.aff
+        src/assets/dictionaries/uk_UA.dic
         src/assets/dictionaries/HUNSPELL_COPYING.MPL
         src/assets/dictionaries/SOURCES
 )
+
 qt_add_shaders(StatusQ "statusq_shaders"
     # the batch renderer needs this variant of material vertex shaders
     BATCHABLE

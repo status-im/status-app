@@ -15,7 +15,7 @@ class LanguageService : public QObject
     Q_PROPERTY(bool spellCheckEnabled READ spellCheckEnabled WRITE setSpellCheckEnabled NOTIFY spellCheckEnabledChanged FINAL)
     Q_PROPERTY(bool spellCheckSkipCapitalizedWords READ spellCheckSkipCapitalizedWords WRITE setSpellCheckSkipCapitalizedWords NOTIFY spellCheckSkipCapitalizedWordsChanged FINAL)
     Q_PROPERTY(QSet<QString> availableSpellcheckLanguages READ availableSpellcheckLanguages NOTIFY availableSpellcheckLanguagesChanged FINAL)
-    Q_PROPERTY(QSet<QString> activeSpellcheckLanguages READ activeSpellcheckLanguages NOTIFY activeSpellcheckLanguagesChanged FINAL)
+    Q_PROPERTY(QStringList activeSpellcheckLanguages READ activeSpellcheckLanguages NOTIFY activeSpellcheckLanguagesChanged FINAL)
     Q_PROPERTY(QString spellCheckDictsDir READ spellCheckDictsDir NOTIFY availableSpellcheckLanguagesChanged FINAL)
 
 public:
@@ -49,7 +49,7 @@ private:
     QSet<QString> availableSpellcheckLanguages() const;
 
     QSet<QString> m_activeSpellcheckLanguages;
-    QSet<QString> activeSpellcheckLanguages() const;
+    QStringList activeSpellcheckLanguages() const;
     void setActiveSpellcheckLanguages(const QSet<QString>& dictLangs);
 
     QString spellCheckDictsDir() const;

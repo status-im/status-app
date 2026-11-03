@@ -1301,13 +1301,13 @@ Control {
 
             threadButton {
                 visible: root.threadsEnabled && !root.isThread && !root.isEdit
-                onVisibleChanged: if (!visible) checked = false
+                onVisibleChanged: if (!visible) threadButton.checked = false
                 onToggled: threadButton.checked && messageInputField.length > 0 ? threadNameInput.item?.forceActiveFocus() : messageInputField.forceActiveFocus()
             }
 
             threadReplyButton {
                 visible: root.threadsEnabled && root.isThread && !root.isEdit
-                onVisibleChanged: if (!visible) checked = false
+                onVisibleChanged: if (!visible) threadReplyButton.checked = false
                 tooltipText: qsTr("Also send to %1").arg('#' + root.chatName)
             }
         }

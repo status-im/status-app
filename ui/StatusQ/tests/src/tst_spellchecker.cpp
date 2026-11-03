@@ -1,4 +1,5 @@
 #include <QDateTime>
+#include <QElapsedTimer>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -8,6 +9,8 @@
 #include <QTest>
 
 #include <StatusQ/spellchecker.h>
+
+using namespace Qt::Literals::StringLiterals;
 
 class TestSpellChecker : public QObject
 {
@@ -199,6 +202,106 @@ private slots:
         QVERIFY(checker.issues().isEmpty());
     }
 
+    void disablingCancelsPendingCheck()
+    {
+        SpellChecker checker;
+        checker.setSpellCheckDictsDir(m_dictionaries.path());
+        QSignalSpy finished(&checker, &SpellChecker::checkFinished);
+
+        checker.setText(QStringLiteral("helo "));
+        QVERIFY(checker.checkPending());
+        checker.setEnabled(false);
+        QVERIFY(!checker.checkPending());
+        QTest::qWait(200);
+        QCOMPARE(finished.count(), 0);
+        QVERIFY(checker.issues().isEmpty());
+
+        checker.setEnabled(true);
+        QTRY_COMPARE(finished.count(), 1);
+        QCOMPARE(misspelledWords(checker), QStringList{QStringLiteral("helo")});
+    }
+
+    void disablingAbortsRunningCheck()
+    {
+        SpellChecker checker;
+        checker.setSpellCheckDictsDir(m_dictionaries.path());
+        QSignalSpy finished(&checker, &SpellChecker::checkFinished);
+        checker.setText(QStringLiteral("hello "));
+        QTRY_COMPARE(finished.count(), 1);
+        finished.clear();
+
+        const QString text = QStringLiteral("hello ").repeated(3000000);
+        QElapsedTimer timer;
+        timer.start();
+        checker.setText(text);
+        QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 60000);
+        const auto fullCheck = timer.elapsed();
+        finished.clear();
+        checker.setText(QString());
+
+        checker.setText(text);
+        QTest::qWait(100); // let the worker start the long check
+        timer.restart();
+        checker.setEnabled(false);
+        checker.setText(QStringLiteral("wrld "));
+        checker.setEnabled(true);
+
+        // Without cancellation the worker would finish the long check first.
+        QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 60000);
+        QCOMPARE_LT(timer.elapsed(), fullCheck / 2);
+        QCOMPARE(misspelledWords(checker), QStringList{QStringLiteral("wrld")});
+    }
+
+    void disablingFreesDictionaries()
+    {
+        QTemporaryDir directory;
+        QVERIFY(directory.isValid());
+        for (const auto& file : {QStringLiteral("en_US.aff"), QStringLiteral("en_US.dic")})
+            QVERIFY(QFile::copy(m_dictionaries.filePath(file), directory.filePath(file)));
+
+        SpellChecker checker;
+        checker.setSpellCheckDictsDir(directory.path());
+        QSignalSpy finished(&checker, &SpellChecker::checkFinished);
+        checker.setText(QStringLiteral("helo "));
+        QTRY_COMPARE(finished.count(), 1);
+        QCOMPARE(misspelledWords(checker), QStringList{QStringLiteral("helo")});
+
+        // Loaded dictionaries would keep working; freed ones must be reloaded.
+        checker.setEnabled(false);
+        QVERIFY(QFile::remove(directory.filePath(QStringLiteral("en_US.dic"))));
+        finished.clear();
+        QTest::ignoreMessage(QtWarningMsg, "!!! Skipping incomplete spell-check dictionary: \"en_US\"");
+        checker.setEnabled(true);
+        QTRY_COMPARE(finished.count(), 1);
+        QVERIFY(checker.issues().isEmpty());
+    }
+
+    void disablingOneEditorKeepsSharedDictionaries()
+    {
+        QTemporaryDir directory;
+        QVERIFY(directory.isValid());
+        for (const auto& file : {QStringLiteral("en_US.aff"), QStringLiteral("en_US.dic")})
+            QVERIFY(QFile::copy(m_dictionaries.filePath(file), directory.filePath(file)));
+
+        SpellChecker first;
+        SpellChecker second;
+        first.setSpellCheckDictsDir(directory.path());
+        second.setSpellCheckDictsDir(directory.path());
+        QSignalSpy firstFinished(&first, &SpellChecker::checkFinished);
+        QSignalSpy secondFinished(&second, &SpellChecker::checkFinished);
+        first.setText(QStringLiteral("helo "));
+        second.setText(QStringLiteral("helo "));
+        QTRY_COMPARE(firstFinished.count(), 1);
+        QTRY_COMPARE(secondFinished.count(), 1);
+
+        first.setEnabled(false);
+        QVERIFY(QFile::remove(directory.filePath(QStringLiteral("en_US.dic"))));
+        secondFinished.clear();
+        second.setText(QStringLiteral("wrld "));
+        QTRY_COMPARE(secondFinished.count(), 1);
+        QCOMPARE(misspelledWords(second), QStringList{QStringLiteral("wrld")});
+    }
+
     void suggestionsPreferUserLanguage_data()
     {
         QTest::addColumn<QString>("preferredLanguage");
@@ -299,6 +402,76 @@ private slots:
         checker.requestSuggestions(0);
         QTRY_VERIFY(!checker.suggestionsPending());
         QCOMPARE(checker.suggestions(), (QStringList{"first", "second", "third", "fourth", "fifth"}));
+    }
+
+    void bundledNonLatinDictionariesPreserveMisspellings_data()
+    {
+        QTest::addColumn<QStringList>("languages");
+        QTest::newRow("english") << QStringList{"en_US"_L1};
+        QTest::newRow("korean") << QStringList{"en_US"_L1, "ko_KR"_L1};
+        QTest::newRow("ukrainian") << QStringList{"en_US"_L1, "uk_UA"_L1};
+        QTest::newRow("both") << QStringList{"en_US"_L1, "ko_KR"_L1, "uk_UA"_L1};
+    }
+
+    void bundledNonLatinDictionariesPreserveMisspellings()
+    {
+        QFETCH(QStringList, languages);
+        SpellChecker checker;
+        checker.setSpellCheckDictsDir(":/StatusQ/dictionaries"_L1);
+        checker.setLanguages({languages.cbegin(), languages.cend()});
+        QSignalSpy finished(&checker, &SpellChecker::checkFinished);
+        QSignalSpy errors(&checker, &SpellChecker::errorOccurred);
+        checker.setText(QStringLiteral("hello helo zzzzz "));
+        QTRY_COMPARE(finished.count(), 1);
+        QCOMPARE(errors.count(), 0);
+        QCOMPARE(misspelledWords(checker), (QStringList{"helo", "zzzzz"}));
+
+        checker.requestSuggestions(6);
+        QTRY_VERIFY(!checker.suggestionsPending());
+        QVERIFY(checker.suggestions().contains(QStringLiteral("hello")));
+        const auto suggestions = checker.suggestions();
+        checker.setPreferredLanguage("ko"_L1);
+        checker.requestSuggestions(6);
+        QTRY_VERIFY(!checker.suggestionsPending());
+        QCOMPARE(checker.suggestions(), suggestions);
+        QCOMPARE(errors.count(), 0);
+    }
+
+    void bundledNativeScriptWords_data()
+    {
+        QTest::addColumn<QLatin1String>("language");
+        QTest::addColumn<QString>("correctWord");
+        QTest::addColumn<QString>("incorrectWord");
+        QTest::newRow("korean")
+            << "ko_KR"_L1 << QString::fromUtf8("한국어")
+            << QString::fromUtf8("됴됴됴");
+        QTest::newRow("ukrainian")
+            << "uk_UA"_L1 << QString::fromUtf8("привіт")
+            << QString::fromUtf8("абвгґдеєжзиіїй");
+        QTest::newRow("czech")
+            << "cs_CZ"_L1 << QString::fromUtf8("kůň")
+            << QString::fromUtf8("kúň");
+    }
+
+    void bundledNativeScriptWords()
+    {
+        QFETCH(QLatin1String, language);
+        QFETCH(QString, correctWord);
+        QFETCH(QString, incorrectWord);
+        SpellChecker checker;
+        checker.setSpellCheckDictsDir(":/StatusQ/dictionaries"_L1);
+        checker.setLanguages({"ko_KR"_L1, "uk_UA"_L1, "cs_CZ"_L1});
+        QSignalSpy finished(&checker, &SpellChecker::checkFinished);
+        QSignalSpy errors(&checker, &SpellChecker::errorOccurred);
+        checker.setText(correctWord + ' '_L1 + incorrectWord + ' '_L1);
+        QTRY_COMPARE(finished.count(), 1);
+        QCOMPARE(errors.count(), 0);
+        QCOMPARE(misspelledWords(checker), QStringList{incorrectWord});
+
+        finished.clear();
+        checker.setLanguages({language});
+        QTRY_COMPARE(finished.count(), 1);
+        QCOMPARE(misspelledWords(checker), QStringList{incorrectWord});
     }
 };
 

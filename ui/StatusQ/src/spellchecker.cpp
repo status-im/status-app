@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QHash>
 #include <QLoggingCategory>
+#include <QPointer>
 #include <QRegularExpression>
 #include <QTemporaryDir>
 #include <QThread>
@@ -58,34 +59,83 @@ QByteArray hunspellPath(const QString& path)
 
 constexpr auto kMaxSuggestions = 5;
 
+bool dictionarySupportsScripts(QStringView language, const QSet<QChar::Script>& scripts)
+{
+    // These are the scripts of the bundled dictionaries. Leave other scripts
+    // unrestricted for callers supplying their own dictionary directories.
+    switch (QLocale(language).script()) {
+    case QLocale::LatinScript:
+        return scripts.contains(QChar::Script_Latin);
+    case QLocale::CyrillicScript:
+        return scripts.contains(QChar::Script_Cyrillic);
+    case QLocale::KoreanScript:
+        return scripts.contains(QChar::Script_Hangul) || scripts.contains(QChar::Script_Han);
+    default:
+        return true;
+    }
+}
+
+QSet<QChar::Script> wordScripts(QStringView word)
+{
+    QSet<QChar::Script> scripts;
+    for (const auto codePoint : word.toUcs4()) {
+        if (QChar::isLetter(codePoint))
+            scripts.insert(QChar::script(codePoint));
+    }
+    return scripts;
+}
+
 } // namespace
 
 class SpellCheckWorker : public QObject
 {
     Q_OBJECT
 public:
+    using Token = QSharedPointer<const QAtomicInteger<quint64>>;
+
     ~SpellCheckWorker() {
-        qDeleteAll(m_dictionaries);
-        m_dictionaries.clear();
+        freeDictionaries();
+    }
+
+    static bool cancelled(const Token& token, quint64 value)
+    {
+        return token->loadRelaxed() != value
+            || QThread::currentThread()->isInterruptionRequested();
+    }
+
+    void use(quint64 id)
+    {
+        m_users.insert(id);
+    }
+
+    // Frees the dictionaries once no enabled checker needs them; they reload lazily.
+    void release(quint64 id)
+    {
+        m_users.remove(id);
+        if (m_users.isEmpty() && !m_dictionaries.isEmpty()) {
+            freeDictionaries();
+            qCDebug(spellChecker) << "!!! Released spell-check dictionaries";
+        }
     }
 
     void configure(const QString& directory, const QSet<QString>& languages)
     {
         if (m_directory == QDir(directory) && m_languages == languages)
             return;
-        qDeleteAll(m_dictionaries);
-        m_dictionaries.clear();
-        m_dictionaryLanguages.clear();
-        m_error.clear();
+        freeDictionaries();
         if (m_directory != QDir(directory))
             m_extractedDictionaries.reset();
         m_directory = QDir(directory);
         m_languages = languages;
     }
 
-    void check(quint64 id, quint64 generation, const QString& text, int incompletePosition,
-               bool skipCapitalized)
+    void check(quint64 id, quint64 generation, const Token& token, const QString& text,
+               int incompletePosition, bool skipCapitalized)
     {
+        // A superseded result is ignored by the checker, which reschedules if needed.
+        const auto abandon = [&] { emit checked(id, generation, {}, {}); };
+        if (cancelled(token, generation))
+            return abandon();
         if (!load()) {
             emit checked(id, generation, {}, m_error);
             return;
@@ -101,8 +151,8 @@ public:
         int previousEnd = -1;
         QHash<QString, bool> checkedWords;
         while (matches.hasNext()) {
-            if (QThread::currentThread()->isInterruptionRequested())
-                return;
+            if (cancelled(token, generation))
+                return abandon();
             const auto match = matches.next();
             const int start = match.capturedStart();
             const int end = match.capturedEnd();
@@ -137,13 +187,16 @@ public:
             if (stdWord.size() >= MAXWORDLEN)
                 continue;
             auto found = checkedWords.constFind(word);
-            const auto spellcheckAny = [this, &stdWord](const auto& word) -> bool {
-                return std::any_of(m_dictionaries.cbegin(), m_dictionaries.cend(), [&stdWord](auto dict) {
-                    const auto result = dict->spell(stdWord);
-                    return result;
-                });
+            const auto spellcheckAny = [this, &stdWord, &word]() {
+                const auto scripts = wordScripts(word);
+                for (qsizetype i = 0; i < m_dictionaries.size(); ++i) {
+                    if (dictionarySupportsScripts(m_dictionaryLanguages[i], scripts)
+                        && m_dictionaries[i]->spell(stdWord))
+                        return true;
+                }
+                return false;
             };
-            const bool correct = found != checkedWords.cend() ? *found : spellcheckAny(word);
+            const bool correct = found != checkedWords.cend() ? *found : spellcheckAny();
             checkedWords.insert(word, correct);
             if (duplicate || !correct) {
                 issues.append(QVariantMap{
@@ -154,9 +207,14 @@ public:
         emit checked(id, generation, issues, {});
     }
 
-    void suggest(quint64 id, quint64 request, const QString& word, const QString& preferredLanguage)
+    void suggest(quint64 id, quint64 request, const Token& token, const QString& word,
+                 const QString& preferredLanguage)
     {
         QStringList suggestions;
+        if (cancelled(token, request)) {
+            emit suggested(id, request, {}, {});
+            return;
+        }
         if (load()) {
             const QLocale preferred(preferredLanguage);
             const auto priority = [&preferred](const QString& code) {
@@ -174,8 +232,13 @@ public:
                 return aPriority == bPriority ? a < b : aPriority < bPriority;
             });
             const auto stdWord = word.toStdString();
+            const auto scripts = wordScripts(word);
             qCDebug(spellChecker) << Q_FUNC_INFO << "!!! Getting suggestions for word:" << word << "using languages in order:" << languages;
             for (const auto& language : std::as_const(languages)) {
+                if (cancelled(token, request))
+                    break;
+                if (!dictionarySupportsScripts(language, scripts))
+                    continue;
                 const auto index = m_dictionaryLanguages.indexOf(language);
                 const auto stdSuggestions = m_dictionaries[index]->suggest(stdWord);
                 for (const auto& suggestion: stdSuggestions) {
@@ -198,6 +261,14 @@ signals:
     void suggested(quint64 id, quint64 request, const QStringList& suggestions, const QString& error);
 
 private:
+    void freeDictionaries()
+    {
+        qDeleteAll(m_dictionaries);
+        m_dictionaries.clear();
+        m_dictionaryLanguages.clear();
+        m_error.clear();
+    }
+
     bool load()
     {
         if (!m_dictionaries.isEmpty())
@@ -275,6 +346,7 @@ private:
     QDir m_directory;
     QString m_error;
     QSet<QString> m_languages;
+    QSet<quint64> m_users;
     std::unique_ptr<QTemporaryDir> m_extractedDictionaries;
 };
 
@@ -302,9 +374,17 @@ public:
     SpellCheckWorker* worker;
 };
 
+QPointer<SpellCheckEngine>& engineInstance()
+{
+    static QPointer<SpellCheckEngine> engine;
+    return engine;
+}
+
 SpellCheckWorker* worker()
 {
-    static SpellCheckEngine* engine = new SpellCheckEngine;
+    auto& engine = engineInstance();
+    if (!engine)
+        engine = new SpellCheckEngine;
     return engine->worker;
 }
 
@@ -317,6 +397,29 @@ SpellChecker::SpellChecker(QObject* parent) : QObject(parent)
     m_timer.setSingleShot(true);
     m_timer.setInterval(30);
     connect(&m_timer, &QTimer::timeout, this, &SpellChecker::dispatch);
+}
+
+SpellChecker::~SpellChecker()
+{
+    bumpGeneration();
+    m_suggestionToken->storeRelaxed(++m_suggestionRequest);
+    releaseDictionaries();
+}
+
+void SpellChecker::bumpGeneration()
+{
+    m_checkToken->storeRelaxed(++m_generation);
+}
+
+void SpellChecker::releaseDictionaries()
+{
+    // The engine is gone once the application is being destroyed.
+    if (!m_workerUser || !engineInstance())
+        return;
+    m_workerUser = false;
+    auto target = engineInstance()->worker;
+    const auto id = m_id;
+    QMetaObject::invokeMethod(target, [target, id] { target->release(id); }, Qt::QueuedConnection);
 }
 
 void SpellChecker::setCheckPending(bool value)
@@ -334,7 +437,7 @@ bool SpellChecker::supported() const
 
 void SpellChecker::invalidate()
 {
-    ++m_generation;
+    bumpGeneration();
     clearSuggestions();
     setCheckPending(supported() && !m_text.isEmpty());
     if (!m_issues.isEmpty()) {
@@ -352,17 +455,22 @@ void SpellChecker::dispatch()
     if (m_inFlight || !m_checkPending || m_composing || !supported() || m_text.isEmpty())
         return;
     m_inFlight = true;
+    m_workerUser = true;
     auto target = worker();
     const auto directory = m_spellCheckDictsDir;
     const auto languages = m_languages;
     const auto id = m_id;
     const auto generation = m_generation;
+    const SpellCheckWorker::Token token = m_checkToken;
     const auto text = m_text;
     const auto incompletePosition = m_incompleteEnd;
     const auto skip = m_skipCapitalizedWords;
     QMetaObject::invokeMethod(target, [=] {
-        target->configure(directory, languages);
-        target->check(id, generation, text, incompletePosition, skip);
+        if (!SpellCheckWorker::cancelled(token, generation)) {
+            target->use(id);
+            target->configure(directory, languages);
+        }
+        target->check(id, generation, token, text, incompletePosition, skip);
     }, Qt::QueuedConnection);
 }
 
@@ -372,6 +480,8 @@ void SpellChecker::setEnabled(bool value)
         return;
     m_enabled = value;
     invalidate();
+    if (!m_enabled)
+        releaseDictionaries();
     emit enabledChanged();
 }
 
@@ -423,7 +533,7 @@ void SpellChecker::setComposing(bool value)
     if (m_composing == value)
         return;
     m_composing = value;
-    ++m_generation;
+    bumpGeneration();
     clearSuggestions();
     m_timer.stop();
     if (!value && m_checkPending)
@@ -502,7 +612,7 @@ void SpellChecker::setText(const QString& text)
         m_incompleteEnd = tokenEnd;
     }
 
-    ++m_generation;
+    bumpGeneration();
     clearSuggestions();
     if (m_issues != retained) {
         m_issues = retained;
@@ -520,7 +630,7 @@ void SpellChecker::recheck()
 {
     m_incompleteStart = -1;
     m_incompleteEnd = -1;
-    ++m_generation;
+    bumpGeneration();
     clearSuggestions();
     setCheckPending(supported() && !m_text.isEmpty());
     if (m_checkPending && !m_composing)
@@ -553,7 +663,7 @@ void SpellChecker::completeWordIfCaretLeft()
     m_incompleteStart = -1;
     m_incompleteEnd = -1;
     // Results excluding the word are now stale; unaffected underlines stay.
-    ++m_generation;
+    bumpGeneration();
     setCheckPending(supported() && !m_text.isEmpty());
     if (m_checkPending && !m_composing)
         m_timer.start();
@@ -586,6 +696,7 @@ QVariantMap SpellChecker::issueAt(int position) const
 void SpellChecker::clearSuggestions()
 {
     ++m_suggestionRequest;
+    m_suggestionToken->storeRelaxed(m_suggestionRequest);
     m_suggestions.clear();
     m_suggestionsPending = false;
     m_suggestionStart = -1;
@@ -612,19 +723,24 @@ void SpellChecker::requestSuggestions(int position)
 
 void SpellChecker::dispatchSuggestions()
 {
-    if (m_suggestionsInFlight)
+    if (m_suggestionsInFlight || !m_enabled)
         return;
     m_suggestionsInFlight = true;
+    m_workerUser = true;
     auto target = worker();
     const auto directory = m_spellCheckDictsDir;
     const auto languages = m_languages;
     const auto id = m_id;
     const auto request = m_suggestionRequest;
+    const SpellCheckWorker::Token token = m_suggestionToken;
     const auto word = m_suggestionWord;
     const auto preferredLanguage = m_preferredLanguage;
     QMetaObject::invokeMethod(target, [=] {
-        target->configure(directory, languages);
-        target->suggest(id, request, word, preferredLanguage);
+        if (!SpellCheckWorker::cancelled(token, request)) {
+            target->use(id);
+            target->configure(directory, languages);
+        }
+        target->suggest(id, request, token, word, preferredLanguage);
     }, Qt::QueuedConnection);
 }
 

@@ -27,7 +27,7 @@ SplitView {
             SplitView.fillHeight: true
             contentWidth: parent.width - 150
 
-            availableLanguages: ["de", "cs", "en", "en_CA", "ko", "ar", "fr", "fr_CA", "pt_BR", "pt", "uk", "ja", "el"]
+            availableLanguages: ["de", "cs", "en", "en_CA", "en_US", "ko", "ar", "fr", "fr_CA", "pt_BR", "pt", "uk", "ja", "el"]
             currentLanguage: "en"
 
             availableSpellcheckLanguages: LanguageService.availableSpellcheckLanguages
