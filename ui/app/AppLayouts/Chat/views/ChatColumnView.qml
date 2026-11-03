@@ -93,7 +93,7 @@ Item {
 
     signal openStickerPackPopup(string stickerPackId)
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
-    signal openThreadRequested(string threadId, string threadName)
+    signal openThreadRequested(string threadId, string threadName, string parentMessageId)
     signal renameThreadRequested(string threadId, string threadName)
 
     // Unfurling related requests:
@@ -141,13 +141,6 @@ Item {
             chatRepeater.forceActiveFocus()
     }
 
-    Connections {
-        target: d.activeMessagesStore.messageModule
-
-        function onThreadOpenRequested(threadId, threadName) {
-            root.openThreadRequested(threadId, threadName)
-        }
-    }
 
     QtObject {
         id: d
@@ -688,11 +681,7 @@ Item {
                     if (root.threadsFeatureEnabled
                             && Utils.isThreadSupportedChatType(root.activeChatType)
                             && !d.activeMessagesStore.threadId) {
-                        if (threadId) {
-                            root.openThreadRequested(threadId, threadName)
-                            return
-                        }
-                        d.activeMessagesStore.createThread(parentMessageId)
+                        root.openThreadRequested(threadId, threadName, parentMessageId)
                     }
                 }
                 onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)

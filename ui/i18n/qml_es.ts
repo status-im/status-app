@@ -3414,8 +3414,16 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Couldn&apos;t send thread reply. Try again.</source>
+        <translation>No se pudo enviar la respuesta al hilo. Inténtalo de nuevo.</translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation>Buscar</translation>
+    </message>
+    <message>
+        <source>New thread</source>
+        <translation>Nuevo hilo</translation>
     </message>
     <message>
         <source>No pinned messages found</source>
@@ -11723,6 +11731,10 @@ al cargar</translation>
         <translation>Crear hilo</translation>
     </message>
     <message>
+        <source>Open thread</source>
+        <translation>Abrir hilo</translation>
+    </message>
+    <message>
         <source>Edit</source>
         <translation>Editar</translation>
     </message>
@@ -16617,11 +16629,11 @@ al cargar</translation>
     <name>StatusChatInput</name>
     <message>
         <source>Reply in %1, also send to %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Responder en %1 y enviar también a %2</translation>
     </message>
     <message>
         <source>Reply in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Responder en %1</translation>
     </message>
     <message>
         <source>Type something</source>
@@ -16672,19 +16684,19 @@ al cargar</translation>
     </message>
     <message>
         <source>Also send to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Enviar también a %1</translation>
     </message>
     <message>
         <source>Confirm</source>
-        <translation type="unfinished">Confirmar</translation>
+        <translation>Confirmar</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Responder</translation>
+        <translation>Responder</translation>
     </message>
     <message>
         <source>Send</source>
-        <translation type="unfinished">Enviar</translation>
+        <translation>Enviar</translation>
     </message>
 </context>
 <context>
@@ -18465,20 +18477,20 @@ Esta acción no se puede deshacer.</translation>
     </message>
     <message>
         <source>Couldn&apos;t rename thread: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo cambiar el nombre del hilo: %1</translation>
     </message>
     <message>
         <source>Thread name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nombre del hilo</translation>
     </message>
     <message>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
-        <translation type="unfinished">en %1</translation>
+        <translation>en %1</translation>
     </message>
     <message>
         <source>Renaming...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cambiando el nombre...</translation>
     </message>
     <message>
         <source>Deleting...</source>
@@ -18486,7 +18498,26 @@ Esta acción no se puede deshacer.</translation>
     </message>
     <message>
         <source>More</source>
-        <translation type="unfinished">Más</translation>
+        <translation>Más</translation>
+    </message>
+</context>
+<context>
+    <name>ThreadReplyStore</name>
+    <message>
+        <source>Couldn&apos;t open thread. Try again.</source>
+        <translation>No se pudo abrir el hilo. Inténtalo de nuevo.</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t send message. Try again.</source>
+        <translation>No se pudo enviar el mensaje. Inténtalo de nuevo.</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread. Try again.</source>
+        <translation>No se pudo crear el hilo. Inténtalo de nuevo.</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t rename thread: %1</source>
+        <translation>No se pudo cambiar el nombre del hilo: %1</translation>
     </message>
 </context>
 <context>
