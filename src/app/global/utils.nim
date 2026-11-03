@@ -1,6 +1,6 @@
 import nimqml
-import std/[strformat, strutils, httpclient, os, uri], regex, stint
-import ../../app_service/common/utils as common_utils
+import std/[strformat, strutils, httpclient, os], regex, stint
+import ../../app_service/common/local_path
 import ./html_utils
 import stew/byteutils
 import ./utils/qrcodegen
@@ -41,13 +41,7 @@ QtObject:
     self.QObject.delete
 
   proc fromPathUri*(self: Utils, path: string): string {.slot.} =
-    var formattedPath = replace(path, "file://", "")
-    # Sometimes the original path only contains `file:` without the `//`
-    formattedPath = replace(formattedPath, "file:", "")
-    result = uri.decodeUrl(formattedPath, decodePlus=false)
-    if defined(windows):
-      # Windows doesn't work with paths starting with a slash
-      result.removePrefix('/')
+    convertUrlToLocalPath(path)
 
   proc toFileUri*(self: Utils, path: string): string {.slot.} =
     let absPath = absolutePath(path)   # Ensure it's absolute
