@@ -70,4 +70,6 @@ public:
     }
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(ChatTextSegment::Flags)
+// Members are relocatable Qt values and scalars, with no self-references.
+Q_DECLARE_TYPEINFO(ChatTextSegment, Q_RELOCATABLE_TYPE);
 Q_DECLARE_METATYPE(ChatTextSegment)
