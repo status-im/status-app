@@ -245,6 +245,6 @@ mainWindow_touchIdYesUseTouchIDButton = {"container": statusDesktop_mainWindow, 
 mainWindow_touchIdIPreferToUseMyPasswordText = {"container": statusDesktop_mainWindow, "objectName": "touchIdIPreferToUseMyPasswordText", "type": "StatusBaseText"}
 
 # Enable biometrics view
-enableBiometricsView = {"container": onboardingLayout, "type": "EnableBiometricsPage", "unnamed": 1, "visible": True}
-enableBiometricsButton = {"container": enableBiometricsView, "objectName": "btnEnableBiometrics", "type": "StatusButton", "visible": True}
-dontEnableBiometricsButton = {"container": enableBiometricsView, "objectName": "btnDontEnableBiometrics", "type": "StatusFlatButton", "visible": True}
+# The biometrics and save-password opt-ins live inline on the Create Password page
+biometricsSwitch = {"container": onboardingLayout, "objectName": "biometricsSwitch", "type": "StatusSwitch", "visible": True}
+stayLoggedInSwitch = {"container": onboardingLayout, "objectName": "stayLoggedInSwitch", "type": "StatusSwitch", "visible": True}

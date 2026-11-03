@@ -71,6 +71,7 @@ in
         # auto.nixGLDefault requires impure shell
         nixgl.nixGLIntel
         libxkbcommon # Qt6GuiPrivate
+        libsecret # StatusQ SecureStorage (Secret Service)
       ]);
 
     shellHook = ''

@@ -64,7 +64,10 @@ Item {
                                                          : SecureStorage.StatusSuccess,
                              credential: value === undefined ? "" : value }
                 }
+                property int setStatus: SecureStorage.StatusSuccess
                 function setCredential(account, credential) {
+                    if (setStatus !== SecureStorage.StatusSuccess)
+                        return setStatus
                     creds[account] = credential
                     return SecureStorage.StatusSuccess
                 }
@@ -107,7 +110,17 @@ Item {
                 function loginRequested(keyUid, method, data) {}
 
                 signal accountLoginError(string error, bool wrongPassword)
+                signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference)
                 signal stayLoggedInDeleteRequested(string keyUid)
+
+                // Settings wrappers the real store exposes (store-layer rule)
+                property bool stayLoggedIn: false
+                property var suppressionCalls: []
+                function setStayLoggedIn(value) { stayLoggedIn = value }
+                function setAutoLoginSuppressed(keyUid, value) {
+                    suppressionCalls.push({ keyUid, value })
+                    return true
+                }
             }
         }
     }
@@ -163,11 +176,47 @@ Item {
             verify(!!wrapper)
 
             wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.onboardingStore.stayLoggedIn = true
             wrapper.onboardingStore.stayLoggedInDeleteRequested("uid_1")
 
             compare(wrapper.secureStorage.creds["uid_1"], undefined)
             compare(wrapper.secureStorage.deleteCalls.length, 1)
             compare(wrapper.secureStorage.deleteCalls[0], "uid_1")
+            compare(wrapper.onboardingStore.stayLoggedIn, false) // verified deletion -> pref off
+        }
+
+        // Onboarding opt-in: the preference becomes stored only on a VERIFIED credential
+        // write — an unverified write (e.g. locked keyring) must not leave the toggle ON
+        // with nothing stored. Every explicit login lifts the auto-login suppression.
+        function test_stayLoggedInSavePreferenceRequiresVerifiedWrite() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const store = wrapper.onboardingStore
+
+            wrapper.secureStorage.setStatus = SecureStorage.StatusUnavailable
+            store.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true)
+            compare(store.stayLoggedIn, false)
+            compare(store.suppressionCalls.length, 1)
+            compare(store.suppressionCalls[0].keyUid, "uid_1")
+            compare(store.suppressionCalls[0].value, false)
+
+            wrapper.secureStorage.setStatus = SecureStorage.StatusSuccess
+            store.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true)
+            compare(store.stayLoggedIn, true)
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+        }
+
+        // Preference OFF: the task sends an empty credential (no DEK export) and any
+        // stale stored credential is reconciled away.
+        function test_stayLoggedInSavePrefOffReconcilesStaleCredential() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "", false)
+
+            compare(wrapper.secureStorage.creds["uid_1"], undefined)
+            compare(wrapper.onboardingStore.stayLoggedIn, false)
         }
     }
 }

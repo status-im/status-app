@@ -113,24 +113,25 @@ Item {
         }
 
         function onStayLoggedInSaveRequested(account, credential, enablePreference) {
-            // The credential is guaranteed dek-tagged (enforced Nim-side). The
-            // preference survives logout by design: with it ON, an explicit login
-            // silently re-stores the credential; with it OFF, any stale credential
-            // is reconciled away (the final safety net for a mutation that
-            // committed after its caller timed out).
-            // `localAccountSettings` is a context property, absent in QML tests.
-            const settings = typeof localAccountSettings !== "undefined" ? localAccountSettings : null
+            // The credential is guaranteed dek-tagged (enforced Nim-side; empty when the
+            // preference is OFF, where the task skips the DEK export). The preference
+            // survives logout by design: with it ON, an explicit login silently
+            // re-stores the credential; with it OFF, any stale credential is reconciled
+            // away (the final safety net for a mutation that committed after its
+            // caller timed out).
             // An explicit login happened: lift any auto-login suppression recorded by a
-            // sign-out whose credential deletion could not be verified — the code below
-            // reconciles the stored credential with the preference either way.
-            const appSettings = typeof localAppSettings !== "undefined" ? localAppSettings : null
-            appSettings?.setAutoLoginSuppressed(account, false)
-            if (enablePreference && settings)
-                settings.stayLoggedIn = true
-            if (settings && settings.stayLoggedIn)
-                root.secureStorage.setCredential(account, credential)
-            else if (root.secureStorage.hasCredential(account) === SecureStorage.StatusSuccess)
+            // sign-out whose credential deletion could not be verified.
+            root.onboardingStore.setAutoLoginSuppressed(account, false)
+            if (enablePreference || root.onboardingStore.stayLoggedIn) {
+                const status = root.secureStorage.setCredential(account, credential)
+                // The onboarding opt-in becomes the stored preference only on a VERIFIED
+                // write — otherwise the toggle would show ON while no credential exists
+                // and every launch would silently land on the login screen.
+                if (enablePreference && status === SecureStorage.StatusSuccess)
+                    root.onboardingStore.setStayLoggedIn(true)
+            } else if (root.secureStorage.hasCredential(account) === SecureStorage.StatusSuccess) {
                 root.secureStorage.deleteCredential(account)
+            }
         }
 
         function onStayLoggedInDeleteRequested(account) {
@@ -139,10 +140,10 @@ Item {
             // deletion verifiably succeeded turn the preference off (delete-first
             // ordering; startup trusts credential presence).
             const status = root.secureStorage.deleteCredential(account)
-            const settings = typeof localAccountSettings !== "undefined" ? localAccountSettings : null
-            if (settings && (status === SecureStorage.StatusSuccess
-                             || status === SecureStorage.StatusNotFound))
-                settings.stayLoggedIn = false
+            if (status === SecureStorage.StatusSuccess
+                    || status === SecureStorage.StatusNotFound
+                    || status === SecureStorage.StatusNotSupported)
+                root.onboardingStore.setStayLoggedIn(false)
         }
 
         function onKeycardStateChanged() {

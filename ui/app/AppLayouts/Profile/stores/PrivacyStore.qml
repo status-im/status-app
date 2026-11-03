@@ -43,6 +43,10 @@ QtObject {
         localAccountSettings.stayLoggedIn = value
     }
 
+    function setAutoLoginSuppressed(keyUid, value) {
+        return localAppSettings.setAutoLoginSuppressed(keyUid, value)
+    }
+
     function getStayLoggedInCredentialForStorage(keyUid, password) {
         return root.privacyModule.getStayLoggedInCredentialForStorage(keyUid, password)
     }

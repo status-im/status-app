@@ -673,7 +673,6 @@ Item {
             if (!data.disabled)
                 controlUnderTest.autoLoginEnabled = true
 
-            wait(100)
             compare(loginSpy.count, 0)
             compare(controlUnderTest.autoLoginAttempted, false)
             if (data.credential !== undefined) // an unused credential is left untouched
@@ -689,7 +688,6 @@ Item {
         function test_autoLogin_garbageCredentialIsDropped() {
             setupAutoLogin("uid_1", "not-a-dek")
 
-            wait(100)
             compare(loginSpy.count, 0)
             compare(controlUnderTest.autoLoginAttempted, false)
             compare(controlUnderTest.secureStorage.creds["uid_1"], undefined)
@@ -729,7 +727,6 @@ Item {
             controlUnderTest.autoLoginEnabled = true // wrong order: key UID still empty
             controlUnderTest.lastSelectedProfileKeyUid = "uid_1"
 
-            wait(100)
             compare(loginSpy.count, 0)
             compare(controlUnderTest.autoLoginAttempted, false)
         }

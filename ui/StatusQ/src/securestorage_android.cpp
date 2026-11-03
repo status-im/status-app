@@ -17,8 +17,12 @@ static constexpr const char *kJavaClass = "app/status/mobile/SecureStorageHelper
 // Status codes of SecureStorageHelper (kept in sync with the Java side). The Java layer
 // never conflates absence with failure: STATUS_NOT_FOUND is only returned for genuine
 // absence or corruption whose cleanup verifiably succeeded.
-static constexpr jint kStatusOk = 0;
-static constexpr jint kStatusNotFound = 1;
+// Deliberately NON-ZERO success code: QJniObject::callMethod<jint> returns 0 when the
+// call itself cannot be made (unresolved method id, or the Java side threw and Qt
+// cleared the exception) — with a zero success code that failure mode would silently
+// read as success. Kept in sync with SecureStorageHelper.java.
+static constexpr jint kStatusOk = 1;
+static constexpr jint kStatusNotFound = 2;
 
 static SecureStorage::Status convertStatus(jint status)
 {

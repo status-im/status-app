@@ -93,11 +93,10 @@ QtObject {
             // defense-in-depth, and the preference flips off only on a verified-absent
             // result (delete-first ordering: startup trusts credential presence).
             const status = root.secureStorage.deleteCredential(userProfileKeyUid)
-            if ((status === SecureStorage.StatusSuccess
-                 || status === SecureStorage.StatusNotFound
-                 || status === SecureStorage.StatusNotSupported)
-                    && typeof localAccountSettings !== "undefined") {
-                localAccountSettings.stayLoggedIn = false
+            if (status === SecureStorage.StatusSuccess
+                    || status === SecureStorage.StatusNotFound
+                    || status === SecureStorage.StatusNotSupported) {
+                root.privacyStore.setStayLoggedIn(false)
             }
         }
     }
@@ -1732,6 +1731,7 @@ QtObject {
             SignOutConfirmationDialog {
                 id: confirmDialog
                 secureStorage: root.secureStorage
+                privacyStore: root.privacyStore
                 keyUid: root.privacyStore.keyUid
                 onSignOutRequested: mainModule.signOutAndQuit()
             }

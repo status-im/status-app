@@ -1,7 +1,8 @@
-import chronicles, strutils
+import chronicles
 import task
 import ../io_interface
 
+import app/global/global_singleton
 import app_service/service/accounts/service as accounts_service
 import app_service/common/keychain_credential
 import app_service/common/utils as common_utils
@@ -47,6 +48,15 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
   # bypass the hardware factor the user deliberately chose.
   if loggedInAccount.keycardPairing.len > 0:
     debug "skipping stay-logged-in save for a keycard profile"
+    return
+
+  # With the preference OFF (and no onboarding opt-in), there is nothing to store: skip
+  # the DEK export entirely (two synchronous status-go calls on the GUI thread, and the
+  # raw DEK would cross into the QML/JS heap only to be discarded). The request is still
+  # emitted — with an empty credential — so the QML handler can lift any auto-login
+  # suppression and reconcile away a stale credential.
+  if not self.enablePreference and not singletonInstance.localAccountSettings.getStayLoggedIn():
+    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false)
     return
 
   var toStore: string

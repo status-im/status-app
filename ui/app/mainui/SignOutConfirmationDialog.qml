@@ -13,9 +13,9 @@ ConfirmationDialog {
     required property SecureStorage secureStorage
     required property string keyUid
 
-    // The global app settings holding the per-profile auto-login suppression; a context
-    // property in the app, absent in QML tests (injectable there).
-    property var appSettings: typeof localAppSettings !== "undefined" ? localAppSettings : null
+    // Store exposing setAutoLoginSuppressed(keyUid, value) -> bool (PrivacyStore in the
+    // app) — an explicit dependency instead of a hidden context-property global.
+    required property var privacyStore
 
     signal signOutRequested()
 
@@ -46,9 +46,7 @@ ConfirmationDialog {
             // whether the marker verifiably persisted (mobile logout hard-exits right
             // after this handler): when NEITHER the deletion NOR the suppression can be
             // confirmed, keep the session so the user can retry.
-            const suppressed = root.appSettings
-                             ? root.appSettings.setAutoLoginSuppressed(root.keyUid, true)
-                             : false
+            const suppressed = root.privacyStore.setAutoLoginSuppressed(root.keyUid, true)
             if (!suppressed) {
                 Global.displayToastMessage(
                             qsTr("Failed to turn off automatic login — sign out aborted, please try again"),

@@ -17,6 +17,7 @@ QtObject:
   type LocalAccountSettings* = ref object of QObject
     settingsFileDir: string
     currentFileName: string
+    keyUid: string
     settings: QSettings
 
   proc setup(self: LocalAccountSettings, settingsFileDir: string)
@@ -38,6 +39,9 @@ QtObject:
       discard
     self.currentFileName = fileName
     self.settings = newQSettings(newFilePath, QSettingsFormat.IniFormat)
+
+  proc setKeyUid*(self: LocalAccountSettings, keyUid: string) =
+    self.keyUid = keyUid
 
   proc storeToKeychainValueChanged*(self: LocalAccountSettings) {.signal.}
 
@@ -95,15 +99,18 @@ QtObject:
   # whether the credential gets (re-)stored after an explicit login — it survives logout
   # by design. Default false: existing users are opted out; new users opt in via the
   # onboarding checkbox. Always false in TEST_MODE so e2e runs can never auto-login.
+  # Namespaced by keyUid: the settings file itself is per display name, which is not
+  # unique — without the namespace, a same-named profile would inherit the opt-in and
+  # get its DEK silently stored on the next login.
   proc getStayLoggedIn*(self: LocalAccountSettings): bool {.slot.} =
-    if self.settings.isNil or TEST_MODE_ENABLED:
+    if self.settings.isNil or TEST_MODE_ENABLED or self.keyUid.len == 0:
       return false
-    self.settings.value(LS_KEY_STAY_LOGGED_IN).boolVal
+    self.settings.value(LS_KEY_STAY_LOGGED_IN & "/" & self.keyUid).boolVal
 
   proc setStayLoggedIn*(self: LocalAccountSettings, value: bool) {.slot.} =
-    if self.settings.isNil:
+    if self.settings.isNil or self.keyUid.len == 0:
       return
-    self.settings.setValue(LS_KEY_STAY_LOGGED_IN, newQVariant(value))
+    self.settings.setValue(LS_KEY_STAY_LOGGED_IN & "/" & self.keyUid, newQVariant(value))
     self.stayLoggedInChanged()
 
   QtProperty[bool] stayLoggedIn:
