@@ -36,12 +36,17 @@ Item {
             property var chatSearchModel: null
             property var releasedPaths: []
             property var activatedChats: []
+            property var navigation: []
 
             function releaseShareIntakeFiles(imagePaths) {
                 releasedPaths = releasedPaths.concat(imagePaths)
             }
             function setActiveSectionChat(sectionId, chatId) {
                 activatedChats = activatedChats.concat([{ sectionId, chatId }])
+                navigation = navigation.concat(["activate"])
+            }
+            function setNavToMsgDetailsFlag(navigate) {
+                navigation = navigation.concat([navigate ? "details" : "list"])
             }
         }
     }
@@ -167,6 +172,16 @@ Item {
             picker().cancelRequested()
             compare(rootStore.releasedPaths, ["/cache/a.png", "/cache/b.png"])
             compare(rootChatStore.sends, [])
+            compare(rootStore.navigation, [])
+            waitForUnload()
+        }
+
+        function test_sendOpensTheFirstDestinationChat() {
+            launchAndOpen("hi", [])
+            picker().sendRequested([{ sectionId: "community-1", chatId: "channel-pets" },
+                                    { sectionId: "personal", chatId: "0x04alice" }], "hi", [])
+            compare(rootStore.navigation, ["details", "activate"])
+            compare(rootStore.activatedChats, [{ sectionId: "community-1", chatId: "channel-pets" }])
             waitForUnload()
         }
 
@@ -210,6 +225,7 @@ Item {
             launchAndOpen("hi", [])
             picker().sendRequested([], "hi", [])
             compare(rootStore.activatedChats, [])
+            compare(rootStore.navigation, [])
             compare(rootStore.releasedPaths, [])
             waitForUnload()
         }
