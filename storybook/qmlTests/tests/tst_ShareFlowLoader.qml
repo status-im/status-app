@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtTest
 
 import AppLayouts.stores as AppStores
@@ -73,6 +74,15 @@ Item {
     }
 
     Component {
+        id: popupComponent
+
+        Popup {
+            width: 100
+            height: 100
+        }
+    }
+
+    Component {
         id: loaderComponent
 
         ShareFlowLoader {
@@ -125,6 +135,31 @@ Item {
             // own chat and the channel without post rights are never offered
             compare(picker().model.rowCount(), 2)
             compare(rootStore.releasedPaths, [])
+        }
+
+        function openPopup() {
+            const popup = createTemporaryObject(popupComponent, root)
+            popup.open()
+            tryVerify(() => popup.opened)
+            return popup
+        }
+
+        function test_launchClosesOpenPopups() {
+            const popup = openPopup()
+            launchAndOpen("hello", [])
+            tryVerify(() => !popup.visible)
+            verify(loader.item.opened)
+        }
+
+        function test_relaunchClosesPopupsOverThePickerAndKeepsThePicker() {
+            launchAndOpen("first", [])
+            const dialog = loader.item
+            const popup = openPopup()
+            loader.launch("second", [])
+            tryVerify(() => !popup.visible)
+            compare(loader.item, dialog)
+            verify(dialog.opened)
+            compare(picker().text, "second")
         }
 
         function test_cancelReleasesCachedImagesAndUnloads() {
