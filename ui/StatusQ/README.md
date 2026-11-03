@@ -80,6 +80,9 @@ spell-check worker lazily extracts only selected dictionaries on the first check
 or suggestion request. Extracted pairs are cached in a worker-owned private
 temporary directory across language changes and editors, until the source directory
 changes or the worker exits. Filesystem dictionary directories remain supported.
+Disabling an editor's spell checker cancels its queued and running checks and
+suggestions; once no enabled editor uses the shared worker, its Hunspell
+dictionaries are freed and reload lazily when spell checking is re-enabled.
 Message text is never written to disk or sent over the network by spell checking.
 
 The application passes the dictionary directory, active dictionaries, and
@@ -96,6 +99,10 @@ of the same language, then the remaining dictionaries in code order. Hunspell's
 ranking within each dictionary is preserved; duplicates are removed before the
 five-suggestion limit. This is a language preference, not word-language detection,
 and does not change which enabled dictionaries accept a word as correctly spelled.
+For the bundled Latin, Cyrillic, and Korean dictionaries, only dictionaries matching
+a letter script in the word participate in checks and suggestions. This prevents
+foreign-script ignore rules (such as Ukrainian stripping Latin letters or Korean
+accepting arbitrary Latin compounds) from masking misspellings in another language.
 
 Checks are coalesced with a 30 ms timer and run off the UI thread. Document and
 configuration generations prevent outdated results from being applied. Code,

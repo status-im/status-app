@@ -43,22 +43,28 @@ private slots:
     void toggleSpellcheckLanguage() {
         LanguageService service;
         QVERIFY(service.setProperty("userUID", QStringLiteral("toggle-test")));
-        auto active = service.property("activeSpellcheckLanguages").value<QSet<QString>>();
-        QCOMPARE(active.size(), 1);
-        QVERIFY(active.contains("en_US"_L1));
+        auto active = service.property("activeSpellcheckLanguages").toStringList();
+        QCOMPARE(active, QStringList{"en_US"_L1});
 
         const auto available = service.property("availableSpellcheckLanguages").value<QSet<QString>>();
         QVERIFY(available.size() > 1);
         QVERIFY(available.contains("cs_CZ"_L1));
         service.toggleSpellcheckLanguage("cs_CZ"_L1, true);
-        active = service.property("activeSpellcheckLanguages").value<QSet<QString>>();
+        active = service.property("activeSpellcheckLanguages").toStringList();
         QCOMPARE(active.size(), 2);
         QVERIFY(active.contains("cs_CZ"_L1));
         QVERIFY(active.contains("en_US"_L1));
 
         service.toggleSpellcheckLanguage("en_US"_L1, false); // can't be toggled off
-        active = service.property("activeSpellcheckLanguages").value<QSet<QString>>();
+        active = service.property("activeSpellcheckLanguages").toStringList();
         QCOMPARE(active.size(), 2);
+        QVERIFY(active.contains("cs_CZ"_L1));
+        QVERIFY(active.contains("en_US"_L1));
+
+        service.toggleSpellcheckLanguage("cs_CZ"_L1, false);
+        QCOMPARE(service.property("activeSpellcheckLanguages").toStringList(), QStringList{"en_US"_L1});
+        service.toggleSpellcheckLanguage("en_US"_L1, false);
+        QCOMPARE(service.property("activeSpellcheckLanguages").toStringList(), QStringList{"en_US"_L1});
     }
 
     void spellcheckOptionsArePersisted_data()

@@ -1,7 +1,9 @@
 #pragma once
 
+#include <QAtomicInteger>
 #include <QObject>
 #include <QLocale>
+#include <QSharedPointer>
 #include <QStringList>
 #include <QTimer>
 #include <QVariantList>
@@ -26,7 +28,9 @@ class SpellChecker : public QObject
 
 public:
     explicit SpellChecker(QObject* parent = nullptr);
+    ~SpellChecker() override;
     bool enabled() const { return m_enabled; }
+    // Disabling cancels pending work and frees dictionaries no enabled checker uses.
     void setEnabled(bool value);
     QSet<QString> languages() const { return m_languages; }
     void setLanguages(const QSet<QString>& value);
@@ -77,6 +81,8 @@ private:
 
     bool supported() const;
     void invalidate();
+    void bumpGeneration();
+    void releaseDictionaries();
     void setCheckPending(bool value);
     void completeWordIfCaretLeft();
     std::pair<int, int> tokenAt(int position) const;
@@ -86,6 +92,10 @@ private:
     quint64 m_id;
     quint64 m_generation = 0;
     quint64 m_suggestionRequest = 0;
+    // Read by the worker to abandon superseded checks and suggestions.
+    QSharedPointer<QAtomicInteger<quint64>> m_checkToken = QSharedPointer<QAtomicInteger<quint64>>::create(0);
+    QSharedPointer<QAtomicInteger<quint64>> m_suggestionToken = QSharedPointer<QAtomicInteger<quint64>>::create(0);
+    bool m_workerUser = false;
     bool m_enabled = true;
     QSet<QString> m_languages = {QStringLiteral("en_US")};
     QString m_preferredLanguage = QLocale().name();
