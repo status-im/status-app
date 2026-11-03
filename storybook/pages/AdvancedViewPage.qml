@@ -33,6 +33,7 @@ SplitView {
 
     PopupsLoader {
         keychain: Keychain {}
+        secureStorage: SecureStorage { service: "StatusStorybook.AutoLogin" }
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}
@@ -59,7 +60,9 @@ SplitView {
             minimizeOnCloseOptionVisible: ctrlMinimizeOnCloseOptionVisible.checked
 
             walletStore: WalletStore {
-                function getRpcStats() {}
+                function getRpcStats() {
+                    return JSON.stringify({ result: { total: 3, methods: { eth_call: 2, eth_blockNumber: 1 } } })
+                }
                 function resetRpcStats() {}
             }
             advancedStore: AdvancedStore {
