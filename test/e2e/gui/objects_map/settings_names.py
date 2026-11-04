@@ -175,4 +175,4 @@ settingsContentBaseScrollViewRelayWakuModeBloomSelectorButton = {"container": ma
 languageView = {"container": statusDesktop_mainWindow, "objectName": "languageView", "type": "LanguageView", "visible": True}
 languageViewLanguageSelector = {"container": statusDesktop_mainWindow, "objectName": "languageViewLanguageSelector", "type": "StatusLanguageSelector", "visible": True}
 languageViewLanguageChangeConfirmButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "languageViewLanguageChangeConfirmButton", "type": "StatusButton", "visible": True}
-languageViewSpellCheckEnabled = {"checkable": True, "container": languageView, "objectName": "languageViewSpellCheckEnabled", "type": "StatusCheckBox", "visible": True}
+languageViewSpellCheckEnabled = {"checkable": True, "container": languageView, "objectName": "languageViewSpellCheckEnabled", "type": "StatusSwitch", "visible": True}

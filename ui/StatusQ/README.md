@@ -74,8 +74,12 @@ additional mask or color-overlay effect.
 and asynchronous suggestions. Hunspell is a pinned, private static FetchContent
 dependency; its dictionaries are shared on one worker thread. Bundled dictionaries
 and license notices are always Qt resources, including hot-reload builds.
-Hunspell requires filesystem paths, so `LanguageService` extracts these public
-dictionary assets into a private temporary directory for its lifetime.
+`LanguageService` discovers complete dictionary pairs without reading their contents
+and exposes their resource directory. Hunspell requires filesystem paths, so the
+spell-check worker lazily extracts only selected dictionaries on the first check
+or suggestion request. Extracted pairs are cached in a worker-owned private
+temporary directory across language changes and editors, until the source directory
+changes or the worker exits. Filesystem dictionary directories remain supported.
 Message text is never written to disk or sent over the network by spell checking.
 
 The application passes the dictionary directory, active dictionaries, and
@@ -85,6 +89,13 @@ and cannot be toggled off while available; additional dictionaries can be toggle
 independently. Standalone editors must also receive a dictionary directory.
 Both spell checking and skipping capitalized words default to enabled. The latter is a heuristic:
 it skips any token containing uppercase letters, not named-entity recognition.
+
+Suggestions prioritize the editor's `preferredLanguage` (bound to `Qt.uiLanguage`
+in `ChatTextArea`, otherwise defaulting to the current locale), then dictionaries
+of the same language, then the remaining dictionaries in code order. Hunspell's
+ranking within each dictionary is preserved; duplicates are removed before the
+five-suggestion limit. This is a language preference, not word-language detection,
+and does not change which enabled dictionaries accept a word as correctly spelled.
 
 Checks are coalesced with a 30 ms timer and run off the UI thread. Document and
 configuration generations prevent outdated results from being applied. Code,

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include <QTemporaryDir>
+#include <QSet>
 
 class LanguageService : public QObject
 {
@@ -53,7 +53,6 @@ private:
     void setActiveSpellcheckLanguages(const QSet<QString>& dictLangs);
 
     QString spellCheckDictsDir() const;
-    QTemporaryDir m_directory;
 
     bool m_spellCheckEnabled{true};
     bool spellCheckEnabled() const;

@@ -9,6 +9,7 @@ import StatusQ.Core.Utils
 import SortFilterProxyModel
 
 import shared.status
+import shared.stores
 
 Item {
     id: root
@@ -410,6 +411,10 @@ unclosed fence here (no closing triple-tick)
         }
     }
 
+    SpellCheckStore {
+        id: spellCheckSettings
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
@@ -464,6 +469,11 @@ unclosed fence here (no closing triple-tick)
 
                             characterLimit: limitSpinBox.value
                             onAttemptToExceedHardLimit: limitInfo.hitCount++
+
+                            spellCheckEnabled: spellCheckSettings.enabled
+                            spellCheckDictsDir: spellCheckSettings.spellCheckDictsDir
+                            spellCheckLanguages: spellCheckSettings.activeLanguages
+                            spellCheckSkipCapitalizedWords: spellCheckSettings.skipCapitalizedWords
 
                             // Mention/emoji-suggestions navigation is handled here (in the page),
                             // not inside ChatTextArea. These attached handlers coexist with
