@@ -34,6 +34,7 @@ Item {
     property var chatSectionModule
 
     property RootStore store
+    property Component threadContextMenu
 
     QtObject {
         id: d
@@ -134,6 +135,8 @@ Item {
             }
             onChatItemClicked: (id) => root.chatItemClicked(id)
             onChatItemUnmuted: (id) => root.chatSectionModule.unmuteChat(id)
+
+            threadPopupMenu: root.threadContextMenu
 
             popupMenu: ChatContextMenuView {
                 id: chatContextMenuView

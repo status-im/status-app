@@ -395,6 +395,7 @@ QtObject {
                                categoryPosition, isPrivate) {
             root.chatsModel.append({
                 itemId: itemId,
+                isThread: false,
                 name: chatName,
                 usesDefaultName: false,
                 memberRole: root.memberRole,

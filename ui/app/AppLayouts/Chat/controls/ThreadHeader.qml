@@ -24,6 +24,8 @@ RowLayout {
                                              ? inputLoader.item as StatusTextField : null
 
     signal renameRequested(string name)
+    signal editNameRequested()
+    signal markAsReadRequested()
 
     function beginEditing() {
         if (!root.canEdit || root.pending)
@@ -146,7 +148,6 @@ RowLayout {
     StatusFlatButton {
         id: menuButton
         objectName: "threadHeaderMenuButton"
-        visible: root.canEdit
         enabled: !root.pending
         icon.name: "more"
         type: StatusFlatButton.Type.Secondary
@@ -165,6 +166,8 @@ RowLayout {
             sourceComponent: ThreadContextMenu {
                 objectName: "threadHeaderContextMenu"
                 isMobile: SQUtils.Utils.isMobile
+                followEnabled: false
+                muteEnabled: false
                 followed: false
                 muted: false
                 pinned: false
@@ -172,7 +175,8 @@ RowLayout {
                 deleteEnabled: false
                 threadLinkToCopyShare: ""
                 editEnabled: root.canEdit && !root.pending
-                onEditNameRequested: Qt.callLater(root.beginEditing)
+                onMarkAsReadRequested: root.markAsReadRequested()
+                onEditNameRequested: root.editNameRequested()
             }
         }
     }

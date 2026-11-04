@@ -37,6 +37,14 @@ Item {
             id: renameSpy
             signalName: "renameRequested"
         }
+        SignalSpy {
+            id: readSpy
+            signalName: "markAsReadRequested"
+        }
+        SignalSpy {
+            id: editSpy
+            signalName: "editNameRequested"
+        }
         InputMethodTester { id: ime }
 
         function init() {
@@ -44,6 +52,10 @@ Item {
             verify(!!header)
             renameSpy.target = header
             renameSpy.clear()
+            readSpy.target = header
+            readSpy.clear()
+            editSpy.target = header
+            editSpy.clear()
         }
 
         function edit(text) {
@@ -153,17 +165,59 @@ Item {
             compare(header.editing, false)
             header.beginEditing()
             compare(header.editing, false)
-            compare(findChild(header, "threadHeaderMenuButton").visible, false)
+            compare(findChild(header, "threadHeaderMenuButton").visible, true)
             compare(renameSpy.count, 0)
         }
 
-        function test_menuStartsEditing() {
+        function test_menuRequestsEditingWithoutStartingInlineEditor() {
             mouseClick(findChild(header, "threadHeaderMenuButton"))
             const menu = findChild(header, "threadHeaderContextMenu")
             verify(!!menu)
             tryCompare(menu, "opened", true)
             menu.actionAt(0).trigger()
-            tryCompare(header, "editing", true)
+            compare(editSpy.count, 1)
+            compare(header.editing, false)
+            menu.close()
+        }
+
+        function test_menuOnlyShowsConnectedActions_data() {
+            return [
+                { tag: "can rename", canEdit: true, labels: [qsTr("Edit name"), qsTr("Mark as read")] },
+                { tag: "cannot rename", canEdit: false, labels: [qsTr("Mark as read")] }
+            ]
+        }
+
+        function test_menuOnlyShowsConnectedActions(data) {
+            header.canEdit = data.canEdit
+            mouseClick(findChild(header, "threadHeaderMenuButton"))
+            const menu = findChild(header, "threadHeaderContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            const labels = []
+            for (let i = 0; i < menu.count; ++i) {
+                const item = menu.itemAt(i)
+                if (item.visible && item.height > 0)
+                    labels.push(item.text)
+            }
+            compare(labels, data.labels)
+            menu.close()
+        }
+
+        function test_nonAuthorCanMarkThreadAsRead() {
+            header.canEdit = false
+            mouseClick(findChild(header, "threadHeaderMenuButton"))
+            const menu = findChild(header, "threadHeaderContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            for (let i = 0; i < menu.count; ++i) {
+                const action = menu.actionAt(i)
+                if (action && action.objectName === "threadContextMenu_markAsRead") {
+                    action.trigger()
+                    break
+                }
+            }
+            compare(readSpy.count, 1)
+            menu.close()
         }
 
         function test_imeCompositionIsNotSubmitted() {
