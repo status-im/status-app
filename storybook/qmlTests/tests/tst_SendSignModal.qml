@@ -656,6 +656,37 @@ Item {
             compare(controlUnderTest.result, Dialog.Accepted)
         }
 
+        function test_signButtonBlockedByCustomGasBelowEstimate_data() {
+            return [
+                // fixture: minGasAmount 26250 (the router's raw estimate)
+                { tag: "custom above the estimate", feeMode: Constants.FeePriorityModeType.Custom, gas: "35000", blocked: false },
+                { tag: "custom equal to the estimate", feeMode: Constants.FeePriorityModeType.Custom, gas: "26250", blocked: false },
+                { tag: "custom below a refreshed estimate", feeMode: Constants.FeePriorityModeType.Custom, gas: "26249", blocked: true },
+                { tag: "not custom: the router's own amount", feeMode: Constants.FeePriorityModeType.Normal, gas: "26249", blocked: false },
+            ]
+        }
+
+        function test_signButtonBlockedByCustomGasBelowEstimate(data) {
+            verify(!!controlUnderTest)
+            controlUnderTest.selectedFeeMode = data.feeMode
+            controlUnderTest.customGasAmount = data.gas
+            controlUnderTest.open()
+            tryCompare(controlUnderTest, "opened", true)
+
+            const signButton = findChild(controlUnderTest.footer, "signButton")
+            verify(!!signButton)
+            compare(signButton.interactive, !data.blocked)
+
+            const gasTooLowText = findChild(controlUnderTest.footer, "footerGasTooLowText")
+            verify(!!gasTooLowText)
+            compare(gasTooLowText.visible, data.blocked)
+            compare(findChild(controlUnderTest.footer, "footerEstTimeText").visible, !data.blocked)
+
+            // no minimum known: never blocked
+            controlUnderTest.minGasAmount = ""
+            compare(signButton.interactive, true)
+        }
+
         function test_rejectButton() {
             verify(!!controlUnderTest)
 
