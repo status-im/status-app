@@ -188,6 +188,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/contextmenueventfilter.h
         include/StatusQ/delegatepool.h
         include/StatusQ/chattextformat.h
+        include/StatusQ/chatsinglelinetextitem.h
         include/StatusQ/chattextappearance.h
         include/StatusQ/chattextitem.h
         include/StatusQ/chattextsegment.h
@@ -247,6 +248,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/incubationhints.cpp
         src/constantrole.cpp
         src/delegatepool.cpp
+        src/chatsinglelinetextitem.cpp
         src/chattextappearance.cpp
         src/chattextitem.cpp
         src/externc.cpp
