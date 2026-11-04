@@ -114,6 +114,7 @@ Item {
                 { tag: "negative", amount: "-1" },
                 { tag: "non-numeric", amount: "abc" },
                 { tag: "fractional", amount: "21000.5" },
+                { tag: "empty", amount: "" },
             ]
         }
 

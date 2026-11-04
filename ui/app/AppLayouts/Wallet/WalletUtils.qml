@@ -85,6 +85,9 @@ QtObject {
         const suggested = StatusQUtils.AmountsArithmetic.fromString(suggestedGasAmount)
         if (!(suggested instanceof Object))
             return ""
+        // TODO(glamsterdam item E): once status-go buffers approval gas by 1.05, approvals must
+        // divide by gasEstimateBufferFactor too, or the minimum equals the suggestion and the
+        // "below recommended" band becomes blocking. Ship this together with the E bump.
         if (isApproval)
             return suggested.toFixed()
         const factor = StatusQUtils.AmountsArithmetic.fromString(fromChain !== toChain
