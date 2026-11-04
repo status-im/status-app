@@ -367,6 +367,10 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
           self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(data["password"].str, keyUid = keyUid))
           self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
+        # Removes a leftover "save password" credential, e.g. one a
+        # profile->keycard conversion could not remove because the OS store was
+        # unreachable at the time.
+        self.postLoginTasks.add(newSaveStayLoggedInPasswordTask("", keyUid = keyUid))
         self.loginKeycard(keyUid, data["pin"].str, data{"pairingPassword"}.getStr)
       of LoginMethod.Mnemonic:
         self.controller.login(account, password = "", mnemonic = data["mnemonic"].str)

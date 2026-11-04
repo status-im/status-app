@@ -47,7 +47,8 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
   # Keycard profiles are out of scope for "Stay logged in": a silently readable DEK would
   # bypass the hardware factor the user deliberately chose.
   if loggedInAccount.keycardPairing.len > 0:
-    debug "skipping stay-logged-in save for a keycard profile"
+    debug "keycard profile — requesting stay-logged-in reconciliation only"
+    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false)
     return
 
   # With the preference OFF (and no onboarding opt-in), there is nothing to store: skip

@@ -317,19 +317,26 @@ QtObject {
             // Converting the profile to Keycard must not leave a usable silent DEK
             // behind (the rekey=false conversion rewraps the SAME DEK, so a stored
             // credential would keep decrypting the databases without the card). Verified
-            // removal of the "Stay logged in" credential is therefore a prerequisite for
-            // starting the flow — NotSupported qualifies only because it comes solely
-            // from the stub backend (no build could ever have stored a credential);
-            // an inaccessible store (Unavailable, e.g. an unsigned dev build) blocks the
-            // conversion, since a credential stored by an entitled build may survive.
-            // The preference is flipped off only once the conversion succeeds; if the
-            // user abandons the flow, the next explicit login re-stores the credential.
+            // removal — or verified absence — is a prerequisite for starting the flow,
+            // and it must be established by deleteCredential, never by a bare
+            // hasCredential probe: on Linux the delete is serialized against the
+            // pending-mutation registry, so a credential write that timed out but may
+            // still commit blocks the conversion, while a read would race past it and
+            // report a stale NotFound. Success and NotFound are verified outcomes; the
+            // stub-only NotSupported proves no build could ever have stored anything.
+            // Any UNVERIFIED outcome (Unavailable — locked keyring, unsigned dev build,
+            // pending mutation — GenericError, Indeterminate) refuses the conversion,
+            // because a surviving credential would remain a usable decryption key once
+            // the store is reachable again. Keycard logins additionally reconcile
+            // leftovers as defense-in-depth, but best-effort cleanup is not a
+            // substitute for the prerequisite.
             const deleteStatus = root.secureStorage.deleteCredential(root.keycardManagementStore.userProfileKeyUid)
-            if (deleteStatus !== SecureStorage.StatusSuccess
-                    && deleteStatus !== SecureStorage.StatusNotFound
-                    && deleteStatus !== SecureStorage.StatusNotSupported) {
+            const verifiedAbsent = deleteStatus === SecureStorage.StatusSuccess
+                                || deleteStatus === SecureStorage.StatusNotFound
+                                || deleteStatus === SecureStorage.StatusNotSupported
+            if (!verifiedAbsent) {
                 Global.displayToastMessage(
-                            qsTr("Cannot move the profile key pair to Keycard: failed to remove the Stay logged in credential, please try again"),
+                            qsTr("Cannot move the profile key pair to Keycard: failed to remove the saved password, please try again"),
                             "", "warning", false, Constants.ephemeralNotificationType.danger, "")
                 return
             }
