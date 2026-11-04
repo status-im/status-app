@@ -220,11 +220,11 @@ unclosed fence here (no closing triple-tick)
 
     // Pops the click bubble at the last pointer position over the static render.
     function showClickBubble(message) {
-        clickBubble.message = message
-        clickBubble.x = hoverHandler.point.position.x
-        clickBubble.y = hoverHandler.point.position.y
-        clickBubble.open()
-        bubbleTimer.restart()
+        documentBubble.message = message
+        documentBubble.x = documentHover.point.position.x
+        documentBubble.y = documentHover.point.position.y
+        documentBubble.open()
+        documentBubbleTimer.restart()
     }
 
     QtObject {
@@ -457,13 +457,13 @@ unclosed fence here (no closing triple-tick)
                             id: textArea
 
                             background: Rectangle {
-                                color: Theme.palette.background
+                                color: root.Theme.palette.background
                                 radius: 4
                             }
 
                             textMargin: 10
                             font.pixelSize: fontSizeSlider.value
-                            codeBackground: Theme.palette.baseColor4
+                            codeBackground: root.Theme.palette.baseColor4
                             quoteBarVisible: quoteBarSwitch.checked
                             asciiEmojiConversion: asciiEmojiSwitch.checked
 
@@ -538,7 +538,7 @@ unclosed fence here (no closing triple-tick)
                     Label {
                         Layout.fillWidth: true
                         font.bold: true
-                        text: `Static HTML render (${selectableSwitch.checked ? "" : "not "}selectable):`
+                        text: `ChatTextItem render (${selectableSwitch.checked ? "" : "not "}selectable):`
                     }
 
                     ScrollView {
@@ -549,75 +549,64 @@ unclosed fence here (no closing triple-tick)
 
                         contentWidth: availableWidth
 
-                        // One item per block, so quote/code blocks can be decorated.
-                        ChatTextView {
-                            id: chatTextView
-
+                        Control {
+                            id: preview
                             width: htmlScroll.availableWidth
                             padding: 10
+                            background: Rectangle { color: root.Theme.palette.background; radius: 4 }
 
-                            background: Rectangle {
-                                color: Theme.palette.background
-                                radius: 4
+                            contentItem: ChatTextItem {
+                                id: chatTextPreview
+
+                                appearance: ChatTextAppearance {
+                                    font.family: Fonts.baseFont.family
+                                    font.pixelSize: textArea.font.pixelSize
+                                    color: root.Theme.palette.directColor1
+                                    linkColor: root.Theme.palette.primaryColor1
+                                    hoverHighlightColor: root.Theme.palette.primaryColor3
+                                    codeFontFamily: Fonts.codeFont.family
+                                    mentionColor: root.Theme.palette.primaryColor1
+                                    mentionBackground: root.Theme.palette.baseColor2
+                                    quoteColor: root.Theme.palette.baseColor1
+                                    codeBackground: root.Theme.palette.baseColor4
+                                    codeBorderColor: root.Theme.palette.baseColor2
+                                    quoteBarColor: quoteBarSwitch.checked
+                                                   ? root.Theme.palette.baseColor1 : "transparent"
+                                    selectionColor: preview.palette.highlight
+                                    lineHeight: 22
+                                    editedMarkerFontSize: root.Theme.tertiaryTextFontSize
+                                    editedMarkerColor: root.Theme.palette.baseColor1
+                                    emojiOnlyPixelSize: Math.round(font.pixelSize * 2.2)
+                                }
+
+                                selectable: selectableSwitch.checked
+                                edited: editedSwitch.checked
+                                segments: {
+                                    textArea.text
+                                    const text = StringUtils.expandAsciiEmoticonShortcuts(
+                                        textArea.textWithMentions())
+                                    return MarkdownUtils.toChatTextSegments(
+                                        text, mentionResolver.resolveFor(text), textArea.formatUnclosedCodeFence)
+                                }
+                                onLinkActivated: href => {
+                                    chatTextPreview.highlightedLink = href
+                                    if (href.indexOf("://") >= 0 || href.startsWith("//")) {
+                                        root.showClickBubble("Link: " + href)
+                                    } else {
+                                        const name = mentionResolver.resolveFor("@" + href)[href]
+                                        root.showClickBubble("Mention: @" + (name || href))
+                                    }
+                                }
                             }
-
-                            font.family: Fonts.baseFont.family
-                            font.pixelSize: textArea.font.pixelSize
-                            selectable: selectableSwitch.checked
-                            edited: editedSwitch.checked
-
-                            // Rendered from the editor's plain text (mentions as "@0x…"), not the
-                            // text document — mentions are resolved via mentionResolver.
-                            blocks: {
-                                textArea.text // re-build on every edit
-
-                                // Expand chat slash-commands (e.g. /tableflip) as the real send path does.
-                                const text = StringUtils.expandAsciiEmoticonShortcuts(textArea.textWithMentions())
-                                return MarkdownUtils.toBlocks(text,
-                                                              mentionResolver.resolveFor(text),
-                                                              chatTextView.font,
-                                                              textArea.formatUnclosedCodeFence,
-                                                              textArea.fullLineHeightEmojis,
-                                                              12 /* emoji enlargement for only-emojis message */)
-                            }
-
-                            // Tracks the pointer so the click bubble can appear where you clicked.
-                            HoverHandler { id: hoverHandler }
-
-                            // Example click handling: pop a bubble showing the clicked target and
-                            // highlight all occurrences of the clicked link (coexists with hover).
-                            onMentionClicked: (pubKey) => {
-                                const name = mentionResolver.resolveFor("@" + pubKey)[pubKey]
-                                root.showClickBubble("Mention: @" + (name || pubKey))
-                                chatTextView.highlightedLink = pubKey
-                            }
-                            onLinkClicked: (url) => {
-                                root.showClickBubble("Link: " + url)
-                                chatTextView.highlightedLink = url
-                            }
-
+                            HoverHandler { id: documentHover }
                             Popup {
-                                id: clickBubble
-
+                                id: documentBubble
                                 property string message
-
                                 padding: 8
                                 closePolicy: Popup.NoAutoClose
-
-                                contentItem: Text {
-                                    text: clickBubble.message
-                                    color: "white"
-                                }
-                                background: Rectangle {
-                                    color: "#333333"
-                                    radius: 6
-                                }
-
-                                Timer {
-                                    id: bubbleTimer
-                                    interval: 1500
-                                    onTriggered: clickBubble.close()
-                                }
+                                contentItem: Text { text: documentBubble.message; color: "white" }
+                                background: Rectangle { color: "#333333"; radius: 6 }
+                                Timer { id: documentBubbleTimer; interval: 1500; onTriggered: documentBubble.close() }
                             }
                         }
                     }
@@ -891,7 +880,7 @@ unclosed fence here (no closing triple-tick)
                     from: 8
                     to: 40
                     stepSize: 1
-                    value: Theme.primaryTextFontSize
+                    value: root.Theme.primaryTextFontSize
                 }
                 Label {
                     text: fontSizeSlider.value + " px"
@@ -902,19 +891,19 @@ unclosed fence here (no closing triple-tick)
             Label {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                text: "hovered link (view): " + (chatTextView.hoveredLink || "—")
+                text: "hovered link (view): " + (chatTextPreview.hoveredLink || "—")
             }
 
             Label {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
                 text: "highlighted link (view) - click link to highlight for 5s: "
-                      + (chatTextView.highlightedLink || "—")
+                      + (chatTextPreview.highlightedLink || "—")
 
                 Timer {
-                    running: chatTextView.highlightedLink
+                    running: chatTextPreview.highlightedLink
                     interval: 5000
-                    onTriggered: chatTextView.highlightedLink = ""
+                    onTriggered: chatTextPreview.highlightedLink = ""
                 }
             }
 
