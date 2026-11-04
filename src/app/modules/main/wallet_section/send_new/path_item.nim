@@ -33,6 +33,8 @@ QtObject:
     suggestedTxGasAmount: string
     suggestedApprovalTxNonce: string
     suggestedApprovalGasAmount: string
+    estimatedTxGasAmount: string
+    estimatedApprovalGasAmount: string
     txNonce: string
     txGasPrice: string
     txGasFeeMode: int
@@ -90,6 +92,8 @@ QtObject:
     suggestedTxGasAmount: string,
     suggestedApprovalTxNonce: string,
     suggestedApprovalGasAmount: string,
+    estimatedTxGasAmount: string,
+    estimatedApprovalGasAmount: string,
     txNonce: string,
     txGasPrice: string,
     txGasFeeMode: int,
@@ -148,6 +152,8 @@ QtObject:
     suggestedTxGasAmount: string,
     suggestedApprovalTxNonce: string,
     suggestedApprovalGasAmount: string,
+    estimatedTxGasAmount: string,
+    estimatedApprovalGasAmount: string,
     txNonce: string,
     txGasPrice: string,
     txGasFeeMode: int,
@@ -206,6 +212,8 @@ QtObject:
       suggestedTxGasAmount,
       suggestedApprovalTxNonce,
       suggestedApprovalGasAmount,
+      estimatedTxGasAmount,
+      estimatedApprovalGasAmount,
       txNonce,
       txGasPrice,
       txGasFeeMode,
@@ -264,6 +272,8 @@ QtObject:
     result &= "\nsuggestedTxGasAmount: " & $self.suggestedTxGasAmount
     result &= "\nsuggestedApprovalTxNonce: " & $self.suggestedApprovalTxNonce
     result &= "\nsuggestedApprovalGasAmount: " & $self.suggestedApprovalGasAmount
+    result &= "\nestimatedTxGasAmount: " & $self.estimatedTxGasAmount
+    result &= "\nestimatedApprovalGasAmount: " & $self.estimatedApprovalGasAmount
     result &= "\ntxNonce: " & $self.txNonce
     result &= "\ntxGasPrice: " & $self.txGasPrice
     result &= "\ntxGasFeeMode: " & $self.txGasFeeMode
@@ -378,6 +388,12 @@ QtObject:
 
   proc suggestedApprovalGasAmount*(self: PathItem): string =
     return self.suggestedApprovalGasAmount
+
+  proc estimatedTxGasAmount*(self: PathItem): string =
+    return self.estimatedTxGasAmount
+
+  proc estimatedApprovalGasAmount*(self: PathItem): string =
+    return self.estimatedApprovalGasAmount
 
   proc txNonce*(self: PathItem): string =
     return self.txNonce
@@ -499,6 +515,8 @@ QtObject:
     suggestedTxGasAmount: string,
     suggestedApprovalTxNonce: string,
     suggestedApprovalGasAmount: string,
+    estimatedTxGasAmount: string,
+    estimatedApprovalGasAmount: string,
     txNonce: string,
     txGasPrice: string,
     txGasFeeMode: int,
@@ -556,6 +574,8 @@ QtObject:
     self.suggestedTxGasAmount = suggestedTxGasAmount
     self.suggestedApprovalTxNonce = suggestedApprovalTxNonce
     self.suggestedApprovalGasAmount = suggestedApprovalGasAmount
+    self.estimatedTxGasAmount = estimatedTxGasAmount
+    self.estimatedApprovalGasAmount = estimatedApprovalGasAmount
     self.txNonce = txNonce
     self.txGasPrice = txGasPrice
     self.txGasFeeMode = txGasFeeMode

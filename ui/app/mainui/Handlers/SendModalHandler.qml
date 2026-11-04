@@ -854,12 +854,15 @@ QtObject {
                         }
                         return ""
                     }
-                    minGasAmount: !!txPathUnderReviewEntry.item
-                                  ? WalletUtils.minGasAmountFromSuggested(currentGasAmount,
-                                                                          txPathUnderReviewEntry.item.fromChain,
-                                                                          txPathUnderReviewEntry.item.toChain,
-                                                                          handler.reviewApprovalForTxPathUnderReview)
-                                  : ""
+                    // raw node estimate; "0" (a stand-in) means no minimum
+                    minGasAmount: {
+                        if (!txPathUnderReviewEntry.item)
+                            return ""
+                        const estimated = handler.reviewApprovalForTxPathUnderReview
+                                ? txPathUnderReviewEntry.item.estimatedApprovalGasAmount
+                                : txPathUnderReviewEntry.item.estimatedTxGasAmount
+                        return !!estimated && estimated !== "0" ? estimated : ""
+                    }
                     currentNonce: {
                         if (!!txPathUnderReviewEntry.item) {
                             if (handler.reviewApprovalForTxPathUnderReview) {
