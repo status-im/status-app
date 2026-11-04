@@ -94,10 +94,12 @@ Item {
             // Return to the existing login screen by popping whatever is above it
             // recreating it via unwindToLoginScreen would discard the error state.
             const loginScreen = onboardingLayout.stack.loginScreen
-            if (loginScreen)
-                onboardingLayout.stack.pop(loginScreen)
-            else
+            if (loginScreen) {
+                if (onboardingLayout.stack.currentItem !== loginScreen)
+                    onboardingLayout.stack.pop(loginScreen)
+            } else {
                 onboardingLayout.unwindToLoginScreen()
+            }
         }
 
         function onSaveBiometricsRequested(account, credential) {
@@ -119,16 +121,19 @@ Item {
             // An explicit login happened: lift any auto-login suppression recorded by a
             // sign-out whose credential deletion could not be verified.
             root.onboardingStore.setAutoLoginSuppressed(account, false)
-            if (enablePreference || root.onboardingStore.stayLoggedIn) {
-                const status = root.secureStorage.setCredential(account, credential)
-                // The onboarding opt-in becomes the stored preference only on a VERIFIED
-                // write — otherwise the toggle would show ON while no credential exists
-                // and every launch would silently land on the login screen.
-                if (enablePreference && status === SecureStorage.StatusSuccess)
-                    root.onboardingStore.setStayLoggedIn(true)
-            } else if (root.secureStorage.hasCredential(account) === SecureStorage.StatusSuccess) {
-                root.secureStorage.deleteCredential(account)
+            if (credential === "") {
+                // Reconciliation-only request (preference OFF, or a keycard profile
+                // where the feature is out of scope): never store, only remove any
+                // leftover credential.
+                if (root.secureStorage.hasCredential(account) === SecureStorage.StatusSuccess)
+                    root.secureStorage.deleteCredential(account)
+                return
             }
+            // A non-empty credential is only sent when the preference is ON or the
+            // onboarding opt-in was taken (enforced Nim-side).
+            const status = root.secureStorage.setCredential(account, credential)
+            if (enablePreference && status === SecureStorage.StatusSuccess)
+                root.onboardingStore.setStayLoggedIn(true)
         }
 
         function onStayLoggedInDeleteRequested(account) {

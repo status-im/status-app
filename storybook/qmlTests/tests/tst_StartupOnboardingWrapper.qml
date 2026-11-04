@@ -206,6 +206,9 @@ Item {
             compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
         }
 
+        // A failed MANUAL login must keep showing the error on the login screen
+        // (red border + "Password incorrect") — the wrapper's splash cleanup must not
+        // recreate the screen and lose the error state the layout just set (#23055).
         function test_manualLoginErrorStaysVisibleOnTheLoginScreen() {
             wrapper = createTemporaryObject(wrapperComponent, root)
             verify(!!wrapper)
@@ -213,14 +216,17 @@ Item {
             const layout = findChild(wrapper, "startupOnboardingLayout")
             verify(!!layout)
             layout.restartFlow()
+            tryVerify(() => !!layout.stack.currentItem)
 
-            let page = getCurrentPage(layout.stack)
-            const userSelector = findChild(page, "loginUserSelector")
+            const userSelector = findChild(layout.stack.currentItem, "loginUserSelector")
             verify(!!userSelector)
             userSelector.setSelection("uid_1")
 
-            // Manual login: the wrapper pushes the splash screen
-            wrapper.onboardingStore.loginRequested("uid_1", Onboarding.LoginMethod.Password, { password: "wrong" })
+            // Manual login via the LAYOUT's signal — the wrapper reacts by pushing the
+            // splash screen above the login screen (the production sequence)
+            layout.loginRequested("uid_1", Onboarding.LoginMethod.Password, { password: "wrong" })
+            tryVerify(() => layout.stack.currentItem !== layout.stack.loginScreen,
+                      2000, "the splash must be pushed above the login screen")
 
             wrapper.onboardingStore.accountLoginError("login failed", true)
 
@@ -234,9 +240,18 @@ Item {
             }, 2000, "login screen must display the manual-login error")
         }
 
-        function getCurrentPage(stack) {
-            tryVerify(() => !!stack.currentItem)
-            return stack.currentItem
+        // Even with the preference ON — e.g. a keycard profile converted while the
+        // preference survived — an empty-credential request is reconciliation-only:
+        // never store an empty string, remove any leftover credential.
+        function test_stayLoggedInSaveEmptyNeverStores() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.onboardingStore.stayLoggedIn = true
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "", false)
+
+            compare(wrapper.secureStorage.creds["uid_1"], undefined)
         }
 
         // Preference OFF: the task sends an empty credential (no DEK export) and any

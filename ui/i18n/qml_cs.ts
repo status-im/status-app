@@ -13801,7 +13801,7 @@ selhalo</translation>
 <context>
     <name>Popups</name>
     <message>
-        <source>Cannot move the profile key pair to Keycard: failed to remove the Stay logged in credential, please try again</source>
+        <source>Cannot move the profile key pair to Keycard: failed to remove the saved password, please try again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
