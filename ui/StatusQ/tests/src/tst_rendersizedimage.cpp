@@ -10,6 +10,8 @@
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QTemporaryDir>
 
 #include <QtGui/private/qhighdpiscaling_p.h>
@@ -44,6 +46,30 @@ void setDevicePixelRatio(QQuickWindow* window, qreal dpr)
     QWindowSystemInterface::handleWindowDevicePixelRatioChanged<
             QWindowSystemInterface::SynchronousDelivery>(window);
 }
+
+// Answers every request with 404 and counts them
+class NotFoundServer : public QTcpServer
+{
+public:
+    int requests = 0;
+
+    NotFoundServer()
+    {
+        connect(this, &QTcpServer::newConnection, this, [this] {
+            while (QTcpSocket* socket = nextPendingConnection()) {
+                connect(socket, &QTcpSocket::readyRead, socket, [this, socket] {
+                    if (!socket->readAll().contains("\r\n\r\n"))
+                        return;
+                    ++requests;
+                    socket->write("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n"
+                                  "Connection: close\r\n\r\n");
+                    socket->disconnectFromHost();
+                });
+                connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+            }
+        });
+    }
+};
 
 } // namespace
 
@@ -145,6 +171,63 @@ private slots:
             QVERIFY(RenderSizedImage::knownNativeSizeCount() <= RenderSizedImage::maxKnownNativeSizes);
         }
         QCOMPARE(RenderSizedImage::knownNativeSizeCount(), RenderSizedImage::maxKnownNativeSizes);
+    }
+
+    // A dead remote source is requested and reported once, not once per item and reload
+    void failedRemoteSourceWarnsOnce()
+    {
+        NotFoundServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        const QUrl source(QStringLiteral("http://127.0.0.1:%1/logo.png").arg(server.serverPort()));
+        const int failedBefore = RenderSizedImage::knownFailedSourceCount();
+
+        QQmlComponent component(m_engine);
+        component.setData(R"(
+            import QtQuick
+            import StatusQ.Components
+            Item {
+                property alias source: repeater.source
+                property alias model: repeater.model
+                Repeater {
+                    id: repeater
+                    property url source
+                    model: 3
+                    StatusImage { width: 20; height: 20; source: repeater.source }
+                }
+            })", QUrl());
+
+        QTest::ignoreMessage(QtWarningMsg,
+                             QRegularExpression(QStringLiteral("Error transferring")));
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        root->setProperty("source", source);
+
+        const auto images = [&root] {
+            QList<QQuickItem*> items;
+            for (auto child : qobject_cast<QQuickItem*>(root.get())->childItems())
+                if (qobject_cast<RenderSizedImage*>(child))
+                    items << child;
+            return items;
+        };
+        QCOMPARE(images().size(), 3);
+        for (auto image : images())
+            QTRY_COMPARE(image->property("status").toInt(), int(QQuickImageBase::Error));
+        QCOMPARE(server.requests, 1);
+        QCOMPARE(RenderSizedImage::knownFailedSourceCount() - failedBefore, 1);
+
+        // Re-created items, a reload in place: no request, no warning
+        QTest::failOnWarning(QRegularExpression(QStringLiteral("Error transferring")));
+        root->setProperty("model", 0);
+        root->setProperty("model", 2);
+        QCOMPARE(images().size(), 2);
+        for (auto image : images()) {
+            QCOMPARE(image->property("status").toInt(), int(QQuickImageBase::Error));
+            image->setProperty("source", QUrl());
+            image->setProperty("source", source);
+            QCOMPARE(image->property("status").toInt(), int(QQuickImageBase::Error));
+        }
+        QTest::qWait(100);
+        QCOMPARE(server.requests, 1);
     }
 
     void dprChangesKeepSourceSizeLogical_data()

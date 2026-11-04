@@ -113,7 +113,7 @@ target_link_libraries(TestNetworkAccessFactory PRIVATE Qt::Test Qt::Network Qt::
 add_test(NAME TestNetworkAccessFactory COMMAND TestNetworkAccessFactory)
 
 add_executable(TestRenderSizedImage src/tst_rendersizedimage.cpp)
-target_link_libraries(TestRenderSizedImage PRIVATE Qt::Test Qt::Gui Qt::GuiPrivate Qt::Qml Qt::Quick
+target_link_libraries(TestRenderSizedImage PRIVATE Qt::Test Qt::Gui Qt::GuiPrivate Qt::Network Qt::Qml Qt::Quick
     Qt::QuickPrivate StatusQ)
 target_compile_definitions(TestRenderSizedImage PRIVATE
     STATUSQ_MODULE_IMPORT_PATH="${STATUSQ_MODULE_IMPORT_PATH}"
