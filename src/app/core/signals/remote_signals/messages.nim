@@ -17,6 +17,7 @@ import app_service/service/accounts/dto/[accounts]
 include app_service/common/json_utils
 
 type MessageSignal* = ref object of Signal
+  sectionUnreadCountsChanged*: bool
   bookmarks*: seq[BookmarkDto]
   messages*: seq[MessageDto]
   threads*: seq[ThreadDto]
@@ -73,6 +74,8 @@ proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
     return signal
 
   let e = event["event"]
+
+  signal.sectionUnreadCountsChanged = e{"sectionUnreadCountsChanged"}.getBool
 
   if e.contains("contacts"):
     for jsonContact in e["contacts"]:

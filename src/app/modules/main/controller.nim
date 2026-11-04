@@ -1,4 +1,4 @@
-import chronicles, stint, json
+import chronicles, stint, json, tables
 import app/global/global_singleton
 import app/global/app_signals
 import app/core/signals/types as signal_types
@@ -108,6 +108,23 @@ proc delete*(self: Controller) =
   discard
 
 proc init*(self: Controller) =
+  self.events.on(SIGNAL_SECTION_UNREAD_COUNTS_UPDATED) do(e: Args):
+    let args = SectionUnreadCountsUpdatedArgs(e)
+    for backendSectionId, counts in args.counts:
+      let sectionId = if backendSectionId == PERSONAL_SECTION_ID:
+        singletonInstance.userProfile.getPubKey()
+      else:
+        backendSectionId
+      self.delegate.onNotificationsUpdated(sectionId,
+        counts.unviewedMessagesCount > 0 or counts.unviewedMentionsCount > 0,
+        counts.unviewedMentionsCount)
+
+  for event in [SIGNAL_COMMUNITY_JOINED, SIGNAL_COMMUNITY_SPECTATED, SIGNAL_COMMUNITY_CREATED,
+      SIGNAL_COMMUNITY_IMPORTED, SIGNAL_COMMUNITY_LEFT, SIGNAL_COMMUNITY_EDITED,
+      SIGNAL_COMMUNITIES_UPDATE, SIGNAL_COMMUNITY_MUTED]:
+    self.events.on(event) do(e: Args):
+      self.chatService.requestSectionUnreadCounts()
+
   self.events.on(SignalType.MediaServerStarted.event) do(e: Args):
     let args = MediaServerStartedSignal(e)
     self.delegate.onMediaServerStarted(args.port)
@@ -494,12 +511,11 @@ proc getActiveSectionId*(self: Controller): string =
 proc setActiveSectionId*(self: Controller, sectionId: string) =
   self.activeSectionId = sectionId
 
-proc sectionUnreadMessagesAndMentionsCount*(self: Controller, communityId: string, sectionIsMuted: bool):
+proc sectionUnreadMessagesAndMentionsCount*(self: Controller, sectionId: string):
     tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
-  result = self.chatService.sectionUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
-  let threadCounts = self.messageService.sectionThreadsUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
-  result.unviewedMessagesCount += threadCounts.unviewedMessagesCount
-  result.unviewedMentionsCount += threadCounts.unviewedMentionsCount
+  let backendSectionId = if sectionId == singletonInstance.userProfile.getPubKey(): PERSONAL_SECTION_ID else: sectionId
+  let counts = self.chatService.getSectionUnreadCounts(backendSectionId)
+  (counts.unviewedMessagesCount, counts.unviewedMentionsCount)
 
 proc setCurrentUserStatus*(self: Controller, status: StatusType) =
   if(self.settingsService.saveSendStatusUpdates(status)):

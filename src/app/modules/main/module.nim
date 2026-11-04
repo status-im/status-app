@@ -394,8 +394,7 @@ proc createCommunitySectionItem[T](self: Module[T], communityDetails: CommunityD
       communityTokensItems = existingCommunity.communityTokens.items
 
   let (unviewedCount, notificationsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    communityDetails.id,
-    communityDetails.muted,
+    communityDetails.id
   )
 
   let hasNotification = unviewedCount > 0 or notificationsCount > 0
@@ -963,8 +962,7 @@ method onChatsLoaded*[T](
     networkService
   )
   let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    myPubKey,
-    sectionIsMuted = false
+    myPubKey
   )
   var items: seq[SectionItem] = @[]
 
@@ -1439,13 +1437,6 @@ method communityEdited*[T](
   if not self.chatSectionModules.contains(community.id):
     return
   var communitySectionItem = self.createCommunitySectionItem(community)
-  # We need to calculate the unread counts because the community update doesn't come with it
-  let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    communitySectionItem.id,
-    communitySectionItem.muted,
-  )
-  communitySectionItem.setHasNotification(unviewedMessagesCount > 0)
-  communitySectionItem.setNotificationsCount(unviewedMentionsCount)
   self.view.editItem(communitySectionItem)
   if self.chatSectionModules[community.id].isAdminMembersLoaded():
     self.refreshCommunityAdminMembers(community)
