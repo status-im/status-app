@@ -45,7 +45,7 @@ method setFeeMode*(self: AccessInterface, feeMode: int, routerInputParamsUuid: s
   isApprovalTx: bool, communityId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method setCustomTxDetails*(self: AccessInterface, nonce: int, gasAmount: int, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
+method setCustomTxDetails*(self: AccessInterface, nonce: int, gasAmount: string, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
   routerInputParamsUuid: string, pathName: string, chainId: int, isApprovalTx: bool, communityId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -291,7 +291,7 @@ method setFeeMode*(self: Module, feeMode: int, routerInputParamsUuid: string, pa
     var data = NotificationArgs(title: "Setting fee mode", message: err)
     self.events.emit(SIGNAL_DISPLAY_APP_NOTIFICATION, data)
 
-method setCustomTxDetails*(self: Module, nonce: int, gasAmount: int, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
+method setCustomTxDetails*(self: Module, nonce: int, gasAmount: string, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
   routerInputParamsUuid: string, pathName: string, chainId: int, isApprovalTx: bool, communityId: string) =
   let err = self.controller.setCustomTxDetails(nonce, gasAmount, gasPrice, maxFeesPerGas, priorityFee, routerInputParamsUuid, pathName,
     chainId, isApprovalTx, communityId)
