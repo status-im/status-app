@@ -143,3 +143,16 @@ proc normalizedWeiHexValue*(weiHex: string): string =
 
 proc gweiToWeiHexValue*(gwei: float64): string =
   "0x" & stripLeadingZeros(stint.u256(int64(gwei * 1e9)).toHex)
+
+## EIP-8037 TX_MAX_TOTAL_GAS_LIMIT (2^32 - 1); keep in sync with Constants.maxTxGasAmount.
+const MaxTxGasAmount* = 4_294_967_295'u64
+
+proc parseGasAmount*(value: string): uint64 =
+  ## Parses decimal gas text without a 32-bit `int` (Qt slots, armv7). Rejects
+  ## empty, non-decimal, zero and values above `MaxTxGasAmount`.
+  if value.len == 0 or not value.allCharsInSet(Digits):
+    raise newException(ValueError, "invalid gas amount: '" & value & "'")
+  let parsed = parseBiggestUInt(value)  # raises ValueError on uint64 overflow
+  if parsed == 0 or parsed > MaxTxGasAmount:
+    raise newException(ValueError, "gas amount out of range: " & value)
+  parsed

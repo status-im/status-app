@@ -476,7 +476,7 @@ QtObject:
       error "setFeeMode", exception=e.msg
       return e.msg
 
-  proc setCustomTxDetails*(self: Service, nonce: int, gasAmount: int, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
+  proc setCustomTxDetails*(self: Service, nonce: int, gasAmount: string, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
     routerInputParamsUuid: string, pathName: string, chainId: int, isApprovalTx: bool, communityId: string): string =
     try:
       let
@@ -486,8 +486,9 @@ QtObject:
         gasPriceHex = "0x" & eth_utils.stripLeadingZeros(bigGasPrice.toHex)
         maxFeesPerGasHex = "0x" & eth_utils.stripLeadingZeros(bigMaxFeesPerGas.toHex)
         priorityFeeHex = "0x" & eth_utils.stripLeadingZeros(bigPriorityFee.toHex)
+        parsedGasAmount = eth_utils.parseGasAmount(gasAmount)
 
-      let err = wallet.setCustomTxDetails(nonce, gasAmount, gasPriceHex, maxFeesPerGasHex, priorityFeeHex, routerInputParamsUuid, pathName,
+      let err = wallet.setCustomTxDetails(nonce, parsedGasAmount, gasPriceHex, maxFeesPerGasHex, priorityFeeHex, routerInputParamsUuid, pathName,
         chainId, isApprovalTx, communityId)
       if err.len > 0:
         raise newException(CatchableError, err)
