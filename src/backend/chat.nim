@@ -36,6 +36,9 @@ proc getActiveChats*(): RpcResponse[JsonNode] =
   let payload = %* []
   result = callPrivateRPC("activeChats".prefix, payload)
 
+proc sectionUnreadCounts*(includeThreads: bool): RpcResponse[JsonNode] =
+  callPrivateRPC("sectionUnreadCounts".prefix, %* [{"includeThreads": includeThreads}])
+
 proc createOneToOneChat*(chatId: string, ensName: string = ""): RpcResponse[JsonNode] =
   let communityId = ""
   let payload = %* [communityId, chatId, ensName]

@@ -4,6 +4,8 @@ import ../../common/utils as common_utils
 
 import app/core/tasks/[qt, threadpool]
 import ./dto/chat as chat_dto
+import ./dto/section_unread_counts
+from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop, isActive
 import ../message/dto/message as message_dto
 import ../message/dto/thread as thread_dto
 import ../message/dto/[link_preview, standard_link_preview, status_link_preview]
@@ -15,6 +17,7 @@ import backend/chat as status_chat
 import backend/communities as status_communities
 import backend/group_chat as status_group_chat
 import app/global/[global_singleton, utils]
+import app/global/feature_flags
 import app/core/eventemitter
 import app/core/intake/share_intake_cache
 import app/core/signals/types
@@ -22,6 +25,7 @@ import app/core/signals/types
 import ../../common/message as message_common
 
 export chat_dto
+export section_unread_counts
 
 logScope:
   topics = "chat-service"
@@ -116,6 +120,12 @@ type
   ThreadMetadataArgs* = ref object of Args
     threads*: seq[thread_dto.ThreadDto]
 
+  SectionUnreadCountsUpdatedArgs* = ref object of Args
+    counts*: Table[string, SectionUnreadCounts]
+
+  SectionUnreadCountsFailedArgs* = ref object of Args
+    error*: string
+
 # Signals which may be emitted by this service:
 const SIGNAL_ACTIVE_CHATS_LOADED* = "activeChatsLoaded"
 const SIGNAL_CHATS_LOADING_FAILED* = "chatsLoadingFailed"
@@ -143,6 +153,8 @@ const SIGNAL_CHECK_CHANNEL_PERMISSIONS_RESPONSE* = "checkChannelPermissionsRespo
 const SIGNAL_CHECK_ALL_CHANNELS_PERMISSIONS_RESPONSE* = "checkAllChannelsPermissionsResponse"
 const SIGNAL_CHECK_ALL_CHANNELS_PERMISSIONS_FAILED* = "checkAllChannelsPermissionsFailed"
 const SIGNAL_THREAD_METADATA_RECEIVED* = "threadMetadataReceived"
+const SIGNAL_SECTION_UNREAD_COUNTS_UPDATED* = "sectionUnreadCountsUpdated"
+const SIGNAL_SECTION_UNREAD_COUNTS_FAILED* = "sectionUnreadCountsFailed"
 
 QtObject:
   type Service* = ref object of QObject
@@ -157,8 +169,14 @@ QtObject:
     # Mutation is observable across all callers and will corrupt subsequent
     # miss results — never pass to procs that take `var T`.
     emptyChat: ChatDto
+    sectionUnreadCounts: Table[string, SectionUnreadCounts]
+    sectionCountsTimer: QTimer
+    sectionCountsInFlight: bool
+    sectionCountsRefreshPending: bool
 
   proc delete*(self: Service)
+  proc fetchSectionUnreadCounts(self: Service)
+  proc requestSectionUnreadCounts*(self: Service)
   proc newService*(
       events: EventEmitter,
       threadpool: ThreadPool,
@@ -170,11 +188,78 @@ QtObject:
     result.threadpool = threadpool
     result.contactService = contactService
     result.chats = initTable[string, ChatDto]()
+    result.sectionCountsTimer = QTimer.create()
+    result.sectionCountsTimer.setSingleShot(true)
+    let svc = result
+    result.sectionCountsTimer.onTimeout(proc() {.closure, raises: [].} =
+      try:
+        svc.fetchSectionUnreadCounts()
+      except Exception as e:
+        error "failed to dispatch section unread counts", msg = e.msg)
+    result.events.on(SignalType.SectionUnreadCountsChanged.event) do(e: Args):
+      svc.requestSectionUnreadCounts()
+    result.events.on(SignalType.Message.event) do(e: Args):
+      if MessageSignal(e).sectionUnreadCountsChanged:
+        svc.requestSectionUnreadCounts()
 
   # Forward declarations
   proc updateOrAddChat*(self: Service, chat: ChatDto)
   proc processMessengerResponse*(self: Service, response: RpcResponse[JsonNode]): (seq[ChatDto], seq[MessageDto])
   proc getChatById*(self: Service, chatId: string, showWarning: bool = true): lent ChatDto
+
+  proc requestSectionUnreadCounts*(self: Service) =
+    self.sectionCountsRefreshPending = true
+    if not self.sectionCountsInFlight and not self.sectionCountsTimer.isActive:
+      self.sectionCountsTimer.start(100)
+
+  proc fetchSectionUnreadCounts(self: Service) =
+    if self.sectionCountsInFlight:
+      return
+    self.sectionCountsRefreshPending = false
+    self.sectionCountsInFlight = true
+    let arg = AsyncSectionUnreadCountsTaskArg(
+      tptr: asyncSectionUnreadCountsTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncSectionUnreadCounts",
+      includeThreads: THREADS_ENABLED)
+    try:
+      self.threadpool.startLocalRead(arg)
+    except Exception as e:
+      self.sectionCountsInFlight = false
+      self.events.emit(SIGNAL_SECTION_UNREAD_COUNTS_FAILED, SectionUnreadCountsFailedArgs(error: e.msg))
+      raise
+
+  proc onAsyncSectionUnreadCounts*(self: Service, response: string) {.slot.} =
+    self.sectionCountsInFlight = false
+    try:
+      let payload = response.parseJson
+      let errorMessage = payload{"error"}.getStr
+      if errorMessage.len > 0:
+        raise newException(ValueError, errorMessage)
+      let counts = parseSectionUnreadCounts(payload{"response"})
+      var updated = initTable[string, SectionUnreadCounts]()
+      for sectionId, count in counts:
+        if not self.sectionUnreadCounts.hasKey(sectionId) or
+            self.sectionUnreadCounts[sectionId] != count:
+          updated[sectionId] = count
+      for sectionId in self.sectionUnreadCounts.keys:
+        if not counts.hasKey(sectionId):
+          updated[sectionId] = SectionUnreadCounts()
+      self.sectionUnreadCounts = counts
+      if updated.len > 0:
+        self.events.emit(SIGNAL_SECTION_UNREAD_COUNTS_UPDATED, SectionUnreadCountsUpdatedArgs(counts: updated))
+    except CatchableError as e:
+      error "failed to load section unread counts", msg = e.msg
+      self.events.emit(SIGNAL_SECTION_UNREAD_COUNTS_FAILED, SectionUnreadCountsFailedArgs(error: e.msg))
+    if self.sectionCountsRefreshPending:
+      self.requestSectionUnreadCounts()
+
+  proc getSectionUnreadCounts*(self: Service, sectionId: string): SectionUnreadCounts =
+    self.sectionUnreadCounts.getOrDefault(sectionId)
+
+  proc handleSectionUnreadCountsResponse*(self: Service, response: JsonNode) =
+    if not response.isNil and response{"sectionUnreadCountsChanged"}.getBool:
+      self.requestSectionUnreadCounts()
 
   proc parseChatsInMessengerResponse*(self: Service, chatsInResponse: seq[ChatDto]) =
     var chats: seq[ChatDto] = @[]
@@ -255,31 +340,10 @@ QtObject:
     self.doConnect()
 
     self.asyncGetActiveChats()
+    self.requestSectionUnreadCounts()
 
   proc hasChannel*(self: Service, chatId: string): bool =
     self.chats.hasKey(chatId)
-
-  proc sectionUnreadMessagesAndMentionsCount*(self: Service, sectionId: string, sectionIsMuted: bool):
-      tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
-
-    result.unviewedMentionsCount = 0
-    result.unviewedMessagesCount = 0
-
-    let myPubKey = singletonInstance.userProfile.getPubKey()
-    var sectionIdToFind = sectionId
-    if sectionId == myPubKey:
-      # If the section is the personal one (ID == pubKey), then we set the sectionIdToFind to ""
-      # because personal chats have communityId == ""
-      sectionIdToFind = ""
-    for _, chat in self.chats:
-      if chat.communityId != sectionIdToFind:
-        continue
-      result.unviewedMentionsCount += chat.unviewedMentionsCount
-      # We count the unread messages if we are unmuted and it's not a mention, we want to show a badge on mentions
-      if chat.unviewedMentionsCount == 0 and (chat.muted or sectionIsMuted):
-        continue
-      if chat.unviewedMessagesCount > 0:
-        result.unviewedMessagesCount = result.unviewedMessagesCount + chat.unviewedMessagesCount
 
   proc updateOrAddChat*(self: Service, chat: ChatDto) =
     # status-go doesn't seem to preserve categoryIDs from chat
@@ -296,6 +360,7 @@ QtObject:
     self.events.emit(SIGNAL_CHAT_ADDED_OR_UPDATED, ChatArgs(communityId: chat.communityId, chatId: chat.id))
 
   proc parseChatResponse*(self: Service, response: RpcResponse[JsonNode]): (seq[ChatDto], seq[MessageDto]) =
+    self.handleSectionUnreadCountsResponse(response.result)
     var chats: seq[ChatDto] = @[]
     var messages: seq[MessageDto] = @[]
     let errDesription = response.result{"error"}.getStr
@@ -350,6 +415,7 @@ QtObject:
     self.signalThreadUpdates(response)
 
   proc processGroupChatResponse*(self: Service, response: RpcResponse[JsonNode]) =
+    self.handleSectionUnreadCountsResponse(response.result)
     proc parseGroupChatResponse(response: RpcResponse[JsonNode]): (ChatDto, seq[MessageDto], string) =
       var chat: ChatDto
       var messages: seq[MessageDto] = @[]
@@ -418,6 +484,7 @@ QtObject:
       return
 
     result.chatDto = jsonChat.toChatDto()
+    self.requestSectionUnreadCounts()
     self.updateOrAddChat(result.chatDto)
     result.success = true
 
@@ -429,6 +496,7 @@ QtObject:
           communityID,
           chatId,
           ensName=ensName)
+        self.requestSectionUnreadCounts()
         result.success = true
         result.chatDto = self.chats[chatId]
         return
@@ -458,7 +526,8 @@ QtObject:
         let leaveGroupResponse = status_chat.leaveGroupChat(chatId)
         self.parseChatResponseAndEmit(leaveGroupResponse)
 
-      discard status_chat.deactivateChat(chatId, preserveHistory = chat.chatType == chat_dto.ChatType.OneToOne)
+      let response = status_chat.deactivateChat(chatId, preserveHistory = chat.chatType == chat_dto.ChatType.OneToOne)
+      self.handleSectionUnreadCountsResponse(response.result)
 
       self.chats.del(chatId)
       self.events.emit(SIGNAL_CHAT_LEFT, ChatArgs(chatId: chatId))
@@ -672,6 +741,7 @@ QtObject:
   proc clearChatHistory*(self: Service, chatId: string) =
     try:
       let response = status_chat.clearChatHistory(chatId)
+      self.handleSectionUnreadCountsResponse(response.result)
       if(not response.error.isNil):
         let msg = response.error.message & " chatId=" & chatId
         error "error while clearing chat history ", msg
@@ -845,4 +915,6 @@ QtObject:
       ))
 
   proc delete*(self: Service) =
+    if not self.sectionCountsTimer.h.isNil:
+      self.sectionCountsTimer.stop()
     self.QObject.delete
