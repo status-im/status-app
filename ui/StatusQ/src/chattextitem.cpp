@@ -347,7 +347,11 @@ void ChatTextItem::updateAppearance(int kind, const std::function<void(QTextChar
     if (!relevant)
         return;
 
-    m_document->setLayoutEnabled(false);
+    // No setLayoutEnabled(false) here: turning layout back on relays out the
+    // whole document (qtextdocument.cpp:681). Within one edit block, the format
+    // edits and the mirrored layout formats are laid out once, as one range.
+    QTextCursor cursor(m_document.get());
+    cursor.beginEditBlock();
     clearLinkHighlights();
     struct Change { int start; int end; QTextCharFormat format; };
     QVector<Change> changes;
@@ -370,16 +374,14 @@ void ChatTextItem::updateAppearance(int kind, const std::function<void(QTextChar
             }
         }
     }
-    QTextCursor cursor(m_document.get());
-    cursor.beginEditBlock();
     for (const auto& change : std::as_const(changes)) {
         cursor.setPosition(change.start);
         cursor.setPosition(change.end, QTextCursor::KeepAnchor);
         cursor.setCharFormat(change.format);
     }
-    cursor.endEditBlock();
-    m_formatsDirty |= !changes.isEmpty();
     applyLinkHighlights();
+    syncLayoutFormats();
+    cursor.endEditBlock();
     markLayoutDirty();
 }
 
@@ -885,7 +887,8 @@ QVariantList ChatTextItem::quoteBarRects() const
 void ChatTextItem::markLayoutDirty()
 {
     m_layoutDirty = true;
-    ensureLayout();
+    if (m_layoutBatch == 0)
+        ensureLayout();
     update();
 }
 
@@ -897,26 +900,8 @@ void ChatTextItem::ensureLayout()
     m_layoutDirty = false;
     ++m_layoutRevision;
 
-    // addTextLayout reads brushes from additional formats rather than walking
-    // document fragments. Mirror those formats on the GUI thread; unchanged
-    // layouts keep their existing shaping and line breaks.
-    if (m_formatsDirty) {
-        for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
-            QList<QTextLayout::FormatRange> formats;
-            for (auto it = block.begin(); !it.atEnd(); ++it) {
-                const QTextFragment fragment = it.fragment();
-                const QTextCharFormat format = fragment.charFormat();
-                if (!format.isEmpty())
-                    formats.append({fragment.position() - block.position(), fragment.length(), format});
-            }
-            if (block.layout()->formats() != formats) {
-                block.layout()->setFormats(formats);
-                m_document->markContentsDirty(block.position(), block.length());
-            }
-        }
-
-        m_formatsDirty = false;
-    }
+    if (m_formatsDirty)
+        syncLayoutFormats();
 
     // Only when it actually changed. QTextDocument::setTextWidth goes straight
     // to setPageSize, which unconditionally calls
@@ -939,6 +924,34 @@ void ChatTextItem::ensureLayout()
     m_contentHeight = height;
     setImplicitHeight(height);
     emit contentHeightChanged();
+}
+
+// addTextLayout reads brushes from additional formats rather than walking
+// document fragments. Mirror those formats on the GUI thread; unchanged
+// layouts keep their existing shaping and line breaks.
+void ChatTextItem::syncLayoutFormats()
+{
+    int dirtyFrom = -1;
+    int dirtyTo = -1;
+    for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+        QList<QTextLayout::FormatRange> formats;
+        for (auto it = block.begin(); !it.atEnd(); ++it) {
+            const QTextFragment fragment = it.fragment();
+            const QTextCharFormat format = fragment.charFormat();
+            if (!format.isEmpty())
+                formats.append({fragment.position() - block.position(), fragment.length(), format});
+        }
+        if (block.layout()->formats() != formats) {
+            block.layout()->setFormats(formats);
+            if (dirtyFrom < 0)
+                dirtyFrom = block.position();
+            dirtyTo = block.position() + block.length();
+        }
+    }
+    // One call: markContentsDirty lays out immediately, even inside an edit block.
+    if (dirtyFrom >= 0)
+        m_document->markContentsDirty(dirtyFrom, dirtyTo - dirtyFrom);
+    m_formatsDirty = false;
 }
 
 qreal ChatTextItem::contentHeight() const
@@ -1650,9 +1663,16 @@ void ChatTextItem::setAppearance(ChatTextAppearance* appearance)
     disconnect(m_appearance, nullptr, this, nullptr);
     m_appearance = appearance;
     connectAppearance();
-    for (int field = ChatTextAppearance::Font; field <= ChatTextAppearance::QuoteColor; ++field)
-        if (changes & (1u << (field - 1)))
-            applyAppearance(static_cast<ChatTextAppearance::Change>(field));
+    if (changes) {
+        // Every field's edits first, then a single layout of the document.
+        m_document->setLayoutEnabled(false);
+        ++m_layoutBatch;
+        for (int field = ChatTextAppearance::Font; field <= ChatTextAppearance::QuoteColor; ++field)
+            if (changes & (1u << (field - 1)))
+                applyAppearance(static_cast<ChatTextAppearance::Change>(field));
+        --m_layoutBatch;
+        markLayoutDirty();
+    }
     emit appearanceChanged();
 }
 
@@ -1665,6 +1685,8 @@ void ChatTextItem::applyAppearance(ChatTextAppearance::Change change)
     }
     switch (change) {
     case ChatTextAppearance::Font: {
+        // One full layout for the font and the emoji sizes that follow it.
+        m_document->setLayoutEnabled(false);
         m_document->setDefaultFont(m_appearance->font());
 
         // Ordinary spans inherit the new default font. Emoji carry an explicit
