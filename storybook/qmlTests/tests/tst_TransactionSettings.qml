@@ -24,9 +24,9 @@ Item {
             currentBaseFee: "8200000000"
             currentSuggestedMinPriorityFee: "60000000"
             currentSuggestedMaxPriorityFee: "5100000000"
-            // ETH send to a new address after Glamsterdam: ~207,390 raw estimate * 1.05
+            // ETH send to a new address after Glamsterdam: 207,390 raw estimate * 1.05
             currentGasAmount: "217760"
-            minGasAmount: "181467"
+            minGasAmount: "207390"
             currentNonce: 21
 
             customBaseFeeOrGasPrice: "8.2"
@@ -59,28 +59,33 @@ Item {
         function test_customGasAmount_data() {
             return [
                 // blocked: below the node estimate (e.g. legacy 21000 for a send to a new address)
-                { tag: "legacy 21000 below minimum", amount: "21000", minGas: "181467",
+                { tag: "legacy 21000 below minimum", amount: "21000", minGas: "207390",
                   blocking: true, message: "Too low" },
-                { tag: "just below minimum", amount: "181466", minGas: "181467",
+                { tag: "just below minimum", amount: "207389", minGas: "207390",
+                  blocking: true, message: "Too low" },
+                // blocked: above suggested / 1.2, but still below the raw estimate on a 1.05 path
+                { tag: "between suggested/1.2 and raw estimate", amount: "190000", minGas: "207390",
                   blocking: true, message: "Too low" },
                 // warning only: between the node estimate and the suggestion
-                { tag: "between minimum and suggested", amount: "200000", minGas: "181467",
+                { tag: "exactly minimum", amount: "207390", minGas: "207390",
                   blocking: false, message: "Lower than recommended" },
-                { tag: "suggested", amount: "217760", minGas: "181467",
+                { tag: "between minimum and suggested", amount: "210000", minGas: "207390",
+                  blocking: false, message: "Lower than recommended" },
+                { tag: "suggested", amount: "217760", minGas: "207390",
                   blocking: false, message: "Current:" },
                 // values the old fixed 21000..30000000 bounds rejected
                 { tag: "self-send 12000 when estimate allows", amount: "12000", minGas: "12000",
                   blocking: false, message: "Lower than recommended" },
                 { tag: "zero-value 15000 when estimate allows", amount: "15000", minGas: "15000",
                   blocking: false, message: "Lower than recommended" },
-                { tag: "40M", amount: "40000000", minGas: "181467",
+                { tag: "40M", amount: "40000000", minGas: "207390",
                   blocking: false, message: "Much higher" },
-                { tag: "3e9", amount: "3000000000", minGas: "181467",
+                { tag: "3e9", amount: "3000000000", minGas: "207390",
                   blocking: false, message: "Much higher" },
-                { tag: "2^32-1", amount: "4294967295", minGas: "181467",
+                { tag: "2^32-1", amount: "4294967295", minGas: "207390",
                   blocking: false, message: "Much higher" },
                 // blocked: out of the transport range
-                { tag: "2^32", amount: "4294967296", minGas: "181467",
+                { tag: "2^32", amount: "4294967296", minGas: "207390",
                   blocking: true, message: "Must be between" },
                 { tag: "zero", amount: "0", minGas: "",
                   blocking: true, message: "Must be between" },

@@ -841,9 +841,13 @@ QtObject {
     // EIP-8037 TX_MAX_TOTAL_GAS_LIMIT (2^32 - 1); a transport bound, not a block fit.
     // Keep in sync with MaxTxGasAmount in src/app_service/service/eth/utils.nim.
     readonly property string maxTxGasAmount: "4294967295"
-    // Largest buffer the router applies on top of the node estimate (bridges). Dividing the
-    // suggested gas by it never exceeds the raw node estimate, so it is a safe lower bound.
-    readonly property string maxGasEstimateBufferFactor: "1.2"
+    // Buffers the router applies on top of the node estimate. Used to derive the raw estimate
+    // from the suggested gas (see WalletUtils.minGasAmountFromSuggested).
+    // Keep in sync with IncreaseEstimatedGasFactor / IncreaseEstimatedGasFactorForBridge in
+    // vendor/status-go/pkg/services/wallet/router/pathprocessor/common/constants.go: a QML value
+    // below the status-go one would put the minimum above the raw estimate and block valid values.
+    readonly property string gasEstimateBufferFactor: "1.05"
+    readonly property string bridgeGasEstimateBufferFactor: "1.2"
     // A custom gas amount above suggested * this factor gets a (non-blocking) warning.
     readonly property string highGasAmountWarningFactor: "2"
 

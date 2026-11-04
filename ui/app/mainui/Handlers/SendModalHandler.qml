@@ -854,17 +854,12 @@ QtObject {
                         }
                         return ""
                     }
-                    // Lower bound derived from the suggested gas: the router buffers the node
-                    // estimate by at most `maxGasEstimateBufferFactor`, so this never exceeds it.
-                    // TODO: bind to the raw estimate once status-go exposes it on the path.
-                    minGasAmount: {
-                        const suggested = !!currentGasAmount ? SQUtils.AmountsArithmetic.fromString(currentGasAmount) : NaN
-                        if (!(suggested instanceof Object)) {
-                            return ""
-                        }
-                        const factor = SQUtils.AmountsArithmetic.fromString(Constants.maxGasEstimateBufferFactor)
-                        return suggested.div(factor).round(0, 0 /* round down */).toFixed()
-                    }
+                    minGasAmount: !!txPathUnderReviewEntry.item
+                                  ? WalletUtils.minGasAmountFromSuggested(currentGasAmount,
+                                                                          txPathUnderReviewEntry.item.fromChain,
+                                                                          txPathUnderReviewEntry.item.toChain,
+                                                                          handler.reviewApprovalForTxPathUnderReview)
+                                  : ""
                     currentNonce: {
                         if (!!txPathUnderReviewEntry.item) {
                             if (handler.reviewApprovalForTxPathUnderReview) {
