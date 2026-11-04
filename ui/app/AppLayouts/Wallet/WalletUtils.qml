@@ -93,7 +93,9 @@ QtObject {
         const factor = StatusQUtils.AmountsArithmetic.fromString(fromChain !== toChain
                                                                 ? Constants.bridgeGasEstimateBufferFactor
                                                                 : Constants.gasEstimateBufferFactor)
-        return suggested.div(factor).round(0, 0 /* round down */).toFixed()
+        // status-go truncates: suggested = floor(raw * factor). With factor > 1 that is strictly
+        // increasing in raw, so ceil(suggested / factor) recovers raw exactly.
+        return suggested.div(factor).round(0, 3 /* round up */).toFixed()
     }
 
     function getLabelForEstimatedTxTime(estimatedFlag, shortForm = false) {
