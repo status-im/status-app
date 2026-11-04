@@ -203,19 +203,28 @@ Item {
         }
 
         function test_hoverHighlightAndDisabledTooltip() {
+            mouseMove(root, 790, 790)
             const part = createPart()
             part.messageDetails.unparsedText = root.address
             const field = part.textField
             const href = "//send-via-personal-chat//" + root.address
             const point = linkPoint(field, href)
-            const tooltip = findChild(part, "StatusTextMessage_disabledLinkTooltip")
-            verify(!!tooltip)
-            mouseMove(root, 790, 790)
+            const loader = findChild(part, "StatusTextMessage_disabledLinkTooltipLoader")
+            verify(!!loader)
+            compare(loader.item, null)
+            compare(findChild(part, "StatusTextMessage_disabledLinkTooltip"), null)
             mouseMove(field, point.x, point.y)
             compare(part.hoveredLink, href)
-            compare(tooltip.visible, false)
+            compare(loader.item, null)
             part.disabledTooltipText = "Not available"
+            tryVerify(() => !!loader.item)
+            const tooltip = loader.item
+            compare(findChild(part, "StatusTextMessage_disabledLinkTooltip"), tooltip)
+            compare(tooltip.parent, field)
+            compare(tooltip.delay, 100)
+            compare(tooltip.opened, false)
             tryCompare(tooltip, "visible", true)
+            tryCompare(tooltip, "opened", true)
             compare(tooltip.text, "Not available")
             part.highlightedLink = href
             compare(field.highlightedLink, href)
@@ -224,6 +233,60 @@ Item {
             mouseMove(root, 790, 790)
             compare(part.hoveredLink, "")
             compare(field.highlightedLink, href)
+            compare(loader.item, tooltip)
+            part.disabledTooltipText = "Another reason"
+            compare(tooltip.visible, false)
+            mouseMove(field, point.x, point.y)
+            tryCompare(tooltip, "opened", true)
+            compare(loader.item, tooltip)
+            compare(tooltip.text, "Another reason")
+            mouseMove(root, 790, 790)
+            tryCompare(tooltip, "visible", false)
+        }
+
+        function test_disabledTooltipOnlyForWalletLinks_data() {
+            return [
+                {tag: "plain", source: "hello", href: "", wallet: false},
+                {tag: "url", source: "https://status.app", href: "https://status.app", wallet: false},
+                {tag: "mention", source: "@" + root.pubKey, href: root.pubKey, wallet: false},
+                {tag: "address", source: root.address, href: "//send-via-personal-chat//" + root.address,
+                 wallet: true},
+                {tag: "ens", source: "alice.eth", href: "//send-via-personal-chat//alice.eth", wallet: true}
+            ]
+        }
+        function test_disabledTooltipOnlyForWalletLinks(data) {
+            mouseMove(root, 790, 790)
+            const part = createPart({disabledTooltipText: "Not available"})
+            part.messageDetails.mentionsMap = ({[root.pubKey]: "Alice"})
+            part.messageDetails.unparsedText = data.source
+            const field = part.textField
+            const loader = findChild(part, "StatusTextMessage_disabledLinkTooltipLoader")
+            compare(loader.item, null)
+            const point = data.href ? linkPoint(field, data.href) : Qt.point(5, 11)
+            mouseMove(field, point.x, point.y)
+            if (data.wallet) {
+                tryVerify(() => !!loader.item && loader.item.opened)
+                compare(loader.item.text, "Not available")
+                mouseMove(field, field.width - 5, point.y)
+                tryCompare(loader.item, "visible", false)
+            } else {
+                wait(150)
+                compare(loader.item, null)
+            }
+            mouseMove(root, 790, 790)
+        }
+
+        function test_touchDoesNotCreateDisabledTooltip() {
+            mouseMove(root, 790, 790)
+            const part = createPart({isMobile: true, disabledTooltipText: "Not available"})
+            part.messageDetails.unparsedText = root.address
+            const field = part.textField
+            const loader = findChild(part, "StatusTextMessage_disabledLinkTooltipLoader")
+            const spy = linkSpy(part)
+            activate(field, linkPoint(field, "//send-via-personal-chat//" + root.address), "touch")
+            compare(spy.count, 0)
+            wait(150)
+            compare(loader.item, null)
         }
 
         function test_focusPolicyAndMobileToggle() {

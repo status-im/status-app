@@ -92,11 +92,13 @@ Item {
             root.linkActivated(isLink ? href : "//" + href)
         }
 
-        StatusToolTip {
+        StatusLazyToolTip {
             id: disabledLinkTooltip
-            objectName: "StatusTextMessage_disabledLinkTooltip"
+            objectName: "StatusTextMessage_disabledLinkTooltipLoader"
+            tooltipObjectName: "StatusTextMessage_disabledLinkTooltip"
+            target: chatTextItem
+            enabled: d.showDisabledTooltipForAddressEnsName(chatTextItem.hoveredLink)
             text: root.disabledTooltipText
-            visible: d.showDisabledTooltipForAddressEnsName(chatTextItem.hoveredLink)
             delay: 100
         }
     }
