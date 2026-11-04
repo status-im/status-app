@@ -39,6 +39,7 @@ Item {
     // We're here in case of CommunitySection
     // This module is set from `ChatLayout` (each `ChatLayout` has its own communitySectionModule)
     property var communitySectionModule
+    property Component threadContextMenu
 
     property ChatStores.RootStore store
     property CommunitiesStores.CommunitiesStore communitiesStore
@@ -299,6 +300,8 @@ Item {
                         }
                     }
                 }
+
+                threadListPopupMenu: root.threadContextMenu
 
                 chatListPopupMenu: ChatContextMenuView {
                     id: chatContextMenuView

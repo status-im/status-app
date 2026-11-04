@@ -92,6 +92,12 @@ Item {
         name: "ChatHeaderMenu"
         when: windowShown
 
+        SignalSpy {
+            id: editThreadSpy
+            target: header
+            signalName: "editThreadRequested"
+        }
+
         // INTENT (perf): the More menu must not be instantiated at load
         function test_01_menuNotBuiltAtLoad() {
             wait(200)
@@ -153,8 +159,9 @@ Item {
             chatContentModuleMock.chatAdmin = false
         }
 
-        function test_04_selectedThreadHeaderWiresMenuAndRename() {
+        function test_04_selectedThreadHeaderRequestsPanelEditor() {
             const messages = chatContentModuleMock.messagesModule
+            editThreadSpy.clear()
             messages.threadId = "thread"
             compare(header.chatContentModule.messagesModule.threadId, "thread")
             compare(findChild(header, "chatHeaderMessageStore").threadId, "thread")
@@ -165,19 +172,24 @@ Item {
             mouseClick(button)
             const menu = findChild(header, "threadHeaderContextMenu")
             tryCompare(menu, "opened", true)
+            compare(menu.actionAt(0).objectName, "threadContextMenu_editName")
+            verify(menu.actionAt(0).enabled)
             menu.actionAt(0).trigger()
-            tryVerify(() => !!findChild(header, "threadNameInput"))
-            const input = findChild(header, "threadNameInput")
-            input.text = "Renamed thread"
-            input.accepted()
-            compare(messages.requestedName, "Renamed thread")
-            compare(messages.threadEditPending, true)
-            messages.threadName = "Renamed thread"
-            messages.threadEditPending = false
-            messages.threadEditFinished("")
-            tryVerify(() => !findChild(header, "threadNameInput"))
+            compare(editThreadSpy.count, 1)
+            compare(editThreadSpy.signalArguments[0][0], "thread")
+            compare(findChild(header, "threadNameInput"), null)
+            menu.close()
+            tryCompare(menu, "opened", false)
+
             messages.canEditThread = false
-            compare(button.visible, false)
+            compare(button.visible, true)
+            mouseClick(button)
+            tryCompare(menu, "opened", true)
+            compare(menu.actionAt(0).enabled, false)
+            verify(findChild(menu, "threadContextMenu_markAsRead").enabled)
+            compare(editThreadSpy.count, 1)
+            menu.close()
+            tryCompare(menu, "opened", false)
             messages.threadId = ""
             messages.canEditThread = true
         }

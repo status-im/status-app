@@ -50,6 +50,122 @@ Item {
 
         Component { id: searchSpyComponent; SignalSpy { signalName: "openAppSearch" } }
 
+        Component {
+            id: threadMessagesComponent
+            QtObject {
+                property string threadId: "rename-thread"
+                property string threadName: "Thread name"
+                property string threadParentChatName: "Parent chat"
+                property bool canEditThread: true
+                property bool threadEditPending: false
+                property var model: null
+                property string requestedName
+                property string parentChatId: "parent-chat"
+                signal threadEditFinished(string error)
+                function getChatId() { return parentChatId }
+                function editThread(name) { requestedName = name }
+            }
+        }
+
+        function test_editNameOpensEditorInThreadPanel_data() {
+            return [
+                {tag: "central desktop", portrait: false, fromList: false},
+                {tag: "central portrait", portrait: true, fromList: false},
+                {tag: "list desktop", portrait: false, fromList: true},
+                {tag: "list portrait", portrait: true, fromList: true}
+            ]
+        }
+
+        function test_editNameOpensEditorInThreadPanel(data) {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            tryVerify(() => loader.status === Loader.Ready, 120000)
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
+            view.sectionLayout.criteria = [data.portrait, true]
+            tryCompare(view.sectionLayout, "isPortrait", data.portrait)
+            view.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+            const messages = createTemporaryObject(threadMessagesComponent, this)
+            verify(!!messages)
+            let menu
+            if (data.fromList) {
+                messages.parentChatId = view.activeItemId
+                const model = view.rootStore.chatCommunitySectionModule.model
+                let threadName
+                for (let i = 0; i < model.count; ++i) {
+                    const row = model.get(i)
+                    if (row.type === Constants.chatType.communityChat && row.itemId !== view.activeItemId) {
+                        messages.threadId = row.itemId
+                        threadName = row.name
+                        model.setProperty(i, "isThread", true)
+                        break
+                    }
+                }
+                verify(!!threadName)
+                tryCompare(view.leftPanel, "status", Loader.Ready)
+                view.sectionLayout.currentIndex = StatusSectionLayout.LeftPanel
+                let row
+                tryVerify(() => {
+                    row = findChild(view.leftPanel.item, threadName)
+                    return !!row && row.width > 0 && row.height > 0 && row.Window.window !== null
+                })
+                verify(waitForPolish(view.leftPanel.item))
+                mouseClick(row, row.width / 2, row.height / 2, Qt.RightButton)
+                tryVerify(() => {
+                    menu = findChild(view.leftPanel.item, "threadListContextMenu")
+                    return !!menu
+                }, 5000, "Thread rows must use ThreadContextMenu")
+                const listStore = findChild(menu, "threadListMessageStore")
+                verify(!!listStore)
+                listStore.messageModule = messages
+            } else {
+                const centralStore = findChild(view.headerContent, "chatHeaderMessageStore")
+                verify(!!centralStore)
+                centralStore.messageModule = messages
+                const centralHeader = harness.findChildByTypePrefix(view.headerContent, "ThreadHeader")
+                verify(!!centralHeader)
+                findChild(centralHeader, "threadHeaderMenuButton").clicked()
+                menu = findChild(centralHeader, "threadHeaderContextMenu")
+            }
+            tryCompare(menu, "opened", true)
+            compare(menu.actionAt(0).objectName, "threadContextMenu_editName")
+            verify(menu.actionAt(0).enabled)
+            menu.actionAt(0).trigger()
+            menu.close()
+            compare(findChild(view.headerContent, "threadNameInput"), null)
+            tryCompare(view.rootStore, "openThreadId", messages.threadId)
+            tryCompare(view.rightPanel, "status", Loader.Ready)
+            let panelHeader
+            tryVerify(() => {
+                const panel = data.portrait ? view.threadToolbarHeader : view.rightPanel.item
+                panelHeader = findChild(panel, "threadPanelHeader")
+                return !!panelHeader
+            })
+            const panelStore = findChild(panelHeader, "threadPanelMessageStore")
+            verify(!!panelStore)
+            panelStore.messageModule = messages
+            tryCompare(panelHeader, "editing", true)
+            if (data.portrait)
+                tryCompare(view.sectionLayout, "currentIndex", StatusSectionLayout.RightPanel)
+            const input = findChild(panelHeader, "threadNameInput")
+            verify(!!input)
+            tryCompare(input, "activeFocus", true)
+            input.text = "Updated thread"
+            input.accepted()
+            compare(messages.requestedName, "Updated thread")
+            messages.threadEditFinished("Request failed")
+            compare(panelHeader.editing, true)
+            compare(input.text, "Updated thread")
+            input.accepted()
+            messages.threadEditFinished("")
+            compare(panelHeader.editing, false)
+            findChild(panelHeader, "threadHeaderMenuButton").clicked()
+            const panelMenu = findChild(panelHeader, "threadHeaderContextMenu")
+            tryCompare(panelMenu, "opened", true)
+            panelMenu.actionAt(0).trigger()
+            panelMenu.close()
+            tryCompare(panelHeader, "editing", true)
+        }
+
         function test_threadSearchUsesItsOwnScope_data() {
             return [{tag: "desktop", portrait: false}, {tag: "portrait", portrait: true}]
         }

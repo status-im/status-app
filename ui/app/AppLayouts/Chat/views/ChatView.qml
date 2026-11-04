@@ -219,10 +219,26 @@ Item {
         property int threadPanelRevision: 0
         property int infoTab: ChatInfoPanel.Default
         property bool threadOpenedFromInfo: false
+        property string threadNameEditId
 
-        function openThreadPanel(threadId, threadName) {
+        function getThreadMessageModule(threadId) {
+            const section = root.rootStore.chatCommunitySectionModule
+            if (!threadId || !section)
+                return null
+            section.prepareChatContentModuleForChatId(threadId)
+            return section.getChatContentModule()?.messagesModule ?? null
+        }
+
+        function editThreadName(threadId, threadName, parentChatId) {
+            root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
+            threadOpenedFromInfo = false
+            threadNameEditId = threadId
+            openThreadPanel(threadId, threadName, parentChatId)
+        }
+
+        function openThreadPanel(threadId, threadName, parentChatId = root.activeItemId) {
             threadPanelRevision++
-            root.rootStore.openThreadPanel(threadId, threadName, root.activeItemId)
+            root.rootStore.openThreadPanel(threadId, threadName, parentChatId)
             // Wait for the right panel page to exist before navigating to it.
             if (root.sectionLayout?.isPortrait)
                 Backpressure.setTimeout(root, 50, () => {
@@ -255,6 +271,7 @@ Item {
 
         function closeThreadPanel() {
             threadPanelRevision++
+            threadNameEditId = ""
             root.rootStore.closeThreadPanel()
         }
     }
@@ -335,7 +352,7 @@ Item {
                                                    rightPanelLoader.item?.headerContent ?? null
 
     readonly property Item threadToolbarHeader: Loader {
-        active: !!d.openThreadId
+        active: d.threadHeaderInToolbar
         sourceComponent: RowLayout {
             Loader {
                 Layout.fillWidth: true
@@ -357,21 +374,34 @@ Item {
 
         ThreadHeader {
             id: panelThreadHeader
+            objectName: "threadPanelHeader"
+            readonly property bool editRequested: !!threadId && d.threadNameEditId === threadId
+                                                 && canEdit && !pending && visible
+                                                 && (!d.threadHeaderInToolbar || root.sectionLayout.currentIndex === StatusSectionLayout.RightPanel)
+
+            function editRequestedName() {
+                if (!editRequested)
+                    return
+                beginEditing()
+                d.threadNameEditId = ""
+            }
+
+            onEditRequestedChanged: if (editRequested) Qt.callLater(panelThreadHeader.editRequestedName)
+            Component.onCompleted: if (editRequested) Qt.callLater(panelThreadHeader.editRequestedName)
+
             threadId: d.openThreadId
             threadName: threadMessageStore.threadName
             parentChatName: d.openThreadParentChatName
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
+            onEditNameRequested: Qt.callLater(panelThreadHeader.beginEditing)
             onRenameRequested: name => threadMessageStore.editThread(name)
+            onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(d.openThreadParentChatId, d.openThreadId)
 
             ChatStores.MessageStore {
                 id: threadMessageStore
-                messageModule: {
-                    if (!root.rootStore.chatCommunitySectionModule || !d.openThreadId)
-                        return null
-                    root.rootStore.chatCommunitySectionModule.prepareChatContentModuleForChatId(d.openThreadId)
-                    return root.rootStore.chatCommunitySectionModule.getChatContentModule()?.messagesModule ?? null
-                }
+                objectName: "threadPanelMessageStore"
+                messageModule: d.getThreadMessageModule(d.openThreadId)
                 chatSectionModule: root.rootStore.chatCommunitySectionModule
             }
 
@@ -801,6 +831,10 @@ Item {
             amIChatAdmin: root.amIChatAdmin
             showMembersButtonHighlighted: root.showUsersList && !d.openThreadId
 
+            onEditThreadRequested: threadId => {
+                d.editThreadName(threadId, root.activeItemName, root.chatContentModule.messagesModule.getChatId())
+            }
+
             onSearchButtonClicked: root.openAppSearch(root.chatContentModule?.getMyChatId() ?? "",
                                                        root.chatContentModule?.messagesModule.threadId ?? "")
             onDisplayEditChannelPopup: {
@@ -946,8 +980,41 @@ Item {
     }
 
     Component {
+        id: threadListContextMenuComponent
+
+        ThreadContextMenu {
+            objectName: "threadListContextMenu"
+            isMobile: SQUtils.Utils.isMobile
+            followed: false
+            muted: false
+            pinned: false
+            followEnabled: false
+            muteEnabled: false
+            pinEnabled: false
+            deleteEnabled: false
+            threadLinkToCopyShare: ""
+            editEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending
+            openHandler: function(threadId) { threadMenuData.threadId = threadId }
+            onEditNameRequested: d.editThreadName(threadMenuData.threadId, listedThreadMessages.threadName, listedThreadMessages.chatId)
+            onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(listedThreadMessages.chatId, threadMenuData.threadId)
+
+            QtObject {
+                id: threadMenuData
+                property string threadId
+            }
+
+            ChatStores.MessageStore {
+                id: listedThreadMessages
+                objectName: "threadListMessageStore"
+                messageModule: d.getThreadMessageModule(threadMenuData.threadId)
+            }
+        }
+    }
+
+    Component {
         id: contactsColumnComponent
         ContactsColumnView {
+            threadContextMenu: threadListContextMenuComponent
             chatSectionModule: root.rootStore.chatCommunitySectionModule
             store: root.rootStore
 
@@ -970,6 +1037,7 @@ Item {
     Component {
         id: communtiyColumnComponent
         CommunityColumnView {
+            threadContextMenu: threadListContextMenuComponent
             communitySectionModule: root.rootStore.chatCommunitySectionModule
             communityData: root.sectionItemModel
             joinedMembersCount: root.joinedMembersCount
