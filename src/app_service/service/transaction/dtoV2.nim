@@ -53,6 +53,9 @@ type
     suggestedTxGasAmount*: uint64
     suggestedApprovalTxNonce*: UInt256
     suggestedApprovalGasAmount*: uint64
+    ## raw node estimates behind the suggestions; 0 for a stand-in
+    estimatedTxGasAmount*: uint64
+    estimatedApprovalGasAmount*: uint64
     usedContractAddress*: string
 
     txNonce*: UInt256
@@ -135,6 +138,8 @@ proc toTransactionPathDtoV2*(jsonObj: JsonNode): TransactionPathDtoV2 =
   discard jsonObj.getProp("SuggestedTxGasAmount", result.suggestedTxGasAmount)
   result.suggestedApprovalTxNonce = stint.fromHex(UInt256, jsonObj{"SuggestedApprovalTxNonce"}.getStr)
   discard jsonObj.getProp("SuggestedApprovalGasAmount", result.suggestedApprovalGasAmount)
+  discard jsonObj.getProp("EstimatedTxGasAmount", result.estimatedTxGasAmount)
+  discard jsonObj.getProp("EstimatedApprovalGasAmount", result.estimatedApprovalGasAmount)
   discard jsonObj.getProp("UsedContractAddress", result.usedContractAddress)
   result.txNonce = stint.fromHex(UInt256, jsonObj{"TxNonce"}.getStr)
   result.txGasPrice = stint.fromHex(UInt256, jsonObj{"TxGasPrice"}.getStr)

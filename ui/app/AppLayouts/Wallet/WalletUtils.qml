@@ -75,25 +75,6 @@ QtObject {
         return Math.max(result, 0)
     }
 
-    // Lower bound for a custom gas amount: the node's raw estimate, recovered from the router's
-    // suggested (buffered) gas. Bridge txs (fromChain != toChain) are buffered more than other
-    // paths; approvals always run on the source chain and use the default buffer.
-    // Returns "" when the suggestion is unknown.
-    // TODO: use the raw estimate once status-go exposes it on the path.
-    function minGasAmountFromSuggested(suggestedGasAmount, fromChain, toChain, isApproval) {
-        if (!suggestedGasAmount)
-            return ""
-        const suggested = StatusQUtils.AmountsArithmetic.fromString(suggestedGasAmount)
-        if (!(suggested instanceof Object))
-            return ""
-        const factor = StatusQUtils.AmountsArithmetic.fromString(!isApproval && fromChain !== toChain
-                                                                ? Constants.bridgeGasEstimateBufferFactor
-                                                                : Constants.gasEstimateBufferFactor)
-        // status-go truncates: suggested = floor(raw * factor). With factor > 1 that is strictly
-        // increasing in raw, so ceil(suggested / factor) recovers raw exactly.
-        return suggested.div(factor).round(0, 3 /* round up */).toFixed()
-    }
-
     function getLabelForEstimatedTxTime(estimatedFlag, shortForm = false) {
         switch(estimatedFlag) {
         case Constants.TransactionEstimatedTime.Unknown:
