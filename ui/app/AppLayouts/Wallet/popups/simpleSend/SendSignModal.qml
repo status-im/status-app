@@ -97,6 +97,8 @@ SignTransactionModalBase {
     required property string currentSuggestedMinPriorityFee
     required property string currentSuggestedMaxPriorityFee
     required property string currentGasAmount
+    /** Minimum custom gas amount (the raw node estimate); empty if unknown **/
+    required property string minGasAmount
     required property int currentNonce
 
     required property string normalPrice
@@ -300,6 +302,7 @@ SignTransactionModalBase {
         currentSuggestedMinPriorityFee: root.currentSuggestedMinPriorityFee
         currentSuggestedMaxPriorityFee: root.currentSuggestedMaxPriorityFee
         currentGasAmount: root.currentGasAmount
+        minGasAmount: root.minGasAmount
         currentNonce: root.currentNonce
 
         normalPrice: root.fnGetPriceInCurrencyForFee(root.normalPrice)

@@ -838,8 +838,14 @@ QtObject {
         "BNB": 9,
     }
 
-    readonly property string minGasForTx: "21000"
-    readonly property string maxGasForTx: "30000000"
+    // EIP-8037 TX_MAX_TOTAL_GAS_LIMIT (2^32 - 1); a transport bound, not a block fit.
+    // Keep in sync with MaxTxGasAmount in src/app_service/service/eth/utils.nim.
+    readonly property string maxTxGasAmount: "4294967295"
+    // Largest buffer the router applies on top of the node estimate (bridges). Dividing the
+    // suggested gas by it never exceeds the raw node estimate, so it is a safe lower bound.
+    readonly property string maxGasEstimateBufferFactor: "1.2"
+    // A custom gas amount above suggested * this factor gets a (non-blocking) warning.
+    readonly property string highGasAmountWarningFactor: "2"
 
     readonly property QtObject networkShortChainNames: QtObject {
         readonly property string mainnet: "eth"

@@ -166,6 +166,7 @@ SplitView {
                     currentSuggestedMinPriorityFee: "0.06"
                     currentSuggestedMaxPriorityFee: "5.1"
                     currentGasAmount: "31500"
+                    minGasAmount: "26250"
                     currentNonce: 21
 
                     normalPrice: "1.45 EUR"
