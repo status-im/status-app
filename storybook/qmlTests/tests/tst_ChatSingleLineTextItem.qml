@@ -183,6 +183,18 @@ Item {
                 measurement.destroy()
             }
         }
+        // A marker-only quote keeps its "> " prefix in the reply preview.
+        function test_markerOnlyQuote_data() {
+            return [
+                {tag: "standalone", source: "> ", displayed: "> "},
+                {tag: "after-text", source: "before\n> ", displayed: "before > "}
+            ]
+        }
+
+        function test_markerOnlyQuote(data) {
+            compare(create(data.source).displayedText, data.displayed)
+        }
+
         function test_nestedQuoteSegments() {
             const item = create("")
             item.segments = [

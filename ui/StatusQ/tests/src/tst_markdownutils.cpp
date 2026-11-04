@@ -92,6 +92,42 @@ private slots:
                 + kKeyA + QStringLiteral(" counts");
         QCOMPARE(utils.mentions(text), QStringList{kKeyA});
     }
+    // Mirrors MarkdownHtmlTest::blocks_quoteFencedCodeThenEmptyLine: the empty
+    // quoted line after the fence stays, keeping the quote (and its bar) as tall.
+    void segments_quoteFencedCodeThenEmptyLine()
+    {
+        const auto s = utils.toChatTextSegments(QStringLiteral("> A\n> ```\n> B\n> ```\n> "), {});
+        QCOMPARE(s.size(), 3);
+        QCOMPARE(s[0].text, QStringLiteral("A"));
+        QCOMPARE(s[0].quoteLevel, 1);
+        QVERIFY(!s[0].codeBlock());
+        QCOMPARE(s[1].text, QStringLiteral("B"));
+        QCOMPARE(s[1].quoteLevel, 1);
+        QVERIFY(s[1].codeBlock());
+        QCOMPARE(s[2].text, QString()); // the empty quoted line
+        QCOMPARE(s[2].quoteLevel, 1);
+        QVERIFY(!s[2].codeBlock());
+    }
+
+    // Same without a fence: the newline before the final marker is a line, not the quote's end.
+    void segments_quoteThenEmptyLine()
+    {
+        const auto s = utils.toChatTextSegments(QStringLiteral("> A\n> "), {});
+        QCOMPARE(s.size(), 1);
+        QCOMPARE(s[0].text, QStringLiteral("A\n"));
+        QCOMPARE(s[0].quoteLevel, 1);
+    }
+
+    // Without a trailing marker the newline only ends the quote and is consumed.
+    void segments_quoteFencedCodeThenText()
+    {
+        const auto s = utils.toChatTextSegments(QStringLiteral("> A\n> ```\n> B\n> ```\nC"), {});
+        QCOMPARE(s.size(), 3);
+        QVERIFY(s[1].codeBlock());
+        QCOMPARE(s[2].text, QStringLiteral("C"));
+        QCOMPARE(s[2].quoteLevel, 0);
+        QVERIFY(s[2].newBlock());
+    }
 };
 
 QTEST_MAIN(TestMarkdownUtils)

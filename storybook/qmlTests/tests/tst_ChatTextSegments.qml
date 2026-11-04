@@ -155,6 +155,50 @@ Item {
             compare(segments[2].text, "after")
         }
 
+        // A marker-only quote line has no text but is still an empty quoted line.
+        function test_markerOnlyQuote_data() {
+            return [
+                {tag: "standalone", source: "> ",
+                 expected: [{text: "", quoteLevel: 1, newBlock: false}]},
+                {tag: "after-text", source: "before\n> ",
+                 expected: [{text: "before", quoteLevel: 0, newBlock: false},
+                            {text: "", quoteLevel: 1, newBlock: true}]},
+                {tag: "trailing-marker", source: "> A\n> ",
+                 expected: [{text: "A\n", quoteLevel: 1, newBlock: false}]}
+            ]
+        }
+
+        function test_markerOnlyQuote(data) {
+            const segments = MarkdownUtils.toChatTextSegments(data.source)
+            compare(segments.map(s => ({text: s.text, quoteLevel: s.quoteLevel, newBlock: s.newBlock})),
+                    data.expected)
+        }
+
+        // Windows and old Mac line endings read as plain ones: no stray '\r'
+        // in the segments, the rendered text or the plain text.
+        function test_carriageReturns_data() {
+            return [
+                {tag: "plain", source: "a\nb"},
+                {tag: "code", source: "a\n```\nb\n```\nc"},
+                {tag: "quote", source: "> q1\n> q2\nafter"},
+                {tag: "quoted-code", source: "> a\n> ```\n> b\n> ```\nc"}
+            ]
+        }
+
+        function test_carriageReturns(data) {
+            const expected = MarkdownUtils.toChatTextSegments(data.source)
+            const plain = MarkdownUtils.plainText(data.source)
+            const reference = createStyledTemporary(documentComponent, root, {segments: expected})
+            for (const ending of ["\r\n", "\r"]) {
+                const source = data.source.replace(/\n/g, ending)
+                const segments = MarkdownUtils.toChatTextSegments(source)
+                compare(segments.map(s => s.text), expected.map(s => s.text), JSON.stringify(ending))
+                compare(MarkdownUtils.plainText(source), plain)
+                const item = createStyledTemporary(documentComponent, root, {segments: segments})
+                compare(item.contentHeight, reference.contentHeight)
+            }
+        }
+
         function test_separateCodeFences_data() {
             return [
                 {tag: "adjacent", source: "```\nfirst\n```\n```\nsecond\n```", code: ["first", "second"]},

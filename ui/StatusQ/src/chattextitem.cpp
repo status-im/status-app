@@ -1581,8 +1581,8 @@ void ChatTextItem::componentComplete()
 
 QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
 {
-    // Not m_document->isEmpty(): an empty code block has no characters
-    // but still paints its frame.
+    // Not m_document->isEmpty(): an empty code block or an empty quoted line
+    // has no characters but still paints its frame or quote bar.
     if (width() <= 0 || m_segments.isEmpty()) {
         delete oldNode;
         return nullptr;
