@@ -569,6 +569,77 @@ Item {
             compare(rowColorShare(item, 1, "lime"), 0)
         }
 
+        function test_backgroundFollowsVisualTextRuns_data() {
+            const cases = [
+                {tag: "ltr", prefix: "start ", text: "hello", suffix: " end"},
+                {tag: "rtl", prefix: "אבג ", text: "דהו", suffix: " זחט"},
+                {tag: "mixed-ltr", prefix: "start אבג ", text: "דהו abc", suffix: " זחט end"},
+                {tag: "mixed-rtl", prefix: "אבג abc", text: " def דהו", suffix: "xyz זחט"},
+                {tag: "arabic", prefix: "start الل", text: "غة", suffix: " العربية end"},
+                {tag: "wrapped", prefix: "start ", text: "abc אבג hello דהו more link text",
+                 suffix: " end", width: 180}
+            ]
+            const rows = []
+            for (const mode of ["highlight", "hover", "mention"])
+                for (const data of cases)
+                    rows.push(Object.assign({}, data, {tag: mode + "-" + data.tag, mode: mode}))
+            return rows
+        }
+
+        function test_backgroundFollowsVisualTextRuns(data) {
+            const href = "https://a.test"
+            const item = createStyledTemporary(itemComponent, root, {
+                width: data.width || 550,
+                font: Qt.font({family: "DejaVu Sans", pixelSize: 24}),
+                lineHeight: 32,
+                color: "black",
+                linkColor: "black",
+                mentionColor: "black",
+                hoverHighlightColor: "lime",
+                mentionBackground: "lime",
+                segments: [
+                    {text: data.prefix},
+                    {text: data.text, href: href, mention: data.mode === "mention"},
+                    {text: data.suffix}
+                ]
+            })
+            verify(!!item)
+            item.height = item.contentHeight
+            if (data.mode === "highlight")
+                item.highlightedLink = href
+            else if (data.mode === "hover") {
+                for (let x = 0; x < item.width; ++x) {
+                    if (item.linkAt(x, 16) === href) {
+                        item.hoverAt(x, 16)
+                        break
+                    }
+                }
+                compare(item.hoveredLink, href)
+            }
+
+            const image = grabImage(item)
+            let linkedColumns = 0
+            for (let top = 0; top < item.contentHeight; top += item.appearance.lineHeight) {
+                const middle = top + item.appearance.lineHeight / 2
+                for (let x = 2; x < item.width - 2; ++x) {
+                    const linked = item.linkAt(x, middle) === href
+                    // Ignore antialiasing and hit-test rounding at anchor boundaries.
+                    if ((item.linkAt(x - 2, middle) === href) !== linked
+                            || (item.linkAt(x + 2, middle) === href) !== linked)
+                        continue
+                    let painted = false
+                    for (let y = top; y < Math.min(top + item.appearance.lineHeight, image.height); ++y) {
+                        const color = image.pixel(x, y)
+                        painted = painted || (color.g > 0.9 && color.r < 0.1 && color.b < 0.1 && color.a > 0.9)
+                    }
+                    compare(painted, linked, "Background must cover only linked text at " + x + ", " + middle)
+                    if (linked)
+                        linkedColumns++
+                }
+            }
+            verify(linkedColumns > 10)
+        }
+
         function test_highlightPreservesSelectionAndReappliesAfterRebuild() {
             const item = highlightItem()
             item.select(1, 4)
