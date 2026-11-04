@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QLocale>
 #include <QStringList>
 #include <QTimer>
 #include <QVariantList>
@@ -11,6 +12,7 @@ class SpellChecker : public QObject
     Q_OBJECT
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(QSet<QString> languages READ languages WRITE setLanguages NOTIFY languagesChanged)
+    Q_PROPERTY(QString preferredLanguage READ preferredLanguage WRITE setPreferredLanguage NOTIFY preferredLanguageChanged)
     Q_PROPERTY(QString spellCheckDictsDir READ spellCheckDictsDir WRITE setSpellCheckDictsDir NOTIFY spellCheckDictsDirChanged)
     Q_PROPERTY(bool skipCapitalizedWords READ skipCapitalizedWords WRITE setSkipCapitalizedWords NOTIFY skipCapitalizedWordsChanged)
     Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged)
@@ -28,6 +30,8 @@ public:
     void setEnabled(bool value);
     QSet<QString> languages() const { return m_languages; }
     void setLanguages(const QSet<QString>& value);
+    QString preferredLanguage() const { return m_preferredLanguage; }
+    void setPreferredLanguage(const QString& value);
     bool skipCapitalizedWords() const { return m_skipCapitalizedWords; }
     void setSkipCapitalizedWords(bool value);
     int cursorPosition() const { return m_cursorPosition; }
@@ -51,11 +55,13 @@ public:
     Q_INVOKABLE void clearSuggestions();
 
     QString spellCheckDictsDir() const;
+    // Resource directories are extracted lazily on the shared worker.
     void setSpellCheckDictsDir(const QString &newSpellCheckDictsDir);
 
 signals:
     void enabledChanged();
     void languagesChanged();
+    void preferredLanguageChanged();
     void skipCapitalizedWordsChanged();
     void cursorPositionChanged();
     void composingChanged();
@@ -82,6 +88,7 @@ private:
     quint64 m_suggestionRequest = 0;
     bool m_enabled = true;
     QSet<QString> m_languages = {QStringLiteral("en_US")};
+    QString m_preferredLanguage = QLocale().name();
     bool m_skipCapitalizedWords = true;
     int m_cursorPosition = -1;
     int m_incompleteStart = -1;

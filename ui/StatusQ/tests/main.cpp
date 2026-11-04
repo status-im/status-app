@@ -17,6 +17,7 @@ public:
         qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
         BrowserCertDistrust::applyChromiumFlags();
         QtWebEngineQuick::initialize();
+        QStandardPaths::setTestModeEnabled(true);
     }
 };
 

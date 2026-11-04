@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QDebug>
+#include <QFile>
 #include <QLoggingCategory>
 #include <QSettings>
 
@@ -57,32 +58,23 @@ void LanguageService::fetchAvailableSpellcheckLanguages()
         return;
     m_availableSpellcheckLanguages.clear();
 
-    if (!m_directory.isValid()) {
-        qCWarning(languageService) << "Cannot create spell-check dictionary directory";
-        emit availableSpellcheckLanguagesChanged();
-        emit activeSpellcheckLanguagesChanged();
-        return;
-    }
-
-    QDir spDir(":/StatusQ/dictionaries/"_L1);
+    QDir spDir(spellCheckDictsDir());
 
     qCDebug(languageService) << Q_FUNC_INFO << "!!! Probing" << spDir.absolutePath() << "for dictionaries";
 
-    const auto dictFiles = spDir.entryInfoList({"*.aff"_L1, "*.dic"_L1}, QDir::Files | QDir::Readable);
+    const auto dictFiles = spDir.entryInfoList({"*.dic"_L1}, QDir::Files | QDir::Readable);
     if (!dictFiles.isEmpty()) {
         qCDebug(languageService) << Q_FUNC_INFO << "!!! Found dictionaries:" << dictFiles << "in" << spDir.absolutePath();
 
         for (const auto& dictFile: dictFiles) {
-            const auto langCode = dictFile.baseName();
-            qCDebug(languageService) << Q_FUNC_INFO << "!!! Adding dictionary:" << langCode;
-
-            if (!QFile::copy(dictFile.filePath(), m_directory.filePath(dictFile.fileName()))) {
-                qCWarning(languageService) << "Cannot extract spell-check dictionary:" << dictFile.fileName();
+            const auto langCode = dictFile.baseName();            
+            if (!QFile::exists(spDir.filePath(langCode + ".aff"_L1))) {
+                qCWarning(languageService) << Q_FUNC_INFO << "!!! Incomplete spell-check dictionary; skipping:" << langCode;
                 continue;
             }
+            qCDebug(languageService) << Q_FUNC_INFO << "!!! Added dictionary:" << langCode;
             m_availableSpellcheckLanguages.insert(langCode);
         }
-        qCDebug(languageService) << Q_FUNC_INFO << "!!! Copied dictionaries to:" << m_directory.path();
     }
 
     if (m_availableSpellcheckLanguages.isEmpty())
@@ -142,6 +134,10 @@ void LanguageService::setUserUID(const QString &newUserUID)
     load();
     connect(this, &LanguageService::activeSpellcheckLanguagesChanged, this, &LanguageService::save,
             Qt::UniqueConnection);
+    connect(this, &LanguageService::spellCheckEnabledChanged, this, &LanguageService::save,
+            Qt::UniqueConnection);
+    connect(this, &LanguageService::spellCheckSkipCapitalizedWordsChanged, this, &LanguageService::save,
+            Qt::UniqueConnection);
 }
 
 QString LanguageService::settingsGroup() const
@@ -174,16 +170,14 @@ void LanguageService::load()
     }
     settings.endGroup();
 
-    qCDebug(languageService) << "!!! LOAD AND FETCH ACTIVE:" << activeDicts;
+    qCDebug(languageService) << Q_FUNC_INFO << "!!! Active spellcheck languages:" << activeDicts;
 
     setActiveSpellcheckLanguages({activeDicts.cbegin(), activeDicts.cend()});
 }
 
 QString LanguageService::spellCheckDictsDir() const
 {
-    if (!m_directory.isValid())
-        return {};
-    return m_directory.path();
+    return ":/StatusQ/dictionaries"_L1;
 }
 
 bool LanguageService::spellCheckEnabled() const

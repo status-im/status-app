@@ -64,6 +64,18 @@ qt_add_executable(TestSpellChecker src/tst_spellchecker.cpp)
 target_link_libraries(TestSpellChecker PRIVATE Qt::Test StatusQ)
 add_test(NAME TestSpellChecker COMMAND TestSpellChecker)
 
+qt_add_executable(TestLanguageService src/tst_languageservice.cpp)
+target_include_directories(TestLanguageService PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+target_link_libraries(TestLanguageService PRIVATE Qt::Test StatusQ)
+qt_add_resources(TestLanguageService "incomplete_dictionaries"
+    PREFIX "/StatusQ/dictionaries"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/assets/dictionaries"
+    FILES
+        assets/dictionaries/missing_dic.aff
+        assets/dictionaries/missing_aff.dic
+)
+add_test(NAME TestLanguageService COMMAND TestLanguageService)
+
 # Parser benchmark — a reference point for optimisation. Labelled "benchmark" so it can be
 # excluded from a normal run (ctest -LE benchmark) or run alone (ctest -R MarkdownParserBenchmark).
 add_executable(MarkdownParserBenchmark src/tst_markdownparser_benchmark.cpp)
