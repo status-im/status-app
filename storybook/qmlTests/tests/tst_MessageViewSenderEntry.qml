@@ -61,6 +61,9 @@ Item {
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
         theme: root.Theme
     }
+    readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+        theme: root.Theme
+    }
 
     width: 800
     height: 600
@@ -141,6 +144,7 @@ Item {
 
         MessageView {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             width: 600
 
             rootStore: rootStoreMock

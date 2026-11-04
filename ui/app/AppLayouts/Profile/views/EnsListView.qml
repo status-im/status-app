@@ -25,6 +25,9 @@ Item {
         readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
             theme: root.Theme
         }
+        readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+            theme: root.Theme
+        }
     }
 
     property int profileContentWidth
@@ -210,6 +213,7 @@ Item {
         StatusMessage {
             id: messagesShownAs
             textAppearance: d.textAppearance
+            previewAppearance: d.previewAppearance
 
             anchors.top: !visible ? separator.bottom : primaryUsernameItem.bottom
             anchors.topMargin: Theme.padding * 2

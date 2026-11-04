@@ -731,26 +731,41 @@ unclosed fence here (no closing triple-tick)
                 text: "Single-line render:"
             }
 
-            ChatSingleLineTextView {
+            Rectangle {
                 Layout.fillWidth: true
+                implicitHeight: singleLinePreview.implicitHeight + 20
+                color: root.Theme.palette.background
+                border.color: "lightgray"
+                radius: 4
 
-                font.pixelSize: fontSizeSlider.value - 2
-                padding: 10
-                edited: editedSwitch.checked
+                ChatSingleLineTextItem {
+                    appearance: ChatTextAppearance {
+                        font.family: Fonts.baseFont.family
+                        font.pixelSize: fontSizeSlider.value - 2
+                        color: root.Theme.palette.directColor1
+                        linkColor: root.Theme.palette.primaryColor1
+                        quoteColor: root.Theme.palette.baseColor1
+                        codeBackground: root.Theme.palette.baseColor4
+                        codeFontFamily: Fonts.codeFont.family
+                        mentionColor: root.Theme.palette.mentionColor1
+                        mentionBackground: root.Theme.palette.mentionColor4
+                        editedMarkerFontSize: root.Theme.tertiaryTextFontSize
+                        editedMarkerColor: root.Theme.palette.baseColor1
+                    }
 
-                background: Rectangle {
-                    color: Theme.palette.background
-                    border.color: "lightgray"
-                    radius: 4
-                }
+                    id: singleLinePreview
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 10
+                    clip: true
+                    edited: editedSwitch.checked
 
-                html: {
-                    textArea.text // rebuild on every edit
-                    const text = textArea.textWithMentions()
-                    return  StringUtils.expandAsciiEmoticonShortcuts(
-                                MarkdownUtils.singleLineHtml(
-                                    text,
-                                    mentionResolver.resolveFor(text), font))
+                    readonly property string sourceText: {
+                        textArea.text // rebuild on every edit
+                        return StringUtils.expandAsciiEmoticonShortcuts(textArea.textWithMentions())
+                    }
+                    segments: MarkdownUtils.toChatTextSegments(sourceText, mentionResolver.resolveFor(sourceText))
                 }
             }
 

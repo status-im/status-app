@@ -23,6 +23,9 @@ StatusListView {
         readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
             theme: root.Theme
         }
+        readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+            theme: root.Theme
+        }
     }
 
     property RootStore store
@@ -74,6 +77,7 @@ StatusListView {
         MessageView {
             id: messageItem
             textAppearance: d.textAppearance
+            previewAppearance: d.previewAppearance
 
             width: parent.width
 

@@ -11,6 +11,9 @@ Item {
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
         theme: root.Theme
     }
+    readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+        theme: root.Theme
+    }
 
     width: 600
     height: 400
@@ -19,6 +22,7 @@ Item {
         id: messageComponent
         MessageView {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             deleted: true
             deletedBy: "0x123"
             deletedByContactDisplayName: "Prod-Test-ABC with a very long name"

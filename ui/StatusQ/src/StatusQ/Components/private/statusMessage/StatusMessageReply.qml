@@ -14,6 +14,7 @@ Item {
     Accessible.role: Accessible.Grouping
     Accessible.name: Utils.formatAccessibleName("", root.objectName)
 
+    property ChatTextAppearance appearance
     property StatusMessageDetails replyDetails
     property bool profileClickable: true
     property bool isMobile: Utils.isMobile
@@ -101,13 +102,12 @@ Item {
                             Layout.fillWidth: true
                             active: !!replyDetails.unparsedText && replyDetails.contentType !== StatusMessage.ContentType.Sticker
                             visible: active
-                            sourceComponent: ChatSingleLineTextView {
+                            sourceComponent: ChatSingleLineTextItem {
                                 objectName: "StatusMessage_replyDetails_textMessage"
-                                font.pixelSize: Theme.secondaryTextFontSize
-                                fadeColor: Theme.palette.background      // surface behind the reply
+                                appearance: root.appearance
+                                clip: true
                                 edited: root.replyDetails.isEdited
-                                html: MarkdownUtils.singleLineHtml(root.replyDetails.unparsedText,
-                                                                   root.replyDetails.mentionsMap, font)
+                                segments: MarkdownUtils.toChatTextSegments(root.replyDetails.unparsedText, root.replyDetails.mentionsMap)
                             }
                         }
 

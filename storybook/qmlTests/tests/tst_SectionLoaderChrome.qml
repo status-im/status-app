@@ -18,6 +18,7 @@ Item {
     id: root
 
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
+    readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance { theme: root.Theme }
 
     width: 800
     height: 600
@@ -53,6 +54,7 @@ Item {
 
         ChatLoader {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             anchors.fill: parent
 
             // The stub stands in for the section, so the loader must not run
@@ -89,6 +91,7 @@ Item {
 
         CommunityChatLoader {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             anchors.fill: parent
 
             active: false

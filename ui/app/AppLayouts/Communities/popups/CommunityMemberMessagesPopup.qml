@@ -29,6 +29,10 @@ StatusDialog {
             theme: root.Theme
             selectionPalette: root.palette
         }
+        readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+            theme: root.Theme
+            selectionPalette: root.palette
+        }
     }
 
     property SharedStores.RootStore sharedRootStore
@@ -94,6 +98,7 @@ StatusDialog {
                 MessageView {
                     id: messageItem
                     textAppearance: d.textAppearance
+                    previewAppearance: d.previewAppearance
 
                     width: parent.width
 

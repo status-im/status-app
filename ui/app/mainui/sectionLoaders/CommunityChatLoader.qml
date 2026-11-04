@@ -52,6 +52,7 @@ StatusSectionLoader {
     property SortFilterProxyModel reactionEmojiModel
     property DelegatePool rowPool: null
     required property ChatTextAppearance textAppearance
+    required property ChatTextAppearance previewAppearance
 
     // Per-community inputs
     required property string sectionId
@@ -358,6 +359,7 @@ StatusSectionLoader {
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
             rowPool:                        Qt.binding(() => root.rowPool),
             textAppearance:                 Qt.binding(() => root.textAppearance),
+            previewAppearance:              Qt.binding(() => root.previewAppearance),
         })
     }
 
