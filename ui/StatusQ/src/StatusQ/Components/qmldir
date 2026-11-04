@@ -8,6 +8,7 @@ CountdownProgressIndicator 0.1 CountdownProgressIndicator.qml
 LoadingSkeletonGroup 0.1 LoadingSkeletonGroup.qml
 LoadingSkeletonTile 0.1 LoadingSkeletonTile.qml
 MessageTextAppearance 0.1 MessageTextAppearance.qml
+ReplyTextAppearance 0.1 ReplyTextAppearance.qml
 StatusAnimatedImage 0.1 StatusAnimatedImage.qml
 StatusBadge 0.1 StatusBadge.qml
 StatusBetaTag 0.1 StatusBetaTag.qml
