@@ -88,7 +88,7 @@ OnboardingPage {
                     anchors.top: parent.top
                     anchors.topMargin: root.isPortrait ? Theme.halfPadding : 0
                     languageCodes: root.availableLanguages
-                    activeLanguageCodes: [root.currentLanguage]
+                    activeLanguageCodes: [root.currentLanguage || "en"]
                     onLanguageSelected: (languageCode) => root.changeLanguageRequested(languageCode)
                 }
             }

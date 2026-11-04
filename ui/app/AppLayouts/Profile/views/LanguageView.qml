@@ -77,7 +77,7 @@ SettingsContentBase {
                 id: languagePicker
                 objectName: "languageViewLanguageSelector"
                 languageCodes: root.availableLanguages
-                activeLanguageCodes: [root.currentLanguage]
+                activeLanguageCodes: [root.currentLanguage || "en"]
                 onLanguageSelected: (languageCode) =>
                                     languageConfirmationDialog.createObject(root, {oldCode: root.currentLanguage, newCode: languageCode}).open()
             }

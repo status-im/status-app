@@ -268,6 +268,7 @@ StatusTextArea {
         spellChecker {
             enabled: root.spellCheckEnabled
             languages: root.spellCheckLanguages
+            preferredLanguage: Qt.uiLanguage || "en"
             spellCheckDictsDir: root.spellCheckDictsDir
             skipCapitalizedWords: root.spellCheckSkipCapitalizedWords
             cursorPosition: root.cursorPosition
