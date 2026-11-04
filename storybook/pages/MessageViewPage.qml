@@ -19,6 +19,10 @@ SplitView {
         theme: root.Theme
         selectionPalette: root.palette
     }
+    readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+        theme: root.Theme
+        selectionPalette: root.palette
+    }
 
     QtObject {
         id: d
@@ -126,6 +130,7 @@ SplitView {
         MessageView {
             id: messageView
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
 
             width: parent.width
 

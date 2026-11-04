@@ -18,6 +18,7 @@ Control {
     id: root
 
     property ChatTextAppearance textAppearance
+    property ChatTextAppearance previewAppearance
 
     enum ContentType {
         Unknown = 0,
@@ -228,7 +229,8 @@ Control {
                 active: d.replyShown || root.keepOptionalPartsLoaded
                 visible: d.replyShown
                 sourceComponent: StatusMessageReply {
-                        objectName: "StatusMessage_replyDetails"
+                    appearance: root.previewAppearance
+                    objectName: "StatusMessage_replyDetails"
                     isMobile: root.isMobile
                     replyDetails: root.replyDetails
                     profileClickable: root.profileClickable

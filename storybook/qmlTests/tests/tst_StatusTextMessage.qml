@@ -31,6 +31,10 @@ Item {
                 theme: message.Theme
                 selectionPalette: message.palette
             }
+            previewAppearance: ReplyTextAppearance {
+                theme: message.Theme
+                selectionPalette: message.palette
+            }
             width: 600
             showHeader: false
             messageDetails: StatusMessageDetails {

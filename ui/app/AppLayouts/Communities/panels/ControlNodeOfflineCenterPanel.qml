@@ -18,6 +18,9 @@ ColumnLayout {
         readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
             theme: root.Theme
         }
+        readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+            theme: root.Theme
+        }
     }
 
     property string name
@@ -66,6 +69,7 @@ ColumnLayout {
                 model: root.messagesModel
                 delegate: StatusMessage {
                     textAppearance: d.textAppearance
+                    previewAppearance: d.previewAppearance
                     width: ListView.view.width
                     timestamp: model.timestamp
                     enabled: false

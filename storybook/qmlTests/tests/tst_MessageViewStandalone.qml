@@ -23,6 +23,9 @@ Item {
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
         theme: root.Theme
     }
+    readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+        theme: root.Theme
+    }
 
     width: 800
     height: 600
@@ -114,6 +117,7 @@ Item {
 
         MessageView {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             width: 600
         }
     }
@@ -123,6 +127,7 @@ Item {
 
         MessageView {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             width: 600
 
             rootStore: rootStoreMock
@@ -137,6 +142,7 @@ Item {
 
         MessageView {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             rootStore: rootStoreMock
             messageStore: messageStoreMock
             chatContentModule: chatContentModuleMock
@@ -373,6 +379,29 @@ Item {
                     return child
             }
             return null
+        }
+
+        function test_appearancesReachBodyAndReply() {
+            const view = createTemporaryObject(bareMessageViewComp, root)
+            rebind(view, messageA)
+            view.quotedMessageContentType = Constants.messageContentType.messageType
+            const message = statusMessageOf(view)
+            verify(!!message)
+            compare(message.textAppearance, root.textAppearance)
+            compare(message.previewAppearance, root.previewAppearance)
+            tryVerify(() => !!findChild(view, "StatusMessage_textMessage"))
+            const body = findChild(view, "StatusMessage_textMessage").textField
+            tryVerify(() => !!findChild(view, "StatusMessage_replyDetails_textMessage"))
+            const preview = findChild(view, "StatusMessage_replyDetails_textMessage")
+            compare(body.appearance, root.textAppearance)
+            compare(preview.appearance, root.previewAppearance)
+            body.selectAll()
+            const selected = body.selectedText
+            view.textAppearance = root.previewAppearance
+            view.previewAppearance = root.textAppearance
+            compare(body.appearance, root.previewAppearance)
+            compare(preview.appearance, root.textAppearance)
+            compare(body.selectedText, selected)
         }
 
         function test_zeroDataConstructsCleanly() {

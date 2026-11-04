@@ -35,6 +35,10 @@ SplitView {
         theme: root.Theme
         selectionPalette: root.palette
     }
+    readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+        theme: root.Theme
+        selectionPalette: root.palette
+    }
 
     orientation: Qt.Vertical
 
@@ -446,6 +450,7 @@ SplitView {
                     popupHandler: null
                     rowPool: messageRowPool
                     textAppearance: root.textAppearance
+                    previewAppearance: root.previewAppearance
                     createChatViewOpened: false
                     isPortraitMode: (Window.width ?? 0) < ThemeUtils.portraitBreakpoint.width
 

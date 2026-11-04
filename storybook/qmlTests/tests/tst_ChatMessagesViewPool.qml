@@ -31,6 +31,9 @@ Item {
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
         theme: root.Theme
     }
+    readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
+        theme: root.Theme
+    }
 
     width: 800
     height: 600
@@ -241,6 +244,7 @@ Item {
 
         ChatMessagesView {
             textAppearance: root.textAppearance
+            previewAppearance: root.previewAppearance
             width: root.width
             height: root.height
 
@@ -407,6 +411,7 @@ Item {
                 compare(r.content.parent, r.shell, "the item is on screen, in its row")
                 compare(r.content.objectName, "chatMessageViewDelegate")
                 compare(r.content.textAppearance, root.textAppearance)
+                compare(r.content.previewAppearance, root.previewAppearance)
             }
 
             // the item shows the message of its row
@@ -446,6 +451,29 @@ Item {
 
             compare(readyCount(), ready - (rows.length - 1),
                     "the identifier row took no pooled item")
+        }
+
+        function test_reusedRowsReceiveTheCurrentAppearances() {
+            prewarmedPool()
+            const view = openView()
+            const original = rowItems(view).map(row => row.content)
+            view.visible = false
+            tryCompare(view.chatLogView, "rowCount", 0, 5000)
+            // The app-owned instances remain valid after the view releases its rows.
+            for (const item of original) {
+                compare(item.textAppearance, root.textAppearance)
+                compare(item.previewAppearance, root.previewAppearance)
+            }
+            view.textAppearance = root.previewAppearance
+            view.previewAppearance = root.textAppearance
+            view.visible = true
+            settle(view)
+            const rows = rowItems(view)
+            verify(rows.some(row => original.indexOf(row.content) >= 0), "a pooled row was reused")
+            for (const row of rows) {
+                compare(row.content.textAppearance, root.previewAppearance)
+                compare(row.content.previewAppearance, root.textAppearance)
+            }
         }
 
         // Fewer items ready than the window wants: the rows wait for the pool
