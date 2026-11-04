@@ -20,6 +20,8 @@ StatusMenu {
     required property string threadLinkToCopyShare
     required property bool deleteEnabled
     property bool editEnabled: false
+    property bool followEnabled: true
+    property bool muteEnabled: true
 
     signal editNameRequested()
     signal followRequested()
@@ -41,6 +43,7 @@ StatusMenu {
 
     StatusAction {
         objectName: "threadContextMenu_follow"
+        enabled: root.followEnabled
         text: root.followed ? qsTr("Unfollow") : qsTr("Follow")
         icon.name: "checkmark"
         onTriggered: root.followed ? root.unfollowRequested() : root.followRequested()
@@ -49,14 +52,14 @@ StatusMenu {
     MuteChatMenuItem {
         objectName: "threadContextMenu_muteThread"
         title: qsTr("Mute thread")
-        enabled: !root.muted
+        enabled: root.muteEnabled && !root.muted
         onMuteTriggered: interval => root.muteRequested(interval)
     }
 
     StatusAction {
         objectName: "threadContextMenu_unmuteThread"
         text: qsTr("Unmute thread")
-        enabled: root.muted
+        enabled: root.muteEnabled && root.muted
         icon.name: "notification"
         onTriggered: root.unmuteRequested()
     }
@@ -70,6 +73,7 @@ StatusMenu {
 
     StatusSuccessAction {
         objectName: "threadContextMenu_copyShare"
+        enabled: !!root.threadLinkToCopyShare
 
         readonly property string shareIcon: root.isMobile
                                             ? (SQUtils.Utils.isIOS ? "share-ios" : "share-android")

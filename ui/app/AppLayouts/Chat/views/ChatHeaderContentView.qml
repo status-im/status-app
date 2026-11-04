@@ -50,6 +50,7 @@ RowLayout {
                                    bool hideIfPermissionsNotMet)
 
     signal toggleShowMembersRequested
+    signal editThreadRequested(string threadId)
 
     function addRemoveGroupMember() {
         root.state = d.stateMembersSelectorContent
@@ -267,7 +268,6 @@ RowLayout {
     Component {
         id: threadHeader
         ThreadHeader {
-            id: selectedThreadHeader
             threadId: messageStore.threadId
             threadName: messageStore.threadName
             parentChatName: {
@@ -276,13 +276,8 @@ RowLayout {
             }
             canEdit: messageStore.canEditThread
             pending: messageStore.threadEditPending
-            onRenameRequested: name => messageStore.editThread(name)
-            Connections {
-                target: messageStore.messageModule
-                function onThreadEditFinished(error: string) {
-                    selectedThreadHeader.editFinished(error)
-                }
-            }
+            onEditNameRequested: root.editThreadRequested(messageStore.threadId)
+            onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(messageStore.chatId, messageStore.threadId)
         }
     }
 
