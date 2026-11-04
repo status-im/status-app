@@ -30,6 +30,9 @@ QObject {
     property bool approvalPending: false
     property bool approvalSuccessful: false
 
+    // the route's gas changed; nothing was sent, fetch the route again
+    signal routeReviewRequired()
+
     // the below property holds internal checks done by the SwapModal
     property bool amountEnteredGreaterThanBalance: false
 
@@ -306,6 +309,8 @@ QObject {
                 if (uuid !== d.uuid || !!error) {
                     root.approvalPending = false
                     root.approvalSuccessful = false
+                    if (uuid === d.uuid && error === Constants.walletSection.routeNeedsReview)
+                        root.routeReviewRequired()
                     return
                 }
                 root.approvalPending = true

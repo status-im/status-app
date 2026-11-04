@@ -62,7 +62,7 @@ proc init*(self: Controller) =
       args.sendDetails.fromChain,
       isApprovalTx,
       txHash,
-      if not args.sendDetails.errorResponse.isNil: args.sendDetails.errorResponse.details else: ""
+      args.sendDetails.errorResponse.errorForView()
     )
 
 
