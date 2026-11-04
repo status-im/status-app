@@ -293,47 +293,27 @@ ChatTextItem::ChatTextItem(QQuickItem* parent)
     setAcceptedMouseButtons(Qt::LeftButton);
     setAcceptHoverEvents(true);
 
+    connectAppearance();
     applyDocumentDefaults();
     updateCursorShape();
 }
 
-ChatTextItem::~ChatTextItem() = default;
+ChatTextItem::~ChatTextItem()
+{
+    disconnect(m_appearance, nullptr, this, nullptr);
+}
 
 void ChatTextItem::applyDocumentDefaults()
 {
     // Text and formatting updates are internal; no undo history is needed.
     m_document->setUndoRedoEnabled(false);
-    m_document->setDefaultFont(m_font);
+    m_document->setDefaultFont(m_appearance->font());
     m_document->setDocumentMargin(0);
 }
 
 QList<ChatTextSegment> ChatTextItem::segments() const
 {
     return m_segments;
-}
-
-void ChatTextItem::setMentionColor(const QColor& color)
-{
-    if (m_mentionColor == color) return;
-    m_mentionColor = color;
-    updateAppearance(MentionForegroundAppearance, [color](QTextCharFormat& format) { format.setForeground(color); });
-    emit mentionColorChanged();
-}
-
-void ChatTextItem::setMentionBackground(const QColor& color)
-{
-    if (m_mentionBackground == color) return;
-    m_mentionBackground = color;
-    updateAppearance(MentionBackgroundAppearance, [color](QTextCharFormat& format) { format.setBackground(color); });
-    emit mentionBackgroundChanged();
-}
-
-void ChatTextItem::setQuoteColor(const QColor& color)
-{
-    if (m_quoteColor == color) return;
-    m_quoteColor = color;
-    updateAppearance(QuoteAppearance, [color](QTextCharFormat& format) { format.setForeground(color); });
-    emit quoteColorChanged();
 }
 
 void ChatTextItem::setSegments(const QList<ChatTextSegment>& segments)
@@ -355,33 +335,6 @@ void ChatTextItem::setEdited(bool edited)
     m_edited = edited;
     rebuildFromSegments();
     emit editedChanged();
-}
-
-int ChatTextItem::editedMarkerFontSize() const { return m_editedMarkerFontSize; }
-
-void ChatTextItem::setEditedMarkerFontSize(int size)
-{
-    size = qMax(1, size);
-    if (m_editedMarkerFontSize == size)
-        return;
-    m_editedMarkerFontSize = size;
-    updateAppearance(MarkerAppearance, [this](QTextCharFormat& format) {
-        format.setProperty(QTextFormat::FontPixelSize, m_editedMarkerFontSize);
-    });
-    emit editedMarkerFontSizeChanged();
-}
-
-QColor ChatTextItem::editedMarkerColor() const { return m_editedMarkerColor; }
-
-void ChatTextItem::setEditedMarkerColor(const QColor& color)
-{
-    if (m_editedMarkerColor == color)
-        return;
-    m_editedMarkerColor = color;
-    updateAppearance(MarkerAppearance, [this](QTextCharFormat& format) {
-        format.setForeground(m_editedMarkerColor);
-    });
-    emit editedMarkerColorChanged();
 }
 
 // Preserve text positions and unrelated styles while changing only the ranges
@@ -471,8 +424,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     QTextBlockFormat blockFormat;
     blockFormat.setTopMargin(0);
     blockFormat.setBottomMargin(0);
-    if (m_lineHeight > 0)
-        blockFormat.setLineHeight(m_lineHeight, QTextBlockFormat::MinimumHeight);
+    if (m_appearance->lineHeight() > 0)
+        blockFormat.setLineHeight(m_appearance->lineHeight(), QTextBlockFormat::MinimumHeight);
 
     // Margins are left to applyBlockMargins(), so they can follow the quote and
     // code settings without a rebuild. A code block keeps the font's natural
@@ -508,7 +461,7 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
 
         // Deltas from the document's default font only.
         //
-        // The obvious `format.setFont(m_font)` is a trap: it defaults to
+        // The obvious `format.setFont(m_appearance->font())` is a trap: it defaults to
         // FontPropertiesAll, which writes roughly eighteen font properties into
         // every segment -- families, style name, size, weight, style, underline,
         // overline, strikeout, fixed pitch, capitalisation, word and letter
@@ -521,34 +474,24 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         // Foreground is left unset for the same reason: QSGTextNode::setColor
         // supplies it for segments that carry none, and leaving it out means a
         // colour change no longer needs the document rebuilt.
-        QTextCharFormat format;
-
-        if (segment.has(Segment::Bold))
-            format.setFontWeight(QFont::Bold);
-
-        if (segment.has(Segment::Italic))
-            format.setFontItalic(true);
-        if (segment.has(Segment::Strikethrough))
-            format.setFontStrikeOut(true);
-        if (segment.has(Segment::Underline))
-            format.setFontUnderline(true);
+        QTextCharFormat format = ChatTextFormat::emphasis(segment);
 
         if (segment.has(Segment::Code)) {
-            setCodeFont(format, m_codeFontFamily);
-            format.setBackground(m_codeBackground);
+            setCodeFont(format, m_appearance->codeFontFamily());
+            format.setBackground(m_appearance->codeBackground());
             format.setProperty(CodeSpanProperty, true);
         }
 
         // A code block's background is the frame the item paints, not a
         // character background.
         if (codeBlock)
-            setCodeFont(format, m_codeFontFamily);
+            setCodeFont(format, m_appearance->codeFontFamily());
 
         const auto role = ChatTextFormat::foregroundRole(segment, quoteLevelOf(cursor.block()));
-        if (segment.mention()) format.setBackground(m_mentionBackground);
-        if (role == ChatTextFormat::ForegroundRole::Mention) format.setForeground(m_mentionColor);
-        else if (role == ChatTextFormat::ForegroundRole::Link) format.setForeground(m_linkColor);
-        else if (role == ChatTextFormat::ForegroundRole::Quote) format.setForeground(m_quoteColor);
+        if (segment.mention()) format.setBackground(m_appearance->mentionBackground());
+        if (role == ChatTextFormat::ForegroundRole::Mention) format.setForeground(m_appearance->mentionColor());
+        else if (role == ChatTextFormat::ForegroundRole::Link) format.setForeground(m_appearance->linkColor());
+        else if (role == ChatTextFormat::ForegroundRole::Quote) format.setForeground(m_appearance->quoteColor());
 
         // Link foreground must be explicit for QSGTextNode::addTextLayout.
         const QString& href = segment.href;
@@ -596,8 +539,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
             cursor.insertBlock(blockFormat);
         }
         QTextCharFormat marker;
-        marker.setForeground(m_editedMarkerColor);
-        marker.setProperty(QTextFormat::FontPixelSize, m_editedMarkerFontSize);
+        marker.setForeground(m_appearance->editedMarkerColor());
+        marker.setProperty(QTextFormat::FontPixelSize, m_appearance->editedMarkerFontSize());
         // Reuse the existing QML StringUtils translation context/catalogue.
         const int start = cursor.position();
         cursor.insertText(QLatin1Char(' ') + QCoreApplication::translate("StringUtils", "(edited)"), marker);
@@ -735,23 +678,8 @@ void ChatTextItem::applyEmojiSizing()
 
 qreal ChatTextItem::effectiveEmojiSize(bool emojiOnly) const
 {
-    return emojiOnly && m_emojiOnlyPixelSize > 0 ? m_emojiOnlyPixelSize
-                                              : qRound(QFontMetricsF(m_font).height());
-}
-
-qreal ChatTextItem::emojiOnlyPixelSize() const
-{
-    return m_emojiOnlyPixelSize;
-}
-
-void ChatTextItem::setEmojiOnlyPixelSize(qreal size)
-{
-    if (qFuzzyCompare(m_emojiOnlyPixelSize, size))
-        return;
-
-    m_emojiOnlyPixelSize = size;
-    updateEmojiAppearance();
-    emit emojiOnlyPixelSizeChanged();
+    return emojiOnly && m_appearance->emojiOnlyPixelSize() > 0 ? m_appearance->emojiOnlyPixelSize()
+                                              : qRound(QFontMetricsF(m_appearance->font()).height());
 }
 
 bool ChatTextItem::emojiOnly() const
@@ -761,7 +689,7 @@ bool ChatTextItem::emojiOnly() const
 
 qreal ChatTextItem::quoteIndent() const
 {
-    return m_quoteBarWidth + m_quoteSpacing;
+    return m_appearance->quoteBarWidth() + m_appearance->quoteSpacing();
 }
 
 // Every margin the item owns, from the quote level and the code settings.
@@ -781,7 +709,7 @@ void ChatTextItem::applyBlockMargins()
     QTextCursor cursor(m_document.get());
     cursor.beginEditBlock();
 
-    const qreal padding = m_codeBlockPadding;
+    const qreal padding = m_appearance->codeBlockPadding();
 
     for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
         QTextBlockFormat format = block.blockFormat();
@@ -847,9 +775,9 @@ std::pair<qreal, qreal> ChatTextItem::blockExtent(const QTextBlock& block) const
 
     if (isCodeBlock(block)) {
         if (!continuesCode(block.previous(), block))
-            top -= m_codeBlockPadding;
+            top -= m_appearance->codeBlockPadding();
         if (!continuesCode(block, block.next()))
-            bottom += m_codeBlockPadding;
+            bottom += m_appearance->codeBlockPadding();
     }
 
     return {top, bottom};
@@ -884,7 +812,7 @@ QVector<QRectF> ChatTextItem::computeCodeFrames() const
 
         if (!continuesCode(block, block.next())) {
             const qreal x = quoteLevelOf(block) * indent;
-            const qreal frameWidth = qMin(widest + 2 * m_codeBlockPadding, width() - x);
+            const qreal frameWidth = qMin(widest + 2 * m_appearance->codeBlockPadding(), width() - x);
             frames.append(QRectF(x, top, frameWidth, blockBottom - top));
         }
     }
@@ -930,7 +858,7 @@ QVector<QRectF> ChatTextItem::computeQuoteBars() const
             if (l <= open.size())
                 open[l - 1].setBottom(bottom);
             else
-                open.append(QRectF((l - 1) * indent, top, m_quoteBarWidth, bottom - top));
+                open.append(QRectF((l - 1) * indent, top, m_appearance->quoteBarWidth(), bottom - top));
         }
     }
 
@@ -1013,117 +941,6 @@ void ChatTextItem::ensureLayout()
     emit contentHeightChanged();
 }
 
-QFont ChatTextItem::font() const
-{
-    return m_font;
-}
-
-void ChatTextItem::setFont(const QFont& font)
-{
-    if (m_font == font)
-        return;
-
-    m_font = font;
-    m_document->setDefaultFont(font);
-
-    // Ordinary spans inherit the new default font. Emoji carry an explicit
-    // size, so update their formats while preserving selection and hover.
-    bool hasEmoji = false;
-    for (const auto& range : std::as_const(m_appearanceRanges))
-        hasEmoji |= (range.kinds & EmojiAppearance) != 0;
-    if (hasEmoji)
-        updateEmojiAppearance();
-    else
-        markLayoutDirty();
-
-    emit fontChanged();
-}
-
-QColor ChatTextItem::color() const
-{
-    return m_color;
-}
-
-void ChatTextItem::setColor(const QColor& color)
-{
-    if (m_color == color)
-        return;
-
-    m_color = color;
-    update();
-    emit colorChanged();
-}
-
-QColor ChatTextItem::linkColor() const
-{
-    return m_linkColor;
-}
-
-void ChatTextItem::setLinkColor(const QColor& color)
-{
-    if (m_linkColor == color)
-        return;
-
-    m_linkColor = color;
-    updateAppearance(LinkAppearance, [this](QTextCharFormat& format) {
-        format.setForeground(m_linkColor);
-    });
-    update();
-    emit linkColorChanged();
-}
-
-QColor ChatTextItem::codeBackground() const
-{
-    return m_codeBackground;
-}
-
-void ChatTextItem::setCodeBackground(const QColor& color)
-{
-    if (m_codeBackground == color)
-        return;
-
-    m_codeBackground = color;
-    updateAppearance(CodeBackgroundAppearance, [this](QTextCharFormat& format) {
-        format.setBackground(m_codeBackground);
-    });
-    update();
-    emit codeBackgroundChanged();
-}
-
-int ChatTextItem::lineHeight() const
-{
-    return m_lineHeight;
-}
-
-void ChatTextItem::setLineHeight(int lineHeight)
-{
-    if (m_lineHeight == lineHeight)
-        return;
-
-    m_lineHeight = lineHeight;
-    m_document->setLayoutEnabled(false);
-    QTextCursor cursor(m_document.get());
-    cursor.beginEditBlock();
-    for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
-        if (isCodeBlock(block))
-            continue;
-        QTextBlockFormat format = block.blockFormat();
-        if (m_lineHeight > 0)
-            format.setLineHeight(m_lineHeight, QTextBlockFormat::MinimumHeight);
-        else {
-            format.clearProperty(QTextFormat::LineHeight);
-            format.clearProperty(QTextFormat::LineHeightType);
-        }
-        if (format != block.blockFormat()) {
-            cursor.setPosition(block.position());
-            cursor.setBlockFormat(format);
-        }
-    }
-    cursor.endEditBlock();
-    markLayoutDirty();
-    emit lineHeightChanged();
-}
-
 qreal ChatTextItem::contentHeight() const
 {
     // No side effects: safe to read from a binding, including a layout's
@@ -1160,21 +977,6 @@ void ChatTextItem::setSelectionEnd(int position)
     m_selectionEnd = position;
     update();
     emit selectionChanged();
-}
-
-QColor ChatTextItem::selectionColor() const
-{
-    return m_selectionColor;
-}
-
-void ChatTextItem::setSelectionColor(const QColor& color)
-{
-    if (m_selectionColor == color)
-        return;
-
-    m_selectionColor = color;
-    update();
-    emit selectionColorChanged();
 }
 
 void ChatTextItem::clearSelection()
@@ -1219,21 +1021,6 @@ QString ChatTextItem::selectedText() const
     }
 
     return lines.join(QLatin1Char('\n'));
-}
-
-QColor ChatTextItem::selectionTextColor() const
-{
-    return m_selectionTextColor;
-}
-
-void ChatTextItem::setSelectionTextColor(const QColor& color)
-{
-    if (m_selectionTextColor == color)
-        return;
-
-    m_selectionTextColor = color;
-    update();
-    emit selectionTextColorChanged();
 }
 
 bool ChatTextItem::selectable() const
@@ -1655,140 +1442,12 @@ void ChatTextItem::setHoveredLink(const QString& link)
     emit hoveredLinkChanged();
 }
 
-QColor ChatTextItem::quoteBarColor() const
-{
-    return m_quoteBarColor;
-}
-
-void ChatTextItem::setQuoteBarColor(const QColor& color)
-{
-    if (m_quoteBarColor == color)
-        return;
-
-    m_quoteBarColor = color;
-    update();
-    emit quoteBarColorChanged();
-}
-
-qreal ChatTextItem::quoteBarWidth() const
-{
-    return m_quoteBarWidth;
-}
-
-void ChatTextItem::setQuoteBarWidth(qreal width)
-{
-    if (qFuzzyCompare(m_quoteBarWidth, width))
-        return;
-
-    m_quoteBarWidth = width;
-    applyBlockMargins();
-    markLayoutDirty();
-    emit quoteBarWidthChanged();
-}
-
-qreal ChatTextItem::quoteSpacing() const
-{
-    return m_quoteSpacing;
-}
-
-void ChatTextItem::setQuoteSpacing(qreal spacing)
-{
-    if (qFuzzyCompare(m_quoteSpacing, spacing))
-        return;
-
-    m_quoteSpacing = spacing;
-    applyBlockMargins();
-    markLayoutDirty();
-    emit quoteSpacingChanged();
-}
-
-QString ChatTextItem::codeFontFamily() const
-{
-    return m_codeFontFamily;
-}
-
-void ChatTextItem::setCodeFontFamily(const QString& family)
-{
-    if (m_codeFontFamily == family)
-        return;
-
-    m_codeFontFamily = family;
-    updateAppearance(CodeFontAppearance, [this](QTextCharFormat& format) {
-        setCodeFont(format, m_codeFontFamily);
-    });
-    emit codeFontFamilyChanged();
-}
-
-QColor ChatTextItem::codeBorderColor() const
-{
-    return m_codeBorderColor;
-}
-
-void ChatTextItem::setCodeBorderColor(const QColor& color)
-{
-    if (m_codeBorderColor == color)
-        return;
-
-    m_codeBorderColor = color;
-    update();
-    emit codeBorderColorChanged();
-}
-
-qreal ChatTextItem::codeBlockPadding() const
-{
-    return m_codeBlockPadding;
-}
-
-void ChatTextItem::setCodeBlockPadding(qreal padding)
-{
-    if (qFuzzyCompare(m_codeBlockPadding + 1, padding + 1))
-        return;
-
-    m_codeBlockPadding = padding;
-    applyBlockMargins();
-    markLayoutDirty();
-    emit codeBlockPaddingChanged();
-}
-
-qreal ChatTextItem::codeBlockRadius() const
-{
-    return m_codeBlockRadius;
-}
-
-void ChatTextItem::setCodeBlockRadius(qreal radius)
-{
-    if (qFuzzyCompare(m_codeBlockRadius + 1, radius + 1))
-        return;
-
-    m_codeBlockRadius = radius;
-    update();
-    emit codeBlockRadiusChanged();
-}
-
-QColor ChatTextItem::hoverHighlightColor() const
-{
-    return m_hoverHighlightColor;
-}
-
-void ChatTextItem::setHoverHighlightColor(const QColor& color)
-{
-    if (m_hoverHighlightColor == color)
-        return;
-
-    clearLinkHighlights();
-    m_hoverHighlightColor = color;
-    applyLinkHighlights();
-
-    markLayoutDirty();
-    emit hoverHighlightColorChanged();
-}
-
 // Merges a background over every fragment belonging to either active anchor. No
 // string is rebuilt and nothing is reparsed: the document keeps its identity,
 // and QTextDocument marks only the touched blocks dirty.
 void ChatTextItem::applyLinkHighlights()
 {
-    if ((m_hoveredLink.isEmpty() && m_highlightedLink.isEmpty()) || !m_hoverHighlightColor.isValid())
+    if ((m_hoveredLink.isEmpty() && m_highlightedLink.isEmpty()) || !m_appearance->hoverHighlightColor().isValid())
         return;
 
     for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
@@ -1811,7 +1470,7 @@ void ChatTextItem::applyLinkHighlights()
     cursor.beginEditBlock();
     m_formatsDirty = !m_highlighted.isEmpty() || m_formatsDirty;
     QTextCharFormat highlight;
-    highlight.setBackground(m_hoverHighlightColor);
+    highlight.setBackground(m_appearance->hoverHighlightColor());
     for (const HighlightedRange& range : std::as_const(m_highlighted)) {
         cursor.setPosition(range.start);
         cursor.setPosition(range.start + range.length, QTextCursor::KeepAnchor);
@@ -1885,15 +1544,15 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
     auto* node = static_cast<QSGTextNode*>(framesNode->nextSibling());
     QSGNode* barsNode = node->nextSibling();
 
-    const TextPaintKey textKey{m_layoutRevision, boundingRect(),
-                               m_color, m_linkColor, m_selectionColor, m_selectionTextColor,
-                               m_selectionStart, m_selectionEnd};
+    const TextPaintKey textKey {m_layoutRevision, boundingRect(), m_appearance->color(), m_appearance->linkColor(),
+        m_appearance->selectionColor(), m_appearance->selectionTextColor(), m_selectionStart, m_selectionEnd};
     if (!root->textKey || !(*root->textKey == textKey)) {
         root->textKey = textKey;
-        node->setColor(m_color);
-        node->setLinkColor(m_linkColor);
-        node->setSelectionColor(m_selectionColor);
-        node->setSelectionTextColor(m_selectionTextColor.isValid() ? m_selectionTextColor : QColor(Qt::white));
+        node->setColor(m_appearance->color());
+        node->setLinkColor(m_appearance->linkColor());
+        node->setSelectionColor(m_appearance->selectionColor());
+        node->setSelectionTextColor(
+            m_appearance->selectionTextColor().isValid() ? m_appearance->selectionTextColor() : QColor(Qt::white));
         node->setViewport(boundingRect());
 
         node->clear();
@@ -1933,35 +1592,217 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
             == QSGRendererInterface::Software;
 
     const qreal devicePixelRatio = window()->effectiveDevicePixelRatio();
-    const FramePaintKey frameKey{m_layoutRevision, m_codeBackground,
-                                m_codeBorderColor, m_codeBlockRadius,
+    const FramePaintKey frameKey{m_layoutRevision, m_appearance->codeBackground(),
+                                m_appearance->codeBorderColor(), m_appearance->codeBlockRadius(),
                                 devicePixelRatio};
     if (!root->frameKey || !(*root->frameKey == frameKey)) {
         root->frameKey = frameKey;
         deleteChildren(framesNode);
         for (const QRectF& rect : computeCodeFrames()) {
-            framesNode->appendChildNode(
-                        software ? createSquareFrameNode(window(), rect, 1, m_codeBackground,
-                                                         m_codeBorderColor)
-                                 : createRoundedRectNode(rect, m_codeBlockRadius, 1, m_codeBackground,
-                                                         m_codeBorderColor,
-                                                         devicePixelRatio));
+            framesNode->appendChildNode(software ? createSquareFrameNode(window(), rect, 1,
+                                            m_appearance->codeBackground(), m_appearance->codeBorderColor())
+                                                 : createRoundedRectNode(rect, m_appearance->codeBlockRadius(), 1,
+                                                     m_appearance->codeBackground(), m_appearance->codeBorderColor(),
+                                                     devicePixelRatio));
         }
 
     }
-    const BarPaintKey barKey{m_layoutRevision, m_quoteBarColor};
+    const BarPaintKey barKey{m_layoutRevision, m_appearance->quoteBarColor()};
     if (!root->barKey || !(*root->barKey == barKey)) {
         root->barKey = barKey;
         deleteChildren(barsNode);
-        if (m_quoteBarColor.alpha() > 0) {
+        if (m_appearance->quoteBarColor().alpha() > 0) {
             for (const QRectF& rect : computeQuoteBars()) {
                 QSGRectangleNode* bar = window()->createRectangleNode();
                 bar->setRect(rect);
-                bar->setColor(m_quoteBarColor);
+                bar->setColor(m_appearance->quoteBarColor());
                 barsNode->appendChildNode(bar);
             }
         }
 
     }
     return root;
+}
+
+void ChatTextItem::connectAppearance()
+{
+    connect(m_appearance, &ChatTextAppearance::changed, this, &ChatTextItem::applyAppearance);
+    connect(m_appearance, &QObject::destroyed, this, [this] {
+        m_appearance = ChatTextAppearance::defaults();
+        connectAppearance();
+        // Owners usually go down together with their items. Restyling is
+        // queued, so a dying item skips it: Qt drops queued calls to a
+        // destroyed receiver.
+        QMetaObject::invokeMethod(this, [this] {
+            applyAppearance(ChatTextAppearance::All);
+            emit appearanceChanged();
+        }, Qt::QueuedConnection);
+    });
+}
+
+void ChatTextItem::setAppearance(ChatTextAppearance* appearance)
+{
+    if (!appearance)
+        appearance = ChatTextAppearance::defaults();
+    if (appearance == m_appearance)
+        return;
+    const quint32 changes = m_appearance->differences(*appearance);
+    disconnect(m_appearance, nullptr, this, nullptr);
+    m_appearance = appearance;
+    connectAppearance();
+    for (int field = ChatTextAppearance::Font; field <= ChatTextAppearance::QuoteColor; ++field)
+        if (changes & (1u << (field - 1)))
+            applyAppearance(static_cast<ChatTextAppearance::Change>(field));
+    emit appearanceChanged();
+}
+
+void ChatTextItem::applyAppearance(ChatTextAppearance::Change change)
+{
+    if (change == ChatTextAppearance::All) {
+        m_document->setDefaultFont(m_appearance->font());
+        rebuildFromSegments(true);
+        return;
+    }
+    switch (change) {
+    case ChatTextAppearance::Font: {
+        m_document->setDefaultFont(m_appearance->font());
+
+        // Ordinary spans inherit the new default font. Emoji carry an explicit
+        // size, so update their formats while preserving selection and hover.
+        bool hasEmoji = false;
+        for (const auto& range : std::as_const(m_appearanceRanges))
+            hasEmoji |= (range.kinds & EmojiAppearance) != 0;
+        if (hasEmoji)
+            updateEmojiAppearance();
+        else
+            markLayoutDirty();
+
+        break;
+    }
+    case ChatTextAppearance::Color: {
+        update();
+        break;
+    }
+    case ChatTextAppearance::LinkColor: {
+        updateAppearance(LinkAppearance, [this](QTextCharFormat& format) {
+            format.setForeground(m_appearance->linkColor());
+        });
+        update();
+        break;
+    }
+    case ChatTextAppearance::CodeBackground: {
+        updateAppearance(CodeBackgroundAppearance, [this](QTextCharFormat& format) {
+            format.setBackground(m_appearance->codeBackground());
+        });
+        update();
+        break;
+    }
+    case ChatTextAppearance::CodeFontFamily: {
+        updateAppearance(CodeFontAppearance, [this](QTextCharFormat& format) {
+            setCodeFont(format, m_appearance->codeFontFamily());
+        });
+        break;
+    }
+    case ChatTextAppearance::CodeBorderColor: {
+        update();
+        break;
+    }
+    case ChatTextAppearance::CodeBlockPadding: {
+        applyBlockMargins();
+        markLayoutDirty();
+        break;
+    }
+    case ChatTextAppearance::CodeBlockRadius: {
+        update();
+        break;
+    }
+    case ChatTextAppearance::LineHeight: {
+        m_document->setLayoutEnabled(false);
+        QTextCursor cursor(m_document.get());
+        cursor.beginEditBlock();
+        for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+            if (isCodeBlock(block))
+                continue;
+            QTextBlockFormat format = block.blockFormat();
+            if (m_appearance->lineHeight() > 0)
+                format.setLineHeight(m_appearance->lineHeight(), QTextBlockFormat::MinimumHeight);
+            else {
+                format.clearProperty(QTextFormat::LineHeight);
+                format.clearProperty(QTextFormat::LineHeightType);
+            }
+            if (format != block.blockFormat()) {
+                cursor.setPosition(block.position());
+                cursor.setBlockFormat(format);
+            }
+        }
+        cursor.endEditBlock();
+        markLayoutDirty();
+        break;
+    }
+    case ChatTextAppearance::SelectionColor: {
+        update();
+        break;
+    }
+    case ChatTextAppearance::SelectionTextColor: {
+        update();
+        break;
+    }
+    case ChatTextAppearance::HoverHighlightColor: {
+        clearLinkHighlights();
+        applyLinkHighlights();
+
+        markLayoutDirty();
+        break;
+    }
+    case ChatTextAppearance::QuoteBarColor: {
+        update();
+        break;
+    }
+    case ChatTextAppearance::QuoteBarWidth: {
+        applyBlockMargins();
+        markLayoutDirty();
+        break;
+    }
+    case ChatTextAppearance::QuoteSpacing: {
+        applyBlockMargins();
+        markLayoutDirty();
+        break;
+    }
+    case ChatTextAppearance::EmojiOnlyPixelSize: {
+        updateEmojiAppearance();
+        break;
+    }
+    case ChatTextAppearance::EditedMarkerFontSize: {
+        updateAppearance(MarkerAppearance, [this](QTextCharFormat& format) {
+            format.setProperty(QTextFormat::FontPixelSize, m_appearance->editedMarkerFontSize());
+        });
+        break;
+    }
+    case ChatTextAppearance::EditedMarkerColor: {
+        updateAppearance(MarkerAppearance, [this](QTextCharFormat& format) {
+            format.setForeground(m_appearance->editedMarkerColor());
+        });
+        break;
+    }
+    case ChatTextAppearance::MentionColor: {
+        updateAppearance(MentionForegroundAppearance, [this](QTextCharFormat& format) {
+            format.setForeground(m_appearance->mentionColor());
+        });
+        break;
+    }
+    case ChatTextAppearance::MentionBackground: {
+        updateAppearance(MentionBackgroundAppearance, [this](QTextCharFormat& format) {
+            format.setBackground(m_appearance->mentionBackground());
+        });
+        break;
+    }
+    case ChatTextAppearance::QuoteColor: {
+        updateAppearance(QuoteAppearance, [this](QTextCharFormat& format) {
+            format.setForeground(m_appearance->quoteColor());
+        });
+        break;
+    }
+    default:
+        break;
+    }
 }

@@ -15,7 +15,7 @@ SplitView {
     QtObject {
         id: d
 
-        readonly property int emojiOnlyPx: Math.round(documentItem.font.pixelSize * 2.2)
+        readonly property int emojiOnlyPx: Math.round(documentItem.appearance.font.pixelSize * 2.2)
         readonly property var samples: [
             everythingSegments,
             [{text: "🎉 🚀 ✅ 👩🏽‍💻 👨‍👩‍👧‍👦 🇵🇱 1️⃣"}]
@@ -84,7 +84,7 @@ SplitView {
                 Layout.fillWidth: true
                 Layout.margins: 16
                 text: "ChatTextItem"
-                color: Theme.palette.directColor1
+                color: root.Theme.palette.directColor1
                 font.bold: true
             }
             Label {
@@ -92,11 +92,34 @@ SplitView {
                 Layout.leftMargin: 16
                 Layout.rightMargin: 16
                 wrapMode: Text.Wrap
-                color: Theme.palette.directColor1
+                color: root.Theme.palette.directColor1
                 text: "Formatted text, mentions, links, emoji, quotes and code blocks. "
                       + "Drag to select across them, or click a link to highlight it."
             }
             ChatTextItem {
+                appearance: ChatTextAppearance {
+                    font.family: Fonts.baseFont.family
+                    font.pixelSize: ctrlFontSize.value
+                    lineHeight: ctrlLineHeight.value
+                    color: root.Theme.palette.directColor1
+                    linkColor: root.Theme.palette.primaryColor1
+                    hoverHighlightColor: root.Theme.palette.primaryColor2
+                    codeBackground: root.Theme.palette.baseColor4
+                    codeBorderColor: root.Theme.palette.baseColor2
+                    codeFontFamily: Fonts.codeFont.family
+                    mentionColor: root.Theme.palette.primaryColor1
+                    mentionBackground: root.Theme.palette.baseColor2
+                    quoteColor: root.Theme.palette.baseColor1
+                    emojiOnlyPixelSize: d.emojiOnlyPx
+                    quoteBarColor: root.Theme.palette.baseColor1
+                    quoteBarWidth: ctrlQuoteBarWidth.value
+                    quoteSpacing: ctrlQuoteSpacing.value
+                    selectionColor: root.Theme.palette.primaryColor1
+                    selectionTextColor: root.Theme.palette.indirectColor1
+                    editedMarkerFontSize: root.Theme.tertiaryTextFontSize
+                    editedMarkerColor: root.Theme.palette.baseColor1
+                }
+
                 id: documentItem
                 objectName: "chatTextItemShowcase"
                 Layout.preferredWidth: ctrlWidth.value
@@ -106,28 +129,8 @@ SplitView {
                 Layout.rightMargin: 16
 
                 segments: d.samples[ctrlMessage.currentIndex] || []
-                font.family: Fonts.baseFont.family
-                font.pixelSize: ctrlFontSize.value
-                lineHeight: ctrlLineHeight.value
-                color: Theme.palette.directColor1
-                linkColor: Theme.palette.primaryColor1
-                hoverHighlightColor: Theme.palette.primaryColor2
-                codeBackground: Theme.palette.baseColor4
-                codeBorderColor: Theme.palette.baseColor2
-                codeFontFamily: Fonts.codeFont.family
-                mentionColor: Theme.palette.primaryColor1
-                mentionBackground: Theme.palette.baseColor2
-                quoteColor: Theme.palette.baseColor1
-                emojiOnlyPixelSize: d.emojiOnlyPx
-                quoteBarColor: Theme.palette.baseColor1
-                quoteBarWidth: ctrlQuoteBarWidth.value
-                quoteSpacing: ctrlQuoteSpacing.value
                 selectable: ctrlSelectable.checked
-                selectionColor: Theme.palette.primaryColor1
-                selectionTextColor: Theme.palette.indirectColor1
                 edited: ctrlEdited.checked
-                editedMarkerFontSize: Theme.tertiaryTextFontSize
-                editedMarkerColor: Theme.palette.baseColor1
 
                 onLinkActivated: link => {
                     highlightedLink = link
@@ -138,7 +141,7 @@ SplitView {
                 Layout.fillWidth: true
                 Layout.leftMargin: 16
                 Layout.rightMargin: 16
-                color: Theme.palette.baseColor1
+                color: root.Theme.palette.baseColor1
                 wrapMode: Text.WrapAnywhere
                 textFormat: Text.PlainText
                 text: "Hovered link: " + (documentItem.hoveredLink || "—")
@@ -146,7 +149,7 @@ SplitView {
             Label {
                 Layout.fillWidth: true
                 Layout.margins: 16
-                color: Theme.palette.baseColor1
+                color: root.Theme.palette.baseColor1
                 wrapMode: Text.Wrap
                 textFormat: Text.PlainText
                 text: "Selected text: " + (documentItem.selectedText || "—")
@@ -208,7 +211,7 @@ SplitView {
                             id: ctrlFontSize
                             objectName: "showcaseFontSize"
                             Layout.fillWidth: true
-                            from: 8; to: 40; stepSize: 1; value: Theme.primaryTextFontSize
+                            from: 8; to: 40; stepSize: 1; value: root.Theme.primaryTextFontSize
                         }
                         Label { text: "Minimum line height: " + ctrlLineHeight.value + " px" }
                         Slider {

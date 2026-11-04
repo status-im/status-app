@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "ChatTextTestUtils.js" as ChatTextTestUtils
 import StatusQ
 
 Item {
@@ -18,35 +19,45 @@ Item {
     Component {
         id: itemComponent
         ChatTextItem {
+            appearance: ChatTextAppearance {
+                font.pixelSize: 15
+                lineHeight: 22
+            }
+
             width: 400
-            font.pixelSize: 15
-            lineHeight: 22
             segments: [{text: "first line"}, {text: "second line", newBlock: true}]
         }
     }
     Component { id: spyComponent; SignalSpy {} }
 
     TestCase {
+        id: testCase
+
+        readonly property var appearanceProperties: ChatTextTestUtils.appearanceProperties
+        property list<chatTextSegment> initialSegments
+        function createStyledTemporary(component, parent, properties) {
+            return ChatTextTestUtils.create(testCase, component, parent, properties)
+        }
         name: "ChatTextItemInteraction"
         when: windowShown
 
         function createItem(properties) {
-            const item = createTemporaryObject(itemComponent, root, properties || {})
+            const item = createStyledTemporary(itemComponent, root, properties || {})
             verify(!!item)
             return item
         }
 
         function linkSpy(item) {
-            const spy = createTemporaryObject(spyComponent, root,
+            const spy = createStyledTemporary(spyComponent, root,
                 {target: item, signalName: "linkActivated"})
             verify(!!spy && spy.valid)
             return spy
         }
 
         function dragAll(item) {
-            mousePress(item, 0, item.lineHeight / 2)
-            mouseMove(item, item.width - 4, item.contentHeight - item.lineHeight / 2)
-            mouseRelease(item, item.width - 4, item.contentHeight - item.lineHeight / 2)
+            mousePress(item, 0, item.appearance.lineHeight / 2)
+            mouseMove(item, item.width - 4, item.contentHeight - item.appearance.lineHeight / 2)
+            mouseRelease(item, item.width - 4, item.contentHeight - item.appearance.lineHeight / 2)
         }
 
         function test_emptySegmentsCollapseContent() {
@@ -68,9 +79,9 @@ Item {
         function test_lineHeightOverrideChangesGeometry() {
             const item = createItem({segments: [{text: "a\nb"}]})
             compare(item.contentHeight, 44)
-            item.lineHeight = 30
+            item.appearance.lineHeight = 30
             compare(item.contentHeight, 60)
-            item.lineHeight = 0
+            item.appearance.lineHeight = 0
             verify(item.contentHeight > 0 && item.contentHeight < 60)
             compare(item.implicitHeight, item.contentHeight)
         }
@@ -266,7 +277,7 @@ Item {
             const item = createItem()
             dragAll(item)
             const before = grabImage(item)
-            item.linkColor = "#123456"
+            item.appearance.linkColor = "#123456"
             compare(item.selectedText, "first line\nsecond line")
             verify(before.equals(grabImage(item)))
         }
