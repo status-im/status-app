@@ -206,6 +206,39 @@ Item {
             compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
         }
 
+        function test_manualLoginErrorStaysVisibleOnTheLoginScreen() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+
+            const layout = findChild(wrapper, "startupOnboardingLayout")
+            verify(!!layout)
+            layout.restartFlow()
+
+            let page = getCurrentPage(layout.stack)
+            const userSelector = findChild(page, "loginUserSelector")
+            verify(!!userSelector)
+            userSelector.setSelection("uid_1")
+
+            // Manual login: the wrapper pushes the splash screen
+            wrapper.onboardingStore.loginRequested("uid_1", Onboarding.LoginMethod.Password, { password: "wrong" })
+
+            wrapper.onboardingStore.accountLoginError("login failed", true)
+
+            // Back on a login screen that SHOWS the error (red border via validationError)
+            tryVerify(() => {
+                const screen = layout.stack.loginScreen
+                if (!screen)
+                    return false
+                const passwordBox = findChild(screen, "passwordBox")
+                return !!passwordBox && passwordBox.validationError.indexOf("Password incorrect") >= 0
+            }, 2000, "login screen must display the manual-login error")
+        }
+
+        function getCurrentPage(stack) {
+            tryVerify(() => !!stack.currentItem)
+            return stack.currentItem
+        }
+
         // Preference OFF: the task sends an empty credential (no DEK export) and any
         // stale stored credential is reconciled away.
         function test_stayLoggedInSavePrefOffReconcilesStaleCredential() {

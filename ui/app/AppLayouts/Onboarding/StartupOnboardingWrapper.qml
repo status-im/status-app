@@ -91,15 +91,12 @@ Item {
             if (staleAutoLoginKeyUid !== "" && root.secureStorage)
                 root.secureStorage.deleteCredential(staleAutoLoginKeyUid)
 
-            // Pop the splash screen that onLoginRequested pushed, instead of unwinding — unwinding replaces the current screen
+            // Return to the existing login screen by popping whatever is above it
+            // recreating it via unwindToLoginScreen would discard the error state.
             const loginScreen = onboardingLayout.stack.loginScreen
-            if (root.onboardingStore.keycardState === Onboarding.KeycardState.PairingPasswordRequired
-                    && !!loginScreen) {
-                onboardingLayout.stack.pop(loginScreen)
-                return
-            }
-
             if (loginScreen)
+                onboardingLayout.stack.pop(loginScreen)
+            else
                 onboardingLayout.unwindToLoginScreen()
         }
 
