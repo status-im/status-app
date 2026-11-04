@@ -894,7 +894,11 @@ void ChatTextItem::markLayoutDirty()
 
 void ChatTextItem::ensureLayout()
 {
-    if (!m_layoutDirty)
+    // Before completion the width and appearance may still be arriving, and
+    // at zero width QTextDocument wraps at every break opportunity: a full
+    // layout that the real width throws away. componentComplete() and
+    // geometryChange() lay out once both are known.
+    if (!m_layoutDirty || !isComponentComplete() || width() <= 0)
         return;
 
     m_layoutDirty = false;
@@ -1531,6 +1535,13 @@ void ChatTextItem::geometryChange(const QRectF& newGeometry, const QRectF& oldGe
     QQuickItem::geometryChange(newGeometry, oldGeometry);
 
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width()))
+        markLayoutDirty();
+}
+
+void ChatTextItem::componentComplete()
+{
+    QQuickItem::componentComplete();
+    if (m_layoutDirty)
         markLayoutDirty();
 }
 

@@ -187,6 +187,7 @@ protected:
     QSGNode* updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*) override;
     void geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry) override;
     void itemChange(ItemChange change, const ItemChangeData& value) override;
+    void componentComplete() override;
 
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
@@ -241,8 +242,9 @@ private:
     QVector<QRectF> computeCodeFrames() const;
     qreal quoteIndent() const;
 
-    // Layout runs eagerly from every mutator, so contentHeight and the hit
-    // tests can be plain reads with no side effects. See markLayoutDirty().
+    // Layout runs eagerly from every mutator once the item is complete and
+    // has a width, so contentHeight and the hit tests can be plain reads with
+    // no side effects. See markLayoutDirty().
     void markLayoutDirty();
     void ensureLayout();
 
