@@ -51,11 +51,6 @@ Markdown::Options optionsFor(bool unclosedFence)
     return o;
 }
 
-// ── image-based emoji helpers ────────────────────────────────────────────────
-
-// Custom char-format property holding an emoji image object's original Unicode text, used to
-// recover the real emoji for extraction/copy and to toggle back to font rendering. Well clear
-// of the mention properties (UserProperty + 1..3).
 // Reads the code point at `i` (advancing `units` over a surrogate pair).
 constexpr char32_t codePointAt(QStringView s, qsizetype i, qsizetype& units)
 {
@@ -68,8 +63,7 @@ constexpr char32_t codePointAt(QStringView s, qsizetype i, qsizetype& units)
     return c.unicode();
 }
 
-// True if the block text at [i, ...) starts an emoji code point (never matches the U+FFFC of an
-// existing image/mention object, so conversion is idempotent).
+// True if the block text at [i, ...) starts an emoji code point.
 constexpr bool startsEmoji(QStringView s, qsizetype i, qsizetype& units)
 {
     return Markdown::isEmojiCodePoint(codePointAt(s, i, units));
@@ -858,7 +852,7 @@ bool ChatInputHighlighter::isPlainTextRange(int start, int end) const
     cursor.setPosition(end, QTextCursor::KeepAnchor);
     const QString sel = cursor.selectedText();
     // U+2029 (ParagraphSeparator) marks a block/newline break; U+FFFC (ObjectReplacementCharacter)
-    // marks a mention pill or an inline emoji image. Either disqualifies the range from being a
+    // marks a mention pill. Either disqualifies the range from being a
     // clean, single-line plain-text label.
     return !sel.contains(QChar::ParagraphSeparator)
             && !sel.contains(QChar::ObjectReplacementCharacter);

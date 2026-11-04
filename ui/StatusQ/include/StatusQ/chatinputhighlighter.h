@@ -139,8 +139,8 @@ public:
     // over a selection should wrap it as a markdown link label.
     Q_INVOKABLE bool isSingleUrl(const QString& text) const;
 
-    // True when `[start, end)` contains only plain text — no mention pills, no inline emoji image
-    // objects, and no paragraph/line break. Guards the "wrap only clean text" rule for link paste.
+    // True when `[start, end)` contains only plain text — no mention pills or paragraph/line
+    // breaks. Guards the "wrap only clean text" rule for link paste.
     Q_INVOKABLE bool isPlainTextRange(int start, int end) const;
 
     // Wraps `[start, end)` as a markdown link label: inserts "[" at start and "](url)" at end,
