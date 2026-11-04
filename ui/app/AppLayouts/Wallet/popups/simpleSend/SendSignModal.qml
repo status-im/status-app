@@ -143,6 +143,16 @@ SignTransactionModalBase {
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.networkChainId)
 
+        // the estimate is refreshed while the route is open; less gas would run out on-chain
+        readonly property bool customGasBelowEstimate: {
+            if (root.selectedFeeMode !== Constants.FeePriorityModeType.Custom
+                    || !root.customGasAmount || !root.minGasAmount)
+                return false
+            const custom = SQUtils.AmountsArithmetic.fromString(root.customGasAmount)
+            const min = SQUtils.AmountsArithmetic.fromString(root.minGasAmount)
+            return custom instanceof Object && min instanceof Object && custom.cmp(min) === -1
+        }
+
         signal refreshTxSettings()
     }
 
@@ -155,6 +165,8 @@ SignTransactionModalBase {
     }
 
     headerActionsCloseButtonVisible: true
+
+    signButtonEnabled: !d.customGasBelowEstimate
 
     // Wallet account background color to be used as gardient in the header
     gradientColor: root.accountColor
@@ -234,9 +246,19 @@ SignTransactionModalBase {
                 StatusTextWithLoadingState {
                     Layout.fillWidth: true
                     objectName: "footerEstTimeText"
+                    visible: !d.customGasBelowEstimate
                     text: loading ? Constants.dummyText : root.estimatedTime
                     loading: root.feesLoading
                     font.pixelSize: Theme.additionalTextSize
+                }
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    objectName: "footerGasTooLowText"
+                    visible: d.customGasBelowEstimate
+                    text: qsTr("Gas amount too low, the transaction would fail")
+                    color: Theme.palette.dangerColor1
+                    font.pixelSize: Theme.additionalTextSize
+                    wrapMode: Text.Wrap
                 }
             }
             ColumnLayout {
