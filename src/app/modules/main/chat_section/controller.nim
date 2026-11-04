@@ -531,12 +531,11 @@ proc getChatsAndBuildUI*(self: Controller) =
         self.sharedUrlsService,
       )
 
-proc sectionUnreadMessagesAndMentionsCount*(self: Controller, communityId: string, sectionIsMuted: bool):
+proc sectionUnreadMessagesAndMentionsCount*(self: Controller):
     tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
-  result = self.chatService.sectionUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
-  let threadCounts = self.messageService.sectionThreadsUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
-  result.unviewedMessagesCount += threadCounts.unviewedMessagesCount
-  result.unviewedMentionsCount += threadCounts.unviewedMentionsCount
+  let sectionId = if self.isCommunitySection: self.sectionId else: PERSONAL_SECTION_ID
+  let counts = self.chatService.getSectionUnreadCounts(sectionId)
+  (counts.unviewedMessagesCount, counts.unviewedMentionsCount)
 
 proc getChatDetails*(self: Controller, chatId: string): lent ChatDto =
   return self.chatService.getChatById(chatId)
