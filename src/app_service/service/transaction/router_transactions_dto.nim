@@ -14,6 +14,14 @@ type
     details*: string
     code*: string
 
+const
+  ## status-go transfer.ErrRouteGasEstimateExpired: the route's gas estimate is too old to sign,
+  ## the route has to be requested again
+  ErrCodeRouteGasEstimateExpired* = "WT-005"
+
+proc isRouteGasEstimateExpired*(self: ErrorResponse): bool =
+  not self.isNil and self.code == ErrCodeRouteGasEstimateExpired
+
 type
   TansferDetails* = ref object
     tokenType*: int

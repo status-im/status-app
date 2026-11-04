@@ -1296,6 +1296,8 @@ QtObject {
 
     readonly property QtObject walletSection: QtObject {
         readonly property string authenticationCanceled: "authenticationCanceled"
+        // the route's gas estimate expired before signing; keep in sync with send_new/controller.nim
+        readonly property string routeGasEstimateExpired: "routeGasEstimateExpired"
     }
 
     // list of symbols for which pngs are stored to avoid

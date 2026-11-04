@@ -564,6 +564,11 @@ QtObject {
                         if (error.includes(Constants.walletSection.authenticationCanceled)) {
                             return
                         }
+                        if (error === Constants.walletSection.routeGasEstimateExpired) {
+                            // nothing was signed: fetch a fresh route, the user reviews it again
+                            simpleSendModal.formChanged()
+                            return
+                        }
                         simpleSendModal.routerError = error
                         return
                     }
