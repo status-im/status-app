@@ -947,6 +947,12 @@ void ChatTextItem::ensureLayout()
 // addTextLayout reads brushes from additional formats rather than walking
 // document fragments. Mirror those formats on the GUI thread; unchanged
 // layouts keep their existing shaping and line breaks.
+//
+// Only what QQuickTextNodeEngine::mergeFormats consumes is mirrored: the
+// foreground, the background and the anchor flag. Fonts already reach the
+// glyphs through the document's own formats, and every additional format
+// range costs QTextEngine an override lookup and splits the glyph nodes, so a
+// block with only bold, italic or sized emoji needs no additional formats.
 void ChatTextItem::syncLayoutFormats()
 {
     int dirtyFrom = -1;
@@ -956,8 +962,22 @@ void ChatTextItem::syncLayoutFormats()
         for (auto it = block.begin(); !it.atEnd(); ++it) {
             const QTextFragment fragment = it.fragment();
             const QTextCharFormat format = fragment.charFormat();
-            if (!format.isEmpty())
-                formats.append({fragment.position() - block.position(), fragment.length(), format});
+            QTextCharFormat paint;
+            if (format.hasProperty(QTextFormat::ForegroundBrush))
+                paint.setForeground(format.foreground());
+            if (format.hasProperty(QTextFormat::BackgroundBrush))
+                paint.setBackground(format.background());
+            if (format.isAnchor())
+                paint.setAnchor(true);
+            if (paint.isEmpty())
+                continue;
+            const int start = fragment.position() - block.position();
+            if (!formats.isEmpty() && formats.last().format == paint
+                    && formats.last().start + formats.last().length == start) {
+                formats.last().length += fragment.length();
+            } else {
+                formats.append({start, fragment.length(), paint});
+            }
         }
         if (block.layout()->formats() != formats) {
             block.layout()->setFormats(formats);
