@@ -379,23 +379,27 @@ QtObject:
       if acNotification.notificationType == notificationType and acNotification.communityId == communityId:
         return acNotification
 
+  proc handleAcceptedActivityCenterNotification*(self: Service, notificationId: string,
+      response: RpcResponse[JsonNode]) =
+    if response.error != nil:
+      raise newException(RpcException, response.error.message)
+
+    self.chatService.handleSectionUnreadCountsResponse(response.result)
+    if response.result.kind != JNull:
+      if response.result.contains("chats"):
+        for jsonChat in response.result["chats"]:
+          var chat = toChatDto(jsonChat)
+          self.chatService.updateOrAddChat(chat)
+          self.events.emit(SIGNAL_CHAT_UPDATE, ChatUpdateArgs(chats: @[chat]))
+
+    self.parseActivityCenterState(response)
+    self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_ACCEPTED, ActivityCenterNotificationIdArgs(notificationId: notificationId))
+    self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED, Args())
+
   proc acceptActivityCenterNotification*(self: Service, notificationId: string) =
     try:
-      let notificationIds = @[notificationId]
-      let response = backend.acceptActivityCenterNotifications(notificationIds)
-      if response.error != nil:
-        raise newException(RpcException, response.error.message)
-
-      if response.result.kind != JNull:
-        if response.result.contains("chats"):
-          for jsonChat in response.result["chats"]:
-            var chat = toChatDto(jsonChat)
-            self.chatService.updateOrAddChat(chat)
-            self.events.emit(SIGNAL_CHAT_UPDATE, ChatUpdateArgs(chats: @[chat]))
-
-      self.parseActivityCenterState(response)
-      self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_ACCEPTED, ActivityCenterNotificationIdArgs(notificationId: notificationId))
-      self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED, Args())
+      let response = backend.acceptActivityCenterNotifications(@[notificationId])
+      self.handleAcceptedActivityCenterNotification(notificationId, response)
     except Exception as e:
       error "Error accepting activity center notification", msg = e.msg
 

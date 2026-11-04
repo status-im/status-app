@@ -991,24 +991,15 @@ method getChatContentModule*(self: Module, chatId: string): QVariant =
   return self.chatContentModules[chatId].getModuleAsVariant()
 
 proc updateParentBadgeNotifications(self: Module) =
-  var sectionIsMuted = false
-  if self.controller.isCommunity:
-    sectionIsMuted = self.controller.getMyCommunity().muted
-
-  let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    self.controller.getMySectionId(),
-    sectionIsMuted,
-  )
+  let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount()
   self.delegate.onNotificationsUpdated(
     self.controller.getMySectionId(),
-    unviewedMessagesCount > 0,
+    unviewedMessagesCount > 0 or unviewedMentionsCount > 0,
     unviewedMentionsCount
   )
 
-# Followed threads contribute to the section and category markers, so refresh
-# them whenever thread follow, archive or unread state changes.
+# Category models are available only after the section's chat UI is built.
 proc updateThreadsBadgeNotifications(self: Module, parentChatIds: seq[string]) =
-  self.updateParentBadgeNotifications()
   if not self.isCommunity:
     return
   let communityId = self.controller.getMySectionId()
