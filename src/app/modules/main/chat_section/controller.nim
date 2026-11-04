@@ -106,6 +106,21 @@ proc getThreadById*(self: Controller, chatId, threadId: string): ThreadDto =
 proc loadChatThreadsForChats*(self: Controller, chatIds: seq[string]) =
   self.messageService.loadChatThreadsForChatsIfNeeded(chatIds)
 
+proc chatBelongsToSection*(self: Controller, chatId: string): bool =
+  let chat = self.chatService.getChatById(chatId, showWarning = false)
+  chat.id.len > 0 and
+    (if self.isCommunitySection: chat.communityId == self.sectionId else: chat.communityId.len == 0)
+
+proc loadSectionThreads*(self: Controller) =
+  if not THREADS_ENABLED:
+    return
+  let chats = if self.isCommunitySection: self.chatService.getChatsForCommunity(self.sectionId)
+              else: self.chatService.getChatsForPersonalSection()
+  var chatIds: seq[string]
+  for chat in chats:
+    chatIds.add(chat.id)
+  self.loadChatThreadsForChats(chatIds)
+
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)

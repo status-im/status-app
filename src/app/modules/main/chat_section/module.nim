@@ -525,6 +525,8 @@ method load*(self: Module, buildChats: bool = false) =
     self.controller.getChatsAndBuildUI()
 
   self.view.load()
+  # Section badges need persisted unread/follow state even before its chat UI is built.
+  self.controller.loadSectionThreads()
 
 method onChatsLoaded*(
     self: Module,
@@ -784,6 +786,10 @@ proc clearPendingThreadRestore(self: Module, clearSettings: bool) =
 
 method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     completedChatIds: seq[string]) =
+  if threads.anyIt(self.controller.chatBelongsToSection(it.chatId)) or
+      completedChatIds.anyIt(self.controller.chatBelongsToSection(it)):
+    self.updateParentBadgeNotifications()
+
   if not self.chatsLoaded:
     return
 
@@ -1005,10 +1011,8 @@ proc updateParentBadgeNotifications(self: Module) =
     unviewedMentionsCount
   )
 
-# Followed threads contribute to the section and category markers, so refresh
-# them whenever thread follow, archive or unread state changes.
+# Category models are available only after the section's chat UI is built.
 proc updateThreadsBadgeNotifications(self: Module, parentChatIds: seq[string]) =
-  self.updateParentBadgeNotifications()
   if not self.isCommunity:
     return
   let communityId = self.controller.getMySectionId()
