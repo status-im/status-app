@@ -7,7 +7,6 @@
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QGuiApplication>
-#include <QFontMetricsF>
 #include <QGlyphRun>
 #include <QStyleHints>
 #include <QHoverEvent>
@@ -59,13 +58,14 @@ struct KeyColor {
 struct TextPaintKey {
     quint64 revision;
     QRectF bounds;
+    bool clip;
     KeyColor color, linkColor, selectionColor, selectionTextColor;
     int selectionStart, selectionEnd;
 
     constexpr bool operator==(const TextPaintKey& other) const {
-        return std::tie(revision, bounds, color, linkColor, selectionColor, selectionTextColor,
+        return std::tie(revision, bounds, clip, color, linkColor, selectionColor, selectionTextColor,
                         selectionStart, selectionEnd)
-                == std::tie(other.revision, other.bounds, other.color, other.linkColor,
+                == std::tie(other.revision, other.bounds, other.clip, other.color, other.linkColor,
                             other.selectionColor, other.selectionTextColor,
                             other.selectionStart, other.selectionEnd);
     }
@@ -307,7 +307,10 @@ ChatTextItem::ChatTextItem(QQuickItem* parent)
 {
     setFlag(ItemHasContents, true);
     setAcceptedMouseButtons(Qt::LeftButton);
-    setAcceptHoverEvents(true);
+    // Hover only tracks anchors; see rebuildFromSegments(). The cursor shape
+    // follows the mouse without hover events.
+    setAcceptHoverEvents(false);
+    connect(this, &QQuickItem::clipChanged, this, [this] { update(); });
 
     connectAppearance();
     applyDocumentDefaults();
@@ -462,9 +465,11 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
 
     bool firstBlock = true;
     bool afterCodeBlock = false;
+    bool hasLinks = false;
 
     for (const Segment& segment : std::as_const(m_segments)) {
         const bool codeBlock = segment.has(Segment::CodeBlock);
+        hasLinks |= !segment.href.isEmpty();
         m_hasCodeBlocks |= codeBlock;
         m_hasQuotes |= segment.quoteLevel > 0;
 
@@ -550,6 +555,9 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     }
 
     cursor.endEditBlock();
+    // Text without anchors has nothing to hover; leave its hover events to
+    // the items around it.
+    setAcceptHoverEvents(hasLinks);
 
     applyEmojiSizing();
     // Size/classify the original message before inserting the suffix: an
@@ -699,7 +707,7 @@ void ChatTextItem::applyEmojiSizing()
 qreal ChatTextItem::effectiveEmojiSize(bool emojiOnly) const
 {
     return emojiOnly && m_appearance->emojiOnlyPixelSize() > 0 ? m_appearance->emojiOnlyPixelSize()
-                                              : qRound(QFontMetricsF(m_appearance->font()).height());
+                                              : qRound(m_appearance->fontLineHeight());
 }
 
 bool ChatTextItem::emojiOnly() const
@@ -1624,7 +1632,7 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
     auto* node = static_cast<QSGTextNode*>(backgroundsNode->nextSibling());
     QSGNode* barsNode = node->nextSibling();
 
-    const TextPaintKey textKey {m_layoutRevision, boundingRect(), m_appearance->color(), m_appearance->linkColor(),
+    const TextPaintKey textKey {m_layoutRevision, boundingRect(), clip(), m_appearance->color(), m_appearance->linkColor(),
         m_appearance->selectionColor(), m_appearance->selectionTextColor(), m_selectionStart, m_selectionEnd};
     if (!root->textKey || !(*root->textKey == textKey)) {
         root->textKey = textKey;
@@ -1656,7 +1664,18 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
         // mistaken for duplicate glyphs and disappear behind the selection fill.
         // Each call gets its own renderer engine, so paragraph-local ranges remain
         // local. Keep the original document layouts: no copying or extra shaping.
+        //
+        // A clipped item -- a collapsed long message -- skips the blocks it
+        // cannot show; glyph nodes are the bulk of the paint cost.
+        const QRectF visible = clip() ? boundingRect() : QRectF();
         for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+            if (!visible.isNull()) {
+                const QRectF rect = m_document->documentLayout()->blockBoundingRect(block);
+                if (rect.top() >= visible.bottom())
+                    break;
+                if (rect.bottom() <= visible.top())
+                    continue;
+            }
             const int start = qMax(selectionStart, block.position());
             const int last = qMin(selectionLast, block.position() + block.length() - 2);
             const bool selected = selectionStart >= 0 && start <= last;

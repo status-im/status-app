@@ -2,7 +2,6 @@
 #include "StatusQ/chattextformat.h"
 #include "StatusQ/markdownast.h"
 #include <QCoreApplication>
-#include <QFontMetricsF>
 #include <QTextBoundaryFinder>
 #include <QQuickWindow>
 #include <QSGTextNode>
@@ -107,7 +106,7 @@ void ChatSingleLineTextItem::rebuild()
         // Emoji sizing retains each span's formatting and never enlarges an emoji-only preview.
         if (!segment.code() && !code && Markdown::clusterHasEmoji(text)) {
             if (emojiSize < 0)
-                emojiSize = qRound(QFontMetricsF(m_appearance->font()).height());
+                emojiSize = qRound(m_appearance->fontLineHeight());
             int from = 0;
             Markdown::forEachGraphemeCluster(text, [&](QStringView cluster, int start, int end) {
                 if (Markdown::clusterHasEmoji(cluster)) {

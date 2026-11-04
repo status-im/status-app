@@ -78,6 +78,8 @@ Item {
         layer.effect: StatusEdgeFadeEffect {
             bottomFade: height * 0.15
         }
+        // The layer shows only the collapsed bounds; skip painting the rest.
+        clip: layer.enabled
 
         edited: root.isEdited
         segments: MarkdownUtils.toChatTextSegments(root.messageDetails.unparsedText, root.messageDetails.mentionsMap)
