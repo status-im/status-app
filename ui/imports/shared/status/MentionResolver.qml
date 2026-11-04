@@ -7,7 +7,7 @@ import StatusQ.Core.Utils
 //
 // resolveFor(text) extracts the mentions present in a message text and resolves them
 // against a source model (with pub-key and display-name roles), always resolving the
-// "everyone" system tag (0x00001). This is the single seam used by ChatTextView
+// "everyone" system tag (0x00001). This is the single seam used by chat text renderer
 // (rendering) and ChatTextArea.loadText (editing) to turn the raw "@0x…" mentions in a
 // message into display names — replacing the status-go/Nim name resolution.
 //
