@@ -219,8 +219,7 @@ private:
         MarkerAppearance = 8,
         EmojiAppearance = 16,
         MentionForegroundAppearance = 32,
-        MentionBackgroundAppearance = 64,
-        QuoteAppearance = 128
+        QuoteAppearance = 64
     };
     struct AppearanceRange
     {
@@ -253,8 +252,11 @@ private:
     // range, so inside an edit block they are laid out together with the edit.
     void syncLayoutFormats();
     void setHoveredLink(const QString& link);
-    void applyLinkHighlights();
-    void clearLinkHighlights();
+
+    // Mention backgrounds and link highlights, in item coordinates. Painted
+    // under the text by the item, so hover and highlight changes touch
+    // neither the document nor its layout.
+    QVector<std::pair<QRectF, QColor>> computeBackgrounds() const;
 
     // Snaps a character position to the nearest grapheme-cluster boundary at or
     // before it. Without this a drag can cut an emoji ZWJ sequence or a
@@ -275,16 +277,6 @@ private:
     bool m_hasQuotes = false;
     bool m_hasCodeBlocks = false;
 
-    // Fragments whose format we changed for link highlighting, with the
-    // format they had before, so the highlight can be taken off again without
-    // having to know how the segment was originally styled.
-    struct HighlightedRange
-    {
-        int start;
-        int length;
-        QTextCharFormat original;
-    };
-    QVector<HighlightedRange> m_highlighted;
     int m_selectionStart = -1;
     int m_selectionEnd = -1;
     int m_selectionAnchor = -1;

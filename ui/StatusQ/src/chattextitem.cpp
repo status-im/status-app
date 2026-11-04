@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QFontMetricsF>
+#include <QGlyphRun>
 #include <QStyleHints>
 #include <QHoverEvent>
 #include <QKeyEvent>
@@ -26,6 +27,7 @@
 #include <QTextCursor>
 #include <QTextDocument>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <optional>
@@ -37,6 +39,7 @@ namespace {
 // applications.
 constexpr int CodeBlockProperty = QTextFormat::UserProperty + 1; // int, code-block identity
 constexpr int CodeSpanProperty = QTextFormat::UserProperty + 2;  // bool, characters
+constexpr int MentionProperty = QTextFormat::UserProperty + 3;   // bool, characters
 
 // A paint key's colour, compared as one QRgb. An invalid colour means "use the
 // default" and must not compare equal to opaque black, which its rgba() is.
@@ -81,6 +84,18 @@ struct FramePaintKey {
     }
 };
 
+struct BackgroundPaintKey {
+    quint64 revision;
+    QString hoveredLink, highlightedLink;
+    KeyColor highlight, mention;
+
+    bool operator==(const BackgroundPaintKey& other) const {
+        return std::tie(revision, hoveredLink, highlightedLink, highlight, mention)
+                == std::tie(other.revision, other.hoveredLink, other.highlightedLink,
+                            other.highlight, other.mention);
+    }
+};
+
 struct BarPaintKey {
     quint64 revision;
     KeyColor color;
@@ -94,6 +109,7 @@ class ChatPaintNode : public QSGNode {
 public:
     std::optional<TextPaintKey> textKey;
     std::optional<FramePaintKey> frameKey;
+    std::optional<BackgroundPaintKey> backgroundKey;
     std::optional<BarPaintKey> barKey;
 };
 
@@ -352,7 +368,6 @@ void ChatTextItem::updateAppearance(int kind, const std::function<void(QTextChar
     // edits and the mirrored layout formats are laid out once, as one range.
     QTextCursor cursor(m_document.get());
     cursor.beginEditBlock();
-    clearLinkHighlights();
     struct Change { int start; int end; QTextCharFormat format; };
     QVector<Change> changes;
     for (const auto& range : std::as_const(m_appearanceRanges)) {
@@ -379,7 +394,6 @@ void ChatTextItem::updateAppearance(int kind, const std::function<void(QTextChar
         cursor.setPosition(change.end, QTextCursor::KeepAnchor);
         cursor.setCharFormat(change.format);
     }
-    applyLinkHighlights();
     syncLayoutFormats();
     cursor.endEditBlock();
     markLayoutDirty();
@@ -404,7 +418,6 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     m_appearanceRanges.clear();
     m_hasQuotes = false;
     m_hasCodeBlocks = false;
-    m_highlighted.clear();
     const bool clearHoveredLink = !preserveInteraction && !m_hoveredLink.isEmpty();
     if (!preserveInteraction) {
         m_clickTimer.invalidate();
@@ -480,7 +493,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
 
         if (segment.has(Segment::Code)) {
             setCodeFont(format, m_appearance->codeFontFamily());
-            format.setBackground(m_appearance->codeBackground());
+            if (!segment.mention())
+                format.setBackground(m_appearance->codeBackground());
             format.setProperty(CodeSpanProperty, true);
         }
 
@@ -490,7 +504,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
             setCodeFont(format, m_appearance->codeFontFamily());
 
         const auto role = ChatTextFormat::foregroundRole(segment, quoteLevelOf(cursor.block()));
-        if (segment.mention()) format.setBackground(m_appearance->mentionBackground());
+        // The mention background is painted by the item, under the text.
+        if (segment.mention()) format.setProperty(MentionProperty, true);
         if (role == ChatTextFormat::ForegroundRole::Mention) format.setForeground(m_appearance->mentionColor());
         else if (role == ChatTextFormat::ForegroundRole::Link) format.setForeground(m_appearance->linkColor());
         else if (role == ChatTextFormat::ForegroundRole::Quote) format.setForeground(m_appearance->quoteColor());
@@ -514,7 +529,7 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         }
         int kinds = 0;
         if (role == ChatTextFormat::ForegroundRole::Mention)
-            kinds |= MentionForegroundAppearance | MentionBackgroundAppearance;
+            kinds |= MentionForegroundAppearance;
         else if (role == ChatTextFormat::ForegroundRole::Quote)
             kinds |= QuoteAppearance;
         if (role == ChatTextFormat::ForegroundRole::Link)
@@ -549,7 +564,6 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         m_appearanceRanges.append({start, cursor.position() - start, MarkerAppearance});
     }
     applyBlockMargins();
-    applyLinkHighlights();
     markLayoutDirty();
     if (clearHoveredLink)
         emit hoveredLinkChanged();
@@ -1423,10 +1437,8 @@ void ChatTextItem::setHighlightedLink(const QString& link)
 {
     if (m_highlightedLink == link)
         return;
-    clearLinkHighlights();
     m_highlightedLink = link;
-    applyLinkHighlights();
-    markLayoutDirty();
+    update();
     emit highlightedLinkChanged();
 }
 
@@ -1450,72 +1462,74 @@ void ChatTextItem::setHoveredLink(const QString& link)
     if (m_hoveredLink == link)
         return;
 
-    clearLinkHighlights();
     m_hoveredLink = link;
-    applyLinkHighlights();
     updateCursorShape();
-
-    markLayoutDirty();
+    update();
     emit hoveredLinkChanged();
 }
 
-// Merges a background over every fragment belonging to either active anchor. No
-// string is rebuilt and nothing is reparsed: the document keeps its identity,
-// and QTextDocument marks only the touched blocks dirty.
-void ChatTextItem::applyLinkHighlights()
+// Use visual runs: a logical anchor or mention can occupy disjoint regions
+// within a bidirectional line. Backgrounds cover each run's advance width and
+// the full line height. A highlight replaces the mention background.
+QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds() const
 {
-    if ((m_hoveredLink.isEmpty() && m_highlightedLink.isEmpty()) || !m_appearance->hoverHighlightColor().isValid())
-        return;
+    QVector<std::pair<QRectF, QColor>> backgrounds;
+    const QColor highlight = m_appearance->hoverHighlightColor();
+    const bool highlighting = highlight.isValid()
+            && (!m_hoveredLink.isEmpty() || !m_highlightedLink.isEmpty());
 
     for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+        const QTextLayout* layout = block.layout();
         for (auto it = block.begin(); !it.atEnd(); ++it) {
             const QTextFragment fragment = it.fragment();
-            if (!fragment.isValid())
-                continue;
-            const QString href = fragment.charFormat().anchorHref();
-            if (href.isEmpty() || (href != m_hoveredLink && href != m_highlightedLink))
+            const QTextCharFormat format = fragment.charFormat();
+            QColor color;
+            const QString href = highlighting ? format.anchorHref() : QString();
+            if (!href.isEmpty() && (href == m_hoveredLink || href == m_highlightedLink))
+                color = highlight;
+            else if (format.boolProperty(MentionProperty))
+                color = m_appearance->mentionBackground();
+            if (!color.isValid() || color.alpha() == 0)
                 continue;
 
-            m_highlighted.append({fragment.position(), fragment.length(),
-                                  fragment.charFormat()});
+            const int from = fragment.position() - block.position();
+            const int to = from + fragment.length();
+            for (int i = 0; i < layout->lineCount(); ++i) {
+                const QTextLine line = layout->lineAt(i);
+                const int start = qMax(from, line.textStart());
+                const int end = qMin(to, line.textStart() + line.textLength());
+                if (start >= end)
+                    continue;
+                const auto runs = line.glyphRuns(start, end - start);
+                QVector<QRectF> rects;
+                rects.reserve(runs.size());
+                for (const QGlyphRun& run : runs) {
+                    const QRectF bounds = run.boundingRect();
+                    if (bounds.width() > 0)
+                        rects.append(QRectF(layout->position().x() + bounds.x(),
+                                            layout->position().y() + line.y(),
+                                            bounds.width(), line.height()));
+                }
+                std::sort(rects.begin(), rects.end(), [](const QRectF& a, const QRectF& b) {
+                    return a.left() < b.left();
+                });
+                // Merge touching runs without filling visual gaps or painting
+                // a translucent background twice where their bounds overlap.
+                for (const QRectF& rect : std::as_const(rects)) {
+                    if (!backgrounds.isEmpty() && backgrounds.last().second == color
+                            && backgrounds.last().first.y() == rect.y()
+                            && backgrounds.last().first.height() == rect.height()
+                            && rect.left() <= backgrounds.last().first.right()
+                            && rect.right() >= backgrounds.last().first.left()) {
+                        backgrounds.last().first = backgrounds.last().first.united(rect);
+                    } else {
+                        backgrounds.append({rect, color});
+                    }
+                }
+            }
         }
     }
-
-    // Apply after collecting: merging formats may split/merge fragments and
-    // must not invalidate the traversal, including repeated links.
-    QTextCursor cursor(m_document.get());
-    cursor.beginEditBlock();
-    m_formatsDirty = !m_highlighted.isEmpty() || m_formatsDirty;
-    QTextCharFormat highlight;
-    highlight.setBackground(m_appearance->hoverHighlightColor());
-    for (const HighlightedRange& range : std::as_const(m_highlighted)) {
-        cursor.setPosition(range.start);
-        cursor.setPosition(range.start + range.length, QTextCursor::KeepAnchor);
-        cursor.mergeCharFormat(highlight);
-    }
-
-    cursor.endEditBlock();
-}
-
-// Restores the exact formats captured when the highlight went on, so a mention
-// keeps its own background and a plain link keeps none.
-void ChatTextItem::clearLinkHighlights()
-{
-    if (m_highlighted.isEmpty())
-        return;
-    m_formatsDirty = true;
-
-    QTextCursor cursor(m_document.get());
-    cursor.beginEditBlock();
-
-    for (const HighlightedRange& range : std::as_const(m_highlighted)) {
-        cursor.setPosition(range.start);
-        cursor.setPosition(range.start + range.length, QTextCursor::KeepAnchor);
-        cursor.setCharFormat(range.original);
-    }
-
-    cursor.endEditBlock();
-    m_highlighted.clear();
+    return backgrounds;
 }
 
 int ChatTextItem::positionAt(qreal x, qreal y) const
@@ -1554,18 +1568,20 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
         return nullptr;
     }
 
-    // Three children, in paint order: the code frames, behind the text; the
-    // text; the quote bars.
+    // Four children, in paint order: the code frames and the character
+    // backgrounds, behind the text; the text; the quote bars.
     auto* root = static_cast<ChatPaintNode*>(oldNode);
     if (root == nullptr) {
         root = new ChatPaintNode;
+        root->appendChildNode(new QSGNode);
         root->appendChildNode(new QSGNode);
         root->appendChildNode(window()->createTextNode());
         root->appendChildNode(new QSGNode);
     }
 
     QSGNode* framesNode = root->firstChild();
-    auto* node = static_cast<QSGTextNode*>(framesNode->nextSibling());
+    QSGNode* backgroundsNode = framesNode->nextSibling();
+    auto* node = static_cast<QSGTextNode*>(backgroundsNode->nextSibling());
     QSGNode* barsNode = node->nextSibling();
 
     const TextPaintKey textKey {m_layoutRevision, boundingRect(), m_appearance->color(), m_appearance->linkColor(),
@@ -1631,6 +1647,20 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
         }
 
     }
+    const BackgroundPaintKey backgroundKey{m_layoutRevision, m_hoveredLink, m_highlightedLink,
+                                           m_appearance->hoverHighlightColor(),
+                                           m_appearance->mentionBackground()};
+    if (!root->backgroundKey || !(*root->backgroundKey == backgroundKey)) {
+        root->backgroundKey = backgroundKey;
+        deleteChildren(backgroundsNode);
+        for (const auto& [rect, color] : computeBackgrounds()) {
+            QSGRectangleNode* background = window()->createRectangleNode();
+            background->setRect(rect);
+            background->setColor(color);
+            backgroundsNode->appendChildNode(background);
+        }
+    }
+
     const BarPaintKey barKey{m_layoutRevision, m_appearance->quoteBarColor()};
     if (!root->barKey || !(*root->barKey == barKey)) {
         root->barKey = barKey;
@@ -1781,10 +1811,7 @@ void ChatTextItem::applyAppearance(ChatTextAppearance::Change change)
         break;
     }
     case ChatTextAppearance::HoverHighlightColor: {
-        clearLinkHighlights();
-        applyLinkHighlights();
-
-        markLayoutDirty();
+        update();
         break;
     }
     case ChatTextAppearance::QuoteBarColor: {
@@ -1824,9 +1851,7 @@ void ChatTextItem::applyAppearance(ChatTextAppearance::Change change)
         break;
     }
     case ChatTextAppearance::MentionBackground: {
-        updateAppearance(MentionBackgroundAppearance, [this](QTextCharFormat& format) {
-            format.setBackground(m_appearance->mentionBackground());
-        });
+        update();
         break;
     }
     case ChatTextAppearance::QuoteColor: {
