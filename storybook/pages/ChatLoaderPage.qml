@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ.Components
 import StatusQ
 import StatusQ.Core.Theme
 
@@ -29,6 +30,11 @@ import Storybook
 // keys off Window.width), so resize the window to see the portrait flow.
 SplitView {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+        theme: root.Theme
+        selectionPalette: root.palette
+    }
 
     orientation: Qt.Vertical
 
@@ -439,6 +445,7 @@ SplitView {
                     contactsAdaptor: contactsAdaptorMock
                     popupHandler: null
                     rowPool: messageRowPool
+                    textAppearance: root.textAppearance
                     createChatViewOpened: false
                     isPortraitMode: (Window.width ?? 0) < ThemeUtils.portraitBreakpoint.width
 

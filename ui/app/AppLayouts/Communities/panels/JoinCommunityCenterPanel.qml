@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
@@ -12,6 +13,14 @@ import utils
 
 ColumnLayout {
     id: root
+
+    QtObject {
+        id: d
+
+        readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+            theme: root.Theme
+        }
+    }
 
     property bool joinCommunity: true // Otherwise it means join channel action
     property bool allChannelsAreHiddenBecauseNotPermitted: false
@@ -88,6 +97,7 @@ ColumnLayout {
                 spacing: 16
                 model: root.messagesModel
                 delegate: StatusMessage {
+                    textAppearance: d.textAppearance
                     width: ListView.view.width
                     timestamp: model.timestamp
                     enabled: false

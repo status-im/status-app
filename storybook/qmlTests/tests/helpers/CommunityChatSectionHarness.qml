@@ -1,5 +1,9 @@
 import QtQuick
 
+import StatusQ
+import StatusQ.Components
+import StatusQ.Core.Theme
+
 import utils
 
 import Models
@@ -24,6 +28,8 @@ import mainui.sectionLoaders
 */
 Item {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
 
     readonly property alias mock: mock
     readonly property alias loader: harnessLoader
@@ -90,6 +96,7 @@ Item {
         active: false
 
         sourceComponent: CommunityChatLoader {
+            textAppearance: root.textAppearance
             active: true
 
             userUID: "0xdeadbeef"

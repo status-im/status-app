@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
 
+import StatusQ
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -19,6 +21,15 @@ import AppLayouts.Chat.stores as ChatStores
 
 StatusDialog {
     id: root
+
+    QtObject {
+        id: d
+
+        readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+            theme: root.Theme
+            selectionPalette: root.palette
+        }
+    }
 
     property SharedStores.RootStore sharedRootStore
     property SharedStores.UtilsStore utilsStore
@@ -82,6 +93,7 @@ StatusDialog {
 
                 MessageView {
                     id: messageItem
+                    textAppearance: d.textAppearance
 
                     width: parent.width
 

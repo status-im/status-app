@@ -11,11 +11,12 @@ import StatusQ.Core.Utils
 Item {
     id: root
 
-    readonly property alias hoveredLink: chatTextView.hoveredLink
-    readonly property string selectedText: chatTextView.selectedText
+    readonly property alias hoveredLink: chatTextItem.hoveredLink
+    readonly property string selectedText: chatTextItem.selectedText
 
-    property alias highlightedLink: chatTextView.highlightedLink
-    property alias clearSelectionOnLostFocus: chatTextView.clearSelectionOnLostFocus
+    property alias highlightedLink: chatTextItem.highlightedLink
+    property bool clearSelectionOnLostFocus: true
+    property ChatTextAppearance appearance
     property bool linkAddressAndEnsName
     property string disabledTooltipText
 
@@ -25,11 +26,11 @@ Item {
 
     property bool isMobile
 
-    property alias textField: chatTextView
+    property alias textField: chatTextItem
 
     signal linkActivated(string link)
 
-    implicitHeight: chatTextView.height + d.showMoreHeight / 2
+    implicitHeight: chatTextItem.height + d.showMoreHeight / 2
 
     QtObject {
         id: d
@@ -37,17 +38,12 @@ Item {
         readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
         readonly property int maxHeight: 200
 
-        // Plain message body for accessibility. The rendered text is RichText
-        // (HTML), which Qt's Android a11y backend does not surface, so the body
-        // is otherwise invisible to screen readers and e2e. Expose the unstyled
-        // text via Accessible.name on the text element instead.
+        // Expose the unstyled body with resolved mention names to screen readers
+        // and e2e consumers, independently of the painted document.
         readonly property string plainText: {
-            // Plain text of the same source ChatTextView renders (unparsedText), with mentions
-            // resolved to display names.
             const base = MarkdownUtils.plainText(root.messageDetails.unparsedText,
                                                  root.messageDetails.mentionsMap)
-            // The "(edited)" indicator is only a visual HTML span in the rendered
-            // text; append it here so it reaches Accessible.name too.
+            // Include the visual suffix in the accessible text as well.
             return root.isEdited ? base + " " + qsTr("(edited)") : base
         }
 
@@ -56,11 +52,10 @@ Item {
         }
     }
 
-    // Client-side markdown render path (main desktop bubble): renders `unparsedText` via the
-    // StatusQ parser + ChatTextView, matching the editor. Quote bars, code frames and link-hover
-    // are drawn inside ChatTextView.
-    ChatTextView {
-        id: chatTextView
+
+    // The parser and renderer share typed runs; decorations remain in the item.
+    ChatTextItem {
+        id: chatTextItem
         objectName: "StatusTextMessage_chatText"
         readonly property string text: d.plainText // for e2e / a11y read
         Accessible.role: Accessible.StaticText
@@ -73,8 +68,9 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        appearance: root.appearance
         selectable: !root.isMobile
-        font.pixelSize: Theme.primaryTextFontSize
+        persistentSelection: !root.clearSelectionOnLostFocus
 
         // Collapsed: the last 15% fade out, computed by the shader on the
         // text's layer, with no second layer for a mask
@@ -84,27 +80,21 @@ Item {
         }
 
         edited: root.isEdited
-        blocks: MarkdownUtils.toBlocks(
-                    root.messageDetails.unparsedText,
-                    root.messageDetails.mentionsMap,
-                    chatTextView.font,
-                    false /*formatUnclosedCodeFence*/,
-                    true /*fullLineHeightEmojis*/,
-                    Theme.primaryTextFontSize /*emojiSizeOffset*/)
+        segments: MarkdownUtils.toChatTextSegments(root.messageDetails.unparsedText, root.messageDetails.mentionsMap)
 
-        // Reuse the existing linkActivated contract: "//<pubkey>" opens the profile, a URL opens.
-        onMentionClicked: (pubKey) => root.linkActivated("//" + pubKey)
-        onLinkClicked: (url) => {
-                           if(d.showDisabledTooltipForAddressEnsName(url)) {
-                               return
-                           }
-                           root.linkActivated(url)
-                       }
-        onHoveredLinkChanged: disabledLinkTooltip.visible = d.showDisabledTooltipForAddressEnsName(hoveredLink)
+        // Profile mentions use //<pubkey>; URLs and wallet intents keep their href.
+        onLinkActivated: href => {
+            if (d.showDisabledTooltipForAddressEnsName(href))
+                return
+            const isLink = href.indexOf("://") >= 0 || href.startsWith("//")
+            root.linkActivated(isLink ? href : "//" + href)
+        }
 
         StatusToolTip {
             id: disabledLinkTooltip
+            objectName: "StatusTextMessage_disabledLinkTooltip"
             text: root.disabledTooltipText
+            visible: d.showDisabledTooltipForAddressEnsName(chatTextItem.hoveredLink)
             delay: 100
         }
     }
@@ -112,9 +102,10 @@ Item {
     // "show more" button
     Loader {
         id: showMoreButtonLoader
-        active: root.allowShowMore && chatTextView.implicitHeight > d.maxHeight
+        objectName: "StatusTextMessage_showMore"
+        active: root.allowShowMore && chatTextItem.implicitHeight > d.maxHeight
         visible: active
-        anchors.verticalCenter: chatTextView.bottom
+        anchors.verticalCenter: chatTextItem.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         sourceComponent: StatusButton {
             type: StatusBaseButton.Type.Primary

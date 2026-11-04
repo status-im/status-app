@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
+import StatusQ.Components
 import StatusQ.Core.Theme
 
 import utils
@@ -28,6 +30,8 @@ import Storybook
 // scale knobs for load benchmarks. Refresh recreates the whole loader.
 SplitView {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
 
     orientation: Qt.Vertical
 
@@ -149,6 +153,7 @@ SplitView {
                 active: false
 
                 sourceComponent: CommunityChatLoader {
+                    textAppearance: root.textAppearance
                     active: true
 
                     userUID: "0xdeadbeef"

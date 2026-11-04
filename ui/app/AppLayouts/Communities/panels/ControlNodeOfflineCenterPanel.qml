@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
@@ -10,6 +11,14 @@ import StatusQ.Layout
 
 ColumnLayout {
     id: root
+
+    QtObject {
+        id: d
+
+        readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+            theme: root.Theme
+        }
+    }
 
     property string name
     property string chatDateTimeText
@@ -56,6 +65,7 @@ ColumnLayout {
                 spacing: 16
                 model: root.messagesModel
                 delegate: StatusMessage {
+                    textAppearance: d.textAppearance
                     width: ListView.view.width
                     timestamp: model.timestamp
                     enabled: false
