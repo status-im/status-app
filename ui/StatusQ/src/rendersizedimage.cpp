@@ -1,11 +1,13 @@
 #include "StatusQ/rendersizedimage.h"
 
 #include <QtCore/QCache>
+#include <QtCore/QDeadlineTimer>
 #include <QtCore/QMimeDatabase>
 #include <QtCore/QtMath>
 #include <QtGui/QImageReader>
 #include <QtQml/QQmlFile>
 #include <QtQml/QQmlContext>
+#include <QtQml/QQmlInfo>
 #include <QtQuick/private/qquickimage_p_p.h>
 #include <QtQuickLayouts/private/qquicklayout_p.h>
 
@@ -18,6 +20,31 @@ QCache<size_t, QSize>& nativeSizes()
 {
     static QCache<size_t, QSize> sizes(RenderSizedImage::maxKnownNativeSizes);
     return sizes;
+}
+
+// Remote sources whose load failed, keyed by the URL's hash, with when they may be requested
+// again. Only touched on the GUI thread (load() and requestFinished()).
+QCache<size_t, QDeadlineTimer>& failedSources()
+{
+    static QCache<size_t, QDeadlineTimer> sources(RenderSizedImage::maxKnownFailedSources);
+    return sources;
+}
+
+bool isRemote(const QUrl& url)
+{
+    return url.scheme() == QLatin1String("https") || url.scheme() == QLatin1String("http");
+}
+
+// Whether a load of the source failed within failedSourceRetryMs; drops an expired entry
+bool recentlyFailed(size_t key)
+{
+    const QDeadlineTimer* retry = failedSources().object(key);
+    if (!retry)
+        return false;
+    if (!retry->hasExpired())
+        return true;
+    failedSources().remove(key);
+    return false;
 }
 
 bool isRenderSizedFillMode(QQuickImage::FillMode mode)
@@ -243,6 +270,11 @@ int RenderSizedImage::knownNativeSizeCount()
     return nativeSizes().size();
 }
 
+int RenderSizedImage::knownFailedSourceCount()
+{
+    return failedSources().size();
+}
+
 bool RenderSizedImage::explicitlySized() const
 {
     Q_D(const RenderSizedImage);
@@ -258,6 +290,18 @@ bool RenderSizedImage::isVector() const
 void RenderSizedImage::load()
 {
     Q_D(RenderSizedImage);
+    const QUrl source = d->resolvedUrl();
+    if (isRemote(source) && recentlyFailed(qHash(source))) {
+        d->deferredLoad = false;
+        d->renderSized = false;
+        d->currentPix->clear(this);
+        d->pendingPix->clear(this);
+        d->status = Error;
+        d->setProgress(0);
+        finishRequest();
+        return;
+    }
+
     if (!d->sourcesize.isValid() && isRenderSizedFillMode(d->fillMode)) {
         const QSize preferred = d->layoutPreferredSize();
         if (preferred.width() > 0 || preferred.height() > 0) {
@@ -291,6 +335,62 @@ void RenderSizedImage::load()
     d->inLoad = true;
     QQuickImage::load();
     d->inLoad = false;
+}
+
+// Replaces the private slot QQuickImageBase::requestFinished(), which can't be called from
+// here; a copy of it as of Qt 6.11.0 (source), re-check on a Qt upgrade. The only change: a
+// remote failure already reported is not warned about again.
+void RenderSizedImage::requestFinished()
+{
+    Q_D(RenderSizedImage);
+    if (d->pendingPix != d->currentPix
+            && d->pendingPix->status() != QQuickPixmap::Null
+            && d->pendingPix->status() != QQuickPixmap::Loading) {
+        std::swap(d->pendingPix, d->currentPix);
+        d->pendingPix->clear(this); // Clear the old image
+    }
+
+    if (d->currentPix->isError()) {
+        const QUrl source = d->resolvedUrl();
+        const size_t key = qHash(source);
+        if (!isRemote(source) || !recentlyFailed(key)) {
+            if (isRemote(source))
+                failedSources().insert(key, new QDeadlineTimer(failedSourceRetryMs));
+            qmlWarning(this) << d->currentPix->error();
+        }
+        d->status = Error;
+        d->setProgress(0);
+    } else {
+        d->status = Ready;
+        d->setProgress(1);
+    }
+    finishRequest();
+}
+
+// The tail of QQuickImageBase::requestFinished(), once status and progress are set
+void RenderSizedImage::finishRequest()
+{
+    Q_D(RenderSizedImage);
+    pixmapChange(); // sets the implicit size, before statusChanged is emitted
+    emit statusChanged(d->status);
+
+    if (sourceSize() != d->oldSourceSize) {
+        d->oldSourceSize = sourceSize();
+        emit sourceSizeChanged();
+    }
+    if (autoTransform() != d->oldAutoTransform) {
+        d->oldAutoTransform = autoTransform();
+        emitAutoTransformBaseChanged();
+    }
+    if (d->frameCount != d->currentPix->frameCount()) {
+        d->frameCount = d->currentPix->frameCount();
+        emit frameCountChanged();
+    }
+    if (d->colorSpace != d->currentPix->colorSpace()) {
+        d->colorSpace = d->currentPix->colorSpace();
+        emit colorSpaceChanged();
+    }
+    update();
 }
 
 void RenderSizedImage::pixmapChange()

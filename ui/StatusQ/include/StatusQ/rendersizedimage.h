@@ -13,6 +13,11 @@ class RenderSizedImagePrivate;
     native size keeps it, so binding sourceSize to the item's size cannot feed back into its
     implicit size. explicitlySized tells whether the item's size is set rather than taken
     from its implicit size; vector whether the source is an SVG (svg or svgz) by its MIME type.
+
+    A remote (http/https) source that failed to load is remembered for failedSourceRetryMs:
+    Qt warns about the first failure only, and until then any item showing that source goes
+    to Error without requesting it again. A dead logo URL in a list of delegates is then one
+    request and one log line instead of one per delegate and per re-creation.
 */
 class RenderSizedImage : public QQuickImage
 {
@@ -24,6 +29,11 @@ public:
     static constexpr int maxDecodeSide = 2048;
     // Bound of the process-wide, GUI-thread-only LRU of native source sizes (~80 B each)
     static constexpr int maxKnownNativeSizes = 512;
+    // Bound of the process-wide, GUI-thread-only LRU of failed remote sources (~40 B each)
+    static constexpr int maxKnownFailedSources = 512;
+    // How long a failed remote source is not requested again; long enough to stop the
+    // repeats, short enough that an image missing because the network was down comes back
+    static constexpr int failedSourceRetryMs = 5 * 60 * 1000;
 
     explicit RenderSizedImage(QQuickItem* parent = nullptr);
 
@@ -32,6 +42,7 @@ public:
     bool isVector() const;
 
     static int knownNativeSizeCount();
+    static int knownFailedSourceCount();
 
 signals:
     void explicitlySizedChanged();
@@ -39,10 +50,13 @@ signals:
 
 protected:
     void load() override;
+    void requestFinished() override;
     void pixmapChange() override;
     void updatePolish() override;
     void geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry) override;
 
 private:
+    void finishRequest();
+
     Q_DECLARE_PRIVATE(RenderSizedImage)
 };
