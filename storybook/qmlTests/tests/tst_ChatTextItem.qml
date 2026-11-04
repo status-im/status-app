@@ -426,10 +426,11 @@ Item {
         }
 
         // Paragraphs without characters still paint their decorations: the
-        // document is empty, the frame is not.
+        // document is empty, the frame or bar is not.
         function test_decorationsWithoutText_data() {
             return [
-                {tag: "empty-fence", source: "```\n```", frames: 1, bars: 0}
+                {tag: "empty-fence", source: "```\n```", frames: 1, bars: 0},
+                {tag: "quote-marker", source: "> ", frames: 0, bars: 1}
             ]
         }
 
