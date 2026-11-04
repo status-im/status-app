@@ -13,10 +13,6 @@ import app/core/eventemitter
 logScope:
   topics = "wallet-send-controller"
 
-## Error marker for the view: the route's gas estimate expired, fetch the route again.
-## Keep in sync with Constants.walletSection.routeGasEstimateExpired.
-const routeGasEstimateExpired* = "routeGasEstimateExpired"
-
 type
   Controller* = ref object of RootObj
     delegate: io_interface.AccessInterface
@@ -42,15 +38,6 @@ proc newController*(
 proc delete*(self: Controller) =
   discard
 
-## The error passed to the view: a known marker for errors the view handles itself, otherwise the
-## details to show.
-proc sendErrorForView(errorResponse: ErrorResponse): string =
-  if errorResponse.isNil:
-    return ""
-  if errorResponse.isRouteGasEstimateExpired():
-    return routeGasEstimateExpired
-  return errorResponse.details
-
 proc init*(self: Controller) =
   self.events.on(SIGNAL_TRANSACTION_SENT) do(e:Args):
     let args = TransactionArgs(e)
@@ -65,7 +52,7 @@ proc init*(self: Controller) =
       args.sendDetails.fromChain,
       isApprovalTx,
       txHash,
-      sendErrorForView(args.sendDetails.errorResponse)
+      args.sendDetails.errorResponse.errorForView()
     )
 
 

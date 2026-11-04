@@ -15,12 +15,24 @@ type
     code*: string
 
 const
-  ## status-go transfer.ErrRouteGasEstimateExpired: the route's gas estimate is too old to sign,
-  ## the route has to be requested again
+  ## status-go transfer.ErrRouteGasEstimateExpired
   ErrCodeRouteGasEstimateExpired* = "WT-005"
+  ## status-go transfer.ErrGasBelowEstimate
+  ErrCodeGasBelowEstimate* = "WT-006"
+  ## View marker: nothing was sent, the route must be reviewed again.
+  ## Keep in sync with Constants.walletSection.routeNeedsReview.
+  RouteNeedsReviewError* = "routeNeedsReview"
 
-proc isRouteGasEstimateExpired*(self: ErrorResponse): bool =
-  not self.isNil and self.code == ErrCodeRouteGasEstimateExpired
+proc routeNeedsReview*(self: ErrorResponse): bool =
+  not self.isNil and self.code in [ErrCodeRouteGasEstimateExpired, ErrCodeGasBelowEstimate]
+
+## RouteNeedsReviewError for a route to review again, otherwise the error details.
+proc errorForView*(self: ErrorResponse): string =
+  if self.isNil:
+    return ""
+  if self.routeNeedsReview():
+    return RouteNeedsReviewError
+  return self.details
 
 type
   TansferDetails* = ref object

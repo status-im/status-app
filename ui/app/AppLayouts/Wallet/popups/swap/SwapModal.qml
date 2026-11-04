@@ -282,6 +282,13 @@ StatusDialog {
     }
 
     Connections {
+        target: root.swapAdaptor
+        function onRouteReviewRequired() {
+            d.fetchSuggestedRoutes()
+        }
+    }
+
+    Connections {
         target: root.swapInputParamsForm
         function onFormValuesChanged() {
             d.fetchSuggestedRoutes()

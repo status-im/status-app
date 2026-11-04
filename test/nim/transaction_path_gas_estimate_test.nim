@@ -1,7 +1,4 @@
-## The router reports the node's raw gas estimates next to its buffered
-## suggestions; the send modal uses them as the minimum custom gas amount.
-## A route whose gas estimate expired before signing comes back as WT-005,
-## which the send modal handles by fetching the route again.
+## Raw gas estimates and the new-recipient flag on route paths, and the WT-005/WT-006 review marker.
 
 import unittest, json, strutils
 
@@ -71,11 +68,18 @@ suite "route path gas estimates":
     check path.estimatedTxGasAmount == 0'u64
     check path.estimatedApprovalGasAmount == 0'u64
 
-suite "route gas estimate expired error":
+suite "route needs review errors":
 
-  test "WT-005 is recognised":
-    check ErrorResponse(code: ErrCodeRouteGasEstimateExpired, details: "out of date").isRouteGasEstimateExpired()
+  test "WT-005 and WT-006 need a review":
+    check ErrorResponse(code: ErrCodeRouteGasEstimateExpired, details: "out of date").routeNeedsReview()
+    check ErrorResponse(code: ErrCodeGasBelowEstimate, details: "below the estimate").routeNeedsReview()
 
-  test "other errors are not":
-    check not ErrorResponse(code: "WT-001", details: "no generated route").isRouteGasEstimateExpired()
-    check not ErrorResponse(nil).isRouteGasEstimateExpired()
+  test "other errors don't":
+    check not ErrorResponse(code: "WT-001", details: "no generated route").routeNeedsReview()
+    check not ErrorResponse(nil).routeNeedsReview()
+
+  test "the view gets the marker for review errors, the details otherwise":
+    check ErrorResponse(code: ErrCodeRouteGasEstimateExpired, details: "out of date").errorForView() == RouteNeedsReviewError
+    check ErrorResponse(code: ErrCodeGasBelowEstimate, details: "below the estimate").errorForView() == RouteNeedsReviewError
+    check ErrorResponse(code: "WT-001", details: "no generated route").errorForView() == "no generated route"
+    check ErrorResponse(nil).errorForView() == ""

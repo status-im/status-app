@@ -160,12 +160,17 @@ QtObject:
       let txType = SendType(args.sendDetails.sendType)
       if txType != SendType.ENSRegister and txType != SendType.ENSSetPubKey and txType != SendType.ENSRelease:
         return
+      if args.sendDetails.errorResponse.routeNeedsReview():
+        # nothing was sent; the send modal fetches a new route
+        return
 
       var err = if not args.sendDetails.errorResponse.isNil: args.sendDetails.errorResponse.details else: ""
+      # nil when building or sending failed
+      let txHash = if args.sentTransaction.isNil: "" else: args.sentTransaction.hash
       var dto = EnsUsernameDto(
         chainId: args.sendDetails.fromChain,
         username: args.sendDetails.username,
-        txHash: args.sentTransaction.hash,
+        txHash: txHash,
         txStatus: args.status
       )
 
@@ -197,7 +202,7 @@ QtObject:
         transactionType: $dto.txType,
         chainId: args.sendDetails.fromChain,
         ensUsername: args.sendDetails.username,
-        txHash: args.sentTransaction.hash,
+        txHash: txHash,
         error: err
       )
       self.events.emit(SIGNAL_ENS_TRANSACTION_SENT, data)
