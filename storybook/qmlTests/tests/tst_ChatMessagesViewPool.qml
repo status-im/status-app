@@ -453,6 +453,41 @@ Item {
                     "the identifier row took no pooled item")
         }
 
+        function chatTextItems(item, out) {
+            out = out || []
+            for (const child of item.children) {
+                if (typeof child.selectAll === "function" && child.segments !== undefined)
+                    out.push(child)
+                chatTextItems(child, out)
+            }
+            return out
+        }
+
+        // A row parked and reused for identical text (setSegments returns
+        // early then) comes back without the old selection.
+        function test_reusedRowWithIdenticalTextKeepsNoSelection() {
+            for (let i = 0; i < messagesA.count; ++i)
+                messagesA.setProperty(i, "unparsedText", "ok")
+            prewarmedPool()
+            const view = openView()
+            const original = rowItems(view).map(row => row.content)
+            for (const content of original)
+                for (const text of chatTextItems(content))
+                    text.selectAll()
+            verify(original.some(content => chatTextItems(content).some(t => t.selectedText === "ok")))
+
+            view.visible = false
+            tryCompare(view.chatLogView, "rowCount", 0, 5000)
+            view.visible = true
+            settle(view)
+
+            const rows = rowItems(view)
+            verify(rows.some(row => original.indexOf(row.content) >= 0), "a pooled row was reused")
+            for (const row of rows)
+                for (const text of chatTextItems(row.content))
+                    compare(text.selectedText, "")
+        }
+
         function test_reusedRowsReceiveTheCurrentAppearances() {
             prewarmedPool()
             const view = openView()

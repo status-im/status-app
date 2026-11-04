@@ -334,6 +334,10 @@ QList<ChatTextSegment> ChatTextItem::segments() const
 
 void ChatTextItem::setSegments(const QList<ChatTextSegment>& segments)
 {
+    // Bindings re-run whenever any input changes -- the mentions map, the
+    // message details object -- and usually produce the same segments.
+    if (m_segments == segments)
+        return;
     bool preserveInteraction = m_segments.size() == segments.size();
     for (qsizetype i = 0; preserveInteraction && i < segments.size(); ++i)
         preserveInteraction = m_segments.at(i).sameContent(segments.at(i));
@@ -1557,11 +1561,27 @@ int ChatTextItem::positionAt(qreal x, qreal y) const
     return m_document->documentLayout()->hitTest(QPointF(x, y), Qt::FuzzyHit);
 }
 
+// Hiding drops what the user was doing with the text, as a content change
+// does: a pooled row parked and reused for an identical message (setSegments
+// then returns early) would otherwise come back hovered or selected. Hiding a
+// parent counts too, as Qt reports the effective visibility to every child.
 void ChatTextItem::itemChange(ItemChange change, const ItemChangeData& value)
 {
     QQuickItem::itemChange(change, value);
-    if (change == ItemDevicePixelRatioHasChanged)
+    if (change == ItemDevicePixelRatioHasChanged) {
         update(); // frame antialiasing is sized in device pixels
+        return;
+    }
+    if (change != ItemVisibleHasChanged || value.boolValue)
+        return;
+
+    m_clickTimer.invalidate();
+    m_clickCount = 0;
+    m_mousePressActive = false;
+    m_pressedLink.clear();
+    m_selectionAnchor = -1;
+    setHoveredLink({});
+    clearSelection();
 }
 
 void ChatTextItem::geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry)
