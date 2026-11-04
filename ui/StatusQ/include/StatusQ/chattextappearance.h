@@ -76,6 +76,9 @@ public:
     quint32 differences(const ChatTextAppearance& other) const;
     QFont font() const { return m_font; }
     void setFont(const QFont& value);
+    // QFontMetricsF(font()).height(), computed once per font for every item
+    // that sizes emoji to the line.
+    qreal fontLineHeight() const;
     QColor color() const { return m_color; }
     void setColor(const QColor& value);
     QColor linkColor() const { return m_linkColor; }
@@ -142,6 +145,7 @@ signals:
 
 private:
     QFont m_font = {};
+    mutable qreal m_fontLineHeight = -1;
     QColor m_color = Qt::black;
     QColor m_linkColor = QColor(0x43, 0x60, 0xDF);
     QColor m_codeBackground = QColor(0, 0, 0, 20);

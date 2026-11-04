@@ -1,5 +1,6 @@
 #include "StatusQ/chattextappearance.h"
 
+#include <QFontMetricsF>
 #include <QQmlEngine>
 
 ChatTextAppearance* ChatTextAppearance::defaults()
@@ -22,8 +23,16 @@ void ChatTextAppearance::setFont(const QFont& value)
     if (m_font == value)
         return;
     m_font = value;
+    m_fontLineHeight = -1;
     emit fontChanged();
     emit changed(Font);
+}
+
+qreal ChatTextAppearance::fontLineHeight() const
+{
+    if (m_fontLineHeight < 0)
+        m_fontLineHeight = QFontMetricsF(m_font).height();
+    return m_fontLineHeight;
 }
 
 void ChatTextAppearance::setColor(const QColor& value)
