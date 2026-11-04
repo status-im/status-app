@@ -245,6 +245,11 @@ private:
     // tests can be plain reads with no side effects. See markLayoutDirty().
     void markLayoutDirty();
     void ensureLayout();
+
+    // Copies each block's paint formats into its QTextLayout, which is what
+    // QSGTextNode::addTextLayout reads. Changed blocks are marked dirty as one
+    // range, so inside an edit block they are laid out together with the edit.
+    void syncLayoutFormats();
     void setHoveredLink(const QString& link);
     void applyLinkHighlights();
     void clearLinkHighlights();
@@ -293,5 +298,7 @@ private:
     qreal m_contentHeight = 0;
     quint64 m_layoutRevision = 0;
     bool m_layoutDirty = true;
+    // While non-zero, markLayoutDirty() defers layout to the outermost scope.
+    int m_layoutBatch = 0;
     bool m_formatsDirty = true;
 };
