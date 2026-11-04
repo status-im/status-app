@@ -505,6 +505,14 @@ Item {
                                         status: string,
                                         error: string) {
 
+            if (error === Constants.walletSection.routeNeedsReview) {
+                // nothing was sent; the flow asks the user to review the route
+                Global.displayToastMessage(qsTr("Network fees changed"),
+                                           qsTr("Nothing was sent. Review the transaction again."),
+                                           "warning", false, Constants.ephemeralNotificationType.normal, "")
+                return
+            }
+
             let toastTitle = ""
             let toastSubtitle = ""
             let toastIcon = ""

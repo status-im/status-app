@@ -479,8 +479,8 @@ proc sendNotification[T](self: Module[T], status: string, sendDetails: SendDetai
       communityMasterTokenName = ""
       communityDeployedTokenName = ""
 
-    if not sendDetails.errorResponse.isNil:
-      error = sendDetails.errorResponse.details
+    # keep the review marker; the toast says the fees changed
+    error = sendDetails.errorResponse.errorForView()
 
     if not sentTransaction.isNil and sentTransaction.hash.len > 0:
       txTo = sentTransaction.toAddress
