@@ -970,6 +970,11 @@ void ChatTextItem::syncLayoutFormats()
     int dirtyFrom = -1;
     int dirtyTo = -1;
     for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+        // Keep the shaped glyphs after layout, so addTextLayout does not shape
+        // the paragraph again: QTextLayout::endLayout frees them unless caching
+        // is on (qtextlayout.cpp:626), and QTextDocument never turns it on.
+        // New blocks only come from a rebuild, which always passes through here.
+        block.layout()->setCacheEnabled(true);
         QList<QTextLayout::FormatRange> formats;
         for (auto it = block.begin(); !it.atEnd(); ++it) {
             const QTextFragment fragment = it.fragment();
