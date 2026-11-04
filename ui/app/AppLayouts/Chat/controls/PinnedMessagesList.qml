@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ
+import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -14,6 +16,14 @@ import AppLayouts.Chat.stores
 
 StatusListView {
     id: root
+
+    QtObject {
+        id: d
+
+        readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+            theme: root.Theme
+        }
+    }
 
     property RootStore store
     property MessageStore messageStore
@@ -63,6 +73,7 @@ StatusListView {
 
         MessageView {
             id: messageItem
+            textAppearance: d.textAppearance
 
             width: parent.width
 

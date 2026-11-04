@@ -2,6 +2,9 @@ import QtQuick
 import QtQuick.Controls as QC
 import QtTest
 
+import StatusQ
+import StatusQ.Components
+import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import utils
 
@@ -26,6 +29,8 @@ import mainui.sectionLoaders
 // load cost guards.
 Item {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
 
     width: 1000
     height: 700
@@ -63,6 +68,7 @@ Item {
         active: false
 
         sourceComponent: CommunityChatLoader {
+            textAppearance: root.textAppearance
             active: true
 
             userUID: "0xdeadbeef"

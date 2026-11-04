@@ -1,6 +1,10 @@
 import QtQuick
 import QtTest
 
+import StatusQ
+import StatusQ.Components
+import StatusQ.Core.Theme
+
 import AppLayouts.stores as AppStores
 
 import mainui.sectionLoaders
@@ -12,6 +16,8 @@ import mainui.sectionLoaders
 // race against real incubation.
 Item {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
 
     width: 800
     height: 600
@@ -46,6 +52,7 @@ Item {
         id: chatLoaderComp
 
         ChatLoader {
+            textAppearance: root.textAppearance
             anchors.fill: parent
 
             // The stub stands in for the section, so the loader must not run
@@ -81,6 +88,7 @@ Item {
         id: communityChatLoaderComp
 
         CommunityChatLoader {
+            textAppearance: root.textAppearance
             anchors.fill: parent
 
             active: false

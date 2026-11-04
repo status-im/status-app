@@ -79,7 +79,7 @@ userListPanel_StatusMemberListItem = {"container": mainWindow_UserListPanel, "ty
 mainWindow_userListPanel_StatusListView = {"container": statusDesktop_mainWindow, "objectName": "userListPanel", "type": "StatusListView", "visible": True}
 groupUserListPanel_StatusMemberListItem = {"container": mainWindow_userListPanel_StatusListView, "type": "StatusMemberListItem", "unnamed": 1, "visible": True}
 
-StatusTextMessage_chatTextMessage = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "StatusTextMessage_chatText", "type": "ChatTextView", "visible": True}
+StatusTextMessage_chatTextMessage = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "StatusTextMessage_chatText", "type": "ChatTextItem", "visible": True}
 
 chatMessageViewDelegate_deletedMessage_RowLayout = {"container": chatLogView_chatMessageViewDelegate_MessageView, "id": "deletedMessage", "type": "RowLayout", "unnamed": 1, "visible": True}
 chatMessageViewDelegate_messageContextMenuExpandButton = {"container": messageContextView, "objectName": "messageContextMenu_expand", "type": "StatusFlatRoundButton", "visible": True}

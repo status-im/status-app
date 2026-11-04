@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -17,6 +18,14 @@ import AppLayouts.Profile.popups
 
 Item {
     id: root
+
+    QtObject {
+        id: d
+
+        readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+            theme: root.Theme
+        }
+    }
 
     property int profileContentWidth
 
@@ -200,6 +209,7 @@ Item {
 
         StatusMessage {
             id: messagesShownAs
+            textAppearance: d.textAppearance
 
             anchors.top: !visible ? separator.bottom : primaryUsernameItem.bottom
             anchors.topMargin: Theme.padding * 2

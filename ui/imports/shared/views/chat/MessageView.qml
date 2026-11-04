@@ -33,6 +33,9 @@ import AppLayouts.Profile.helpers
 Loader {
     id: root
 
+    // The message surface owns these instances; pooled rows borrow them.
+    property ChatTextAppearance textAppearance
+
     property ChatStores.RootStore rootStore
     property ChatStores.MessageStore messageStore
     property var chatContentModule
@@ -1025,6 +1028,7 @@ Loader {
 
             StatusMessage {
                 id: delegate
+                textAppearance: root.textAppearance
                 Layout.fillWidth: true
                 Layout.topMargin: showHeader && !root.isInPinnedPopup ? 2 : 0
                 Layout.bottomMargin: !root.isInPinnedPopup ? 2 : 0

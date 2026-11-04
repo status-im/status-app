@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
@@ -13,6 +14,11 @@ import Models
 
 SplitView {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+        theme: root.Theme
+        selectionPalette: root.palette
+    }
 
     Logs { id: logs }
 
@@ -320,6 +326,7 @@ Some other comment there`
                 spacing: 16
                 model: d.messagesModel
                 delegate: StatusMessage {
+                    textAppearance: root.textAppearance
                     readonly property bool hasThreadCard: index < 2
                                                           || model.message === d.messageWithThreeReactions[0].message
 

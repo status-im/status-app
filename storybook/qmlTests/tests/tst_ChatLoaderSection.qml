@@ -1,6 +1,10 @@
 import QtQuick
 import QtTest
 
+import StatusQ
+import StatusQ.Components
+import StatusQ.Core.Theme
+
 import utils
 
 import shared.stores as SharedStores
@@ -19,6 +23,8 @@ import mainui.sectionLoaders
 // asynchronously against mock stores, and the panels swap in.
 Item {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
 
     width: 1000
     height: 700
@@ -270,6 +276,7 @@ Item {
         active: false
 
         sourceComponent: ChatLoader {
+            textAppearance: root.textAppearance
             active: true
 
             userUID: "0xdeadbeef"

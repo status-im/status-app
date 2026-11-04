@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtTest
 import Storybook.Testing
 
+import StatusQ.Components
+import StatusQ.Core.Theme
 import StatusQ
 
 import SortFilterProxyModel
@@ -25,6 +27,10 @@ import AppLayouts.Chat.stores as ChatStores
 */
 Item {
     id: root
+
+    readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
+        theme: root.Theme
+    }
 
     width: 800
     height: 600
@@ -234,6 +240,7 @@ Item {
         id: viewComp
 
         ChatMessagesView {
+            textAppearance: root.textAppearance
             width: root.width
             height: root.height
 
@@ -399,6 +406,7 @@ Item {
             for (const r of rows) {
                 compare(r.content.parent, r.shell, "the item is on screen, in its row")
                 compare(r.content.objectName, "chatMessageViewDelegate")
+                compare(r.content.textAppearance, root.textAppearance)
             }
 
             // the item shows the message of its row
