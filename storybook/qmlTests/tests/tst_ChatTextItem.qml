@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "ChatTextTestUtils.js" as ChatTextTestUtils
 
 import StatusQ 0.1
 
@@ -43,10 +44,13 @@ Item {
         id: itemComponent
 
         ChatTextItem {
+            appearance: ChatTextAppearance {
+                lineHeight: 22
+                selectionColor: "#8040ff"
+            }
+
             width: 480
             segments: root.messageSegments
-            lineHeight: 22
-            selectionColor: "#8040ff"
         }
     }
 
@@ -62,11 +66,14 @@ Item {
             contentHeight: 400
 
             ChatTextItem {
+                appearance: ChatTextAppearance {
+                    lineHeight: 22
+                }
+
                 id: inner
 
                 width: 480
                 segments: root.messageSegments
-                lineHeight: 22
             }
         }
     }
@@ -81,6 +88,11 @@ Item {
     }
 
     TestCase {
+
+        readonly property var appearanceProperties: ChatTextTestUtils.appearanceProperties
+        function createStyledTemporary(component, parent, properties) {
+            return ChatTextTestUtils.create(testCase, component, parent, properties)
+        }
         id: testCase
 
         name: "ChatTextItem"
@@ -88,7 +100,7 @@ Item {
         property list<chatTextSegment> initialSegments
 
         function createItem() {
-            const item = createTemporaryObject(itemComponent, root)
+            const item = createStyledTemporary(itemComponent, root)
             verify(!!item)
             verify(item.contentHeight > 0)
             return item
@@ -96,11 +108,11 @@ Item {
 
         function test_semanticForegroundPrecedence() {
             const item = createItem()
-            item.color = "black"
-            item.quoteColor = "red"
-            item.linkColor = "blue"
-            item.mentionColor = "lime"
-            item.mentionBackground = "transparent"
+            item.appearance.color = "black"
+            item.appearance.quoteColor = "red"
+            item.appearance.linkColor = "blue"
+            item.appearance.mentionColor = "lime"
+            item.appearance.mentionBackground = "transparent"
             item.segments = [
                 {text: "WWWW ", quoteLevel: 1},
                 {text: "WWWW ", quoteLevel: 1, href: "https://status.app"},
@@ -109,8 +121,8 @@ Item {
             let image = grabImage(item)
             for (const color of ["red", "blue", "lime"])
                 verify(colourShare(image, Qt.rect(0, 0, item.width, item.contentHeight), Qt.color(color)) > 0.001, "Missing semantic foreground " + color)
-            item.quoteColor = "magenta"
-            item.mentionColor = "yellow"
+            item.appearance.quoteColor = "magenta"
+            item.appearance.mentionColor = "yellow"
             image = grabImage(item)
             for (const color of ["magenta", "blue", "yellow"])
                 verify(colourShare(image, Qt.rect(0, 0, item.width, item.contentHeight), Qt.color(color)) > 0.001, "Missing updated foreground " + color)
@@ -195,7 +207,7 @@ Item {
             const start = item.selectionStart
             const end = item.selectionEnd
             const text = item.selectedText
-            const spy = createTemporaryObject(Qt.createComponent("QtTest", "SignalSpy"), root,
+            const spy = createStyledTemporary(Qt.createComponent("QtTest", "SignalSpy"), root,
                                                {target: item, signalName: "selectionChanged"})
 
             if (data.property === "segments") {
@@ -203,7 +215,7 @@ Item {
                                                        : {bold: true, italic: true, strikethrough: true}
                 item.segments = item.segments.map(segment => Object.assign({}, segment, style))
             } else {
-                item[data.property] = data.value
+                (appearanceProperties.indexOf(data.property) >= 0 ? item.appearance : item)[data.property] = data.value
             }
             compare(item.selectionStart, start)
             compare(item.selectionEnd, end)
@@ -224,7 +236,7 @@ Item {
             mouseMove(item, 70, 11)
             const text = item.selectedText
             verify(text.length > 0)
-            item.linkColor = "red"
+            item.appearance.linkColor = "red"
             compare(item.selectedText, text)
             mouseMove(item, 150, 11)
             mouseRelease(item, 150, 11)
@@ -236,10 +248,10 @@ Item {
             const item = createItem()
             item.segments = [{text: "hello world"}]
             mouseClick(item, 2, 11)
-            item.linkColor = "red"
+            item.appearance.linkColor = "red"
             mouseClick(item, 2, 11)
             compare(item.selectedText, "hello")
-            item.codeBackground = "blue"
+            item.appearance.codeBackground = "blue"
             mouseClick(item, 2, 11)
             compare(item.selectedText, "hello world")
         }
@@ -247,7 +259,7 @@ Item {
         function test_appearanceChangeKeepsSelectionPainted() {
             const item = selectionItem([{text: "aaaa bbbb cccc"}])
             item.select(5, 9)
-            item.linkColor = "red"
+            item.appearance.linkColor = "red"
             const image = grabImage(item)
             verify(selectedShare(item, image, 11, 5, 9) > 0.3,
                    "restyling must preserve the visible selection")
@@ -330,7 +342,7 @@ Item {
 
         function test_editedEmojiKeepsItsSize() {
             const item = createItem()
-            item.emojiOnlyPixelSize = 40
+            item.appearance.emojiOnlyPixelSize = 40
             item.segments = [{text: "😎"}]
             const height = item.contentHeight
             verify(item.emojiOnly)
@@ -341,16 +353,16 @@ Item {
 
         function test_mentionAppearanceSurvivesHighlightRestoration() {
             const item = createItem()
-            item.mentionColor = "blue"
-            item.mentionBackground = "blue"
+            item.appearance.mentionColor = "blue"
+            item.appearance.mentionBackground = "blue"
             item.segments = [{text: "WWWWWW", href: "https://a.test", mention: true},
                          {text: "WWWWWW", href: "https://b.test", newBlock: true},
                          {text: "WWWWWW", code: true, mention: true, newBlock: true},
                          {text: "WWWWWW", code: true, newBlock: true}]
-            item.hoverHighlightColor = "yellow"
+            item.appearance.hoverHighlightColor = "yellow"
             item.highlightedLink = "https://a.test"
-            item.linkColor = "red"
-            item.codeBackground = "lime"
+            item.appearance.linkColor = "red"
+            item.appearance.codeBackground = "lime"
             item.highlightedLink = ""
             verify(rowColorShare(item, 0, "blue") > 0.01)
             verify(rowColorShare(item, 1, "red") > 0.01)
@@ -360,39 +372,39 @@ Item {
 
         function test_emojiSizeFollowsFontAndEmojiOnlyFallback() {
             const item = createItem()
-            item.font.pixelSize = 12
+            item.appearance.font.pixelSize = 12
             item.segments = [{text: "hello 😎"}]
             item.selectAll()
             const selected = item.selectedText
             const natural = item.contentHeight
-            item.font.pixelSize = 32
+            item.appearance.font.pixelSize = 32
             verify(item.contentHeight > natural)
             compare(item.selectedText, selected)
-            item.font.pixelSize = 12
+            item.appearance.font.pixelSize = 12
             compare(item.contentHeight, natural)
             item.segments = [{text: "😎"}]
-            item.emojiOnlyPixelSize = 70
+            item.appearance.emojiOnlyPixelSize = 70
             const enlarged = item.contentHeight
-            item.font.pixelSize = 20
+            item.appearance.font.pixelSize = 20
             compare(item.contentHeight, enlarged)
-            item.emojiOnlyPixelSize = 0
+            item.appearance.emojiOnlyPixelSize = 0
             verify(item.contentHeight < enlarged)
         }
 
         function test_editedMarkerAppearance() {
             const item = createItem()
             item.segments = [{text: "Hello"}]
-            item.color = "red"
-            item.editedMarkerColor = "lime"
-            item.editedMarkerFontSize = 12
+            item.appearance.color = "red"
+            item.appearance.editedMarkerColor = "lime"
+            item.appearance.editedMarkerFontSize = 12
             item.edited = true
             let image = grabImage(item)
             const rect = Qt.rect(0, 0, item.width, item.contentHeight)
             verify(colourShare(image, rect, Qt.color("lime")) > 0.001)
             const height = item.contentHeight
-            item.editedMarkerFontSize = 40
+            item.appearance.editedMarkerFontSize = 40
             verify(item.contentHeight > height)
-            item.editedMarkerColor = "blue"
+            item.appearance.editedMarkerColor = "blue"
             image = grabImage(item)
             verify(colourShare(image, Qt.rect(0, 0, item.width, item.contentHeight), Qt.color("blue")) > 0.001)
         }
@@ -423,8 +435,8 @@ Item {
 
         function test_decorationsWithoutText(data) {
             const item = createItem()
-            item.codeBackground = "lime"
-            item.quoteBarColor = "lime"
+            item.appearance.codeBackground = "lime"
+            item.appearance.quoteBarColor = "lime"
             item.segments = MarkdownUtils.toChatTextSegments(data.source)
             verify(item.contentHeight > 0)
             const rects = item.codeBlockRects().concat(item.quoteBarRects())
@@ -475,8 +487,8 @@ Item {
         // keeps a band in its own colour on a high-DPI screen.
         function test_codeFrameBorderIsSolidOnHighDpi() {
             const item = createItem()
-            item.codeBackground = "white"
-            item.codeBorderColor = "blue"
+            item.appearance.codeBackground = "white"
+            item.appearance.codeBorderColor = "blue"
             item.segments = [{text: "before"}, {text: "a long enough line of code", codeBlock: true}]
             const frame = item.codeBlockRects()[0]
             const image = grabImage(item)
@@ -495,8 +507,8 @@ Item {
 
         function highlightItem() {
             const item = createItem()
-            item.hoverHighlightColor = "lime"
-            item.mentionBackground = "blue"
+            item.appearance.hoverHighlightColor = "lime"
+            item.appearance.mentionBackground = "blue"
             item.segments = [
                 {text: "WWWWWW", href: "https://a.test"},
                 {text: "WWWWWW", href: "https://b.test", mention: true, newBlock: true},
@@ -507,11 +519,11 @@ Item {
         }
 
         function rowColorShare(item, row, color) {
-            let y = row * item.lineHeight
+            let y = row * item.appearance.lineHeight
             const bars = item.quoteBarRects()
             if (row >= 2 && bars.length)
-                y = bars[0].y + (row - 2) * (item.lineHeight + item.codeBlockPadding)
-            return colourShare(grabImage(item), Qt.rect(0, y, 100, item.lineHeight), Qt.color(color))
+                y = bars[0].y + (row - 2) * (item.appearance.lineHeight + item.appearance.codeBlockPadding)
+            return colourShare(grabImage(item), Qt.rect(0, y, 100, item.appearance.lineHeight), Qt.color(color))
         }
 
         function test_externalHighlightAllOccurrences() {
@@ -563,14 +575,14 @@ Item {
             const selected = item.selectedText
             item.highlightedLink = "https://a.test"
             item.hoverAt(10, 33)
-            item.hoverHighlightColor = "yellow"
+            item.appearance.hoverHighlightColor = "yellow"
             item.clearHover()
             compare(item.selectedText, selected)
             compare(item.selectionStart, 1)
             compare(item.selectionEnd, 4)
             item.clearSelection()
             verify(rowColorShare(item, 0, "yellow") > 0.1)
-            item.linkColor = "red" // changing the base color keeps the active highlight
+            item.appearance.linkColor = "red" // changing the base color keeps the active highlight
             verify(rowColorShare(item, 0, "yellow") > 0.1)
             item.hoverAt(10, 33)
             item.segments = [{text: "plain"}]
@@ -586,11 +598,11 @@ Item {
         function test_linkIsPaintedInLinkColor() {
             const item = createItem()
             item.segments = [{ text: "WWWWWWWWWW", href: "https://status.app" }]
-            item.color = "black"
-            item.linkColor = "red"
+            item.appearance.color = "black"
+            item.appearance.linkColor = "red"
 
             const image = grabImage(item)
-            const linkRect = Qt.rect(0, 0, 80, item.lineHeight)
+            const linkRect = Qt.rect(0, 0, 80, item.appearance.lineHeight)
             verify(colourShare(image, linkRect, Qt.color("red")) > 0.05,
                    "the link is not painted in linkColor")
             compare(colourShare(image, linkRect, Qt.color("black")), 0)
@@ -613,26 +625,26 @@ Item {
             item.segments = [{ text: "Hi 👍🏽👍🏽 there" }]
             const after = "Hi 👍🏽👍🏽 ".length
             const plain = xOf(item, 11, after)
-            item.font.pixelSize = 20
+            item.appearance.font.pixelSize = 20
 
             verify(xOf(item, 11, after) > plain + 4, "emoji did not grow")
             verify(!item.emojiOnly)
-            verify(item.contentHeight >= item.lineHeight)
+            verify(item.contentHeight >= item.appearance.lineHeight)
         }
 
         // lineHeight is a minimum, like the px line-height it stands in for.
         function test_tallEmojiGrowsItsLine() {
             const item = createItem()
-            item.font.pixelSize = 32
+            item.appearance.font.pixelSize = 32
             item.segments = [{ text: "Big 🎉" }, { text: "small", newBlock: true }]
 
-            verify(item.contentHeight >= 40 + item.lineHeight,
+            verify(item.contentHeight >= 40 + item.appearance.lineHeight,
                    "line did not grow: " + item.contentHeight)
         }
 
         function test_emojiOnlyGrowsTheLine() {
             const item = createItem()
-            item.emojiOnlyPixelSize = 40
+            item.appearance.emojiOnlyPixelSize = 40
 
             item.segments = [{ text: "🎉 🎉" }]
             verify(item.emojiOnly)
@@ -640,14 +652,14 @@ Item {
 
             item.segments = [{ text: "Party 🎉" }]
             verify(!item.emojiOnly)
-            compare(item.contentHeight, item.lineHeight)
+            compare(item.contentHeight, item.appearance.lineHeight)
         }
 
         // A ZWJ family and a keycap are single grapheme clusters with non-emoji
         // code points inside; per-code-point classification gets both wrong.
         function test_emojiClustersCountAsEmoji() {
             const item = createItem()
-            item.emojiOnlyPixelSize = 40
+            item.appearance.emojiOnlyPixelSize = 40
 
             item.segments = [{ text: "👨‍👩‍👧 1️⃣" }]
             verify(item.emojiOnly)
@@ -675,11 +687,11 @@ Item {
 
         function test_emojiSizeChangeReapplies() {
             const item = createItem()
-            item.emojiOnlyPixelSize = 30
+            item.appearance.emojiOnlyPixelSize = 30
             item.segments = [{ text: "🎉" }]
             const smaller = item.contentHeight
 
-            item.emojiOnlyPixelSize = 60
+            item.appearance.emojiOnlyPixelSize = 60
 
             verify(item.contentHeight > smaller)
         }
@@ -692,9 +704,9 @@ Item {
         function selectionItem(segments) {
             const item = createItem()
             item.segments = segments
-            item.color = "black"
-            item.selectionColor = "red"
-            item.selectionTextColor = "white"
+            item.appearance.color = "black"
+            item.appearance.selectionColor = "red"
+            item.appearance.selectionTextColor = "white"
             return item
         }
 
@@ -735,12 +747,12 @@ Item {
                 Object.assign({text: "formatted text", newBlock: true}, data.style),
                 {text: "regular text last", newBlock: true}
             ])
-            item.color = "lime"
-            item.selectionTextColor = "lime"
+            item.appearance.color = "lime"
+            item.appearance.selectionTextColor = "lime"
             const before = grabImage(item)
             item.selectAll()
             const after = grabImage(item)
-            const rect = Qt.rect(0, item.lineHeight, 100, item.lineHeight)
+            const rect = Qt.rect(0, item.appearance.lineHeight, 100, item.appearance.lineHeight)
             const beforeShare = colourShare(before, rect, Qt.color("lime"))
             verify(beforeShare > 0.01)
             verify(colourShare(after, rect, Qt.color("lime")) >= beforeShare * 0.8,
@@ -789,14 +801,14 @@ Item {
 
         function test_selectionAcrossAQuoteIsPainted() {
             const item = selectionItem(root.quoteSegments)
-            item.quoteBarColor = "transparent"
+            item.appearance.quoteBarColor = "transparent"
 
-            const quotedLine = item.quoteBarRects()[0].y + item.lineHeight / 2
+            const quotedLine = item.quoteBarRects()[0].y + item.appearance.lineHeight / 2
             const start = "Before the quote".length + 1
             item.select(3, start + 8)
             const image = grabImage(item)
 
-            verify(selectedShare(item, image, item.lineHeight / 2, 3, 16) > 0.3,
+            verify(selectedShare(item, image, item.appearance.lineHeight / 2, 3, 16) > 0.3,
                    "first paragraph not painted")
             verify(selectedShare(item, image, quotedLine, start, start + 8) > 0.3,
                    "quoted paragraph not painted")
@@ -805,8 +817,8 @@ Item {
         function test_selectionInACodeBlockIsPainted() {
             const item = selectionItem([{ text: "Before" },
                                         { text: "let x = 1", codeBlock: true }])
-            item.codeBackground = "white"
-            item.codeBorderColor = "white"
+            item.appearance.codeBackground = "white"
+            item.appearance.codeBorderColor = "white"
 
             const frame = item.codeBlockRects()[0]
             const y = frame.y + frame.height / 2
@@ -825,7 +837,7 @@ Item {
             const item = createItem()
             item.segments = [{ text: "see " }, { text: "the link", href: "https://status.app" },
                          { text: " for more" }]
-            const spy = createTemporaryObject(
+            const spy = createStyledTemporary(
                           Qt.createComponent("QtTest", "SignalSpy"), root,
                           { target: item, signalName: "linkActivated" })
             const y = 11
@@ -928,7 +940,7 @@ Item {
 
         function test_selectionClearsWhenFocusMovesOn() {
             const item = createItem()
-            const other = createTemporaryObject(focusSinkComponent, root)
+            const other = createStyledTemporary(focusSinkComponent, root)
             item.forceActiveFocus()
             item.select(0, 3)
 
@@ -939,7 +951,7 @@ Item {
 
         function test_persistentSelectionSurvivesFocusLoss() {
             const item = createItem()
-            const other = createTemporaryObject(focusSinkComponent, root)
+            const other = createStyledTemporary(focusSinkComponent, root)
             item.persistentSelection = true
             item.forceActiveFocus()
             item.select(0, 3)
@@ -964,14 +976,14 @@ Item {
             const frames = item.codeBlockRects()
             compare(frames.length, 1)
             const frame = frames[0]
-            const padding = item.codeBlockPadding
+            const padding = item.appearance.codeBlockPadding
 
             compare(frame.x, 0)
             // Hugs the code rather than taking the full width.
             verify(frame.width > 2 * padding && frame.width < item.width / 2,
                    "frame width " + frame.width)
             // One line of text, then a gap of one padding before the frame.
-            fuzzyCompare(frame.y, item.lineHeight + padding, 1)
+            fuzzyCompare(frame.y, item.appearance.lineHeight + padding, 1)
 
             // The code starts one padding inside the frame...
             const codeStart = "Before".length + 1
@@ -1021,7 +1033,7 @@ Item {
             ]
 
             const frame = item.codeBlockRects()[0]
-            compare(frame.x, item.quoteBarWidth + item.quoteSpacing)
+            compare(frame.x, item.appearance.quoteBarWidth + item.appearance.quoteSpacing)
 
             const bars = item.quoteBarRects()
             compare(bars.length, 1)
@@ -1033,8 +1045,8 @@ Item {
         function test_codeBlockFrameIsPainted() {
             const item = createItem()
             item.segments = codeSegments
-            item.codeBackground = "lime"
-            item.codeBorderColor = "red"
+            item.appearance.codeBackground = "lime"
+            item.appearance.codeBorderColor = "red"
 
             const frame = item.codeBlockRects()[0]
             const image = grabImage(item)
@@ -1060,7 +1072,7 @@ Item {
             const frames = item.codeBlockRects()
             compare(frames.length, 1)
 
-            const padding = item.codeBlockPadding
+            const padding = item.appearance.codeBlockPadding
             compare(item.positionAt(padding + 1, frames[0].y + padding + 2), "Before".length + 1)
             verify(frames[0].height > 2 * padding + 20, "frame does not span both lines")
         }
@@ -1081,11 +1093,11 @@ Item {
             verify(frames[0].width > frames[1].width, "each frame must hug its own content")
             for (let i = 1; i < frames.length; ++i) {
                 const gap = frames[i].y - frames[i - 1].y - frames[i - 1].height
-                fuzzyCompare(gap, item.codeBlockPadding, 1)
+                fuzzyCompare(gap, item.appearance.codeBlockPadding, 1)
                 fuzzyCompare(frames[i].height, frames[0].height, 1)
             }
             compare(item.quoteBarRects().length, data.quoteLevel ? 1 : 0)
-            item.codeBackground = "lime"
+            item.appearance.codeBackground = "lime"
             const image = grabImage(item)
             for (const frame of frames) {
                 verify(colourShare(image, Qt.rect(frame.x + 2, frame.y + frame.height - 5,
@@ -1105,7 +1117,7 @@ Item {
 
         function test_emojiInCodeIsNotEnlarged() {
             const item = createItem()
-            item.emojiOnlyPixelSize = 40
+            item.appearance.emojiOnlyPixelSize = 40
             item.segments = [{ text: "🎉", codeBlock: true }]
 
             verify(!item.emojiOnly)
@@ -1143,7 +1155,7 @@ Item {
             const secondSegment = Object.assign({text: "second", newBlock: true}, data.second)
             function measure(segments) {
                 const item = createItem()
-                item.codeBlockPadding = data.padding
+                item.appearance.codeBlockPadding = data.padding
                 item.segments = segments
                 return item.contentHeight
             }
@@ -1155,11 +1167,11 @@ Item {
         function test_quoteSpacingPreservesBlankLinesAndNoOuterGap() {
             const item = createItem()
             item.segments = [{text: "first\n\nlast", quoteLevel: 1}]
-            fuzzyCompare(item.contentHeight, 3 * item.lineHeight, 1)
+            fuzzyCompare(item.contentHeight, 3 * item.appearance.lineHeight, 1)
             item.segments = [{text: "before"}, {text: "first\n\nlast", quoteLevel: 1, newBlock: true},
                          {text: "after", newBlock: true}]
-            fuzzyCompare(item.contentHeight, 5 * item.lineHeight + 2 * item.codeBlockPadding, 1)
-            fuzzyCompare(item.quoteBarRects()[0].height, 3 * item.lineHeight, 1)
+            fuzzyCompare(item.contentHeight, 5 * item.appearance.lineHeight + 2 * item.appearance.codeBlockPadding, 1)
+            fuzzyCompare(item.quoteBarRects()[0].height, 3 * item.appearance.lineHeight, 1)
             item.selectAll()
             compare(item.selectedText, "before\n> first\n> \n> last\nafter")
         }
@@ -1171,16 +1183,16 @@ Item {
             const bars = item.quoteBarRects()
             compare(bars.length, 1)
             compare(bars[0].x, 0)
-            compare(bars[0].width, item.quoteBarWidth)
+            compare(bars[0].width, item.appearance.quoteBarWidth)
             // Two quoted paragraphs, one line each, between two unquoted ones.
-            fuzzyCompare(bars[0].y, item.lineHeight + item.codeBlockPadding, 1)
-            fuzzyCompare(bars[0].height, 2 * item.lineHeight, 1)
+            fuzzyCompare(bars[0].y, item.appearance.lineHeight + item.appearance.codeBlockPadding, 1)
+            fuzzyCompare(bars[0].height, 2 * item.appearance.lineHeight, 1)
         }
 
         function test_quoteBarIsPainted() {
             const item = createItem()
             item.segments = root.quoteSegments
-            item.quoteBarColor = "red"
+            item.appearance.quoteBarColor = "red"
 
             const bar = item.quoteBarRects()[0]
             const image = grabImage(item)
@@ -1188,7 +1200,7 @@ Item {
             // Inset by a pixel: edges are antialiased against the background.
             verify(colourShare(image, Qt.rect(bar.x + 1, bar.y + 1, 1, bar.height - 2),
                                Qt.color("red")) > 0.9, "no bar painted")
-            compare(colourShare(image, Qt.rect(0, 0, bar.width, item.lineHeight - 1),
+            compare(colourShare(image, Qt.rect(0, 0, bar.width, item.appearance.lineHeight - 1),
                                 Qt.color("red")), 0)
         }
 
@@ -1199,7 +1211,7 @@ Item {
             // The bar column holds no text: a hit there lands on the first
             // character of the quoted line, not inside it.
             const quotedStart = "Before the quote".length + 1
-            compare(item.positionAt(1, item.quoteBarRects()[0].y + item.lineHeight / 2), quotedStart)
+            compare(item.positionAt(1, item.quoteBarRects()[0].y + item.appearance.lineHeight / 2), quotedStart)
         }
 
         function test_nestedQuotesGetABarPerLevel() {
@@ -1216,23 +1228,23 @@ Item {
             const outer = bars.find(b => b.x === 0)
             const inner = bars.find(b => b.x > 0)
             verify(!!outer && !!inner)
-            fuzzyCompare(outer.height, 3 * item.lineHeight + 2 * item.codeBlockPadding, 1)
-            fuzzyCompare(inner.height, item.lineHeight, 1)
-            compare(inner.x, item.quoteBarWidth + item.quoteSpacing)
+            fuzzyCompare(outer.height, 3 * item.appearance.lineHeight + 2 * item.appearance.codeBlockPadding, 1)
+            fuzzyCompare(inner.height, item.appearance.lineHeight, 1)
+            compare(inner.x, item.appearance.quoteBarWidth + item.appearance.quoteSpacing)
         }
 
         function test_barWidthChangeNeedsNoNewContent() {
             const item = createItem()
             item.segments = root.quoteSegments
-            const before = item.positionAt(item.quoteBarWidth + item.quoteSpacing + 1,
-                                           item.quoteBarRects()[0].y + item.lineHeight / 2)
+            const before = item.positionAt(item.appearance.quoteBarWidth + item.appearance.quoteSpacing + 1,
+                                           item.quoteBarRects()[0].y + item.appearance.lineHeight / 2)
 
-            item.quoteBarWidth = 5
+            item.appearance.quoteBarWidth = 5
 
             compare(item.quoteBarRects()[0].width, 5)
             // The quoted text moved right with the wider bar.
-            compare(item.positionAt(item.quoteBarWidth + item.quoteSpacing + 1,
-                                    item.quoteBarRects()[0].y + item.lineHeight / 2), before)
+            compare(item.positionAt(item.appearance.quoteBarWidth + item.appearance.quoteSpacing + 1,
+                                    item.quoteBarRects()[0].y + item.appearance.lineHeight / 2), before)
         }
 
         // The point of keeping quotes in the one document: a drag runs through
@@ -1241,10 +1253,10 @@ Item {
             const item = createItem()
             item.segments = root.quoteSegments
 
-            mousePress(item, 2, item.lineHeight * 0.5, Qt.LeftButton)
-            mouseMove(item, 100, item.lineHeight * 2)
-            mouseMove(item, 300, item.contentHeight - item.lineHeight / 2)
-            mouseRelease(item, 300, item.contentHeight - item.lineHeight / 2, Qt.LeftButton)
+            mousePress(item, 2, item.appearance.lineHeight * 0.5, Qt.LeftButton)
+            mouseMove(item, 100, item.appearance.lineHeight * 2)
+            mouseMove(item, 300, item.contentHeight - item.appearance.lineHeight / 2)
+            mouseRelease(item, 300, item.contentHeight - item.appearance.lineHeight / 2, Qt.LeftButton)
 
             compare(item.selectedText,
                     "Before the quote\n> Quoted one with a link\n> Quoted two\nAfter the quote")
@@ -1253,11 +1265,11 @@ Item {
         function test_linkInsideQuoteActivates() {
             const item = createItem()
             item.segments = root.quoteSegments
-            const spy = createTemporaryObject(
+            const spy = createStyledTemporary(
                           Qt.createComponent("QtTest", "SignalSpy"), root,
                           { target: item, signalName: "linkActivated" })
 
-            const y = item.quoteBarRects()[0].y + item.lineHeight / 2
+            const y = item.quoteBarRects()[0].y + item.appearance.lineHeight / 2
             let linkX = -1
             for (let x = 0; x < item.width; x += 2) {
                 if (item.linkAt(x, y) === "https://status.app") {
@@ -1265,7 +1277,7 @@ Item {
                     break
                 }
             }
-            verify(linkX > item.quoteBarWidth + item.quoteSpacing, "no link inside the quote")
+            verify(linkX > item.appearance.quoteBarWidth + item.appearance.quoteSpacing, "no link inside the quote")
 
             mouseClick(item, linkX, y, Qt.LeftButton)
 
@@ -1336,11 +1348,11 @@ Item {
             if (data.width)
                 item.width = data.width
             let x = 15
-            let y = item.lineHeight * (data.line + 0.5)
+            let y = item.appearance.lineHeight * (data.line + 0.5)
             if (data.code) {
                 const frame = item.codeBlockRects()[0]
-                const lineHeight = (frame.height - 2 * item.codeBlockPadding) / 2
-                y = frame.y + item.codeBlockPadding + (data.line + 0.5) * lineHeight
+                const lineHeight = (frame.height - 2 * item.appearance.codeBlockPadding) / 2
+                y = frame.y + item.appearance.codeBlockPadding + (data.line + 0.5) * lineHeight
             }
             for (let i = 0; i < 3; ++i)
                 mouseClick(item, x, y)
@@ -1350,7 +1362,7 @@ Item {
         function test_multiClickSelectionDoesNotActivateLink() {
             const item = createItem()
             item.segments = [{text: "hello world", href: "https://status.app"}]
-            const spy = createTemporaryObject(Qt.createComponent("QtTest", "SignalSpy"), root,
+            const spy = createStyledTemporary(Qt.createComponent("QtTest", "SignalSpy"), root,
                                                {target: item, signalName: "linkActivated"})
             for (let i = 0; i < 4; ++i)
                 mouseClick(item, 2, 11)
@@ -1391,7 +1403,7 @@ Item {
         // The regression that started this: inside a Flickable the drag was
         // being stolen, so selection worked only via selectAll().
         function test_selectByMouseDragInsideFlickable() {
-            const flickable = createTemporaryObject(flickableComponent, root)
+            const flickable = createStyledTemporary(flickableComponent, root)
             verify(!!flickable)
 
             const item = flickable.textItem
@@ -1421,9 +1433,9 @@ Item {
         function test_cachedDecorationsFollowAppearanceAndReplacement() {
             const item = createItem()
             item.segments = [{text: "WWWWWW", codeBlock: true, quoteLevel: 1}]
-            item.quoteBarColor = "lime"
-            item.codeBackground = "blue"
-            item.codeBorderColor = "blue"
+            item.appearance.quoteBarColor = "lime"
+            item.appearance.codeBackground = "blue"
+            item.appearance.codeBorderColor = "blue"
             let image = grabImage(item)
             const bar = item.quoteBarRects()[0]
             const frame = item.codeBlockRects()[0]
@@ -1433,8 +1445,8 @@ Item {
             image = grabImage(item)
             verify(colourShare(image, bar, Qt.color("lime")) > 0.5)
             item.clearSelection()
-            item.quoteBarColor = "red"
-            item.codeBackground = "yellow"
+            item.appearance.quoteBarColor = "red"
+            item.appearance.codeBackground = "yellow"
             image = grabImage(item)
             verify(colourShare(image, bar, Qt.color("red")) > 0.5)
             verify(colourShare(image, frame, Qt.color("yellow")) > 0.5)
@@ -1467,7 +1479,7 @@ Item {
         function test_typedInitialPropertiesPreserveSegments() {
             initialSegments = [{text: "hello", bold: true, mention: true},
                                {text: "world", newBlock: true, code: true}]
-            const item = createTemporaryObject(itemComponent, root,
+            const item = createStyledTemporary(itemComponent, root,
                 {segments: initialSegments})
             verify(!!item)
             compare(item.segments[0].text, "hello")
@@ -1512,9 +1524,9 @@ Item {
             compare(item.contentHeight, plainHeight)
             compare(item.codeBlockRects().length, 0)
             compare(item.quoteBarRects().length, 0)
-            item.quoteBarWidth = 5
-            item.quoteSpacing = 15
-            item.codeBlockPadding = 12
+            item.appearance.quoteBarWidth = 5
+            item.appearance.quoteSpacing = 15
+            item.appearance.codeBlockPadding = 12
             compare(item.contentHeight, plainHeight)
             item.segments = [{text: "code", codeBlock: true, quoteLevel: 2}]
             verify(item.codeBlockRects().length > 0)
@@ -1530,7 +1542,7 @@ Item {
                          {text: "first\nsecond", codeBlock: true},
                          {text: "end", newBlock: true}]
             const decoratedHeight = item.contentHeight
-            verify(decoratedHeight > 4 * item.lineHeight)
+            verify(decoratedHeight > 4 * item.appearance.lineHeight)
             compare(item.implicitHeight, decoratedHeight)
             item.segments = [{text: "https://status.app", href: "https://status.app"}]
             verify(item.contentHeight < decoratedHeight)
@@ -1542,7 +1554,7 @@ Item {
 
         function test_clickOnLinkActivatesItAndDoesNotSelect() {
             const item = createItem()
-            const spy = createTemporaryObject(
+            const spy = createStyledTemporary(
                           Qt.createComponent("QtTest", "SignalSpy"), root,
                           { target: item, signalName: "linkActivated" })
 

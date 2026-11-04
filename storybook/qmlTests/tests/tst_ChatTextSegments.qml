@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "ChatTextTestUtils.js" as ChatTextTestUtils
 import StatusQ
 
 Item {
@@ -7,9 +8,22 @@ Item {
     width: 1200
     height: 1000
 
-    Component { id: documentComponent; ChatTextItem { width: 400; font.pixelSize: 16; lineHeight: 22 } }
+    Component {
+        id: documentComponent
+        ChatTextItem {
+            width: 400
+            appearance: ChatTextAppearance { font.pixelSize: 16; lineHeight: 22 }
+        }
+    }
 
     TestCase {
+        id: testCase
+
+        readonly property var appearanceProperties: ChatTextTestUtils.appearanceProperties
+        property list<chatTextSegment> initialSegments
+        function createStyledTemporary(component, parent, properties) {
+            return ChatTextTestUtils.create(testCase, component, parent, properties)
+        }
         name: "ChatTextSegments"
         when: windowShown
 
@@ -70,13 +84,13 @@ Item {
             const segments = MarkdownUtils.toChatTextSegments(data.source)
             if (segments.length)
                 compare(segments[0].sourceIsOnlyEmoji, data.only)
-            const item = createTemporaryObject(documentComponent, root, {
+            const item = createStyledTemporary(documentComponent, root, {
                 segments: segments, emojiOnlyPixelSize: 20
             })
             verify(!!item)
             compare(item.emojiOnly, data.only)
             const height = item.contentHeight
-            item.emojiOnlyPixelSize = 40
+            item.appearance.emojiOnlyPixelSize = 40
             if (data.only)
                 verify(item.contentHeight > height, "emoji-only source must get extra enlargement")
             else
@@ -86,7 +100,7 @@ Item {
         }
 
         function test_sourceClassificationSurvivesStyleChanges() {
-            const item = createTemporaryObject(documentComponent, root, {
+            const item = createStyledTemporary(documentComponent, root, {
                 segments: MarkdownUtils.toChatTextSegments("😎"), emojiOnlyPixelSize: 40
             })
             verify(!!item)
@@ -154,11 +168,11 @@ Item {
         function test_separateCodeFences(data) {
             const segments = MarkdownUtils.toChatTextSegments(data.source)
             compare(segments.filter(r => r.codeBlock).map(r => r.text), data.code)
-            const item = createTemporaryObject(documentComponent, root, {segments: segments})
+            const item = createStyledTemporary(documentComponent, root, {segments: segments})
             verify(!!item)
             const frames = item.codeBlockRects()
             compare(frames.length, data.code.length)
-            verify(frames[1].y - frames[0].y - frames[0].height >= item.codeBlockPadding - 1)
+            verify(frames[1].y - frames[0].y - frames[0].height >= item.appearance.codeBlockPadding - 1)
             item.selectAll()
             for (const code of data.code.filter(c => c.length > 0))
                 verify(item.selectedText.indexOf(code) >= 0, "copy must preserve code content")

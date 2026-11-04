@@ -65,7 +65,7 @@ file(GLOB_RECURSE CORE_JS_FILES "../ui/app/*.js")
 file(GLOB_RECURSE STORYBOOK_QML_FILES "stubs/*.qml" "mocks/*.qml" "pages/*.qml"
     "src/*.qml" "src/qmldir")
 
-file(GLOB_RECURSE TEST_QML_FILES "qmlTests/*.qml")
+file(GLOB_RECURSE TEST_QML_FILES "qmlTests/*.qml" "qmlTests/*.js")
 
 qt_add_executable(
   ${PROJECT_NAME} MANUAL_FINALIZATION

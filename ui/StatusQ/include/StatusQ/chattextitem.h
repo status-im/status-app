@@ -1,5 +1,6 @@
 #pragma once
 
+#include "StatusQ/chattextappearance.h"
 #include "StatusQ/chattextsegment.h"
 
 #include <QColor>
@@ -31,13 +32,16 @@ class ChatTextItem : public QQuickItem
 {
     Q_OBJECT
 
+    // Shared fonts, colors and decoration geometry. Content and interaction
+    // remain per-item. A null or destroyed appearance restores shared defaults.
+    Q_PROPERTY(ChatTextAppearance* appearance READ appearance WRITE setAppearance NOTIFY appearanceChanged)
+
     // The content. `segments` is a list of chatTextSegment values, each describing one formatted span
     // appended in order:
     //   { text: string,
     //     bold: bool, italic: bool, strikethrough: bool, underline: bool,
-    //     code: bool, color: color, background: color,
-    //     href: string,            // makes the segment an anchor, in linkColor
-    //                              // unless color is given
+    //     code: bool, mention: bool,
+    //     href: string,            // anchor target; appearance resolves its color
     //     newBlock: bool,          // start a new paragraph before this segment
     //     codeBlock: bool,         // the segment is a code block: a paragraph of
     //                              // its own, in codeFontFamily, framed;
@@ -56,57 +60,16 @@ class ChatTextItem : public QQuickItem
     // outside the decoration after a trailing quote or code block. Empty
     // content has no marker. Its format never inherits a link or emphasis.
     Q_PROPERTY(bool edited READ edited WRITE setEdited NOTIFY editedChanged)
-    Q_PROPERTY(int editedMarkerFontSize READ editedMarkerFontSize WRITE setEditedMarkerFontSize
-               NOTIFY editedMarkerFontSizeChanged)
-    Q_PROPERTY(QColor editedMarkerColor READ editedMarkerColor WRITE setEditedMarkerColor
-               NOTIFY editedMarkerColorChanged)
-
-    Q_PROPERTY(QColor mentionColor READ mentionColor WRITE setMentionColor NOTIFY mentionColorChanged)
-    Q_PROPERTY(QColor mentionBackground READ mentionBackground WRITE setMentionBackground NOTIFY mentionBackgroundChanged)
-    Q_PROPERTY(QColor quoteColor READ quoteColor WRITE setQuoteColor NOTIFY quoteColorChanged)
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-    Q_PROPERTY(QColor linkColor READ linkColor WRITE setLinkColor NOTIFY linkColorChanged)
-    Q_PROPERTY(QColor codeBackground READ codeBackground WRITE setCodeBackground
-               NOTIFY codeBackgroundChanged)
-
-    // Minimum line height in px. A line holding a taller glyph, such as an
-    // enlarged emoji, grows instead of overflowing. This matches Qt's HTML
-    // interpretation of `p { line-height: Npx }` (qtexthtmlparser.cpp:1289).
-    // 0 leaves the font's natural leading.
-    Q_PROPERTY(int lineHeight READ lineHeight WRITE setLineHeight NOTIFY lineHeightChanged)
-
-    // Code. Inline code (a segment's `code`) gets codeFontFamily and codeBackground
-    // as character formats. A code block (a segment's `codeBlock`) is a paragraph
-    // inset by codeBlockPadding, in a frame the item
-    // paints behind the text: codeBackground, a 1px codeBorderColor border,
-    // codeBlockRadius corners, hugging the widest line.
-    // The code stays in the one document, so selection and hit testing
-    // run through it. Qt's own frame decoration is no substitute: it is square
-    // and full-width, and QQuickTextNodeEngine::addFrameDecorations
-    // dereferences a null table for a bordered plain frame.
-    Q_PROPERTY(QString codeFontFamily READ codeFontFamily WRITE setCodeFontFamily
-               NOTIFY codeFontFamilyChanged)
-    Q_PROPERTY(QColor codeBorderColor READ codeBorderColor WRITE setCodeBorderColor
-               NOTIFY codeBorderColorChanged)
-    Q_PROPERTY(qreal codeBlockPadding READ codeBlockPadding WRITE setCodeBlockPadding
-               NOTIFY codeBlockPaddingChanged)
-    Q_PROPERTY(qreal codeBlockRadius READ codeBlockRadius WRITE setCodeBlockRadius
-               NOTIFY codeBlockRadiusChanged)
 
     // Laid-out height of the document at the current width.
     Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentHeightChanged)
 
-    // Selection rendering. QSGTextNode draws it; turning a drag into these two
-    // numbers is the caller's job, and is what TextEdit would otherwise do.
+    // Selection positions used by pointer handling and external coordinators.
+    // QSGTextNode paints the selected range.
     Q_PROPERTY(int selectionStart READ selectionStart WRITE setSelectionStart
                NOTIFY selectionChanged)
     Q_PROPERTY(int selectionEnd READ selectionEnd WRITE setSelectionEnd
                NOTIFY selectionChanged)
-    Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor
-               NOTIFY selectionColorChanged)
-    Q_PROPERTY(QColor selectionTextColor READ selectionTextColor WRITE setSelectionTextColor
-               NOTIFY selectionTextColorChanged)
 
     // Whether a mouse/pointing-device drag selects. Touch never selects or
     // takes keyboard focus: short taps activate links, while drags and long
@@ -134,38 +97,6 @@ class ChatTextItem : public QQuickItem
     Q_PROPERTY(QString highlightedLink READ highlightedLink WRITE setHighlightedLink
                NOTIFY highlightedLinkChanged)
 
-    // Background painted behind hovered and externally highlighted anchors.
-    // This is the whole argument
-    // for authoring the document directly: today the equivalent is an
-    // `a[href="..."] { background-color }` rule inside the text, so every hover
-    // transition rewrites the string and reparses the document. Here it is a
-    // format merged over the anchor's range -- the document is not rebuilt, and
-    // only the affected block relayouts.
-    Q_PROPERTY(QColor hoverHighlightColor READ hoverHighlightColor WRITE setHoverHighlightColor
-               NOTIFY hoverHighlightColorChanged)
-
-    // Quote blocks. A quoted paragraph carries QTextFormat::BlockQuoteLevel,
-    // set from a segment's quoteLevel, and is indented by quoteBarWidth +
-    // quoteSpacing per level. The bars are
-    // not part of the document: neither Qt renderer reads BlockQuoteLevel, and
-    // QQuickTextNodeEngine can only draw a frame's border as a full box. So the
-    // item paints one bar per level beside each segment of quoted paragraphs, as
-    // rectangle nodes next to the text node. The quote stays inside the one
-    // document, so selection, hit testing and links run through it unchanged.
-    // Quote boundaries share codeBlockPadding-sized vertical gaps with code
-    // blocks; consecutive paragraphs at the same quote level have no extra gap.
-    Q_PROPERTY(QColor quoteBarColor READ quoteBarColor WRITE setQuoteBarColor
-               NOTIFY quoteBarColorChanged)
-    Q_PROPERTY(qreal quoteBarWidth READ quoteBarWidth WRITE setQuoteBarWidth
-               NOTIFY quoteBarWidthChanged)
-    Q_PROPERTY(qreal quoteSpacing READ quoteSpacing WRITE setQuoteSpacing
-               NOTIFY quoteSpacingChanged)
-
-    // Emoji use the rounded font line height. Emoji-only messages can use a
-    // larger explicit size; zero falls back to the font line height.
-    Q_PROPERTY(qreal emojiOnlyPixelSize READ emojiOnlyPixelSize WRITE setEmojiOnlyPixelSize
-               NOTIFY emojiOnlyPixelSizeChanged)
-
     // Whether the original message source is emoji only, as Markdown::isOnlyEmoji.
     // MarkdownUtils.toChatTextSegments supplies this classification. Hand-authored segments
     // without metadata are classified from their text and formatting flags.
@@ -175,48 +106,14 @@ public:
     explicit ChatTextItem(QQuickItem* parent = nullptr);
     ~ChatTextItem() override;
 
+    ChatTextAppearance* appearance() const { return m_appearance; }
+    void setAppearance(ChatTextAppearance* appearance);
+
     QList<ChatTextSegment> segments() const;
     void setSegments(const QList<ChatTextSegment>& segments);
 
     bool edited() const;
     void setEdited(bool edited);
-    int editedMarkerFontSize() const;
-    void setEditedMarkerFontSize(int size);
-    QColor editedMarkerColor() const;
-    void setEditedMarkerColor(const QColor& color);
-
-    QColor mentionColor() const { return m_mentionColor; }
-    void setMentionColor(const QColor& color);
-    QColor mentionBackground() const { return m_mentionBackground; }
-    void setMentionBackground(const QColor& color);
-    QColor quoteColor() const { return m_quoteColor; }
-    void setQuoteColor(const QColor& color);
-    QFont font() const;
-    void setFont(const QFont& font);
-
-    QColor color() const;
-    void setColor(const QColor& color);
-
-    QColor linkColor() const;
-    void setLinkColor(const QColor& color);
-
-    QColor codeBackground() const;
-    void setCodeBackground(const QColor& color);
-
-    int lineHeight() const;
-    void setLineHeight(int lineHeight);
-
-    QString codeFontFamily() const;
-    void setCodeFontFamily(const QString& family);
-
-    QColor codeBorderColor() const;
-    void setCodeBorderColor(const QColor& color);
-
-    qreal codeBlockPadding() const;
-    void setCodeBlockPadding(qreal padding);
-
-    qreal codeBlockRadius() const;
-    void setCodeBlockRadius(qreal radius);
 
     // Code block frames in item coordinates, as painted.
     Q_INVOKABLE QVariantList codeBlockRects() const;
@@ -229,12 +126,6 @@ public:
     int selectionEnd() const;
     void setSelectionEnd(int position);
 
-    QColor selectionColor() const;
-    void setSelectionColor(const QColor& color);
-
-    QColor selectionTextColor() const;
-    void setSelectionTextColor(const QColor& color);
-
     bool selectable() const;
     void setSelectable(bool selectable);
 
@@ -244,21 +135,6 @@ public:
     QString hoveredLink() const;
     QString highlightedLink() const;
     void setHighlightedLink(const QString& link);
-
-    QColor hoverHighlightColor() const;
-    void setHoverHighlightColor(const QColor& color);
-
-    QColor quoteBarColor() const;
-    void setQuoteBarColor(const QColor& color);
-
-    qreal quoteBarWidth() const;
-    void setQuoteBarWidth(qreal width);
-
-    qreal quoteSpacing() const;
-    void setQuoteSpacing(qreal spacing);
-
-    qreal emojiOnlyPixelSize() const;
-    void setEmojiOnlyPixelSize(qreal size);
 
     bool emojiOnly() const;
 
@@ -291,26 +167,11 @@ public:
     Q_INVOKABLE void select(int start, int end);
 
 signals:
+    void appearanceChanged();
     void segmentsChanged();
     void editedChanged();
-    void editedMarkerFontSizeChanged();
-    void editedMarkerColorChanged();
-    void mentionColorChanged();
-    void mentionBackgroundChanged();
-    void quoteColorChanged();
-    void fontChanged();
-    void colorChanged();
-    void linkColorChanged();
-    void codeBackgroundChanged();
-    void lineHeightChanged();
-    void codeFontFamilyChanged();
-    void codeBorderColorChanged();
-    void codeBlockPaddingChanged();
-    void codeBlockRadiusChanged();
     void contentHeightChanged();
     void selectionChanged();
-    void selectionColorChanged();
-    void selectionTextColorChanged();
     void selectableChanged();
     void persistentSelectionChanged();
 
@@ -319,11 +180,6 @@ signals:
     void selectionDragStarted(int position);
     void hoveredLinkChanged();
     void highlightedLinkChanged();
-    void hoverHighlightColorChanged();
-    void quoteBarColorChanged();
-    void quoteBarWidthChanged();
-    void quoteSpacingChanged();
-    void emojiOnlyPixelSizeChanged();
     void emojiOnlyChanged();
     void linkActivated(const QString& link);
 
@@ -345,6 +201,9 @@ protected:
     void focusOutEvent(QFocusEvent* event) override;
 
 private:
+    void connectAppearance();
+    void applyAppearance(ChatTextAppearance::Change change);
+    ChatTextAppearance* m_appearance = ChatTextAppearance::defaults();
     // Appearance-only rebuilds keep character positions and interaction state,
     // including an active drag, without transient selectionChanged signals.
     void rebuildFromSegments(bool preserveInteraction = false);
@@ -352,11 +211,22 @@ private:
     void updateAppearance(int kind, const std::function<void(QTextCharFormat&)>& change);
     void updateEmojiAppearance();
     qreal effectiveEmojiSize(bool emojiOnly) const;
-    enum AppearanceKind { LinkAppearance = 1, CodeBackgroundAppearance = 2,
-                          CodeFontAppearance = 4, MarkerAppearance = 8, EmojiAppearance = 16,
-                          MentionForegroundAppearance = 32, MentionBackgroundAppearance = 64,
-                          QuoteAppearance = 128 };
-    struct AppearanceRange { int start; int length; int kinds; };
+    enum AppearanceKind {
+        LinkAppearance = 1,
+        CodeBackgroundAppearance = 2,
+        CodeFontAppearance = 4,
+        MarkerAppearance = 8,
+        EmojiAppearance = 16,
+        MentionForegroundAppearance = 32,
+        MentionBackgroundAppearance = 64,
+        QuoteAppearance = 128
+    };
+    struct AppearanceRange
+    {
+        int start;
+        int length;
+        int kinds;
+    };
     QVector<AppearanceRange> m_appearanceRanges;
 
     // Sizes emoji sequences, and updates emojiOnly.
@@ -392,27 +262,8 @@ private:
     using Segment = ChatTextSegment;
     QVector<Segment> m_segments;
     bool m_edited = false;
-    int m_editedMarkerFontSize = 12;
-    QColor m_editedMarkerColor{Qt::gray};
-    QColor m_mentionColor{QColor(0x43, 0x60, 0xDF)};
-    QColor m_mentionBackground{QColor(0, 0, 0, 20)};
-    QColor m_quoteColor{QColor(Qt::gray)};
-    QFont m_font;
-    QColor m_color{Qt::black};
-    QColor m_linkColor{QColor(0x43, 0x60, 0xDF)};
-    QColor m_codeBackground{QColor(0, 0, 0, 20)};
-    QColor m_selectionColor{QColor(0x43, 0x60, 0xDF, 0x60)};
     QString m_hoveredLink;
     QString m_highlightedLink;
-    QColor m_hoverHighlightColor;
-    QColor m_quoteBarColor{QColor(0, 0, 0, 0x40)};
-    qreal m_quoteBarWidth = 3;
-    qreal m_quoteSpacing = 8;
-    QString m_codeFontFamily{QStringLiteral("monospace")};
-    QColor m_codeBorderColor{QColor(0, 0, 0, 0x20)};
-    qreal m_codeBlockPadding = 8;
-    qreal m_codeBlockRadius = 6;
-    qreal m_emojiOnlyPixelSize = 0;
     bool m_emojiOnly = false;
     bool m_hasQuotes = false;
     bool m_hasCodeBlocks = false;
@@ -420,15 +271,18 @@ private:
     // Fragments whose format we changed for link highlighting, with the
     // format they had before, so the highlight can be taken off again without
     // having to know how the segment was originally styled.
-    struct HighlightedRange { int start; int length; QTextCharFormat original; };
+    struct HighlightedRange
+    {
+        int start;
+        int length;
+        QTextCharFormat original;
+    };
     QVector<HighlightedRange> m_highlighted;
-    int m_lineHeight = 0;
     int m_selectionStart = -1;
     int m_selectionEnd = -1;
     int m_selectionAnchor = -1;
     bool m_selectable = true;
     bool m_persistentSelection = false;
-    QColor m_selectionTextColor;
     QString m_pressedLink;
     QElapsedTimer m_touchPressTimer;
     QElapsedTimer m_clickTimer;

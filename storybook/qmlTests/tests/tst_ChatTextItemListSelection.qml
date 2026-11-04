@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "ChatTextTestUtils.js" as ChatTextTestUtils
 
 import StatusQ
 import StatusQ.Core
@@ -34,11 +35,14 @@ Item {
                 implicitHeight: textItem.implicitHeight + 10
 
                 ChatTextItem {
+                    appearance: ChatTextAppearance {
+                        font.pixelSize: 15
+                    }
+
                     id: textItem
 
                     width: parent.width
                     selectable: true
-                    font.pixelSize: 15
                     segments: [
                         {text: "Msg " + index + " line one here"},
                         {text: "Msg " + index + " line two here", newBlock: true},
@@ -52,6 +56,13 @@ Item {
     }
 
     TestCase {
+        id: testCase
+
+        readonly property var appearanceProperties: ChatTextTestUtils.appearanceProperties
+        property list<chatTextSegment> initialSegments
+        function createStyledTemporary(component, parent, properties) {
+            return ChatTextTestUtils.create(testCase, component, parent, properties)
+        }
         name: "ChatTextItemListSelection"
         when: windowShown
 
@@ -75,7 +86,7 @@ Item {
         }
 
         function test_selectionDragDoesNotScrollTheList() {
-            const listView = createTemporaryObject(componentUnderTest, root)
+            const listView = createStyledTemporary(componentUnderTest, root)
             verify(listView)
             tryVerify(() => !!listView.views[0] && listView.views[0].implicitHeight > 0)
             // Let the list settle at its initial position before sampling it.
@@ -98,7 +109,7 @@ Item {
 
         // Suspending the list while selecting must not leave it permanently unscrollable.
         function test_listStaysScrollableAfterSelectionDrag() {
-            const listView = createTemporaryObject(componentUnderTest, root)
+            const listView = createStyledTemporary(componentUnderTest, root)
             verify(listView)
             tryVerify(() => !!listView.views[0] && listView.views[0].implicitHeight > 0)
             tryVerify(() => !listView.moving)

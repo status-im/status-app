@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "ChatTextTestUtils.js" as ChatTextTestUtils
 import StatusQ
 import StatusQ.Controls
 
@@ -13,9 +14,12 @@ Item {
     Component {
         id: textComponent
         ChatTextItem {
+            appearance: ChatTextAppearance {
+                font.pixelSize: 16
+                lineHeight: 22
+            }
+
             width: 480
-            font.pixelSize: 16
-            lineHeight: 22
             segments: [{text: "https://status.app", href: "https://status.app"}]
         }
     }
@@ -27,10 +31,13 @@ Item {
             contentHeight: textItem.implicitHeight
             property alias textItem: textItem
             ChatTextItem {
+                appearance: ChatTextAppearance {
+                    font.pixelSize: 16
+                    lineHeight: 22
+                }
+
                 id: textItem
                 width: parent.width
-                font.pixelSize: 16
-                lineHeight: 22
                 segments: [{text: Array(30).fill("https://status.app").join("\n"), href: "https://status.app"}]
             }
         }
@@ -43,10 +50,13 @@ Item {
             property int lastSource: -1
             property alias textItem: textItem
             ChatTextItem {
+                appearance: ChatTextAppearance {
+                    font.pixelSize: 16
+                    lineHeight: 22
+                }
+
                 id: textItem
                 width: parent.width
-                font.pixelSize: 16
-                lineHeight: 22
                 segments: [{text: "https://status.app", href: "https://status.app"}]
             }
             StatusSecondaryActionHandler {
@@ -59,18 +69,25 @@ Item {
     }
 
     TestCase {
+        id: testCase
+
+        readonly property var appearanceProperties: ChatTextTestUtils.appearanceProperties
+        property list<chatTextSegment> initialSegments
+        function createStyledTemporary(component, parent, properties) {
+            return ChatTextTestUtils.create(testCase, component, parent, properties)
+        }
         name: "ChatTextItemTouch"
         when: windowShown
 
         function spy(item, signal) {
-            const result = createTemporaryObject(spyComponent, root, {target: item, signalName: signal})
+            const result = createStyledTemporary(spyComponent, root, {target: item, signalName: signal})
             verify(!!result && result.valid)
             return result
         }
 
         function test_touchTap_data() { return [{tag: "selectable", selectable: true}, {tag: "non-selectable", selectable: false}] }
         function test_touchTap(data) {
-            const item = createTemporaryObject(textComponent, root, {selectable: data.selectable})
+            const item = createStyledTemporary(textComponent, root, {selectable: data.selectable})
             const links = spy(item, "linkActivated")
             focusSink.forceActiveFocus()
             const touch = touchEvent(item)
@@ -86,7 +103,7 @@ Item {
         }
 
         function test_touchPlainTextPreservesFocusAndSelection() {
-            const item = createTemporaryObject(textComponent, root, {segments: [{text: "first line\nsecond line"}]})
+            const item = createStyledTemporary(textComponent, root, {segments: [{text: "first line\nsecond line"}]})
             const drags = spy(item, "selectionDragStarted")
             focusSink.forceActiveFocus()
             item.select(0, 5)
@@ -101,7 +118,7 @@ Item {
 
         function test_touchDrag_data() { return [{tag: "selectable", selectable: true}, {tag: "non-selectable", selectable: false}] }
         function test_touchDrag(data) {
-            const item = createTemporaryObject(textComponent, root, {selectable: data.selectable})
+            const item = createStyledTemporary(textComponent, root, {selectable: data.selectable})
             const links = spy(item, "linkActivated")
             const touch = touchEvent(item)
             touch.press(0, item, 10, 11).commit()
@@ -118,7 +135,7 @@ Item {
 
         function test_touchScroll_data() { return [{tag: "selectable", selectable: true}, {tag: "non-selectable", selectable: false}] }
         function test_touchScroll(data) {
-            const flickable = createTemporaryObject(scrollComponent, root)
+            const flickable = createStyledTemporary(scrollComponent, root)
             flickable.textItem.selectable = data.selectable
             const links = spy(flickable.textItem, "linkActivated")
             const touch = touchEvent(flickable)
@@ -135,7 +152,7 @@ Item {
         }
 
         function test_parentTouchTap() {
-            const message = createTemporaryObject(messageComponent, root)
+            const message = createStyledTemporary(messageComponent, root)
             const links = spy(message.textItem, "linkActivated")
             const touch = touchEvent(message)
             touch.press(0, message, 10, 11).commit()
@@ -145,7 +162,7 @@ Item {
         }
 
         function test_bareLongPressDoesNotActivate() {
-            const item = createTemporaryObject(textComponent, root)
+            const item = createStyledTemporary(textComponent, root)
             const links = spy(item, "linkActivated")
             const touch = touchEvent(item)
             touch.press(0, item, 10, 11).commit()
@@ -164,7 +181,7 @@ Item {
             ]
         }
         function test_parentLongPress(data) {
-            const message = createTemporaryObject(messageComponent, root)
+            const message = createStyledTemporary(messageComponent, root)
             message.textItem.selectable = data.selectable
             if (!data.link)
                 message.textItem.segments = [{text: "Plain message"}]
