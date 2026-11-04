@@ -39,6 +39,7 @@ Item {
         property int activations: 0
         onActivated: ++activations
     }
+    Component { id: containerComponent; Item { width: 480; height: 400 } }
 
     Component {
         id: itemComponent
@@ -146,6 +147,18 @@ Item {
             compare(item.selectionStart, -1)
             compare(item.selectionEnd, -1)
             compare(item.selectedText, "")
+        }
+
+        function test_identicalSegmentsAreANoOp() {
+            const item = createItem()
+            item.selectAll()
+            const spy = createStyledTemporary(Qt.createComponent("QtTest", "SignalSpy"), root,
+                                               {target: item, signalName: "segmentsChanged"})
+
+            item.segments = root.messageSegments.map(segment => Object.assign({}, segment))
+
+            compare(spy.count, 0)
+            verify(item.selectedText.length > 0)
         }
 
         function test_appearanceChangesPreserveSelection_data() {
@@ -482,6 +495,38 @@ Item {
             } finally {
                 windowShortcut.enabled = false
             }
+        }
+
+        // Hiding the item, or any parent of it, drops its hover and selection,
+        // as a pooled row parked and reused for identical text would keep them.
+        function test_hidingDropsInteraction_data() {
+            return [
+                {tag: "item", hideParent: false, persistent: false},
+                {tag: "parent", hideParent: true, persistent: false},
+                {tag: "persistent-selection", hideParent: true, persistent: true}
+            ]
+        }
+
+        function test_hidingDropsInteraction(data) {
+            const container = createTemporaryObject(containerComponent, root)
+            const item = createStyledTemporary(itemComponent, container)
+            item.persistentSelection = data.persistent
+            item.segments = [{text: "link", href: "https://a.test"}, {text: " and more text"}]
+            item.hoverAt(2, 10)
+            compare(item.hoveredLink, "https://a.test")
+            item.selectAll()
+            verify(item.selectedText.length > 0)
+
+            if (data.hideParent)
+                container.visible = false
+            else
+                item.visible = false
+
+            compare(item.hoveredLink, "")
+            compare(item.selectedText, "")
+            container.visible = true
+            item.visible = true
+            compare(item.selectedText, "")
         }
 
         // Frame edges are antialiased over one device pixel, so a 1 px border
