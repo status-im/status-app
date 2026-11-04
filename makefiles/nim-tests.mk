@@ -39,6 +39,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	thread_navigation_test \
 	thread_notifications_test \
 	thread_search_test \
+	thread_section_badges_test \
 	token_selector_module_test \
 	typed_completion_test \
 	url_scheme_event_test \
@@ -49,6 +50,7 @@ $(NIM_STATUSQ_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-
 $(NIM_STATUSQ_TARGETS): | statusq
 
 nim-test-run/test/nim/thread_search_test.nim: export FLAG_THREADS_ENABLED := 1
+nim-test-run/test/nim/thread_section_badges_test.nim: export FLAG_THREADS_ENABLED := 1
 
 nim-test-run/test/nim/thread_notifications_test.nim: export FLAG_THREADS_ENABLED := 1
 nim-test-run/test/nim/thread_notifications_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
@@ -57,6 +59,8 @@ nim-test-run/test/nim/thread_notifications_test.nim: | $(STATUSKEYCARD_QT_LIB)
 # The messages module also imports the existing keycard service bindings.
 nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
 nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: | $(STATUSKEYCARD_QT_LIB)
+nim-test-run/test/nim/thread_section_badges_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
+nim-test-run/test/nim/thread_section_badges_test.nim: | $(STATUSKEYCARD_QT_LIB)
 
 ifeq ($(mkspecs),linux)
 nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
