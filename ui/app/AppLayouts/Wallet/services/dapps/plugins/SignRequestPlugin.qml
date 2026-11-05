@@ -92,6 +92,7 @@ SQUtils.QObject {
             store: root.store
             estimatedTimeCategory: feesSubscriber.estimatedTimeResponse
             feesInfo: feesSubscriber.feesInfo
+            gasLimit: feesSubscriber.gasLimit || ""
             haveEnoughFunds: d.hasEnoughBalance(request.chainId, request.accountAddress, request.value, request.nativeTokenGroupKey)
             haveEnoughFees: haveEnoughFunds && d.hasEnoughBalance(request.chainId, request.accountAddress, request.nativeTokenMaxFees, request.nativeTokenGroupKey)
             nativeTokenGroupKey: Utils.getNativeTokenGroupKey(request.chainId)
@@ -135,7 +136,7 @@ SQUtils.QObject {
                 root.store.signingResult.connect(request.signedHandler)
                 let executed = false
                 try {
-                    executed = d.executeSessionRequest(request, request.feesInfo)
+                    executed = d.executeSessionRequest(request, request.feesInfo, request.gasLimit)
                 } catch (e) {
                     console.error("Error executing session request", e)
                 }
@@ -323,7 +324,7 @@ SQUtils.QObject {
             return BigOps.div(accountFundsWei, BigOps.fromNumber(1, 18))
         }
 
-        function executeSessionRequest(request, payload) {
+        function executeSessionRequest(request, payload, gasLimit) {
             if (!SessionRequest.getSupportedMethods().includes(request.method)) {
                 console.error("Unsupported method to execute: ", request.method)
                 return false
@@ -350,7 +351,7 @@ SQUtils.QObject {
                                         request.chainId,
                                         legacy)
             } else if (SessionRequest.isTransactionMethod(request.method)) {
-                const txObj = prepareTxForStatusGo(SessionRequest.getTxObject(request.method, request.data), payload)
+                const txObj = prepareTxForStatusGo(SessionRequest.getTxObject(request.method, request.data), payload, gasLimit)
                 if (request.method === SessionRequest.methods.signTransaction.name) {
                     root.store.signTransaction(request.topic,
                                           request.requestId,
@@ -370,7 +371,8 @@ SQUtils.QObject {
             return true
         }
 
-        function prepareTxForStatusGo(txObj, feesInfo) {
+        // the gas the fees were shown for; signed as is, so status-go doesn't estimate again
+        function prepareTxForStatusGo(txObj, feesInfo, gasLimit) {
             if (!!feesInfo) {
                 let hexFeesJson = root.store.convertFeesInfoToHex(JSON.stringify(feesInfo))
                 if (!!hexFeesJson) {
@@ -386,6 +388,10 @@ SQUtils.QObject {
                 delete txObj.gasPrice
                 delete txObj.gas
                 delete txObj.type
+            }
+            if (!!gasLimit) {
+                delete txObj.gasLimit
+                txObj.gas = gasLimit
             }
             // Remove nonce from txObj to be auto-filled by the wallet
             delete txObj.nonce

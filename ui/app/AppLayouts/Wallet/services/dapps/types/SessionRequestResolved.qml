@@ -45,6 +45,8 @@ QObject {
     property var /* Big */ nativeTokenMaxFees
     property string nativeTokenGroupKey
     property var feesInfo
+    // hex gas the fees are shown for and the tx is signed with
+    property string gasLimit
     property var /* Big */ value
 
     /// maps to Constants.TransactionEstimatedTime values
