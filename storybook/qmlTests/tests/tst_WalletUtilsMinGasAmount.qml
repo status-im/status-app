@@ -27,7 +27,10 @@ TestCase {
             // non-divisible: floor(200,001 * 1.2) = 240,001
             { tag: "bridge non-divisible", suggested: "240001", fromChain: 1, toChain: 10,
               isApproval: false, expected: "200001" },
-            { tag: "approval is not buffered", suggested: "46000", fromChain: 1, toChain: 10,
+            // approvals use 1.05 even on a bridge path: floor(46,001 * 1.05) = 48,301
+            { tag: "approval uses 1.05 on a bridge path", suggested: "48301", fromChain: 1, toChain: 10,
+              isApproval: true, expected: "46001" },
+            { tag: "approval uses 1.05 on a same-chain path", suggested: "48300", fromChain: 1, toChain: 1,
               isApproval: true, expected: "46000" },
             { tag: "unknown suggestion", suggested: "", fromChain: 1, toChain: 1,
               isApproval: false, expected: "" },
@@ -44,8 +47,9 @@ TestCase {
     // Mirrors status-go's uint64(float64(raw) * factor) (JS numbers are float64 too) and checks
     // the helper recovers every raw estimate exactly.
     function test_minGasAmountRoundTrip() {
-        const cases = [ { factor: 1.05, fromChain: 1, toChain: 1 },
-                        { factor: 1.2, fromChain: 1, toChain: 10 } ]
+        const cases = [ { factor: 1.05, fromChain: 1, toChain: 1, isApproval: false },
+                        { factor: 1.2, fromChain: 1, toChain: 10, isApproval: false },
+                        { factor: 1.05, fromChain: 1, toChain: 10, isApproval: true } ]
         for (const c of cases) {
             for (let raw = 12000; raw < 22000; ++raw)
                 checkRoundTrip(raw, c)
@@ -56,7 +60,7 @@ TestCase {
 
     function checkRoundTrip(raw, c) {
         const suggested = Math.floor(raw * c.factor).toString()
-        const min = WalletUtils.minGasAmountFromSuggested(suggested, c.fromChain, c.toChain, false)
+        const min = WalletUtils.minGasAmountFromSuggested(suggested, c.fromChain, c.toChain, c.isApproval)
         if (min !== raw.toString())
             fail("factor %1: raw %2 -> suggested %3 -> %4".arg(c.factor).arg(raw).arg(suggested).arg(min))
     }
