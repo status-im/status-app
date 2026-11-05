@@ -303,6 +303,16 @@ make run
 ```
 🎉
 
+### Nim host tests
+
+Run all Nim host tests with `make tests-nim`, or one test with
+`make nim-test-run/test/nim/chat_section_model_test.nim`.
+Test caches are separate per test; on Linux they also include the GCC target
+and GCC/G++ versions so compiler upgrades do not reuse incompatible LTO objects.
+`make tests-nim-linux` runs tests and benchmarks serially with shared caches.
+Tests linking Keycard automatically add the PC/SC library directory reported by
+`pkg-config --variable=libdir libpcsclite` to their Linux runtime library path.
+
 ### Build Configuration Options
 
 The following environment variables can be used to customize the build:
