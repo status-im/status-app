@@ -76,8 +76,9 @@ QtObject {
     }
 
     // Lower bound for a custom gas amount: the node's raw estimate, recovered from the router's
-    // suggested (buffered) gas. Bridges (fromChain != toChain) are buffered more than other paths;
-    // approval gas is not buffered yet. Returns "" when the suggestion is unknown.
+    // suggested (buffered) gas. Bridge txs (fromChain != toChain) are buffered more than other
+    // paths; approvals always run on the source chain and use the default buffer.
+    // Returns "" when the suggestion is unknown.
     // TODO: use the raw estimate once status-go exposes it on the path.
     function minGasAmountFromSuggested(suggestedGasAmount, fromChain, toChain, isApproval) {
         if (!suggestedGasAmount)
@@ -85,12 +86,7 @@ QtObject {
         const suggested = StatusQUtils.AmountsArithmetic.fromString(suggestedGasAmount)
         if (!(suggested instanceof Object))
             return ""
-        // TODO(glamsterdam item E): once status-go buffers approval gas by 1.05, approvals must
-        // divide by gasEstimateBufferFactor too, or the minimum equals the suggestion and the
-        // "below recommended" band becomes blocking. Ship this together with the E bump.
-        if (isApproval)
-            return suggested.toFixed()
-        const factor = StatusQUtils.AmountsArithmetic.fromString(fromChain !== toChain
+        const factor = StatusQUtils.AmountsArithmetic.fromString(!isApproval && fromChain !== toChain
                                                                 ? Constants.bridgeGasEstimateBufferFactor
                                                                 : Constants.gasEstimateBufferFactor)
         // status-go truncates: suggested = floor(raw * factor). With factor > 1 that is strictly
