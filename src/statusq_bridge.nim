@@ -9,6 +9,7 @@ proc statusq_setupNetworkAccessManagerFactory*(engine: pointer, tmpPath: cstring
 proc statusq_initializeWebEngine*() {.cdecl, importc.}
 proc statusq_installBoostedIncubationController*(engine: pointer, msPerTick: cint, gentlePeriodMs: cint, boostGapMs: cint) {.cdecl, importc.}
 proc statusq_installBackgroundGraphicsRelease*() {.cdecl, importc.}
+proc statusq_setQmlInventoryOutputDir*(dir: cstring) {.cdecl, importc.}
 
 proc statusq_osnotification_create*(): pointer {.cdecl, importc.}
 proc statusq_osnotification_show_notification*(obj: pointer, title: cstring, message: cstring, identifier: cstring) {.cdecl, importc.}

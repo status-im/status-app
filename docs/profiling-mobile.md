@@ -92,3 +92,52 @@ xcrun devicectl device process launch --terminate-existing --device <udid> \
 iproxy 6060:6060 &
 curl -s 'localhost:6060/debug/pprof/heap?debug=1' | head
 ```
+
+## QML object and compilation-unit inventory
+
+`STATUS_QML_INVENTORY` makes StatusQ record every `QObject` created after it loads (through Qt's `qtHookData`
+add/remove hooks) and write snapshots of what is alive. The value is the delay in seconds after start, or a comma
+separated list for several snapshots (`30,120`). Unset means off: no hook, no timer.
+
+Each snapshot is written to `qml-inventory-<yyyyMMdd-HHmmss>-<n>.json` (`n` is the snapshot's position in the list)
+and a top-20 summary is logged under `status.qmlInventory`. It holds:
+
+- `objects`: live objects grouped by type (QML type name, or C++ class name), `creationFile` (the QML file that
+  declares the object; objects a QML object creates from C++, like attached objects, take their nearest ancestor's)
+  and `owningFile` (the file that instantiated the document `creationFile` belongs to: the user of a component, or
+  the creation context of a `Loader`/`Repeater`/`createObject` delegate). An instance of `Foo.qml` used in `Bar.qml`
+  counts as type `Foo` declared in `Bar.qml`; the objects inside `Foo.qml` count as declared in `Foo.qml` and owned
+  by `Bar.qml`. `parentless` counts objects without a `QObject` parent (JS-owned objects, singletons, models).
+  Objects living on other threads only count under `<other thread>`.
+- `compilationUnits`: the units loaded by every live engine, by URL, with `unitBytes` (the compiled unit data;
+  `unitOnHeap` is false when it is mapped from the binary or a `.qmlc` file rather than allocated),
+  `runtimeBytes` (the per-engine tables allocated when the unit is linked: string, regexp, class, block and
+  template object pointers, lookups and `QV4::Function` objects; the JS heap objects they point to are not counted),
+  `propertyCaches` and `liveObjects` (objects declared in the file plus instances of it). `liveObjects: 0` marks a
+  unit that is loaded but has nothing alive.
+
+The tool's own bookkeeping (a set of every live object pointer) inflates PSS slightly while it is enabled.
+A hook installed later (e.g. GammaRay) must chain `RemoveQObject`, or the inventory reads dangling pointers.
+While a snapshot walks the objects, other threads block when they create or delete a `QObject`.
+
+Desktop (written to the data dir, `./Status/` at the repo root for dev builds):
+
+```sh
+STATUS_QML_INVENTORY=60 make run
+```
+
+Android (written to the app's external files dir):
+
+```sh
+echo 'STATUS_QML_INVENTORY=30,120' >> status-env.txt   # push and force-stop as above
+adb logcat -d | grep status.qmlInventory
+adb pull /sdcard/Android/data/app.status.mobile.pr/files/ inventory/
+```
+
+Compare two dumps (deltas per type, per owning file, per group and per unit, by absolute size) or list the top
+entries of one:
+
+```sh
+scripts/qml_inventory_diff.py before.json after.json
+scripts/qml_inventory_diff.py dump.json
+```

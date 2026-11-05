@@ -33,7 +33,7 @@ endif()
 find_package(QT 6.11 NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt6 COMPONENTS
-        Core CorePrivate Qml Gui GuiPrivate Quick QuickPrivate QuickLayoutsPrivate QuickControls2 ShaderTools WebChannel Svg Network Multimedia REQUIRED)
+        Core CorePrivate Qml QmlPrivate Gui GuiPrivate Quick QuickPrivate QuickLayoutsPrivate QuickControls2 ShaderTools WebChannel Svg Network Multimedia REQUIRED)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT ANDROID)
     find_package(Qt6 COMPONENTS DBus REQUIRED)
@@ -184,6 +184,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/chatinputhighlighter.h
         include/StatusQ/clipboardutils.h
         include/StatusQ/incubationhints.h
+        include/StatusQ/qmlinventory.h
         include/StatusQ/constantrole.h
         include/StatusQ/contextmenueventfilter.h
         include/StatusQ/delegatepool.h
@@ -241,6 +242,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/spellchecker.cpp
         src/clipboardutils.cpp
         src/incubationhints.cpp
+        src/qmlinventory.cpp
         src/constantrole.cpp
         src/delegatepool.cpp
         src/externc.cpp
@@ -314,8 +316,8 @@ add_library(StatusQ ${LIB_TYPE}
         )
 
 target_compile_features(StatusQ PRIVATE cxx_std_17)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::GuiPrivate Qt6::QuickPrivate
-        Qt6::QuickLayoutsPrivate)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::CorePrivate Qt6::QmlPrivate Qt6::GuiPrivate
+        Qt6::QuickPrivate Qt6::QuickLayoutsPrivate)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(AppKit AppKit)
