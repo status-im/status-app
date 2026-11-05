@@ -531,8 +531,10 @@ if(NOT (IOS OR ANDROID))
     if(TARGET Qt::WebEngineQuick)
         target_sources(StatusQ PRIVATE
             include/StatusQ/browsercertdistrust.h
+            include/StatusQ/browserlocalfilegrants.h
             include/StatusQ/browserprofileutils.h
             src/browsercertdistrust.cpp
+            src/browserlocalfilegrants.cpp
             src/browserprofileutils.cpp
         )
         target_link_libraries(StatusQ PRIVATE Qt::WebEngineQuick)

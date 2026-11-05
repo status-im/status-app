@@ -157,4 +157,8 @@ if(NOT ANDROID AND NOT IOS)
     qt_add_executable(TestBrowserCertDistrust src/tst_browsercertdistrust.cpp)
     target_link_libraries(TestBrowserCertDistrust PRIVATE Qt::Test Qt::Network Qt::WebEngineQuick StatusQ)
     add_test(NAME TestBrowserCertDistrust COMMAND TestBrowserCertDistrust)
+
+    qt_add_executable(TestBrowserLocalFileGrants src/tst_browserlocalfilegrants.cpp)
+    target_link_libraries(TestBrowserLocalFileGrants PRIVATE Qt::Test StatusQ)
+    add_test(NAME TestBrowserLocalFileGrants COMMAND TestBrowserLocalFileGrants)
 endif()
