@@ -1552,6 +1552,14 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Enviando %1 %2 de %3 a %4</translation>
     </message>
     <message>
+        <source>Network fees changed</source>
+        <translation>Las comisiones de red han cambiado</translation>
+    </message>
+    <message>
+        <source>Nothing was sent. Review the transaction again.</source>
+        <translation>No se envió nada. Revisa la transacción de nuevo.</translation>
+    </message>
+    <message>
         <source>Swapping %1 to %2 in %3</source>
         <translation>Swapping %1 por %2 en %3</translation>
     </message>
@@ -5512,6 +5520,10 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     <message>
         <source>Insufficient funds for transaction</source>
         <translation>Fondos insuficientes para la transacción</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t estimate the network fee. The transaction would likely fail.</source>
+        <translation>No se pudo estimar la comisión de red. Es probable que la transacción falle.</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -12534,6 +12546,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>NewRecipientFeeHint</name>
+    <message>
+        <source>Higher fee: this is a first transfer to this address, and the network charges for creating its account or token balance</source>
+        <translation>Comisión más alta: es la primera transferencia a esta dirección y la red cobra por crear su cuenta o su saldo de tokens</translation>
+    </message>
+</context>
+<context>
     <name>NewsMessagePopup</name>
     <message>
         <source>Visit the website</source>
@@ -15715,6 +15734,10 @@ al cargar</translation>
     <message>
         <source>Review all details before signing</source>
         <translation>Revisa todos los detalles antes de firmar</translation>
+    </message>
+    <message>
+        <source>Gas amount too low, the transaction would fail</source>
+        <translation>Cantidad de gas demasiado baja, la transacción fallaría</translation>
     </message>
     <message>
         <source>Max fees</source>
@@ -19193,12 +19216,20 @@ Cuanto mayor sea la propina, más rápido es probable que se procese tu transacc
         <translation>Cantidad máxima de gas</translation>
     </message>
     <message>
-        <source>Too low (should be between %1 and %2)</source>
-        <translation>Demasiado bajo (debe estar entre %1 y %2)</translation>
+        <source>Must be between 1 and %1</source>
+        <translation>Debe estar entre 1 y %1</translation>
     </message>
     <message>
-        <source>Too high (should be between %1 and %2)</source>
-        <translation>Demasiado alto (debe estar entre %1 y %2)</translation>
+        <source>Too low, the transaction would fail (minimum %1)</source>
+        <translation>Demasiado baja, la transacción fallaría (mínimo %1)</translation>
+    </message>
+    <message>
+        <source>Lower than recommended %1, the transaction may fail</source>
+        <translation>Inferior a la recomendada (%1), la transacción podría fallar</translation>
+    </message>
+    <message>
+        <source>Much higher than recommended %1</source>
+        <translation>Muy superior a la recomendada (%1)</translation>
     </message>
     <message>
         <source>UNITS</source>

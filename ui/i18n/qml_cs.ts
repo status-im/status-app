@@ -1563,6 +1563,14 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Odesílání %1 %2 z %3 na %4</translation>
     </message>
     <message>
+        <source>Network fees changed</source>
+        <translation>Síťové poplatky se změnily</translation>
+    </message>
+    <message>
+        <source>Nothing was sent. Review the transaction again.</source>
+        <translation>Nic nebylo odesláno. Zkontrolujte transakci znovu.</translation>
+    </message>
+    <message>
         <source>Swapping %1 to %2 in %3</source>
         <translation>Směna %1 za %2 v %3</translation>
     </message>
@@ -5534,6 +5542,10 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>Insufficient funds for transaction</source>
         <translation>Nedostatek prostředků pro transakci</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t estimate the network fee. The transaction would likely fail.</source>
+        <translation>Síťový poplatek se nepodařilo odhadnout. Transakce by pravděpodobně selhala.</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -12598,6 +12610,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>NewRecipientFeeHint</name>
+    <message>
+        <source>Higher fee: this is a first transfer to this address, and the network charges for creating its account or token balance</source>
+        <translation>Vyšší poplatek: jde o první převod na tuto adresu a síť účtuje vytvoření jejího účtu nebo zůstatku tokenu</translation>
+    </message>
+</context>
+<context>
     <name>NewsMessagePopup</name>
     <message>
         <source>Visit the website</source>
@@ -15788,6 +15807,10 @@ selhalo</translation>
     <message>
         <source>Review all details before signing</source>
         <translation>Před podpisem zkontrolujte všechny podrobnosti</translation>
+    </message>
+    <message>
+        <source>Gas amount too low, the transaction would fail</source>
+        <translation>Množství gasu je příliš nízké, transakce by selhala</translation>
     </message>
     <message>
         <source>Max fees</source>
@@ -19275,12 +19298,20 @@ The higher the tip, the faster your transaction is likely to be processed, espec
         <translation>Maximální množství gasu</translation>
     </message>
     <message>
-        <source>Too low (should be between %1 and %2)</source>
-        <translation>Příliš nízká hodnota (měla by být mezi %1 a %2)</translation>
+        <source>Must be between 1 and %1</source>
+        <translation>Musí být mezi 1 a %1</translation>
     </message>
     <message>
-        <source>Too high (should be between %1 and %2)</source>
-        <translation>Příliš vysoká hodnota (měla by být mezi %1 a %2)</translation>
+        <source>Too low, the transaction would fail (minimum %1)</source>
+        <translation>Příliš nízké, transakce by selhala (minimum %1)</translation>
+    </message>
+    <message>
+        <source>Lower than recommended %1, the transaction may fail</source>
+        <translation>Nižší než doporučených %1, transakce může selhat</translation>
+    </message>
+    <message>
+        <source>Much higher than recommended %1</source>
+        <translation>Mnohem vyšší než doporučených %1</translation>
     </message>
     <message>
         <source>UNITS</source>

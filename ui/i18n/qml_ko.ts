@@ -1540,6 +1540,14 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>%3에서 %4로 %1 %2 전송 중</translation>
     </message>
     <message>
+        <source>Network fees changed</source>
+        <translation>네트워크 수수료가 변경되었습니다</translation>
+    </message>
+    <message>
+        <source>Nothing was sent. Review the transaction again.</source>
+        <translation>아무것도 전송되지 않았습니다. 거래를 다시 확인하세요.</translation>
+    </message>
+    <message>
         <source>Swapping %1 to %2 in %3</source>
         <translation>%3에서 %1을(를) %2로 스왑하는 중</translation>
     </message>
@@ -5489,6 +5497,10 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>Insufficient funds for transaction</source>
         <translation>트랜잭션을 실행하기에 잔액이 부족합니다</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t estimate the network fee. The transaction would likely fail.</source>
+        <translation>네트워크 수수료를 추정할 수 없습니다. 거래가 실패할 가능성이 높습니다.</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -12470,6 +12482,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>NewRecipientFeeHint</name>
+    <message>
+        <source>Higher fee: this is a first transfer to this address, and the network charges for creating its account or token balance</source>
+        <translation>수수료 증가: 이 주소로의 첫 전송이므로 네트워크가 계정 또는 토큰 잔액 생성 비용을 청구합니다</translation>
+    </message>
+</context>
+<context>
     <name>NewsMessagePopup</name>
     <message>
         <source>Visit the website</source>
@@ -15642,6 +15661,10 @@ to load</source>
     <message>
         <source>Review all details before signing</source>
         <translation>서명하기 전에 모든 내용을 확인하세요</translation>
+    </message>
+    <message>
+        <source>Gas amount too low, the transaction would fail</source>
+        <translation>가스 수량이 너무 적어 거래가 실패합니다</translation>
     </message>
     <message>
         <source>Max fees</source>
@@ -19106,12 +19129,20 @@ The higher the tip, the faster your transaction is likely to be processed, espec
         <translation>최대 가스 한도</translation>
     </message>
     <message>
-        <source>Too low (should be between %1 and %2)</source>
-        <translation>너무 낮습니다 (%1과 %2 사이여야 함)</translation>
+        <source>Must be between 1 and %1</source>
+        <translation>1에서 %1 사이여야 합니다</translation>
     </message>
     <message>
-        <source>Too high (should be between %1 and %2)</source>
-        <translation>너무 높음(%1과 %2 사이여야 함)</translation>
+        <source>Too low, the transaction would fail (minimum %1)</source>
+        <translation>너무 낮아 거래가 실패합니다 (최소 %1)</translation>
+    </message>
+    <message>
+        <source>Lower than recommended %1, the transaction may fail</source>
+        <translation>권장값 %1보다 낮아 거래가 실패할 수 있습니다</translation>
+    </message>
+    <message>
+        <source>Much higher than recommended %1</source>
+        <translation>권장값 %1보다 훨씬 높습니다</translation>
     </message>
     <message>
         <source>UNITS</source>

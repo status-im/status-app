@@ -1552,6 +1552,14 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>Envoi de %1 %2 depuis %3 vers %4</translation>
     </message>
     <message>
+        <source>Network fees changed</source>
+        <translation>Les frais de réseau ont changé</translation>
+    </message>
+    <message>
+        <source>Nothing was sent. Review the transaction again.</source>
+        <translation>Rien n&apos;a été envoyé. Vérifiez à nouveau la transaction.</translation>
+    </message>
+    <message>
         <source>Swapping %1 to %2 in %3</source>
         <translation>Échange de %1 contre %2 dans %3</translation>
     </message>
@@ -5510,6 +5518,10 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
     <message>
         <source>Insufficient funds for transaction</source>
         <translation>Fonds insuffisants pour la transaction</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t estimate the network fee. The transaction would likely fail.</source>
+        <translation>Impossible d&apos;estimer les frais de réseau. La transaction échouerait probablement.</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -12528,6 +12540,13 @@ chargement</translation>
     </message>
 </context>
 <context>
+    <name>NewRecipientFeeHint</name>
+    <message>
+        <source>Higher fee: this is a first transfer to this address, and the network charges for creating its account or token balance</source>
+        <translation>Frais plus élevés : il s&apos;agit d&apos;un premier transfert vers cette adresse, et le réseau facture la création de son compte ou de son solde de jetons</translation>
+    </message>
+</context>
+<context>
     <name>NewsMessagePopup</name>
     <message>
         <source>Visit the website</source>
@@ -15711,6 +15730,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Review all details before signing</source>
         <translation>Vérifiez tous les détails avant de signer</translation>
+    </message>
+    <message>
+        <source>Gas amount too low, the transaction would fail</source>
+        <translation>Quantité de gaz trop faible, la transaction échouerait</translation>
     </message>
     <message>
         <source>Max fees</source>
@@ -19188,12 +19211,20 @@ Plus le pourboire est élevé, plus votre transaction sera traitée rapidement, 
         <translation>Quantité maximale de gaz</translation>
     </message>
     <message>
-        <source>Too low (should be between %1 and %2)</source>
-        <translation>Trop faible (doit être compris entre %1 et %2)</translation>
+        <source>Must be between 1 and %1</source>
+        <translation>Doit être compris entre 1 et %1</translation>
     </message>
     <message>
-        <source>Too high (should be between %1 and %2)</source>
-        <translation>Trop élevé (doit être compris entre %1 et %2)</translation>
+        <source>Too low, the transaction would fail (minimum %1)</source>
+        <translation>Trop faible, la transaction échouerait (minimum %1)</translation>
+    </message>
+    <message>
+        <source>Lower than recommended %1, the transaction may fail</source>
+        <translation>Inférieure à la valeur recommandée de %1, la transaction pourrait échouer</translation>
+    </message>
+    <message>
+        <source>Much higher than recommended %1</source>
+        <translation>Bien supérieure à la valeur recommandée de %1</translation>
     </message>
     <message>
         <source>UNITS</source>

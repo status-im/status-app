@@ -1563,6 +1563,14 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Надсилання %1 %2 з %3 до %4</translation>
     </message>
     <message>
+        <source>Network fees changed</source>
+        <translation>Комісії мережі змінилися</translation>
+    </message>
+    <message>
+        <source>Nothing was sent. Review the transaction again.</source>
+        <translation>Нічого не надіслано. Перевірте транзакцію ще раз.</translation>
+    </message>
+    <message>
         <source>Swapping %1 to %2 in %3</source>
         <translation>Обмін %1 на %2 у %3</translation>
     </message>
@@ -5534,6 +5542,10 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>Insufficient funds for transaction</source>
         <translation>Недостатньо коштів для транзакції</translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t estimate the network fee. The transaction would likely fail.</source>
+        <translation>Не вдалося оцінити комісію мережі. Транзакція, ймовірно, не вдасться.</translation>
     </message>
     <message>
         <source>Max fees:</source>
@@ -12599,6 +12611,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>NewRecipientFeeHint</name>
+    <message>
+        <source>Higher fee: this is a first transfer to this address, and the network charges for creating its account or token balance</source>
+        <translation>Вища комісія: це перший переказ на цю адресу, і мережа стягує плату за створення її облікового запису або балансу токена</translation>
+    </message>
+</context>
+<context>
     <name>NewsMessagePopup</name>
     <message>
         <source>Visit the website</source>
@@ -15789,6 +15808,10 @@ to load</source>
     <message>
         <source>Review all details before signing</source>
         <translation>Перевірте всі дані перед підписанням</translation>
+    </message>
+    <message>
+        <source>Gas amount too low, the transaction would fail</source>
+        <translation>Обсяг газу занадто малий, транзакція не вдасться</translation>
     </message>
     <message>
         <source>Max fees</source>
@@ -19281,12 +19304,20 @@ The higher the tip, the faster your transaction is likely to be processed, espec
         <translation>Макс. обсяг газу</translation>
     </message>
     <message>
-        <source>Too low (should be between %1 and %2)</source>
-        <translation>Занизьке значення (має бути від %1 до %2)</translation>
+        <source>Must be between 1 and %1</source>
+        <translation>Має бути від 1 до %1</translation>
     </message>
     <message>
-        <source>Too high (should be between %1 and %2)</source>
-        <translation>Зависоке значення (має бути від %1 до %2)</translation>
+        <source>Too low, the transaction would fail (minimum %1)</source>
+        <translation>Занадто мало, транзакція не вдасться (мінімум %1)</translation>
+    </message>
+    <message>
+        <source>Lower than recommended %1, the transaction may fail</source>
+        <translation>Менше за рекомендовані %1, транзакція може не вдатися</translation>
+    </message>
+    <message>
+        <source>Much higher than recommended %1</source>
+        <translation>Набагато більше за рекомендовані %1</translation>
     </message>
     <message>
         <source>UNITS</source>
