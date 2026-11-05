@@ -20,6 +20,8 @@ SQUtils.QObject {
     required property bool active
     // selectedFeesMode -> selected fees mode. Defaults to Constants.TransactionFeesMode.Medium
     property int selectedFeesMode: Constants.TransactionFeesMode.Medium
+    // gasEstimateTxObject -> the transaction as it will be signed, without gas; re-estimated when it changes
+    property var gasEstimateTxObject: txObject
 
     // Required function to be implemented by the subscriber
     required property var hexToDec /*(hexValue) => decValue*/
@@ -33,10 +35,10 @@ SQUtils.QObject {
     readonly property var maxEthFee: d.computedFees
     // feesInfo -> status-go fees info with updated maxFeePerGas based on selectedFeesMode
     readonly property var feesInfo: d.computedFeesInfo
-    // gasLimit -> hex gas to show the fees for and sign with: the larger of the dApp's gas and
-    // our estimate; unset until the estimate answered
-    readonly property string gasLimit: d.gasResponse
-    // gasEstimated -> our estimate answered, or failed with the dApp's gas to fall back on
+    // gasLimit -> hex gas to sign with: the larger of the dApp's gas and our estimate; unset until
+    // the estimate for the current gasEstimateTxObject answered
+    readonly property string gasLimit: d.gasEstimated ? d.gasResponse : ""
+    // gasEstimated -> our estimate for gasEstimateTxObject answered, or failed with the dApp's gas to fall back on
     readonly property bool gasEstimated: d.gasEstimated
 
     function setFees(fees) {
@@ -47,10 +49,15 @@ SQUtils.QObject {
         d.resetFees()
     }
 
-    // our buffered estimate, hex; empty when it failed
-    function setGasEstimate(gas) {
+    // our buffered estimate, hex, for the transaction with txKey (see txKey()); empty when it failed
+    function setGasEstimate(gas, txKey) {
         d.estimatedGas = gas || ""
         d.estimateFailed = !gas
+        d.estimatedTxKey = txKey
+    }
+
+    function txKey(tx) {
+        return JSON.stringify(tx ?? null)
     }
 
     function setEstimatedTime(estimatedTime) {
@@ -70,10 +77,14 @@ SQUtils.QObject {
         readonly property string dappGas: !!root.txObject ? (root.txObject.gas || root.txObject.gasLimit || "") : ""
         property string estimatedGas
         property bool estimateFailed: false
+        readonly property string estimateTxKey: root.txKey(root.gasEstimateTxObject)
+        property string estimatedTxKey
         // without the dApp's gas to fall back on, a failed estimate is asked again
-        readonly property bool gasEstimated: !!estimatedGas || (estimateFailed && !!dappGas)
+        readonly property bool hasGas: !!estimatedGas || (estimateFailed && !!dappGas)
+        // the last gas only shows the fees while the changed transaction is re-estimated
+        readonly property bool gasEstimated: hasGas && estimatedTxKey === estimateTxKey
         readonly property string gasResponse: {
-            if (!gasEstimated)
+            if (!hasGas)
                 return ""
             if (!estimatedGas || !dappGas)
                 return estimatedGas || dappGas
@@ -92,13 +103,14 @@ SQUtils.QObject {
             if (!d.feesResponse) {
                 return
             }
-            if (!gasResponse) {
-                return
-            }
             try {
-                d.computedFees = getEstimatedMaxFees()
-                d.computedFeesInfo = d.feesResponse
-                d.computedFeesInfo.maxFeePerGas = getFeesForFeesMode(d.feesResponse)
+                // independent of the gas, so the gas can be estimated with these fees
+                const feesInfo = Object.assign({}, d.feesResponse)
+                feesInfo.maxFeePerGas = getFeesForFeesMode(d.feesResponse)
+                d.computedFeesInfo = feesInfo
+                if (gasResponse) {
+                    d.computedFees = getEstimatedMaxFees()
+                }
             } catch (e) {
                 console.error("Failed to compute fees", e, e.stack)
             }

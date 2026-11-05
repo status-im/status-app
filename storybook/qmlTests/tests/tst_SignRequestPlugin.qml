@@ -61,7 +61,9 @@ Item {
                 property string mockGasEstimate: ""
                 property bool deferGasEstimate: false
                 property string pendingGasEstimateTopic: ""
+                property var lastGasEstimateTx: null
                 function requestGasEstimate(topic, chainId, tx) {
+                    lastGasEstimateTx = tx
                     if (deferGasEstimate) {
                         pendingGasEstimateTopic = topic
                         return
@@ -75,8 +77,23 @@ Item {
                     return Constants.TransactionEstimatedTime.LessThanThreeMins
                 }
 
-                function convertFeesInfoToHex(feesInfo) {
-                    return null
+                // suggested fees, in gwei; null leaves the fee request unanswered
+                property var mockSuggestedFees: null
+                property string feesTopic: ""
+                function requestSuggestedFees(topic, chainId) {
+                    feesTopic = topic
+                    const fees = mockSuggestedFees
+                    if (!!fees)
+                        Qt.callLater(() => suggestedFeesResponse(topic, fees, true))
+                }
+
+                function convertFeesInfoToHex(feesInfoJson) {
+                    const feesInfo = JSON.parse(feesInfoJson)
+                    if (!feesInfo.maxFeePerGas)
+                        return null
+                    const toHex = (gwei) => "0x" + Math.round(gwei * 1e9).toString(16)
+                    return JSON.stringify({ maxFeePerGas: toHex(feesInfo.maxFeePerGas),
+                                            maxPriorityFeePerGas: toHex(feesInfo.maxPriorityFeePerGas) })
                 }
 
                 property var mockedSuggestedFees: ({
@@ -304,6 +321,98 @@ Item {
             tryVerify(() => !!componentUnderTest.store.pendingGasEstimateTopic)
             componentUnderTest.store.estimatedGasResponse(componentUnderTest.store.pendingGasEstimateTopic, "0x34410", true)
             tryCompare(request, "gasLimit", "0x34410")
+        }
+
+        function suggestedFees(mediumGwei) {
+            return { maxFeePerGasLow: 1.0, maxFeePerGasMedium: mediumGwei, maxFeePerGasHigh: 9.0,
+                     maxPriorityFeePerGas: 0.5, eip1559Enabled: true }
+        }
+
+        function test_gasIsEstimatedWithTheSignedFees() {
+            const store = componentUnderTest.store
+            store.mockGasEstimate = "0x5208"
+            store.mockSuggestedFees = suggestedFees(2.0)
+            const signEvent = sendTransactionEvent({ gasPrice: "0x3b9aca00" })
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive()
+            // the medium fee, not the dApp's
+            tryVerify(() => !!store.lastGasEstimateTx && store.lastGasEstimateTx.maxFeePerGas === "0x77359400")
+            tryCompare(request, "gasLimit", "0x5208")
+            compare(store.lastGasEstimateTx.maxPriorityFeePerGas, "0x1dcd6500")
+            verify(!store.lastGasEstimateTx.hasOwnProperty("gasPrice"))
+
+            request.execute()
+            const txObj = store.sendTransactionCalls[0].txObj
+            compare(txObj.maxFeePerGas, store.lastGasEstimateTx.maxFeePerGas)
+            compare(txObj.maxPriorityFeePerGas, store.lastGasEstimateTx.maxPriorityFeePerGas)
+            compare(txObj.gas, "0x5208")
+        }
+
+        // estimated at 2 gwei, then the fees rise to 3 gwei and the re-estimate is pending
+        function requestReestimatingForNewFees() {
+            const store = componentUnderTest.store
+            store.mockGasEstimate = "0x5208"
+            store.mockSuggestedFees = suggestedFees(2.0)
+            const signEvent = sendTransactionEvent({})
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive()
+            tryVerify(() => !!store.lastGasEstimateTx && store.lastGasEstimateTx.maxFeePerGas === "0x77359400")
+            tryCompare(request, "gasLimit", "0x5208")
+
+            store.deferGasEstimate = true
+            store.suggestedFeesResponse(store.feesTopic, suggestedFees(3.0), true)
+            tryVerify(() => store.lastGasEstimateTx.maxFeePerGas === "0xb2d05e00")
+            return request
+        }
+
+        function test_gasIsReestimatedWhenTheSignedFeesChange() {
+            const store = componentUnderTest.store
+            const request = requestReestimatingForNewFees()
+            // the old gas isn't offered for the new fees
+            compare(request.gasLimit, "")
+
+            store.estimatedGasResponse(store.pendingGasEstimateTopic, "0x6000", true)
+            tryCompare(request, "gasLimit", "0x6000")
+        }
+
+        // Sign runs accept() -> execute() at once; authentication follows in the signing popup
+        function test_feeChangeAfterSignKeepsTheSignedRequest() {
+            const store = componentUnderTest.store
+            store.mockGasEstimate = "0x5208"
+            store.mockSuggestedFees = suggestedFees(2.0)
+            const signEvent = sendTransactionEvent({})
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive()
+            tryVerify(() => !!store.lastGasEstimateTx && store.lastGasEstimateTx.maxFeePerGas === "0x77359400")
+            tryCompare(request, "gasLimit", "0x5208")
+
+            request.accept()
+            compare(store.sendTransactionCalls.length, 1)
+            const txObj = store.sendTransactionCalls[0].txObj
+            compare(txObj.gas, "0x5208")
+            compare(txObj.maxFeePerGas, "0x77359400")
+
+            store.deferGasEstimate = true
+            store.suggestedFeesResponse(store.feesTopic, suggestedFees(3.0), true)
+            wait(50)
+            compare(componentUnderTest.sdk.rejectSessionRequestCalls.length, 0)
+            compare(store.sendTransactionCalls.length, 1)
+            compare(txObj.maxFeePerGas, "0x77359400", "the signed pair is fixed at Sign")
+        }
+
+        function test_oldGasIsNotSignedWhileReestimating() {
+            const request = requestReestimatingForNewFees()
+            request.execute()
+            compare(componentUnderTest.store.sendTransactionCalls.length, 0)
         }
 
         function reject_sign() {

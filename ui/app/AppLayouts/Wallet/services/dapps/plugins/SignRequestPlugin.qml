@@ -153,6 +153,7 @@ SQUtils.QObject {
                 key: request.requestId
                 chainId: request.chainId
                 txObject: SessionRequest.getTxObject(request.method, request.data)
+                gasEstimateTxObject: d.txToEstimate(feesSubscriber.txObject, feesSubscriber.feesInfo)
                 active: request.active && !!txObject
                 selectedFeesMode: Constants.FeesMode.Medium
                 hexToDec: root.store.hexToDec
@@ -374,6 +375,12 @@ SQUtils.QObject {
             }
 
             return true
+        }
+
+        // the transaction as prepareTxForStatusGo would sign it now, without gas; the dApp's fees
+        // until ours arrive, then re-estimated with ours
+        function txToEstimate(txObj, feesInfo) {
+            return !!txObj ? prepareTxForStatusGo(Object.assign({}, txObj), feesInfo, "") : null
         }
 
         // the gas the fees were shown for; signed as is, so status-go doesn't estimate again
