@@ -889,14 +889,10 @@ StatusDialog {
                         networkName: !!d.selectedNetworkEntry.item && d.selectedNetworkEntry.available ?
                                          d.selectedNetworkEntry.item.chainName: ""
                     }
-                    StatusBaseText {
+                    NewRecipientFeeHint {
                         objectName: "newRecipientFeeHint"
                         Layout.fillWidth: true
-                        visible: root.recipientIsNewAccount && !(root.routesLoading && root.allValuesFilledCorrectly)
-                        text: WalletUtils.newRecipientFeeHint()
-                        color: Theme.palette.baseColor1
-                        font.pixelSize: Theme.additionalTextSize
-                        wrapMode: Text.Wrap
+                        visible: root.recipientIsNewAccount && !root.routesLoading
                     }
                     visible: root.allValuesFilledCorrectly
                 }
