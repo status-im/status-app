@@ -39,6 +39,7 @@ type
     SuggestedApprovalGasAmount,
     EstimatedTxGasAmount,
     EstimatedApprovalGasAmount,
+    RecipientIsNewAccount,
     TxNonce,
     TxGasPrice,
     TxGasFeeMode,
@@ -119,6 +120,7 @@ QtObject:
       ModelRole.SuggestedApprovalGasAmount.int: "suggestedApprovalGasAmount",
       ModelRole.EstimatedTxGasAmount.int: "estimatedTxGasAmount",
       ModelRole.EstimatedApprovalGasAmount.int: "estimatedApprovalGasAmount",
+      ModelRole.RecipientIsNewAccount.int: "recipientIsNewAccount",
       ModelRole.TxNonce.int: "txNonce",
       ModelRole.TxGasPrice.int: "txGasPrice",
       ModelRole.TxGasFeeMode.int: "txGasFeeMode",
@@ -225,6 +227,8 @@ QtObject:
       result = newQVariant(item.estimatedTxGasAmount)
     of ModelRole.EstimatedApprovalGasAmount:
       result = newQVariant(item.estimatedApprovalGasAmount)
+    of ModelRole.RecipientIsNewAccount:
+      result = newQVariant(item.recipientIsNewAccount)
     of ModelRole.TxNonce:
       result = newQVariant(item.txNonce)
     of ModelRole.TxGasPrice:

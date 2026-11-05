@@ -357,6 +357,7 @@ QtObject {
         SimpleSendModal {
             id: simpleSendModal
 
+            recipientIsNewAccount: handler.recipientIsNewAccountAggregator.value === true
             accountsModel: handler.accountsSelectorAdaptor.processedWalletAccounts
             assetsModel: handler.assetsSelectorModel
             groupedAccountAssetsModel: root.groupedAccountAssetsModel
@@ -729,6 +730,16 @@ QtObject {
                             simpleSendModal.estimatedFiatFees = totalFeesInFiat
                         }
                     }
+                }
+
+                // e.g. EIP-8037 state gas
+                readonly property var recipientIsNewAccountAggregator: FunctionAggregator {
+                    model: !!handler.fetchedPathModel ?
+                               handler.fetchedPathModel: null
+                    initialValue: false
+                    roleName: "recipientIsNewAccount"
+
+                    aggregateFunction: (aggr, value) => aggr || !!value
                 }
 
                 readonly property var estimatedTimeAggregator: FunctionAggregator {

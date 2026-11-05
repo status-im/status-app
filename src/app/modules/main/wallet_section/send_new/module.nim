@@ -130,6 +130,7 @@ proc convertTransactionPathDtoV2ToPathItem(self: Module, txPath: TransactionPath
     suggestedApprovalGasAmount = $txPath.suggestedApprovalGasAmount,
     estimatedTxGasAmount = $txPath.estimatedTxGasAmount,
     estimatedApprovalGasAmount = $txPath.estimatedApprovalGasAmount,
+    recipientIsNewAccount = txPath.recipientIsNewAccount,
     txNonce = $txPath.txNonce,
     txGasPrice = $txPath.txGasPrice,
     txGasFeeMode = txPath.txGasFeeMode,
