@@ -30,8 +30,14 @@ QObject {
     property bool approvalPending: false
     property bool approvalSuccessful: false
 
+    // the main swap tx is being built and sent, possibly for a route replaced since
+    readonly property bool swapTxPending: d.sentUuid !== ""
+    readonly property bool txPending: root.approvalPending || root.swapTxPending
+
     // the route's gas changed; nothing was sent, fetch the route again
     signal routeReviewRequired()
+    // the main swap tx was sent, or failed for another reason than a review or a cancel
+    signal swapTxFinished()
 
     // the below property holds internal checks done by the SwapModal
     property bool amountEnteredGreaterThanBalance: false
@@ -107,6 +113,8 @@ QObject {
         property string mandatoryKeys
         // storing txHash to verify against tx completed event
         property string txHash
+        // the route the main swap tx was sent for
+        property string sentUuid
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapFormData.selectedNetworkChainId)
         readonly property string nativeTokenKey: Utils.getNativeTokenKey(root.swapFormData.selectedNetworkChainId)
@@ -305,12 +313,23 @@ QObject {
         }
 
         function onTransactionSent(uuid, chainId, approvalTx, txHash, error) {
+            if (root.swapTxPending && uuid === d.sentUuid) {
+                d.sentUuid = ""
+                if (error === Constants.walletSection.routeNeedsReview)
+                    root.routeReviewRequired()
+                else if (error !== Constants.walletSection.authenticationCanceled)
+                    root.swapTxFinished()
+                return
+            }
+            if (uuid === d.uuid && error === Constants.walletSection.routeNeedsReview) {
+                root.approvalPending = false
+                root.routeReviewRequired()
+                return
+            }
             if(root.swapOutputData.approvalNeeded && !root.approvalSuccessful) {
                 if (uuid !== d.uuid || !!error) {
                     root.approvalPending = false
                     root.approvalSuccessful = false
-                    if (uuid === d.uuid && error === Constants.walletSection.routeNeedsReview)
-                        root.routeReviewRequired()
                     return
                 }
                 root.approvalPending = true
@@ -338,6 +357,7 @@ QObject {
         root.swapProposalLoading = false
         root.approvalPending = false
         root.approvalSuccessful = false
+        d.sentUuid = ""
         d.txHash = ""
     }
 
@@ -394,6 +414,7 @@ QObject {
     }
 
     function sendSwapTx() {
+        d.sentUuid = d.uuid
         root.swapStore.authenticateAndTransfer(d.uuid)
     }
 

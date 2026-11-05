@@ -167,6 +167,7 @@ Item {
             root.swapFormData.resetFormData()
             formValuesChanged.clear()
             reevaluateSwapCalled.clear()
+            fetchSuggestedRoutesCalled.clear()
             // per-test store stubs must not leak into the next test, even after a failure
             const store = root.swapAdaptor.walletAssetsStore.walletTokensStore
             store.tokenSelectorStubData = []
@@ -212,6 +213,10 @@ Item {
         // Opens the modal, fills the form the way a user would (so a route fetch is really
         // triggered) and answers it with the Relay route; returns the modal.
         function openWithRelayRoute(props, errCode) {
+            return openWithRoute(root.dummySwapTransactionRoutes.txHasRoutesApprovalNeededViaRelay, props, errCode)
+        }
+
+        function openWithRoute(txRoutes, props, errCode) {
             controlUnderTest = createTemporaryObject(componentUnderTest, root,
                                                      Object.assign({ swapInputParamsForm: root.swapFormData }, props ?? {}))
             launchAndVerfyModal()
@@ -230,7 +235,6 @@ Item {
             formValuesChanged.wait()
             fetchSuggestedRoutesCalled.wait()
 
-            let txRoutes = root.dummySwapTransactionRoutes.txHasRoutesApprovalNeededViaRelay
             txRoutes.uuid = root.swapAdaptor.uuid
             root.swapStore.suggestedRoutesReady(txRoutes, errCode ?? "", errCode ?? "")
             verify(root.swapAdaptor.validSwapProposalReceived)
@@ -1784,6 +1788,78 @@ Item {
             tryCompare(strategyFees, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(
                         root.swapAdaptor.swapOutputData.txFeesInFiat,
                         root.swapAdaptor.currencyStore.currentCurrency))
+            closeAndVerfyModal()
+        }
+
+        function sendSwapRefusedForReview() {
+            const signButton = findChild(controlUnderTest, "signButton")
+            root.swapAdaptor.sendSwapTx()
+            verify(root.swapAdaptor.swapTxPending)
+            verify(!signButton.interactive)
+
+            fetchSuggestedRoutesCalled.clear()
+            root.swapStore.transactionSent(root.swapAdaptor.uuid, root.swapFormData.selectedNetworkChainId, false, "",
+                                           Constants.walletSection.routeNeedsReview)
+            // nothing was sent: the route is fetched again in the still open modal
+            fetchSuggestedRoutesCalled.wait()
+            verify(controlUnderTest.opened)
+            verify(!root.swapAdaptor.swapTxPending)
+            closeAndVerfyModal()
+        }
+
+        function test_swapWithoutApprovalRefusedForReviewFetchesTheRouteAgain() {
+            openWithRoute(root.dummySwapTransactionRoutes.txHasRouteNoApproval)
+            verify(!root.swapAdaptor.swapOutputData.approvalNeeded)
+            sendSwapRefusedForReview()
+        }
+
+        function test_mainTxAfterApprovalRefusedForReviewFetchesTheRouteAgain() {
+            openWithRoute(root.dummySwapTransactionRoutes.txHasRoutesApprovalNeeded)
+            const txHash = "0x877ffe47fc29340312611d4e833ab189fe4f4152b01cc9a05bb4125b81b2a89a"
+            root.swapAdaptor.sendApproveTx()
+            root.swapStore.transactionSent(root.swapAdaptor.uuid, root.swapFormData.selectedNetworkChainId, true, txHash, "")
+            root.swapStore.transactionSendingComplete(txHash, "Success")
+            verify(root.swapAdaptor.approvalSuccessful)
+            sendSwapRefusedForReview()
+        }
+
+        function test_swapModalStaysOpenUntilTheSwapIsSent() {
+            openWithRoute(root.dummySwapTransactionRoutes.txHasRouteNoApproval)
+            const chainId = root.swapFormData.selectedNetworkChainId
+
+            root.swapAdaptor.sendSwapTx()
+            root.swapStore.transactionSent(root.swapAdaptor.uuid, chainId, false, "", Constants.walletSection.authenticationCanceled)
+            verify(controlUnderTest.opened, "a cancelled password prompt can be retried")
+            verify(!root.swapAdaptor.swapTxPending)
+
+            root.swapAdaptor.sendSwapTx()
+            root.swapStore.transactionSent(root.swapAdaptor.uuid, chainId, false, "0x1234", "")
+            tryVerify(() => !controlUnderTest.opened)
+        }
+
+        function test_routeChangedWhileTheSwapIsPending() {
+            openWithRoute(root.dummySwapTransactionRoutes.txHasRouteNoApproval)
+            const chainId = root.swapFormData.selectedNetworkChainId
+            const signButton = findChild(controlUnderTest, "signButton")
+            const sentUuid = root.swapAdaptor.uuid
+            root.swapAdaptor.sendSwapTx()
+
+            // the amount is edited and a new quote arrives meanwhile
+            fetchSuggestedRoutesCalled.clear()
+            root.swapFormData.fromTokenAmount = "0.002"
+            fetchSuggestedRoutesCalled.wait()
+            verify(root.swapAdaptor.uuid !== sentUuid)
+            const newRoute = root.dummySwapTransactionRoutes.txHasRouteNoApproval
+            newRoute.uuid = root.swapAdaptor.uuid
+            root.swapStore.suggestedRoutesReady(newRoute, "", "")
+            verify(root.swapAdaptor.swapTxPending)
+            verify(!signButton.interactive, "no second swap while the first is in flight")
+
+            // the sent request still settles the pending state
+            root.swapStore.transactionSent(sentUuid, chainId, false, "", Constants.walletSection.authenticationCanceled)
+            verify(!root.swapAdaptor.swapTxPending)
+            verify(controlUnderTest.opened)
+            tryVerify(() => signButton.interactive)
             closeAndVerfyModal()
         }
 
