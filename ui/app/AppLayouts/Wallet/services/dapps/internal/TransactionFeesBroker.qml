@@ -118,16 +118,16 @@ SQUtils.QObject {
             readonly property var requestArgs: ({
                 type: TransactionFeesBroker.SubscriptionType.GasLimit,
                 chainId: subscriber.chainId,
-                tx: subscriber.txObject
+                tx: subscriber.gasEstimateTxObject
             })
             // asked even when the dApp names a gas, we sign the larger; retried until it answers,
             // unless the dApp's gas can be used
-            isReady: subscriber.active && !!subscriber.txObject && !!subscriber.chainId && !subscriber.gasEstimated
+            isReady: subscriber.active && !!subscriber.gasEstimateTxObject && !!subscriber.chainId && !subscriber.gasEstimated
             topic: isReady ? JSON.stringify(requestArgs) : ""
             onResponseChanged: {
                 if (!response)
                     return
-                subscriber.setGasEstimate(response.success ? response.gasEstimate : "")
+                subscriber.setGasEstimate(response.success ? response.gasEstimate : "", subscriber.txKey(requestArgs.tx))
             }
         }
     }

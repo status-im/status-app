@@ -158,8 +158,8 @@ proc asyncEstimateGasTask(argsEncoded: string) {.gcsafe, nimcall.} =
         }
         proc nonEmpty(key: string): bool =
             tx.hasKey(key) and tx[key].kind == JString and tx[key].getStr.len > 0
-        # a tx without `to` deploys a contract
-        for key in ["to", "value"]:
+        # no `to` deploys a contract; the fees are the signed ones, a contract may read tx.gasprice
+        for key in ["to", "value", "gasPrice", "maxFeePerGas", "maxPriorityFeePerGas"]:
             if nonEmpty(key):
                 transaction[key] = tx[key]
         # input wins over data, as in SendTxArgs.GetInput
