@@ -57,6 +57,20 @@ Item {
                     return parseInt(hex, 16)
                 }
 
+                // our buffered estimate; empty means it failed
+                property string mockGasEstimate: ""
+                property bool deferGasEstimate: false
+                property string pendingGasEstimateTopic: ""
+                function requestGasEstimate(topic, chainId, tx) {
+                    if (deferGasEstimate) {
+                        pendingGasEstimateTopic = topic
+                        return
+                    }
+                    // answered asynchronously, like the real store
+                    const gas = mockGasEstimate
+                    Qt.callLater(() => estimatedGasResponse(topic, gas, !!gas))
+                }
+
                 function getEstimatedTime() {
                     return Constants.TransactionEstimatedTime.LessThanThreeMins
                 }
@@ -223,6 +237,53 @@ Item {
             componentUnderTest.sdk.sessionRequestUserAnswerResult(signEvent.topic, signEvent.id, true, null)
 
             compare(componentUnderTest.signCompletedSpy.count, 1, "Sign completed signal should be emitted")
+        }
+
+        function sendTransactionEvent(txParams) {
+            return {"id":1730899979094572,"params":{"chainId":"eip155:1","request":{"method":"eth_sendTransaction","params":[Object.assign({"from":"0x123","maxFeePerGas":"0x2540be400","maxPriorityFeePerGas":"0x3b9aca00","to":"0x0c54FcCd2e384b4BB6f2E405Bf5Cbc15a017AaFb","value":"0x0"}, txParams)]}},"topic":"247fa9ddffcf9d782b5e002eb36b041e43a1db2bad79a598da6926105ce6680f","verifyContext":{"verified":{"origin":"https://metamask.github.io/test-dapp/","validation":"UNKNOWN","verifyUrl":"https://verify.walletconnect.org"}}}
+        }
+
+        function test_sendTransactionSignsTheGasTheFeesWereShownFor_data() {
+            return [
+                // e.g. ETH to a new account after Glamsterdam
+                { tag: "our estimate above the dApp's gas", txParams: { gasLimit: "0x5208" }, estimate: "0x34410", expected: "0x34410" },
+                { tag: "the dApp's gas above our estimate", txParams: { gasLimit: "0x7a120" }, estimate: "0x5208", expected: "0x7a120" },
+                { tag: "the dApp's gas as `gas`", txParams: { gas: "0x5208" }, estimate: "0x34410", expected: "0x34410" },
+                { tag: "no dApp gas", txParams: {}, estimate: "0x5208", expected: "0x5208" },
+                { tag: "our estimate failed: the dApp's gas", txParams: { gasLimit: "0x5028" }, estimate: "", expected: "0x5028" },
+            ]
+        }
+
+        function test_sendTransactionSignsTheGasTheFeesWereShownFor(data) {
+            componentUnderTest.store.mockGasEstimate = data.estimate
+            const signEvent = sendTransactionEvent(data.txParams)
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive() // as the sign modal does when it opens
+            tryCompare(request, "gasLimit", data.expected)
+
+            request.execute()
+            compare(componentUnderTest.store.sendTransactionCalls.length, 1)
+            const txObj = componentUnderTest.store.sendTransactionCalls[0].txObj
+            compare(txObj.gas, data.expected, "the signed gas is the one the fees were shown for")
+            verify(!txObj.hasOwnProperty("gasLimit"))
+        }
+
+        function test_dappGasIsNotUsedBeforeOurEstimateAnswers() {
+            componentUnderTest.store.deferGasEstimate = true
+            const signEvent = sendTransactionEvent({ gasLimit: "0x5208" })
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive() // as the sign modal does when it opens
+            tryVerify(() => !!componentUnderTest.store.pendingGasEstimateTopic)
+            compare(request.gasLimit, "", "no fees are shown for the dApp's gas alone")
+
+            componentUnderTest.store.estimatedGasResponse(componentUnderTest.store.pendingGasEstimateTopic, "0x34410", true)
+            tryCompare(request, "gasLimit", "0x34410")
         }
 
         function reject_sign() {
