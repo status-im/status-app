@@ -18,10 +18,10 @@
 #include <QProcessEnvironment>
 #include <QSaveFile>
 #include <QStandardPaths>
-#include <QTimer>
 #include <QDebug>
 #include <QMetaObject>
 #include <QPointer>
+#include <atomic>
 #include <mutex>
 #include <QQuickWindow>
 #include <qpa/qplatformscreen.h>
@@ -57,9 +57,10 @@ signals:
     void quit(bool spontaneous);
 };
 
-static SystemUtilsInternal* s_systemUtilsInternal = nullptr;
+static std::atomic<SystemUtilsInternal*> s_systemUtilsInternal = nullptr;
 
 #ifdef Q_OS_IOS
+static void handleIOSKeyboardChanged(int height, bool visible);
 static void iosShakeDetected();
 static void handleIOSFilePickerAccepted(const QStringList& fileUrls);
 static void handleIOSFilePickerRejected();
@@ -69,6 +70,7 @@ static void handleIOSFilePickerRejected();
 extern "C" {
 static void jni_nativeShakeDetected(JNIEnv*, jclass);
 static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density);
+static void jni_nativeKeyboardHeightChanged(JNIEnv*, jclass, jint height);
 }
 #endif
 
@@ -112,64 +114,47 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
         }
     });
 
-    // Poll keyboard state on Android and emit property change signals
-    auto keyboardTimer = new QTimer(this);
-    keyboardTimer->setInterval(50); // 20 FPS polling rate
-    QObject::connect(keyboardTimer, &QTimer::timeout, this, [this]() {
-        // Get the Android activity
-        auto activity = QNativeInterface::QAndroidApplication::context();
-
-        int height = QJniObject::callStaticMethod<jint>(
-            "app/status/mobile/KeyboardUtil",
-            "getKeyboardHeight",
-            "(Landroid/app/Activity;)I",
-            activity.object()
-        );
-        bool visible = QJniObject::callStaticMethod<jboolean>(
-            "app/status/mobile/KeyboardUtil",
-            "isKeyboardVisible",
-            "(Landroid/app/Activity;)Z",
-            activity.object()
-        );
-
-        if (m_androidKeyboardHeight != height) {
-            m_androidKeyboardHeight = height;
-            emit androidKeyboardHeightChanged();
-        }
-
-        if (m_androidKeyboardVisible != visible) {
-            m_androidKeyboardVisible = visible;
-            emit androidKeyboardVisibleChanged();
+    static std::once_flag keyboardRegOnce;
+    std::call_once(keyboardRegOnce, []{
+        QJniEnvironment env;
+        jclass clazz = env->FindClass("app/status/mobile/KeyboardUtil");
+        if (clazz) {
+            const JNINativeMethod methods[] = {
+                { const_cast<char*>("nativeOnKeyboardHeightChanged"),
+                  const_cast<char*>("(I)V"),
+                  reinterpret_cast<void*>(jni_nativeKeyboardHeightChanged) },
+            };
+            jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
+            env->DeleteLocalRef(clazz);
+            if (rc != 0) {
+                qWarning() << "[Android Keyboard] RegisterNatives failed:" << rc;
+            }
         }
     });
-    keyboardTimer->start();
+
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (activity.isValid()) {
+        QJniObject::callStaticMethod<void>(
+            "app/status/mobile/KeyboardUtil",
+            "start",
+            "(Landroid/app/Activity;)V",
+            activity.object<jobject>()
+        );
+    }
 #endif
 
 #ifdef Q_OS_IOS
     // Set up iOS keyboard tracking
+    ::setIOSKeyboardCallback(handleIOSKeyboardChanged);
     ::setupIOSKeyboardTracking();
     ::setIOSFilePickerCallbacks(handleIOSFilePickerAccepted, handleIOSFilePickerRejected);
-
-    // Poll iOS keyboard state and emit property change signals
-    m_iosKeyboardPollTimer = new QTimer(this);
-    m_iosKeyboardPollTimer->setInterval(50); // 20 FPS polling rate
-    QObject::connect(m_iosKeyboardPollTimer, &QTimer::timeout, this, [this]() {
-        int height = ::getIOSKeyboardHeight();
-        bool visible = ::isIOSKeyboardVisible();
-
-        if (m_iosKeyboardHeight != height) {
-            m_iosKeyboardHeight = height;
-            emit iosKeyboardHeightChanged();
-        }
-
-        if (m_iosKeyboardVisible != visible) {
-            m_iosKeyboardVisible = visible;
-            emit iosKeyboardVisibleChanged();
-        }
-    });
-    m_iosKeyboardPollTimer->start();
-
 #endif
+}
+
+SystemUtilsInternal::~SystemUtilsInternal()
+{
+    auto self = this;
+    s_systemUtilsInternal.compare_exchange_strong(self, nullptr);
 }
 
 QString SystemUtilsInternal::qtRuntimeVersion() const {
@@ -653,6 +638,34 @@ bool SystemUtilsInternal::androidKeyboardVisible() const
     return m_androidKeyboardVisible;
 }
 
+void SystemUtilsInternal::updateAndroidKeyboard(int height)
+{
+    const bool visible = height > 0;
+
+    if (m_androidKeyboardHeight != height) {
+        m_androidKeyboardHeight = height;
+        emit androidKeyboardHeightChanged();
+    }
+
+    if (m_androidKeyboardVisible != visible) {
+        m_androidKeyboardVisible = visible;
+        emit androidKeyboardVisibleChanged();
+    }
+}
+
+void SystemUtilsInternal::updateIOSKeyboard(int height, bool visible)
+{
+    if (m_iosKeyboardHeight != height) {
+        m_iosKeyboardHeight = height;
+        emit iosKeyboardHeightChanged();
+    }
+
+    if (m_iosKeyboardVisible != visible) {
+        m_iosKeyboardVisible = visible;
+        emit iosKeyboardVisibleChanged();
+    }
+}
+
 void SystemUtilsInternal::requestAndroidKeyboardShow()
 {
 #ifdef Q_OS_ANDROID
@@ -671,20 +684,12 @@ void SystemUtilsInternal::requestAndroidKeyboardShow()
 
 int SystemUtilsInternal::iosKeyboardHeight() const
 {
-#ifdef Q_OS_IOS
     return m_iosKeyboardHeight;
-#else
-    return 0;
-#endif
 }
 
 bool SystemUtilsInternal::iosKeyboardVisible() const
 {
-#ifdef Q_OS_IOS
     return m_iosKeyboardVisible;
-#else
-    return false;
-#endif
 }
 
 void SystemUtilsInternal::setupIOSKeyboardTracking()
@@ -945,31 +950,44 @@ bool SystemUtilsInternal::fuzzyCompare(const QJSValue &lhs, const QJSValue &rhs)
 }
 
 #ifdef Q_OS_IOS
+static void handleIOSKeyboardChanged(int height, bool visible)
+{
+    auto self = s_systemUtilsInternal.load();
+    if (!self)
+        return;
+    QMetaObject::invokeMethod(self, [self, height, visible]() {
+        self->updateIOSKeyboard(height, visible);
+    }, Qt::QueuedConnection);
+}
+
 static void iosShakeDetected()
 {
-    if (!s_systemUtilsInternal)
-        return;
-    QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+    QMetaObject::invokeMethod(qApp, []() {
+        auto self = s_systemUtilsInternal.load();
+        if (!self)
+            return;
 #ifdef QT_DEBUG
         qInfo() << "[iOS Shake] SystemUtilsInternal: shakeDetected signal emitted";
 #endif
-        emit s_systemUtilsInternal->shakeDetected();
+        emit self->shakeDetected();
     }, Qt::QueuedConnection);
 }
 
 static void handleIOSFilePickerAccepted(const QStringList& fileUrls)
 {
-    if (!s_systemUtilsInternal)
+    auto self = s_systemUtilsInternal.load();
+    if (!self)
         return;
-    QMetaObject::invokeMethod(s_systemUtilsInternal, &SystemUtilsInternal::iosFilePickerAccepted,
+    QMetaObject::invokeMethod(self, &SystemUtilsInternal::iosFilePickerAccepted,
                               Qt::QueuedConnection, fileUrls);
 }
 
 static void handleIOSFilePickerRejected()
 {
-    if (!s_systemUtilsInternal)
+    auto self = s_systemUtilsInternal.load();
+    if (!self)
         return;
-    QMetaObject::invokeMethod(s_systemUtilsInternal, &SystemUtilsInternal::iosFilePickerRejected,
+    QMetaObject::invokeMethod(self, &SystemUtilsInternal::iosFilePickerRejected,
                               Qt::QueuedConnection);
 }
 #endif
@@ -977,28 +995,35 @@ static void handleIOSFilePickerRejected()
 #ifdef Q_OS_ANDROID
 static void jni_nativeShakeDetected(JNIEnv*, jclass)
 {
-    if (!s_systemUtilsInternal)
-        return;
-    QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+    QMetaObject::invokeMethod(qApp, []() {
+        auto self = s_systemUtilsInternal.load();
+        if (!self)
+            return;
 #ifdef QT_DEBUG
         qInfo() << "[Android Shake] SystemUtilsInternal: shakeDetected signal emitted";
 #endif
-        emit s_systemUtilsInternal->shakeDetected();
+        emit self->shakeDetected();
     }, Qt::QueuedConnection);
 }
 
 static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density)
 {
-    if (!s_systemUtilsInternal)
-        return;
-    QPointer<SystemUtilsInternal> weak(s_systemUtilsInternal);
-    QMetaObject::invokeMethod(s_systemUtilsInternal, [weak, density]() {
-        if (!weak)
+    QMetaObject::invokeMethod(qApp, [density]() {
+        auto self = s_systemUtilsInternal.load();
+        if (!self)
             return;
 #ifdef QT_DEBUG
         qInfo() << "[Android Density] SystemUtilsInternal: nativeDprChanged signal emitted with" << density;
 #endif
-        emit weak->nativeDprChanged(static_cast<qreal>(density));
+        emit self->nativeDprChanged(static_cast<qreal>(density));
+    }, Qt::QueuedConnection);
+}
+
+static void jni_nativeKeyboardHeightChanged(JNIEnv*, jclass, jint height)
+{
+    QMetaObject::invokeMethod(qApp, [height]() {
+        if (auto self = s_systemUtilsInternal.load())
+            self->updateAndroidKeyboard(static_cast<int>(height));
     }, Qt::QueuedConnection);
 }
 #endif

@@ -149,6 +149,10 @@ add_executable(TestIncubationController src/tst_incubationcontroller.cpp)
 target_link_libraries(TestIncubationController PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationController COMMAND TestIncubationController)
 
+add_executable(TestKeyboardState src/tst_keyboardstate.cpp)
+target_link_libraries(TestKeyboardState PRIVATE Qt::Test Qt::Gui Qt::Quick StatusQ)
+add_test(NAME TestKeyboardState COMMAND TestKeyboardState)
+
 if(NOT ANDROID AND NOT IOS)
     qt_add_executable(TestBrowserCertDistrust src/tst_browsercertdistrust.cpp)
     target_link_libraries(TestBrowserCertDistrust PRIVATE Qt::Test Qt::Network Qt::WebEngineQuick StatusQ)

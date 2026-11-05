@@ -17,9 +17,10 @@
 # ui/StatusQ/src/systemutilsinternal.cpp: callStaticMethod on
 # StatusQtActivity (mainWindowReady, openDownloadsUi,
 # openAccessibilitySettings, restartApplication), KeyboardUtil
-# (requestKeyboardShow, getKeyboardHeight, isKeyboardVisible), StatusBarUtil
-# (setStatusBarIconColor), ShareUtils (sharePaths), MediaStoreHelper
-# (insertImageFromPath); RegisterNatives on DensityListener and ShakeDetector.
+# (requestKeyboardShow, start), StatusBarUtil (setStatusBarIconColor),
+# ShareUtils (sharePaths), MediaStoreHelper (insertImageFromPath);
+# RegisterNatives on DensityListener, ShakeDetector and KeyboardUtil
+# (nativeOnKeyboardHeightChanged).
 -keep class app.status.mobile.StatusQtActivity { *; }
 -keep class app.status.mobile.KeyboardUtil { *; }
 -keep class app.status.mobile.StatusBarUtil { *; }

@@ -7,6 +7,7 @@
 #include <functional>
 
 
+using IOSKeyboardCallback = void (*)(int height, bool visible);
 using IOSShakeCallback = void (*)();
 using IOSFilePickerAcceptedCallback = void (*)(const QStringList&);
 using IOSFilePickerRejectedCallback = void (*)();
@@ -18,8 +19,7 @@ QString resolveIOSPhotoAsset(const QUrl &assetUrl);
 
 // Keyboard utilities
 void setupIOSKeyboardTracking();
-int getIOSKeyboardHeight();
-bool isIOSKeyboardVisible();
+void setIOSKeyboardCallback(IOSKeyboardCallback callback);
 
 // Shake detection utilities
 void setupIOSShakeDetection();
