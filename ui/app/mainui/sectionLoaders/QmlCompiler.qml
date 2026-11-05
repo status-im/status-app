@@ -38,14 +38,19 @@ QtObject {
             return
         }
         if (c.status !== Component.Ready) {
-            c.statusChanged.connect(() => {
+            const onStatusChanged = () => {
+                if (c.status === Component.Loading)
+                    return
+                // a live connection would keep `c` alive after `pinned` drops it
+                c.statusChanged.disconnect(onStatusChanged)
                 if (c.status === Component.Error) {
                     console.error("QmlCompiler precompile error:", componentUrl, c.errorString())
                     precompileFinished(componentUrl, false)
                 } else if (c.status === Component.Ready) {
                     precompileFinished(componentUrl, true)
                 }
-            })
+            }
+            c.statusChanged.connect(onStatusChanged)
         }
     }
 
