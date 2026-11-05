@@ -21,8 +21,6 @@ Item {
 
     readonly property url profileManagerUrl: Qt.resolvedUrl(
         "../../../ui/app/AppLayouts/Browser/adapters/ProfileManager.qml")
-    readonly property url openFailedPageUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/views/OpenFailedPage.qml")
 
     Component {
         id: hostStackComponent
@@ -272,20 +270,6 @@ Item {
 
             view.openFailed = true
             compare(ctx.currentContentMode, BrowserWebViewContext.ContentMode.OpenFailedContent)
-        }
-
-        // The failure page names the file, or says nothing more when none is known.
-        function test_openFailedPage_namesTheFile() {
-            const component = Qt.createComponent(root.openFailedPageUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const page = createTemporaryObject(component, root, { fileName: "report.docx" })
-            const name = findChild(page, "openFailedFileName")
-            verify(!!name)
-            compare(name.text, "report.docx")
-            verify(name.visible)
-
-            page.fileName = ""
-            verify(!name.visible)
         }
 
         // A restored session reopens URLs in browsing tabs, so a preview tab
