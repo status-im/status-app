@@ -524,9 +524,16 @@ Loader {
                 || messageOutgoingStatus === Constants.expired
         }
 
-        // Advanced by StatusSharedUpdateTimer so the time-derived bindings
-        // below follow the clock as well as the message properties.
+        // Advanced by StatusSharedUpdateTimer while this or the next message is
+        // sending, so the expiry-derived bindings below follow the clock.
         property double timeNow: Date.now()
+
+        readonly property bool followsClock: root.messageOutgoingStatus === Constants.messageOutgoingStatus.sending
+            || root.nextMessageAsJsonObj?.outgoingStatus === Constants.messageOutgoingStatus.sending
+        onFollowsClockChanged: {
+            if (followsClock)
+                timeNow = Date.now()
+        }
 
         readonly property bool isExpired: getIsExpired(root.messageTimestamp, root.messageOutgoingStatus)
         readonly property bool shouldRepeatHeader: getShouldRepeatHeader(root.messageTimestamp, root.prevMessageTimestamp, root.messageOutgoingStatus)
@@ -765,6 +772,7 @@ Loader {
 
     Connections {
         target: StatusSharedUpdateTimer
+        enabled: d.followsClock
         function onTriggered() {
             d.timeNow = Date.now()
         }

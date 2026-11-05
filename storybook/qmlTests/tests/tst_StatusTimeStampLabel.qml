@@ -12,6 +12,7 @@ import StatusQ.Core
    previous-year buckets                    → test_relativeBuckets
  - full mode (showFullTimestamp)            → test_fullTimestampMode
  - hover → tooltip with the full date-time  → test_hoverTooltip
+ - hidden, then shown → current text        → test_hiddenLabelRefreshesWhenShown
 */
 Item {
     id: root
@@ -22,6 +23,11 @@ Item {
     Component {
         id: labelComp
         StatusTimeStampLabel {}
+    }
+
+    Component {
+        id: holderComp
+        Item {}
     }
 
     TestCase {
@@ -58,6 +64,20 @@ Item {
                 compare(label.text, LocaleUtils.formatRelativeTimestamp(stamps[i]),
                         "bucket " + i)
             }
+        }
+
+        function test_hiddenLabelRefreshesWhenShown() {
+            const holder = createTemporaryObject(holderComp, root, {visible: false})
+            const label = createTemporaryObject(labelComp, holder,
+                                                {timestamp: Date.now() - 60 * 1000})
+            verify(!label.visible)
+
+            const ts = Date.now() - 3 * dayMs
+            label.timestamp = ts
+            holder.visible = true
+
+            verify(label.visible)
+            compare(label.text, LocaleUtils.formatRelativeTimestamp(ts))
         }
 
         function test_fullTimestampMode() {

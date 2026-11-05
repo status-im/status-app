@@ -24,10 +24,15 @@ StatusBaseText {
         // initial value
         property string formattedLabel: root.showFullTimestamp ? LocaleUtils.formatDateTime(root.timestamp) : LocaleUtils.formatRelativeTimestamp(root.timestamp)
 
-        // updates
+        readonly property bool ticking: !root.showFullTimestamp && root.timestamp && root.visible
+
+        // updates; Binding evaluates `value` even when `when` is false, so a
+        // hidden label must not read the timer
         Binding on formattedLabel {
-            when: !root.showFullTimestamp && root.timestamp && root.visible
+            when: d.ticking
             value: {
+                if (!d.ticking)
+                    return d.formattedLabel
                 StatusSharedUpdateTimer.secondsActive
                 return LocaleUtils.formatRelativeTimestamp(root.timestamp)
             }
