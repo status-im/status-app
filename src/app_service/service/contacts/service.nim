@@ -1,4 +1,4 @@
-import nimqml, tables, json, sequtils, std/strformat, chronicles, strutils, times, std/times
+import nimqml, tables, json, sequtils, std/strformat, chronicles, strutils, times, std/times, sets
 
 import app/global/global_singleton
 import app/core/signals/types
@@ -110,6 +110,7 @@ QtObject:
     settingsService: settings_service.Service
     contacts: Table[string, ContactDetails] # [contact_id, ContactDetails]
     contactsStatus: Table[string, StatusUpdateDto] # [contact_id, StatusUpdateDto]
+    contactInfoRequests: HashSet[string]
     events: EventEmitter
     closingApp: bool
     mediaServerPort: int
@@ -138,6 +139,7 @@ QtObject:
     result.threadpool = threadpool
     result.contacts = initTable[string, ContactDetails]()
     result.contactsStatus = initTable[string, StatusUpdateDto]()
+    result.contactInfoRequests = initHashSet[string]()
     # subscribed at construction: the media server first starts before login
     let service = result
     events.on(SignalType.MediaServerStarted.event) do(e: Args):
@@ -781,31 +783,53 @@ QtObject:
       error "error in removeTrustStatus request", msg = e.msg
 
   proc asyncContactInfoLoaded*(self: Service, pubkeyAndRpcResponse: string) {.slot.} =
+    var publicKey: string
+    var ok = false
+    defer:
+      if publicKey.len > 0:
+        self.contactInfoRequests.excl(publicKey)
+        self.events.emit(SIGNAL_CONTACT_INFO_REQUEST_FINISHED,
+          ContactInfoRequestArgs(publicKey: publicKey, ok: ok))
     try:
       let rpcResponseObj = pubkeyAndRpcResponse.parseJson
-      let publicKey = rpcResponseObj{"publicKey"}.getStr
+      publicKey = rpcResponseObj{"publicKey"}.getStr
+      if publicKey.len == 0:
+        raise newException(ValueError, "contact info response has no public key")
       let requestError = rpcResponseObj{"error"}
       var error : string
 
-      if requestError.kind != JNull:
+      if not requestError.isNil and requestError.kind != JNull:
         error = requestError.getStr
-      else:
+      if error.len == 0:
         let responseError = rpcResponseObj{"response"}{"error"}
-        if responseError.kind != JNull:
+        if not responseError.isNil and responseError.kind != JNull:
           error = Json.decode($responseError, RpcError).message
 
       if len(error) != 0:
         error "error requesting contact info", msg = error, publicKey
-        self.events.emit(SIGNAL_CONTACT_INFO_REQUEST_FINISHED, ContactInfoRequestArgs(publicKey: publicKey, ok: false))
         return
 
-      let contact = rpcResponseObj{"response"}{"result"}.toContactsDto()
+      let contactObj = rpcResponseObj{"response"}{"result"}
+      if contactObj.isNil or contactObj.kind != JObject:
+        raise newException(ValueError, "contact info response contains no contact")
+      let contact = contactObj.toContactsDto()
+      if contact.id != publicKey:
+        raise newException(ValueError, "contact info response has a different public key")
       self.saveContact(contact)
-      self.events.emit(SIGNAL_CONTACT_INFO_REQUEST_FINISHED, ContactInfoRequestArgs(publicKey: publicKey, ok: true))
+      ok = true
     except Exception as e:
       error "error in contact info loaded", msg = e.msg
 
   proc requestContactInfo*(self: Service, pubkey: string) =
+    if pubkey.len == 0:
+      error "Error requesting contact info: empty public key"
+      self.events.emit(SIGNAL_CONTACT_INFO_REQUEST_FINISHED,
+        ContactInfoRequestArgs(publicKey: pubkey, ok: false))
+      return
+    # Completion is broadcast by public key, so all callers can share one RPC.
+    if pubkey in self.contactInfoRequests:
+      return
+    self.contactInfoRequests.incl(pubkey)
     try:
       let arg = AsyncRequestContactInfoTaskArg(
         tptr: asyncRequestContactInfoTask,
@@ -815,7 +839,10 @@ QtObject:
       )
       self.threadpool.start(arg)
     except Exception as e:
+      self.contactInfoRequests.excl(pubkey)
       error "Error requesting contact info", msg = e.msg, pubkey
+      self.events.emit(SIGNAL_CONTACT_INFO_REQUEST_FINISHED,
+        ContactInfoRequestArgs(publicKey: pubkey, ok: false))
 
   proc shareUserUrlWithData*(self: Service, pubkey: string): string =
     try:
@@ -896,4 +923,3 @@ QtObject:
 
   proc delete*(self: Service) =
     self.QObject.delete
-

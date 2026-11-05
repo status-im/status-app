@@ -17,6 +17,8 @@ type
   ThreadPool* = ref object
     pool: Taskpool
     tornDown: bool
+    localReads: ptr Channel[ThreadSafeTaskArg]
+    localReadWorker: Thread[ptr Channel[ThreadSafeTaskArg]]
   ThreadSafeTaskArg* = object
     tptr: common.Task
     payload: cstring
@@ -43,6 +45,12 @@ proc teardown*(self: ThreadPool) =
   featureGuard THREADPOOL_ENABLED:
     self.pool.syncAll()
     self.pool.shutdown()
+    if self.localReads != nil:
+      self.localReads[].send(ThreadSafeTaskArg())
+      joinThread(self.localReadWorker)
+      self.localReads[].close()
+      deallocShared(self.localReads)
+      self.localReads = nil
   # Sweep any typed completions parked by workers whose GUI slot never ran (loop
   # stopped mid-flight). All workers are quiesced by this point, so no producer
   # can race the drain. Destroys them on the shutdown thread — see typed_handoff.
@@ -81,5 +89,35 @@ proc runTask(safeTaskArg: ThreadSafeTaskArg) {.gcsafe, nimcall, raises: [].} =
 proc start*[T: TaskArg](self: ThreadPool, arg: T) =
   featureGuard THREADPOOL_ENABLED:
     self.pool.spawn runTask(arg.safe())
+  else:
+    runTask(arg.safe())
+
+proc runLocalReads(queue: ptr Channel[ThreadSafeTaskArg]) {.thread.} =
+  while true:
+    let task = queue[].recv()
+    if task.tptr == nil:
+      break
+    runTask(task)
+
+proc startLocalRead*[T: TaskArg](self: ThreadPool, arg: T) =
+  ## Submit on the GUI thread, like start. Only local, read-only work belongs
+  ## here: network waits must never occupy this worker.
+  if self.tornDown:
+    raise newException(ValueError, "Cannot submit a local read after threadpool teardown")
+  featureGuard THREADPOOL_ENABLED:
+    if self.localReads == nil:
+      # A separate Taskpool would overwrite the submitting thread's taskpools
+      # workerContext. Use a native worker and FIFO instead.
+      let queue = cast[ptr Channel[ThreadSafeTaskArg]](
+        allocShared0(sizeof(Channel[ThreadSafeTaskArg])))
+      queue[].open()
+      try:
+        createThread(self.localReadWorker, runLocalReads, queue)
+      except:
+        queue[].close()
+        deallocShared(queue)
+        raise
+      self.localReads = queue
+    self.localReads[].send(arg.safe())
   else:
     runTask(arg.safe())
