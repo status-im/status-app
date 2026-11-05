@@ -56,6 +56,8 @@ type
     ## raw node estimates behind the suggestions; 0 for a stand-in
     estimatedTxGasAmount*: uint64
     estimatedApprovalGasAmount*: uint64
+    ## the new recipient makes the transfer cost more gas
+    recipientIsNewAccount*: bool
     usedContractAddress*: string
 
     txNonce*: UInt256
@@ -140,6 +142,7 @@ proc toTransactionPathDtoV2*(jsonObj: JsonNode): TransactionPathDtoV2 =
   discard jsonObj.getProp("SuggestedApprovalGasAmount", result.suggestedApprovalGasAmount)
   discard jsonObj.getProp("EstimatedTxGasAmount", result.estimatedTxGasAmount)
   discard jsonObj.getProp("EstimatedApprovalGasAmount", result.estimatedApprovalGasAmount)
+  discard jsonObj.getProp("RecipientIsNewAccount", result.recipientIsNewAccount)
   discard jsonObj.getProp("UsedContractAddress", result.usedContractAddress)
   result.txNonce = stint.fromHex(UInt256, jsonObj{"TxNonce"}.getStr)
   result.txGasPrice = stint.fromHex(UInt256, jsonObj{"TxGasPrice"}.getStr)

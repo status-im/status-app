@@ -35,6 +35,7 @@ QtObject:
     suggestedApprovalGasAmount: string
     estimatedTxGasAmount: string
     estimatedApprovalGasAmount: string
+    recipientIsNewAccount: bool
     txNonce: string
     txGasPrice: string
     txGasFeeMode: int
@@ -94,6 +95,7 @@ QtObject:
     suggestedApprovalGasAmount: string,
     estimatedTxGasAmount: string,
     estimatedApprovalGasAmount: string,
+    recipientIsNewAccount: bool,
     txNonce: string,
     txGasPrice: string,
     txGasFeeMode: int,
@@ -154,6 +156,7 @@ QtObject:
     suggestedApprovalGasAmount: string,
     estimatedTxGasAmount: string,
     estimatedApprovalGasAmount: string,
+    recipientIsNewAccount: bool,
     txNonce: string,
     txGasPrice: string,
     txGasFeeMode: int,
@@ -214,6 +217,7 @@ QtObject:
       suggestedApprovalGasAmount,
       estimatedTxGasAmount,
       estimatedApprovalGasAmount,
+      recipientIsNewAccount,
       txNonce,
       txGasPrice,
       txGasFeeMode,
@@ -274,6 +278,7 @@ QtObject:
     result &= "\nsuggestedApprovalGasAmount: " & $self.suggestedApprovalGasAmount
     result &= "\nestimatedTxGasAmount: " & $self.estimatedTxGasAmount
     result &= "\nestimatedApprovalGasAmount: " & $self.estimatedApprovalGasAmount
+    result &= "\nrecipientIsNewAccount: " & $self.recipientIsNewAccount
     result &= "\ntxNonce: " & $self.txNonce
     result &= "\ntxGasPrice: " & $self.txGasPrice
     result &= "\ntxGasFeeMode: " & $self.txGasFeeMode
@@ -394,6 +399,9 @@ QtObject:
 
   proc estimatedApprovalGasAmount*(self: PathItem): string =
     return self.estimatedApprovalGasAmount
+
+  proc recipientIsNewAccount*(self: PathItem): bool =
+    return self.recipientIsNewAccount
 
   proc txNonce*(self: PathItem): string =
     return self.txNonce
@@ -517,6 +525,7 @@ QtObject:
     suggestedApprovalGasAmount: string,
     estimatedTxGasAmount: string,
     estimatedApprovalGasAmount: string,
+    recipientIsNewAccount: bool,
     txNonce: string,
     txGasPrice: string,
     txGasFeeMode: int,
@@ -576,6 +585,7 @@ QtObject:
     self.suggestedApprovalGasAmount = suggestedApprovalGasAmount
     self.estimatedTxGasAmount = estimatedTxGasAmount
     self.estimatedApprovalGasAmount = estimatedApprovalGasAmount
+    self.recipientIsNewAccount = recipientIsNewAccount
     self.txNonce = txNonce
     self.txGasPrice = txGasPrice
     self.txGasFeeMode = txGasFeeMode
