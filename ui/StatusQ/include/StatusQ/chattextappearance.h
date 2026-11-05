@@ -38,6 +38,11 @@ class ChatTextAppearance : public QObject
                NOTIFY editedMarkerFontSizeChanged)
     Q_PROPERTY(QColor editedMarkerColor READ editedMarkerColor WRITE setEditedMarkerColor
                NOTIFY editedMarkerColorChanged)
+    // Localized edited marker text, without the leading space. Bind it to
+    // qsTr() in QML so a runtime language change retranslates it; the
+    // default is the English "(edited)". Reset restores the default.
+    Q_PROPERTY(QString editedMarkerText READ editedMarkerText WRITE setEditedMarkerText
+               RESET resetEditedMarkerText NOTIFY editedMarkerTextChanged)
     Q_PROPERTY(QColor mentionColor READ mentionColor WRITE setMentionColor NOTIFY mentionColorChanged)
     Q_PROPERTY(QColor mentionBackground READ mentionBackground WRITE setMentionBackground
                NOTIFY mentionBackgroundChanged)
@@ -65,7 +70,8 @@ public:
         EditedMarkerColor,
         MentionColor,
         MentionBackground,
-        QuoteColor
+        QuoteColor,
+        EditedMarkerText
     };
     Q_ENUM(Change)
     explicit ChatTextAppearance(QObject* parent = nullptr)
@@ -113,6 +119,9 @@ public:
     void setEditedMarkerFontSize(int value);
     QColor editedMarkerColor() const { return m_editedMarkerColor; }
     void setEditedMarkerColor(const QColor& value);
+    QString editedMarkerText() const;
+    void setEditedMarkerText(const QString& value);
+    void resetEditedMarkerText() { setEditedMarkerText({}); }
     QColor mentionColor() const { return m_mentionColor; }
     void setMentionColor(const QColor& value);
     QColor mentionBackground() const { return m_mentionBackground; }
@@ -139,6 +148,7 @@ signals:
     void emojiOnlyPixelSizeChanged();
     void editedMarkerFontSizeChanged();
     void editedMarkerColorChanged();
+    void editedMarkerTextChanged();
     void mentionColorChanged();
     void mentionBackgroundChanged();
     void quoteColorChanged();
@@ -163,6 +173,7 @@ private:
     qreal m_emojiOnlyPixelSize = 0;
     int m_editedMarkerFontSize = 12;
     QColor m_editedMarkerColor = Qt::gray;
+    QString m_editedMarkerText; // empty: the English default
     QColor m_mentionColor = QColor(0x43, 0x60, 0xDF);
     QColor m_mentionBackground = QColor(0, 0, 0, 20);
     QColor m_quoteColor = Qt::gray;

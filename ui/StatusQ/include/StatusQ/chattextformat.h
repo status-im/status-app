@@ -20,4 +20,27 @@ inline QTextCharFormat emphasis(const ChatTextSegment& segment)
     if (segment.underline()) format.setFontUnderline(true);
     return format;
 }
+
+// Unformatted text of the segments for screen readers and tests: paragraphs
+// split as ChatTextItem splits them, joined by newlines, then a space and
+// `editedMarker` if that is not empty. Matches MarkdownUtils::plainText on the
+// source, except that a code fence sharing a line with other text is on a line
+// of its own, as it is rendered.
+inline QString plainText(const QList<ChatTextSegment>& segments, const QString& editedMarker)
+{
+    QString text;
+    bool first = true;
+    bool afterCode = false;
+    for (const ChatTextSegment& segment : segments) {
+        const bool code = segment.codeBlock();
+        if (!first && (code || afterCode || segment.newBlock()))
+            text += QLatin1Char('\n');
+        text += segment.text;
+        first = false;
+        afterCode = code;
+    }
+    if (!editedMarker.isEmpty() && !segments.isEmpty())
+        text += QLatin1Char(' ') + editedMarker;
+    return text;
+}
 }

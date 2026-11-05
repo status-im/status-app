@@ -61,6 +61,10 @@ class ChatTextItem : public QQuickItem
     // content has no marker. Its format never inherits a link or emphasis.
     Q_PROPERTY(bool edited READ edited WRITE setEdited NOTIFY editedChanged)
 
+    // Plain text of the content, mentions resolved, with the edited suffix.
+    // Computed on read; also the accessible name (StaticText role).
+    Q_PROPERTY(QString text READ text NOTIFY textChanged)
+
     // Laid-out height of the document at the current width.
     Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentHeightChanged)
 
@@ -114,6 +118,8 @@ public:
 
     bool edited() const;
     void setEdited(bool edited);
+
+    QString text() const;
 
     // Code block frames in item coordinates, as painted.
     Q_INVOKABLE QVariantList codeBlockRects() const;
@@ -170,6 +176,7 @@ signals:
     void appearanceChanged();
     void segmentsChanged();
     void editedChanged();
+    void textChanged();
     void contentHeightChanged();
     void selectionChanged();
     void selectableChanged();
@@ -208,6 +215,8 @@ private:
     // Appearance-only rebuilds keep character positions and interaction state,
     // including an active drag, without transient selectionChanged signals.
     void rebuildFromSegments(bool preserveInteraction = false);
+    // `text` and the accessible name follow a new edited marker text.
+    void editedMarkerTextChanged();
     void applyDocumentDefaults();
     void updateAppearance(int kind, const std::function<void(QTextCharFormat&)>& change);
     void updateEmojiAppearance();

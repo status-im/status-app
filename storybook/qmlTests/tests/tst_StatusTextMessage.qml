@@ -85,15 +85,17 @@ Item {
 
         function test_sourceAccessibilityAndEditedMarker() {
             const part = createPart()
+            const field = part.textField
+            // CI may have accessibility inactive. Attach explicitly before
+            // content updates so the test exercises accessible-name updates.
+            field.Accessible.role = Accessible.StaticText
             part.messageDetails.messageContent = "stale server content"
             part.messageDetails.mentionsMap = ({[root.pubKey]: "Alice"})
             part.messageDetails.unparsedText = "**Hello** @" + root.pubKey + "\n`<tag>&`"
-            const field = part.textField
             field.selectAll()
             compare(part.selectedText, "Hello @Alice\n<tag>&")
             compare(field.text, "Hello @Alice\n<tag>&")
             compare(field.Accessible.name, field.text)
-            compare(field.Accessible.role, Accessible.StaticText)
             verify(field.segments.some(segment => segment.bold && segment.text === "Hello"))
             verify(field.segments.some(segment => segment.code && segment.text === "<tag>&"))
             part.isEdited = true

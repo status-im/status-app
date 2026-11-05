@@ -11686,6 +11686,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MessageTextAppearance</name>
+    <message>
+        <source>(edited)</source>
+        <translation>(수정됨)</translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -17283,13 +17290,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusTextMessage</name>
-    <message>
-        <source>(edited)</source>
-        <translation>(수정됨)</translation>
-    </message>
-</context>
-<context>
     <name>StatusTokenInlineSelector</name>
     <message>
         <source>Hold</source>
@@ -17395,13 +17395,6 @@ to load</source>
     <message>
         <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StringUtils</name>
-    <message>
-        <source>(edited)</source>
-        <translation>(수정됨)</translation>
     </message>
 </context>
 <context>
