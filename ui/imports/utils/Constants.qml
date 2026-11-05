@@ -8,12 +8,12 @@ import StatusQ.Core.Theme
 QtObject {
     id: root
 
-    readonly property QtObject appState: QtObject {
-        readonly property int startup: 0
-        readonly property int appLoading: 1
-        readonly property int main: 2
-        readonly property int appEncryptionProcess: 3
-    }
+    readonly property var appState: ({
+        startup: 0,
+        appLoading: 1,
+        main: 2,
+        appEncryptionProcess: 3
+    })
 
     enum CommunityFetchState {
         Idle,
@@ -67,346 +67,338 @@ QtObject {
         ]
     }
 
-    readonly property QtObject predefinedKeycardData: QtObject {
-        readonly property int wronglyInsertedCard: 1
-        readonly property int hideKeyPair: 2
-        readonly property int wrongSeedPhrase: 4
-        readonly property int wrongPassword: 8
-        readonly property int offerPukForUnlock: 16
-        readonly property int disableSeedPhraseForUnlock: 32
-        readonly property int useGeneralMessageForLockedState: 64
-        readonly property int maxPUKReached: 128
-        readonly property int copyFromAKeycardPartDone: 256
-        readonly property int maxPairingSlotsReached: 512
-    }
+    readonly property var predefinedKeycardData: ({
+        wronglyInsertedCard: 1,
+        hideKeyPair: 2,
+        wrongSeedPhrase: 4,
+        wrongPassword: 8,
+        offerPukForUnlock: 16,
+        disableSeedPhraseForUnlock: 32,
+        useGeneralMessageForLockedState: 64,
+        maxPUKReached: 128,
+        copyFromAKeycardPartDone: 256,
+        maxPairingSlotsReached: 512
+    })
 
-    readonly property QtObject keycardSharedFlow: QtObject {
-        readonly property string general: "General"
-        readonly property string factoryReset: "FactoryReset"
-        readonly property string setupNewKeycard: "SetupNewKeycard"
-        readonly property string setupNewKeycardNewSeedPhrase: "SetupNewKeycardNewSeedPhrase"
-        readonly property string setupNewKeycardOldSeedPhrase: "SetupNewKeycardOldSeedPhrase"
-        readonly property string importFromKeycard: "ImportFromKeycard"
-        readonly property string authentication: "Authentication"
-        readonly property string unlockKeycard: "UnlockKeycard"
-        readonly property string displayKeycardContent: "DisplayKeycardContent"
-        readonly property string renameKeycard: "RenameKeycard"
-        readonly property string changeKeycardPin: "ChangeKeycardPin"
-        readonly property string changeKeycardPuk: "ChangeKeycardPuk"
-        readonly property string changePairingCode: "ChangePairingCode"
-        readonly property string createCopyOfAKeycard: "CreateCopyOfAKeycard"
-        readonly property string migrateFromKeycardToApp: "MigrateFromKeycardToApp"
-        readonly property string migrateFromAppToKeycard: "MigrateFromAppToKeycard"
-        readonly property string sign: "Sign"
-    }
+    readonly property var keycardSharedFlow: ({
+        general: "General",
+        factoryReset: "FactoryReset",
+        setupNewKeycard: "SetupNewKeycard",
+        setupNewKeycardNewSeedPhrase: "SetupNewKeycardNewSeedPhrase",
+        setupNewKeycardOldSeedPhrase: "SetupNewKeycardOldSeedPhrase",
+        importFromKeycard: "ImportFromKeycard",
+        authentication: "Authentication",
+        unlockKeycard: "UnlockKeycard",
+        displayKeycardContent: "DisplayKeycardContent",
+        renameKeycard: "RenameKeycard",
+        changeKeycardPin: "ChangeKeycardPin",
+        changeKeycardPuk: "ChangeKeycardPuk",
+        changePairingCode: "ChangePairingCode",
+        createCopyOfAKeycard: "CreateCopyOfAKeycard",
+        migrateFromKeycardToApp: "MigrateFromKeycardToApp",
+        migrateFromAppToKeycard: "MigrateFromAppToKeycard",
+        sign: "Sign"
+    })
 
-    readonly property QtObject keycardSharedState: QtObject {
-        readonly property string keycardFlowStarted: "KeycardFlowStarted"
-        readonly property string biometrics: "Biometrics"
-        readonly property string noPCSCService: "NoPCSCService"
-        readonly property string noState: "NoState"
-        readonly property string pluginReader: "PluginReader"
-        readonly property string readingKeycard: "ReadingKeycard"
-        readonly property string insertKeycard: "InsertKeycard"
-        readonly property string keycardInserted: "KeycardInserted"
-        readonly property string createPin: "CreatePin"
-        readonly property string repeatPin: "RepeatPin"
-        readonly property string pinSet: "PinSet"
-        readonly property string pinVerified: "PinVerified"
-        readonly property string enterPin: "EnterPin"
-        readonly property string wrongPin: "WrongPin"
-        readonly property string enterPuk: "EnterPuk"
-        readonly property string wrongPuk: "WrongPuk"
-        readonly property string wrongKeychainPin: "WrongKeychainPin"
-        readonly property string maxPinRetriesReached: "MaxPinRetriesReached"
-        readonly property string maxPukRetriesReached: "MaxPukRetriesReached"
-        readonly property string maxPairingSlotsReached: "MaxPairingSlotsReached"
-        readonly property string factoryResetConfirmation: "FactoryResetConfirmation"
-        readonly property string factoryResetConfirmationDisplayMetadata: "FactoryResetConfirmationDisplayMetadata"
-        readonly property string factoryResetSuccess: "FactoryResetSuccess"
-        readonly property string keycardEmptyMetadata: "KeycardEmptyMetadata"
-        readonly property string keycardMetadataDisplay: "KeycardMetadataDisplay"
-        readonly property string keycardEmpty: "KeycardEmpty"
-        readonly property string keycardNotEmpty: "KeycardNotEmpty"
-        readonly property string keycardAlreadyUnlocked: "KeycardAlreadyUnlocked"
-        readonly property string notKeycard: "NotKeycard"
-        readonly property string unlockKeycardOptions: "UnlockKeycardOptions"
-        readonly property string unlockingKeycard: "UnlockingKeycard"
-        readonly property string unlockKeycardFailure: "UnlockKeycardFailure"
-        readonly property string unlockKeycardSuccess: "UnlockKeycardSuccess"
-        readonly property string wrongKeycard: "WrongKeycard"
-        readonly property string recognizedKeycard: "RecognizedKeycard"
-        readonly property string selectExistingKeyPair: "SelectExistingKeyPair"
-        readonly property string enterSeedPhrase: "EnterSeedPhrase"
-        readonly property string wrongSeedPhrase: "WrongSeedPhrase"
-        readonly property string seedPhraseAlreadyInUse: "SeedPhraseAlreadyInUse"
-        readonly property string seedPhraseDisplay: "SeedPhraseDisplay"
-        readonly property string seedPhraseEnterWords: "SeedPhraseEnterWords"
-        readonly property string keyPairMigrateSuccess: "KeyPairMigrateSuccess"
-        readonly property string keyPairMigrateFailure: "KeyPairMigrateFailure"
-        readonly property string migrateKeypairToApp: "MigrateKeypairToApp"
-        readonly property string migrateKeypairToKeycard: "MigrateKeypairToKeycard"
-        readonly property string migratingKeypairToApp: "MigratingKeypairToApp"
-        readonly property string migratingKeypairToKeycard: "MigratingKeypairToKeycard"
-        readonly property string enterPassword: "EnterPassword"
-        readonly property string wrongPassword: "WrongPassword"
-        readonly property string createPassword: "CreatePassword"
-        readonly property string confirmPassword: "ConfirmPassword"
-        readonly property string biometricsPasswordFailed: "BiometricsPasswordFailed"
-        readonly property string biometricsPinFailed: "BiometricsPinFailed"
-        readonly property string biometricsPinInvalid: "BiometricsPinInvalid"
-        readonly property string biometricsReadyToSign: "BiometricsReadyToSign"
-        readonly property string enterBiometricsPassword: "EnterBiometricsPassword"
-        readonly property string wrongBiometricsPassword: "WrongBiometricsPassword"
-        readonly property string enterKeycardName: "EnterKeycardName"
-        readonly property string renamingKeycard: "RenamingKeycard"
-        readonly property string keycardRenameSuccess: "KeycardRenameSuccess"
-        readonly property string keycardRenameFailure: "KeycardRenameFailure"
-        readonly property string changingKeycardPin: "ChangingKeycardPin"
-        readonly property string changingKeycardPinSuccess: "ChangingKeycardPinSuccess"
-        readonly property string changingKeycardPinFailure: "ChangingKeycardPinFailure"
-        readonly property string createPuk: "CreatePuk"
-        readonly property string repeatPuk: "RepeatPuk"
-        readonly property string changingKeycardPuk: "ChangingKeycardPuk"
-        readonly property string changingKeycardPukSuccess: "ChangingKeycardPukSuccess"
-        readonly property string changingKeycardPukFailure: "ChangingKeycardPukFailure"
-        readonly property string createPairingCode: "CreatePairingCode"
-        readonly property string changingKeycardPairingCode: "ChangingKeycardPairingCode"
-        readonly property string changingKeycardPairingCodeSuccess: "ChangingKeycardPairingCodeSuccess"
-        readonly property string changingKeycardPairingCodeFailure: "ChangingKeycardPairingCodeFailure"
-        readonly property string removeKeycard: "RemoveKeycard"
-        readonly property string sameKeycard: "SameKeycard"
-        readonly property string copyToKeycard: "CopyToKeycard"
-        readonly property string copyingKeycard: "CopyingKeycard"
-        readonly property string copyingKeycardFailure: "CopyingKeycardFailure"
-        readonly property string copyingKeycardSuccess: "CopyingKeycardSuccess"
-        readonly property string manageKeycardAccounts: "ManageKeycardAccounts"
-        readonly property string creatingAccountNewSeedPhrase: "CreatingAccountNewSeedPhrase"
-        readonly property string creatingAccountNewSeedPhraseSuccess: "CreatingAccountNewSeedPhraseSuccess"
-        readonly property string creatingAccountNewSeedPhraseFailure: "CreatingAccountNewSeedPhraseFailure"
-        readonly property string creatingAccountOldSeedPhrase: "CreatingAccountOldSeedPhrase"
-        readonly property string creatingAccountOldSeedPhraseSuccess: "CreatingAccountOldSeedPhraseSuccess"
-        readonly property string creatingAccountOldSeedPhraseFailure: "CreatingAccountOldSeedPhraseFailure"
-        readonly property string importingFromKeycard: "ImportingFromKeycard"
-        readonly property string importingFromKeycardSuccess: "ImportingFromKeycardSuccess"
-        readonly property string importingFromKeycardFailure: "ImportingFromKeycardFailure"
-    }
+    readonly property var keycardSharedState: ({
+        keycardFlowStarted: "KeycardFlowStarted",
+        biometrics: "Biometrics",
+        noPCSCService: "NoPCSCService",
+        noState: "NoState",
+        pluginReader: "PluginReader",
+        readingKeycard: "ReadingKeycard",
+        insertKeycard: "InsertKeycard",
+        keycardInserted: "KeycardInserted",
+        createPin: "CreatePin",
+        repeatPin: "RepeatPin",
+        pinSet: "PinSet",
+        pinVerified: "PinVerified",
+        enterPin: "EnterPin",
+        wrongPin: "WrongPin",
+        enterPuk: "EnterPuk",
+        wrongPuk: "WrongPuk",
+        wrongKeychainPin: "WrongKeychainPin",
+        maxPinRetriesReached: "MaxPinRetriesReached",
+        maxPukRetriesReached: "MaxPukRetriesReached",
+        maxPairingSlotsReached: "MaxPairingSlotsReached",
+        factoryResetConfirmation: "FactoryResetConfirmation",
+        factoryResetConfirmationDisplayMetadata: "FactoryResetConfirmationDisplayMetadata",
+        factoryResetSuccess: "FactoryResetSuccess",
+        keycardEmptyMetadata: "KeycardEmptyMetadata",
+        keycardMetadataDisplay: "KeycardMetadataDisplay",
+        keycardEmpty: "KeycardEmpty",
+        keycardNotEmpty: "KeycardNotEmpty",
+        keycardAlreadyUnlocked: "KeycardAlreadyUnlocked",
+        notKeycard: "NotKeycard",
+        unlockKeycardOptions: "UnlockKeycardOptions",
+        unlockingKeycard: "UnlockingKeycard",
+        unlockKeycardFailure: "UnlockKeycardFailure",
+        unlockKeycardSuccess: "UnlockKeycardSuccess",
+        wrongKeycard: "WrongKeycard",
+        recognizedKeycard: "RecognizedKeycard",
+        selectExistingKeyPair: "SelectExistingKeyPair",
+        enterSeedPhrase: "EnterSeedPhrase",
+        wrongSeedPhrase: "WrongSeedPhrase",
+        seedPhraseAlreadyInUse: "SeedPhraseAlreadyInUse",
+        seedPhraseDisplay: "SeedPhraseDisplay",
+        seedPhraseEnterWords: "SeedPhraseEnterWords",
+        keyPairMigrateSuccess: "KeyPairMigrateSuccess",
+        keyPairMigrateFailure: "KeyPairMigrateFailure",
+        migrateKeypairToApp: "MigrateKeypairToApp",
+        migrateKeypairToKeycard: "MigrateKeypairToKeycard",
+        migratingKeypairToApp: "MigratingKeypairToApp",
+        migratingKeypairToKeycard: "MigratingKeypairToKeycard",
+        enterPassword: "EnterPassword",
+        wrongPassword: "WrongPassword",
+        createPassword: "CreatePassword",
+        confirmPassword: "ConfirmPassword",
+        biometricsPasswordFailed: "BiometricsPasswordFailed",
+        biometricsPinFailed: "BiometricsPinFailed",
+        biometricsPinInvalid: "BiometricsPinInvalid",
+        biometricsReadyToSign: "BiometricsReadyToSign",
+        enterBiometricsPassword: "EnterBiometricsPassword",
+        wrongBiometricsPassword: "WrongBiometricsPassword",
+        enterKeycardName: "EnterKeycardName",
+        renamingKeycard: "RenamingKeycard",
+        keycardRenameSuccess: "KeycardRenameSuccess",
+        keycardRenameFailure: "KeycardRenameFailure",
+        changingKeycardPin: "ChangingKeycardPin",
+        changingKeycardPinSuccess: "ChangingKeycardPinSuccess",
+        changingKeycardPinFailure: "ChangingKeycardPinFailure",
+        createPuk: "CreatePuk",
+        repeatPuk: "RepeatPuk",
+        changingKeycardPuk: "ChangingKeycardPuk",
+        changingKeycardPukSuccess: "ChangingKeycardPukSuccess",
+        changingKeycardPukFailure: "ChangingKeycardPukFailure",
+        createPairingCode: "CreatePairingCode",
+        changingKeycardPairingCode: "ChangingKeycardPairingCode",
+        changingKeycardPairingCodeSuccess: "ChangingKeycardPairingCodeSuccess",
+        changingKeycardPairingCodeFailure: "ChangingKeycardPairingCodeFailure",
+        removeKeycard: "RemoveKeycard",
+        sameKeycard: "SameKeycard",
+        copyToKeycard: "CopyToKeycard",
+        copyingKeycard: "CopyingKeycard",
+        copyingKeycardFailure: "CopyingKeycardFailure",
+        copyingKeycardSuccess: "CopyingKeycardSuccess",
+        manageKeycardAccounts: "ManageKeycardAccounts",
+        creatingAccountNewSeedPhrase: "CreatingAccountNewSeedPhrase",
+        creatingAccountNewSeedPhraseSuccess: "CreatingAccountNewSeedPhraseSuccess",
+        creatingAccountNewSeedPhraseFailure: "CreatingAccountNewSeedPhraseFailure",
+        creatingAccountOldSeedPhrase: "CreatingAccountOldSeedPhrase",
+        creatingAccountOldSeedPhraseSuccess: "CreatingAccountOldSeedPhraseSuccess",
+        creatingAccountOldSeedPhraseFailure: "CreatingAccountOldSeedPhraseFailure",
+        importingFromKeycard: "ImportingFromKeycard",
+        importingFromKeycardSuccess: "ImportingFromKeycardSuccess",
+        importingFromKeycardFailure: "ImportingFromKeycardFailure"
+    })
 
-    readonly property QtObject keycardAnimations: QtObject {}
+    readonly property var keycardAnimations: ({})
 
-    readonly property QtObject keychain: QtObject {
-        readonly property QtObject errorType: QtObject {
-            readonly property string authentication: "authentication"
-            readonly property string keychain: "keychain"
-        }
-
-        readonly property QtObject storedValue: QtObject {
-            readonly property string store: "store"
-            readonly property string notNow: "notNow"
-            readonly property string never: "never"
-        }
-
-        readonly property string dekPrefix: "dek:"
-    }
+    readonly property var keychain: ({
+        errorType: {
+            authentication: "authentication",
+            keychain: "keychain"
+        },
+        storedValue: {
+            store: "store",
+            notNow: "notNow",
+            never: "never"
+        },
+        dekPrefix: "dek:"
+    })
 
     readonly property int chatSectionLeftColumnWidth: 304
     readonly property int chatSectionRightColumnWidth: 250
 
     // has to match section_item.nim#SectionType
-    readonly property QtObject appSection: QtObject {
-        readonly property int chat: 2
-        readonly property int community: 3
-        readonly property int wallet: 1
-        readonly property int profile: 4
-        readonly property int qrCodeScanner: 5
-        readonly property int communitiesPortal: 6
-        readonly property int loadingSection: 7
-        readonly property int swap: 8
-        readonly property int market: 9
-        readonly property int browser: 10
+    readonly property var appSection: ({
+        chat: 2,
+        community: 3,
+        wallet: 1,
+        profile: 4,
+        qrCodeScanner: 5,
+        communitiesPortal: 6,
+        loadingSection: 7,
+        swap: 8,
+        market: 9,
+        browser: 10,
+        homePage: 0,
+        dApp: 999
+    })
 
-        readonly property int homePage: 0
-        readonly property int dApp: 999
-    }
+    readonly property var appViewStackIndex: ({
+        homePage: 0,
+        chat: 1,
+        community: 7,
+        communitiesPortal: 2,
+        wallet: 3,
+        browser: 4,
+        profile: 5,
+        market: 6
+    })
 
-    readonly property QtObject appViewStackIndex: QtObject {
-        readonly property int homePage: 0
-        readonly property int chat: 1
-        readonly property int community: 7 // any stack layout children with the index 7 or higher is community
-        readonly property int communitiesPortal: 2
-        readonly property int wallet: 3
-        readonly property int browser: 4
-        readonly property int profile: 5
-        readonly property int market: 6
-    }
+    readonly property var settingsSubsection: ({
+        profile: 0,
+        password: 1,
+        contacts: 2,
+        ensUsernames: 3,
+        messaging: 4,
+        wallet: 5,
+        appearance: 6,
+        language: 7,
+        notifications: 8,
+        syncingSettings: 9,
+        browserSettings: 10,
+        advanced: 11,
+        about: 12,
+        communitiesSettings: 13,
+        keycardNew: 14,
+        about_terms: 15,
+        about_privacy: 16,
+        privacyAndSecurity: 17,
+        backupSettings: 18,
+        logosNetworkSettings: 19,
+        signout: 100,
+        backUpSeed: 101
+    })
 
-    readonly property QtObject settingsSubsection: QtObject {
-        readonly property int profile: 0
-        readonly property int password: 1
-        readonly property int contacts: 2 // a subpage under "Messaging"
-        readonly property int ensUsernames: 3
-        readonly property int messaging: 4
-        readonly property int wallet:5
-        readonly property int appearance: 6
-        readonly property int language: 7
-        readonly property int notifications: 8
-        readonly property int syncingSettings: 9
-        readonly property int browserSettings: 10
-        readonly property int advanced: 11
-        readonly property int about: 12
-        readonly property int communitiesSettings: 13
-        readonly property int keycardNew: 14
-        readonly property int about_terms: 15 // a subpage under "About"
-        readonly property int about_privacy: 16 // a subpage under "About"
-        readonly property int privacyAndSecurity: 17
-        readonly property int backupSettings: 18
-        readonly property int logosNetworkSettings: 19
+    readonly property var walletSettingsSubsection: ({
+        manageNetworks: 0,
+        manageAccounts: 1,
+        manageAssets: 2,
+        manageCollectibles: 3,
+        manageHidden: 4,
+        manageAdvanced: 5
+    })
 
-        // special treatment; these do not participate in the main settings' StackLayout
-        readonly property int signout: 100
-        readonly property int backUpSeed: 101
-    }
+    readonly property var currentUserStatus: ({
+        unknown: 0,
+        automatic: 1,
+        doNotDisturb: 2,
+        alwaysOnline: 3,
+        inactive: 4
+    })
 
-    readonly property QtObject walletSettingsSubsection: QtObject {
-        readonly property int manageNetworks: 0
-        readonly property int manageAccounts: 1
-        readonly property int manageAssets: 2
-        readonly property int manageCollectibles: 3
-        readonly property int manageHidden: 4
-        readonly property int manageAdvanced: 5
-    }
+    readonly property var onboarding: ({
+        userImageWidth: 40,
+        userImageHeight: 40,
+        defaultPinAttempts: 3,
+        defaultPukAttempts: 5
+    })
 
-    readonly property QtObject currentUserStatus: QtObject{
-        readonly property int unknown: 0
-        readonly property int automatic: 1
-        readonly property int doNotDisturb: 2
-        readonly property int alwaysOnline: 3
-        readonly property int inactive: 4
-    }
+    readonly property var onlineStatus: ({
+        unknown: -1,
+        inactive: 0,
+        online: 1
+    })
 
-    readonly property QtObject onboarding: QtObject {
-        readonly property int userImageWidth: 40
-        readonly property int userImageHeight: 40
-        readonly property int defaultPinAttempts: 3
-        readonly property int defaultPukAttempts: 5
-    }
+    readonly property var chatType: ({
+        category: -1,
+        unknown: 0,
+        oneToOne: 1,
+        publicChat: 2,
+        privateGroupChat: 3,
+        profile: 4,
+        communityChat: 6
+    })
 
-    readonly property QtObject onlineStatus: QtObject{
-        readonly property int unknown: -1
-        readonly property int inactive: 0
-        readonly property int online: 1
-    }
+    readonly property var profileType: ({
+        regular: 0,
+        self: 1,
+        blocked: 2,
+        bridged: 3
+    })
 
-    readonly property QtObject chatType: QtObject{
-        readonly property int category: -1
-        readonly property int unknown: 0
-        readonly property int oneToOne: 1
-        readonly property int publicChat: 2
-        readonly property int privateGroupChat: 3
-        readonly property int profile: 4
-        readonly property int communityChat: 6
-    }
+    readonly property var memberRole: ({
+        none: 0,
+        owner: 1,
+        admin: 4,
+        tokenMaster: 5
+    })
 
-    readonly property QtObject profileType: QtObject {
-        readonly property int regular: 0
-        readonly property int self: 1
-        readonly property int blocked: 2
-        readonly property int bridged: 3
-    }
+    readonly property var permissionType: ({
+        none: 0,
+        admin: 1,
+        member: 2,
+        read: 3,
+        viewAndPost: 4,
+        becomeTokenMaster: 5,
+        becomeTokenOwner: 6
+    })
 
-    readonly property QtObject memberRole: QtObject{
-        readonly property int none: 0
-        readonly property int owner: 1
-        readonly property int admin: 4
-        readonly property int tokenMaster: 5
-    }
+    readonly property var messageContentType: ({
+        newMessagesMarker: -3,
+        fetchMoreMessagesButton: -2,
+        chatIdentifier: -1,
+        unknownContentType: 0,
+        messageType: 1,
+        stickerType: 2,
+        statusType: 3,
+        emojiType: 4,
+        transactionType: 5,
+        systemMessagePrivateGroupType: 6,
+        imageType: 7,
+        audioType: 8,
+        communityInviteType: 9,
+        gapType: 10,
+        contactRequestType: 11,
+        discordMessageType: 12,
+        systemMessagePinnedMessage: 14,
+        systemMessageMutualEventSent: 15,
+        systemMessageMutualEventAccepted: 16,
+        systemMessageMutualEventRemoved: 17,
+        bridgeMessageType: 18
+    })
 
-    readonly property QtObject permissionType: QtObject{
-        readonly property int none: 0
-        readonly property int admin: 1
-        readonly property int member: 2
-        readonly property int read: 3
-        readonly property int viewAndPost: 4
-        readonly property int becomeTokenMaster: 5
-        readonly property int becomeTokenOwner: 6
-    }
+    readonly property var messageModelRoles: ({
+        responseToMessageWithId: 262
+    })
 
-    readonly property QtObject messageContentType: QtObject {
-        readonly property int newMessagesMarker: -3
-        readonly property int fetchMoreMessagesButton: -2
-        readonly property int chatIdentifier: -1
-        readonly property int unknownContentType: 0
-        readonly property int messageType: 1
-        readonly property int stickerType: 2
-        readonly property int statusType: 3
-        readonly property int emojiType: 4
-        readonly property int transactionType: 5
-        readonly property int systemMessagePrivateGroupType: 6
-        readonly property int imageType: 7
-        readonly property int audioType: 8
-        readonly property int communityInviteType: 9
-        readonly property int gapType: 10
-        readonly property int contactRequestType: 11
-        readonly property int discordMessageType: 12
-        readonly property int systemMessagePinnedMessage: 14
-        readonly property int systemMessageMutualEventSent: 15
-        readonly property int systemMessageMutualEventAccepted: 16
-        readonly property int systemMessageMutualEventRemoved: 17
-        readonly property int bridgeMessageType: 18
-    }
+    readonly property var contactType: ({
+        nonContact: 0,
+        contact: 1,
+        contactRequestReceived: 2,
+        contactRequestSent: 3
+    })
 
-    readonly property QtObject messageModelRoles: QtObject {
-        readonly property int responseToMessageWithId: 262 // ModelRole.ResponseToMessageWithId
-    }
+    readonly property var trustStatus: ({
+        unknown: 0,
+        trusted: 1,
+        untrustworthy: 2
+    })
 
-    readonly property QtObject contactType: QtObject {
-        readonly property int nonContact: 0
-        readonly property int contact: 1
-        readonly property int contactRequestReceived: 2
-        readonly property int contactRequestSent: 3
-    }
+    readonly property var contactsPanelUsage: ({
+        unknownPosition: -1,
+        mutualContacts: 0,
+        pendingContacts: 1,
+        blockedContacts: 2,
+        rejectedReceivedContactRequest: 3
+    })
 
-    readonly property QtObject trustStatus: QtObject {
-        readonly property int unknown: 0
-        readonly property int trusted: 1
-        readonly property int untrustworthy: 2
-    }
+    readonly property var displayName: ({
+        nameLengthMax: 20,
+        nameLengthMin: 5
+    })
 
-    readonly property QtObject contactsPanelUsage: QtObject {
-        readonly property int unknownPosition: -1
-        readonly property int mutualContacts: 0
-        readonly property int pendingContacts: 1
-        readonly property int blockedContacts: 2
-        readonly property int rejectedReceivedContactRequest: 3
-    }
-
-    readonly property QtObject displayName: QtObject {
-        readonly property int nameLengthMax: 20
-        readonly property int nameLengthMin: 5
-    }
-
-    readonly property QtObject keypair: QtObject {
-        readonly property int nameLengthMax: 20
-        readonly property int nameLengthMin: 1
-
-        readonly property QtObject type: QtObject {
-            readonly property int unknown: -1
-            readonly property int profile: 0
-            readonly property int seedImport: 1
-            readonly property int privateKeyImport: 2
-            readonly property int watchOnly: 3 // added just because of UI, impossible to have watch only keypair
+    readonly property var keypair: ({
+        nameLengthMax: 20,
+        nameLengthMin: 1,
+        type: {
+            unknown: -1,
+            profile: 0,
+            seedImport: 1,
+            privateKeyImport: 2,
+            watchOnly: 3
+        },
+        operability: {
+            nonOperable: "no",
+            partiallyOperable: "partially",
+            fullyOperable: "fully"
+        },
+        syncedFrom: {
+            backup: "backup"
         }
-
-        readonly property QtObject operability: QtObject {
-            readonly property string nonOperable: "no"        // an account is non operable it is not a keycard account and there is no keystore file for it and no keystore file for the address it is derived from
-            readonly property string partiallyOperable: "partially" // an account is partially operable if it is not a keycard account and there is created keystore file for the address it is derived from
-            readonly property string fullyOperable: "fully" // an account is fully operable if it is not a keycard account and there is a keystore file for it
-        }
-
-        readonly property QtObject syncedFrom: QtObject {
-            readonly property string backup: "backup" // means an account is coming from backed up data
-        }
-    }
+    })
 
     readonly property QtObject validators: QtObject {
         readonly property list<StatusValidator> keypairName: [
@@ -452,37 +444,37 @@ QtObject {
         property string dotSepString: '<font size="3">  &#x2022; </font>'
     }
 
-    readonly property QtObject ephemeralNotificationType: QtObject {
-        readonly property int normal: 0
-        readonly property int success: 1
-        readonly property int danger: 2
-    }
+    readonly property var ephemeralNotificationType: ({
+        normal: 0,
+        success: 1,
+        danger: 2
+    })
 
-    readonly property QtObject translationsState: QtObject {
-        readonly property int alpha: 0
-        readonly property int beta: 1
-        readonly property int stable: 2
-    }
+    readonly property var translationsState: ({
+        alpha: 0,
+        beta: 1,
+        stable: 2
+    })
 
-    readonly property QtObject authenticationReason: QtObject {
-        readonly property string enableBiometrics: "enable-biometrics"
-        readonly property string disableBiometrics: "disable-biometrics"
-        readonly property string enableStayLoggedIn: "enable-stay-logged-in"
-        readonly property string disableStayLoggedIn: "disable-stay-logged-in"
-        readonly property string migrateProfileEncryption: "migrate-profile-encryption"
-        readonly property string addAccount: "add-account"
-        readonly property string importKeypair: "import-keypair"
-        readonly property string syncDevice: "sync-device"
-        readonly property string signing: "signing"
-    }
+    readonly property var authenticationReason: ({
+        enableBiometrics: "enable-biometrics",
+        disableBiometrics: "disable-biometrics",
+        enableStayLoggedIn: "enable-stay-logged-in",
+        disableStayLoggedIn: "disable-stay-logged-in",
+        migrateProfileEncryption: "migrate-profile-encryption",
+        addAccount: "add-account",
+        importKeypair: "import-keypair",
+        syncDevice: "sync-device",
+        signing: "signing"
+    })
 
-    readonly property QtObject signingReason: QtObject {
-        readonly property string communityTokens: "community-tokens"
-        readonly property string communitiesSignSharedAddresses: "communities-sign-shared-addresses"
-        readonly property string walletSend: "wallet-send"
-        readonly property string swap: "swap"
-        readonly property string walletConnect: "wallet-connect"
-    }
+    readonly property var signingReason: ({
+        communityTokens: "community-tokens",
+        communitiesSignSharedAddresses: "communities-sign-shared-addresses",
+        walletSend: "wallet-send",
+        swap: "swap",
+        walletConnect: "wallet-connect"
+    })
 
     readonly property QtObject keycard: QtObject {
         readonly property int maxPinAttempts: 3
@@ -611,56 +603,53 @@ QtObject {
         readonly property string positiveRealNumbers: qsTr("Positive real numbers only")
     }
 
-    readonly property QtObject socialLinkType: QtObject {
-        readonly property int custom: 0
-        readonly property int twitter: 1
-        readonly property int personalSite: 2
-        readonly property int github: 3
-        readonly property int youtube: 4
-        readonly property int discord: 5
-        readonly property int telegram: 6
-    }
+    readonly property var socialLinkType: ({
+        custom: 0,
+        twitter: 1,
+        personalSite: 2,
+        github: 3,
+        youtube: 4,
+        discord: 5,
+        telegram: 6
+    })
 
     readonly property int maxSocialLinkTextLength: 24
 
-    readonly property QtObject addAccountPopup: QtObject {
-        readonly property int popupWidth: 480
-        readonly property int contentHeight1: 554
-        readonly property int itemHeight: 64
-        readonly property int importPrivateKeyWarningHeight: 86
-        readonly property int footerButtonsHeight: 44
-        readonly property int keyPairNameMaxLength: 20
-        readonly property int keyPairAccountNameMinLength: 1
-        readonly property int stepperWidth: 242
-
-        readonly property QtObject keyPairType: QtObject {
-            readonly property int unknown: -1
-            readonly property int profile: 0
-            readonly property int seedImport: 1
-            readonly property int privateKeyImport: 2
+    readonly property var addAccountPopup: ({
+        popupWidth: 480,
+        contentHeight1: 554,
+        itemHeight: 64,
+        importPrivateKeyWarningHeight: 86,
+        footerButtonsHeight: 44,
+        keyPairNameMaxLength: 20,
+        keyPairAccountNameMinLength: 1,
+        stepperWidth: 242,
+        keyPairType: {
+            unknown: -1,
+            profile: 0,
+            seedImport: 1,
+            privateKeyImport: 2
+        },
+        predefinedPaths: {
+            custom: "m/44'",
+            ethereum: "m/44'/60'/0'/0",
+            ethereumLedger: "m/44'/60'/0'",
+            ethereumLedgerLive: "m/44'/60'"
+        },
+        state: {
+            noState: "NoState",
+            main: "Main",
+            selectMasterKey: "SelectMasterKey",
+            enterSeedPhrase: "EnterSeedPhrase",
+            enterSeedPhraseWord1: "EnterSeedPhraseWord1",
+            enterSeedPhraseWord2: "EnterSeedPhraseWord2",
+            enterPrivateKey: "EnterPrivateKey",
+            enterKeypairName: "EnterKeypairName",
+            displaySeedPhrase: "DisplaySeedPhrase",
+            confirmAddingNewMasterKey: "ConfirmAddingNewMasterKey",
+            confirmSeedPhraseBackup: "ConfirmSeedPhraseBackup"
         }
-
-        readonly property QtObject predefinedPaths: QtObject {
-            readonly property string custom: "m/44'"
-            readonly property string ethereum: "m/44'/60'/0'/0"
-            readonly property string ethereumLedger: "m/44'/60'/0'"
-            readonly property string ethereumLedgerLive: "m/44'/60'"
-        }
-
-        readonly property QtObject state: QtObject {
-            readonly property string noState: "NoState"
-            readonly property string main: "Main"
-            readonly property string selectMasterKey: "SelectMasterKey"
-            readonly property string enterSeedPhrase: "EnterSeedPhrase"
-            readonly property string enterSeedPhraseWord1: "EnterSeedPhraseWord1"
-            readonly property string enterSeedPhraseWord2: "EnterSeedPhraseWord2"
-            readonly property string enterPrivateKey: "EnterPrivateKey"
-            readonly property string enterKeypairName: "EnterKeypairName"
-            readonly property string displaySeedPhrase: "DisplaySeedPhrase"
-            readonly property string confirmAddingNewMasterKey: "ConfirmAddingNewMasterKey"
-            readonly property string confirmSeedPhraseBackup: "ConfirmSeedPhraseBackup"
-        }
-    }
+    })
 
     readonly property QtObject keypairImportPopup: QtObject {
         readonly property int popupWidth: 480
@@ -690,18 +679,18 @@ QtObject {
         }
     }
 
-    readonly property QtObject localPairingAction: QtObject {
-        readonly property int actionUnknown: 0
-        readonly property int actionConnect: 1
-        readonly property int actionPairingAccount: 2
-        readonly property int actionSyncDevice: 3
-    }
+    readonly property var localPairingAction: ({
+        actionUnknown: 0,
+        actionConnect: 1,
+        actionPairingAccount: 2,
+        actionSyncDevice: 3
+    })
 
-    readonly property QtObject hiddenTokenLists: QtObject {
-        readonly property string nativeList: "native"
-        readonly property string custom: "custom"
-        readonly property string community: "community"
-    }
+    readonly property var hiddenTokenLists: ({
+        nativeList: "native",
+        custom: "custom",
+        community: "community"
+    })
 
     enum LocalPairingState {
         Idle = 0,
@@ -764,11 +753,11 @@ QtObject {
     readonly property string walletRootPath: "m/44'/60'/0'/0"
 
 
-    readonly property QtObject walletConnections: QtObject {
-        readonly property string collectibles: "collectibles"
-        readonly property string blockchains: "blockchains"
-        readonly property string market: "market"
-    }
+    readonly property var walletConnections: ({
+        collectibles: "collectibles",
+        blockchains: "blockchains",
+        market: "market"
+    })
 
     readonly property QtObject walletConstants: QtObject {
         readonly property string maxNumberOfAccountsTitle: qsTr("Limit of 20 accounts reached")
@@ -844,120 +833,119 @@ QtObject {
     // A custom gas amount above suggested * this factor gets a (non-blocking) warning.
     readonly property string highGasAmountWarningFactor: "2"
 
-    readonly property QtObject networkShortChainNames: QtObject {
-        readonly property string mainnet: "eth"
-        readonly property string arbitrum: "arb1"
-        readonly property string optimism: "oeth"
-        readonly property string base: "base"
-        readonly property string linea: "linea"
-        readonly property string unichain: "unichain"
-        readonly property string katana: "katana"
-        readonly property string ink: "ink"
-        readonly property string aabstract: "abstract"
-        readonly property string zkSync: "zksync"
-        readonly property string soneium: "soneium"
-        readonly property string scroll: "scroll"
-        readonly property string blast: "blast"
-        readonly property string robinhood: "rhc"
-        readonly property string binanceSmartChain: "bsc"
-    }
+    readonly property var networkShortChainNames: ({
+        mainnet: "eth",
+        arbitrum: "arb1",
+        optimism: "oeth",
+        base: "base",
+        linea: "linea",
+        unichain: "unichain",
+        katana: "katana",
+        ink: "ink",
+        aabstract: "abstract",
+        zkSync: "zksync",
+        soneium: "soneium",
+        scroll: "scroll",
+        blast: "blast",
+        robinhood: "rhc",
+        binanceSmartChain: "bsc"
+    })
 
-    readonly property QtObject networkNames: QtObject {
-        readonly property string mainnet: "Mainnet"
-        readonly property string hoodi: "Hoodi"
-        readonly property string sepolia: "Sepolia"
-        readonly property string arbitrum: "Arbitrum"
-        readonly property string sepoliaArbitrum: "Arbitrum Sepolia"
-        readonly property string optimism: "Optimism"
-        readonly property string sepoliaOptimism: "Optimism Sepolia"
-        readonly property string base: "Base"
-        readonly property string sepoliaBase: "Base Sepolia"
-        readonly property string linea: "Linea"
-        readonly property string sepoliaLinea: "Linea Sepolia"
-        readonly property string unichain: "Unichain"
-        readonly property string sepoliaUnichain: "Unichain Sepolia"
-        readonly property string katana: "Katana"
-        readonly property string bokutoKatana: "Katana Bokuto"
-        readonly property string ink: "Ink"
-        readonly property string sepoliaInk: "Ink Sepolia"
-        readonly property string aabstract: "Abstract"
-        readonly property string sepoliaAbstract: "Abstract Sepolia"
-        readonly property string zkSync: "ZKsync"
-        readonly property string sepoliaZkSync: "ZKsync Sepolia"
-        readonly property string soneium: "Soneium"
-        readonly property string minatoSoneium: "Soneium Minato"
-        readonly property string scroll: "Scroll"
-        readonly property string sepoliaScroll: "Scroll Sepolia"
-        readonly property string blast: "Blast"
-        readonly property string sepoliaBlast: "Blast Sepolia"
-        readonly property string robinhood: "Robinhood"
-        readonly property string testnetRobinhood: "Robinhood Testnet"
-        readonly property string binanceSmartChain: "BNB Smart Chain"
-        readonly property string testnetBinanceSmartChain: "BNB Smart Chain Testnet"
-    }
+    readonly property var networkNames: ({
+        mainnet: "Mainnet",
+        hoodi: "Hoodi",
+        sepolia: "Sepolia",
+        arbitrum: "Arbitrum",
+        sepoliaArbitrum: "Arbitrum Sepolia",
+        optimism: "Optimism",
+        sepoliaOptimism: "Optimism Sepolia",
+        base: "Base",
+        sepoliaBase: "Base Sepolia",
+        linea: "Linea",
+        sepoliaLinea: "Linea Sepolia",
+        unichain: "Unichain",
+        sepoliaUnichain: "Unichain Sepolia",
+        katana: "Katana",
+        bokutoKatana: "Katana Bokuto",
+        ink: "Ink",
+        sepoliaInk: "Ink Sepolia",
+        aabstract: "Abstract",
+        sepoliaAbstract: "Abstract Sepolia",
+        zkSync: "ZKsync",
+        sepoliaZkSync: "ZKsync Sepolia",
+        soneium: "Soneium",
+        minatoSoneium: "Soneium Minato",
+        scroll: "Scroll",
+        sepoliaScroll: "Scroll Sepolia",
+        blast: "Blast",
+        sepoliaBlast: "Blast Sepolia",
+        robinhood: "Robinhood",
+        testnetRobinhood: "Robinhood Testnet",
+        binanceSmartChain: "BNB Smart Chain",
+        testnetBinanceSmartChain: "BNB Smart Chain Testnet"
+    })
 
-    readonly property QtObject networkExplorerLinks: QtObject {
-        readonly property string etherscan: "https://etherscan.io"
-        readonly property string arbiscan: "https://arbiscan.io"
-        readonly property string optimism: "https://optimistic.etherscan.io"
-        readonly property string base: "https://basescan.org"
-        readonly property string linea: "https://lineascan.build"
-        readonly property string unichain: "https://unichain.blockscout.com"
-        readonly property string katana: "https://katanascan.com"
-        readonly property string ink: "https://explorer.inkonchain.com"
-        readonly property string aabstract: "https://abscan.org"
-        readonly property string zkSync: "https://explorer.zksync.io"
-        readonly property string soneium: "https://soneium.blockscout.com"
-        readonly property string scroll: "https://scrollscan.com"
-        readonly property string blast: "https://blastscan.io"
-        readonly property string robinhood: "https://robinhoodchain.blockscout.com"
-        readonly property string binanceSmartChain: "https://bscscan.com"
-        readonly property string hoodiEtherscan: "https://hoodi.etherscan.io"
-        readonly property string sepoliaEtherscan: "https://sepolia.etherscan.io"
-        readonly property string sepoliaArbiscan: "https://sepolia.arbiscan.io"
-        readonly property string sepoliaOptimism: "https://sepolia-optimism.etherscan.io"
-        readonly property string sepoliaBase: "https://sepolia.basescan.org"
-        readonly property string sepoliaLinea: "https://sepolia.lineascan.build"
-        readonly property string sepoliaUnichain: "https://unichain-sepolia.blockscout.com"
-        readonly property string bokutoKatana: "https://bokuto.katanascan.com"
-        readonly property string sepoliaInk: "https://explorer-sepolia.inkonchain.com"
-        readonly property string sepoliaAbstract: "https://sepolia.abscan.org"
-        readonly property string sepoliaZkSync: "https://sepolia.explorer.zksync.io"
-        readonly property string minatoSoneium: "https://soneium-minato.blockscout.com"
-        readonly property string sepoliaScroll: "https://sepolia.scrollscan.com"
-        readonly property string sepoliaBlast: "https://sepolia.blastscan.io"
-        readonly property string testnetRobinhood: "https://explorer.testnet.chain.robinhood.com"
-        readonly property string testnetBinanceSmartChain: "https://testnet.bscscan.com"
-        readonly property string addressPath: "address"
-        readonly property string txPath: "tx"
-    }
+    readonly property var networkExplorerLinks: ({
+        etherscan: "https://etherscan.io",
+        arbiscan: "https://arbiscan.io",
+        optimism: "https://optimistic.etherscan.io",
+        base: "https://basescan.org",
+        linea: "https://lineascan.build",
+        unichain: "https://unichain.blockscout.com",
+        katana: "https://katanascan.com",
+        ink: "https://explorer.inkonchain.com",
+        aabstract: "https://abscan.org",
+        zkSync: "https://explorer.zksync.io",
+        soneium: "https://soneium.blockscout.com",
+        scroll: "https://scrollscan.com",
+        blast: "https://blastscan.io",
+        robinhood: "https://robinhoodchain.blockscout.com",
+        binanceSmartChain: "https://bscscan.com",
+        hoodiEtherscan: "https://hoodi.etherscan.io",
+        sepoliaEtherscan: "https://sepolia.etherscan.io",
+        sepoliaArbiscan: "https://sepolia.arbiscan.io",
+        sepoliaOptimism: "https://sepolia-optimism.etherscan.io",
+        sepoliaBase: "https://sepolia.basescan.org",
+        sepoliaLinea: "https://sepolia.lineascan.build",
+        sepoliaUnichain: "https://unichain-sepolia.blockscout.com",
+        bokutoKatana: "https://bokuto.katanascan.com",
+        sepoliaInk: "https://explorer-sepolia.inkonchain.com",
+        sepoliaAbstract: "https://sepolia.abscan.org",
+        sepoliaZkSync: "https://sepolia.explorer.zksync.io",
+        minatoSoneium: "https://soneium-minato.blockscout.com",
+        sepoliaScroll: "https://sepolia.scrollscan.com",
+        sepoliaBlast: "https://sepolia.blastscan.io",
+        testnetRobinhood: "https://explorer.testnet.chain.robinhood.com",
+        testnetBinanceSmartChain: "https://testnet.bscscan.com",
+        addressPath: "address",
+        txPath: "tx"
+    })
 
-    readonly property QtObject openseaExplorerLinks: QtObject {
-        readonly property string mainnetLink: "https://opensea.io"
-        readonly property string testnetLink: "https://testnets.opensea.io" // not supported anymore
-
-        readonly property string ethereum: "ethereum"
-        readonly property string arbitrum: "arbitrum"
-        readonly property string optimism: "optimism"
-        readonly property string base: "base"
-        readonly property string linea: "linea"
-        readonly property string unichain: "unichain"
-        readonly property string katana: "katana" // opensea does not support katana yet
-        readonly property string ink: "ink" // opensea does not support ink yet
-        readonly property string aabstract: "abstract"
-        readonly property string zkSync: "zksync" // opensea does not support zkSync Era yet
-        readonly property string soneium: "soneium"
-        readonly property string scroll: "scroll" // opensea does not support scroll yet
-        readonly property string blast: "blast"
-        readonly property string robinhood: "robinhood" // opensea does not support robinhood chain yet
-        readonly property string binanceSmartChain: "binance-smart-chain" // testnet not supported
-        readonly property string hoodiEthereum: "hoodi" // testnet not supported
-        readonly property string sepoliaEthereum: "sepolia" // testnet not supported
-        readonly property string sepoliaArbitrum: "arbitrum-sepolia" // testnet not supported
-        readonly property string sepoliaOptimism: "optimism-sepolia" // testnet not supported
-        readonly property string sepoliaBase: "base-sepolia" // testnet not supported
-        readonly property string sepoliaLinea: "linea-sepolia" // testnet not supported
-    }
+    readonly property var openseaExplorerLinks: ({
+        mainnetLink: "https://opensea.io",
+        testnetLink: "https://testnets.opensea.io",
+        ethereum: "ethereum",
+        arbitrum: "arbitrum",
+        optimism: "optimism",
+        base: "base",
+        linea: "linea",
+        unichain: "unichain",
+        katana: "katana",
+        ink: "ink",
+        aabstract: "abstract",
+        zkSync: "zksync",
+        soneium: "soneium",
+        scroll: "scroll",
+        blast: "blast",
+        robinhood: "robinhood",
+        binanceSmartChain: "binance-smart-chain",
+        hoodiEthereum: "hoodi",
+        sepoliaEthereum: "sepolia",
+        sepoliaArbitrum: "arbitrum-sepolia",
+        sepoliaOptimism: "optimism-sepolia",
+        sepoliaBase: "base-sepolia",
+        sepoliaLinea: "linea-sepolia"
+    })
 
     readonly property string api_request: "api-request"
     readonly property string web3SendAsyncReadOnly: "web3-send-async-read-only"
@@ -1030,12 +1018,12 @@ QtObject {
         "connected-different-key": qsTr("Continuing will require a transaction to connect the username with your current chat key."),
     }
 
-    readonly property QtObject startupErrorType: QtObject {
-        readonly property int unknownType: 0
-        readonly property int importAccError: 1
-        readonly property int setupAccError: 2
-        readonly property int convertToRegularAccError: 3
-    }
+    readonly property var startupErrorType: ({
+        unknownType: 0,
+        importAccError: 1,
+        setupAccError: 2,
+        convertToRegularAccError: 3
+    })
 
     readonly property string existingAccountError: "account already exists"
     readonly property string wrongDerivationPathError: "error parsing derivation path"
@@ -1043,11 +1031,11 @@ QtObject {
     readonly property int minPasswordLength: 10
     readonly property int maxPasswordLength: 100
 
-    readonly property QtObject suggestedRoutesExtraParamsProperties: QtObject {
-        readonly property string packId: "packID"
-        readonly property string username: "username"
-        readonly property string publicKey: "publicKey"
-    }
+    readonly property var suggestedRoutesExtraParamsProperties: ({
+        packId: "packID",
+        username: "username",
+        publicKey: "publicKey"
+    })
 
     enum SendType {
         Transfer,
@@ -1083,93 +1071,89 @@ QtObject {
         NoError
     }
 
-    readonly property QtObject routerErrorCodes: QtObject {
-
-        readonly property string errInternal: "-1" // comes from Nim side
-        readonly property string errGeneric: "0"
-
-        readonly property QtObject processor: QtObject {
-            readonly property string errFailedToParseBaseFee           : "WPP-001"
-            readonly property string errFailedToParsePercentageFee     : "WPP-002"
-            readonly property string errContractNotFound               : "WPP-003"
-            readonly property string errNetworkNotFound                : "WPP-004"
-            readonly property string errTokenNotFound                  : "WPP-005"
-            readonly property string errNoEstimationFound              : "WPP-006"
-            readonly property string errNotAvailableForContractType    : "WPP-007"
-            readonly property string errNoBonderFeeFound               : "WPP-008"
-            readonly property string errContractTypeNotSupported       : "WPP-009"
-            readonly property string errFromChainNotSupported          : "WPP-010"
-            readonly property string errToChainNotSupported            : "WPP-011"
-            readonly property string errTxForChainNotSupported         : "WPP-012"
-            readonly property string errENSResolverNotFound            : "WPP-013"
-            readonly property string errENSRegistrarNotFound           : "WPP-014"
-            readonly property string errToAndFromTokensMustBeSet       : "WPP-015"
-            readonly property string errCannotResolveTokens            : "WPP-016"
-            readonly property string errPriceRouteNotFound             : "WPP-017"
-            readonly property string errConvertingAmountToBigInt       : "WPP-018"
-            readonly property string errNoChainSet                     : "WPP-019"
-            readonly property string errNoTokenSet                     : "WPP-020"
-            readonly property string errToTokenShouldNotBeSet          : "WPP-021"
-            readonly property string errFromAndToChainsMustBeDifferent : "WPP-022"
-            readonly property string errFromAndToChainsMustBeSame      : "WPP-023"
-            readonly property string errFromAndToTokensMustBeDifferent : "WPP-024"
-            readonly property string errTransferCustomError            : "WPP-025"
-            readonly property string errERC721TransferCustomError      : "WPP-026"
-            readonly property string errERC1155TransferCustomError     : "WPP-027"
-            readonly property string errBridgeHopCustomError           : "WPP-028"
-            readonly property string errBridgeCellerCustomError        : "WPP-029"
-            readonly property string errSwapParaswapCustomError        : "WPP-030"
-            readonly property string errENSRegisterCustomError         : "WPP-031"
-            readonly property string errENSReleaseCustomError          : "WPP-032"
-            readonly property string errENSPublicKeyCustomError        : "WPP-033"
-            readonly property string errStickersBuyCustomError         : "WPP-034"
-            readonly property string errContextCancelled               : "WPP-035"
-            readonly property string errContextDeadlineExceeded        : "WPP-036"
-            readonly property string errPriceTimeout                   : "WPP-037"
-            readonly property string errNotEnoughLiquidity             : "WPP-038"
-            readonly property string errPriceImpactTooHigh             : "WPP-039"
-            readonly property string errLiFiCustomError                : "WPP-044"
-            readonly property string errRelayCustomError               : "WPP-045"
-            readonly property string errNoRoutesFound                  : "WPP-046"
-            readonly property string errNoQuotesAvailable              : "WPP-047"
-            readonly property string errSlippageExceeded               : "WPP-048"
-            readonly property string errAmountTooLow                   : "WPP-049"
-            readonly property string errAmountTooHigh                  : "WPP-050"
-            readonly property string errUnsupportedCurrency            : "WPP-051"
-            readonly property string errUnsupportedChain               : "WPP-052"
+    readonly property var routerErrorCodes: ({
+        errInternal: "-1",
+        errGeneric: "0",
+        processor: {
+            errFailedToParseBaseFee: "WPP-001",
+            errFailedToParsePercentageFee: "WPP-002",
+            errContractNotFound: "WPP-003",
+            errNetworkNotFound: "WPP-004",
+            errTokenNotFound: "WPP-005",
+            errNoEstimationFound: "WPP-006",
+            errNotAvailableForContractType: "WPP-007",
+            errNoBonderFeeFound: "WPP-008",
+            errContractTypeNotSupported: "WPP-009",
+            errFromChainNotSupported: "WPP-010",
+            errToChainNotSupported: "WPP-011",
+            errTxForChainNotSupported: "WPP-012",
+            errENSResolverNotFound: "WPP-013",
+            errENSRegistrarNotFound: "WPP-014",
+            errToAndFromTokensMustBeSet: "WPP-015",
+            errCannotResolveTokens: "WPP-016",
+            errPriceRouteNotFound: "WPP-017",
+            errConvertingAmountToBigInt: "WPP-018",
+            errNoChainSet: "WPP-019",
+            errNoTokenSet: "WPP-020",
+            errToTokenShouldNotBeSet: "WPP-021",
+            errFromAndToChainsMustBeDifferent: "WPP-022",
+            errFromAndToChainsMustBeSame: "WPP-023",
+            errFromAndToTokensMustBeDifferent: "WPP-024",
+            errTransferCustomError: "WPP-025",
+            errERC721TransferCustomError: "WPP-026",
+            errERC1155TransferCustomError: "WPP-027",
+            errBridgeHopCustomError: "WPP-028",
+            errBridgeCellerCustomError: "WPP-029",
+            errSwapParaswapCustomError: "WPP-030",
+            errENSRegisterCustomError: "WPP-031",
+            errENSReleaseCustomError: "WPP-032",
+            errENSPublicKeyCustomError: "WPP-033",
+            errStickersBuyCustomError: "WPP-034",
+            errContextCancelled: "WPP-035",
+            errContextDeadlineExceeded: "WPP-036",
+            errPriceTimeout: "WPP-037",
+            errNotEnoughLiquidity: "WPP-038",
+            errPriceImpactTooHigh: "WPP-039",
+            errLiFiCustomError: "WPP-044",
+            errRelayCustomError: "WPP-045",
+            errNoRoutesFound: "WPP-046",
+            errNoQuotesAvailable: "WPP-047",
+            errSlippageExceeded: "WPP-048",
+            errAmountTooLow: "WPP-049",
+            errAmountTooHigh: "WPP-050",
+            errUnsupportedCurrency: "WPP-051",
+            errUnsupportedChain: "WPP-052"
+        },
+        router: {
+            errENSRegisterRequiresUsernameAndPubKey: "WRR-001",
+            errENSRegisterTestnetSTTOnly: "WRR-002",
+            errENSRegisterMainnetSNTOnly: "WRR-003",
+            errENSReleaseRequiresUsername: "WRR-004",
+            errENSSetPubKeyRequiresUsernameAndPubKey: "WRR-005",
+            errStickersBuyRequiresPackID: "WRR-006",
+            errSwapRequiresToTokenID: "WRR-007",
+            errSwapTokenIDMustBeDifferent: "WRR-008",
+            errSwapAmountInAmountOutMustBeExclusive: "WRR-009",
+            errSwapAmountInMustBePositive: "WRR-010",
+            errSwapAmountOutMustBePositive: "WRR-011",
+            errLockedAmountNotSupportedForNetwork: "WRR-012",
+            errLockedAmountNotNegative: "WRR-013",
+            errLockedAmountExceedsTotalSendAmount: "WRR-014",
+            errLockedAmountLessThanSendAmountAllNetworks: "WRR-015",
+            errDisabledChainFoundAmongLockedNetworks: "WRR-016",
+            errENSSetPubKeyInvalidUsername: "WRR-017",
+            errLockedAmountExcludesAllSupported: "WRR-018",
+            errCannotCheckLockedAmounts: "WRR-019",
+            errNotEnoughTokenBalance: "WR-001",
+            errNotEnoughNativeBalance: "WR-002",
+            errNativeTokenNotFound: "WR-003",
+            errTokenNotFound: "WR-004",
+            errNoBestRouteFound: "WR-005",
+            errCannotCheckReceiverBalance: "WR-006",
+            errLowAmountInForHopBridge: "WR-007",
+            errNoPositiveBalance: "WR-008"
         }
-
-        readonly property QtObject router: QtObject {
-            readonly property string errENSRegisterRequiresUsernameAndPubKey      : "WRR-001"
-            readonly property string errENSRegisterTestnetSTTOnly                 : "WRR-002"
-            readonly property string errENSRegisterMainnetSNTOnly                 : "WRR-003"
-            readonly property string errENSReleaseRequiresUsername                : "WRR-004"
-            readonly property string errENSSetPubKeyRequiresUsernameAndPubKey     : "WRR-005"
-            readonly property string errStickersBuyRequiresPackID                 : "WRR-006"
-            readonly property string errSwapRequiresToTokenID                     : "WRR-007"
-            readonly property string errSwapTokenIDMustBeDifferent                : "WRR-008"
-            readonly property string errSwapAmountInAmountOutMustBeExclusive      : "WRR-009"
-            readonly property string errSwapAmountInMustBePositive                : "WRR-010"
-            readonly property string errSwapAmountOutMustBePositive               : "WRR-011"
-            readonly property string errLockedAmountNotSupportedForNetwork        : "WRR-012"
-            readonly property string errLockedAmountNotNegative                   : "WRR-013"
-            readonly property string errLockedAmountExceedsTotalSendAmount        : "WRR-014"
-            readonly property string errLockedAmountLessThanSendAmountAllNetworks : "WRR-015"
-            readonly property string errDisabledChainFoundAmongLockedNetworks     : "WRR-016"
-            readonly property string errENSSetPubKeyInvalidUsername               : "WRR-017"
-            readonly property string errLockedAmountExcludesAllSupported          : "WRR-018"
-            readonly property string errCannotCheckLockedAmounts                  : "WRR-019"
-
-            readonly property string errNotEnoughTokenBalance                     : "WR-001"
-            readonly property string errNotEnoughNativeBalance                    : "WR-002"
-            readonly property string errNativeTokenNotFound                       : "WR-003"
-            readonly property string errTokenNotFound                             : "WR-004"
-            readonly property string errNoBestRouteFound                          : "WR-005"
-            readonly property string errCannotCheckReceiverBalance                : "WR-006"
-            readonly property string errLowAmountInForHopBridge                   : "WR-007"
-            readonly property string errNoPositiveBalance                         : "WR-008"
-        }
-    }
+    })
 
     enum FeesMode {
         Low,
@@ -1177,12 +1161,12 @@ QtObject {
         High
     }
 
-    readonly property QtObject txStatus: QtObject {
-        readonly property string sending: "Sending"
-        readonly property string pending: "Pending"
-        readonly property string success: "Success"
-        readonly property string failed: "Failed"
-    }
+    readonly property var txStatus: ({
+        sending: "Sending",
+        pending: "Pending",
+        success: "Success",
+        failed: "Failed"
+    })
 
     enum AuthSignPurpose {
         General,
@@ -1287,18 +1271,18 @@ QtObject {
         Custom
     }
 
-    readonly property QtObject time: QtObject {
-        readonly property int hoursIn7Days: 168
-        readonly property int hoursInDay: 24
-        readonly property int secondsIn7Days: 604800
-        readonly property int secondsInHour: 3600
-    }
+    readonly property var time: ({
+        hoursIn7Days: 168,
+        hoursInDay: 24,
+        secondsIn7Days: 604800,
+        secondsInHour: 3600
+    })
 
-    readonly property QtObject walletSection: QtObject {
-        readonly property string authenticationCanceled: "authenticationCanceled"
+    readonly property var walletSection: ({
+        authenticationCanceled: "authenticationCanceled",
         // the route's gas changed, nothing was sent; keep in sync with RouteNeedsReviewError
-        readonly property string routeNeedsReview: "routeNeedsReview"
-    }
+        routeNeedsReview: "routeNeedsReview"
+    })
 
     // list of symbols for which pngs are stored to avoid
     // accessing not existing resources and providing
@@ -1363,33 +1347,32 @@ QtObject {
     }
 
     // Message outgoing status
-    readonly property QtObject messageOutgoingStatus: QtObject {
-        readonly property string sending: "sending"
-        readonly property string sent: "sent"
-        readonly property string delivered: "delivered"
-        readonly property string expired: "expired"
-        readonly property string failedResending: "failedResending"
-    }
+    readonly property var messageOutgoingStatus: ({
+        sending: "sending",
+        sent: "sent",
+        delivered: "delivered",
+        expired: "expired",
+        failedResending: "failedResending"
+    })
 
-    readonly property QtObject appTranslatableConstants: QtObject {
-        readonly property string loginAccountsListAddNewUser: "LOGIN-ACCOUNTS-LIST-ADD-NEW-USER"
-        readonly property string loginAccountsListAddExistingUser: "LOGIN-ACCOUNTS-LIST-ADD-EXISTING-USER"
-        readonly property string loginAccountsListLostKeycard: "LOGIN-ACCOUNTS-LIST-LOST-KEYCARD"
-        readonly property string addAccountLabelNewWatchOnlyAccount: "LABEL-NEW-WATCH-ONLY-ACCOUNT"
-        readonly property string addAccountLabelWatchOnlyAccount: "LABEL-WATCH-ONLY-ACCOUNT"
-        readonly property string addAccountLabelExisting: "LABEL-EXISTING"
-        readonly property string addAccountLabelImportNew: "LABEL-IMPORT-NEW"
-        readonly property string addAccountLabelOptionAddNewMasterKey: "LABEL-OPTION-ADD-NEW-MASTER-KEY"
-        readonly property string addAccountLabelOptionAddWatchOnlyAcc: "LABEL-OPTION-ADD-WATCH-ONLY-ACC"
-        readonly property string keycardAccountNameOfUnknownWalletAccount: "KEYCARD-ACCOUNT-NAME-OF-UNKNOWN-WALLET-ACCOUNT"
-
-        readonly property string communityTokenTxErrorFailedToStart: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-START"
-        readonly property string communityTokenTxErrorNoAccount: "COMMUNITY-TOKEN-TX-ERROR-NO-ACCOUNT"
-        readonly property string communityTokenTxErrorFailedToPrepare: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE"
-        readonly property string communityTokenTxErrorFailedToSend: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-SEND"
-        readonly property string communityTokenTxErrorSigningIncomplete: "COMMUNITY-TOKEN-TX-ERROR-SIGNING-INCOMPLETE"
-        readonly property string communityTokenTxErrorFailedToPrepareSigning: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE-SIGNING"
-    }
+    readonly property var appTranslatableConstants: ({
+        loginAccountsListAddNewUser: "LOGIN-ACCOUNTS-LIST-ADD-NEW-USER",
+        loginAccountsListAddExistingUser: "LOGIN-ACCOUNTS-LIST-ADD-EXISTING-USER",
+        loginAccountsListLostKeycard: "LOGIN-ACCOUNTS-LIST-LOST-KEYCARD",
+        addAccountLabelNewWatchOnlyAccount: "LABEL-NEW-WATCH-ONLY-ACCOUNT",
+        addAccountLabelWatchOnlyAccount: "LABEL-WATCH-ONLY-ACCOUNT",
+        addAccountLabelExisting: "LABEL-EXISTING",
+        addAccountLabelImportNew: "LABEL-IMPORT-NEW",
+        addAccountLabelOptionAddNewMasterKey: "LABEL-OPTION-ADD-NEW-MASTER-KEY",
+        addAccountLabelOptionAddWatchOnlyAcc: "LABEL-OPTION-ADD-WATCH-ONLY-ACC",
+        keycardAccountNameOfUnknownWalletAccount: "KEYCARD-ACCOUNT-NAME-OF-UNKNOWN-WALLET-ACCOUNT",
+        communityTokenTxErrorFailedToStart: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-START",
+        communityTokenTxErrorNoAccount: "COMMUNITY-TOKEN-TX-ERROR-NO-ACCOUNT",
+        communityTokenTxErrorFailedToPrepare: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE",
+        communityTokenTxErrorFailedToSend: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-SEND",
+        communityTokenTxErrorSigningIncomplete: "COMMUNITY-TOKEN-TX-ERROR-SIGNING-INCOMPLETE",
+        communityTokenTxErrorFailedToPrepareSigning: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE-SIGNING"
+    })
 
     enum CommunitySettingsSections {
         Overview,
@@ -1424,21 +1407,21 @@ QtObject {
         BannedWithAllMessagesDelete
     }
 
-    readonly property QtObject walletAccountColors: QtObject {
-        readonly property string primary: "primary"
-        readonly property string purple: "purple"
-        readonly property string orange: "orange"
-        readonly property string army: "army"
-        readonly property string turquoise: "turquoise"
-        readonly property string sky: "sky"
-        readonly property string yellow: "yellow"
-        readonly property string pink: "pink"
-        readonly property string copper: "copper"
-        readonly property string camel: "camel"
-        readonly property string magenta: "magenta"
-        readonly property string yinYang: "yinYang"
-        readonly property string undefinedAccount: "undefined"
-    }
+    readonly property var walletAccountColors: ({
+        primary: "primary",
+        purple: "purple",
+        orange: "orange",
+        army: "army",
+        turquoise: "turquoise",
+        sky: "sky",
+        yellow: "yellow",
+        pink: "pink",
+        copper: "copper",
+        camel: "camel",
+        magenta: "magenta",
+        yinYang: "yinYang",
+        undefinedAccount: "undefined"
+    })
 
     enum MutingVariations {
         For15min = 1,
@@ -1482,41 +1465,33 @@ QtObject {
         Done = 2
     }
 
-    readonly property QtObject swap: QtObject {
-        /* TODO: https://github.com/status-im/status-app/issues/15329
-        This is only added temporarily until we have an api from the backend in order to get
-        this list dynamically */
-        readonly property string paraswapName: "Velora"
-        readonly property string paraswapIcon: "paraswap"
-        readonly property string paraswapHostname: "app.velora.xyz"
-        readonly property string paraswapUrl: "https://www.velora.xyz/"
-        readonly property string paraswapV5ApproveContractAddress: "0x216B4B4Ba9F3e719726886d34a177484278Bfcae"
-        readonly property string paraswapV5SwapContractAddress: "0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"
-        readonly property string paraswapV6_2ContractAddress: "0x6a000f20005980200259b80c5102003040001068"
-        readonly property string paraswapTermsAndConditionUrl: "https://www.velora.xyz/terms/terms-of-use"
-
-        readonly property string lifiName: "LI.FI"
-        readonly property string lifiIcon: "lifi" // FIXME add ui/StatusQ/src/assets/png/swap/lifi.png
-        readonly property string lifiHostname: "li.fi"
-        readonly property string lifiUrl: "https://li.fi/"
-        readonly property string lifiTermsAndConditionUrl: "https://li.fi/legal/terms-and-conditions/"
-        readonly property string lifiContractAddress: "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"
-
-        readonly property string relayName: "Relay"
-        readonly property string relayIcon: "relay"
-        readonly property string relayHostname: "relay.link"
-        readonly property string relayUrl: "https://relay.link/"
-        readonly property string relayTermsAndConditionUrl: "https://relay.link/terms"
-
-        readonly property string paraswapProcessorName: "Paraswap"
-        readonly property string lifiProcessorName: "LiFi"
-        readonly property string relayProcessorName: "Relay"
-
-        // How the provider ranks routes; sent verbatim as LI.FI's `order` parameter.
-        readonly property string routeOrderBestReturn: "RECOMMENDED"
-        readonly property string routeOrderFastest: "FASTEST"
-        readonly property string routeOrderLowestFee: "CHEAPEST"
-    }
+    readonly property var swap: ({
+        paraswapName: "Velora",
+        paraswapIcon: "paraswap",
+        paraswapHostname: "app.velora.xyz",
+        paraswapUrl: "https://www.velora.xyz/",
+        paraswapV5ApproveContractAddress: "0x216B4B4Ba9F3e719726886d34a177484278Bfcae",
+        paraswapV5SwapContractAddress: "0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57",
+        paraswapV6_2ContractAddress: "0x6a000f20005980200259b80c5102003040001068",
+        paraswapTermsAndConditionUrl: "https://www.velora.xyz/terms/terms-of-use",
+        lifiName: "LI.FI",
+        lifiIcon: "lifi",
+        lifiHostname: "li.fi",
+        lifiUrl: "https://li.fi/",
+        lifiTermsAndConditionUrl: "https://li.fi/legal/terms-and-conditions/",
+        lifiContractAddress: "0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE",
+        relayName: "Relay",
+        relayIcon: "relay",
+        relayHostname: "relay.link",
+        relayUrl: "https://relay.link/",
+        relayTermsAndConditionUrl: "https://relay.link/terms",
+        paraswapProcessorName: "Paraswap",
+        lifiProcessorName: "LiFi",
+        relayProcessorName: "Relay",
+        routeOrderBestReturn: "RECOMMENDED",
+        routeOrderFastest: "FASTEST",
+        routeOrderLowestFee: "CHEAPEST"
+    })
 
     // Mirrors src/app_service/service/transaction/service.nim -> EstimatedTime
     enum TransactionEstimatedTime {
@@ -1550,18 +1525,18 @@ QtObject {
         SavedAddresses
     }
 
-    readonly property QtObject rpcProviderTypes: QtObject {
-        readonly property string embeddedEthRpcProxy: "embedded-eth-rpc-proxy"
-        readonly property string embeddedDirect: "embedded-direct"
-        readonly property string user: "user"
-    }
+    readonly property var rpcProviderTypes: ({
+        embeddedEthRpcProxy: "embedded-eth-rpc-proxy",
+        embeddedDirect: "embedded-direct",
+        user: "user"
+    })
 
-    readonly property QtObject rpcProviderAuthTypes: QtObject {
-        readonly property string noAuth: "no-auth"
-        readonly property string basicAuth: "basic-auth"
-        readonly property string tokenAuth: "token-auth"
-        readonly property string puzzleAuth: "puzzle-auth"
-    }
+    readonly property var rpcProviderAuthTypes: ({
+        noAuth: "no-auth",
+        basicAuth: "basic-auth",
+        tokenAuth: "token-auth",
+        puzzleAuth: "puzzle-auth"
+    })
 
     readonly property int maxActiveNetworks: 5
 
@@ -1573,14 +1548,14 @@ QtObject {
         Completed
     }
 
-    readonly property QtObject keycardChannelState: QtObject {
-        readonly property string idle: "idle"
-        readonly property string waitingForKeycard: "waiting-for-keycard"
-        readonly property string reading: "reading"
-        readonly property string error: "error"
-        readonly property string notSupported: "not-supported"
-        readonly property string notAvailable: "not-available"
-    }
+    readonly property var keycardChannelState: ({
+        idle: "idle",
+        waitingForKeycard: "waiting-for-keycard",
+        reading: "reading",
+        error: "error",
+        notSupported: "not-supported",
+        notAvailable: "not-available"
+    })
 
     readonly property string bugReportUrl: "https://github.com/status-im/status-app/issues/new?template=bug.md"
 }

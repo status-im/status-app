@@ -48,7 +48,6 @@ import AppLayouts.Communities.stores
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Profile.helpers
-import AppLayouts.Wallet.popups as WalletPopups
 import AppLayouts.Wallet.popups.dapps as DAppsPopups
 import AppLayouts.Wallet.stores as WalletStores
 import AppLayouts.stores as AppStores
@@ -1691,8 +1690,37 @@ Item {
         function openSearchPopup(chatId = "", threadId = "") {
             if (homePageLoader.active)
                 return
-            if (!active)
+            if (!active) {
                 active = true
+                setSource(Qt.resolvedUrl("AppSearch.qml"), {
+                    personalChatsSectionId: Qt.binding(() => d.myPublicKey),
+                    threadsEnabled: Qt.binding(() => appMain.featureFlagsStore.threadsEnabled),
+                    threadLocationMenuModel: Qt.binding(() => appMain.appSearchStore.threadLocationMenuModel),
+                    threadLocationsLoading: Qt.binding(() => appMain.appSearchStore.threadLocationsLoading),
+                    threadLocationsError: Qt.binding(() => appMain.appSearchStore.threadLocationsError),
+                    prepareThreadLocationMenuModelFn: appMain.appSearchStore.prepareThreadLocationMenuModel,
+                    prepareThreadLocationsForSectionFn: appMain.appSearchStore.prepareThreadLocationsForSection,
+                    locationMenuModel: Qt.binding(() => appMain.appSearchStore.locationMenuModel),
+                    resultModel: Qt.binding(() => appMain.appSearchStore.resultModel),
+                    searchInProgress: Qt.binding(() => appMain.appSearchStore.searchInProgress),
+                    setSearchLocationFn: function(location, subLocation, threadId) {
+                        appMain.appSearchStore.setSearchLocation(location, subLocation, threadId)
+                    },
+                    prepareLocationMenuModelFn: function() {
+                        appMain.appSearchStore.prepareLocationMenuModel()
+                    },
+                    getSearchLocationObjectFn: function(chatId, threadId) {
+                        return appMain.appSearchStore.getSearchLocationObject(chatId, threadId)
+                    },
+                    isChatKeyFn: function(value) {
+                        return appMain.utilsStore.isChatKey(value)
+                    },
+                    openProfilePopupFn: function(publicKey, parentPopup) {
+                        Global.openProfilePopup(publicKey, parentPopup)
+                    },
+                    resolveMentionsFn: text => appMain.mentionResolver.resolveFor(text)
+                })
+            }
             item.openSearchPopup(chatId, threadId)
         }
 
@@ -1703,40 +1731,19 @@ Item {
             active = false
         }
 
-        sourceComponent: AppSearch {
-            personalChatsSectionId: d.myPublicKey
-            threadsEnabled: appMain.featureFlagsStore.threadsEnabled
-            threadLocationMenuModel: appMain.appSearchStore.threadLocationMenuModel
-            threadLocationsLoading: appMain.appSearchStore.threadLocationsLoading
-            threadLocationsError: appMain.appSearchStore.threadLocationsError
-            prepareThreadLocationMenuModelFn: appMain.appSearchStore.prepareThreadLocationMenuModel
-            prepareThreadLocationsForSectionFn: appMain.appSearchStore.prepareThreadLocationsForSection
-            locationMenuModel: appMain.appSearchStore.locationMenuModel
-            resultModel: appMain.appSearchStore.resultModel
-            searchInProgress: appMain.appSearchStore.searchInProgress
-            setSearchLocationFn: function(location, subLocation, threadId) {
-                appMain.appSearchStore.setSearchLocation(location, subLocation, threadId)
-            }
-            prepareLocationMenuModelFn: function() {
-                appMain.appSearchStore.prepareLocationMenuModel()
-            }
-            getSearchLocationObjectFn: function(chatId, threadId) {
-                return appMain.appSearchStore.getSearchLocationObject(chatId, threadId)
-            }
-            isChatKeyFn: function(value) {
-                return appMain.utilsStore.isChatKey(value)
-            }
-            openProfilePopupFn: function(publicKey, parentPopup) {
-                Global.openProfilePopup(publicKey, parentPopup)
-            }
-            onSearchMessages: (searchTerm) => {
+        Connections {
+            target: appSearch.item
+            ignoreUnknownSignals: true
+
+            function onSearchMessages(searchTerm) {
                 appMain.appSearchStore.searchMessages(searchTerm)
             }
-            onResultItemClicked: (itemId) => {
+            function onResultItemClicked(itemId) {
                 appMain.appSearchStore.resultItemClicked(itemId)
             }
-            resolveMentionsFn: text => appMain.mentionResolver.resolveFor(text)
-            onClosed: appSearch.active = false
+            function onClosed() {
+                appSearch.active = false
+            }
         }
     }
 
@@ -2160,22 +2167,23 @@ Item {
                     id: acPanelLoader
                     // kept alive while the panel animates out, released once fully closed
                     active: mainLayoutItem.openACCenterPanel || acSlideContainer._shown || acPortraitPopup.visible
-                    sourceComponent: ActivityCenterAdaptor {
-                        contactsModel: appMain.contactsStore?.contactsModel ?? null
-                        userProfileName: appMain.profileStore?.name ?? ""
-                        resolveMentionsFn: (text, knownNames) => appMain.mentionResolver.resolveFor(text, knownNames)
-                        notifications: appMain.activityCenterStore?.activityCenterNotifications ?? null
+                    Component.onCompleted: setSource(Qt.resolvedUrl("../AppLayouts/ActivityCenter/adaptors/ActivityCenterAdaptor.qml"), {
+                        contactsModel: Qt.binding(() => appMain.contactsStore?.contactsModel ?? null),
+                        userProfileName: Qt.binding(() => appMain.profileStore?.name ?? ""),
+                        resolveMentionsFn: (text, knownNames) => appMain.mentionResolver.resolveFor(text, knownNames),
+                        notifications: Qt.binding(() => appMain.activityCenterStore?.activityCenterNotifications ?? null),
                         getCommunityDetails: function(communityId) {
                             return appMain.rootChatStore?.getCommunityDetailsAsJson(communityId) ?? ({})
-                        }
+                        },
                         getChatDetails: function(chatId) {
                             return appMain.rootChatStore?.getChatDetails(chatId) ?? ({})
                         }
-                        onPopulateContactDetailsRequested: (contactId) => appMain.contactsStore.populateContactDetails(contactId)
-                    }
+                    })
+                    onLoaded: item.populateContactDetailsRequested.connect(
+                                  contactId => appMain.contactsStore.populateContactDetails(contactId))
                 }
 
-                readonly property ActivityCenterAdaptor adaptor: acPanelLoader.item
+                readonly property QtObject adaptor: acPanelLoader.item
 
                 backgroundColor: Theme.palette.statusAppLayout.backgroundColor
 
@@ -2763,24 +2771,20 @@ Item {
                     anchors.right: parent.right
                     anchors.left: appMain.isPortraitMode ? parent.left : undefined
 
-                    sourceComponent: CreateChatView {
-                        width: Math.min(Math.max(implicitWidth, createChatView.defaultWidth), createChatView.parent.width)
-                        utilsStore: appMain.utilsStore
-                        rootStore: ChatStores.RootStore {
-                            contactsStore: appMain.contactsStore
-                            currencyStore: appMain.currencyStore
-                            communityTokensStore: appMain.communityTokensStore
-                            openCreateChat: createChatView.opened
-                            isChatSectionModule: true
-                        }
-                        createChatPropertiesStore: appMain.createChatPropertiesStore
-
-                        mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
-                        allContactsModel: appMain.contactsStore.contactsModel
-
-                        onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) =>
-                            popupRequestsHandler.openGifs(params, cbOnGifSelected, cbOnClose)
-                    }
+                    Component.onCompleted: setSource(Qt.resolvedUrl("CreateChatViewInstance.qml"), {
+                        defaultWidth: Qt.binding(() => createChatView.defaultWidth),
+                        maxWidth: Qt.binding(() => createChatView.parent.width),
+                        utilsStore: appMain.utilsStore,
+                        chatContactsStore: appMain.contactsStore,
+                        chatCurrencyStore: appMain.currencyStore,
+                        chatCommunityTokensStore: appMain.communityTokensStore,
+                        openCreateChat: Qt.binding(() => createChatView.opened),
+                        createChatPropertiesStore: appMain.createChatPropertiesStore,
+                        mutualContactsModel: Qt.binding(() => contactsModelAdaptor?.mutualContacts ?? null),
+                        allContactsModel: Qt.binding(() => appMain.contactsStore.contactsModel)
+                    })
+                    onLoaded: item.openGifPopupRequest.connect((params, cbOnGifSelected, cbOnClose) =>
+                        popupRequestsHandler.openGifs(params, cbOnGifSelected, cbOnClose))
                 }
             }
 
@@ -2834,6 +2838,7 @@ Item {
                 }
                 onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
+                onProfileMenuOpened: QmlCompiler.precompile(QmlCompiler.profileDialogUrl)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
                 onSettingsRequested: d.openSettingsRoot()
                 onQuitRequested: Global.quitAppRequested()
@@ -3034,17 +3039,21 @@ Item {
     Loader {
         id: channelPickerLoader
         active: false
-        sourceComponent: StatusSearchListPopup {
-            directParent: appMain
-            relativeX: appMain.width/2 - width/2
-            relativeY: appMain.height/2 - height/2
-            searchBoxPlaceholder: qsTr("Where do you want to go?")
-            model: rootStore.chatSearchModel
 
-            onSelected: function (sectionId, chatId) {
+        Component.onCompleted: setSource(Qt.resolvedUrl("../../imports/shared/status/StatusSearchListPopup.qml"), {
+            directParent: appMain,
+            searchBoxPlaceholder: qsTr("Where do you want to go?")
+        })
+
+        onLoaded: {
+            const popup = item
+            popup.relativeX = Qt.binding(() => appMain.width/2 - popup.width/2)
+            popup.relativeY = Qt.binding(() => appMain.height/2 - popup.height/2)
+            popup.model = Qt.binding(() => rootStore.chatSearchModel)
+            popup.selected.connect((sectionId, chatId) => {
                 rootStore.setActiveSectionChat(sectionId, chatId)
-                close()
-            }
+                popup.close()
+            })
         }
     }
 
@@ -3127,6 +3136,14 @@ Item {
 
         function open(params = {}) {
             addEditSavedAddress.params = params
+            addEditSavedAddress.setSource(Qt.resolvedUrl("../AppLayouts/Wallet/popups/AddEditSavedAddressPopup.qml"), {
+                contactsModel: Qt.binding(() => appMain.contactsStore.contactsModel),
+                isChecksumValidForAddress: (address) => appMain.walletRootStore.isChecksumValidForAddress(address),
+                getWalletAccount: (address) => appMain.walletRootStore.getWalletAccount(address),
+                getSavedAddress: (address) => appMain.walletRootStore.getSavedAddress(address),
+                remainingCapacityForSavedAddresses: () => appMain.walletRootStore.remainingCapacityForSavedAddresses(),
+                savedAddressNameExists: (name) => appMain.walletRootStore.savedAddressNameExists(name)
+            })
             addEditSavedAddress.active = true
         }
 
@@ -3135,28 +3152,17 @@ Item {
         }
 
         onLoaded: {
-            addEditSavedAddress.item.initWithParams(addEditSavedAddress.params)
-            addEditSavedAddress.item.open()
-        }
-
-        sourceComponent: WalletPopups.AddEditSavedAddressPopup {
-            contactsModel: appMain.contactsStore.contactsModel
-            isChecksumValidForAddress: (address) => appMain.walletRootStore.isChecksumValidForAddress(address)
-            getWalletAccount: (address) => appMain.walletRootStore.getWalletAccount(address)
-            getSavedAddress: (address) => appMain.walletRootStore.getSavedAddress(address)
-            remainingCapacityForSavedAddresses: () => appMain.walletRootStore.remainingCapacityForSavedAddresses()
-            savedAddressNameExists: (name) => appMain.walletRootStore.savedAddressNameExists(name)
-
-            onPopulateContactDetails: (publicKey) => appMain.contactsStore.populateContactDetails(publicKey)
-            onFetchProfileShowcaseAccountsByAddressRequested: (address) => {
+            const popup = addEditSavedAddress.item
+            popup.populateContactDetails.connect(publicKey => appMain.contactsStore.populateContactDetails(publicKey))
+            popup.fetchProfileShowcaseAccountsByAddressRequested.connect(address => {
                 appMain.contactsStore.fetchProfileShowcaseAccountsByAddress(address)
-            }
-            onCreateOrUpdateSavedAddressRequested: (name, address, ens, colorId) => {
+            })
+            popup.createOrUpdateSavedAddressRequested.connect((name, address, ens, colorId) => {
                 appMain.walletRootStore.createOrUpdateSavedAddress(name, address, ens, colorId)
-            }
-            onClosed: {
-                addEditSavedAddress.close()
-            }
+            })
+            popup.closed.connect(addEditSavedAddress.close)
+            popup.initWithParams(addEditSavedAddress.params)
+            popup.open()
         }
     }
 
@@ -3219,6 +3225,12 @@ Item {
 
         function open(params = {}) {
             deleteSavedAddress.params = params
+            deleteSavedAddress.setSource(Qt.resolvedUrl("../AppLayouts/Wallet/popups/RemoveSavedAddressPopup.qml"), {
+                name: params.name ?? "",
+                address: params.address ?? "",
+                ens: params.ens ?? "",
+                colorId: params.colorId ?? "blue"
+            })
             deleteSavedAddress.active = true
         }
 
@@ -3227,23 +3239,13 @@ Item {
         }
 
         onLoaded: {
-            deleteSavedAddress.item.open()
-        }
-
-        sourceComponent: WalletPopups.RemoveSavedAddressPopup {
-            name: deleteSavedAddress.params.name ?? ""
-            address: deleteSavedAddress.params.address ?? ""
-            ens: deleteSavedAddress.params.ens ?? ""
-            colorId: deleteSavedAddress.params.colorId ?? "blue"
-
-            onClosed: {
-                deleteSavedAddress.close()
-            }
-
-            onRemoveSavedAddress: {
-                appMain.walletRootStore.deleteSavedAddress(address)
-                close()
-            }
+            const popup = deleteSavedAddress.item
+            popup.closed.connect(deleteSavedAddress.close)
+            popup.removeSavedAddress.connect(() => {
+                appMain.walletRootStore.deleteSavedAddress(popup.address)
+                popup.close()
+            })
+            popup.open()
         }
     }
 
@@ -3304,6 +3306,13 @@ Item {
                 showQR.selectedAccount.emoji = params.emoji?? ""
             }
 
+            showQR.setSource(Qt.resolvedUrl("ReceiveModalInstance.qml"), {
+                fixedAccount: Qt.binding(() => showQR.showSingleAccount || showQR.showForSavedAddress),
+                fixedSelectedAccount: Qt.binding(() => showQR.selectedAccount),
+                allAccounts: Qt.binding(() => appMain.walletRootStore.accounts),
+                receiverAccounts: Qt.binding(() => appMain.transactionStore.accounts),
+                selectedReceiverAddress: Qt.binding(() => appMain.transactionStore.selectedReceiverAccountAddress)
+            })
             showQR.active = true
         }
 
@@ -3314,46 +3323,12 @@ Item {
         onLoaded: {
             showQR.item.switchingAccounsEnabled = showQR.params.switchingAccounsEnabled?? true
             showQR.item.hasFloatingButtons = showQR.params.hasFloatingButtons?? true
+            showQR.item.receiverAccountSelected.connect(address => appMain.transactionStore.setReceiverAccount(address))
+            showQR.item.closed.connect(showQR.close)
 
             showQR.item.open()
         }
-
-        sourceComponent: WalletPopups.ReceiveModal {
-
-            ModelEntry {
-                id: selectedReceiverAccount
-                key: "address"
-                sourceModel: appMain.transactionStore.accounts
-                value: appMain.transactionStore.selectedReceiverAccountAddress
-            }
-
-            accounts: {
-                 if (showQR.showSingleAccount || showQR.showForSavedAddress) {
-                    return null
-                }
-                return appMain.walletRootStore.accounts
-            }
-
-            selectedAccount: {
-                if (showQR.showSingleAccount || showQR.showForSavedAddress) {
-                    return showQR.selectedAccount
-                }
-                return selectedReceiverAccount.item ?? SQUtils.ModelUtils.get(appMain.transactionStore.accounts, 0)
-            }
-
-            onUpdateSelectedAddress: (address) => {
-                if (showQR.showSingleAccount || showQR.showForSavedAddress) {
-                    return
-                }
-                appMain.transactionStore.setReceiverAccount(address)
-            }
-
-            onClosed: {
-                showQR.close()
-            }
-        }
     }
-
 
     Loader {
         id: savedAddressActivity
@@ -3364,6 +3339,11 @@ Item {
 
         function open(params = {}) {
             savedAddressActivity.params = params
+            savedAddressActivity.setSource(Qt.resolvedUrl("../AppLayouts/Wallet/popups/SavedAddressActivityPopup.qml"), {
+                networkConnectionStore: appMain.networkConnectionStore,
+                networksStore: appMain.networksStore,
+                walletRootStore: appMain.walletRootStore
+            })
             savedAddressActivity.active = true
         }
 
@@ -3372,21 +3352,11 @@ Item {
         }
 
         onLoaded: {
-            savedAddressActivity.item.initWithParams(savedAddressActivity.params)
-            savedAddressActivity.item.open()
-        }
-
-        sourceComponent: WalletPopups.SavedAddressActivityPopup {
-            networkConnectionStore: appMain.networkConnectionStore
-            networksStore: appMain.networksStore
-            walletRootStore: appMain.walletRootStore
-
-            onSendToAddressRequested: {
-                Global.sendToRecipientRequested(address)
-            }
-            onClosed: {
-                savedAddressActivity.close()
-            }
+            const popup = savedAddressActivity.item
+            popup.sendToAddressRequested.connect(address => Global.sendToRecipientRequested(address))
+            popup.closed.connect(savedAddressActivity.close)
+            popup.initWithParams(savedAddressActivity.params)
+            popup.open()
         }
     }
 

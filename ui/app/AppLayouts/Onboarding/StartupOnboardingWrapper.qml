@@ -190,7 +190,7 @@ Item {
             }
 
             if (flow === Onboarding.OnboardingFlow.LoginWithLostKeycardSeedphrase) {
-                onboardingLayout.stack.push(convertingKeycardAccountPage)
+                convertingKeycardAccountPage.adopt(onboardingLayout.stack.push(convertingKeycardAccountPage.component(), convertingKeycardAccountPage.properties))
             } else {
                 onboardingLayout.stack.push(splashScreenV2, {runningProgressAnimation: true})
             }
@@ -227,19 +227,22 @@ Item {
             root.contentLoaded()
         }
 
-        Component {
+        SQUtils.DeferredComponent {
             id: convertingKeycardAccountPage
 
-            ConvertKeycardAccountPage {
-                convertKeycardAccountState: root.onboardingStore.convertKeycardAccountState
-                restartRequired: root.onboardingStore.convertKeycardAccountRestartRequired
-                onRestartRequested: {
-                    SystemUtils.restartApplication(true)
-                }
-                onBackToLoginRequested: {
+            module: "AppLayouts.Onboarding.pages"
+            typeName: "ConvertKeycardAccountPage"
+            properties: ({
+                convertKeycardAccountState: Qt.binding(() => root.onboardingStore.convertKeycardAccountState),
+                restartRequired: Qt.binding(() => root.onboardingStore.convertKeycardAccountRestartRequired)
+            })
+
+            onCreated: page => {
+                page.restartRequested.connect(() => SystemUtils.restartApplication(true))
+                page.backToLoginRequested.connect(() => {
                     d.loginRequestSent = false
                     onboardingLayout.unwindToLoginScreen()
-                }
+                })
             }
         }
     }

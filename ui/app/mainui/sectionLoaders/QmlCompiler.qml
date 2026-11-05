@@ -18,6 +18,11 @@ QtObject {
     readonly property url walletUrl: Qt.resolvedUrl("../../AppLayouts/Wallet/WalletLayout.qml")
     readonly property url walletPrivacyWallUrl: Qt.resolvedUrl("../../AppLayouts/Wallet/WalletPrivacyWall.qml")
 
+    // popups created on demand (DeferredComponent), prefetched when their section is entered
+    readonly property url profileDialogUrl: Qt.resolvedUrl("../ProfileDialogInstance.qml")
+    readonly property url sendModalUrl: Qt.resolvedUrl("../Handlers/SimpleSendModalInstance.qml")
+    readonly property url swapModalUrl: Qt.resolvedUrl("../../AppLayouts/Wallet/popups/swap/SwapModal.qml")
+
     readonly property QtObject _d: QtObject {
         id: d
         property var precompiledUrls: new Set()
@@ -54,20 +59,19 @@ QtObject {
         }
     }
 
+    // the privacy walls are only shown with third-party services off; their section loaders
+    // precompile them then
     function precompileAll(async = true) {
         precompile(appMainUrl, async)
         precompile(browserUrl, async)
-        precompile(browserPrivacyWallUrl, async)
         precompile(communitiesPortalUrl, async)
         precompile(chatUrl, async)
         precompile(handlersManagerUrl, async)
         precompile(homeUrl, async)
         precompile(marketUrl, async)
-        precompile(marketPrivacyWallUrl, async)
         precompile(popupsUrl, async)
         precompile(profileUrl, async)
         precompile(walletUrl, async)
-        precompile(walletPrivacyWallUrl, async)
     }
 
     onPrecompileFinished: function(componentUrl, success) {

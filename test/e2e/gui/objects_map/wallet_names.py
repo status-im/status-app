@@ -46,7 +46,7 @@ rightSideWalletTabBar_StatusTabBar = {"container": mainWindow_RightTabView, "obj
 rightSideWalletTabBar_Assets_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "assetsTabButton", "text": "Assets", "type": "StatusTabButton", "visible": True}
 rightSideWalletTabBar_Collectibles_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "collectiblesTabButton", "text": "Collectibles", "type": "StatusTabButton", "visible": True}
 rightSideWalletTabBar_Activity_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "activityTabButton", "text": "History", "type": "StatusTabButton", "visible": True}
-collectibles_view = {"container": mainWindow_RightTabView, "type": "CollectiblesView", "unnamed": 1, "visible": True}
+collectibles_view = {"container": mainWindow_RightTabView, "type": RegularExpression("^(CollectiblesView|CollectiblesViewInstance)$"), "unnamed": 1, "visible": True}
 activity_view = {"container": mainWindow_RightTabView, "objectName": "walletAccountTransactionList", "type": "StatusListView", "visible": True}
 activity_delegate = {"container": mainWindow_RightTabView, "objectName": RegularExpression("walletActivityDelegate*"), "type": "TransactionDelegate", "visible": True}
 activity_history_view = {"container": mainWindow_RightTabView, "objectName": "walletAccountHistoryView", "type": "HistoryView", "visible": True}
@@ -88,7 +88,7 @@ addWatchedAddress = {"container": statusDesktop_mainWindow_overlay, "enabled": T
 addNewAccount = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": RegularExpression("AccountMenu-AddNewAccountAction*"), "type": "StatusMenuItem", "visible": True}
 
 """Receive modal"""
-receiveModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "ReceiveModal", "type": "PopupItem", "visible": True}
+receiveModal = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(ReceiveModal|ReceiveModalInstance)$"), "type": "PopupItem", "visible": True}
 textContent_StatusBaseText = {"container": statusDesktop_mainWindow_overlay, "objectName": "textContent", "type": "StatusBaseText", "visible": True}
 greenCircleAroundIcon_Rectangle = {"container": statusDesktop_mainWindow_overlay, "id": "greenCircleAroundIcon", "type": "Rectangle", "unnamed": 1, "visible": True}
 qrCodeImage_Image = {"container": statusDesktop_mainWindow_overlay, "objectName": "qrCodeImage", "type": "Image", "visible": True}

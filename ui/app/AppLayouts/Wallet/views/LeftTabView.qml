@@ -128,47 +128,48 @@ Rectangle {
         property string colorId
         property bool migratedToColdWallet
 
-        sourceComponent: RemoveAccountConfirmationPopup {
-            accountType: removeAccountConfirmation.accountType
-            accountName: removeAccountConfirmation.accountName
-            accountAddress: removeAccountConfirmation.accountAddress
-            accountDerivationPath: removeAccountConfirmation.accountDerivationPath
-            emoji: removeAccountConfirmation.emoji
-            color: Utils.getColorForId(Theme.palette, removeAccountConfirmation.colorId)
+        function doDeletion(password) {
+            removeAccountConfirmation.item.close()
+            root.accountDeletionRequested(removeAccountConfirmation.accountAddress, password)
+        }
 
-            function doDeletion(password) {
-                close()
-                root.accountDeletionRequested(removeAccountConfirmation.accountAddress, password)
-            }
-
-            onClosed: {
-                removeAccountConfirmation.active = false
-            }
-
-            onRemoveAccount: {
-                if (removeAccountConfirmation.accountType === Constants.watchWalletType
-                        || removeAccountConfirmation.migratedToColdWallet) {
-                    doDeletion("")
-                    return
-                }
-                root.userAuthenticationRequested(d.removeAccountIdentifier)
-            }
-
-            Connections {
-                target: RootStore
-                enabled: removeAccountConfirmation.active
-
-                function onLoggedInUserAuthenticated(requestedBy: string, password: string, pin: string, keyUid: string, keycardUid: string) {
-                    if (d.removeAccountIdentifier !== requestedBy || password === "") {
-                        return
-                    }
-                    doDeletion(password)
-                }
-            }
+        onActiveChanged: {
+            if (!active)
+                return
+            setSource(Qt.resolvedUrl("../../../../imports/shared/popups/RemoveAccountConfirmationPopup.qml"), {
+                accountType: Qt.binding(() => removeAccountConfirmation.accountType),
+                accountName: Qt.binding(() => removeAccountConfirmation.accountName),
+                accountAddress: Qt.binding(() => removeAccountConfirmation.accountAddress),
+                accountDerivationPath: Qt.binding(() => removeAccountConfirmation.accountDerivationPath),
+                emoji: Qt.binding(() => removeAccountConfirmation.emoji),
+                color: Qt.binding(() => Utils.getColorForId(Theme.palette, removeAccountConfirmation.colorId))
+            })
         }
 
         onLoaded: {
-            removeAccountConfirmation.item.open()
+            const popup = removeAccountConfirmation.item
+            popup.closed.connect(() => removeAccountConfirmation.active = false)
+            popup.removeAccount.connect(() => {
+                if (removeAccountConfirmation.accountType === Constants.watchWalletType
+                        || removeAccountConfirmation.migratedToColdWallet) {
+                    removeAccountConfirmation.doDeletion("")
+                    return
+                }
+                root.userAuthenticationRequested(d.removeAccountIdentifier)
+            })
+            popup.open()
+        }
+    }
+
+    Connections {
+        target: RootStore
+        enabled: removeAccountConfirmation.active
+
+        function onLoggedInUserAuthenticated(requestedBy: string, password: string, pin: string, keyUid: string, keycardUid: string) {
+            if (d.removeAccountIdentifier !== requestedBy || password === "") {
+                return
+            }
+            removeAccountConfirmation.doDeletion(password)
         }
     }
 

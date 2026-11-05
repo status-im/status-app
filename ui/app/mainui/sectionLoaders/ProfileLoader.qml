@@ -152,6 +152,7 @@ StatusSectionLoader {
         item.settingsSubsection = Qt.binding(() => root.settingsSubsection)
         item.settingsSubSubsection = Qt.binding(() => root.settingsSubSubsection)
         item.visible = true
+        Qt.callLater(() => QmlCompiler.precompile(QmlCompiler.profileDialogUrl))
     }
 
     Connections {

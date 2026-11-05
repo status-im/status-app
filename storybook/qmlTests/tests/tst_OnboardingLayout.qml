@@ -410,12 +410,13 @@ Item {
         function test_accountLoginError_showsDialogWhenNoLoginScreen() {
             getCurrentPage(controlUnderTest.stack, WelcomePage)
 
-            const dialog = findChild(controlUnderTest, "accountsLoadErrorDialog")
-            verify(!!dialog)
-            compare(dialog.opened, false)
+            // built on demand
+            compare(findChild(controlUnderTest, "accountsLoadErrorDialog"), null)
 
             controlUnderTest.onboardingStore.accountLoginError("ignored", false)
 
+            const dialog = findChild(controlUnderTest, "accountsLoadErrorDialog")
+            verify(!!dialog)
             tryCompare(dialog, "opened", true)
             compare(dialog.title, qsTr("Error loading accounts"))
             compare(dialog.text, qsTr("Failed to load accounts. Please restart the app and try again."))
@@ -435,13 +436,9 @@ Item {
             verify(!!userSelector)
             userSelector.setSelection("uid_1")
 
-            const dialog = findChild(controlUnderTest, "accountsLoadErrorDialog")
-            verify(!!dialog)
-            compare(dialog.opened, false)
-
             controlUnderTest.onboardingStore.accountLoginError("login failed", false)
 
-            compare(dialog.opened, false)
+            compare(findChild(controlUnderTest, "accountsLoadErrorDialog"), null)
             const passwordBox = findChild(page, "passwordBox")
             verify(!!passwordBox)
             compare(passwordBox.detailedError, "login failed")
