@@ -329,6 +329,11 @@ SQUtils.QObject {
                 console.error("Unsupported method to execute: ", request.method)
                 return false
             }
+            // never sign with the dApp's unchecked gas
+            if (SessionRequest.isTransactionMethod(request.method) && !request.gasLimit) {
+                console.error("Transaction executed before its gas was estimated")
+                return false
+            }
 
             if (request.method === SessionRequest.methods.sign.name) {
                 root.store.signMessageUnsafe(request.topic,
