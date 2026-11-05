@@ -174,6 +174,7 @@ Loader {
     property string threadOriginalMessageId: ""
     property string threadTitle: ""
     property int threadMessagesCount: 0
+    property bool threadMuted: false
     property int threadNotificationCount: 0
     property var threadParticipantsModel: null
     property int threadParticipantsCount: 0
@@ -1349,6 +1350,7 @@ Loader {
                         originalMessageId: root.threadOriginalMessageId || root.messageId
                         title: root.threadTitle
                         messagesCount: root.threadMessagesCount
+                        muted: root.threadMuted
                         notificationCount: root.threadNotificationCount
                         participantsPreviewModel: root.threadParticipantsModel
                         participantsCount: root.threadParticipantsCount

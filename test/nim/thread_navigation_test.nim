@@ -305,6 +305,25 @@ suite "thread navigation":
     check(album.hasThread)
     check(album.threadSummary.threadId == "second")
     check(module.view.threadsModel().rowCount(nil) == 3)
+    # Muting retains history but hides ordinary unread activity in both summaries.
+    module.onChatThreadsLoaded(@[
+      ThreadDto(threadId: "first", parentMessageId: "parent", name: "First", messagesCount: 2, muted: true,
+        unviewedMessagesCount: 5, unviewedMentionsCount: 0)
+    ])
+    check(parent.threadSummary.muted)
+    check(parent.threadSummary.notificationCount == 0)
+    module.onChatThreadsLoaded(@[
+      ThreadDto(threadId: "first", parentMessageId: "parent", name: "First", messagesCount: 2, muted: true,
+        unviewedMessagesCount: 6, unviewedMentionsCount: 1)
+    ])
+    check(parent.threadSummary.notificationCount == 1)
+    module.onChatThreadsLoaded(@[
+      ThreadDto(threadId: "first", parentMessageId: "parent", name: "First", messagesCount: 2,
+        unviewedMessagesCount: 6, unviewedMentionsCount: 1)
+    ])
+    check(not parent.threadSummary.muted)
+    check(parent.threadSummary.notificationCount == 6)
+
 
   test "thread info models are lazy and are not built for thread conversations":
     let events = createEventEmitter()

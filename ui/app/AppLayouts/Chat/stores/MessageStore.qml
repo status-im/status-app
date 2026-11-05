@@ -29,6 +29,14 @@ QtObject {
     readonly property bool canEditThread: messageModule ? messageModule.canEditThread : false
     readonly property bool threadEditPending: messageModule ? messageModule.threadEditPending : false
 
+    readonly property bool threadMuted: messageModule ? messageModule.threadMuted : false
+    readonly property real threadMuteTill: messageModule ? messageModule.threadMuteTill : 0
+
+    function setThreadMuted(interval: int) {
+        if (root.messageModule)
+            root.messageModule.setThreadMuted(interval)
+    }
+
     function editThread(name: string) {
         if (!root.messageModule) {
             console.error("editThread: message module is not set")

@@ -151,6 +151,7 @@ ColumnLayout {
                 originalMessageId: model.originalMessageId
                 title: model.title
                 messagesCount: model.messagesCount
+                muted: model.muted
                 notificationCount: model.notificationCount
                 participantsCount: model.participantsCount
                 participantsPreviewModel: model.participantsModel

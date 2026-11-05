@@ -85,6 +85,18 @@ suite "thread summary":
     check(participantResets == 0)
     model.setThreadSummary("thread-parent", summary)
     check(changedRoles.len == 1)
+    summary.muted = true
+    model.setThreadSummary("thread-parent", summary)
+    var muteRole = -1
+    for role, name in model.roleNames():
+      if name == "threadMuted": muteRole = role
+    require(muteRole != -1)
+    check(changedRoles[^1] == @[muteRole.cint])
+    let index = model.createIndex(0, 0, nil)
+    let muted = model.data(index, muteRole)
+    check(muted.boolVal)
+    muted.delete()
+    index.delete()
 
   test "renames a zero-reply thread card without editing the root message":
     let model = newModel()

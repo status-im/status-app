@@ -82,6 +82,7 @@ type
     ThreadTitle
     ThreadMessagesCount
     ThreadNotificationCount
+    ThreadMuted
     ThreadParticipantsModel
     ThreadParticipantsCount
     ThreadLastMessageSenderName
@@ -206,6 +207,7 @@ QtObject:
       ModelRole.ThreadOriginalMessageId.int: "threadOriginalMessageId",
       ModelRole.ThreadTitle.int: "threadTitle",
       ModelRole.ThreadMessagesCount.int: "threadMessagesCount",
+      ModelRole.ThreadMuted.int: "threadMuted",
       ModelRole.ThreadNotificationCount.int: "threadNotificationCount",
       ModelRole.ThreadParticipantsModel.int: "threadParticipantsModel",
       ModelRole.ThreadParticipantsCount.int: "threadParticipantsCount",
@@ -451,6 +453,8 @@ QtObject:
       result = newQVariant(item.threadSummary.title)
     of ModelRole.ThreadMessagesCount:
       result = newQVariant(item.threadSummary.messagesCount)
+    of ModelRole.ThreadMuted:
+      result = newQVariant(item.threadSummary.muted)
     of ModelRole.ThreadNotificationCount:
       result = newQVariant(item.threadSummary.notificationCount)
     of ModelRole.ThreadParticipantsModel:
@@ -778,6 +782,7 @@ QtObject:
         discard
       addChangedRole(roles, previous.messagesCount, summary.messagesCount,
         ModelRole.ThreadMessagesCount.int): discard
+      addChangedRole(roles, previous.muted, summary.muted, ModelRole.ThreadMuted.int): discard
       addChangedRole(roles, previous.notificationCount, summary.notificationCount,
         ModelRole.ThreadNotificationCount.int): discard
       # Existing participant models notify their own row changes.

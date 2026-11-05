@@ -55,6 +55,21 @@ Item {
             clickedSpy.clear()
         }
 
+        function test_mutedThreadKeepsMentionBadgeAndUsesMutedTitle() {
+            controlUnderTest.muted = true
+            controlUnderTest.notificationCount = 1
+            const title = findChild(controlUnderTest, "threadCardTitle")
+            const badge = findChild(controlUnderTest, "threadCardUnreadBadge")
+            compare(title.color, Theme.palette.directColor5)
+            compare(title.font.weight, Font.Normal)
+            compare(badge.visible, true)
+            controlUnderTest.notificationCount = 0
+            compare(badge.visible, false)
+            controlUnderTest.muted = false
+            compare(title.color, Theme.palette.directColor1)
+            compare(title.font.weight, Font.Bold)
+        }
+
         function test_titleDisplaysMarkupLiterally() {
             const name = "<b>Bold</b> & <a href='https://example.com'>link</a>"
             controlUnderTest.title = name

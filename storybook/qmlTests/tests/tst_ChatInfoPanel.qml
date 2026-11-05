@@ -41,7 +41,7 @@ Item {
                     key: entry.key, originalMessageId: "parent-" + entry.key,
                     archived: false,
                     title: entry.title, lastMessageTimestamp: entry.timestamp,
-                    messagesCount: 2, notificationCount: 1, participantsCount: 0, participantsModel: participants,
+                    messagesCount: 2, notificationCount: 1, muted: false, participantsCount: 0, participantsModel: participants,
                     lastMessageSenderName: "Alice", lastMessageSenderImage: "",
                     lastMessageSenderColorId: 0, lastMessageText: "Latest reply"
                 })
@@ -122,6 +122,24 @@ Item {
             compare(findChild(panel, "chatInfoMembersTab").Accessible.name, qsTr("Members"))
             compare(findChild(panel, "chatInfoThreadsTab").Accessible.name, qsTr("Threads"))
             compare(findChild(panel, "chatInfoPinsTab").Accessible.name, qsTr("Pins"))
+        }
+
+        function test_muteStateUpdatesExistingThreadCard() {
+            panel.requestedTab = ChatInfoPanel.Threads
+            const list = findChild(panel, "chatInfoThreadsList")
+            tryCompare(list, "count", 2)
+            verify(waitForPolish(panel))
+            const card = list.itemAtIndex(0)
+            compare(card.threadId, "newer")
+            threads.setProperty(1, "muted", true)
+            tryCompare(card, "muted", true)
+            compare(findChild(card, "threadCardTitle").color, Theme.palette.directColor5)
+            threads.setProperty(1, "notificationCount", 0)
+            tryCompare(findChild(card, "threadCardUnreadBadge"), "visible", false)
+            threads.setProperty(1, "notificationCount", 1)
+            tryCompare(findChild(card, "threadCardUnreadBadge"), "visible", true)
+            threads.setProperty(1, "muted", false)
+            tryCompare(card, "muted", false)
         }
 
         function test_activityOrderUpdatesAndNavigation() {

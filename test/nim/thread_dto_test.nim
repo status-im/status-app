@@ -76,3 +76,33 @@ suite "thread dto":
     check(dto.lastMessage.`from` == "")
     check(dto.lastMessage.text == "")
     check(dto.lastMessage.timestamp == 0)
+
+  test "parses persisted thread mute state and defaults old payloads to unmuted":
+    let muted = (%* {"muted": true, "muteTill": "2026-11-05T00:13:20Z"}).toThreadDto()
+    check muted.muted
+    check muted.muteTill == 1793837600000'i64
+    let legacy = (%* {"threadId": "legacy"}).toThreadDto()
+    check not legacy.muted
+    check legacy.muteTill == 0
+
+  test "accepts a null mute deadline without changing mute state":
+    for muted in [false, true]:
+      let dto = (%* {"muted": muted, "muteTill": nil}).toThreadDto()
+      check dto.muted == muted
+      check dto.muteTill == 0
+
+  test "accepts an empty mute deadline without changing mute state":
+    for muted in [false, true]:
+      let dto = (%* {"muted": muted, "muteTill": ""}).toThreadDto()
+      check dto.muted == muted
+      check dto.muteTill == 0
+
+  test "until unmuted uses the same zero date as chat muting":
+    let dto = (%* {"muted": true, "muteTill": "0001-01-01T00:00:00Z"}).toThreadDto()
+    check dto.muted
+    check dto.muteTill == 0
+
+  test "reads backend preference revisions independently of the mute deadline":
+    let dto = (%* {"muted": true, "muteRevision": 42, "muteTill": "0001-01-01T00:00:00Z"}).toThreadDto()
+    check dto.muteRevision == 42
+    check dto.muted

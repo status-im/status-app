@@ -245,7 +245,7 @@ method closeThreadPanel(self: SectionHarness) =
   self.panelClosed = true
 
 proc newSectionHarness(service: message_service.Service, events: EventEmitter): SectionHarness =
-  result = SectionHarness()
+  result = SectionHarness(messageService: service)
   result.controller = section_controller.newController(result, "section", false, events,
     nil, nil, nil, nil, nil, service, nil, nil, nil, nil, nil, nil)
   result.view = section_view.newView(result)
@@ -256,6 +256,31 @@ proc newSectionHarness(service: message_service.Service, events: EventEmitter): 
     categoryOpened: true)])
 
 suite "thread search result navigation":
+  test "thread rows inherit persisted mute state and preserve mention markers on updates":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.chatsLoaded = true
+    var thread = ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root",
+      name: "Thread", muted: true, unviewedMessagesCount: 3)
+    section.onChatThreadsForChatsLoaded(@[thread], @["parent"])
+    let item = section.view.chatsModel().getItemById("thread")
+    require(not item.isNil)
+    check(item.muted)
+    check(item.notificationsCount == 0)
+    thread.unviewedMentionsCount = 1
+    section.onChatThreadsForChatsLoaded(@[thread], @[])
+    check(item.muted)
+    check(item.notificationsCount == 1)
+    thread.muted = false
+    section.onChatThreadsForChatsLoaded(@[thread], @[])
+    check(not item.muted)
+    # The sidebar mute icon must target the thread API, not its parent's chat API.
+    service.threadMutePending.incl(("parent", "thread"))
+    section.unmuteChat("thread")
+    check(service.threadMuteQueued[("parent", "thread")] == 7)
+
   test "an uncached result survives a cached list and opens on an incremental update":
     if THREADS_ENABLED:
       let events = createEventEmitter()

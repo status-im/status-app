@@ -20,6 +20,7 @@ type
     title*: string
     messagesCount*: int
     notificationCount*: int
+    muted*: bool
     participantsCount*: int
     participants*: seq[thread_participant_model.Participant]
     lastMessageSenderId*: string
@@ -632,6 +633,7 @@ proc toJsonNode*(self: Item): JsonNode =
     "threadOriginalMessageId": self.threadSummary.originalMessageId,
     "threadTitle": self.threadSummary.title,
     "threadMessagesCount": self.threadSummary.messagesCount,
+    "threadMuted": self.threadSummary.muted,
     "threadNotificationCount": self.threadSummary.notificationCount,
     "threadParticipantsCount": self.threadSummary.participantsCount,
     "threadLastMessageText": self.threadSummary.lastMessageText,
