@@ -881,6 +881,22 @@ void SystemUtilsInternal::startShakeDetection()
 #endif
 }
 
+#ifndef Q_OS_ANDROID
+namespace {
+// The global QT_SCALE_FACTOR, read the same way QHighDpiScaling::initHighDpiScaling() does
+// (once, at startup; invalid or missing means 1.0). Qt doesn't expose it publicly
+qreal globalQtScaleFactor()
+{
+    static const qreal factor = [] {
+        bool ok = false;
+        const qreal value = qEnvironmentVariable("QT_SCALE_FACTOR").toDouble(&ok);
+        return ok && value > 0 ? value : qreal(1);
+    }();
+    return factor;
+}
+} // namespace
+#endif
+
 qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
 {
 #ifdef Q_OS_ANDROID
@@ -909,13 +925,12 @@ qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
         return 1.0;
     }
 
-    if (auto platformScreen = screen->handle()) {
-        return platformScreen->devicePixelRatio();
-    }
-
-    // Fallback to standard API if platform handle isn't available
-    qWarning() << Q_FUNC_INFO << "invalid native platform screen";
-    return screen->devicePixelRatio();
+    // QScreen's DPR is QT_SCALE_FACTOR * Qt's per-screen factor * platform DPR. The per-screen
+    // factor carries the OS scale on Windows/X11 (where the platform DPR is always 1.0 and the
+    // scale comes from the logical DPI), already resolved by Qt with its rounding policy,
+    // QT_ENABLE_HIGHDPI_SCALING, QT_SCREEN_SCALE_FACTORS etc. Dividing out our own zoom
+    // (the global QT_SCALE_FACTOR) leaves the native baseline on every desktop platform
+    return screen->devicePixelRatio() / globalQtScaleFactor();
 #endif
 }
 
