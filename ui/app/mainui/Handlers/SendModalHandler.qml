@@ -357,7 +357,7 @@ QtObject {
         SimpleSendModal {
             id: simpleSendModal
 
-            recipientIsNewAccount: handler.recipientIsNewAccountAggregator.value === true
+            recipientIsNewAccount: !!handler.recipientIsNewAccountAggregator.value
             accountsModel: handler.accountsSelectorAdaptor.processedWalletAccounts
             assetsModel: handler.assetsSelectorModel
             groupedAccountAssetsModel: root.groupedAccountAssetsModel
@@ -697,9 +697,8 @@ QtObject {
                     restoreMode: Binding.RestoreNone
                 }
 
-                readonly property var totalFeesAggregator: FunctionAggregator {
-                    model: !!handler.fetchedPathModel ?
-                               handler.fetchedPathModel: null
+                readonly property FunctionAggregator totalFeesAggregator: FunctionAggregator {
+                    model: handler.fetchedPathModel
                     initialValue: "-1"
                     roleName: "txTotalFee"
 
@@ -733,18 +732,16 @@ QtObject {
                 }
 
                 // e.g. EIP-8037 state gas
-                readonly property var recipientIsNewAccountAggregator: FunctionAggregator {
-                    model: !!handler.fetchedPathModel ?
-                               handler.fetchedPathModel: null
+                readonly property FunctionAggregator recipientIsNewAccountAggregator: FunctionAggregator {
+                    model: handler.fetchedPathModel
                     initialValue: false
                     roleName: "recipientIsNewAccount"
 
                     aggregateFunction: (aggr, value) => aggr || !!value
                 }
 
-                readonly property var estimatedTimeAggregator: FunctionAggregator {
-                    model: !!handler.fetchedPathModel ?
-                               handler.fetchedPathModel: null
+                readonly property FunctionAggregator estimatedTimeAggregator: FunctionAggregator {
+                    model: handler.fetchedPathModel
                     initialValue: -1
                     roleName: "estimatedTime"
 

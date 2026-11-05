@@ -35,7 +35,7 @@ SQUtils.QObject {
     readonly property var feesInfo: d.computedFeesInfo
     // gasLimit -> hex gas to show the fees for and sign with: the larger of the dApp's gas and
     // our estimate; unset until the estimate answered
-    readonly property var gasLimit: d.gasResponse
+    readonly property string gasLimit: d.gasResponse
     // gasEstimated -> our estimate answered, or failed with the dApp's gas to fall back on
     readonly property bool gasEstimated: d.gasEstimated
 
@@ -47,18 +47,10 @@ SQUtils.QObject {
         d.resetFees()
     }
 
-    // the dApp's gas, hex
-    function setDappGas(gas) {
-        d.dappGas = gas || ""
-        d.resolveGas()
-    }
-
     // our buffered estimate, hex; empty when it failed
     function setGasEstimate(gas) {
         d.estimatedGas = gas || ""
-        // without the dApp's gas to fall back on a failed estimate is asked again
-        d.gasEstimated = !!d.estimatedGas || !!d.dappGas
-        d.resolveGas()
+        d.estimateFailed = !gas
     }
 
     function setEstimatedTime(estimatedTime) {
@@ -74,30 +66,27 @@ SQUtils.QObject {
 
         property int estimatedTimeResponse: Constants.TransactionEstimatedTime.Unknown
         property var feesResponse
-        property var gasResponse
-        property string dappGas
+        // the dApp's gas, hex
+        readonly property string dappGas: !!root.txObject ? (root.txObject.gas || root.txObject.gasLimit || "") : ""
         property string estimatedGas
-        property bool gasEstimated: false
+        property bool estimateFailed: false
+        // without the dApp's gas to fall back on, a failed estimate is asked again
+        readonly property bool gasEstimated: !!estimatedGas || (estimateFailed && !!dappGas)
+        readonly property string gasResponse: {
+            if (!gasEstimated)
+                return ""
+            if (!estimatedGas || !dappGas)
+                return estimatedGas || dappGas
+            const BigOps = SQUtils.AmountsArithmetic
+            const estimated = BigOps.fromString(root.hexToDec(estimatedGas))
+            const dapp = BigOps.fromString(root.hexToDec(dappGas))
+            return dapp.cmp(estimated) === 1 ? dappGas : estimatedGas
+        }
+        onGasResponseChanged: resetFees()
         // Eth max fee in Gwei
         property var computedFees
         // feesResponse with additional `maxFeePerGas` property based on selectedFeesMode
         property var computedFeesInfo
-
-        function resolveGas() {
-            if (!d.gasEstimated)
-                return
-            let gas = d.estimatedGas || d.dappGas
-            if (!!d.estimatedGas && !!d.dappGas) {
-                const BigOps = SQUtils.AmountsArithmetic
-                const estimated = BigOps.fromString(String(root.hexToDec(d.estimatedGas)))
-                const dapp = BigOps.fromString(String(root.hexToDec(d.dappGas)))
-                gas = dapp.cmp(estimated) === 1 ? d.dappGas : d.estimatedGas
-            }
-            if (d.gasResponse === gas)
-                return
-            d.gasResponse = gas
-            d.resetFees()
-        }
 
         function resetFees() {
             if (!d.feesResponse) {

@@ -92,7 +92,7 @@ SQUtils.QObject {
             store: root.store
             estimatedTimeCategory: feesSubscriber.estimatedTimeResponse
             feesInfo: feesSubscriber.feesInfo
-            gasLimit: feesSubscriber.gasLimit || ""
+            gasLimit: feesSubscriber.gasLimit
             haveEnoughFunds: d.hasEnoughBalance(request.chainId, request.accountAddress, request.value, request.nativeTokenGroupKey)
             haveEnoughFees: haveEnoughFunds && d.hasEnoughBalance(request.chainId, request.accountAddress, request.nativeTokenMaxFees, request.nativeTokenGroupKey)
             nativeTokenGroupKey: Utils.getNativeTokenGroupKey(request.chainId)
@@ -136,7 +136,7 @@ SQUtils.QObject {
                 root.store.signingResult.connect(request.signedHandler)
                 let executed = false
                 try {
-                    executed = d.executeSessionRequest(request, request.feesInfo, request.gasLimit)
+                    executed = d.executeSessionRequest(request, request.feesInfo)
                 } catch (e) {
                     console.error("Error executing session request", e)
                 }
@@ -324,7 +324,7 @@ SQUtils.QObject {
             return BigOps.div(accountFundsWei, BigOps.fromNumber(1, 18))
         }
 
-        function executeSessionRequest(request, payload, gasLimit) {
+        function executeSessionRequest(request, payload) {
             if (!SessionRequest.getSupportedMethods().includes(request.method)) {
                 console.error("Unsupported method to execute: ", request.method)
                 return false
@@ -351,7 +351,7 @@ SQUtils.QObject {
                                         request.chainId,
                                         legacy)
             } else if (SessionRequest.isTransactionMethod(request.method)) {
-                const txObj = prepareTxForStatusGo(SessionRequest.getTxObject(request.method, request.data), payload, gasLimit)
+                const txObj = prepareTxForStatusGo(SessionRequest.getTxObject(request.method, request.data), payload, request.gasLimit)
                 if (request.method === SessionRequest.methods.signTransaction.name) {
                     root.store.signTransaction(request.topic,
                                           request.requestId,

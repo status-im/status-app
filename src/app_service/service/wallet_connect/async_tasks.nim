@@ -156,13 +156,20 @@ proc asyncEstimateGasTask(argsEncoded: string) {.gcsafe, nimcall.} =
         let transaction = %*{
             "from": tx["from"].getStr
         }
+        proc nonEmpty(key: string): bool =
+            tx.hasKey(key) and tx[key].kind == JString and tx[key].getStr.len > 0
         # a tx without `to` deploys a contract
-        for key in ["to", "data", "input", "value"]:
-            if tx.hasKey(key) and tx[key].kind == JString and tx[key].getStr.len > 0:
+        for key in ["to", "value"]:
+            if nonEmpty(key):
                 transaction[key] = tx[key]
+        # input wins over data, as in SendTxArgs.GetInput
+        if nonEmpty("input"):
+            transaction["input"] = tx["input"]
+        elif nonEmpty("data"):
+            transaction["data"] = tx["data"]
 
         # buffered; the modal signs with this or the dApp's gas, whichever is higher
-        let response = estimateTransactionGas(arg.chainId, $transaction)
+        let response = wallet.estimateTransactionGas(arg.chainId, $transaction)
         result["estimatedGas"] = response.result
         arg.finish(result)
     except Exception as e:
