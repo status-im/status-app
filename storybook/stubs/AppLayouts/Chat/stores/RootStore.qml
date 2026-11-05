@@ -52,6 +52,7 @@ QtObject {
 
     property UsersStore usersStore: UsersStore {}
     property StickersStore stickersStore: StickersStore {}
+    property var stickersModuleInst: null
 
     function formatTokenAmount(amount, key) {
         return amount

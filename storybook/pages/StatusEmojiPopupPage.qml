@@ -23,6 +23,7 @@ SplitView {
         id: d
         property string lastSelectedEmoji: "N/A"
         property string lastSelectedEmojiHexcode: ""
+        property string skinColor
     }
 
     Pane {
@@ -51,8 +52,9 @@ SplitView {
             height: 440
             visible: true
             modal: false
-            userUID: "0xdeadbeef"
             emojiModel: StatusQUtils.Emoji.emojiModel
+            skinColor: d.skinColor
+            onSkinColorSelected: skinColor => d.skinColor = skinColor
             onEmojiSelected: function(emoji, atCu, hexcode) {
                 logs.logEvent("onEmojiSelected", ["emoji", "atCu", "hexcode"], arguments)
                 d.lastSelectedEmoji = emoji
@@ -75,7 +77,8 @@ SplitView {
                 onClicked: {
                     d.lastSelectedEmoji = ""
                     d.lastSelectedEmojiHexcode = ""
-                    emojiPopup.clearSettings()
+                    d.skinColor = ""
+                    StatusQUtils.Emoji.emojiModel.recentEmojis = []
                 }
             }
 

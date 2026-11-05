@@ -36,7 +36,6 @@ ColumnLayout {
     property var account
     property var keyPair
     property ProfileStores.WalletStore walletStore
-    property var emojiPopup
     property string userProfilePublicKey
     required property var activeNetworks
 
@@ -325,7 +324,6 @@ ColumnLayout {
                 }
             }
             onClosed: destroy()
-            emojiPopup: root.emojiPopup
         }
     }
 

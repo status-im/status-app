@@ -115,8 +115,7 @@ StackLayout {
     property int extraLeftPadding: 0
     property bool isPortraitMode: false
 
-    property var emojiPopup
-    property var stickersPopup
+    property SortFilterProxyModel reactionEmojiModel
     property DelegatePool rowPool: null
 
     // Unfurling related data:
@@ -324,8 +323,7 @@ StackLayout {
 
             mutualContactsModel: root.mutualContactsModel
 
-            emojiPopup: root.emojiPopup
-            stickersPopup: root.stickersPopup
+            reactionEmojiModel: root.reactionEmojiModel
             rowPool: root.rowPool
             sectionItemModel: root.sectionItemModel
             joinedMembersCount: root.sectionItemModel?.joinedMembersCount ?? 0

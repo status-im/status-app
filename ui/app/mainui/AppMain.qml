@@ -1253,6 +1253,7 @@ Item {
         category: "AppMainLocalSettings_%1".arg(d.myPublicKey)
         property var whitelistedUnfurledDomains: []
         property bool introduceYourselfPopupSeen
+        property string skinColor  // a name, not a `#rrggbb` value
         property int theme: ThemeUtils.Style.System
         property int fontSize: {
             if (appMain.isPortraitMode) {
@@ -1319,7 +1320,8 @@ Item {
         mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
 
         isDevBuild: !appMain.rootStore.isProduction
-        emojiPopup: statusEmojiPopup.item
+        emojiSkinColor: appMainLocalSettings.skinColor
+        isWalletEnabled: appMain.walletProfileStore?.isWalletEnabled ?? false
 
         onOpenExternalLink: (link) => d.openLinkInBrowser(link)
         onSaveDomainToUnfurledWhitelist: function(domain) {
@@ -1334,6 +1336,9 @@ Item {
         onWcUriScanned: uri => d.pairWalletConnectUri(uri)
         onNavigationEducationDialogSeenRequested: appMainGlobalSettings.newMenuEducationPopupSeen = true
         onRestartRequested: SystemUtils.restartApplication()
+        onEmojiSkinColorSelected: skinColor => appMainLocalSettings.skinColor = skinColor
+        onBuyStickerPackRequested: (packId, price) => popupRequestsHandler.buyStickerPack(packId, price)
+        onEnableThirdpartyServicesRequested: popupRequestsHandler.openThirdpartyServicesPopup()
     }
 
     BalancesOnScreenTracker {
@@ -1719,32 +1724,16 @@ Item {
         }
     }
 
-    Loader {
-        id: statusEmojiPopup
-        active: appMain.mainReady && appMain.rootStore.sectionsLoaded
-        asynchronous: true
-        sourceComponent: StatusEmojiPopup {
-            directParent: appMain.Window.window.contentItem
-            height: 440
-            userUID: d.myPublicKey
-            emojiModel: SQUtils.Emoji.emojiModel
-        }
+    Binding {
+        target: SQUtils.Emoji.emojiModel
+        property: "userUID"
+        value: d.myPublicKey
     }
 
-    Loader {
-        id: statusStickersPopupLoader
-        active: appMain.mainReady && appMain.rootStore.sectionsLoaded
-        asynchronous: true
-        sourceComponent: StatusStickersPopup {
-            directParent: appMain.Window.contentItem
-            height: 440
-            store: appMain.rootChatStore
-            isWalletEnabled: appMain.walletProfileStore?.isWalletEnabled ?? false
-            thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
-
-            onBuyClicked: (packId, price) => popupRequestsHandler.buyStickerPack(packId, price)
-            onEnableThirdpartyServicesRequested: popupRequestsHandler.openThirdpartyServicesPopup()
-        }
+    SkinToneFilteredEmojiModel {
+        id: skinToneEmojiModel
+        emojiModel: SQUtils.Emoji.emojiModel
+        skinColor: appMainLocalSettings.skinColor
     }
 
     ColumnLayout {
@@ -2430,8 +2419,7 @@ Item {
                         createChatPropertiesStore: appMain.createChatPropertiesStore
                         contactsAdaptor: contactsModelAdaptor
                         popupHandler: popupRequestsHandler
-                        emojiPopupLoader: statusEmojiPopup
-                        stickersPopupLoader: statusStickersPopupLoader
+                        reactionEmojiModel: skinToneEmojiModel
                         rowPool: appMain.messageRowPool
 
                         createChatViewOpened: createChatView.opened
@@ -2470,7 +2458,6 @@ Item {
                         transactionStore: appMain.transactionStore
                         popupHandler: popupRequestsHandler
                         dappsServiceLoader: dAppsServiceLoader
-                        emojiPopupLoader: statusEmojiPopup
 
                         appMainVisible: appMain.visible
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
@@ -2536,7 +2523,6 @@ Item {
 
                         contactsAdaptor: contactsModelAdaptor
                         popupHandler: popupRequestsHandler
-                        emojiPopupLoader: statusEmojiPopup
                         keychain: appMain.keychain
                         secureStorage: appMain.secureStorage
 
@@ -2638,8 +2624,7 @@ Item {
                             utilsStore: appMain.utilsStore
                             contactsAdaptor: contactsModelAdaptor
                             popupHandler: popupRequestsHandler
-                            emojiPopupLoader: statusEmojiPopup
-                            stickersPopupLoader: statusStickersPopupLoader
+                            reactionEmojiModel: skinToneEmojiModel
                             rowPool: appMain.messageRowPool
 
                             createChatViewOpened: createChatView.opened
@@ -2772,9 +2757,6 @@ Item {
 
                         mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
                         allContactsModel: appMain.contactsStore.contactsModel
-
-                        emojiPopup: statusEmojiPopup.item
-                        stickersPopup: statusStickersPopupLoader.item
 
                         onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) =>
                             popupRequestsHandler.openGifs(params, cbOnGifSelected, cbOnClose)
@@ -3025,8 +3007,6 @@ Item {
         rootStore: appMain.rootStore
         rootChatStore: appMain.rootChatStore
         excludedChatId: d.myPublicKey
-        emojiPopup: statusEmojiPopup.item
-        stickersPopup: statusStickersPopupLoader.item
         paymentRequestFeatureEnabled: appMain.featureFlagsStore.paymentRequestEnabled
         areTestNetworksEnabled: appMain.networksStore.areTestNetworksEnabled
     }

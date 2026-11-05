@@ -48,26 +48,71 @@ Item {
     Component {
         id: editModeComponent
         Item {
+            id: editModeWrapper
             width: 700
             height: 400
 
-            Popup {
-                id: emojiPopupStub
-                objectName: "emojiPopupStub"
-                modal: false
-                width: 80
-                height: 60
+            Connections {
+                target: Global
 
-                signal emojiSelected(string emoji, bool atCursor, string hexcode)
+                function onOpenEmojiPopupRequested(params, cb) {
+                    const popup = emojiPopupStubComponent.createObject(editModeWrapper, params)
+                    popup.open()
+                    cb(popup)
+                }
 
-                Button {
-                    objectName: "emojiPopupSelectButton"
-                    anchors.centerIn: parent
-                    text: "😀"
-                    onClicked: {
-                        emojiPopupStub.emojiSelected("😀", true, "1f600")
-                        emojiPopupStub.close()
+                function onOpenStickersPopupRequested(params, cb) {
+                    const popup = stickersPopupStubComponent.createObject(editModeWrapper, params)
+                    popup.open()
+                    cb(popup)
+                }
+            }
+
+            Component {
+                id: stickersPopupStubComponent
+
+                Popup {
+                    objectName: "stickersPopupStub"
+                    modal: false
+                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+                    width: 80
+                    height: 60
+
+                    property Item directParent
+                    property real relativeY
+
+                    signal stickerSelected(string hashId, string packId, string url)
+
+                    onClosed: destroy()
+                }
+            }
+
+            Component {
+                id: emojiPopupStubComponent
+
+                Popup {
+                    id: emojiPopupStub
+                    objectName: "emojiPopupStub"
+                    modal: false
+                    width: 80
+                    height: 60
+
+                    property Item directParent
+                    property real relativeY
+
+                    signal emojiSelected(string emoji, bool atCursor, string hexcode)
+
+                    Button {
+                        objectName: "emojiPopupSelectButton"
+                        anchors.centerIn: parent
+                        text: "😀"
+                        onClicked: {
+                            emojiPopupStub.emojiSelected("😀", true, "1f600")
+                            emojiPopupStub.close()
+                        }
                     }
+
+                    onClosed: destroy()
                 }
             }
 
@@ -80,7 +125,6 @@ Item {
                 imageFeaturesEnabled: false
                 stickersButtonVisible: false
                 paymentRequestButtonVisible: false
-                emojiPopup: emojiPopupStub
 
                 onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => {
                     const picker = gifPickerComponent.createObject(parent, {
@@ -496,13 +540,37 @@ Item {
             const emojiPopup = findChild(wrapperUnderTest, "emojiPopupStub")
             verify(!!emojiPopup)
             verify(emojiPopup.visible)
+            compare(emojiPopup.directParent, toolBar.emojiButton)
+            verify(toolBar.emojiButton.checked)
 
             mouseClick(findChild(emojiPopup, "emojiPopupSelectButton"))
             waitForRendering(controlUnderTest)
 
             verify(controlUnderTest.getPlainText().includes("😀 "),
                    "the composer appends a separator, so the next emoji cannot fuse with this one")
-            verify(!emojiPopup.visible)
+            tryVerify(() => !findChild(wrapperUnderTest, "emojiPopupStub"))
+            verify(!toolBar.emojiButton.checked)
+        }
+
+        function test_stickersButton_opensPopupAndForwardsSelection() {
+            controlUnderTest.stickersButtonVisible = true
+            const toolBar = getToolBar()
+            verify(!findChild(wrapperUnderTest, "stickersPopupStub"))
+
+            mouseClick(toolBar.stickersButton)
+            const stickersPopup = findChild(wrapperUnderTest, "stickersPopupStub")
+            verify(!!stickersPopup)
+            compare(stickersPopup.directParent, toolBar.stickersButton)
+            verify(toolBar.stickersButton.checked)
+
+            signalSpy.setup(controlUnderTest, "stickerSelected")
+            stickersPopup.stickerSelected("hash", "pack", "url")
+            compare(signalSpy.count, 1)
+            compare(signalSpy.signalArguments[0][0], "hash")
+
+            mouseClick(toolBar.stickersButton)
+            tryVerify(() => !findChild(wrapperUnderTest, "stickersPopupStub"))
+            verify(!toolBar.stickersButton.checked)
         }
 
         function test_editMode_gifSelection_doesNotSendMessage() {

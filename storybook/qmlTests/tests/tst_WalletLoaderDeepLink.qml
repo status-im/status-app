@@ -46,7 +46,6 @@ Item {
         transactionStore: null
         popupHandler: null
         dappsServiceLoader: dummyLoader
-        emojiPopupLoader: dummyLoader
     }
 
     TestCase {

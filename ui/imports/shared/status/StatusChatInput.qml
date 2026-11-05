@@ -50,9 +50,6 @@ Control {
     // first.
     property int suggestionsModelWireDelay: 100
 
-    property var emojiPopup: null
-    property var stickersPopup: null
-    // Use this to only enable the Connections only when this Input opens the Emoji popup
     property bool closeGifPopupAfterSelection: true
     property bool areTestNetworksEnabled
     property bool paymentRequestFeatureEnabled: false
@@ -152,8 +149,8 @@ Control {
             (SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible || Qt.inputMethod.visible)
                 ? Qt.ControlModifier : Qt.NoModifier
 
-        property bool emojiPopupOpened: false
-        property bool stickersPopupOpened: false
+        property var emojiPopup: null
+        property var stickersPopup: null
 
         // Latched on the first mention entry; the members model stays out of
         // the suggestions adaptor until then so chat switches never pay for
@@ -219,44 +216,18 @@ Control {
             messageInputField.insert(at, emoji + " ")
         }
 
-        // common popups are emoji, gif and stickers
-        // Put controlWidth as argument with default value for binding
-        function getCommonPopupRelativePosition(popup, popupParent, controlWidth = root.width) {
-            const popupWidth = popup ? popup.width : 0
-            const popupHeight = popup ? popup.height : 0
-            const controlX = controlWidth - popupWidth - Theme.halfPadding
-            const controlY = -popupHeight
-            return popupParent.mapFromItem(root, controlX, controlY)
+        function openEmojiPopup() {
+            Global.openEmojiPopup({ directParent: toolBar.emojiButton }, popup => {
+                popup.relativeY = Qt.binding(() => -popup.height - root.Theme.halfPadding)
+                d.emojiPopup = popup
+            })
         }
 
-        readonly property point emojiPopupPosition: getCommonPopupRelativePosition(emojiPopup, toolBar.emojiButton)
-        readonly property point stickersPopupPosition: getCommonPopupRelativePosition(stickersPopup, toolBar.stickersButton)
-
-        readonly property StateGroup emojiPopupTakeover: StateGroup {
-            states: State {
-                when: d.emojiPopupOpened
-
-                PropertyChanges {
-                    target: emojiPopup
-
-                    directParent: toolBar.emojiButton
-                    relativeX: 0
-                    relativeY: -emojiPopup.height - root.Theme.halfPadding
-                }
-            }
-        }
-        readonly property StateGroup stickersPopupTakeover: StateGroup {
-            states: State {
-                when: d.stickersPopupOpened
-
-                PropertyChanges {
-                    target: stickersPopup
-
-                    directParent: toolBar.stickersButton
-                    relativeX: 0
-                    relativeY: -stickersPopup.height - root.Theme.halfPadding
-                }
-            }
+        function openStickersPopup() {
+            Global.openStickersPopup({ directParent: toolBar.stickersButton }, popup => {
+                popup.relativeY = Qt.binding(() => -popup.height - root.Theme.halfPadding)
+                d.stickersPopup = popup
+            })
         }
 
         function getSelectedTextWithFormationChars(messageInputField) {
@@ -298,8 +269,7 @@ Control {
     }
 
     Connections {
-        enabled: d.emojiPopupOpened
-        target: emojiPopup
+        target: d.emojiPopup
 
         function onEmojiSelected(text: string, atCursor: bool, hexcode: string) {
             // commit any potential preedit text first
@@ -313,13 +283,12 @@ Control {
             messageInputField.forceActiveFocus()
         }
         function onClosed() {
-            d.emojiPopupOpened = false
+            d.emojiPopup = null
         }
     }
 
     Connections {
-        enabled: d.stickersPopupOpened
-        target: root.stickersPopup
+        target: d.stickersPopup
 
         function onStickerSelected(hashId: string, packId: string, url: string ) {
             root.stickerSelected(hashId, packId, url)
@@ -327,7 +296,7 @@ Control {
             messageInputField.forceActiveFocus();
         }
         function onClosed() {
-            d.stickersPopupOpened = false
+            d.stickersPopup = null
         }
     }
 
@@ -1229,17 +1198,13 @@ Control {
                     d.addFormatting("codeSpan")
             }
 
-            stickersButton.checked: d.stickersPopupOpened
+            stickersButton.checked: !!d.stickersPopup
             stickersButton.visible: root.stickersButtonVisible
             stickersButton.onClicked: {
-                if (d.stickersPopupOpened) {
-                    root.stickersPopup.close()
-                    return
-                }
-                if (root.stickersPopup) {
-                    root.stickersPopup.open()
-                    d.stickersPopupOpened = true
-                }
+                if (d.stickersPopup)
+                    d.stickersPopup.close()
+                else
+                    d.openStickersPopup()
             }
 
             gifButton.checked: false
@@ -1272,16 +1237,12 @@ Control {
                 root.openGifPopupRequest(properties, onGifSelectedCb, onCloseCb)
             }
 
-            emojiButton.checked: d.emojiPopupOpened
+            emojiButton.checked: !!d.emojiPopup
             emojiButton.onClicked: {
-                if (d.emojiPopupOpened) {
-                    emojiPopup.close()
-                    return
-                }
-                if (emojiPopup) {
-                    emojiPopup.open()
-                    d.emojiPopupOpened = true
-                }
+                if (d.emojiPopup)
+                    d.emojiPopup.close()
+                else
+                    d.openEmojiPopup()
             }
 
             mentionButton.checkable: false

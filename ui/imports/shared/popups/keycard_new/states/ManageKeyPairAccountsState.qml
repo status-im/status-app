@@ -15,7 +15,6 @@ import "../helpers"
 Control {
     id: root
 
-    property var emojiPopup: null
     property string keyPairName: ""
     property string userProfilePublicKey: ""
 
@@ -66,6 +65,7 @@ Control {
         id: d
 
         property bool allAccountsValid: false
+        property var emojiPopup: null
 
         property int observedAccountIndex: -1
         property string observedAccountName: ""
@@ -141,11 +141,13 @@ Control {
     }
 
     Connections {
-        target: root.emojiPopup
-        enabled: root.emojiPopup !== null
+        target: d.emojiPopup
 
         function onEmojiSelected(emojiText, atCursor) {
             d.observedAccountEmoji = emojiText
+        }
+        function onClosed() {
+            d.emojiPopup = null
         }
     }
 
@@ -187,7 +189,7 @@ Control {
             charLimit: Constants.keycard.general.keycardNameLength
             placeholderText: qsTr("What would you like this account to be called?")
             input.acceptReturn: true
-            input.isIconSelectable: root.emojiPopup !== null
+            input.isIconSelectable: true
             input.leftPadding: Theme.padding
             input.asset.color: Utils.getColorForId(Theme.palette, d.observedAccountColorId)
             input.asset.emoji: d.observedAccountEmoji
@@ -206,11 +208,10 @@ Control {
             }
 
             onIconClicked: {
-                if (!root.emojiPopup)
-                    return
-                root.emojiPopup.open()
-                root.emojiPopup.directParent = accountNameInput
-                root.emojiPopup.relativeY = accountNameInput.height + Theme.halfPadding
+                Global.openEmojiPopup({
+                    directParent: accountNameInput,
+                    relativeY: accountNameInput.height + Theme.halfPadding
+                }, popup => d.emojiPopup = popup)
             }
         }
 

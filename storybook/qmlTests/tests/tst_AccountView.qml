@@ -47,7 +47,6 @@ Item {
             width: root.width
             walletStore: walletStoreMock
             activeNetworks: emptyNetworks
-            emojiPopup: null
             userProfilePublicKey: ""
             keyPair: ({
                           pairType: Constants.keypair.type.profile,

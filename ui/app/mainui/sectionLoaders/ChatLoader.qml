@@ -1,5 +1,6 @@
 import QtQml
 import QtQuick
+import SortFilterProxyModel
 
 import StatusQ
 import StatusQ.Core.Theme
@@ -44,8 +45,7 @@ StatusSectionLoader {
     // Adaptors / shared loaders / handlers
     required property ContactsModelAdaptor contactsAdaptor
     required property HandlersManagerLoader popupHandler
-    required property Loader emojiPopupLoader
-    required property Loader stickersPopupLoader
+    property SortFilterProxyModel reactionEmojiModel
     property DelegatePool rowPool: null
 
     // Inputs
@@ -260,8 +260,7 @@ StatusSectionLoader {
             networksStore:                  Qt.binding(() => root.networksStore),
             advancedStore:                  Qt.binding(() => root.advancedStore),
             utilsStore:                     Qt.binding(() => root.utilsStore),
-            emojiPopup:                     Qt.binding(() => root.emojiPopupLoader.item),
-            stickersPopup:                  Qt.binding(() => root.stickersPopupLoader.item),
+            reactionEmojiModel:             Qt.binding(() => root.reactionEmojiModel),
             sendViaPersonalChatEnabled:     Qt.binding(() => root.featureFlagsStore.sendViaPersonalChatEnabled),
             disabledTooltipText:            Qt.binding(() => !root.networkConnectionStore.walletReadyForTransactionsEnabled
                                                    ? root.networkConnectionStore.walletReadyForTransactionsToolTipText : ""),

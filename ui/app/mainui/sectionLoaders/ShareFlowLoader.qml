@@ -34,8 +34,6 @@ Loader {
     // The user's own 1-1 chat, never offered as a destination
     required property string excludedChatId
 
-    property var emojiPopup: null
-    property var stickersPopup: null
     property bool paymentRequestFeatureEnabled: false
     property bool areTestNetworksEnabled: false
 
@@ -146,8 +144,6 @@ Loader {
             model: shareDestinationsAdaptor.model
             text: d.sharedText
             imagePaths: d.sharedImagePaths
-            emojiPopup: root.emojiPopup
-            stickersPopup: root.stickersPopup
             keyboardVisible: SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible
                              || Qt.inputMethod.visible
             paymentRequestModel: root.rootChatStore?.sharePaymentRequestModel ?? null

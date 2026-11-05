@@ -2,6 +2,7 @@ import QtQuick
 import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
+import SortFilterProxyModel
 
 import StatusQ
 import StatusQ.Components
@@ -63,8 +64,7 @@ Item {
     // Contacts related data:
     property string myPublicKey
 
-    property var emojiPopup
-    property var stickersPopup
+    property SortFilterProxyModel reactionEmojiModel
     property bool areTestNetworksEnabled
 
     property string chatId: ""
@@ -618,7 +618,7 @@ Item {
         // live - and broken again at release, so nothing in the app-wide pool
         // keeps reaching back into this view.
         readonly property var context: [
-            "rootStore", "messageStore", "channelEmoji", "emojiPopup", "stickersPopup",
+            "rootStore", "messageStore", "channelEmoji", "reactionEmojiModel",
             "chatLogView", "chatContentModule", "formatBalance", "usersModel",
             "isChatBlocked", "joined", "sendViaPersonalChatEnabled",
             "messageLinkSharingEnabled", "threadsFeatureEnabled", "isThreadView",

@@ -109,7 +109,8 @@ QtObject {
         popupParent: root.popupParent
     }
 
-    property var emojiPopup: null
+    property string emojiSkinColor
+    property bool isWalletEnabled
 
     property var allContactsModel
     property var mutualContactsModel
@@ -123,6 +124,9 @@ QtObject {
     signal wcUriScanned(string uri)
     signal navigationEducationDialogSeenRequested()
     signal restartRequested()
+    signal emojiSkinColorSelected(string skinColor)
+    signal buyStickerPackRequested(string packId, string price)
+    signal enableThirdpartyServicesRequested()
 
     readonly property Connections imageSaveConnections: Connections {
         target: SystemUtils
@@ -219,6 +223,35 @@ QtObject {
             newVersion: version
         }
         openPopup(downloadPageComponent, popupProperties)
+    }
+
+    function openEmojiPopup(params, cb) {
+        return openAnchoredPopup(emojiPopupComponent, params, cb)
+    }
+
+    function openStickersPopup(params, cb) {
+        return openAnchoredPopup(stickersPopupComponent, params, cb)
+    }
+
+    // A typed property reads null once its object is destroyed; a plain JS
+    // reference, like the one in a request's params, does not.
+    readonly property QtObject anchorProbe: QtObject {
+        property Item item
+    }
+
+    // The first open waits for Popups to load, so the requester (the popup's
+    // directParent) may already be gone; the callback is then not called.
+    function openAnchoredPopup(popupComponent, params, cb) {
+        root.anchorProbe.item = params.directParent ?? null
+        const anchored = !!root.anchorProbe.item
+        root.anchorProbe.item = null
+        if (!anchored)
+            return null
+
+        const popup = openPopup(popupComponent, params)
+        if (popup)
+            cb(popup)
+        return popup
     }
 
     function openImagePopup(image, url) {
@@ -846,7 +879,6 @@ QtObject {
             id: keycardManagementPopupComponent
             KeycardManagementPopup {
                 store: root.keycardManagementStore
-                emojiPopup: root.emojiPopup
                 passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore
                 onMetadataResult: keycardInfo => Global.keycardManagementResult(keycardInfo)
                 onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {
@@ -860,6 +892,33 @@ QtObject {
         Component {
             id: downloadPageComponent
             DownloadPage {
+                onClosed: destroy()
+            }
+        },
+
+        Component {
+            id: emojiPopupComponent
+            StatusEmojiPopup {
+                objectName: "StatusEmojiPopup"
+                height: 440
+                emojiModel: SQUtils.Emoji.emojiModel
+                skinColor: root.emojiSkinColor
+                onSkinColorSelected: skinColor => root.emojiSkinColorSelected(skinColor)
+                onClosed: destroy()
+            }
+        },
+
+        Component {
+            id: stickersPopupComponent
+            StatusStickersPopup {
+                objectName: "StatusStickersPopup"
+                height: 440
+                store: root.chatStore
+                isWalletEnabled: root.isWalletEnabled
+                thirdpartyServicesEnabled: root.rootStore.thirdpartyServicesEnabled
+
+                onBuyClicked: (packId, price) => root.buyStickerPackRequested(packId, price)
+                onEnableThirdpartyServicesRequested: root.enableThirdpartyServicesRequested()
                 onClosed: destroy()
             }
         },

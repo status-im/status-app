@@ -19,7 +19,6 @@ Column {
     id: root
 
     property WalletStore walletStore
-    property var emojiPopup
 
     property bool isKeycardEnabled: true
 
@@ -103,7 +102,6 @@ Column {
 
         sourceComponent: AddAccountPopup {
             isKeycardEnabled: root.isKeycardEnabled
-            store.emojiPopup: root.emojiPopup
             store.addAccountModule: walletSection.addAccountModule
         }
 

@@ -28,7 +28,6 @@ RowLayout {
     property var mutualContactsModel
 
     property var chatContentModule: root.rootStore.currentChatContentModule() || null
-    property var emojiPopup
     property int padding: Theme.halfPadding
 
     property var usersModel

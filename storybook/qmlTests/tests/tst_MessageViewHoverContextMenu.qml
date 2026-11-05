@@ -1,8 +1,13 @@
 import QtQuick
+import QtQuick.Controls
 import QtTest
+
+import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
+import shared.status
 import shared.views.chat
 
 import AppLayouts.Chat.stores as ChatStores
@@ -115,11 +120,70 @@ Item {
         }
     }
 
+    // Stands in for Popups: records each emoji picker request and answers it
+    // with a stub picker, right away or when the test says so.
+    QtObject {
+        id: pickerRequests
+
+        property var requests: []
+        property bool answerImmediately: true
+
+        function answer(request) {
+            const picker = pickerStubComp.createObject(root, request.params)
+            picker.open()
+            request.cb(picker)
+            return picker
+        }
+
+        readonly property Connections connections: Connections {
+            target: Global
+
+            function onOpenEmojiPopupRequested(params, cb) {
+                const request = { params, cb }
+                pickerRequests.requests.push(request)
+                if (pickerRequests.answerImmediately)
+                    pickerRequests.answer(request)
+            }
+        }
+    }
+
+    Component {
+        id: pickerStubComp
+
+        Popup {
+            objectName: "pickerStub"
+
+            property Item directParent
+            property real relativeX
+            property real relativeY
+
+            signal emojiSelected(string emoji, bool atCursor, string hexcode)
+
+            width: 370
+            height: 440
+            onClosed: destroy()
+        }
+    }
+
+    Component {
+        id: skinToneModelComp
+        SkinToneFilteredEmojiModel {
+            emojiModel: SQUtils.Emoji.emojiModel
+        }
+    }
+
+    Component {
+        id: signalSpyComp
+        SignalSpy {}
+    }
+
     TestCase {
         name: "MessageViewHoverContextMenu"
         when: windowShown
 
         function init() {
+            pickerRequests.requests = []
+            pickerRequests.answerImmediately = true
             listMock.moving = false
             listMock.wheelScrolling = false
             plainListMock.moving = false
@@ -343,6 +407,104 @@ Item {
                       "moving into the inter-message gap must close the hover menu")
             verify(!hasQuickActionsMenu(secondView),
                    "gap hover must not open a menu on the neighboring message")
+        }
+
+        function cleanup() {
+            tryVerify(() => {
+                findChild(root, "pickerStub")?.close()
+                return !findChild(root, "pickerStub")
+            })
+        }
+
+        function openedQuickActionsMenu(id, props = {}) {
+            const view = createTemporaryObject(messageViewComp, root, Object.assign({
+                messageId: id,
+                senderId: "0xsender",
+                senderDisplayName: "Sender",
+                unparsedText: "react to me"
+            }, props))
+            tryVerify(() => messageViewReady(view), 5000, "MessageView must be ready")
+            mouseMove(root, root.width - 1, root.height - 1)
+            hoverMessageDelegate(view)
+            tryVerify(() => hasQuickActionsMenu(view), 3000)
+            return { view, menu: findChild(view, "MessageContextMenuView") }
+        }
+
+        function test_reactionBarUsesTheGivenModel() {
+            const model = createTemporaryObject(skinToneModelComp, root)
+            const { menu } = openedQuickActionsMenu("msg-bar", { reactionEmojiModel: model })
+            compare(menu.emojiModel, model)
+        }
+
+        function test_reactionPickerIsRequestedNextToTheClick() {
+            const { view, menu } = openedQuickActionsMenu("msg-react")
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+
+            compare(pickerRequests.requests.length, 1)
+            const params = pickerRequests.requests[0].params
+            compare(params.directParent, view)
+            compare(params.closePolicy, Popup.CloseOnEscape | Popup.CloseOnPressOutside)
+
+            const picker = findChild(root, "pickerStub")
+            compare(picker.relativeX, 400 - picker.width)
+            compare(picker.relativeY, 10 + Theme.bigPadding)
+        }
+
+        function test_reactionReachesTheMessage() {
+            const { view, menu } = openedQuickActionsMenu("msg-toggle")
+            const spy = signalSpyComp.createObject(root, { target: view, signalName: "emojiReactionToggled" })
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+
+            findChild(root, "pickerStub").emojiSelected("\u2764\uFE0F", true, "2764")
+
+            compare(spy.count, 1)
+            compare(spy.signalArguments[0][0], "msg-toggle")
+            compare(spy.signalArguments[0][1], "2764")
+        }
+
+        // the press that closes the picker must not reopen it on release
+        function test_noReopenRightAfterClosing() {
+            const { view, menu } = openedQuickActionsMenu("msg-debounce")
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+            findChild(root, "pickerStub").close()
+
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+            compare(pickerRequests.requests.length, 1)
+
+            wait(150)
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+            compare(pickerRequests.requests.length, 2)
+        }
+
+        // a pooled row can be retargeted while its picker is open
+        function test_openPickerClosesWhenTheRowIsRetargeted() {
+            const { view, menu } = openedQuickActionsMenu("msg-open-old")
+            const spy = signalSpyComp.createObject(root, { target: view, signalName: "emojiReactionToggled" })
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+            const picker = findChild(root, "pickerStub")
+            tryCompare(picker, "opened", true)
+
+            view.messageId = "msg-open-new"
+            picker.emojiSelected("\u2764\uFE0F", true, "2764")
+            compare(spy.count, 0)
+            tryCompare(picker, "visible", false)
+
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+            compare(pickerRequests.requests.length, 2)
+        }
+
+        // a pooled row can be retargeted before an asynchronous first open answers
+        function test_pickerForARetargetedRowIsClosed() {
+            pickerRequests.answerImmediately = false
+            const { view, menu } = openedQuickActionsMenu("msg-old")
+            const spy = signalSpyComp.createObject(root, { target: view, signalName: "emojiReactionToggled" })
+            menu.openEmojiPopup(view, { x: 400, y: 10 })
+
+            view.messageId = "msg-new"
+            const picker = pickerRequests.answer(pickerRequests.requests[0])
+            tryCompare(picker, "visible", false)
+            picker.emojiSelected("\u2764\uFE0F", true, "2764")
+            compare(spy.count, 0)
         }
     }
 }

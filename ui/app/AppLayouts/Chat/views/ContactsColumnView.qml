@@ -34,7 +34,6 @@ Item {
     property var chatSectionModule
 
     property RootStore store
-    property var emojiPopup
 
     QtObject {
         id: d

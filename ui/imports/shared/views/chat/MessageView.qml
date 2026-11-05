@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
 import QtModelsToolkit
+import SortFilterProxyModel
 
 import utils
 import shared.panels
@@ -40,8 +41,7 @@ Loader {
     property string channelEmoji
 
     property var chatLogView
-    property var emojiPopup
-    property var stickersPopup
+    property SortFilterProxyModel reactionEmojiModel
 
     // Unfurling related data:
     property bool gifUnfurlingEnabled
@@ -256,6 +256,9 @@ Loader {
     // Rebind hygiene: state tied to the previous message must not outlive it.
     onMessageIdChanged: {
         d.contextMenu?.close()
+        d.emojiPopup?.close()
+        d.emojiPopup = null
+        d.emojiPopupOpened = false
         d.activeMessage = ""
         // a pooled row must not keep resolving the contacts of every message it shows
         root.senderContactEntry.active = false
@@ -489,6 +492,7 @@ Loader {
                                                && Utils.isGifOnlyText(root.unparsedText)
         property bool hideMessage: false
         property bool emojiPopupOpened: false
+        property var emojiPopup: null
 
         property string activeMessage
         readonly property bool isMessageActive: d.activeMessage === root.messageId
@@ -595,11 +599,9 @@ Loader {
             }
         }
 
-        function isAbove(mouseArea, mouse, popupH) {
-            const p = mouseArea.mapToItem(null, mouse.x, mouse.y)
-            const winH = mouseArea.Window.height
-            const spaceAbove = p.y
-            const spaceBelow = winH - p.y
+        function isAbove(windowY, winH, popupH) {
+            const spaceAbove = windowY
+            const spaceBelow = winH - windowY
 
             // plenty of room below → place below
             if (popupH <= spaceBelow) return false
@@ -610,26 +612,33 @@ Loader {
         }
 
         function addReactionClicked(mouseArea, mouse) {
-            // emojiPopup loads lazily after startup
-            if (!emojiPopup || !d.addReactionAllowed || d.emojiPopupOpened) return
+            if (!d.addReactionAllowed || d.emojiPopupOpened) return
 
             // Don't use mouseArea as parent, as it will be destroyed right after opening menu
             const point = mouseArea.mapToItem(root, mouse.x, mouse.y)
-            // Position: put popup next to the click and clamp inside the container
-            let x =  point.x - emojiPopup.width
-            let y = 0
-            if (isAbove(mouseArea, mouse, emojiPopup.height)) {
-                y = point.y - emojiPopup.height - Theme.bigPadding
-            } else {
-                y = point.y + Theme.bigPadding
-            }
+            const windowY = mouseArea.mapToItem(null, mouse.x, mouse.y).y
+            const winH = mouseArea.Window.height
+            const messageId = root.messageId
 
-            emojiPopup.open()
-            emojiPopup.directParent = root
-            emojiPopup.relativeX = x
-            emojiPopup.relativeY = y
-
-            d.emojiPopupOpened = true
+            Global.openEmojiPopup({
+                directParent: root,
+                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+            }, popup => {
+                // a pooled row may show another message by the time the picker is built
+                if (root.messageId !== messageId) {
+                    popup.close()
+                    return
+                }
+                // Position: put popup next to the click and clamp inside the container
+                popup.relativeX = point.x - popup.width
+                if (isAbove(windowY, winH, popup.height)) {
+                    popup.relativeY = point.y - popup.height - Theme.bigPadding
+                } else {
+                    popup.relativeY = point.y + Theme.bigPadding
+                }
+                d.emojiPopup = popup
+                d.emojiPopupOpened = true
+            })
         }
 
         function onImageClicked(image, mouse, imageSource, url = "", pos = undefined) {
@@ -739,13 +748,6 @@ Loader {
         on_ChatLogViewAncestorXTraceChanged: contextMenu?.close() // will run destruction/cleanup
     }
 
-    Binding {
-        target: root?.emojiPopup ?? null
-        property: "closePolicy"
-        value: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        when: d.emojiPopupOpened
-    }
-
     Timer {
         id: hoverMessageContextMenuCloseTimer
         // Keep the hover menu alive while the pointer moves from the message to the popup.
@@ -758,14 +760,14 @@ Loader {
 
 
     Connections {
-        enabled: d.emojiPopupOpened
-        target: root.emojiPopup ?? null
+        target: d.emojiPopup
 
         function onEmojiSelected(text: string, atCursor: bool, hexcode: string) {
             root.emojiReactionToggled(root.messageId, hexcode)
         }
         function onClosed() {
             // Debounce so that the popup doesn't immediately reopen when clicking the button
+            d.emojiPopup = null
             Backpressure.debounce(root, 100, () => { d.emojiPopupOpened = false })()
         }
     }
@@ -1425,8 +1427,7 @@ Loader {
         MessageContextMenuView {
             id: messageContextMenuView
             emojiReactionLimitReached: root.emojiReactionLimitReached
-            // the emoji popup loads lazily after startup — the menu can open first
-            emojiModel: root.emojiPopup?.fullModel ?? null
+            emojiModel: root.reactionEmojiModel
             disabledForChat: !root.rootStore.isUserAllowedToSendMessage
             forceEnableEmojiReactions: !root.rootStore.isUserAllowedToSendMessage && d.addReactionAllowed
             messageLinkSharingEnabled: root.messageLinkSharingEnabled

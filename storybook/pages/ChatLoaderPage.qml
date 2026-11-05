@@ -403,8 +403,6 @@ SplitView {
         // Hidden shared popup loaders the ChatLoader API requires
         Item {
             visible: false
-            Loader { id: emojiPopupLoaderMock; active: false }
-            Loader { id: stickersPopupLoaderMock; active: false }
         }
 
         Rectangle {
@@ -440,8 +438,6 @@ SplitView {
                     createChatPropertiesStore: createChatPropertiesStoreMock
                     contactsAdaptor: contactsAdaptorMock
                     popupHandler: null
-                    emojiPopupLoader: emojiPopupLoaderMock
-                    stickersPopupLoader: stickersPopupLoaderMock
                     rowPool: messageRowPool
                     createChatViewOpened: false
                     isPortraitMode: (Window.width ?? 0) < ThemeUtils.portraitBreakpoint.width

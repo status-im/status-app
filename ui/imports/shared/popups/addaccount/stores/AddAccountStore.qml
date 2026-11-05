@@ -10,7 +10,6 @@ BasePopupStore {
 
     isAddAccountPopup: true
     required property var addAccountModule
-    required property var emojiPopup
 
     property string userProfilePublicKey: userProfile.pubKey
     property string userProfileKeyUid: userProfile.keyUid

@@ -77,7 +77,6 @@ Item {
     required property TransactionStore transactionStore
     required property SharedStores.NetworksStore networksStore
 
-    property var emojiPopup: null
     property SharedStores.NetworkConnectionStore networkConnectionStore
     property bool appMainVisible
 
@@ -545,7 +544,6 @@ Item {
 
         sourceComponent: AddAccountPopup {
             isKeycardEnabled: root.isKeycardEnabled
-            store.emojiPopup: root.emojiPopup
             store.addAccountModule: walletSection.addAccountModule
         }
 

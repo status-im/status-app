@@ -45,8 +45,6 @@ StatusStackModal {
     property string channelDescription: ""
     property string channelEmoji: ""
     property string channelColor: d.communityDetails.color !== "" ? d.communityDetails.color : ""
-    property bool emojiPopupOpened: false
-    property var emojiPopup: null
     readonly property int communityColorValidator: Utils.Validate.NoEmpty
                                                    | Utils.Validate.TextHexColor
 
@@ -143,6 +141,7 @@ StatusStackModal {
         property bool viewOnlyCanAddReaction: root.viewOnlyCanAddReaction
         property bool hideIfPermissionsNotMet: root.hideIfPermissionsNotMet
         property bool colorPickerOpened: false
+        property var emojiPopup: null
 
         function isFormValid() {
             return nameInput.valid && descriptionTextArea.valid &&
@@ -150,11 +149,13 @@ StatusStackModal {
         }
 
         function openEmojiPopup(leftSide = false) {
-            root.emojiPopupOpened = true;
-            root.emojiPopup.open();
-            root.emojiPopup.directParent = nameInput
-            root.emojiPopup.relativeX = leftSide ? 0 : nameInput.width - root.emojiPopup.width
-            root.emojiPopup.relativeY = nameInput.height + Theme.smallPadding;
+            Global.openEmojiPopup({
+                directParent: nameInput,
+                relativeY: nameInput.height + Theme.smallPadding
+            }, popup => {
+                popup.relativeX = leftSide ? 0 : nameInput.width - popup.width
+                d.emojiPopup = popup
+            })
         }
 
         function _getChannelConfig() {
@@ -656,15 +657,14 @@ StatusStackModal {
     ]
 
     Connections {
-        enabled: root.opened && root.emojiPopupOpened
-        target: emojiPopup
+        target: d.emojiPopup
 
         function onEmojiSelected(emojiText: string, atCursor: bool) {
             nameInput.input.asset.isLetterIdenticon = false;
             nameInput.input.asset.emoji = emojiText
         }
         function onClosed() {
-            root.emojiPopupOpened = false
+            d.emojiPopup = null
         }
     }
 

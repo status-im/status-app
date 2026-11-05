@@ -71,7 +71,6 @@ StatusSectionLayout {
     property AppLayoutsStores.ContactsStore contactsStore
     property AppLayoutsStores.RootStore globalStore
 
-    property var emojiPopup
 
     required property Keychain keychain
     required property SecureStorage secureStorage
@@ -411,7 +410,6 @@ StatusSectionLayout {
                 thirdpartyServicesEnabled: root.privacyStore.thirdpartyServicesEnabled
                 myPublicKey: userProfile.pubKey
                 currencySymbol: root.sharedRootStore.currencyStore.currentCurrency
-                emojiPopup: root.emojiPopup
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.wallet)
 
                 onAddressWasShownRequested: (address) => root.addressWasShownRequested(address)
