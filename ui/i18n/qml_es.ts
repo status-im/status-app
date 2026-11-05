@@ -2675,6 +2675,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certificado del servidor no confiable</translation>
     </message>
@@ -12902,6 +12906,13 @@ al cargar</translation>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>Error al obtener credenciales.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

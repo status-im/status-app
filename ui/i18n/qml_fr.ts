@@ -2675,6 +2675,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Le certificat du serveur n’est pas approuvé</translation>
     </message>
@@ -12896,6 +12900,13 @@ chargement</translation>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>La récupération des identifiants a échoué.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

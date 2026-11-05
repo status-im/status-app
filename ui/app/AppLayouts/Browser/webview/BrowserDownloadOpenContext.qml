@@ -34,7 +34,7 @@ QtObject {
         console.warn("BrowserDownloadOpenContext: openUrlFn not set")
     }
 
-    /// Opens a local file with a read grant for a directory (AbstractWebView
+    /// Opens a local file with a read grant for it or a directory (AbstractWebView
     /// loadFileUrl); empty readAccessUrl means the file's own directory.
     property var openFileUrlFn: function(fileUrl, readAccessUrl) {
         console.warn("BrowserDownloadOpenContext: openFileUrlFn not set")
@@ -48,6 +48,11 @@ QtObject {
     // Text file reader; reads qrc: and file: alike. Tests inject a fake.
     property var readTextFileFn: function(path) {
         return StringUtils.readTextFile(path)
+    }
+
+    // Existence probe for an Opened File; tests inject a fake.
+    property var fileExistsFn: function(path) {
+        return SystemUtils.fileExists(path)
     }
 
     // Directory create; injectable so Storybook/unit tests need not stub SystemUtils.
@@ -189,6 +194,35 @@ QtObject {
         }
 
         root.openUrlFn(UrlUtils.urlFromUserInput(path))
+        return true
+    }
+
+    /// An Opened File through the same allowlist and player page as a Record,
+    /// read-granted to the file alone. False when it cannot be shown here.
+    function openOpenedFile(fileUrl, supportsPdf) {
+        const path = UrlUtils.convertUrlToLocalPath(fileUrl)
+        if (!path || !root.fileExistsFn(path))
+            return false
+        const record = {
+            targetPath: path,
+            fileName: DownloadFormatUtils.fileNameOf(path),
+            mimeType: "",
+            missingFile: false,
+            state: AbstractWebView.DownloadState.DownloadCompleted
+        }
+        if (!canOpenInBrowser(record, supportsPdf))
+            return false
+
+        if (root.mediaPlayerPageRequired
+                && DownloadFormatUtils.isPlayableMedia("", record.fileName,
+                                                       root.proprietaryCodecsSupported)) {
+            const page = mediaPlayerPageUrl(record)
+            if (!page)
+                return false
+            root.openUrlFn(page)
+            return true
+        }
+        root.openFileUrlFn(fileUrl, fileUrl)
         return true
     }
 

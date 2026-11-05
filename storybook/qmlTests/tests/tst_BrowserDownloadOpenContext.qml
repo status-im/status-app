@@ -327,5 +327,52 @@ Item {
             compare(ctx.mediaPlayerPageRequired,
                     BrowserBackendCapabilities.mediaPlayerPageRequired)
         }
+
+        /// An Opened File: a context whose probe sees exactly these paths.
+        function openedFileContext(existing) {
+            const ctx = createContext()
+            ctx.fileExistsFn = (path) => existing.indexOf(path) >= 0
+            return ctx
+        }
+
+        function test_openOpenedFile_grantsTheFileAlone() {
+            const ctx = openedFileContext(["/Users/me/My Docs/a b.txt"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/My Docs/a b.txt", false))
+
+            compare(openedFileUrls.length, 1)
+            compare(openedFileUrls[0].url, "file:///Users/me/My Docs/a b.txt")
+            compare(openedFileUrls[0].readAccess, "file:///Users/me/My Docs/a b.txt")
+            compare(openedUrls.length, 0)
+        }
+
+        function test_openOpenedFile_refusesWhatATabCannotShow() {
+            const ctx = openedFileContext(["/Users/me/setup.exe", "/Users/me/a.pdf"])
+
+            verify(!ctx.openOpenedFile("file:///Users/me/setup.exe", true))
+            verify(!ctx.openOpenedFile("file:///Users/me/a.pdf", false))
+            verify(ctx.openOpenedFile("file:///Users/me/a.pdf", true))
+            compare(openedFileUrls.length, 1)
+        }
+
+        function test_openOpenedFile_refusesAFileThatIsGone() {
+            const ctx = openedFileContext([])
+
+            verify(!ctx.openOpenedFile("file:///Users/me/a.txt", false))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_playsMediaThroughThePlayerPage() {
+            const ctx = openedFileContext(["/Users/me/song.mp3"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].indexOf("/tmp/status-player/") >= 0, openedUrls[0])
+            compare(openedFileUrls.length, 0)
+
+            ctx.mediaPlayerPageRequired = false
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+            compare(openedFileUrls[0].readAccess, "file:///Users/me/song.mp3")
+        }
     }
 }

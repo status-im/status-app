@@ -2662,6 +2662,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>서버의 인증서를 신뢰할 수 없습니다</translation>
     </message>
@@ -12837,6 +12841,13 @@ to load</source>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>자격 증명 가져오기에 실패했습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

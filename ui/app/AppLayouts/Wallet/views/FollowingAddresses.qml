@@ -204,8 +204,8 @@ Item {
             Layout.preferredWidth: 161
             Layout.preferredHeight: 160
 
-            source: (Theme.style === Theme.Light) ? Assets.png("wallet/onchain-friends-empty-light") :
-                                                    Assets.png("wallet/onchain-friends-empty-dark")
+            source: (Theme.style === Theme.Light) ? Assets.png("empty-states/onchain-friends-empty-light") :
+                                                    Assets.png("empty-states/onchain-friends-empty-dark")
             fillMode: Image.PreserveAspectFit
             mipmap: true
             cache: false

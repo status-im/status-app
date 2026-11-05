@@ -2687,6 +2687,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certifikát serveru není důvěryhodný</translation>
     </message>
@@ -12967,6 +12971,13 @@ selhalo</translation>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>Získání přihlašovacích údajů se nezdařilo.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

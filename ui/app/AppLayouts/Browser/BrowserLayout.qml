@@ -80,6 +80,22 @@ StatusSectionLayout {
         })
     }
 
+    /// An Opened File in a Preview Tab, or a Preview Tab saying it could not
+    /// be opened; never handed back to the OS.
+    function openOpenedFile(fileUrl, refused) {
+        if (!refused && downloadsContext.openOpenedFile(fileUrl))
+            return
+        const fileName = fileUrl
+            ? DownloadFormatUtils.fileNameOf(UrlUtils.convertUrlToLocalPath(fileUrl)) : ""
+        Qt.callLater(() => {
+            const tab = _internal.addLocalPreviewTab("", fileName || qsTr("Couldn't open the file"))
+            if (!tab)
+                return
+            tab.openFailedFileName = fileName
+            tab.openFailed = true
+        })
+    }
+
     // Drive the current tab from Storybook / automation (web content is not in AX).
     function runJsOnCurrentTab(script, callback) {
         const wv = _internal.currentWebView
@@ -281,9 +297,9 @@ StatusSectionLayout {
             return tab;
         }
 
-        function addLocalPreviewTab(url) {
+        function addLocalPreviewTab(url, title = "") {
             return webViewContext.createEmptyTab(
-                browserConfig.localPreviewProfileParams, false, true, url, "")
+                browserConfig.localPreviewProfileParams, false, true, url, title)
         }
 
         function addNewEmptyTab() {
@@ -692,8 +708,8 @@ StatusSectionLayout {
             visible: !overlayLoader.active
         }
 
-        // Overlay for EmptyWebPage (no URL) and CrashedWebPage (dead render
-        // process). Downloads List lives in Open tabs only.
+        // Overlay for EmptyWebPage (no URL), CrashedWebPage (dead render
+        // process) and OpenFailedPage. Downloads List lives in Open tabs only.
         Loader {
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -701,10 +717,17 @@ StatusSectionLayout {
 
             readonly property int contentMode: webViewContext.currentContentMode
             visible: active
-            active: contentMode === BrowserWebViewContext.ContentMode.EmptyContent
-                    || contentMode === BrowserWebViewContext.ContentMode.CrashedContent
-            sourceComponent: contentMode === BrowserWebViewContext.ContentMode.CrashedContent
-                             ? crashedPageComponent : emptyPageComponent
+            active: contentMode !== BrowserWebViewContext.ContentMode.WebContent
+            sourceComponent: {
+                switch (contentMode) {
+                case BrowserWebViewContext.ContentMode.CrashedContent:
+                    return crashedPageComponent
+                case BrowserWebViewContext.ContentMode.OpenFailedContent:
+                    return openFailedPageComponent
+                default:
+                    return emptyPageComponent
+                }
+            }
         }
     }
 
@@ -749,6 +772,13 @@ StatusSectionLayout {
         id: crashedPageComponent
         CrashedWebPage {
             onReloadRequested: _internal.currentWebView?.reload()
+        }
+    }
+
+    Component {
+        id: openFailedPageComponent
+        OpenFailedPage {
+            fileName: _internal.currentWebView?.openFailedFileName ?? ""
         }
     }
 

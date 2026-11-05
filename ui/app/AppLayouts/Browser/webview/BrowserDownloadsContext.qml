@@ -194,6 +194,10 @@ QtObject {
         return downloadOpenContext.openInBrowser(record, supportsPdfFn())
     }
 
+    function openOpenedFile(fileUrl) {
+        return downloadOpenContext.openOpenedFile(fileUrl, supportsPdfFn())
+    }
+
     function retryRecord(record) {
         if (!downloadsStore.canRetryFromMenu(record) && !downloadsStore.canRetryFromTap(record))
             return false
