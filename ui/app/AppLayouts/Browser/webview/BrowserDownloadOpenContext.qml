@@ -22,9 +22,9 @@ import "DownloadFormatUtils.js" as DownloadFormatUtils
  * a plain per-call input.
  *
  * openInBrowser() makes the open-route choice: a generated player page for
- * media (only where the Backend needs one — otherwise the media file itself
- * via openFileUrlFn), a direct navigation for everything else. A false return
- * means "not renderable here" — the caller hands the file to the OS.
+ * media where the Backend needs one, otherwise the file itself via
+ * openFileUrlFn, read-granted to itself alone. A false return means "not
+ * renderable here" — the caller hands the file to the OS.
  */
 QtObject {
     id: root
@@ -90,6 +90,22 @@ QtObject {
         Qt.resolvedUrl("player/media_player.js")
 
     readonly property QtObject d: QtObject {
+
+        /// The player page where the Backend needs one, otherwise the file
+        /// itself, read-granted to itself alone.
+        function open(record, fileUrl, openedFilePath) {
+            if (root.mediaPlayerPageRequired
+                    && DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
+                                                           root.proprietaryCodecsSupported)) {
+                const page = root.mediaPlayerPageUrl(record)
+                if (!page)
+                    return false
+                root.openUrlFn(page, openedFilePath)
+                return true
+            }
+            root.openFileUrlFn(fileUrl, fileUrl, openedFilePath)
+            return true
+        }
 
         property string mediaPlayerTemplateCache: ""
 
@@ -178,24 +194,7 @@ QtObject {
         const path = record.targetPath
         if (!path)
             return false
-
-        if (DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
-                                               root.proprietaryCodecsSupported)) {
-            // Backends that play a directly loaded file get the file itself,
-            // read-granted to its own directory (empty = the narrowest grant).
-            if (!root.mediaPlayerPageRequired) {
-                root.openFileUrlFn(UrlUtils.urlFromUserInput(path), "")
-                return true
-            }
-            const page = mediaPlayerPageUrl(record)
-            if (!page)
-                return false
-            root.openUrlFn(page)
-            return true
-        }
-
-        root.openUrlFn(UrlUtils.urlFromUserInput(path))
-        return true
+        return d.open(record, UrlUtils.urlFromUserInput(path), "")
     }
 
     /// An Opened File through the same allowlist and player page as a Record,
@@ -213,18 +212,7 @@ QtObject {
         }
         if (!canOpenInBrowser(record, supportsPdf))
             return false
-
-        if (root.mediaPlayerPageRequired
-                && DownloadFormatUtils.isPlayableMedia("", record.fileName,
-                                                       root.proprietaryCodecsSupported)) {
-            const page = mediaPlayerPageUrl(record)
-            if (!page)
-                return false
-            root.openUrlFn(page, path)
-            return true
-        }
-        root.openFileUrlFn(fileUrl, fileUrl, path)
-        return true
+        return d.open(record, fileUrl, path)
     }
 
     /// Write (and reuse) a player page for a downloaded media Record and return its

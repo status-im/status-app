@@ -279,20 +279,22 @@ Item {
             verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
             verify(openedUrls[0].endsWith(".html"))
 
-            // Static route: direct navigation to the Download Target.
+            // Static route: the Download Target itself, read-granted to itself.
             verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
-            compare(openedUrls.length, 2)
-            verify(openedUrls[1].indexOf("photo.png") >= 0)
+            compare(openedUrls.length, 1)
+            compare(openedFileUrls.length, 1)
+            verify(openedFileUrls[0].url.endsWith("/tmp/downloads/photo.png"))
+            compare(openedFileUrls[0].readAccess, openedFileUrls[0].url)
             compare(openedPaths, ["", ""], "a Download's Tab is no Opened File")
 
             // Not renderable here → false: the caller hands off to the OS.
             verify(!ctx.openInBrowser(completed("application/octet-stream", "a.bin"), true))
-            compare(openedUrls.length, 2)
+            compare(openedUrls.length + openedFileUrls.length, 2)
 
             // No player page (write failed) → false, same OS handoff.
             ctx.writeTextFileFn = function() { return false }
             verify(!ctx.openInBrowser(completed("video/webm", "b.webm"), false))
-            compare(openedUrls.length, 2)
+            compare(openedUrls.length + openedFileUrls.length, 2)
         }
 
         /// The player page is a Backend workaround, so the route follows the
@@ -310,22 +312,15 @@ Item {
             compare(openedFileUrls.length, 1)
             verify(openedFileUrls[0].url.startsWith("file://"))
             verify(openedFileUrls[0].url.endsWith("/tmp/downloads/tune.mp3"))
-            // Empty read access = the file's own directory, the narrowest grant.
-            compare(openedFileUrls[0].readAccess, "")
-
-            // Non-media is unaffected: still a plain navigation.
-            verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
-            compare(openedFileUrls.length, 1)
-            compare(openedUrls.length, 1)
-            verify(openedUrls[0].indexOf("photo.png") >= 0)
+            compare(openedFileUrls[0].readAccess, openedFileUrls[0].url)
 
             // Flipping the Capability back restores the player-page route —
             // the fallback stays one property away.
             ctx.mediaPlayerPageRequired = true
             verify(ctx.openInBrowser(completed("audio/mpeg", "tune.mp3"), false))
             compare(openedFileUrls.length, 1)
-            compare(openedUrls.length, 2)
-            verify(openedUrls[1].startsWith("file:///tmp/status-player/player-"))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
             compare(written, 1)
         }
 
