@@ -18,7 +18,6 @@
 #include <QProcessEnvironment>
 #include <QSaveFile>
 #include <QStandardPaths>
-#include <QtMath>
 #include <QDebug>
 #include <QMetaObject>
 #include <QPointer>
@@ -884,30 +883,16 @@ void SystemUtilsInternal::startShakeDetection()
 
 #ifndef Q_OS_ANDROID
 namespace {
-// Same rounding as QHighDpiScaling::roundScaleFactor() (private Qt API), so that our
-// "native" DPR matches the per-screen factor Qt actually applies to the window
-qreal roundedDpiScaleFactor(qreal rawFactor)
+// The global QT_SCALE_FACTOR, read the same way QHighDpiScaling::initHighDpiScaling() does
+// (once, at startup; invalid or missing means 1.0). Qt doesn't expose it publicly
+qreal globalQtScaleFactor()
 {
-    qreal rounded = rawFactor;
-    switch (QGuiApplication::highDpiScaleFactorRoundingPolicy()) {
-    case Qt::HighDpiScaleFactorRoundingPolicy::Round:
-        rounded = qRound(rawFactor);
-        break;
-    case Qt::HighDpiScaleFactorRoundingPolicy::Ceil:
-        rounded = qCeil(rawFactor);
-        break;
-    case Qt::HighDpiScaleFactorRoundingPolicy::Floor:
-        rounded = qFloor(rawFactor);
-        break;
-    case Qt::HighDpiScaleFactorRoundingPolicy::RoundPreferFloor:
-        rounded = rawFactor - qFloor(rawFactor) < 0.75 ? qFloor(rawFactor) : qCeil(rawFactor);
-        break;
-    case Qt::HighDpiScaleFactorRoundingPolicy::PassThrough:
-    case Qt::HighDpiScaleFactorRoundingPolicy::Unset:
-        break;
-    }
-    // Qt clamps the minimum factor to 1
-    return qMax(rounded, qreal(1));
+    static const qreal factor = [] {
+        bool ok = false;
+        const qreal value = qEnvironmentVariable("QT_SCALE_FACTOR").toDouble(&ok);
+        return ok && value > 0 ? value : qreal(1);
+    }();
+    return factor;
 }
 } // namespace
 #endif
@@ -940,21 +925,12 @@ qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
         return 1.0;
     }
 
-    if (auto platformScreen = screen->handle()) {
-        // Mirror QHighDpiScaling: the window DPR is QT_SCALE_FACTOR * dpiFactor * platform DPR.
-        // Platforms with "real" device pixels (macOS, iOS, Wayland) report the OS scale in
-        // QPlatformScreen::devicePixelRatio() and keep logicalDpi == logicalBaseDpi. Windows
-        // and X11 report a platform DPR of 1.0 and expose the OS scale only through the
-        // logical DPI, so leaving the dpiFactor out treats e.g. a 150% Windows display as 100%
-        const QDpi logicalDpi = QPlatformScreen::overrideDpi(platformScreen->logicalDpi());
-        const QDpi baseDpi = platformScreen->logicalBaseDpi();
-        const qreal rawDpiFactor = baseDpi.first > 0 ? logicalDpi.first / baseDpi.first : 1.0;
-        return roundedDpiScaleFactor(rawDpiFactor) * platformScreen->devicePixelRatio();
-    }
-
-    // Fallback to standard API if platform handle isn't available
-    qWarning() << Q_FUNC_INFO << "invalid native platform screen";
-    return screen->devicePixelRatio();
+    // QScreen's DPR is QT_SCALE_FACTOR * Qt's per-screen factor * platform DPR. The per-screen
+    // factor carries the OS scale on Windows/X11 (where the platform DPR is always 1.0 and the
+    // scale comes from the logical DPI), already resolved by Qt with its rounding policy,
+    // QT_ENABLE_HIGHDPI_SCALING, QT_SCREEN_SCALE_FACTORS etc. Dividing out our own zoom
+    // (the global QT_SCALE_FACTOR) leaves the native baseline on every desktop platform
+    return screen->devicePixelRatio() / globalQtScaleFactor();
 #endif
 }
 
