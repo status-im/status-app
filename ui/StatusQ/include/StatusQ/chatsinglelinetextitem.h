@@ -13,6 +13,8 @@ class ChatSingleLineTextItem : public QQuickItem
     Q_PROPERTY(ChatTextAppearance* appearance READ appearance WRITE setAppearance NOTIFY appearanceChanged)
     Q_PROPERTY(QList<ChatTextSegment> segments READ segments WRITE setSegments NOTIFY segmentsChanged)
     Q_PROPERTY(bool edited READ edited WRITE setEdited NOTIFY editedChanged)
+    // Full plain text, mentions resolved, with the edited suffix; also the accessible name.
+    Q_PROPERTY(QString text READ text NOTIFY textChanged)
     Q_PROPERTY(QString displayedText READ displayedText NOTIFY displayedTextChanged)
     Q_PROPERTY(bool truncated READ truncated NOTIFY truncatedChanged)
     Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentHeightChanged)
@@ -26,6 +28,7 @@ public:
     void setSegments(const QList<ChatTextSegment>& value);
     bool edited() const { return m_edited; }
     void setEdited(bool value);
+    QString text() const;
     QString displayedText() const { return m_layout.text(); }
     bool truncated() const { return m_truncated; }
     qreal contentHeight() const { return implicitHeight(); }
@@ -33,6 +36,7 @@ signals:
     void appearanceChanged();
     void segmentsChanged();
     void editedChanged();
+    void textChanged();
     void displayedTextChanged();
     void truncatedChanged();
     void contentHeightChanged();

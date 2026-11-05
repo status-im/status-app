@@ -60,6 +60,10 @@ add_executable(MarkdownUtilsTest src/tst_markdownutils.cpp)
 target_link_libraries(MarkdownUtilsTest PRIVATE Qt::Test Qt::Gui StatusQ)
 add_test(NAME MarkdownUtilsTest COMMAND MarkdownUtilsTest)
 
+add_executable(ChatTextAccessibilityTest src/tst_chattextaccessibility.cpp)
+target_link_libraries(ChatTextAccessibilityTest PRIVATE Qt::Test Qt::Gui Qt::Quick Qt::QuickPrivate StatusQ)
+add_test(NAME ChatTextAccessibilityTest COMMAND ChatTextAccessibilityTest)
+
 qt_add_executable(TestSpellChecker src/tst_spellchecker.cpp)
 target_link_libraries(TestSpellChecker PRIVATE Qt::Test StatusQ)
 add_test(NAME TestSpellChecker COMMAND TestSpellChecker)

@@ -22,6 +22,8 @@ ChatTextAppearance {
     lineHeight: 22
     editedMarkerFontSize: theme.tertiaryTextFontSize
     editedMarkerColor: theme.palette.baseColor1
+    // A binding, so Qt.uiLanguage changes retranslate the marker.
+    editedMarkerText: qsTr("(edited)")
     selectionColor: selectionPalette.highlight
     selectionTextColor: selectionPalette.highlightedText
     emojiOnlyPixelSize: Math.round(theme.primaryTextFontSize * 2.2)

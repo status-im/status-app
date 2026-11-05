@@ -9,12 +9,20 @@ Item {
     height: 1000
 
     Component {
+        id: previewComponent
+        ChatSingleLineTextItem { width: 400 }
+    }
+
+    Component {
         id: documentComponent
         ChatTextItem {
             width: 400
             appearance: ChatTextAppearance { font.pixelSize: 16; lineHeight: 22 }
         }
     }
+
+    Component { id: textChangedSpy; SignalSpy { signalName: "textChanged" } }
+    Component { id: appearanceComponent; ChatTextAppearance {} }
 
     TestCase {
         id: testCase
@@ -222,5 +230,66 @@ Item {
                 verify(item.selectedText.indexOf(code) >= 0, "copy must preserve code content")
         }
 
+        // `text` is the accessible name and what e2e reads: the plain body with
+        // mentions resolved, as MarkdownUtils.plainText gives it, plus the marker.
+        function test_plainText_data() {
+            const key = "0x" + "a".repeat(130)
+            return [
+                {tag: "formatting", source: "a **b** _c_ ~~d~~ `e` [f](https://status.app)"},
+                {tag: "mention", source: "hi @" + key + " there", mentions: ({[key]: "Alice"})},
+                {tag: "quote", source: "before\n> quoted\n> lines\nafter"},
+                {tag: "code block", source: "before\n```\ncode\nmore\n```\nafter"},
+                {tag: "blank lines", source: "a\n\n\nb"},
+                {tag: "quote fence empty line", source: "> A\n> ```\n> B\n> ```\n> "},
+            ]
+        }
+
+        function test_plainText(data) {
+            const segments = MarkdownUtils.toChatTextSegments(data.source, data.mentions || {})
+            const expected = MarkdownUtils.plainText(data.source, data.mentions || {})
+            for (const component of [documentComponent, previewComponent]) {
+                const item = createTemporaryObject(component, root, {segments: segments})
+                verify(item)
+                const spy = createTemporaryObject(textChangedSpy, item, {target: item})
+                compare(item.text, expected)
+                item.edited = true
+                compare(item.text, expected + " (edited)")
+                compare(spy.count, 1)
+            }
+        }
+
+        // The marker comes from the appearance, so a retranslated binding there
+        // updates the painted marker, `text` and the accessible name live.
+        function test_editedMarkerText() {
+            const appearance = createTemporaryObject(appearanceComponent, root)
+            const segments = MarkdownUtils.toChatTextSegments("Hello", {})
+            const multi = createTemporaryObject(documentComponent, root,
+                                                {segments: segments, edited: true, appearance: appearance})
+            const single = createTemporaryObject(previewComponent, root,
+                                                 {segments: segments, edited: true, appearance: appearance})
+            const plain = createTemporaryObject(documentComponent, root,
+                                                {segments: segments, appearance: appearance})
+            compare(appearance.editedMarkerText, "(edited)")
+            compare(multi.text, "Hello (edited)")
+            const multiSpy = createTemporaryObject(textChangedSpy, multi, {target: multi})
+            const singleSpy = createTemporaryObject(textChangedSpy, single, {target: single})
+            const plainSpy = createTemporaryObject(textChangedSpy, plain, {target: plain})
+
+            appearance.editedMarkerText = "(upraveno)"
+            compare(multi.text, "Hello (upraveno)")
+            multi.selectAll()
+            compare(multi.selectedText, "Hello (upraveno)")
+            compare(single.text, "Hello (upraveno)")
+            compare(single.displayedText, "Hello (upraveno)")
+            compare(multiSpy.count, 1)
+            compare(singleSpy.count, 1)
+            compare(plainSpy.count, 0) // not edited: nothing to update
+            compare(plain.text, "Hello")
+
+            appearance.editedMarkerText = undefined // reset to the default
+            compare(appearance.editedMarkerText, "(edited)")
+            compare(multi.text, "Hello (edited)")
+            compare(single.displayedText, "Hello (edited)")
+        }
     }
 }

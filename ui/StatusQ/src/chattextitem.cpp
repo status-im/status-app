@@ -1,11 +1,11 @@
 #include "StatusQ/chattextitem.h"
 #include "StatusQ/chattextformat.h"
+#include "chattextaccessibility.h"
 
 #include "StatusQ/markdownast.h"
 
 #include <QAbstractTextDocumentLayout>
 #include <QClipboard>
-#include <QCoreApplication>
 #include <QGuiApplication>
 #include <QGlyphRun>
 #include <QStyleHints>
@@ -315,10 +315,12 @@ ChatTextItem::ChatTextItem(QQuickItem* parent)
     connectAppearance();
     applyDocumentDefaults();
     updateCursorShape();
+    ChatTextAccessibility::track(this);
 }
 
 ChatTextItem::~ChatTextItem()
 {
+    ChatTextAccessibility::untrack(this);
     disconnect(m_appearance, nullptr, this, nullptr);
 }
 
@@ -347,6 +349,8 @@ void ChatTextItem::setSegments(const QList<ChatTextSegment>& segments)
     m_segments = segments;
     rebuildFromSegments(preserveInteraction);
     emit segmentsChanged();
+    emit textChanged();
+    ChatTextAccessibility::update(this);
 }
 
 bool ChatTextItem::edited() const { return m_edited; }
@@ -358,6 +362,20 @@ void ChatTextItem::setEdited(bool edited)
     m_edited = edited;
     rebuildFromSegments();
     emit editedChanged();
+    emit textChanged();
+    ChatTextAccessibility::update(this);
+}
+
+void ChatTextItem::editedMarkerTextChanged()
+{
+    emit textChanged();
+    ChatTextAccessibility::update(this);
+}
+
+QString ChatTextItem::text() const
+{
+    return ChatTextFormat::plainText(m_segments,
+                                     m_edited ? m_appearance->editedMarkerText() : QString());
 }
 
 // Preserve text positions and unrelated styles while changing only the ranges
@@ -570,9 +588,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         QTextCharFormat marker;
         marker.setForeground(m_appearance->editedMarkerColor());
         marker.setProperty(QTextFormat::FontPixelSize, m_appearance->editedMarkerFontSize());
-        // Reuse the existing QML StringUtils translation context/catalogue.
         const int start = cursor.position();
-        cursor.insertText(QLatin1Char(' ') + QCoreApplication::translate("StringUtils", "(edited)"), marker);
+        cursor.insertText(QLatin1Char(' ') + m_appearance->editedMarkerText(), marker);
         m_appearanceRanges.append({start, cursor.position() - start, MarkerAppearance});
     }
     applyBlockMargins();
@@ -1772,7 +1789,7 @@ void ChatTextItem::setAppearance(ChatTextAppearance* appearance)
         // Every field's edits first, then a single layout of the document.
         m_document->setLayoutEnabled(false);
         ++m_layoutBatch;
-        for (int field = ChatTextAppearance::Font; field <= ChatTextAppearance::QuoteColor; ++field)
+        for (int field = ChatTextAppearance::Font; field <= ChatTextAppearance::EditedMarkerText; ++field)
             if (changes & (1u << (field - 1)))
                 applyAppearance(static_cast<ChatTextAppearance::Change>(field));
         --m_layoutBatch;
@@ -1786,6 +1803,8 @@ void ChatTextItem::applyAppearance(ChatTextAppearance::Change change)
     if (change == ChatTextAppearance::All) {
         m_document->setDefaultFont(m_appearance->font());
         rebuildFromSegments(true);
+        if (m_edited)
+            editedMarkerTextChanged();
         return;
     }
     switch (change) {
@@ -1922,6 +1941,14 @@ void ChatTextItem::applyAppearance(ChatTextAppearance::Change change)
         updateAppearance(QuoteAppearance, [this](QTextCharFormat& format) {
             format.setForeground(m_appearance->quoteColor());
         });
+        break;
+    }
+    case ChatTextAppearance::EditedMarkerText: {
+        // Only the marker's text changes, at the end of the document.
+        if (!m_edited || m_segments.isEmpty())
+            break;
+        rebuildFromSegments(true);
+        editedMarkerTextChanged();
         break;
     }
     default:

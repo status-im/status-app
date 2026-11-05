@@ -189,6 +189,26 @@ void ChatTextAppearance::setEditedMarkerColor(const QColor& value)
     emit changed(EditedMarkerColor);
 }
 
+QString ChatTextAppearance::editedMarkerText() const
+{
+    if (!m_editedMarkerText.isEmpty())
+        return m_editedMarkerText;
+    // Application appearances supply a translated marker from QML.
+    return QStringLiteral("(edited)");
+}
+
+void ChatTextAppearance::setEditedMarkerText(const QString& value)
+{
+    if (m_editedMarkerText == value)
+        return;
+    const QString previous = editedMarkerText();
+    m_editedMarkerText = value;
+    if (editedMarkerText() == previous)
+        return;
+    emit editedMarkerTextChanged();
+    emit changed(EditedMarkerText);
+}
+
 void ChatTextAppearance::setMentionColor(const QColor& value)
 {
     if (m_mentionColor == value)
@@ -261,5 +281,7 @@ quint32 ChatTextAppearance::differences(const ChatTextAppearance& other) const
         changes |= 1u << (MentionBackground - 1);
     if (m_quoteColor != other.m_quoteColor)
         changes |= 1u << (QuoteColor - 1);
+    if (editedMarkerText() != other.editedMarkerText())
+        changes |= 1u << (EditedMarkerText - 1);
     return changes;
 }

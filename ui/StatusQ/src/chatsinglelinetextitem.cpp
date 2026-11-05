@@ -1,7 +1,7 @@
 #include "StatusQ/chatsinglelinetextitem.h"
+#include "chattextaccessibility.h"
 #include "StatusQ/chattextformat.h"
 #include "StatusQ/markdownast.h"
-#include <QCoreApplication>
 #include <QTextBoundaryFinder>
 #include <QQuickWindow>
 #include <QSGTextNode>
@@ -35,6 +35,13 @@ ChatSingleLineTextItem::ChatSingleLineTextItem(QQuickItem* parent)
     connectAppearance();
     setFlag(ItemHasContents);
     m_layout.setCacheEnabled(true);
+    ChatTextAccessibility::track(this);
+}
+
+QString ChatSingleLineTextItem::text() const
+{
+    return ChatTextFormat::plainText(m_segments,
+                                     m_edited ? m_appearance->editedMarkerText() : QString());
 }
 
 void ChatSingleLineTextItem::setSegments(const QList<ChatTextSegment>& value)
@@ -44,6 +51,8 @@ void ChatSingleLineTextItem::setSegments(const QList<ChatTextSegment>& value)
     m_segments = value;
     rebuild();
     emit segmentsChanged();
+    emit textChanged();
+    ChatTextAccessibility::update(this);
 }
 
 void ChatSingleLineTextItem::setEdited(bool value)
@@ -53,6 +62,8 @@ void ChatSingleLineTextItem::setEdited(bool value)
     m_edited = value;
     rebuild();
     emit editedChanged();
+    emit textChanged();
+    ChatTextAccessibility::update(this);
 }
 
 void ChatSingleLineTextItem::rebuild()
@@ -126,7 +137,7 @@ void ChatSingleLineTextItem::rebuild()
         QTextCharFormat marker;
         marker.setForeground(m_appearance->editedMarkerColor());
         marker.setProperty(QTextFormat::FontPixelSize, m_appearance->editedMarkerFontSize());
-        append(QLatin1Char(' ') + QCoreApplication::translate("StringUtils", "(edited)"), marker);
+        append(QLatin1Char(' ') + m_appearance->editedMarkerText(), marker);
     }
     m_boundaries = {0};
     QTextBoundaryFinder finder(QTextBoundaryFinder::Grapheme, m_text);
@@ -340,10 +351,16 @@ void ChatSingleLineTextItem::applyAppearance(ChatTextAppearance::Change change)
         return;
     default:
         rebuild();
+        if (m_edited && (change == ChatTextAppearance::All
+                         || change == ChatTextAppearance::EditedMarkerText)) {
+            emit textChanged();
+            ChatTextAccessibility::update(this);
+        }
     }
 }
 
 ChatSingleLineTextItem::~ChatSingleLineTextItem()
 {
+    ChatTextAccessibility::untrack(this);
     disconnect(m_appearance, nullptr, this, nullptr);
 }

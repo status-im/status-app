@@ -249,6 +249,8 @@ add_library(StatusQ ${LIB_TYPE}
         src/constantrole.cpp
         src/delegatepool.cpp
         src/chatsinglelinetextitem.cpp
+        src/chattextaccessibility.cpp
+        src/chattextaccessibility.h
         src/chattextappearance.cpp
         src/chattextitem.cpp
         src/externc.cpp

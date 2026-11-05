@@ -38,15 +38,6 @@ Item {
         readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
         readonly property int maxHeight: 200
 
-        // Expose the unstyled body with resolved mention names to screen readers
-        // and e2e consumers, independently of the painted document.
-        readonly property string plainText: {
-            const base = MarkdownUtils.plainText(root.messageDetails.unparsedText,
-                                                 root.messageDetails.mentionsMap)
-            // Include the visual suffix in the accessible text as well.
-            return root.isEdited ? base + " " + qsTr("(edited)") : base
-        }
-
         function showDisabledTooltipForAddressEnsName(link) {
             return link.startsWith('//send-via-personal-chat//') && !!root.disabledTooltipText
         }
@@ -57,9 +48,8 @@ Item {
     ChatTextItem {
         id: chatTextItem
         objectName: "StatusTextMessage_chatText"
-        readonly property string text: d.plainText // for e2e / a11y read
-        Accessible.role: Accessible.StaticText
-        Accessible.name: d.plainText
+        // `text` (plain, mentions resolved, with the edited suffix) is the
+        // accessible name and what e2e reads; ChatTextItem provides both.
 
         readonly property int effectiveHeight:
             showMoreButtonLoader.active && !d.readMore ? d.maxHeight : implicitHeight
