@@ -204,6 +204,17 @@ proc logHandlerCallback(messageType: cint, message: cstring, category: cstring, 
 
 proc enableHDPI(uiScaleFilePath: string) =
   const scaleEnvVar = "QT_SCALE_FACTOR"
+  # Mirrors the QT_SCALE_FACTOR value we set ourselves. SystemUtils.restartApplication()
+  # relaunches the app with the current process environment, so without this marker the
+  # relaunched instance would mistake our previous value for a user-provided override and
+  # ignore the freshly saved 'ui-scale' file (#23052)
+  const appliedScaleEnvVar = "STATUS_APPLIED_QT_SCALE_FACTOR"
+
+  let inheritedScale = getEnv(appliedScaleEnvVar)
+  if inheritedScale != "":
+    delEnv(appliedScaleEnvVar)
+    if getEnv(scaleEnvVar) == inheritedScale:
+      delEnv(scaleEnvVar)
 
   # Equivalent to qEnvironmentVariableIsSet
   if getEnv(scaleEnvVar) != "":
@@ -222,7 +233,9 @@ proc enableHDPI(uiScaleFilePath: string) =
       var scale = parseFloat(scaleStr)
       scale = clamp(scale, 0.75, 1.5)
       echo "[Debug] Setting custom UI scale to ", scale
-      putEnv(scaleEnvVar, formatFloat(scale, ffDecimal, precision = 2))
+      let scaleValue = formatFloat(scale, ffDecimal, precision = 2)
+      putEnv(scaleEnvVar, scaleValue)
+      putEnv(appliedScaleEnvVar, scaleValue)
 
     except ValueError:
       warn "Error parsing 'ui-scale' file contents, not a float"
