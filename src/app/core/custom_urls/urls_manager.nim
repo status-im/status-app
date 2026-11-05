@@ -38,6 +38,8 @@ QtObject:
       self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
     discard QObject.connect(urlSchemeEvent, SIGNAL("shareActivated(QString,QString)"),
       self, SLOT("onShareActivated(QString,QString)"), ConnectionType.QueuedConnection)
+    discard QObject.connect(urlSchemeEvent, SIGNAL("fileActivated(QString,bool)"),
+      self, SLOT("onFileActivated(QString,bool)"), ConnectionType.QueuedConnection)
     discard QObject.connect(urlSchemeEvent, SIGNAL("appForegrounded()"),
       self, SLOT("onAppForegrounded()"), ConnectionType.QueuedConnection)
     # direct: the process may be frozen before a queued slot runs
@@ -114,6 +116,11 @@ QtObject:
       .multiReplace(("\r\n", ""))
       .multiReplace(("\n", ""))
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url))
+
+  proc onFileActivated*(self: UrlsManager, fileUrl: string, copied: bool) {.slot.} =
+    ## An Opened File handed over by the platform layer (iOS document open).
+    self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeFile,
+      fileUrl: fileUrl, copied: copied))
 
   proc onAppForegrounded*(self: UrlsManager) {.slot.} =
     ## Wake-less fallback (iOS): the app came to the foreground; if the share

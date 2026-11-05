@@ -17,6 +17,7 @@ using namespace Status;
 
 #if defined(Q_OS_IOS)
     #include <CoreFoundation/CFBundle.h>
+    #include <StatusQ/openedfileintake.h>
 #endif
 
 void UrlSchemeEvent::registerUrlHandler()
@@ -38,6 +39,10 @@ void UrlSchemeEvent::registerUrlHandler()
         if (!bundleId.isEmpty())
             QDesktopServices::setUrlHandler(bundleId.toLower(), this, "handleUrl");
     }
+    // Qt also posts a QFileOpenEvent for these, without the security scope.
+    Status::OpenedFileIntake::setReceiver([this](const QString& fileUrl, bool copied) {
+        emitFileToQt(fileUrl, copied);
+    });
 #endif
 }
 
@@ -122,6 +127,13 @@ void UrlSchemeEvent::emitShareToQt(const QString& text, const QStringList& image
         paths.append(path);
 
     emit shareActivated(text, QString::fromUtf8(QJsonDocument(paths).toJson(QJsonDocument::Compact)));
+}
+
+void UrlSchemeEvent::emitFileToQt(const QString& fileUrl, bool copied)
+{
+    if (fileUrl.isEmpty()) return;
+
+    emit fileActivated(fileUrl, copied);
 }
 
 static UrlSchemeEvent* g_urlSchemeEventInstance = nullptr;

@@ -26,6 +26,9 @@ public:
     Q_INVOKABLE void restartApplication(bool killBackend) const;
 
     Q_INVOKABLE bool fileExists(const QString &path) const;
+    // The Tab showing an Opened File is gone: end its iOS security scope or
+    // delete its copy. No-op elsewhere.
+    Q_INVOKABLE void releaseOpenedFile(const QString &path) const;
     Q_INVOKABLE bool ensureDirectory(const QString &path) const;
 
     // Desktop: reveal file in OS file manager. Android: open system Downloads UI.
