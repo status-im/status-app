@@ -168,6 +168,11 @@ Item {
             componentUnderTest.sdk.sessionRequestEvent(signEvent)
             // Execute the request
             const request = componentUnderTest.requests.get(0)
+            if (SessionRequest.isTransactionMethod(request.requestItem.method)) {
+                // executed once the gas is known
+                request.requestItem.setActive()
+                tryVerify(() => !!request.requestItem.gasLimit)
+            }
             request.requestItem.execute()
 
             componentUnderTest.store.signingResult(signEvent.topic, signEvent.id, "result")
@@ -282,6 +287,21 @@ Item {
             tryVerify(() => !!componentUnderTest.store.pendingGasEstimateTopic)
             compare(request.gasLimit, "", "no fees are shown for the dApp's gas alone")
 
+            // estimate pending: refused
+            request.execute()
+            compare(componentUnderTest.store.sendTransactionCalls.length, 0)
+            compare(componentUnderTest.sdk.rejectSessionRequestCalls.length, 1)
+        }
+
+        function test_estimateAnswersThenGasIsUsed() {
+            componentUnderTest.store.deferGasEstimate = true
+            const signEvent = sendTransactionEvent({ gasLimit: "0x5208" })
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive()
+            tryVerify(() => !!componentUnderTest.store.pendingGasEstimateTopic)
             componentUnderTest.store.estimatedGasResponse(componentUnderTest.store.pendingGasEstimateTopic, "0x34410", true)
             tryCompare(request, "gasLimit", "0x34410")
         }
