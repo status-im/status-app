@@ -30,10 +30,12 @@ else
 fi
 
 if [[ "$OS" == "ios" ]]; then
-    PLATFORM_SPECIFIC=(--app:staticlib -d:ios --os:ios)
+    PLATFORM_SPECIFIC=(--app:staticlib -d:ios --os:ios
+        "-d:qrscanCmakeFlags=-DCMAKE_OSX_SYSROOT=${SDK:?} -DCMAKE_OSX_DEPLOYMENT_TARGET=${IOS_TARGET:?} -DCMAKE_C_COMPILER=$(xcrun -f clang) -DCMAKE_CXX_COMPILER=$(xcrun -f clang++)")
 else
     PLATFORM_SPECIFIC=(--app:lib --os:android -d:android -d:androidNDK -d:lto -d:chronicles_sinks=textlines[logcat],textlines[file,nocolors] \
-        --passL="-L$LIB_DIR" --passL="-lstatus_stub" --passL="-lStatusQ$LIB_SUFFIX" --passL="-lqrcodegen" --passL="-lssl_3" --passL="-lcrypto_3" --passL="-lstatus-keycard-qt" -d:taskpool)
+        --passL="-L$LIB_DIR" --passL="-lstatus_stub" --passL="-lStatusQ$LIB_SUFFIX" --passL="-lqrcodegen" --passL="-lssl_3" --passL="-lcrypto_3" --passL="-lstatus-keycard-qt" -d:taskpool \
+        "-d:qrscanCmakeFlags=-DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT:?}/build/cmake/android.toolchain.cmake -DANDROID_PLATFORM=android-${ANDROID_API:?} -DANDROID_STL=c++_static")
 fi
 
 if [ -n "$USE_QML_SERVER" ]; then
@@ -83,9 +85,6 @@ NIM_FLAGS=(
     --clang.linkerexe="$CC"
     --dynlibOverrideAll
     --nimcache:"$STATUS_DESKTOP"/nimcache
-    # nim-qrscan's ZXing (scripts/buildZXing.sh): linked into the Android .so;
-    # on iOS (static lib) only checked at compile time, Status.pro links it.
-    "-d:qrscanZxingLib=${ZXING_LIB:?}"
     # The app links Qt's Darwin camera-permission plugin itself (qmake on iOS).
     -d:qtcameraNoPermissionPlugin
 )
@@ -100,10 +99,19 @@ else
 fi
 
 # build status-client with feature flags
-env "${FEATURE_FLAGS[@]}" ./vendor/nimbus-build-system/scripts/env.sh nim c --parallelBuild:"${NPROC:-0}" "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
+env "${FEATURE_FLAGS[@]}" "${NIM:?NIM must name the resolved Nim compiler (run make from the repo root)}" c --parallelBuild:"${NPROC:-0}" "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
     "${NIM_FLAGS[@]}" \
     "$STATUS_DESKTOP"/src/nim_status_client.nim
 
 mkdir -p "$LIB_DIR"
 
 cp "$STATUS_DESKTOP/bin/libnim_status_client$LIB_EXT" "$LIB_DIR/libnim_status_client$LIB_EXT"
+
+# A static library carries no link flags: Status.pro links the ZXing that
+# nim-qrscan built into nimcache for this SDK and architecture.
+if [[ "$OS" == "ios" ]]; then
+    zxing=$(find "$STATUS_DESKTOP/nimcache" -maxdepth 2 -path "*/zxing-ios-$CARCH-*/CMakeCache.txt" \
+        -exec grep -l -x "CMAKE_OSX_SYSROOT:[A-Z]*=$SDK" {} + | head -n 1)
+    [ -n "$zxing" ] || { echo "No ZXing build for $SDK/$CARCH in $STATUS_DESKTOP/nimcache" >&2; exit 1; }
+    cmp -s "$(dirname "$zxing")/core/libZXing.a" "$LIB_DIR/libZXing.a" || cp "$(dirname "$zxing")/core/libZXing.a" "$LIB_DIR/libZXing.a"
+fi

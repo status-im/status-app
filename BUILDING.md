@@ -15,7 +15,6 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
       - [Install Required Packages](#install-required-packages)
       - [Install Microsoft Visual C++ Build Tools](#install-microsoft-visual-c-build-tools)
       - [Install Go 1.26](#install-go-126)
-      - [Install Nim 2.2.x](#install-nim-22x)
       - [Install protobuf](#install-protobuf)
     - [Linux](#linux)
       - [Ubuntu](#ubuntu)
@@ -35,6 +34,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
     - [Linux](#linux-1)
   - [4️⃣ Build the App](#4️⃣-build-the-app)
     - [Build Configuration Options](#build-configuration-options)
+    - [Nim packages](#nim-packages)
     - [Nim token catalogue](#nim-token-catalogue)
   - [Pro tips](#pro-tips)
     - [Working with VS Code](#working-with-vs-code)
@@ -52,6 +52,12 @@ needed. The English dictionary and license notices are bundled in Qt resources;
 only the initial dependency fetch needs network access.
 For iOS, the mobile StatusQ build also stages `libhunspell-1.7.a`, which the
 qmake wrapper links explicitly alongside the static StatusQ archive.
+
+On every platform, install [nimble](https://github.com/nim-lang/nimble/releases)
+0.26.2 or newer and put it on `PATH` (or pass `NIMBLE=/path/to/nimble` to
+`make`). The build takes the Nim compiler and every Nim package from
+`nim_status_client.nimble` and `nimble.lock` (see [Nim packages](#nim-packages)),
+so no separate Nim install is needed.
 
 ### Windows
 
@@ -81,10 +87,6 @@ You can install them from the [Microsoft website](https://visualstudio.microsoft
 #### Install Go 1.26
 
 Download and install Go 1.26 from the [official website](https://go.dev/dl/).
-
-#### Install Nim 2.2.x
-
-Download and install Nim 2.2.x from the [official website](https://nim-lang.org/install_windows.html).
 
 #### Install protobuf
 
@@ -254,7 +256,6 @@ C:\ProgramData\chocolatey\bin
 C:\ProgramData\scoop\shims
 С:\Users\{your_username}\go\bin
 C:\Program Files\Go\bin
-C:\nim-2.2.6\bin
 C:\Users\{you_username}\.nimble\bin
 C:\Qt\6.11.0\msvc2022_64\bin
 C:\BuildTools\VC\Tools\MSVC\14.44.35207\bin
@@ -310,7 +311,7 @@ The following environment variables can be used to customize the build:
 - INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
 - KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
-- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/../nim-sds`
+- NIMBLE (path to executable) - The nimble to resolve Nim packages with (0.26.2 or newer). Defaults to `nimble` on `PATH`
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
 - QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
 - QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
@@ -322,18 +323,35 @@ The following environment variables can be used to customize the build:
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
 
 
+### Nim packages
+
+`nim_status_client.nimble` pins the Nim compiler and every Nim package the app
+uses; `nimble.lock` records the exact revisions. `make` runs `nimble setup --localdeps`
+whenever either changes: packages go to `nimbledeps/` and `nimble.paths` lists
+them for the compiler.
+After editing the manifest, regenerate the lock with `nimble lock`.
+
+status-go stays a git submodule (`vendor/status-go`) and is not a nimble
+dependency. The app pins the Nim libraries status-go links (nim-sds,
+nim-token-lists) with the same lines as `vendor/status-go/status_go.nimble`. A
+status-go bump that changes those pins must update the app manifest and lock
+too.
+
+The app passes status-go its compiler, its resolution (`NIMBLE_ROOT`) and its
+own Nim policy for those libraries (`makefiles/nim-libs.mk`), so they build
+from the app's resolution with the app's flags.
+
 ### Nim token catalogue
 
 Desktop and mobile builds use the Nim token catalogue as the sole token
 backend. With the development environment configured, the usual build and
 `make run` commands need no token flags or separate library checkout.
 
-Status-go pins the public Go wrapper and native library to the same revision.
-Its build prepares one checkout at `vendor/status-go/build/deps/nim-token-lists`
-and reuses matching native and backend artifacts. Mobile archives are separate
-for each architecture and for iOS devices and simulators. `make clean` removes
-the managed checkout and its artifacts; the next build prepares them again.
-The existing nim-sds setup is unchanged.
+Status-go pins the public Go wrapper and native library to the same revision,
+builds the native library from the app's nimble resolution and reuses matching
+native and backend artifacts. Mobile archives are separate for each
+architecture and for iOS devices and simulators. `make clean` removes them; the
+next build prepares them again.
 
 There are no build-time or runtime backend selectors. A rollback requires an
 earlier app/backend revision.
@@ -346,7 +364,7 @@ for leaked token-library exports.
 
 ### Working with VS Code
 
-To have nim code parsing, set the environment variables before opening your IDE. E.g. run `./env.sh code .` in the source root folder.
+For Nim code parsing, open the IDE with the pinned Nim on `PATH`: run `nimble shell code .` in the source root folder.
 
 ### Data folder
 

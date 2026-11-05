@@ -12,7 +12,6 @@ noBackup/
 .tours
 bin/
 pkg/
-vendor/.nimble
 *.AppImage
 tmp
 nimcache
@@ -104,7 +103,6 @@ builds/
 *.exe
 *.out
 *.app
-nimbus-build-system.paths
 
 # ui-tests
 /test/ui-pytest/configs/_local.py
@@ -133,3 +131,9 @@ mobile/fastlane/result
 
 # Benchmark output (regenerated locally, never committed)
 test/nim/benchmarks/results/
+
+# nimble setup products
+/nimble.paths
+/.nimble-setup.log
+/nimble.develop
+/nimbledeps/

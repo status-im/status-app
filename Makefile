@@ -7,15 +7,22 @@
 
 SHELL := bash # the shell used internally by Make
 
-# used inside the included makefiles
-BUILD_SYSTEM_DIR := vendor/nimbus-build-system
-
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
-LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
-# Nimble that resolves status-go's libsds; older ones pick the wrong Nim.
-export NIMBLE_COMMIT := v0.26.1
-# we don't want an error here, so we can handle things later, in the ".DEFAULT" target
--include $(BUILD_SYSTEM_DIR)/makefiles/variables.mk
+
+# verbosity level
+V ?= 0
+NIM_PARAMS := $(NIMFLAGS) --verbosity:$(V)
+HANDLE_OUTPUT :=
+ifeq ($(V), 0)
+  NIM_PARAMS += --hints:off
+  # don't swallow stderr, in case it's important
+  HANDLE_OUTPUT := >/dev/null
+.SILENT:
+endif
+ifdef LOG_LEVEL
+  NIM_PARAMS += -d:chronicles_log_level="$(LOG_LEVEL)"
+endif
+BUILD_MSG := "\\x1B[92mBuilding:\\x1B[39m"
 
 .PHONY: \
 	all \
@@ -47,8 +54,6 @@ export NIMBLE_COMMIT := v0.26.1
 	benches-nim \
 	status-go \
 	qrcodegen \
-	zxing \
-	zxing-clean \
 	status-keycard-qt \
 	keycard-simulator \
 	keycard-simulator-bundle \
@@ -71,27 +76,13 @@ export NIMBLE_COMMIT := v0.26.1
 	flatpak-run \
 	flatpak-clean \
 	macos-icon-assets \
-	platform-cleanup
-
-ifeq ($(NIM_PARAMS),)
-# "variables.mk" was not included, so we update the submodules.
-GIT_SUBMODULE_UPDATE := git submodule update --init --recursive
-.DEFAULT:
-	+@ echo -e "Git submodules not found. Running '$(GIT_SUBMODULE_UPDATE)'.\n"; \
-		$(GIT_SUBMODULE_UPDATE); \
-		echo
-# Now that the included *.mk files appeared, and are newer than this file, Make will restart itself:
-# https://www.gnu.org/software/make/manual/make.html#Remaking-Makefiles
-#
-# After restarting, it will execute its original goal, so we don't have to start a child Make here
-# with "$(MAKE) $(MAKECMDGOALS)". Isn't hidden control flow great?
-
-else # "variables.mk" was included. Business as usual until the end of this file.
+	platform-cleanup \
+	nimble-deps
 
 all: nim_status_client
 
-# must be included after the default target
--include $(BUILD_SYSTEM_DIR)/makefiles/targets.mk
+# Nim compiler and packages (nimble), and the Nim build configuration handed to status-go
+include makefiles/nimble.mk
 
 # `qmake` path, either passed explicitely, or as found in PATH
 # (makes it possible to override with a custom Qt6 install dir)
@@ -117,11 +108,6 @@ host_os:=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 ifeq ($(mkspecs),)
 	$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
-endif
-
-ifneq ($(USE_SYSTEM_NIM),1)
- # Add it to PATH for external build tools that use nim directly
- export PATH := $(CURDIR)/$(NIM_DIR)/bin:$(PATH)
 endif
 
 # Link libm by default; the win32 branch below clears it (MSVC has no libm).
@@ -215,9 +201,12 @@ openssl:
 openssl-clean:
 endif
 
-deps: | check-qt-dir deps-common openssl
+deps: | check-qt-dir nimble-deps openssl
 
-update: | check-qt-dir update-common
+update: | check-qt-dir
+	git submodule sync --quiet --recursive
+	git submodule update --init --recursive
+	+ "$(MAKE)" --no-print-directory nimble-deps
 # Build the pkg-config wrapper (and generate this kit's Qt .pc if missing)
 	+ "$(MAKE)" --no-print-directory qt-pkgconfig
 
@@ -257,7 +246,7 @@ endif
 # This tool generates the .pc files
 # Installs a pkg-config wrapper that's profiding the `prefix` config for pkg-config files
 
-include vendor/prl-to-pc/qt-pkgconfig.mk
+-include vendor/prl-to-pc/qt-pkgconfig.mk
 # -----------------------------------------------------
 
 ifneq ($(mkspecs),win32)
@@ -291,6 +280,7 @@ ifeq ($(mkspecs),win32)
  NIM_PARAMS += --clang.exe:"$(REAL_CLANG)" --clang.linkerexe:"$(REAL_CLANG)"
  NIM_PARAMS += --passC:"--target=x86_64-pc-windows-msvc -fms-runtime-lib=dll"
  NIM_PARAMS += --passL:"--target=x86_64-pc-windows-msvc -fuse-ld=lld -fms-runtime-lib=dll"
+ NIM_PARAMS += -d:qrscanCmakeFlags="-A x64 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"
 endif
 
 ifeq ($(mkspecs),macx)
@@ -310,7 +300,7 @@ NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 ifeq ($(mkspecs),win32)
  # Nim invokes native clang.exe outside the MSYS shell. Pass the import library
  # as a Windows path so lld-link does not have to resolve -lsds via an MSYS -L.
- NIM_EXTRA_PARAMS += --passL:"$(shell cygpath -am '$(NIMSDS_LIBDIR)/sds.lib')"
+ NIM_EXTRA_PARAMS += --passL:"$(shell cygpath -am '$(GIT_ROOT)/build/implib/sds.lib')"
 else
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
 endif
@@ -479,9 +469,10 @@ else
  STORYBOOK_BINARY := $(STORYBOOK_BUILD_PATH)/bin/Storybook
 endif
 
-$(STORYBOOK_CMAKE_CACHE): | check-qt-dir qt-pkgconfig
+$(STORYBOOK_CMAKE_CACHE): | check-qt-dir qt-pkgconfig nimble-deps
 	echo -e "\033[92mConfiguring:\033[39m Storybook"
 	cmake \
+		-DNIM_EXECUTABLE="$(NIM)" \
 		-DCMAKE_INSTALL_PREFIX=$(STORYBOOK_INSTALL_PATH) \
 		-DCMAKE_BUILD_TYPE=$(COMMON_CMAKE_BUILD_TYPE) \
 		-DSTATUSQ_SHADOW_BUILD=OFF \
@@ -530,15 +521,17 @@ check-status-go-tkl:
 $(STATUSGO): check-status-go-tkl | force-rebuild-status-go
 
 # Rebuild libsds independently after platform switch cleanup deletes it.
-$(NIMSDS_LIBFILE): | platform-cleanup
+$(NIMSDS_LIBFILE): nimble.paths | platform-cleanup
 	echo -e $(BUILD_MSG) "nim-sds"
-	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh $(HANDLE_OUTPUT)
+	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh \
+		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_DESKTOP)) $(HANDLE_OUTPUT)
 
 $(STATUSGO): | deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
 	# This target checks both caches and compiles only when inputs changed.
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library SHELL=/bin/sh \
+		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_DESKTOP)) \
 		SENTRY_CONTEXT_NAME="status-desktop" SENTRY_CONTEXT_VERSION="$(DESKTOP_VERSION)"
 
 status-go: $(STATUSGO)
@@ -624,18 +617,19 @@ ifeq ($(mkspecs),win32)
  # header via scripts/gen-import-lib.sh. The Qt keycard variant already emits
  # its own import lib, so only status-go and nim-sds need this.
  STATUSGO_IMPLIB := $(STATUSGO_LIBDIR)/status.lib
- NIMSDS_IMPLIB := $(NIMSDS_LIBDIR)/sds.lib
+ # Not beside libsds.dll: there mingw's ld would take it for status-go's -lsds.
+ NIMSDS_IMPLIB := $(GIT_ROOT)/build/implib/sds.lib
  WIN_IMPORT_LIBS := $(STATUSGO_IMPLIB) $(NIMSDS_IMPLIB)
 
  $(STATUSGO_IMPLIB): $(STATUSGO)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(STATUSGO_IMPLIB))"
 	bash scripts/gen-import-lib.sh "$(STATUSGO_LIBDIR)/libstatus.h" "$(notdir $(STATUSGO))" "$(STATUSGO_IMPLIB)" $(HANDLE_OUTPUT)
 
- # status-go's SDS build cleans the SDS checkout, including any earlier sds.lib.
  # Regenerate it only after status-go finishes; the client uses it order-only.
  .PHONY: $(NIMSDS_IMPLIB)
  $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE) $(STATUSGO)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
+	mkdir -p "$(@D)"
 	bash scripts/gen-import-lib.sh "$(NIMSDS_LIBDIR)/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
 
  import-libs: $(WIN_IMPORT_LIBS)
@@ -650,35 +644,6 @@ $(QRCODEGEN): | deps platform-cleanup
 
 # Named alias so callers (ci/Jenkinsfile.linux) don't hardcode the archive path.
 qrcodegen: $(QRCODEGEN)
-
-# ZXing (readers + C API) for nim-qrscan, built from its nested zxing-cpp
-# submodule. One ZXing per program: StatusQ no longer carries one.
-ifeq ($(mkspecs),macx)
- # The Qt kit's arch (an x86_64 kit on Apple Silicon too); one build dir per arch.
- ZXING_PLATFORM := macos
- ZXING_ARCH := $(QT_ARCH)
-else ifeq ($(mkspecs),win32)
- ZXING_PLATFORM := windows
-else
- ZXING_PLATFORM := linux
-endif
-ZXING_BUILD_DIR := vendor/nim-qrscan/build/zxing-$(ZXING_PLATFORM)$(if $(ZXING_ARCH),-$(ZXING_ARCH))
-ifeq ($(mkspecs),win32)
- ZXING := $(ZXING_BUILD_DIR)/core/Release/ZXing.lib
-else
- ZXING := $(ZXING_BUILD_DIR)/core/libZXing.a
-endif
-
-$(ZXING): | deps
-	echo -e $(BUILD_MSG) "ZXing"
-	bash vendor/nim-qrscan/scripts/build-zxing.sh $(ZXING_PLATFORM) $(ZXING_ARCH) $(HANDLE_OUTPUT)
-
-zxing: $(ZXING)
-
-# Every platform/arch build, not only the current one (e.g. an x86_64 kit's).
-zxing-clean:
-	echo -e "\033[92mCleaning:\033[39m ZXing"
-	rm -rf vendor/nim-qrscan/build/zxing-*
 
 
 # When modifying files that are not tracked in UI_SOURCES (see below),
@@ -699,7 +664,7 @@ endif
 # QML modules of the vendored Nim libraries, bundled as qrc:/<Module>/... so an
 # installed app finds them through its "qrc:/" import path (their install()
 # only adds import paths inside this checkout).
-NIM_QML_MODULE_ROOTS := vendor/nim-qtcamera/qml vendor/nim-qrscan/qml
+NIM_QML_MODULE_ROOTS := $(patsubst $(CURDIR)/%,%,$(addsuffix /qml,$(call nim_pkg_dir,qtcamera) $(call nim_pkg_dir,qrscan)))
 NIM_QML_SOURCES := $(shell find $(NIM_QML_MODULE_ROOTS) -type f \( -name qmldir -o -name '*.qml' -o -name '*.js' \))
 
 UI_RESOURCES := resources.rcc
@@ -746,10 +711,8 @@ endif
 RESOURCES_LAYOUT ?= -d:development
 
 # When modifying files that are not tracked in NIM_SOURCES (see below),
-# e.g. vendor/*.nim, REBUILD_NIM=true can be supplied to `make` to ensure a
-# rebuild of bin/nim_status_client: `make REBUILD_NIM=true run`
-# Note: it is not necessary to supply REBUILD_NIM=true after `make update`
-# because that target bumps .update.timestamp
+# REBUILD_NIM=true can be supplied to `make` to ensure a rebuild of
+# bin/nim_status_client: `make REBUILD_NIM=true run`
 REBUILD_NIM ?= false
 
 ifeq ($(REBUILD_NIM),true)
@@ -759,7 +722,7 @@ endif
 .update.timestamp:
 	touch .update.timestamp
 
-NIM_SOURCES := .update.timestamp $(shell find src -type f)
+NIM_SOURCES := .update.timestamp nimble.paths $(shell find src -type f)
 
 STATUS_RC_FILE := status.rc
 
@@ -819,10 +782,10 @@ ifneq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
 # nim-qtcamera's Darwin permission plugin is not needed: StatusQ registers one.
-$(NIM_STATUS_CLIENT): NIM_PARAMS += -d:qrscanZxingLib="$(abspath $(ZXING))" -d:qtcameraNoPermissionPlugin
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) $(ZXING) rcc deps
+$(NIM_STATUS_CLIENT): NIM_PARAMS += -d:qtcameraNoPermissionPlugin
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
-	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
+	"$(NIM)" c $(NIM_PARAMS) \
 		--mm:orc \
 		-d:useMalloc \
 		--passL:"-L$(STATUSGO_LIBDIR)" \
@@ -1036,7 +999,7 @@ notarize-macos:
 	scripts/notarize-macos-pkg.sh $(STATUS_CLIENT_DMG)
 
 nim_windows_launcher: | deps
-	$(ENV_SCRIPT) nim c -d:debug --outdir:./bin --passL:"-static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive" src/nim_windows_launcher.nim
+	"$(NIM)" c -d:debug --outdir:./bin --passL:"-static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive" src/nim_windows_launcher.nim
 
 STATUS_CLIENT_EXE ?= pkg/Status.exe
 STATUS_CLIENT_7Z ?= pkg/Status.7z
@@ -1100,10 +1063,7 @@ pkg-linux: check-pkg-target-linux $(STATUS_CLIENT_APPIMAGE)
 
 tgz-linux: $(STATUS_CLIENT_TARBALL)
 
-clean-libsds-cache:
-	@echo "Cleaning libsds_d from cache..."
-	rm -rf ~/.cache/nim/libsds_d
-pkg-macos: clean-libsds-cache check-pkg-target-macos $(STATUS_CLIENT_DMG)
+pkg-macos: check-pkg-target-macos $(STATUS_CLIENT_DMG)
 
 pkg-windows: check-pkg-target-windows $(STATUS_CLIENT_EXE)
 
@@ -1112,8 +1072,8 @@ zip-windows: check-pkg-target-windows $(STATUS_CLIENT_7Z)
 clean-destdir:
 	rm -rf bin/*
 
-clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations zxing-clean
-	rm -rf pkg/* tmp/*
+clean: | clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
+	rm -rf pkg/* tmp/* nimcache
 	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 
 clean-git:
@@ -1200,11 +1160,11 @@ endef
 export PATH := $(call qmkq,QT_INSTALL_BINS):$(call qmkq,QT_HOST_BINS):$(call qmkq,QT_HOST_LIBEXECS):$(PATH)
 export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
-mobile-run: qt-pkgconfig deps-common
+mobile-run: qt-pkgconfig nimble-deps
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-profile: qt-pkgconfig deps-common
+mobile-profile: qt-pkgconfig nimble-deps
 ifeq ($(mkspecs),ios)
 	@echo "TODO: iOS profiling is not implemented yet"; exit 1
 else
@@ -1215,8 +1175,7 @@ else
 	    QML_DEBUG_PORT=$(QML_DEBUG_PORT)
 endif
 
-mobile-build: USE_SYSTEM_NIM=1
-mobile-build: qt-pkgconfig | deps-common
+mobile-build: qt-pkgconfig | nimble-deps
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
 	$(MAKE) -C mobile aab
@@ -1231,5 +1190,3 @@ endif
 mobile-clean:
 	echo -e "\033[92mCleaning:\033[39m mobile app"
 	$(MAKE) -C mobile clean
-
-endif # "variables.mk" was not included
