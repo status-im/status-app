@@ -23,6 +23,9 @@ RowLayout {
     readonly property StatusTextField editor: inputLoader.status === Loader.Ready
                                              ? inputLoader.item as StatusTextField : null
 
+    property bool muted: false
+    signal muteRequested(int interval)
+    signal unmuteRequested()
     signal renameRequested(string name)
     signal editNameRequested()
     signal markAsReadRequested()
@@ -148,6 +151,7 @@ RowLayout {
     StatusFlatButton {
         id: menuButton
         objectName: "threadHeaderMenuButton"
+        visible: !!root.threadId
         enabled: !root.pending
         icon.name: "more"
         type: StatusFlatButton.Type.Secondary
@@ -167,9 +171,10 @@ RowLayout {
                 objectName: "threadHeaderContextMenu"
                 isMobile: SQUtils.Utils.isMobile
                 followEnabled: false
-                muteEnabled: false
                 followed: false
-                muted: false
+                muted: root.muted
+                onMuteRequested: interval => root.muteRequested(interval)
+                onUnmuteRequested: root.unmuteRequested()
                 pinned: false
                 pinEnabled: false
                 deleteEnabled: false

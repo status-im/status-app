@@ -1,4 +1,4 @@
-import json
+import json, times
 
 include ../../../common/json_utils
 
@@ -15,6 +15,9 @@ type
     name*: string
     creatorId*: string
     archived*: bool
+    muteRevision*: int64
+    muted*: bool
+    muteTill*: int64
     unviewedMessagesCount*: int
     unviewedMentionsCount*: int
     messagesCount*: int
@@ -30,6 +33,11 @@ proc toThreadDto*(jsonObj: JsonNode): ThreadDto =
   discard jsonObj.getProp("name", result.name)
   discard jsonObj.getProp("creatorId", result.creatorId)
   discard jsonObj.getProp("archived", result.archived)
+  discard jsonObj.getProp("muteRevision", result.muteRevision)
+  discard jsonObj.getProp("muted", result.muted)
+  let muteTill = jsonObj{"muteTill"}.getStr()
+  if muteTill.len > 0 and muteTill != "0001-01-01T00:00:00Z":
+    result.muteTill = parse(muteTill, "yyyy-MM-dd'T'HH:mm:sszzz").toTime().toUnix() * 1000
   discard jsonObj.getProp("unviewedMessagesCount", result.unviewedMessagesCount)
   discard jsonObj.getProp("unviewedMentionsCount", result.unviewedMentionsCount)
   discard jsonObj.getProp("messagesCount", result.messagesCount)

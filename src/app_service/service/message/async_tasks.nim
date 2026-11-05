@@ -8,6 +8,7 @@ import ../../../backend/linkpreview as status_go_linkpreview
 import ../../../app/core/custom_urls/urls_manager
 
 import dto/seen_unseen_messages
+from ../community/dto/community import MutedType
 
 proc getCountAndCountWithMentionsFromResponse(chatId: string, seenAndUnseenMessagesBatch: JsonNode): (int, int) =
   if seenAndUnseenMessagesBatch.len > 0:
@@ -36,6 +37,11 @@ type
   AsyncCreateThreadTaskArg = ref object of QObjectTaskArg
     chatId: string
     parentMessageId: string
+
+  AsyncThreadMuteTaskArg = ref object of QObjectTaskArg
+    chatId: string
+    threadId: string
+    interval: int
 
   AsyncEditThreadTaskArg = ref object of QObjectTaskArg
     chatId: string
@@ -176,6 +182,21 @@ proc asyncFetchChatThreadsForChatsTask(argEncoded: string) {.gcsafe, nimcall.} =
       "chatRevisions": revisions,
       "error": e.msg,
     })
+
+proc asyncThreadMuteTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncThreadMuteTaskArg](argEncoded)
+  var responseJson = %* {"chatId": arg.chatId, "threadId": arg.threadId, "error": ""}
+  try:
+    let muted = arg.interval != MutedType.Unmuted.int
+    let response = if muted:
+        status_go_chat.muteChat(arg.chatId, arg.interval, arg.threadId)
+      else:
+        status_go_chat.unmuteThread(arg.chatId, arg.threadId)
+    if not response.error.isNil:
+      raise newException(RpcException, response.error.message)
+  except CatchableError as e:
+    responseJson["error"] = %e.msg
+  arg.finish(responseJson)
 
 proc asyncEditThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncEditThreadTaskArg](argEncoded)

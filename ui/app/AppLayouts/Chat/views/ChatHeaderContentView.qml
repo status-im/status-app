@@ -34,6 +34,10 @@ RowLayout {
     property bool amIChatAdmin
 
     property bool showMembersButtonHighlighted
+    property bool threadMuted: false
+
+    signal muteThreadRequested(int interval)
+    signal unmuteThreadRequested()
 
     signal groupMembersUpdateRequested(string membersPubKeysList)
 
@@ -270,6 +274,9 @@ RowLayout {
         ThreadHeader {
             threadId: messageStore.threadId
             threadName: messageStore.threadName
+            muted: root.threadMuted
+            onMuteRequested: interval => root.muteThreadRequested(interval)
+            onUnmuteRequested: root.unmuteThreadRequested()
             parentChatName: {
                 const prefix = messageStore.chatType === Constants.chatType.communityChat ? "# " : ""
                 return prefix + messageStore.threadParentChatName

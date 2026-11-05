@@ -9,6 +9,7 @@ type
     Title
     MessagesCount
     NotificationCount
+    Muted
     ParticipantsCount
     ParticipantsModel
     LastMessageSenderName
@@ -41,6 +42,7 @@ QtObject:
       ModelRole.OriginalMessageId.int: "originalMessageId",
       ModelRole.Title.int: "title",
       ModelRole.MessagesCount.int: "messagesCount",
+      ModelRole.Muted.int: "muted",
       ModelRole.NotificationCount.int: "notificationCount",
       ModelRole.ParticipantsCount.int: "participantsCount",
       ModelRole.ParticipantsModel.int: "participantsModel",
@@ -59,6 +61,7 @@ QtObject:
     of ModelRole.OriginalMessageId: result = newQVariant(row.summary.originalMessageId)
     of ModelRole.Title: result = newQVariant(row.summary.title)
     of ModelRole.MessagesCount: result = newQVariant(row.summary.messagesCount)
+    of ModelRole.Muted: result = newQVariant(row.summary.muted)
     of ModelRole.NotificationCount: result = newQVariant(row.summary.notificationCount)
     of ModelRole.ParticipantsCount: result = newQVariant(row.summary.participantsCount)
     of ModelRole.ParticipantsModel: result = newQVariant(row.participants)
@@ -85,6 +88,7 @@ QtObject:
         addChangedRole(roles, previous.originalMessageId, summary.originalMessageId, ModelRole.OriginalMessageId.int): discard
         addChangedRole(roles, previous.title, summary.title, ModelRole.Title.int): discard
         addChangedRole(roles, previous.messagesCount, summary.messagesCount, ModelRole.MessagesCount.int): discard
+        addChangedRole(roles, previous.muted, summary.muted, ModelRole.Muted.int): discard
         addChangedRole(roles, previous.notificationCount, summary.notificationCount, ModelRole.NotificationCount.int): discard
         addChangedRole(roles, previous.participantsCount, summary.participantsCount, ModelRole.ParticipantsCount.int): discard
         addChangedRole(roles, previous.lastMessageSenderName, summary.lastMessageSenderName, ModelRole.LastMessageSenderName.int): discard

@@ -511,6 +511,7 @@ method updateThreadDetails*(self: Module) =
       self.controller.getOneToOneChatNameAndImage().name
     else:
       chat.name
+  self.view.setThreadMute(thread.muted, thread.muteTill)
   self.view.setThreadDetails(thread.name, parentName,
     THREADS_ENABLED and thread_permissions.canEditThread(thread, chat,
       singletonInstance.userProfile.getPubKey(), community))
@@ -518,6 +519,10 @@ method updateThreadDetails*(self: Module) =
 method updateThreadCanView*(self: Module, canView: bool) =
   self.threadCanView = some(canView)
   self.updateThreadDetails()
+
+method setThreadMuted*(self: Module, interval: int) =
+  if self.controller.getMyThreadId().len > 0:
+    self.controller.setThreadMuted(interval)
 
 method editThread*(self: Module, name: string) =
   if self.threadEditRequestId.len > 0:
@@ -586,7 +591,9 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
   summary.messagesCount = thread.messagesCount
   # Mentions and replies are messages, so adding their counters would count
   # the same unseen activity more than once.
-  summary.notificationCount = thread.unviewedMessagesCount
+  summary.muted = thread.muted
+  summary.notificationCount = if thread.muted: thread.unviewedMentionsCount
+                              else: thread.unviewedMessagesCount
   summary.participantsCount = thread.participantsCount
 
   for participantId in thread.participantsPreviewIds:

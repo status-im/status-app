@@ -45,6 +45,14 @@ Item {
             id: editSpy
             signalName: "editNameRequested"
         }
+        SignalSpy {
+            id: muteSpy
+            signalName: "muteRequested"
+        }
+        SignalSpy {
+            id: unmuteSpy
+            signalName: "unmuteRequested"
+        }
         InputMethodTester { id: ime }
 
         function init() {
@@ -56,6 +64,10 @@ Item {
             readSpy.clear()
             editSpy.target = header
             editSpy.clear()
+            muteSpy.target = header
+            muteSpy.clear()
+            unmuteSpy.target = header
+            unmuteSpy.clear()
         }
 
         function edit(text) {
@@ -182,8 +194,8 @@ Item {
 
         function test_menuOnlyShowsConnectedActions_data() {
             return [
-                { tag: "can rename", canEdit: true, labels: [qsTr("Edit name"), qsTr("Mark as read")] },
-                { tag: "cannot rename", canEdit: false, labels: [qsTr("Mark as read")] }
+                { tag: "can rename", canEdit: true, labels: [qsTr("Edit name"), qsTr("Mute thread"), qsTr("Mark as read")] },
+                { tag: "cannot rename", canEdit: false, labels: [qsTr("Mute thread"), qsTr("Mark as read")] }
             ]
         }
 
@@ -218,6 +230,29 @@ Item {
             }
             compare(readSpy.count, 1)
             menu.close()
+        }
+
+        function test_muteAvailableWithoutRenamePermissionAndFollowsBackendState() {
+            header.canEdit = false
+            header.muted = true
+            const button = findChild(header, "threadHeaderMenuButton")
+            mouseClick(button)
+            const menu = findChild(header, "threadHeaderContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            compare(menu.muted, true)
+            compare(menu.editEnabled, false)
+            findChild(menu, "threadContextMenu_unmuteThread").trigger()
+            compare(unmuteSpy.count, 1)
+            menu.close()
+            tryCompare(menu, "opened", false)
+            header.muted = false
+            mouseClick(button)
+            tryCompare(menu, "opened", true)
+            compare(menu.muted, false)
+            findChild(menu, "threadContextMenu_muteThread").muteTriggered(8)
+            compare(muteSpy.count, 1)
+            compare(muteSpy.signalArguments[0][0], 8)
         }
 
         function test_imeCompositionIsNotSubmitted() {

@@ -393,6 +393,9 @@ Item {
 
             threadId: d.openThreadId
             threadName: threadMessageStore.threadName
+            muted: threadMessageStore.threadMuted
+            onMuteRequested: interval => threadMessageStore.setThreadMuted(interval)
+            onUnmuteRequested: threadMessageStore.setThreadMuted(Constants.MutingVariations.Unmuted)
             parentChatName: d.openThreadParentChatName
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
@@ -836,6 +839,9 @@ Item {
             usersModel: root.usersModel
             amIChatAdmin: root.amIChatAdmin
             showMembersButtonHighlighted: root.showUsersList && !d.openThreadId
+            threadMuted: infoMessageStore.threadMuted
+            onMuteThreadRequested: interval => infoMessageStore.setThreadMuted(interval)
+            onUnmuteThreadRequested: infoMessageStore.setThreadMuted(Constants.MutingVariations.Unmuted)
 
             onEditThreadRequested: threadId => {
                 d.editThreadName(threadId, root.activeItemName, root.chatContentModule.messagesModule.getChatId())
@@ -994,15 +1000,16 @@ Item {
             objectName: "threadListContextMenu"
             isMobile: SQUtils.Utils.isMobile
             followed: false
-            muted: false
+            muted: listedThreadMessages.threadMuted
             pinned: false
             followEnabled: false
-            muteEnabled: false
             pinEnabled: false
             deleteEnabled: false
             threadLinkToCopyShare: ""
             editEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending
             openHandler: function(threadId) { threadMenuData.threadId = threadId }
+            onMuteRequested: interval => listedThreadMessages.setThreadMuted(interval)
+            onUnmuteRequested: listedThreadMessages.setThreadMuted(Constants.MutingVariations.Unmuted)
             onEditNameRequested: d.editThreadName(threadMenuData.threadId, listedThreadMessages.threadName, listedThreadMessages.chatId)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(listedThreadMessages.chatId, threadMenuData.threadId)
 

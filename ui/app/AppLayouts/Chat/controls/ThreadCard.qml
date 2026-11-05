@@ -48,6 +48,8 @@ Control {
     */
     property int messagesCount: 0
 
+    property bool muted: false
+
     /*!
        Unread/new activity count shown as a badge. Hidden when 0.
        Only used when threadState is ThreadCard.State.Active.
@@ -157,7 +159,7 @@ Control {
                     width: d.iconSize
                     height: d.iconSize
                     icon: "thread"
-                    color: Theme.palette.primaryColor1
+                    color: root.muted ? Theme.palette.directColor5 : Theme.palette.primaryColor1
                 }
             }
 
@@ -168,9 +170,9 @@ Control {
                 text: root.title
                 textFormat: Text.PlainText
                 elide: Text.ElideRight
-                color: Theme.palette.directColor1
+                color: root.muted ? Theme.palette.directColor5 : Theme.palette.directColor1
                 font.pixelSize: Theme.primaryTextFontSize
-                font.weight: Font.Bold
+                font.weight: root.muted ? Font.Normal : Font.Bold
             }
 
             StatusBadge {

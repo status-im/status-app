@@ -98,6 +98,17 @@ Item {
             signalName: "editThreadRequested"
         }
 
+        SignalSpy {
+            id: muteSpy
+            target: header
+            signalName: "muteThreadRequested"
+        }
+        SignalSpy {
+            id: unmuteSpy
+            target: header
+            signalName: "unmuteThreadRequested"
+        }
+
         // INTENT (perf): the More menu must not be instantiated at load
         function test_01_menuNotBuiltAtLoad() {
             wait(200)
@@ -190,6 +201,35 @@ Item {
             compare(editThreadSpy.count, 1)
             menu.close()
             tryCompare(menu, "opened", false)
+            messages.threadId = ""
+            messages.canEditThread = true
+        }
+
+        function test_05_threadMuteUsesExplicitPropertiesAndSignals() {
+            const messages = chatContentModuleMock.messagesModule
+            messages.threadId = "thread"
+            messages.canEditThread = false
+            header.threadMuted = true
+            tryVerify(() => !!findChild(header, "threadHeaderMenuButton"))
+            const button = findChild(header, "threadHeaderMenuButton")
+            mouseClick(button)
+            const menu = findChild(header, "threadHeaderContextMenu")
+            tryCompare(menu, "opened", true)
+            compare(menu.muted, true)
+            unmuteSpy.clear()
+            findChild(menu, "threadContextMenu_unmuteThread").trigger()
+            compare(unmuteSpy.count, 1)
+            menu.close()
+            tryCompare(menu, "opened", false)
+            header.threadMuted = false
+            mouseClick(button)
+            tryCompare(menu, "opened", true)
+            compare(menu.muted, false)
+            muteSpy.clear()
+            findChild(menu, "threadContextMenu_muteThread").muteTriggered(Constants.MutingVariations.For24hr)
+            compare(muteSpy.count, 1)
+            compare(muteSpy.signalArguments[0][0], Constants.MutingVariations.For24hr)
+            menu.close()
             messages.threadId = ""
             messages.canEditThread = true
         }

@@ -299,12 +299,18 @@ QtObject {
                 // the last message jumped to
                 property string jumpedToMessageId
                 property string threadId: ""
+                property bool canEditThread: false
+                property bool threadEditPending: false
+                property bool threadMuted: false
+                property real threadMuteTill: 0
+                property int requestedMuteInterval: -1
                 property int loadThreadsRequests: 0
                 readonly property ListModel threadsModel: ListModel {}
                 readonly property bool threadsLoading: false
                 readonly property bool threadsError: false
 
                 function loadChatThreads() { loadThreadsRequests++ }
+                function setThreadMuted(interval) { requestedMuteInterval = interval }
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)

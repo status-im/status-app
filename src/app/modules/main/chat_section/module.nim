@@ -24,6 +24,7 @@ import app/core/held_resource_qtimer
 import app/core/unique_event_emitter
 import app/core/notifications/details as notification_details
 import app_service/common/types
+from app_service/service/community/dto/community import MutedType
 import app_service/common/utils as service_common_utils
 import app_service/service/settings/service as settings_service
 import app_service/service/node_configuration/service as node_configuration_service
@@ -326,7 +327,7 @@ proc removeSubmodule(self: Module, chatId: string) =
   self.chatContentModules.del(chatId)
 
 proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, threadId: string,
-    threadName: string, hasUnreadMessages: bool, notificationsCount: int, archived: bool): ChatItem =
+    threadName: string, hasUnreadMessages: bool, notificationsCount: int, archived: bool, muted: bool): ChatItem =
   return chat_item.initChatItem(
     id = threadId,
     name = threadName,
@@ -341,7 +342,7 @@ proc createThreadItem(self: Module, parentItem: ChatItem, parentChatId: string, 
     lastMessageUnparsedText = "",
     hasUnreadMessages = hasUnreadMessages,
     notificationsCount = notificationsCount,
-    muted = false,
+    muted = muted,
     blocked = false,
     active = false,
     position = parentItem.position,
@@ -741,6 +742,7 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
 
   # If the thread row already exists, just update it and activate it if needed.
   if not self.view.chatsModel().getItemById(threadId).isNil:
+    self.view.chatsModel().changeMutedOnItemById(threadId, self.controller.getThreadById(parentChatId, threadId).muted)
     self.view.chatsModel().updateNotificationsForItemById(threadId, hasUnreadMessages, notificationsCount)
     if self.chatContentModules.contains(threadId):
       self.chatContentModules[threadId].onNotificationsUpdated(hasUnreadMessages, notificationsCount)
@@ -759,7 +761,8 @@ method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, t
     return
 
   let threadItem = self.createThreadItem(parentItem, parentChatId, threadId, threadName,
-    hasUnreadMessages, notificationsCount, self.controller.getThreadById(parentChatId, threadId).archived)
+    hasUnreadMessages, notificationsCount, self.controller.getThreadById(parentChatId, threadId).archived,
+    self.controller.getThreadById(parentChatId, threadId).muted)
   self.view.chatsModel().appendItemAfterParent(threadItem, parentIndex)
   self.threadChatIds.incl(threadId)
   if setActive:
@@ -798,6 +801,7 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     for thread in parentThreads:
       if not self.view.chatsModel().getItemById(thread.threadId).isNil:
         self.view.chatsModel().updateArchivedById(thread.threadId, thread.archived)
+        self.view.chatsModel().changeMutedOnItemById(thread.threadId, thread.muted)
         self.view.renameThreadItem(thread.threadId, thread.name)
         if self.view.getOpenThreadId() == thread.threadId:
           self.view.setOpenThread(thread.threadId, thread.name, parentChatId)
@@ -812,7 +816,7 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
         continue
       pendingThreadIds.incl(thread.threadId)
       items.add(self.createThreadItem(parentItem, parentChatId, thread.threadId, thread.name,
-        thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount, thread.archived))
+        thread.unviewedMessagesCount > 0, thread.unviewedMentionsCount, thread.archived, thread.muted))
 
     self.view.chatsModel().appendItemsAfterParent(items, parentChatId)
     for item in items:
@@ -1418,6 +1422,10 @@ method muteChat*(self: Module, chatId: string, interval: int) =
   self.controller.muteChat(chatId, interval)
 
 method unmuteChat*(self: Module, chatId: string) =
+  let item = self.view.chatsModel().getItemById(chatId)
+  if not item.isNil and item.isThread:
+    self.messageService.setThreadMuted(item.parentChatId, chatId, MutedType.Unmuted.int)
+    return
   self.controller.unmuteChat(chatId)
 
 method muteCategory*(self: Module, categoryId: string, interval: int) =
@@ -1739,6 +1747,13 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
     self.view.chatsModel().updateNotificationsForItemById(displayChatId, unviewedMessagesCount > 0, unviewedMentionsCount)
     if self.chatContentModules.contains(displayChatId):
       self.chatContentModules[displayChatId].onNotificationsUpdated(unviewedMessagesCount > 0, unviewedMentionsCount)
+
+  # Muting suppresses ordinary activity; mentions and replies to us still notify.
+  if THREADS_ENABLED and message.threadId.len > 0 and
+      self.messageService.getThreadById(chatIdMsgBelongsTo, message.threadId).muted and
+      not (message.isPersonalMention(myPK) or message.isGlobalMention() or
+        (message.responseTo.len > 0 and message.quotedMessage.`from` == myPK)):
+    return
 
   # Prepare notification
   var notificationType = notification_details.NotificationType.NewMessage

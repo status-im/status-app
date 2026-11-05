@@ -118,3 +118,15 @@ suite "chat info threads":
     model.upsert(summary)
     check(changed == @[@[unreadRole], @[timestampRole]])
     check(resetCount == 0)
+
+  test "mute state is exposed and updated without replacing the row":
+    let model = thread_model.newModel()
+    defer: model.delete()
+    var summary = ThreadSummary(threadId: "thread", muted: false)
+    model.upsert(summary)
+    summary.muted = true
+    model.upsert(summary)
+    let muted = model.value(0, "muted")
+    check(muted.boolVal)
+    muted.delete()
+    check(model.rowCount(nil) == 1)
