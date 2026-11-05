@@ -50,6 +50,8 @@ const SIGNAL_CHAT_THREADS_LOADING_FAILED* = "chatThreadsLoadingFailed"
 const SIGNAL_THREAD_CREATED* = "threadCreated"
 const SIGNAL_THREAD_CREATION_FAILED* = "threadCreationFailed"
 const SIGNAL_THREAD_EDIT_FINISHED* = "threadEditFinished"
+const SIGNAL_THREAD_DELETE_FINISHED* = "threadDeleteFinished"
+const SIGNAL_THREAD_FOLLOW_FINISHED* = "threadFollowFinished"
 const SIGNAL_PINNED_MESSAGES_LOADED* = "pinnedMessagesLoaded"
 const SIGNAL_REACTIONS_FOR_MESSAGE_LOADED* = "signalReactionsForMessageLoaded"
 const SIGNAL_FIRST_UNSEEN_MESSAGE_LOADED* = "firstUnseenMessageLoaded"
@@ -112,6 +114,18 @@ type
     chatId*: string
     parentMessageId*: string
     threads*: seq[ThreadDto]
+
+  ThreadDeleteFinishedArgs* = ref object of Args
+    chatId*: string
+    threadId*: string
+    requestId*: string
+    error*: string
+
+  ThreadFollowFinishedArgs* = ref object of Args
+    chatId*: string
+    threadId*: string
+    followed*: bool
+    error*: string
 
   ThreadEditFinishedArgs* = ref object of Args
     chatId*: string
@@ -234,11 +248,13 @@ QtObject:
     chatThreadSummariesLoadingChats: HashSet[string]
     chatThreadsRevision: Table[string, int]
     chatThreadSummariesPendingUpdates: Table[string, Table[string, ThreadDto]]
+    chatThreadListsPendingUpdates: Table[string, Table[string, ThreadDto]]
     # Read-only sentinel returned via `lent` borrow when a thread lookup misses.
     # Mutating it would affect every subsequent miss result.
     emptyThread: ThreadDto
 
   proc asyncLoadChatThreadsForChats*(self: Service, chatIds: seq[string])
+  proc getThreadMessageCursorKey(self: Service, chatId: string, threadId: string): string
 
   proc delete*(self: Service)
   proc newService*(
@@ -271,6 +287,16 @@ QtObject:
 
   proc mergeThreadSummary(existing, incoming: ThreadDto): ThreadDto =
     result = incoming
+    if existing.deleted and (not incoming.deleted or existing.deletedClock > incoming.deletedClock):
+      return existing
+    if incoming.deleted:
+      result.messagesCount = 0
+      result.participantsCount = 0
+      result.participantsPreviewIds = @[]
+      result.lastMessage = ThreadLastMessageDto()
+      result.unviewedMessagesCount = 0
+      result.unviewedMentionsCount = 0
+      return
     if result.creatorId.len == 0:
       result.creatorId = existing.creatorId
     if incoming.messagesCount == 0 and existing.messagesCount > 0:
@@ -299,6 +325,12 @@ QtObject:
         let merged = self.mergeCachedThread(chatId, thread)
         threadsByParentId[thread.parentMessageId] = merged
         result.add(merged)
+    # A snapshot started before deletion may omit the thread altogether.
+    # Keep tombstones independently of the current list contents.
+    for parentId, existing in self.chatThreadsByParentIdByChat.getOrDefault(chatId):
+      if existing.deleted and not threadsByParentId.hasKey(parentId):
+        threadsByParentId[parentId] = existing
+        result.add(existing)
     self.chatThreadsByParentIdByChat[chatId] = threadsByParentId
 
   proc cacheThreads(self: Service, chatId: string, threads: seq[ThreadDto]) =
@@ -309,6 +341,10 @@ QtObject:
       if thread.parentMessageId.len > 0:
         self.chatThreadsByParentIdByChat[chatId][thread.parentMessageId] =
           self.mergeCachedThread(chatId, thread)
+        if chatId in self.chatThreadListsLoadingChats:
+          let previousPending = self.chatThreadListsPendingUpdates.getOrDefault(chatId).getOrDefault(thread.parentMessageId)
+          self.chatThreadListsPendingUpdates.mgetOrPut(chatId, initTable[string, ThreadDto]())[thread.parentMessageId] =
+            mergeThreadSummary(previousPending, thread)
         if chatId in self.chatThreadSummariesLoadingChats:
           let previousPending = self.chatThreadSummariesPendingUpdates.getOrDefault(chatId).getOrDefault(thread.parentMessageId)
           self.chatThreadSummariesPendingUpdates.mgetOrPut(chatId, initTable[string, ThreadDto]())[thread.parentMessageId] =
@@ -321,6 +357,7 @@ QtObject:
     self.chatThreadSummariesLoadedChats.excl(chatId)
     self.chatThreadSummariesLoadingChats.excl(chatId)
     self.chatThreadSummariesPendingUpdates.del(chatId)
+    self.chatThreadListsPendingUpdates.del(chatId)
     self.chatThreadsRevision[chatId] = self.chatThreadsRevision.getOrDefault(chatId) + 1
 
   proc loadChatThreadsForChatsIfNeeded*(self: Service, chatIds: seq[string]) =
@@ -376,9 +413,45 @@ QtObject:
         return self.chatThreadsByParentIdByChat[chatId][parentMessageId]
     return self.emptyThread
 
+  # Only followed, active threads participate in chat-list and section unread markers.
+  proc threadCountsTowardUnread*(thread: ThreadDto): bool =
+    THREADS_ENABLED and thread.followed and not thread.archived and not thread.deleted
+
+  proc sectionThreadsUnreadMessagesAndMentionsCount*(self: Service, sectionId: string, sectionIsMuted: bool):
+      tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
+    if self.chatService.isNil:
+      return
+    let communityId = if sectionId == singletonInstance.userProfile.getPubKey(): "" else: sectionId
+    for chatId, threadsByParentId in self.chatThreadsByParentIdByChat:
+      let chat = self.chatService.getChatById(chatId, showWarning = false)
+      if chat.id.len == 0 or chat.communityId != communityId:
+        continue
+      for _, thread in threadsByParentId:
+        if not threadCountsTowardUnread(thread):
+          continue
+        result.unviewedMentionsCount += thread.unviewedMentionsCount
+        if thread.unviewedMentionsCount == 0 and (chat.muted or sectionIsMuted):
+          continue
+        result.unviewedMessagesCount += thread.unviewedMessagesCount
+
+  proc categoryThreadsHaveUnreadMessages*(self: Service, communityId: string, categoryId: string): bool =
+    if self.chatService.isNil or communityId.len == 0 or categoryId.len == 0:
+      return false
+    for chatId, threadsByParentId in self.chatThreadsByParentIdByChat:
+      let chat = self.chatService.getChatById(chatId, showWarning = false)
+      if chat.id.len == 0 or chat.communityId != communityId or chat.categoryId != categoryId:
+        continue
+      for _, thread in threadsByParentId:
+        if threadCountsTowardUnread(thread) and
+            ((not chat.muted and thread.unviewedMessagesCount > 0) or thread.unviewedMentionsCount > 0):
+          return true
+    return false
+
   proc handleThreadsUpdate(self: Service, threads: seq[ThreadDto]) =
     var mergedThreads: seq[ThreadDto]
     for thread in threads:
+      if thread.deleted:
+        self.threadMsgCursor.del(self.getThreadMessageCursorKey(thread.chatId, thread.threadId))
       if thread.chatId.len > 0 and thread.parentMessageId.len > 0:
         self.cacheThreads(thread.chatId, @[thread])
         mergedThreads.add(self.chatThreadsByParentIdByChat[thread.chatId][thread.parentMessageId])
@@ -531,6 +604,8 @@ QtObject:
       error "empty chat id or thread id", procName="asyncLoadMoreMessagesForThread"
       return false
 
+    if self.getThreadById(chatId, threadId).deleted:
+      return false
     let msgCursor = self.initOrGetThreadMessageCursor(chatId, threadId)
     if msgCursor.isPending():
       return true
@@ -569,6 +644,38 @@ QtObject:
       chatId: chatId,
       threadId: threadId,
       name: name,
+      requestId: requestId,
+    ))
+
+  proc asyncSetThreadFollowed*(self: Service, chatId, threadId: string, followed: bool) =
+    if chatId.len == 0 or threadId.len == 0:
+      error "invalid thread follow identifiers", chatId, threadId
+      self.events.emit(SIGNAL_THREAD_FOLLOW_FINISHED,
+        ThreadFollowFinishedArgs(chatId: chatId, threadId: threadId, followed: followed,
+          error: "follow-thread: invalid request"))
+      return
+    self.threadpool.start(AsyncSetThreadFollowedTaskArg(
+      tptr: asyncSetThreadFollowedTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncSetThreadFollowed",
+      chatId: chatId,
+      threadId: threadId,
+      followed: followed,
+    ))
+
+  proc asyncDeleteThread*(self: Service, chatId, threadId, requestId: string) =
+    if chatId.len == 0 or threadId.len == 0 or requestId.len == 0:
+      error "invalid thread deletion identifiers", chatId, threadId, requestId
+      self.events.emit(SIGNAL_THREAD_DELETE_FINISHED,
+        ThreadDeleteFinishedArgs(chatId: chatId, threadId: threadId, requestId: requestId,
+          error: "delete-thread: invalid request"))
+      return
+    self.threadpool.start(AsyncDeleteThreadTaskArg(
+      tptr: asyncDeleteThreadTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncDeleteThread",
+      chatId: chatId,
+      threadId: threadId,
       requestId: requestId,
     ))
 
@@ -1061,6 +1168,10 @@ QtObject:
       # A lightweight request can finish after the richer summary snapshot.
       # Its older list must not replace that snapshot or invalidate its cache.
       if not includeSummaries:
+        for chatId in chatIds:
+          if chatId in self.chatThreadSummariesLoadedChats:
+            self.chatThreadListsLoadingChats.excl(chatId)
+            self.chatThreadListsPendingUpdates.del(chatId)
         chatIds = chatIds.filterIt(it notin self.chatThreadSummariesLoadedChats)
       if chatIds.len == 0:
         return
@@ -1080,16 +1191,17 @@ QtObject:
           threadsByChat.mgetOrPut(thread.chatId, @[]).add(thread)
 
       # Updates received after the request began take precedence over its snapshot.
-      if includeSummaries:
-        for chatId in chatIds:
-          var merged = initTable[string, ThreadDto]()
-          for thread in threadsByChat.getOrDefault(chatId):
-            merged[thread.parentMessageId] = thread
-          for parentId, thread in self.chatThreadSummariesPendingUpdates.getOrDefault(chatId):
-            merged[parentId] = mergeThreadSummary(merged.getOrDefault(parentId), thread)
-          threadsByChat[chatId] = @[]
-          for _, thread in merged:
-            threadsByChat[chatId].add(thread)
+      for chatId in chatIds:
+        var merged = initTable[string, ThreadDto]()
+        for thread in threadsByChat.getOrDefault(chatId):
+          merged[thread.parentMessageId] = thread
+        let pending = if includeSummaries: self.chatThreadSummariesPendingUpdates.getOrDefault(chatId)
+                      else: self.chatThreadListsPendingUpdates.getOrDefault(chatId)
+        for parentId, thread in pending:
+          merged[parentId] = mergeThreadSummary(merged.getOrDefault(parentId), thread)
+        threadsByChat[chatId] = @[]
+        for _, thread in merged:
+          threadsByChat[chatId].add(thread)
 
       # Settle every requested chat, including those with no threads, so they leave the
       # loading set without waiting for a per-chat success event.
@@ -1098,12 +1210,13 @@ QtObject:
         let chatThreads = threadsByChat.getOrDefault(chatId, @[])
         threads.add(self.replaceChatThreadsCache(chatId, chatThreads))
         self.chatThreadListsLoadedChats.incl(chatId)
-        self.chatThreadListsLoadingChats.excl(chatId)
         if includeSummaries:
           self.chatThreadSummariesLoadingChats.excl(chatId)
           self.chatThreadSummariesPendingUpdates.del(chatId)
           self.chatThreadSummariesLoadedChats.incl(chatId)
         else:
+          self.chatThreadListsLoadingChats.excl(chatId)
+          self.chatThreadListsPendingUpdates.del(chatId)
           self.chatThreadSummariesLoadedChats.excl(chatId)
       self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
         ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: chatIds,
@@ -1115,6 +1228,7 @@ QtObject:
           self.chatThreadSummariesPendingUpdates.del(chatId)
         else:
           self.chatThreadListsLoadingChats.excl(chatId)
+          self.chatThreadListsPendingUpdates.del(chatId)
         self.events.emit(SIGNAL_CHAT_THREADS_LOADING_FAILED,
           ChatThreadsLoadingFailedArgs(chatId: chatId, summariesRequested: includeSummaries))
       error "error loading chat threads for chats", msg = e.msg
@@ -1134,6 +1248,8 @@ QtObject:
       if errorString != "":
         raise newException(CatchableError, errorString)
 
+      if self.getThreadById(chatId, threadId).deleted:
+        return
       let msgCursor = self.initOrGetThreadMessageCursor(chatId, threadId)
 
       var msgCursorValue: string
@@ -1192,6 +1308,60 @@ QtObject:
     if args.error.len > 0:
       error "error editing thread", chatId = args.chatId, threadId = args.threadId, msg = args.error
     self.events.emit(SIGNAL_THREAD_EDIT_FINISHED, args)
+
+  proc onAsyncSetThreadFollowed*(self: Service, response: string) {.slot.} =
+    var args = ThreadFollowFinishedArgs()
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(ValueError, "follow thread response is not a json object")
+      discard responseObj.getProp("chatId", args.chatId)
+      discard responseObj.getProp("threadId", args.threadId)
+      discard responseObj.getProp("followed", args.followed)
+      args.error = responseObj{"error"}.getStr()
+      if args.error.len == 0:
+        let threadsArr = responseObj{"threads"}
+        if threadsArr.isNil or threadsArr.kind != JArray:
+          raise newException(ValueError, "follow thread response is missing thread metadata")
+        let threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
+        if not threads.anyIt(it.chatId == args.chatId and it.threadId == args.threadId and
+            it.parentMessageId.len > 0):
+          raise newException(ValueError, "follow thread response is missing the thread")
+        self.handleThreadsUpdate(threads)
+    except CatchableError as e:
+      args.error = e.msg
+    if args.error.len > 0:
+      error "error updating thread follow state", chatId = args.chatId, threadId = args.threadId,
+        followed = args.followed, msg = args.error
+    self.events.emit(SIGNAL_THREAD_FOLLOW_FINISHED, args)
+
+  proc onAsyncDeleteThread*(self: Service, response: string) {.slot.} =
+    var args = ThreadDeleteFinishedArgs()
+    try:
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(ValueError, "delete thread response is not a json object")
+      discard responseObj.getProp("chatId", args.chatId)
+      discard responseObj.getProp("threadId", args.threadId)
+      discard responseObj.getProp("requestId", args.requestId)
+      args.error = responseObj{"error"}.getStr()
+      if args.error.len == 0:
+        let threadsArr = responseObj{"threads"}
+        if threadsArr.isNil or threadsArr.kind != JArray:
+          raise newException(ValueError, "delete thread response is missing thread metadata")
+        let threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
+        if not threads.anyIt(it.chatId == args.chatId and it.threadId == args.threadId and
+            it.parentMessageId.len > 0 and it.deleted):
+          raise newException(ValueError, "delete thread response is missing the deleted thread")
+        let chats = responseObj{"chats"}
+        if not self.chatService.isNil and not chats.isNil and chats.kind == JArray:
+          self.chatService.parseChatsInMessengerResponse(chats.getElems().mapIt(chat_dto.toChatDto(it)))
+        self.handleThreadsUpdate(threads)
+    except CatchableError as e:
+      args.error = e.msg
+    if args.error.len > 0:
+      error "error deleting thread", chatId = args.chatId, threadId = args.threadId, msg = args.error
+    self.events.emit(SIGNAL_THREAD_DELETE_FINISHED, args)
 
   proc onAsyncCreateThread*(self: Service, response: string) {.slot.} =
     var chatId: string = ""
@@ -1493,6 +1663,7 @@ QtObject:
         raise newException(CatchableError, "expected messages json array is neither of JArray nor JNull type")
 
       var messages = map(messagesArray.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
+      messages = messages.filterIt(it.threadId.len == 0 or not self.getThreadById(it.localChatId, it.threadId).deleted)
 
       let data = SearchMessagesArgs(chatId: chatId, messages: messages, requestId: requestId)
       self.events.emit(SIGNAL_SEARCH_MESSAGES_LOADED, data)
@@ -1828,6 +1999,9 @@ proc deleteMessage*(self: Service, messageId: string) =
   try:
     let response = status_go.deleteMessageAndSend(messageId)
 
+    let chats = response.result{"chats"}
+    if not self.chatService.isNil and not chats.isNil and chats.kind == JArray:
+      self.chatService.parseChatsInMessengerResponse(chats.getElems().mapIt(chat_dto.toChatDto(it)))
     self.handleThreadsFromResponse(response.result)
 
     var removesMessagesObj: JsonNode

@@ -253,6 +253,13 @@ proc getContactNameAndImage*(self: Controller, contactId: string):
 proc addResultItemDetails*(self: Controller, itemId: string, sectionId = "", channelId = "", messageId = "", threadId = "") =
   self.resultItems[itemId] = ResultItemDetails(sectionId: sectionId, channelId: channelId, messageId: messageId, threadId: threadId)
 
+proc forgetThreadResults*(self: Controller, chatId, threadId: string): seq[string] =
+  for id, details in self.resultItems:
+    if details.channelId == chatId and details.threadId == threadId:
+      result.add(id)
+  for id in result:
+    self.resultItems.del(id)
+
 proc resultItemClicked*(self: Controller, itemId: string) =
   let itemDetails = self.resultItems.getOrDefault(itemId)
   if(itemDetails.isEmpty()):

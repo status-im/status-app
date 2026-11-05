@@ -14,6 +14,12 @@ type
     parentMessageId*: string
     name*: string
     creatorId*: string
+    archived*: bool
+    followed*: bool
+    deleted*: bool
+    deletedBy*: string
+    deletedClock*: int64
+    deletedAt*: int64
     unviewedMessagesCount*: int
     unviewedMentionsCount*: int
     messagesCount*: int
@@ -23,11 +29,17 @@ type
 
 proc toThreadDto*(jsonObj: JsonNode): ThreadDto =
   result = ThreadDto()
+  discard jsonObj.getProp("deleted", result.deleted)
+  discard jsonObj.getProp("deletedBy", result.deletedBy)
+  discard jsonObj.getProp("deletedClock", result.deletedClock)
+  discard jsonObj.getProp("deletedAt", result.deletedAt)
   discard jsonObj.getProp("threadId", result.threadId)
   discard jsonObj.getProp("chatId", result.chatId)
   discard jsonObj.getProp("parentMessageId", result.parentMessageId)
   discard jsonObj.getProp("name", result.name)
   discard jsonObj.getProp("creatorId", result.creatorId)
+  discard jsonObj.getProp("archived", result.archived)
+  discard jsonObj.getProp("followed", result.followed)
   discard jsonObj.getProp("unviewedMessagesCount", result.unviewedMessagesCount)
   discard jsonObj.getProp("unviewedMentionsCount", result.unviewedMentionsCount)
   discard jsonObj.getProp("messagesCount", result.messagesCount)

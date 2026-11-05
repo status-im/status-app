@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
@@ -22,6 +23,7 @@ import shared.stores
 import shared.views.chat
 
 import AppLayouts.Chat.stores as ChatStores
+import AppLayouts.Chat.popups
 import AppLayouts.Communities.popups
 import AppLayouts.Communities.panels
 import AppLayouts.Communities.stores as CommunitiesStores
@@ -69,6 +71,7 @@ Item {
     signal infoButtonClicked
     signal manageButtonClicked
     signal chatItemClicked(string id)
+    signal renameThreadRequested(string threadId, string threadName, string parentChatId)
     signal shareOwnProfileRequested
 
     // Permissions Related requests:
@@ -213,6 +216,29 @@ Item {
                 model: SortFilterProxyModel {
                     sourceModel: root.communitySectionModule.model
                     filters: [
+                        // Non-archived threads are listed when followed or currently opened.
+                        AnyOf {
+                            ValueFilter {
+                                roleName: "isThread"
+                                value: false
+                            }
+                            AllOf {
+                                ValueFilter {
+                                    roleName: "archived"
+                                    value: false
+                                }
+                                AnyOf {
+                                    ValueFilter {
+                                        roleName: "followed"
+                                        value: true
+                                    }
+                                    ValueFilter {
+                                        roleName: "active"
+                                        value: true
+                                    }
+                                }
+                            }
+                        },
                         SQUtils.SearchFilter {
                             roleName: "name"
                             searchPhrase: searchField.text
@@ -299,6 +325,12 @@ Item {
                                              })
                         }
                     }
+                }
+
+                threadPopupMenu: ThreadListContextMenu {
+                    sectionModule: root.communitySectionModule
+                    onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                        root.renameThreadRequested(threadId, threadName, parentChatId)
                 }
 
                 chatListPopupMenu: ChatContextMenuView {

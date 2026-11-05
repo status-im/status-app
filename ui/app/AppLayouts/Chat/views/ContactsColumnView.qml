@@ -50,6 +50,7 @@ Item {
     signal openAppSearch()
     signal addRemoveGroupMemberClicked()
     signal chatItemClicked(string id)
+    signal renameThreadRequested(string threadId, string threadName, string parentChatId)
 
     // main layout
     ColumnLayout {
@@ -108,6 +109,29 @@ Item {
             model: SortFilterProxyModel {
                 sourceModel: root.chatSectionModule.model
                 filters: [
+                    // Non-archived threads are listed when followed or currently opened.
+                    AnyOf {
+                        ValueFilter {
+                            roleName: "isThread"
+                            value: false
+                        }
+                        AllOf {
+                            ValueFilter {
+                                roleName: "archived"
+                                value: false
+                            }
+                            AnyOf {
+                                ValueFilter {
+                                    roleName: "followed"
+                                    value: true
+                                }
+                                ValueFilter {
+                                    roleName: "active"
+                                    value: true
+                                }
+                            }
+                        }
+                    },
                     SQUtils.SearchFilter {
                         roleName: "name"
                         searchPhrase: searchInput.text
@@ -135,6 +159,12 @@ Item {
             }
             onChatItemClicked: (id) => root.chatItemClicked(id)
             onChatItemUnmuted: (id) => root.chatSectionModule.unmuteChat(id)
+
+            threadPopupMenu: ThreadListContextMenu {
+                sectionModule: root.chatSectionModule
+                onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                    root.renameThreadRequested(threadId, threadName, parentChatId)
+            }
 
             popupMenu: ChatContextMenuView {
                 id: chatContextMenuView

@@ -2,6 +2,7 @@ import std/[importutils, json, tables, sets, unittest]
 import nimqml
 
 import app/core/eventemitter
+import app/core/signals/types
 import app/modules/main/chat_section/chat_content/io_interface as chat_content_interface
 import app/modules/main/chat_section/chat_content/messages/module as messages_module
 import app_service/service/message/service as message_service
@@ -34,6 +35,7 @@ type
     controller: controller.Controller
     names: seq[string]
     namesAtCompletion: seq[string]
+    deletions: seq[string]
     summaries: seq[ThreadDto]
 
 method updateThreadDetails(self: ThreadDetailsDelegate) =
@@ -41,6 +43,9 @@ method updateThreadDetails(self: ThreadDetailsDelegate) =
 
 method onThreadEditFinished(self: ThreadDetailsDelegate, requestId, error: string) =
   self.namesAtCompletion.add(self.names[^1])
+
+method onThreadDeleteFinished(self: ThreadDetailsDelegate, requestId, error: string) =
+  self.deletions.add(requestId)
 
 method onChatThreadsLoaded(self: ThreadDetailsDelegate, threads: seq[ThreadDto], listLoaded: bool = false) =
   self.summaries = threads
@@ -52,6 +57,82 @@ method openThreadAsChat(self: MockDelegate, threadId, threadName, parentMessageI
     hasUnreadMessages: hasUnreadMessages, notificationsCount: notificationsCount))
 
 suite "thread navigation":
+  test "thread-only signals carry archive transitions without losing summaries":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.init()
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat-id"], "includeSummaries": true,
+      "threads": [{"chatId": "chat-id", "threadId": "thread-id", "parentMessageId": "parent-id",
+        "name": "Thread", "messagesCount": 3,
+        "lastMessage": {"from": "alice", "text": "Reply", "timestamp": 100}}]
+    }))
+    var updates: seq[ThreadDto]
+    events.on(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
+      updates = ChatThreadsForChatsLoadedArgs(e).threads
+    for archived in [true, false]:
+      let signal = MessageSignal.fromEvent(%* {"event": {"threads": [{
+        "chatId": "chat-id", "threadId": "thread-id", "parentMessageId": "parent-id",
+        "name": "Thread", "archived": archived
+      }]}})
+      check signal.messages.len == 0
+      events.emit(SignalType.Message.event, signal)
+      let cached = service.getThreadById("chat-id", "thread-id")
+      check cached.archived == archived
+      check cached.messagesCount == 3
+      check cached.lastMessage.text == "Reply"
+      require updates.len == 1
+      check updates[0] == cached
+
+  test "live archive transitions win over each overlapping snapshot order":
+    for summariesFirst in [false, true]:
+      for archived in [true, false]:
+        let events = createEventEmitter()
+        let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+        service.init()
+        service.chatThreadListsLoadingChats.incl("chat-id")
+        service.chatThreadSummariesLoadingChats.incl("chat-id")
+        events.emit(SignalType.Message.event, MessageSignal(threads: @[
+          ThreadDto(chatId: "chat-id", threadId: "thread-id", parentMessageId: "parent-id",
+            name: "Thread", archived: archived)]))
+        for summaries in (if summariesFirst: @[true, false] else: @[false, true]):
+          service.onAsyncLoadChatThreadsForChats($(%* {
+            "chatIds": ["chat-id"], "includeSummaries": summaries,
+            "threads": [{"chatId": "chat-id", "threadId": "thread-id",
+              "parentMessageId": "parent-id", "name": "Thread",
+              "archived": not archived, "messagesCount": (if summaries: 3 else: 0)}]
+          }))
+          check service.getThreadById("chat-id", "thread-id").archived == archived
+        check service.getThreadById("chat-id", "thread-id").messagesCount == 3
+        check not service.chatThreadListsPendingUpdates.hasKey("chat-id")
+        check not service.chatThreadSummariesPendingUpdates.hasKey("chat-id")
+        check "chat-id" notin service.chatThreadListsLoadingChats
+        check "chat-id" notin service.chatThreadSummariesLoadingChats
+
+  test "lightweight loads preserve live archives and clean pending state on failure or invalidation":
+    for completion in ["success", "failure", "invalidation"]:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      service.init()
+      service.chatThreadListsLoadingChats.incl("chat-id")
+      events.emit(SignalType.Message.event, MessageSignal(threads: @[
+        ThreadDto(chatId: "chat-id", threadId: "thread-id", parentMessageId: "parent-id",
+          name: "Thread", archived: true)]))
+      require service.chatThreadListsPendingUpdates.hasKey("chat-id")
+      if completion == "invalidation":
+        events.emit(chat_service.SIGNAL_CHAT_HISTORY_CLEARED, chat_service.ChatArgs(chatId: "chat-id"))
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["chat-id"], "error": (if completion == "failure": "load failed" else: ""),
+        "threads": [{"chatId": "chat-id", "threadId": "thread-id",
+          "parentMessageId": "parent-id", "archived": false}]
+      }))
+      check not service.chatThreadListsPendingUpdates.hasKey("chat-id")
+      check "chat-id" notin service.chatThreadListsLoadingChats
+      if completion == "invalidation":
+        check service.getThreadById("chat-id", "thread-id").threadId == ""
+      else:
+        check service.getThreadById("chat-id", "thread-id").archived
+
   test "local and remote renames refresh both thread headers before edit completion":
     let events = createEventEmitter()
     let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
@@ -456,3 +537,52 @@ suite "thread navigation":
       service.asyncLoadChatThreadSummaries("chat-id")
       check(completed.len == 0)
       check("chat-id" in service.chatThreadSummariesLoadedChats)
+
+  test "deleted threads keep the parent card and reject stale reply pages":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let module = messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, nil, nil, service, nil, nil)
+    defer: module.delete()
+    let parent = createMessageItemFromDtos(MessageDto(id: "parent", clock: 1), "",
+      ContactDetails(), false, "")
+    module.view.model().insertItemBasedOnClock(parent)
+    module.onChatThreadsLoaded(@[ThreadDto(threadId: "dead", parentMessageId: "parent",
+      deleted: true, deletedAt: 100)], listLoaded = true)
+    check parent.hasThread
+    check parent.threadSummary.deleted
+    check parent.threadSummary.lastMessageTimestamp == 100
+    check module.view.threadsModel().rowCount(nil) == 0
+    check module.view.model().findIndexForMessageId("parent") >= 0
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat-id"], "threads": [{"threadId": "dead", "chatId": "chat-id",
+      "parentMessageId": "parent", "deleted": true}]
+    }))
+    let thread = messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, nil, nil, service, nil, nil, threadId = "dead")
+    defer: thread.delete()
+    thread.messagesAdded(@[MessageDto(id: "late", threadId: "dead")])
+    thread.newMessagesLoaded(@[MessageDto(id: "stale", threadId: "dead")], @[])
+    check thread.view.model().rowCount(nil) == 0
+    module.createThread("parent")
+
+  test "summary deletions complete in their parent chat as well as the selected thread":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    var delegates: seq[ThreadDetailsDelegate]
+    for (chatId, threadId) in [("chat", ""), ("chat", "target"), ("chat", "other"), ("elsewhere", "")]:
+      let delegate = ThreadDetailsDelegate()
+      delegate.controller = controller.newController(delegate, events, "section", chatId,
+        false, nil, nil, nil, service, nil, nil, threadId = threadId)
+      delegate.controller.init()
+      delegates.add(delegate)
+    defer:
+      for delegate in delegates:
+        delegate.controller.delete()
+    events.emit(SIGNAL_THREAD_DELETE_FINISHED,
+      ThreadDeleteFinishedArgs(chatId: "chat", threadId: "target", requestId: "request"))
+    check delegates[0].deletions == @["request"]
+    check delegates[1].deletions == @["request"]
+    check delegates[2].deletions.len == 0
+    check delegates[3].deletions.len == 0

@@ -17,6 +17,7 @@ import app_service/service/chat/dto/chat
 import app/global/feature_flags
 import app/global/global_singleton
 import app/global/qt_settings
+import app/modules/main/io_interface as main_interface
 import app/modules/main/chat_section/module as section_module
 import app/modules/main/chat_section/controller as section_controller
 import app/modules/main/chat_section/view as section_view
@@ -222,12 +223,18 @@ privateAccess(section_module.Module)
 privateAccess(chat_item.ChatItem)
 
 type
+  SectionDelegate = ref object of main_interface.AccessInterface
+    notifications: seq[tuple[sectionId: string, hasUnreadMessages: bool, notificationsCount: int]]
   ContentStub = ref object of content_interface.AccessInterface
     scrolledTo: seq[string]
     renamedTo: seq[string]
   SectionHarness = ref object of section_module.Module
     activated: seq[string]
     panelClosed: bool
+
+method onNotificationsUpdated(self: SectionDelegate, sectionId: string,
+    sectionHasUnreadMessages: bool, sectionNotificationCount: int) =
+  self.notifications.add((sectionId, sectionHasUnreadMessages, sectionNotificationCount))
 
 method scrollToMessage(self: ContentStub, messageId: string) =
   self.scrolledTo.add(messageId)
@@ -245,9 +252,13 @@ method closeThreadPanel(self: SectionHarness) =
   self.panelClosed = true
 
 proc newSectionHarness(service: message_service.Service, events: EventEmitter): SectionHarness =
+  let chats = chat_service.newService(events, nil, nil)
+  chats.chats["parent"] = ChatDto(id: "parent")
+  service.chatService = chats
   result = SectionHarness()
+  result.delegate = SectionDelegate()
   result.controller = section_controller.newController(result, "section", false, events,
-    nil, nil, nil, nil, nil, service, nil, nil, nil, nil, nil, nil)
+    nil, nil, nil, chats, nil, service, nil, nil, nil, nil, nil, nil)
   result.view = section_view.newView(result)
   result.viewVariant = newQVariant(result.view)
   result.threadChatIds = initHashSet[string]()
@@ -285,17 +296,22 @@ suite "thread search result navigation":
       service.onAsyncLoadChatThreadsForChats($(%* {
         "chatIds": ["parent"], "threads": []
       }))
+      check SectionDelegate(section.delegate).notifications == @[("section", false, 0)]
       check section.openCommunityChatAndScrollToMessage("parent", "target", "thread")
       check section.pendingThreadId == "thread"
       check section.pendingThreadMessageId == "target"
       check settings.getSectionLastOpenThread("section") == savedThread
       check section.activated == @["parent"]
+      check SectionDelegate(section.delegate).notifications ==
+        @[("section", false, 0), ("section", false, 0)]
 
       events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
         ThreadDto(chatId: "parent", threadId: "other-thread", parentMessageId: "other-root", name: "Other")
       ]))
       check section.pendingThreadMessageId == "target"
       check content.scrolledTo.len == 0
+      check SectionDelegate(section.delegate).notifications ==
+        @[("section", false, 0), ("section", false, 0), ("section", false, 0)]
 
       events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
         ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root", name: "Thread")
@@ -306,8 +322,50 @@ suite "thread search result navigation":
       check section.pendingThreadId == ""
       check section.pendingThreadMessageId == ""
       check settings.getSectionLastOpenThread("section") == savedThread
+      check SectionDelegate(section.delegate).notifications ==
+        @[("section", false, 0), ("section", false, 0), ("section", false, 0), ("section", false, 0)]
     else:
       skip()
+
+  test "archiving retains selected and panel threads and cached opening respects archive state":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.chatsLoaded = true
+    let content = ContentStub()
+    section.chatContentModules["thread"] = content
+    section.onChatThreadsForChatsLoaded(@[
+      ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root",
+        name: "Thread", archived: true)], @[])
+    let row = section.view.chatsModel().getItemById("thread")
+    require not row.isNil
+    check row.archived
+    section.view.setOpenThread("thread", "Thread", "parent")
+    section.pendingThreadId = "saved-thread"
+    section.pendingThreadParentChatId = "parent"
+    for archived in [false, true, true, false]:
+      section.onChatThreadsForChatsLoaded(@[
+        ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root",
+          name: "Thread", archived: archived)], @[])
+      check row.archived == archived
+      check section.view.chatsModel().getItemById("thread") == row
+      check section.view.chatsModel().rowCount() == 2
+      check section.view.getOpenThreadId() == "thread"
+      check section.chatContentModules["thread"] == content
+      check section.isChatThread("thread")
+      check section.activated.len == 0
+      check not section.panelClosed
+      check section.pendingThreadId == "saved-thread"
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["parent"], "threads": [{"chatId": "parent", "threadId": "cached",
+        "parentMessageId": "cached-root", "name": "Archived", "archived": true}]
+    }))
+    section.openThreadAsChat("parent", "cached", "Archived", "cached-root")
+    check section.view.chatsModel().getItemById("cached").archived
+    section.openThreadAsChat("parent", "cached", "Archived", "cached-root")
+    check section.view.chatsModel().rowCount() == 3
+    check section.view.chatsModel().getItemById("cached").archived
 
   test "a newer parent or cached thread result cancels deferred navigation":
     if THREADS_ENABLED:
@@ -423,3 +481,42 @@ suite "thread search result navigation":
       check section.activated.len == 0
     else:
       skip()
+
+  test "deletion removes navigation rows and redirects an open thread to its parent":
+    if THREADS_ENABLED:
+      privateAccess(section_controller.Controller)
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.view.chatsModel().setData(@[
+        chat_item.ChatItem(id: "parent", name: "Parent", canView: true),
+        chat_item.ChatItem(id: "thread", name: "Thread", isThread: true, parentChatId: "parent")])
+      section.threadChatIds.incl("thread")
+      section.controller.activeItemId = "thread"
+      section.view.setOpenThread("thread", "Thread", "parent")
+      section.onChatThreadsForChatsLoaded(@[ThreadDto(chatId: "parent", threadId: "thread",
+        parentMessageId: "root", deleted: true)], @[])
+      check section.view.chatsModel().getItemById("thread").isNil
+      check not section.view.chatsModel().getItemById("parent").isNil
+      check section.activated == @["parent"]
+      check section.panelClosed
+      check "thread" notin section.threadChatIds
+    else:
+      skip()
+
+  test "deleted threads disappear from search locations and cached destinations":
+    let events = createEventEmitter()
+    let module = search_module.newModule(nil, events, nil, nil, nil, nil)
+    defer: module.delete()
+    module.threadLocationChatId = "parent"
+    module.onThreadLocationsLoaded(@[
+      ThreadDto(chatId: "parent", threadId: "dead", name: "Delete"),
+      ThreadDto(chatId: "parent", threadId: "keep", name: "Keep")], @["parent"])
+    module.controller.addResultItemDetails("deleted-result", "section", "parent", "message", "dead")
+    module.controller.addResultItemDetails("other-result", "section", "parent", "other", "keep")
+    module.onThreadLocationsLoaded(@[ThreadDto(chatId: "parent", threadId: "dead", deleted: true)], @[])
+    check module.view.threadLocationMenuModel().count() == 1
+    check not module.controller.resultItems.hasKey("deleted-result")
+    check module.controller.resultItems.hasKey("other-result")

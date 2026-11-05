@@ -45,6 +45,8 @@ type
     hidden: bool # cached: row hidden by its collapsed category (see recomputeHidden)
     isThread: bool
     parentChatId: string
+    archived: bool
+    followed: bool
 
 # Row is hidden by its collapsed category. Active, unmuted-unread and
 # notification-carrying chats stay visible so the list can surface them.
@@ -94,6 +96,8 @@ proc initChatItem*(
     isThread: bool = false,
     parentChatId: string = "",
     sortTimestamp: int = -1,
+    archived: bool = false,
+    followed: bool = false,
     ): ChatItem =
   result = ChatItem()
   result.id = id
@@ -134,6 +138,8 @@ proc initChatItem*(
   result.recomputeHidden()
   result.isThread = isThread
   result.parentChatId = parentChatId
+  result.archived = archived
+  result.followed = followed
 
 proc `$`*(self: ChatItem): string =
   result = fmt"""chat_section/ChatItem(
@@ -208,6 +214,8 @@ proc toJsonNode*(self: ChatItem): JsonNode =
     "permissionsCheckOngoing": self.permissionsCheckOngoing,
     "isThread": self.isThread,
     "parentChatId": self.parentChatId,
+    "archived": self.archived,
+    "followed": self.followed,
   }
 
 proc delete*(self: ChatItem) =
@@ -215,6 +223,18 @@ proc delete*(self: ChatItem) =
 
 proc id*(self: ChatItem): string =
   self.id
+
+proc archived*(self: ChatItem): bool =
+  self.archived
+
+proc `archived=`*(self: var ChatItem, value: bool) =
+  self.archived = value
+
+proc followed*(self: ChatItem): bool =
+  self.followed
+
+proc `followed=`*(self: var ChatItem, value: bool) =
+  self.followed = value
 
 proc name*(self: ChatItem): string =
   self.name

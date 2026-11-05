@@ -39,6 +39,7 @@ Item {
             ]) {
                 threads.append({
                     key: entry.key, originalMessageId: "parent-" + entry.key,
+                    archived: false,
                     title: entry.title, lastMessageTimestamp: entry.timestamp,
                     messagesCount: 2, notificationCount: 1, participantsCount: 0, participantsModel: participants,
                     lastMessageSenderName: "Alice", lastMessageSenderImage: "",
@@ -135,6 +136,27 @@ Item {
             mouseClick(card, card.width / 2, card.height / 2)
             compare(openSpy.count, 1)
             compare(openSpy.signalArguments[0][0], "older")
+        }
+
+        function test_archivedThreadRemainsDiscoverableAndOpenable() {
+            threads.setProperty(1, "archived", true)
+            panel.requestedTab = ChatInfoPanel.Threads
+            const list = findChild(panel, "chatInfoThreadsList")
+            verify(!!list)
+            tryCompare(list, "count", 2)
+            mouseClick(findChild(panel, "membersSearchButton"))
+            const search = findChild(panel, "chatInfoSearchBox")
+            verify(!!search)
+            search.text = "road"
+            tryCompare(list, "count", 1)
+            tryVerify(() => !!list.itemAtIndex(0))
+            verify(waitForPolish(panel))
+            const card = list.itemAtIndex(0)
+            compare(card.threadId, "newer")
+            mouseClick(card, card.width / 2, card.height / 2)
+            tryCompare(openSpy, "count", 1)
+            compare(openSpy.signalArguments[0][0], "newer")
+            compare(threads.get(1).archived, true)
         }
 
         function test_directMessageAndFeatureFlag() {

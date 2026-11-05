@@ -277,9 +277,17 @@ RowLayout {
             }
             canEdit: messageStore.canEditThread
             pending: messageStore.threadEditPending
+            deletePending: messageStore.threadDeletePending
+            followed: messageStore.threadFollowed
+            onFollowRequested: messageStore.setThreadFollowed(true)
+            onUnfollowRequested: messageStore.setThreadFollowed(false)
+            onDeleteRequested: messageStore.deleteThread()
             onRenameRequested: name => messageStore.editThread(name)
             Connections {
                 target: messageStore.messageModule
+                function onThreadDeleteFinished(error: string) {
+                    selectedThreadHeader.deleteFinished(error)
+                }
                 function onThreadEditFinished(error: string) {
                     selectedThreadHeader.editFinished(error)
                 }

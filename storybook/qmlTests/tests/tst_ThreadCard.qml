@@ -55,6 +55,15 @@ Item {
             clickedSpy.clear()
         }
 
+        function test_deletedThreadCannotBeOpened() {
+            controlUnderTest.threadState = ThreadCard.State.Deleted
+            controlUnderTest.deletedMessage = { sender: { name: "Admin" }, timestamp: Date.now() }
+            mouseClick(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            compare(clickedSpy.count, 0)
+            const body = findChild(controlUnderTest, "threadCardMessagePreview")
+            verify(body.text.includes("deleted this thread"))
+        }
+
         function test_titleDisplaysMarkupLiterally() {
             const name = "<b>Bold</b> & <a href='https://example.com'>link</a>"
             controlUnderTest.title = name

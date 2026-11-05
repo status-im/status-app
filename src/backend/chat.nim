@@ -136,6 +136,15 @@ proc createThread*(chatId: string, parentMessageId: string): RpcResponse[JsonNod
   let payload = %* [chatId, parentMessageId]
   result = callPrivateRPC("createThread".prefix, payload)
 
+proc deleteThread*(chatId, threadId: string): RpcResponse[JsonNode] =
+  callPrivateRPC("deleteThread".prefix, %* [{"chatId": chatId, "threadId": threadId}])
+
+proc followThread*(chatId, threadId: string): RpcResponse[JsonNode] =
+  callPrivateRPC("followThread".prefix, %* [{"chatId": chatId, "threadId": threadId}])
+
+proc unfollowThread*(chatId, threadId: string): RpcResponse[JsonNode] =
+  callPrivateRPC("unfollowThread".prefix, %* [{"chatId": chatId, "threadId": threadId}])
+
 proc editThread*(chatId, threadId, name: string): RpcResponse[JsonNode] =
   callPrivateRPC("editThread".prefix, %* [{
     "chatId": chatId,

@@ -3,6 +3,16 @@ import std/[json, unittest]
 import app_service/service/message/dto/thread
 
 suite "thread dto":
+  test "archive state defaults to false and parses both transitions":
+    check not parseJson("""{"threadId":"legacy"}""").toThreadDto().archived
+    check parseJson("""{"archived":true}""").toThreadDto().archived
+    check not parseJson("""{"archived":false}""").toThreadDto().archived
+
+  test "follow state defaults to false and parses both values":
+    check not parseJson("""{"threadId":"legacy"}""").toThreadDto().followed
+    check parseJson("""{"followed":true}""").toThreadDto().followed
+    check not parseJson("""{"followed":false}""").toThreadDto().followed
+
   test "accepts batch thread data without participant previews":
     let dto = parseJson("""{
       "threadId": "thread-id",
@@ -71,3 +81,11 @@ suite "thread dto":
     check(dto.lastMessage.`from` == "")
     check(dto.lastMessage.text == "")
     check(dto.lastMessage.timestamp == 0)
+
+  test "parses deletion actor and wall-clock timestamp independently of ordering":
+    let dto = (%* {"threadId": "thread", "deleted": true, "deletedBy": "admin",
+      "deletedClock": 200, "deletedAt": 190}).toThreadDto()
+    check dto.deleted
+    check dto.deletedBy == "admin"
+    check dto.deletedClock == 200
+    check dto.deletedAt == 190
