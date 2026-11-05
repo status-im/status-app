@@ -653,6 +653,17 @@ Item {
             verify(!sendModalFooter.error)
             verify(!sendModalFooter.errorTags)
 
+            // the hint follows the route's flag
+            const newRecipientFeeHint = findChild(feesLayout, "newRecipientFeeHint")
+            verify(!!newRecipientFeeHint)
+            verify(!newRecipientFeeHint.visible)
+            controlUnderTest.recipientIsNewAccount = true
+            verify(newRecipientFeeHint.visible)
+            controlUnderTest.routesLoading = true
+            verify(!newRecipientFeeHint.visible, "hidden while the route is being fetched")
+            controlUnderTest.routesLoading = false
+            controlUnderTest.recipientIsNewAccount = false
+
             // clear amount and check if allValuesFilledCorrectly changes
             amountToSend.clear()
             tryCompare(controlUnderTest, "allValuesFilledCorrectly", false)

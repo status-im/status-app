@@ -68,6 +68,16 @@ suite "route path gas estimates":
     check path.estimatedTxGasAmount == 0'u64
     check path.estimatedApprovalGasAmount == 0'u64
 
+suite "new recipient flag":
+
+  test "parsed when set":
+    let path = makePathJson("""
+      "RecipientIsNewAccount": true,""").parseJson.toTransactionPathDtoV2()
+    check path.recipientIsNewAccount
+
+  test "missing (older status-go) means no hint":
+    check not makePathJson("").parseJson.toTransactionPathDtoV2().recipientIsNewAccount
+
 suite "route needs review errors":
 
   test "WT-005 and WT-006 need a review":

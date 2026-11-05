@@ -353,7 +353,12 @@ QtObject {
         }
     }
 
-    function getFeeTextForFeeMode(feeMode) {
+    // Shown next to the fees when the transfer's recipient is new and that raises them
+    function newRecipientFeeHint() {
+        return qsTr("Higher fee: this is a first transfer to this address, and the network charges for creating its account or token balance")
+    }
+
+        function getFeeTextForFeeMode(feeMode) {
         switch(feeMode) {
         case Constants.FeePriorityModeType.Fast:
             return qsTr("Fast")
