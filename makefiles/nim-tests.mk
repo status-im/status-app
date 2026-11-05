@@ -52,13 +52,13 @@ nim-test-run/test/nim/thread_search_test.nim: export FLAG_THREADS_ENABLED := 1
 nim-test-run/test/nim/thread_section_badges_test.nim: export FLAG_THREADS_ENABLED := 1
 
 # The messages module also imports the existing keycard service bindings.
-nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
-nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: | $(STATUSKEYCARD_QT_LIB)
-nim-test-run/test/nim/thread_section_badges_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
-nim-test-run/test/nim/thread_section_badges_test.nim: | $(STATUSKEYCARD_QT_LIB)
+NIM_TESTS_LINK_KEYCARD := thread_navigation_test thread_search_test thread_section_badges_test
+NIM_KEYCARD_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_LINK_KEYCARD))
+$(NIM_KEYCARD_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
+$(NIM_KEYCARD_TARGETS): | $(STATUSKEYCARD_QT_LIB)
 
 ifeq ($(mkspecs),linux)
-nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
+$(NIM_KEYCARD_TARGETS): export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
 endif
 
 nim-test-run/test/nim/qrscan_zxing_errors_test.nim: NIM_PARAMS += -d:qrscanZxingLib="$(abspath $(ZXING))"
@@ -101,12 +101,17 @@ endif
 # Per-test nimcache by default so parallel test builds don't race.
 # NIM_TESTS_SHARED_CACHE=1 shares one cache.
 NIMCACHE_BASE ?= $(or $(WORKSPACE_TMP),build)/nimcache
+# Nim does not invalidate cached C/C++ objects when GCC changes. LTO objects
+# must be compiled and linked with compatible compiler versions.
+ifeq ($(mkspecs),linux)
+ NIM_TEST_CACHE_TOOLCHAIN := -$(shell gcc -dumpmachine)-gcc$(shell gcc -dumpfullversion)-gxx$(shell g++ -dumpfullversion)
+endif
 ifeq ($(NIM_TESTS_SHARED_CACHE),1)
  nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)
 else
  nim_test_cache = $(notdir $(basename $1))
 endif
-nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,$@)
+nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,$@)$(NIM_TEST_CACHE_TOOLCHAIN)
 
 # Windows links the sds/status import libraries by explicit path
 # (NIM_EXTRA_PARAMS); status-go's build can delete an earlier sds.lib, so wait
