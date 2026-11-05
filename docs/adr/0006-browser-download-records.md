@@ -21,6 +21,10 @@ Accepted
   Backend echoes, so it reattaches to the armed Record by identity; the desktop
   re-issue is viewless — the profile, not a Tab, owns the Backend — while mobile
   still needs a live Tab, and neither a Retained View nor a local preview is one)
+- **Amended**: 2026-11-04 — §8 (a Preview Tab reads through a per-file Read
+  Grant instead of fixed directories, so a file the OS hands in through "Open
+  with" opens wherever it lives; in place where the platform allows, a private
+  copy otherwise; the guard holds on every Backend, Android included)
 - **Owners**: Status Desktop (browser)
 
 ## Context
@@ -219,6 +223,19 @@ library's Download object is a transient attachment to it.**
    downloaded file meant leaving a filesystem door open to every site the user
    visits, and closing it meant not opening the file. The isolation is one flag on
    the params, so a preview Tab's params can never seed a browsing Tab.
+
+   **A preview Tab reads one file, not a directory.** An Opened File — one the OS
+   hands in through "Open with" — lives anywhere: a USB stick, a Flatpak document
+   portal path, an iCloud folder, an Android `content://` URI. Widening the
+   preview profile to each such place would make it a filesystem door again, and
+   copying everything into the downloads directory would duplicate large media and
+   leave the copies to clean up. So the preview profile holds no fixed roots of its
+   own beyond the ones the browser writes; each preview Tab is given a Read Grant
+   for exactly the file it shows. Desktop grants the original in place. Mobile
+   grants in place where the platform lets the web content read the original, and
+   only otherwise copies it into private storage and grants the copy, which goes
+   with the Tab. The guard is the Backend's on every platform: Android's WebView,
+   which allowed `file://` in every Tab, enforces it too.
 
    The corollary: **state the Backend cannot report must not gate UI.** The seam
    can open and close the native find panel but is never told when the user
