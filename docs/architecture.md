@@ -86,3 +86,24 @@ classDiagram
   WalletSection *-- SavedAddresses
   WalletSection *-- SendModule
 ```
+
+### Local message reads
+
+The shared Nim `ThreadPool.start` dispatcher also runs synchronous network RPCs.
+Message pages (including thread history), pinned messages, reactions, message
+lookups, search, thread lists/summaries, and first-unseen-message reads use
+`ThreadPool.startLocalRead` instead. It owns a lazily started native worker with
+a FIFO queue, so exhausted network workers cannot prevent local history from
+loading. Completion delivery still uses the existing queued Qt signals.
+
+Submit tasks from the GUI thread. Only local, read-only operations belong on
+this worker; do not enqueue network requests or mutations that can sync with
+peers. Teardown drains accepted reads and joins the worker before sweeping
+typed completions. A second `taskpools.Taskpool` on the GUI thread is not an
+equivalent implementation: taskpools uses a thread-local submitting-worker
+context that would be replaced by the second pool.
+
+The contacts service also coalesces concurrent profile-information requests by
+public key. All callers share the existing keyed completion event; success or
+failure releases the key so a later request can refresh or retry. This avoids
+occupying multiple general workers waiting for the same store-node lookup.

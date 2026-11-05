@@ -485,7 +485,7 @@ QtObject:
       limit: if(limit <= MESSAGES_PER_PAGE_MAX): limit else: MESSAGES_PER_PAGE_MAX
     )
 
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
     return true
 
   proc asyncLoadChatThreadsForChats*(self: Service, chatIds: seq[string]) =
@@ -503,7 +503,7 @@ QtObject:
       chatRevisions: revisions,
     )
 
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
 
   proc asyncLoadChatThreadSummaries*(self: Service, chatId: string) =
     if not THREADS_ENABLED or chatId.len == 0 or chatId in self.chatThreadSummariesLoadingChats:
@@ -516,7 +516,7 @@ QtObject:
         ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: @[chatId], summariesLoaded: true))
       return
     self.chatThreadSummariesLoadingChats.incl(chatId)
-    self.threadpool.start(AsyncFetchChatThreadsForChatsTaskArg(
+    self.threadpool.startLocalRead(AsyncFetchChatThreadsForChatsTaskArg(
       tptr: asyncFetchChatThreadsForChatsTask,
       vptr: cast[uint](self.vptr),
       slot: "onAsyncLoadChatThreadsForChats",
@@ -552,7 +552,7 @@ QtObject:
       limit: if(limit <= MESSAGES_PER_PAGE_MAX): limit else: MESSAGES_PER_PAGE_MAX,
     )
 
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
     return true
 
   proc asyncEditThread*(self: Service, chatId, threadId, name, requestId: string) =
@@ -632,7 +632,7 @@ QtObject:
       messageId: messageId
     )
 
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
 
   proc asyncLoadPinnedMessagesForChat*(self: Service, chatId: string) =
     if (chatId.len == 0):
@@ -655,7 +655,7 @@ QtObject:
       limit: MESSAGES_PER_PAGE_MAX
     )
 
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
 
   proc asyncLoadInitialMessagesForChat*(self: Service, chatId: string) =
     if self.isChatCursorInitialized(chatId):
@@ -1463,7 +1463,7 @@ QtObject:
       requestId: $requestId,
       messageId: messageId,
     )
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
     return requestId
 
   proc onAsyncSearchMessages*(self: Service, response: string) {.slot.} =
@@ -1518,7 +1518,7 @@ QtObject:
       searchTerm: searchTerm,
       caseSensitive: caseSensitive
     )
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
 
   proc asyncSearchMessages*(self: Service, communityIds: seq[string], chatIds: seq[string], searchTerm: string,
     caseSensitive: bool, threadId: string = "", requestId: string = "") =
@@ -1548,7 +1548,7 @@ QtObject:
       requestId: requestId,
       caseSensitive: caseSensitive
     )
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
 
   proc onMarkAllMessagesRead*(self: Service, response: string) {.slot.} =
     try:
@@ -1688,7 +1688,7 @@ QtObject:
       chatId: chatId,
     )
 
-    self.threadpool.start(arg)
+    self.threadpool.startLocalRead(arg)
 
   proc onGetFirstUnseenMessageIdFor*(self: Service, response: string) {.slot.} =
     try:
