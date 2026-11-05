@@ -4,6 +4,7 @@ import QtTest
 import StatusQ.Internal
 
 import AppLayouts.Browser.adapters
+import AppLayouts.Browser.webview
 
 /**
  * The open-a-downloaded-file seam (ADR 0006 §8): render/media allowlist and
@@ -14,8 +15,11 @@ import AppLayouts.Browser.adapters
 Item {
     id: root
 
-    readonly property url openContextUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/webview/BrowserDownloadOpenContext.qml")
+    Component {
+        id: openContextComponent
+
+        BrowserDownloadOpenContext {}
+    }
 
     TestCase {
         name: "BrowserDownloadOpenContext"
@@ -29,9 +33,7 @@ Item {
             openedUrls = []
             openedFileUrls = []
             openedPaths = []
-            const component = Qt.createComponent(root.openContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root)
+            const ctx = createTemporaryObject(openContextComponent, root)
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
@@ -329,9 +331,7 @@ Item {
 
         /// The Capability is a Backend fact, not a platform check.
         function test_mediaPlayerPageRequired_defaultsToTheBackendCapability() {
-            const component = Qt.createComponent(root.openContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root)
+            const ctx = createTemporaryObject(openContextComponent, root)
             compare(ctx.mediaPlayerPageRequired,
                     BrowserBackendCapabilities.mediaPlayerPageRequired)
         }

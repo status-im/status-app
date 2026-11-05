@@ -16,8 +16,11 @@ Item {
     width: 400
     height: 400
 
-    readonly property url downloadsContextUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/webview/BrowserDownloadsContext.qml")
+    Component {
+        id: downloadsContextComponent
+
+        BrowserDownloadsContext {}
+    }
 
     Component {
         id: mockStoreComponent
@@ -231,9 +234,7 @@ Item {
             openedUrls = []
             openedFileUrls = []
             supportsPdf = false
-            const component = Qt.createComponent(root.downloadsContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root, {
+            const ctx = createTemporaryObject(downloadsContextComponent, root, {
                 downloadsStore: store,
                 downloadUrlFn: function(wantOtr, url, fileName, token) {
                     reissues.push({ wantOtr: !!wantOtr, url: String(url),

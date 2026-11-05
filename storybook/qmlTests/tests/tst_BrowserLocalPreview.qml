@@ -19,8 +19,11 @@ Item {
     width: 400
     height: 400
 
-    readonly property url profileManagerUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/adapters/ProfileManager.qml")
+    Component {
+        id: profileManagerComponent
+
+        ProfileManager {}
+    }
 
     Component {
         id: hostStackComponent
@@ -136,9 +139,7 @@ Item {
         when: windowShown
 
         function createProfileManager() {
-            const component = Qt.createComponent(root.profileManagerUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            return createTemporaryObject(component, root)
+            return createTemporaryObject(profileManagerComponent, root)
         }
 
         /// Params for one profile kind: browsing, incognito, or local preview.
