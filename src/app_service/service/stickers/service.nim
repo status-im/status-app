@@ -161,8 +161,9 @@ QtObject:
         return
       # nil when building or sending failed
       let txHash = if args.sentTransaction.isNil: "" else: args.sentTransaction.hash
-      self.marketStickerPacks[$args.sendDetails.packId].status = StickerPackStatus.Pending
-      self.marketStickerPacks[$args.sendDetails.packId].txHash = txHash
+      if args.sendDetails.errorResponse.isNil:
+        self.marketStickerPacks[$args.sendDetails.packId].status = StickerPackStatus.Pending
+        self.marketStickerPacks[$args.sendDetails.packId].txHash = txHash
       let data = StickerBuyResultArgs(
         chainId: args.sendDetails.fromChain,
         packId: args.sendDetails.packId,
