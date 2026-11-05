@@ -309,6 +309,10 @@ proc init*(self: Controller) =
     let args = ExternalUrlIntakeArgs(e)
     self.delegate.openUrlInNewBrowserTab(args.url)
 
+  self.events.on(SIGNAL_EXTERNAL_FILE_INTAKE) do(e: Args):
+    let args = ExternalFileIntakeArgs(e)
+    self.delegate.openFileInBrowserTab(args.fileUrl, args.refused)
+
   self.events.on(SIGNAL_EXTERNAL_SHARE_INTAKE) do(e: Args):
     let args = ExternalShareIntakeArgs(e)
     self.delegate.launchShareFlow(args.text, args.imagePaths)

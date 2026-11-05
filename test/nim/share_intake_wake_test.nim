@@ -343,3 +343,19 @@ suite "share_intake_wake":
     drainEvents()
 
     check browserTabUrls == @["https://share-intake"]
+
+  test "a file url keeps its spaces and opens as a file, not a deep link":
+    var openedFiles: seq[string] = @[]
+    var deepLinks: seq[string] = @[]
+    events.on(SIGNAL_EXTERNAL_FILE_INTAKE) do(e: Args):
+      openedFiles.add(ExternalFileIntakeArgs(e).fileUrl)
+    events.on(SIGNAL_STATUS_URL_ACTIVATED) do(e: Args):
+      deepLinks.add(StatusUrlArgs(e).url)
+    manager.appReady()
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr,
+      "file:///Users/me/My Docs/a b.pdf".cstring)
+    drainEvents()
+
+    check openedFiles == @["file:///Users/me/My Docs/a b.pdf"]
+    check deepLinks.len == 0

@@ -444,6 +444,10 @@ QtObject:
   proc emitOpenUrlInNewBrowserTabSignal*(self: View, url: string) =
     self.openUrlInNewBrowserTab(url)
 
+  proc openFileInBrowserTab*(self: View, fileUrl: string, refused: bool) {.signal.}
+  proc emitOpenFileInBrowserTabSignal*(self: View, fileUrl: string, refused: bool) =
+    self.openFileInBrowserTab(fileUrl, refused)
+
   proc launchShareFlow*(self: View, text: string, imagePathsJson: string) {.signal.}
   proc emitLaunchShareFlowSignal*(self: View, text: string, imagePathsJson: string) =
     self.launchShareFlow(text, imagePathsJson)

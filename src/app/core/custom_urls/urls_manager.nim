@@ -1,3 +1,4 @@
+import std/os
 import nimqml, strutils, json, chronicles
 import ./url_scheme_event
 import app/global/single_instance
@@ -103,6 +104,12 @@ QtObject:
       self.consumePendingIntake()
       return
 
+    if isOpenedFileUrl(urlRaw):
+      # A path may hold spaces; only the single-instance line ending goes.
+      self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeFile,
+        fileUrl: urlRaw.strip(leading = false, chars = {'\r', '\n'})))
+      return
+
     let url = urlRaw.multiReplace((" ", ""))
       .multiReplace(("\r\n", ""))
       .multiReplace(("\n", ""))
@@ -159,6 +166,17 @@ QtObject:
     result.intake.onShare = proc(text: string, imagePaths: seq[string]) =
       self.events.emit(SIGNAL_EXTERNAL_SHARE_INTAKE,
         ExternalShareIntakeArgs(text: text, imagePaths: imagePaths))
+    result.intake.onOpenedFile = proc(fileUrl: string) =
+      self.events.emit(SIGNAL_EXTERNAL_FILE_INTAKE,
+        ExternalFileIntakeArgs(fileUrl: fileUrl))
+    result.intake.onOpenedFileRefused = proc(fileUrl: string) =
+      self.events.emit(SIGNAL_EXTERNAL_FILE_INTAKE,
+        ExternalFileIntakeArgs(fileUrl: fileUrl, refused: true))
+    result.intake.onOpenedFileCopyDiscarded = proc(fileUrl: string) =
+      try:
+        removeFile(openedFilePath(fileUrl))
+      except OSError:
+        warn "an opened file copy could not be deleted"
     result.intake.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
       # A pending share was replaced last-wins before delivery: its cached
       # image copies are unreferenced now and must not accumulate.
