@@ -119,3 +119,55 @@ suite "thread edit metadata handling":
     check completions[0].error.len > 0
     check completions[1].error.len > 0
     check updates.len == 0
+
+  test "revisioned mute and unmute events update only the matching thread":
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root", name: "Thread"),
+      ThreadDto(threadId: "sibling", chatId: "chat", parentMessageId: "other", name: "Other"),
+    ]))
+    for revision, muted in [true, false]:
+      events.emit(SignalType.Message.event, MessageSignal(threads: @[
+        ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root",
+          name: "Thread", muted: muted, muteRevision: (revision + 1).int64),
+      ]))
+      service.onAsyncThreadMute($ %* {"chatId": "chat", "threadId": "thread", "error": ""})
+      check service.getThreadById("chat", "thread").muted == muted
+      check not service.getThreadById("chat", "sibling").muted
+      check updates[^1].threads[0].muted == muted
+
+  test "delayed expiration and snapshots cannot undo a newer mute":
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root",
+        name: "Thread", muted: true, muteTill: 1793900000000'i64, muteRevision: 2),
+    ]))
+    for revision in [1'i64, 0'i64]:
+      events.emit(SignalType.Message.event, MessageSignal(threads: @[
+        ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root",
+          name: "Updated name", muted: false, muteRevision: revision),
+      ]))
+      let thread = service.getThreadById("chat", "thread")
+      check thread.muted
+      check thread.muteTill == 1793900000000'i64
+      check thread.muteRevision == 2
+      check thread.name == "Updated name"
+      check updates[^1].threads[0].muted
+
+  test "late mute completion cannot overwrite an expiration event":
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root",
+        muted: false, muteRevision: 3),
+    ]))
+    service.onAsyncThreadMute($ %* {
+      "chatId": "chat", "threadId": "thread", "error": "",
+      "muted": true, "muteTill": "0001-01-01T00:00:00Z",
+    })
+    check not service.getThreadById("chat", "thread").muted
+    check updates.len == 1
+
+  test "failed mute completion leaves cached state unchanged":
+    events.emit(SignalType.Message.event, MessageSignal(threads: @[
+      ThreadDto(threadId: "thread", chatId: "chat", parentMessageId: "root", muted: true),
+    ]))
+    service.onAsyncThreadMute($ %* {"chatId": "chat", "threadId": "thread", "error": "RPC failure"})
+    check service.getThreadById("chat", "thread").muted
+    check updates.len == 1

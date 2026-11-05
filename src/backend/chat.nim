@@ -152,17 +152,18 @@ proc fetchThreadSummaries*(chatId: string, parentMessageIds: seq[string],
   let payload = %* [chatId, parentMessageIds, participantsPreviewLimit]
   result = callPrivateRPC("chatThreadSummariesByParentMessageIDs".prefix, payload)
 
-proc muteChat*(chatId: string, interval: int): RpcResponse[JsonNode] =
-  result = callPrivateRPC("muteChatV2".prefix, %* [
-    {
-      "chatId": chatId,
-      "mutedType": interval,
-    }
-  ])
+proc muteChat*(chatId: string, interval: int, threadId: string = ""): RpcResponse[JsonNode] =
+  var request = %* {"chatId": chatId, "mutedType": interval}
+  if threadId.len > 0:
+    request["threadId"] = %threadId
+  result = callPrivateRPC("muteChatV2".prefix, %* [request])
 
 proc unmuteChat*(chatId: string): RpcResponse[JsonNode] =
   let payload = %* [chatId]
   result = callPrivateRPC("unmuteChat".prefix, payload)
+
+proc unmuteThread*(chatId, threadId: string): RpcResponse[JsonNode] =
+  callPrivateRPC("unmuteThread".prefix, %* [chatId, threadId])
 
 proc deleteMessagesByChatId*(chatId: string): RpcResponse[JsonNode] =
   let payload = %* [chatId]

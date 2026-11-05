@@ -58,16 +58,70 @@ Item {
                 property string threadParentChatName: "Parent chat"
                 property bool canEditThread: true
                 property bool threadEditPending: false
+                property bool threadMuted: false
+                property real threadMuteTill: 0
+                property int requestedMuteInterval: -1
                 property var model: null
                 property string requestedName
                 property string parentChatId: "parent-chat"
                 signal threadEditFinished(string error)
                 function getChatId() { return parentChatId }
                 function editThread(name) { requestedName = name }
+                function setThreadMuted(interval) { requestedMuteInterval = interval }
             }
         }
 
-        function test_editNameOpensEditorInThreadPanel_data() {
+        function verifyThreadMuteMenu(menu, messages) {
+            const canEdit = messages.canEditThread
+            messages.canEditThread = false
+            messages.threadMuted = false
+            messages.requestedMuteInterval = -1
+            compare(menu.muteEnabled, true)
+            compare(menu.editEnabled, false)
+            tryCompare(menu, "muted", false)
+            const muteAction = findChild(menu, "threadContextMenu_muteThread")
+            const unmuteAction = findChild(menu, "threadContextMenu_unmuteThread")
+            verify(!!muteAction)
+            verify(!!unmuteAction)
+            compare(muteAction.enabled, true)
+            compare(unmuteAction.enabled, false)
+            muteAction.muteTriggered(Constants.MutingVariations.For24hr)
+            compare(messages.requestedMuteInterval, Constants.MutingVariations.For24hr)
+            compare(menu.muted, false)
+
+            messages.threadMuted = true
+            tryCompare(menu, "muted", true)
+            compare(muteAction.enabled, false)
+            compare(unmuteAction.enabled, true)
+            unmuteAction.trigger()
+            compare(messages.requestedMuteInterval, Constants.MutingVariations.Unmuted)
+            compare(menu.muted, true)
+
+            messages.threadMuted = false
+            tryCompare(menu, "muted", false)
+            messages.canEditThread = canEdit
+        }
+
+        function test_centralHeaderMuteUsesCurrentThreadModule() {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            tryVerify(() => loader.status === Loader.Ready, 120000)
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
+            const messages = view.chatContentModule.messagesModule
+            messages.threadId = "mute-thread"
+            let header
+            tryVerify(() => {
+                header = harness.findChildByTypePrefix(view.headerContent, "ThreadHeader")
+                return !!header
+            })
+            findChild(header, "threadHeaderMenuButton").clicked()
+            const menu = findChild(header, "threadHeaderContextMenu")
+            tryCompare(menu, "opened", true)
+            verifyThreadMuteMenu(menu, messages)
+            menu.close()
+        }
+
+        function test_threadMenusWireRenameAndMute_data() {
             return [
                 {tag: "central desktop", portrait: false, fromList: false},
                 {tag: "central portrait", portrait: true, fromList: false},
@@ -76,7 +130,7 @@ Item {
             ]
         }
 
-        function test_editNameOpensEditorInThreadPanel(data) {
+        function test_threadMenusWireRenameAndMute(data) {
             harness.loader.active = true
             const loader = harness.loader.item
             tryVerify(() => loader.status === Loader.Ready, 120000)
@@ -127,6 +181,8 @@ Item {
                 menu = findChild(centralHeader, "threadHeaderContextMenu")
             }
             tryCompare(menu, "opened", true)
+            if (data.fromList)
+                verifyThreadMuteMenu(menu, messages)
             compare(menu.actionAt(0).objectName, "threadContextMenu_editName")
             verify(menu.actionAt(0).enabled)
             menu.actionAt(0).trigger()
@@ -161,6 +217,7 @@ Item {
             findChild(panelHeader, "threadHeaderMenuButton").clicked()
             const panelMenu = findChild(panelHeader, "threadHeaderContextMenu")
             tryCompare(panelMenu, "opened", true)
+            verifyThreadMuteMenu(panelMenu, messages)
             panelMenu.actionAt(0).trigger()
             panelMenu.close()
             tryCompare(panelHeader, "editing", true)

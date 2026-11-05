@@ -17,6 +17,8 @@ QtObject:
       threadsError: bool
       threadId: string
       threadName: string
+      threadMuted: bool
+      threadMuteTill: int64
       threadParentChatName: string
       canEditThread: bool
       threadEditPending: bool
@@ -202,6 +204,29 @@ QtObject:
   proc threadEditFinished*(self: View, error: string) {.signal.}
   proc emitThreadEditFinished*(self: View, error: string) =
     self.threadEditFinished(error)
+
+  proc threadMuteChanged*(self: View) {.signal.}
+  proc getThreadMuted(self: View): bool {.slot.} =
+    self.threadMuted
+  QtProperty[bool] threadMuted:
+    read = getThreadMuted
+    notify = threadMuteChanged
+
+  proc getThreadMuteTill(self: View): float {.slot.} =
+    self.threadMuteTill.float
+  QtProperty[float] threadMuteTill:
+    read = getThreadMuteTill
+    notify = threadMuteChanged
+
+  proc setThreadMute*(self: View, muted: bool, till: int64) =
+    if self.threadMuted == muted and self.threadMuteTill == till:
+      return
+    self.threadMuted = muted
+    self.threadMuteTill = till
+    self.threadMuteChanged()
+
+  proc setThreadMuted*(self: View, interval: int) {.slot.} =
+    self.delegate.setThreadMuted(interval)
 
   proc editThread*(self: View, name: string) {.slot.} =
     self.delegate.editThread(name)

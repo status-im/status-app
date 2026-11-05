@@ -1738,6 +1738,11 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
     if self.chatContentModules.contains(displayChatId):
       self.chatContentModules[displayChatId].onNotificationsUpdated(unviewedMessagesCount > 0, unviewedMentionsCount)
 
+  # Keep unread state up to date, but suppress desktop notifications and their sound.
+  if THREADS_ENABLED and message.threadId.len > 0 and
+      self.messageService.getThreadById(chatIdMsgBelongsTo, message.threadId).muted:
+    return
+
   # Prepare notification
   var notificationType = notification_details.NotificationType.NewMessage
   if message.isPersonalMention(myPK):
