@@ -29,14 +29,15 @@ import "DownloadFormatUtils.js" as DownloadFormatUtils
 QtObject {
     id: root
 
-    /// Opens a URL in the browser; injected by the owner.
-    property var openUrlFn: function(url) {
+    /// Opens a URL in the browser; injected by the owner. openedFilePath names
+    /// the Opened File the Tab shows, "" for a Download.
+    property var openUrlFn: function(url, openedFilePath) {
         console.warn("BrowserDownloadOpenContext: openUrlFn not set")
     }
 
     /// Opens a local file with a read grant for it or a directory (AbstractWebView
     /// loadFileUrl); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl) {
+    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath) {
         console.warn("BrowserDownloadOpenContext: openFileUrlFn not set")
     }
 
@@ -219,10 +220,10 @@ QtObject {
             const page = mediaPlayerPageUrl(record)
             if (!page)
                 return false
-            root.openUrlFn(page)
+            root.openUrlFn(page, path)
             return true
         }
-        root.openFileUrlFn(fileUrl, fileUrl)
+        root.openFileUrlFn(fileUrl, fileUrl, path)
         return true
     }
 

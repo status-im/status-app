@@ -2823,6 +2823,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Rechercher dans la page</translation>
     </message>
     <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">Copier le chemin du fichier</translation>
+    </message>
+    <message>
         <source>Developer Tools</source>
         <translation>Outils de développement</translation>
     </message>
@@ -12124,6 +12128,10 @@ chargement</translation>
     <message>
         <source>Find in page</source>
         <translation>Rechercher dans la page</translation>
+    </message>
+    <message>
+        <source>Share file</source>
+        <translation type="unfinished">Partager le fichier</translation>
     </message>
     <message>
         <source>Zoom</source>

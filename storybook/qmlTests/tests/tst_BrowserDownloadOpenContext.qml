@@ -23,19 +23,26 @@ Item {
 
         property var openedUrls: []
         property var openedFileUrls: []
+        property var openedPaths: []
 
         function createContext() {
             openedUrls = []
             openedFileUrls = []
+            openedPaths = []
             const component = Qt.createComponent(root.openContextUrl)
             verify(component.status === Component.Ready, component.errorString())
             const ctx = createTemporaryObject(component, root)
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
-            ctx.openUrlFn = (url) => openedUrls.push(String(url))
-            ctx.openFileUrlFn = (fileUrl, readAccessUrl) => openedFileUrls.push(
-                { url: String(fileUrl), readAccess: String(readAccessUrl || "") })
+            ctx.openUrlFn = (url, openedFilePath) => {
+                openedUrls.push(String(url))
+                openedPaths.push(openedFilePath || "")
+            }
+            ctx.openFileUrlFn = (fileUrl, readAccessUrl, openedFilePath) => {
+                openedFileUrls.push({ url: String(fileUrl), readAccess: String(readAccessUrl || "") })
+                openedPaths.push(openedFilePath || "")
+            }
             // The player page is what the desktop Backend needs; tests that
             // exercise the direct route flip this Capability themselves.
             ctx.mediaPlayerPageRequired = true
@@ -274,6 +281,7 @@ Item {
             verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
             compare(openedUrls.length, 2)
             verify(openedUrls[1].indexOf("photo.png") >= 0)
+            compare(openedPaths, ["", ""], "a Download's Tab is no Opened File")
 
             // Not renderable here → false: the caller hands off to the OS.
             verify(!ctx.openInBrowser(completed("application/octet-stream", "a.bin"), true))
@@ -343,6 +351,7 @@ Item {
             compare(openedFileUrls.length, 1)
             compare(openedFileUrls[0].url, "file:///Users/me/My Docs/a b.txt")
             compare(openedFileUrls[0].readAccess, "file:///Users/me/My Docs/a b.txt")
+            compare(openedPaths, ["/Users/me/My Docs/a b.txt"])
             compare(openedUrls.length, 0)
         }
 
@@ -368,6 +377,7 @@ Item {
             verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
             compare(openedUrls.length, 1)
             verify(openedUrls[0].indexOf("/tmp/status-player/") >= 0, openedUrls[0])
+            compare(openedPaths, ["/Users/me/song.mp3"])
             compare(openedFileUrls.length, 0)
 
             ctx.mediaPlayerPageRequired = false

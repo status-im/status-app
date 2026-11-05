@@ -429,7 +429,13 @@ QtObject {
     function shareFile(record) {
         if (!canShareFile(record))
             return false
-        const path = record.targetPath
+        return sharePath(record.targetPath)
+    }
+
+    /// Same share-vs-copy policy for a local file (an Opened File's Tab).
+    function sharePath(path) {
+        if (!path)
+            return false
         if (root.platform.preferShareSheet) {
             if (root.platform.sharePaths)
                 root.platform.sharePaths([path])

@@ -2807,6 +2807,10 @@ Do you wish to override the security check and continue?</source>
         <translation>페이지에서 찾기</translation>
     </message>
     <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">파일 경로 복사</translation>
+    </message>
+    <message>
         <source>Developer Tools</source>
         <translation>개발자 도구</translation>
     </message>
@@ -12067,6 +12071,10 @@ to load</source>
     <message>
         <source>Find in page</source>
         <translation>페이지에서 찾기</translation>
+    </message>
+    <message>
+        <source>Share file</source>
+        <translation type="unfinished">파일 공유</translation>
     </message>
     <message>
         <source>Zoom</source>

@@ -2836,6 +2836,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Najít na stránce</translation>
     </message>
     <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">Kopírovat cestu k souboru</translation>
+    </message>
+    <message>
         <source>Developer Tools</source>
         <translation>Vývojářské nástroje</translation>
     </message>
@@ -12193,6 +12197,10 @@ selhalo</translation>
     <message>
         <source>Find in page</source>
         <translation>Najít na stránce</translation>
+    </message>
+    <message>
+        <source>Share file</source>
+        <translation type="unfinished">Sdílet soubor</translation>
     </message>
     <message>
         <source>Zoom</source>

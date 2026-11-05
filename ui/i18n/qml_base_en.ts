@@ -2822,6 +2822,10 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Copy file path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Developer Tools</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12112,6 +12116,10 @@ to load</source>
     </message>
     <message>
         <source>Find in page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Share file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
