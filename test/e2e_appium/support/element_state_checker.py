@@ -31,8 +31,15 @@ class ElementStateChecker:
 
     @staticmethod
     def is_checked(element) -> bool:
+        # XCUITest has no "checked"; switches report their state in "value" ("1"/"0").
         try:
-            return str(element.get_attribute("checked")).lower() == "true"
+            checked = str(element.get_attribute("checked")).lower()
+            if checked in ("true", "false"):
+                return checked == "true"
+        except Exception:
+            pass
+        try:
+            return str(element.get_attribute("value")).lower() in ("1", "true")
         except Exception:
             return False
 
