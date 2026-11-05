@@ -788,6 +788,7 @@ StatusSectionLayout {
         id: openFailedPageComponent
         OpenFailedPage {
             fileName: DownloadFormatUtils.fileNameOf(_internal.currentWebView?.openedFilePath ?? "")
+            onSupportedFormatsRequested: _internal.openSupportedFormats()
         }
     }
 

@@ -12916,6 +12916,10 @@ chargement</translation>
         <source>Couldn&apos;t open the file</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>View supported formats</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>OpenLinksInView</name>

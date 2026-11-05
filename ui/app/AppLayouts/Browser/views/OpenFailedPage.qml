@@ -3,12 +3,15 @@ import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Controls
 
 /// Shown in place of a Web View whose Opened File could not be shown.
 Rectangle {
     id: root
 
     property string fileName
+
+    signal supportedFormatsRequested()
 
     color: Theme.palette.background
 
@@ -47,6 +50,15 @@ Rectangle {
             font.pixelSize: Theme.additionalTextSize
             color: Theme.palette.baseColor1
             text: root.fileName
+        }
+
+        StatusLinkText {
+            objectName: "openFailedFormatsLink"
+            Layout.alignment: Qt.AlignHCenter
+            font.pixelSize: Theme.primaryTextFontSize
+            normalColor: linkColor
+            text: qsTr("View supported formats")
+            onClicked: root.supportedFormatsRequested()
         }
     }
 }
