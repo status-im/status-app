@@ -423,6 +423,11 @@ QString resolveIOSPhotoAsset(const QUrl &assetUrl) {
 static int g_keyboardHeight = 0;
 static bool g_keyboardVisible = false;
 static UIView *g_rootView = nil;
+static IOSKeyboardCallback g_keyboardCallback = nullptr;
+
+void setIOSKeyboardCallback(IOSKeyboardCallback callback) {
+    g_keyboardCallback = callback;
+}
 
 void setupIOSKeyboardTracking() {
     @autoreleasepool {
@@ -520,6 +525,8 @@ void setupIOSKeyboardTracking() {
             
             g_keyboardVisible = true;
             NSLog(@"[iOS Keyboard] Final keyboard height (in pixels): %d", g_keyboardHeight);
+            if (g_keyboardCallback)
+                g_keyboardCallback(g_keyboardHeight, g_keyboardVisible);
             
             // Reset transform immediately in the same run loop to prevent flash
             // This runs before Qt's scrollToCursor animation begins
@@ -583,6 +590,8 @@ void setupIOSKeyboardTracking() {
             g_keyboardHeight = 0;
             g_keyboardVisible = false;
             NSLog(@"[iOS Keyboard] Keyboard will hide");
+            if (g_keyboardCallback)
+                g_keyboardCallback(g_keyboardHeight, g_keyboardVisible);
             
             // Reset transform when keyboard hides
             if (g_rootView) {
@@ -594,14 +603,6 @@ void setupIOSKeyboardTracking() {
             }
         }];
     }
-}
-
-int getIOSKeyboardHeight() {
-    return g_keyboardHeight;
-}
-
-bool isIOSKeyboardVisible() {
-    return g_keyboardVisible;
 }
 
 // -----------------------------------------------------------------------------

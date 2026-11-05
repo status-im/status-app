@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -14,44 +15,47 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class KeyboardUtil {
-    // Cached keyboard state (updated by WindowInsets listener)
-    private static final AtomicInteger cachedKeyboardHeight = new AtomicInteger(0);
-    private static boolean isListenerSetup = false;
-    
-    // Call this from Qt via JNI: KeyboardUtil.getKeyboardHeight(Activity)
-    // Returns the current keyboard height in pixels, or 0 if keyboard is hidden
-    public static int getKeyboardHeight(Activity activity) {
-        setupListenerIfNeeded(activity);
-        return cachedKeyboardHeight.get();
-    }
-    
-    // Call this from Qt via JNI: KeyboardUtil.isKeyboardVisible(Activity)
-    // Returns true if keyboard is currently visible, false otherwise
-    public static boolean isKeyboardVisible(Activity activity) {
-        return getKeyboardHeight(activity) > 0;
-    }
-    
-    // Setup WindowInsets listener once to cache keyboard state
-    private static void setupListenerIfNeeded(Activity activity) {
-        if (isListenerSetup || activity == null) return;
-        
-        Window window = activity.getWindow();
-        if (window == null) return;
-        
-        View decorView = window.getDecorView();
-        ViewCompat.setOnApplyWindowInsetsListener(decorView, (view, windowInsets) -> {
-            // Get IME (keyboard) insets and cache the height
-            Insets imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime());
-            cachedKeyboardHeight.set(imeInsets.bottom);
-            
-            // Return insets unchanged so other listeners still work
-            return windowInsets;
+    private static final String TAG = "StatusKeyboardUtil";
+    private static boolean started = false;
+    private static int lastKeyboardHeight = 0;
+
+    public static void start(Activity activity) {
+        if (activity == null) return;
+
+        activity.runOnUiThread(() -> {
+            if (started) {
+                pushKeyboardHeight(lastKeyboardHeight);
+                return;
+            }
+
+            Window window = activity.getWindow();
+            if (window == null) return;
+
+            View decorView = window.getDecorView();
+            ViewCompat.setOnApplyWindowInsetsListener(decorView, (view, windowInsets) -> {
+                Insets imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime());
+                if (imeInsets.bottom != lastKeyboardHeight) {
+                    lastKeyboardHeight = imeInsets.bottom;
+                    pushKeyboardHeight(lastKeyboardHeight);
+                }
+
+                // Return insets unchanged so other listeners still work
+                return windowInsets;
+            });
+            started = true;
+            pushKeyboardHeight(lastKeyboardHeight);
+            ViewCompat.requestApplyInsets(decorView);
         });
-        
-        isListenerSetup = true;
+    }
+
+    private static void pushKeyboardHeight(int height) {
+        try {
+            nativeOnKeyboardHeightChanged(height);
+        } catch (UnsatisfiedLinkError e) {
+            Log.w(TAG, "nativeOnKeyboardHeightChanged not yet registered", e);
+        }
     }
 
     // Force a keyboard show request. This helps on Android 16 when Qt misses the first request.
@@ -111,4 +115,6 @@ public class KeyboardUtil {
             }, 100);
         }
     }
+
+    private static native void nativeOnKeyboardHeightChanged(int height);
 }
