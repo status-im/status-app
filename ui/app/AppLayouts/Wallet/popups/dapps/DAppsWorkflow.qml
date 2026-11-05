@@ -423,7 +423,8 @@ SQUtils.QObject {
             enoughFundsForTransaction: request.haveEnoughFunds
             enoughFundsForFees: request.haveEnoughFees
 
-            signButtonEnabled: ((!hasFees) || enoughFundsForTransaction && enoughFundsForFees) && root.enabled
+            // the gas to sign is known once our estimate answered
+            signButtonEnabled: ((!hasFees) || enoughFundsForTransaction && enoughFundsForFees && !!request.gasLimit) && root.enabled
             signingTransaction: !!request.method && (request.method === SessionRequest.methods.signTransaction.name
                                                   || request.method === SessionRequest.methods.sendTransaction.name)
             requestPayload: {
