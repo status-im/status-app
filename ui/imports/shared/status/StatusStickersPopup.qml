@@ -54,7 +54,7 @@ StatusDropdown {
 
         readonly property bool online: root.store.networkConnectionStore.isOnline
         onOnlineChanged: {
-            if (online)
+            if (online && root.opened)
                 d.loadStickers()
         }
     }
@@ -68,6 +68,9 @@ StatusDropdown {
     background: StatusBackgroundPanel {}
 
     onAboutToShow: {
+        // nothing else starts the pack load, and a failed one is retried here
+        if (!d.stickerPacksLoaded && d.online)
+            d.loadStickers()
         d.getInstalledStickerPacks()
         if (!stickerGrid.packId) {
             d.getRecentStickers()
@@ -207,7 +210,7 @@ StatusDropdown {
             Item {
                 id: noStickerPacks
                 anchors.fill: parent
-                visible: d.installedPacksCount == 0 && stickersModule.recent.rowCount() === 0
+                visible: d.installedPacksCount == 0 && d.recentStickers.rowCount() === 0
 
                 Image {
                     id: imgNoStickers

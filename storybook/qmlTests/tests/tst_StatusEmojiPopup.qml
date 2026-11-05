@@ -26,7 +26,6 @@ Item {
         relativeY: 0
         width: 370
         height: 440
-        userUID: "tst_StatusEmojiPopup"
         emojiModel: SQUtils.Emoji.emojiModel
     }
 
@@ -38,7 +37,6 @@ Item {
             bottomSheetAllowed: false
             width: 370
             height: 440
-            userUID: "tst_StatusEmojiPopup"
             emojiModel: SQUtils.Emoji.emojiModel
         }
     }
@@ -68,11 +66,15 @@ Item {
             verify(!!findChild(popup.contentItem, "StatusEmojiPopup_searchBox"))
         }
 
-        // The message context menu shows the first rows of fullModel as quick
-        // reactions, whether or not the picker was ever opened.
-        function test_fullModelIsAvailableBeforeTheFirstOpen() {
+        // The skin tone is owned outside the picker; the catalogue follows the tone it is given.
+        function test_catalogueFollowsTheGivenSkinTone() {
             const popup = createTemporaryObject(pickerComponent, root)
+            popup.searchString = "waving hand"
             verify(popup.fullModel.count > 0)
+            compare(SQUtils.ModelUtils.get(popup.fullModel, 0, "unicode"), "1f44b")
+
+            popup.skinColor = "1f3fd"
+            compare(SQUtils.ModelUtils.get(popup.fullModel, 0, "unicode"), "1f44b-1f3fd")
         }
 
         function test_searchIsClearedOnClose() {

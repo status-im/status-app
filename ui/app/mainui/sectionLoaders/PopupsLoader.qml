@@ -42,7 +42,8 @@ Loader {
     property ProfileStores.PrivacyStore privacyStore
     property MessagingStores.MessagingRootStore messagingRootStore
 
-    property var emojiPopup: null
+    property string emojiSkinColor
+    property bool isWalletEnabled
     property var allContactsModel
     property var mutualContactsModel
     property bool isDevBuild
@@ -55,6 +56,9 @@ Loader {
     signal wcUriScanned(string uri)
     signal navigationEducationDialogSeenRequested()
     signal restartRequested()
+    signal emojiSkinColorSelected(string skinColor)
+    signal buyStickerPackRequested(string packId, string price)
+    signal enableThirdpartyServicesRequested()
 
     asynchronous: true
     active: false
@@ -103,7 +107,8 @@ Loader {
             aboutStore:             Qt.binding(() => root.aboutStore),
             privacyStore:           Qt.binding(() => root.privacyStore),
             messagingRootStore:     Qt.binding(() => root.messagingRootStore),
-            emojiPopup:             Qt.binding(() => root.emojiPopup),
+            emojiSkinColor:         Qt.binding(() => root.emojiSkinColor),
+            isWalletEnabled:        Qt.binding(() => root.isWalletEnabled),
             allContactsModel:       Qt.binding(() => root.allContactsModel),
             mutualContactsModel:    Qt.binding(() => root.mutualContactsModel),
             isDevBuild:             Qt.binding(() => root.isDevBuild),
@@ -193,6 +198,12 @@ Loader {
         }
         function onOpenDownloadModalRequested(available, version, url) {
             root.invoke(() => root.item.openDownloadModal(available, version, url))
+        }
+        function onOpenEmojiPopupRequested(params, cb) {
+            root.invoke(() => root.item.openEmojiPopup(params, cb))
+        }
+        function onOpenStickersPopupRequested(params, cb) {
+            root.invoke(() => root.item.openStickersPopup(params, cb))
         }
         function onOpenImagePopup(image, url) {
             root.invoke(() => root.item.openImagePopup(image, url))
@@ -350,5 +361,8 @@ Loader {
         function onWcUriScanned(uri) { root.wcUriScanned(uri) }
         function onNavigationEducationDialogSeenRequested() { root.navigationEducationDialogSeenRequested() }
         function onRestartRequested() { root.restartRequested() }
+        function onEmojiSkinColorSelected(skinColor) { root.emojiSkinColorSelected(skinColor) }
+        function onBuyStickerPackRequested(packId, price) { root.buyStickerPackRequested(packId, price) }
+        function onEnableThirdpartyServicesRequested() { root.enableThirdpartyServicesRequested() }
     }
 }

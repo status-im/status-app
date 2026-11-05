@@ -39,7 +39,6 @@ Item {
     // We're here in case of CommunitySection
     // This module is set from `ChatLayout` (each `ChatLayout` has its own communitySectionModule)
     property var communitySectionModule
-    property var emojiPopup
 
     property ChatStores.RootStore store
     property CommunitiesStores.CommunitiesStore communitiesStore
@@ -518,7 +517,6 @@ Item {
                 return root.spectatedPermissionsModel
             }
             channelsModel: root.store.chatCommunitySectionModule.model
-            emojiPopup: root.emojiPopup
             activeCommunity: root.communityData
 
             property int channelPosition: -1

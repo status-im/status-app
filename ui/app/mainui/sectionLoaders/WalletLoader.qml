@@ -32,7 +32,6 @@ StatusSectionLoader {
     // App-shell handlers / shared loaders
     required property HandlersManagerLoader popupHandler
     required property Loader dappsServiceLoader
-    required property Loader emojiPopupLoader
 
     property bool appMainVisible: false
 
@@ -196,7 +195,6 @@ StatusSectionLoader {
             contactsStore:          Qt.binding(() => root.contactsStore),
             communitiesStore:       Qt.binding(() => root.communitiesStore),
             transactionStore:       Qt.binding(() => root.transactionStore),
-            emojiPopup:             Qt.binding(() => root.emojiPopupLoader.item),
             networkConnectionStore: Qt.binding(() => root.networkConnectionStore),
             networksStore:          Qt.binding(() => root.networksStore),
             appMainVisible:         Qt.binding(() => root.appMainVisible),

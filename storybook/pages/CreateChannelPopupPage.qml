@@ -12,8 +12,31 @@ import Models
 import AppLayouts.Communities.popups
 import AppLayouts.Communities.stores as CommunitiesStores
 
+import shared.status
+import utils
+
 SplitView {
     id: root
+
+    Connections {
+        target: Global
+
+        function onOpenEmojiPopupRequested(params, cb) {
+            const popup = emojiPopupComponent.createObject(root, params)
+            popup.open()
+            cb(popup)
+        }
+    }
+
+    Component {
+        id: emojiPopupComponent
+
+        StatusEmojiPopup {
+            height: 440
+            emojiModel: StatusQUtils.Emoji.emojiModel
+            onClosed: destroy()
+        }
+    }
 
     Logs { id: logs }
 
@@ -143,24 +166,6 @@ SplitView {
                         logs.logEvent("requestImportDiscordChannel", ["args", "timestamp"], arguments)
                     }
                 }
-
-                emojiPopup: Popup {
-                    id: inner_emojiPopup
-
-                    parent: root
-
-
-                    Button {
-                        text: "😃"
-                        onClicked: {
-                            emojiPopup.emojiSelected(text, false)
-                            emojiPopup.close()
-                        }
-                    }
-
-                    signal emojiSelected(string emoji, bool atCu)
-                }
-
 
                 onCreateCommunityChannel: function(chName, chDescription, chEmoji, chColor, chCategoryId, viewOnlyCanAddReaction, hideIfPermissionsNotMet) {
                     logs.logEvent("onCreateCommunityChannel",

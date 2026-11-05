@@ -34,7 +34,6 @@ StatusDialog {
 
     property bool useExistingKeycardWhenMigratingProfileToKeycard: false
 
-    property var emojiPopup: null
 
     property var passwordStrengthScoreFunction: (password) => { console.error("passwordStrengthScoreFunction: IMPLEMENT ME") }
 
@@ -1872,7 +1871,6 @@ StatusDialog {
     Component {
         id: manageKeyPairAccountsComponent
         ManageKeyPairAccountsState {
-            emojiPopup: root.emojiPopup
             keyPairName: d.keyPairName
             userProfilePublicKey: root.store.userProfilePubKey
 

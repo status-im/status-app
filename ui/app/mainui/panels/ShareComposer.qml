@@ -25,8 +25,6 @@ Control {
     property string text
     property var imagePaths: []
     property bool sendEnabled: true
-    property var emojiPopup: null
-    property var stickersPopup: null
     property var paymentRequestModel: null
     // (amount, tokenKey) => display amount of a payment request
     property var formatBalance: null
@@ -97,8 +95,6 @@ Control {
         textInput.leftPadding: 12
 
         sendEnabled: root.sendEnabled
-        emojiPopup: root.emojiPopup
-        stickersPopup: root.stickersPopup
         chatInputPlaceholder: qsTr("Message")
         gifButtonVisible: false
         stickersButtonVisible: false

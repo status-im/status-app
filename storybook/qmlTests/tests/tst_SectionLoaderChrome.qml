@@ -72,8 +72,6 @@ Item {
             createChatPropertiesStore: null
             contactsAdaptor: null
             popupHandler: null
-            emojiPopupLoader: null
-            stickersPopupLoader: null
             createChatViewOpened: false
             isPortraitMode: false
         }
@@ -109,8 +107,6 @@ Item {
             createChatPropertiesStore: null
             contactsAdaptor: null
             popupHandler: null
-            emojiPopupLoader: null
-            stickersPopupLoader: null
             sectionId: "community-1"
             sectionItemModel: null
             createChatViewOpened: false

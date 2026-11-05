@@ -300,9 +300,6 @@ SplitView {
                     }
                 }
 
-                property var emojiPopup: null
-                property var stickersPopup: null
-
                 onPinMessageRequested: (messageId) => {
                     logs.logEvent("Pin message requested:", messageId)
                 }

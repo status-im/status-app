@@ -23,6 +23,8 @@ QtObject {
     signal displayImageToastWithActionMessage(string title, string subTitle, string image, int ephNotifType, int actionType, string data)
 
     signal openPopupRequested(var popupComponent, var params)
+    signal openEmojiPopupRequested(var params, var cb)
+    signal openStickersPopupRequested(var params, var cb)
     signal closePopupRequested()
     signal openNicknamePopupRequested(string publicKey, var cb)
     signal openDownloadModalRequested(bool available, string version, string url)
@@ -144,6 +146,16 @@ QtObject {
 
     function openPopup(popupComponent, params = {}) {
         root.openPopupRequested(popupComponent, params);
+    }
+
+    // params: directParent, relativeX, relativeY, closePolicy; cb receives the popup
+    // instance, which is destroyed when it closes
+    function openEmojiPopup(params, cb) {
+        root.openEmojiPopupRequested(params, cb)
+    }
+
+    function openStickersPopup(params, cb) {
+        root.openStickersPopupRequested(params, cb)
     }
 
     function closePopup() {

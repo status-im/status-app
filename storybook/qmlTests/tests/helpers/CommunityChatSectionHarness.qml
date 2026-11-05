@@ -82,8 +82,6 @@ Item {
 
     Item {
         visible: false
-        Loader { id: emojiPopupLoaderMock; active: false }
-        Loader { id: stickersPopupLoaderMock; active: false }
     }
 
     Loader {
@@ -115,8 +113,6 @@ Item {
             createChatPropertiesStore: createChatPropertiesStoreMock
             contactsAdaptor: contactsAdaptorMock
             popupHandler: null
-            emojiPopupLoader: emojiPopupLoaderMock
-            stickersPopupLoader: stickersPopupLoaderMock
             sectionId: mock.communityId
             sectionItemModel: mock.sectionItemModel
             createChatViewOpened: false

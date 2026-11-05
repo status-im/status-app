@@ -55,8 +55,6 @@ Item {
 
     Item {
         visible: false
-        Loader { id: emojiPopupLoaderMock; active: false }
-        Loader { id: stickersPopupLoaderMock; active: false }
     }
 
     Loader {
@@ -88,8 +86,6 @@ Item {
             createChatPropertiesStore: createChatPropertiesStoreMock
             contactsAdaptor: contactsAdaptorMock
             popupHandler: null
-            emojiPopupLoader: emojiPopupLoaderMock
-            stickersPopupLoader: stickersPopupLoaderMock
             sectionId: mock.communityId
             sectionItemModel: mock.sectionItemModel
             createChatViewOpened: false
@@ -730,6 +726,25 @@ Item {
             tryCompare(input.textInput, "text", "")
             mock.setActiveChat(draftChatId)
             tryCompare(input.textInput, "text", "hello")
+        }
+
+        // the sticker pack popup reads the network state through the section's chat store
+        function test_stickerPackPopupGetsTheNetworkStore() {
+            failOnWarning(/TypeError/)
+            const loader = loadSectionWithInput()
+            const columnView = findChildByTypePrefix(loader, "ChatColumnView")
+            verify(!!columnView)
+
+            let request = null
+            const capture = (component, params) => request = { component, params }
+            Global.openPopupRequested.connect(capture)
+            columnView.openStickerPackPopup("pack-1")
+            Global.openPopupRequested.disconnect(capture)
+            verify(!!request)
+
+            const popup = createTemporaryObject(request.component, root, request.params)
+            verify(!!popup)
+            compare(popup.store.networkConnectionStore, networkConnectionStoreMock)
         }
 
         // the input's own mention names cover a contacts-wide model: built on the first edit

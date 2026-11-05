@@ -1,4 +1,3 @@
-import QtCore
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -19,64 +18,37 @@ import SortFilterProxyModel
 StatusDropdown {
     id: root
 
-    required property string userUID
     required property StatusEmojiModel emojiModel
+    property string skinColor  // a name, not a `#rrggbb` value
 
     readonly property var fullModel: SortFilterProxyModel {
-        sourceModel: root.emojiModel
+        sourceModel: skinToneModel
 
-        filters: [
-            AllOf {
-                enabled: d.searchString !== ""
-                AnyOf {
-                    StatusQUtils.SearchFilter {
-                        roleName: "name"
-                        searchPhrase: d.searchString
-                    }
-                    StatusQUtils.SearchFilter {
-                        roleName: "shortname"
-                        searchPhrase: d.searchString
-                    }
-                }
-                // don't duplicate recents in the search results
-                ValueFilter {
-                    roleName: "category"
-                    value: root.emojiModel.recentCategoryName
-                    inverted: true
-                }
-            },
+        filters: AllOf {
+            enabled: d.searchString !== ""
             AnyOf {
-                ValueFilter {
-                    roleName: "skinColor"
-                    value: ""
+                StatusQUtils.SearchFilter {
+                    roleName: "name"
+                    searchPhrase: d.searchString
                 }
-                ValueFilter {
-                    roleName: "skinColor"
-                    value: root.emojiModel.baseSkinColorName
+                StatusQUtils.SearchFilter {
+                    roleName: "shortname"
+                    searchPhrase: d.searchString
                 }
-                enabled: settings.skinColor === ""
-            },
-            AnyOf {
-                ValueFilter {
-                    roleName: "skinColor"
-                    value: ""
-                }
-                ValueFilter {
-                    roleName: "skinColor"
-                    value: settings.skinColor
-                }
-                enabled: settings.skinColor !== ""
             }
-        ]
-
-        sorters: RoleSorter {
-            roleName: "emoji_order"
+            // don't duplicate recents in the search results
+            ValueFilter {
+                roleName: "category"
+                value: root.emojiModel.recentCategoryName
+                inverted: true
+            }
         }
     }
 
     property alias searchString: searchBox.text
 
     signal emojiSelected(string emoji, bool atCursor, string hexcode)
+    signal skinColorSelected(string skinColor)
 
     width: 370
     padding: 0
@@ -91,12 +63,6 @@ StatusDropdown {
 
         root.emojiSelected(emoji, true, hexcode)
         root.close()
-    }
-
-    function clearSettings() {
-        root.emojiModel.recentEmojis = []
-        settings.skinColor = ""
-        settings.sync()
     }
 
     onOpened: {
@@ -120,16 +86,10 @@ StatusDropdown {
         readonly property int imageMargin: 6
     }
 
-    Settings {
-        id: settings
-        category: "AppMainLocalSettings_%1".arg(root.userUID)
-        property string skinColor  // a name, not a `#rrggbb` value
-    }
-
-    Binding {
-        target: root.emojiModel
-        property: "userUID"
-        value: root.userUID
+    SkinToneFilteredEmojiModel {
+        id: skinToneModel
+        emojiModel: root.emojiModel
+        skinColor: root.skinColor
     }
 
     contentItem: ColumnLayout {
@@ -178,7 +138,7 @@ StatusDropdown {
                             cursorShape: Qt.PointingHandCursor
                             anchors.fill: parent
                             onClicked: {
-                                settings.skinColor = index === 5 ? "" : modelData.split("-")[1]
+                                root.skinColorSelected(index === 5 ? "" : modelData.split("-")[1])
                                 skinToneEmoji.expandSkinColorOptions = false;
                             }
                         }
@@ -195,7 +155,7 @@ StatusDropdown {
                 visible: !skinToneEmoji.expandSkinColorOptions
                 // Hand emoji 🖐️ to which we append the skin color selected by the user
                 emoji: StatusQUtils.Emoji.emojiModel.getEmojiFromHexcode(
-                           "1f590" + ((settings.skinColor !== "" && visible) ? ("-" + settings.skinColor) : ""))
+                           "1f590" + ((root.skinColor !== "" && visible) ? ("-" + root.skinColor) : ""))
                 StatusMouseArea {
                     cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
@@ -292,7 +252,8 @@ StatusDropdown {
                     icon.name: modelData
                     highlighted: !!d.searchString ? index === 0 : index == emojiGrid.currentCategoryIndex
                     onClicked: {
-                        const offset = root.fullModel.mapFromSource(root.emojiModel.getCategoryOffset(index))
+                        const offset = root.fullModel.mapFromSource(
+                            skinToneModel.mapFromSource(root.emojiModel.getCategoryOffset(index)))
                         emojiGrid.positionViewAtIndex(offset, GridView.Beginning)
                     }
                 }

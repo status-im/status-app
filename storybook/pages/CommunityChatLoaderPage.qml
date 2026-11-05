@@ -134,8 +134,6 @@ SplitView {
         // Hidden shared popup loaders the loader API requires
         Item {
             visible: false
-            Loader { id: emojiPopupLoaderMock; active: false }
-            Loader { id: stickersPopupLoaderMock; active: false }
         }
 
         Rectangle {
@@ -174,8 +172,6 @@ SplitView {
                     createChatPropertiesStore: createChatPropertiesStoreMock
                     contactsAdaptor: contactsAdaptorMock
                     popupHandler: null
-                    emojiPopupLoader: emojiPopupLoaderMock
-                    stickersPopupLoader: stickersPopupLoaderMock
                     sectionId: mock.communityId
                     sectionItemModel: mock.sectionItemModel
                     createChatViewOpened: false

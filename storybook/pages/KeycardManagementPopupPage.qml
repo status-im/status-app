@@ -6,8 +6,11 @@ import QtQuick.Window
 
 import Storybook
 
+import StatusQ.Core.Utils as StatusQUtils
+
 import utils
 import shared.popups.keycard_new
+import shared.status
 
 SplitView {
     id: root
@@ -59,13 +62,24 @@ SplitView {
         }
     }
 
-    QtObject {
-        id: emojiPopupMock
-        property var directParent: null
-        property real relativeY: 0
-        signal emojiSelected(string emojiText, bool atCursor)
-        function open() {}
-        function close() {}
+    Connections {
+        target: Global
+
+        function onOpenEmojiPopupRequested(params, cb) {
+            const popup = emojiPopupComponent.createObject(root, params)
+            popup.open()
+            cb(popup)
+        }
+    }
+
+    Component {
+        id: emojiPopupComponent
+
+        StatusEmojiPopup {
+            height: 440
+            emojiModel: StatusQUtils.Emoji.emojiModel
+            onClosed: destroy()
+        }
     }
 
     // Mock implementing the KeycardManagementPopup store contract (see BaseKeycardManagementStore.qml).
@@ -242,7 +256,6 @@ SplitView {
             cardMetadataWalletAccountsJson: mockStore.cardMetadataWalletAccountsJson
 
             store: mockStore
-            emojiPopup: emojiPopupMock
             passwordStrengthScoreFunction: (password) => Math.min(4, (password ? password.length : 0))
 
             closePolicy: Popup.NoAutoClose

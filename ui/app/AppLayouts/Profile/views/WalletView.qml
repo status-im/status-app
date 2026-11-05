@@ -32,7 +32,6 @@ import AppLayouts.stores as AppLayoutStores
 SettingsContentBase {
     id: root
 
-    property var emojiPopup
     property string myPublicKey: ""
     property alias currencySymbol: manageTokensView.currencySymbol
 
@@ -258,7 +257,6 @@ SettingsContentBase {
             Layout.fillHeight: false
 
             walletStore: root.walletStore
-            emojiPopup: root.emojiPopup
             isKeycardEnabled: root.isKeycardEnabled
 
             onGoToNetworksView: priv.navigateToDetails(root.networksViewIndex)
@@ -356,7 +354,6 @@ SettingsContentBase {
             id: accountView
             account: root.walletStore.selectedAccount
             walletStore: root.walletStore
-            emojiPopup: root.emojiPopup
             userProfilePublicKey: walletStore.userProfilePublicKey
             activeNetworks: root.networksStore.activeNetworks
             onGoBack: priv.navigateToDetails(root.mainViewIndex)

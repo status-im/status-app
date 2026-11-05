@@ -54,29 +54,31 @@ Item {
     QtObject {
         id: d
         readonly property bool isEdit: root.store.editMode
+        property var emojiPopup: null
 
         function openEmojiPopup(showLeft) {
-            if (!root.store.emojiPopup) {
-                return
-            }
-            let inputCoords = accountName.mapToItem(appMain, 0, 0)
-            root.store.emojiPopup.open()
-            root.store.emojiPopup.directParent = accountName
-            root.store.emojiPopup.relativeX = 0
-            if (!showLeft) {
-                root.store.emojiPopup.relativeX = accountName.width - root.store.emojiPopup.width
-            }
-            root.store.emojiPopup.relativeY = accountName.height + Theme.halfPadding
+            Global.openEmojiPopup({
+                directParent: accountName,
+                relativeY: accountName.height + Theme.halfPadding
+            }, popup => {
+                if (!showLeft) {
+                    popup.relativeX = accountName.width - popup.width
+                }
+                d.emojiPopup = popup
+            })
         }
     }
 
     Connections {
-        target: root.store.emojiPopup
+        target: d.emojiPopup
 
         function onEmojiSelected (emojiText, atCursor) {
             root.store.addAccountModule.selectedEmoji = emojiText
             accountName.input.asset.isLetterIdenticon = false
             accountName.input.asset.emoji = emojiText
+        }
+        function onClosed() {
+            d.emojiPopup = null
         }
     }
 

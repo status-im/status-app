@@ -1,5 +1,6 @@
 import QtQml
 import QtQuick
+import SortFilterProxyModel
 
 import StatusQ
 import StatusQ.Core.Theme
@@ -48,8 +49,7 @@ StatusSectionLoader {
 
     required property ContactsModelAdaptor contactsAdaptor
     required property HandlersManagerLoader popupHandler
-    required property Loader emojiPopupLoader
-    required property Loader stickersPopupLoader
+    property SortFilterProxyModel reactionEmojiModel
     property DelegatePool rowPool: null
 
     // Per-community inputs
@@ -243,6 +243,7 @@ StatusSectionLoader {
             currencyStore: root.currencyStore
             communityTokensStore: root.communityTokensStore
             openCreateChat: root.createChatViewOpened
+            networkConnectionStore: root.networkConnectionStore
             isChatSectionModule: false
             communityId: root.sectionId
         }
@@ -327,8 +328,7 @@ StatusSectionLoader {
             visible:                        false,
             sectionLayout:                  Qt.binding(() => chromeLoader.item),
             showUsersList:                  Qt.binding(() => d.showUsersPanel),
-            emojiPopup:                     Qt.binding(() => root.emojiPopupLoader.item),
-            stickersPopup:                  Qt.binding(() => root.stickersPopupLoader.item),
+            reactionEmojiModel:             Qt.binding(() => root.reactionEmojiModel),
             sectionItemModel:               Qt.binding(() => root.sectionItemModel),
             createChatPropertiesStore:      Qt.binding(() => root.createChatPropertiesStore),
             communitiesStore:               Qt.binding(() => root.communitiesStore),

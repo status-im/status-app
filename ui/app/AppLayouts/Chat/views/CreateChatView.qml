@@ -30,8 +30,6 @@ Page {
 
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
-    property var emojiPopup: null
-    property var stickersPopup: null
 
     QtObject {
         id: d
@@ -172,8 +170,6 @@ Page {
                 Layout.alignment: Qt.AlignBottom
                 Layout.fillWidth: true
                 visible: !membersSelector.model.ModelCount.empty
-                emojiPopup: root.emojiPopup
-                stickersPopup: root.stickersPopup
                 closeGifPopupAfterSelection: true
                 usersModel: membersSelector.selectedContactsModel
                 usersModelIncludeAtEveryone: membersSelector.model.ModelCount.count > 1

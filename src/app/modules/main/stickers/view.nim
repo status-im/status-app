@@ -8,6 +8,7 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       packsLoaded*: bool
+      packsLoading: bool
       installedStickerPacksLoaded*: bool
       packsLoadFailed*: bool
       stickerPacks*: StickerPackList
@@ -117,6 +118,7 @@ QtObject:
     notify = stickerPacksLoaded
 
   proc allPacksLoaded*(self: View) =
+    self.packsLoading = false
     self.packsLoaded = true
     self.packsLoadFailed = false
 
@@ -125,6 +127,7 @@ QtObject:
     self.installedStickerPacksUpdated()
 
   proc allPacksLoadFailed*(self: View) =
+    self.packsLoading = false
     self.packsLoadFailed = true
     self.packsLoadFailedChanged()
 
@@ -136,6 +139,9 @@ QtObject:
     notify = packsLoadFailedChanged
 
   proc loadStickers(self: View) {.slot.} =
+    if self.packsLoading:
+      return
+    self.packsLoading = true
     self.packsLoaded = false
     self.packsLoadFailed = false
     self.stickerPacksLoaded()

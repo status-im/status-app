@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml
+import SortFilterProxyModel
 
 import StatusQ
 import StatusQ.Components
@@ -41,8 +42,7 @@ Item {
 
     property ChatStores.RootStore rootStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
-    property var emojiPopup
-    property var stickersPopup
+    property SortFilterProxyModel reactionEmojiModel
     property DelegatePool rowPool: null
     property bool areTestNetworksEnabled
 
@@ -658,8 +658,7 @@ Item {
                 rootStore: root.rootStore
                 rowPool: root.rowPool
                 formatBalance: d.formatBalance
-                emojiPopup: root.emojiPopup
-                stickersPopup: root.stickersPopup
+                reactionEmojiModel: root.reactionEmojiModel
                 stickersLoaded: root.stickersLoaded
                 sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
                 messageLinkSharingEnabled: root.messageLinkSharingEnabled
@@ -788,8 +787,6 @@ Item {
                     isThread: d.activeMessagesStore.threadId !== ""
                     chatName: root.parentModule?.activeItem?.name || ""
 
-                    emojiPopup: root.emojiPopup
-                    stickersPopup: root.stickersPopup
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
                     threadName: root.threadName

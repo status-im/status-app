@@ -17,8 +17,6 @@ import shared.controls
 StatusModal {
     id: popup
 
-    property var emojiPopup
-
     property string accountName
     property string accountEmoji
     property string accountColorId
@@ -34,11 +32,18 @@ StatusModal {
         accountNameInput.forceActiveFocus(Qt.MouseFocusReason)
     }
 
+    QtObject {
+        id: d
+        property var emojiPopup: null
+    }
+
     Connections {
-        enabled: popup.opened
-        target: root.emojiPopup ?? null
+        target: d.emojiPopup
         function onEmojiSelected(emojiText: string, atCursor: bool) {
             popup.contentItem.accountNameInput.input.asset.emoji = emojiText
+        }
+        function onClosed() {
+            d.emojiPopup = null
         }
     }
 
@@ -62,9 +67,10 @@ StatusModal {
             validationMode: StatusInput.ValidationMode.Always
 
             onIconClicked: {
-                popup.emojiPopup.open()
-                popup.emojiPopup.directParent = accountNameInput
-                popup.emojiPopup.relativeY = accountNameInput.height
+                Global.openEmojiPopup({
+                    directParent: accountNameInput,
+                    relativeY: accountNameInput.height
+                }, emojiPopup => d.emojiPopup = emojiPopup)
             }
             validators: [
                 StatusMinLengthValidator {

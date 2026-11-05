@@ -26,8 +26,6 @@ Control {
 
     property string text
     property var imagePaths: []
-    property var emojiPopup: null
-    property var stickersPopup: null
     property var paymentRequestModel: null
     property var formatBalance: null
     property bool paymentRequestFeatureEnabled: false
@@ -274,8 +272,6 @@ Control {
             visible: !d.searchKeyboardUp
             text: root.text
             imagePaths: root.imagePaths
-            emojiPopup: root.emojiPopup
-            stickersPopup: root.stickersPopup
             paymentRequestModel: root.paymentRequestModel
             formatBalance: root.formatBalance
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled

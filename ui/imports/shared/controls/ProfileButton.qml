@@ -75,34 +75,54 @@ StatusIconTabButton {
     }
 
     onClicked: {
-        if (!root.loading)
-            userStatusContextMenu.opened ? userStatusContextMenu.close() : userStatusContextMenu.open()
+        if (root.loading)
+            return
+        if (d.menu) {
+            d.menu.close()
+            return
+        }
+        d.menu = userStatusContextMenuComponent.createObject(root)
+        d.menu.open()
     }
 
-    UserStatusContextMenu {
-        id: userStatusContextMenu
-        objectName: "userStatusContextMenu"
+    QtObject {
+        id: d
+        property var menu: null
+    }
 
-        directParent: root
+    Component {
+        id: userStatusContextMenuComponent
 
-        relativeY: root.y - userStatusContextMenu.height + root.height
-        relativeX: root.x + root.width + 8
+        UserStatusContextMenu {
+            id: userStatusContextMenu
+            objectName: "userStatusContextMenu"
 
-        compressedPubKey: root.compressedPubKey
-        emojiHash: root.getEmojiHashFn(root.pubKey)
-        colorId: root.colorId
-        name: root.name
-        headerIcon: root.iconSource
-        usesDefaultName: root.usesDefaultName
-        bio: root.bio
+            directParent: root
 
-        currentUserStatus: root.currentUserStatus
+            relativeY: root.y - userStatusContextMenu.height + root.height
+            relativeX: root.x + root.width + 8
 
-        onViewProfileRequested: root.viewProfileRequested(root.pubKey)
-        onShareOwnProfileRequested: root.shareOwnProfileRequested()
-        onSettingsRequested: root.settingsRequested()
-        onCopyLinkRequested: ClipboardUtils.setText(root.getLinkToProfileFn(root.pubKey))
-        onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
-        onQuitRequested: root.quitRequested()
+            compressedPubKey: root.compressedPubKey
+            emojiHash: root.getEmojiHashFn(root.pubKey)
+            colorId: root.colorId
+            name: root.name
+            headerIcon: root.iconSource
+            usesDefaultName: root.usesDefaultName
+            bio: root.bio
+
+            currentUserStatus: root.currentUserStatus
+
+            onViewProfileRequested: root.viewProfileRequested(root.pubKey)
+            onShareOwnProfileRequested: root.shareOwnProfileRequested()
+            onSettingsRequested: root.settingsRequested()
+            onCopyLinkRequested: ClipboardUtils.setText(root.getLinkToProfileFn(root.pubKey))
+            onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
+            onQuitRequested: root.quitRequested()
+
+            onClosed: {
+                d.menu = null
+                destroy()
+            }
+        }
     }
 }

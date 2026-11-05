@@ -91,8 +91,7 @@ Item {
     property int joinedMembersCount
     property bool areTestNetworksEnabled
 
-    property var emojiPopup
-    property var stickersPopup
+    property SortFilterProxyModel reactionEmojiModel
     property DelegatePool rowPool: null
     property bool stickersLoaded: false
 
@@ -703,8 +702,7 @@ Item {
                     messagesViewEnabled: rightPanelLoader.status === Loader.Ready
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     stickersLoaded: root.stickersLoaded
-                    emojiPopup: root.emojiPopup
-                    stickersPopup: root.stickersPopup
+                    reactionEmojiModel: root.reactionEmojiModel
                     viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
                     getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
                     canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost
@@ -798,7 +796,6 @@ Item {
 
             rootStore: root.rootStore
             mutualContactsModel: root.mutualContactsModel
-            emojiPopup: root.emojiPopup
 
             usersModel: root.usersModel
             amIChatAdmin: root.amIChatAdmin
@@ -869,8 +866,7 @@ Item {
             areTestNetworksEnabled: root.areTestNetworksEnabled
             createChatPropertiesStore: root.createChatPropertiesStore
             stickersLoaded: root.stickersLoaded
-            emojiPopup: root.emojiPopup
-            stickersPopup: root.stickersPopup
+            reactionEmojiModel: root.reactionEmojiModel
             rowPool: root.rowPool
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
@@ -954,7 +950,6 @@ Item {
         ContactsColumnView {
             chatSectionModule: root.rootStore.chatCommunitySectionModule
             store: root.rootStore
-            emojiPopup: root.emojiPopup
 
             onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
             onOpenAppSearch: {
@@ -982,7 +977,6 @@ Item {
             communitiesStore: root.communitiesStore
             walletAssetsStore: root.walletAssetsStore
             currencyStore: root.currencyStore
-            emojiPopup: root.emojiPopup
             isPendingOwnershipRequest: root.isPendingOwnershipRequest
             ensCommunityPermissionsEnabled: root.ensCommunityPermissionsEnabled
             spectatedPermissionsModel: root.spectatedPermissionsModel
@@ -1016,7 +1010,7 @@ Item {
     Component {
         id: statusStickerPackClickPopup
         StatusStickerPackClickPopup {
-            store: root.stickersPopup.store
+            store: root.rootStore
             onBuyClicked: root.buyStickerPackRequested(packId, price)
             onClosed: destroy()
         }
