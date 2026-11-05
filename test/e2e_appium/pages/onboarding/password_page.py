@@ -8,6 +8,7 @@ import time
 
 from ..base_page import BasePage
 from locators.onboarding.password_screen_locators import PasswordScreenLocators
+from support.element_state_checker import ElementStateChecker
 
 
 class PasswordPage(BasePage):
@@ -50,8 +51,39 @@ class PasswordPage(BasePage):
 
         return self.gestures.element_center_tap(button)
 
-    def create_password(self, password: str) -> bool:
+    def set_stay_logged_in(self, enabled: bool) -> bool:
+        self.logger.info("Setting 'Stay logged in' to %s", enabled)
+        switch = self.find_element_safe(self.locators.STAY_LOGGED_IN_SWITCH, timeout=5)
+        if not switch:
+            self.logger.error("'Stay logged in' switch not found")
+            self.dump_page_source("stay_logged_in_switch_not_found")
+            return False
+
+        if ElementStateChecker.is_checked(switch) == enabled:
+            return True
+
+        if not self.gestures.element_center_tap(switch):
+            self.logger.error("Failed to tap 'Stay logged in' switch")
+            return False
+
+        if not self.wait_for_condition(
+            lambda: self._is_element_checked(self.locators.STAY_LOGGED_IN_SWITCH)
+            == enabled,
+            timeout=5,
+            poll_interval=0.2,
+        ):
+            self.logger.error("'Stay logged in' switch did not change to %s", enabled)
+            return False
+        return True
+
+    def create_password(self, password: str, stay_logged_in: bool = False) -> bool:
+        # Off by default: the app turns it on, and then a restart skips the
+        # welcome-back screen that most tests log in through.
         self.logger.info("Creating password")
+
+        # Before the fields: iOS can submit the page as soon as both are valid.
+        if not self.set_stay_logged_in(stay_logged_in):
+            return False
 
         if not self.enter_password(password):
             self.logger.error("Failed to enter password")
