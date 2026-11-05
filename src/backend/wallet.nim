@@ -31,6 +31,11 @@ rpc(buildTransaction, "wallet"):
   chainId: int
   sendTxArgsJson: string
 
+## Buffered gas limit (hex) for a tx built outside the router, e.g. a dApp request.
+rpc(estimateTransactionGas, "wallet"):
+  chainId: int
+  sendTxArgsJson: string
+
 rpc(buildRawTransaction, "wallet"):
   chainId: int
   sendTxArgsJson: string

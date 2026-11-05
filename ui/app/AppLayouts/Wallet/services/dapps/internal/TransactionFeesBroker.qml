@@ -31,7 +31,7 @@ SQUtils.QObject {
                 subscriber: subscriberObj
             })
             if (subscriberObj.txObject && (subscriberObj.txObject.gas || subscriberObj.txObject.gasLimit)) {
-                subscriberObj.setGas(subscriberObj.txObject.gas || subscriberObj.txObject.gasLimit)
+                subscriberObj.setDappGas(subscriberObj.txObject.gas || subscriberObj.txObject.gasLimit)
             }
             broker.subscribe(estimatedTimeSub)
             broker.subscribe(feesSub)
@@ -123,12 +123,13 @@ SQUtils.QObject {
                 chainId: subscriber.chainId,
                 tx: subscriber.txObject
             })
-            isReady: subscriber.active && !!subscriber.txObject && !!subscriber.chainId && !subscriber.gasLimit /*Ask for gas just once*/
+            // asked even when the dApp names a gas: we sign the larger of the two
+            isReady: subscriber.active && !!subscriber.txObject && !!subscriber.chainId && !subscriber.gasEstimated /*Ask for gas just once*/
             topic: isReady ? JSON.stringify(requestArgs) : ""
             onResponseChanged: {
-                if (!response || !response.success)
+                if (!response)
                     return
-                subscriber.setGas(response.gasEstimate)
+                subscriber.setGasEstimate(response.success ? response.gasEstimate : "")
             }
         }
     }
