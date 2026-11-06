@@ -60,23 +60,25 @@ public class StatusQtActivity extends QtActivity {
     private static String pendingIntakeUrl = null;
     private static String pendingIntakeShareText = null;
     private static String[] pendingIntakeShareImagePaths = null;
+    private static OpenedFileIntake.OpenedFile pendingIntakeFile = null;
     // Bumped (under intakeLock) by every intake, URL or share. A share whose
     // streams finish copying after a newer intake arrived is stale: its copies
     // are deleted, never delivered — last-wins across kinds, like the slot.
     private static int intakeSerial = 0;
 
-    // Shared streams are vetted, type-resolved and copied off the Android UI
-    // thread: the copy reads provider-backed (possibly network-backed)
-    // streams and a multi-image share would ANR onCreate/onNewIntent. One
-    // thread keeps shares in arrival order; the result hops back to the UI
-    // thread for the deliver-or-park decision, so Qt is only ever called from
+    // Shared streams and opened files are vetted, type-resolved and copied off
+    // the Android UI thread: the copy reads provider-backed (possibly
+    // network-backed) streams and a multi-image share would ANR
+    // onCreate/onNewIntent. One thread keeps intakes in arrival order; the
+    // result hops back to the UI thread for the deliver-or-park decision, so
+    // Qt is only ever called from
     // the threads that called it before. Tasks capture the application
     // context, not the activity: a recreated activity is fine, and a
     // finishing one kills the process (onDestroy), so the executor is never
     // shut down.
-    private static final ExecutorService shareIntakeExecutor =
+    private static final ExecutorService intakeExecutor =
             Executors.newSingleThreadExecutor(r -> {
-                Thread t = new Thread(r, "status-share-intake");
+                Thread t = new Thread(r, "status-intake");
                 t.setDaemon(true);
                 return t;
             });
@@ -88,6 +90,10 @@ public class StatusQtActivity extends QtActivity {
     // app-private cached copies, never OS-managed URIs).
     private static native void passDeepLinkToQt(String deepLink);
     private static native void passShareToQt(String text, String[] imagePaths);
+    // "Open with": the URL to load (a content:// URI in place or a private
+    // copy) with the provider's name and type for it.
+    private static native void passFileToQt(String fileUrl, String name, String mimeType,
+                                            boolean readable, boolean copied);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -116,6 +122,7 @@ public class StatusQtActivity extends QtActivity {
         // cleanup), before this launch's intent adds new ones.
         if (savedInstanceState == null) {
             sweepShareIntakeCache();
+            OpenedFileIntake.sweep(this);
         }
 
         // Delivery dedup, not routing: getIntent() on an Activity recreation
@@ -202,14 +209,17 @@ public class StatusQtActivity extends QtActivity {
         final String url;
         final String shareText;
         final String[] shareImagePaths;
+        final OpenedFileIntake.OpenedFile file;
         synchronized (intakeLock) {
             userLoggedIn = true;
             url = pendingIntakeUrl;
             shareText = pendingIntakeShareText;
             shareImagePaths = pendingIntakeShareImagePaths;
+            file = pendingIntakeFile;
             pendingIntakeUrl = null;
             pendingIntakeShareText = null;
             pendingIntakeShareImagePaths = null;
+            pendingIntakeFile = null;
         }
         if (url != null) {
             passDeepLinkToQt(url);
@@ -218,6 +228,13 @@ public class StatusQtActivity extends QtActivity {
         if (shareText != null) {
             passShareToQt(shareText, shareImagePaths);
         }
+        if (file != null) {
+            passFile(file);
+        }
+    }
+
+    private static void passFile(OpenedFileIntake.OpenedFile file) {
+        passFileToQt(file.url, file.name, file.mimeType, file.readable, file.copied);
     }
 
     // Thin, decision-free platform layer: extract the URL payload from the
@@ -227,16 +244,67 @@ public class StatusQtActivity extends QtActivity {
         String action = intent.getAction();
         Uri data = intent.getData();
         if (Intent.ACTION_VIEW.equals(action) && data != null) {
+            if (isFileUri(data)) {
+                handleFileIntake(data, intent.getType());
+                return;
+            }
             synchronized (intakeLock) {
                 intakeSerial++;
                 if (!userLoggedIn) {
                     pendingIntakeUrl = data.toString();
                     clearPendingShareLocked();
+                    clearPendingFileLocked(getApplicationContext());
                     return;
                 }
             }
             passDeepLinkToQt(data.toString());
         }
+    }
+
+    private static boolean isFileUri(Uri uri) {
+        return ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())
+                || ContentResolver.SCHEME_FILE.equals(uri.getScheme());
+    }
+
+    // "Open with": the file is looked at off the UI thread (the provider may
+    // be slow), then passed on like a URL, or parked until login.
+    private void handleFileIntake(Uri uri, String type) {
+        final int serial;
+        synchronized (intakeLock) {
+            serial = ++intakeSerial;
+        }
+        final Context app = getApplicationContext();
+        final Handler ui = new Handler(Looper.getMainLooper());
+        intakeExecutor.execute(() -> {
+            final OpenedFileIntake.OpenedFile file = OpenedFileIntake.receive(app, uri, type);
+            ui.post(() -> deliverFile(app, serial, file));
+        });
+    }
+
+    // UI thread. Logged in, every file opens; before login the slot keeps the
+    // newest intake and a file overtaken by a later one is dropped.
+    private static void deliverFile(Context ctx, int serial, OpenedFileIntake.OpenedFile file) {
+        synchronized (intakeLock) {
+            if (!userLoggedIn) {
+                if (serial != intakeSerial) {
+                    OpenedFileIntake.discard(ctx, file);
+                    return;
+                }
+                clearPendingShareLocked();
+                clearPendingFileLocked(ctx);
+                pendingIntakeUrl = null;
+                pendingIntakeFile = file;
+                return;
+            }
+        }
+        passFile(file);
+    }
+
+    // Last-wins: a replaced pending file must not leak its copy.
+    // Caller holds intakeLock.
+    private static void clearPendingFileLocked(Context ctx) {
+        OpenedFileIntake.discard(ctx, pendingIntakeFile);
+        pendingIntakeFile = null;
     }
 
     // Thin, decision-free platform layer: extract the shared payload from the
@@ -270,7 +338,7 @@ public class StatusQtActivity extends QtActivity {
         }
         final Context app = getApplicationContext();
         final Handler ui = new Handler(Looper.getMainLooper());
-        shareIntakeExecutor.execute(() -> {
+        intakeExecutor.execute(() -> {
             final String[] imagePaths = isImageShare
                     ? copySharedImagesToCache(app, extractStreamUris(app, intent, isSendMultiple))
                     : new String[0];
@@ -290,6 +358,7 @@ public class StatusQtActivity extends QtActivity {
             }
             if (usable && !userLoggedIn) {
                 clearPendingShareLocked();
+                clearPendingFileLocked(ctx);
                 pendingIntakeShareText = text;
                 pendingIntakeShareImagePaths = imagePaths;
                 pendingIntakeUrl = null;
@@ -360,7 +429,7 @@ public class StatusQtActivity extends QtActivity {
     // Resolved through PackageManager rather than compared against a literal:
     // the authority carries applicationIdSuffix (".debug"), and this also
     // covers any provider we add later.
-    private static boolean belongsToUs(Context ctx, Uri uri) {
+    static boolean belongsToUs(Context ctx, Uri uri) {
         final String authority = uri.getAuthority();
         if (authority == null) return true; // unresolvable: treat as untrusted
         final ProviderInfo info =

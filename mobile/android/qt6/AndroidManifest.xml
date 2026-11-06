@@ -154,6 +154,39 @@
             </intent-filter>
         </activity>
 
+        <!--
+          "Open with": the formats the browser shows here (DownloadFormatUtils),
+          never images - the gallery shares those to chats. content:// only.
+          A caller waiting for a result would get a second StatusQtActivity, which
+          Qt answers by restarting the app, so this one only passes the file on.
+        -->
+        <activity
+            android:name="app.status.mobile.OpenedFileActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/pdf" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="audio/mpeg" />
+                <data android:mimeType="audio/mp3" />
+                <data android:mimeType="audio/wav" />
+                <data android:mimeType="audio/x-wav" />
+                <data android:mimeType="audio/wave" />
+                <data android:mimeType="video/webm" />
+                <data android:mimeType="audio/webm" />
+                <data android:mimeType="video/mp4" />
+                <data android:mimeType="video/x-m4v" />
+                <data android:mimeType="audio/mp4" />
+                <data android:mimeType="audio/aac" />
+                <data android:mimeType="audio/x-m4a" />
+            </intent-filter>
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.qtprovider"

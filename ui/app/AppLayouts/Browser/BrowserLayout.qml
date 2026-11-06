@@ -91,13 +91,13 @@ StatusSectionLayout {
     function openOpenedFile(fileUrl, refused) {
         if (!refused && downloadsContext.openOpenedFile(fileUrl))
             return
-        const path = fileUrl ? UrlUtils.convertUrlToLocalPath(fileUrl) : ""
+        const openedFile = downloadsContext.openedFileTag(fileUrl)
         Qt.callLater(() => {
             const tab = _internal.addLocalPreviewTab(
-                "", DownloadFormatUtils.fileNameOf(path) || qsTr("Couldn't open the file"))
+                "", downloadsContext.openedFileName(openedFile) || qsTr("Couldn't open the file"))
             if (!tab)
                 return
-            tab.openedFilePath = path
+            tab.openedFilePath = openedFile
             tab.openFailed = true
         })
     }
@@ -787,7 +787,7 @@ StatusSectionLayout {
     Component {
         id: openFailedPageComponent
         OpenFailedPage {
-            fileName: DownloadFormatUtils.fileNameOf(_internal.currentWebView?.openedFilePath ?? "")
+            fileName: downloadsContext.openedFileName(_internal.currentWebView?.openedFilePath ?? "")
             onSupportedFormatsRequested: _internal.openSupportedFormats()
         }
     }

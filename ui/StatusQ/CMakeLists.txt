@@ -291,6 +291,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/ios_utils.h
         include/StatusQ/shareintake.h
         include/StatusQ/openedfileintake.h
+        src/openedfileintake.cpp
 
         src/StatusQ/Controls/NativeSwipeHandlerItem.cpp
         src/StatusQ/Controls/NativeIndicatorItem.cpp
@@ -374,7 +375,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
         src/StatusQ/Controls/NativeIndicatorItem_android.cpp
         src/shareutils_android.cpp
         src/shareintake_other.cpp
-        src/openedfileintake_other.cpp
+        src/openedfileintake_android.cpp
     )
 elseif (WIN32)
     target_sources(StatusQ PRIVATE

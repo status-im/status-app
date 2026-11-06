@@ -118,7 +118,8 @@ QtObject:
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url))
 
   proc onFileActivated*(self: UrlsManager, fileUrl: string, copied: bool) {.slot.} =
-    ## An Opened File handed over by the platform layer (iOS document open).
+    ## An Opened File handed over by the platform layer (iOS document open,
+    ## Android VIEW intent: a content:// URI read in place or a copy).
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeFile,
       fileUrl: fileUrl, copied: copied))
 

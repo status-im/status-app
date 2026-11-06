@@ -379,5 +379,93 @@ Item {
             verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
             compare(openedFileUrls[0].readAccess, "file:///Users/me/song.mp3")
         }
+
+        /// An Opened File the platform described (an Android content:// URI):
+        /// no path to probe, the platform's name and type instead.
+        function describedFileContext(descriptions) {
+            const ctx = createContext()
+            ctx.fileExistsFn = (path) => false
+            ctx.openedFileInfoFn = (url) => descriptions[url] || ({})
+            ctx.mediaPlayerPageRequired = false
+            return ctx
+        }
+
+        function test_openOpenedFile_opensADescribedFileInPlace() {
+            const url = "content://com.example.files/doc/7"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            verify(ctx.openOpenedFile(url, true))
+
+            compare(openedFileUrls.length, 1)
+            compare(openedFileUrls[0].url, url)
+            compare(openedFileUrls[0].readAccess, url)
+            compare(openedPaths, [url])
+        }
+
+        function test_openOpenedFile_refusesADescribedFileThatCannotBeRead() {
+            const url = "content://com.example.files/doc/8"
+            const ctx = describedFileContext({
+                [url]: { name: "notes.txt", mimeType: "text/plain", readable: false }
+            })
+
+            verify(!ctx.openOpenedFile(url, true))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_checksADescribedFileByItsNameThenItsType() {
+            const docx = "content://com.example.files/doc/9"
+            const bare = "content://com.example.files/doc/10"
+            const ctx = describedFileContext({
+                [docx]: { name: "notes.docx", mimeType: "text/plain", readable: true },
+                [bare]: { name: "notes", mimeType: "text/plain", readable: true }
+            })
+
+            verify(!ctx.openOpenedFile(docx, true))
+            verify(ctx.openOpenedFile(bare, true))
+            compare(openedFileUrls.length, 1)
+            compare(openedFileUrls[0].url, bare)
+        }
+
+        // On Android the local path of a content:// URL is a copy of the file.
+        function test_openOpenedFile_neverAsksForTheLocalPathOfADescribedFile() {
+            const url = "content://com.example.files/doc/14"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+            const asked = []
+            ctx.localPathFn = (fileUrl) => { asked.push(fileUrl); return "/tmp/copy" }
+
+            verify(ctx.openOpenedFile(url, true))
+
+            compare(asked, [])
+            compare(openedPaths, [url])
+        }
+
+        function test_openedFileTag_isTheUrlOfADescribedFileOrTheLocalPath() {
+            const url = "content://com.example.files/doc/15"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: false }
+            })
+            const asked = []
+            ctx.localPathFn = (fileUrl) => { asked.push(fileUrl); return "/Users/me/a.pdf" }
+
+            compare(ctx.openedFileTag(url), url)
+            compare(asked, [])
+            compare(ctx.openedFileTag("file:///Users/me/a.pdf"), "/Users/me/a.pdf")
+            compare(ctx.openedFileTag(""), "")
+        }
+
+        function test_openedFileName_isThePlatformNameOrThePathName() {
+            const url = "content://com.example.files/doc/11"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            compare(ctx.openedFileName(url), "report.pdf")
+            compare(ctx.openedFileName("/Users/me/My Docs/a b.txt"), "a b.txt")
+            compare(ctx.openedFileName(""), "")
+        }
     }
 }

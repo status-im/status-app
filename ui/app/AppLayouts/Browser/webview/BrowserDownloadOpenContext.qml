@@ -56,6 +56,18 @@ QtObject {
         return SystemUtils.fileExists(path)
     }
 
+    // {name, mimeType, readable} the platform gave for an Opened File whose URL
+    // names no file to probe (Android content://), {} otherwise. Tests inject a fake.
+    property var openedFileInfoFn: function(fileUrl) {
+        return SystemUtils.openedFileInfo(fileUrl)
+    }
+
+    // Local path of a file URL; tests inject a fake. On Android it copies a
+    // content:// file out, so a described file never reaches it.
+    property var localPathFn: function(fileUrl) {
+        return UrlUtils.convertUrlToLocalPath(fileUrl)
+    }
+
     // Directory create; injectable so Storybook/unit tests need not stub SystemUtils.
     property var ensureDirectoryFn: function(path) {
         return SystemUtils.ensureDirectory(path)
@@ -199,20 +211,45 @@ QtObject {
 
     /// An Opened File through the same allowlist and player page as a Record,
     /// read-granted to the file alone. False when it cannot be shown here.
+    /// A described file is taken at the platform's word and tagged by its URL.
     function openOpenedFile(fileUrl, supportsPdf) {
-        const path = UrlUtils.convertUrlToLocalPath(fileUrl)
-        if (!path || !root.fileExistsFn(path))
+        const described = root.openedFileInfoFn(fileUrl) || {}
+        const isDescribed = described.name !== undefined
+        const path = isDescribed ? "" : root.localPathFn(fileUrl)
+        if (isDescribed) {
+            if (!described.readable)
+                return false
+        } else if (!path || !root.fileExistsFn(path)) {
             return false
+        }
         const record = {
             targetPath: path,
-            fileName: DownloadFormatUtils.fileNameOf(path),
-            mimeType: "",
+            fileName: described.name ?? DownloadFormatUtils.fileNameOf(path),
+            mimeType: described.mimeType ?? "",
             missingFile: false,
             state: AbstractWebView.DownloadState.DownloadCompleted
         }
         if (!canOpenInBrowser(record, supportsPdf))
             return false
-        return d.open(record, fileUrl, path)
+        return d.open(record, fileUrl, path || fileUrl)
+    }
+
+    /// The tag of an Opened File's Tab: its local path, or its URL when the
+    /// platform described it.
+    function openedFileTag(fileUrl) {
+        if (!fileUrl)
+            return ""
+        const described = root.openedFileInfoFn(fileUrl) || {}
+        if (described.name !== undefined)
+            return fileUrl
+        return root.localPathFn(fileUrl) || fileUrl
+    }
+
+    /// The name to show for an Opened File, from its Tab tag (a local path, or
+    /// the URL of a described file).
+    function openedFileName(openedFile) {
+        const described = openedFile ? (root.openedFileInfoFn(openedFile) || {}) : {}
+        return described.name ?? DownloadFormatUtils.fileNameOf(openedFile)
     }
 
     /// Write (and reuse) a player page for a downloaded media Record and return its
