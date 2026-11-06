@@ -649,6 +649,7 @@ Item {
                         objectName: "searchThreadButton"
                         icon.name: "search"
                         tooltip.text: qsTr("Search")
+                        tooltip.orientation: StatusToolTip.Orientation.Bottom
                         onClicked: root.openAppSearch(d.openThreadParentChatId, d.openThreadId)
                     }
 
@@ -656,6 +657,7 @@ Item {
                         objectName: "closeThreadPanelButton"
                         icon.name: "close"
                         tooltip.text: qsTr("Close thread")
+                        tooltip.orientation: StatusToolTip.Orientation.Bottom
                         onClicked: {
                             const returnToInfo = d.threadOpenedFromInfo
                             if (!returnToInfo)
