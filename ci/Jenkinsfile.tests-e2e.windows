@@ -122,6 +122,7 @@ pipeline {
 
     /* Forces QT to use OpenGL for rendering instead of default Direct3D 11 */
     QSG_RHI_BACKEND = 'opengl'
+    QTWEBENGINE_CHROMIUM_FLAGS = '--disable-gpu'
   }
 
   stages {
