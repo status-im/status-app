@@ -124,6 +124,7 @@ public class StatusQtActivity extends QtActivity {
         if (savedInstanceState == null) {
             sweepShareIntakeCache();
             OpenedFileIntake.sweep(this);
+            sweepPickedFileCopies();
         }
 
         // Delivery dedup, not routing: getIntent() on an Activity recreation
@@ -492,6 +493,24 @@ public class StatusQtActivity extends QtActivity {
         if (files == null) return;
         for (File file : files) {
             file.delete();
+        }
+    }
+
+    // Copies of files picked in the app's file dialogs, including those older
+    // builds left in the cache root.
+    private void sweepPickedFileCopies() {
+        File[] copies = new File(getCacheDir(), PickedFileRules.COPIES_DIR).listFiles();
+        if (copies != null) {
+            for (File file : copies) {
+                file.delete();
+            }
+        }
+        File[] entries = getCacheDir().listFiles();
+        if (entries == null) return;
+        for (File file : entries) {
+            if (file.isFile() && PickedFileRules.isLegacyCopyName(file.getName())) {
+                file.delete();
+            }
         }
     }
 
