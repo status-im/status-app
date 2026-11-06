@@ -17,6 +17,7 @@ class PasswordScreenLocators(BaseLocators):
     )
 
     CONFIRM_PASSWORD_BUTTON = BaseLocators.tid("btnConfirmPassword")
+    STAY_LOGGED_IN_SWITCH = BaseLocators.tid("stayLoggedInSwitch")
 
     ONBOARDING_CONTAINER = BaseLocators.object_name_contains(
         "startupOnboardingLayout"

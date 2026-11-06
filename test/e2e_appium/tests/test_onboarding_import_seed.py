@@ -14,8 +14,10 @@ from pages.onboarding.biometrics_page import BiometricsPage
 from pages.base_page import BasePage
 from pages.app import App
 from pages.onboarding.push_notifications_page import PushNotificationsPage
+from pages.onboarding.welcome_back_page import WelcomeBackPage
 from pages.wallet.wallet_left_panel import WalletLeftPanel
 from locators.onboarding.returning_login_locators import ReturningLoginLocators
+from locators.wallet.accounts_locators import WalletAccountsLocators
 from support.gestures import Gestures
 from support.generators import generate_seed_phrase, get_wallet_address_from_mnemonic
 from support.multi_device_helpers import StepMixin
@@ -24,7 +26,7 @@ from support.multi_device_helpers import StepMixin
 @pytest.mark.flaky(reruns=1, reruns_delay=5)
 class TestOnboardingImportSeed(StepMixin):
     async def _import_seed_and_verify_wallet(
-        self, driver, seed_phrase: str, password: str,
+        self, driver, seed_phrase: str, password: str, stay_logged_in: bool = False,
     ) -> BasePage:
         """Onboard via seed-phrase import and verify the wallet address.
 
@@ -65,7 +67,9 @@ class TestOnboardingImportSeed(StepMixin):
             assert password_page.is_screen_displayed(
                 timeout=ONBOARDING_SCREEN_TRANSITION_TIMEOUT_SECONDS,
             ), "Password screen should be visible"
-            assert password_page.create_password(password), "Failed to create password"
+            assert password_page.create_password(
+                password, stay_logged_in=stay_logged_in,
+            ), "Failed to create password"
 
         async with self.step(self.device, "Dismiss biometrics prompt if present"):
             # RC1 (and earlier) shows EnableBiometricsPage between password
@@ -140,6 +144,38 @@ class TestOnboardingImportSeed(StepMixin):
         password = "TestPassword123!"
 
         await self._import_seed_and_verify_wallet(driver, seed_phrase, password)
+
+    @pytest.mark.gate
+    @pytest.mark.smoke
+    @pytest.mark.onboarding
+    @pytest.mark.raw_devices
+    async def test_stay_logged_in_skips_password_after_restart(self):
+        driver = self.device.driver
+        seed_phrase = generate_seed_phrase()
+        password = "TestPassword123!"
+
+        base = await self._import_seed_and_verify_wallet(
+            driver, seed_phrase, password, stay_logged_in=True,
+        )
+
+        async with self.step(self.device, "Restart app"):
+            assert base.restart_app(), "Failed to restart app"
+
+        async with self.step(self.device, "Verify wallet opens without password"):
+            Gestures(driver).activation_tap()
+            assert SplashScreen(driver).wait_for_loading_completion(timeout=60), (
+                "App did not finish loading after restart"
+            )
+            PushNotificationsPage(driver).dismiss_if_present(timeout=5)
+            wallet_visible = base.is_element_visible(
+                WalletAccountsLocators.FOOTER_SEND, timeout=20,
+            ) or base.is_element_visible(
+                WalletAccountsLocators.ADD_ACCOUNT_BUTTON, timeout=10,
+            )
+            assert wallet_visible, "Wallet not shown after restart; expected silent login"
+            assert not WelcomeBackPage(driver).is_welcome_back_screen_displayed(
+                timeout=2,
+            ), "Welcome-back screen shown although 'Stay logged in' was on"
 
     @pytest.mark.gate
     @pytest.mark.smoke
