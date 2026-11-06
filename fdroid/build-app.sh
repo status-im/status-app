@@ -29,7 +29,6 @@ export PATH="$QT_BASE/gcc_64/bin:$QT_BASE/android_arm64_v8a/bin:$NDK_TOOLCHAIN/b
 cd "$BUILD_DIR"
 
 ulimit -n 65536 || true
-export USE_SYSTEM_NIM=1
 # F-Droid builds are release builds: no Swap, no swap providers (compile-time flags).
 export FLAG_SWAP_ENABLED=0
 export FLAG_RELAY_ENABLED=0

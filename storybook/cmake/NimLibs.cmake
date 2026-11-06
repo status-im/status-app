@@ -6,11 +6,28 @@
 set(STATUS_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 include(${CMAKE_CURRENT_LIST_DIR}/NimEnv.cmake)
 
-find_program(NIM_EXECUTABLE nim
-  HINTS "${STATUS_ROOT}/vendor/nimbus-build-system/vendor/Nim/bin" NO_DEFAULT_PATH)
+# The app's resolved compiler and packages (nimble), as `make` passes them.
 find_program(NIM_EXECUTABLE nim)
-if (NOT NIM_EXECUTABLE)
-  message(FATAL_ERROR "No Nim compiler found: run `make update` in ${STATUS_ROOT}")
+set(_nimble_paths "${STATUS_ROOT}/nimble.paths")
+if (NOT NIM_EXECUTABLE OR NOT EXISTS "${_nimble_paths}")
+  message(FATAL_ERROR "No Nim compiler or nimble.paths: run `make update` in ${STATUS_ROOT}")
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_nimble_paths}")
+file(STRINGS "${_nimble_paths}" _nimble_path_lines REGEX "^--path:")
+set(_nimble_path_args)
+foreach(_line IN LISTS _nimble_path_lines)
+  if (_line MATCHES "[/\\\\](seaqt|nimqml|results|qtcamera|qrscan)-[^/\\\\\"]*[^\"]*\"$")
+    string(REGEX REPLACE "^--path:\"(.*)\"$" "\\1" _dir "${_line}")
+    list(APPEND _nimble_path_args "--path:${_dir}")
+    if (_line MATCHES "[/\\\\]qtcamera-[^/\\\\\"]*\"$")
+      set(NIM_QTCAMERA_DIR "${_dir}")
+    elseif (_line MATCHES "[/\\\\]qrscan-[^/\\\\\"]*\"$")
+      set(NIM_QRSCAN_DIR "${_dir}")
+    endif()
+  endif()
+endforeach()
+if (NOT NIM_QTCAMERA_DIR OR NOT NIM_QRSCAN_DIR)
+  message(FATAL_ERROR "qtcamera or qrscan missing from ${_nimble_paths}: run `make update` in ${STATUS_ROOT}")
 endif()
 
 # The archive's dependency tracking relies on add_custom_command(DEPFILE),
@@ -28,7 +45,7 @@ else()
   set(_nim_out "${_nim_dir}/libstorybook_nim.a")
 endif()
 
-# ZXing (readers + C API) for nim-qrscan, from its nested submodule. Nim
+# ZXing (readers + C API) for nim-qrscan, from its bundled zxing-cpp. Nim
 # checks the archive exists at compile time; the hosts link it.
 # zxing-cpp 3 needs C++20 and only picks it when the standard is unset;
 # Storybook sets 17. Both overrides are scoped to this subdirectory.
@@ -41,7 +58,7 @@ set(ZXING_WRITERS OFF CACHE STRING "" FORCE)
 set(ZXING_C_API ON CACHE BOOL "" FORCE)
 # Only core/ (the library, C API included): the top level also adds the C
 # wrapper's demo, a CTest entry and a configure-time stb download.
-add_subdirectory("${STATUS_ROOT}/vendor/nim-qrscan/vendor/zxing-cpp/core"
+add_subdirectory("${NIM_QRSCAN_DIR}/vendor/zxing-cpp/core"
   "${CMAKE_BINARY_DIR}/zxing" EXCLUDE_FROM_ALL)
 set(BUILD_SHARED_LIBS ${_zxing_saved_shared})
 set(CMAKE_CXX_STANDARD ${_zxing_saved_std})
@@ -53,11 +70,7 @@ set(_nim_depfile "${_nim_dir}/libstorybook_nim.d")
 set(_nim_args
   --app:staticlib --noMain --mm:orc --threads:on
   --hints:off -d:release -d:qtcameraNoPermissionPlugin --noNimblePath
-  "--path:${STATUS_ROOT}/vendor/nim-seaqt"
-  "--path:${STATUS_ROOT}/vendor/nimqml-seaqt/src"
-  "--path:${STATUS_ROOT}/vendor/nim-result"
-  "--path:${STATUS_ROOT}/vendor/nim-qtcamera"
-  "--path:${STATUS_ROOT}/vendor/nim-qrscan"
+  ${_nimble_path_args}
   "--path:${STATUS_ROOT}/src/app/global"
   "-d:qrscanZxingLib=$<TARGET_FILE:ZXing>")
 
@@ -110,7 +123,7 @@ string(REPLACE ";" "|" _nim_args_joined "${_nim_args}")
 
 # The wrapper writes a depfile listing every Nim module, {.compile.}'d C++
 # source/header and Nim config file the build read, so updating any vendored
-# dependency (nim-seaqt, nimqml-seaqt, nim-result, ...) or the app's
+# dependency (seaqt, nimqml, results, ...) or the app's
 # config.nims / nim.cfg rebuilds the archive and relinks its hosts.
 if (POLICY CMP0116)
   cmake_policy(SET CMP0116 NEW)

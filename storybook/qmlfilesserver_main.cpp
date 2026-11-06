@@ -37,10 +37,10 @@ int main(int argc, char *argv[])
         QML_IMPORT_ROOT u"/../ui"_s,
         QML_IMPORT_ROOT u"/../ui/app"_s,
         QML_IMPORT_ROOT u"/../ui/imports"_s,
-        // QML modules of the vendored Nim libraries (the app bundles them in
+        // QML modules of the Nim libraries (the app bundles them in
         // resources.rcc, which server mode doesn't use)
-        QML_IMPORT_ROOT u"/../vendor/nim-qtcamera/qml"_s,
-        QML_IMPORT_ROOT u"/../vendor/nim-qrscan/qml"_s,
+        QString::fromUtf8(NIM_QTCAMERA_QML),
+        QString::fromUtf8(NIM_QRSCAN_QML),
     }, QML_IMPORT_ROOT u"/pages"_s, true, &app);
 
     if (!server->start(port))

@@ -9,8 +9,7 @@ ARG JAVA_VERSION=17
 ARG ANDROID_API_LEVEL=36
 ARG ANDROID_NDK_VERSION=27.2.12479018
 ARG GOLANG_VERSION="1.24.7"
-ARG NIM_VERSION="2.2.10"
-ARG NIMBLE_VERSION="0.26.1"
+ARG NIMBLE_VERSION="0.26.2"
 ARG NIX_VERSION="2.24.11"
 
 # =============================================================================
@@ -62,7 +61,6 @@ ARG JAVA_VERSION
 ARG ANDROID_API_LEVEL
 ARG ANDROID_NDK_VERSION
 ARG GOLANG_VERSION
-ARG NIM_VERSION
 ARG NIMBLE_VERSION
 ARG NIX_VERSION
 
@@ -216,24 +214,6 @@ RUN set -e \
 ENV OPENSSL_LIB_DIR="/home/jenkins/openssl-output/arm64-v8a/lib"
 ENV OPENSSL_INC_DIR="/home/jenkins/openssl-output/arm64-v8a/include"
 
-# Install Nim and clean up choosenim downloads
-RUN curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y \
- && /home/jenkins/.nimble/bin/choosenim ${NIM_VERSION} \
- && rm -rf /home/jenkins/.choosenim/downloads
-
-# The Nimble bundled with Nim installs nim-sds without library/, so libsds
-# cannot be built with it.
-RUN set -eu; \
-    case "$(dpkg --print-architecture)" in \
-    amd64) NIMBLE_ARCH="linux_x64" ;; \
-    arm64) NIMBLE_ARCH="linux_aarch64" ;; \
-    *) echo "ERROR: unsupported architecture" >&2; exit 1 ;; \
-    esac; \
-    curl -sSfL -o /tmp/nimble.tar.gz \
-      "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-${NIMBLE_ARCH}.tar.gz" \
- && tar -xzf /tmp/nimble.tar.gz -C /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin \
- && rm /tmp/nimble.tar.gz
-
 # Install Nix and clean up Nix store cache
 RUN curl -s https://nixos.org/releases/nix/nix-${NIX_VERSION}/install | sh -s -- --no-daemon \
  && rm -rf /home/jenkins/.cache/nix
@@ -243,12 +223,19 @@ RUN curl -s https://nixos.org/releases/nix/nix-${NIX_VERSION}/install | sh -s --
 # =============================================================================
 USER root
 
-# Create symlinks for Nim tools
-RUN ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nim /usr/local/bin/nim \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nimble /usr/local/bin/nimble \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/choosenim /usr/local/bin/choosenim \
- && chmod 755 /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/* \
- && chown -R root:root /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin
+# nimble >= 0.26.2 for `setup --localdeps` and nimble.lock. nimble installs
+# the Nim compiler nim_status_client.nimble pins, so there is no system Nim.
+RUN set -eu; \
+    case "$(dpkg --print-architecture)" in \
+    amd64) NIMBLE_ARCH="linux_x64" ;; \
+    arm64) NIMBLE_ARCH="linux_aarch64" ;; \
+    *) echo "ERROR: unsupported architecture" >&2; exit 1 ;; \
+    esac; \
+    curl -sSfL -o /tmp/nimble.tar.gz \
+      "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-${NIMBLE_ARCH}.tar.gz" \
+ && tar -xzf /tmp/nimble.tar.gz -C /usr/local/bin nimble \
+ && chmod 755 /usr/local/bin/nimble \
+ && rm /tmp/nimble.tar.gz
 
 # Set GCC alternatives
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
@@ -257,7 +244,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
 # =============================================================================
 # Final PATH and environment
 # =============================================================================
-ENV PATH="/opt/qt/${QT_VERSION}/android_arm64_v8a/bin:/opt/qt/${QT_VERSION}/gcc_64/bin:/opt/qt/${QT_VERSION}/gcc_64/libexec:/usr/local/go/bin:/home/jenkins/go/bin:/home/jenkins/.nimble/bin:/home/jenkins/.nix-profile/bin:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/usr/local/bin:${PATH}"
+ENV PATH="/opt/qt/${QT_VERSION}/android_arm64_v8a/bin:/opt/qt/${QT_VERSION}/gcc_64/bin:/opt/qt/${QT_VERSION}/gcc_64/libexec:/usr/local/go/bin:/home/jenkins/go/bin:/home/jenkins/.nix-profile/bin:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/usr/local/bin:${PATH}"
 ENV PKG_CONFIG_PATH="/opt/qt/${QT_VERSION}/android_arm64_v8a/lib/pkgconfig"
 ENV ARCH=arm64
 

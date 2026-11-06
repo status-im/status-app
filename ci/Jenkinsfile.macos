@@ -30,7 +30,7 @@ pipeline {
     )
     choice(
       name: 'VERBOSE',
-      description: 'Level of verbosity based on nimbus-build-system setup.',
+      description: 'Level of verbosity of the build output.',
       choices: ['0', '1', '2', '3']
     )
     booleanParam(
@@ -138,7 +138,7 @@ pipeline {
         def cores = sh(script: 'sysctl -n hw.logicalcpu', returnStdout: true).trim() as Integer
         def executors = (env.EXECUTORS ?: '2') as Integer
         env.NPROC = Math.max(1, cores.intdiv(executors)).toString()
-        env.MAKEFLAGS = "-j${env.NPROC} V=${params.VERBOSE} USE_SYSTEM_NIM=1"
+        env.MAKEFLAGS = "-j${env.NPROC} V=${params.VERBOSE}"
         env.GOMAXPROCS = env.NPROC
       } }
     }
