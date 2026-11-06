@@ -44,6 +44,7 @@ SignTransactionModalBase {
 
     property bool enoughFundsForTransaction: true
     property bool enoughFundsForFees: false
+    property bool gasEstimateFailed: false
 
     title: qsTr("Sign Request")
     subtitle: SQUtils.StringUtils.extractDomainFromLink(root.dappUrl)
@@ -71,6 +72,7 @@ SignTransactionModalBase {
     toImageSmartIdenticon.asset.color: Theme.palette.primaryColor1
 
     infoTagText: qsTr("Only sign if you trust the dApp")
+    // the first state whose condition holds wins, so order is priority
     infoTag.states: [
         State {
             name: "insufficientFunds"
@@ -82,6 +84,18 @@ SignTransactionModalBase {
                 backgroundColor: Theme.palette.dangerColor3
                 bgBorderColor: Theme.palette.dangerColor2
                 tagPrimaryLabel.text: qsTr("Insufficient funds for transaction")
+            }
+        },
+        State {
+            name: "gasEstimateFailed"
+            when: root.hasFees && root.gasEstimateFailed
+            PropertyChanges {
+                target: infoTag
+                asset.color: Theme.palette.dangerColor1
+                tagPrimaryLabel.color: Theme.palette.dangerColor1
+                backgroundColor: Theme.palette.dangerColor3
+                bgBorderColor: Theme.palette.dangerColor2
+                tagPrimaryLabel.text: qsTr("Couldn't estimate the network fee. The transaction would likely fail.")
             }
         }
     ]

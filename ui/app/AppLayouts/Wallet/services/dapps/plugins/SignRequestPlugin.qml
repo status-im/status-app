@@ -93,6 +93,7 @@ SQUtils.QObject {
             estimatedTimeCategory: feesSubscriber.estimatedTimeResponse
             feesInfo: feesSubscriber.feesInfo
             gasLimit: feesSubscriber.gasLimit
+            gasEstimateFailed: feesSubscriber.gasEstimateFailed
             haveEnoughFunds: d.hasEnoughBalance(request.chainId, request.accountAddress, request.value, request.nativeTokenGroupKey)
             haveEnoughFees: haveEnoughFunds && d.hasEnoughBalance(request.chainId, request.accountAddress, request.nativeTokenMaxFees, request.nativeTokenGroupKey)
             nativeTokenGroupKey: Utils.getNativeTokenGroupKey(request.chainId)

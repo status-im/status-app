@@ -59,6 +59,7 @@ SplitView {
             hasFees: hasFees.checked
             enoughFundsForTransaction: enoughFeesForTransaction.checked
             enoughFundsForFees: enoughFeesForGas.checked
+            gasEstimateFailed: gasEstimateFailed.checked
 
             // sun emoji
             accountEmoji: "\u2600"
@@ -150,6 +151,10 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce nibh. Etiam quis
                 id: enoughFeesForGas
                 text: "Enough fees for gas"
                 checked: true
+            }
+            CheckBox {
+                id: gasEstimateFailed
+                text: "Gas estimate failed"
             }
             CheckBox {
                 id: feesLoading

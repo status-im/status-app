@@ -1123,6 +1123,38 @@ Item {
             tryCompare(signButton, "interactive", true)
         }
 
+        function test_failedGasEstimateIsShownAndBlocksSigning() {
+            const request = buildSessionRequestResolved(dappsWorkflowTest, "0x1", "1", "abcd", "12347")
+            request.method = SessionRequest.methods.sendTransaction.name
+            request.haveEnoughFunds = true
+            request.haveEnoughFees = true
+            request.fiatMaxFees = SQUtils.AmountsArithmetic.fromNumber(1)
+            request.nativeTokenMaxFees = SQUtils.AmountsArithmetic.fromNumber(1)
+            request.gasEstimateFailed = true
+            controlUnderTest.accountsModel.append({
+                    address: request.accountAddress, name: "helloworld", emoji: "😋",
+                    color: "#2A4AF5", migratedToColdWallet: false
+            })
+            controlUnderTest.networksModel.append({
+                    chainId: request.chainId, chainName: "Test Chain", iconUrl: "network/ethereum", layer: 1
+            })
+            controlUnderTest.sessionRequestsModel.enqueue(request)
+            const popup = findChild(controlUnderTest, "dappsRequestModal")
+            tryVerify(() => !!popup && popup.opened)
+            const signButton = findChild(popup, "signButton")
+            verify(!!signButton)
+
+            compare(popup.gasEstimateFailed, true)
+            compare(popup.infoTag.state, "gasEstimateFailed")
+            compare(signButton.interactive, false)
+
+            // a retried estimate answered
+            request.gasEstimateFailed = false
+            request.gasLimit = "0x34410"
+            tryCompare(signButton, "interactive", true)
+            compare(popup.infoTag.state, "")
+        }
+
         function test_AcceptDappRequestModal() {
             const topic = "abcd"
             const requestId = "12345"

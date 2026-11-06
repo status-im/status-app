@@ -38,8 +38,10 @@ SQUtils.QObject {
     // gasLimit -> hex gas to sign with: the larger of the dApp's gas and our estimate; unset until
     // the estimate for the current gasEstimateTxObject answered
     readonly property string gasLimit: d.gasEstimated ? d.gasResponse : ""
-    // gasEstimated -> our estimate for gasEstimateTxObject answered, or failed with the dApp's gas to fall back on
+    // gasEstimated -> our estimate for gasEstimateTxObject answered
     readonly property bool gasEstimated: d.gasEstimated
+    // gasEstimateFailed -> our estimate for gasEstimateTxObject failed; asked again, nothing is signed meanwhile
+    readonly property bool gasEstimateFailed: !d.estimatedGas && d.estimateIsCurrent
 
     function setFees(fees) {
         if (d.feesResponse === fees) {
@@ -52,7 +54,6 @@ SQUtils.QObject {
     // our buffered estimate, hex, for the transaction with txKey (see txKey()); empty when it failed
     function setGasEstimate(gas, txKey) {
         d.estimatedGas = gas || ""
-        d.estimateFailed = !gas
         d.estimatedTxKey = txKey
     }
 
@@ -76,18 +77,16 @@ SQUtils.QObject {
         // the dApp's gas, hex
         readonly property string dappGas: !!root.txObject ? (root.txObject.gas || root.txObject.gasLimit || "") : ""
         property string estimatedGas
-        property bool estimateFailed: false
         readonly property string estimateTxKey: root.txKey(root.gasEstimateTxObject)
         property string estimatedTxKey
-        // without the dApp's gas to fall back on, a failed estimate is asked again
-        readonly property bool hasGas: !!estimatedGas || (estimateFailed && !!dappGas)
-        // the last gas only shows the fees while the changed transaction is re-estimated
-        readonly property bool gasEstimated: hasGas && estimatedTxKey === estimateTxKey
+        // the last answer is for the current transaction
+        readonly property bool estimateIsCurrent: estimatedTxKey === estimateTxKey
+        // the dApp's gas alone is never used: a failed estimate means the tx would likely fail
+        // while a changed transaction is re-estimated, the last gas only shows the fees; a failure clears them
+        readonly property bool gasEstimated: !!estimatedGas && estimateIsCurrent
         readonly property string gasResponse: {
-            if (!hasGas)
-                return ""
             if (!estimatedGas || !dappGas)
-                return estimatedGas || dappGas
+                return estimatedGas
             const BigOps = SQUtils.AmountsArithmetic
             const estimated = BigOps.fromString(root.hexToDec(estimatedGas))
             const dapp = BigOps.fromString(root.hexToDec(dappGas))
@@ -108,9 +107,7 @@ SQUtils.QObject {
                 const feesInfo = Object.assign({}, d.feesResponse)
                 feesInfo.maxFeePerGas = getFeesForFeesMode(d.feesResponse)
                 d.computedFeesInfo = feesInfo
-                if (gasResponse) {
-                    d.computedFees = getEstimatedMaxFees()
-                }
+                d.computedFees = gasResponse ? getEstimatedMaxFees() : null
             } catch (e) {
                 console.error("Failed to compute fees", e, e.stack)
             }
