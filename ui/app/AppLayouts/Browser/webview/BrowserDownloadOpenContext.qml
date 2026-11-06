@@ -252,6 +252,14 @@ QtObject {
         return described.name ?? DownloadFormatUtils.fileNameOf(openedFile)
     }
 
+    /// The name a Tab shows in place of its URL while it is still on its
+    /// Opened File; "" once it has gone on to another page, or for other Tabs.
+    function openedFileAddressLabel(view) {
+        if (!view || !view.openedFilePath || view.canGoBack)
+            return ""
+        return openedFileName(view.openedFilePath)
+    }
+
     /// Write (and reuse) a player page for a downloaded media Record and return its
     /// file URL, or "" when it cannot be written.
     ///

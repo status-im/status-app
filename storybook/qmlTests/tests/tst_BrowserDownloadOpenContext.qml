@@ -467,5 +467,27 @@ Item {
             compare(ctx.openedFileName("/Users/me/My Docs/a b.txt"), "a b.txt")
             compare(ctx.openedFileName(""), "")
         }
+
+        function test_openedFileAddressLabel_namesTheFileWhileTheTabIsOnIt() {
+            const url = "content://com.example.files/doc/12"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            compare(ctx.openedFileAddressLabel({ openedFilePath: url, canGoBack: false }), "report.pdf")
+            compare(ctx.openedFileAddressLabel({ openedFilePath: "/Users/me/a b.txt", canGoBack: false }),
+                    "a b.txt")
+        }
+
+        function test_openedFileAddressLabel_isEmptyOffTheOpenedFile() {
+            const url = "content://com.example.files/doc/13"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            compare(ctx.openedFileAddressLabel({ openedFilePath: url, canGoBack: true }), "")
+            compare(ctx.openedFileAddressLabel({ openedFilePath: "", canGoBack: false }), "")
+            compare(ctx.openedFileAddressLabel(null), "")
+        }
     }
 }

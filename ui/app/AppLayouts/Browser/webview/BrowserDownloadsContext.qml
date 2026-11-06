@@ -207,6 +207,10 @@ QtObject {
         return downloadOpenContext.openedFileName(openedFile)
     }
 
+    function openedFileAddressLabel(view) {
+        return downloadOpenContext.openedFileAddressLabel(view)
+    }
+
     function retryRecord(record) {
         if (!downloadsStore.canRetryFromMenu(record) && !downloadsStore.canRetryFromTap(record))
             return false

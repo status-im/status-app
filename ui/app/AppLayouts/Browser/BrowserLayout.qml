@@ -211,6 +211,8 @@ StatusSectionLayout {
         // The file the current Tab shows, when it is an Opened File it could show.
         readonly property string currentOpenedFilePath:
             currentWebView && !currentWebView.openFailed ? (currentWebView.openedFilePath ?? "") : ""
+        readonly property string currentAddressLabel:
+            downloadsContext.openedFileAddressLabel(currentWebView)
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
         property real lastScrollPos: 0
         property bool scrolledUp: true
@@ -591,6 +593,7 @@ StatusSectionLayout {
             id: browserLandscapeToolbar
             BrowserLandscapeToolbar {
                 url: root.browserRootStore.obtainAddress(_internal.currentWebView?.url ?? "")
+                addressLabel: _internal.currentAddressLabel
                 canGoBack: _internal.currentWebView?.canGoBack ?? false
                 canGoForward: _internal.currentWebView?.canGoForward ?? false
 
@@ -654,6 +657,7 @@ StatusSectionLayout {
             id: mobileAddressBar
             visible: root.invertedLayout
             url: root.browserRootStore.obtainAddress(_internal.currentWebView?.url ?? "")
+            addressLabel: _internal.currentAddressLabel
             currentTabLoading: _internal.currentTabLoading
             incognitoMode: _internal.currentTabIncognito
             browserDappsModel: browserDappsProvider.model
