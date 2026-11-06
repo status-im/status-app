@@ -14,6 +14,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --ba
 && apt-get update && apt-get install -y \
     docker-ce-cli docker-compose-plugin \
     mesa-common-dev libglu1-mesa-dev libpcsclite-dev libsecret-1-dev \
+    dbus-x11 gnome-keyring libsecret-tools \
     xvfb fluxbox libxft-dev xclip xsel nautilus \
     tesseract-ocr libzbar-dev libopenjp2-7 \
     ruby-dev ruby-bundler leiningen ghp-import git-lfs \
