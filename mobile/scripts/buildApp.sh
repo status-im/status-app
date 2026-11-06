@@ -82,6 +82,8 @@ if [[ "${OS}" == "android" ]]; then
     cp -f "$CWD/../lib/android/qt${QT_MAJOR}/$lib" "$BUILD_DIR/android-build/libs/arm64-v8a/$lib"
   done
 
+  "$CWD/android/checkPageAlignment.sh" "$BUILD_DIR/android-build/libs/arm64-v8a"
+
   # Copy custom Android files, preserve Qt-generated libs.xml
   cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties,proguard-rules.pro} "$BUILD_DIR/android-build/"
   rsync -a --exclude='libs.xml' "$CWD/../android/qt${QT_MAJOR}/res/" "$BUILD_DIR/android-build/res/" 2>/dev/null || true
