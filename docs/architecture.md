@@ -107,3 +107,24 @@ The contacts service also coalesces concurrent profile-information requests by
 public key. All callers share the existing keyed completion event; success or
 failure releases the key so a later request can refresh or retry. This avoids
 occupying multiple general workers waiting for the same store-node lookup.
+
+### Section unread badges
+
+The chat service fetches `wakuext_sectionUnreadCounts` on the local-read worker
+at startup, independently of chat UI construction. Its validated, complete
+snapshot is the sole source of section unread and mention totals. The main
+controller maps the backend's `personal` identifier to the personal section's
+public-key ID and updates section badges, including unopened communities.
+Section creation reads the same cache, so startup completion order does not
+affect the final badges.
+
+`section.unread_counts.changed` signals and `sectionUnreadCountsChanged` flags
+on Messenger responses invalidate the cache. Local community lifecycle events
+also request a refresh. A short single-shot timer coalesces bursts, only one
+query runs at a time, and invalidations during a query schedule a followup.
+Failures are logged and signaled without replacing the last successful
+snapshot; a later invalidation or explicit refresh retries the query.
+
+Thread inclusion follows `THREADS_ENABLED`. Section badges never sum chats or
+threads in Nim, and never require loading thread metadata. Thread lists,
+summaries, and category unread markers retain their existing lazy loading.

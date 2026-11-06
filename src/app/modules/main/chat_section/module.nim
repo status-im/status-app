@@ -525,8 +525,6 @@ method load*(self: Module, buildChats: bool = false) =
     self.controller.getChatsAndBuildUI()
 
   self.view.load()
-  # Section badges need persisted unread/follow state even before its chat UI is built.
-  self.controller.loadSectionThreads()
 
 method onChatsLoaded*(
     self: Module,
@@ -786,10 +784,6 @@ proc clearPendingThreadRestore(self: Module, clearSettings: bool) =
 
 method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     completedChatIds: seq[string]) =
-  if threads.anyIt(self.controller.chatBelongsToSection(it.chatId)) or
-      completedChatIds.anyIt(self.controller.chatBelongsToSection(it)):
-    self.updateParentBadgeNotifications()
-
   if not self.chatsLoaded:
     return
 
@@ -997,17 +991,10 @@ method getChatContentModule*(self: Module, chatId: string): QVariant =
   return self.chatContentModules[chatId].getModuleAsVariant()
 
 proc updateParentBadgeNotifications(self: Module) =
-  var sectionIsMuted = false
-  if self.controller.isCommunity:
-    sectionIsMuted = self.controller.getMyCommunity().muted
-
-  let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    self.controller.getMySectionId(),
-    sectionIsMuted,
-  )
+  let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount()
   self.delegate.onNotificationsUpdated(
     self.controller.getMySectionId(),
-    unviewedMessagesCount > 0,
+    unviewedMessagesCount > 0 or unviewedMentionsCount > 0,
     unviewedMentionsCount
   )
 

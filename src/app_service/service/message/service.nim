@@ -417,23 +417,6 @@ QtObject:
   proc threadCountsTowardUnread*(thread: ThreadDto): bool =
     THREADS_ENABLED and thread.followed and not thread.archived and not thread.deleted
 
-  proc sectionThreadsUnreadMessagesAndMentionsCount*(self: Service, sectionId: string, sectionIsMuted: bool):
-      tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
-    if self.chatService.isNil:
-      return
-    let communityId = if sectionId == singletonInstance.userProfile.getPubKey(): "" else: sectionId
-    for chatId, threadsByParentId in self.chatThreadsByParentIdByChat:
-      let chat = self.chatService.getChatById(chatId, showWarning = false)
-      if chat.id.len == 0 or chat.communityId != communityId:
-        continue
-      for _, thread in threadsByParentId:
-        if not threadCountsTowardUnread(thread):
-          continue
-        result.unviewedMentionsCount += thread.unviewedMentionsCount
-        if thread.unviewedMentionsCount == 0 and (chat.muted or sectionIsMuted):
-          continue
-        result.unviewedMessagesCount += thread.unviewedMessagesCount
-
   proc categoryThreadsHaveUnreadMessages*(self: Service, communityId: string, categoryId: string): bool =
     if self.chatService.isNil or communityId.len == 0 or categoryId.len == 0:
       return false
@@ -460,6 +443,8 @@ QtObject:
       ChatThreadsForChatsLoadedArgs(threads: mergedThreads, completedChatIds: @[]))
 
   proc handleThreadsFromResponse(self: Service, response: JsonNode) =
+    if not self.chatService.isNil:
+      self.chatService.handleSectionUnreadCountsResponse(response)
     var threadsArr: JsonNode
     if response.getProp("threads", threadsArr) and threadsArr.kind == JArray:
       let threads = map(threadsArr.getElems(), proc(x: JsonNode): ThreadDto = x.toThreadDto())
@@ -1290,6 +1275,8 @@ QtObject:
       let responseObj = response.parseJson
       if responseObj.kind != JObject:
         raise newException(ValueError, "edit thread response is not a json object")
+      if not self.chatService.isNil:
+        self.chatService.handleSectionUnreadCountsResponse(responseObj)
       discard responseObj.getProp("chatId", args.chatId)
       discard responseObj.getProp("threadId", args.threadId)
       discard responseObj.getProp("requestId", args.requestId)
@@ -1315,6 +1302,8 @@ QtObject:
       let responseObj = response.parseJson
       if responseObj.kind != JObject:
         raise newException(ValueError, "follow thread response is not a json object")
+      if not self.chatService.isNil:
+        self.chatService.handleSectionUnreadCountsResponse(responseObj)
       discard responseObj.getProp("chatId", args.chatId)
       discard responseObj.getProp("threadId", args.threadId)
       discard responseObj.getProp("followed", args.followed)
@@ -1341,6 +1330,8 @@ QtObject:
       let responseObj = response.parseJson
       if responseObj.kind != JObject:
         raise newException(ValueError, "delete thread response is not a json object")
+      if not self.chatService.isNil:
+        self.chatService.handleSectionUnreadCountsResponse(responseObj)
       discard responseObj.getProp("chatId", args.chatId)
       discard responseObj.getProp("threadId", args.threadId)
       discard responseObj.getProp("requestId", args.requestId)
@@ -1370,6 +1361,8 @@ QtObject:
       let responseObj = response.parseJson
       if responseObj.kind != JObject:
         raise newException(CatchableError, "create thread response is not a json object")
+      if not self.chatService.isNil:
+        self.chatService.handleSectionUnreadCountsResponse(responseObj)
 
       discard responseObj.getProp("chatId", chatId)
       discard responseObj.getProp("parentMessageId", parentMessageId)
@@ -2078,6 +2071,8 @@ proc resendChatMessage*(self: Service, messageId: string): string =
 proc deleteCommunityMemberMessages*(self: Service, communityId: string, memberPubKey: string, messageId: string, chatId: string) =
   try:
     let response = status_go.deleteCommunityMemberMessages(communityId, memberPubKey, messageId, chatId)
+    if not self.chatService.isNil:
+      self.chatService.handleSectionUnreadCountsResponse(response.result)
 
     let errorString = response.result{"error"}.getStr()
     if errorString != "":
