@@ -48,7 +48,7 @@ ifeq ($(OS),android)
 	  GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
 	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
-	  CGO_LDFLAGS="-Wl,--build-id=none" \
+	  CGO_LDFLAGS="$(LDFLAGS) -Wl,--build-id=none" \
 	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
