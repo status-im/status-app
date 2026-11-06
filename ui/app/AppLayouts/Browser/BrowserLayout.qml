@@ -67,18 +67,18 @@ StatusSectionLayout {
     /// params keep it out of the browsing context — its own ephemeral profile,
     /// no injected scripts, no web channel, and the only profile that may reach
     /// file:// at all. `url` is a file URL, or the generated media player page.
-    function openLocalPreviewInNewTab(url, openedFilePath = "") {
+    function openLocalPreviewInNewTab(url, openedFilePath = "", title = "") {
         Qt.callLater(() => {
-            const tab = _internal.addLocalPreviewTab(url)
+            const tab = _internal.addLocalPreviewTab(url, title)
             if (tab)
                 tab.openedFilePath = openedFilePath
         })
     }
 
     /// Local preview loaded through loadFileUrl, read-granted to the file or a directory.
-    function openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath = "") {
+    function openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath = "", title = "") {
         Qt.callLater(() => {
-            const tab = _internal.addLocalPreviewTab("")
+            const tab = _internal.addLocalPreviewTab("", title)
             if (!tab)
                 return
             tab.openedFilePath = openedFilePath
@@ -426,9 +426,9 @@ StatusSectionLayout {
         onDownloadAttributed: (view) => _internal.closeDownloadOnlyTab(view)
         hideFindUiFn: () => _internal.hideFindBar()
         // Both only ever carry local files (a downloaded file, a player page).
-        openUrlFn: (url, openedFilePath) => root.openLocalPreviewInNewTab(url, openedFilePath)
-        openFileUrlFn: (fileUrl, readAccessUrl, openedFilePath) =>
-            root.openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath)
+        openUrlFn: (url, openedFilePath, title) => root.openLocalPreviewInNewTab(url, openedFilePath, title)
+        openFileUrlFn: (fileUrl, readAccessUrl, openedFilePath, title) =>
+            root.openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath, title)
         supportsPdfFn: () => BrowserBackendCapabilities.pdfViewerSupported
     }
 

@@ -30,14 +30,15 @@ QtObject {
     id: root
 
     /// Opens a URL in the browser; injected by the owner. openedFilePath names
-    /// the Opened File the Tab shows, "" for a Download.
-    property var openUrlFn: function(url, openedFilePath) {
+    /// the Opened File the Tab shows, "" for a Download; title is the Tab's
+    /// title until the page gives one.
+    property var openUrlFn: function(url, openedFilePath, title) {
         console.warn("BrowserDownloadOpenContext: openUrlFn not set")
     }
 
     /// Opens a local file with a read grant for it or a directory (AbstractWebView
     /// loadFileUrl); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath) {
+    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath, title) {
         console.warn("BrowserDownloadOpenContext: openFileUrlFn not set")
     }
 
@@ -106,16 +107,17 @@ QtObject {
         /// The player page where the Backend needs one, otherwise the file
         /// itself, read-granted to itself alone.
         function open(record, fileUrl, openedFilePath) {
+            const title = openedFilePath ? record.fileName : ""
             if (root.mediaPlayerPageRequired
                     && DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
                                                            root.proprietaryCodecsSupported)) {
                 const page = root.mediaPlayerPageUrl(record)
                 if (!page)
                     return false
-                root.openUrlFn(page, openedFilePath)
+                root.openUrlFn(page, openedFilePath, title)
                 return true
             }
-            root.openFileUrlFn(fileUrl, fileUrl, openedFilePath)
+            root.openFileUrlFn(fileUrl, fileUrl, openedFilePath, title)
             return true
         }
 
