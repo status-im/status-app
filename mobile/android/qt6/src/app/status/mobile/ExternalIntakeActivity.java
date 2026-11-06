@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 /**
- * "Open with" and "Share" from other apps land here and are passed on to
+ * Links, "Open with" and "Share" from other apps land here and are passed on to
  * StatusQtActivity in its own task, with the read grants this activity holds.
  * The caller's flags stay behind: a result it waits for is not passed on.
  */

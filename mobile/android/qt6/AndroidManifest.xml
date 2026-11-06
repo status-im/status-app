@@ -51,9 +51,9 @@
         android:hasFragileUserData="true"
         android:fullBackupOnly="false"
         android:enableOnBackInvokedCallback="false">
-        <!-- singleTask: link intents land in the caller's task, where singleTop
-             would spawn a second activity Qt cannot re-init against (dead screen).
-             Files and shares come through ExternalIntakeActivity. -->
+        <!-- singleTask: singleTop would spawn a second activity Qt cannot
+             re-init against (dead screen). Links, files and shares come through
+             ExternalIntakeActivity. -->
         <activity
             android:name="app.status.mobile.StatusQtActivity"
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
@@ -86,7 +86,22 @@
             <meta-data
                     android:name="android.app.bundle_local_qt_libs"
                     android:value="1" />
+        </activity>
 
+        <!--
+          Links, "Open with" and "Share" from other apps land here and are passed
+          on to StatusQtActivity. A caller waiting for a result would get a second
+          StatusQtActivity, which Qt answers by restarting the app. No task
+          affinity: StatusQtActivity must never join a task this one roots,
+          which is left out of recents and closed in the background.
+        -->
+        <activity
+            android:name="app.status.mobile.ExternalIntakeActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -133,22 +148,6 @@
                 <data android:scheme="http" />
                 <data android:scheme="https" />
             </intent-filter>
-        </activity>
-
-        <!--
-          "Open with" and "Share" from other apps land here and are passed on to
-          StatusQtActivity. A caller waiting for a result would get a second
-          StatusQtActivity, which Qt answers by restarting the app. No task
-          affinity: StatusQtActivity must never join a task this one roots,
-          which is left out of recents and closed in the background.
-        -->
-        <activity
-            android:name="app.status.mobile.ExternalIntakeActivity"
-            android:exported="true"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@android:style/Theme.NoDisplay">
             <!--
               "Open with": the formats the browser shows here (DownloadFormatUtils),
               never images - the gallery shares those to chats. content:// only.
