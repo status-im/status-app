@@ -182,5 +182,11 @@ androidComponents {
         if (variant.buildType in ['debug', 'profile']) {
             variant.packaging.jniLibs.keepDebugSymbols.add('**/libnim_status_client.so')
         }
+        // Release and F-Droid APKs compress native libs and dex: about half the download,
+        // in exchange for extracting them on install. The Play bundle keeps the default.
+        if (variant.buildType in ['release', 'fdroid']) {
+            variant.packaging.jniLibs.useLegacyPackaging.set(true)
+            variant.packaging.dex.useLegacyPackaging.set(true)
+        }
     }
 }
