@@ -252,7 +252,8 @@ Item {
 
         function test_sendTransaction() {
             const signEvent = {"id":1730899979094571,"params":{"chainId":"eip155:1","request":{"method":"eth_sendTransaction","params":[{"from":"0x123","gasLimit":"0x5028","maxFeePerGas":"0x2540be400","maxPriorityFeePerGas":"0x3b9aca00","to":"0x0c54FcCd2e384b4BB6f2E405Bf5Cbc15a017AaFb","value":"0x0"}]}},"topic":"147fa9ddffcf9d782b5e002eb36b041e43a1db2bad79a598da6926105ce6680f","verifyContext":{"verified":{"origin":"https://metamask.github.io/test-dapp/","validation":"UNKNOWN","verifyUrl":"https://verify.walletconnect.org"}}}
-            
+            componentUnderTest.store.mockGasEstimate = "0x5208"
+
             executeRequest(signEvent)
 
             compare(componentUnderTest.store.sendTransactionCalls.length, 1, "Send transaction should be called")
@@ -272,8 +273,40 @@ Item {
                 { tag: "the dApp's gas above our estimate", txParams: { gasLimit: "0x7a120" }, estimate: "0x5208", expected: "0x7a120" },
                 { tag: "the dApp's gas as `gas`", txParams: { gas: "0x5208" }, estimate: "0x34410", expected: "0x34410" },
                 { tag: "no dApp gas", txParams: {}, estimate: "0x5208", expected: "0x5208" },
-                { tag: "our estimate failed: the dApp's gas", txParams: { gasLimit: "0x5028" }, estimate: "", expected: "0x5028" },
             ]
+        }
+
+        // e.g. a dApp's 21000 for ETH to a new account after Glamsterdam: signing it burns the fee
+        function test_dappGasIsNotSignedWhenOurEstimateFails() {
+            const store = componentUnderTest.store
+            store.mockGasEstimate = ""
+            const signEvent = sendTransactionEvent({ gasLimit: "0x5208" })
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive()
+            tryCompare(request, "gasEstimateFailed", true)
+            compare(request.gasLimit, "", "the dApp's gas alone is not offered for signing")
+
+            // asked again; a later answer makes the request signable
+            store.mockGasEstimate = "0x34410"
+            tryCompare(request, "gasLimit", "0x34410", 10000)
+            compare(request.gasEstimateFailed, false)
+        }
+
+        function test_executeIsRefusedWhenOurEstimateFails() {
+            componentUnderTest.store.mockGasEstimate = ""
+            const signEvent = sendTransactionEvent({ gasLimit: "0x5208" })
+            populateDAppData(signEvent.topic)
+            componentUnderTest.sdk.sessionRequestEvent(signEvent)
+
+            const request = componentUnderTest.requests.get(0).requestItem
+            request.setActive()
+            tryCompare(request, "gasEstimateFailed", true)
+
+            request.execute()
+            compare(componentUnderTest.store.sendTransactionCalls.length, 0)
         }
 
         function test_sendTransactionSignsTheGasTheFeesWereShownFor(data) {
@@ -379,6 +412,17 @@ Item {
 
             store.estimatedGasResponse(store.pendingGasEstimateTopic, "0x6000", true)
             tryCompare(request, "gasLimit", "0x6000")
+        }
+
+        function test_failedReestimateClearsTheOldFees() {
+            const store = componentUnderTest.store
+            const request = requestReestimatingForNewFees()
+            verify(!!request.nativeTokenMaxFees, "the last gas shows the fees while re-estimating")
+
+            store.estimatedGasResponse(store.pendingGasEstimateTopic, "", false)
+            tryCompare(request, "gasEstimateFailed", true)
+            compare(request.nativeTokenMaxFees, null, "no fees for a gas we don't have")
+            compare(request.gasLimit, "")
         }
 
         // Sign runs accept() -> execute() at once; authentication follows in the signing popup

@@ -120,8 +120,7 @@ SQUtils.QObject {
                 chainId: subscriber.chainId,
                 tx: subscriber.gasEstimateTxObject
             })
-            // asked even when the dApp names a gas, we sign the larger; retried until it answers,
-            // unless the dApp's gas can be used
+            // asked even when the dApp names a gas, we sign the larger; retried until it answers
             isReady: subscriber.active && !!subscriber.gasEstimateTxObject && !!subscriber.chainId && !subscriber.gasEstimated
             topic: isReady ? JSON.stringify(requestArgs) : ""
             onResponseChanged: {
