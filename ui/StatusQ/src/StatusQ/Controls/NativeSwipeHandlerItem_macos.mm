@@ -133,12 +133,11 @@ void NativeSwipeHandlerItem_macOS::detachGestureRecognizer()
     if (!m_attached)
         return;
 
-    NSView *view = getNSView();
-    if (view && m_delegate && m_delegate.panGesture) {
-        [view removeGestureRecognizer:m_delegate.panGesture];
-        m_delegate.panGesture = nil;
-    }
     if (m_delegate) {
+        if (m_delegate.panGesture) {
+            [m_delegate.panGesture.view removeGestureRecognizer:m_delegate.panGesture];
+            m_delegate.panGesture = nil;
+        }
         m_delegate.handler = nullptr;
         [m_delegate release];
         m_delegate = nullptr;
