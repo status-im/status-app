@@ -29,6 +29,51 @@ QtObject {
     readonly property bool canEditThread: messageModule ? messageModule.canEditThread : false
     readonly property bool threadEditPending: messageModule ? messageModule.threadEditPending : false
 
+    readonly property bool threadDeleted: messageModule?.threadDeleted ?? false
+    readonly property bool threadDeletePending: (root.messageModule?.threadDeletePending ?? false) ||
+                                                root.threadDeleteRequestedById
+    property bool threadDeleteRequestedById: false
+    property var pendingThreadDeleteModule: null
+
+    function canManageThreadById(threadId: string): bool {
+        return root.messageModule?.canManageThreadById(threadId) ?? false
+    }
+
+    function threadDeleteErrorMessage(error: string): string {
+        if (error === "thread-delete-permission-denied")
+            return qsTr("Only the thread creator or an admin can delete this thread")
+        return error
+    }
+
+    function deleteThreadById(threadId: string) {
+        if (!root.messageModule) {
+            console.error("deleteThreadById: message module is not set")
+            return
+        }
+        if (root.threadDeleteRequestedById || root.threadDeletePending || root.threadEditPending)
+            return
+        root.pendingThreadDeleteModule = root.messageModule
+        root.threadDeleteRequestedById = true
+        root.pendingThreadDeleteModule.deleteThreadById(threadId)
+    }
+
+    readonly property Connections threadDeletionConnections: Connections {
+        target: root.pendingThreadDeleteModule
+        function onThreadDeleteFinished(error: string) {
+            const requestedHere = root.threadDeleteRequestedById
+            root.threadDeleteRequestedById = false
+            root.pendingThreadDeleteModule = null
+            if (error && requestedHere && !root.threadId)
+                Global.displayToastMessage(qsTr("Couldn't delete thread"), root.threadDeleteErrorMessage(error), "warning", false,
+                                           Constants.ephemeralNotificationType.danger, "")
+        }
+    }
+
+    function deleteThread() {
+        if (root.messageModule)
+            root.messageModule.deleteThread()
+    }
+
     function editThread(name: string) {
         if (!root.messageModule) {
             console.error("editThread: message module is not set")

@@ -219,16 +219,24 @@ Item {
         property int threadPanelRevision: 0
         property int infoTab: ChatInfoPanel.Default
         property bool threadOpenedFromInfo: false
+        property string threadIdToRename: ""
 
-        function openThreadPanel(threadId, threadName) {
+        function openThreadPanel(threadId, threadName, parentChatId = root.activeItemId) {
             threadPanelRevision++
-            root.rootStore.openThreadPanel(threadId, threadName, root.activeItemId)
+            root.rootStore.openThreadPanel(threadId, threadName, parentChatId)
             // Wait for the right panel page to exist before navigating to it.
             if (root.sectionLayout?.isPortrait)
                 Backpressure.setTimeout(root, 50, () => {
                     if (d.openThreadId)
                         root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
                 })
+        }
+
+        function renameThreadFromList(threadId, threadName, parentChatId) {
+            threadOpenedFromInfo = false
+            root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
+            threadIdToRename = threadId
+            openThreadPanel(threadId, threadName, parentChatId)
         }
         // The thread closes when the active chat changes, so the parent is always the active one
         readonly property string openThreadParentChatName: {
@@ -335,7 +343,7 @@ Item {
                                                    rightPanelLoader.item?.headerContent ?? null
 
     readonly property Item threadToolbarHeader: Loader {
-        active: !!d.openThreadId
+        active: !!d.openThreadId && d.threadHeaderInToolbar
         sourceComponent: RowLayout {
             Loader {
                 Layout.fillWidth: true
@@ -357,11 +365,21 @@ Item {
 
         ThreadHeader {
             id: panelThreadHeader
+            Timer {
+                interval: 0
+                running: !!d.threadIdToRename && d.threadIdToRename === panelThreadHeader.threadId && panelThreadHeader.canEdit
+                onTriggered: {
+                    d.threadIdToRename = ""
+                    panelThreadHeader.beginEditing()
+                }
+            }
             threadId: d.openThreadId
             threadName: threadMessageStore.threadName
             parentChatName: d.openThreadParentChatName
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
+            deletePending: threadMessageStore.threadDeletePending
+            onDeleteRequested: threadMessageStore.deleteThread()
             onRenameRequested: name => threadMessageStore.editThread(name)
 
             ChatStores.MessageStore {
@@ -377,6 +395,9 @@ Item {
 
             Connections {
                 target: threadMessageStore.messageModule
+                function onThreadDeleteFinished(error: string) {
+                    panelThreadHeader.deleteFinished(threadMessageStore.threadDeleteErrorMessage(error))
+                }
                 function onThreadEditFinished(error: string) {
                     panelThreadHeader.editFinished(error)
                 }
@@ -495,6 +516,7 @@ Item {
 
         ChatInfoPanel {
             id: infoPanel
+            sectionModule: root.rootStore.chatCommunitySectionModule
             headerInToolbar: !!root.sectionLayout?.isPortrait
             visible: rightPanelLoader.status === Loader.Ready
             chatKey: root.chatContentModule?.getMyChatId() ?? ""
@@ -514,6 +536,8 @@ Item {
                 const title = ModelUtils.getByKey(threadsModel, "key", threadId, "title")
                 d.openThreadPanel(threadId, title)
             }
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                d.renameThreadFromList(threadId, threadName, parentChatId)
         }
     }
 
@@ -893,6 +917,11 @@ Item {
 
             onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+            onRenameThreadRequested: (threadId, threadName) => {
+                d.threadOpenedFromInfo = false
+                d.threadIdToRename = threadId
+                d.openThreadPanel(threadId, threadName)
+            }
             onOpenThreadRequested: (threadId, threadName) => {
                 d.threadOpenedFromInfo = false
                 d.openThreadPanel(threadId, threadName)
@@ -950,6 +979,8 @@ Item {
         ContactsColumnView {
             chatSectionModule: root.rootStore.chatCommunitySectionModule
             store: root.rootStore
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                d.renameThreadFromList(threadId, threadName, parentChatId)
 
             onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
             onOpenAppSearch: {
@@ -971,6 +1002,8 @@ Item {
         id: communtiyColumnComponent
         CommunityColumnView {
             communitySectionModule: root.rootStore.chatCommunitySectionModule
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                d.renameThreadFromList(threadId, threadName, parentChatId)
             communityData: root.sectionItemModel
             joinedMembersCount: root.joinedMembersCount
             store: root.rootStore

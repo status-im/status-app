@@ -42,6 +42,11 @@ Item {
         signalName: "clicked"
     }
 
+    SignalSpy {
+        id: contextMenuSpy
+        signalName: "contextMenuRequested"
+    }
+
     TestCase {
         name: "ThreadCard"
         when: windowShown
@@ -53,6 +58,17 @@ Item {
             verify(!!controlUnderTest)
             clickedSpy.target = controlUnderTest
             clickedSpy.clear()
+            contextMenuSpy.target = controlUnderTest
+            contextMenuSpy.clear()
+        }
+
+        function test_deletedThreadCannotBeOpened() {
+            controlUnderTest.threadState = ThreadCard.State.Deleted
+            controlUnderTest.deletedMessage = { sender: { name: "Admin" }, timestamp: Date.now() }
+            mouseClick(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2)
+            compare(clickedSpy.count, 0)
+            const body = findChild(controlUnderTest, "threadCardMessagePreview")
+            verify(body.text.includes("deleted this thread"))
         }
 
         function test_titleDisplaysMarkupLiterally() {
@@ -93,6 +109,21 @@ Item {
             compare(clickedSpy.count, 1)
             compare(clickedSpy.signalArguments[0][0], "thread-id")
             compare(clickedSpy.signalArguments[0][1], "parent-id")
+        }
+
+        function test_rightClickRequestsContextMenu() {
+            mouseClick(controlUnderTest, controlUnderTest.width / 2, controlUnderTest.height / 2, Qt.RightButton)
+            tryCompare(contextMenuSpy, "count", 1)
+        }
+
+        function test_touchLongPressRequestsContextMenu() {
+            const x = controlUnderTest.width / 2
+            const y = controlUnderTest.height / 2
+            const touch = touchEvent(controlUnderTest)
+            touch.press(0, controlUnderTest, x, y).commit()
+            wait(1000)
+            touch.release(0, controlUnderTest, x, y).commit()
+            tryCompare(contextMenuSpy, "count", 1)
         }
 
         function test_updatesSummaryAndReadBadge() {

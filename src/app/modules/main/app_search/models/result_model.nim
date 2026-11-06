@@ -1,5 +1,5 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables, strutils, std/strformat
+import nimqml, tables, strutils, std/strformat, sequtils
 
 import result_item
 
@@ -117,6 +117,10 @@ QtObject:
     self.beginResetModel()
     self.resultList = items
     self.endResetModel()
+
+  proc removeItems*(self: Model, ids: seq[string]) =
+    if ids.len > 0:
+      self.set(self.resultList.filterIt(it.itemId notin ids))
 
   proc clear*(self: Model) =
     self.beginResetModel()

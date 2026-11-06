@@ -39,6 +39,8 @@ Item {
     property alias footer: statusChatListItems.footer
 
     property alias popupMenu: popupMenuSlot.sourceComponent
+    // Falls back to popupMenu when no thread-specific menu is provided.
+    property alias threadPopupMenu: threadPopupMenuSlot.sourceComponent
     property alias categoryPopupMenu: categoryPopupMenuSlot.sourceComponent
 
     signal chatItemSelected(string categoryId, string id)
@@ -267,20 +269,22 @@ Item {
                             highlightWhenCreated = false
 
                             if (mouse.button === Qt.RightButton) {
-                                if (!!root.popupMenu) {
+                                const menuSlot = statusChatListItem.isThread && root.threadPopupMenu
+                                                 ? threadPopupMenuSlot : popupMenuSlot
+                                if (menuSlot.sourceComponent) {
                                     statusChatListItem.highlighted = true
 
-                                    popupMenuSlot.active = true
-                                    const originalOpenHandler = popupMenuSlot.item.openHandler
-                                    const originalCloseHandler = popupMenuSlot.item.closeHandler
+                                    menuSlot.active = true
+                                    const originalOpenHandler = menuSlot.item.openHandler
+                                    const originalCloseHandler = menuSlot.item.closeHandler
 
-                                    popupMenuSlot.item.openHandler = function () {
+                                    menuSlot.item.openHandler = function () {
                                         if (!!originalOpenHandler) {
                                             originalOpenHandler(statusChatListItem.chatId)
                                         }
                                     }
 
-                                    popupMenuSlot.item.closeHandler = function () {
+                                    menuSlot.item.closeHandler = function () {
                                         if (statusChatListItem) {
                                             statusChatListItem.highlighted = false
                                         }
@@ -291,8 +295,8 @@ Item {
 
                                     const p = statusChatListItem.mapToItem(root, mouse.x, mouse.y)
 
-                                    popupMenuSlot.item.popup(p.x + 4, p.y + 6)
-                                    popupMenuSlot.item.openHandler = originalOpenHandler
+                                    menuSlot.item.popup(p.x + 4, p.y + 6)
+                                    menuSlot.item.openHandler = originalOpenHandler
                                 }
                             } else {
                                 if (!statusChatListItem.selected) {
@@ -312,6 +316,11 @@ Item {
     // Menus are built on first use — see setupPopup and the right-click handler
     Loader {
         id: popupMenuSlot
+        active: false
+    }
+
+    Loader {
+        id: threadPopupMenuSlot
         active: false
     }
 
