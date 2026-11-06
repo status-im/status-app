@@ -64,6 +64,9 @@ android {
     QMAKE_LFLAGS += -Wl,-z,max-page-size=16384
     QMAKE_LFLAGS_SHLIB += -Wl,-z,max-page-size=16384
 
+    # Packed relocation tables: several MB smaller than plain .rela.dyn.
+    QMAKE_LFLAGS += -Wl,--pack-dyn-relocs=android
+
     ANDROID_VERSION_NAME = $$VERSION
 
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../android/qt$$QT_MAJOR_VERSION
