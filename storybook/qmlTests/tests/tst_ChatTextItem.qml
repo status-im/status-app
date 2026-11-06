@@ -13,6 +13,8 @@ Item {
     width: 600
     height: 200
 
+    FontMetrics { id: codeMetrics }
+
     readonly property var messageSegments: [
         { text: "Hey " },
         { text: "@Bob", href: "//0xc0ffee" },
@@ -462,6 +464,145 @@ Item {
                                   Math.max(1, r.width / 2), Math.max(1, r.height / 2))
             verify(colourShare(grabImage(item), inner, Qt.color("lime")) > 0.9,
                    "the decoration must be painted")
+        }
+
+        // Code reads left to right whatever script it starts with, so it is
+        // drawn inside its frame rather than right-aligned past it.
+        function test_rightToLeftCodeStaysInItsFrame_data() {
+            return [
+                {tag: "arabic", segments: [{text: "before"}, {text: "طباعة(\"مرحبا\")", codeBlock: true}]},
+                {tag: "hebrew", segments: [{text: "before"}, {text: "הדפס(1)", codeBlock: true}]},
+                {tag: "arabic-comment-then-code",
+                 segments: [{text: "before"}, {text: "// تعليق\nconst x = 1", codeBlock: true}]},
+                {tag: "quoted", segments: [{text: "before"}, {text: "اقتباس", newBlock: true, quoteLevel: 1},
+                                           {text: "قيمة = ١٢٣", codeBlock: true, quoteLevel: 1}]}
+            ]
+        }
+
+        function test_rightToLeftCodeStaysInItsFrame(data) {
+            const item = createItem()
+            item.appearance.color = "red"
+            item.appearance.quoteColor = "red"
+            item.appearance.quoteBarColor = "transparent"
+            item.segments = data.segments
+            const frames = item.codeBlockRects()
+            compare(frames.length, 1)
+            const frame = frames[0]
+            const quoteLevel = data.segments[data.segments.length - 1].quoteLevel ?? 0
+            verify(frame.right <= item.width - quoteLevel * (item.appearance.quoteBarWidth
+                                                             + item.appearance.quoteSpacing) + 0.5)
+
+            const image = grabImage(item)
+            const scale = image.width / item.width
+            let inside = 0, outside = 0
+            for (let y = Math.ceil(frame.y * scale); y < Math.floor(frame.bottom * scale); ++y) {
+                for (let x = 0; x < image.width; ++x) {
+                    const c = image.pixel(x, y)
+                    if (c.a > 0.5 && c.r > 0.6 && c.g < 0.4 && c.b < 0.4) {
+                        const px = x / scale
+                        if (px >= frame.x && px < frame.right)
+                            ++inside
+                        else
+                            ++outside
+                    }
+                }
+            }
+            verify(inside > 20, "the code must be painted")
+            compare(outside, 0, "no code may be painted outside its frame")
+        }
+
+        // In a right-to-left quote a code box sits by the bars, on the right,
+        // and its text follows the code's own direction: left-to-right code
+        // stays left-aligned inside the box, at any width.
+        function test_codeInRightToLeftQuoteSitsByTheBars_data() {
+            return [
+                {tag: "rtl-code", rightToLeft: true, lines: ["قيمة = ١٢٣", "إرجاع قيمة"]},
+                {tag: "ltr-code", rightToLeft: false, lines: ["const total = items.length", "return total * 2"]}
+            ]
+        }
+
+        function test_codeInRightToLeftQuoteSitsByTheBars(data) {
+            const item = createItem()
+            item.segments = [{text: "before"}, {text: "اقتباس", newBlock: true, quoteLevel: 1},
+                             {text: data.lines.join("\n"), codeBlock: true, quoteLevel: 1}]
+            const padding = item.appearance.codeBlockPadding
+            const quote = item.appearance.quoteBarWidth + item.appearance.quoteSpacing
+            codeMetrics.font = item.appearance.font
+            codeMetrics.font.family = item.appearance.codeFontFamily
+            let widestLine = 0
+            for (const line of data.lines)
+                widestLine = Math.max(widestLine, codeMetrics.advanceWidth(line))
+            for (const width of [480, 360, 600]) {
+                item.width = width
+                const frames = item.codeBlockRects()
+                compare(frames.length, 1)
+                const frame = frames[0]
+                fuzzyCompare(frame.right, width - quote, 0.5, `box by the bars at width ${width}`)
+                fuzzyCompare(frame.width, widestLine + 2 * padding, 1,
+                             `box hugs its code at width ${width}`)
+                const lineHeight = (frame.height - 2 * padding) / data.lines.length
+                for (let i = 0; i < data.lines.length; ++i) {
+                    const y = frame.y + padding + (i + 0.5) * lineHeight
+                    // A line starts at the box's left edge when left-to-right,
+                    // at its right edge when right-to-left.
+                    const x = data.rightToLeft ? frame.right - padding - 1 : frame.x + padding + 1
+                    compare(item.positionAt(x, y), item.text.indexOf(data.lines[i]),
+                            `line ${i} at width ${width}`)
+                }
+            }
+        }
+
+        // A quote's bars sit on its start edge, decided by its first paragraph
+        // with a strong character: the right one for a right-to-left quote.
+        function test_quoteBarFollowsQuoteDirection_data() {
+            return [
+                {tag: "ltr", rightToLeft: false,
+                 segments: [{text: "before"}, {text: "quoted", newBlock: true, quoteLevel: 1}]},
+                {tag: "arabic", rightToLeft: true,
+                 segments: [{text: "before"}, {text: "اقتباس", newBlock: true, quoteLevel: 1}]},
+                {tag: "hebrew-after-neutral", rightToLeft: true,
+                 segments: [{text: "before"}, {text: "123 ", newBlock: true, quoteLevel: 1},
+                            {text: "שלום"}]},
+                {tag: "code-first-then-arabic", rightToLeft: true,
+                 segments: [{text: "before"}, {text: "x = 1", codeBlock: true, quoteLevel: 1},
+                            {text: "اقتباس", newBlock: true, quoteLevel: 1}]},
+                {tag: "ltr-first-then-arabic", rightToLeft: false,
+                 segments: [{text: "before"}, {text: "quoted", newBlock: true, quoteLevel: 1},
+                            {text: "اقتباس", newBlock: true, quoteLevel: 1}]},
+                {tag: "nested-arabic", rightToLeft: true,
+                 segments: [{text: "before"}, {text: "اقتباس", newBlock: true, quoteLevel: 1},
+                            {text: "داخلي", newBlock: true, quoteLevel: 2}]}
+            ]
+        }
+
+        function test_quoteBarFollowsQuoteDirection(data) {
+            const item = createItem()
+            item.segments = data.segments
+            const barWidth = item.appearance.quoteBarWidth
+            const indent = barWidth + item.appearance.quoteSpacing
+            const bars = item.quoteBarRects().sort((a, b) => a.width - b.width || a.x - b.x)
+            verify(bars.length > 0)
+            for (const bar of bars) {
+                const level = data.rightToLeft ? Math.round((item.width - bar.x - barWidth) / indent)
+                                               : Math.round(bar.x / indent)
+                const expected = data.rightToLeft ? item.width - level * indent - barWidth : level * indent
+                compare(bar.x, expected)
+                compare(bar.width, barWidth)
+            }
+            const xs = bars.map(bar => bar.x)
+            verify(data.rightToLeft ? Math.min(...xs) > item.width / 2 : Math.max(...xs) < item.width / 2)
+        }
+
+        // A right-to-left quote is indented from the right: its text ends
+        // before the bar instead of running under it.
+        function test_rightToLeftQuoteIsIndentedFromTheRight() {
+            const item = createItem()
+            item.segments = [{text: "before"}, {text: "اقتباس", newBlock: true, quoteLevel: 1}]
+            const bar = item.quoteBarRects()[0]
+            const y = bar.y + bar.height / 2
+            const quoteStart = item.text.indexOf("اقتباس")
+            // The first character of a right-to-left line is its rightmost one.
+            compare(item.positionAt(bar.x - item.appearance.quoteSpacing - 1, y), quoteStart)
         }
 
         // The item takes Copy and Select All from a window-level Shortcut on

@@ -39,6 +39,10 @@ namespace {
 constexpr int CodeBlockProperty = QTextFormat::UserProperty + 1; // int, code-block identity
 constexpr int CodeSpanProperty = QTextFormat::UserProperty + 2;  // bool, characters
 constexpr int MentionProperty = QTextFormat::UserProperty + 3;   // bool, characters
+constexpr int QuoteRightToLeftProperty = QTextFormat::UserProperty + 4; // bool, quoted blocks
+// bool, left-to-right code in a right-to-left quote: its box sits on the
+// right, so its left margin is fitted to the widest line after layout.
+constexpr int FittedCodeProperty = QTextFormat::UserProperty + 5;
 
 // A paint key's colour, compared as one QRgb. An invalid colour means "use the
 // default" and must not compare equal to opaque black, which its rgba() is.
@@ -122,6 +126,35 @@ int quoteLevelOf(const QTextBlock& block)
 {
     return block.isValid() ? qMax(0, block.blockFormat().intProperty(QTextFormat::BlockQuoteLevel))
                            : 0;
+}
+
+// A quote's bars and indent sit on its start edge: the right one when the
+// first paragraph with a strong character is right-to-left. Code is skipped,
+// being left-to-right by convention. Set by applyBlockMargins().
+bool quoteRightToLeft(const QTextBlock& block)
+{
+    return block.blockFormat().boolProperty(QuoteRightToLeftProperty);
+}
+
+// The direction of the text's first strong character, if it has one.
+std::optional<bool> strongRightToLeft(const QString& text)
+{
+    for (qsizetype i = 0; i < text.size(); ++i) {
+        char32_t codePoint = text.at(i).unicode();
+        if (QChar::isHighSurrogate(codePoint) && i + 1 < text.size()
+                && text.at(i + 1).isLowSurrogate())
+            codePoint = QChar::surrogateToUcs4(text.at(i), text.at(++i));
+        switch (QChar::direction(codePoint)) {
+        case QChar::DirL:
+            return false;
+        case QChar::DirR:
+        case QChar::DirAL:
+            return true;
+        default:
+            break;
+        }
+    }
+    return std::nullopt;
 }
 
 // Paragraphs belonging to one code segment share a frame. Separate codeBlock segments
@@ -442,6 +475,7 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     m_formatsDirty = true;
     m_appearanceRanges.clear();
     m_hasQuotes = false;
+    m_hasFittedCode = false;
     m_hasCodeBlocks = false;
     const bool clearHoveredLink = !preserveInteraction && !m_hoveredLink.isEmpty();
     if (!preserveInteraction) {
@@ -755,6 +789,9 @@ void ChatTextItem::applyBlockMargins()
     cursor.beginEditBlock();
 
     const qreal padding = m_appearance->codeBlockPadding();
+    bool rightToLeft = false;
+    bool codeRightToLeft = false;
+    m_hasFittedCode = false;
 
     for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
         QTextBlockFormat format = block.blockFormat();
@@ -763,9 +800,59 @@ void ChatTextItem::applyBlockMargins()
         const QTextBlock previous = block.previous();
         const bool previousCode = isCodeBlock(previous);
 
+        // One side for a whole quote, nested levels included: decided when
+        // it opens, from its first paragraph with a strong character.
+        if (level > 0 && quoteLevelOf(previous) == 0) {
+            rightToLeft = false;
+            for (QTextBlock quoted = block; quoted.isValid() && quoteLevelOf(quoted) > 0;
+                 quoted = quoted.next()) {
+                if (isCodeBlock(quoted))
+                    continue;
+                if (const auto direction = strongRightToLeft(quoted.text())) {
+                    rightToLeft = *direction;
+                    break;
+                }
+            }
+        }
+
         const QTextBlockFormat before = format;
-        format.setLeftMargin(level * quoteIndent() + (code ? padding : 0));
-        format.setRightMargin(code ? padding : 0);
+        const qreal quote = level * quoteIndent();
+        const qreal inner = code ? padding : 0;
+        const bool mirrored = level > 0 && rightToLeft;
+
+        // Code reads left to right whatever script its first word is in, so
+        // its frame can hug the left edge. In a right-to-left quote the box
+        // sits on the right instead, and the code takes its own direction.
+        if (code && !continuesCode(previous, block)) {
+            codeRightToLeft = false;
+            if (mirrored) {
+                for (QTextBlock line = block; line.isValid(); line = line.next()) {
+                    if (const auto direction = strongRightToLeft(line.text())) {
+                        codeRightToLeft = *direction;
+                        break;
+                    }
+                    if (!continuesCode(line, line.next()))
+                        break;
+                }
+            }
+        }
+        const bool fitted = code && mirrored && !codeRightToLeft;
+        m_hasFittedCode |= fitted;
+        if (code)
+            format.setLayoutDirection(codeRightToLeft && mirrored ? Qt::RightToLeft : Qt::LeftToRight);
+        else
+            format.clearProperty(QTextFormat::LayoutDirection);
+
+        format.setLeftMargin((mirrored ? 0 : quote) + inner);
+        format.setRightMargin((mirrored ? quote : 0) + inner);
+        if (mirrored)
+            format.setProperty(QuoteRightToLeftProperty, true);
+        else
+            format.clearProperty(QuoteRightToLeftProperty);
+        if (fitted)
+            format.setProperty(FittedCodeProperty, true);
+        else
+            format.clearProperty(FittedCodeProperty);
         qreal boundary = 0;
         if (previous.isValid() && !continuesCode(previous, block)) {
             if (code || previousCode)
@@ -794,6 +881,52 @@ void ChatTextItem::applyBlockMargins()
     }
 
     cursor.endEditBlock();
+}
+
+// Left-to-right code in a right-to-left quote is left-aligned in a box on the
+// right. Qt aligns lines, not boxes, so once laid out at the full width the
+// left margin moves in to leave exactly the widest line: the line breaks stay
+// as they are and the box hugs the bars. Undone before every layout, so a new
+// width starts from the full width again. Returns whether a margin changed.
+bool ChatTextItem::fitCodeMargins(bool fit)
+{
+    const qreal padding = m_appearance->codeBlockPadding();
+    QTextCursor cursor(m_document.get());
+    bool changed = false;
+
+    for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
+        if (!block.blockFormat().boolProperty(FittedCodeProperty))
+            continue;
+
+        // One margin for the whole box, from its widest line.
+        QTextBlock last = block;
+        qreal widest = 0;
+        for (QTextBlock line = block;; line = line.next()) {
+            if (fit && line.layout()) {
+                for (int i = 0; i < line.layout()->lineCount(); ++i)
+                    widest = qMax(widest, line.layout()->lineAt(i).naturalTextWidth());
+            }
+            last = line;
+            if (!continuesCode(line, line.next()))
+                break;
+        }
+
+        const qreal available = width() - quoteLevelOf(block) * quoteIndent() - 2 * padding;
+        const qreal margin = fit ? padding + qMax(qreal(0), available - std::ceil(widest)) : padding;
+        for (QTextBlock line = block;; line = line.next()) {
+            QTextBlockFormat format = line.blockFormat();
+            if (!qFuzzyCompare(format.leftMargin() + 1, margin + 1)) {
+                format.setLeftMargin(margin);
+                cursor.setPosition(line.position());
+                cursor.setBlockFormat(format);
+                changed = true;
+            }
+            if (line == last)
+                break;
+        }
+        block = last;
+    }
+    return changed;
 }
 
 // Vertical extent of a block as drawn. The rect starts at the block's layout
@@ -856,8 +989,10 @@ QVector<QRectF> ChatTextItem::computeCodeFrames() const
         }
 
         if (!continuesCode(block, block.next())) {
-            const qreal x = quoteLevelOf(block) * indent;
-            const qreal frameWidth = qMin(widest + 2 * m_appearance->codeBlockPadding(), width() - x);
+            // Next to the bars: on the right in a right-to-left quote.
+            const qreal quote = quoteLevelOf(block) * indent;
+            const qreal frameWidth = qMin(widest + 2 * m_appearance->codeBlockPadding(), width() - quote);
+            const qreal x = quoteRightToLeft(block) ? width() - quote - frameWidth : quote;
             frames.append(QRectF(x, top, frameWidth, blockBottom - top));
         }
     }
@@ -898,12 +1033,16 @@ QVector<QRectF> ChatTextItem::computeQuoteBars() const
             continue;
 
         const auto [top, bottom] = blockExtent(block);
+        const qreal barWidth = m_appearance->quoteBarWidth();
 
         for (int l = 1; l <= level; ++l) {
-            if (l <= open.size())
+            if (l <= open.size()) {
                 open[l - 1].setBottom(bottom);
-            else
-                open.append(QRectF((l - 1) * indent, top, m_appearance->quoteBarWidth(), bottom - top));
+            } else {
+                const qreal x = quoteRightToLeft(block) ? width() - (l - 1) * indent - barWidth
+                                                        : (l - 1) * indent;
+                open.append(QRectF(x, top, barWidth, bottom - top));
+            }
         }
     }
 
@@ -961,9 +1100,15 @@ void ChatTextItem::ensureLayout()
     if (m_document->textWidth() != newTextWidth)
         m_document->setTextWidth(newTextWidth);
 
+    if (m_hasFittedCode)
+        fitCodeMargins(false);
+
     m_document->setLayoutEnabled(true);
-    const qreal height = m_segments.isEmpty() ? 0
+    qreal height = m_segments.isEmpty() ? 0
             : m_document->documentLayout()->documentSize().height();
+
+    if (m_hasFittedCode && fitCodeMargins(true))
+        height = m_document->documentLayout()->documentSize().height();
 
     if (qFuzzyCompare(m_contentHeight, height))
         return;
