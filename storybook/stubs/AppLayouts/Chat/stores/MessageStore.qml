@@ -29,6 +29,13 @@ QtObject {
     readonly property string threadParentChatName: messageModule?.threadParentChatName ?? ""
     readonly property bool canEditThread: messageModule?.canEditThread ?? false
     readonly property bool threadEditPending: messageModule?.threadEditPending ?? false
+    readonly property bool threadMuted: messageModule?.threadMuted ?? false
+    readonly property real threadMuteTill: messageModule?.threadMuteTill ?? 0
+
+    function setThreadMuted(interval) {
+        if (messageModule && messageModule.setThreadMuted)
+            messageModule.setThreadMuted(interval)
+    }
 
     function editThread(name) {
         if (!root.messageModule || !root.messageModule.editThread) {

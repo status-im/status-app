@@ -234,6 +234,8 @@ QtObject:
     chatThreadSummariesLoadingChats: HashSet[string]
     chatThreadsRevision: Table[string, int]
     chatThreadSummariesPendingUpdates: Table[string, Table[string, ThreadDto]]
+    threadMutePending: HashSet[(string, string)]
+    threadMuteQueued: Table[(string, string), int]
     # Read-only sentinel returned via `lent` borrow when a thread lookup misses.
     # Mutating it would affect every subsequent miss result.
     emptyThread: ThreadDto
@@ -271,6 +273,10 @@ QtObject:
 
   proc mergeThreadSummary(existing, incoming: ThreadDto): ThreadDto =
     result = incoming
+    if existing.muteRevision > incoming.muteRevision:
+      result.muted = existing.muted
+      result.muteTill = existing.muteTill
+      result.muteRevision = existing.muteRevision
     if result.creatorId.len == 0:
       result.creatorId = existing.creatorId
     if incoming.messagesCount == 0 and existing.messagesCount > 0:
@@ -1167,6 +1173,39 @@ QtObject:
           self.threadMsgCursor.del(key)
         self.events.emit(SIGNAL_MESSAGES_LOADED,
           MessagesLoadedArgs(chatId: chatId, threadId: threadId, messages: @[], reactions: @[]))
+
+  proc setThreadMuted*(self: Service, chatId, threadId: string, interval: int)
+
+  proc onAsyncThreadMute*(self: Service, response: string) {.slot.} =
+    var key: (string, string)
+    try:
+      let responseObj = response.parseJson
+      key = (responseObj{"chatId"}.getStr(), responseObj{"threadId"}.getStr())
+      let errorString = responseObj{"error"}.getStr()
+      if errorString.len > 0:
+        raise newException(ValueError, errorString)
+      # Only revisioned backend events change state. A delayed RPC completion
+      # must not replay an earlier preference over a newer mute or expiry.
+    except CatchableError as e:
+      error "error muting thread", msg = e.msg
+    finally:
+      self.threadMutePending.excl(key)
+      if self.threadMuteQueued.hasKey(key):
+        let interval = self.threadMuteQueued[key]
+        self.threadMuteQueued.del(key)
+        self.setThreadMuted(key[0], key[1], interval)
+
+  proc setThreadMuted*(self: Service, chatId, threadId: string, interval: int) =
+    if not THREADS_ENABLED or chatId.len == 0 or threadId.len == 0:
+      return
+    let key = (chatId, threadId)
+    if key in self.threadMutePending:
+      self.threadMuteQueued[key] = interval
+      return
+    self.threadMutePending.incl(key)
+    self.threadpool.start(AsyncThreadMuteTaskArg(
+      tptr: asyncThreadMuteTask, vptr: cast[uint](self.vptr),
+      slot: "onAsyncThreadMute", chatId: chatId, threadId: threadId, interval: interval))
 
   proc onAsyncEditThread*(self: Service, response: string) {.slot.} =
     var args = ThreadEditFinishedArgs()
