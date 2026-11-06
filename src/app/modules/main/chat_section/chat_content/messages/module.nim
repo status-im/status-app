@@ -521,7 +521,7 @@ method updateThreadDetails*(self: Module) =
       chat.name
   self.view.setThreadDetails(thread.name, parentName,
     THREADS_ENABLED and thread_permissions.canEditThread(thread, chat,
-      singletonInstance.userProfile.getPubKey(), community), thread.deleted)
+      singletonInstance.userProfile.getPubKey(), community), thread.deleted, thread.followed)
   if thread.deleted:
     self.view.model().clear()
     self.view.setMessageSearchOngoing(false)
@@ -541,6 +541,11 @@ method canManageThreadById*(self: Module, threadId: string): bool =
       CommunityDto()
   return THREADS_ENABLED and thread_permissions.canEditThread(thread, chat,
     singletonInstance.userProfile.getPubKey(), community)
+
+method setThreadFollowedById*(self: Module, threadId: string, followed: bool) =
+  if not THREADS_ENABLED or threadId.len == 0:
+    return
+  self.controller.setThreadFollowed(threadId, followed)
 
 method deleteThreadById*(self: Module, threadId: string) =
   if self.threadDeleteRequestId.len > 0 or self.threadEditRequestId.len > 0:
@@ -629,6 +634,7 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
   summary.originalMessageId = thread.parentMessageId
   summary.title = thread.name
   summary.deleted = thread.deleted
+  summary.followed = thread.followed
   if thread.deleted:
     let actor = self.controller.getContactDetails(thread.deletedBy)
     summary.lastMessageSenderId = thread.deletedBy

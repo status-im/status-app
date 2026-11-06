@@ -177,7 +177,10 @@ Item {
             messages.threadEditFinished("")
             tryVerify(() => !findChild(header, "threadNameInput"))
             messages.canEditThread = false
-            compare(button.visible, false)
+            compare(button.visible, true)
+            const threadMenu = findChild(header, "threadHeaderContextMenu")
+            compare(findChild(threadMenu, "threadContextMenu_editName").enabled, false)
+            compare(findChild(threadMenu, "threadContextMenu_delete").enabled, false)
             messages.threadId = ""
             messages.canEditThread = true
         }

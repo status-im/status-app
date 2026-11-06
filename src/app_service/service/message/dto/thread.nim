@@ -15,6 +15,7 @@ type
     name*: string
     creatorId*: string
     archived*: bool
+    followed*: bool
     deleted*: bool
     deletedBy*: string
     deletedClock*: int64
@@ -38,6 +39,7 @@ proc toThreadDto*(jsonObj: JsonNode): ThreadDto =
   discard jsonObj.getProp("name", result.name)
   discard jsonObj.getProp("creatorId", result.creatorId)
   discard jsonObj.getProp("archived", result.archived)
+  discard jsonObj.getProp("followed", result.followed)
   discard jsonObj.getProp("unviewedMessagesCount", result.unviewedMessagesCount)
   discard jsonObj.getProp("unviewedMentionsCount", result.unviewedMentionsCount)
   discard jsonObj.getProp("messagesCount", result.messagesCount)

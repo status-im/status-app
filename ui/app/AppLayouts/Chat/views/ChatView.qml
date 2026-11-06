@@ -329,6 +329,11 @@ Item {
         function onActiveItemChanged() {
             Global.closeCreateChatView()
         }
+
+        function onThreadFollowFailed(threadId: string, followed: bool, error: string) {
+            Global.displayToastMessage(followed ? qsTr("Couldn't follow thread") : qsTr("Couldn't unfollow thread"),
+                                       error, "warning", false, Constants.ephemeralNotificationType.danger, "")
+        }
     }
 
     readonly property Item headerContent: Loader {
@@ -379,6 +384,9 @@ Item {
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
             deletePending: threadMessageStore.threadDeletePending
+            followed: threadMessageStore.threadFollowed
+            onFollowRequested: threadMessageStore.setThreadFollowed(true)
+            onUnfollowRequested: threadMessageStore.setThreadFollowed(false)
             onDeleteRequested: threadMessageStore.deleteThread()
             onRenameRequested: name => threadMessageStore.editThread(name)
 

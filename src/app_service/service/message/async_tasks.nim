@@ -42,6 +42,11 @@ type
     threadId: string
     requestId: string
 
+  AsyncSetThreadFollowedTaskArg = ref object of QObjectTaskArg
+    chatId: string
+    threadId: string
+    followed: bool
+
   AsyncEditThreadTaskArg = ref object of QObjectTaskArg
     chatId: string
     threadId: string
@@ -197,6 +202,29 @@ proc asyncEditThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
     var threads: JsonNode
     if response.result.isNil or not response.result.getProp("threads", threads) or threads.kind != JArray:
       raise newException(ValueError, "edit thread response is missing thread metadata")
+    responseJson["threads"] = threads
+  except CatchableError as e:
+    responseJson["error"] = %e.msg
+  arg.finish(responseJson)
+
+proc asyncSetThreadFollowedTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncSetThreadFollowedTaskArg](argEncoded)
+  var responseJson = %* {
+    "chatId": arg.chatId,
+    "threadId": arg.threadId,
+    "followed": arg.followed,
+    "error": "",
+  }
+  try:
+    let response = if arg.followed:
+        status_go_chat.followThread(arg.chatId, arg.threadId)
+      else:
+        status_go_chat.unfollowThread(arg.chatId, arg.threadId)
+    if not response.error.isNil:
+      raise newException(RpcException, response.error.message)
+    var threads: JsonNode
+    if response.result.isNil or not response.result.getProp("threads", threads) or threads.kind != JArray:
+      raise newException(ValueError, "follow thread response is missing thread metadata")
     responseJson["threads"] = threads
   except CatchableError as e:
     responseJson["error"] = %e.msg

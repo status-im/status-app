@@ -17,6 +17,7 @@ import app_service/service/chat/dto/chat
 import app/global/feature_flags
 import app/global/global_singleton
 import app/global/qt_settings
+import app/modules/main/io_interface as main_interface
 import app/modules/main/chat_section/module as section_module
 import app/modules/main/chat_section/controller as section_controller
 import app/modules/main/chat_section/view as section_view
@@ -222,12 +223,18 @@ privateAccess(section_module.Module)
 privateAccess(chat_item.ChatItem)
 
 type
+  SectionDelegate = ref object of main_interface.AccessInterface
+    notifications: seq[tuple[sectionId: string, hasUnreadMessages: bool, notificationsCount: int]]
   ContentStub = ref object of content_interface.AccessInterface
     scrolledTo: seq[string]
     renamedTo: seq[string]
   SectionHarness = ref object of section_module.Module
     activated: seq[string]
     panelClosed: bool
+
+method onNotificationsUpdated(self: SectionDelegate, sectionId: string,
+    sectionHasUnreadMessages: bool, sectionNotificationCount: int) =
+  self.notifications.add((sectionId, sectionHasUnreadMessages, sectionNotificationCount))
 
 method scrollToMessage(self: ContentStub, messageId: string) =
   self.scrolledTo.add(messageId)
@@ -245,9 +252,13 @@ method closeThreadPanel(self: SectionHarness) =
   self.panelClosed = true
 
 proc newSectionHarness(service: message_service.Service, events: EventEmitter): SectionHarness =
+  let chats = chat_service.newService(events, nil, nil)
+  chats.chats["parent"] = ChatDto(id: "parent")
+  service.chatService = chats
   result = SectionHarness()
+  result.delegate = SectionDelegate()
   result.controller = section_controller.newController(result, "section", false, events,
-    nil, nil, nil, nil, nil, service, nil, nil, nil, nil, nil, nil)
+    nil, nil, nil, chats, nil, service, nil, nil, nil, nil, nil, nil)
   result.view = section_view.newView(result)
   result.viewVariant = newQVariant(result.view)
   result.threadChatIds = initHashSet[string]()
@@ -285,17 +296,22 @@ suite "thread search result navigation":
       service.onAsyncLoadChatThreadsForChats($(%* {
         "chatIds": ["parent"], "threads": []
       }))
+      check SectionDelegate(section.delegate).notifications == @[("section", false, 0)]
       check section.openCommunityChatAndScrollToMessage("parent", "target", "thread")
       check section.pendingThreadId == "thread"
       check section.pendingThreadMessageId == "target"
       check settings.getSectionLastOpenThread("section") == savedThread
       check section.activated == @["parent"]
+      check SectionDelegate(section.delegate).notifications ==
+        @[("section", false, 0), ("section", false, 0)]
 
       events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
         ThreadDto(chatId: "parent", threadId: "other-thread", parentMessageId: "other-root", name: "Other")
       ]))
       check section.pendingThreadMessageId == "target"
       check content.scrolledTo.len == 0
+      check SectionDelegate(section.delegate).notifications ==
+        @[("section", false, 0), ("section", false, 0), ("section", false, 0)]
 
       events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
         ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root", name: "Thread")
@@ -306,6 +322,8 @@ suite "thread search result navigation":
       check section.pendingThreadId == ""
       check section.pendingThreadMessageId == ""
       check settings.getSectionLastOpenThread("section") == savedThread
+      check SectionDelegate(section.delegate).notifications ==
+        @[("section", false, 0), ("section", false, 0), ("section", false, 0), ("section", false, 0)]
     else:
       skip()
 
