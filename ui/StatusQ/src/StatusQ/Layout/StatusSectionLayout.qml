@@ -57,7 +57,8 @@ LayoutChooser {
     // used in StatusSectionLayoutLandscape for panel resizing/persistence
     property string userUID
     property string sectionName
-    property alias handle: landscapeView.handle
+    // the landscape splitter handle; null keeps the landscape default
+    property Component handle: null
 
     /*!
         \qmlproperty int StatusSectionLayout::leftPanelWidthOverride
@@ -140,7 +141,7 @@ LayoutChooser {
         This property sets the left padding for the portrait view
         Default value is the indicator width + standard padding as left margin
     */
-    property alias leftPortraitPadding: portraitView.leftPadding
+    property real leftPortraitPadding: 0
     /*!
         \qmlproperty string StatusSectionLayout::backButtonName
         This property holds a reference to the backButtonName property of the
@@ -171,9 +172,10 @@ LayoutChooser {
         \qmlproperty int StatusSectionLayout::currentIndex
         This property holds the current index of the active panel.
 
-        Noop for landscape mode.
+        Kept here rather than in the portrait view, which only exists while
+        portrait is the chosen layout; landscape ignores it.
     */
-    property alias currentIndex: portraitView.currentIndex
+    property int currentIndex: 0
 
     /*!
         \qmlsignal
@@ -189,13 +191,13 @@ LayoutChooser {
         This method is used to focus the panel that needs to be active.
     */
     function goToNextPanel() {
-        if (portraitView.visible)
-            portraitView.incrementCurrentIndex()
+        if (d.portrait)
+            d.portrait.incrementCurrentIndex()
     }
 
     function goToPreviousPanel() {
-        if (portraitView.visible)
-            portraitView.decrementCurrentIndex()
+        if (d.portrait)
+            d.portrait.decrementCurrentIndex()
     }
 
     /*!
@@ -221,7 +223,7 @@ LayoutChooser {
     function tryGoBack() {
         if (root.contentHistory && root.contentHistory.tryGoBack()) // content tier
             return true
-        if (portraitView.visible && portraitView.tryGoBack(false)) // content tier was already tried
+        if (d.portrait && d.portrait.tryGoBack(false)) // content tier was already tried
             return true
         if (root.subsectionHistory && root.subsectionHistory.tryGoBack()) { // subsection tier
             // Advance to the central panel so the restored subsection's detail is
@@ -235,10 +237,10 @@ LayoutChooser {
     // Returning to the leaf (left) panel — via Back, the header back button or a
     // swipe — dismisses the active subsection so it isn't retraced later.
     Connections {
-        target: portraitView
+        target: root
         enabled: !!root.subsectionHistory
         function onCurrentIndexChanged() {
-            if (portraitView.currentIndex === 0)
+            if (root.currentIndex === 0)
                 root.subsectionHistory.dropLeaf()
         }
     }
@@ -252,7 +254,7 @@ LayoutChooser {
     */
     readonly property bool canGoBack:
         (!!root.contentHistory && root.contentHistory.canGoBack)
-        || (portraitView.visible && portraitView.canGoBackInternally)
+        || (!!d.portrait && d.portrait.canGoBackInternally)
         || (!!root.subsectionHistory && root.subsectionHistory.canGoBack)
 
     /*!
@@ -285,7 +287,9 @@ LayoutChooser {
     // Landscape shows every panel at once — no slide — but consumers still
     // get each switch bracketed by the signal pair, back-to-back.
     onCurrentIndexChanged: {
-        if (!portraitView.visible) {
+        root.swiped(d.currentIndexCache, root.currentIndex)
+        d.currentIndexCache = root.currentIndex
+        if (!d.portrait) {
             root.panelSwitchStarted()
             root.panelSwitchEnded()
         }
@@ -333,7 +337,7 @@ LayoutChooser {
         interval: 48
         repeat: true
         onTriggered: {
-            if (d.geometryInputSeen || landscapeView.leftColumnAnimating) {
+            if (d.geometryInputSeen || (!!d.landscape && d.landscape.leftColumnAnimating)) {
                 d.geometryInputSeen = false
                 return
             }
@@ -346,6 +350,8 @@ LayoutChooser {
     // A swap between the two sub-layouts, not the initial choice: bracketing
     // that one would only delay the section's first layout.
     onChosenLayoutChanged: {
+        if (chosenLayout)
+            chosenLayout.active = true
         if (d.previousChosenLayout)
             d.beginGeometryTransition()
         d.previousChosenLayout = chosenLayout
@@ -365,11 +371,11 @@ LayoutChooser {
     ]
 
     layoutChoices: [
-        portraitView,
-        landscapeView
+        portraitLoader,
+        landscapeLoader
     ]
 
-    readonly property bool isPortrait: chosenLayout === portraitView
+    readonly property bool isPortrait: chosenLayout === portraitLoader
 
     /*!
         \qmlproperty real StatusSectionLayout::leftPanelSlotWidth
@@ -387,85 +393,118 @@ LayoutChooser {
         the section's own box - it is short by the header and the footer, and
         narrow by the left column in landscape.
     */
-    readonly property real leftPanelSlotWidth: chosenLayout ? chosenLayout.leftPanelSlotWidth : 0
-    readonly property real leftPanelSlotHeight: chosenLayout ? chosenLayout.leftPanelSlotHeight : 0
-    readonly property real centerPanelSlotWidth: chosenLayout ? chosenLayout.centerPanelSlotWidth : 0
-    readonly property real centerPanelSlotHeight: chosenLayout ? chosenLayout.centerPanelSlotHeight : 0
-    readonly property real rightPanelSlotWidth: chosenLayout ? chosenLayout.rightPanelSlotWidth : 0
-    readonly property real rightPanelSlotHeight: chosenLayout ? chosenLayout.rightPanelSlotHeight : 0
+    readonly property real leftPanelSlotWidth: chosenLayout?.item ? chosenLayout.item.leftPanelSlotWidth : 0
+    readonly property real leftPanelSlotHeight: chosenLayout?.item ? chosenLayout.item.leftPanelSlotHeight : 0
+    readonly property real centerPanelSlotWidth: chosenLayout?.item ? chosenLayout.item.centerPanelSlotWidth : 0
+    readonly property real centerPanelSlotHeight: chosenLayout?.item ? chosenLayout.item.centerPanelSlotHeight : 0
+    readonly property real rightPanelSlotWidth: chosenLayout?.item ? chosenLayout.item.rightPanelSlotWidth : 0
+    readonly property real rightPanelSlotHeight: chosenLayout?.item ? chosenLayout.item.rightPanelSlotHeight : 0
 
-    StatusSectionLayoutLandscape {
-        id: landscapeView
+    // Each orientation's view is built the first time LayoutChooser chooses it and
+    // is never destroyed (not when the section is hidden, not on rotation): views
+    // hold LayoutItemProxys onto section-owned items, and Qt 6.11 leaves a dangling
+    // implicit-size connection on the target when a proxy is destroyed. LayoutChooser
+    // toggles the loaders' visibility; the panels are owned by whichever view's
+    // slots are live, so they move across when the views swap.
+    Loader {
+        id: landscapeLoader
+        objectName: "landscapeLoader"
         anchors.fill: parent
-        userUID: root.userUID
-        sectionName: root.sectionName
-        leftPanelWidthOverride: root.leftPanelWidthOverride
-        leftPanel: root.leftPanel
-        centerPanel: root.centerPanel
-        rightPanel: root.rightPanel
-        footer: root.footer
-        headerBackground: root.headerBackground
-        showRightPanel: root.showRightPanel
-        rightPanelWidth: root.rightPanelWidth
-        showHeader: root.showHeader
-        headerPadding: root.headerPadding
-        showFooter: root.showFooter
-        footerSpacing: root.footerSpacing
-        backButtonName: root.backButtonName
-        headerContent: root.headerContent
-        backgroundColor: root.backgroundColor
-        panelsFrozen: root.geometryTransitionOngoing
+        visible: false
+        active: false
 
-        onBackButtonClicked: root.backButtonClicked()
+        sourceComponent: StatusSectionLayoutLandscape {
+            userUID: root.userUID
+            sectionName: root.sectionName
+            leftPanelWidthOverride: root.leftPanelWidthOverride
+            leftPanel: root.leftPanel
+            centerPanel: root.centerPanel
+            rightPanel: root.rightPanel
+            footer: root.footer
+            headerBackground: root.headerBackground
+            showRightPanel: root.showRightPanel
+            rightPanelWidth: root.rightPanelWidth
+            showHeader: root.showHeader
+            headerPadding: root.headerPadding
+            showFooter: root.showFooter
+            footerSpacing: root.footerSpacing
+            backButtonName: root.backButtonName
+            headerContent: root.headerContent
+            backgroundColor: root.backgroundColor
+            panelsFrozen: root.geometryTransitionOngoing
+
+            onBackButtonClicked: root.backButtonClicked()
+
+            Component.onCompleted: {
+                if (root.handle)
+                    handle = root.handle
+            }
+        }
     }
 
-    StatusSectionLayoutPortrait {
-        id: portraitView
+    Loader {
+        id: portraitLoader
+        objectName: "portraitLoader"
         anchors.fill: parent
-        leftPanel: root.leftPanel
-        centerPanel: root.centerPanel
-        rightPanel: root.rightPanel
-        rightPanelHeaderContent: root.rightPanelHeaderContent
-        contentHistory: root.contentHistory
-        footer: root.footer
-        headerBackground: root.headerBackground
-        showRightPanel: root.showRightPanel
-        rightPanelWidth: root.rightPanelWidth
-        showHeader: root.showHeader
-        headerPadding: root.headerPadding
-        showFooter: root.showFooter
-        backButtonName: root.backButtonName
-        headerContent: root.headerContent
-        backgroundColor: root.backgroundColor
-        invertedLayout: root.invertedLayout
-        panelsFrozen: root.geometryTransitionOngoing
+        visible: false
+        active: false
 
-        property int currentIndexCache
+        sourceComponent: StatusSectionLayoutPortrait {
+            id: portraitView
 
-        onCurrentIndexChanged: {
-            root.swiped(currentIndexCache, currentIndex)
-            currentIndexCache = currentIndex
+            leftPadding: root.leftPortraitPadding
+            leftPanel: root.leftPanel
+            centerPanel: root.centerPanel
+            rightPanel: root.rightPanel
+            rightPanelHeaderContent: root.rightPanelHeaderContent
+            contentHistory: root.contentHistory
+            footer: root.footer
+            headerBackground: root.headerBackground
+            showRightPanel: root.showRightPanel
+            rightPanelWidth: root.rightPanelWidth
+            showHeader: root.showHeader
+            headerPadding: root.headerPadding
+            showFooter: root.showFooter
+            backButtonName: root.backButtonName
+            headerContent: root.headerContent
+            backgroundColor: root.backgroundColor
+            invertedLayout: root.invertedLayout
+            panelsFrozen: root.geometryTransitionOngoing
 
-            // Workaround for QTBUG-74328
-            interactive = false
-            interactive = true
+            // Bound from the start, like the alias it replaces: the index is
+            // applied while the pages are still in the view, and the view then
+            // keeps the current page as pages come and go. Changes made by the
+            // view (swipes, pages joining before the current one) flow back once
+            // construction is over.
+            currentIndex: root.currentIndex
+            property bool indexSynced: false
+
+            onCurrentIndexChanged: {
+                if (indexSynced)
+                    root.currentIndex = currentIndex
+
+                // Workaround for QTBUG-74328
+                interactive = false
+                interactive = true
+            }
+
+            onBackButtonClicked: root.backButtonClicked()
+
+            property bool switchOngoing: false
+
+            onPanelSwitchStarted: switchOngoing = true
+            onPanelSwitchEnded: switchOngoing = false
+
+            Component.onCompleted: indexSynced = true
         }
-
-        onBackButtonClicked: root.backButtonClicked()
-
-        // Raw slide state, tracked regardless of orientation — the slide also
-        // runs invisibly in landscape, since currentIndex is an alias into
-        // this view.
-        property bool switchOngoing: false
-
-        onPanelSwitchStarted: switchOngoing = true
-        onPanelSwitchEnded: switchOngoing = false
-
-        Component.onCompleted: currentIndexCache = currentIndex
     }
 
     QtObject {
         id: d
+
+        readonly property Item portrait: portraitLoader.item
+        readonly property Item landscape: landscapeLoader.item
+        property int currentIndexCache: 0
 
         // Set by every geometry input, cleared by the settle tick that sees it.
         // Only ever read from that tick, so a stale true costs one extra tick
@@ -485,7 +524,7 @@ LayoutChooser {
         // visible left to defer for); rotating into a still-running slide
         // opens one — start/end stay paired across orientation changes.
         readonly property bool panelSwitchOngoing:
-            portraitView.visible && portraitView.switchOngoing
+            root.isPortrait && !!d.portrait && d.portrait.switchOngoing
 
         onPanelSwitchOngoingChanged: {
             if (panelSwitchOngoing)
