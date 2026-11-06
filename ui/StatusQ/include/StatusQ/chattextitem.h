@@ -244,6 +244,7 @@ private:
     // Sets every quoted paragraph's and code block's margins from the current
     // quote and code settings.
     void applyBlockMargins();
+    bool fitCodeMargins(bool fit);
 
     std::pair<qreal, qreal> blockExtent(const QTextBlock& block) const;
     QVector<QRectF> computeQuoteBars() const;
@@ -284,6 +285,7 @@ private:
     QString m_highlightedLink;
     bool m_emojiOnly = false;
     bool m_hasQuotes = false;
+    bool m_hasFittedCode = false;
     bool m_hasCodeBlocks = false;
 
     int m_selectionStart = -1;

@@ -18,7 +18,30 @@ SplitView {
         readonly property int emojiOnlyPx: Math.round(documentItem.appearance.font.pixelSize * 2.2)
         readonly property var samples: [
             everythingSegments,
-            [{text: "🎉 🚀 ✅ 👩🏽‍💻 👨‍👩‍👧‍👦 🇵🇱 1️⃣"}]
+            [{text: "🎉 🚀 ✅ 👩🏽‍💻 👨‍👩‍👧‍👦 🇵🇱 1️⃣"}],
+            rtlSegments
+        ]
+
+        // Right-to-left paragraphs, quotes and code blocks. A code block's
+        // direction comes from its first strong character, like any paragraph.
+        readonly property var rtlSegments: [
+            { text: "مرحبا! هذه رسالة باللغة العربية مع " },
+            { text: "رابط", href: "https://status.app", underline: true },
+            { text: " في المنتصف." },
+            { text: "שלום, זו הודעה בעברית.", newBlock: true },
+            { text: "اقتباس من رسالة سابقة", newBlock: true, quoteLevel: 1 },
+            { text: "Arabic code block:", newBlock: true },
+            { text: "طباعة(\"مرحبا بالعالم\")", codeBlock: true },
+            { text: "Arabic comment, then code:", newBlock: true },
+            { text: "// تعليق بالعربية\nconst greeting = \"hello\"", codeBlock: true },
+            { text: "Code with a Hebrew string:", newBlock: true },
+            { text: "const greeting = \"שלום\"", codeBlock: true },
+            { text: "Right-to-left quote with right-to-left code:", newBlock: true },
+            { text: "اقتباس مع شيفرة عربية", newBlock: true, quoteLevel: 1 },
+            { text: "قيمة = ١٢٣\nإرجاع قيمة", codeBlock: true, quoteLevel: 1 },
+            { text: "Right-to-left quote with left-to-right code:", newBlock: true },
+            { text: "اقتباس مع شيفرة", newBlock: true, quoteLevel: 1 },
+            { text: "const total = items.length\nreturn total * 2", codeBlock: true, quoteLevel: 1 }
         ]
 
         readonly property var everythingSegments: [
@@ -180,7 +203,7 @@ SplitView {
                             id: ctrlMessage
                             objectName: "showcaseMessage"
                             Layout.fillWidth: true
-                            model: ["All features", "Emoji only"]
+                            model: ["All features", "Emoji only", "Right-to-left"]
                         }
                         CheckBox {
                             id: ctrlEdited
