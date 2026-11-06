@@ -138,13 +138,16 @@
         <!--
           "Open with" and "Share" from other apps land here and are passed on to
           StatusQtActivity. A caller waiting for a result would get a second
-          StatusQtActivity, which Qt answers by restarting the app.
+          StatusQtActivity, which Qt answers by restarting the app. No task
+          affinity: StatusQtActivity must never join a task this one roots,
+          which is left out of recents and closed in the background.
         -->
         <activity
             android:name="app.status.mobile.ExternalIntakeActivity"
             android:exported="true"
             android:excludeFromRecents="true"
             android:noHistory="true"
+            android:taskAffinity=""
             android:theme="@android:style/Theme.NoDisplay">
             <!--
               "Open with": the formats the browser shows here (DownloadFormatUtils),
