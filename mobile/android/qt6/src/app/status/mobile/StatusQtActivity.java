@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import androidx.core.splashscreen.SplashScreen;
 import java.util.concurrent.atomic.AtomicBoolean;
+import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -332,6 +333,7 @@ public class StatusQtActivity extends QtActivity {
         if (text == null) text = "";
 
         final String shareText = text;
+        final boolean fileAttached = hasStream(intent);
         final int serial;
         synchronized (intakeLock) {
             serial = ++intakeSerial;
@@ -342,14 +344,15 @@ public class StatusQtActivity extends QtActivity {
             final String[] imagePaths = isImageShare
                     ? copySharedImagesToCache(app, extractStreamUris(app, intent, isSendMultiple))
                     : new String[0];
-            ui.post(() -> deliverShare(app, serial, isImageShare, shareText, imagePaths));
+            ui.post(() -> deliverShare(app, serial, isImageShare, fileAttached, shareText,
+                    imagePaths));
         });
     }
 
     // UI thread. The decision the synchronous path used to make, now applied
     // to the copied result: pass to Qt when logged in, else park.
     private static void deliverShare(Context ctx, int serial, boolean isImageShare,
-                                     String text, String[] imagePaths) {
+                                     boolean fileAttached, String text, String[] imagePaths) {
         final boolean usable = !text.isEmpty() || imagePaths.length > 0;
         synchronized (intakeLock) {
             if (serial != intakeSerial) {
@@ -366,13 +369,24 @@ public class StatusQtActivity extends QtActivity {
             }
         }
         if (!usable) {
-            if (isImageShare) {
+            if (ShareIntakeRules.explainsNothingShared(usable, isImageShare, fileAttached)) {
                 Toast.makeText(ctx, "Only images and text can be shared to Status",
                         Toast.LENGTH_LONG).show();
             }
             return;
         }
         passShareToQt(text, imagePaths);
+    }
+
+    // A file in the share (a .txt arrives as text/plain with one), whatever its type.
+    private static boolean hasStream(Intent intent) {
+        if (intent.hasExtra(Intent.EXTRA_STREAM)) return true;
+        final ClipData clip = intent.getClipData();
+        if (clip == null) return false;
+        for (int i = 0; i < clip.getItemCount(); ++i) {
+            if (clip.getItemAt(i).getUri() != null) return true;
+        }
+        return false;
     }
 
     // Last-wins: a replaced pending share must not leak its cached copies.
