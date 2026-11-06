@@ -308,9 +308,7 @@ Item {
             target: Math.ceil(appMain.height / 48) * 3
 
             delegate: Component {
-                ChatViews.MessageView {
-                    reusable: true
-                }
+                ChatViews.MessageView {}
             }
         }
     }
