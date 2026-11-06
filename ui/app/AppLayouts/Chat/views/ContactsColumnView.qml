@@ -107,6 +107,16 @@ Item {
             model: SortFilterProxyModel {
                 sourceModel: root.chatSectionModule.model
                 filters: [
+                    AnyOf {
+                        ValueFilter {
+                            roleName: "isThread"
+                            value: false
+                        }
+                        ValueFilter {
+                            roleName: "archived"
+                            value: false
+                        }
+                    },
                     SQUtils.SearchFilter {
                         roleName: "name"
                         searchPhrase: searchInput.text

@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
@@ -212,6 +213,16 @@ Item {
                 model: SortFilterProxyModel {
                     sourceModel: root.communitySectionModule.model
                     filters: [
+                        AnyOf {
+                            ValueFilter {
+                                roleName: "isThread"
+                                value: false
+                            }
+                            ValueFilter {
+                                roleName: "archived"
+                                value: false
+                            }
+                        },
                         SQUtils.SearchFilter {
                             roleName: "name"
                             searchPhrase: searchField.text
