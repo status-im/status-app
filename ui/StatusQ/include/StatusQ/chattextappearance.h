@@ -4,6 +4,8 @@
 #include <QColor>
 #include <QFont>
 
+#include <optional>
+
 // Shared visual parameters. Content and interaction state belong to the item.
 // lineHeight is a minimum; zero uses natural leading. Normal emoji follow font
 // metrics; emojiOnlyPixelSize overrides only the source-classified emoji case.
@@ -85,6 +87,15 @@ public:
     // QFontMetricsF(font()).height(), computed once per font for every item
     // that sizes emoji to the line.
     qreal fontLineHeight() const;
+    // The ascent and descent one line needs for the font's text, emoji sized
+    // to fontLineHeight() and inline code in codeFontFamily(). Computed once
+    // per font and code font. Single-line previews use it as their minimum, so
+    // neither their height nor their baseline depends on what is visible.
+    struct LineMetrics {
+        qreal ascent = 0;
+        qreal descent = 0;
+    };
+    LineMetrics singleLineMetrics() const;
     QColor color() const { return m_color; }
     void setColor(const QColor& value);
     QColor linkColor() const { return m_linkColor; }
@@ -156,6 +167,7 @@ signals:
 private:
     QFont m_font = {};
     mutable qreal m_fontLineHeight = -1;
+    mutable std::optional<LineMetrics> m_singleLineMetrics;
     QColor m_color = Qt::black;
     QColor m_linkColor = QColor(0x43, 0x60, 0xDF);
     QColor m_codeBackground = QColor(0, 0, 0, 20);

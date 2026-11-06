@@ -66,5 +66,9 @@ private:
     bool m_truncated = false;
     // Paragraph direction from the first strong character, as Text resolves it.
     bool m_rightToLeft = false;
+    // Measured once per rebuild on the full text and the appearance's minimum
+    // line, so resizing never changes the height or moves the baseline.
+    qreal m_baseline = 0;
+    qreal m_height = 0;
     quint64 m_revision = 0;
 };
