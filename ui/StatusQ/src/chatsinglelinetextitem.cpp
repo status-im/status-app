@@ -67,21 +67,59 @@ void ChatSingleLineTextItem::setEdited(bool value)
     ChatTextAccessibility::update(this);
 }
 
+void ChatSingleLineTextItem::componentComplete()
+{
+    QQuickItem::componentComplete();
+    if (m_rebuildPending)
+        rebuild();
+}
+
+// A preview shows one line of a few hundred pixels at most, so the text is cut
+// well past what any width can show: 512 characters of even the narrowest
+// glyphs span far more than a preview. A long message then costs no more than
+// a short one to flatten, measure and shape.
+static constexpr qsizetype kPreviewLength = 512;
+// One complete code point beyond the cap lets the boundary finder distinguish
+// a real boundary from the artificial end of the collected prefix.
+static constexpr qsizetype kPreviewBufferLength = kPreviewLength + 2;
+
 void ChatSingleLineTextItem::rebuild()
 {
+    // Properties arrive one at a time while the item is created, segments
+    // usually before the appearance: shaping for each would lay the text out
+    // with the default appearance first, only to throw it away.
+    if (!isComponentComplete()) {
+        m_rebuildPending = true;
+        return;
+    }
+    m_rebuildPending = false;
+    m_capped = false;
     m_text.clear();
     m_formats.clear();
     int emojiSize = -1;
     bool afterCode = false;
     int quote = 0;
     int blockQuoteLevel = 0;
-    const auto append = [this](const QString& text, const QTextCharFormat& format) {
+    const auto append = [this](QStringView text, const QTextCharFormat& format, bool limited = true) {
+        if (limited && text.size() > kPreviewBufferLength - m_text.size()) {
+            const qsizetype room = qMax(qsizetype(0), kPreviewBufferLength - m_text.size());
+            text = text.left(room);
+            m_capped = true;
+        }
         if (text.isEmpty())
             return;
         m_formats.append({int(m_text.size()), int(text.size()), format});
         m_text += text;
     };
     for (const auto& segment : std::as_const(m_segments)) {
+        // Past the preview length: the rest is never shown.
+        if (m_capped || m_text.size() >= kPreviewBufferLength) {
+            if (!segment.text.isEmpty()) {
+                m_capped = true;
+                break;
+            }
+            continue;
+        }
         const bool code = segment.codeBlock();
         const bool boundary = !m_text.isEmpty() && (code || afterCode || segment.newBlock());
         if (m_text.isEmpty() || boundary)
@@ -109,12 +147,22 @@ void ChatSingleLineTextItem::rebuild()
             format.setForeground(m_appearance->linkColor());
         else if (role == ChatTextFormat::ForegroundRole::Quote)
             format.setForeground(m_appearance->quoteColor());
-        QString text = code ? segment.text.trimmed() : segment.text;
-        text.replace(QStringLiteral("\r\n"), QStringLiteral(" "));
-        for (QChar& c : text) {
+        // Cut before flattening and the emoji scan, so their cost is bounded too.
+        const QStringView source = code ? QStringView(segment.text).trimmed() : QStringView(segment.text);
+        const qsizetype room = kPreviewBufferLength - m_text.size();
+        QString text;
+        text.reserve(qMin(room, source.size()));
+        qsizetype consumed = 0;
+        while (consumed < source.size() && text.size() < room) {
+            QChar c = source.at(consumed++);
+            if (c == '\r' && consumed < source.size() && source.at(consumed) == '\n')
+                ++consumed;
             if (c == '\n' || c == '\r' || c == QChar::LineSeparator || c == QChar::ParagraphSeparator)
                 c = QLatin1Char(' ');
+            text += c;
         }
+        if (consumed < source.size())
+            m_capped = true;
         // Emoji sizing retains each span's formatting and never enlarges an emoji-only preview.
         if (!segment.code() && !code && Markdown::clusterHasEmoji(text)) {
             if (emojiSize < 0)
@@ -134,11 +182,27 @@ void ChatSingleLineTextItem::rebuild()
         } else
             append(text, format);
     }
-    if (m_edited && !m_segments.isEmpty()) {
+    if (m_text.size() > kPreviewLength) {
+        // Find boundaries across segment/format changes, with lookahead still
+        // present. Cutting first would make an incomplete cluster look complete.
+        QTextBoundaryFinder boundary(QTextBoundaryFinder::Grapheme, m_text);
+        boundary.setPosition(kPreviewLength);
+        const qsizetype end = boundary.isAtBoundary()
+                ? kPreviewLength : qMax(qsizetype(0), boundary.toPreviousBoundary());
+        m_text.truncate(end);
+        while (!m_formats.isEmpty() && m_formats.last().start >= end)
+            m_formats.removeLast();
+        if (!m_formats.isEmpty())
+            m_formats.last().length = qMin(m_formats.last().length, int(end) - m_formats.last().start);
+        m_capped = true;
+    }
+    // A cut text is elided before its end, so the marker could only show
+    // after an ellipsis. The accessible text keeps it either way.
+    if (m_edited && !m_segments.isEmpty() && !m_capped) {
         QTextCharFormat marker;
         marker.setForeground(m_appearance->editedMarkerColor());
         marker.setProperty(QTextFormat::FontPixelSize, m_appearance->editedMarkerFontSize());
-        append(QLatin1Char(' ') + m_appearance->editedMarkerText(), marker);
+        append(QString(QLatin1Char(' ') + m_appearance->editedMarkerText()), marker, false);
     }
     m_boundaries = {0};
     QTextBoundaryFinder finder(QTextBoundaryFinder::Grapheme, m_text);
@@ -154,7 +218,7 @@ void ChatSingleLineTextItem::rebuild()
     m_layout.setTextOption(option);
     m_ellipsisWidth = shape(0, true);
     m_naturalWidth = shape(m_text.size(), false);
-    if (m_text.isEmpty()) {
+    if (m_text.isEmpty() && !m_capped) {
         m_baseline = m_height = 0;
     } else {
         const auto minimum = m_appearance->singleLineMetrics();
@@ -164,7 +228,9 @@ void ChatSingleLineTextItem::rebuild()
     }
     m_fitMinimum = m_fitMaximum = -1;
     m_cutIndex = -1;
-    setImplicitWidth(m_naturalWidth);
+    // A cut text always ends in an ellipsis, so its natural width includes
+    // one: an item sized by it shows the text whole instead of searching.
+    setImplicitWidth(m_capped ? m_naturalWidth + m_ellipsisWidth : m_naturalWidth);
     layout();
     emit displayedTextChanged();
 }
@@ -178,6 +244,7 @@ qreal ChatSingleLineTextItem::shape(int length, bool ellipsis)
     const bool joins = ellipsis && length > 0 && nextCharJoins(m_text, length);
     const QString suffix = !ellipsis ? QString()
             : joins ? QStringLiteral("\u200D\u2026") : QStringLiteral("\u2026");
+    m_shapedFull = length == m_text.size() && !ellipsis;
     m_layout.setText(m_text.left(length) + suffix);
     QList<QTextLayout::FormatRange> formats;
     for (const auto& range : std::as_const(m_formats)) {
@@ -205,11 +272,18 @@ void ChatSingleLineTextItem::layout()
         return;
     const QString previous = m_layout.text();
     const bool wasTruncated = m_truncated;
-    m_truncated = m_naturalWidth > available;
+    m_truncated = m_capped || m_naturalWidth > available;
     if (!m_truncated) {
-        shape(m_text.size(), false);
+        // Usually still in the layout from measuring it in rebuild().
+        if (!m_shapedFull)
+            shape(m_text.size(), false);
         m_fitMinimum = m_naturalWidth;
         m_fitMaximum = std::numeric_limits<qreal>::infinity();
+    } else if (m_capped && m_naturalWidth + m_ellipsisWidth <= available) {
+        // A cut text wider than the preview can be: all of it, elided.
+        m_fitMinimum = shape(m_text.size(), true);
+        m_fitMaximum = std::numeric_limits<qreal>::infinity();
+        m_cutIndex = -1;
     } else if (m_ellipsisWidth > available) {
         m_fitMaximum = m_ellipsisWidth;
         m_fitMinimum = 0;

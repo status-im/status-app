@@ -44,6 +44,7 @@ signals:
 protected:
     QSGNode* updatePaintNode(QSGNode*, UpdatePaintNodeData*) override;
     void geometryChange(const QRectF&, const QRectF&) override;
+    void componentComplete() override;
 
 private:
     void connectAppearance();
@@ -51,6 +52,12 @@ private:
     ChatTextAppearance* m_appearance = ChatTextAppearance::defaults();
     void rebuild();
     void layout();
+    // Set while properties arrive during creation: rebuilt once, when complete.
+    bool m_rebuildPending = false;
+    // Whether the layout holds the whole text, unelided, as last shaped.
+    bool m_shapedFull = false;
+    // Whether the text was cut at the preview length: then always elided.
+    bool m_capped = false;
     qreal shape(int length, bool ellipsis);
     QList<ChatTextSegment> m_segments = {};
     bool m_edited = false;

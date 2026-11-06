@@ -46,6 +46,20 @@ Item {
         }
     }
     Component { id: clickSpy; SignalSpy { signalName: "clicked" } }
+
+    ChatTextAppearance { id: replyAppearance; font.pixelSize: 15 }
+    // Declared as StatusMessageReply declares it: the appearance and the
+    // segments arrive one at a time while the item is created.
+    Component {
+        id: replyComponent
+        ChatSingleLineTextItem {
+            property int displayedChanges: 0
+            appearance: replyAppearance
+            clip: true
+            edited: false
+            onDisplayedTextChanged: ++displayedChanges
+        }
+    }
     TestCase {
         id: testCase
 
@@ -407,6 +421,101 @@ Item {
             verify(shown.endsWith("\u2026"))
             compare(shown.endsWith("\u200D\u2026"), data.joiner)
             compare(shown.split("\u200D").length - 1, data.joiner ? 1 : 0)
+        }
+
+        // Built once, when complete, not once per property as it arrives.
+        function test_builtOnceWhenComplete() {
+            const item = createTemporaryObject(replyComponent, root, {
+                width: 300, segments: MarkdownUtils.toChatTextSegments("hello **world** 😀", {})})
+            verify(!!item)
+            compare(item.displayedChanges, 1)
+            compare(item.displayedText, "hello world 😀")
+        }
+
+        // A long message is cut at the preview length: the preview is elided
+        // at any width, while the accessible text keeps the whole message.
+        function test_capPreservesGraphemes_data() {
+            const rows = []
+            for (const cluster of ["👨‍👩‍👧‍👦", "👍🏽", "🇵🇱", "a\u0301", "1️⃣"]) {
+                for (const split of [false, true])
+                    rows.push({tag: cluster + (split ? "-segments" : ""), cluster, split})
+            }
+            return rows
+        }
+
+        function test_capPreservesGraphemes(data) {
+            const splitAt = data.cluster.codePointAt(0) > 0xffff ? 2 : 1
+            const prefix = "x".repeat(512 - splitAt)
+            const item = create("", {width: 20000})
+            item.segments = data.split
+                ? [{text: prefix + data.cluster.slice(0, splitAt)},
+                   {text: data.cluster.slice(splitAt) + "tail", bold: true}]
+                : [{text: prefix + data.cluster + "tail"}]
+            compare(item.displayedText, prefix + "…")
+            verify(item.truncated)
+            compare(item.text, prefix + data.cluster + "tail")
+
+            // A complete cluster ending exactly at the limit must survive.
+            const exact = "x".repeat(512 - data.cluster.length) + data.cluster
+            item.segments = [{text: exact + "tail"}]
+            compare(item.displayedText, exact + "…")
+        }
+
+        function test_capOmitsOversizedCluster() {
+            const cluster = "a" + "\u0301".repeat(600)
+            const item = create("", {width: 20000})
+            item.segments = [{text: cluster}, {text: "tail"}]
+            compare(item.displayedText, "…")
+            verify(item.truncated)
+            verify(item.contentHeight > 0)
+            compare(item.text, cluster + "tail")
+        }
+
+        function test_capAfterNormalizedNewlines() {
+            const item = create("", {width: 20000})
+            const prefix = "\r\n".repeat(511)
+            item.segments = [{text: prefix + "a\u0301tail"}]
+            compare(item.displayedText, " ".repeat(511) + "…")
+        }
+
+        function test_longTextIsCut_data() {
+            return [
+                {tag: "narrow", width: 300},
+                {tag: "wider-than-the-cut-text", width: 200000}
+            ]
+        }
+
+        function test_longTextIsCut(data) {
+            const source = "word ".repeat(1000).trim()
+            const item = create(source, {width: data.width})
+            verify(item.truncated)
+            verify(item.displayedText.endsWith("\u2026"))
+            verify(item.displayedText.length <= 513, `shown ${item.displayedText.length} characters`)
+            compare(item.text, source)
+            const before = item.contentHeight
+            item.width = 100
+            compare(item.contentHeight, before)
+        }
+
+        function test_cutTextDropsTheEditedMarker() {
+            const item = create("word ".repeat(1000), {width: 200000, edited: true})
+            verify(item.displayedText.endsWith("\u2026"))
+            verify(item.displayedText.indexOf(item.appearance.editedMarkerText) < 0)
+            verify(item.text.endsWith(item.appearance.editedMarkerText))
+        }
+
+        // The cut never splits a surrogate pair: an emoji straddling it is
+        // left out whole.
+        function test_cutKeepsSurrogatePairsWhole_data() {
+            return [
+                {tag: "emoji", source: "a".repeat(511) + "😀" + "b".repeat(100)},
+                {tag: "code", source: "`" + "a".repeat(511) + "𝔸" + "b".repeat(100) + "`"}
+            ]
+        }
+
+        function test_cutKeepsSurrogatePairsWhole(data) {
+            const item = create(data.source, {width: 200000})
+            compare(item.displayedText, "a".repeat(511) + "\u2026")
         }
 
         function test_mixedDirection() {
