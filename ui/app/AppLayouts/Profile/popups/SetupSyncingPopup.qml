@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
-import QtQml.StateMachine as DSM
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -35,12 +34,17 @@ StatusDialog {
     QtObject {
         id: d
 
-        signal generatingConnectionStringFailed
-        signal connectionStringGenerated
+        readonly property int stateDisplaySyncCode: 0
+        readonly property int stateLocalPairingInProgress: 1
+        readonly property int stateLocalPairingFailed: 2
+        readonly property int stateLocalPairingSuccess: 3
+        readonly property int stateError: 4
 
-        signal localPairingStarted
-        signal localPairingFailed
-        signal localPairingFinished
+        property int state: d.stateDisplaySyncCode
+
+        readonly property bool localPairing: d.state === d.stateLocalPairingInProgress
+                                             || d.state === d.stateLocalPairingFailed
+                                             || d.state === d.stateLocalPairingSuccess
         property string localPairingErrorMessage
 
         property string connectionString
@@ -59,7 +63,8 @@ StatusDialog {
             }
 
             if (d.errorMessage !== "") {
-                d.generatingConnectionStringFailed()
+                if (d.state === d.stateDisplaySyncCode)
+                    d.state = d.stateError
                 return
             }
 
@@ -73,113 +78,24 @@ StatusDialog {
         function onLocalPairingStateChanged() {
             switch (root.devicesStore.localPairingState) {
             case Constants.LocalPairingState.Transferring:
-                d.localPairingStarted()
+                if (d.state === d.stateDisplaySyncCode)
+                    d.state = d.stateLocalPairingInProgress
                 break
             case Constants.LocalPairingState.Error:
-                d.localPairingFailed()
+                if (d.state === d.stateDisplaySyncCode || d.state === d.stateLocalPairingInProgress)
+                    d.state = d.stateLocalPairingFailed
                 break
             case Constants.LocalPairingState.Finished:
-                d.localPairingFinished()
+                if (d.state === d.stateDisplaySyncCode || d.state === d.stateLocalPairingInProgress)
+                    d.state = d.stateLocalPairingSuccess
                 break
             }
         }
     }
 
-    DSM.StateMachine {
-        id: stateMachine
-
-        running: root.visible
-        initialState: displaySyncCodeState
-
-        DSM.State {
-            id: displaySyncCodeState
-
-            onEntered: {
-                d.generateConnectionString()
-            }
-
-            DSM.SignalTransition {
-                targetState: errorState
-                signal: d.generatingConnectionStringFailed
-            }
-
-            DSM.SignalTransition {
-                targetState: localPairingBaseState
-                signal: d.localPairingStarted
-            }
-
-            DSM.SignalTransition {
-                targetState: finalState
-                signal: nextButton.clicked
-            }
-
-            // Next 2 transitions are here temporarily.
-            // TODO: Remove when server notifies with ProcessSuccess/ProcessError event.
-
-            DSM.SignalTransition {
-                targetState: localPairingFailedState
-                signal: d.localPairingFailed
-            }
-
-            DSM.SignalTransition {
-                targetState: localPairingSuccessState
-                signal: d.localPairingFinished
-            }
-        }
-
-        DSM.State {
-            id: localPairingBaseState
-
-            initialState: localPairingInProgressState
-
-            DSM.State {
-                id: localPairingInProgressState
-
-                DSM.SignalTransition {
-                    targetState: localPairingFailedState
-                    signal: d.localPairingFailed
-                }
-
-                DSM.SignalTransition {
-                    targetState: localPairingSuccessState
-                    signal: d.localPairingFinished
-                }
-            }
-
-            DSM.State {
-                id: localPairingFailedState
-
-                DSM.SignalTransition {
-                    targetState: finalState
-                    signal: nextButton.clicked
-                }
-            }
-
-            DSM.State {
-                id: localPairingSuccessState
-
-                DSM.SignalTransition {
-                    targetState: finalState
-                    signal: nextButton.clicked
-                }
-            }
-        }
-
-        DSM.State {
-            id: errorState
-
-            DSM.SignalTransition {
-                targetState: finalState
-                signal: nextButton.clicked
-            }
-        }
-
-        DSM.FinalState {
-            id: finalState
-            onEntered: {
-                root.close()
-            }
-        }
+    onAboutToShow: {
+        d.state = d.stateDisplaySyncCode
+        d.generateConnectionString()
     }
 
     contentItem: Item {
@@ -195,7 +111,7 @@ StatusDialog {
         SyncingDisplayCode {
             id: displaySyncCodeView
             anchors.fill: parent
-            visible: displaySyncCodeState.active
+            visible: d.state === d.stateDisplaySyncCode
 
             connectionStringLabel: qsTr("Sync code")
             connectionString: d.connectionString
@@ -210,7 +126,7 @@ StatusDialog {
         SyncingDeviceView {
             id: localPairingView
             anchors.fill: parent
-            visible: localPairingBaseState.active
+            visible: d.localPairing
             devicesModel: root.devicesStore.devicesModel
             userDisplayName: root.profileStore.displayName
             usesDefaultName: root.profileStore.usesDefaultName
@@ -229,7 +145,7 @@ StatusDialog {
         SyncingErrorMessage {
             id: errorView
             anchors.fill: parent
-            visible: errorState.active
+            visible: d.state === d.stateError
             primaryText: qsTr("Failed to generate sync code")
             secondaryText: qsTr("Failed to start pairing server")
             errorDetails: d.errorMessage
@@ -244,14 +160,15 @@ StatusDialog {
 
                 id: nextButton
                 visible: !!text
-                enabled: !localPairingInProgressState.active
+                enabled: d.state !== d.stateLocalPairingInProgress
+                onClicked: root.close()
                 text: {
-                    if (displaySyncCodeState.active
-                        || localPairingInProgressState.active
-                        || localPairingSuccessState.active)
+                    if (d.state === d.stateDisplaySyncCode
+                        || d.state === d.stateLocalPairingInProgress
+                        || d.state === d.stateLocalPairingSuccess)
                         return qsTr("Done");
-                    if (localPairingFailedState.active
-                        || errorState.active)
+                    if (d.state === d.stateLocalPairingFailed
+                        || d.state === d.stateError)
                         return qsTr("Close");
                     return ""
                 }

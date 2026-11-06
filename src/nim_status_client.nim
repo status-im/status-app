@@ -301,6 +301,11 @@ proc mainProc() =
     if not existsEnv("QSG_ATLAS_HEIGHT"):
       putEnv("QSG_ATLAS_HEIGHT", MobileQsgAtlasSize)
 
+  # Mali keeps a host copy of every texture atlas page; no atlas saves ~10 MB GPU memory
+  when defined(android):
+    if not existsEnv("QSG_ATLAS_SIZE_LIMIT"):
+      putEnv("QSG_ATLAS_SIZE_LIMIT", "0")
+
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
   statusq_initializeWebEngine()
 
@@ -322,9 +327,11 @@ proc mainProc() =
       imageCert.toOpenArrayByte(0, imageCert.len - 1))
     for c in newCerts.mitems:
       certList.add(move(c))
-    var sysCerts = QSslConfiguration.systemCaCertificates()
-    for c in sysCerts.mitems:
-      certList.add(move(c))
+    # On Android the default CA list already holds the system CAs (no on-demand loading)
+    when not defined(android):
+      var sysCerts = QSslConfiguration.systemCaCertificates()
+      for c in sysCerts.mitems:
+        certList.add(move(c))
     defaultConfig.setCaCertificates(certList)
     QSslConfiguration.setDefaultConfiguration(defaultConfig)
 
