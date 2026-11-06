@@ -5,6 +5,7 @@
 #include <QTextBoundaryFinder>
 #include <QQuickWindow>
 #include <QSGTextNode>
+#include <QtMath>
 #include <limits>
 #include <utility>
 
@@ -13,7 +14,7 @@ class TextNode : public QSGNode
 {
 public:
     quint64 revision = 0;
-    qreal x = 0;
+    QPointF position;
 };
 
 // Whether the character at `pos` (past combining marks) joins the one before
@@ -153,6 +154,14 @@ void ChatSingleLineTextItem::rebuild()
     m_layout.setTextOption(option);
     m_ellipsisWidth = shape(0, true);
     m_naturalWidth = shape(m_text.size(), false);
+    if (m_text.isEmpty()) {
+        m_baseline = m_height = 0;
+    } else {
+        const auto minimum = m_appearance->singleLineMetrics();
+        const QTextLine line = m_layout.lineAt(0);
+        m_baseline = qMax(minimum.ascent, line.ascent());
+        m_height = qCeil(m_baseline + qMax(minimum.descent, line.descent()));
+    }
     m_fitMinimum = m_fitMaximum = -1;
     m_cutIndex = -1;
     setImplicitWidth(m_naturalWidth);
@@ -251,7 +260,7 @@ void ChatSingleLineTextItem::layout()
         m_fitMaximum = qMin(m_naturalWidth, highWidth);
         m_fitMinimum = shape(m_boundaries[low], true);
     }
-    const qreal height = m_text.isEmpty() ? 0 : m_layout.lineAt(0).height();
+    const qreal height = m_height;
     if (implicitHeight() != height) {
         setImplicitHeight(height);
         emit contentHeightChanged();
@@ -285,15 +294,21 @@ QSGNode* ChatSingleLineTextItem::updatePaintNode(QSGNode* old, UpdatePaintNodeDa
     }
     auto* node = static_cast<QSGTextNode*>(root->firstChild());
     node->setViewport(boundingRect());
-    // A right-to-left line sits at the right edge, as Text aligns it.
-    const qreal x = m_rightToLeft && m_layout.lineCount() > 0
-            ? qMax(qreal(0), width() - m_layout.lineAt(0).naturalTextWidth()) : 0;
-    if (root->revision != m_revision || root->x != x) {
+    // A right-to-left line sits at the right edge, as Text aligns it. Every
+    // line shares one baseline, whatever part of the text is visible.
+    QPointF position;
+    if (m_layout.lineCount() > 0) {
+        const QTextLine line = m_layout.lineAt(0);
+        if (m_rightToLeft)
+            position.setX(qMax(qreal(0), width() - line.naturalTextWidth()));
+        position.setY(m_baseline - line.ascent());
+    }
+    if (root->revision != m_revision || root->position != position) {
         root->revision = m_revision;
-        root->x = x;
+        root->position = position;
         node->clear();
         node->setColor(m_appearance->color());
-        node->addTextLayout(QPointF(x, 0), &m_layout);
+        node->addTextLayout(position, &m_layout);
     }
     return root;
 }

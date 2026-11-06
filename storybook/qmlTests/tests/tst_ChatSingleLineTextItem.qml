@@ -109,6 +109,104 @@ Item {
             verify(!item.truncated)
             verify(item.contentHeight > 0)
         }
+        // One height for text, emoji, inline code and fallback scripts, so
+        // reply rows neither differ by content nor jump while resizing.
+        function test_heightIndependentOfContent() {
+            const height = create("hello").contentHeight
+            verify(height > 0)
+            for (const source of ["hello 😀", "`code`", "**bold**", "مرحبا", "שלום", "hello 😀 `code` مرحبا"])
+                compare(create(source).contentHeight, height, source)
+            compare(create("hello", {edited: true}).contentHeight, height)
+        }
+
+        function test_heightIndependentOfWidth() {
+            const item = create("hello **world** 😀 `end`")
+            const height = item.contentHeight
+            for (const width of [40, 100, 160, 900]) {
+                item.width = width
+                compare(item.contentHeight, height, `at width ${width}`)
+            }
+        }
+
+        // Measure only the unchanged word, using its actual font rather than
+        // a fixed pixel window. Emoji/code/fallback glyphs are outside it.
+        function inkRows(item) {
+            referenceMetrics.font = item.appearance.font
+            const wordWidth = referenceMetrics.advanceWidth("hello")
+            const image = grabImage(item)
+            const scale = image.width / item.width
+            let top = image.height, bottom = -1
+            for (let y = 0; y < image.height; ++y) {
+                for (let x = 0; x < Math.min(image.width, Math.floor(wordWidth * scale)); ++x) {
+                    const c = image.pixel(x, y)
+                    if (c.a > 0.5 && c.r > 0.5 && c.g < 0.5 && c.b < 0.5) {
+                        top = Math.min(top, y)
+                        bottom = Math.max(bottom, y)
+                        break
+                    }
+                }
+            }
+            return {top: top / scale, bottom: bottom / scale}
+        }
+
+        function test_baselineIndependentOfContent_data() {
+            return [
+                {tag: "emoji", source: "hello 😀"},
+                {tag: "code", source: "hello `code`"},
+                {tag: "combining", source: "hello a\u0301"},
+                {tag: "fallback", source: "hello مرحبا"}
+            ]
+        }
+
+        function test_baselineIndependentOfContent(data) {
+            const item = create("hello", {color: "red"})
+            const plain = inkRows(item)
+            verify(plain.bottom > plain.top)
+            item.segments = MarkdownUtils.toChatTextSegments(data.source, {})
+            const ink = inkRows(item)
+            verify(ink.bottom > ink.top)
+            compare(ink.top, plain.top, data.source)
+            compare(ink.bottom, plain.bottom, data.source)
+        }
+
+        function test_baselineIndependentOfWidth_data() {
+            return test_baselineIndependentOfContent_data()
+        }
+
+        function test_baselineMatchesBetweenItems_data() {
+            return [{tag: "plain", source: "hello"}].concat(test_baselineIndependentOfContent_data())
+        }
+
+        function test_baselineMatchesBetweenItems(data) {
+            const plainItem = create("hello", {color: "red"})
+            const plain = inkRows(plainItem)
+            // grabImage includes overlapping siblings. Hide the reference so
+            // doubled antialiasing cannot change the measured ink boundary.
+            plainItem.visible = false
+            const ink = inkRows(create(data.source, {color: "red"}))
+            verify(plain.bottom > plain.top)
+            verify(ink.bottom > ink.top)
+            compare(ink.top, plain.top, data.source)
+            compare(ink.bottom, plain.bottom, data.source)
+        }
+
+        function test_baselineIndependentOfWidth(data) {
+            const item = create(data.source + " trailing text", {color: "red"})
+            const full = inkRows(item)
+            const height = item.contentHeight
+            referenceMetrics.font = item.appearance.font
+            const narrow = Math.ceil(referenceMetrics.advanceWidth("hello …"))
+            for (const width of [narrow, 900, narrow, 900]) {
+                item.width = width
+                verify(item.displayedText.startsWith("hello"))
+                compare(item.truncated, width === narrow)
+                const ink = inkRows(item)
+                compare(ink.top, full.top, `at width ${width}`)
+                compare(ink.bottom, full.bottom, `at width ${width}`)
+                compare(item.contentHeight, height, `at width ${width}`)
+            }
+        }
+
         function test_resizeAndRestore() {
             const item = create("A **bold** preview with `monospace` and a long suffix")
             const full = item.displayedText

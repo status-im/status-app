@@ -2,6 +2,7 @@
 
 #include <QFontMetricsF>
 #include <QQmlEngine>
+#include <QTextLayout>
 
 ChatTextAppearance* ChatTextAppearance::defaults()
 {
@@ -24,6 +25,7 @@ void ChatTextAppearance::setFont(const QFont& value)
         return;
     m_font = value;
     m_fontLineHeight = -1;
+    m_singleLineMetrics.reset();
     emit fontChanged();
     emit changed(Font);
 }
@@ -33,6 +35,25 @@ qreal ChatTextAppearance::fontLineHeight() const
     if (m_fontLineHeight < 0)
         m_fontLineHeight = QFontMetricsF(m_font).height();
     return m_fontLineHeight;
+}
+
+ChatTextAppearance::LineMetrics ChatTextAppearance::singleLineMetrics() const
+{
+    if (!m_singleLineMetrics) {
+        // Text, then an emoji and inline code formatted as single-line items
+        // format them. Fallback fonts for other scripts can still exceed it.
+        QTextLayout layout(QStringLiteral("Xg\U0001F600Xg"), m_font);
+        QTextCharFormat emoji;
+        emoji.setProperty(QTextFormat::FontPixelSize, qRound(fontLineHeight()));
+        QTextCharFormat code;
+        code.setFontFamilies({m_codeFontFamily});
+        layout.setFormats({{2, 2, emoji}, {4, 2, code}});
+        layout.beginLayout();
+        const QTextLine line = layout.createLine();
+        layout.endLayout();
+        m_singleLineMetrics = LineMetrics{line.ascent(), line.descent()};
+    }
+    return *m_singleLineMetrics;
 }
 
 void ChatTextAppearance::setColor(const QColor& value)
@@ -67,6 +88,7 @@ void ChatTextAppearance::setCodeFontFamily(const QString& value)
     if (m_codeFontFamily == value)
         return;
     m_codeFontFamily = value;
+    m_singleLineMetrics.reset();
     emit codeFontFamilyChanged();
     emit changed(CodeFontFamily);
 }
