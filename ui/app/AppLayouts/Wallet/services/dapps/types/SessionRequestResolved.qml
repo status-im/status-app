@@ -47,6 +47,8 @@ QObject {
     property var feesInfo
     // hex gas the fees are shown for and the tx is signed with
     property string gasLimit
+    // our gas estimate failed, so there is no gas to sign with
+    property bool gasEstimateFailed: false
     property var /* Big */ value
 
     /// maps to Constants.TransactionEstimatedTime values

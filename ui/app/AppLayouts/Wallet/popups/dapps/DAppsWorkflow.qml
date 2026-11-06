@@ -417,11 +417,12 @@ SQUtils.QObject {
             cryptoFees: request.nativeTokenMaxFees ? request.nativeTokenMaxFees.toFixed() : ""
             nativeTokenSymbol: Utils.getNativeTokenSymbol(request.chainId)
             estimatedTime: WalletUtils.getLabelForEstimatedTxTime(request.estimatedTimeCategory)
-            feesLoading: hasFees && (!fiatFees || !cryptoFees)
+            feesLoading: hasFees && (!fiatFees || !cryptoFees) && !gasEstimateFailed
             estimatedTimeLoading: request.estimatedTimeCategory === Constants.TransactionEstimatedTime.Unknown
             hasFees: signingTransaction
             enoughFundsForTransaction: request.haveEnoughFunds
             enoughFundsForFees: request.haveEnoughFees
+            gasEstimateFailed: !!request.gasEstimateFailed
 
             // the gas to sign is known once our estimate answered
             signButtonEnabled: ((!hasFees) || enoughFundsForTransaction && enoughFundsForFees && !!request.gasLimit) && root.enabled
