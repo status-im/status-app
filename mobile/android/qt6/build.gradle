@@ -162,13 +162,6 @@ android {
             debuggable = true
             applicationIdSuffix ".debug"
             resValue "string", "app_name", "Status Debug"
-            packaging {
-                jniLibs {
-                    // Keep Nim debug symbols so Android Studio
-                    // can resolve native frames into Nim names.
-                    keepDebugSymbols += '**/libnim_status_client.so'
-                }
-            }
         }
         profile {
             // See docs/profiling-mobile.md.
@@ -178,6 +171,16 @@ android {
             minifyEnabled = true
             shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Debug and profile builds keep Nim symbols so Android Studio can resolve native
+// frames into Nim names. A packaging block inside a build type applies to all of them.
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        if (variant.buildType in ['debug', 'profile']) {
+            variant.packaging.jniLibs.keepDebugSymbols.add('**/libnim_status_client.so')
         }
     }
 }
