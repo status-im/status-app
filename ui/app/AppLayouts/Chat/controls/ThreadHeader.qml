@@ -72,6 +72,7 @@ RowLayout {
         spacing: 0
 
         StatusBaseText {
+            objectName: "threadHeaderTitle"
             Layout.fillWidth: true
             visible: !root.editing
             text: root.threadName
