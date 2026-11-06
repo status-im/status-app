@@ -985,6 +985,8 @@ endif
 		$(MACOS_INNER_BUNDLE) \
 		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess \
 		-no-codesign
+	scripts/thin-macos-bundle.sh $(MACOS_OUTER_BUNDLE) \
+		$(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client
 
 	# codesign refuses files with Finder info or a resource fork; make run leaves a custom icon on the binary.
 	xattr -cr $(MACOS_OUTER_BUNDLE)
