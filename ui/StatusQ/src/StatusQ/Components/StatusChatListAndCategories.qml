@@ -23,6 +23,7 @@ Item {
     property bool isMobile: Utils.isMobile
 
     property Component categoryPopupMenu
+    property Component threadListPopupMenu
     property Component chatListPopupMenu
     property alias popupMenu: popupMenuSlot.sourceComponent
 
@@ -82,6 +83,7 @@ Item {
                 ]
             }
 
+            threadPopupMenu: root.threadListPopupMenu
             popupMenu: root.chatListPopupMenu
             categoryPopupMenu: root.categoryPopupMenu
         }
