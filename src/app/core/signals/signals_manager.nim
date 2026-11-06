@@ -77,6 +77,7 @@ QtObject:
 
     result = case signalType:
       of SignalType.Message: MessageSignal.fromEvent(jsonSignal)
+      of SignalType.SectionUnreadCountsChanged: Signal(signalType: signalType)
       of SignalType.MessageDelivered: MessageDeliveredSignal.fromEvent(jsonSignal)
       of SignalType.NotificationReplySent: NotificationReplySentSignal.fromEvent(jsonSignal)
       of SignalType.EnvelopeSent: EnvelopeSentSignal.fromEvent(jsonSignal)

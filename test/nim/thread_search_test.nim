@@ -296,22 +296,20 @@ suite "thread search result navigation":
       service.onAsyncLoadChatThreadsForChats($(%* {
         "chatIds": ["parent"], "threads": []
       }))
-      check SectionDelegate(section.delegate).notifications == @[("section", false, 0)]
+      check SectionDelegate(section.delegate).notifications.len == 0
       check section.openCommunityChatAndScrollToMessage("parent", "target", "thread")
       check section.pendingThreadId == "thread"
       check section.pendingThreadMessageId == "target"
       check settings.getSectionLastOpenThread("section") == savedThread
       check section.activated == @["parent"]
-      check SectionDelegate(section.delegate).notifications ==
-        @[("section", false, 0), ("section", false, 0)]
+      check SectionDelegate(section.delegate).notifications.len == 0
 
       events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
         ThreadDto(chatId: "parent", threadId: "other-thread", parentMessageId: "other-root", name: "Other")
       ]))
       check section.pendingThreadMessageId == "target"
       check content.scrolledTo.len == 0
-      check SectionDelegate(section.delegate).notifications ==
-        @[("section", false, 0), ("section", false, 0), ("section", false, 0)]
+      check SectionDelegate(section.delegate).notifications.len == 0
 
       events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
         ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root", name: "Thread")
@@ -322,8 +320,7 @@ suite "thread search result navigation":
       check section.pendingThreadId == ""
       check section.pendingThreadMessageId == ""
       check settings.getSectionLastOpenThread("section") == savedThread
-      check SectionDelegate(section.delegate).notifications ==
-        @[("section", false, 0), ("section", false, 0), ("section", false, 0), ("section", false, 0)]
+      check SectionDelegate(section.delegate).notifications.len == 0
     else:
       skip()
 

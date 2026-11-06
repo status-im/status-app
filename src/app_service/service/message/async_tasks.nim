@@ -199,6 +199,7 @@ proc asyncEditThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
     let response = status_go_chat.editThread(arg.chatId, arg.threadId, arg.name)
     if not response.error.isNil:
       raise newException(RpcException, response.error.message)
+    responseJson["sectionUnreadCountsChanged"] = %response.result{"sectionUnreadCountsChanged"}.getBool
     var threads: JsonNode
     if response.result.isNil or not response.result.getProp("threads", threads) or threads.kind != JArray:
       raise newException(ValueError, "edit thread response is missing thread metadata")
@@ -222,6 +223,7 @@ proc asyncSetThreadFollowedTask(argEncoded: string) {.gcsafe, nimcall.} =
         status_go_chat.unfollowThread(arg.chatId, arg.threadId)
     if not response.error.isNil:
       raise newException(RpcException, response.error.message)
+    responseJson["sectionUnreadCountsChanged"] = %response.result{"sectionUnreadCountsChanged"}.getBool
     var threads: JsonNode
     if response.result.isNil or not response.result.getProp("threads", threads) or threads.kind != JArray:
       raise newException(ValueError, "follow thread response is missing thread metadata")
@@ -242,6 +244,7 @@ proc asyncDeleteThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
     let response = status_go_chat.deleteThread(arg.chatId, arg.threadId)
     if not response.error.isNil:
       raise newException(RpcException, response.error.message)
+    responseJson["sectionUnreadCountsChanged"] = %response.result{"sectionUnreadCountsChanged"}.getBool
     var threads: JsonNode
     if response.result.isNil or not response.result.getProp("threads", threads) or threads.kind != JArray:
       raise newException(ValueError, "delete thread response is missing thread metadata")
@@ -263,6 +266,7 @@ proc asyncCreateThreadTask(argEncoded: string) {.gcsafe, nimcall.} =
       "chatId": arg.chatId,
       "parentMessageId": arg.parentMessageId,
       "threads": %*[],
+      "sectionUnreadCountsChanged": response.result{"sectionUnreadCountsChanged"}.getBool,
       "error": "",
     }
 

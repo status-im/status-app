@@ -33,6 +33,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	services_pause_bridge_test \
 	share_intake_wake_test \
 	signal_handler_test \
+	section_unread_counts_test \
 	thread_edit_service_test \
 	swap_key_harvest_bench \
 	swap_modal_instantiation_bench \

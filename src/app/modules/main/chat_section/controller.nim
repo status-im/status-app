@@ -106,21 +106,6 @@ proc getThreadById*(self: Controller, chatId, threadId: string): ThreadDto =
 proc loadChatThreadsForChats*(self: Controller, chatIds: seq[string]) =
   self.messageService.loadChatThreadsForChatsIfNeeded(chatIds)
 
-proc chatBelongsToSection*(self: Controller, chatId: string): bool =
-  let chat = self.chatService.getChatById(chatId, showWarning = false)
-  chat.id.len > 0 and
-    (if self.isCommunitySection: chat.communityId == self.sectionId else: chat.communityId.len == 0)
-
-proc loadSectionThreads*(self: Controller) =
-  if not THREADS_ENABLED:
-    return
-  let chats = if self.isCommunitySection: self.chatService.getChatsForCommunity(self.sectionId)
-              else: self.chatService.getChatsForPersonalSection()
-  var chatIds: seq[string]
-  for chat in chats:
-    chatIds.add(chat.id)
-  self.loadChatThreadsForChats(chatIds)
-
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
@@ -546,12 +531,11 @@ proc getChatsAndBuildUI*(self: Controller) =
         self.sharedUrlsService,
       )
 
-proc sectionUnreadMessagesAndMentionsCount*(self: Controller, communityId: string, sectionIsMuted: bool):
+proc sectionUnreadMessagesAndMentionsCount*(self: Controller):
     tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
-  result = self.chatService.sectionUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
-  let threadCounts = self.messageService.sectionThreadsUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
-  result.unviewedMessagesCount += threadCounts.unviewedMessagesCount
-  result.unviewedMentionsCount += threadCounts.unviewedMentionsCount
+  let sectionId = if self.isCommunitySection: self.sectionId else: PERSONAL_SECTION_ID
+  let counts = self.chatService.getSectionUnreadCounts(sectionId)
+  (counts.unviewedMessagesCount, counts.unviewedMentionsCount)
 
 proc getChatDetails*(self: Controller, chatId: string): lent ChatDto =
   return self.chatService.getChatById(chatId)
