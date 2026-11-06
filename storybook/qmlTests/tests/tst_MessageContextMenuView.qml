@@ -185,10 +185,40 @@ Item {
 
             const openAction = findAction(existingThreadMenu, "messageContextMenu_openThread")
             verify(!!openAction)
-            verify(!openAction.enabled)
-            verify(enabledActionTexts(existingThreadMenu).indexOf(qsTr("Create Thread")) < 0)
+            verify(openAction.enabled)
+            compare(openAction.text, qsTr("Open thread"))
             existingThreadMenu.close()
         }
+
+        function test_compactThreadAction_data() {
+            return [
+                { tag: "create-dm", type: Constants.chatType.oneToOne, hasThread: false },
+                { tag: "open-dm", type: Constants.chatType.oneToOne, hasThread: true },
+                { tag: "create-group", type: Constants.chatType.privateGroupChat, hasThread: false },
+                { tag: "open-channel", type: Constants.chatType.communityChat, hasThread: true }
+            ]
+        }
+
+        function test_compactThreadAction(data) {
+            const menu = createMenu({ openExpanded: false, threadsFeatureEnabled: true,
+                                      chatType: data.type, hasThread: data.hasThread })
+            const spy = createTemporaryObject(threadSpyComponent, root, { target: menu })
+            menu.open()
+            const reply = singleRowAction(menu, "messageContextMenu_replyTo")
+            const thread = singleRowAction(menu, "messageContextMenu_openThread")
+            compare(thread.Accessible.name, data.hasThread ? qsTr("Open thread") : qsTr("Create Thread"))
+            verify(thread.visible)
+            verify(thread.x > reply.x)
+            compare(thread.icon.name, "thread")
+            compare(menu.width, 328)
+            compare(findChild(menu, "messageContextMenu_reactionsRow").countLimit, 2)
+            verifyNoHorizontalOverflow(menu)
+            mouseClick(thread)
+            compare(spy.count, 1)
+            verify(!menu.opened)
+        }
+
+        Component { id: threadSpyComponent; SignalSpy { signalName: "openThread" } }
 
         function test_noCreateThreadInsideThreadView() {
             const menu = createMenu({
