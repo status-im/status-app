@@ -2225,7 +2225,9 @@ Flickable {
             // named so a test can tell which placement holds the slot
             objectName: "topSlot"
 
-            width: rowsColumn.width
+            width: !!item && item.implicitWidth ? Math.min(item.implicitWidth, rowsColumn.width)
+                          : rowsColumn.width
+            anchors.horizontalCenter: parent.horizontalCenter
 
             sourceComponent: d.bottomUp ? root.footer : root.header
             visible: !!sourceComponent
@@ -2455,7 +2457,9 @@ Flickable {
 
             objectName: "bottomSlot"
 
-            width: rowsColumn.width
+            width: !!item && item.implicitWidth ? Math.min(item.implicitWidth, rowsColumn.width)
+                          : rowsColumn.width
+            anchors.horizontalCenter: parent.horizontalCenter
 
             sourceComponent: d.bottomUp ? root.header : root.footer
             visible: !!sourceComponent

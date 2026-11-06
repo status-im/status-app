@@ -14,6 +14,7 @@ import QtModelsToolkit
 import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Utils
+import StatusQ.Controls
 
 import "MessageDelegateComponents"
 
@@ -786,6 +787,14 @@ SplitView {
         }
     }
 
+    Component {
+        id: sendButtonComponent
+        StatusButton {
+            objectName: "sendContactRequestButton"
+            text: "Send Contact Request"
+        }
+    }
+
     // What a row looks like. The view never sees this.
     Component {
         id: messageComponent
@@ -890,7 +899,7 @@ SplitView {
                 d.applyJump()
             }
 
-            header: headerSwitch.checked ? headerBannerComponent : null
+            header: headerSwitchWithButton.checked ? sendButtonComponent : headerSwitch.checked ? headerBannerComponent : null
             topPadding: topPaddingSpinBox.value
             bottomPadding: bottomPaddingSpinBox.value
             footer: footerSwitch.checked ? footerBannerComponent : null
@@ -1420,6 +1429,18 @@ SplitView {
 
                     text: "Header"
                     checked: d.defaultHeader
+                    onToggled: if (!checked) headerSwitchWithButton.checked = false
+                }
+
+                Switch {
+                    id: headerSwitchWithButton
+
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 16
+
+                    text: "Header with button"
+                    checked: false
+                    enabled: headerSwitch.checked
                 }
 
                 Switch {
