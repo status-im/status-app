@@ -91,7 +91,8 @@ if [[ "${OS}" == "android" ]]; then
   # only the DT_NEEDED/JNI_OnLoad libs in its eager lists
   python3 -I "$CWD/android/trim_qt_deploy.py" "$BUILD_DIR/android-build" \
     "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/$(uname -s | tr '[:upper:]' '[:lower:]')-x86_64/bin/llvm-readelf" \
-    "${ANDROID_ABI:-arm64-v8a}" "$CWD/android/qt-deploy-deny.txt" "$OUTPUT_NAME"
+    "${ANDROID_ABI:-arm64-v8a}" "$CWD/android/qt-deploy-deny.txt" "$OUTPUT_NAME" \
+    "$CWD/android/qt-deploy-lazy.txt"
 
   # Copy custom Android files, preserve Qt-generated libs.xml
   cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties,proguard-rules.pro} "$BUILD_DIR/android-build/"

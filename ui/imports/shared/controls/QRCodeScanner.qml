@@ -355,15 +355,19 @@ ColumnLayout {
             imagePickerEnabled: d.imagePickerEnabled
             onImagePickerRequested: imageDialog.open()
 
+            readonly property bool decoding: scanner.capturing
+                                             && root.state === StatusQrCodeScanner.State.None
+
             // Pulls grayscale frames from the preview, at most `maxFps`
             // while the camera runs and nothing is accepted yet, cropped to
             // the scan corners. QrScanner drops a decode still running when
-            // this turns false (hidden, app inactive).
+            // this turns false (hidden, app inactive). Unused on Android: the
+            // native camera is the frame source there (scanner.frameSource).
             FrameTap {
                 id: tap
 
                 videoSink: scanner.videoSink
-                enabled: scanner.capturing && root.state === StatusQrCodeScanner.State.None
+                enabled: scanner.decoding && !scanner.frameSource
                 maxFps: 10
                 maxDim: 1024
 
@@ -379,8 +383,8 @@ ColumnLayout {
             onCaptureAreaChanged: tap.applyRoi()
 
             QrScanner {
-                frameSource: tap.handle
-                scanning: tap.enabled
+                frameSource: scanner.frameSource || tap.handle
+                scanning: scanner.decoding
                 // One code per scan: a frame can hold several.
                 onTagFound: tag => {
                     if (root.state !== StatusQrCodeScanner.State.None)

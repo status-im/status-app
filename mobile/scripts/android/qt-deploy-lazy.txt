@@ -1,0 +1,9 @@
+# Regexes on lib file names that trim_qt_deploy.py keeps in the APK but out of Qt's eager
+# load lists. Loaded on first use; JNI_OnLoad of the ffmpeg plugin is run by StatusQ's
+# MediaBackend::ensureLoaded() before the first QtMultimedia object.
+
+# QtMultimedia ffmpeg backend and the FFmpeg libs it needs
+libplugins_multimedia_ffmpegmediaplugin_
+^libav(codec|format|util)\.so$
+^libsw(scale|resample)\.so$
+^libQt6FFmpegStub-

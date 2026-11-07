@@ -2,21 +2,35 @@
 # Drop unused Qt libs from the androiddeployqt output and keep only the libs that must be
 # System.load()ed (DT_NEEDED closure of the app libs, or carrying JNI_OnLoad) in Qt's eager
 # load lists. Everything else stays packaged and is dlopen()ed on demand by Qt.
-# usage: trim_qt_deploy.py <android-build> <llvm-readelf> <abi> <deny-file> <main-lib-name>
+# Libs matching the lazy file stay packaged but are never loaded eagerly, even when they
+# carry a JNI_OnLoad (the app calls it on first use).
+# usage: trim_qt_deploy.py <android-build> <llvm-readelf> <abi> <deny-file> <main-lib-name> [<lazy-file>]
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 build, readelf, abi, deny_file, main_lib = sys.argv[1:6]
+lazy_file = sys.argv[6] if len(sys.argv) > 6 else None
 libdir = Path(build) / 'libs' / abi
 libsxml = Path(build) / 'res' / 'values' / 'libs.xml'
 
-deny = []
-for line in Path(deny_file).read_text().splitlines():
-    line = line.split('#', 1)[0].strip()
-    if line:
-        deny.append(re.compile(line))
+
+def patterns(path):
+    out = []
+    for line in Path(path).read_text().splitlines():
+        line = line.split('#', 1)[0].strip()
+        if line:
+            out.append(re.compile(line))
+    return out
+
+
+deny = patterns(deny_file)
+lazy = patterns(lazy_file) if lazy_file else []
+
+
+def is_lazy(name):
+    return any(p.search(name) for p in lazy)
 
 dropped = set()
 for f in sorted(libdir.glob('*.so')):
@@ -54,17 +68,21 @@ def array(name):
 
 bundled = re.findall(r'<item>%s;([^<]+)</item>' % abi, array('bundled_libs').group(2))
 local_m = re.search(r'(<array name="load_local_libs">\s*<item>%s;)([^<]*)(</item>)' % abi, xml)
-local = [l for l in local_m.group(2).split(':') if l and (libdir / l).exists()] if local_m else []
+local = [l for l in local_m.group(2).split(':')
+         if l and (libdir / l).exists() and not is_lazy(l)] if local_m else []
 
 roots = [soname(n) for n in bundled] + local + [soname('%s_%s' % (main_lib, abi))]
 roots += [n for n, (_, jni) in present.items() if jni]
 keep, todo = set(), list(roots)
 while todo:
     n = todo.pop()
-    if n in keep or n not in present:
+    if n in keep or n not in present or is_lazy(n):
         continue
     keep.add(n)
     todo += present[n][0]
+eager_needs_lazy = sorted((n, d) for n in keep for d in present[n][0] if is_lazy(d))
+if eager_needs_lazy:
+    sys.exit('trim: eager libs need lazy libs: %s' % eager_needs_lazy)
 
 qt = array('qt_libs')
 
@@ -82,3 +100,5 @@ if local_m:
 libsxml.write_text(xml)
 print('trim: eager qt_libs =', ' '.join(re.findall(r'<item>%s;([^<]+)</item>' % abi, qt_body)))
 print('trim: load_local_libs =', ':'.join(local))
+lazy_kept = sorted(n for n in present if is_lazy(n))
+print('trim: lazy (packaged, loaded on first use) =', ' '.join(lazy_kept))

@@ -33,3 +33,7 @@ libQt6Core5Compat_
 libQt6WebView_
 libplugins_webview_
 
+
+# QtMultimedia uses the ffmpeg backend on Android; the android backend plugin is never
+# selected but its JNI_OnLoad would still run at startup
+libplugins_multimedia_androidmediaplugin_

@@ -143,6 +143,8 @@ endif()
 add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
         include/StatusQ/audioutils.h
+        include/StatusQ/mediabackend.h
+        include/StatusQ/nativeqrcodecapture.h
         include/StatusQ/skeletontileitem.h
         include/StatusQ/backgroundgraphicsrelease.h
         include/StatusQ/browserbackendcapabilities.h
@@ -204,6 +206,8 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/urlutils.h
         include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
+        src/mediabackend.cpp
+        src/nativeqrcodecapture.cpp
         src/skeletontileitem.cpp
         src/backgroundgraphicsrelease.cpp
         src/browserbackendcapabilities.cpp

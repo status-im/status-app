@@ -285,6 +285,7 @@
         <file>StatusQ/Validators/qmldir</file>
         <file>StatusQ/Components/private/StatusNewItemGradient.qml</file>
         <file>StatusQ/Components/StatusSoundEffect.qml</file>
+        <file>StatusQ/Components/private/StatusQtSoundEffect.qml</file>
         <file>StatusQ/Popups/Dialog/StatusFolderDialog.qml</file>
         <file>StatusQ/Popups/Dialog/StatusFileDialog.qml</file>
         <file>StatusQ/Popups/Dialog/StatusSaveFileDialog.qml</file>
