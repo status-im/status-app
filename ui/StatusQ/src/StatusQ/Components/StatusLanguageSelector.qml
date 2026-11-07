@@ -51,6 +51,8 @@ Button {
         readonly property int maxPopupHeight: 400
         readonly property int delegateHeight: 60
 
+        property bool openedOnce: false
+
         readonly property SortFilterProxyModel languageModel: SortFilterProxyModel {
             id: languageModel
             sourceModel: LanguageModel {
@@ -131,6 +133,7 @@ Button {
         margins: Theme.halfPadding
         padding: Theme.padding
 
+        onAboutToShow: d.openedOnce = true
         onOpened: if (!Utils.isMobile) searchField.forceActiveFocus()
         onClosed: searchField.input.edit.clear()
 
@@ -152,7 +155,8 @@ Button {
 
                 id: userSelectorPanel
                 objectName: "statusLanguageSelectorListView"
-                model: d.languageModel
+                // populated on the first open: the native names (한국어, ...) load fallback fonts
+                model: d.openedOnce ? d.languageModel : null
                 highlightFollowsCurrentItem: true
                 highlight: Rectangle {
                     radius: Theme.radius

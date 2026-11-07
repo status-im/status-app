@@ -1,14 +1,13 @@
 #pragma once
 
 #include <QObject>
-#include <QMimeDatabase>
 
 class UrlUtils : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString validImageNameFilters READ validImageNameFilters FINAL CONSTANT) // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif *.svg"
-    Q_PROPERTY(QStringList validPreferredImageExtensions READ validPreferredImageExtensions FINAL CONSTANT) // ["jpg", "png", "webp", "gif", "svg"]
-    Q_PROPERTY(QStringList allValidImageExtensions READ allValidImageExtensions FINAL CONSTANT) // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif", "svg"]
+    Q_PROPERTY(QString validImageNameFilters READ validImageNameFilters FINAL CONSTANT)
+    Q_PROPERTY(QStringList validPreferredImageExtensions READ validPreferredImageExtensions FINAL CONSTANT)
+    Q_PROPERTY(QStringList allValidImageExtensions READ allValidImageExtensions FINAL CONSTANT)
 
 public:
     explicit UrlUtils(QObject* parent = nullptr);
@@ -31,22 +30,17 @@ public:
     Q_INVOKABLE QString displayPathLabel(const QString& path) const;
 
 private:
-    QMimeDatabase m_mimeDb;
+    QStringList m_validImageMimeTypes;
 
-    QStringList m_validImageMimeTypes{QStringLiteral("image/jpeg"),
-                                      QStringLiteral("image/png"),
-                                      QStringLiteral("image/gif"),
-                                      QStringLiteral("image/svg")};
-
-    // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif *.svg"
+    // "*.jpg *.jpeg *.jpe *.jif *.jfif *.jfi *.png *.gif *.webp" + the same in uppercase
     QString m_imgFilters;
     QString validImageNameFilters() const { return m_imgFilters; }
 
-    // ["jpg", "png", "webp", "gif", "svg"]
+    // ["jpg", "png", "gif", "webp"]
     QStringList m_imgExtensions;
     QStringList validPreferredImageExtensions() const { return m_imgExtensions; }
 
-    // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif", "svg"]
+    // ["jpg", "jpeg", "jpe", "jif", "jfif", "jfi", "png", "gif", "webp"]
     QStringList m_allImgExtensions;
     QStringList allValidImageExtensions() const { return m_allImgExtensions; }
 
