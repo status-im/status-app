@@ -52,7 +52,7 @@ proc init*(self: Controller) =
       args.sendDetails.fromChain,
       isApprovalTx,
       txHash,
-      if not args.sendDetails.errorResponse.isNil: args.sendDetails.errorResponse.details else: ""
+      args.sendDetails.errorResponse.errorForView()
     )
 
 
@@ -93,7 +93,7 @@ proc setFeeMode*(self: Controller, feeMode: int, routerInputParamsUuid: string, 
   isApprovalTx: bool, communityId: string): string =
     return self.transactionService.setFeeMode(feeMode, routerInputParamsUuid, pathName, chainId, isApprovalTx, communityId)
 
-proc setCustomTxDetails*(self: Controller, nonce: int, gasAmount: int, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
+proc setCustomTxDetails*(self: Controller, nonce: int, gasAmount: string, gasPrice: string, maxFeesPerGas: string, priorityFee: string,
   routerInputParamsUuid: string, pathName: string, chainId: int, isApprovalTx: bool, communityId: string): string =
     return self.transactionService.setCustomTxDetails(nonce, gasAmount, gasPrice, maxFeesPerGas, priorityFee, routerInputParamsUuid,
     pathName, chainId, isApprovalTx, communityId)

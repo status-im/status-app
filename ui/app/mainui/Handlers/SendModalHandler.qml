@@ -357,6 +357,7 @@ QtObject {
         SimpleSendModal {
             id: simpleSendModal
 
+            recipientIsNewAccount: !!handler.recipientIsNewAccountAggregator.value
             accountsModel: handler.accountsSelectorAdaptor.processedWalletAccounts
             assetsModel: handler.assetsSelectorModel
             groupedAccountAssetsModel: root.groupedAccountAssetsModel
@@ -564,6 +565,11 @@ QtObject {
                         if (error.includes(Constants.walletSection.authenticationCanceled)) {
                             return
                         }
+                        if (error === Constants.walletSection.routeNeedsReview) {
+                            // nothing was sent; fetch a new route to review
+                            simpleSendModal.formChanged()
+                            return
+                        }
                         simpleSendModal.routerError = error
                         return
                     }
@@ -691,9 +697,8 @@ QtObject {
                     restoreMode: Binding.RestoreNone
                 }
 
-                readonly property var totalFeesAggregator: FunctionAggregator {
-                    model: !!handler.fetchedPathModel ?
-                               handler.fetchedPathModel: null
+                readonly property FunctionAggregator totalFeesAggregator: FunctionAggregator {
+                    model: handler.fetchedPathModel
                     initialValue: "-1"
                     roleName: "txTotalFee"
 
@@ -726,9 +731,17 @@ QtObject {
                     }
                 }
 
-                readonly property var estimatedTimeAggregator: FunctionAggregator {
-                    model: !!handler.fetchedPathModel ?
-                               handler.fetchedPathModel: null
+                // e.g. EIP-8037 state gas
+                readonly property FunctionAggregator recipientIsNewAccountAggregator: FunctionAggregator {
+                    model: handler.fetchedPathModel
+                    initialValue: false
+                    roleName: "recipientIsNewAccount"
+
+                    aggregateFunction: (aggr, value) => aggr || !!value
+                }
+
+                readonly property FunctionAggregator estimatedTimeAggregator: FunctionAggregator {
+                    model: handler.fetchedPathModel
                     initialValue: -1
                     roleName: "estimatedTime"
 
@@ -853,6 +866,15 @@ QtObject {
                             return txPathUnderReviewEntry.item.suggestedTxGasAmount
                         }
                         return ""
+                    }
+                    // raw node estimate; "0" (a stand-in) means no minimum
+                    minGasAmount: {
+                        if (!txPathUnderReviewEntry.item)
+                            return ""
+                        const estimated = handler.reviewApprovalForTxPathUnderReview
+                                ? txPathUnderReviewEntry.item.estimatedApprovalGasAmount
+                                : txPathUnderReviewEntry.item.estimatedTxGasAmount
+                        return !!estimated && estimated !== "0" ? estimated : ""
                     }
                     currentNonce: {
                         if (!!txPathUnderReviewEntry.item) {

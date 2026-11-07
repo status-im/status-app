@@ -92,6 +92,8 @@ SQUtils.QObject {
             store: root.store
             estimatedTimeCategory: feesSubscriber.estimatedTimeResponse
             feesInfo: feesSubscriber.feesInfo
+            gasLimit: feesSubscriber.gasLimit
+            gasEstimateFailed: feesSubscriber.gasEstimateFailed
             haveEnoughFunds: d.hasEnoughBalance(request.chainId, request.accountAddress, request.value, request.nativeTokenGroupKey)
             haveEnoughFees: haveEnoughFunds && d.hasEnoughBalance(request.chainId, request.accountAddress, request.nativeTokenMaxFees, request.nativeTokenGroupKey)
             nativeTokenGroupKey: Utils.getNativeTokenGroupKey(request.chainId)
@@ -152,6 +154,7 @@ SQUtils.QObject {
                 key: request.requestId
                 chainId: request.chainId
                 txObject: SessionRequest.getTxObject(request.method, request.data)
+                gasEstimateTxObject: d.txToEstimate(feesSubscriber.txObject, feesSubscriber.feesInfo)
                 active: request.active && !!txObject
                 selectedFeesMode: Constants.FeesMode.Medium
                 hexToDec: root.store.hexToDec
@@ -328,6 +331,11 @@ SQUtils.QObject {
                 console.error("Unsupported method to execute: ", request.method)
                 return false
             }
+            // never sign with the dApp's unchecked gas
+            if (SessionRequest.isTransactionMethod(request.method) && !request.gasLimit) {
+                console.error("Transaction executed before its gas was estimated")
+                return false
+            }
 
             if (request.method === SessionRequest.methods.sign.name) {
                 root.store.signMessageUnsafe(request.topic,
@@ -350,7 +358,7 @@ SQUtils.QObject {
                                         request.chainId,
                                         legacy)
             } else if (SessionRequest.isTransactionMethod(request.method)) {
-                const txObj = prepareTxForStatusGo(SessionRequest.getTxObject(request.method, request.data), payload)
+                const txObj = prepareTxForStatusGo(SessionRequest.getTxObject(request.method, request.data), payload, request.gasLimit)
                 if (request.method === SessionRequest.methods.signTransaction.name) {
                     root.store.signTransaction(request.topic,
                                           request.requestId,
@@ -370,7 +378,14 @@ SQUtils.QObject {
             return true
         }
 
-        function prepareTxForStatusGo(txObj, feesInfo) {
+        // the transaction as prepareTxForStatusGo would sign it now, without gas; the dApp's fees
+        // until ours arrive, then re-estimated with ours
+        function txToEstimate(txObj, feesInfo) {
+            return !!txObj ? prepareTxForStatusGo(Object.assign({}, txObj), feesInfo, "") : null
+        }
+
+        // the gas the fees were shown for; signed as is, so status-go doesn't estimate again
+        function prepareTxForStatusGo(txObj, feesInfo, gasLimit) {
             if (!!feesInfo) {
                 let hexFeesJson = root.store.convertFeesInfoToHex(JSON.stringify(feesInfo))
                 if (!!hexFeesJson) {
@@ -386,6 +401,10 @@ SQUtils.QObject {
                 delete txObj.gasPrice
                 delete txObj.gas
                 delete txObj.type
+            }
+            if (!!gasLimit) {
+                delete txObj.gasLimit
+                txObj.gas = gasLimit
             }
             // Remove nonce from txObj to be auto-filled by the wallet
             delete txObj.nonce

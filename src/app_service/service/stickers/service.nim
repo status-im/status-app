@@ -156,12 +156,18 @@ QtObject:
       let txType = SendType(args.sendDetails.sendType)
       if txType != SendType.StickersBuy:
         return
-      self.marketStickerPacks[$args.sendDetails.packId].status = StickerPackStatus.Pending
-      self.marketStickerPacks[$args.sendDetails.packId].txHash = args.sentTransaction.hash
+      if args.sendDetails.errorResponse.routeNeedsReview():
+        # nothing was sent; the send modal fetches a new route
+        return
+      # nil when building or sending failed
+      let txHash = if args.sentTransaction.isNil: "" else: args.sentTransaction.hash
+      if args.sendDetails.errorResponse.isNil:
+        self.marketStickerPacks[$args.sendDetails.packId].status = StickerPackStatus.Pending
+        self.marketStickerPacks[$args.sendDetails.packId].txHash = txHash
       let data = StickerBuyResultArgs(
         chainId: args.sendDetails.fromChain,
         packId: args.sendDetails.packId,
-        txHash: args.sentTransaction.hash,
+        txHash: txHash,
         error: if not args.sendDetails.errorResponse.isNil: args.sendDetails.errorResponse.details else: ""
       )
       self.events.emit(SIGNAL_STICKER_TRANSACTION_SENT, data)

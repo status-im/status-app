@@ -154,15 +154,22 @@ proc asyncEstimateGasTask(argsEncoded: string) {.gcsafe, nimcall.} =
     try:
         let tx = arg.txJson
         let transaction = %*{
-            "from": tx["from"].getStr,
-            "to": tx["to"].getStr
+            "from": tx["from"].getStr
         }
-        if tx.hasKey("data"):
+        proc nonEmpty(key: string): bool =
+            tx.hasKey(key) and tx[key].kind == JString and tx[key].getStr.len > 0
+        # no `to` deploys a contract; the fees are the signed ones, a contract may read tx.gasprice
+        for key in ["to", "value", "gasPrice", "maxFeePerGas", "maxPriorityFeePerGas"]:
+            if nonEmpty(key):
+                transaction[key] = tx[key]
+        # input wins over data, as in SendTxArgs.GetInput
+        if nonEmpty("input"):
+            transaction["input"] = tx["input"]
+        elif nonEmpty("data"):
             transaction["data"] = tx["data"]
-        if tx.hasKey("value"):
-            transaction["value"] = tx["value"]
 
-        let response = eth.estimateGas(arg.chainId, transaction)
+        # buffered; the modal signs with this or the dApp's gas, whichever is higher
+        let response = wallet.estimateTransactionGas(arg.chainId, $transaction)
         result["estimatedGas"] = response.result
         arg.finish(result)
     except Exception as e:

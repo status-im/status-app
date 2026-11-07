@@ -20,6 +20,8 @@ SQUtils.QObject {
     required property bool active
     // selectedFeesMode -> selected fees mode. Defaults to Constants.TransactionFeesMode.Medium
     property int selectedFeesMode: Constants.TransactionFeesMode.Medium
+    // gasEstimateTxObject -> the transaction as it will be signed, without gas; re-estimated when it changes
+    property var gasEstimateTxObject: txObject
 
     // Required function to be implemented by the subscriber
     required property var hexToDec /*(hexValue) => decValue*/
@@ -33,8 +35,13 @@ SQUtils.QObject {
     readonly property var maxEthFee: d.computedFees
     // feesInfo -> status-go fees info with updated maxFeePerGas based on selectedFeesMode
     readonly property var feesInfo: d.computedFeesInfo
-    // gasLimit -> gas limit for the transaction
-    readonly property var gasLimit: d.gasResponse
+    // gasLimit -> hex gas to sign with: the larger of the dApp's gas and our estimate; unset until
+    // the estimate for the current gasEstimateTxObject answered
+    readonly property string gasLimit: d.gasEstimated ? d.gasResponse : ""
+    // gasEstimated -> our estimate for gasEstimateTxObject answered
+    readonly property bool gasEstimated: d.gasEstimated
+    // gasEstimateFailed -> our estimate for gasEstimateTxObject failed; asked again, nothing is signed meanwhile
+    readonly property bool gasEstimateFailed: !d.estimatedGas && d.estimateIsCurrent
 
     function setFees(fees) {
         if (d.feesResponse === fees) {
@@ -44,13 +51,14 @@ SQUtils.QObject {
         d.resetFees()
     }
 
-    function setGas(gas) {
-        if (d.gasResponse === gas) {
-            return
-        }
+    // our buffered estimate, hex, for the transaction with txKey (see txKey()); empty when it failed
+    function setGasEstimate(gas, txKey) {
+        d.estimatedGas = gas || ""
+        d.estimatedTxKey = txKey
+    }
 
-        d.gasResponse = gas
-        d.resetFees()
+    function txKey(tx) {
+        return JSON.stringify(tx ?? null)
     }
 
     function setEstimatedTime(estimatedTime) {
@@ -66,7 +74,25 @@ SQUtils.QObject {
 
         property int estimatedTimeResponse: Constants.TransactionEstimatedTime.Unknown
         property var feesResponse
-        property var gasResponse
+        // the dApp's gas, hex
+        readonly property string dappGas: !!root.txObject ? (root.txObject.gas || root.txObject.gasLimit || "") : ""
+        property string estimatedGas
+        readonly property string estimateTxKey: root.txKey(root.gasEstimateTxObject)
+        property string estimatedTxKey
+        // the last answer is for the current transaction
+        readonly property bool estimateIsCurrent: estimatedTxKey === estimateTxKey
+        // the dApp's gas alone is never used: a failed estimate means the tx would likely fail
+        // while a changed transaction is re-estimated, the last gas only shows the fees; a failure clears them
+        readonly property bool gasEstimated: !!estimatedGas && estimateIsCurrent
+        readonly property string gasResponse: {
+            if (!estimatedGas || !dappGas)
+                return estimatedGas
+            const BigOps = SQUtils.AmountsArithmetic
+            const estimated = BigOps.fromString(root.hexToDec(estimatedGas))
+            const dapp = BigOps.fromString(root.hexToDec(dappGas))
+            return dapp.cmp(estimated) === 1 ? dappGas : estimatedGas
+        }
+        onGasResponseChanged: resetFees()
         // Eth max fee in Gwei
         property var computedFees
         // feesResponse with additional `maxFeePerGas` property based on selectedFeesMode
@@ -76,13 +102,12 @@ SQUtils.QObject {
             if (!d.feesResponse) {
                 return
             }
-            if (!gasResponse) {
-                return
-            }
             try {
-                d.computedFees = getEstimatedMaxFees()
-                d.computedFeesInfo = d.feesResponse
-                d.computedFeesInfo.maxFeePerGas = getFeesForFeesMode(d.feesResponse)
+                // independent of the gas, so the gas can be estimated with these fees
+                const feesInfo = Object.assign({}, d.feesResponse)
+                feesInfo.maxFeePerGas = getFeesForFeesMode(d.feesResponse)
+                d.computedFeesInfo = feesInfo
+                d.computedFees = gasResponse ? getEstimatedMaxFees() : null
             } catch (e) {
                 console.error("Failed to compute fees", e, e.stack)
             }

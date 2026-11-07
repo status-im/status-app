@@ -838,8 +838,11 @@ QtObject {
         "BNB": 9,
     }
 
-    readonly property string minGasForTx: "21000"
-    readonly property string maxGasForTx: "30000000"
+    // EIP-8037 TX_MAX_TOTAL_GAS_LIMIT (2^32 - 1); a transport bound, not a block fit.
+    // Keep in sync with MaxTxGasAmount in src/app_service/service/eth/utils.nim.
+    readonly property string maxTxGasAmount: "4294967295"
+    // A custom gas amount above suggested * this factor gets a (non-blocking) warning.
+    readonly property string highGasAmountWarningFactor: "2"
 
     readonly property QtObject networkShortChainNames: QtObject {
         readonly property string mainnet: "eth"
@@ -1293,6 +1296,8 @@ QtObject {
 
     readonly property QtObject walletSection: QtObject {
         readonly property string authenticationCanceled: "authenticationCanceled"
+        // the route's gas changed, nothing was sent; keep in sync with RouteNeedsReviewError
+        readonly property string routeNeedsReview: "routeNeedsReview"
     }
 
     // list of symbols for which pngs are stored to avoid

@@ -145,6 +145,8 @@ StatusDialog {
     property string estimatedFiatFees
     /** input property to set estimated fees in crypto **/
     property string estimatedCryptoFees
+    /** input property: the new recipient makes the fees higher **/
+    property bool recipientIsNewAccount
     /** input property to set router error title **/
     property string routerError: ""
     /** input property to set router error details **/
@@ -886,6 +888,11 @@ StatusDialog {
                         error: d.errNotEnoughEth
                         networkName: !!d.selectedNetworkEntry.item && d.selectedNetworkEntry.available ?
                                          d.selectedNetworkEntry.item.chainName: ""
+                    }
+                    NewRecipientFeeHint {
+                        objectName: "newRecipientFeeHint"
+                        Layout.fillWidth: true
+                        visible: root.recipientIsNewAccount && !root.routesLoading
                     }
                     visible: root.allValuesFilledCorrectly
                 }

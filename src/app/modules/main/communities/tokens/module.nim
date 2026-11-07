@@ -223,6 +223,11 @@ method onTransactionSent*(self: Module, uuid: string, sendType: SendType, chainI
   # the signal is emitted for every wallet transaction; only react to the one this module started
   if uuid != self.tempUuid:
     return
+  if error == RouteNeedsReviewError:
+    # nothing was sent; the toast asks the user to review the fees
+    info "Transaction refused for review, the fees changed", uuid
+    self.resetTempValues()
+    return
   if error.len > 0:
     error "Error sending transaction", error = error
     self.view.emitTransactionError(TxErrorFailedToSend)

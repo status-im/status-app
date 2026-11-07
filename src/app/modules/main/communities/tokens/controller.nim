@@ -81,7 +81,7 @@ proc init*(self: Controller) =
       isApprovalTx,
       txHash,
       toAddress,
-      if not args.sendDetails.errorResponse.isNil: args.sendDetails.errorResponse.details else: ""
+      args.sendDetails.errorResponse.errorForView()
     )
 
 proc storeDeployedContract*(self: Controller, sendType: SendType, addressFrom: string, addressTo: string, chainId: int,

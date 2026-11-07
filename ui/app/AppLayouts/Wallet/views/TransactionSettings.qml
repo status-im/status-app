@@ -29,7 +29,10 @@ Rectangle {
     required property string currentBaseFee
     required property string currentSuggestedMinPriorityFee
     required property string currentSuggestedMaxPriorityFee
+    /** Suggested (buffered) gas amount for the transaction under review **/
     required property string currentGasAmount
+    /** Minimum custom gas amount (the raw node estimate); empty if unknown **/
+    required property string minGasAmount
     required property int currentNonce
 
     property alias normalPrice: optionNormal.subText
@@ -97,6 +100,34 @@ Rectangle {
         id: d
 
         readonly property bool customMode: root.selectedFeeMode === Constants.FeePriorityModeType.Custom
+
+        // Returns a Big for a numeric string, null otherwise
+        function toBig(value) {
+            if (!value) {
+                return null
+            }
+            const big = SQUtils.AmountsArithmetic.fromString(value)
+            return big instanceof Object ? big : null
+        }
+
+        readonly property var customGasAmount: customGasAmountInput.valid ? toBig(customGasAmountInput.text) : null
+        readonly property var suggestedGasAmount: toBig(root.currentGasAmount)
+        readonly property var minGasAmount: toBig(root.minGasAmount)
+
+        // Blocking: outside what a transaction can carry at all
+        readonly property bool gasOutOfRange: !!customGasAmount
+                                              && (customGasAmount.cmp(0) !== 1
+                                                  || customGasAmount.cmp(toBig(Constants.maxTxGasAmount)) === 1)
+        // Blocking: below the node estimate, the transaction would fail
+        readonly property bool gasBelowMinimum: !!customGasAmount && !gasOutOfRange
+                                                && !!minGasAmount && customGasAmount.cmp(minGasAmount) === -1
+        // Warning: below the suggested (buffered) amount
+        readonly property bool gasBelowSuggested: !!customGasAmount && !gasOutOfRange && !gasBelowMinimum
+                                                  && !!suggestedGasAmount && customGasAmount.cmp(suggestedGasAmount) === -1
+        // Warning: far above the suggested amount
+        readonly property bool gasFarAboveSuggested: !!customGasAmount && !gasOutOfRange && !!suggestedGasAmount
+                                                     && customGasAmount.cmp(suggestedGasAmount.times(toBig(Constants.highGasAmountWarningFactor))) === 1
+        readonly property bool gasBlockingError: gasOutOfRange || gasBelowMinimum
 
         function showAlert(title, text, note, url) {
             infoBox.title = title
@@ -525,39 +556,33 @@ Rectangle {
 
                         StatusInput {
                             id: customGasAmountInput
-
-                            readonly property bool displayTooLowAmountWarning: {
-                                if (!customGasAmountInput.text) {
-                                    return false
-                                }
-                                const minValue = SQUtils.AmountsArithmetic.fromString(Constants.minGasForTx)
-                                const enteredValue = SQUtils.AmountsArithmetic.fromString(customGasAmountInput.text)
-                                return minValue.cmp(enteredValue) === 1
-                            }
-
-                            readonly property bool displayTooHighAmountWarning: {
-                                if (!customGasAmountInput.text) {
-                                    return false
-                                }
-                                const maxValue = SQUtils.AmountsArithmetic.fromString(Constants.maxGasForTx)
-                                const enteredValue = SQUtils.AmountsArithmetic.fromString(customGasAmountInput.text)
-                                return enteredValue.cmp(maxValue) === 1
-                            }
+                            objectName: "customGasAmountInput"
 
                             Layout.preferredWidth: parent.width
                             label: qsTr("Max gas amount")
                             labelIcon: "info"
                             labelIconColor: Theme.palette.baseColor1
                             labelIconClickable: true
-                            bottomLabelMessageLeftCmp.color: customGasAmountInput.displayTooLowAmountWarning
-                                                             || customGasAmountInput.displayTooHighAmountWarning?
+                            bottomLabelMessageLeftCmp.color: d.gasBlockingError?
                                                                  Theme.palette.dangerColor1
-                                                               : Theme.palette.baseColor1
-                            bottomLabelMessageLeftCmp.text: customGasAmountInput.displayTooLowAmountWarning?
-                                                                qsTr("Too low (should be between %1 and %2)").arg(Constants.minGasForTx).arg(Constants.maxGasForTx)
-                                                              : customGasAmountInput.displayTooHighAmountWarning?
-                                                                    qsTr("Too high (should be between %1 and %2)").arg(Constants.minGasForTx).arg(Constants.maxGasForTx)
-                                                                  : qsTr("Current: %1").arg(root.currentGasAmount)
+                                                               : d.gasBelowSuggested || d.gasFarAboveSuggested?
+                                                                     Theme.palette.miscColor6
+                                                                   : Theme.palette.baseColor1
+                            bottomLabelMessageLeftCmp.text: {
+                                if (d.gasOutOfRange) {
+                                    return qsTr("Must be between 1 and %1").arg(Constants.maxTxGasAmount)
+                                }
+                                if (d.gasBelowMinimum) {
+                                    return qsTr("Too low, the transaction would fail (minimum %1)").arg(root.minGasAmount)
+                                }
+                                if (d.gasBelowSuggested) {
+                                    return qsTr("Lower than recommended %1, the transaction may fail").arg(root.currentGasAmount)
+                                }
+                                if (d.gasFarAboveSuggested) {
+                                    return qsTr("Much higher than recommended %1").arg(root.currentGasAmount)
+                                }
+                                return qsTr("Current: %1").arg(root.currentGasAmount)
+                            }
                             rightPadding: leftPadding
                             input.rightComponent: StatusBaseText {
                                 text: qsTr("UNITS")
@@ -641,14 +666,14 @@ Rectangle {
                 }
 
                 StatusButton {
+                    objectName: "transactionSettingsConfirmButton"
                     Layout.preferredWidth: parent.width
                     enabled: !d.customMode
                              || (!customBaseFeeOrGasPriceInput.input.dirty || customBaseFeeOrGasPriceInput.valid) &&
                              (!root.fromChainEIP1559Compliant || !customPriorityFeeInput.input.dirty || customPriorityFeeInput.valid) &&
                              (!customGasAmountInput.input.dirty || customGasAmountInput.valid) &&
                              (!customNonceInput.input.dirty || customNonceInput.valid) &&
-                             !customGasAmountInput.displayTooHighAmountWarning &&
-                             !customGasAmountInput.displayTooLowAmountWarning
+                             !d.gasBlockingError
                     text: qsTr("Confirm")
                     onClicked: root.confirmClicked()
                 }

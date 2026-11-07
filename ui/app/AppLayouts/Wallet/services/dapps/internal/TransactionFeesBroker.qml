@@ -30,9 +30,6 @@ SQUtils.QObject {
             const gasLimitSub = gasLimitSubscription.createObject(subscriberObj, {
                 subscriber: subscriberObj
             })
-            if (subscriberObj.txObject && (subscriberObj.txObject.gas || subscriberObj.txObject.gasLimit)) {
-                subscriberObj.setGas(subscriberObj.txObject.gas || subscriberObj.txObject.gasLimit)
-            }
             broker.subscribe(estimatedTimeSub)
             broker.subscribe(feesSub)
             broker.subscribe(gasLimitSub)
@@ -121,14 +118,15 @@ SQUtils.QObject {
             readonly property var requestArgs: ({
                 type: TransactionFeesBroker.SubscriptionType.GasLimit,
                 chainId: subscriber.chainId,
-                tx: subscriber.txObject
+                tx: subscriber.gasEstimateTxObject
             })
-            isReady: subscriber.active && !!subscriber.txObject && !!subscriber.chainId && !subscriber.gasLimit /*Ask for gas just once*/
+            // asked even when the dApp names a gas, we sign the larger; retried until it answers
+            isReady: subscriber.active && !!subscriber.gasEstimateTxObject && !!subscriber.chainId && !subscriber.gasEstimated
             topic: isReady ? JSON.stringify(requestArgs) : ""
             onResponseChanged: {
-                if (!response || !response.success)
+                if (!response)
                     return
-                subscriber.setGas(response.gasEstimate)
+                subscriber.setGasEstimate(response.success ? response.gasEstimate : "", subscriber.txKey(requestArgs.tx))
             }
         }
     }

@@ -282,6 +282,17 @@ StatusDialog {
     }
 
     Connections {
+        target: root.swapAdaptor
+        function onRouteReviewRequired() {
+            d.fetchSuggestedRoutes()
+        }
+        // kept open until then, so a refused build can fetch the route again
+        function onSwapTxFinished() {
+            root.close()
+        }
+    }
+
+    Connections {
         target: root.swapInputParamsForm
         function onFormValuesChanged() {
             d.fetchSuggestedRoutes()
@@ -651,7 +662,7 @@ StatusDialog {
                     interval: 1000
                     repeat: true
                     running: swapFooter.hasProposal && !swapFooter.loading && root.visible
-                             && !root.swapAdaptor.approvalPending
+                             && !root.swapAdaptor.txPending
                     onTriggered: {
                         if (swapFooter.secondsLeft <= 1)
                             swapFooter.refresh()
@@ -940,7 +951,7 @@ StatusDialog {
                             objectName: "signButton"
                             Layout.fillWidth: true
                             readonly property string fromTokenSymbol: !!root.swapAdaptor.fromToken ? root.swapAdaptor.fromToken.symbol ?? "" : ""
-                            loadingWithText: root.swapAdaptor.approvalPending
+                            loadingWithText: root.swapAdaptor.txPending
                             icon.name: Utils.resolveAuthSignIcon(!!d.selectedAccount ? d.selectedAccount.keyUid : "",
                                                                  !!d.selectedAccount && d.selectedAccount.migratedToColdWallet,
                                                                  Constants.AuthSignPurpose.General)
@@ -973,7 +984,7 @@ StatusDialog {
                             disabledColor: Theme.palette.directColor8
                             interactive: root.swapAdaptor.validSwapProposalReceived &&
                                          !d.isError &&
-                                         !root.swapAdaptor.approvalPending
+                                         !root.swapAdaptor.txPending
                             onClicked: {
                                 if (root.swapAdaptor.validSwapProposalReceived) {
                                     if (root.swapAdaptor.swapOutputData.approvalNeeded && !root.swapAdaptor.approvalSuccessful)
@@ -992,7 +1003,7 @@ StatusDialog {
                             type: StatusBaseButton.Type.Normal
                             enabled: (swapFooter.hasProposal || root.swapAdaptor.swapOutputData.hasError)
                                      && !swapFooter.loading
-                                     && !root.swapAdaptor.approvalPending
+                                     && !root.swapAdaptor.txPending
                             onClicked: swapFooter.refresh()
                         }
                     }
@@ -1162,7 +1173,6 @@ StatusDialog {
 
             onAccepted: {
                 root.swapAdaptor.sendSwapTx()
-                root.close()
             }
         }
     }
