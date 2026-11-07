@@ -7,13 +7,9 @@
 
 // Rounded loading placeholder with a shimmer sweep, drawn in one pass.
 //
-// The sweep phase lives entirely on the scene graph side: the node advances it
-// from a shared clock in preprocess() and requests the next frame from the
-// render thread. Nothing touches the item between syncs, so the item can be
-// removed from the window at any moment, and the sweep keeps running while the
-// GUI thread is busy. This is why it does not use UniformAnimator, which reads
-// the live item on the render thread and crashes when it leaves the window
-// (QTBUG-151922).
+// Phase advances in preprocess() from a shared clock. Visible tiles poll
+// update() on the GUI thread; preprocess() must not call window()->update().
+// UniformAnimator is not used (QTBUG-151922).
 class SkeletonTileItem : public QQuickItem
 {
     Q_OBJECT
@@ -25,6 +21,7 @@ class SkeletonTileItem : public QQuickItem
 
 public:
     explicit SkeletonTileItem(QQuickItem* parent = nullptr);
+    ~SkeletonTileItem() override;
 
     QColor color() const { return m_color; }
     void setColor(const QColor& color);
@@ -49,9 +46,13 @@ signals:
     void sweepSizeChanged();
 
 protected:
+    void itemChange(ItemChange change, const ItemChangeData& value) override;
+    void geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry) override;
     QSGNode* updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*) override;
 
 private:
+    void syncSweep();
+
     QColor m_color;
     QColor m_highlightColor;
     qreal m_radius = 4;
