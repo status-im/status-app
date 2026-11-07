@@ -5,9 +5,11 @@
         <file compression-algorithm="none">RobotoMono-VariableFont_wght.ttf</file>
         <file compression-algorithm="none">RobotoMono-Italic-VariableFont_wght.ttf</file>
         <file compression-algorithm="none">StatusTwemoji-COLRv0.ttf</file>
+        <file compression-algorithm="none">StatusSymbols.ttf</file>
     </qresource>
     <!-- Not under /assets/fonts: everything there is expected to be a loadable font -->
     <qresource prefix="/assets/licenses">
         <file>StatusTwemoji-COLRv0.LICENSE</file>
+        <file>StatusSymbols.LICENSE</file>
     </qresource>
 </RCC>

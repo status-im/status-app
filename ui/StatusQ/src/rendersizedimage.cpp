@@ -2,7 +2,6 @@
 
 #include <QtCore/QCache>
 #include <QtCore/QDeadlineTimer>
-#include <QtCore/QMimeDatabase>
 #include <QtCore/QtMath>
 #include <QtGui/QImageReader>
 #include <QtQml/QQmlFile>
@@ -53,12 +52,12 @@ bool isRenderSizedFillMode(QQuickImage::FillMode mode)
             || mode == QQuickImage::Stretch;
 }
 
-// By file name only: no file access, case-insensitive globs
+// By file name only, case-insensitive: the image/svg+xml globs (*.svg, *.svgz). Not
+// QMimeDatabase, which parses its whole database into the heap for the process lifetime.
 bool isVectorFileName(const QString& fileName)
 {
-    const QMimeType mime = QMimeDatabase().mimeTypeForFile(fileName, QMimeDatabase::MatchExtension);
-    return mime.inherits(QStringLiteral("image/svg+xml"))
-            || mime.inherits(QStringLiteral("image/svg+xml-compressed"));
+    return fileName.endsWith(QLatin1String(".svg"), Qt::CaseInsensitive)
+            || fileName.endsWith(QLatin1String(".svgz"), Qt::CaseInsensitive);
 }
 
 } // namespace
