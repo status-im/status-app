@@ -43,17 +43,12 @@ Loader {
 
             fragmentShader: "qrc:/StatusQ/shaders/skeletonmask.frag.qsb"
 
-            Loader {
-                active: sweep.visible
-                sourceComponent: UniformAnimator {
-                    target: sweep
-                    uniform: "phase"
-                    from: 0
-                    to: 1
-                    duration: 1000
-                    loops: Animation.Infinite
-                    running: true
-                }
+            NumberAnimation on phase {
+                from: 0
+                to: 1
+                duration: 1000
+                loops: Animation.Infinite
+                running: sweep.visible
             }
         }
     }
