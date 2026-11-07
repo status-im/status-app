@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Dialogs
 import QtCore
 
 import StatusQ
@@ -10,21 +9,24 @@ import MobileUI
 QObject {
     id: root
 
-    property alias title: dlg.title
-    property alias nameFilters: dlg.nameFilters
+    property string title
+    property list<string> nameFilters
     readonly property alias selectedFile: d.resolvedFile
     readonly property alias selectedFiles: d.resolvedFiles
     property bool selectMultiple
     property bool usePhotoLibrary
 
-    property alias modality: dlg.modality
-    property alias currentFolder: dlg.currentFolder
-    property alias visible: dlg.visible
+    property int modality: Qt.WindowModal
+    property url currentFolder
+    readonly property bool visible: d.dialog?.visible ?? false
 
     readonly property string picturesShortcut: Utils.isIOS ? "assets-library://" :
                             d.standardPictureLocations.length > 1 ? d.standardPictureLocations[1] // [0] is writable, don't need it here, we have StatusSaveFileDialog for that
                                                                   : d.standardPictureLocations.length > 0 ? d.standardPictureLocations[0]
                                                                                                           : ""
+
+    // the QtQuick.Dialogs object, created on the first open()
+    readonly property alias dialog: d.dialog
 
     signal accepted
     signal rejected
@@ -40,24 +42,46 @@ QObject {
             return
         }
 
-        dlg.open()
+        d.ensureDialog().open()
     }
 
     function close() {
         if (Utils.isIOS)
             d.nativeDialogOpen = false
-        dlg.close()
+        d.dialog?.close()
     }
 
     QtObject {
         id: d
 
+        property QtObject dialog: null
+
+        function ensureDialog() {
+            if (!dialog) {
+                const props = {
+                    title: Qt.binding(() => root.title),
+                    nameFilters: Qt.binding(() => root.nameFilters)
+                }
+                if (root.currentFolder.toString() !== "")
+                    props.currentFolder = root.currentFolder
+                dialog = Qt.createComponent(Qt.resolvedUrl("impl/FileDialogImpl.qml")).createObject(root, props)
+                // enum properties reject Qt.binding() as an initial property
+                dialog.modality = Qt.binding(() => root.modality)
+                dialog.fileMode = Qt.binding(() => root.selectMultiple ? 1 /* FileDialog.OpenFiles */
+                                                                       : 0 /* FileDialog.OpenFile */)
+                dialog.accepted.connect(root.accepted)
+                dialog.rejected.connect(root.rejected)
+                dialog.currentFolderChanged.connect(() => root.currentFolder = dialog.currentFolder)
+            }
+            return dialog
+        }
+
         readonly property list<url> standardPictureLocations: StandardPaths.standardLocations(StandardPaths.PicturesLocation)
         property var nativeSelectedFiles: []
         property bool nativeDialogOpen: false
 
-        readonly property url resolvedFile: Utils.isIOS ? resolveFile(nativeSelectedFiles[0]) : resolveFile(dlg.selectedFile)
-        readonly property var resolvedFiles: Utils.isIOS ? resolveSelectedFiles(nativeSelectedFiles) : resolveSelectedFiles(dlg.selectedFiles)
+        readonly property url resolvedFile: Utils.isIOS ? resolveFile(nativeSelectedFiles[0]) : resolveFile(d.dialog?.selectedFile ?? "")
+        readonly property var resolvedFiles: Utils.isIOS ? resolveSelectedFiles(nativeSelectedFiles) : resolveSelectedFiles(d.dialog?.selectedFiles ?? [])
 
         function resolveFile(file) {
             if (!file)
@@ -106,12 +130,8 @@ QObject {
         }
     }
 
-    FileDialog {
-        id: dlg
-
-        fileMode: selectMultiple ? FileDialog.OpenFiles : FileDialog.OpenFile
-
-        onAccepted: root.accepted()
-        onRejected: root.rejected()
+    onCurrentFolderChanged: {
+        if (d.dialog && d.dialog.currentFolder.toString() !== root.currentFolder.toString())
+            d.dialog.currentFolder = root.currentFolder
     }
 }

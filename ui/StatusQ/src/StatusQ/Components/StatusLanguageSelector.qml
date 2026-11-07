@@ -49,6 +49,8 @@ Button {
         readonly property int maxPopupHeight: 400
         readonly property int delegateHeight: 60
 
+        property bool openedOnce: false
+
         readonly property SortFilterProxyModel languageModel: SortFilterProxyModel {
             id: languageModel
             sourceModel: LanguageModel {
@@ -128,6 +130,7 @@ Button {
         margins: Theme.halfPadding
         padding: Theme.padding
 
+        onAboutToShow: d.openedOnce = true
         onOpened: if (!Utils.isMobile) searchField.forceActiveFocus()
         onClosed: searchField.input.edit.clear()
 
@@ -174,7 +177,8 @@ Button {
                             StatusBaseText {
                                 Layout.fillWidth: true
                                 horizontalAlignment: Qt.AlignLeft // force LTR
-                                text: model.nativeName
+                                // not shaped before the first open: native names such as 한국어 load CJK fallback fonts
+                                text: d.openedOnce ? model.nativeName : ""
                                 font.capitalization: Font.Capitalize
                                 font.pixelSize: root.font.pixelSize
                                 font.weight: root.font.weight

@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QImageReader>
+#include <QMimeDatabase>
 #include <QRegularExpression>
 #include <QStandardPaths>
 #include <QUrl>
@@ -14,20 +15,36 @@
 #endif
 
 namespace {
+struct ImageMimeType {
+    const char* name;
+    const char* suffixes; // preferred first
+};
+
+// QMimeDatabase's entries for these types. Not looked up at runtime: the first lookup parses
+// the whole database into the heap for the process lifetime.
+constexpr ImageMimeType imageMimeTypes[] = {
+    {"image/jpeg", "jpg jpeg jpe jif jfif jfi"},
+    {"image/png", "png"},
+    {"image/gif", "gif"},
+    {"image/webp", "webp"},
+};
+
 constexpr auto webpMime = "image/webp";
 }
 
 UrlUtils::UrlUtils(QObject *parent): QObject(parent) {
     const auto webpSupported = QImageReader::supportedMimeTypes().contains(webpMime);
-    if (webpSupported)
-        m_validImageMimeTypes.append(webpMime);
 
     QStringList imgFilters;
-    for (const auto& mime: std::as_const(m_validImageMimeTypes)) {
-        const auto mimeData = m_mimeDb.mimeTypeForName(mime);
-        imgFilters.append(mimeData.globPatterns());
-        m_imgExtensions.append(mimeData.preferredSuffix());
-        m_allImgExtensions.append(mimeData.suffixes());
+    for (const auto& mime: imageMimeTypes) {
+        if (!webpSupported && qstrcmp(mime.name, webpMime) == 0)
+            continue;
+        const auto suffixes = QString::fromLatin1(mime.suffixes).split(' ');
+        m_validImageMimeTypes.append(QString::fromLatin1(mime.name));
+        m_imgExtensions.append(suffixes.first());
+        m_allImgExtensions.append(suffixes);
+        for (const auto& suffix: suffixes)
+            imgFilters.append(QStringLiteral("*.") + suffix);
     }
 
     m_imgFilters = imgFilters.join(' ');
@@ -50,7 +67,7 @@ bool UrlUtils::isValidImageUrl(const QUrl &url) const
     if (url.scheme().startsWith(QLatin1String("http"))) // truly remote URLs, not virtual like Android content://
         return urlEndsWithSupportedExtension(filePath); // QMimeDatabase::mimeTypeForUrl(url) returns 'application/octet-stream'
 
-    const auto mimeType = m_mimeDb.mimeTypeForFile(filePath, QMimeDatabase::MatchContent).name();
+    const auto mimeType = QMimeDatabase().mimeTypeForFile(filePath, QMimeDatabase::MatchContent).name();
 
     return m_validImageMimeTypes.contains(mimeType);
 }

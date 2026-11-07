@@ -85,6 +85,14 @@ Item {
         languageStore.setUserUID(d.myPublicKey)
     }
 
+    // Reports QML compiled from source at runtime (mobile builds are ahead-of-time compiled
+    // and should have none), once the first section and the post-login precompile settled
+    Timer {
+        interval: 60000
+        running: SQUtils.Utils.isMobile
+        onTriggered: SystemUtils.checkSourceCompiledQmlUnits(appMain)
+    }
+
     // Primary store container — all additional stores should be initialized under this root
     readonly property AppStores.RootStore rootStore: AppStores.RootStore {
         localBackupEnabled: appMain.featureFlagsStore.localBackupEnabled
