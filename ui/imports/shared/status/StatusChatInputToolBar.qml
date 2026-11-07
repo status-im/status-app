@@ -46,6 +46,9 @@ Control {
 
         property string tooltipText
 
+        Accessible.role: Accessible.Button
+        Accessible.name: SQUtils.Utils.formatAccessibleName(tooltipText, objectName)
+
         icon.width: 28 + Math.max(0, Theme.fontSizeOffset * 2)
         icon.height: 28 + Math.max(0, Theme.fontSizeOffset * 2)
 
