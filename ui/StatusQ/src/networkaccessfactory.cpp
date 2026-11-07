@@ -10,6 +10,10 @@
 
 #include <memory>
 
+#ifdef Q_OS_ANDROID
+#include "platformhttpsreply_android.h"
+#endif
+
 namespace Status {
 
 namespace {
@@ -24,8 +28,14 @@ protected:
     QNetworkReply* createRequest(Operation op, const QNetworkRequest& request,
                                  QIODevice* outgoingData) override
     {
-        auto* reply = QNetworkAccessManager::createRequest(op, withAcceptedImageFormats(request),
-                                                          outgoingData);
+        QNetworkReply* reply = nullptr;
+#ifdef Q_OS_ANDROID
+        if (op == GetOperation && request.url().scheme() == QLatin1String("https"))
+            reply = createPlatformHttpsReply(withAcceptedImageFormats(request), this);
+#endif
+        if (!reply)
+            reply = QNetworkAccessManager::createRequest(op, withAcceptedImageFormats(request),
+                                                         outgoingData);
 
         const QUrl url = request.url();
         if (!url.host().isEmpty()) {
@@ -106,6 +116,9 @@ void setupNetworkAccessManagerFactory(QQmlEngine* engine, const QString& cacheDi
     // Construct HttpStats on the GUI thread before any NAM factory worker can
     // first-touch it with the wrong QObject affinity (see HttpStats::instance).
     (void)HttpStats::instance();
+#ifdef Q_OS_ANDROID
+    installPlatformHttpsCache(cacheDir + QStringLiteral("-https"), maxCacheSize);
+#endif
     engine->setNetworkAccessManagerFactory(new NetworkAccessFactory(cacheDir, maxCacheSize));
 }
 

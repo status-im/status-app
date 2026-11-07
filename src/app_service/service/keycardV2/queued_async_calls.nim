@@ -15,6 +15,9 @@ proc onAsyncResponse(self: Service, response: string) {.slot.} =
     error "onAsyncResponse", err=e.msg
 
 proc asyncCallRPC(self: Service, action: KeycardAction, params: JsonNode, callback: proc (responseObj: JsonNode, err: string)) =
+  # callRPC answers Stop/Cancel itself while nothing is loaded
+  if action notin {KeycardAction.Stop, KeycardAction.CancelCurrentOperation}:
+    loadLib()
   self.requestCounter.inc
   self.requestMap[self.requestCounter] = KeycardRequest(
     action: action,

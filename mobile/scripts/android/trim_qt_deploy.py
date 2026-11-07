@@ -71,18 +71,26 @@ local_m = re.search(r'(<array name="load_local_libs">\s*<item>%s;)([^<]*)(</item
 local = [l for l in local_m.group(2).split(':')
          if l and (libdir / l).exists() and not is_lazy(l)] if local_m else []
 
-roots = [soname(n) for n in bundled] + local + [soname('%s_%s' % (main_lib, abi))]
+
+def closure(roots):
+    keep, todo = set(), list(roots)
+    while todo:
+        n = todo.pop()
+        if n in keep or n not in present or is_lazy(n):
+            continue
+        keep.add(n)
+        todo += present[n][0]
+    return keep
+
+
+# Bundled libs nothing loads at startup (OpenSSL, keycard) stay packaged for a later dlopen()
+roots = local + [soname('%s_%s' % (main_lib, abi))]
 roots += [n for n, (_, jni) in present.items() if jni]
-keep, todo = set(), list(roots)
-while todo:
-    n = todo.pop()
-    if n in keep or n not in present or is_lazy(n):
-        continue
-    keep.add(n)
-    todo += present[n][0]
+keep = closure(roots)
 eager_needs_lazy = sorted((n, d) for n in keep for d in present[n][0] if is_lazy(d))
 if eager_needs_lazy:
     sys.exit('trim: eager libs need lazy libs: %s' % eager_needs_lazy)
+lazy_bundled = [n for n in bundled if soname(n) not in keep]
 
 qt = array('qt_libs')
 
@@ -97,7 +105,12 @@ xml = xml[:qt.start(2)] + qt_body + '\n    ' + xml[qt.end(2):]
 if local_m:
     xml = re.sub(r'(<array name="load_local_libs">\s*<item>%s;)[^<]*' % abi,
                  lambda m: m.group(1) + ':'.join(local), xml)
+bl = array('bundled_libs')
+bl_body = re.sub(r'\s*<item>%s;([^<]+)</item>' % abi,
+                 lambda m: '' if m.group(1) in lazy_bundled else m.group(0), bl.group(2))
+xml = xml[:bl.start(2)] + bl_body + xml[bl.end(2):]
 libsxml.write_text(xml)
+print('trim: lazy bundled_libs =', ' '.join(lazy_bundled))
 print('trim: eager qt_libs =', ' '.join(re.findall(r'<item>%s;([^<]+)</item>' % abi, qt_body)))
 print('trim: load_local_libs =', ':'.join(local))
 lazy_kept = sorted(n for n in present if is_lazy(n))

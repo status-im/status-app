@@ -40,8 +40,8 @@ template refreshMediaServerUrl*(field, port, changed: untyped) =
     field = updated
     changed = true
 
-# status-go media server defaults: TLS on, advertised as localhost
-const MEDIA_SERVER_BASE = "https://localhost:"
+# status-go media server, advertised as localhost: TLS on, except on Android (see initializeApplication)
+const MEDIA_SERVER_BASE = when defined(android): "http://localhost:" else: "https://localhost:"
 
 proc contactImageUrl*(port: int, pubKey: string, clock: uint64): string =
   ## The contact thumbnail URL status-go's MakeContactImageURL builds (query

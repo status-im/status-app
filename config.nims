@@ -9,7 +9,9 @@ else:
 
 --threads:on
 --opt:speed # -O3
---define:ssl # needed by the stdlib to enable SSL procedures
+# needed by the stdlib to enable SSL procedures; Android keeps OpenSSL out of the UI process
+if not defined(android):
+  --define:ssl
 --define:useOpenSSL3
 --parallelBuild:0  # 0 == auto nr. of cores
 

@@ -347,6 +347,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
         src/securestorage_android.cpp
         src/safutils_android.cpp
         src/lifecycleutils_android.cpp
+        src/platformhttpsreply_android.cpp
         src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
         src/StatusQ/Controls/NativeIndicatorItem_android.cpp
         src/shareutils_android.cpp
