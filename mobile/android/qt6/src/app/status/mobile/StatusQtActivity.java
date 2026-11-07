@@ -99,7 +99,9 @@ public class StatusQtActivity extends QtActivity {
         // IMPORTANT: call super.onCreate() after starting/binding the service.
         // QtActivity may start the Qt (Nim) side during super.onCreate(), and the Nim
         // onboarding resume check queries the service immediately on startup.
+        WindowSurfaceMode.beforeCreate(this);
         super.onCreate(savedInstanceState);
+        WindowSurfaceMode.afterCreate(this);
         sInstance = this;
 
         if (Build.VERSION.SDK_INT >= 31) { // Android 12+
