@@ -38,9 +38,11 @@
             <!-- Predicate form: the extension is offered when at least one
                  attachment is an image, a URL or plain text. The dictionary
                  form required every attachment to match, which hid Status
-                 for hosts that add extra representations (e.g. a Notes link). -->
+                 for hosts that add extra representations (e.g. a Notes link).
+                 A URL or text that is a file is no message to send: a
+                 document, a .txt included, opens through "Open with". -->
             <key>NSExtensionActivationRule</key>
-            <string>SUBQUERY(extensionItems, $item, SUBQUERY($item.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text").@count &gt; 0).@count &gt; 0</string>
+            <string>SUBQUERY(extensionItems, $item, SUBQUERY($item.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image" OR ((ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.plain-text") AND NOT (ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url"))).@count &gt; 0).@count &gt; 0</string>
         </dict>
     </dict>
 </dict>

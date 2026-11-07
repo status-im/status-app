@@ -2662,6 +2662,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>서버의 인증서를 신뢰할 수 없습니다</translation>
     </message>
@@ -2801,6 +2805,10 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Find in page</source>
         <translation>페이지에서 찾기</translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">파일 경로 복사</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -12072,6 +12080,10 @@ to load</source>
         <translation>페이지에서 찾기</translation>
     </message>
     <message>
+        <source>Share file</source>
+        <translation type="unfinished">파일 공유</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation>확대/축소</translation>
     </message>
@@ -12844,6 +12856,17 @@ to load</source>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>자격 증명 가져오기에 실패했습니다.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View supported formats</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

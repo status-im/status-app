@@ -2687,6 +2687,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certifikát serveru není důvěryhodný</translation>
     </message>
@@ -2830,6 +2834,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Find in page</source>
         <translation>Najít na stránce</translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">Kopírovat cestu k souboru</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -12198,6 +12206,10 @@ selhalo</translation>
         <translation>Najít na stránce</translation>
     </message>
     <message>
+        <source>Share file</source>
+        <translation type="unfinished">Sdílet soubor</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation>Lupa</translation>
     </message>
@@ -12974,6 +12986,17 @@ selhalo</translation>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>Získání přihlašovacích údajů se nezdařilo.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View supported formats</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

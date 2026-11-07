@@ -358,6 +358,9 @@ method activateStatusDeepLink*(self: AccessInterface, statusDeepLink: string) {.
 method openUrlInNewBrowserTab*(self: AccessInterface, url: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method openFileInBrowserTab*(self: AccessInterface, fileUrl: string, refused: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method launchShareFlow*(self: AccessInterface, text: string, imagePaths: seq[string]) {.base.} =
   raise newException(ValueError, "No implementation available")
 

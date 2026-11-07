@@ -94,6 +94,7 @@ Item {
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
+        onOpenFileInBrowserTab: (fileUrl, refused) => d.openFileInBrowserTab(fileUrl, refused)
         onLaunchShareFlow: (text, imagePaths) => shareFlowLoader.launch(text, imagePaths)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
@@ -1226,6 +1227,21 @@ Item {
                 const browser = browserLayoutContainer.item
                 if (browser && browser.openUrlInNewTab)
                     browser.openUrlInNewTab(link)
+            })
+        }
+
+        // An Opened File: the OS offered Status for it, so it is never handed
+        // back to the OS.
+        function openFileInBrowserTab(fileUrl: string, refused: bool) {
+            if (!d.isBrowserEnabled) {
+                console.warn("An opened file arrived while the browser is disabled")
+                return
+            }
+            globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
+            Qt.callLater(() => {
+                const browser = browserLayoutContainer.item
+                if (browser && browser.openOpenedFile)
+                    browser.openOpenedFile(fileUrl, refused)
             })
         }
 

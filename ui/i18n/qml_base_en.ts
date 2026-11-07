@@ -2674,6 +2674,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2815,6 +2819,10 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Find in page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12118,6 +12126,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Share file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12891,6 +12903,17 @@ to load</source>
     </message>
     <message>
         <source>Fetching credentials failed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View supported formats</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

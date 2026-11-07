@@ -19,8 +19,11 @@ Item {
     width: 400
     height: 400
 
-    readonly property url profileManagerUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/adapters/ProfileManager.qml")
+    Component {
+        id: profileManagerComponent
+
+        ProfileManager {}
+    }
 
     Component {
         id: hostStackComponent
@@ -70,6 +73,8 @@ Item {
             property string uid: ""
             property string title: ""
             property url icon: ""
+            property bool crashed: false
+            property bool openFailed: false
             property bool offTheRecord: profileParams ? profileParams.offTheRecord
                                                       : false
         }
@@ -134,9 +139,7 @@ Item {
         when: windowShown
 
         function createProfileManager() {
-            const component = Qt.createComponent(root.profileManagerUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            return createTemporaryObject(component, root)
+            return createTemporaryObject(profileManagerComponent, root)
         }
 
         /// Params for one profile kind: browsing, incognito, or local preview.
@@ -251,6 +254,23 @@ Item {
             view.profileParams = createTemporaryObject(browsingParamsComponent, root)
             ctx.setIncognitoCurrent(true)
             compare(view.profileParams, ctx.otrProfileParams)
+        }
+
+        // An Opened File that could not be shown keeps its Tab and says so.
+        function test_openFailedTab_showsTheFailurePage() {
+            const hostStack = createTemporaryObject(hostStackComponent, root)
+            const tabsModel = createTemporaryObject(tabsModelComponent, root)
+            const ctx = createTemporaryObject(browserWebViewContextComponent, root, {
+                hostStack: hostStack,
+                tabsModelRef: tabsModel
+            })
+            const view = createTemporaryObject(fakeWebViewComponent, hostStack, {
+                profileParams: createTemporaryObject(previewParamsComponent, root)
+            })
+            compare(ctx.currentContentMode, BrowserWebViewContext.ContentMode.EmptyContent)
+
+            view.openFailed = true
+            compare(ctx.currentContentMode, BrowserWebViewContext.ContentMode.OpenFailedContent)
         }
 
         // A restored session reopens URLs in browsing tabs, so a preview tab

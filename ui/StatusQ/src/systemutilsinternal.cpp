@@ -1,4 +1,5 @@
 #include "StatusQ/systemutilsinternal.h"
+#include "StatusQ/openedfileintake.h"
 
 #include <QDateTime>
 #include <QDesktopServices>
@@ -164,6 +165,16 @@ QString SystemUtilsInternal::qtRuntimeVersion() const {
 bool SystemUtilsInternal::fileExists(const QString &path) const
 {
     return !path.isEmpty() && QFileInfo::exists(path) && QFileInfo(path).isFile();
+}
+
+void SystemUtilsInternal::releaseOpenedFile(const QString &path) const
+{
+    Status::OpenedFileIntake::release(path);
+}
+
+QVariantMap SystemUtilsInternal::openedFileInfo(const QString &fileUrl) const
+{
+    return Status::OpenedFileIntake::description(fileUrl);
 }
 
 bool SystemUtilsInternal::ensureDirectory(const QString &path) const

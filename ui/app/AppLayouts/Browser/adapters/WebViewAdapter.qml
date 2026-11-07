@@ -44,7 +44,12 @@ AbstractWebView {
     // Override functions
     function loadUrl(newUrl) { webView.url = newUrl }
     // WebEngine reads local files without a per-directory grant; readAccessUrl is moot.
-    function loadFileUrl(fileUrl, readAccessUrl) { loadUrl(fileUrl) }
+    /// The preview profile reaches the file (or the directory holding it) for
+    /// as long as this Tab lives; an empty read access grants the file alone.
+    function loadFileUrl(fileUrl, readAccessUrl) {
+        BrowserProfileUtils.grantFileRead(webView, readAccessUrl || fileUrl)
+        loadUrl(fileUrl)
+    }
     function goBack() { webView.goBack() }
     function goForward() { webView.goForward() }
     function goBackOrForward(offset) { webView.goBackOrForward(offset) }

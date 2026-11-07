@@ -10,6 +10,7 @@
 class QWebEngineDownloadRequest;
 class QWebEnginePage;
 class QWebEngineUrlRequestInterceptor;
+class BrowserLocalFileGrants;
 
 // Desktop-only helper exposing WebEngineProfile clearing that the QML
 // WebEngineProfile type does not expose (cookie store). Registered only when
@@ -46,11 +47,17 @@ public:
     Q_INVOKABLE void installBrowsingUrlPolicy(QObject *profile);
 
     // Install the local-preview policy on `profile`: file:// navigation is
-    // allowed under the downloads location and the generated player-page
-    // directory, and blocked everywhere else. Only for the profile backing tabs
+    // allowed under the downloads location, the generated player-page
+    // directory and each view's Read Grant (grantFileRead), and blocked
+    // everywhere else. Only for the profile backing tabs
     // that display a downloaded file — never for a browsing profile. The default
     // profile keeps the browsing policy (see installBrowsingUrlPolicy).
     Q_INVOKABLE void installLocalPreviewUrlPolicy(QObject *profile);
+
+    // Let the local-preview `view` reach `readAccessUrl` (a file, or a directory
+    // holding the files it shows) until the view is destroyed; replaces its
+    // earlier grant. Browsing profiles ignore grants.
+    Q_INVOKABLE void grantFileRead(QObject *view, const QUrl &readAccessUrl);
 
     // Clears profile-wide browsing data: HTTP cache and all cookies.
     // `profile` must be a QML WebEngineProfile (QQuickWebEngineProfile);
@@ -96,6 +103,7 @@ private:
     // singleton (created on first use).
     QWebEngineUrlRequestInterceptor *m_browsingUrlPolicy = nullptr;
     QWebEngineUrlRequestInterceptor *m_localPreviewUrlPolicy = nullptr;
+    BrowserLocalFileGrants *m_localFileGrants = nullptr;
 
     QWebEngineUrlRequestInterceptor *browsingUrlPolicy();
     QWebEngineUrlRequestInterceptor *localPreviewUrlPolicy();
