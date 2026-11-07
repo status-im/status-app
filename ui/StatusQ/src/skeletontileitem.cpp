@@ -2,9 +2,11 @@
 
 #include <QElapsedTimer>
 #include <QQuickWindow>
+#include <QSet>
 #include <QSGGeometryNode>
 #include <QSGMaterial>
 #include <QSGMaterialShader>
+#include <QTimer>
 
 #include <cstring>
 
@@ -12,7 +14,6 @@ namespace {
 
 constexpr qint64 kSweepDurationMs = 1000;
 
-// shared by all tiles, so that they sweep in step whenever they were created
 float sweepPhase()
 {
     static const QElapsedTimer clock = [] {
@@ -66,7 +67,6 @@ public:
         setShaderFileName(FragmentStage, QStringLiteral(":/StatusQ/shaders/skeletontile.frag.qsb"));
     }
 
-    // offsets follow the std140 layout of the uniform block in skeletontile.frag
     bool updateUniformData(RenderState& state, QSGMaterial* newMaterial, QSGMaterial*) override
     {
         const auto* m = static_cast<SkeletonTileMaterial*>(newMaterial);
@@ -98,6 +98,53 @@ QSGMaterialShader* SkeletonTileMaterial::createShader(QSGRendererInterface::Rend
     return new SkeletonTileShader;
 }
 
+bool tileShouldSweep(const QQuickItem* item)
+{
+    return item->window() && item->isVisible() && item->width() > 0 && item->height() > 0;
+}
+
+// Drives item->update() on the GUI thread while any tile is on screen.
+class SweepTicker : public QObject
+{
+public:
+    static SweepTicker& instance()
+    {
+        static SweepTicker ticker;
+        return ticker;
+    }
+
+    void add(QQuickItem* item)
+    {
+        m_items.insert(item);
+        if (!m_timer.isActive())
+            m_timer.start();
+    }
+
+    void remove(QQuickItem* item) { m_items.remove(item); }
+
+private:
+    SweepTicker()
+    {
+        m_timer.setInterval(1000 / 60);
+        connect(&m_timer, &QTimer::timeout, this, [this] {
+            for (auto it = m_items.begin(); it != m_items.end(); ) {
+                QQuickItem* item = *it;
+                if (!tileShouldSweep(item)) {
+                    it = m_items.erase(it);
+                    continue;
+                }
+                item->update();
+                ++it;
+            }
+            if (m_items.isEmpty())
+                m_timer.stop();
+        });
+    }
+
+    QTimer m_timer;
+    QSet<QQuickItem*> m_items;
+};
+
 class SkeletonTileNode : public QSGGeometryNode
 {
 public:
@@ -109,11 +156,8 @@ public:
         setFlags(OwnsGeometry | OwnsMaterial | UsePreprocess);
     }
 
-    // called on the render thread while the GUI thread is blocked
     void sync(const SkeletonTileItem* item)
     {
-        m_window = item->window();
-
         const QSizeF size = item->size();
         QSGGeometry::updateTexturedRectGeometry(geometry(), QRectF(QPointF(0, 0), size), QRectF(0, 0, 1, 1));
         markDirty(DirtyGeometry);
@@ -123,25 +167,18 @@ public:
         m->highlightColor = item->highlightColor();
         m->itemSize = size;
         m->radius = item->radius();
-        m->pixelRatio = m_window ? m_window->effectiveDevicePixelRatio() : 1;
+        const auto* window = item->window();
+        m->pixelRatio = window ? window->effectiveDevicePixelRatio() : 1;
         m->sweepOrigin = item->sweepOrigin();
         m->sweepSize = item->sweepSize();
         markDirty(DirtyMaterial);
     }
 
-    // Runs once per frame only while the node is in the rendered scene, so a
-    // hidden or removed tile stops requesting frames by itself.
     void preprocess() override
     {
         static_cast<SkeletonTileMaterial*>(material())->phase = sweepPhase();
         markDirty(DirtyMaterial);
-
-        if (m_window)
-            m_window->update();
     }
-
-private:
-    QQuickWindow* m_window = nullptr;
 };
 
 } // namespace
@@ -150,6 +187,34 @@ SkeletonTileItem::SkeletonTileItem(QQuickItem* parent)
     : QQuickItem(parent)
 {
     setFlag(ItemHasContents);
+}
+
+SkeletonTileItem::~SkeletonTileItem()
+{
+    SweepTicker::instance().remove(this);
+}
+
+void SkeletonTileItem::itemChange(ItemChange change, const ItemChangeData& value)
+{
+    QQuickItem::itemChange(change, value);
+    if (change == ItemVisibleHasChanged || change == ItemSceneChange)
+        syncSweep();
+}
+
+void SkeletonTileItem::geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry)
+{
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
+    if ((newGeometry.width() > 0) != (oldGeometry.width() > 0)
+        || (newGeometry.height() > 0) != (oldGeometry.height() > 0))
+        syncSweep();
+}
+
+void SkeletonTileItem::syncSweep()
+{
+    if (tileShouldSweep(this))
+        SweepTicker::instance().add(this);
+    else
+        SweepTicker::instance().remove(this);
 }
 
 void SkeletonTileItem::setColor(const QColor& color)
