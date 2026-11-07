@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eof pipefail
+set -eo pipefail
 
 if [[ $# -ne 1 ]]; then
     echo "No path to search for EXE and DLL files provided!" >&2
@@ -9,13 +9,10 @@ fi
 function must_get_env() {
     declare -n VAR_VALUE="$1"
     if [[ -z "${VAR_VALUE}" ]]; then
-        echo -e "Missing env variable: ${!VAR_VALUE}" 1>&2
+        echo -e "Missing env variable: ${1}" >&2
         exit 1
     fi
 }
-
-# The timestamp server is always required.
-must_get_env WINDOWS_CODESIGN_TIMESTAMP_URL
 
 # Signing Tool usually comes with the Windows Kits.
 WINDOWS_KITS='/c/Program Files (x86)/Windows Kits'
@@ -37,24 +34,32 @@ for FILE in ${FOUND_FILES}; do
     FILES_TO_SIGN+=("${FILE}")
 done
 
-if [[ "${RELEASE:-false}" == "true" ]]; then
-    echo "Using DigiCert KeyLocker for release signing..."
+if [[ "${PUBLISH:-false}" == "true" ]]; then
+    echo "Using DigiCert KeyLocker for publish signing..."
 
     # Check for required release signing variables
-    must_get_env WINDOWS_DIGICERT_CERT_FINGERPRINT
+    must_get_env WINDOWS_DIGICERT_KEYPAIR_ALIAS
     must_get_env SM_API_KEY
     must_get_env SM_CLIENT_CERT_PASSWORD
     must_get_env SM_CLIENT_CERT_FILE
 
     export SM_HOST='https://clientauth.one.digicert.com'
 
+    SMCTL='/c/Program Files/DigiCert/DigiCert One Signing Manager Tools/smctl.exe'
+
     # Sign with DigiCert KeyLocker
-    "${SIGNTOOL}" sign -v -debug -td SHA256 -fd SHA256 \
-        -sha1 "${WINDOWS_DIGICERT_CERT_FINGERPRINT}" \
-        -tr "${WINDOWS_CODESIGN_TIMESTAMP_URL}" \
-        "${FILES_TO_SIGN[@]}"
+    for FILE in "${FILES_TO_SIGN[@]}"; do
+        echo "Signing: ${FILE}"
+        if ! "${SMCTL}" sign --keypair-alias "${WINDOWS_DIGICERT_KEYPAIR_ALIAS}" --input "${FILE}" --simple; then
+            echo "Failed to sign: ${FILE}" >&2
+            exit 1
+        fi
+    done
 else
     echo "Using development certificate for signing..."
+
+    # The timestamp server is required for development signing.
+    must_get_env WINDOWS_CODESIGN_TIMESTAMP_URL
 
     # Check for required development signing variables
     must_get_env WINDOWS_CODESIGN_PASSWORD

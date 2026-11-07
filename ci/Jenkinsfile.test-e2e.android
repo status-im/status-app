@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-library 'status-jenkins-lib@v1.10.0'
+library 'status-jenkins-lib@v1.10.4'
 
 pipeline {
   agent {
@@ -142,7 +142,7 @@ pipeline {
       }
       steps {
         script {
-          def autSource = params.BUILD_SOURCE?.startsWith('http') ? 
+          def autSource = params.BUILD_SOURCE?.startsWith('http') ?
             params.BUILD_SOURCE : utils.findFile('test/e2e_appium/pkg/*.apk')
           withCredentials([
             usernamePassword(
