@@ -1012,6 +1012,8 @@ endif
 	macdeployqt \
 		$(MACOS_INNER_BUNDLE) \
 		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess
+	scripts/thin-macos-bundle.sh $(MACOS_OUTER_BUNDLE) \
+		$(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client
 
 	# if MACOS_CODESIGN_IDENT is not set then the outer and inner .app
 	# bundles are not signed
