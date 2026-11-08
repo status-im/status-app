@@ -7,6 +7,10 @@
 #include "StatusQ/contextmenueventfilter.h"
 #include "StatusQ/chattextitem.h"
 #include "StatusQ/chattextappearance.h"
+#include "StatusQ/messageheaderitem.h"
+#include "StatusQ/messageheaderservices.h"
+#include "StatusQ/messageheaderdata.h"
+#include "StatusQ/messageheaderappearance.h"
 #include "StatusQ/chatsinglelinetextitem.h"
 #include "StatusQ/fastexpressionfilter.h"
 #include "StatusQ/fastexpressionrole.h"
@@ -97,6 +101,10 @@ void registerStatusQTypes() {
     qmlRegisterType<DelegatePool>("StatusQ", 0, 1, "DelegatePool");
     qmlRegisterType<DelegatePoolKind>("StatusQ", 0, 1, "DelegatePoolKind");
     qmlRegisterTypesAndRevisions<ChatTextSegment>("StatusQ", 0);
+    qmlRegisterType<MessageHeaderAppearance>("StatusQ", 0, 1, "MessageHeaderAppearance");
+    qmlRegisterTypesAndRevisions<MessageHeaderData>("StatusQ", 0);
+    qmlRegisterType<MessageHeaderServices>("StatusQ", 0, 1, "MessageHeaderServices");
+    qmlRegisterType<MessageHeaderItem>("StatusQ", 0, 1, "MessageHeaderItem");
     qmlRegisterType<ChatSingleLineTextItem>("StatusQ", 0, 1, "ChatSingleLineTextItem");
     qmlRegisterType<ChatTextAppearance>("StatusQ", 0, 1, "ChatTextAppearance");
     qmlRegisterType<ChatTextItem>("StatusQ", 0, 1, "ChatTextItem");

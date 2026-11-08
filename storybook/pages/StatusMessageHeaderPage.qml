@@ -11,6 +11,17 @@ SplitView {
     id: root
 
     Logs { id: logs }
+    StatusMessageHeaderServices { id: headerServices }
+    StatusMessageHeaderAppearance { id: headerAppearance; theme: root.Theme }
+
+    // Reading children in this binding also tracks Loader/Control children
+    // added or removed when a variant's options change.
+    function countVisualItems(item) {
+        let count = 1
+        for (const child of item.children)
+            count += countVisualItems(child)
+        return count
+    }
 
     readonly property double sampleTime: Date.now()
     readonly property string sampleId: "0x04a1b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdef"
@@ -54,7 +65,7 @@ SplitView {
 
             Label {
                 Layout.margins: 16
-                text: "StatusMessageHeader"
+                text: "StatusMessageHeader · QML / native comparison"
                 font.bold: true
                 font.pixelSize: 22
                 color: root.Theme.palette.directColor1
@@ -67,12 +78,23 @@ SplitView {
                 wrapMode: Text.WordWrap
                 color: root.Theme.palette.baseColor1
             }
+            Label {
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+                Layout.rightMargin: 16
+                text: "The native prototype batches layout and paints text/icons directly; it retains QML tooltips and the resend button. Counts include the header and all its visual descendants, including hidden items. Nonvisual objects and detached popups are excluded."
+                wrapMode: Text.WordWrap
+                color: root.Theme.palette.baseColor1
+            }
 
             Repeater {
                 model: root.variants
                 delegate: Frame {
                     id: card
                     required property var modelData
+                    required property int index
+                    objectName: "headerVariant-" + index
+                    readonly property int visualItemCount: root.countVisualItems(header)
                     Layout.fillWidth: true
                     Layout.leftMargin: 16
                     Layout.rightMargin: 16
@@ -91,7 +113,13 @@ SplitView {
                             wrapMode: Text.WordWrap
                             color: root.Theme.palette.baseColor1
                         }
+                        Label {
+                            text: "QML · " + card.visualItemCount + " visual items"
+                            color: root.Theme.palette.baseColor1
+                            font.pixelSize: 12
+                        }
                         StatusMessageHeader {
+                            id: header
                             Layout.preferredWidth: widthSlider.value
                             Layout.maximumWidth: widthSlider.value
                             Layout.alignment: Qt.AlignLeft
@@ -112,6 +140,37 @@ SplitView {
                             isMobile: mobileMode.checked
                             onClicked: logs.logEvent("clicked", ["variant"], [card.modelData.title])
                             onResendClicked: logs.logEvent("resendClicked", ["variant"], [card.modelData.title])
+                        }
+                        Label {
+                            text: "Native prototype · " + root.countVisualItems(prototype) + " visual items"
+                            color: root.Theme.palette.baseColor1
+                            font.pixelSize: 12
+                        }
+                        StatusMessageHeaderPrototype {
+                            id: prototype
+                            services: headerServices
+                            appearance: headerAppearance
+                            objectName: "nativeHeaderVariant-" + card.index
+                            Layout.preferredWidth: widthSlider.value
+                            Layout.maximumWidth: widthSlider.value
+                            Layout.alignment: Qt.AlignLeft
+                            headerData: ({senderId: root.sampleId,
+                                          displayName: card.modelData.name ?? "Alice",
+                                          secondaryName: card.modelData.secondary ?? "",
+                                          tertiaryDetail: card.modelData.detail ?? root.sampleId,
+                                          isContact: card.modelData.contact ?? false,
+                                          trustIndicator: card.modelData.trust ?? StatusContactVerificationIcons.TrustedType.None,
+                                          amISender: card.modelData.own ?? false,
+                                          timestamp: root.sampleTime - (card.modelData.age ?? 60000),
+                                          outgoingStatus: card.modelData.status ?? StatusMessage.OutgoingStatus.Unknown,
+                                          resendError: card.modelData.error ?? "",
+                                          messageOriginInfo: card.modelData.origin ?? ""})
+                            displayNameClickable: header.displayNameClickable
+                            showFullTimestamp: header.showFullTimestamp
+                            showOutgoingStatusLabel: header.showOutgoingStatusLabel
+                            isMobile: header.isMobile
+                            onClicked: logs.logEvent("native clicked", ["variant"], [card.modelData.title])
+                            onResendClicked: logs.logEvent("native resendClicked", ["variant"], [card.modelData.title])
                         }
                     }
                 }
