@@ -190,6 +190,10 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/chattextformat.h
         include/StatusQ/chatsinglelinetextitem.h
         include/StatusQ/chattextappearance.h
+        include/StatusQ/messageheaderappearance.h
+        include/StatusQ/messageheaderdata.h
+        include/StatusQ/messageheaderitem.h
+        include/StatusQ/messageheaderservices.h
         include/StatusQ/chattextitem.h
         include/StatusQ/chattextsegment.h
         include/StatusQ/fastexpressionfilter.h
@@ -252,6 +256,13 @@ add_library(StatusQ ${LIB_TYPE}
         src/chattextaccessibility.cpp
         src/chattextaccessibility.h
         src/chattextappearance.cpp
+        src/messageheaderappearance.cpp
+        src/messageheaderitem.cpp
+        src/messageheaderservices.cpp
+        src/messageheadertext.cpp
+        src/messageheadertext.h
+        src/messageheadertime.cpp
+        src/messageheadertime.h
         src/chattextitem.cpp
         src/externc.cpp
         src/fastexpressionfilter.cpp
