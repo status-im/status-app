@@ -8,11 +8,11 @@
 // Rounded loading placeholder with a shimmer sweep, drawn in one pass.
 //
 // The sweep phase lives entirely on the scene graph side: the node advances it
-// from a shared clock in preprocess() and requests the next frame from the
-// render thread. Nothing touches the item between syncs, so the item can be
-// removed from the window at any moment, and the sweep keeps running while the
-// GUI thread is busy. This is why it does not use UniformAnimator, which reads
-// the live item on the render thread and crashes when it leaves the window
+// from a shared clock in preprocess() and requests the next frame itself. Nothing
+// touches the item between syncs, so the item can be removed from the window at
+// any moment, and with the threaded render loop the sweep keeps running while
+// the GUI thread is busy. This is why it does not use UniformAnimator, which
+// reads the live item on the render thread and crashes when it leaves the window
 // (QTBUG-151922).
 class SkeletonTileItem : public QQuickItem
 {
