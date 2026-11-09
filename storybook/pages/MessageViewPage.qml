@@ -23,6 +23,7 @@ SplitView {
         theme: root.Theme
         selectionPalette: root.palette
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     QtObject {
         id: d
@@ -131,6 +132,7 @@ SplitView {
             id: messageView
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
 
             width: parent.width
 

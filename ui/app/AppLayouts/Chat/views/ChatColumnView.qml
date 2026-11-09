@@ -46,6 +46,7 @@ Item {
     property DelegatePool rowPool: null
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
     property bool areTestNetworksEnabled
 
     /*
@@ -661,6 +662,7 @@ Item {
                 rowPool: root.rowPool
                 textAppearance: root.textAppearance
                 previewAppearance: root.previewAppearance
+                messageHeaderServices: root.messageHeaderServices
                 formatBalance: d.formatBalance
                 reactionEmojiModel: root.reactionEmojiModel
                 stickersLoaded: root.stickersLoaded

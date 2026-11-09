@@ -53,6 +53,7 @@ StatusSectionLoader {
     property DelegatePool rowPool: null
     required property ChatTextAppearance textAppearance
     required property ChatTextAppearance previewAppearance
+    required property MessageHeaderServices messageHeaderServices
 
     // Per-community inputs
     required property string sectionId
@@ -360,6 +361,7 @@ StatusSectionLoader {
             rowPool:                        Qt.binding(() => root.rowPool),
             textAppearance:                 Qt.binding(() => root.textAppearance),
             previewAppearance:              Qt.binding(() => root.previewAppearance),
+            messageHeaderServices:          Qt.binding(() => root.messageHeaderServices),
         })
     }
 

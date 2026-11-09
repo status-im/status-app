@@ -25,6 +25,9 @@ Item {
         readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
             theme: root.Theme
         }
+        readonly property MessageHeaderServices headerServices: StatusMessageHeaderServices {
+            theme: root.Theme
+        }
         readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
             theme: root.Theme
         }
@@ -214,6 +217,7 @@ Item {
             id: messagesShownAs
             textAppearance: d.textAppearance
             previewAppearance: d.previewAppearance
+            headerServices: d.headerServices
 
             anchors.top: !visible ? separator.bottom : primaryUsernameItem.bottom
             anchors.topMargin: Theme.padding * 2

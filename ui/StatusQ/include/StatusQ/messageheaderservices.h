@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StatusQ/messageheaderappearance.h"
+
 #include <QDate>
 #include <QElapsedTimer>
 #include <QObject>
@@ -9,7 +11,6 @@
 
 #include <memory>
 
-class MessageHeaderAppearance;
 class MessageHeaderItem;
 struct MessageHeaderTimeFormats;
 struct MessageHeaderShapedText;
@@ -26,6 +27,10 @@ class MessageHeaderServices : public QObject
     Q_OBJECT
     // Instantiated with a required `header` property, only for headers that
     // currently show a resend control.
+    // The appearance of the view's headers, used by every header without one
+    // of its own: passing the services hands a view everything it needs.
+    Q_PROPERTY(MessageHeaderAppearance* appearance READ appearance WRITE setAppearance
+               NOTIFY appearanceChanged)
     Q_PROPERTY(QQmlComponent* resendButton READ resendButton WRITE setResendButton
                NOTIFY resendButtonChanged)
     // Positioned over the hovered region of the header that owns the tooltip.
@@ -41,6 +46,8 @@ public:
     explicit MessageHeaderServices(QObject* parent = nullptr);
     ~MessageHeaderServices() override;
 
+    MessageHeaderAppearance* appearance() const { return m_appearance; }
+    void setAppearance(MessageHeaderAppearance* appearance);
     QQmlComponent* resendButton() const { return m_resendButton; }
     void setResendButton(QQmlComponent* component);
     QQuickItem* tooltipAnchor() const { return m_anchor; }
@@ -87,6 +94,7 @@ public:
     QQuickItem* createResendButton(MessageHeaderItem* header);
 
 signals:
+    void appearanceChanged();
     void resendButtonChanged();
     void tooltipAnchorChanged();
     void tooltipChanged();
@@ -96,6 +104,7 @@ private:
     bool refreshClock();
     void releaseAnchor();
 
+    QPointer<MessageHeaderAppearance> m_appearance;
     QPointer<QQmlComponent> m_resendButton;
     QPointer<QQuickItem> m_anchor;
     QPointer<MessageHeaderItem> m_tooltipOwner;

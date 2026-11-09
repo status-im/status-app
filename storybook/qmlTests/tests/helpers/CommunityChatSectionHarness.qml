@@ -31,6 +31,7 @@ Item {
 
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance { theme: root.Theme }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     readonly property alias mock: mock
     readonly property alias loader: harnessLoader
@@ -99,6 +100,7 @@ Item {
         sourceComponent: CommunityChatLoader {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             active: true
 
             userUID: "0xdeadbeef"

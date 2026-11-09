@@ -22,6 +22,7 @@ Item {
 
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance { theme: root.Theme }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 800
     height: 600
@@ -107,6 +108,7 @@ Item {
                 id: messagesView
                 textAppearance: root.textAppearance
                 previewAppearance: root.previewAppearance
+                messageHeaderServices: root.messageHeaderServices
 
                 parent: harness.placed ? shell.messagesSlot : holder
                 anchors.fill: parent

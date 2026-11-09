@@ -112,6 +112,7 @@ protected:
     void hoverMoveEvent(QHoverEvent* event) override;
     void hoverLeaveEvent(QHoverEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseUngrabEvent() override;
 
@@ -190,6 +191,9 @@ private:
     };
 
     void connectAppearance();
+    // Reconnects and redoes everything when the effective appearance (own,
+    // the services', or the defaults) is a different object.
+    void appearanceSourceChanged();
     void invalidate(quint16 flags);
     void process();
     void prepareContent();
@@ -215,6 +219,8 @@ private:
     QPointer<MessageHeaderAppearance> m_appearance;
     QPointer<MessageHeaderServices> m_services;
     QList<QMetaObject::Connection> m_appearanceConnections;
+    QPointer<MessageHeaderAppearance> m_connectedAppearance;
+    QMetaObject::Connection m_servicesAppearanceConnection;
     MessageHeaderData m_data;
     bool m_displayNameClickable = true;
     bool m_showFullTimestamp = false;
@@ -244,4 +250,6 @@ private:
     Region m_hoverRegion = Region::None;
     bool m_nameHovered = false;
     bool m_pressedOnName = false;
+    QPointF m_pressPosition;
+    quint64 m_pressTimestamp = 0;
 };

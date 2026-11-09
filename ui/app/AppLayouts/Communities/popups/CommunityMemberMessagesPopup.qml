@@ -29,6 +29,9 @@ StatusDialog {
             theme: root.Theme
             selectionPalette: root.palette
         }
+        readonly property MessageHeaderServices headerServices: StatusMessageHeaderServices {
+            theme: root.Theme
+        }
         readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
             theme: root.Theme
             selectionPalette: root.palette
@@ -99,6 +102,7 @@ StatusDialog {
                     id: messageItem
                     textAppearance: d.textAppearance
                     previewAppearance: d.previewAppearance
+                    messageHeaderServices: d.headerServices
 
                     width: parent.width
 

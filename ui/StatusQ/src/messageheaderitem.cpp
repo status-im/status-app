@@ -19,6 +19,8 @@
 #include <QSGImageNode>
 #include <QSGRectangleNode>
 #include <QSGTextNode>
+#include <QStyleHints>
+#include <QGuiApplication>
 #include <QSGTransformNode>
 #include <QVarLengthArray>
 #include <QtMath>
@@ -162,7 +164,11 @@ MessageHeaderItem::~MessageHeaderItem()
 
 MessageHeaderAppearance* MessageHeaderItem::appearance() const
 {
-    return m_appearance ? m_appearance.data() : MessageHeaderAppearance::defaults();
+    if (m_appearance)
+        return m_appearance;
+    if (m_services && m_services->appearance())
+        return m_services->appearance();
+    return MessageHeaderAppearance::defaults();
 }
 
 void MessageHeaderItem::setAppearance(MessageHeaderAppearance* value)
@@ -170,9 +176,16 @@ void MessageHeaderItem::setAppearance(MessageHeaderAppearance* value)
     if (m_appearance == value)
         return;
     m_appearance = value;
+    appearanceSourceChanged();
+    emit appearanceChanged();
+}
+
+void MessageHeaderItem::appearanceSourceChanged()
+{
+    if (m_connectedAppearance == appearance())
+        return;
     connectAppearance();
     invalidate(DirtyContent | DirtyTimestamp | DirtyFonts | DirtyColors | DirtyGeometry);
-    emit appearanceChanged();
 }
 
 void MessageHeaderItem::connectAppearance()
@@ -181,6 +194,7 @@ void MessageHeaderItem::connectAppearance()
         disconnect(connection);
     m_appearanceConnections.clear();
     MessageHeaderAppearance* a = appearance();
+    m_connectedAppearance = a;
     m_appearanceConnections = {
         connect(a, &MessageHeaderAppearance::fontsChanged, this,
                 [this] { invalidate(DirtyFonts | DirtyGeometry); }),
@@ -191,12 +205,7 @@ void MessageHeaderItem::connectAppearance()
         connect(a, &MessageHeaderAppearance::timeFormatChanged, this,
                 [this] { invalidate(DirtyTimestamp); }),
         // A destroyed appearance falls back to the defaults.
-        connect(a, &QObject::destroyed, this, [this] {
-            if (!m_appearance) {
-                connectAppearance();
-                invalidate(DirtyContent | DirtyTimestamp | DirtyFonts | DirtyColors | DirtyGeometry);
-            }
-        }),
+        connect(a, &QObject::destroyed, this, [this] { appearanceSourceChanged(); }),
     };
 }
 
@@ -209,7 +218,13 @@ void MessageHeaderItem::setServices(MessageHeaderServices* value)
         m_services->unsubscribe(this);
     }
     m_clockSubscribed = false;
+    disconnect(m_servicesAppearanceConnection);
     m_services = value;
+    if (value) {
+        m_servicesAppearanceConnection = connect(value, &MessageHeaderServices::appearanceChanged, this,
+                                                 &MessageHeaderItem::appearanceSourceChanged);
+    }
+    appearanceSourceChanged();
     // A different clock: the cached timestamp may not match it.
     m_formattedClock = 0;
     invalidate(DirtyTimestamp | DirtyStatus);
@@ -221,6 +236,8 @@ void MessageHeaderItem::servicesDestroyed()
 {
     m_clockSubscribed = false;
     m_services = nullptr;
+    disconnect(m_servicesAppearanceConnection);
+    appearanceSourceChanged();
     if (m_resendButton) {
         m_resendButton->setVisible(false);
         m_resendButton->setEnabled(false);
@@ -965,6 +982,9 @@ void MessageHeaderItem::hoverEnterEvent(QHoverEvent* event)
 
 void MessageHeaderItem::hoverMoveEvent(QHoverEvent* event)
 {
+    // Ignored, so the hover also reaches the ancestors (the message row's
+    // HoverHandler); the item stays hovered and keeps getting moves.
+    event->ignore();
     if (fromTouchScreen(event)) {
         if (m_hovering) {
             clearHover();
@@ -975,8 +995,9 @@ void MessageHeaderItem::hoverMoveEvent(QHoverEvent* event)
     updateHover(event->position());
 }
 
-void MessageHeaderItem::hoverLeaveEvent(QHoverEvent*)
+void MessageHeaderItem::hoverLeaveEvent(QHoverEvent* event)
 {
+    event->ignore();
     clearHover();
     unsetCursor();
 }
@@ -987,10 +1008,26 @@ void MessageHeaderItem::mousePressEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton && m_displayNameClickable
             && regionAtPoint(event->position()) == Region::Name) {
         m_pressedOnName = true;
+        m_pressPosition = event->position();
+        m_pressTimestamp = event->timestamp();
         event->accept();
         return;
     }
     event->ignore();
+}
+
+// As the TapHandler the name used to have: a press dragged past the drag
+// threshold, or held for a long press, is no click.
+void MessageHeaderItem::mouseMoveEvent(QMouseEvent* event)
+{
+    if (!m_pressedOnName) {
+        event->ignore();
+        return;
+    }
+    const QPointF moved = event->position() - m_pressPosition;
+    if (qMax(qAbs(moved.x()), qAbs(moved.y())) > QGuiApplication::styleHints()->startDragDistance())
+        m_pressedOnName = false;
+    event->accept();
 }
 
 void MessageHeaderItem::mouseReleaseEvent(QMouseEvent* event)
@@ -1001,6 +1038,9 @@ void MessageHeaderItem::mouseReleaseEvent(QMouseEvent* event)
     }
     m_pressedOnName = false;
     event->accept();
+    const auto held = event->timestamp() - m_pressTimestamp;
+    if (held >= quint64(QGuiApplication::styleHints()->mousePressAndHoldInterval()))
+        return;
     if (m_displayNameClickable && regionAtPoint(event->position()) == Region::Name)
         emit clicked(this);
 }

@@ -19,6 +19,9 @@ Control {
 
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    // Shared by every message of a view (or of the app, for pooled rows):
+    // the header's appearance, clock, tooltip and resend control.
+    property MessageHeaderServices headerServices
 
     enum ContentType {
         Unknown = 0,
@@ -318,13 +321,26 @@ Control {
                         active: root.showHeader
                         visible: active
                         sourceComponent: StatusMessageHeader {
-                            sender: root.messageDetails.sender
-                            amISender: root.messageDetails.amISender
-                            messageOriginInfo: root.messageDetails.messageOriginInfo
-                            resendError: root.messageDetails.amISender ? root.resendError : ""
-                            timestamp: root.timestamp
+                            objectName: "StatusMessage_header"
+                            services: root.headerServices
+                            // One snapshot of every input. A rebind may
+                            // re-evaluate it per changed input, but the header
+                            // ignores equal ones and prepares once per polish.
+                            // tertiaryDetail stays unset and falls back to
+                            // senderId; an empty id (ENS) hides it.
+                            headerData: ({
+                                senderId: root.messageDetails.sender.id,
+                                displayName: root.messageDetails.sender.displayName,
+                                secondaryName: root.messageDetails.sender.secondaryName,
+                                isContact: root.messageDetails.sender.isContact,
+                                trustIndicator: root.messageDetails.sender.trustIndicator,
+                                amISender: root.messageDetails.amISender,
+                                messageOriginInfo: root.messageDetails.messageOriginInfo,
+                                resendError: root.messageDetails.amISender ? root.resendError : "",
+                                timestamp: root.timestamp,
+                                outgoingStatus: root.outgoingStatus
+                            })
                             displayNameClickable: root.profileClickable
-                            outgoingStatus: root.outgoingStatus
                             isMobile: root.isMobile
                             showOutgoingStatusLabel: root.hovered && !root.isInPinnedPopup
                             onClicked: (sender) => root.senderNameClicked(sender)

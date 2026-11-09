@@ -39,6 +39,7 @@ SplitView {
         theme: root.Theme
         selectionPalette: root.palette
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     orientation: Qt.Vertical
 
@@ -451,6 +452,7 @@ SplitView {
                     rowPool: messageRowPool
                     textAppearance: root.textAppearance
                     previewAppearance: root.previewAppearance
+                    messageHeaderServices: root.messageHeaderServices
                     createChatViewOpened: false
                     isPortraitMode: (Window.width ?? 0) < ThemeUtils.portraitBreakpoint.width
 

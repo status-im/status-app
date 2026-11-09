@@ -9,8 +9,8 @@ import StatusQ.Components
 
 import Storybook
 
-// Legacy StatusMessageHeader next to the native StatusMessageHeaderPrototype
-// for the same inputs, with the number of visual items each one builds.
+// StatusMessageHeader variants: incoming, verification, details, timestamps,
+// delivery states and Resend, with the shared services of the page.
 SplitView {
     id: root
 
@@ -47,25 +47,10 @@ SplitView {
                                timestamp: root.now }, variant.data)
     }
 
-    function countItems(item) {
-        let n = 1
-        for (let i = 0; i < item.children.length; ++i)
-            n += countItems(item.children[i])
-        return n
-    }
-
-    StatusMessageHeaderAppearance {
-        id: headerAppearance
-        theme: root.Theme
-    }
 
     StatusMessageHeaderServices {
         id: headerServices
-    }
-
-    Component {
-        id: senderComponent
-        StatusMessageSenderDetails {}
+        theme: root.Theme
     }
 
     Pane {
@@ -93,47 +78,20 @@ SplitView {
                         spacing: 4
 
                         Label {
-                            text: row.modelData.label + "  —  legacy " + root.countItems(legacy)
-                                  + " items, native " + root.countItems(native) + " items"
+                            text: row.modelData.label
                             font.bold: true
                         }
 
                         StatusMessageHeader {
-                            id: legacy
                             width: parent.width
-                            sender: senderComponent.createObject(legacy, {
-                                id: row.fixture.senderId,
-                                displayName: row.fixture.displayName,
-                                secondaryName: row.fixture.secondaryName ?? "",
-                                isContact: row.fixture.isContact ?? false,
-                                trustIndicator: row.fixture.trustIndicator ?? 0
-                            })
-                            tertiaryDetail: row.fixture.tertiaryDetail ?? sender.id
-                            timestamp: row.fixture.timestamp
-                            amISender: row.fixture.amISender ?? false
-                            messageOriginInfo: row.fixture.messageOriginInfo ?? ""
-                            resendError: row.fixture.resendError ?? ""
-                            outgoingStatus: row.fixture.outgoingStatus ?? 0
-                            displayNameClickable: clickableBox.checked
-                            showFullTimestamp: fullTimestampBox.checked
-                            showOutgoingStatusLabel: statusLabelBox.checked
-                            isMobile: mobileBox.checked
-                            onClicked: logs.logEvent("legacy clicked " + row.modelData.label)
-                            onResendClicked: logs.logEvent("legacy resend " + row.modelData.label)
-                        }
-
-                        StatusMessageHeaderPrototype {
-                            id: native
-                            width: parent.width
-                            appearance: headerAppearance
                             services: headerServices
                             headerData: row.fixture
                             displayNameClickable: clickableBox.checked
                             showFullTimestamp: fullTimestampBox.checked
                             showOutgoingStatusLabel: statusLabelBox.checked
                             isMobile: mobileBox.checked
-                            onClicked: logs.logEvent("native clicked " + row.modelData.label)
-                            onResendClicked: logs.logEvent("native resend " + row.modelData.label)
+                            onClicked: logs.logEvent("clicked " + row.modelData.label)
+                            onResendClicked: logs.logEvent("resend " + row.modelData.label)
                         }
                     }
                 }

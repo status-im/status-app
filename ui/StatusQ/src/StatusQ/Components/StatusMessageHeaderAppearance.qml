@@ -10,9 +10,10 @@ import StatusQ.Core.Theme
    \inqmlmodule StatusQ.Components
    \brief Themed, translated presentation shared by the message headers of a view.
 
-   Create one per view and give it to every StatusMessageHeaderPrototype.
-   Translations keep the contexts of the components the header replaces, so
-   existing translations apply.
+   StatusMessageHeaderServices creates one as its \c appearance, which every
+   StatusMessageHeader without an appearance of its own uses. Translations
+   keep the contexts of the components the header replaced, so existing
+   translations apply.
 */
 MessageHeaderAppearance {
     required property var theme
