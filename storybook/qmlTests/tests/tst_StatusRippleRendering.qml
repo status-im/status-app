@@ -4,6 +4,8 @@ import QtTest
 
 import StatusQ.Controls
 
+import "helpers"
+
 /*
  Checks what the ripple actually draws. The offscreen QPA platform has no RHI
  backend to compile and run shaders with, so every test is skipped there; run
@@ -56,42 +58,16 @@ Item {
         }
     }
 
-    // many expanding ripples, to give the render thread work while they are removed
-    Component {
-        id: gridComp
-
-        Loader {
-            active: false
-            sourceComponent: Grid {
-                columns: 10
-
-                Repeater {
-                    model: 300
-
-                    StatusRipple {
-                        width: 36
-                        height: 16
-                        color: "#ffffff"
-                        expandDuration: 1000
-                        Component.onCompleted: press(0, 0)
-                    }
-                }
-            }
-        }
-    }
-
-    // ticks on the animation clock, so removals land right after a sync
-    Timer {
-        id: toggler
-
-        property Loader target: null
-        property int toggles: 0
-
-        interval: 150
-        repeat: true
-        onTriggered: {
-            target.active = !target.active
-            ++toggles
+    LeaveWindowStress {
+        id: stress
+        count: 300
+        columns: 10
+        delegate: StatusRipple {
+            width: 36
+            height: 16
+            color: "#ffffff"
+            expandDuration: 1000
+            Component.onCompleted: press(0, 0)
         }
     }
 
@@ -200,13 +176,8 @@ Item {
         }
 
         function test_ripples_can_leave_the_window_while_expanding() {
-            toggler.target = createTemporaryObject(gridComp, root)
-            verify(!!toggler.target)
-
-            toggler.toggles = 0
-            toggler.start()
-            tryVerify(() => toggler.toggles >= 60, 30000)
-            toggler.stop()
+            stress.run(60)
+            tryVerify(() => !stress.running, 30000)
         }
     }
 }
