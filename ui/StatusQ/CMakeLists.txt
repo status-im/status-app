@@ -466,9 +466,18 @@ qt_add_shaders(StatusQ "statusq_shaders"
         src/assets/shaders/roundedimage.frag
         src/assets/shaders/roundedrendersizedimage.frag
         src/assets/shaders/roundedrendersizedimage.vert
-        src/assets/shaders/skeletonmask.frag
         src/assets/shaders/skeletontile.frag
         src/assets/shaders/skeletontile.vert
+)
+# The loading tile drawn where a mask texture is opaque
+qt_add_shaders(StatusQ "statusq_shaders_skeletonmask"
+    PREFIX "/StatusQ/shaders"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/src/assets/shaders"
+    DEFINES MASK
+    FILES
+        src/assets/shaders/skeletontile.frag
+    OUTPUTS
+        skeletontilemask.frag.qsb
 )
 # A rounded image's border alone, for when there is no image
 qt_add_shaders(StatusQ "statusq_shaders_border"

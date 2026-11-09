@@ -2,12 +2,18 @@
 
 #include "scenegraphanimation.h"
 
+#include <QImage>
 #include <QQuickWindow>
+#include <QSGDynamicTexture>
 #include <QSGGeometryNode>
 #include <QSGMaterial>
 #include <QSGMaterialShader>
+#include <QSGTexture>
+#include <QSGTextureProvider>
+#include <QtQuick/private/qsgplaintexture_p.h>
 
 #include <cstring>
+#include <memory>
 
 namespace {
 
@@ -29,7 +35,8 @@ void writePremultiplied(char* dst, const QColor& color)
 class SkeletonTileMaterial : public QSGMaterial
 {
 public:
-    SkeletonTileMaterial()
+    explicit SkeletonTileMaterial(bool masked)
+        : masked(masked)
     {
         setFlag(Blending);
         setFlag(RequiresFullMatrix);
@@ -37,12 +44,28 @@ public:
 
     QSGMaterialType* type() const override
     {
-        static QSGMaterialType type;
-        return &type;
+        static QSGMaterialType plainType;
+        static QSGMaterialType maskedType;
+        return masked ? &maskedType : &plainType;
     }
 
     QSGMaterialShader* createShader(QSGRendererInterface::RenderMode) const override;
 
+    // read on every frame: the provider replaces its texture between syncs
+    QSGTexture* maskTexture()
+    {
+        if (maskProvider && maskProvider->texture())
+            return maskProvider->texture();
+        if (!emptyMask) {
+            QImage transparent(1, 1, QImage::Format_RGBA8888_Premultiplied);
+            transparent.fill(Qt::transparent);
+            emptyMask = std::make_unique<QSGPlainTexture>();
+            emptyMask->setImage(transparent);
+        }
+        return emptyMask.get();
+    }
+
+    const bool masked;
     QColor color;
     QColor highlightColor;
     QSizeF itemSize;
@@ -51,21 +74,27 @@ public:
     float radius = 0;
     float pixelRatio = 1;
     float phase = 0;
+    QPointer<QSGTextureProvider> maskProvider;
+
+private:
+    std::unique_ptr<QSGPlainTexture> emptyMask;
 };
 
 class SkeletonTileShader : public QSGMaterialShader
 {
 public:
-    SkeletonTileShader()
+    explicit SkeletonTileShader(bool masked)
     {
         setShaderFileName(VertexStage, QStringLiteral(":/StatusQ/shaders/skeletontile.vert.qsb"));
-        setShaderFileName(FragmentStage, QStringLiteral(":/StatusQ/shaders/skeletontile.frag.qsb"));
+        setShaderFileName(FragmentStage, masked
+                              ? QStringLiteral(":/StatusQ/shaders/skeletontilemask.frag.qsb")
+                              : QStringLiteral(":/StatusQ/shaders/skeletontile.frag.qsb"));
     }
 
     // offsets follow the std140 layout of the uniform block in skeletontile.frag
     bool updateUniformData(RenderState& state, QSGMaterial* newMaterial, QSGMaterial*) override
     {
-        const auto* m = static_cast<SkeletonTileMaterial*>(newMaterial);
+        auto* m = static_cast<SkeletonTileMaterial*>(newMaterial);
         char* buf = state.uniformData()->data();
 
         const auto writeFloat = [buf](int offset, float value) {
@@ -85,28 +114,48 @@ public:
         writeFloat(136, m->sweepSize.width());
         writeFloat(140, m->sweepSize.height());
         writeFloat(144, m->phase);
+        if (m->masked) {
+            // where the mask sits in its atlas
+            const QRectF subRect = m->maskTexture()->normalizedTextureSubRect();
+            writeFloat(160, subRect.x());
+            writeFloat(164, subRect.y());
+            writeFloat(168, subRect.width());
+            writeFloat(172, subRect.height());
+        }
         return true;
+    }
+
+    void updateSampledImage(RenderState& state, int binding, QSGTexture** texture,
+                            QSGMaterial* newMaterial, QSGMaterial*) override
+    {
+        if (binding != 1)
+            return;
+        QSGTexture* const t = static_cast<SkeletonTileMaterial*>(newMaterial)->maskTexture();
+        t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+        *texture = t;
     }
 };
 
 QSGMaterialShader* SkeletonTileMaterial::createShader(QSGRendererInterface::RenderMode) const
 {
-    return new SkeletonTileShader;
+    return new SkeletonTileShader(masked);
 }
 
 class SkeletonTileNode : public QSGGeometryNode
 {
 public:
-    SkeletonTileNode()
+    explicit SkeletonTileNode(bool masked)
     {
         auto geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
         setGeometry(geometry);
-        setMaterial(new SkeletonTileMaterial);
+        setMaterial(new SkeletonTileMaterial(masked));
         setFlags(OwnsGeometry | OwnsMaterial | UsePreprocess);
     }
 
+    bool isMasked() const { return static_cast<const SkeletonTileMaterial*>(material())->masked; }
+
     // called on the render thread while the GUI thread is blocked
-    void sync(const SkeletonTileItem* item)
+    void sync(const SkeletonTileItem* item, QSGTextureProvider* maskProvider)
     {
         m_window = item->window();
 
@@ -122,6 +171,7 @@ public:
         m->pixelRatio = m_window ? m_window->effectiveDevicePixelRatio() : 1;
         m->sweepOrigin = item->sweepOrigin();
         m->sweepSize = item->sweepSize();
+        m->maskProvider = maskProvider;
         markDirty(DirtyMaterial);
     }
 
@@ -129,7 +179,12 @@ public:
     // hidden or removed tile stops requesting frames by itself.
     void preprocess() override
     {
-        static_cast<SkeletonTileMaterial*>(material())->phase = sweepPhase();
+        auto* m = static_cast<SkeletonTileMaterial*>(material());
+        m->phase = sweepPhase();
+        if (m->masked) {
+            if (auto* dynamicMask = qobject_cast<QSGDynamicTexture*>(m->maskTexture()))
+                dynamicMask->updateTexture();
+        }
         markDirty(DirtyMaterial);
 
         if (m_window)
@@ -193,18 +248,52 @@ void SkeletonTileItem::setSweepSize(const QSizeF& size)
     emit sweepSizeChanged();
 }
 
+void SkeletonTileItem::setMask(QQuickItem* mask)
+{
+    if (m_mask == mask)
+        return;
+    if (m_mask)
+        disconnect(m_mask, &QObject::destroyed, this, nullptr);
+    m_mask = mask;
+    if (mask) {
+        connect(mask, &QObject::destroyed, this, [this] {
+            update();
+            emit maskChanged();
+        });
+    }
+    update();
+    emit maskChanged();
+}
+
 QSGNode* SkeletonTileItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
 {
     auto* node = static_cast<SkeletonTileNode*>(oldNode);
 
-    if (width() <= 0 || height() <= 0) {
+    QSGTextureProvider* const provider = m_mask && m_mask->isTextureProvider()
+                                             ? m_mask->textureProvider() : nullptr;
+    if (provider != m_maskProvider) {
+        if (m_maskProvider)
+            disconnect(m_maskProvider, nullptr, this, nullptr);
+        m_maskProvider = provider;
+        if (provider) {
+            connect(provider, &QSGTextureProvider::textureChanged,
+                    this, &QQuickItem::update, Qt::QueuedConnection);
+        }
+    }
+
+    const bool masked = !m_mask.isNull();
+    if (width() <= 0 || height() <= 0 || (masked && !(provider && provider->texture()))) {
         delete node;
         return nullptr;
     }
 
+    if (node && node->isMasked() != masked) {
+        delete node;
+        node = nullptr;
+    }
     if (!node)
-        node = new SkeletonTileNode;
+        node = new SkeletonTileNode(masked);
 
-    node->sync(this);
+    node->sync(this, provider);
     return node;
 }

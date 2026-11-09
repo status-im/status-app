@@ -26,35 +26,10 @@ Loader {
             cache: false
         }
 
-        // The loading skeleton's shimmer (as LoadingSkeletonTile draws it)
-        // shown through the graph's outline, in one shader pass: the
-        // outline's own texture is the mask.
-        ShaderEffect {
-            id: sweep
-
+        // the loading shimmer, drawn where the graph's outline is opaque
+        LoadingSkeletonTile {
             anchors.fill: parent
-
-            readonly property Item mask: graphMask
-            readonly property size itemSize: Qt.size(width, height)
-            readonly property real pixelRatio: Screen.devicePixelRatio
-            readonly property color color: Theme.palette.statusLoadingHighlight
-            readonly property color highlightColor: Theme.palette.statusLoadingHighlight2
-            property real phase: 0
-
-            fragmentShader: "qrc:/StatusQ/shaders/skeletonmask.frag.qsb"
-
-            Loader {
-                active: sweep.visible
-                sourceComponent: UniformAnimator {
-                    target: sweep
-                    uniform: "phase"
-                    from: 0
-                    to: 1
-                    duration: 1000
-                    loops: Animation.Infinite
-                    running: true
-                }
-            }
+            mask: graphMask
         }
     }
 }
