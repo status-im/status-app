@@ -17,7 +17,8 @@ COUNT=0
 while IFS= read -r -d '' FILE; do
     FILE_ARCHS=$(lipo -archs "${FILE}" 2>/dev/null) || continue
     [[ "${FILE_ARCHS}" == *" "* && " ${FILE_ARCHS} " == *" ${ARCHS} "* ]] || continue
-    MODE=$(stat -f '%Lp' "${FILE}")
+    # GNU stat (nix shell on CI) takes -c; BSD stat rejects -c and takes -f.
+    MODE=$(stat -c '%a' "${FILE}" 2>/dev/null || stat -f '%Lp' "${FILE}")
     lipo -thin "${ARCHS}" "${FILE}" -output "${FILE}.thin"
     mv "${FILE}.thin" "${FILE}"
     chmod "${MODE}" "${FILE}"
