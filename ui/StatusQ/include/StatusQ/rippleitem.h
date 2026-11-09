@@ -5,8 +5,6 @@
 #include <QQuickItem>
 #include <QTimer>
 
-#include <algorithm>
-
 // A ripple's press and release, in milliseconds on the scene graph clock.
 struct RippleTimeline
 {
@@ -18,7 +16,7 @@ struct RippleTimeline
 
     qint64 expandEnd() const { return pressTime + expandDuration; }
     // a release during the expansion collapses once it has finished
-    qint64 collapseStart() const { return std::max(releaseTime, expandEnd()); }
+    qint64 collapseStart() const { return qMax(releaseTime, expandEnd()); }
     qint64 collapseEnd() const { return collapseStart() + collapseDuration; }
 
     qreal radiusAt(qint64 time) const;
