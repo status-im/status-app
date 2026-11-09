@@ -340,6 +340,8 @@ else
  # Additional optimization flags for release builds are not included at present;
  # adding them will involve refactoring config.nims in the root of this repo
  STATUSGO_MAKE_PARAMS += CGO_CFLAGS="-O3"
+ # No Go symbol table or DWARF; panic stack traces still name functions.
+ STATUSGO_MAKE_PARAMS += BUILD_FLAGS='-ldflags="-s -w"'
  NIM_PARAMS += -d:release -d:lto
 endif
 
