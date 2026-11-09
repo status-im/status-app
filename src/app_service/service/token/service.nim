@@ -11,7 +11,8 @@ import app_service/service/settings/service as settings_service
 
 import app/core/eventemitter
 import app/core/held_resource_qtimer
-from seaqt/qtimer import QTimer, create, setSingleShot, setTimerType, onTimeout, start, stop
+from seaqt/qtimer import QTimer, create, setSingleShot, setTimerType, start, stop
+import app/core/session_timer
 from seaqt/QtCore/gen_qnamespace import TimerTypeEnum, PreciseTimer
 import app/core/tasks/[qt, threadpool]
 import app/core/signals/types

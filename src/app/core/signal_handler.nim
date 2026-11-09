@@ -29,3 +29,8 @@ proc signal_handler_in_generation*(receiver: pointer, payload: cstring, slot: cs
   ## generation has moved on since `generation` was captured.
   if not receiver.isNil:
     statusq_invoke_method_queued_in_generation(receiver, slot, payload, generation)
+
+proc hasSessionEnded*(generation: uint64): bool =
+  ## For native producers (timers) owned by a session: once its generation ended they
+  ## must not run session code anymore, while the backend logs out.
+  generation != currentSessionGeneration()
