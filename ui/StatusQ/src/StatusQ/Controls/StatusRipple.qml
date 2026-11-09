@@ -1,5 +1,6 @@
 import QtQuick
 
+import StatusQ
 import StatusQ.Core.Theme
 
 /*!
@@ -65,9 +66,10 @@ Item {
 
     /*!
        Radius of the ripple circle. It is animated on the render thread, so
-       this is its value at rest, or where an animation stopped.
+       this is its value at rest: the end radius once expanded, 0 once
+       collapsed.
     */
-    readonly property real rippleRadius: rippleLoader.item ? rippleLoader.item.rippleRadius : 0
+    readonly property real rippleRadius: ripple.rippleRadius
 
     /*!
        True while the ripple is being held after a press.
@@ -90,15 +92,12 @@ Item {
             d.pressY = Math.max(0, Math.min(height, y))
         }
         d.pressed = true
-        d.opacity = maxOpacity
-        collapseAnimation.stop()
-        expandAnimation.restart()
+        ripple.press()
     }
 
     function release() {
         d.pressed = false
-        if (!expandAnimation.running)
-            collapseAnimation.restart()
+        ripple.release()
     }
 
     Connections {
@@ -128,68 +127,20 @@ Item {
         property real pressX: root.width / 2
         property real pressY: root.height / 2
         property bool pressed: false
-        property real opacity: 0
     }
 
-    visible: d.opacity > 0
+    visible: ripple.active
 
-    // The circle, clipped to the rounded bounds, in one shader pass: no
-    // offscreen layer and no mask texture. Built only while the ripple
-    // shows, as controls create their ripple whether pressed or not.
-    Loader {
-        id: rippleLoader
+    RippleItem {
+        id: ripple
 
         anchors.fill: parent
-        active: root.visible
-        sourceComponent: rippleComponent
-    }
-
-    Component {
-        id: rippleComponent
-
-        ShaderEffect {
-            opacity: d.opacity
-
-            property size itemSize: Qt.size(width, height)
-            property real radius: Math.max(0, Math.min(root.radius, width / 2, height / 2))
-            property point centre: Qt.point(root.pressX, root.pressY)
-            // animated by the UniformAnimators below, which write their end
-            // value back: not bound
-            property real rippleRadius: 0
-            property color color: root.color
-
-            fragmentShader: "qrc:/StatusQ/shaders/ripple.frag.qsb"
-        }
-    }
-
-    // On the render thread: they keep going while a press makes the GUI thread
-    // busy (opening what was pressed), and a frame takes no binding update.
-    UniformAnimator {
-        id: expandAnimation
-        target: rippleLoader.item
-        uniform: "rippleRadius"
-        from: 0
-        to: root.endRadius
-        duration: root.expandDuration
-        easing.type: Easing.OutCubic
-
-        onStopped: {
-            if (!root.pressed)
-                collapseAnimation.restart()
-        }
-    }
-
-    UniformAnimator {
-        id: collapseAnimation
-        target: rippleLoader.item
-        uniform: "rippleRadius"
-        to: 0
-        duration: root.collapseDuration
-        easing.type: Easing.InOutQuad
-
-        onStopped: {
-            if (!root.pressed && root.rippleRadius === 0)
-                d.opacity = 0
-        }
+        opacity: root.maxOpacity
+        color: root.color
+        radius: root.radius
+        centre: Qt.point(root.pressX, root.pressY)
+        endRadius: root.endRadius
+        expandDuration: root.expandDuration
+        collapseDuration: root.collapseDuration
     }
 }

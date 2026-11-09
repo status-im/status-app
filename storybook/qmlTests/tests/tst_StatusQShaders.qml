@@ -13,6 +13,7 @@ Item {
             return [
                 "edgefade.frag",
                 "ripple.frag",
+                "ripple.vert",
                 "roundedimage.frag",
                 "roundedrendersizedimage.frag",
                 "roundedrendersizedimage.vert",

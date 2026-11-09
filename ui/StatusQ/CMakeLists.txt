@@ -179,6 +179,7 @@ add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_TESTCONFIG_RCC}
         include/StatusQ/audioutils.h
         include/StatusQ/skeletontileitem.h
+        include/StatusQ/rippleitem.h
         include/StatusQ/backgroundgraphicsrelease.h
         include/StatusQ/browserbackendcapabilities.h
         include/StatusQ/chatinputhighlighter.h
@@ -240,6 +241,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
         src/skeletontileitem.cpp
+        src/rippleitem.cpp
         src/scenegraphanimation.cpp
         src/scenegraphanimation.h
         src/backgroundgraphicsrelease.cpp
@@ -463,6 +465,7 @@ qt_add_shaders(StatusQ "statusq_shaders"
     FILES
         src/assets/shaders/edgefade.frag
         src/assets/shaders/ripple.frag
+        src/assets/shaders/ripple.vert
         src/assets/shaders/roundedimage.frag
         src/assets/shaders/roundedrendersizedimage.frag
         src/assets/shaders/roundedrendersizedimage.vert
