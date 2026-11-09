@@ -13013,6 +13013,17 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>OpenedFileDelivery</name>
+    <message>
+        <source>Turn on the browser in Settings to open files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>OperatorsUtils</name>
     <message>
         <source>and</source>

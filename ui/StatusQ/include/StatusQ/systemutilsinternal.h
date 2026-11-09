@@ -29,6 +29,8 @@ public:
     // The Tab showing an Opened File is gone: end its iOS security scope or
     // delete its copy. No-op elsewhere.
     Q_INVOKABLE void releaseOpenedFile(const QString &path) const;
+    // Releases a file the OS handed over that never reached a Tab.
+    Q_INVOKABLE void releaseOpenedFileUrl(const QString &fileUrl) const;
     // {name, mimeType, readable} the platform gave for an Opened File whose
     // URL names no file Status can check (Android content://); empty otherwise.
     Q_INVOKABLE QVariantMap openedFileInfo(const QString &fileUrl) const;

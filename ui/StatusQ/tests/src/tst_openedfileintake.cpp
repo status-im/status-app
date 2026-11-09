@@ -59,6 +59,21 @@ private slots:
 
         QVERIFY(OpenedFileIntake::description(url).isEmpty());
     }
+
+    void aDescribedFileIsReleasedByItsUrl()
+    {
+        const QString url = "content://com.example.files/doc/6";
+        OpenedFileIntake::describe(url, "report.pdf", "application/pdf", true);
+
+        QCOMPARE(OpenedFileIntake::releaseKey(url), url);
+        OpenedFileIntake::forget(url);
+    }
+
+    void anyOtherFileIsReleasedByItsPath()
+    {
+        QCOMPARE(OpenedFileIntake::releaseKey("file:///tmp/My%20Docs/a%20b.txt"),
+                 QString("/tmp/My Docs/a b.txt"));
+    }
 };
 
 QTEST_GUILESS_MAIN(TestOpenedFileIntake)

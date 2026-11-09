@@ -29,6 +29,9 @@ namespace Status::OpenedFileIntake
     // The Tab showing `openedFile` (a local path, or the URL of a described
     // file) is gone: end its scope, or delete its copy, and forget it.
     void release(const QString &openedFile);
+
+    // What release() takes for a file handed over as `fileUrl`.
+    QString releaseKey(const QString &fileUrl);
 }
 
 #endif // STATUSQ_OPENED_FILE_INTAKE_H

@@ -51,6 +51,13 @@ QVariantMap Status::OpenedFileIntake::description(const QString &fileUrl)
     return {{"name", it->name}, {"mimeType", it->mimeType}, {"readable", it->readable}};
 }
 
+QString Status::OpenedFileIntake::releaseKey(const QString &fileUrl)
+{
+    if (!description(fileUrl).isEmpty())
+        return fileUrl;
+    return QUrl(fileUrl).toLocalFile();
+}
+
 void Status::OpenedFileIntake::forget(const QString &fileUrl)
 {
     QMutexLocker locker(&lock());
