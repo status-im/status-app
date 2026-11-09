@@ -96,12 +96,16 @@ Item {
             verify(!!frame)
             waitForRendering(frame)
 
-            const image = grabImage(frame)
-            const scale = image.width / frame.width
+            // the mask texture may arrive a frame later
+            let image = null
+            let scale = 1
+            tryVerify(() => {
+                image = grabImage(frame)
+                scale = image.width / frame.width
+                return !isBackground(image.pixel(frame.width / 2 * scale, (frame.height - 3) * scale))
+            }, 3000, "below the graph line must be drawn")
             verify(isBackground(image.pixel(2 * scale, 2 * scale)),
                    "above the graph line must stay empty")
-            verify(!isBackground(image.pixel(frame.width / 2 * scale, (frame.height - 3) * scale)),
-                   "below the graph line must be drawn")
 
             // tryVerify evaluates once more at the end
             const first = graphBrightness(image)

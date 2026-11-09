@@ -35,6 +35,27 @@ Item {
         }
     }
 
+    Component {
+        id: rippleInLayerComp
+
+        Rectangle {
+            readonly property alias ripple: ripple
+
+            width: 200
+            height: 100
+            color: "#0000ff"
+            layer.enabled: true
+
+            StatusRipple {
+                id: ripple
+                anchors.fill: parent
+                color: "#ffffff"
+                maxOpacity: 1
+                expandDuration: 4000
+            }
+        }
+    }
+
     // many expanding ripples, to give the render thread work while they are removed
     Component {
         id: gridComp
@@ -120,6 +141,38 @@ Item {
 
             ripple.release()
             tryCompare(ripple, "visible", false)
+        }
+
+        function test_circle_grows_inside_a_layer() {
+            const frame = createTemporaryObject(rippleInLayerComp, root)
+            verify(!!frame)
+            waitForRendering(frame)
+
+            frame.ripple.press(30, 50)
+            let grown = false
+            tryVerify(() => {
+                const image = grabImage(frame)
+                grown = grown || lit(image, image.width / frame.width, 120, 50)
+                return grown
+            }, 8000, "the circle must grow inside a layer")
+            frame.ripple.release()
+        }
+
+        function test_animates_while_the_gui_thread_is_busy() {
+            const frame = createTemporaryObject(rippleComp, root)
+            verify(!!frame)
+            waitForRendering(frame)
+
+            frame.ripple.press(30, 50)
+            wait(50)
+            frameSpy.clear()
+            const busyUntil = Date.now() + 300
+            while (Date.now() < busyUntil) {}
+            // the frames rendered meanwhile are counted once the event loop runs
+            wait(0)
+            verify(frameSpy.count > 5,
+                   `the ripple must render frames while the GUI thread is busy, got ${frameSpy.count}`)
+            frame.ripple.release()
         }
 
         function test_requests_no_frames_while_held() {

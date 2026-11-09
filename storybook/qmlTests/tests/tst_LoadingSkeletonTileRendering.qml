@@ -36,6 +36,28 @@ Item {
         }
     }
 
+    Component {
+        id: tileInLayerComp
+
+        Rectangle {
+            readonly property alias tile: tile
+
+            width: 240
+            height: 80
+            color: "#0000ff"
+            layer.enabled: true
+
+            LoadingSkeletonTile {
+                id: tile
+                x: 20
+                y: 20
+                width: 200
+                height: 40
+                color: "#404040"
+            }
+        }
+    }
+
     // two tiles farther apart than the band is wide
     Component {
         id: groupComp
@@ -156,6 +178,21 @@ Item {
                 brightened = brightened || brightness(e.brightest) > brightness(e.darkest) + 0.03
                 return brightened
             }, 3000, "the sweep band must brighten the tile in some frame")
+        }
+
+        function test_band_moves_inside_a_layer() {
+            const frame = createTemporaryObject(tileInLayerComp, root)
+            verify(!!frame)
+            waitForRendering(frame)
+
+            const tile = frame.tile
+            const scale = grabImage(tile).width / tile.width
+            let brightened = false
+            tryVerify(() => {
+                const e = middleRowExtremes(grabImage(tile), scale)
+                brightened = brightened || brightness(e.brightest) > brightness(e.darkest) + 0.03
+                return brightened
+            }, 3000, "the sweep band must move inside a layer")
         }
 
         function test_band_sweeps_across_group_tiles_in_turn() {

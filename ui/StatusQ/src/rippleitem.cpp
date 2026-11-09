@@ -4,7 +4,6 @@
 
 #include <QEasingCurve>
 #include <QQuickWindow>
-#include <QSGGeometryNode>
 #include <QSGMaterial>
 #include <QSGMaterialShader>
 
@@ -102,26 +101,22 @@ QSGMaterialShader* RippleMaterial::createShader(QSGRendererInterface::RenderMode
     return new RippleShader;
 }
 
-class RippleNode : public QSGGeometryNode
+class RippleNode : public AnimatedQuadNode
 {
 public:
     RippleNode()
+        : AnimatedQuadNode(new RippleMaterial)
     {
-        auto geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
-        setGeometry(geometry);
-        setMaterial(new RippleMaterial);
-        setFlags(OwnsGeometry | OwnsMaterial | UsePreprocess);
     }
 
     // called on the render thread while the GUI thread is blocked
     void sync(const RippleItem* item)
     {
-        m_window = item->window();
+        setWindow(item->window());
         m_timeline = item->timeline();
 
         const QSizeF size = item->size();
-        QSGGeometry::updateTexturedRectGeometry(geometry(), QRectF(QPointF(0, 0), size), QRectF(0, 0, 1, 1));
-        markDirty(DirtyGeometry);
+        setSize(size);
 
         auto* m = static_cast<RippleMaterial*>(material());
         m->itemSize = size;
@@ -139,12 +134,11 @@ public:
         static_cast<RippleMaterial*>(material())->rippleRadius = m_timeline.radiusAt(now);
         markDirty(DirtyMaterial);
 
-        if (m_window && !m_timeline.settledAt(now))
-            requestNextFrame(m_window);
+        if (!m_timeline.settledAt(now))
+            requestNextFrame();
     }
 
 private:
-    QQuickWindow* m_window = nullptr;
     RippleTimeline m_timeline;
 };
 

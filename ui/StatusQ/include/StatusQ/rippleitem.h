@@ -27,13 +27,10 @@ struct RippleTimeline
 };
 
 // Press ripple: a circle growing from `centre` and shrinking back after the
-// release, clipped to the rounded bounds, drawn in one pass.
-//
-// The scene graph node computes the radius from the timeline in preprocess()
-// and requests its own frames, so nothing reads the item between syncs and the
-// item can leave the window at any moment, unlike with UniformAnimator
-// (QTBUG-151922). With the threaded render loop the ripple keeps animating
-// while the GUI thread is busy, as it is when a press opens something.
+// release, clipped to the rounded bounds, drawn in one pass. The scene graph
+// node computes the radius from the timeline and requests its own frames, so
+// nothing reads the item between syncs and, with the threaded render loop, the
+// ripple keeps animating while the GUI thread is busy.
 class RippleItem : public QQuickItem
 {
     Q_OBJECT
