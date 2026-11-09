@@ -110,23 +110,28 @@ Rectangle {
             return big instanceof Object ? big : null
         }
 
-        readonly property var customGasAmount: customGasAmountInput.valid ? toBig(customGasAmountInput.text) : null
-        readonly property var suggestedGasAmount: toBig(root.currentGasAmount)
-        readonly property var minGasAmount: toBig(root.minGasAmount)
+        // Gas amount string (whole number) as shown to the user, e.g. "207,391"
+        function formatGasAmount(value) {
+            return !!value ? LocaleUtils.numberToLocaleString(Number(value), 0) : ""
+        }
+
+        readonly property var customGasAmountBig: customGasAmountInput.valid ? toBig(customGasAmountInput.text) : null
+        readonly property var suggestedGasAmountBig: toBig(root.currentGasAmount)
+        readonly property var minGasAmountBig: toBig(root.minGasAmount)
 
         // Blocking: outside what a transaction can carry at all
-        readonly property bool gasOutOfRange: !!customGasAmount
-                                              && (customGasAmount.cmp(0) !== 1
-                                                  || customGasAmount.cmp(toBig(Constants.maxTxGasAmount)) === 1)
+        readonly property bool gasOutOfRange: !!customGasAmountBig
+                                              && (customGasAmountBig.cmp(0) !== 1
+                                                  || customGasAmountBig.cmp(toBig(Constants.maxTxGasAmount)) === 1)
         // Blocking: below the node estimate, the transaction would fail
-        readonly property bool gasBelowMinimum: !!customGasAmount && !gasOutOfRange
-                                                && !!minGasAmount && customGasAmount.cmp(minGasAmount) === -1
+        readonly property bool gasBelowMinimum: !!customGasAmountBig && !gasOutOfRange
+                                                && !!minGasAmountBig && customGasAmountBig.cmp(minGasAmountBig) === -1
         // Warning: below the suggested (buffered) amount
-        readonly property bool gasBelowSuggested: !!customGasAmount && !gasOutOfRange && !gasBelowMinimum
-                                                  && !!suggestedGasAmount && customGasAmount.cmp(suggestedGasAmount) === -1
+        readonly property bool gasBelowSuggested: !!customGasAmountBig && !gasOutOfRange && !gasBelowMinimum
+                                                  && !!suggestedGasAmountBig && customGasAmountBig.cmp(suggestedGasAmountBig) === -1
         // Warning: far above the suggested amount
-        readonly property bool gasFarAboveSuggested: !!customGasAmount && !gasOutOfRange && !!suggestedGasAmount
-                                                     && customGasAmount.cmp(suggestedGasAmount.times(toBig(Constants.highGasAmountWarningFactor))) === 1
+        readonly property bool gasFarAboveSuggested: !!customGasAmountBig && !gasOutOfRange && !!suggestedGasAmountBig
+                                                     && customGasAmountBig.cmp(suggestedGasAmountBig.times(toBig(Constants.highGasAmountWarningFactor))) === 1
         readonly property bool gasBlockingError: gasOutOfRange || gasBelowMinimum
 
         function showAlert(title, text, note, url) {
@@ -570,18 +575,18 @@ Rectangle {
                                                                    : Theme.palette.baseColor1
                             bottomLabelMessageLeftCmp.text: {
                                 if (d.gasOutOfRange) {
-                                    return qsTr("Must be between 1 and %1").arg(Constants.maxTxGasAmount)
+                                    return qsTr("Must be between 1 and %1").arg(d.formatGasAmount(Constants.maxTxGasAmount))
                                 }
                                 if (d.gasBelowMinimum) {
-                                    return qsTr("Too low, the transaction would fail (minimum %1)").arg(root.minGasAmount)
+                                    return qsTr("Too low, the transaction would fail (minimum %1)").arg(d.formatGasAmount(root.minGasAmount))
                                 }
                                 if (d.gasBelowSuggested) {
-                                    return qsTr("Lower than recommended %1, the transaction may fail").arg(root.currentGasAmount)
+                                    return qsTr("Lower than recommended %1, the transaction may fail").arg(d.formatGasAmount(root.currentGasAmount))
                                 }
                                 if (d.gasFarAboveSuggested) {
-                                    return qsTr("Much higher than recommended %1").arg(root.currentGasAmount)
+                                    return qsTr("Much higher than recommended %1").arg(d.formatGasAmount(root.currentGasAmount))
                                 }
-                                return qsTr("Current: %1").arg(root.currentGasAmount)
+                                return qsTr("Current: %1").arg(d.formatGasAmount(root.currentGasAmount))
                             }
                             rightPadding: leftPadding
                             input.rightComponent: StatusBaseText {

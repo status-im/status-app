@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import StatusQ.Core
+
 import AppLayouts.Wallet.views
 
 import utils
@@ -107,6 +109,24 @@ Item {
             compare(confirmButton.enabled, !data.blocking)
             const message = input.bottomLabelMessageLeftCmp.text
             verify(message.startsWith(data.message), "unexpected message: " + message)
+        }
+
+        function test_gasAmountsAreFormatted_data() {
+            return [
+                { tag: "minimum", amount: "21000", shown: 207391 },
+                { tag: "recommended", amount: "210000", shown: 217760 },
+                { tag: "current", amount: "217760", shown: 217760 },
+                { tag: "maximum", amount: "4294967296", shown: 4294967295 },
+            ]
+        }
+
+        function test_gasAmountsAreFormatted(data) {
+            controlUnderTest.customGasAmount = data.amount
+            const input = findChild(controlUnderTest, "customGasAmountInput")
+            verify(!!input)
+            const message = input.bottomLabelMessageLeftCmp.text
+            const formatted = LocaleUtils.numberToLocaleString(data.shown, 0)
+            verify(message.includes(formatted), "expected " + formatted + " in: " + message)
         }
 
         function test_invalidInputBlocks_data() {
