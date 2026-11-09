@@ -16,6 +16,7 @@ layout(std140, binding = 0) uniform buf {
     vec2 sweepOrigin;
     vec2 sweepSize;
     float phase;
+    vec4 maskSubRect;
 };
 
 void main()

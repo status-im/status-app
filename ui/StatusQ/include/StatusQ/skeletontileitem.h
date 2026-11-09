@@ -2,8 +2,11 @@
 
 #include <QColor>
 #include <QPointF>
+#include <QPointer>
 #include <QQuickItem>
 #include <QSizeF>
+
+class QSGTextureProvider;
 
 // Rounded loading placeholder with a shimmer sweep, drawn in one pass.
 //
@@ -14,6 +17,9 @@
 // the GUI thread is busy. This is why it does not use UniformAnimator, which
 // reads the live item on the render thread and crashes when it leaves the window
 // (QTBUG-151922).
+//
+// With a mask, an item that provides a texture, the tile is drawn where the
+// mask is opaque instead of as a rounded box.
 class SkeletonTileItem : public QQuickItem
 {
     Q_OBJECT
@@ -22,6 +28,7 @@ class SkeletonTileItem : public QQuickItem
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
     Q_PROPERTY(QPointF sweepOrigin READ sweepOrigin WRITE setSweepOrigin NOTIFY sweepOriginChanged)
     Q_PROPERTY(QSizeF sweepSize READ sweepSize WRITE setSweepSize NOTIFY sweepSizeChanged)
+    Q_PROPERTY(QQuickItem* mask READ mask WRITE setMask NOTIFY maskChanged)
 
 public:
     explicit SkeletonTileItem(QQuickItem* parent = nullptr);
@@ -41,12 +48,16 @@ public:
     QSizeF sweepSize() const { return m_sweepSize; }
     void setSweepSize(const QSizeF& size);
 
+    QQuickItem* mask() const { return m_mask; }
+    void setMask(QQuickItem* mask);
+
 signals:
     void colorChanged();
     void highlightColorChanged();
     void radiusChanged();
     void sweepOriginChanged();
     void sweepSizeChanged();
+    void maskChanged();
 
 protected:
     QSGNode* updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*) override;
@@ -57,4 +68,7 @@ private:
     qreal m_radius = 4;
     QPointF m_sweepOrigin;
     QSizeF m_sweepSize;
+    QPointer<QQuickItem> m_mask;
+    // render thread
+    QPointer<QSGTextureProvider> m_maskProvider;
 };

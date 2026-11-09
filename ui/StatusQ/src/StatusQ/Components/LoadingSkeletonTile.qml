@@ -18,8 +18,12 @@ import StatusQ.Core.Theme
    Nothing is drawn under the software scene graph; there is no fallback, as
    the app never selects it.
 
-   Only \c color and \c radius are meant to be set; \c sweepOrigin, \c sweepSize
-   and \c highlightColor are internal shader inputs.
+   With \c mask set to an item that provides a texture, such as a hidden
+   Image, the tile is drawn where the mask is opaque instead of as a rounded
+   box.
+
+   Only \c color, \c radius and \c mask are meant to be set; \c sweepOrigin,
+   \c sweepSize and \c highlightColor are internal shader inputs.
 */
 SkeletonTileItem {
     id: root
