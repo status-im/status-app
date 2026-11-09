@@ -6,6 +6,7 @@ import allure
 
 import configs
 import driver
+from gui.components.messaging.thread_header_context_menu import ThreadHeaderMenu
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
@@ -62,6 +63,7 @@ def _log_is_thread_view(log) -> bool:
 class ThreadPanel:
     def __init__(self):
         self._close_button = Button(messaging_names.closeThreadPanelButton)
+        self._send_button = Button(messaging_names.threadSendButton)
 
     @property
     @allure.step('Thread side panel is open')
@@ -78,8 +80,7 @@ class ThreadPanel:
         field.wait_until_appears()
         field.click()
         field.set_text_property(message)
-        send_button = Button(messaging_names.threadSendButton)
-        send_button.wait_until_enabled().click()
+        self._send_button.wait_until_enabled().click()
 
     @allure.step('Send image in the open thread or thread main chat')
     def send_image(self, path_or_base64: str):
@@ -90,7 +91,7 @@ class ThreadPanel:
         else:
             image_payload = pathlib.Path(str(path_or_base64)).as_uri()
         chat_input.object.selectImageString(image_payload)
-        Button(messaging_names.threadSendButton).wait_until_enabled().click()
+        self._send_button.wait_until_enabled().click()
 
     @allure.step('Find message in the open thread panel')
     def find_message(self, message_text: str):
@@ -124,6 +125,33 @@ class ThreadPanel:
         assert driver.waitFor(lambda: not self._close_button.exists, timeout_msec), (
             f'Thread panel did not close within {timeout_msec} ms'
         )
+
+
+@allure.step('Unfollow the open thread from its header menu')
+def unfollow_open_thread():
+    ThreadHeaderMenu().open().select_follow('Unfollow')
+
+
+@allure.step('Follow the open thread from its header menu')
+def follow_open_thread():
+    ThreadHeaderMenu().open().select_follow('Follow')
+
+
+@allure.step('Delete the open thread from its header menu')
+def delete_open_thread():
+    ThreadHeaderMenu().open().select_delete().confirm()
+
+
+@allure.step('Wait until thread row {thread_title!r} listed={present}')
+def wait_for_thread_list_row(messages_screen, thread_title: str, present: bool):
+    timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
+
+    def listed() -> bool:
+        return (thread_title in messages_screen.left_panel.get_chats_names) is present
+
+    assert driver.waitFor(listed, timeout_msec), (
+        f'Thread row {thread_title!r} presence did not become {present} within {timeout_msec} ms'
+    )
 
 
 def _header_label_text(locator: dict) -> str:
