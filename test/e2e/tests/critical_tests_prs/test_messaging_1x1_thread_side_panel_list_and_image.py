@@ -20,6 +20,7 @@ from helpers.thread_helper import (
     thread_parent_message_literal,
     thread_title_from_parent_message,
     wait_for_chat_header,
+    wait_for_thread_list_row,
 )
 from scripts.utils.generators import random_text_message
 
@@ -80,10 +81,7 @@ def test_messaging_1x1_thread_side_panel_list_and_image(multiple_instances):
             thread_panel.close()
 
         with step('Thread row under contact opens thread in main panel'):
-            assert driver.waitFor(
-                lambda: thread_title in messages_screen.left_panel.get_chats_names,
-                configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000,
-            ), f'Thread row {thread_title!r} missing under contact in Messages list'
+            wait_for_thread_list_row(messages_screen, thread_title, True)
             messages_screen.left_panel.click_chat_by_name(thread_title)
             wait_for_chat_header(thread_title)
             messages_screen.chat.find_message_by_text(reply_message, 0)
