@@ -23,6 +23,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	collectibles_selector_bench \
 	collectibles_selector_model_bench \
 	community_accept_request_test \
+	held_resource_qtimer_test \
 	community_permission_save_test \
 	contact_info_requests_test \
 	message_history_paging_test \

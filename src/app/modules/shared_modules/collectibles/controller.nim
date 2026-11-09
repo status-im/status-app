@@ -1,6 +1,6 @@
 import nimqml, std/json, sequtils, sugar, strutils, algorithm
 import stint, chronicles, tables, sets
-from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop,
+from seaqt/qtimer import QTimer, create, setSingleShot, start, stop,
     setInterval, isActive
 
 import app/modules/shared_models/collectibles_entry
@@ -9,6 +9,7 @@ import app/modules/shared_models/collectibles_utils
 import events_handler
 
 import app/core/eventemitter
+import app/core/session_timer
 
 import backend/collectibles as backend_collectibles
 import app_service/service/network/service as network_service
@@ -186,12 +187,9 @@ QtObject:
     result.refreshTimer.setSingleShot(true)
     result.refreshTimer.setInterval(cint(OWNERSHIP_REFRESH_DEBOUNCE_MS))
     let ctrl = result
-    result.refreshTimer.onTimeout(proc() {.closure, raises: [].} =
-      try:
-        # Keep the current items visible: the refetch ends in a diff update.
-        ctrl.requestReset(clearItems = false)
-      except Exception as e:
-        error "error refreshing collectibles: ", error = e.msg)
+    # Keep the current items visible: the refetch ends in a diff update.
+    result.refreshTimer.onSessionTimeout("collectibles refresh",
+      proc() = ctrl.requestReset(clearItems = false))
 
     result.setup()
 

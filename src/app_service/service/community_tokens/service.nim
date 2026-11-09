@@ -1,10 +1,11 @@
 import nimqml, tables, chronicles, json, stint, strutils, sugar, sequtils, std/strformat, times
-from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop,
+from seaqt/qtimer import QTimer, create, setSingleShot, start, stop,
     setInterval, isActive
 
 import app/global/global_singleton
 import app/core/eventemitter
 import app/core/tasks/[qt, threadpool]
+import app/core/session_timer
 import app/core/signals/types
 
 import app/modules/shared_models/currency_amount
@@ -297,11 +298,8 @@ QtObject:
     result.tokenHoldersTimer = QTimer.create()
     result.tokenHoldersTimer.setSingleShot(true)
     let svc = result
-    result.tokenHoldersTimer.onTimeout(proc() {.closure, raises: [].} =
-      try:
-        svc.onTokenHoldersTimeout()
-      except Exception as e:
-        error "onTokenHoldersTimeout raised", msg = e.msg)
+    result.tokenHoldersTimer.onSessionTimeout("token holders",
+      proc() = svc.onTokenHoldersTimeout())
 
   # cache functions
   proc updateCommunityTokenCache(self: Service, chainId: int, address: string, tokenToUpdate: CommunityTokenDto) =

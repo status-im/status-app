@@ -16,7 +16,7 @@ var release: Atomic[bool]
 
 proc countTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[CountTaskArg](argEncoded)
-  lastGeneration.store(arg.generation)
+  lastGeneration.store(arg.sessionGeneration)
   while arg.holdMs > 0 and not release.load():
     sleep(1)
   discard ran.fetchAdd(1)

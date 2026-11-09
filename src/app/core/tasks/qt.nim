@@ -24,10 +24,10 @@ proc isStale(arg: QObjectTaskArg): bool =
   ## thread re-checks the generation on delivery, for completions queued before that.
   ## An arg completed without going through `ThreadPool.start` keeps generation 0 and
   ## is stale once the first session has ended.
-  isShuttingDown() or arg.generation != currentSessionGeneration()
+  isShuttingDown() or arg.sessionGeneration != currentSessionGeneration()
 
 proc deliver(arg: QObjectTaskArg, payload: cstring) =
-  signal_handler_in_generation(cast[pointer](arg.vptr), payload, cstring(arg.slot), arg.generation)
+  signal_handler_in_generation(cast[pointer](arg.vptr), payload, cstring(arg.slot), arg.sessionGeneration)
 
 proc finish*[T](arg: QObjectTaskArg, payload: T) =
   if arg.isStale(): return

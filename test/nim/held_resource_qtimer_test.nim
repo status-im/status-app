@@ -2,6 +2,7 @@ import std/[unittest, monotimes, times]
 from seaqt/qcoreapplication import QCoreApplication, create, processEvents
 
 import app/core/held_resource_qtimer
+import app/core/signal_handler
 
 discard QCoreApplication.create()
 
@@ -38,6 +39,17 @@ suite "held resources on QTimers":
     resource.release()
     processEventsFor(1_000, proc(): bool = drops > 0)
     check drops == 1
+    resource.dispose()
+
+  test "a resource of an ended session drops nothing when its timer was due":
+    var drops = 0
+    let resource = newHeldResourceWithQTimers("ended session",
+      onLoad = (proc(generation: int) = discard), onDrop = (proc() = inc drops), idleReleaseMs = 1)
+    resource.acquire()
+    resource.release()
+    discard advanceSessionGeneration() # logout
+    processEventsFor(50, proc(): bool = false)
+    check drops == 0
     resource.dispose()
 
   test "a disposed resource drops nothing when its timer was due":
