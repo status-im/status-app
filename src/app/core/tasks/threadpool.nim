@@ -144,7 +144,7 @@ proc admit[T: TaskArg](self: ThreadPool, arg: T): bool =
   if self.closed.load():
     logDroppedTask($T)
     return false
-  arg.generation = currentSessionGeneration()
+  arg.sessionGeneration = currentSessionGeneration()
   discard self.inFlight.count[].fetchAdd(1)
   true
 

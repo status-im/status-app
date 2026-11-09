@@ -259,11 +259,8 @@ proc init*(self: Service) =
   self.missingTokenKeysRetryTimer = QTimer.create()
   self.missingTokenKeysRetryTimer.setSingleShot(true)
   self.missingTokenKeysRetryTimer.setTimerType(TimerTypeEnum.PreciseTimer.cint)
-  self.missingTokenKeysRetryTimer.onTimeout(proc() {.closure, raises: [].} =
-    try:
-      self.onMissingTokenKeysRetryTimeout()
-    except Exception as e:
-      error "missing token keys retry failed", msg = e.msg)
+  self.missingTokenKeysRetryTimer.onSessionTimeout("missing token keys retry",
+    proc() = self.onMissingTokenKeysRetryTimeout())
 
   self.onDemandPricesDebouncer = debouncer_service.newDebouncer(
     self.threadpool,
