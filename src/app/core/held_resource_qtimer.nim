@@ -7,6 +7,7 @@ import chronicles
 from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop
 
 import held_resource
+import app/core/signal_handler
 export held_resource
 
 type QTimerOwner = ref object
@@ -16,10 +17,13 @@ type QTimerOwner = ref object
 proc qtimerHeldResourceTimer(name, purpose: string, fire: proc()): HeldResourceTimer =
   let owner = QTimerOwner(timer: QTimer.create(), fire: fire)
   owner.timer.setSingleShot(true)
+  # The resource belongs to the app session it is created in; once that session
+  # ended (logout) its timers must not run session code.
+  let sessionGeneration = currentSessionGeneration()
   # seaqt never frees a slot closure, so the slot reaches `fire` only through
   # the owner, and disposing cuts it off
   owner.timer.onTimeout(proc() {.closure, raises: [].} =
-    if owner.fire.isNil:
+    if owner.fire.isNil or hasSessionEnded(sessionGeneration):
       return
     try:
       owner.fire()

@@ -6,6 +6,7 @@
 import unittest, os
 import nimqml
 import app/core/tasks/qt
+import app/core/signal_handler
 import app/global/app_lifecycle
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # QObject and make the nimqml QtObject macro below ambiguous.
@@ -35,7 +36,7 @@ discard QCoreApplication.create()
 proc taskArg(r: Receiver): AsyncGenerationTaskArg =
   # ThreadPool.start stamps this; the tests stamp it directly.
   AsyncGenerationTaskArg(vptr: cast[uint](r.vptr), slot: "onDone",
-    generation: currentSessionGeneration())
+    sessionGeneration: currentSessionGeneration())
 
 proc pump() =
   for _ in 0 ..< 50:
@@ -76,3 +77,15 @@ suite "task completions across session generations":
     old.finish("old")
     pump()
     check r.got == @["new"]
+
+suite "session-owned producers":
+
+  test "a producer of the current session runs until the session ends":
+    let generation = currentSessionGeneration()
+    check not hasSessionEnded(generation)
+    discard advanceSessionGeneration()
+    check hasSessionEnded(generation)
+
+  test "a producer that captured the first session's generation stops in later ones":
+    discard advanceSessionGeneration()
+    check hasSessionEnded(0)
