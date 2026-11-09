@@ -39,15 +39,13 @@ Item {
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
-            ctx.openUrlFn = (url, openedFilePath, title) => {
-                openedUrls.push(String(url))
-                openedPaths.push(openedFilePath || "")
-                openedTitles.push(title || "")
-            }
-            ctx.openFileUrlFn = (fileUrl, readAccessUrl, openedFilePath, title) => {
-                openedFileUrls.push({ url: String(fileUrl), readAccess: String(readAccessUrl || "") })
-                openedPaths.push(openedFilePath || "")
-                openedTitles.push(title || "")
+            ctx.openPreviewFn = plan => {
+                if (plan.readAccessUrl)
+                    openedFileUrls.push({ url: String(plan.url), readAccess: String(plan.readAccessUrl) })
+                else
+                    openedUrls.push(String(plan.url))
+                openedPaths.push(plan.openedFilePath || "")
+                openedTitles.push(plan.title || "")
             }
             // The player page is what the desktop Backend needs; tests that
             // exercise the direct route flip this Capability themselves.
@@ -483,6 +481,24 @@ Item {
             ctx.proprietaryCodecsSupported = true
 
             verify(ctx.openOpenedFile(m4v, true))
+        }
+
+        // The plan a restored Session reopens an Opened File with.
+        function test_openedFilePlan_isTheTabAFileWouldOpenIn() {
+            const ctx = openedFileContext(["/Users/me/a b.pdf", "/Users/me/song.mp3"])
+
+            const pdf = ctx.openedFilePlan("file:///Users/me/a b.pdf", true)
+            compare(pdf.url, "file:///Users/me/a b.pdf")
+            compare(pdf.readAccessUrl, "file:///Users/me/a b.pdf")
+            compare(pdf.openedFilePath, "/Users/me/a b.pdf")
+            compare(pdf.title, "a b.pdf")
+
+            const song = ctx.openedFilePlan("file:///Users/me/song.mp3", true)
+            verify(String(song.url).indexOf("/tmp/status-player/") >= 0, song.url)
+            compare(song.readAccessUrl, "")
+
+            compare(ctx.openedFilePlan("file:///Users/me/gone.pdf", true), null)
+            compare(openedFileUrls.length + openedUrls.length, 0)
         }
 
         // On Android the local path of a content:// URL is a copy of the file.

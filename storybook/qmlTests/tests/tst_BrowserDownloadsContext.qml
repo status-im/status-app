@@ -242,10 +242,12 @@ Item {
                     return hostTakesReissue
                 },
                 hideFindUiFn: function() { findHiddenCount += 1 },
-                openUrlFn: function(url) { openedUrls.push(String(url)) },
-                openFileUrlFn: function(fileUrl, readAccessUrl) {
-                    openedFileUrls.push({ url: String(fileUrl),
-                                          readAccess: String(readAccessUrl || "") })
+                openPreviewFn: function(plan) {
+                    if (plan.readAccessUrl)
+                        openedFileUrls.push({ url: String(plan.url),
+                                              readAccess: String(plan.readAccessUrl) })
+                    else
+                        openedUrls.push(String(plan.url))
                 },
                 supportsPdfFn: function() { return supportsPdf }
             })

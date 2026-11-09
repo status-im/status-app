@@ -63,27 +63,13 @@ StatusSectionLayout {
         Qt.callLater(() => _internal.addNewTab(root.browserRootStore.determineRealURL(url), initialTitle, activate))
     }
 
-    /// A downloaded local file in a Tab of its own (ADR 0006 §8): local-preview
+    /// A local file in a Tab of its own (ADR 0006 §8), as the open route
+    /// planned it (BrowserDownloadOpenContext.openPreviewFn): local-preview
     /// params keep it out of the browsing context — its own ephemeral profile,
     /// no injected scripts, no web channel, and the only profile that may reach
-    /// file:// at all. `url` is a file URL, or the generated media player page.
-    function openLocalPreviewInNewTab(url, openedFilePath = "", title = "") {
-        Qt.callLater(() => {
-            const tab = _internal.addLocalPreviewTab(url, title)
-            if (tab)
-                tab.openedFilePath = openedFilePath
-        })
-    }
-
-    /// Local preview loaded through loadFileUrl, read-granted to the file or a directory.
-    function openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath = "", title = "") {
-        Qt.callLater(() => {
-            const tab = _internal.addLocalPreviewTab("", title)
-            if (!tab)
-                return
-            tab.openedFilePath = openedFilePath
-            tab.loadFileUrl(fileUrl, readAccessUrl || "")
-        })
+    /// file:// at all.
+    function openPreviewTab(plan) {
+        Qt.callLater(() => _internal.addPreviewTab(plan, true))
     }
 
     /// An Opened File in a Preview Tab, or a Preview Tab saying it could not
@@ -313,6 +299,18 @@ StatusSectionLayout {
                 browserConfig.localPreviewProfileParams, false, true, url, title)
         }
 
+        function addPreviewTab(plan, focus, uid = undefined) {
+            const tab = webViewContext.createEmptyTab(
+                browserConfig.localPreviewProfileParams, false, focus,
+                plan.readAccessUrl ? "" : plan.url, plan.title, undefined, uid)
+            if (!tab)
+                return null
+            tab.openedFilePath = plan.openedFilePath
+            if (plan.readAccessUrl)
+                tab.loadFileUrl(plan.url, plan.readAccessUrl)
+            return tab
+        }
+
         function addNewEmptyTab() {
             addNewTab("", "", true)
         }
@@ -425,10 +423,8 @@ StatusSectionLayout {
             _internal.reissueDownload(wantOtr, url, fileName, token)
         onDownloadAttributed: (view) => _internal.closeDownloadOnlyTab(view)
         hideFindUiFn: () => _internal.hideFindBar()
-        // Both only ever carry local files (a downloaded file, a player page).
-        openUrlFn: (url, openedFilePath, title) => root.openLocalPreviewInNewTab(url, openedFilePath, title)
-        openFileUrlFn: (fileUrl, readAccessUrl, openedFilePath, title) =>
-            root.openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath, title)
+        // Only ever local files: a downloaded or opened file, or a player page.
+        openPreviewFn: plan => root.openPreviewTab(plan)
         supportsPdfFn: () => BrowserBackendCapabilities.pdfViewerSupported
     }
 
@@ -480,6 +476,11 @@ StatusSectionLayout {
         determineRealURL: (u) => root.browserRootStore.determineRealURL(u)
         preferencesStore: root.browserPreferencesStore
         currentWebView: _internal.currentWebView
+        keepsOpenedFiles: !SQUtils.Utils.isMobile
+        restoreOpenedFileFn: tab => {
+            const plan = downloadsContext.openedFilePlan(UrlUtils.urlFromUserInput(tab.openedFile))
+            return !!plan && !!_internal.addPreviewTab(plan, false, tab.uuid)
+        }
     }
 
     headerContent: ColumnLayout {

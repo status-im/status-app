@@ -41,14 +41,9 @@ QtObject {
     /// its footer/strip to this — nothing writes visibility imperatively.
     readonly property bool stripVisible: stripPresenter.stripVisible
 
-    property var openUrlFn: function(url, openedFilePath, title) {
-        console.warn("BrowserDownloadsContext: openUrlFn not set")
-    }
-
-    /// Opens a local file through the Web View's loadFileUrl (read grant for a
-    /// directory); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath, title) {
-        console.warn("BrowserDownloadsContext: openFileUrlFn not set")
+    /// Opens a Preview Tab for a plan (BrowserDownloadOpenContext.openPreviewFn).
+    property var openPreviewFn: function(plan) {
+        console.warn("BrowserDownloadsContext: openPreviewFn not set")
     }
 
     // Backend PDF-rendering Capability. BrowserLayout overrides with
@@ -84,9 +79,7 @@ QtObject {
         readonly property BrowserDownloadOpenContext openContext: BrowserDownloadOpenContext {
             id: downloadOpenContext
 
-            openUrlFn: (url, openedFilePath, title) => root.openUrlFn(url, openedFilePath, title)
-            openFileUrlFn: (fileUrl, readAccessUrl, openedFilePath, title) =>
-                root.openFileUrlFn(fileUrl, readAccessUrl, openedFilePath, title)
+            openPreviewFn: plan => root.openPreviewFn(plan)
         }
 
         // Missing File markers go stale while the app is backgrounded (files can
@@ -197,6 +190,10 @@ QtObject {
 
     function openOpenedFile(fileUrl) {
         return downloadOpenContext.openOpenedFile(fileUrl, supportsPdfFn())
+    }
+
+    function openedFilePlan(fileUrl) {
+        return downloadOpenContext.openedFilePlan(fileUrl, supportsPdfFn())
     }
 
     function openedFileTag(fileUrl) {
