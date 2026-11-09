@@ -7,6 +7,7 @@
 #include <QSGMaterial>
 #include <QSGMaterialShader>
 
+#include <algorithm>
 #include <cstring>
 
 qreal RippleTimeline::radiusAt(qint64 time) const
