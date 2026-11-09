@@ -12,6 +12,7 @@ struct Description
     QString name;
     QString mimeType;
     bool readable = false;
+    int tabs = 1;
 };
 
 // Described from the Android UI thread, read from the Qt thread.
@@ -39,7 +40,9 @@ void Status::OpenedFileIntake::describe(const QString &fileUrl, const QString &n
                                         const QString &mimeType, bool readable)
 {
     QMutexLocker locker(&lock());
-    descriptions().insert(keyOf(fileUrl), {name, mimeType, readable});
+    const auto it = descriptions().find(keyOf(fileUrl));
+    const int tabs = it == descriptions().end() ? 1 : it->tabs + 1;
+    descriptions().insert(keyOf(fileUrl), {name, mimeType, readable, tabs});
 }
 
 QVariantMap Status::OpenedFileIntake::description(const QString &fileUrl)
@@ -61,5 +64,7 @@ QString Status::OpenedFileIntake::releaseKey(const QString &fileUrl)
 void Status::OpenedFileIntake::forget(const QString &fileUrl)
 {
     QMutexLocker locker(&lock());
-    descriptions().remove(keyOf(fileUrl));
+    const auto it = descriptions().find(keyOf(fileUrl));
+    if (it != descriptions().end() && --it->tabs == 0)
+        descriptions().erase(it);
 }
