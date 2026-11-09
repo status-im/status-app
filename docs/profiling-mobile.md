@@ -41,6 +41,8 @@ To switch back to a normal run, just `make mobile-run`.
 
 `BUILD_VARIANT=pr make mobile-build` produces `app.status.mobile.pr` with `<profileable android:shell="true"/>`
 (release and fdroid stay non-profileable), so heapprofd, simpleperf and Perfetto can attach to the APKs CI builds.
+Their native libraries are stripped like release ones, so Nim code shows up as addresses; use `make mobile-profile`
+when you need Nim function names.
 It does not make `/proc/<pid>/smaps` readable from the shell: that still needs a debuggable build and `run-as`.
 
 Debug, profile and PR packages apply `KEY=VALUE` lines from `/sdcard/Android/data/<package>/files/status-env.txt`
