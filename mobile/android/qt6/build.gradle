@@ -182,9 +182,11 @@ androidComponents {
         if (variant.buildType in ['debug', 'profile']) {
             variant.packaging.jniLibs.keepDebugSymbols.add('**/libnim_status_client.so')
         }
-        // Release and F-Droid APKs compress native libs and dex: about half the download,
-        // in exchange for extracting them on install. The Play bundle keeps the default.
-        if (variant.buildType in ['release', 'fdroid']) {
+        // Release APKs compress native libs and dex: about half the download, in exchange for
+        // extracting them on install. The Play bundle keeps the default.
+        // FIXME: compress F-Droid APKs too once a compressed F-Droid build is shown to match
+        // F-Droid's own rebuild byte for byte.
+        if (variant.buildType == 'release') {
             variant.packaging.jniLibs.useLegacyPackaging.set(true)
             variant.packaging.dex.useLegacyPackaging.set(true)
         }
