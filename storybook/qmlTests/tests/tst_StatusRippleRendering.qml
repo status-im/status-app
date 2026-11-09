@@ -161,8 +161,8 @@ Item {
             ripple.press(30, 50)
             tryVerify(() => frameSpy.count > 3, 2000,
                       "an expanding ripple must keep the window rendering")
-            tryVerify(() => Math.abs(ripple.rippleRadius - ripple.endRadius) < 0.5, 8000,
-                      "the ripple must reach its end radius")
+            tryCompare(ripple, "rippleRadius", ripple.endRadius, 8000,
+                       "the ripple must reach its end radius")
             // let the frames already in flight finish
             wait(100)
             frameSpy.clear()
