@@ -7,6 +7,7 @@
 
 #include <QCache>
 #include <QCursor>
+#include <QPointingDevice>
 #include <QDateTime>
 #include <QFontMetricsF>
 #include <QImageReader>
@@ -232,6 +233,8 @@ void MessageHeaderItem::setHeaderData(const MessageHeaderData& data)
         return;
     const bool timestampChanged = m_data.timestamp != data.timestamp;
     m_data = data;
+    // A press that began on the previous message is not a click on this one.
+    m_pressedOnName = false;
     invalidate(DirtyContent | (timestampChanged ? DirtyTimestamp : 0));
     if (timestampChanged)
         updateClockSubscription();
@@ -945,13 +948,30 @@ void MessageHeaderItem::refreshTooltip()
     m_services->hideTooltip(this);
 }
 
+namespace {
+// As StatusLazyToolTip: hover from a touch screen raises no pointer
+// affordance (tooltip, underline, cursor).
+bool fromTouchScreen(const QHoverEvent* event)
+{
+    const QPointingDevice* device = event->pointingDevice();
+    return device && device->type() == QInputDevice::DeviceType::TouchScreen;
+}
+}
+
 void MessageHeaderItem::hoverEnterEvent(QHoverEvent* event)
 {
-    updateHover(event->position());
+    hoverMoveEvent(event);
 }
 
 void MessageHeaderItem::hoverMoveEvent(QHoverEvent* event)
 {
+    if (fromTouchScreen(event)) {
+        if (m_hovering) {
+            clearHover();
+            unsetCursor();
+        }
+        return;
+    }
     updateHover(event->position());
 }
 
