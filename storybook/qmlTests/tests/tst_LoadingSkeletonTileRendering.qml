@@ -4,6 +4,8 @@ import QtTest
 
 import StatusQ.Components
 
+import "helpers"
+
 /*
  Checks what the tile shader actually draws. The offscreen QPA platform has no
  RHI backend to compile and run shaders with, so every test is skipped
@@ -91,24 +93,13 @@ Item {
         }
     }
 
-    // many running tiles, to give the render thread work while they are removed
-    Component {
-        id: gridComp
-
-        Loader {
-            active: false
-            sourceComponent: Grid {
-                columns: 12
-
-                Repeater {
-                    model: 120
-
-                    LoadingSkeletonTile {
-                        width: 30
-                        height: 16
-                    }
-                }
-            }
+    LeaveWindowStress {
+        id: stress
+        count: 120
+        columns: 12
+        delegate: LoadingSkeletonTile {
+            width: 30
+            height: 16
         }
     }
 
@@ -229,15 +220,8 @@ Item {
 
         // QTBUG-151922: UniformAnimator crashed the render thread here
         function test_tiles_can_leave_the_window_while_sweeping() {
-            const loader = createTemporaryObject(gridComp, root)
-            verify(!!loader)
-
-            for (let i = 0; i < 40; ++i) {
-                loader.active = true
-                wait(150)
-                loader.active = false
-                wait(10)
-            }
+            stress.run(60)
+            tryVerify(() => !stress.running, 30000)
         }
 
         function test_requests_frames_only_while_visible() {

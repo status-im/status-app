@@ -3,6 +3,7 @@ import QtQuick.Window
 import QtTest
 
 import "../../../ui/app/AppLayouts/Wallet/views"
+import "helpers"
 
 /*
  Checks what the loading graph actually draws. The offscreen QPA platform has
@@ -29,40 +30,14 @@ Item {
         }
     }
 
-    // many sweeping graphs, to give the render thread work while they are removed
-    Component {
-        id: gridComp
-
-        Loader {
-            active: false
-            sourceComponent: Grid {
-                columns: 6
-
-                Repeater {
-                    model: 120
-
-                    LoadingGraphView {
-                        width: 60
-                        height: 30
-                        active: true
-                    }
-                }
-            }
-        }
-    }
-
-    // ticks on the animation clock, so removals land right after a sync
-    Timer {
-        id: toggler
-
-        property Loader target: null
-        property int toggles: 0
-
-        interval: 150
-        repeat: true
-        onTriggered: {
-            target.active = !target.active
-            ++toggles
+    LeaveWindowStress {
+        id: stress
+        count: 120
+        columns: 6
+        delegate: LoadingGraphView {
+            width: 60
+            height: 30
+            active: true
         }
     }
 
@@ -117,13 +92,8 @@ Item {
         }
 
         function test_graphs_can_leave_the_window_while_sweeping() {
-            toggler.target = createTemporaryObject(gridComp, root)
-            verify(!!toggler.target)
-
-            toggler.toggles = 0
-            toggler.start()
-            tryVerify(() => toggler.toggles >= 60, 30000)
-            toggler.stop()
+            stress.run(60)
+            tryVerify(() => !stress.running, 30000)
         }
     }
 }
