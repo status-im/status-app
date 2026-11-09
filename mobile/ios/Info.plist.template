@@ -98,8 +98,8 @@
             </array>
         </dict>
     </array>
-    <!-- "Open with": the formats the browser renders on iOS, never images
-         (the gallery shares those to chats) and never the default handler. -->
+    <!-- "Open with": the formats the browser renders on iOS, never as the default
+         handler. Sharing an image to a chat goes through the share extension. -->
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
@@ -111,6 +111,11 @@
             <string>Alternate</string>
             <key>LSItemContentTypes</key>
             <array>
+                <string>public.png</string>
+                <string>public.jpeg</string>
+                <string>com.compuserve.gif</string>
+                <string>org.webmproject.webp</string>
+                <string>com.microsoft.bmp</string>
                 <string>com.adobe.pdf</string>
                 <!-- iOS matches by UTI only, so this also offers Status for source code,
                      Markdown and CSV, which open as "Couldn't open the file". -->

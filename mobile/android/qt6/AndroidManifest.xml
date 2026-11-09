@@ -149,13 +149,18 @@
                 <data android:scheme="https" />
             </intent-filter>
             <!--
-              "Open with": the formats the browser shows here (DownloadFormatUtils),
-              never images - the gallery shares those to chats. content:// only.
+              "Open with": the formats the browser shows here (DownloadFormatUtils).
+              content:// only. Sharing an image to a chat goes through SEND below.
             -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="content" />
+                <data android:mimeType="image/png" />
+                <data android:mimeType="image/jpeg" />
+                <data android:mimeType="image/gif" />
+                <data android:mimeType="image/webp" />
+                <data android:mimeType="image/bmp" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="text/plain" />
                 <data android:mimeType="audio/mpeg" />

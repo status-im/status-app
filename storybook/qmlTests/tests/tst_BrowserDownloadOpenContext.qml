@@ -501,6 +501,29 @@ Item {
             compare(openedFileUrls.length + openedUrls.length, 0)
         }
 
+        function test_openOpenedFile_opensDescribedImagesByTheirType() {
+            const urls = {
+                "content://com.example.files/doc/30": { name: "a.png", mimeType: "image/png", readable: true },
+                "content://com.example.files/doc/31": { name: "b.jpg", mimeType: "image/jpeg", readable: true },
+                "content://com.example.files/doc/32": { name: "c.webp", mimeType: "image/webp", readable: true },
+                "content://com.example.files/doc/33": { name: "d.bmp", mimeType: "image/bmp", readable: true }
+            }
+            const ctx = describedFileContext(urls)
+
+            for (const url in urls)
+                verify(ctx.openOpenedFile(url, true), url)
+        }
+
+        // The Android Web View shows no image/x-ms-bmp, the type MediaStore gives a .bmp.
+        function test_openOpenedFile_refusesABitmapTypedXMsBmp() {
+            const url = "content://com.example.files/doc/34"
+            const ctx = describedFileContext({
+                [url]: { name: "bars.bmp", mimeType: "image/x-ms-bmp", readable: true }
+            })
+
+            verify(!ctx.openOpenedFile(url, true))
+        }
+
         // On Android the local path of a content:// URL is a copy of the file.
         function test_openOpenedFile_neverAsksForTheLocalPathOfADescribedFile() {
             const url = "content://com.example.files/doc/14"
