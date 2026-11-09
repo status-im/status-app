@@ -909,8 +909,9 @@ QtObject {
                         if (!rawFee) {
                             return ""
                         }
-                        const feeTokenGroupKey = Utils.getNativeTokenGroupKey(simpleSendModal.selectedChainId)
-                        return root.fnFormatCurrencyAmount(rawFee, feeTokenGroupKey).toString()
+                        const chainId = simpleSendModal.selectedChainId
+                        const decimalFee = SQUtils.AmountsArithmetic.toNumber(rawFee, Utils.getNativeTokenDecimals(chainId))
+                        return root.fnFormatCurrencyAmount(decimalFee, Utils.getNativeTokenGroupKey(chainId)).toString()
                     }
 
                     fnGetEstimatedTime: function(gasPrice, rawBaseFee, rawPriorityFee) {
