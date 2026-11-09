@@ -115,6 +115,10 @@ Rectangle {
             return !!value ? LocaleUtils.numberToLocaleString(Number(value), 0) : ""
         }
 
+        function formatGasPrice(rawValue) {
+            return !!rawValue ? "%1 GWEI".arg(root.fnToLocaleStr(root.fnRawToGas(rawValue).toFixed())) : ""
+        }
+
         readonly property var customGasAmountBig: customGasAmountInput.valid ? toBig(customGasAmountInput.text) : null
         readonly property var suggestedGasAmountBig: toBig(root.currentGasAmount)
         readonly property var minGasAmountBig: toBig(root.minGasAmount)
@@ -397,6 +401,7 @@ Rectangle {
 
                         StatusInput {
                             id: customBaseFeeOrGasPriceInput
+                            objectName: "customBaseFeeOrGasPriceInput"
 
                             readonly property bool displayLowBaseFeeOrGasPriceWarning: {
                                 if (root.fromChainEIP1559Compliant && root.fromChainNoBaseFee) {
@@ -447,10 +452,10 @@ Rectangle {
                                                           : root.currentBaseFee
 
                                 return customBaseFeeOrGasPriceInput.displayLowBaseFeeOrGasPriceWarning?
-                                            qsTr("Lower than necessary (current %1)").arg(root.fnGetPriceInNativeTokenForFee(baseFeeOrGasPrice).toUpperCase())
+                                            qsTr("Lower than necessary (current %1)").arg(d.formatGasPrice(baseFeeOrGasPrice))
                                           : customBaseFeeOrGasPriceInput.displayHighBaseFeeOrGasPriceWarning?
-                                                qsTr("Higher than necessary (current %1)").arg(root.fnGetPriceInNativeTokenForFee(baseFeeOrGasPrice).toUpperCase())
-                                              : qsTr("Current: %1").arg(root.fnGetPriceInNativeTokenForFee(baseFeeOrGasPrice).toUpperCase())
+                                                qsTr("Higher than necessary (current %1)").arg(d.formatGasPrice(baseFeeOrGasPrice))
+                                              : qsTr("Current: %1").arg(d.formatGasPrice(baseFeeOrGasPrice))
                             }
                             rightPadding: leftPadding
                             input.rightComponent: StatusBaseText {
@@ -488,6 +493,7 @@ Rectangle {
 
                         StatusInput {
                             id: customPriorityFeeInput
+                            objectName: "customPriorityFeeInput"
 
                             readonly property bool displayHigherPriorityFeeWarning: {
                                 if (root.fromChainEIP1559Compliant && root.fromChainNoPriorityFee) {
@@ -530,8 +536,8 @@ Rectangle {
                             bottomLabelMessageLeftCmp.text: customPriorityFeeInput.displayHigherThanBaseFeeWarning?
                                                                 qsTr("Higher than max base fee: %1").arg(customBaseFeeOrGasPriceInput.text)
                                                               : customPriorityFeeInput.displayHigherPriorityFeeWarning?
-                                                                    qsTr("Higher than necessary (current %1 - %2)").arg(root.fnGetPriceInNativeTokenForFee(root.currentSuggestedMinPriorityFee).toUpperCase()).arg(root.fnGetPriceInNativeTokenForFee(root.currentSuggestedMaxPriorityFee).toUpperCase())
-                                                                  : qsTr("Current: %1 - %2").arg(root.fnGetPriceInNativeTokenForFee(root.currentSuggestedMinPriorityFee).toUpperCase()).arg(root.fnGetPriceInNativeTokenForFee(root.currentSuggestedMaxPriorityFee).toUpperCase())
+                                                                    qsTr("Higher than necessary (current %1 - %2)").arg(d.formatGasPrice(root.currentSuggestedMinPriorityFee)).arg(d.formatGasPrice(root.currentSuggestedMaxPriorityFee))
+                                                                  : qsTr("Current: %1 - %2").arg(d.formatGasPrice(root.currentSuggestedMinPriorityFee)).arg(d.formatGasPrice(root.currentSuggestedMaxPriorityFee))
                             rightPadding: leftPadding
                             input.rightComponent: StatusBaseText {
                                 text: "GWEI"

@@ -129,6 +129,19 @@ Item {
             verify(message.includes(formatted), "expected " + formatted + " in: " + message)
         }
 
+        function test_currentFeesShownInGwei() {
+            const gwei = value => controlUnderTest.fnToLocaleStr(value) + " GWEI"
+
+            const baseFeeInput = findChild(controlUnderTest, "customBaseFeeOrGasPriceInput")
+            verify(!!baseFeeInput)
+            compare(baseFeeInput.bottomLabelMessageLeftCmp.text, "Current: " + gwei("8.2"))
+
+            const priorityFeeInput = findChild(controlUnderTest, "customPriorityFeeInput")
+            verify(!!priorityFeeInput)
+            compare(priorityFeeInput.bottomLabelMessageLeftCmp.text,
+                    "Current: " + gwei("0.06") + " - " + gwei("5.1"))
+        }
+
         function test_invalidInputBlocks_data() {
             return [
                 { tag: "negative", amount: "-1" },
