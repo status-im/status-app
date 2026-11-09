@@ -107,7 +107,8 @@ function isPlayableMedia(mimeType, fileName, proprietaryCodecs = false) {
     if (mime === "video/webm" || mime === "audio/webm" || name.endsWith(".webm"))
         return true
     if (proprietaryCodecs) {
-        if (mime === "video/mp4" || name.endsWith(".mp4") || name.endsWith(".m4v"))
+        if (mime === "video/mp4" || mime === "video/x-m4v" || name.endsWith(".mp4")
+                || name.endsWith(".m4v"))
             return true
         if (mime === "audio/mp4" || mime === "audio/aac" || mime === "audio/x-m4a"
                 || name.endsWith(".m4a") || name.endsWith(".aac"))

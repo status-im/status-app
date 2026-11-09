@@ -233,6 +233,11 @@ QtObject {
         }
         if (!canOpenInBrowser(record, supportsPdf))
             return false
+        // A content:// URL renders by its provider's type, so the type must pass on its own.
+        if (isDescribed && !DownloadFormatUtils.canOpenInBrowser(
+                    record.mimeType, "", supportsPdf, root.inBrowserMediaPlaybackSupported,
+                    root.proprietaryCodecsSupported))
+            return false
         return d.open(record, fileUrl, path || fileUrl)
     }
 

@@ -461,6 +461,30 @@ Item {
             compare(openedFileUrls[0].url, bare)
         }
 
+        // A content:// URL renders by the type its provider reports, not by its name.
+        function test_openOpenedFile_refusesADescribedFileWhoseTypeIsNotAllowed() {
+            const html = "content://com.example.files/doc/20"
+            const untyped = "content://com.example.files/doc/21"
+            const ctx = describedFileContext({
+                [html]: { name: "invoice.pdf", mimeType: "text/html", readable: true },
+                [untyped]: { name: "report.pdf", mimeType: "", readable: true }
+            })
+
+            verify(!ctx.openOpenedFile(html, true))
+            verify(!ctx.openOpenedFile(untyped, true))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_opensDescribedMediaByItsType() {
+            const m4v = "content://com.example.files/doc/22"
+            const ctx = describedFileContext({
+                [m4v]: { name: "clip.m4v", mimeType: "video/x-m4v", readable: true }
+            })
+            ctx.proprietaryCodecsSupported = true
+
+            verify(ctx.openOpenedFile(m4v, true))
+        }
+
         // On Android the local path of a content:// URL is a copy of the file.
         function test_openOpenedFile_neverAsksForTheLocalPathOfADescribedFile() {
             const url = "content://com.example.files/doc/14"

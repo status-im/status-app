@@ -63,9 +63,11 @@ public final class OpenedFileIntake {
         }
 
         final ContentResolver resolver = ctx.getContentResolver();
-        final String mimeType = typeOf(resolver, uri, intentType);
+        // The Web View renders a content:// URL by its provider's type.
+        final String mimeType = providerType(resolver, uri);
         final String name = OpenedFileRules.displayName(providerName(resolver, uri),
-                MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType));
+                MimeTypeMap.getSingleton().getExtensionFromMimeType(
+                        OpenedFileRules.nameType(mimeType, intentType)));
 
         Boolean regular = isRegularFile(resolver, uri);
         if (regular == null) {
@@ -117,17 +119,13 @@ public final class OpenedFileIntake {
         deleteTree(new File(ctx.getCacheDir(), OpenedFileRules.COPIES_DIR));
     }
 
-    private static String typeOf(ContentResolver resolver, Uri uri, String intentType) {
-        String type = null;
+    private static String providerType(ContentResolver resolver, Uri uri) {
         try {
-            type = resolver.getType(uri);
+            String type = resolver.getType(uri);
+            return type == null ? "" : type;
         } catch (RuntimeException e) {
-            // The intent's type is the sender's claim; the provider did not answer.
+            return "";
         }
-        if (type == null) {
-            type = intentType;
-        }
-        return type == null ? "" : type;
     }
 
     private static String providerName(ContentResolver resolver, Uri uri) {

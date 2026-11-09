@@ -54,6 +54,14 @@ public class OpenedFileRulesTest {
     }
 
     @Test
+    public void aCopyIsNamedByTheProviderTypeFirst() {
+        assertEquals("application/pdf", OpenedFileRules.nameType("application/pdf", "text/plain"));
+        assertEquals("text/plain", OpenedFileRules.nameType("", "text/plain"));
+        assertEquals("text/plain", OpenedFileRules.nameType(null, "text/plain"));
+        assertEquals("", OpenedFileRules.nameType(null, null));
+    }
+
+    @Test
     public void nothingIsInsideAMissingDirectory() {
         assertFalse(OpenedFileRules.isInside("/x.pdf", ""));
         assertFalse(OpenedFileRules.isInside(null, "/data/cache/opened-files"));
