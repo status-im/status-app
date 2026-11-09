@@ -42,6 +42,11 @@ Item {
     }
 
     Component {
+        id: clipHostComp
+        Item { width: 600; height: 240; clip: true }
+    }
+
+    Component {
         id: servicesComp
         StatusMessageHeaderServices {}
     }
@@ -309,6 +314,115 @@ Item {
             fresh.destroy()
         }
 
+        function test_resizeAndHoverDoNotPublishContent() {
+            const header = create({ headerData: data({ displayName: "Alice with a long name that wraps onto lines" }) })
+            waitForRendering(header)
+            const text = header.accessibleText
+            const single = header.implicitHeight
+            dataSpy.target = header
+            accessibleSpy.target = header
+            header.width = 240
+            header.applyPendingChanges()
+            verify(header.implicitHeight > single)
+            compare(header.accessibleText, text)
+            compare(accessibleSpy.count, 0)
+
+            // Hover changes neither content nor geometry.
+            displaySpy.target = header
+            const name = center(header.partRect("name"))
+            mouseMove(header, name.x, name.y)
+            tryCompare(header, "nameHovered", true)
+            header.applyPendingChanges()
+            mouseMove(root, root.width - 1, root.height - 1)
+            tryCompare(header, "nameHovered", false)
+            header.applyPendingChanges()
+            compare(displaySpy.count, 0)
+            compare(accessibleSpy.count, 0)
+            compare(dataSpy.count, 0)
+        }
+
+        function test_fontChangeRelayouts() {
+            const appearance = createTemporaryObject(appearanceComp, root)
+            const header = create({ appearance: appearance })
+            const height = header.implicitHeight
+            const width = header.partRect("name").width
+            appearance.nameFont = Qt.font({ family: appearance.nameFont.family, pixelSize: 32,
+                                            weight: Font.Medium })
+            header.applyPendingChanges()
+            verify(header.implicitHeight > height)
+            verify(header.partRect("name").width > width)
+        }
+
+        // Text replaced by text of the same metrics, in the same or another
+        // role, must repaint: node reuse goes by revision, not by geometry.
+        function test_replacedTextWithEqualMetricsRepaints() {
+            const appearance = createTemporaryObject(appearanceComp, root)
+            appearance.youText = "Alice"
+            appearance.detailFont = Qt.font({ family: appearance.detailFont.family, pixelSize: 12,
+                                              kerning: false })
+            const incoming = { displayName: "Alice", senderId: "ABCDEFGHIJ", timestamp: 1700000000000 }
+            const own = { amISender: true, messageOriginInfo: "ACB…EFGHIJ", timestamp: 1700000000000 }
+            const header = create({ appearance: appearance, displayNameClickable: false, headerData: incoming })
+            compare(header.displayData.tertiaryDetail, "ABC…EFGHIJ")
+            waitForRendering(header)
+            const original = grabImage(header)
+
+            header.headerData = own
+            waitForRendering(header)
+            const updated = grabImage(header)
+            verify(!original.equals(updated), "a changed label must repaint")
+            header.visible = false
+            const fresh = create({ appearance: appearance, displayNameClickable: false, headerData: own })
+            waitForRendering(fresh)
+            verify(grabImage(fresh).equals(updated), "matches a fresh header")
+            fresh.destroy()
+            header.visible = true
+            waitForRendering(header)
+
+            // Removal and recreation of parts without a frame in between.
+            header.headerData = incoming
+            header.applyPendingChanges()
+            header.headerData = Object.assign({}, own, { messageOriginInfo: "ABC…EFGHIJ" })
+            header.applyPendingChanges()
+            waitForRendering(header)
+            verify(!updated.equals(grabImage(header)), "recreated parts must not reuse old nodes")
+        }
+
+        // The software renderer keeps an inherited position and clip only
+        // under transform nodes; rebuilt text must stay inside its header.
+        function test_rebuiltTextKeepsParentTransformAndClip() {
+            const host = createTemporaryObject(clipHostComp, root)
+            const appearance = createTemporaryObject(appearanceComp, root)
+            appearance.nameColor = "magenta"
+            appearance.detailColor = "lime"
+            const header = create({ appearance: appearance, x: 80, y: 80, width: 480,
+                                    headerData: data({ amISender: true, timestamp: 1700000000000 }) })
+            header.parent = host
+            function coloured(image, x0, y0, w, h) {
+                let count = 0
+                for (let y = y0; y < y0 + h; ++y)
+                    for (let x = x0; x < x0 + w; ++x)
+                        if (image.alpha(x, y) > 100
+                                && ((image.green(x, y) > 200 && image.red(x, y) < 100 && image.blue(x, y) < 100)
+                                    || (image.red(x, y) > 200 && image.blue(x, y) > 200 && image.green(x, y) < 100)))
+                            ++count
+                return count
+            }
+            function check() {
+                header.applyPendingChanges()
+                waitForRendering(host)
+                const image = grabImage(host)
+                verify(coloured(image, 80, 80, 150, 35) > 0, "text stays in its translated header")
+                compare(coloured(image, 0, 0, 600, 50), 0, "rebuilt glyphs must not escape to the origin")
+            }
+            check()
+            header.showFullTimestamp = true
+            header.width = 240
+            check()
+            appearance.detailColor = "#00ff00"
+            check()
+        }
+
         // --- interaction
 
         function test_nameClick() {
@@ -325,6 +439,42 @@ Item {
             header.displayNameClickable = false
             mouseClick(header, name.x, name.y)
             compare(clickSpy.count, 1)
+        }
+
+        // A reused row must not report a press that began on the previous
+        // message as a click on the new sender.
+        function test_rebindCancelsPendingNameClick() {
+            const header = create()
+            waitForRendering(header)
+            clickSpy.target = header
+            const name = center(header.partRect("name"))
+            mousePress(header, name.x, name.y)
+            header.headerData = data({ displayName: "Bob" })
+            header.applyPendingChanges()
+            mouseRelease(header, name.x, name.y)
+            compare(clickSpy.count, 0)
+            mouseClick(header, name.x, name.y)
+            compare(clickSpy.count, 1)
+        }
+
+        // As StatusLazyToolTip: a touch never raises a pointer tooltip. A
+        // guard: where Qt delivers no hover for touch this holds regardless.
+        function test_touchDoesNotOpenTooltip() {
+            const services = createTemporaryObject(servicesComp, root)
+            const header = create({ services: services })
+            waitForRendering(header)
+            const ts = center(header.partRect("timestamp"))
+            const touch = touchEvent(header)
+            touch.press(0, header, ts.x, ts.y).commit()
+            touch.move(0, header, ts.x + 1, ts.y).commit()
+            wait(50)
+            compare(services.tooltipVisible, false)
+            const name = center(header.partRect("name"))
+            touch.move(0, header, name.x, name.y).commit()
+            wait(50)
+            compare(header.nameHovered, false)
+            touch.release(0, header, name.x, name.y).commit()
+            compare(services.tooltipVisible, false)
         }
 
         function test_nameHover() {
