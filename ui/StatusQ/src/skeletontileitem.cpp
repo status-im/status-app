@@ -5,7 +5,6 @@
 #include <QImage>
 #include <QQuickWindow>
 #include <QSGDynamicTexture>
-#include <QSGGeometryNode>
 #include <QSGMaterial>
 #include <QSGMaterialShader>
 #include <QSGTexture>
@@ -141,15 +140,12 @@ QSGMaterialShader* SkeletonTileMaterial::createShader(QSGRendererInterface::Rend
     return new SkeletonTileShader(masked);
 }
 
-class SkeletonTileNode : public QSGGeometryNode
+class SkeletonTileNode : public AnimatedQuadNode
 {
 public:
     explicit SkeletonTileNode(bool masked)
+        : AnimatedQuadNode(new SkeletonTileMaterial(masked))
     {
-        auto geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
-        setGeometry(geometry);
-        setMaterial(new SkeletonTileMaterial(masked));
-        setFlags(OwnsGeometry | OwnsMaterial | UsePreprocess);
     }
 
     bool isMasked() const { return static_cast<const SkeletonTileMaterial*>(material())->masked; }
@@ -157,18 +153,18 @@ public:
     // called on the render thread while the GUI thread is blocked
     void sync(const SkeletonTileItem* item, QSGTextureProvider* maskProvider)
     {
-        m_window = item->window();
+        QQuickWindow* const window = item->window();
+        setWindow(window);
 
         const QSizeF size = item->size();
-        QSGGeometry::updateTexturedRectGeometry(geometry(), QRectF(QPointF(0, 0), size), QRectF(0, 0, 1, 1));
-        markDirty(DirtyGeometry);
+        setSize(size);
 
         auto* m = static_cast<SkeletonTileMaterial*>(material());
         m->color = item->color();
         m->highlightColor = item->highlightColor();
         m->itemSize = size;
         m->radius = item->radius();
-        m->pixelRatio = m_window ? m_window->effectiveDevicePixelRatio() : 1;
+        m->pixelRatio = window ? window->effectiveDevicePixelRatio() : 1;
         m->sweepOrigin = item->sweepOrigin();
         m->sweepSize = item->sweepSize();
         m->maskProvider = maskProvider;
@@ -186,13 +182,8 @@ public:
                 dynamicMask->updateTexture();
         }
         markDirty(DirtyMaterial);
-
-        if (m_window)
-            requestNextFrame(m_window);
+        requestNextFrame();
     }
-
-private:
-    QQuickWindow* m_window = nullptr;
 };
 
 } // namespace
