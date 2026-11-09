@@ -149,10 +149,12 @@ Item {
                               "the body outside the band must be the base color")
 
             // the band sweeps on the render thread; sample frames until it
-            // crosses the middle row
+            // crosses the middle row (tryVerify evaluates once more at the end)
+            let brightened = false
             tryVerify(() => {
                 const e = middleRowExtremes(grabImage(tile), scale)
-                return brightness(e.brightest) > brightness(e.darkest) + 0.03
+                brightened = brightened || brightness(e.brightest) > brightness(e.darkest) + 0.03
+                return brightened
             }, 3000, "the sweep band must brighten the tile in some frame")
         }
 

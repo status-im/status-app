@@ -240,6 +240,8 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
         src/skeletontileitem.cpp
+        src/scenegraphanimation.cpp
+        src/scenegraphanimation.h
         src/backgroundgraphicsrelease.cpp
         src/browserbackendcapabilities.cpp
         src/chatinputhighlighter.cpp

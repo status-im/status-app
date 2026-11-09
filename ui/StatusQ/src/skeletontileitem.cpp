@@ -1,6 +1,7 @@
 #include "StatusQ/skeletontileitem.h"
 
-#include <QElapsedTimer>
+#include "scenegraphanimation.h"
+
 #include <QQuickWindow>
 #include <QSGGeometryNode>
 #include <QSGMaterial>
@@ -15,12 +16,7 @@ constexpr qint64 kSweepDurationMs = 1000;
 // shared by all tiles, so that they sweep in step whenever they were created
 float sweepPhase()
 {
-    static const QElapsedTimer clock = [] {
-        QElapsedTimer timer;
-        timer.start();
-        return timer;
-    }();
-    return float(clock.elapsed() % kSweepDurationMs) / kSweepDurationMs;
+    return float(sceneGraphClockMs() % kSweepDurationMs) / kSweepDurationMs;
 }
 
 void writePremultiplied(char* dst, const QColor& color)
@@ -137,7 +133,7 @@ public:
         markDirty(DirtyMaterial);
 
         if (m_window)
-            m_window->update();
+            requestNextFrame(m_window);
     }
 
 private:
