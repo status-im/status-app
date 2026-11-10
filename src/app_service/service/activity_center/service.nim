@@ -1,4 +1,4 @@
-import nimqml, json, sequtils, chronicles, strutils, strutils, stint, sugar, tables, json_serialization
+import nimqml, json, sequtils, chronicles, strutils, strutils, stint, sugar, tables, sets, json_serialization
 
 import ../../../app/core/eventemitter
 import ../../../app/core/[main]
@@ -66,6 +66,8 @@ QtObject:
     readType: ActivityCenterReadType
     chatService: chat_service.Service
     countRefreshState: CountRefreshGenerationState
+    deletedThreads: HashSet[(string, string)]
+    threadNotificationIds: Table[(string, string), seq[string]]
 
   # Forward declaration
   proc asyncActivityNotificationLoad*(self: Service)
@@ -86,13 +88,24 @@ QtObject:
     result.chatService = chatService
     result.countRefreshState = initCountRefreshGenerationState()
 
+  proc filterThreadNotifications(self: Service, notifications: seq[ActivityCenterNotificationDto]): seq[ActivityCenterNotificationDto] =
+    for notification in notifications:
+      if notification.threadId.len > 0:
+        let key = (notification.chatId, notification.threadId)
+        if key in self.deletedThreads:
+          continue
+        if notification.id notin self.threadNotificationIds.getOrDefault(key):
+          self.threadNotificationIds.mgetOrPut(key, @[]).add(notification.id)
+      result.add(notification)
+
   proc handleNewNotificationsLoaded(self: Service, activityCenterNotifications: seq[ActivityCenterNotificationDto]) =
+    let eligible = self.filterThreadNotifications(activityCenterNotifications)
     # For now status-go notify about every notification update regardless active group so we need filter manually on the desktop side
     let groupTypes = activityCenterNotificationTypesByGroup(self.activeGroup)
-    let filteredNotifications = filter(activityCenterNotifications, proc(notification: ActivityCenterNotificationDto): bool =
+    let filteredNotifications = filter(eligible, proc(notification: ActivityCenterNotificationDto): bool =
       return (self.readType == ActivityCenterReadType.All or not notification.read) and groupTypes.contains(notification.notificationType.int)
     )
-    let removedNotifications = filter(activityCenterNotifications, proc(notification: ActivityCenterNotificationDto): bool =
+    let removedNotifications = filter(eligible, proc(notification: ActivityCenterNotificationDto): bool =
       return notification.deleted
     )
 
@@ -109,6 +122,23 @@ QtObject:
     self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED, Args())
 
   proc init*(self: Service) =
+    self.events.on(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
+      let args = ChatThreadsForChatsLoadedArgs(e)
+      var removed: seq[string]
+      var deleted = false
+      for thread in args.threads:
+        if thread.deleted:
+          deleted = true
+          let key = (thread.chatId, thread.threadId)
+          self.deletedThreads.incl(key)
+          removed.add(self.threadNotificationIds.getOrDefault(key))
+          self.threadNotificationIds.del(key)
+      if removed.len > 0:
+        self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_REMOVED,
+          ActivityCenterNotificationIdsArgs(notificationIds: removed))
+      if deleted:
+        self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED, Args())
+
     self.events.on(SignalType.Message.event) do(e: Args):
       let receivedData = MessageSignal(e)
       if (receivedData.activityCenterNotifications.len > 0):
@@ -188,7 +218,7 @@ QtObject:
       let activityCenterNotificationsTuple = parseActivityCenterNotifications(response.result)
 
       self.cursor = activityCenterNotificationsTuple[0];
-      result = activityCenterNotificationsTuple[1]
+      result = self.filterThreadNotifications(activityCenterNotificationsTuple[1])
 
     except Exception as e:
       error "Error getting activity center notifications", msg = e.msg
@@ -279,7 +309,8 @@ QtObject:
         self.cursor = activityCenterNotificationsTuple[0]
 
         self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_LOADED,
-          ActivityCenterNotificationsArgs(activityCenterNotifications: activityCenterNotificationsTuple[1]))
+          ActivityCenterNotificationsArgs(
+            activityCenterNotifications: self.filterThreadNotifications(activityCenterNotificationsTuple[1])))
     except Exception as e:
       error "Error loading activity notification async", msg = e.msg
 
@@ -348,23 +379,27 @@ QtObject:
       if acNotification.notificationType == notificationType and acNotification.communityId == communityId:
         return acNotification
 
+  proc handleAcceptedActivityCenterNotification*(self: Service, notificationId: string,
+      response: RpcResponse[JsonNode]) =
+    if response.error != nil:
+      raise newException(RpcException, response.error.message)
+
+    self.chatService.handleSectionUnreadCountsResponse(response.result)
+    if response.result.kind != JNull:
+      if response.result.contains("chats"):
+        for jsonChat in response.result["chats"]:
+          var chat = toChatDto(jsonChat)
+          self.chatService.updateOrAddChat(chat)
+          self.events.emit(SIGNAL_CHAT_UPDATE, ChatUpdateArgs(chats: @[chat]))
+
+    self.parseActivityCenterState(response)
+    self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_ACCEPTED, ActivityCenterNotificationIdArgs(notificationId: notificationId))
+    self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED, Args())
+
   proc acceptActivityCenterNotification*(self: Service, notificationId: string) =
     try:
-      let notificationIds = @[notificationId]
-      let response = backend.acceptActivityCenterNotifications(notificationIds)
-      if response.error != nil:
-        raise newException(RpcException, response.error.message)
-
-      if response.result.kind != JNull:
-        if response.result.contains("chats"):
-          for jsonChat in response.result["chats"]:
-            var chat = toChatDto(jsonChat)
-            self.chatService.updateOrAddChat(chat)
-            self.events.emit(SIGNAL_CHAT_UPDATE, ChatUpdateArgs(chats: @[chat]))
-
-      self.parseActivityCenterState(response)
-      self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_ACCEPTED, ActivityCenterNotificationIdArgs(notificationId: notificationId))
-      self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_COUNT_MAY_HAVE_CHANGED, Args())
+      let response = backend.acceptActivityCenterNotifications(@[notificationId])
+      self.handleAcceptedActivityCenterNotification(notificationId, response)
     except Exception as e:
       error "Error accepting activity center notification", msg = e.msg
 
@@ -383,4 +418,3 @@ QtObject:
 
   proc delete*(self: Service) =
     self.QObject.delete
-

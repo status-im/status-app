@@ -3404,6 +3404,14 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatView</name>
     <message>
+        <source>Couldn&apos;t follow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t unfollow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11742,6 +11750,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MessageStore</name>
+    <message>
+        <source>Couldn&apos;t delete thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MessageTextAppearance</name>
     <message>
         <source>(edited)</source>
@@ -18420,6 +18435,10 @@ This action cannot be undone.</source>
 <context>
     <name>ThreadHeader</name>
     <message>
+        <source>Couldn&apos;t delete thread: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Couldn&apos;t rename thread: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18434,6 +18453,10 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Renaming...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleting...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

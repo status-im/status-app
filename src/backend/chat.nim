@@ -36,6 +36,9 @@ proc getActiveChats*(): RpcResponse[JsonNode] =
   let payload = %* []
   result = callPrivateRPC("activeChats".prefix, payload)
 
+proc sectionUnreadCounts*(includeThreads: bool): RpcResponse[JsonNode] =
+  callPrivateRPC("sectionUnreadCounts".prefix, %* [{"includeThreads": includeThreads}])
+
 proc createOneToOneChat*(chatId: string, ensName: string = ""): RpcResponse[JsonNode] =
   let communityId = ""
   let payload = %* [communityId, chatId, ensName]
@@ -135,6 +138,15 @@ proc sendImages*(chatId: string,
 proc createThread*(chatId: string, parentMessageId: string): RpcResponse[JsonNode] =
   let payload = %* [chatId, parentMessageId]
   result = callPrivateRPC("createThread".prefix, payload)
+
+proc deleteThread*(chatId, threadId: string): RpcResponse[JsonNode] =
+  callPrivateRPC("deleteThread".prefix, %* [{"chatId": chatId, "threadId": threadId}])
+
+proc followThread*(chatId, threadId: string): RpcResponse[JsonNode] =
+  callPrivateRPC("followThread".prefix, %* [{"chatId": chatId, "threadId": threadId}])
+
+proc unfollowThread*(chatId, threadId: string): RpcResponse[JsonNode] =
+  callPrivateRPC("unfollowThread".prefix, %* [{"chatId": chatId, "threadId": threadId}])
 
 proc editThread*(chatId, threadId, name: string): RpcResponse[JsonNode] =
   callPrivateRPC("editThread".prefix, %* [{

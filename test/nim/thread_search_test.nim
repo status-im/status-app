@@ -8,11 +8,15 @@ import app/modules/main/app_search/controller as search_controller
 import app/modules/main/app_search/module as search_module
 import app/modules/main/app_search/view
 import app/modules/main/app_search/models/location_menu_sub_model
+import app/modules/main/app_search/models/result_model
 import app/modules/main/app_search/models/[location_menu_model, location_menu_item, location_menu_sub_item]
 import app_service/service/message/service as message_service
 import app_service/service/message/dto/[message, thread]
+import app_service/common/types
 import app_service/service/chat/service as chat_service
 import app_service/service/chat/dto/chat
+import app_service/service/contacts/service as contact_service
+import app_service/service/community/service as community_service
 
 import app/global/feature_flags
 import app/global/global_singleton
@@ -29,6 +33,7 @@ privateAccess(search_module.Module)
 privateAccess(view.View)
 privateAccess(message_service.Service)
 privateAccess(chat_service.Service)
+privateAccess(contact_service.Service)
 privateAccess(LocalAccountSensitiveSettings)
 
 type SearchDelegate = ref object of search_interface.AccessInterface
@@ -461,5 +466,88 @@ suite "thread search result navigation":
       section.chatsLoaded = true
       check not section.openCommunityChatAndScrollToMessage("missing-parent", "target", "thread")
       check section.activated.len == 0
+    else:
+      skip()
+
+  test "deletion removes navigation rows and redirects an open thread to its parent":
+    if THREADS_ENABLED:
+      privateAccess(section_controller.Controller)
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.view.chatsModel().setData(@[
+        chat_item.ChatItem(id: "parent", name: "Parent", canView: true),
+        chat_item.ChatItem(id: "thread", name: "Thread", isThread: true, parentChatId: "parent")])
+      section.threadChatIds.incl("thread")
+      section.controller.activeItemId = "thread"
+      section.view.setOpenThread("thread", "Thread", "parent")
+      section.onChatThreadsForChatsLoaded(@[ThreadDto(chatId: "parent", threadId: "thread",
+        parentMessageId: "root", deleted: true)], @[])
+      check section.view.chatsModel().getItemById("thread").isNil
+      check not section.view.chatsModel().getItemById("parent").isNil
+      check section.activated == @["parent"]
+      check section.panelClosed
+      check "thread" notin section.threadChatIds
+    else:
+      skip()
+
+  test "deleted threads disappear from search locations and cached destinations":
+    let events = createEventEmitter()
+    let module = search_module.newModule(nil, events, nil, nil, nil, nil)
+    defer: module.delete()
+    module.threadLocationChatId = "parent"
+    module.onThreadLocationsLoaded(@[
+      ThreadDto(chatId: "parent", threadId: "dead", name: "Delete"),
+      ThreadDto(chatId: "parent", threadId: "keep", name: "Keep")], @["parent"])
+    module.controller.addResultItemDetails("deleted-result", "section", "parent", "message", "dead")
+    module.controller.addResultItemDetails("other-result", "section", "parent", "other", "keep")
+    module.onThreadLocationsLoaded(@[ThreadDto(chatId: "parent", threadId: "dead", deleted: true)], @[])
+    check module.view.threadLocationMenuModel().count() == 1
+    check not module.controller.resultItems.hasKey("deleted-result")
+    check module.controller.resultItems.hasKey("other-result")
+
+  test "late search results do not restore deleted threads":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let chats = chat_service.newService(events, nil, nil)
+      chats.chats["parent"] = ChatDto(id: "parent", name: "Parent",
+        chatType: ChatType.PrivateGroupChat)
+      const sender = "0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
+      let contacts = contact_service.newService(events, nil, nil, nil)
+      contacts.contacts[sender] = ContactDetails(dto: ContactsDto(id: sender, displayName: "Sender"))
+      let communities = community_service.newService(events, nil, chats, nil, service)
+      let module = search_module.newModule(nil, events, contacts, chats, communities, service)
+      defer: module.delete()
+      module.controller.init()
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["parent"], "threads": [
+          {"chatId": "parent", "threadId": "dead", "parentMessageId": "dead-root", "deleted": true},
+          {"chatId": "parent", "threadId": "keep", "parentMessageId": "keep-root"}]
+      }))
+      check service.getThreadById("parent", "dead").deleted
+      module.controller.searchRequestId = "current"
+      events.emit(SIGNAL_SEARCH_MESSAGES_LOADED, SearchMessagesArgs(requestId: "current",
+        messages: @[
+          MessageDto(id: "deleted-result", chatId: "parent", threadId: "dead",
+            contentType: ContentType.Message, `from`: sender),
+          MessageDto(id: "live-result", chatId: "parent", threadId: "keep",
+            contentType: ContentType.Message, `from`: sender),
+          MessageDto(id: "parent-result", chatId: "parent", contentType: ContentType.Message,
+            `from`: sender)]))
+      check module.view.searchResultModel().count() == 2
+      check not module.controller.resultItems.hasKey("deleted-result")
+      check module.controller.resultItems.hasKey("live-result")
+      check module.controller.resultItems.hasKey("parent-result")
+
+      module.controller.setSearchLocation("section", "parent", "dead")
+      module.controller.searchRequestId = "scoped"
+      events.emit(SIGNAL_SEARCH_MESSAGES_LOADED, SearchMessagesArgs(requestId: "scoped",
+        messages: @[MessageDto(id: "scoped-result", chatId: "parent",
+          contentType: ContentType.Message, `from`: sender)]))
+      check module.view.searchResultModel().count() == 0
+      check not module.controller.resultItems.hasKey("scoped-result")
     else:
       skip()
