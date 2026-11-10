@@ -24,7 +24,7 @@ proc newModule*(
   result.controller = controller.newController(result, events, keycardServiceV2)
   result.moduleLoaded = false
 
-  singletonInstance.engine.setRootContextProperty("keycardChannelModule", result.viewVariant)
+  singletonInstance.setSessionContextProperty("keycardChannelModule", result.viewVariant)
 
 method delete*(self: Module) =
   self.view.delete

@@ -24,6 +24,7 @@ proc intakeImagePaths(parsed: JsonNode): seq[string] =
 
 QtObject:
   type UrlsManager* = ref object of QObject
+    # The current app session's (process lifetime: nil between sessions)
     events: EventEmitter
     intake: ExternalIntake
     intakeSlot: PendingIntakeSlot
@@ -114,10 +115,12 @@ QtObject:
     ## wake failed or was dropped, deliver it now instead of waiting for the
     ## next full app start. No-op when the slot is inactive or empty.
     self.consumePendingIntake()
-    self.events.emit(SIGNAL_APP_FOREGROUNDED, Args())
+    if not self.events.isNil:
+      self.events.emit(SIGNAL_APP_FOREGROUNDED, Args())
 
   proc onAppBackgrounded*(self: UrlsManager) {.slot.} =
-    self.events.emit(SIGNAL_APP_BACKGROUNDED, Args())
+    if not self.events.isNil:
+      self.events.emit(SIGNAL_APP_BACKGROUNDED, Args())
 
   proc onShareActivated*(self: UrlsManager, text: string, imagePathsJson: string) {.slot.} =
     ## Share-target hand-off (Android SEND/SEND_MULTIPLE intents): shared
@@ -127,6 +130,15 @@ QtObject:
     ## receipt.
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeShare,
       text: text, imagePaths: parseImagePathsJson(imagePathsJson)))
+
+  proc attachSession*(self: UrlsManager, events: EventEmitter) =
+    ## The app session that receives intakes from now on (once it is ready, appReady()).
+    self.events = events
+
+  proc detachSession*(self: UrlsManager) =
+    ## The session ended (logout): intakes wait in the pending slot for the next one.
+    self.intake.setNotReady()
+    self.events = nil
 
   proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: UrlSchemeEvent,
       singleInstance: SingleInstance, protocolUriOnStart: string,

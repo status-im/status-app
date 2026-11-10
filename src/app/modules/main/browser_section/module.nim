@@ -71,7 +71,7 @@ method delete*(self: Module) =
   self.currentAccountModule.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("browserSection", self.viewVariant)
+  singletonInstance.setSessionContextProperty("browserSection", self.viewVariant)
   self.currentAccountModule.load()
   self.bookmarkModule.load()
   self.dappsModule.load()
