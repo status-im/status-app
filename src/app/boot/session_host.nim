@@ -9,7 +9,7 @@
 
 import std/[monotimes, times, strutils]
 import nimqml, chronicles, results
-from seaqt/qtimer import QTimer, create, setInterval, onTimeout, start, stop
+from seaqt/qtimer import QTimer, create, setInterval, onTimeout, start, stop, isActive
 
 import app/core/signal_epoch
 import app/core/signal_handler
@@ -25,8 +25,11 @@ logScope:
 
 const
   HeldSignalsCapacity = 2000
-  DrainPollMs = 50
+  TickMs = 50
   DrainDeadlineMs* = 15_000'i64
+  # A logout stops the node and closes the databases, normally within seconds. Past
+  # this deadline the session's UI offers to quit (LogoutTimeout).
+  LogoutDeadlineMs* = 30_000'i64
 
 proc nowMs(): int64 =
   getMonoTime().ticks div 1_000_000
@@ -49,22 +52,27 @@ QtObject:
     hasReceivers: bool
     signals: SignalGate
     keycardSignals: SignalGate
-    drainTimer: QTimer
+    tickTimer: QTimer
     logoutThread: Thread[BackendLogoutThreadArg]
     logoutThreadRunning: bool
     autoLoginPolicy: AutoLoginPolicy
     drainDeadlineMs: int64
-    # Backend epoch of the session whose activity was stopped, until the next session
-    # is attached: its signals are dropped, not held.
+    logoutDeadlineMs: int64
+    # Backend and keycard epochs of the session whose activity was stopped, until the
+    # next session is attached: their signals are dropped, not held.
     endedEpoch: uint64
+    endedKeycardEpoch: uint64
 
   proc delete*(self: SessionHost)
   proc setup(self: SessionHost)
+  proc scheduleTick(self: SessionHost)
   proc deliverHeld(self: SessionHost)
 
-  proc newSessionHost*(drainDeadlineMs = DrainDeadlineMs): SessionHost =
+  proc newSessionHost*(drainDeadlineMs = DrainDeadlineMs,
+      logoutDeadlineMs = LogoutDeadlineMs): SessionHost =
     new(result, delete)
     result.drainDeadlineMs = drainDeadlineMs
+    result.logoutDeadlineMs = logoutDeadlineMs
     result.setup()
 
   proc setup(self: SessionHost) =
@@ -74,23 +82,22 @@ QtObject:
     self.keycardSignals = initSignalGate(HeldSignalsCapacity)
     let host = self
     onSignalEpochAccepted(proc() = host.deliverHeld())
-    self.drainTimer = QTimer.create()
-    self.drainTimer.setInterval(DrainPollMs)
-    self.drainTimer.onTimeout(proc() {.closure, raises: [].} =
+    self.tickTimer = QTimer.create()
+    self.tickTimer.setInterval(TickMs)
+    self.tickTimer.onTimeout(proc() {.closure, raises: [].} =
       try:
-        host.lifecycle.onDrainTick(nowMs())
-        if host.lifecycle.state notin {SessionState.Draining, SessionState.DrainTimeout}:
-          host.drainTimer.stop()
+        host.lifecycle.onTick(nowMs())
+        host.scheduleTick()
       except Exception as e:
-        error "drain tick failed", error = e.msg
+        error "session tick failed", error = e.msg
     )
 
   proc delete*(self: SessionHost) =
     # Graceful exit only; a hard exit never runs this, so it never waits for the node.
     if self.logoutThreadRunning:
       joinThread(self.logoutThread)
-    if not self.drainTimer.h.isNil:
-      self.drainTimer.stop()
+    if not self.tickTimer.h.isNil:
+      self.tickTimer.stop()
     onSignalEpochAccepted(nil)
     self.QObject.delete
 
@@ -100,6 +107,21 @@ QtObject:
     info "accepting backend signals", signalEpoch = epoch
     acceptSignalEpoch(epoch)
     ok()
+
+  proc scheduleTick(self: SessionHost) =
+    ## Keeps the tick going while the lifecycle needs it: the drain is polled, the
+    ## backend logout only needs one wakeup at its deadline.
+    if self.lifecycle.isNil or not self.lifecycle.isTicking():
+      self.tickTimer.stop()
+      return
+    let interval =
+      if self.lifecycle.state == SessionState.BackendLogout:
+        max(1'i64, self.lifecycle.logoutTimeLeftMs(nowMs()))
+      else:
+        TickMs.int64
+    self.tickTimer.setInterval(interval.cint) # restarts a running timer
+    if not self.tickTimer.isActive():
+      self.tickTimer.start()
 
   proc deliverHeld(self: SessionHost) =
     if not self.hasReceivers:
@@ -115,6 +137,7 @@ QtObject:
     self.receivers = receivers
     self.hasReceivers = true
     self.endedEpoch = NoEpoch
+    self.endedKeycardEpoch = NoEpoch
     self.deliverHeld()
 
   proc detachSession*(self: SessionHost) =
@@ -152,7 +175,8 @@ QtObject:
       except ValueError:
         discard
     let signal = if at >= 0: stamped[at + 1 .. ^1] else: stamped
-    case self.keycardSignals.route(epoch, currentKeycardEpoch(), signal, self.hasReceivers)
+    case self.keycardSignals.route(epoch, currentKeycardEpoch(), signal, self.hasReceivers,
+        self.endedKeycardEpoch)
     of SignalRoute.Deliver:
       self.receivers.keycardSignal(signal)
     of SignalRoute.Hold:
@@ -167,6 +191,9 @@ QtObject:
     ## The operations of the app sessions this host runs. The host adds detaching the
     ## ended session from the signals, the drain polling, the backend logout thread and
     ## attaching the session `initializeSession` builds.
+    for name, op in ops.fieldPairs:
+      if name notin ["startBackendLogout", "initialize"]:
+        doAssert not op.isNil, "session operation not set: " & name
     var ops = ops
     let host = self
     let sessionReady = ops.sessionReady
@@ -177,17 +204,30 @@ QtObject:
     ops.stopActivity = proc() =
       host.detachSession()
       host.endedEpoch = acceptedSignalEpoch()
+      host.endedKeycardEpoch = currentKeycardEpoch()
       stopActivity()
-      host.drainTimer.start()
-    ops.startBackendLogout = proc() =
-      host.logoutThreadRunning = true
-      createThread(host.logoutThread, backendLogoutThread,
-        BackendLogoutThreadArg(host: cast[pointer](host.vptr)))
+    let dispose = ops.dispose
+    ops.dispose = proc() =
+      # The keycard library queues its events through the GUI event loop before they
+      # reach the callback that stamps them. The GUI thread delivers posted events of
+      # the same priority in posting order, so its events queued before the keycard was
+      # stopped (with stopActivity) were delivered by now - ahead of the backend logout
+      # response that led here, posted later - and dropped as the ended session's.
+      # Advancing only now keeps them from being stamped with the next session's epoch.
+      advanceKeycardEpoch()
+      dispose()
+    if ops.startBackendLogout.isNil:
+      # Set only by tests that stand in for the backend (and answer through
+      # onBackendLogoutResponse themselves).
+      ops.startBackendLogout = proc() =
+        host.logoutThreadRunning = true
+        createThread(host.logoutThread, backendLogoutThread,
+          BackendLogoutThreadArg(host: cast[pointer](host.vptr)))
     ops.initialize = proc(): Result[void, string] =
       let receivers = ?initializeSession()
       host.attachSession(receivers)
       ok()
-    self.lifecycle = newSessionLifecycle(ops, self.drainDeadlineMs)
+    self.lifecycle = newSessionLifecycle(ops, self.drainDeadlineMs, self.logoutDeadlineMs)
 
   proc onBackendLogoutResponse*(self: SessionHost, response: string) {.slot.} =
     if self.logoutThreadRunning:
@@ -204,6 +244,7 @@ QtObject:
     else:
       info "backend logged out", signalEpoch = loggedOut.signalEpoch
       self.lifecycle.onBackendLogoutDone(Result[void, string].ok())
+    self.scheduleTick()
 
   proc autoLoginPolicy*(self: SessionHost): AutoLoginPolicy =
     ## The policy the current session started with: process start, logout or relogin.
@@ -224,7 +265,9 @@ QtObject:
   proc sessionUiReleased*(self: SessionHost) {.slot.} =
     if not self.lifecycle.isNil:
       self.lifecycle.onUiReleased(nowMs())
+      self.scheduleTick()
 
   proc retry*(self: SessionHost) {.slot.} =
     if not self.lifecycle.isNil:
-      self.lifecycle.retry()
+      self.lifecycle.retry(nowMs())
+      self.scheduleTick()
