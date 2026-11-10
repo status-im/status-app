@@ -20,8 +20,8 @@ import java.util.List;
 
 /**
  * Whether Status opens a file type by default, and the way there and back. Only
- * the user picks a default: with "Always" when the system asks which app opens
- * the type, or by clearing the defaults of the app that has it.
+ * the user picks a default, with "Always" when the system asks which app opens
+ * the type.
  */
 public final class DefaultViewer {
     private static final String TAG = "StatusDefaultViewer";
@@ -50,8 +50,8 @@ public final class DefaultViewer {
     }
 
     /**
-     * Asks the system which app opens the type, or opens the settings of the app
-     * that does. False when there is nothing to ask. Called from Qt via JNI.
+     * Asks the system which app opens the type. False when it would not ask:
+     * an app opens the type already. Called from Qt via JNI.
      */
     public static boolean offer(Activity activity, String mimeType) {
         if (!DefaultViewerRules.isType(mimeType)) {
@@ -64,16 +64,11 @@ public final class DefaultViewer {
             if (chosen == null || chosen.activityInfo == null) {
                 return false;
             }
-            String chosenPackage = chosen.activityInfo.packageName;
-            if (!isCandidate(pm, view, chosen)) {
-                writeProbe(activity, DefaultViewerRules.probeName(mimeType));
-                activity.startActivity(view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));
-                return true;
-            }
-            if (chosenPackage.equals(activity.getPackageName())) {
+            if (isCandidate(pm, view, chosen)) {
                 return false;
             }
-            activity.startActivity(appSettings(chosenPackage));
+            writeProbe(activity, DefaultViewerRules.probeName(mimeType));
+            activity.startActivity(view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));
             return true;
         } catch (ActivityNotFoundException | SecurityException | IOException e) {
             Log.w(TAG, "could not offer the default viewer: " + e.getClass().getSimpleName());

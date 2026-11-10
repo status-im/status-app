@@ -6,8 +6,8 @@ import utils
 
 /// Offers to make Status the app that opens a file type while a Tab shows a file
 /// of that type another app handed over. Only the user picks a default on
-/// Android: the offer leads to the system's choice of app, or to the settings of
-/// the app that has it. Elsewhere the platform says nothing and the offer never shows.
+/// Android: the offer leads to the system's choice of app, and only while no app
+/// opens the type. Elsewhere the platform says nothing and the offer never shows.
 QtObject {
     id: root
 
@@ -32,9 +32,8 @@ QtObject {
     readonly property string fileType: openedFile ? String(fileTypeFn(openedFile) || "").toLowerCase() : ""
     /// How the offer names fileType; "" for a type Status does not claim.
     readonly property string typeName: DefaultViewerTypes.name(fileType)
-    readonly property string otherApp: defaultViewer.startsWith("other:") ? defaultViewer.slice(6) : ""
     readonly property bool shown: typeName !== "" && suggested && askedType !== fileType
-                                  && (defaultViewer === "none" || otherApp !== "")
+                                  && defaultViewer === "none"
     /// Status opens fileType now, after the user went through the offer.
     readonly property bool confirmed: confirmedType !== "" && confirmedType === fileType
 

@@ -52,7 +52,6 @@ Item {
             const offer = makeOffer({ openedFile: "content://media/doc/report.pdf" })
             verify(offer.shown)
             compare(offer.typeName, "PDFs")
-            compare(offer.otherApp, "")
         }
 
         function test_offeredForEveryTypeStatusClaims() {
@@ -91,10 +90,10 @@ Item {
             verify(!offer.shown)
         }
 
-        function test_namesTheAppThatOpensTheType() {
+        // The user chose that app for the type after Status was installed.
+        function test_notOfferedWhenAnotherAppOpensTheType() {
             const offer = makeOffer({ platformAll: "other:Drive", openedFile: "content://media/doc/report.pdf" })
-            verify(offer.shown)
-            compare(offer.otherApp, "Drive")
+            verify(!offer.shown)
         }
 
         function test_notOfferedWhenTheUserTurnedItOff() {

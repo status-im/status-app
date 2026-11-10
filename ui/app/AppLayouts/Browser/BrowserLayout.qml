@@ -692,7 +692,6 @@ StatusSectionLayout {
             Layout.fillWidth: true
             visible: defaultViewerOffer.shown || defaultViewerOffer.confirmed
             typeName: defaultViewerOffer.typeName
-            otherApp: defaultViewerOffer.otherApp
             confirmed: defaultViewerOffer.confirmed
             onAcceptRequested: defaultViewerOffer.accept()
             onDismissRequested: defaultViewerOffer.dismiss()

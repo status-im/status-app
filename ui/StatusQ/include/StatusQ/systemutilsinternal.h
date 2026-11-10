@@ -38,8 +38,8 @@ public:
     // system asks each time, "other:<app name>" when another app does; "" for a
     // type Status does not claim, and elsewhere.
     Q_INVOKABLE QString defaultViewer(const QString &mimeType) const;
-    // Android: shows the system's choice of app for the type, or the settings of
-    // the app that is the default. False when nothing was shown.
+    // Android: shows the system's choice of app for the type. False when nothing
+    // was shown, as when an app opens the type already.
     Q_INVOKABLE bool offerDefaultViewer(const QString &mimeType) const;
     // Android: the types Status opens by default; empty elsewhere.
     Q_INVOKABLE QStringList defaultViewerTypes() const;

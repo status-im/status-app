@@ -43,9 +43,6 @@ Item {
         function test_hintsAtAnotherAppOnTopOnlyWhenAndroidAsks() {
             const banner = createTemporaryObject(bannerComponent, root)
             verify(findChild(banner, "defaultViewerHint").visible)
-            banner.otherApp = "Drive"
-            verify(!findChild(banner, "defaultViewerHint").visible)
-            banner.otherApp = ""
             banner.confirmed = true
             verify(!findChild(banner, "defaultViewerHint").visible)
         }

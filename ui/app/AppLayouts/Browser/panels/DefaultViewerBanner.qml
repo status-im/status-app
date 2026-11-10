@@ -11,8 +11,6 @@ Rectangle {
 
     /// The type, as DefaultViewerTypes names it.
     property string typeName: ""
-    /// The app that opens the type now; "" when the system asks each time.
-    property string otherApp: ""
     /// Status opens the type now: the banner says so instead of asking.
     property bool confirmed: false
 
@@ -41,9 +39,7 @@ Rectangle {
                 font.pixelSize: Theme.additionalTextSize
                 text: root.confirmed
                       ? qsTr("Status opens your %1 now.").arg(root.typeName)
-                      : root.otherApp
-                        ? qsTr("%1 opens your %2. To open them in Status, clear its defaults in its settings.").arg(root.otherApp).arg(root.typeName)
-                        : qsTr("Open %1 in Status? Choose Status, then Always.").arg(root.typeName)
+                      : qsTr("Open %1 in Status? Choose Status, then Always.").arg(root.typeName)
             }
 
             // Android offers Always only to the app on top when the user picked
@@ -51,7 +47,7 @@ Rectangle {
             StatusBaseText {
                 objectName: "defaultViewerHint"
                 Layout.fillWidth: true
-                visible: !root.confirmed && !root.otherApp
+                visible: !root.confirmed
                 wrapMode: Text.Wrap
                 font.pixelSize: Theme.additionalTextSize
                 color: Theme.palette.baseColor1
@@ -70,7 +66,7 @@ Rectangle {
         StatusButton {
             objectName: "defaultViewerAcceptButton"
             size: StatusBaseButton.Size.Small
-            text: root.confirmed ? qsTr("Got it") : root.otherApp ? qsTr("Settings") : qsTr("Choose")
+            text: root.confirmed ? qsTr("Got it") : qsTr("Choose")
             onClicked: root.confirmed ? root.acknowledged() : root.acceptRequested()
         }
     }
