@@ -88,6 +88,12 @@ QtObject {
             messageModule.jumpToMessage(id)
     }
     function createMessageLink(chatId, messageId) { return "" }
+
+    function createThreadLink(chatId, threadId) {
+        if (!chatId || !threadId)
+            return ""
+        return "https://status.app/g/?a2=" + encodeURIComponent(chatId) + "&thread-id=" + encodeURIComponent(threadId)
+    }
     function resendMessage(messageId) {}
     function createThread(parentMessageId) {
         if (messageModule && messageModule.createThread)

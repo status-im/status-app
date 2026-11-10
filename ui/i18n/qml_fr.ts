@@ -1552,6 +1552,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>Envoi de %1 %2 depuis %3 vers %4</translation>
     </message>
     <message>
+        <source>Couldn&apos;t open this thread. It may be unavailable or you may not have access.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Network fees changed</source>
         <translation>Les frais de réseau ont changé</translation>
     </message>
@@ -10544,6 +10548,30 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>Channel in</source>
         <translation>Canal dans</translation>
     </message>
+    <message>
+        <source>Thread in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in group chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in direct message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">Inconnu</translation>
+    </message>
+    <message>
+        <source>Thread in Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewGifDelegate</name>
@@ -10561,6 +10589,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>Failed to generate preview</source>
         <translation>Échec de la génération de l’aperçu</translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">Inconnu</translation>
     </message>
 </context>
 <context>

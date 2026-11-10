@@ -34,6 +34,22 @@ proc urlIntake(url: string): ExternalIntakeEvent =
 proc shareIntake(text: string, imagePaths: seq[string] = @[]): ExternalIntakeEvent =
   ExternalIntakeEvent(kind: ExternalIntakeShare, text: text, imagePaths: imagePaths)
 
+suite "thread destination classification":
+  test "existing parent routes recognize thread query keys across schemes":
+    for prefix in ["https://status.app/", "http://status.app/", "status-app://"]:
+      for path in ["p/", "p/peer", "g/", "cc/channel"]:
+        for suffix in ["?thread-id=thread", "?a2=group&thread-id=", "?thread-id=%zz",
+            "?%74hread-id=thread", "?thread-id"]:
+          check isThreadDeepLink(prefix & path & suffix)
+
+  test "parent links and fragment text are not thread destinations":
+    for link in ["https://status.app/p/peer", "status-app://g/?a2=group",
+        "https://status.app/cc/channel#key", "https://status.app/cc/channel?other=thread-id#key",
+        "https://status.app/g/?a2=group#thread-id=thread", "https://status.app/u/key?thread-id=thread",
+        "https://status.app.evil/p/peer?thread-id=thread", "https://example.org/g/?thread-id=thread",
+        "https://status.app/t/chat?thread-id=thread"]:
+      check not isThreadDeepLink(link)
+
 suite "external_intake routing":
 
   test "status-app scheme routes as deep link":

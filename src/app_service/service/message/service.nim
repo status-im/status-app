@@ -47,6 +47,7 @@ const MESSAGES_PER_PAGE_MAX* = 40
 const SIGNAL_MESSAGES_LOADED* = "messagesLoaded"
 const SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED* = "chatThreadsForChatsLoaded"
 const SIGNAL_CHAT_THREADS_LOADING_FAILED* = "chatThreadsLoadingFailed"
+const SIGNAL_CHAT_THREADS_INVALIDATED* = "chatThreadsInvalidated"
 const SIGNAL_THREAD_CREATED* = "threadCreated"
 const SIGNAL_THREAD_CREATION_FAILED* = "threadCreationFailed"
 const SIGNAL_THREAD_EDIT_FINISHED* = "threadEditFinished"
@@ -338,6 +339,7 @@ QtObject:
     self.chatThreadSummariesPendingUpdates.del(chatId)
     self.chatThreadListsPendingUpdates.del(chatId)
     self.chatThreadsRevision[chatId] = self.chatThreadsRevision.getOrDefault(chatId) + 1
+    self.events.emit(SIGNAL_CHAT_THREADS_INVALIDATED, ChatArgs(chatId: chatId))
 
   proc loadChatThreadsForChatsIfNeeded*(self: Service, chatIds: seq[string]) =
     if not THREADS_ENABLED:
@@ -521,10 +523,10 @@ QtObject:
 
     self.threadpool.startLocalRead(arg)
 
-  proc asyncLoadChatThreadSummaries*(self: Service, chatId: string) =
+  proc asyncLoadChatThreadSummaries*(self: Service, chatId: string, forceReload: bool = false) =
     if not THREADS_ENABLED or chatId.len == 0 or chatId in self.chatThreadSummariesLoadingChats:
       return
-    if chatId in self.chatThreadSummariesLoadedChats:
+    if not forceReload and chatId in self.chatThreadSummariesLoadedChats:
       var threads: seq[ThreadDto]
       for _, thread in self.chatThreadsByParentIdByChat.getOrDefault(chatId):
         threads.add(thread)

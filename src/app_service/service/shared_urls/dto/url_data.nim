@@ -29,6 +29,11 @@ type MessageUrlDataDto* = object
   messageId*: string
   communityId*: string
 
+type ThreadUrlDataDto* = object
+  chatId*: string
+  threadId*: string
+  communityId*: string
+
 type UrlDataDto* = object
   community*: CommunityUrlDataDto
   channel*: CommunityChannelUrlDataDto
@@ -117,3 +122,8 @@ proc `$`*(messageUrlDataDto: MessageUrlDataDto): string =
   jsonObj["messageId"] = %* messageUrlDataDto.messageId
   jsonObj["communityId"] = %* messageUrlDataDto.communityId
   return $jsonObj
+
+proc toThreadUrlDataDto*(jsonObj: JsonNode): ThreadUrlDataDto =
+  discard jsonObj.getProp("chatId", result.chatId)
+  discard jsonObj.getProp("threadId", result.threadId)
+  discard jsonObj.getProp("communityId", result.communityId)

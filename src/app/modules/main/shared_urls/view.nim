@@ -28,6 +28,9 @@ QtObject:
   proc createMessageUrl*(self: View, chatId: string, messageId: string): string {.slot.} =
     return self.delegate.createMessageUrl(chatId, messageId)
 
+  proc createThreadUrl*(self: View, chatId: string, threadId: string): string {.slot.} =
+    return self.delegate.createThreadUrl(chatId, threadId)
+
   proc delete*(self: View) =
     self.QObject.delete
 

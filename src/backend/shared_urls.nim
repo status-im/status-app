@@ -33,3 +33,9 @@ proc parseSharedUrl*(url: string): RpcResponse[JsonNode] =
 
 proc parseMessageUrl*(url: string): RpcResponse[JsonNode] =
   result = callPrivateRPC("parseMessageURL".prefix, %*[url])
+
+proc shareThreadUrl*(chatId: string, threadId: string): RpcResponse[JsonNode] =
+  result = callPrivateRPC("shareThreadURL".prefix, %*[chatId, threadId])
+
+proc parseThreadUrl*(url: string): RpcResponse[JsonNode] =
+  result = callPrivateRPC("parseThreadURL".prefix, %*[url])

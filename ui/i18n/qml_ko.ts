@@ -1540,6 +1540,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>%3에서 %4로 %1 %2 전송 중</translation>
     </message>
     <message>
+        <source>Couldn&apos;t open this thread. It may be unavailable or you may not have access.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Network fees changed</source>
         <translation>네트워크 수수료가 변경되었습니다</translation>
     </message>
@@ -10502,6 +10506,30 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
         <source>Channel in</source>
         <translation>채널 입장</translation>
     </message>
+    <message>
+        <source>Thread in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in group chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in direct message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">알 수 없음</translation>
+    </message>
+    <message>
+        <source>Thread in Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewGifDelegate</name>
@@ -10519,6 +10547,14 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     <message>
         <source>Failed to generate preview</source>
         <translation>미리 보기를 생성하지 못했습니다</translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">알 수 없음</translation>
     </message>
 </context>
 <context>

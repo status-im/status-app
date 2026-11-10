@@ -106,6 +106,9 @@ proc getThreadById*(self: Controller, chatId, threadId: string): ThreadDto =
 proc loadChatThreadsForChats*(self: Controller, chatIds: seq[string]) =
   self.messageService.loadChatThreadsForChatsIfNeeded(chatIds)
 
+proc refreshChatThreadsForLink*(self: Controller, chatId: string) =
+  self.messageService.asyncLoadChatThreadSummaries(chatId, forceReload = true)
+
 proc init*(self: Controller) =
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
@@ -151,12 +154,14 @@ proc init*(self: Controller) =
 
   self.events.on(message_service.SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
     let args = message_service.ChatThreadsForChatsLoadedArgs(e)
-    self.delegate.onChatThreadsForChatsLoaded(args.threads, args.completedChatIds)
+    self.delegate.onChatThreadsForChatsLoaded(args.threads, args.completedChatIds, args.summariesLoaded)
 
   self.events.on(message_service.SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
     let args = message_service.ChatThreadsLoadingFailedArgs(e)
-    if not args.summariesRequested:
-      self.delegate.onChatThreadsLoadingFailed(args.chatId)
+    self.delegate.onChatThreadsLoadingFailed(args.chatId, args.summariesRequested)
+
+  self.events.on(message_service.SIGNAL_CHAT_THREADS_INVALIDATED) do(e: Args):
+    self.delegate.onChatThreadsInvalidated(ChatArgs(e).chatId)
 
   self.events.on(chat_service.SIGNAL_CHAT_LEFT) do(e: Args):
     let args = chat_service.ChatArgs(e)

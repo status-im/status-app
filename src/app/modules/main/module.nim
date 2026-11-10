@@ -632,6 +632,9 @@ proc connectForNotificationsOnly[T](self: Module[T]) =
     let args = AccountArgs(e)
     self.view.showToastAccountAdded(args.account.name)
 
+  self.events.on(SIGNAL_THREAD_LINK_FAILED) do(e: Args):
+    self.view.showToastThreadLinkFailed()
+
   self.events.on(SIGNAL_WALLET_ACCOUNT_DELETED) do(e:Args):
     let args = AccountArgs(e)
     self.view.showToastAccountRemoved(args.account.name)
@@ -2015,6 +2018,36 @@ proc activateChatDeepLink[T](self: Module[T], statusDeepLink: string): bool =
 
   return true
 
+proc activateThreadDeepLink[T](self: Module[T], statusDeepLink: string): bool =
+  if not isThreadDeepLink(statusDeepLink):
+    return false
+
+  # A recognized thread route is consumed even when resolution fails.
+  # Falling through could open a different destination or a browser tab.
+  if not THREADS_ENABLED:
+    self.view.showToastThreadLinkFailed()
+    return true
+  let data = self.sharedUrlsModule.parseThreadUrl(statusDeepLink)
+  if data.chatId.len == 0 or data.threadId.len == 0:
+    warn "Ignoring malformed or unavailable thread deep link"
+    self.view.showToastThreadLinkFailed()
+    return true
+
+  let sectionId = if data.communityId.len > 0:
+      data.communityId
+    else:
+      singletonInstance.userProfile.getPubKey()
+  if sectionId notin self.chatSectionModules:
+    warn "Unable to resolve thread deep link section"
+    self.view.showToastThreadLinkFailed()
+    return true
+  if self.getActiveSectionId() != sectionId:
+    self.setActiveSectionById(sectionId)
+  if not self.openSectionChatAndMessage(sectionId, data.chatId, "", data.threadId):
+    warn "Unable to resolve thread deep link"
+    self.view.showToastThreadLinkFailed()
+  return true
+
 proc activateMessageDeepLink[T](self: Module[T], statusDeepLink: string): bool =
   let data = self.sharedUrlsModule.parseMessageUrl(statusDeepLink)
   if data.chatId.len == 0 or data.messageId.len == 0:
@@ -2188,6 +2221,8 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     self.view.wcLinkActivated(statusDeepLink)
     return
   if self.activateThreadNotificationDeepLink(statusDeepLink):
+    return
+  if self.activateThreadDeepLink(statusDeepLink):
     return
   if self.activateMessageDeepLink(statusDeepLink):
     return
@@ -2400,10 +2435,9 @@ method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId:
   if sectionId notin self.chatSectionModules:
     return false
 
-  if threadId.len > 0:
+  result = self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId, threadId)
+  if result and threadId.len > 0:
     self.view.emitNavigateToMessageDetailsSignal()
-
-  return self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId, threadId)
 
 method updateRequestToJoinState*[T](self: Module[T], sectionId: string, requestToJoinState: RequestToJoinState) =
   if sectionId in self.chatSectionModules:

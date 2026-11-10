@@ -163,10 +163,13 @@ method onMarkAllMessagesRead*(self: AccessInterface, chat: ChatDto, threadId: st
   raise newException(ValueError, "No implementation available")
 
 method onChatThreadsForChatsLoaded*(self: AccessInterface, threads: seq[ThreadDto],
-    completedChatIds: seq[string]) {.base.} =
+    completedChatIds: seq[string], summariesLoaded: bool = false) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onChatThreadsLoadingFailed*(self: AccessInterface, chatId: string) {.base.} =
+method onChatThreadsLoadingFailed*(self: AccessInterface, chatId: string, summariesRequested: bool = false) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChatThreadsInvalidated*(self: AccessInterface, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onMarkMessageAsUnread*(self: AccessInterface, chat: ChatDto) {.base.} =
