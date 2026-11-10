@@ -7017,7 +7017,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Biometric login and transaction authentication enabled for this device</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Біометричний вхід і автентифікацію транзакцій увімкнено на цьому пристрої</translation>
     </message>
 </context>
 <context>

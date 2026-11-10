@@ -6960,7 +6960,7 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Biometric login and transaction authentication enabled for this device</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">이 기기에서 생체인증 로그인과 트랜잭션 인증이 활성화되었습니다</translation>
     </message>
 </context>
 <context>
