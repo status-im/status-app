@@ -1,9 +1,10 @@
 ## Keycard signal epoch (process lifetime).
 ##
-## Keycard signals come from status-keycard-qt in this process, synchronously with their
-## producer, so the C callback stamps them with this epoch on arrival. It advances once
-## the ended session's keycard operations are stopped; signals of an earlier epoch are
-## not delivered to the next session.
+## Keycard signals come from status-keycard-qt in this process; the C callback stamps
+## them with this epoch on arrival. The library first queues them through the GUI event
+## loop, so the epoch advances only once the ended session's queued events were
+## delivered (SessionHost, when the ended session is disposed); signals of an earlier
+## epoch are not delivered to the next session.
 
 import std/atomics
 
