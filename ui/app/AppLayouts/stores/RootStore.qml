@@ -25,6 +25,7 @@ QtObject {
     readonly property bool isMessagingNetworkConnected: !!internal.mainModuleInst && internal.mainModuleInst.isMessagingNetworkConnected
     readonly property var sectionsModel: internal.mainModuleInst.sectionsModel
     readonly property bool sectionsLoaded: internal.mainModuleInst && internal.mainModuleInst.sectionsLoaded
+    readonly property bool shareFlowPending: !!internal.mainModuleInst && internal.mainModuleInst.shareFlowPending
     readonly property string activeSectionId: internal.mainModuleInst.activeSection.id
     readonly property int activeSectionType: internal.mainModuleInst.activeSection.sectionType
     property bool localBackupEnabled: false
