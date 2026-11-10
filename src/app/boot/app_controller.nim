@@ -41,7 +41,6 @@ import app/modules/onboarding/module as onboarding_module
 import app/modules/onboarding/post_onboarding/[keycard_replacement_task, keycard_convert_account, save_biometrics_task]
 import app/modules/main/module as main_module
 import app/core/signal_handler
-import app/core/keycard_epoch
 import app/modules/keycard_channel/module as keycard_channel_module
 import app/core/notifications/notifications_manager
 import app/global/global_singleton
@@ -304,15 +303,15 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
 proc stopActivity*(self: AppController) =
   ## First step of ending the session (logout), once its UI is released: stops what
   ## would otherwise keep running session code while the backend logs out. The
-  ## controller is not reused afterwards: the next session gets a new one.
+  ## controller is not reused afterwards: the next session gets a new one. Runs as the
+  ## `stopActivity` operation of SessionHost.setOps, which also stops delivering the
+  ## session's signals and advances the keycard epoch once the session is disposed.
   # Completions of the session's tasks, and its timers, stop reaching it.
   discard advanceSessionGeneration()
   self.statusFoundation.threadpool.close()
   featureGuard KEYCARD_ENABLED:
-    # Before advancing the keycard epoch: signals of the stopped operations are
-    # still stamped with the ended one.
+    # SessionHost advances the keycard epoch once its queued events were delivered.
     self.keycardServiceV2.stop()
-  advanceKeycardEpoch()
   self.notificationsManager.stop()
 
 proc delete*(self: AppController) =
