@@ -5673,6 +5673,123 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
 </context>
 <context>
+    <name>DefaultViewerBanner</name>
+    <message>
+        <source>Status opens your %1 now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 opens your %2. To open them in Status, clear its defaults in its settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open %1 in Status? Choose Status, then Always.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If Android suggests another app on top, clear that app&apos;s defaults in its settings first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">설정</translation>
+    </message>
+    <message>
+        <source>Choose</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Got it</source>
+        <translation type="unfinished">확인했습니다</translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerSettings</name>
+    <message>
+        <source>Suggest opening files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shows an offer above a file another app sent to Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Opened in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished">중지</translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerTypes</name>
+    <message>
+        <source>PDFs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PNG images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>JPEG images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIF images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebP images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BMP images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>text files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MP3 audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WAV audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebM audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebM videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MP4 videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>M4V videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>M4A audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AAC audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DeleteMessageConfirmationPopup</name>
     <message>
         <source>Confirm deleting this message</source>

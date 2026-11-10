@@ -34,6 +34,18 @@ public:
     // {name, mimeType, readable} the platform gave for an Opened File whose
     // URL names no file Status can check (Android content://); empty otherwise.
     Q_INVOKABLE QVariantMap openedFileInfo(const QString &fileUrl) const;
+    // Android: "self" when Status opens the type by default, "none" when the
+    // system asks each time, "other:<app name>" when another app does; "" for a
+    // type Status does not claim, and elsewhere.
+    Q_INVOKABLE QString defaultViewer(const QString &mimeType) const;
+    // Android: shows the system's choice of app for the type, or the settings of
+    // the app that is the default. False when nothing was shown.
+    Q_INVOKABLE bool offerDefaultViewer(const QString &mimeType) const;
+    // Android: the types Status opens by default; empty elsewhere.
+    Q_INVOKABLE QStringList defaultViewerTypes() const;
+    // Android: stops Status opening any type by default, or shows Status's app
+    // settings where the user does. True when no type is left.
+    Q_INVOKABLE bool resetDefaultViewer() const;
     Q_INVOKABLE bool ensureDirectory(const QString &path) const;
 
     // Desktop: reveal file in OS file manager. Android: open system Downloads UI.

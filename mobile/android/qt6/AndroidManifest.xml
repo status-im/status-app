@@ -33,6 +33,14 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Lets Status name the app that opens a file type by default (DefaultViewer). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" android:mimeType="*/*" />
+        </intent>
+    </queries>
+
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"

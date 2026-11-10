@@ -197,6 +197,9 @@ StatusSectionLayout {
         // The file the current Tab shows, when it is an Opened File it could show.
         readonly property string currentOpenedFilePath:
             currentWebView && !currentWebView.openFailed ? (currentWebView.openedFilePath ?? "") : ""
+        // ...while the Tab still shows it.
+        readonly property string currentShownOpenedFile:
+            currentOpenedFilePath && !(currentWebView?.canGoBack ?? false) ? currentOpenedFilePath : ""
         readonly property string currentAddressLabel:
             downloadsContext.openedFileAddressLabel(currentWebView)
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
@@ -685,6 +688,17 @@ StatusSectionLayout {
             sourceComponent: downloadPillStrip
         }
 
+        DefaultViewerBanner {
+            Layout.fillWidth: true
+            visible: defaultViewerOffer.shown || defaultViewerOffer.confirmed
+            typeName: defaultViewerOffer.typeName
+            otherApp: defaultViewerOffer.otherApp
+            confirmed: defaultViewerOffer.confirmed
+            onAcceptRequested: defaultViewerOffer.accept()
+            onDismissRequested: defaultViewerOffer.dismiss()
+            onAcknowledged: defaultViewerOffer.acknowledge()
+        }
+
         FindBar {
             id: findBar
             visible: false
@@ -744,6 +758,17 @@ StatusSectionLayout {
             }
         }
     }
+
+    // Android: offers to open a type in Status while a Tab shows a file of it another app handed over.
+    DefaultViewerOffer {
+        id: defaultViewerOffer
+        openedFile: root.isMobile ? _internal.currentShownOpenedFile : ""
+        suggestedFn: () => root.browserPreferencesStore.getSuggestDefaultViewer()
+        dismissFn: () => root.browserPreferencesStore.setSuggestDefaultViewer(false)
+    }
+
+    // The offer may have been turned off or on in the settings meanwhile.
+    onVisibleChanged: if (visible) defaultViewerOffer.refresh()
 
     StatusBubble {
         id: statusBubble

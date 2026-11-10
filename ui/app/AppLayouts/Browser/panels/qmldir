@@ -7,3 +7,4 @@ DownloadsListView 1.0 DownloadsListView.qml
 BrowserTabView 1.0 BrowserTabView.qml
 FindBar 1.0 FindBar.qml
 MobileAddressBar 1.0 MobileAddressBar.qml
+DefaultViewerBanner 1.0 DefaultViewerBanner.qml

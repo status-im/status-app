@@ -247,7 +247,9 @@ public class StatusQtActivity extends QtActivity {
         Uri data = intent.getData();
         if (Intent.ACTION_VIEW.equals(action) && data != null) {
             if (isFileUri(data)) {
-                handleFileIntake(data, intent.getType());
+                // The file the system was asked about when Status offered to open its type.
+                if (!DefaultViewer.isProbe(this, data))
+                    handleFileIntake(data, intent.getType());
                 return;
             }
             synchronized (intakeLock) {
