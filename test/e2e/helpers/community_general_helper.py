@@ -2,6 +2,7 @@
 
 import time
 
+import allure
 import driver
 from allure_commons._allure import step
 
@@ -23,6 +24,25 @@ def _open_general_channel(main_window, community_name: str):
     community_screen.wait_for_content_loaded()
     community_screen.left_panel.select_channel(Channel.DEFAULT_CHANNEL_NAME.value)
     community_screen.wait_for_content_loaded()
+    return community_screen
+
+
+@allure.step('Join community from invitation in 1:1 chat')
+def join_community_from_invite(main_window, inviter_name: str, password: str, community_name: str):
+    messages_view = main_window.left_panel.open_messages_screen()
+    skip_message_backup_popup_if_visible()
+    assert driver.waitFor(
+        lambda: inviter_name in messages_view.left_panel.get_chats_names,
+        configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+    ), f'Chat with {inviter_name} not in list'
+    chat = messages_view.left_panel.click_chat_by_name(inviter_name)
+    community_screen = chat.click_community_invite_message()
+    community_screen.left_panel.wait_for_name(community_name, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+    community_screen.left_panel.open_welcome_community_popup().join().authenticate(password)
+    assert driver.waitFor(
+        lambda: not community_screen.left_panel.is_join_community_visible,
+        configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ), 'Join community button not hidden'
     return community_screen
 
 
@@ -68,18 +88,7 @@ def setup_community_general_channel(
 
     with step(f'User {member.name}, accept community invitation from {owner.name}'):
         switch_to_aut(aut_member, main_window)
-        chat = main_window.left_panel.open_messages_screen().left_panel.click_chat_by_name(owner.name)
-        skip_message_backup_popup_if_visible()
-        community_screen = chat.click_community_invite_message()
-        community_screen.left_panel.wait_for_name(
-            community.name,
-            configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
-        )
-        community_screen.left_panel.open_welcome_community_popup().join().authenticate(member.password)
-        assert driver.waitFor(
-            lambda: not community_screen.left_panel.is_join_community_visible,
-            configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
-        ), 'Join community button not hidden'
+        join_community_from_invite(main_window, owner.name, member.password, community.name)
         # Keep this AUT on #general (not minimized) so SDS delivery ACKs can complete.
         _open_general_channel(main_window, community.name)
 

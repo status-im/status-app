@@ -2,6 +2,7 @@ import typing
 
 import allure
 
+import configs
 import driver
 from gui.components.community.pinned_messages_panel import PinnedMessagesPanel
 from gui.components.context_menu import ContextMenu
@@ -101,6 +102,10 @@ class ToolBar(QObject):
 
     @allure.step('Open pinned messages panel')
     def open_pinned_messages_panel(self):
+        assert driver.waitFor(
+            lambda: self.pinned_message_tooltip.is_visible,
+            configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+        ), 'Pinned messages banner was not shown'
         self.pinned_message_tooltip.click()
         return PinnedMessagesPanel().wait_until_appears()
 

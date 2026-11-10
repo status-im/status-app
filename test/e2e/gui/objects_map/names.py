@@ -397,6 +397,7 @@ submit_shared_addresses_to_join_StatusButton = {"container": statusDesktop_mainW
 # Pinned messages
 chatInfoPinsList = {"container": statusDesktop_mainWindow, "objectName": "chatInfoPinsList",
                     "type": "StatusListView", "visible": True}
+pinPanel_messageView = {"container": chatInfoPinsList, "type": "MessageView", "visible": True}
 pinMessageDetails_in_pinsPanel = {"container": chatInfoPinsList, "objectName": "statusPinMessageDetails",
                                   "type": "StatusPinMessageDetails", "visible": True}
 pinnedMessagesPanel_unpin = {"container": statusDesktop_mainWindow_overlay, "objectName": "pinnedMessagesPopup_unpin",
