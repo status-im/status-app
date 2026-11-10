@@ -94,7 +94,7 @@ method filterChanged*(self: Module, chainIds: seq[int]) =
   self.refreshAllWalletAccountsBalances()
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionAccounts", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionAccounts", self.viewVariant)
   self.controller.init()
   self.view.load()
 

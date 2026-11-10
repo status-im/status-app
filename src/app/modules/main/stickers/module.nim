@@ -38,7 +38,7 @@ proc newModule*(
     networkService, tokenService)
   result.moduleLoaded = false
 
-  singletonInstance.engine.setRootContextProperty("stickersModule", result.viewVariant)
+  singletonInstance.setSessionContextProperty("stickersModule", result.viewVariant)
 
 method delete*(self: Module) =
   self.view.delete

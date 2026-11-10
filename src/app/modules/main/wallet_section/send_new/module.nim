@@ -72,7 +72,7 @@ proc clearTmpData(self: Module, keepUuid = false) =
   self.tmpSendTransactionDetails = TmpSendTransactionDetails()
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionSendNew", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionSendNew", self.viewVariant)
 
   self.controller.init()
   self.view.load()

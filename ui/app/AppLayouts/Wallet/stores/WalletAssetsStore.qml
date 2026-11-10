@@ -42,6 +42,19 @@ QtObject {
         walletSectionAssetsView.sortBy(roleName, order)
     }
 
+    // The visibility and order preferences belong to the logged-in profile: the store
+    // outlives the session, so they follow the session's backend.
+    readonly property bool _tokenPreferencesAvailable: !!root.walletTokensStore
+                                                       && root.walletTokensStore.tokenPreferencesAvailable
+    on_TokenPreferencesAvailableChanged: {
+        if (root._tokenPreferencesAvailable) {
+            root.assetsController.revert()
+        } else {
+            root.assetsController.loadingStarted()
+            root.assetsController.loadingFinished("")
+        }
+    }
+
     readonly property var assetsController: ManageTokensController {
         sourceModel: groupedAccountAssetsModel
         settingsKey: "WalletAssets"

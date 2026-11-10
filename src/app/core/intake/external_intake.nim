@@ -117,6 +117,11 @@ proc submit*(self: ExternalIntake, event: ExternalIntakeEvent) =
     return
   self.dispatch(event)
 
+proc setNotReady*(self: ExternalIntake) =
+  ## The app session that acted on intakes ended (logout): hold them in the pending
+  ## slot again until the next one is ready.
+  self.ready = false
+
 proc setReady*(self: ExternalIntake) =
   ## Called at main-window-ready (after login or onboarding completes).
   ## Delivers the pending intake, if any.
