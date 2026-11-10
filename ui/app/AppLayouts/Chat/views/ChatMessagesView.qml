@@ -94,6 +94,7 @@ Item {
     signal showReplyArea(string messageId, string author)
     signal editModeChanged(bool editModeOn, string messageId)
     signal openThread(string threadId, string threadName, string parentMessageId)
+    signal renameThreadRequested(string threadId, string threadName, string parentMessageId)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -1167,6 +1168,10 @@ Item {
 
             function onShowReplyArea(messageId, author) {
                 root.showReplyArea(messageId, author)
+            }
+
+            function onRenameThreadRequested(threadId, threadName, parentMessageId) {
+                root.renameThreadRequested(threadId, threadName, parentMessageId)
             }
 
             function onOpenThread(threadId, threadName, parentMessageId) {
