@@ -312,6 +312,12 @@ QtObject {
         return sharedUrlsModule.createMessageUrl(chatId, messageId)
     }
 
+    function createThreadLink(chatId, threadId) {
+        if (!chatId || !threadId || typeof sharedUrlsModule === "undefined" || !sharedUrlsModule)
+            return ""
+        return sharedUrlsModule.createThreadUrl(chatId, threadId)
+    }
+
     function createThread(parentMessageId) {
         if (!messageModule)
             return

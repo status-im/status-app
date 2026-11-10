@@ -17,6 +17,7 @@ RowLayout {
     required property string threadName
     required property string parentChatName
     required property bool canEdit
+    property string threadLinkToCopyShare: ""
     required property bool pending
     property bool deletePending: false
     property bool followed: false
@@ -195,7 +196,7 @@ RowLayout {
                     d.error = ""
                     root.deleteRequested()
                 }
-                threadLinkToCopyShare: ""
+                threadLinkToCopyShare: root.threadLinkToCopyShare
                 editEnabled: root.canEdit && !root.pending && !root.deletePending
                 onMarkAsReadRequested: root.markAsReadRequested()
                 onEditNameRequested: root.editNameRequested()

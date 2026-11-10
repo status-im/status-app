@@ -462,6 +462,7 @@ Item {
                 }
             }
             threadId: d.openThreadId
+            threadLinkToCopyShare: threadMessageStore.createThreadLink(d.openThreadParentChatId, d.openThreadId)
             threadName: d.newThreadParentMessageId ? qsTr("New thread") : threadMessageStore.threadName
             muted: threadMessageStore.threadMuted
             onMuteRequested: interval => threadMessageStore.setThreadMuted(interval)
@@ -1203,7 +1204,7 @@ Item {
             pinEnabled: false
             deleteEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending &&
                            !listedThreadMessages.threadDeletePending && !listedThreadParentMessages.threadDeletePending
-            threadLinkToCopyShare: ""
+            threadLinkToCopyShare: listedThreadMessages.createThreadLink(listedThreadMessages.chatId, threadMenuData.threadId)
             editEnabled: deleteEnabled
             openHandler: function(threadId) { threadMenuData.threadId = threadId }
             onMuteRequested: interval => listedThreadMessages.setThreadMuted(interval)

@@ -15,6 +15,13 @@ Item {
     width: 1000
     height: 700
 
+    QtObject {
+        id: sharedUrlsModule
+        function createThreadUrl(chatId, threadId) {
+            return "https://status.app/g/?a2=" + encodeURIComponent(chatId) + "&thread-id=" + encodeURIComponent(threadId)
+        }
+    }
+
     CommunityChatSectionHarness {
         id: harness
         anchors.fill: parent
@@ -160,9 +167,9 @@ Item {
             view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             const messages = createTemporaryObject(threadMessagesComponent, this)
             verify(!!messages)
+            messages.parentChatId = view.activeItemId
             let menu
             if (data.fromList) {
-                messages.parentChatId = view.activeItemId
                 const model = view.rootStore.chatCommunitySectionModule.model
                 let threadName
                 for (let i = 0; i < model.count; ++i) {
@@ -224,6 +231,9 @@ Item {
                 menu.deleteRequested()
                 compare(messages.deleteRequests, 1)
             }
+            const expectedLink = sharedUrlsModule.createThreadUrl(messages.parentChatId, messages.threadId)
+            compare(menu.threadLinkToCopyShare, expectedLink)
+            tryCompare(findChild(menu, "threadContextMenu_copyShare"), "enabled", true)
             compare(menu.actionAt(0).objectName, "threadContextMenu_editName")
             verify(menu.actionAt(0).enabled)
             menu.actionAt(0).trigger()
@@ -259,6 +269,8 @@ Item {
             const panelMenu = findChild(panelHeader, "threadHeaderContextMenu")
             tryCompare(panelMenu, "opened", true)
             verifyThreadMuteMenu(panelMenu, messages)
+            compare(panelMenu.threadLinkToCopyShare, expectedLink)
+            tryCompare(findChild(panelMenu, "threadContextMenu_copyShare"), "enabled", true)
             panelMenu.actionAt(0).trigger()
             panelMenu.close()
             tryCompare(panelHeader, "editing", true)

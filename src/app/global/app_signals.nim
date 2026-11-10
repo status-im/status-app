@@ -4,6 +4,8 @@ import ../core/eventemitter
 
 export SectionType
 
+const SIGNAL_THREAD_LINK_FAILED* = "threadLinkFailed"
+
 type
   ToggleSectionArgs* = ref object of Args
     sectionType*: SectionType
