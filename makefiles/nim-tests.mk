@@ -32,6 +32,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	send_handler_lookup_bench \
 	send_modal_instantiation_bench \
 	services_pause_bridge_test \
+	session_host_lifecycle_test \
 	session_host_signals_test \
 	share_intake_wake_test \
 	signal_handler_test \

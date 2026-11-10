@@ -7,13 +7,13 @@
 ##   drain without blocking the GUI, runs the backend logout on its own thread and
 ##   attaches the next session.
 
-import std/[atomics, monotimes, times, strutils]
+import std/[monotimes, times, strutils]
 import nimqml, chronicles, results
 from seaqt/qtimer import QTimer, create, setInterval, onTimeout, start, stop
 
 import app/core/signal_epoch
 import app/core/signal_handler
-import statusq_bridge
+import app/core/keycard_epoch
 import app/boot/session_lifecycle
 import backend/general as status_general
 import status_go
@@ -27,21 +27,6 @@ const
   HeldSignalsCapacity = 2000
   DrainPollMs = 50
   DrainDeadlineMs* = 15_000'i64
-  KeycardEpochSeparator = '|'
-
-# Keycard signals come from status-keycard-qt in this process, synchronously with their
-# producer, so the C callback stamps them with this epoch on arrival. It advances
-# after the ended session's keycard operations are stopped.
-var keycardEpoch: Atomic[uint64]
-keycardEpoch.store(1)
-
-proc deliverKeycardSignal*(host: pointer, signal: cstring) =
-  ## Called from the keycard C callback thread: queues "<epoch>|<signal>" to the host.
-  statusq_invoke_method_queued_tagged(host, "receiveStampedKeycardSignal", signal,
-    keycardEpoch.load())
-
-proc advanceKeycardEpoch*() =
-  discard keycardEpoch.fetchAdd(1)
 
 proc nowMs(): int64 =
   getMonoTime().ticks div 1_000_000
@@ -67,6 +52,8 @@ QtObject:
     drainTimer: QTimer
     logoutThread: Thread[BackendLogoutThreadArg]
     logoutThreadRunning: bool
+    autoLoginPolicy: AutoLoginPolicy
+    drainDeadlineMs: int64
     # Backend epoch of the session whose activity was stopped, until the next session
     # is attached: its signals are dropped, not held.
     endedEpoch: uint64
@@ -75,12 +62,14 @@ QtObject:
   proc setup(self: SessionHost)
   proc deliverHeld(self: SessionHost)
 
-  proc newSessionHost*(): SessionHost =
+  proc newSessionHost*(drainDeadlineMs = DrainDeadlineMs): SessionHost =
     new(result, delete)
+    result.drainDeadlineMs = drainDeadlineMs
     result.setup()
 
   proc setup(self: SessionHost) =
     self.QObject.setup
+    self.autoLoginPolicy = AutoLoginPolicy.ColdStart
     self.signals = initSignalGate(HeldSignalsCapacity)
     self.keycardSignals = initSignalGate(HeldSignalsCapacity)
     let host = self
@@ -117,7 +106,7 @@ QtObject:
       return
     for signal in self.signals.takeDeliverable(acceptedSignalEpoch()):
       self.receivers.signal(signal)
-    for signal in self.keycardSignals.takeDeliverable(keycardEpoch.load()):
+    for signal in self.keycardSignals.takeDeliverable(currentKeycardEpoch()):
       self.receivers.keycardSignal(signal)
 
   proc attachSession*(self: SessionHost, receivers: SessionReceivers) =
@@ -163,7 +152,7 @@ QtObject:
       except ValueError:
         discard
     let signal = if at >= 0: stamped[at + 1 .. ^1] else: stamped
-    case self.keycardSignals.route(epoch, keycardEpoch.load(), signal, self.hasReceivers)
+    case self.keycardSignals.route(epoch, currentKeycardEpoch(), signal, self.hasReceivers)
     of SignalRoute.Deliver:
       self.receivers.keycardSignal(signal)
     of SignalRoute.Hold:
@@ -180,6 +169,10 @@ QtObject:
     ## attaching the session `initializeSession` builds.
     var ops = ops
     let host = self
+    let sessionReady = ops.sessionReady
+    ops.sessionReady = proc(policy: AutoLoginPolicy) =
+      host.autoLoginPolicy = policy
+      sessionReady(policy)
     let stopActivity = ops.stopActivity
     ops.stopActivity = proc() =
       host.detachSession()
@@ -194,7 +187,7 @@ QtObject:
       let receivers = ?initializeSession()
       host.attachSession(receivers)
       ok()
-    self.lifecycle = newSessionLifecycle(ops, DrainDeadlineMs)
+    self.lifecycle = newSessionLifecycle(ops, self.drainDeadlineMs)
 
   proc onBackendLogoutResponse*(self: SessionHost, response: string) {.slot.} =
     if self.logoutThreadRunning:
@@ -211,6 +204,10 @@ QtObject:
     else:
       info "backend logged out", signalEpoch = loggedOut.signalEpoch
       self.lifecycle.onBackendLogoutDone(Result[void, string].ok())
+
+  proc autoLoginPolicy*(self: SessionHost): AutoLoginPolicy =
+    ## The policy the current session started with: process start, logout or relogin.
+    self.autoLoginPolicy
 
   proc state*(self: SessionHost): SessionState =
     if self.lifecycle.isNil: SessionState.Active else: self.lifecycle.state

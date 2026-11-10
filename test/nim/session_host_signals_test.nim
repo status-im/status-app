@@ -7,6 +7,7 @@
 import unittest, os
 import nimqml
 import app/boot/session_host
+import app/core/keycard_epoch
 import app/core/signal_epoch
 import app/core/signal_handler
 import backend/general as status_general

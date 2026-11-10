@@ -42,6 +42,23 @@ proc newFake(): (Fake, SessionLifecycle) =
 let loggedOut = Result[void, string].ok()
 let logoutFailed = Result[void, string].err("node stop failed")
 
+suite "auto-login policy":
+
+  test "process start and relogin follow the persisted rules":
+    for policy in [AutoLoginPolicy.ColdStart, AutoLoginPolicy.AllowOnce]:
+      check autoLoginBlockedBy(policy, testEnvironment = false, suppressedAfterSignOut = false) == ""
+      check autoLoginBlockedBy(policy, testEnvironment = false, suppressedAfterSignOut = true) ==
+        "suppressed after a sign-out"
+
+  test "a logout stops at the login screen":
+    check autoLoginBlockedBy(AutoLoginPolicy.Disabled, testEnvironment = false,
+      suppressedAfterSignOut = false) == "after a logout"
+
+  test "test runs never log in silently":
+    for policy in AutoLoginPolicy:
+      check autoLoginBlockedBy(policy, testEnvironment = true, suppressedAfterSignOut = false) ==
+        "test mode"
+
 suite "session lifecycle":
 
   test "logout runs every step in order and hands the policy to the next session":

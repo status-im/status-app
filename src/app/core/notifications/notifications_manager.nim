@@ -39,6 +39,8 @@ QtObject:
     events: EventEmitter
     settingsService: settings_service.Service
     osNotification: StatusOSNotification
+    # The session ended (logout): its notifications must not be shown anymore.
+    stopped: bool
 
   proc processNotification(self: NotificationsManager, title: string, message: string, details: NotificationDetails)
 
@@ -71,6 +73,8 @@ QtObject:
     ## This slot is called once user clicks OS notificaiton bubble, "identifier"
     ## contains data which uniquely define that notification.
     debug "OS notification clicked", identifier=identifier
+    if self.stopped:
+      return
 
     # Make the app the top most window.
     app_window.app_makeItActive(singletonInstance.engine)
@@ -178,6 +182,8 @@ QtObject:
     self.processNotification(title, message, details)
 
   proc onNotificationsCountChanged(self: NotificationsManager, count: int) {.slot.} =
+    if self.stopped:
+      return
     self.osNotification.showIconBadgeNotification(count)
 
   proc onShowCommunityMemberKickedNotification*(self: NotificationsManager, title: string, message: string, sectionId: string) {.slot.} =
@@ -267,6 +273,13 @@ QtObject:
       if self.settingsService.getNotificationSoundsEnabled():
         self.events.emit(SIGNAL_PLAY_NOTIFICATION_SOUND, Args())
 
+  proc stop*(self: NotificationsManager) =
+    ## The session ended: notifications still queued to this manager are not shown,
+    ## clicks on its bubbles are ignored and its unread badge is cleared.
+    if not self.osNotification.isNil:
+      self.osNotification.showIconBadgeNotification(0)
+    self.stopped = true
+
   proc processNotification(self: NotificationsManager, title: string, message: string, details: NotificationDetails) =
     ## This is the main method which need to be called to process an event according to the preferences set in the
     ## "Notifications & Sounds" panel of the "Settings" section.
@@ -274,6 +287,8 @@ QtObject:
     ## This method determines whether a notification need to be displayed or not, what notification to display, whether
     ## to display App or OS notification and/or add notification to Activity Center, what level of anonymous to apply,
     ## whether to play sound or not and so...
+    if self.stopped:
+      return
 
     # The flow used here follows these diagrams:
     # - https://drive.google.com/file/d/1L_9c2CMObcDcSuhVUu97s9-_26gtutES/view

@@ -652,14 +652,9 @@ Window {
                 item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
                 // MUST be assigned LAST: enabling triggers the one-shot auto-login
                 // attempt, which needs the key UID (and storage) already in place.
-                // e2e runs must never auto-login: the OS secure store is not
-                // per-data-dir, so a leftover developer credential could hijack a run.
-                const autoLoginSuppressed = localAppSettings.isAutoLoginSuppressed(localAppSettings.selectedProfileKeyUid)
-                if (localAppSettings.testEnvironment || autoLoginSuppressed)
-                    console.info("auto-login: disabled —",
-                                 localAppSettings.testEnvironment ? "test mode"
-                                                                  : "suppressed after a sign-out")
-                item.autoLoginEnabled = !localAppSettings.testEnvironment && !autoLoginSuppressed
+                // Decided (and logged) on the Nim side: e2e runs never auto-login, and
+                // neither does the login screen after a sign-out or a logout.
+                item.autoLoginEnabled = sessionView.allowsAutoLogin(localAppSettings.selectedProfileKeyUid)
                 splashScreenLoader.active = false
                 applicationWindow.contentLoaded()
                 Backpressure.debounce(applicationWindow, 750, () => {
