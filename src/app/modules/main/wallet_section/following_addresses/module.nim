@@ -51,7 +51,7 @@ method loadFollowingAddresses*(self: Module, userAddress: string) =
 
 method load*(self: Module) =
   try:
-    singletonInstance.engine.setRootContextProperty("walletSectionFollowingAddresses", self.viewVariant)
+    singletonInstance.setSessionContextProperty("walletSectionFollowingAddresses", self.viewVariant)
     self.controller.init()
     self.view.load()
   except Exception as e:

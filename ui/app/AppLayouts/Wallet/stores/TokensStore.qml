@@ -19,6 +19,9 @@ QtObject {
     readonly property var _networksModule: !!networksModule ? networksModule : null
     readonly property var _tokenSelectorModule: !!walletSectionTokenSelector ? walletSectionTokenSelector : null
 
+    // The logged-in profile's token preferences can be read and saved
+    readonly property bool tokenPreferencesAvailable: !!root._allTokensModule
+
     /* Creates a terminal token-selector picker model for the given kind
        (0=owned tokens: send and the swap pay side, 2=buy, 3=swap receive side —
        destination-chain catalog). Returns { model, id }: the producer keeps the

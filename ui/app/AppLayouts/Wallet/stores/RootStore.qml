@@ -47,6 +47,8 @@ QtObject {
 
     property string backButtonName: ""
     property var overview: walletSectionOverview
+    // The session's backend went away (sign-out): the store outlives it (singleton)
+    onOverviewChanged: if (!overview) resetSessionState()
     property bool balanceLoading: overview.balanceLoading
     readonly property var accounts: walletSectionAccounts.accounts
     property var appSettings: localAppSettings
@@ -111,6 +113,8 @@ QtObject {
     }
 
     readonly property var currentActivityFiltersStore: {
+        if (!root.overview || !root.overview.mixedcaseAddress)
+            return null
         const address = root.overview.mixedcaseAddress
         if (address in d.activityFiltersStoreDictionary) {
             return d.activityFiltersStoreDictionary[address]
@@ -185,6 +189,22 @@ QtObject {
                 root.loggedInUserAuthenticated(reason, password, pin, keyUid, "")
             }
         }
+    }
+
+    function resetSessionState() {
+        showSavedAddresses = false
+        showFollowingAddresses = false
+        selectedAddress = ""
+        lastCreatedSavedAddress = undefined
+        addingSavedAddress = false
+        deletingSavedAddress = false
+        backButtonName = ""
+        currentViewedHoldingTokenGroupKey = ""
+        currentViewedHoldingType = 0
+        currentViewedHoldingCommunityId = ""
+        for (const address in d.activityFiltersStoreDictionary)
+            d.activityFiltersStoreDictionary[address].destroy()
+        d.activityFiltersStoreDictionary = {}
     }
 
     function authenticateLoggedInUser(requestedBy) {

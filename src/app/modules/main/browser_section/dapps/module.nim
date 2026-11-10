@@ -69,7 +69,7 @@ method fetchDapps*(self: Module) =
     self.view.addDapp(item)
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("dappPermissionsModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("dappPermissionsModule", self.viewVariant)
   self.view.load()
 
 method isLoaded*(self: Module): bool =

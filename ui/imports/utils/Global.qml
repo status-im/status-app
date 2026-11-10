@@ -89,6 +89,8 @@ QtObject {
     signal playNotificationSound()
     signal playErrorSound()
 
+    signal signOutRequested() // asks for confirmation
+    signal signOutConfirmed()
     signal quitAppRequested()
 
     signal openTestnetPopup()

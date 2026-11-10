@@ -43,7 +43,7 @@ method delete*(self: Module) =
   self.view.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionOverview", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionOverview", self.viewVariant)
   self.controller.init()
   self.view.load()
 

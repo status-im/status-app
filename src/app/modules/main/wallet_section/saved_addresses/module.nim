@@ -47,7 +47,7 @@ method loadSavedAddresses*(self: Module) =
   )
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionSavedAddresses", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionSavedAddresses", self.viewVariant)
 
   self.loadSavedAddresses()
   self.controller.init()
