@@ -46,7 +46,7 @@ Item {
             }
 
             if (subsection === Constants.settingsSubsection.signout) {
-                Global.quitAppRequested()
+                Global.signOutRequested()
                 return
             }
 

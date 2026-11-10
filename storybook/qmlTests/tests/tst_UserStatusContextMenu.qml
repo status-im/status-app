@@ -53,6 +53,11 @@ Item {
     }
 
     SignalSpy {
+        id: signOutSpy
+        signalName: "signOutRequested"
+    }
+
+    SignalSpy {
         id: quitSpy
         signalName: "quitRequested"
     }
@@ -75,12 +80,14 @@ Item {
             shareProfileSpy.target = null
             settingsSpy.target = null
             statusSpy.target = null
+            signOutSpy.target = null
             quitSpy.target = null
             viewProfileSpy.clear()
             copyLinkSpy.clear()
             shareProfileSpy.clear()
             settingsSpy.clear()
             statusSpy.clear()
+            signOutSpy.clear()
             quitSpy.clear()
         }
 
@@ -250,15 +257,36 @@ Item {
             compare(findAction(menu, "userStatusMenuInactiveAction").checked, data.inactive)
         }
 
+        function test_signOutActionEmitsRequested() {
+            const menu = createMenu()
+            signOutSpy.target = menu
+            quitSpy.target = menu
+
+            triggerAction(menu, "userStatusSignOutAction")
+
+            tryCompare(signOutSpy, "count", 1)
+            compare(quitSpy.count, 0)
+            tryCompare(menu, "opened", false)
+        }
+
         function test_quitActionEmitsRequested() {
             const menu = createMenu()
+            signOutSpy.target = menu
             quitSpy.target = menu
-            quitSpy.clear()
 
+            compare(findAction(menu, "userStatusQuitAction").visible, true)
             triggerAction(menu, "userStatusQuitAction")
 
             tryCompare(quitSpy, "count", 1)
+            compare(signOutSpy.count, 0)
             tryCompare(menu, "opened", false)
+        }
+
+        function test_quitActionDesktopOnly() {
+            const menu = createMenu({ isMobile: true })
+
+            compare(findAction(menu, "userStatusQuitAction").visible, false)
+            compare(findAction(menu, "userStatusSignOutAction").visible, true)
         }
     }
 }
