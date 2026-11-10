@@ -496,7 +496,10 @@ proc setActiveSectionId*(self: Controller, sectionId: string) =
 
 proc sectionUnreadMessagesAndMentionsCount*(self: Controller, communityId: string, sectionIsMuted: bool):
     tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
-  return self.chatService.sectionUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
+  result = self.chatService.sectionUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
+  let threadCounts = self.messageService.sectionThreadsUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
+  result.unviewedMessagesCount += threadCounts.unviewedMessagesCount
+  result.unviewedMentionsCount += threadCounts.unviewedMentionsCount
 
 proc setCurrentUserStatus*(self: Controller, status: StatusType) =
   if(self.settingsService.saveSendStatusUpdates(status)):

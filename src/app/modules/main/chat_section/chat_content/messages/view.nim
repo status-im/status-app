@@ -22,6 +22,7 @@ QtObject:
       threadEditPending: bool
       threadDeletePending: bool
       threadDeleted: bool
+      threadFollowed: bool
       messageSearchOngoing: bool
       amIChatAdmin: bool
       isPinMessageAllowedForMembers: bool
@@ -179,15 +180,24 @@ QtObject:
     read = getCanEditThread
     notify = threadDetailsChanged
 
-  proc setThreadDetails*(self: View, name, parentChatName: string, canEdit: bool, deleted: bool = false) =
+  proc setThreadDetails*(self: View, name, parentChatName: string, canEdit: bool, deleted: bool = false,
+      followed: bool = false) =
     if self.threadName == name and self.threadParentChatName == parentChatName and
-        self.canEditThread == canEdit and self.threadDeleted == deleted:
+        self.canEditThread == canEdit and self.threadDeleted == deleted and
+        self.threadFollowed == followed:
       return
     self.threadName = name
     self.threadParentChatName = parentChatName
     self.canEditThread = canEdit
     self.threadDeleted = deleted
+    self.threadFollowed = followed
     self.threadDetailsChanged()
+
+  proc getThreadFollowed*(self: View): bool {.slot.} =
+    self.threadFollowed
+  QtProperty[bool] threadFollowed:
+    read = getThreadFollowed
+    notify = threadDetailsChanged
 
   proc getThreadDeleted*(self: View): bool {.slot.} =
     self.threadDeleted
@@ -208,6 +218,8 @@ QtObject:
   proc emitThreadDeleteFinished*(self: View, error: string) = self.threadDeleteFinished(error)
   proc deleteThread*(self: View) {.slot.} = self.delegate.deleteThread()
   proc deleteThreadById*(self: View, threadId: string) {.slot.} = self.delegate.deleteThreadById(threadId)
+  proc setThreadFollowedById*(self: View, threadId: string, followed: bool) {.slot.} =
+    self.delegate.setThreadFollowedById(threadId, followed)
   proc canManageThreadById*(self: View, threadId: string): bool {.slot.} = self.delegate.canManageThreadById(threadId)
 
   proc threadEditPendingChanged*(self: View) {.signal.}

@@ -175,6 +175,7 @@ Loader {
     property string threadOriginalMessageId: ""
     property string threadTitle: ""
     property bool threadDeleted: false
+    property bool threadFollowed: false
     property int threadMessagesCount: 0
     property int threadNotificationCount: 0
     property var threadParticipantsModel: null
@@ -1396,12 +1397,14 @@ Loader {
                             objectName: "threadSummaryContextMenu"
                             threadId: threadCard.threadId
                             isMobile: StatusQUtils.Utils.isMobile
-                            followed: false
+                            followed: root.threadFollowed
                             muted: false
                             pinned: false
                             pinEnabled: false
                             threadLinkToCopyShare: ""
                             property bool canManage: false
+                            onFollowRequested: root.messageStore.setThreadFollowedById(threadId, true)
+                            onUnfollowRequested: root.messageStore.setThreadFollowedById(threadId, false)
                             deleteEnabled: canManage && !root.threadDeleted && !(root.messageStore?.threadDeletePending ?? false)
                             editEnabled: deleteEnabled
                             onDeleteRequested: root.messageStore.deleteThreadById(threadId)
