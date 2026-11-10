@@ -2256,7 +2256,7 @@ method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string
   ## send). Buffered until the main view is loaded, mirroring the deep-link
   ## and browser-tab routes above; the buffer is last-wins, and a replaced
   ## share's cached image copies are released so they don't accumulate.
-  if not self.chatsLoaded:
+  if not self.isEverythingLoaded:
     if self.shareToDeliverPending:
       releaseCachedShareFiles(self.shareImagePathsToDeliver)
     self.shareToDeliverPending = true
@@ -2265,7 +2265,6 @@ method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string
     self.view.setShareFlowPending(true)
     return
   self.view.emitLaunchShareFlowSignal(text, $(%imagePaths))
-  # Cleared only after the picker took over, so the UI never sees a gap
   self.view.setShareFlowPending(false)
 
 method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =

@@ -3030,12 +3030,11 @@ Item {
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
     }
 
-    // Login popups wait until a share is sent or cancelled: the share picker
-    // takes over the screen and would otherwise dismiss or sit under them
     DeferredActionQueue {
         id: loginPopupsQueue
 
         blocked: appMain.rootStore.shareFlowPending || shareFlowLoader.active
+        busy: SQUtils.Utils.hasPopups(appMain.Overlay.overlay?.children)
     }
 
     ShareFlowLoader {

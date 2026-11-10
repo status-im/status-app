@@ -3,14 +3,16 @@ import QtQml
 import StatusQ.Core.Utils as SQUtils
 
 /**
-  * Runs scheduled actions right away, or holds them while `blocked` and runs
-  * them in scheduling order once unblocked. Scheduling a key that is already
-  * held replaces its action and keeps its place.
+  * Runs scheduled actions right away, or holds them while `blocked`.
+  * Once unblocked, held actions run one at a time in scheduling order, each
+  * waiting until `busy` is false. Scheduling a key that is already held
+  * replaces its action and keeps its place.
   */
 SQUtils.QObject {
     id: root
 
     property bool blocked: false
+    property bool busy: false
 
     readonly property int pendingCount: d.keys.length
 
@@ -24,7 +26,8 @@ SQUtils.QObject {
         d.actions[key] = action
     }
 
-    onBlockedChanged: d.flush()
+    onBlockedChanged: d.drain()
+    onBusyChanged: d.drain()
 
     QtObject {
         id: d
@@ -32,9 +35,8 @@ SQUtils.QObject {
         property var keys: []
         property var actions: ({})
 
-        // An action may block the queue again; the rest then stays held
-        function flush() {
-            while (!root.blocked && d.keys.length > 0) {
+        function drain() {
+            while (!root.blocked && !root.busy && d.keys.length > 0) {
                 const key = d.keys[0]
                 const action = d.actions[key]
                 delete d.actions[key]
