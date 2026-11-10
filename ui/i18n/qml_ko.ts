@@ -2271,6 +2271,17 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
 </context>
 <context>
+    <name>BackupSeedModalInstance</name>
+    <message>
+        <source>Recovery phrase permanently removed from Status application storage</source>
+        <translation type="unfinished">복구 구문이 Status 애플리케이션 저장소에서 영구적으로 삭제되었습니다</translation>
+    </message>
+    <message>
+        <source>You backed up your recovery phrase. Access it in Settings</source>
+        <translation type="unfinished">복구 구문을 백업했습니다. 설정에서 확인할 수 있습니다</translation>
+    </message>
+</context>
+<context>
     <name>BackupSeedphraseIntro</name>
     <message>
         <source>Your recovery phrase has been created</source>
@@ -2573,6 +2584,13 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Block</source>
         <translation>차단</translation>
+    </message>
+</context>
+<context>
+    <name>BlockContactConfirmationDialogInstance</name>
+    <message>
+        <source>%1 blocked</source>
+        <translation type="unfinished">%1 차단됨</translation>
     </message>
 </context>
 <context>
@@ -6319,6 +6337,13 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>DownloadImageDialogInstance</name>
+    <message>
+        <source>Please choose a directory</source>
+        <translation type="unfinished">디렉터리를 선택해 주세요</translation>
+    </message>
+</context>
+<context>
     <name>DownloadPage</name>
     <message>
         <source>Thanks for using Status</source>
@@ -6928,14 +6953,14 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EnableBiometricsPopupHandler</name>
-    <message>
-        <source>Biometric login and transaction authentication enabled for this device</source>
-        <translation>이 기기에 생체 인증 로그인 및 트랜잭션 인증이 활성화되었습니다</translation>
-    </message>
+    <name>EnableBiometricsPopupInstance</name>
     <message>
         <source>Biometric setup failed. Try again.</source>
-        <translation>생체 인증 설정 실패. 다시 시도하세요.</translation>
+        <translation type="unfinished">생체 인증 설정 실패. 다시 시도하세요.</translation>
+    </message>
+    <message>
+        <source>Biometric login and transaction authentication enabled for this device</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7025,6 +7050,13 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Continue</source>
         <translation>계속</translation>
+    </message>
+</context>
+<context>
+    <name>EnablePushNotificationsPopupInstance</name>
+    <message>
+        <source>Push notifications enabled</source>
+        <translation type="unfinished">푸시 알림이 활성화되었습니다</translation>
     </message>
 </context>
 <context>
@@ -8122,6 +8154,13 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
+    <name>FinaliseOwnershipPopupInstance</name>
+    <message>
+        <source>Sign transaction - update %1 smart contract</source>
+        <translation type="unfinished">트랜잭션 서명 - %1 스마트 계약 업데이트</translation>
+    </message>
+</context>
+<context>
     <name>FirstTokenReceivedPopup</name>
     <message>
         <source>Congratulations on receiving your first community asset: &lt;br&gt;&lt;b&gt;%1 %2 (%3) minted by %4&lt;/b&gt;. Community assets are assets that have been minted by a community. As these assets cannot be verified, always double check their origin and validity before interacting with them. If in doubt, ask a trusted member or admin of the relevant community.</source>
@@ -8474,13 +8513,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Popular assets on %1</source>
         <translation>%1에서 인기 있는 자산</translation>
-    </message>
-</context>
-<context>
-    <name>HandlersManager</name>
-    <message>
-        <source>Push notifications enabled</source>
-        <translation>푸시 알림이 활성화되었습니다</translation>
     </message>
 </context>
 <context>
@@ -9045,6 +9077,17 @@ app: %2</source>
     <message>
         <source>Format of the image you chose is not supported. Most probably you picked a file that is invalid, corrupted or has a wrong file extension. The requested file was: %1</source>
         <translation>선택한 이미지 형식이 지원되지 않습니다. 잘못되었거나 손상되었거나 잘못된 파일 확장자를 가진 파일을 선택했을 가능성이 높아요. 요청한 파일: %1</translation>
+    </message>
+</context>
+<context>
+    <name>ImageCropWorkflowInstance</name>
+    <message>
+        <source>Profile Picture</source>
+        <translation type="unfinished">프로필 사진</translation>
+    </message>
+    <message>
+        <source>Make this my Profile Pic</source>
+        <translation type="unfinished">내 프로필 사진으로 설정</translation>
     </message>
 </context>
 <context>
@@ -10474,6 +10517,25 @@ Status 프로필 손실, Status를 재시작할 수 없는 문제가 발생합�
     </message>
 </context>
 <context>
+    <name>LeaveCommunityPopupInstance</name>
+    <message>
+        <source>Are you sure want to leave &apos;%1&apos;?</source>
+        <translation type="unfinished">&apos;%1&apos;을(를) 나가시겠습니까?</translation>
+    </message>
+    <message>
+        <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
+        <translation type="unfinished">다시 멤버가 되려면 참여를 요청해야 합니다. 공개 키를 통해 커뮤니티에 참여했다면 나가기 전에 공개 키 사본을 보관해 두세요.</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">취소</translation>
+    </message>
+    <message>
+        <source>Leave %1</source>
+        <translation type="unfinished">%1 나가기</translation>
+    </message>
+</context>
+<context>
     <name>LeftTabView</name>
     <message>
         <source>Wallet</source>
@@ -11375,6 +11437,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MarkAsIDVerifiedDialogInstance</name>
+    <message>
+        <source>%1 marked as trusted</source>
+        <translation type="unfinished">%1이(가) 신뢰함으로 표시되었습니다</translation>
+    </message>
+</context>
+<context>
     <name>MarkAsUntrustedPopup</name>
     <message>
         <source>Mark as untrusted</source>
@@ -11395,6 +11464,17 @@ to load</source>
     <message>
         <source>Cancel</source>
         <translation>취소</translation>
+    </message>
+</context>
+<context>
+    <name>MarkAsUntrustedPopupInstance</name>
+    <message>
+        <source>%1 removed from contacts and marked as untrusted</source>
+        <translation type="unfinished">%1이(가) 연락처에서 삭제되고 신뢰할 수 없음으로 표시되었습니다</translation>
+    </message>
+    <message>
+        <source>%1 marked as untrusted</source>
+        <translation type="unfinished">%1이(가) 신뢰할 수 없음으로 표시되었습니다</translation>
     </message>
 </context>
 <context>
@@ -13711,80 +13791,8 @@ to load</source>
         <translation>이미지 저장 실패</translation>
     </message>
     <message>
-        <source>%1 removed from contacts and marked as untrusted</source>
-        <translation>%1이(가) 연락처에서 삭제되고 신뢰할 수 없음으로 표시되었습니다</translation>
-    </message>
-    <message>
-        <source>%1 marked as trusted</source>
-        <translation>%1이(가) 신뢰함으로 표시되었습니다</translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation>%1의 신뢰 표시가 제거되고 연락처에서 삭제되었으며 신뢰할 수 없음으로 표시되었습니다</translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed and marked as untrusted</source>
-        <translation>%1의 신뢰 표시가 제거되고 신뢰할 수 없음으로 표시되었습니다</translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed and removed from contacts</source>
-        <translation>%1의 신뢰 표시가 제거되고 연락처에서 삭제되었습니다</translation>
-    </message>
-    <message>
-        <source>Contact request accepted</source>
-        <translation>연락처 요청이 승인됨</translation>
-    </message>
-    <message>
-        <source>Contact request ignored</source>
-        <translation>연락처 요청 무시됨</translation>
-    </message>
-    <message>
-        <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation>복구 구문이 Status 애플리케이션 저장소에서 영구적으로 삭제되었습니다</translation>
-    </message>
-    <message>
-        <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation>복구 구문을 백업했습니다. 설정에서 확인할 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Profile Picture</source>
-        <translation>프로필 사진</translation>
-    </message>
-    <message>
-        <source>Make this my Profile Pic</source>
-        <translation>내 프로필 사진으로 설정</translation>
-    </message>
-    <message>
-        <source>%1 marked as untrusted</source>
-        <translation>%1이(가) 신뢰할 수 없음으로 표시되었습니다</translation>
-    </message>
-    <message>
-        <source>%1 unblocked</source>
-        <translation>%1 차단 해제됨</translation>
-    </message>
-    <message>
-        <source>%1 blocked</source>
-        <translation>%1 차단됨</translation>
-    </message>
-    <message>
-        <source>Please choose a directory</source>
-        <translation>디렉터리를 선택해 주세요</translation>
-    </message>
-    <message>
-        <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation>&apos;%1&apos;을(를) 나가시겠습니까?</translation>
-    </message>
-    <message>
-        <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation>다시 멤버가 되려면 참여를 요청해야 합니다. 공개 키를 통해 커뮤니티에 참여했다면 나가기 전에 공개 키 사본을 보관해 두세요.</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>취소</translation>
-    </message>
-    <message>
-        <source>Leave %1</source>
-        <translation>%1 나가기</translation>
     </message>
     <message>
         <source>Align with paired device</source>
@@ -13809,10 +13817,6 @@ to load</source>
     <message>
         <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
         <translation>이 메시지를 다시 보고 싶지 않다면 설정/지갑으로 이동하여 &quot;페어링된 기기의 키 쌍 마이그레이션 자동 적용&quot;을 꺼 주세요.</translation>
-    </message>
-    <message>
-        <source>Sign transaction - update %1 smart contract</source>
-        <translation>트랜잭션 서명 - %1 스마트 계약 업데이트</translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
@@ -14944,6 +14948,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>RemoveContactPopupInstance</name>
+    <message>
+        <source>%1 removed from contacts and marked as untrusted</source>
+        <translation type="unfinished">%1이(가) 연락처에서 삭제되고 신뢰할 수 없음으로 표시되었습니다</translation>
+    </message>
+</context>
+<context>
     <name>RemoveIDVerificationDialog</name>
     <message>
         <source>Remove trust mark</source>
@@ -14964,6 +14975,21 @@ to load</source>
     <message>
         <source>Cancel</source>
         <translation>취소</translation>
+    </message>
+</context>
+<context>
+    <name>RemoveIDVerificationDialogInstance</name>
+    <message>
+        <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
+        <translation type="unfinished">%1의 신뢰 표시가 제거되고 연락처에서 삭제되었으며 신뢰할 수 없음으로 표시되었습니다</translation>
+    </message>
+    <message>
+        <source>%1 trust mark removed and marked as untrusted</source>
+        <translation type="unfinished">%1의 신뢰 표시가 제거되고 신뢰할 수 없음으로 표시되었습니다</translation>
+    </message>
+    <message>
+        <source>%1 trust mark removed and removed from contacts</source>
+        <translation type="unfinished">%1의 신뢰 표시가 제거되고 연락처에서 삭제되었습니다</translation>
     </message>
 </context>
 <context>
@@ -15120,6 +15146,17 @@ to load</source>
     <message>
         <source>Accept</source>
         <translation>수락</translation>
+    </message>
+</context>
+<context>
+    <name>ReviewContactRequestPopupInstance</name>
+    <message>
+        <source>Contact request accepted</source>
+        <translation type="unfinished">연락처 요청이 승인됨</translation>
+    </message>
+    <message>
+        <source>Contact request ignored</source>
+        <translation type="unfinished">연락처 요청 무시됨</translation>
     </message>
 </context>
 <context>
@@ -15622,14 +15659,6 @@ to load</source>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation>전송하려는 토큰은 지원되지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>%1의 자산</translation>
-    </message>
-    <message>
-        <source>Popular assets</source>
-        <translation>인기 자산</translation>
     </message>
 </context>
 <context>
@@ -16316,6 +16345,17 @@ to load</source>
     <message>
         <source>Add %1</source>
         <translation>%1 추가</translation>
+    </message>
+</context>
+<context>
+    <name>SimpleSendModalInstance</name>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">%1의 자산</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">인기 자산</translation>
     </message>
 </context>
 <context>
@@ -19261,6 +19301,13 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Unblock</source>
         <translation>차단 해제</translation>
+    </message>
+</context>
+<context>
+    <name>UnblockContactConfirmationDialogInstance</name>
+    <message>
+        <source>%1 unblocked</source>
+        <translation type="unfinished">%1 차단 해제됨</translation>
     </message>
 </context>
 <context>
