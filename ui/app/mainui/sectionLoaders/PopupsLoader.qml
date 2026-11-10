@@ -326,8 +326,8 @@ Loader {
         function onOpenNewsMessagePopupRequested(notification, notificationId) {
             root.invoke(() => root.item.openNewsMessagePopup(notification, notificationId))
         }
-        function onQuitAppRequested() {
-            root.invoke(() => root.item.openQuitConfirmPopup())
+        function onSignOutRequested() {
+            root.invoke(() => root.item.openSignOutConfirmPopup())
         }
         function onOpenQRScannerRequested() {
             root.invoke(() => root.item.openQRScannerPopup())
