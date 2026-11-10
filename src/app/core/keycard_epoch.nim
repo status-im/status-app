@@ -1,0 +1,28 @@
+## Keycard signal epoch (process lifetime).
+##
+## Keycard signals come from status-keycard-qt in this process, synchronously with their
+## producer, so the C callback stamps them with this epoch on arrival. It advances once
+## the ended session's keycard operations are stopped; signals of an earlier epoch are
+## not delivered to the next session.
+
+import std/atomics
+
+import statusq_bridge
+
+const KeycardEpochSeparator* = '|'
+
+var keycardEpoch: Atomic[uint64]
+keycardEpoch.store(1)
+
+proc currentKeycardEpoch*(): uint64 =
+  keycardEpoch.load()
+
+proc advanceKeycardEpoch*() =
+  discard keycardEpoch.fetchAdd(1)
+
+proc deliverKeycardSignal*(receiver: pointer, signal: cstring) =
+  ## Called from the keycard C callback thread: queues "<epoch>|<signal>" to the
+  ## receiver's receiveStampedKeycardSignal slot. The payload is built on the C++ side:
+  ## the callback thread must not allocate Nim memory.
+  statusq_invoke_method_queued_tagged(receiver, "receiveStampedKeycardSignal", signal,
+    currentKeycardEpoch())

@@ -37,6 +37,8 @@ import app/global/log_cleanup
 import app/global/log_cleanup_tasks
 import app/boot/app_controller
 import app/boot/session_host
+import app/core/keycard_epoch
+import app/boot/session_view
 from app_service/service/keycardV2/service import receiveKeycardSignalV2
 
 featureGuard KEYCARD_ENABLED:
@@ -407,6 +409,8 @@ proc mainProc() =
   let isProductionQVariant = newQVariant(if defined(production): true else: false)
   let isExperimentalQVariant = newQVariant(isExperimental)
   let signalsManagerQVariant = newQVariant(statusFoundation.signalsManager)
+  let sessionView = newSessionView(proc(): AutoLoginPolicy = sessionHost.autoLoginPolicy)
+  let sessionViewQVariant = newQVariant(sessionView)
 
   QResource.registerResource(app.applicationDirPath & resourcesPath)
 
@@ -441,6 +445,7 @@ proc mainProc() =
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)
   singletonInstance.engine.setRootContextProperty("fleetSelectionEnabled", newQVariant(FLEET_SELECTION_ENABLED))
   singletonInstance.engine.setRootContextProperty("signals", signalsManagerQVariant)
+  singletonInstance.engine.setRootContextProperty("sessionView", sessionViewQVariant)
   singletonInstance.engine.setRootContextProperty("production", isProductionQVariant)
 
   # Ensure we have the featureFlags instance available from the start
@@ -468,6 +473,8 @@ proc mainProc() =
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
     signalsManagerQVariant.delete()
+    sessionViewQVariant.delete()
+    sessionView.delete()
 
     # Drain before the services are destroyed
     statusFoundation.threadpool.teardown()
