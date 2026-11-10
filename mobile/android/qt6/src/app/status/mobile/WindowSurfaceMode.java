@@ -138,11 +138,13 @@ final class WindowSurfaceMode {
         final View decor = window.getDecorView();
         if (decor.getParent() == null) return;
         sTaken = false;
-        for (Listener l : new ArrayList<>(sListeners)) l.beforeWindowReadd();
+        // one snapshot: listeners may unregister in beforeWindowReadd
+        final List<Listener> listeners = new ArrayList<>(sListeners);
+        for (Listener l : listeners) l.beforeWindowReadd();
         final WindowManager wm = activity.getWindowManager();
         wm.removeViewImmediate(decor);
         window.takeSurface(null);
         wm.addView(decor, window.getAttributes());
-        for (Listener l : new ArrayList<>(sListeners)) l.afterWindowReadd();
+        for (Listener l : listeners) l.afterWindowReadd();
     }
 }
