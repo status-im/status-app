@@ -51,7 +51,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("chatSectionChatContentInputArea", self.viewVariant)
+  singletonInstance.setSessionContextProperty("chatSectionChatContentInputArea", self.viewVariant)
 
   self.controller.init()
   self.view.load()

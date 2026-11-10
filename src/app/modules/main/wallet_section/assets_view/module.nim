@@ -122,7 +122,7 @@ proc onCommunityChanged(self: Module, id, name, image: string) =
   self.buildAndPush()
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionAssetsView", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionAssetsView", self.viewVariant)
 
   self.events.on(SIGNAL_WALLET_ACCOUNT_TOKENS_REBUILT) do(e: Args):
     self.buildAndPush()

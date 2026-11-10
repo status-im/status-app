@@ -302,3 +302,17 @@ suite "external_intake pending slot":
 
     check capture.browserTabs == @["https://example.com/one", "https://example.com/two"]
     check not intake.hasPending()
+
+  test "after the session ends, intakes wait for the next one":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+    intake.setNotReady()
+
+    intake.submit(urlIntake("status-app://c/community-id"))
+    check capture.deepLinks.len == 0
+    check intake.hasPending()
+
+    intake.setReady()
+    check capture.deepLinks == @["status-app://c/community-id"]
+    check not intake.hasPending()

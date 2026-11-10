@@ -69,7 +69,7 @@ proc switchAccount*(self: Module, accountIndex: int) =
   self.view.setData(accountItem)
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("browserSectionCurrentAccount", self.viewVariant)
+  singletonInstance.setSessionContextProperty("browserSectionCurrentAccount", self.viewVariant)
 
   self.events.on(SIGNAL_KEYPAIR_SYNCED) do(e: Args):
     let args = KeypairArgs(e)

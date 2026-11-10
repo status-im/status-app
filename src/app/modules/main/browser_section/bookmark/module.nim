@@ -34,7 +34,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("bookmarkModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("bookmarkModule", self.viewVariant)
   self.controller.init()
   self.view.load()
 

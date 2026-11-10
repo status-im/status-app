@@ -198,7 +198,7 @@ proc refreshNetworks*(self: Module) =
   self.view.setNetworkItems(fromNetworks, toNetworks)
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionSend", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionSend", self.viewVariant)
 
   # these connections should be part of the controller's init method
   self.events.on(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED) do(e:Args):

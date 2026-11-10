@@ -56,6 +56,10 @@ proc defaultCollectiblesCalls(): CollectiblesCalls =
 # controllers sharing one would receive and cancel each other's requests.
 var liveRequestIds {.threadvar.}: HashSet[int32]
 
+proc releaseAllRequestIds*() =
+  ## When an app session ends (logout): the next session's controllers start over.
+  liveRequestIds.clear()
+
 proc claimRequestId(requestId: int32) =
   if liveRequestIds.containsOrIncl(requestId):
     error "collectibles request id already used by a live controller", requestId

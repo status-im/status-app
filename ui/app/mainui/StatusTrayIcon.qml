@@ -12,6 +12,7 @@ SystemTrayIcon {
     property bool showRedDot: false
 
     signal activateApp()
+    signal quitRequested()
 
     visible: true
 
@@ -42,7 +43,7 @@ SystemTrayIcon {
 
         MenuItem {
             text: qsTr("Quit")
-            onTriggered: Qt.exit(0)
+            onTriggered: root.quitRequested()
         }
     }
 

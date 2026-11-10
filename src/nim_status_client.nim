@@ -38,7 +38,8 @@ import app/boot/app_controller
 import app/boot/session_host
 import app/core/keycard_epoch
 import app/boot/session_view
-from app_service/service/keycardV2/service import receiveKeycardSignalV2
+import app/boot/app_sessions
+import app/core/custom_urls/urls_manager
 
 featureGuard KEYCARD_ENABLED:
   import keycard_go
@@ -297,10 +298,6 @@ proc mainProc() =
   let openUri = determineOpenUri()
   let statusAppIconPath = determineStatusAppIconPath()
 
-  let statusFoundation = newStatusFoundation()
-  scheduleStartupLogCleanup(statusFoundation.threadpool, LOGDIR, STATUSGODIR,
-    logCleanupProcessStartedAt)
-
   # setup (a smaller) QSG atlas size on mobile
   when defined(ios) or defined(android):
     const MobileQsgAtlasSize = "1024"
@@ -371,7 +368,9 @@ proc mainProc() =
   # init url manager before app controller; the manager also sweeps stale
   # extension-made image copies from the App Group share-intake cache (keeping
   # the copies the still-pending slot payload references).
-  statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri,
+  # Process lifetime: an intake that arrives while no session is ready (signed out)
+  # waits for the next one.
+  let urlsManager = newUrlsManager(nil, urlSchemeEvent, singleInstance, openUri,
     pendingIntakeSlot, $statusq_shareintake_cache_dir())
 
   when defined(ios):
@@ -387,25 +386,22 @@ proc mainProc() =
         pauseServices: backend_pausable_services.pauseServices,
         resumeServices: backend_pausable_services.resumeServices))
 
-  let appController = newAppController(statusFoundation)
-
   let sessionHost = newSessionHost()
   let signalEpochRead = sessionHost.readBackendSignalEpoch()
   if signalEpochRead.isErr:
     # SessionHost then adopts the epoch of the first stamped signal.
     error "reading the backend signal epoch failed", error = signalEpochRead.error
-  sessionHost.attachSession(SessionReceivers(
-    signal: proc(signal: string) = statusFoundation.signalsManager.processSignal(signal),
-    keycardSignal: proc(signal: string) =
-      featureGuard KEYCARD_ENABLED:
-        appController.keycardServiceV2.receiveKeycardSignalV2(signal)
-  ))
+  let sessions = newAppSessions(sessionHost, urlsManager)
+  sessions.startFirstSession()
+  scheduleStartupLogCleanup(sessions.current.foundation.threadpool, LOGDIR, STATUSGODIR,
+    logCleanupProcessStartedAt)
 
   let isProductionQVariant = newQVariant(if defined(production): true else: false)
   let isExperimentalQVariant = newQVariant(isExperimental)
-  let signalsManagerQVariant = newQVariant(statusFoundation.signalsManager)
-  let sessionView = newSessionView(proc(): AutoLoginPolicy = sessionHost.autoLoginPolicy)
-  let sessionViewQVariant = newQVariant(sessionView)
+  let sessionViewQVariant = newQVariant(sessions.view)
+  # Process-lifetime: the window uses them also while no session is loaded.
+  let localAppSettingsQVariant = newQVariant(singletonInstance.localAppSettings)
+  let globalUtilsQVariant = newQVariant(singletonInstance.utils)
 
   QResource.registerResource(app.applicationDirPath & resourcesPath)
 
@@ -439,8 +435,9 @@ proc mainProc() =
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)
   singletonInstance.engine.setRootContextProperty("fleetSelectionEnabled", newQVariant(FLEET_SELECTION_ENABLED))
-  singletonInstance.engine.setRootContextProperty("signals", signalsManagerQVariant)
   singletonInstance.engine.setRootContextProperty("sessionView", sessionViewQVariant)
+  singletonInstance.engine.setRootContextProperty("localAppSettings", localAppSettingsQVariant)
+  singletonInstance.engine.setRootContextProperty("globalUtils", globalUtilsQVariant)
   singletonInstance.engine.setRootContextProperty("production", isProductionQVariant)
 
   # Ensure we have the featureFlags instance available from the start
@@ -467,15 +464,16 @@ proc mainProc() =
     sessionHost.detachSession()
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
-    signalsManagerQVariant.delete()
     sessionViewQVariant.delete()
-    sessionView.delete()
+    localAppSettingsQVariant.delete()
+    globalUtilsQVariant.delete()
 
-    # Drain before the services are destroyed
-    statusFoundation.threadpool.teardown()
-
-    appController.delete()
-    statusFoundation.delete()
+    # The QML engine (and the process singletons) go first, then the session's objects
+    # it showed: the session drains its work, then logs the backend out unless an ended
+    # session already did.
+    singletonInstance.delete
+    sessions.delete()
+    urlsManager.delete()
     when defined(ios):
       servicesPauseBridge.delete()
     sessionHost.delete()
@@ -499,7 +497,7 @@ proc mainProc() =
   info "app info", version=APP_VERSION, commit=GIT_COMMIT, currentDateTime=now()
 
   info "starting application controller..."
-  appController.start()
+  sessions.runFirstSession()
 
   info "starting application..."
   app.exec()

@@ -40,7 +40,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("sharedUrlsModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("sharedUrlsModule", self.viewVariant)
   self.view.load()
 
 method isLoaded*(self: Module): bool =

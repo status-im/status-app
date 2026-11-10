@@ -127,7 +127,7 @@ method refreshCollectiblesSelectorModels*(self: Module) =
   self.pushSelectorSource()
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionAllCollectibles", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionAllCollectibles", self.viewVariant)
 
   self.events.on(SIGNAL_COLLECTIBLE_PREFERENCES_UPDATED) do(e: Args):
     let args = ResultArgs(e)

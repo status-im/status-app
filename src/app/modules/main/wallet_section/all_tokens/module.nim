@@ -63,7 +63,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionAllTokens", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionAllTokens", self.viewVariant)
 
   # Passing on the events for changes in model to abstract model
   self.events.on(SIGNAL_TOKENS_LIST_UPDATED) do(e: Args):

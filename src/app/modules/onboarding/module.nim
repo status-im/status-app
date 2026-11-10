@@ -1,4 +1,4 @@
-import nimqml, chronicles, json, strutils, sequtils
+import nimqml, chronicles, json, strutils, sequtils, results
 
 import io_interface, states
 import view, controller
@@ -119,7 +119,7 @@ method cleanupAfterMainTransition*[T](self: Module[T]) =
   if self.view.isNil:
     return
 
-  singletonInstance.engine.setRootContextProperty("onboardingModule", newQVariant())
+  singletonInstance.setSessionContextProperty("onboardingModule", newQVariant())
   if not self.keycardModule.isNil:
     self.keycardModule.delete
     self.keycardModule = nil
@@ -133,14 +133,13 @@ method cleanupAfterMainTransition*[T](self: Module[T]) =
 method onMainFailedToLoad*[T](self: Module[T]) =
   self.view.accountLoginError("Failed to load main module, please restart the app and try again.", wrongPassword = false)
 
-proc buildLoginAccountsModel[T](self: Module[T]): bool =
+proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
   var openedAccounts: seq[AccountDto]
-  var accountsLoadFailed = false
   try:
     openedAccounts = self.controller.getOpenedAccounts()
   except Exception as e:
     error "failed to load opened accounts", msg = e.msg
-    accountsLoadFailed = true
+    return err(e.msg)
 
   if openedAccounts.len > 0:
     var items: seq[login_acc_item.Item]
@@ -158,10 +157,10 @@ proc buildLoginAccountsModel[T](self: Module[T]): bool =
       ))
 
     self.view.setLoginAccountsModelItems(items)
-  return accountsLoadFailed
+  ok()
 
-method load*[T](self: Module[T]) =
-  singletonInstance.engine.setRootContextProperty("onboardingModule", self.viewVariant)
+method load*[T](self: Module[T]): Result[void, string] =
+  singletonInstance.setSessionContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()
 
   let loggedInAccount = self.accountsService.fetchLoggedInAccount()
@@ -169,14 +168,15 @@ method load*[T](self: Module[T]) =
   if self.resumeLogin:
     self.controller.setLoggedInAccount(loggedInAccount)
     self.finishAppLoading2()
-    return
+    return ok()
 
-  let accountsLoadFailed = self.buildLoginAccountsModel()
+  let accountsLoaded = self.buildLoginAccountsModel()
 
   self.delegate.onboardingDidLoad()
-  if accountsLoadFailed:
+  if accountsLoaded.isErr:
     self.view.accountLoginError("Failed to load accounts. Please restart the app and try again.",
       wrongPassword = false)
+  accountsLoaded
 
 method loginKeycard*[T](self: Module[T], keyUid: string, pin: string, pairingPassword: string) =
   self.controller.loginKeycard(keyUid, pin, pairingPassword)

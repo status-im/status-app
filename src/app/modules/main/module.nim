@@ -316,6 +316,10 @@ method delete*[T](self: Module[T]) =
   self.appSearchModule.delete
   self.networkConnectionModule.delete
   self.sharedUrlsModule.delete
+  self.marketModule.delete
+  if not self.keycardManagementModule.isNil:
+    self.keycardManagementModule.delete
+    self.keycardManagementModule = nil
   if not self.authenticationModule.isNil:
     self.authenticationModule.delete
   if not self.signingModule.isNil:
@@ -696,7 +700,7 @@ method load*[T](
   messageService: message_service.Service,
   mailserversService: mailservers_service.Service,
 ) =
-  singletonInstance.engine.setRootContextProperty("mainModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("mainModule", self.viewVariant)
   self.controller.init()
   self.view.load()
   self.connectForNotificationsOnly()
