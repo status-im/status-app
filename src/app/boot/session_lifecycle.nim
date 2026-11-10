@@ -74,6 +74,19 @@ type
     drainDeadlineMs: int64
     drainStartedMs: int64
 
+proc autoLoginBlockedBy*(policy: AutoLoginPolicy, testEnvironment,
+    suppressedAfterSignOut: bool): string =
+  ## Why the login screen may not attempt a silent login with a stored credential,
+  ## or "" when it may. Test runs never do: the OS secure store is not per data dir.
+  ## A sign-out suppresses it until the next explicit login, also across restarts.
+  if testEnvironment:
+    return "test mode"
+  if policy == AutoLoginPolicy.Disabled:
+    return "after a logout"
+  if suppressedAfterSignOut:
+    return "suppressed after a sign-out"
+  ""
+
 proc newSessionLifecycle*(ops: SessionOps, drainDeadlineMs: int64): SessionLifecycle =
   SessionLifecycle(ops: ops, state: SessionState.Active, drainDeadlineMs: drainDeadlineMs)
 
