@@ -33,6 +33,12 @@ method parseMessageUrl*(self: AccessInterface, url: string): MessageUrlDataDto {
 method parseSharedUrl*(self: AccessInterface, url: string): UrlDataDto {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method createThreadUrl*(self: AccessInterface, chatId: string, threadId: string): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method parseThreadUrl*(self: AccessInterface, url: string): ThreadUrlDataDto {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 # This way (using concepts) is used only for the modules managed by AppController
 type
   DelegateInterface* = concept c

@@ -46,16 +46,23 @@ suite "share send - destinations":
     check(dests[^1].chatId == "chat-" & $(SHARE_MAX_DESTINATIONS - 1))
 
 suite "share send - unfurlable urls":
-  test "keeps allowed urls, skips ask/forbidden/unsupported and status message links":
+  test "keeps allowed thread previews, skips ask/forbidden/unsupported and message links":
     let plan = UrlsUnfurlingPlan(urls: @[
       meta("https://a.example", UrlUnfurlingAllowed),
       meta("https://b.example", UrlUnfurlingAskUser),
       meta("https://c.example", UrlUnfurlingForbiddenBySettings),
       meta("https://d.example", UrlUnfurlingNotSupported),
       meta("https://status.app/m/abc", UrlUnfurlingAllowed),
+      meta("https://status.app/g/?a2=chat&thread-id=thread", UrlUnfurlingAllowed, status = true),
+      meta("http://status.app/p/?thread-id=thread", UrlUnfurlingAllowed, status = true),
+      meta("status-app://cc/channel?thread-id=thread#community", UrlUnfurlingAllowed, status = true),
       meta("https://status.app/c/xyz", UrlUnfurlingAllowed, status = true),
+      meta("https://status.app/cc/channel#community", UrlUnfurlingAllowed, status = true),
     ])
-    check(unfurlableUrls(plan, limit = 5) == @["https://a.example", "https://status.app/c/xyz"])
+    check(unfurlableUrls(plan, limit = 8) == @["https://a.example",
+      "https://status.app/g/?a2=chat&thread-id=thread", "http://status.app/p/?thread-id=thread",
+      "status-app://cc/channel?thread-id=thread#community", "https://status.app/c/xyz",
+      "https://status.app/cc/channel#community"])
 
   test "respects the limit":
     let plan = UrlsUnfurlingPlan(urls: @[

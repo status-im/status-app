@@ -54,6 +54,10 @@ LinkPreviewCard {
     linkData {
         title: standardPreview ? standardPreview.title : ""
         description: standardPreview ? standardPreview.description : ""
+        parentName: root.previewType === Constants.LinkPreviewType.StatusThread && standardPreview ? standardPreview.threadParentName || "" : ""
+        threadAccessible: root.previewType === Constants.LinkPreviewType.StatusThread && standardPreview ? standardPreview.threadAccessible === true : false
+        isDirectThread: root.previewType === Constants.LinkPreviewType.StatusThread && /^(https?:\/\/status\.app\/|status-app:\/\/)p\//.test(root.url)
+        isGroupThread: root.previewType === Constants.LinkPreviewType.StatusThread && /^(https?:\/\/status\.app\/|status-app:\/\/)g\//.test(root.url)
         domain: standardPreview ? standardPreview.hostname : "" //TODO: Use domainName when available
         thumbnail: standardPreviewThumbnail ? (standardPreviewThumbnail.url || standardPreviewThumbnail.dataUri) || "" : ""
         image: "" //TODO: usefavicon when available

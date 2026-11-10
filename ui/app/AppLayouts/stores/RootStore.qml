@@ -499,6 +499,7 @@ QtObject {
     property string currentCurrency: walletSection.currentCurrency
 
     signal showToastAccountAdded(string name)
+    signal showToastThreadLinkFailed()
     signal showToastAccountRemoved(string name)
     signal showToastKeypairRenamed(string oldName, string newName)
     signal showNetworkEndpointUpdated(string name, bool isTest)
@@ -548,6 +549,10 @@ QtObject {
 
         function onShowToastAccountAdded(name: string) {
             root.showToastAccountAdded(name)
+        }
+
+        function onShowToastThreadLinkFailed() {
+            root.showToastThreadLinkFailed()
         }
 
         function onShowToastAccountRemoved(name: string) {

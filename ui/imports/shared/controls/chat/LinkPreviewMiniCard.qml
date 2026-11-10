@@ -74,22 +74,23 @@ CalloutCard {
         State {
             name: "loaded"
             when: root.previewState === LinkPreviewMiniCard.State.Loaded &&
-                  root.type === Constants.LinkPreviewType.Standard &&
+                  (root.type === Constants.LinkPreviewType.Standard || root.type === Constants.LinkPreviewType.StatusThread) &&
                   root.linkData.type === Constants.StandardLinkPreviewType.Link
             PropertyChanges { 
                 target: root; visible: true; dashedBorder: false; borderWidth: 0;
                 borderColor: backgroundColor;
             }
             PropertyChanges { target: loadingAnimation; visible: false; }
-            PropertyChanges { target: titleText; text: root.linkData.title; color: Theme.palette.directColor1 }
-            PropertyChanges { target: subtitleText; visible: true; text: root.linkData.domain; }
+            PropertyChanges { target: titleText; text: root.type === Constants.LinkPreviewType.StatusThread && !root.linkData.threadAccessible ? qsTr("Unknown thread name") : root.linkData.title; textFormat: root.type === Constants.LinkPreviewType.StatusThread ? Text.PlainText : Text.AutoText; color: Theme.palette.directColor1 }
+            PropertyChanges { target: subtitleText; visible: true; text: root.type === Constants.LinkPreviewType.StatusThread ? (root.linkData.threadAccessible ? root.linkData.description : qsTr("Unknown")) : root.linkData.domain; textFormat: Text.PlainText; }
             PropertyChanges { target: reloadButton; visible: false; }
             PropertyChanges { 
                 target: favIcon
                 visible: true
                 name: root.linkData.title
-                asset.isLetterIdenticon: !root.linkData.image
-                asset.color: Theme.palette.baseColor2
+                asset.name: root.type === Constants.LinkPreviewType.StatusThread ? "thread" : root.linkData.image
+                asset.isLetterIdenticon: root.type !== Constants.LinkPreviewType.StatusThread && !root.linkData.image
+                asset.color: root.type === Constants.LinkPreviewType.StatusThread ? Theme.palette.primaryColor1 : Theme.palette.baseColor2
             }
         },
         State {
@@ -171,6 +172,8 @@ CalloutCard {
                 Layout.preferredWidth: 16
                 Layout.preferredHeight: 16
                 visible: false
+                asset.width: width
+                asset.height: height
                 asset.letterSize: asset.charactersLen == 1 ? 10 : 7
             }
             ColumnLayout {
