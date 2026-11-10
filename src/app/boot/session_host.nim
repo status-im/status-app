@@ -209,11 +209,13 @@ QtObject:
     let dispose = ops.dispose
     ops.dispose = proc() =
       # The keycard library queues its events through the GUI event loop before they
-      # reach the callback that stamps them. The GUI thread delivers posted events of
-      # the same priority in posting order, so its events queued before the keycard was
-      # stopped (with stopActivity) were delivered by now - ahead of the backend logout
-      # response that led here, posted later - and dropped as the ended session's.
-      # Advancing only now keeps them from being stamped with the next session's epoch.
+      # reach the callback that stamps them. Its Stop (in stopActivity) returns only once
+      # card detection has stopped, so every event of the ended session was queued by
+      # then (an Android NFC intent included). The GUI thread delivers posted events of
+      # the same priority in posting order, so they were delivered by now - ahead of the
+      # backend logout response that led here, posted later - and dropped as the ended
+      # session's. Advancing only now keeps them from being stamped with the next
+      # session's epoch.
       advanceKeycardEpoch()
       dispose()
     if ops.startBackendLogout.isNil:
