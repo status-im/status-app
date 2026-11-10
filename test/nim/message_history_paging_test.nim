@@ -58,3 +58,27 @@ suite "message history paging":
     check(not cursor.isPending())
     check(cursor.getValue() == "cursor-2")
     check(not cursor.isMostRecent())
+
+suite "pinned messages cursor after leave":
+  test "resetting the message cursor allows pinned messages to be fetched again":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    const chatId = "0xcommunity-general"
+    service.msgCursor[chatId] = initMessageCursor("msg-cursor", pending = false, mostRecent = true)
+    service.pinnedMsgCursor[chatId] = initMessageCursor("pin-cursor", pending = false, mostRecent = true)
+
+    service.resetMessageCursor(chatId)
+
+    check not service.msgCursor.hasKey(chatId)
+    check not service.pinnedMsgCursor.hasKey(chatId)
+
+  test "resetting the message cursor drops a stale pinned cursor even when message cursor is absent":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    const chatId = "0xcommunity-general"
+    service.pinnedMsgCursor[chatId] = initMessageCursor("pin-cursor", pending = false, mostRecent = true)
+
+    service.resetMessageCursor(chatId)
+
+    check not service.pinnedMsgCursor.hasKey(chatId)
+
