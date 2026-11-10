@@ -128,6 +128,8 @@ StatusDropdown {
             }
             NetworkSelectorView {
                 Layout.fillWidth: true
+                // shrinks and scrolls when the window cuts the popup short
+                Layout.fillHeight: true
 
                 model: root.flatNetworks
                 // copy: the view mutates its selection array in place, so it
@@ -152,6 +154,7 @@ StatusDropdown {
                 visible: root.showManageNetworksButton
             }
             StatusButton {
+                objectName: "manageNetworksButton"
                 visible: root.showManageNetworksButton
                 Layout.fillWidth: true
 
