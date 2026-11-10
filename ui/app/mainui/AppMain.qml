@@ -2836,6 +2836,7 @@ Item {
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
                 onSettingsRequested: d.openSettingsRoot()
+                onSignOutRequested: Global.signOutRequested()
                 onQuitRequested: Global.quitAppRequested()
 
                 onSupportBotChatRequested: {

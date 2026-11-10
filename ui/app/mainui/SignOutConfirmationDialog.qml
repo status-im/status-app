@@ -22,7 +22,7 @@ ConfirmationDialog {
     confirmButtonObjectName: "signOutConfirmation"
     headerSettings.title: qsTr("Sign out")
     confirmationText: qsTr("Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.")
-    confirmButtonLabel: qsTr("Sign out & Quit")
+    confirmButtonLabel: qsTr("Sign out")
 
     onConfirmButtonClicked: {
         // Sign-out clears the auto-login credential first (startup trusts credential
@@ -43,8 +43,8 @@ ConfirmationDialog {
             // sign-out can then never be undone by a backend that becomes reachable
             // before the next launch; the next explicit login lifts the suppression and
             // reconciles the stored credential. The setter flushes to disk and reports
-            // whether the marker verifiably persisted (mobile logout hard-exits right
-            // after this handler): when NEITHER the deletion NOR the suppression can be
+            // whether the marker verifiably persisted (the app may be killed on the
+            // login screen that follows): when NEITHER the deletion NOR the suppression can be
             // confirmed, keep the session so the user can retry.
             const suppressed = root.privacyStore.setAutoLoginSuppressed(root.keyUid, true)
             if (!suppressed) {

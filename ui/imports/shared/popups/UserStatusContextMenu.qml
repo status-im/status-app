@@ -32,6 +32,7 @@ StatusDropdown {
     signal shareOwnProfileRequested
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
+    signal signOutRequested
     signal quitRequested
 
     implicitWidth: 400
@@ -161,9 +162,22 @@ StatusDropdown {
 
         ActionWrapper {
             action: StatusAction {
-                objectName: "userStatusQuitAction"
-                text: qsTr("Sign out & Quit")
+                objectName: "userStatusSignOutAction"
+                text: qsTr("Sign out")
                 icon.name: "logout"
+                onTriggered: {
+                    root.signOutRequested()
+                    root.close()
+                }
+            }
+        }
+
+        ActionWrapper {
+            visible: !root.isMobile
+            action: StatusAction {
+                objectName: "userStatusQuitAction"
+                text: qsTr("Quit")
+                icon.name: "close-circle"
                 onTriggered: {
                     root.quitRequested()
                     root.close()

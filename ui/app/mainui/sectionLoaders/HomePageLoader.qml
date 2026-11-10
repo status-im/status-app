@@ -121,7 +121,7 @@ StatusSectionLoader {
                     return
                 }
                 if (itemId == Constants.settingsSubsection.signout) {
-                    Global.quitAppRequested()
+                    Global.signOutRequested()
                     return
                 }
             }
