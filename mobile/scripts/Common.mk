@@ -57,8 +57,6 @@ TARGET := $(BIN_PATH)/$(TARGET_NAME)
 # src files & obj files
 STATUS_DESKTOP_NIM_FILES := $(shell find $(STATUS_DESKTOP)/src -type f \( -iname '*.nim' -o -iname '*.nims' \))
 STATUS_DESKTOP_UI_FILES := $(shell find $(STATUS_DESKTOP)/ui -type f \( -iname 'qmldir' -o -iname '*.qml' -o -iname '*.qrc' \) -not -iname 'resources.qrc' -not -path '$(STATUS_DESKTOP)/ui/StatusQ/*')
-# The Nim libraries' QML modules are bundled into the same resources.
-STATUS_DESKTOP_UI_FILES += $(shell find $(STATUS_DESKTOP)/vendor/nim-qtcamera/qml $(STATUS_DESKTOP)/vendor/nim-qrscan/qml -type f)
 # Include CMakeLists.txt (mobilewebview pin) and prune build/ (generated sources).
 STATUS_Q_FILES := $(shell find $(STATUSQ) \( -path '$(STATUSQ)/build' \) -prune -o -type f \( -iname '*.cpp' -o -iname '*.h' -o -iname '*.mm' -o -iname 'CMakeLists.txt' \) -print)
 # Prune build/ (generated .qrc there are deleted by clean-statusq mid-build).
@@ -85,7 +83,6 @@ STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh
 STATUS_GO_SCRIPT := $(SCRIPTS_PATH)/buildStatusGo.sh
 OPENSSL_SCRIPT := $(SCRIPTS_PATH)/buildOpenSSL.sh
 QRCODEGEN_SCRIPT := $(SCRIPTS_PATH)/buildQRCodeGen.sh
-ZXING_SCRIPT := $(SCRIPTS_PATH)/buildZXing.sh
 STATUS_KEYCARD_QT_SCRIPT := $(SCRIPTS_PATH)/buildStatusKeycardQt.sh
 NIM_STATUS_CLIENT_SCRIPT := $(SCRIPTS_PATH)/buildNimStatusClient.sh
 APP_SCRIPT := $(SCRIPTS_PATH)/buildApp.sh
@@ -101,10 +98,4 @@ NIM_STATUS_CLIENT_LIB := $(LIB_PATH)/libnim_status_client$(LIB_EXT)
 STATUS_DESKTOP_RCC := $(STATUS_DESKTOP)/ui/resources.qrc
 STATUS_GO_STUB_LIB := $(LIB_PATH)/libstatus_stub$(LIB_EXT)
 STATUS_GO_SERVICE_LIB := $(LIB_PATH)/libstatus_service$(LIB_EXT)
-# nim-qrscan's ZXing (scripts/buildZXing.sh). iOS: a copy in LIB_PATH for
-# Status.pro's -lZXing; Android: linked into libnim_status_client.so in place.
-ifeq ($(OS), ios)
-ZXING_LIB := $(LIB_PATH)/libZXing.a
-else
-ZXING_LIB := $(STATUS_DESKTOP)/vendor/nim-qrscan/build/zxing-android-$(ANDROID_ABI)/core/libZXing.a
-endif
+

@@ -3,8 +3,7 @@ ARG QT_MODULES="qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtweb
 ARG LINUXDEPLOYQT_VERSION="20250615-0393b84"
 ARG PCSCLITE_VERSION="2.2.3"
 ARG PCSCLITE_SHA256="6e0205a47ec0dd10c000965ee88e08e60c2f7f3ce7280ce0e624915821ea2402"
-ARG NIM_VERSION="2.2.10"
-ARG NIMBLE_VERSION="0.26.1"
+ARG NIMBLE_VERSION="0.26.2"
 ARG CCID_VERSION="1.7.0"
 ARG CCID_SHA256="4abe76010a72944e02e8d5d4d60ba665f941891eee2a35f77fd35cebc095e14b"
 
@@ -64,7 +63,7 @@ RUN cd builddir && ninja && ninja install
 # Build Image ------------------------------------------------------------------
 FROM ubuntu:22.04
 
-ARG QT_VERSION LINUXDEPLOYQT_VERSION PCSCLITE_VERSION NIM_VERSION NIMBLE_VERSION
+ARG QT_VERSION LINUXDEPLOYQT_VERSION PCSCLITE_VERSION NIMBLE_VERSION
 
 # Adapted from a12e/docker-qt by Aurélien Brooke
 
@@ -189,13 +188,10 @@ RUN curl -s https://nixos.org/releases/nix/nix-2.24.11/install | sh -s -- --no-d
 # for nix-shell to work
 ENV PATH="/home/jenkins/.nix-profile/bin:${PATH}"
 
-# Nim
-RUN curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y \
- && /home/jenkins/.nimble/bin/choosenim ${NIM_VERSION}
-ENV PATH="/home/jenkins/.nimble/bin:${PATH}"
+USER root
 
-# The Nimble bundled with Nim installs nim-sds without library/, so libsds
-# cannot be built with it.
+# nimble >= 0.26.2 for `setup --localdeps` and nimble.lock. nimble installs
+# the Nim compiler nim_status_client.nimble pins, so there is no system Nim.
 RUN set -eu; \
     case "$(dpkg --print-architecture)" in \
     amd64) NIMBLE_ARCH="linux_x64" ;; \
@@ -204,17 +200,9 @@ RUN set -eu; \
     esac; \
     curl -sSfL -o /tmp/nimble.tar.gz \
       "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-${NIMBLE_ARCH}.tar.gz" \
- && tar -xzf /tmp/nimble.tar.gz -C /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin \
+ && tar -xzf /tmp/nimble.tar.gz -C /usr/local/bin nimble \
+ && chmod 755 /usr/local/bin/nimble \
  && rm /tmp/nimble.tar.gz
-
-# Switch to root to create system-wide symlinks for Nim tools
-USER root
-
-RUN ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nim /usr/local/bin/nim \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/nimble /usr/local/bin/nimble \
- && ln -sf /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/choosenim /usr/local/bin/choosenim \
- && chmod 755 /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin/* \
- && chown -R root:root /home/jenkins/.choosenim/toolchains/nim-${NIM_VERSION}/bin
 
 USER jenkins
 

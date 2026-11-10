@@ -24,7 +24,29 @@ function check_version {
 
 function install_build_dependencies {
   echo "Install build dependencies"
-  brew install pkg-config libtool jq node@22 yarn protobuf aqtinstall xcbeautify nim
+  brew install pkg-config libtool jq node@22 yarn protobuf aqtinstall xcbeautify
+}
+
+# nimble goes into a directory with no `nim` beside it: a nim there would shadow the pin.
+NIMBLE_VERSION="0.26.2"
+NIMBLE_SHA256_arm64="dd6090ace64197b0e81b7be3c7926277a03788d3ce83d795642a69f94ab39291"
+NIMBLE_SHA256_x86_64="3f48b6a0567672df4893830c372452046e33788b268da9e29b0c2224c934405d"
+
+function install_nimble {
+  echo "Installing nimble ${NIMBLE_VERSION}"
+  local asset sha
+  if [[ "$(uname -m)" == "arm64" ]]; then
+    asset="nimble-macosx_aarch64.tar.gz"; sha="${NIMBLE_SHA256_arm64}"
+  else
+    asset="nimble-macosx_x64.tar.gz"; sha="${NIMBLE_SHA256_x86_64}"
+  fi
+  curl -fsSLo /tmp/nimble.tar.gz \
+    "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/${asset}"
+  echo "${sha}  /tmp/nimble.tar.gz" | shasum -a 256 -c
+  mkdir -p "${HOME}/.local/bin"
+  tar -xzf /tmp/nimble.tar.gz -C "${HOME}/.local/bin"
+  rm -f /tmp/nimble.tar.gz
+  chmod 755 "${HOME}/.local/bin/nimble"
 }
 
 function install_qt {
@@ -79,7 +101,7 @@ SUCCESS!
 
 Before you attempt to build status-desktop you'll need a few environment variables set:
 
-export PATH=\$QTDIR:\$QTDIR/bin:\$PATH
+export PATH=\$QTDIR:\$QTDIR/bin:\$HOME/.local/bin:\$PATH
 export CMAKE_PREFIX_PATH=${CMAKE_INSTALL_DIR}
 "
   echo $msg
@@ -88,6 +110,7 @@ export CMAKE_PREFIX_PATH=${CMAKE_INSTALL_DIR}
 if [ "$0" = "$BASH_SOURCE" ]; then
     check_version
     install_build_dependencies
+    install_nimble
     install_cmake
     install_qt
     install_golang
