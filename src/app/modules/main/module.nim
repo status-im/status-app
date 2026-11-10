@@ -2262,8 +2262,11 @@ method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string
     self.shareToDeliverPending = true
     self.shareTextToDeliver = text
     self.shareImagePathsToDeliver = imagePaths
+    self.view.setShareFlowPending(true)
     return
   self.view.emitLaunchShareFlowSignal(text, $(%imagePaths))
+  # Cleared only after the picker took over, so the UI never sees a gap
+  self.view.setShareFlowPending(false)
 
 method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
   ## Cache lifecycle, cancel path: the share flow was dismissed without
