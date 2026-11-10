@@ -99,6 +99,7 @@ StatusComboBox {
         }
         Row {
             id: row
+            objectName: "networkIcons"
             spacing: -4
             visible: chainRepeater.count > 0
             Repeater {
@@ -117,6 +118,7 @@ StatusComboBox {
 
                     width: 24
                     height: 24
+                    visible: index < d.maxVisibleIcons
                     image.source: Assets.svg(model.iconUrl)
                     z: index + 1
 
@@ -128,7 +130,7 @@ StatusComboBox {
                     readonly property real imageWidth: width - 2
                     readonly property real cutoutShift: (width + row.spacing) * imageWidth / width
                     image.cutoutCenter: Qt.point(width / 2 + cutoutShift, height / 2)
-                    image.cutoutRadius: index < chainRepeater.count - 1 && row.spacing < 0
+                    image.cutoutRadius: index < d.visibleIconsCount - 1 && row.spacing < 0
                                         ? imageWidth / 2 : 0
                 }
             }
@@ -194,6 +196,11 @@ StatusComboBox {
         readonly property bool oneSelected: root.selection.length === 1
         readonly property bool selectionUnavailable: d.networksCount <= 1 && d.oneSelected
 
+        // selected networks past this many show as "+N" instead of icons
+        readonly property int maxVisibleIcons: 5
+        readonly property int visibleIconsCount: Math.min(chainRepeater.count, d.maxVisibleIcons)
+        readonly property int hiddenIconsCount: chainRepeater.count - d.visibleIconsCount
+
         // in-place commit: swapping the array pointer would detach literal
         // bindings consumers install on `selection`
         function commitSelection(newSelection) {
@@ -220,6 +227,8 @@ StatusComboBox {
             if (root.multiSelection) {
                 if (d.noneSelected)
                     return qsTr("Select networks")
+                if (d.hiddenIconsCount > 0)
+                    return "+%1".arg(d.hiddenIconsCount)
             }
 
             return ""

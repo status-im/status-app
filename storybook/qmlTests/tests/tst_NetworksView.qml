@@ -4,6 +4,7 @@ import QtTest
 import AppLayouts.Profile.views.wallet
 
 import Models
+import utils
 
 Item {
     id: root
@@ -19,6 +20,16 @@ Item {
         }
     }
 
+    Component {
+        id: networksModelComponent
+        ListModel {}
+    }
+
+    SignalSpy {
+        id: setNetworkActiveSpy
+        signalName: "setNetworkActive"
+    }
+
     TestCase {
         name: "NetworksView"
         when: windowShown
@@ -27,6 +38,58 @@ Item {
 
         function cleanup() {
             controlUnderTest = null
+            setNetworkActiveSpy.clear()
+        }
+
+        // count mainnets, the first activeCount of them active
+        function mainnets(count, activeCount) {
+            const model = createTemporaryObject(networksModelComponent, root)
+            for (let i = 0; i < count; ++i)
+                model.append({ chainId: 1000 + i, chainName: "Chain" + i, iconUrl: "network/ethereum",
+                               isTest: false, isActive: i < activeCount, isDeactivatable: i > 0 })
+            return model
+        }
+
+        function createViewWithSpy(model) {
+            createView({ flatNetworks: model })
+            setNetworkActiveSpy.target = controlUnderTest
+        }
+
+        function test_deactivateNeedsNoConfirmation() {
+            createViewWithSpy(mainnets(3, 2))
+
+            delegate("Chain1", 1001).setNetworkActive(false)
+
+            compare(setNetworkActiveSpy.count, 1)
+            compare(setNetworkActiveSpy.signalArguments[0][0], 1001)
+            compare(setNetworkActiveSpy.signalArguments[0][1], false)
+        }
+
+        function test_activateBelowLimit_data() {
+            return [
+                { tag: "6th network", activeCount: 5 },
+                { tag: "20th network", activeCount: 19 },
+            ]
+        }
+
+        function test_activateBelowLimit(data) {
+            createViewWithSpy(mainnets(data.activeCount + 1, data.activeCount))
+
+            const chainId = 1000 + data.activeCount
+            delegate("Chain" + data.activeCount, chainId).setNetworkActive(true)
+
+            compare(setNetworkActiveSpy.count, 1)
+            compare(setNetworkActiveSpy.signalArguments[0][0], chainId)
+            compare(setNetworkActiveSpy.signalArguments[0][1], true)
+        }
+
+        function test_activateAtLimitIsRefused() {
+            const limit = Constants.maxActiveNetworks
+            createViewWithSpy(mainnets(limit + 1, limit))
+
+            delegate("Chain" + limit, 1000 + limit).setNetworkActive(true)
+
+            compare(setNetworkActiveSpy.count, 0)
         }
 
         function createView(props) {
