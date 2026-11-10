@@ -1563,7 +1563,7 @@ QtObject {
         readonly property string puzzleAuth: "puzzle-auth"
     }
 
-    readonly property int maxActiveNetworks: 5
+    readonly property int maxActiveNetworks: 20
 
     readonly property int maxEmojiReactionsPerMessage: 20
 
