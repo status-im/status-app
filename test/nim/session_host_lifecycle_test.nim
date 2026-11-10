@@ -9,14 +9,39 @@ import unittest, os, results
 import nimqml
 import app/boot/session_host
 import app/core/signal_epoch
+import app/core/keycard_epoch
+import app/core/signal_handler
 from seaqt/qcoreapplication import QCoreApplication, create, processEvents
 
 discard QCoreApplication.create()
+
+# Stands in for status-keycard-qt: it queues its events through the GUI event loop
+# before they reach the C callback, which stamps them only then.
+QtObject:
+  type KeycardLibrary = ref object of QObject
+    host: pointer
+
+  proc delete(self: KeycardLibrary)
+
+  proc newKeycardLibrary(host: SessionHost): KeycardLibrary =
+    new(result, delete)
+    result.QObject.setup
+    result.host = cast[pointer](host.vptr)
+
+  proc delete(self: KeycardLibrary) =
+    self.QObject.delete
+
+  proc emitQueued*(self: KeycardLibrary, event: string) {.slot.} =
+    deliverKeycardSignal(self.host, event.cstring)
+
+proc queueKeycardEvent(library: KeycardLibrary, event: string) =
+  signal_handler(cast[pointer](library.vptr), event.cstring, "emitQueued")
 
 const Deadline = 100'i64
 
 type Fake = ref object
   calls: seq[string]
+  keycardEvents: seq[string]
   drained: bool
   failedStep: string
 
@@ -30,10 +55,14 @@ proc pumpUntil(ms: int, done: proc(): bool): int =
     inc waited
     inc result
 
-proc newHostWithFakes(): (SessionHost, Fake) =
-  let host = newSessionHost(drainDeadlineMs = Deadline)
+proc newHostWithFakes(fakeBackend = false): (SessionHost, Fake) =
+  ## `fakeBackend`: the backend logout never answers on its own; tests answer it
+  ## through onBackendLogoutResponse.
+  let host = newSessionHost(drainDeadlineMs = Deadline, logoutDeadlineMs = Deadline)
   let fake = Fake()
   var ops: SessionOps
+  if fakeBackend:
+    ops.startBackendLogout = proc() = fake.calls.add("backendLogout")
   ops.releaseUi = proc() =
     fake.calls.add("releaseUi")
     host.sessionUiReleased()
@@ -43,6 +72,7 @@ proc newHostWithFakes(): (SessionHost, Fake) =
   ops.dispose = proc() = fake.calls.add("dispose")
   ops.sessionReady = proc(policy: AutoLoginPolicy) = fake.calls.add("ready")
   ops.drainTimedOut = proc() = fake.calls.add("drainTimedOut")
+  ops.logoutTimedOut = proc() = fake.calls.add("logoutTimedOut")
   ops.failed = proc(step: SessionStep, error: string) =
     fake.calls.add("failed")
     fake.failedStep = $step
@@ -51,7 +81,7 @@ proc newHostWithFakes(): (SessionHost, Fake) =
   host.setOps(ops, proc(): Result[SessionReceivers, string] =
     fake.calls.add("initialize")
     ok(SessionReceivers(signal: proc(s: string) = discard,
-      keycardSignal: proc(s: string) = discard)))
+      keycardSignal: proc(s: string) = fake.keycardEvents.add(s))))
   (host, fake)
 
 suite "SessionHost lifecycle":
@@ -96,3 +126,49 @@ suite "SessionHost lifecycle":
     check host.state == SessionState.Active
     check fake.calls[^3 .. ^1] == @["dispose", "initialize", "ready"]
     check acceptedSignalEpoch() == epochBefore + 1
+
+  test "a keycard event queued before the session ended does not reach the next one":
+    let (host, fake) = newHostWithFakes()
+    defer: host.delete()
+    check host.readBackendSignalEpoch().isOk
+    let library = newKeycardLibrary(host)
+    defer: library.delete()
+
+    fake.drained = true
+    library.queueKeycardEvent("""{"type":"channel-state-changed","event":{"state":"reading"}}""")
+    check host.requestEnd(AutoLoginPolicy.Disabled)
+    discard pumpUntil(10_000, proc(): bool = host.state == SessionState.Active)
+    check host.state == SessionState.Active
+    check fake.keycardEvents.len == 0
+
+    library.queueKeycardEvent("""{"type":"channel-state-changed","event":{"state":"idle"}}""")
+    discard pumpUntil(1_000, proc(): bool = fake.keycardEvents.len > 0)
+    check fake.keycardEvents == @["""{"type":"channel-state-changed","event":{"state":"idle"}}"""]
+
+  test "a backend logout that never answers times out and a late answer completes it":
+    let (host, fake) = newHostWithFakes(fakeBackend = true)
+    defer: host.delete()
+    fake.drained = true
+    check host.requestEnd(AutoLoginPolicy.Disabled)
+    check host.state == SessionState.BackendLogout
+
+    discard pumpUntil(20 * Deadline.int, proc(): bool = host.state == SessionState.LogoutTimeout)
+    check host.state == SessionState.LogoutTimeout
+    check "logoutTimedOut" in fake.calls
+
+    host.onBackendLogoutResponse("""{"error":"","signalEpoch":""" & $(acceptedSignalEpoch() + 1) & "}")
+    check host.state == SessionState.Active
+    check fake.calls[^1] == "ready"
+
+  test "retrying a failed backend logout watches its deadline again":
+    let (host, fake) = newHostWithFakes(fakeBackend = true)
+    defer: host.delete()
+    fake.drained = true
+    check host.requestEnd(AutoLoginPolicy.Disabled)
+    host.onBackendLogoutResponse("""{"error":"node stop failed","signalEpoch":0}""")
+    check host.state == SessionState.Failed
+
+    host.retry()
+    check host.state == SessionState.BackendLogout
+    discard pumpUntil(20 * Deadline.int, proc(): bool = host.state == SessionState.LogoutTimeout)
+    check host.state == SessionState.LogoutTimeout
