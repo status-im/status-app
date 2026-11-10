@@ -207,6 +207,24 @@ FocusScope {
         }
     }
 
+    // Flickable keeps a contentY set from outside even past the content; bring it back.
+    Connections {
+        target: scrollView.flickable
+
+        function onContentYChanged() {
+            const flickable = scrollView.flickable
+            if (flickable.moving)
+                return
+            const top = flickable.originY - flickable.topMargin
+            const bottom = Math.max(top, flickable.originY + flickable.contentHeight
+                                         + flickable.bottomMargin - flickable.height)
+            if (flickable.contentY > bottom)
+                flickable.contentY = bottom
+            else if (flickable.contentY < top)
+                flickable.contentY = top
+        }
+    }
+
     SettingsDirtyToastMessage {
         id: settingsDirtyToastMessage
 
