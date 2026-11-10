@@ -382,7 +382,11 @@ Control {
         if (!root.sendEnabled)
             return
         // Convert a trailing ASCII emoticon ("hello :)") that was never completed with a space.
-        messageInputField.convertAsciiEmoji()
+        try {
+            messageInputField.convertAsciiEmoji()
+        } catch (error) {
+            console.warn("Failed to convert ASCII emoji before sending:", error)
+        }
 
         // Count against the wire text (mentions expanded to @0xpubkey), not the pill-placeholder text.
         const messageLength = messageInputField.textWithMentions().length
