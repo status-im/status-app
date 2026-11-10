@@ -23,6 +23,11 @@ Item {
         }
     }
 
+    Component {
+        id: manyNetworksComponent
+        ListModel {}
+    }
+
     SignalSpy {
         id: selectionChangedSpy
         target: controlUnderTest
@@ -49,6 +54,32 @@ Item {
             tryCompare(controlUnderTest, "opened", true)
             selectionChangedSpy.clear()
             toggleNetworkSpy.clear()
+        }
+
+        function test_manyNetworksScrollWithinTheWindow() {
+            const model = createTemporaryObject(manyNetworksComponent, root)
+            for (let i = 0; i < 20; ++i)
+                model.append({ chainId: 1000 + i, chainName: "Chain" + i, iconUrl: "network/ethereum",
+                               isTest: false, layer: 2, communitiesSupported: true })
+            controlUnderTest.close()
+            controlUnderTest = createTemporaryObject(componentUnderTest, root,
+                                                     { flatNetworks: model, multiSelection: true,
+                                                       showManageNetworksButton: true })
+            controlUnderTest.open()
+            tryCompare(controlUnderTest, "opened", true)
+            waitForRendering(controlUnderTest.contentItem)
+
+            verify(controlUnderTest.height <= root.height)
+
+            const list = findChild(controlUnderTest.contentItem, "networkSelectorList")
+            verify(!!list)
+            verify(list.height < list.contentHeight)
+
+            const manageButton = findChild(controlUnderTest.contentItem, "manageNetworksButton")
+            verify(!!manageButton)
+            const bottom = manageButton.mapToItem(controlUnderTest.contentItem, 0, manageButton.height).y
+            verify(bottom <= controlUnderTest.contentItem.height,
+                   "button bottom %1, content height %2".arg(bottom).arg(controlUnderTest.contentItem.height))
         }
 
         function test_basicGeometry() {
