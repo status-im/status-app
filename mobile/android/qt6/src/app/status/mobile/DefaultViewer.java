@@ -81,16 +81,21 @@ public final class DefaultViewer {
         }
     }
 
-    /** The types Status opens by default. Called from Qt via JNI. */
+    /** The types the user chose Status for. Called from Qt via JNI. */
     public static String[] types(Context ctx) {
         List<String> own = new ArrayList<>();
         try {
             PackageManager pm = ctx.getPackageManager();
             for (String type : DefaultViewerRules.TYPES) {
-                ResolveInfo chosen = pm.resolveActivity(viewIntent(ctx, type),
-                        PackageManager.MATCH_DEFAULT_ONLY);
-                if (chosen != null && chosen.activityInfo != null
-                        && ctx.getPackageName().equals(chosen.activityInfo.packageName)) {
+                Intent view = viewIntent(ctx, type);
+                ResolveInfo chosen = pm.resolveActivity(view, PackageManager.MATCH_DEFAULT_ONLY);
+                if (chosen == null || chosen.activityInfo == null
+                        || !ctx.getPackageName().equals(chosen.activityInfo.packageName)) {
+                    continue;
+                }
+                int candidates = pm.queryIntentActivities(view, PackageManager.MATCH_DEFAULT_ONLY).size();
+                if (DefaultViewerRules.opensByChoice(ctx.getPackageName(),
+                        chosen.activityInfo.packageName, candidates)) {
                     own.add(type);
                 }
             }

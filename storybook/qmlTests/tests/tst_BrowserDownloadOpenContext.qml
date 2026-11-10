@@ -78,13 +78,16 @@ Item {
             pngRec.missingFile = true
             verify(!ctx.canOpenInBrowser(pngRec, false))
 
-            // The rest of the enumerated raster set, plus plain text.
+            // The rest of the enumerated raster set, plus plain text and JSON.
             verify(ctx.canOpenInBrowser(completed("image/jpeg", "a.jpg"), false))
             verify(ctx.canOpenInBrowser(completed("image/gif", "a.gif"), false))
             verify(ctx.canOpenInBrowser(completed("image/webp", "a.webp"), false))
             verify(ctx.canOpenInBrowser(completed("image/bmp", "a.bmp"), false))
+            verify(ctx.canOpenInBrowser(completed("image/x-ms-bmp", "picture"), false))
             verify(ctx.canOpenInBrowser(completed("", "a.jpeg"), false))
             verify(ctx.canOpenInBrowser(completed("text/plain", "notes.txt"), false))
+            verify(ctx.canOpenInBrowser(completed("application/json", "data.json"), false))
+            verify(ctx.canOpenInBrowser(completed("application/json", "data"), false))
         }
 
         /// A Download opens in the isolated local-preview profile — no scripts
@@ -514,14 +517,14 @@ Item {
                 verify(ctx.openOpenedFile(url, true), url)
         }
 
-        // The Android Web View shows no image/x-ms-bmp, the type MediaStore gives a .bmp.
-        function test_openOpenedFile_refusesABitmapTypedXMsBmp() {
+        // MediaStore types a .bmp image/x-ms-bmp; mobilewebview shows it in an image page.
+        function test_openOpenedFile_opensABitmapTypedXMsBmp() {
             const url = "content://com.example.files/doc/34"
             const ctx = describedFileContext({
                 [url]: { name: "bars.bmp", mimeType: "image/x-ms-bmp", readable: true }
             })
 
-            verify(!ctx.openOpenedFile(url, true))
+            verify(ctx.openOpenedFile(url, true))
         }
 
         // On Android the local path of a content:// URL is a copy of the file.

@@ -5778,6 +5778,10 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>JSON files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>MP3 audio</source>
         <translation type="unfinished"></translation>
     </message>

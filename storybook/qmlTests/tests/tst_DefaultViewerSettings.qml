@@ -73,6 +73,11 @@ Item {
             compare(item.subTitle, "PDFs, MP3 audio")
         }
 
+        function test_namesBitmapsAndJsonLikeTheirSiblings() {
+            compare(DefaultViewerTypes.names(["application/json", "image/x-ms-bmp", "image/bmp"]),
+                    "JSON files, BMP images")
+        }
+
         function test_stoppingResetsAndHidesTheTypes() {
             const settings = makeSettings({ platform: ["image/png"] })
             mouseClick(findChild(settings, "resetDefaultViewerButton"))

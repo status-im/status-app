@@ -13,8 +13,10 @@ QtObject {
         case "image/jpeg": return qsTr("JPEG images")
         case "image/gif": return qsTr("GIF images")
         case "image/webp": return qsTr("WebP images")
-        case "image/bmp": return qsTr("BMP images")
+        case "image/bmp":
+        case "image/x-ms-bmp": return qsTr("BMP images")
         case "text/plain": return qsTr("text files")
+        case "application/json": return qsTr("JSON files")
         case "audio/mpeg":
         case "audio/mp3": return qsTr("MP3 audio")
         case "audio/wav":

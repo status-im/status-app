@@ -5802,6 +5802,10 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>JSON files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>MP3 audio</source>
         <translation type="unfinished"></translation>
     </message>

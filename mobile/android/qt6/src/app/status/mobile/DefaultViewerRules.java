@@ -16,8 +16,8 @@ final class DefaultViewerRules {
 
     /** The "Open with" types in AndroidManifest.xml. */
     static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList(
-            "image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp",
-            "application/pdf", "text/plain",
+            "image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp", "image/x-ms-bmp",
+            "application/pdf", "text/plain", "application/json",
             "audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave",
             "video/webm", "audio/webm", "video/mp4", "video/x-m4v",
             "audio/mp4", "audio/aac", "audio/x-m4a"));
@@ -47,6 +47,14 @@ final class DefaultViewerRules {
         return "other:" + (chosenLabel == null ? chosenPackage : chosenLabel);
     }
 
+    /**
+     * Whether Android opens a type with Status because the user chose it: not
+     * when Status is the only app for the type, which no Stop can change.
+     */
+    static boolean opensByChoice(String ownPackage, String chosenPackage, int candidates) {
+        return ownPackage.equals(chosenPackage) && candidates > 1;
+    }
+
     /** The probe's file name for a type Status claims, else null. */
     static String probeName(String mimeType) {
         if (!isType(mimeType)) {
@@ -61,6 +69,9 @@ final class DefaultViewerRules {
         }
         if (type.equals("text/plain")) {
             return "Status.txt";
+        }
+        if (type.equals("application/json")) {
+            return "Status.json";
         }
         return "Status.wav";
     }

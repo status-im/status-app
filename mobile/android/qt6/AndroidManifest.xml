@@ -169,8 +169,11 @@
                 <data android:mimeType="image/gif" />
                 <data android:mimeType="image/webp" />
                 <data android:mimeType="image/bmp" />
+                <!-- MediaStore's type for .bmp; mobilewebview shows it in an image page. -->
+                <data android:mimeType="image/x-ms-bmp" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="text/plain" />
+                <data android:mimeType="application/json" />
                 <data android:mimeType="audio/mpeg" />
                 <data android:mimeType="audio/mp3" />
                 <data android:mimeType="audio/wav" />

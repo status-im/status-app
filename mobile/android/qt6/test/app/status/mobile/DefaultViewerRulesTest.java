@@ -48,6 +48,14 @@ public class DefaultViewerRulesTest {
     }
 
     @Test
+    public void opensATypeByChoiceOnlyWhenAnotherAppCouldToo() {
+        assertTrue(DefaultViewerRules.opensByChoice(US, US, 2));
+        assertFalse(DefaultViewerRules.opensByChoice(US, US, 1));
+        assertFalse(DefaultViewerRules.opensByChoice(US, "com.google.android.apps.photos", 3));
+        assertFalse(DefaultViewerRules.opensByChoice(US, null, 0));
+    }
+
+    @Test
     public void claimsTheManifestsOpenWithTypes() throws IOException {
         String manifest = new String(Files.readAllBytes(manifest()), StandardCharsets.UTF_8);
         int start = manifest.indexOf("\"Open with\":");
@@ -72,6 +80,8 @@ public class DefaultViewerRulesTest {
         assertEquals("Status.pdf", DefaultViewerRules.probeName("application/pdf"));
         assertEquals("Status.png", DefaultViewerRules.probeName("image/webp"));
         assertEquals("Status.txt", DefaultViewerRules.probeName("text/plain"));
+        assertEquals("Status.json", DefaultViewerRules.probeName("application/json"));
+        assertEquals("Status.png", DefaultViewerRules.probeName("image/x-ms-bmp"));
         assertEquals("Status.wav", DefaultViewerRules.probeName("video/mp4"));
         for (String type : DefaultViewerRules.TYPES) {
             assertNotNull(type, DefaultViewerRules.probeName(type));

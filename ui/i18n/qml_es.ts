@@ -5780,6 +5780,10 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>JSON files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>MP3 audio</source>
         <translation type="unfinished"></translation>
     </message>

@@ -120,6 +120,7 @@
                 <!-- iOS matches by UTI only, so this also offers Status for source code,
                      Markdown and CSV, which open as "Couldn't open the file". -->
                 <string>public.plain-text</string>
+                <string>public.json</string>
                 <string>public.mp3</string>
                 <string>com.microsoft.waveform-audio</string>
                 <string>org.webmproject.webm</string>

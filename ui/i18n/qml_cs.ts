@@ -5802,6 +5802,10 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>JSON files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>MP3 audio</source>
         <translation type="unfinished"></translation>
     </message>
