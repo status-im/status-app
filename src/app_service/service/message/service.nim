@@ -403,9 +403,9 @@ QtObject:
     return self.msgCursor.hasKey(chatId)
 
   proc resetMessageCursor*(self: Service, chatId: string) =
-    if not self.msgCursor.hasKey(chatId):
-      return
-    self.msgCursor.del(chatId)
+    if self.msgCursor.hasKey(chatId):
+      self.msgCursor.del(chatId)
+    self.pinnedMsgCursor.del(chatId)
 
   proc resetAllMessageCursors*(self: Service) =
     self.msgCursor = initTable[string, MessageCursor]()
