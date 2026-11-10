@@ -70,6 +70,9 @@ public final class StatusGoService extends Service {
     private final Object notificationReplyLock = new Object();
     private final Deque<String> pendingNotificationReplySignals = new ArrayDeque<>();
     private volatile boolean foregroundStarted = false;
+    // The UI logged the account out and no login followed: nothing to keep running once the
+    // UI goes away.
+    private volatile boolean loggedOut = false;
     private volatile boolean uiVisible = false;
 
     private final ExecutorService lifecycleExecutor = Executors.newSingleThreadExecutor();
@@ -310,6 +313,7 @@ public final class StatusGoService extends Service {
             final JSONObject event = new JSONObject(jsonSignal).optJSONObject("event");
             if (event == null) return;
             if (!event.optString("error", "").isEmpty()) return;
+            loggedOut = false;
             ensureForegroundStarted();
         } catch (Throwable t) {
             // Best-effort only; don't crash the service.
@@ -338,7 +342,12 @@ public final class StatusGoService extends Service {
                 stopForeground(true);
             } catch (Throwable ignored) {}
             foregroundStarted = false;
-            stopSelf();
+            loggedOut = true;
+            // With a UI attached this is a sign-out that returns to the login screen: stay
+            // started, so the next login's foreground state survives the UI going away
+            // (a bound-only service is destroyed on unbind). Stopped when the UI goes away
+            // logged out (see registerSignalListener).
+            if (listeners.getRegisteredCallbackCount() == 0) stopSelf();
         } catch (Throwable t) {
             // Best-effort only.
         }
@@ -557,7 +566,10 @@ public final class StatusGoService extends Service {
             // RemoteCallbackList.unregister() calls unlinkToDeath internally, so clean
             // unregistration does not trigger this callback.
             try {
-                listener.asBinder().linkToDeath(() -> applyUiVisibility(false), 0);
+                listener.asBinder().linkToDeath(() -> {
+                    applyUiVisibility(false);
+                    if (loggedOut) stopSelf();
+                }, 0);
             } catch (RemoteException ignored) {
                 // Binder already dead — notification suppression is not a concern.
             }

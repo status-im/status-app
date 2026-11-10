@@ -62,6 +62,9 @@ public final class StatusGoServiceClient {
     private volatile boolean hasUiVisibilityHint = false;
     // Tracks whether this process ever had a live Binder connection to status-go.
     private volatile boolean everConnected = false;
+    // The service process went away while the UI was hidden (no restart possible then): the
+    // service that comes up next is a fresh, logged-out backend the UI knows nothing about.
+    private volatile boolean serviceLostWhileHidden = false;
 
     private final IStatusGoSignalListener signalListener = new IStatusGoSignalListener.Stub() {
         @Override
@@ -106,6 +109,11 @@ public final class StatusGoServiceClient {
                 }
                 if (connectedLatch != null) connectedLatch.countDown();
             }
+            if (serviceLostWhileHidden) {
+                serviceLostWhileHidden = false;
+                requestFrontendRestart(StatusGoStub.getContext(), "statusgo_service_restarted");
+                return;
+            }
             // Replay UI visibility on a background thread — the Binder call
             // reaches nativeCall("AppStateChange") which can block for seconds
             // if the Go runtime's memory was paged out (major faults).
@@ -135,8 +143,12 @@ public final class StatusGoServiceClient {
                 bindingInProgress = false;
                 bound = false;
             }
-            if (!suppressed && everConnected && hasUiVisibilityHint && desiredUiVisible) {
-                requestFrontendRestart(StatusGoStub.getContext(), "statusgo_service_disconnected");
+            if (!suppressed && everConnected) {
+                if (hasUiVisibilityHint && desiredUiVisible) {
+                    requestFrontendRestart(StatusGoStub.getContext(), "statusgo_service_disconnected");
+                } else {
+                    serviceLostWhileHidden = true;
+                }
             }
         }
 
@@ -149,8 +161,12 @@ public final class StatusGoServiceClient {
                 bindingInProgress = false;
                 bound = false;
             }
-            if (!suppressed && everConnected && hasUiVisibilityHint && desiredUiVisible) {
-                requestFrontendRestart(StatusGoStub.getContext(), "statusgo_binding_died");
+            if (!suppressed && everConnected) {
+                if (hasUiVisibilityHint && desiredUiVisible) {
+                    requestFrontendRestart(StatusGoStub.getContext(), "statusgo_binding_died");
+                } else {
+                    serviceLostWhileHidden = true;
+                }
             }
         }
 
