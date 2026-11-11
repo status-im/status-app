@@ -53,10 +53,9 @@ def get_git_commit():
     # Try to get git commit from parent repository (status-app)
     try:
         # Get parent directory (status-app)
-        parent_repo = configs.testpath.ROOT.parent.parent
         result = subprocess.run(
             ['git', 'rev-parse', 'HEAD'],
-            cwd=str(parent_repo),
+            cwd=str(configs.testpath.REPO_ROOT),
             capture_output=True,
             text=True,
             timeout=5
@@ -75,7 +74,7 @@ def get_status_go_commit():
     # Try to get git commit from status-go repository (vendor/status-go)
     try:
         # Get status-go directory (vendor/status-go)
-        status_go_repo = configs.testpath.ROOT.parent.parent / 'vendor' / 'status-go'
+        status_go_repo = configs.testpath.REPO_ROOT / 'vendor' / 'status-go'
         result = subprocess.run(
             ['git', 'rev-parse', 'HEAD'],
             cwd=str(status_go_repo),
