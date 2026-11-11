@@ -188,6 +188,9 @@ SettingsContentBase {
         id: stackContainer
 
         width: root.contentWidth
+        // As tall as the current page, at least the viewport; hidden pages do not count.
+        height: Math.max(stackContainer.itemAt(stackContainer.currentIndex)?.implicitHeight ?? 0,
+                         root.availableHeight)
 
         currentIndex: mainViewIndex
 
