@@ -5,7 +5,7 @@ import pytest
 from allure_commons._allure import step
 
 import configs
-from constants import DEFAULT_PIN
+from constants import DEFAULT_PIN, KEYCARD_APPLET_VERSIONS
 from constants.wallet import (
     WalletAddress,
     WalletHistoryTitles,
@@ -30,9 +30,15 @@ from scripts.utils.generators import get_wallet_address_from_mnemonic
 FUNDED_WALLET_ADDRESS = wallet_send_returning_user().status_address
 
 
-@pytest.mark.keycard
-@pytest.mark.transaction
+pytestmark = [
+    pytest.mark.keycard,
+    pytest.mark.transaction,
+    pytest.mark.spec('SC-APLT-13'),
+]
+
+
 @pytest.mark.timeout(600)
+@pytest.mark.parametrize('keycard_simulator', KEYCARD_APPLET_VERSIONS, indirect=True)
 @allure.title('Wallet — send 0 ETH from keycard account (sign with PIN)')
 @allure.description(
     'Create keycard profile by importing funded WALLET_TEST_USER_SEED, enable testnet, '
@@ -53,11 +59,10 @@ def test_wallet_send_0_eth_from_keycard(
         network_name,
 ):
     seed_phrase = (configs.WALLET_SEED or '').strip()
-    if not seed_phrase:
-        pytest.skip(
-            'WALLET_TEST_USER_SEED not set — requires the seed phrase of the '
-            f'funded test profile ({FUNDED_WALLET_ADDRESS})'
-        )
+    assert seed_phrase, (
+        'Set WALLET_TEST_USER_SEED to the funded test profile seed '
+        f'({FUNDED_WALLET_ADDRESS})'
+    )
 
     derived_address = get_wallet_address_from_mnemonic(seed_phrase)
     assert derived_address.lower() == FUNDED_WALLET_ADDRESS.lower(), (

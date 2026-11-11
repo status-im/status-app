@@ -27,6 +27,8 @@ class KeycardSettingsView(QObject):
         self._set_or_change_puk_item = Button(keycard_names.settingsKeycardDetailsSetOrChangePuk)
         self._add_keypair_to_status_item = Button(keycard_names.settingsKeycardDetailsAddKeypairToStatus)
         self._back_button = Button(settings_names.main_toolBar_back_button)
+        self._details_view = QObject(keycard_names.keycardSettingsDetailsView)
+        self._certificate_warning = TextLabel(keycard_names.keycardSettingsCertificateWarning)
 
     @property
     def is_read_keycard_button_visible(self) -> bool:
@@ -51,6 +53,28 @@ class KeycardSettingsView(QObject):
     @property
     def key_pair_location(self) -> str:
         return str(getattr(self._key_pair_info.object, 'subTitle', ''))
+
+    @property
+    def key_uid(self) -> str:
+        return str(self._details_view.object.keyUid)
+
+    @property
+    def pairing_supported(self) -> bool:
+        return bool(self._details_view.object.pairingSupported)
+
+    @property
+    def certificate_warning_text(self) -> str:
+        self._certificate_warning.wait_until_appears()
+        return self._certificate_warning.text
+
+    @allure.step('Wait until certificate warning is hidden on Keycard details')
+    def wait_until_certificate_warning_hidden(
+            self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+    ):
+        assert driver.waitFor(
+            lambda: self._details_title.is_visible and not self._certificate_warning.is_visible,
+            timeout_msec,
+        ), 'Keycard certificate warning is still visible'
 
     @allure.step('Wait until keycard settings view appears')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -77,12 +101,16 @@ class KeycardSettingsView(QObject):
             self,
             expected_title: str = constants.KEYCARD_PROFILE_DETAILS_TITLE,
             timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+            *,
+            wait_for_key_pair_item: bool = True,
     ):
         assert driver.waitFor(
             lambda: self.details_title == expected_title,
             timeout_msec,
         ), f'Expected Keycard details title {expected_title!r}, got {self.details_title!r}'
         if expected_title in (constants.KEYCARD_EMPTY_TITLE, constants.KEYCARD_BLOCKED_TITLE):
+            return self
+        if not wait_for_key_pair_item:
             return self
         self._key_pair_info.wait_until_appears(timeout_msec)
         assert driver.waitFor(

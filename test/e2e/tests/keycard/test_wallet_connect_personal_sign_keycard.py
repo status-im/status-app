@@ -1,7 +1,7 @@
 import allure
 import pytest
 
-from constants import DEFAULT_PIN
+from constants import DEFAULT_PIN, KEYCARD_APPLET_VERSIONS
 from helpers.keycard_helper import (
     assert_status_account_matches_seed,
     create_keycard_profile_from_seed,
@@ -11,8 +11,14 @@ from helpers.wallet_connect_helper import WalletConnectDapp, request_personal_si
 from scripts.utils.generators import random_mnemonic
 
 
-@pytest.mark.keycard
+pytestmark = [
+    pytest.mark.keycard,
+    pytest.mark.spec('SC-APLT-13'),
+]
+
+
 @pytest.mark.timeout(400)
+@pytest.mark.parametrize('keycard_simulator', KEYCARD_APPLET_VERSIONS, indirect=True)
 @allure.title('WalletConnect — personal_sign with Keycard PIN')
 @allure.description(
     'Create keycard profile by importing a seed, connect a WalletConnect test dApp, '

@@ -11,7 +11,7 @@ from tests import test_data
 from configs.system import get_platform
 from driver import context
 from driver.server import SquishServer
-from scripts.utils import system_path, local_system
+from scripts.utils import local_system
 from scripts.utils.failure_screenshot import attach_failure_screenshot
 from scripts.utils.system_path import SystemPath
 from scripts.utils.wait_for_port import wait_for_port
@@ -19,14 +19,41 @@ import psutil
 
 LOG = logging.getLogger(__name__)
 
-# When set (e.g. in CI), startaut adds local Waku flags and passes STATUS_FLEET / STATUS_FLEET_CONFIG_FILE to the AUT.
-_LOCAL_WAKU_ENV_VALUES = ('1', 'true', 'yes')
+def _startaut_local_extras(
+    app_path: SystemPath,
+) -> tuple[list[str], dict[str, str]]:
+    """Argv and env overrides for local repo `bin/` AUT (keycard sim dir, optional Waku fleet)."""
+    env: dict[str, str] = {
+        'STATUS_GO_DISABLE_SUPPORT_BOT_CONTACT_REQUEST': '1',
+    }
+    command_extras: list[str] = []
+    local_bin = (configs.testpath.REPO_ROOT / 'bin').resolve()
+    sim_dir = configs.testpath.KEYCARD_SIMULATOR_DIR
+    if (
+        not os.environ.get('STATUS_KEYCARD_SIM_DIR')
+        and app_path.resolve().is_relative_to(local_bin)
+        and sim_dir.is_dir()
+    ):
+        env['STATUS_KEYCARD_SIM_DIR'] = str(sim_dir.resolve())
+        LOG.info('Local build: STATUS_KEYCARD_SIM_DIR=%s', env['STATUS_KEYCARD_SIM_DIR'])
+
+    if os.environ.get('E2E_LOCAL_WAKU_FLEET', '').lower() in ('1', 'true', 'yes'):
+        local_config = configs.testpath.LOCAL_WAKU_FLEETS_CONFIG.resolve()
+        local_fleet = os.environ.get('STATUS_FLEET', 'status-app.test')
+        command_extras = [
+            '--enable-fleet-selection',
+            f'--waku-fleet={local_fleet}',
+            f'--waku-fleets-config={local_config}',
+        ]
+        env['STATUS_FLEET'] = local_fleet
+        env['STATUS_FLEET_CONFIG_FILE'] = str(local_config)
+    return command_extras, env
 
 
 class AUT:
     def __init__(
             self,
-            app_path: system_path.SystemPath = configs.AUT_PATH,
+            app_path: SystemPath = configs.AUT_PATH,
             user_data: SystemPath = None
     ):
         self.path = app_path
@@ -94,22 +121,10 @@ class AUT:
             str(self.path),
             f'--datadir={self.app_data}',
         ]
+        command_extras, env_overrides = _startaut_local_extras(self.path)
+        command.extend(command_extras)
         child_env = os.environ.copy()
-        child_env['STATUS_GO_DISABLE_SUPPORT_BOT_CONTACT_REQUEST'] = '1'
-        use_local_waku = os.environ.get('E2E_LOCAL_WAKU_FLEET', '').lower() in _LOCAL_WAKU_ENV_VALUES
-        if use_local_waku:
-            repo_root = configs.testpath.ROOT.parent.parent
-            local_config = (repo_root / 'assets' / 'local-waku-fleets-config.json').resolve()
-            local_fleet = os.environ.get('STATUS_FLEET', 'status-app.test')
-            command.extend(
-                [
-                    '--enable-fleet-selection',
-                    f'--waku-fleet={local_fleet}',
-                    f'--waku-fleets-config={local_config}',
-                ]
-            )
-            child_env['STATUS_FLEET'] = local_fleet
-            child_env['STATUS_FLEET_CONFIG_FILE'] = str(local_config)
+        child_env.update(env_overrides)
         command.extend(
             [
                 f'--LOG_LEVEL={configs.testpath.LOG_LEVEL}',
