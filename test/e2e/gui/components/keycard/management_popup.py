@@ -35,6 +35,7 @@ class KeycardManagementPopup(QObject):
         self._factory_reset_checkbox = CheckBox(keycard_names.keycardFactoryResetConfirmCheckbox)
         self._factory_reset_button = Button(keycard_names.keycardManagementFactoryResetButton)
         self._progress_title = TextLabel(keycard_names.keycardProgressTitle)
+        self._progress_message = TextLabel(keycard_names.keycardProgressMessage)
         self._puk_input = QObject(keycard_names.keycardManagementPukInput)
         self._pin_step_title = TextLabel(keycard_names.keycardPinStepTitle)
         self._puk_step_title = TextLabel(keycard_names.keycardPukStepTitle)
@@ -170,16 +171,29 @@ class KeycardManagementPopup(QObject):
     def enter_account_name(self, name: str):
         return self._fill_and_next(self.account_name_input, name)
 
+    @property
+    def progress_message(self) -> str:
+        return self._progress_message.text
+
+    @allure.step('Wait until Keycard progress shows {expected_title}')
+    def wait_until_progress_title(
+            self,
+            expected_title: str,
+            timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+    ) -> 'KeycardManagementPopup':
+        assert driver.waitFor(
+            lambda: self._progress_title.is_visible and self._progress_title.text == expected_title,
+            timeout_msec,
+        ), f'Expected Keycard progress title {expected_title!r}'
+        return self
+
     @allure.step('Wait until Keycard flow succeeds with {expected_title}')
     def wait_until_success(
             self,
             expected_title: str,
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ) -> 'KeycardManagementPopup':
-        assert driver.waitFor(
-            lambda: self._progress_title.text == expected_title,
-            timeout_msec,
-        ), f'Expected progress title {expected_title!r}, got {self._progress_title.text!r}'
+        self.wait_until_progress_title(expected_title, timeout_msec)
         self.done_button.wait_until_appears(timeout_msec)
         return self
 
@@ -355,6 +369,10 @@ class KeycardDetailsView(QObject):
         self.keycard_view_go_back_to_login = Button(onboarding_names.onboardingKeycardDetailsGoBackToLogin)
         self._unblock_puk_item = Button(onboarding_names.onboardingKeycardDetailsUnblockWithPuk)
         self._unblock_recovery_item = Button(onboarding_names.onboardingKeycardDetailsUnblockWithRecovery)
+
+    @property
+    def pairing_supported(self) -> bool:
+        return bool(self.object.pairingSupported)
 
     @allure.step('Import a new keypair to Keycard and create new profile')
     def import_a_new_keypair(self):

@@ -2,29 +2,28 @@ import allure
 import pytest
 
 import configs
-from constants import DEFAULT_PIN, KEYCARD_EMPTY_TITLE, KEYCARD_PROFILE_DETAILS_TITLE
-from helpers.onboarding_helper import skip_biometrics_popup_if_visible
+from constants import DEFAULT_PIN, KEYCARD_EMPTY_TITLE, KEYCARD_PROFILE_DETAILS_TITLE, KEYCARD_APPLET_VERSIONS
+from gui.screens.onboarding import KeycardLoginView
+from helpers.keycard_helper import open_keycard_settings_for_password_profile, read_keycard_details
 from helpers.wallet_helper import authenticate_with_password
 from scripts.utils.generators import keycard_card_id
 
 
 @pytest.mark.keycard
 @pytest.mark.timeout(300)
+@pytest.mark.parametrize('keycard_simulator', KEYCARD_APPLET_VERSIONS, indirect=True)
 @allure.title('Settings — Move profile key pair to Keycard')
 @allure.description(
     'Password profile → Settings → Read Keycard → empty card → Move profile key pair → '
     'confirm → Create PIN → reveal and confirm seed → password → Done → '
-    'Read Keycard shows Status profile key pair'
+    'Read Keycard shows Status profile key pair → for 4.x, restart and see Keycard login'
 )
-def test_settings_move_profile_keypair_to_empty_keycard(keycard_simulator, main_window, user_account):
+def test_settings_move_profile_keypair_to_empty_keycard(keycard_simulator, main_window, user_account, aut):
     card_id = keycard_card_id()
     keycard_simulator.create_empty_card(card_id=card_id)
     keycard_simulator.plug_reader()
 
-    main_window.create_profile(user_account)
-    skip_biometrics_popup_if_visible()
-
-    keycard_settings = main_window.left_panel.open_settings().left_panel.open_keycard_settings()
+    keycard_settings = open_keycard_settings_for_password_profile(main_window, user_account)
 
     keycard_mng_popup = keycard_settings.open_read_keycard()
     keycard_simulator.select_card(card_id).insert_card()
@@ -40,6 +39,9 @@ def test_settings_move_profile_keypair_to_empty_keycard(keycard_simulator, main_
     authenticate_with_password(user_account)
     keycard_mng_popup.close_after_success(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
 
-    keycard_settings = main_window.left_panel.open_settings().left_panel.open_keycard_settings()
-    keycard_settings.open_read_keycard().enter_keycard_pin_and_close(DEFAULT_PIN)
-    keycard_settings.wait_until_details_appears(KEYCARD_PROFILE_DETAILS_TITLE)
+    keycard_settings = read_keycard_details(main_window, DEFAULT_PIN, KEYCARD_PROFILE_DETAILS_TITLE)
+    if keycard_simulator.applet_40:
+        assert not keycard_settings.pairing_supported
+        aut.restart()
+        main_window.prepare()
+        KeycardLoginView().wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
