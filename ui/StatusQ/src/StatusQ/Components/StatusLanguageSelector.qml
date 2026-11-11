@@ -81,7 +81,7 @@ Button {
         }
 
         function beautifyIsoCodes(codes) {
-            return Qt.locale().createSeparatedList(codes.map(code => beautifyIsoCode(code)))
+            return codes.map(code => beautifyIsoCode(code)).join(", ")
         }
     }
 
