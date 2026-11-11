@@ -157,8 +157,12 @@ proc fromStringStateToInt*(state: StateString): KeycardState =
 const SecureChannelVersionNoPairing* = 2
 
 proc pairingSupported*(info: KeycardInfoDto): bool =
-  ## Applet 4.x cards have no pairing: no slots, no pairing password, nothing stored per card
   return info.secureChannelVersion < SecureChannelVersionNoPairing
+
+proc pairingSupportedAfterEvent*(current: bool, info: KeycardInfoDto): bool =
+  if info.instanceUID.len > 0:
+    return info.pairingSupported()
+  return current
 
 proc toKeycardInfoDto*(jsonObj: JsonNode): KeycardInfoDto =
   result = KeycardInfoDto(secureChannelVersion: 1)
