@@ -94,7 +94,7 @@ SettingsContentBase {
                 const link = "https://status.app/cc/G-gAAORqbagnhrSvikdvJE1-f7iUTLVeGDI6uS1gbdHJClvLOIsozcOgbrhs8sVle2GBnz0QghKrJugxwVVmAGNFIcm4KPPNFIKvKdf_83iSXsosZUr1rHgLeJqn0el8TPRaMwxCExy35wPCYGG0TH9dzY_YAnS4705bQNv18a-cEVCyBKPdTgXvRJjjowqNh-zcFB9U6PpT2klNfmPCj05HNG3ShpUfTYxsXslmjKKSyWWQUsyikZIz8sV0zsia-Wwe#zQ3shZeEJqTC1xhGUjxuS4rtHSrhJ8vUYp64v6qWkLpvdy9L9"
                 return qsTr("Want to improve a translation, help add a new language, or request one? Let us know in our %1.").arg(`<a href='${link}'>` + qsTr("channel") + "</a>")
             }
-            onLinkActivated: link => Global.requestOpenLink(link)
+            onLinkActivated: link => Global.activateDeepLink(link)
         }
 
         StatusSwitch {
