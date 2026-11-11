@@ -2098,19 +2098,20 @@ Item {
                 height: parent.height * 0.9
                 y: parent.height - height
 
+                readonly property int animDuration: ThemeUtils.AnimationDuration.Default
+
                 enter: Transition {
                     ParallelAnimation {
                         NumberAnimation {
                             property: "opacity"
                             from: 0.0; to: 1.0
-                            duration: ThemeUtils.AnimationDuration.Slow
+                            duration: acPortraitPopup.animDuration
                         }
                         NumberAnimation {
                             property: "y"
                             from: acPortraitPopup.parent.height
                             to: acPortraitPopup.parent.height - acPortraitPopup.height
-                            duration: ThemeUtils.AnimationDuration.Slow
-                            easing.type: Easing.OutCubic
+                            duration: acPortraitPopup.animDuration
                         }
                     }
                 }
@@ -2120,14 +2121,13 @@ Item {
                         NumberAnimation {
                             property: "opacity"
                             from: 1.0; to: 0.0
-                            duration: ThemeUtils.AnimationDuration.Slow
+                            duration: acPortraitPopup.animDuration
                         }
                         NumberAnimation {
                             property: "y"
                             from: acPortraitPopup.parent.height - acPortraitPopup.height
                             to: acPortraitPopup.parent.height
-                            duration: ThemeUtils.AnimationDuration.Slow
-                            easing.type: Easing.OutCubic
+                            duration: acPortraitPopup.animDuration
                         }
                     }
                 }
