@@ -1,2 +1,4 @@
 BrowserLayout 1.0 BrowserLayout.qml
 BrowserPrivacyWall 1.0 BrowserPrivacyWall.qml
+OpenedFileDelivery 1.0 OpenedFileDelivery.qml
+DefaultViewerOffer 1.0 DefaultViewerOffer.qml

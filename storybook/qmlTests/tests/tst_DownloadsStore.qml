@@ -184,6 +184,24 @@ Item {
             compare(copied, signed)
         }
 
+        function test_sharePath_sharesOnMobile_copiesOnDesktop() {
+            const store = createStore()
+            let shared = []
+            let copied = ""
+            store.platform.sharePaths = function(paths) { shared = paths }
+            store.platform.copyText = function(text) { copied = text }
+
+            store.platform.preferShareSheet = true
+            verify(store.sharePath("/Users/me/a b.pdf"))
+            compare(shared, ["/Users/me/a b.pdf"])
+
+            store.platform.preferShareSheet = false
+            verify(store.sharePath("/Users/me/a b.pdf"))
+            compare(copied, "/Users/me/a b.pdf")
+
+            verify(!store.sharePath(""))
+        }
+
         function test_createRecord_fromLiveDownload() {
             const store = createStore()
             const live = createTemporaryObject(fakeDownloadComponent, root)

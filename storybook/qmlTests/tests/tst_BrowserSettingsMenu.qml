@@ -46,6 +46,21 @@ Item {
                 mouseClick(entry, entry.width / 2, entry.height / 2)
         }
 
+        function test_copyFilePath_onlyForAnOpenedFile() {
+            const menu = openMenu()
+            const entry = BrowserToolbarTestUtils.menuEntryByText(menu, qsTr("Copy file path"))
+            verify(!!entry)
+            verify(!entry.visible)
+
+            menu.canCopyFilePath = true
+            verify(entry.visible)
+            const spy = createTemporaryQmlObject("import QtTest; SignalSpy {}", root)
+            spy.target = menu
+            spy.signalName = "copyFilePath"
+            trigger(menu, qsTr("Copy file path"))
+            compare(spy.count, 1)
+        }
+
         function test_newTab() {
             const menu = openMenu()
             const spy = createTemporaryQmlObject("import QtTest; SignalSpy {}", root)

@@ -156,6 +156,7 @@ type
     pendingProfileMigrationCheck: bool
     profileMigrationFlowInProgress: bool
     urlToOpenInNewBrowserTab: string
+    openedFilesToDeliver: seq[tuple[fileUrl: string, refused: bool]]
     shareTextToDeliver: string
     shareImagePathsToDeliver: seq[string]
     shareToDeliverPending: bool
@@ -167,6 +168,7 @@ type
 proc switchToContactOrDisplayUserProfile[T](self: Module[T], publicKey: string)
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string)
 method openUrlInNewBrowserTab*[T](self: Module[T], url: string)
+method openFileInBrowserTab*[T](self: Module[T], fileUrl: string, refused: bool)
 method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string])
 proc checkIfWeHaveNotifications[T](self: Module[T])
 proc updateIconBadgeNumber[T](self: Module[T])
@@ -1047,6 +1049,11 @@ method onChatsLoaded*[T](
     let url = self.urlToOpenInNewBrowserTab
     self.urlToOpenInNewBrowserTab = ""
     self.openUrlInNewBrowserTab(url)
+
+  let openedFiles = self.openedFilesToDeliver
+  self.openedFilesToDeliver = @[]
+  for file in openedFiles:
+    self.openFileInBrowserTab(file.fileUrl, file.refused)
 
   if self.shareToDeliverPending:
     let text = self.shareTextToDeliver
@@ -2249,6 +2256,14 @@ method openUrlInNewBrowserTab*[T](self: Module[T], url: string) =
     self.urlToOpenInNewBrowserTab = url
     return
   self.view.emitOpenUrlInNewBrowserTabSignal(url)
+
+method openFileInBrowserTab*[T](self: Module[T], fileUrl: string, refused: bool) =
+  ## File route of the external intake seam: an Opened File in a Preview Tab.
+  ## The seam already caps a burst, so every file waits for the main view.
+  if not self.chatsLoaded:
+    self.openedFilesToDeliver.add((fileUrl, refused))
+    return
+  self.view.emitOpenFileInBrowserTabSignal(fileUrl, refused)
 
 method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string]) =
   ## Share route of the external intake seam: content shared to Status from

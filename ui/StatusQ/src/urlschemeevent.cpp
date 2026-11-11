@@ -19,6 +19,10 @@ using namespace Status;
     #include <CoreFoundation/CFBundle.h>
 #endif
 
+#if defined(Q_OS_IOS) || defined(Q_OS_ANDROID)
+    #include <StatusQ/openedfileintake.h>
+#endif
+
 void UrlSchemeEvent::registerUrlHandler()
 {
 #if defined(Q_OS_IOS)
@@ -38,6 +42,10 @@ void UrlSchemeEvent::registerUrlHandler()
         if (!bundleId.isEmpty())
             QDesktopServices::setUrlHandler(bundleId.toLower(), this, "handleUrl");
     }
+    // Qt also posts a QFileOpenEvent for these, without the security scope.
+    Status::OpenedFileIntake::setReceiver([this](const QString& fileUrl, bool copied) {
+        emitFileToQt(fileUrl, copied);
+    });
 #endif
 }
 
@@ -124,6 +132,13 @@ void UrlSchemeEvent::emitShareToQt(const QString& text, const QStringList& image
     emit shareActivated(text, QString::fromUtf8(QJsonDocument(paths).toJson(QJsonDocument::Compact)));
 }
 
+void UrlSchemeEvent::emitFileToQt(const QString& fileUrl, bool copied)
+{
+    if (fileUrl.isEmpty()) return;
+
+    emit fileActivated(fileUrl, copied);
+}
+
 static UrlSchemeEvent* g_urlSchemeEventInstance = nullptr;
 
 void UrlSchemeEvent::setInstance(UrlSchemeEvent* instance)
@@ -164,6 +179,25 @@ Java_app_status_mobile_StatusQtActivity_passShareToQt(JNIEnv* env, jclass /*claz
 
     if (g_urlSchemeEventInstance) {
         g_urlSchemeEventInstance->emitShareToQt(shareText, paths);
+    }
+}
+
+// "Open with" hand-off: a content:// URI read in place (described, since its
+// URL names no file), a private copy, or a file Status must not read.
+extern "C" JNIEXPORT void JNICALL
+Java_app_status_mobile_StatusQtActivity_passFileToQt(JNIEnv* /*env*/, jclass /*clazz*/, jstring url,
+                                                     jstring name, jstring mimeType,
+                                                     jboolean readable, jboolean copied)
+{
+    const QString fileUrl = QJniObject(url).toString();
+    if (fileUrl.isEmpty()) return;
+
+    if (!copied) {
+        Status::OpenedFileIntake::describe(fileUrl, QJniObject(name).toString(),
+                                           QJniObject(mimeType).toString(), readable);
+    }
+    if (g_urlSchemeEventInstance) {
+        g_urlSchemeEventInstance->emitFileToQt(fileUrl, copied);
     }
 }
 #endif

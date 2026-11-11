@@ -101,8 +101,11 @@ QString UrlUtils::resolveAndroidContentUrl(const QString& urlPath) const {
     if (!fileIn.open(QIODevice::ReadOnly))
         return urlPath;
 
-    // save to a temp file, and return the filepath
-    const auto newFilePath = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + '/' + QUuid::createUuid().toString(QUuid::WithoutBraces);
+    // save to a temp file, and return the filepath; StatusQtActivity drops these copies on a fresh launch
+    const QDir copies(QStandardPaths::writableLocation(QStandardPaths::TempLocation) + QStringLiteral("/picked-files"));
+    if (!copies.mkpath(QStringLiteral(".")))
+        return urlPath;
+    const auto newFilePath = copies.filePath(QUuid::createUuid().toString(QUuid::WithoutBraces));
     QFile fileOut(newFilePath);
     if (!fileOut.open(QIODevice::WriteOnly | QIODevice::Truncate))
         return urlPath;

@@ -304,6 +304,8 @@ add_library(StatusQ ${LIB_TYPE}
         src/statuslayoutstate.cpp
         src/ios_utils.h
         include/StatusQ/shareintake.h
+        include/StatusQ/openedfileintake.h
+        src/openedfileintake.cpp
 
         src/StatusQ/Controls/NativeSwipeHandlerItem.cpp
         src/StatusQ/Controls/NativeIndicatorItem.cpp
@@ -345,6 +347,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
         src/shareintake_other.cpp
+        src/openedfileintake_other.cpp
         src/keychain_apple.mm
         src/securestorage_apple.mm
         src/osnotification_apple.mm
@@ -367,6 +370,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/ios_utils.mm
         src/shareutils_ios.mm
         src/shareintake_ios.mm
+        src/openedfileintake_ios.mm
         src/keychain_apple.mm
         src/securestorage_apple.mm
         src/accessibility_crash_filter.mm
@@ -385,11 +389,13 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
         src/StatusQ/Controls/NativeIndicatorItem_android.cpp
         src/shareutils_android.cpp
         src/shareintake_other.cpp
+        src/openedfileintake_android.cpp
     )
 elseif (WIN32)
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
         src/shareintake_other.cpp
+        src/openedfileintake_other.cpp
         src/keychain_other.cpp
         src/securestorage_windows.cpp
     )
@@ -400,6 +406,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
         src/shareintake_other.cpp
+        src/openedfileintake_other.cpp
         src/keychain_other.cpp
         src/securestorage_linux.cpp
     )
@@ -407,6 +414,7 @@ else ()
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
         src/shareintake_other.cpp
+        src/openedfileintake_other.cpp
         src/keychain_other.cpp
         src/securestorage_other.cpp
     )
@@ -498,7 +506,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG 004549ca35c696c319d2c359893720142ac4fc18
+      GIT_TAG c05bf43f267df886bdd32a097b793624b04340db
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)
@@ -555,8 +563,10 @@ if(NOT (IOS OR ANDROID))
     if(TARGET Qt::WebEngineQuick)
         target_sources(StatusQ PRIVATE
             include/StatusQ/browsercertdistrust.h
+            include/StatusQ/browserlocalfilegrants.h
             include/StatusQ/browserprofileutils.h
             src/browsercertdistrust.cpp
+            src/browserlocalfilegrants.cpp
             src/browserprofileutils.cpp
         )
         target_link_libraries(StatusQ PRIVATE Qt::WebEngineQuick)

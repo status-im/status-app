@@ -85,6 +85,8 @@ QtObject {
           probeType: "" },
         { group: "document", name: qsTr("Plain text"), detail: ".txt",
           mimeType: "text/plain", probeType: "" },
+        { group: "document", name: "JSON", detail: ".json",
+          mimeType: "application/json", probeType: "" },
         // Listed so the report says where they go, never as an opt-in: the
         // allowlist refuses scriptable formats, so these always read "opens in
         // another app" (see DownloadFormatUtils.canOpenInBrowser).

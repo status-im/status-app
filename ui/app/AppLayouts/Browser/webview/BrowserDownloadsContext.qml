@@ -41,14 +41,9 @@ QtObject {
     /// its footer/strip to this — nothing writes visibility imperatively.
     readonly property bool stripVisible: stripPresenter.stripVisible
 
-    property var openUrlFn: function(url) {
-        console.warn("BrowserDownloadsContext: openUrlFn not set")
-    }
-
-    /// Opens a local file through the Web View's loadFileUrl (read grant for a
-    /// directory); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl) {
-        console.warn("BrowserDownloadsContext: openFileUrlFn not set")
+    /// Opens a Preview Tab for a plan (BrowserDownloadOpenContext.openPreviewFn).
+    property var openPreviewFn: function(plan) {
+        console.warn("BrowserDownloadsContext: openPreviewFn not set")
     }
 
     // Backend PDF-rendering Capability. BrowserLayout overrides with
@@ -84,8 +79,7 @@ QtObject {
         readonly property BrowserDownloadOpenContext openContext: BrowserDownloadOpenContext {
             id: downloadOpenContext
 
-            openUrlFn: (url) => root.openUrlFn(url)
-            openFileUrlFn: (fileUrl, readAccessUrl) => root.openFileUrlFn(fileUrl, readAccessUrl)
+            openPreviewFn: plan => root.openPreviewFn(plan)
         }
 
         // Missing File markers go stale while the app is backgrounded (files can
@@ -192,6 +186,26 @@ QtObject {
     function openInBrowserRecord(record) {
         downloadsStore.refreshMissingFiles()
         return downloadOpenContext.openInBrowser(record, supportsPdfFn())
+    }
+
+    function openOpenedFile(fileUrl) {
+        return downloadOpenContext.openOpenedFile(fileUrl, supportsPdfFn())
+    }
+
+    function openedFilePlan(fileUrl) {
+        return downloadOpenContext.openedFilePlan(fileUrl, supportsPdfFn())
+    }
+
+    function openedFileTag(fileUrl) {
+        return downloadOpenContext.openedFileTag(fileUrl)
+    }
+
+    function openedFileName(openedFile) {
+        return downloadOpenContext.openedFileName(openedFile)
+    }
+
+    function openedFileAddressLabel(view) {
+        return downloadOpenContext.openedFileAddressLabel(view)
     }
 
     function retryRecord(record) {

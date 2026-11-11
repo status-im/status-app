@@ -19,8 +19,11 @@ Item {
     width: 400
     height: 400
 
-    readonly property url profileManagerUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/adapters/ProfileManager.qml")
+    Component {
+        id: profileManagerComponent
+
+        ProfileManager {}
+    }
 
     Component {
         id: hostStackComponent
@@ -70,6 +73,9 @@ Item {
             property string uid: ""
             property string title: ""
             property url icon: ""
+            property bool crashed: false
+            property bool openFailed: false
+            property string openedFilePath: ""
             property bool offTheRecord: profileParams ? profileParams.offTheRecord
                                                       : false
         }
@@ -134,9 +140,7 @@ Item {
         when: windowShown
 
         function createProfileManager() {
-            const component = Qt.createComponent(root.profileManagerUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            return createTemporaryObject(component, root)
+            return createTemporaryObject(profileManagerComponent, root)
         }
 
         /// Params for one profile kind: browsing, incognito, or local preview.
@@ -253,6 +257,23 @@ Item {
             compare(view.profileParams, ctx.otrProfileParams)
         }
 
+        // An Opened File that could not be shown keeps its Tab and says so.
+        function test_openFailedTab_showsTheFailurePage() {
+            const hostStack = createTemporaryObject(hostStackComponent, root)
+            const tabsModel = createTemporaryObject(tabsModelComponent, root)
+            const ctx = createTemporaryObject(browserWebViewContextComponent, root, {
+                hostStack: hostStack,
+                tabsModelRef: tabsModel
+            })
+            const view = createTemporaryObject(fakeWebViewComponent, hostStack, {
+                profileParams: createTemporaryObject(previewParamsComponent, root)
+            })
+            compare(ctx.currentContentMode, BrowserWebViewContext.ContentMode.EmptyContent)
+
+            view.openFailed = true
+            compare(ctx.currentContentMode, BrowserWebViewContext.ContentMode.OpenFailedContent)
+        }
+
         // A restored session reopens URLs in browsing tabs, so a preview tab
         // must never enter it — the file it showed is no page to come back to,
         // and restoring it would put a local path in a browsing profile.
@@ -283,6 +304,37 @@ Item {
             previewParams.offTheRecord = false
             compare(preview.offTheRecord, false)
             compare(BrowserSessionUtils.buildTabDto(preview, [], determineRealURL), null)
+        }
+
+        // An Opened File's Tab comes back while its file is still there (D8).
+        function test_anOpenedFilesTab_isSavedByItsFile() {
+            const opened = createTemporaryObject(fakeWebViewComponent, root, {
+                profileParams: createTemporaryObject(previewParamsComponent, root),
+                url: "file:///Users/me/My Docs/a b.pdf",
+                uid: "tab-3",
+                title: "a b.pdf",
+                openedFilePath: "/Users/me/My Docs/a b.pdf"
+            })
+            const dto = BrowserSessionUtils.buildTabDto(opened, [], url => url, true)
+            compare(dto.openedFile, "/Users/me/My Docs/a b.pdf")
+            compare(dto.uuid, "tab-3")
+            compare(dto.title, "a b.pdf")
+            verify(dto.url.length > 0)
+
+            compare(BrowserSessionUtils.buildTabDto(opened, [], url => url, false), null)
+            opened.openFailed = true
+            compare(BrowserSessionUtils.buildTabDto(opened, [], url => url, true), null)
+        }
+
+        // A content:// grant does not outlive the run.
+        function test_aDescribedFilesTab_isNeverSaved() {
+            const described = createTemporaryObject(fakeWebViewComponent, root, {
+                profileParams: createTemporaryObject(previewParamsComponent, root),
+                url: "content://com.example.files/doc/1",
+                uid: "tab-4",
+                openedFilePath: "content://com.example.files/doc/1"
+            })
+            compare(BrowserSessionUtils.buildTabDto(described, [], url => url, true), null)
         }
     }
 }

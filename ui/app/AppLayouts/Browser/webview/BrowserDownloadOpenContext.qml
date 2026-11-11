@@ -22,22 +22,20 @@ import "DownloadFormatUtils.js" as DownloadFormatUtils
  * a plain per-call input.
  *
  * openInBrowser() makes the open-route choice: a generated player page for
- * media (only where the Backend needs one — otherwise the media file itself
- * via openFileUrlFn), a direct navigation for everything else. A false return
- * means "not renderable here" — the caller hands the file to the OS.
+ * media where the Backend needs one, otherwise the file itself, read-granted
+ * to itself alone, both through openPreviewFn. A false return means "not
+ * renderable here" — the caller hands the file to the OS.
  */
 QtObject {
     id: root
 
-    /// Opens a URL in the browser; injected by the owner.
-    property var openUrlFn: function(url) {
-        console.warn("BrowserDownloadOpenContext: openUrlFn not set")
-    }
-
-    /// Opens a local file with a read grant for a directory (AbstractWebView
-    /// loadFileUrl); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl) {
-        console.warn("BrowserDownloadOpenContext: openFileUrlFn not set")
+    /// Opens a Preview Tab for a plan {url, readAccessUrl, openedFilePath, title};
+    /// injected by the owner. The file loads through a Read Grant for
+    /// readAccessUrl, or, when that is "", as a page (the player page).
+    /// openedFilePath names the Opened File the Tab shows, "" for a Download;
+    /// title holds until the page gives one.
+    property var openPreviewFn: function(plan) {
+        console.warn("BrowserDownloadOpenContext: openPreviewFn not set")
     }
 
     // Text file writer; production uses StringUtils, tests inject a fake.
@@ -48,6 +46,23 @@ QtObject {
     // Text file reader; reads qrc: and file: alike. Tests inject a fake.
     property var readTextFileFn: function(path) {
         return StringUtils.readTextFile(path)
+    }
+
+    // Existence probe for an Opened File; tests inject a fake.
+    property var fileExistsFn: function(path) {
+        return SystemUtils.fileExists(path)
+    }
+
+    // {name, mimeType, readable} the platform gave for an Opened File whose URL
+    // names no file to probe (Android content://), {} otherwise. Tests inject a fake.
+    property var openedFileInfoFn: function(fileUrl) {
+        return SystemUtils.openedFileInfo(fileUrl)
+    }
+
+    // Local path of a file URL; tests inject a fake. On Android it copies a
+    // content:// file out, so a described file never reaches it.
+    property var localPathFn: function(fileUrl) {
+        return UrlUtils.convertUrlToLocalPath(fileUrl)
     }
 
     // Directory create; injectable so Storybook/unit tests need not stub SystemUtils.
@@ -84,6 +99,28 @@ QtObject {
         Qt.resolvedUrl("player/media_player.js")
 
     readonly property QtObject d: QtObject {
+
+        /// The player page where the Backend needs one, otherwise the file
+        /// itself, read-granted to itself alone; null when no page can be made.
+        function plan(record, fileUrl, openedFilePath) {
+            const title = openedFilePath ? record.fileName : ""
+            if (root.mediaPlayerPageRequired
+                    && DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
+                                                           root.proprietaryCodecsSupported)) {
+                const page = root.mediaPlayerPageUrl(record)
+                if (!page)
+                    return null
+                return { url: page, readAccessUrl: "", openedFilePath: openedFilePath, title: title }
+            }
+            return { url: fileUrl, readAccessUrl: fileUrl, openedFilePath: openedFilePath, title: title }
+        }
+
+        function open(plan) {
+            if (!plan)
+                return false
+            root.openPreviewFn(plan)
+            return true
+        }
 
         property string mediaPlayerTemplateCache: ""
 
@@ -172,24 +209,68 @@ QtObject {
         const path = record.targetPath
         if (!path)
             return false
+        return d.open(d.plan(record, UrlUtils.urlFromUserInput(path), ""))
+    }
 
-        if (DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
-                                               root.proprietaryCodecsSupported)) {
-            // Backends that play a directly loaded file get the file itself,
-            // read-granted to its own directory (empty = the narrowest grant).
-            if (!root.mediaPlayerPageRequired) {
-                root.openFileUrlFn(UrlUtils.urlFromUserInput(path), "")
-                return true
-            }
-            const page = mediaPlayerPageUrl(record)
-            if (!page)
-                return false
-            root.openUrlFn(page)
-            return true
+    /// An Opened File through the same allowlist and player page as a Record,
+    /// read-granted to the file alone. False when it cannot be shown here.
+    function openOpenedFile(fileUrl, supportsPdf) {
+        return d.open(openedFilePlan(fileUrl, supportsPdf))
+    }
+
+    /// How an Opened File opens, or null when it cannot be shown here.
+    /// A described file is taken at the platform's word and tagged by its URL.
+    function openedFilePlan(fileUrl, supportsPdf) {
+        const described = root.openedFileInfoFn(fileUrl) || {}
+        const isDescribed = described.name !== undefined
+        const path = isDescribed ? "" : root.localPathFn(fileUrl)
+        if (isDescribed) {
+            if (!described.readable)
+                return null
+        } else if (!path || !root.fileExistsFn(path)) {
+            return null
         }
+        const record = {
+            targetPath: path,
+            fileName: described.name ?? DownloadFormatUtils.fileNameOf(path),
+            mimeType: described.mimeType ?? "",
+            missingFile: false,
+            state: AbstractWebView.DownloadState.DownloadCompleted
+        }
+        if (!canOpenInBrowser(record, supportsPdf))
+            return null
+        // A content:// URL renders by its provider's type, so the type must pass on its own.
+        if (isDescribed && !DownloadFormatUtils.canOpenInBrowser(
+                    record.mimeType, "", supportsPdf, root.inBrowserMediaPlaybackSupported,
+                    root.proprietaryCodecsSupported))
+            return null
+        return d.plan(record, fileUrl, path || fileUrl)
+    }
 
-        root.openUrlFn(UrlUtils.urlFromUserInput(path))
-        return true
+    /// The tag of an Opened File's Tab: its local path, or its URL when the
+    /// platform described it.
+    function openedFileTag(fileUrl) {
+        if (!fileUrl)
+            return ""
+        const described = root.openedFileInfoFn(fileUrl) || {}
+        if (described.name !== undefined)
+            return fileUrl
+        return root.localPathFn(fileUrl) || fileUrl
+    }
+
+    /// The name to show for an Opened File, from its Tab tag (a local path, or
+    /// the URL of a described file).
+    function openedFileName(openedFile) {
+        const described = openedFile ? (root.openedFileInfoFn(openedFile) || {}) : {}
+        return described.name ?? DownloadFormatUtils.fileNameOf(openedFile)
+    }
+
+    /// The name a Tab shows in place of its URL while it is still on its
+    /// Opened File; "" once it has gone on to another page, or for other Tabs.
+    function openedFileAddressLabel(view) {
+        if (!view || !view.openedFilePath || view.canGoBack)
+            return ""
+        return openedFileName(view.openedFilePath)
     }
 
     /// Write (and reuse) a player page for a downloaded media Record and return its

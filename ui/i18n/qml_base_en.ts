@@ -2682,6 +2682,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2823,6 +2827,10 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Find in page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5684,6 +5692,127 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
     <message>
         <source>Choose a blockchain explorer to open Ethereum addresses or transaction hashes entered in the address bar</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerBanner</name>
+    <message>
+        <source>Status opens your %1 now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 opens your %2. To open them in Status, clear its defaults in its settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open %1 in Status? Choose Status, then Always.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If Android suggests another app on top, clear that app&apos;s defaults in its settings first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Got it</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerSettings</name>
+    <message>
+        <source>Suggest opening files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Shows an offer above a file another app sent to Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Opened in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerTypes</name>
+    <message>
+        <source>PDFs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PNG images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>JPEG images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIF images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebP images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BMP images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>text files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>JSON files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MP3 audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WAV audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebM audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebM videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MP4 videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>M4V videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>M4A audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AAC audio</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -12130,6 +12259,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Share file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12914,6 +13047,17 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View supported formats</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>OpenLinksInView</name>
     <message>
         <source>Open links in</source>
@@ -12929,6 +13073,17 @@ to load</source>
     </message>
     <message>
         <source>User device default browser</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>OpenedFileDelivery</name>
+    <message>
+        <source>Turn on the browser in Settings to open files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -4,6 +4,76 @@
     <dict>
         <key>CFBundleDisplayName</key>
         <string>Status Desktop DEV</string>
+        <key>CFBundleDocumentTypes</key>
+        <array>
+            <dict>
+                <key>CFBundleTypeName</key>
+                <string>Image</string>
+                <key>CFBundleTypeRole</key>
+                <string>Viewer</string>
+                <key>LSHandlerRank</key>
+                <string>Alternate</string>
+                <key>LSItemContentTypes</key>
+                <array>
+                    <string>public.png</string>
+                    <string>public.jpeg</string>
+                    <string>com.compuserve.gif</string>
+                    <string>org.webmproject.webp</string>
+                    <string>com.microsoft.bmp</string>
+                </array>
+            </dict>
+            <dict>
+                <key>CFBundleTypeName</key>
+                <string>Plain text</string>
+                <!-- By extension: public.plain-text also covers source code, Markdown and CSV -->
+                <key>CFBundleTypeExtensions</key>
+                <array>
+                    <string>txt</string>
+                </array>
+                <key>CFBundleTypeRole</key>
+                <string>Viewer</string>
+                <key>LSHandlerRank</key>
+                <string>Alternate</string>
+            </dict>
+            <dict>
+                <key>CFBundleTypeName</key>
+                <string>JSON</string>
+                <key>CFBundleTypeRole</key>
+                <string>Viewer</string>
+                <key>LSHandlerRank</key>
+                <string>Alternate</string>
+                <key>LSItemContentTypes</key>
+                <array>
+                    <string>public.json</string>
+                </array>
+            </dict>
+            <dict>
+                <key>CFBundleTypeName</key>
+                <string>PDF document</string>
+                <key>CFBundleTypeRole</key>
+                <string>Viewer</string>
+                <key>LSHandlerRank</key>
+                <string>Alternate</string>
+                <key>LSItemContentTypes</key>
+                <array>
+                    <string>com.adobe.pdf</string>
+                </array>
+            </dict>
+            <dict>
+                <key>CFBundleTypeName</key>
+                <string>Audio and video</string>
+                <key>CFBundleTypeRole</key>
+                <string>Viewer</string>
+                <key>LSHandlerRank</key>
+                <string>Alternate</string>
+                <key>LSItemContentTypes</key>
+                <array>
+                    <string>public.mp3</string>
+                    <string>com.microsoft.waveform-audio</string>
+                    <string>org.webmproject.webm</string>
+                </array>
+            </dict>
+        </array>
         <key>CFBundleExecutable</key>
         <string>nim_status_client</string>
         <key>CFBundleIconFile</key>

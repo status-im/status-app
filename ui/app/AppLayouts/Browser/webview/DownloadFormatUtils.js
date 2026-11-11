@@ -11,15 +11,18 @@
 // The enumerated safe sets, one pair per branch of canOpenInBrowser. The
 // extensions are the operative half; the MIME types only answer for a name
 // that carries no extension at all.
-const _IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp"]
+// image/x-ms-bmp: Android's name for a .bmp.
+const _IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp",
+                           "image/x-ms-bmp"]
 const _IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"]
-const _TEXT_MIME_TYPES = ["text/plain"]
-const _TEXT_EXTENSIONS = ["txt"]
+// JSON shows as text: no engine runs a script in it.
+const _TEXT_MIME_TYPES = ["text/plain", "application/json"]
+const _TEXT_EXTENSIONS = ["txt", "json"]
 const _PDF_MIME_TYPES = ["application/pdf"]
 const _PDF_EXTENSIONS = ["pdf"]
 
 /// Open-in-Browser allowlist: types our Backends render (ADR 0006 §8).
-/// Raster images and plain text; PDF when the Backend supports it; media per
+/// Raster images, plain text and JSON; PDF when the Backend supports it; media per
 /// isPlayableMedia, gated by mediaPlaybackSupported. Everything else is handed
 /// to the OS.
 ///
@@ -107,7 +110,8 @@ function isPlayableMedia(mimeType, fileName, proprietaryCodecs = false) {
     if (mime === "video/webm" || mime === "audio/webm" || name.endsWith(".webm"))
         return true
     if (proprietaryCodecs) {
-        if (mime === "video/mp4" || name.endsWith(".mp4") || name.endsWith(".m4v"))
+        if (mime === "video/mp4" || mime === "video/x-m4v" || name.endsWith(".mp4")
+                || name.endsWith(".m4v"))
             return true
         if (mime === "audio/mp4" || mime === "audio/aac" || mime === "audio/x-m4a"
                 || name.endsWith(".m4a") || name.endsWith(".aac"))
@@ -126,6 +130,12 @@ function isVideoMedia(mimeType, fileName) {
         return false
     return mime.startsWith("video/") || name.endsWith(".webm")
             || name.endsWith(".mp4") || name.endsWith(".m4v")
+}
+
+/// The last segment of a local path; "" for none.
+function fileNameOf(path) {
+    const s = String(path || "")
+    return s.substring(s.lastIndexOf("/") + 1)
 }
 
 /// Middle-elide the base name, then keep the extension (pill + list).

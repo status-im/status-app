@@ -12,6 +12,11 @@ QtObject {
     required property var preferencesStore
     required property Item currentWebView
 
+    // Opened Files reachable after a restart (desktop) keep their Tabs.
+    property bool keepsOpenedFiles: false
+    // Reopens a saved Opened File's Tab in place; false when it cannot open.
+    property var restoreOpenedFileFn: function(tab) { return false }
+
     property Item previousWebView: null
     property var persistedTabs: []
     property bool _shuttingDown: false
@@ -75,7 +80,8 @@ QtObject {
     }
 
     function buildTabDto(webView) {
-        return BrowserSessionUtils.buildTabDto(webView, persistedTabs, determineRealURL)
+        return BrowserSessionUtils.buildTabDto(webView, persistedTabs, determineRealURL,
+                                               keepsOpenedFiles)
     }
 
     function scheduleSaveSession() {
@@ -129,29 +135,36 @@ QtObject {
             return
         }
 
+        const savedIndex = preferencesStore.getCurrentTabIndex()
+        let currentIndex = -1
+        let browsingParams = null
         tabsToRestore.forEach((tab, index) => {
-            const profileParams = index === 0
-                ? defaultProfileParams
-                : webViewContext.getWebView(0).profileParams
-            webViewContext.createEmptyTab(
-                profileParams,
-                false,
-                false,
-                determineRealURL(tab.url),
-                tab.title,
-                tab.icon,
-                tab.uuid
-            )
+            if (tab.openedFile) {
+                if (!keepsOpenedFiles || !restoreOpenedFileFn(tab))
+                    return
+            } else {
+                const view = webViewContext.createEmptyTab(
+                    browsingParams || defaultProfileParams,
+                    false,
+                    false,
+                    determineRealURL(tab.url),
+                    tab.title,
+                    tab.icon,
+                    tab.uuid
+                )
+                browsingParams = browsingParams || view?.profileParams
+            }
+            if (index <= savedIndex)
+                currentIndex = tabs.count - 1
         })
 
-        const savedIndex = preferencesStore.getCurrentTabIndex()
         Qt.callLater(() => {
             if (tabs.count === 0) {
                 openDefaultTab()
                 return
             }
-            if (savedIndex >= 0 && savedIndex < tabs.count)
-                tabs.activateTab(savedIndex)
+            if (currentIndex >= 0 && currentIndex < tabs.count)
+                tabs.activateTab(currentIndex)
             webViewContext.ensureCurrentWebViewLoaded()
         })
     }

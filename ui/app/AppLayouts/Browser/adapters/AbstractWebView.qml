@@ -1,5 +1,7 @@
 import QtQuick
 
+import StatusQ.Core
+
 import AppLayouts.Browser.stores as BrowserStores
 
 Item {
@@ -39,6 +41,15 @@ Item {
 
     // Desktop only: mobile Backends host no separate render process.
     property bool crashed: false
+
+    // The Opened File a Preview Tab shows, or failed to show; "" otherwise.
+    property string openedFilePath: ""
+    property bool openFailed: false
+
+    Component.onDestruction: {
+        if (openedFilePath)
+            SystemUtils.releaseOpenedFile(openedFilePath)
+    }
 
     // === Capability Flags ===
     required property bool supportsZoom

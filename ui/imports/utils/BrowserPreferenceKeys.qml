@@ -9,5 +9,6 @@ QtObject {
     readonly property string keyOpenTabs: "openTabs"
     readonly property string keyCurrentTabIndex: "currentTabIndex"
     readonly property string keyRestoreOpenTabs: "restoreOpenTabs"
+    readonly property string keySuggestDefaultViewer: "suggestDefaultViewer"
     readonly property string keyDownloadRecords: "records"
 }

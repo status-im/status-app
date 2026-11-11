@@ -21,6 +21,7 @@ SettingsContentBase {
     QtObject {
         id: d
         property bool restoreOpenTabs: root.browserPreferencesStore.getRestoreOpenTabs()
+        property bool suggestDefaultViewer: root.browserPreferencesStore.getSuggestDefaultViewer()
     }
 
     property Component searchEngineModal: SearchEngineModal {
@@ -98,6 +99,16 @@ SettingsContentBase {
                     }
                 ]
                 onClicked: restoreTabsSwitch.click()
+            }
+
+            DefaultViewerSettings {
+                width: parent.width
+                visible: Qt.platform.os === "android"
+                suggested: d.suggestDefaultViewer
+                onSuggestedToggled: suggested => {
+                    d.suggestDefaultViewer = suggested
+                    root.browserPreferencesStore.setSuggestDefaultViewer(suggested)
+                }
             }
         }
     }

@@ -19,6 +19,8 @@ Control {
     required property bool incognitoMode
     required property var browserDappsModel
     required property url url
+    // Shown in place of the URL, such as an Opened File's name.
+    property string addressLabel: ""
     property url faviconUrl
 
     signal requestStopLoadingPage()
@@ -54,6 +56,7 @@ Control {
             Layout.fillWidth: true
 
             url: root.url
+            label: root.addressLabel
             incognitoMode: root.incognitoMode
             faviconUrl: root.faviconUrl
             showFavicon: true
