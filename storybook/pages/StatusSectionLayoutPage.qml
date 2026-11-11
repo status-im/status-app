@@ -27,11 +27,7 @@ Page {
                 CheckBox{
                     id: leftFloatingPanelCheckbox
                     text: "Open Floating Panel"
-                    checked: leftFloatingPanel.StatusLayoutState.opened
-
-                    onCheckedChanged: {
-                        leftFloatingPanel.StatusLayoutState.opened = checked
-                    }
+                    enabled: !leftPanelCheckBox.checked
                 }
             }
             CheckBox {
@@ -154,6 +150,11 @@ Page {
             centerPanel: centerPanelCheckBox.checked ? centerPanel : null
             rightPanel: rightPanel
             showRightPanel: rightPanelCheckBox.checked
+            Binding on leftPanelWidthOverride {
+                value: 200
+                when: leftFloatingPanelCheckbox.checked
+            }
+
             footer: footerItem
             headerContent: headerContent
             headerBackground: Control {
