@@ -147,7 +147,7 @@ SettingsContentBase {
                 selectMultiple: true
                 languageCodes: root.availableSpellcheckLanguages
                 activeLanguageCodes: root.activeSpellcheckLanguages
-                disabledLanguageCodes: ["en_US"]
+                disabledLanguageCodes: ["en"]
                 onLanguageToggled: (code, checked) => root.enableSpellcheckLanguageRequested(code, checked)
             }
         }
