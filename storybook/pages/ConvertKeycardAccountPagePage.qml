@@ -29,8 +29,8 @@ Item {
 
             convertKeycardAccountState: ctrlState.currentValue
             restartRequired: ctrlRestartRequired.checked
-            onRestartRequested: {
-                logs.logEvent("restartRequested")
+            onNewSessionRequested: {
+                logs.logEvent("newSessionRequested")
             }
             onBackToLoginRequested: {
                 logs.logEvent("backToLoginRequested")

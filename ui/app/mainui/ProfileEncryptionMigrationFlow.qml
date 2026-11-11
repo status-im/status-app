@@ -65,7 +65,7 @@ QtObject {
             }
             // The migration re-encrypted the databases — like any deep password change,
             // the app must restart before it can continue.
-            restartDialog.open()
+            reloginDialog.open()
         }
     }
 
@@ -138,29 +138,29 @@ QtObject {
         }
     }
 
-    readonly property ConfirmationDialog restartDialog: ConfirmationDialog {
-        id: restartDialog
+    readonly property ConfirmationDialog reloginDialog: ConfirmationDialog {
+        id: reloginDialog
 
         objectName: "migrationRestartDialog"
         parent: root.popupParent
 
-        property bool restartTriggered: false
+        property bool reloginTriggered: false
 
         headerSettings.title: qsTr("Encryption updated")
-        confirmationText: qsTr("Your profile was migrated to the new encryption format. Status must restart to complete the process.")
-        confirmButtonLabel: qsTr("Restart Status")
-        // The migration deep-re-encrypted the databases — restarting is the only way
+        confirmationText: qsTr("Your profile was migrated to the new encryption format. Log in again to complete the process.")
+        confirmButtonLabel: qsTr("Log in again")
+        // The migration deep-re-encrypted the databases — a new login is the only way
         // out. Esc/overlay dismissal is disabled, and a close arriving through any
         // other path (e.g. the header close button) immediately reopens the dialog.
         escapeKeyCloses: false
         closeOnOverlayClick: false
         onConfirmButtonClicked: {
-            restartTriggered = true
-            SystemUtils.restartApplication(true)
+            reloginTriggered = true
+            Global.reloginRequested()
         }
         onClosed: {
-            if (!restartTriggered)
-                Qt.callLater(() => restartDialog.open())
+            if (!reloginTriggered)
+                Qt.callLater(() => reloginDialog.open())
         }
     }
 }
