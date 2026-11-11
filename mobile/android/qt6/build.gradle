@@ -162,13 +162,6 @@ android {
             debuggable = true
             applicationIdSuffix ".debug"
             resValue "string", "app_name", "Status Debug"
-            packaging {
-                jniLibs {
-                    // Keep Nim debug symbols so Android Studio
-                    // can resolve native frames into Nim names.
-                    keepDebugSymbols += '**/libnim_status_client.so'
-                }
-            }
         }
         profile {
             // See docs/profiling-mobile.md.
@@ -178,6 +171,24 @@ android {
             minifyEnabled = true
             shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Debug and profile builds keep Nim symbols so Android Studio can resolve native
+// frames into Nim names. A packaging block inside a build type applies to all of them.
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        if (variant.buildType in ['debug', 'profile']) {
+            variant.packaging.jniLibs.keepDebugSymbols.add('**/libnim_status_client.so')
+        }
+        // Release APKs compress native libs and dex: about half the download, in exchange for
+        // extracting them on install. The Play bundle keeps the default.
+        // FIXME: compress F-Droid APKs too once a compressed F-Droid build is shown to match
+        // F-Droid's own rebuild byte for byte.
+        if (variant.buildType == 'release') {
+            variant.packaging.jniLibs.useLegacyPackaging.set(true)
+            variant.packaging.dex.useLegacyPackaging.set(true)
         }
     }
 }

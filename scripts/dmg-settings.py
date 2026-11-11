@@ -5,8 +5,8 @@ app = defines.get("app", "/tmp/Status.app")
 files = [app]
 symlinks = {"Applications": "/Applications"}
 
-format = "UDZO"
-compression_level = 9
+# LZMA needs macOS 10.15, the app needs 12.0; its default level beats level 9 here.
+format = "ULMO"
 
 icon_size = 220
 text_size = 13

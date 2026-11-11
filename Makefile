@@ -340,6 +340,8 @@ else
  # Additional optimization flags for release builds are not included at present;
  # adding them will involve refactoring config.nims in the root of this repo
  STATUSGO_MAKE_PARAMS += CGO_CFLAGS="-O3"
+ # No Go symbol table or DWARF; panic stack traces still name functions.
+ STATUSGO_MAKE_PARAMS += BUILD_FLAGS='-ldflags="-s -w"'
  NIM_PARAMS += -d:release -d:lto
 endif
 
@@ -1012,6 +1014,8 @@ endif
 	macdeployqt \
 		$(MACOS_INNER_BUNDLE) \
 		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess
+	scripts/thin-macos-bundle.sh $(MACOS_OUTER_BUNDLE) \
+		$(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client
 
 	# if MACOS_CODESIGN_IDENT is not set then the outer and inner .app
 	# bundles are not signed

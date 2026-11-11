@@ -64,6 +64,9 @@ android {
     QMAKE_LFLAGS += -Wl,-z,max-page-size=16384
     QMAKE_LFLAGS_SHLIB += -Wl,-z,max-page-size=16384
 
+    # Packed relocation tables: several MB smaller than plain .rela.dyn.
+    QMAKE_LFLAGS += -Wl,--pack-dyn-relocs=android
+
     ANDROID_VERSION_NAME = $$VERSION
 
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../android/qt$$QT_MAJOR_VERSION
@@ -131,6 +134,12 @@ ios {
 
     # The Go facade owns the token ABI; keep it private in the final executable.
     QMAKE_LFLAGS += -Wl,-unexported_symbols_list,$$shell_quote($$PWD/../../vendor/status-go/scripts/tkl-unexported-macos.txt)
+
+    # Read-only data lives outside __TEXT, which the App Store encrypts and cannot compress.
+    QMAKE_LFLAGS += \
+        -Wl,-rename_section,__TEXT,__const,__DATA_CONST,__tconst \
+        -Wl,-rename_section,__TEXT,__rodata,__DATA_CONST,__trodata \
+        -Wl,-rename_section,__TEXT,__gopclntab,__DATA_CONST,__gopclntab
 
     contains(DEFINES, FLAG_KEYCARD_ENABLED) {
         # Use entitlements with NFC support (requires paid Apple Developer account)
