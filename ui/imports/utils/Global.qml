@@ -91,6 +91,9 @@ QtObject {
 
     signal signOutRequested() // asks for confirmation
     signal signOutConfirmed()
+    // Ends the session to apply a setting the backend reads at login: the next session
+    // logs in silently once if a credential is stored, otherwise shows the login screen.
+    signal reloginRequested()
     signal quitAppRequested()
 
     signal openTestnetPopup()

@@ -8,4 +8,5 @@ QtObject {
     property string keyUid: "0xprofilekeyuid"
     property bool usingBiometricLogin: false
     property bool migratedToColdWallet: false
+    property bool migratedToDEKEncryption: false
 }

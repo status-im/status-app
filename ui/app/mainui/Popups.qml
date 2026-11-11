@@ -884,6 +884,7 @@ QtObject {
                 onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {
                     Global.keycardFlowDone(flow, keyUid, keycardUid, success)
                 }
+                onSignOutRequested: Global.signOutConfirmed()
 
                 onClosed: destroy()
             }

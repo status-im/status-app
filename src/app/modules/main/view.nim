@@ -521,5 +521,3 @@ QtObject:
   proc credentialStoredToKeychainResult*(self: View, success: bool) {.slot.} =
     self.delegate.credentialStoredToKeychainResult(success)
 
-  proc signOutAndQuit*(self: View) {.slot.} =
-    self.delegate.signOutAndQuit()

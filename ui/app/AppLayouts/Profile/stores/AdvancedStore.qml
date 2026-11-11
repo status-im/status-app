@@ -123,11 +123,12 @@ QtObject {
         root.advancedModule.setNetworkName(networkName)
     }
 
+    // True when saved: the fleet applies from the next login on
     function setFleet(fleetName) {
         if(!root.advancedModule)
-            return
+            return false
 
-        root.advancedModule.setFleet(fleetName)
+        return root.advancedModule.setFleet(fleetName)
     }
 
     function setWakuV2LightClientEnabled(mode) {
@@ -137,11 +138,12 @@ QtObject {
         return root.advancedModule.setWakuV2LightClientEnabled(mode)
     }
 
+    // True when saved: the log level applies from the next login on
     function toggleDebug() {
         if(!root.advancedModule)
-            return
+            return false
 
-        root.advancedModule.toggleDebug()
+        return root.advancedModule.toggleDebug()
     }
 
     function toggleNimbusProxy() {

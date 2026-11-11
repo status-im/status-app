@@ -136,12 +136,7 @@ proc prepareLogging() =
       let logFile = fmt"app_{formattedDate}.log"
       discard output.open(LOGDIR & logFile, fmAppend)
 
-  let defaultLogLvl = if defined(production): chronicles.LogLevel.INFO else: chronicles.LogLevel.DEBUG
-  # default log level can be overriden by LOG_LEVEL env parameter
-  let logLvl = try: parseEnum[chronicles.LogLevel](main_constants.LOG_LEVEL)
-               except: defaultLogLvl
-
-  setLogLevel(logLvl)
+  setLogLevel(main_constants.defaultLogLevel())
 
 proc setupRemoteSignalsHandling() =
   # Please note that this must use the `cdecl` calling convention because

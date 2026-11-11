@@ -63,13 +63,11 @@ proc init*(self: Controller) =
 proc getFleet*(self: Controller): string =
   return self.settingsService.getFleetAsString()
 
-proc setFleet*(self: Controller, fleet: string) =
+proc setFleet*(self: Controller, fleet: string): bool =
   if not self.settingsService.saveFleet(fleet):
-    # in the future we may do a call from here to show a popup about this error
     error "an error occurred, we couldn't set fleet"
-    return
-
-  self.delegate.onFleetSet()
+    return false
+  true
 
 proc getLogMaxBackups*(self: Controller): int =
   return self.nodeConfigurationService.getLogMaxBackups()
@@ -113,17 +111,17 @@ proc setWakuV2LightClientEnabled*(self: Controller, enabled: bool): bool =
 proc isDebugEnabled*(self: Controller): bool =
   return self.nodeConfigurationService.isDebugEnabled()
 
-proc toggleDebug*(self: Controller) =
+proc toggleDebug*(self: Controller): bool =
   var logLevel = LogLevel.DEBUG
   if(self.isDebugEnabled()):
     logLevel = LogLevel.INFO
 
   if(not self.nodeConfigurationService.setLogLevel(logLevel)):
-    # in the future we may do a call from here to show a popup about this error
     error "an error occurred, we couldn't toggle debug level"
-    return
+    return false
 
   self.delegate.onDebugToggled()
+  true
 
 proc isNimbusProxyEnabled*(self: Controller): bool =
   return self.nodeConfigurationService.isNimbusProxyEnabled()

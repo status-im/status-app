@@ -595,9 +595,6 @@ proc connectionChange*(self: Controller, connectionType: string, isExpensive: bo
 proc isMessagingNetworkConnected*(self: Controller): bool =
   self.nodeService.isConnected()
 
-proc logout*(self: Controller) =
-  discard self.generalService.logout()
-
 proc urlUnfurlingMode*(self: Controller): UrlUnfurlingMode =
   self.settingsService.urlUnfurlingMode()
 

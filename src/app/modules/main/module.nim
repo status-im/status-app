@@ -15,8 +15,6 @@ import app/modules/shared_modules/keycard_management/module as keycard_managemen
 import app/global/app_sections_config
 import app/global/app_signals
 import app/global/[global_singleton, feature_flags]
-import app/global/app_lifecycle
-import app/android/lifecycle
 import app/global/utils as utils
 import app_service/service/activity_center/dto/notification as activity_center_notification_dto
 import constants
@@ -2131,25 +2129,6 @@ method getKeycardManagementModule*[T](self: Module[T]): QVariant =
   return newQVariant()
 ################################################################################
 
-
-method signOutAndQuit*[T](self: Module[T]) =
-  info "signOutAndQuit: logging out and quitting"
-  markShuttingDown()
-  when defined(ios) or defined(android):
-    # Since on mobile devices, application.exit() ends in _exit(0), a graceful status_go.logout() is unnecessary
-    # cause it does a few other things (stops the node, closes the DBs, then re-initializes the node and restarts
-    # the media server, all synchronously on the UI thread) that are not needed on mobile devices.
-    # Desktop keeps the graceful logout (no _exit; the event loop unwinds).
-    when defined(android):
-      # On Android status-go runs in a separate, long-lived service process. _exit(0) only reclaims
-      # the UI process, so without this the service keeps the node logged in and the next launch
-      # resumes the account instead of showing the login screen.
-      # Tell the service to stop (and kill its process); the intent is delivered by the system even
-      # after the UI process exits below.
-      stopBackgroundService()
-  else:
-    self.controller.logout()
-  singletonInstance.application.exit()
 
 method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
   let keyUid = singletonInstance.userProfile.getKeyUid()

@@ -412,7 +412,7 @@ SettingsContentBase {
                         onConfirmButtonClicked: {
                             close()
                             if (root.advancedStore.setWakuV2LightClientEnabled(lightMode))
-                                SystemUtils.restartApplication(true)
+                                Global.reloginRequested()
                         }
                         onCancelButtonClicked: {
                             close()
@@ -712,10 +712,11 @@ SettingsContentBase {
                     qsTr("Are you sure you want to disable debug mode?") :
                     qsTr("Are you sure you want to enable debug mode?"))
                      + "\n" +
-                    qsTr("The app will restart if you confirm.")
+                    qsTr("You will be logged out and back in if you confirm.")
                 onConfirmButtonClicked: {
-                    root.advancedStore.toggleDebug()
-                    SystemUtils.restartApplication(true)
+                    close()
+                    if (root.advancedStore.toggleDebug())
+                        Global.reloginRequested()
                 }
                 onCancelButtonClicked: close()
             }
