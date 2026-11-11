@@ -22,8 +22,9 @@ when defined(ios):
   import backend/pausable_services as backend_pausable_services
 
 import seaqt/qguiapplication
-import seaqt/qsslconfiguration
-import seaqt/qsslcertificate
+when not defined(android):
+  import seaqt/qsslconfiguration
+  import seaqt/qsslcertificate
 
 when defined(qmldebug):
   import seaqt/qqmldebuggingenabler
@@ -35,7 +36,7 @@ import app/global/log_cleanup_tasks
 import app/boot/app_controller
 
 featureGuard KEYCARD_ENABLED:
-  import keycard_go
+  import keycard_lib
 
   var keycardServiceV2QObjPointer: pointer
 
@@ -147,7 +148,7 @@ proc setupRemoteSignalsHandling() =
   status_go.setSignalEventCallback(callbackStatusGo)
 
   featureGuard KEYCARD_ENABLED:
-    var callbackKeycardGo: keycard_go.KeycardSignalCallback = proc(p0: cstring) {.cdecl.} =
+    var callbackKeycardGo: keycard_lib.KeycardSignalCallback = proc(p0: cstring) {.cdecl.} =
       if isShuttingDown():
         return
       when defined(useSimulatedKeycard):
@@ -157,7 +158,7 @@ proc setupRemoteSignalsHandling() =
       if keycardServiceV2QObjPointer != nil:
         signal_handler(keycardServiceV2QObjPointer, p0, "receiveKeycardSignalV2")
 
-    keycard_go.setSignalEventCallback(callbackKeycardGo)
+    keycard_lib.setSignalEventCallback(callbackKeycardGo)
 
 proc ensureDirectories*(dataDir, tmpDir, logDir: string) =
   createDir(dataDir)
@@ -301,6 +302,11 @@ proc mainProc() =
     if not existsEnv("QSG_ATLAS_HEIGHT"):
       putEnv("QSG_ATLAS_HEIGHT", MobileQsgAtlasSize)
 
+  # Mali keeps a host copy of every texture atlas page; no atlas saves ~10 MB GPU memory
+  when defined(android):
+    if not existsEnv("QSG_ATLAS_SIZE_LIMIT"):
+      putEnv("QSG_ATLAS_SIZE_LIMIT", "0")
+
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
   statusq_initializeWebEngine()
 
@@ -312,21 +318,23 @@ proc mainProc() =
   if not existsEnv("QSG_RENDER_LOOP"):
     putEnv("QSG_RENDER_LOOP", "threaded")
 
-  # Install self-signed certificate (replaces dos_add_self_signed_certificate)
-  let imageCert = imageServerTLSCert()
-  block:
-    var defaultConfig = QSslConfiguration.defaultConfiguration()
-    var certList = defaultConfig.caCertificates()
-    # fromData with no format arg defaults to QSsl::Pem (same as the original dos_add_self_signed_certificate)
-    var newCerts = QSslCertificate.fromData(
-      imageCert.toOpenArrayByte(0, imageCert.len - 1))
-    for c in newCerts.mitems:
-      certList.add(move(c))
-    var sysCerts = QSslConfiguration.systemCaCertificates()
-    for c in sysCerts.mitems:
-      certList.add(move(c))
-    defaultConfig.setCaCertificates(certList)
-    QSslConfiguration.setDefaultConfiguration(defaultConfig)
+  # Install self-signed certificate (replaces dos_add_self_signed_certificate).
+  # Android serves media over plain HTTP on loopback, so the UI process never loads OpenSSL.
+  when not defined(android):
+    let imageCert = imageServerTLSCert()
+    block:
+      var defaultConfig = QSslConfiguration.defaultConfiguration()
+      var certList = defaultConfig.caCertificates()
+      # fromData with no format arg defaults to QSsl::Pem (same as the original dos_add_self_signed_certificate)
+      var newCerts = QSslCertificate.fromData(
+        imageCert.toOpenArrayByte(0, imageCert.len - 1))
+      for c in newCerts.mitems:
+        certList.add(move(c))
+      var sysCerts = QSslConfiguration.systemCaCertificates()
+      for c in sysCerts.mitems:
+        certList.add(move(c))
+      defaultConfig.setCaCertificates(certList)
+      QSslConfiguration.setDefaultConfiguration(defaultConfig)
 
   # static qApp setup
   QCoreApplication.setApplicationName("Status Desktop")

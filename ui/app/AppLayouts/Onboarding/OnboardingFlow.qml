@@ -21,7 +21,6 @@ import AppLayouts.Onboarding.stores
 import QtModelsToolkit
 
 import shared.popups
-import shared.popups.keycard_new
 import utils
 import SortFilterProxyModel
 
@@ -96,7 +95,10 @@ OnboardingStackView {
     signal skippedBiometricFlow()
 
     function restart() : void {
-        replace(null, loginAccountsModel.ModelCount.empty ? welcomePage : loginScreenComponent)
+        if (loginAccountsModel.ModelCount.empty)
+            d.replaceDeferred(welcomePage)
+        else
+            replace(null, loginScreenComponent)
     }
 
     function setBiometricResponse(secret: string, error: string) : void {
@@ -106,7 +108,12 @@ OnboardingStackView {
         loginScreen.setBiometricResponse(secret, error)
     }
 
-    initialItem: loginAccountsModel.ModelCount.empty ? welcomePage : loginScreenComponent
+    initialItem: loginAccountsModel.ModelCount.empty ? null : loginScreenComponent
+
+    Component.onCompleted: {
+        if (loginAccountsModel.ModelCount.empty)
+            d.replaceDeferred(welcomePage, StackView.Immediate)
+    }
 
     Connections {
         target: root.loginAccountsModel?.ModelCount ?? null
@@ -120,6 +127,18 @@ OnboardingStackView {
         id: d
 
         readonly property int delegateHeight: 64
+
+        function pushDeferred(deferred, params = {}) {
+            const item = root.push(deferred.component(), Object.assign({}, deferred.properties, params))
+            deferred.adopt(item)
+            return item
+        }
+
+        function replaceDeferred(deferred, operation = StackView.Transition) {
+            const item = root.replace(null, deferred.component(), deferred.properties, operation)
+            deferred.adopt(item)
+            return item
+        }
 
         property int flow
         property LoginScreen loginScreen: null
@@ -158,7 +177,7 @@ OnboardingStackView {
             if (d.manageProfilesDialog)
                 d.manageProfilesDialog.close()
 
-            root.replace(null, welcomePage)
+            d.replaceDeferred(welcomePage)
         }
 
         function openDeleteMultiaccountConfirmationDialog(keyUid: string, username: string) : void {
@@ -166,23 +185,24 @@ OnboardingStackView {
         }
     }
 
-    Component {
+    SQUtils.DeferredComponent {
         id: welcomePage
 
-        WelcomePage {
-            availableLanguages: root.availableLanguages
-            currentLanguage: root.currentLanguage
-            onChangeLanguageRequested: (newLanguageCode) => root.changeLanguageRequested(newLanguageCode)
-
-            privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
-            thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
-
-            onCreateProfileRequested: root.push(createProfilePage)
-            onLoginRequested: root.push(loginPage)
-
-            onPrivacyPolicyRequested: d.openPrivacyPolicyPopup()
-            onTermsOfUseRequested: d.openTermsOfUsePopup()
-            onOpenThirdpartyServicesInfoPopupRequested: d.openThirdpartyServicesPopup()
+        module: "AppLayouts.Onboarding.pages"
+        typeName: "WelcomePage"
+        properties: ({
+            availableLanguages: Qt.binding(() => root.availableLanguages),
+            currentLanguage: Qt.binding(() => root.currentLanguage),
+            privacyModeFeatureEnabled: Qt.binding(() => root.privacyModeFeatureEnabled),
+            thirdpartyServicesEnabled: Qt.binding(() => root.thirdpartyServicesEnabled)
+        })
+        onCreated: page => {
+            page.changeLanguageRequested.connect(newLanguageCode => root.changeLanguageRequested(newLanguageCode))
+            page.createProfileRequested.connect(() => d.pushDeferred(createProfilePage))
+            page.loginRequested.connect(() => d.pushDeferred(loginPage))
+            page.privacyPolicyRequested.connect(() => d.openPrivacyPolicyPopup())
+            page.termsOfUseRequested.connect(() => d.openTermsOfUsePopup())
+            page.openThirdpartyServicesInfoPopupRequested.connect(() => d.openThirdpartyServicesPopup())
         }
     }
 
@@ -215,11 +235,11 @@ OnboardingStackView {
             }
             onDismissBiometricsRequested: root.dismissBiometricsRequested()
             onLoginRequested: (keyUid, method, data) => root.loginRequested(keyUid, method, data)
-            onOnboardingCreateProfileFlowRequested: root.push(createProfilePage)
-            onOnboardingLoginFlowRequested: root.push(loginPage)
+            onOnboardingCreateProfileFlowRequested: d.pushDeferred(createProfilePage)
+            onOnboardingLoginFlowRequested: d.pushDeferred(loginPage)
             onLostKeycardFlowRequested: {
                 root.keyUidSubmitted(loginScreen.selectedProfileKeyId)
-                root.push(keycardLostPage)
+                d.pushDeferred(keycardLostPage)
             }
             onOnboardingManageProfilesFlowRequested: d.openManageProfilesPopup()
 
@@ -259,214 +279,64 @@ OnboardingStackView {
         }
     }
 
-    Component {
-        id: createProfilePage
-
-        CreateProfilePage {
-            isKeycardEnabled: root.isKeycardEnabled
-
-            onCreateProfileWithPasswordRequested: {
-                root.push(createNewProfileFlow)
-            }
-            onCreateProfileWithSeedphraseRequested: {
-                d.flow = Onboarding.OnboardingFlow.CreateProfileWithSeedphrase
-                root.push(useRecoveryPhraseFlow,
-                          { type: UseRecoveryPhraseFlow.Type.NewProfile })
-            }
-            onCreateProfileWithEmptyKeycardRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]", false)
-            }
-        }
-    }
-
-    Component {
-        id: loginPage
-
-        NewAccountLoginPage {
-            networkChecksEnabled: root.networkChecksEnabled
-            isKeycardEnabled: root.isKeycardEnabled
-            thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
-
-            onLoginWithSyncingRequested: root.push(logInBySyncingFlow)
-            onLoginWithKeycardRequested: {
-                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]", false)
-            }
-
-            onLoginWithSeedphraseRequested: {
-                d.flow = Onboarding.OnboardingFlow.LoginWithSeedphrase
-                root.push(useRecoveryPhraseFlow,
-                          { type: UseRecoveryPhraseFlow.Type.Login })
-            }
-        }
-    }
-
-    Component {
+    SQUtils.DeferredComponent {
         id: keycardLostPage
 
-        KeycardLostPage {
+        module: "AppLayouts.Onboarding.pages"
+        typeName: "KeycardLostPage"
 
-            onReadSpareKeycardRequested: {
-                const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
-                root.openKeycardPopup(Constants.keycard.flow.readKeycard, keyUid, "", "", "[]", false)
-            }
-
-            onStopUsingKeycardForProfileRequested: {
-                const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
-                root.openKeycardPopup(Constants.keycard.flow.startUsingProfileWithoutKeycard, keyUid, "", "", "[]", false)
-            }
+        onCreated: page => {
+            const keyUid = () => root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
+            page.readSpareKeycardRequested.connect(() => {
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, keyUid(), "", "", "[]", false)
+            })
+            page.stopUsingKeycardForProfileRequested.connect(() => {
+                root.openKeycardPopup(Constants.keycard.flow.startUsingProfileWithoutKeycard, keyUid(), "", "", "[]", false)
+            })
         }
     }
 
-    Component {
-        id: createNewProfileFlow
+    SQUtils.DeferredComponent {
+        id: createProfilePage
 
-        CreateNewProfileFlow {
-            passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
-            stayLoggedInAvailable: root.stayLoggedInAvailable
-            biometricsAvailable: root.biometricsAvailable
+        module: "AppLayouts.Onboarding.pages"
+        typeName: "CreateProfilePage"
+        properties: ({ isKeycardEnabled: Qt.binding(() => root.isKeycardEnabled) })
 
-            onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
-            onEnableBiometricsRequested: (enable) => root.enableBiometricsRequested(enable)
-            onFinished: (password) => {
-                root.setPasswordRequested(password)
-                d.flow = Onboarding.OnboardingFlow.CreateProfileWithPassword
-                d.finishCurrentFlow()
-            }
+        onCreated: page => {
+            page.createProfileWithPasswordRequested.connect(() => d.pushDeferred(createNewProfileFlow))
+            page.createProfileWithSeedphraseRequested.connect(() => {
+                d.flow = Onboarding.OnboardingFlow.CreateProfileWithSeedphrase
+                d.pushDeferred(useRecoveryPhraseFlow,
+                               { type: RecoveryPhraseFlowType.Type.NewProfile })
+            })
+            page.createProfileWithEmptyKeycardRequested.connect(() => {
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]", false)
+            })
         }
     }
 
-    Component {
-        id: useRecoveryPhraseFlow
+    SQUtils.DeferredComponent {
+        id: loginPage
 
-        UseRecoveryPhraseFlow {
-            isSeedPhraseValid: root.isSeedPhraseValid
-            isSeedPhraseDuplicate: root.isSeedPhraseDuplicate
-            passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
-            stayLoggedInAvailable: root.stayLoggedInAvailable
-            biometricsAvailable: root.biometricsAvailable
-            isProfileMigratedToDEKEncryption: {
-                const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
-                return keyUid ? root.isProfileMigratedToDEKEncryption(keyUid) : false
-            }
+        module: "AppLayouts.Onboarding.pages"
+        typeName: "NewAccountLoginPage"
+        properties: ({
+            networkChecksEnabled: Qt.binding(() => root.networkChecksEnabled),
+            isKeycardEnabled: Qt.binding(() => root.isKeycardEnabled),
+            thirdpartyServicesEnabled: Qt.binding(() => root.thirdpartyServicesEnabled)
+        })
 
-            onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)
-            onSetPasswordRequested: (password) => root.setPasswordRequested(password)
-            onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
-            onEnableBiometricsRequested: (enable) => root.enableBiometricsRequested(enable)
-
-            onImportLocalBackupRequested: (importFilePath) => root.importLocalBackupRequested(importFilePath)
-
-            onFinished: {
-                d.finishCurrentFlow()
-            }
-        }
-    }
-
-    Component {
-        id: logInBySyncingFlow
-
-        LoginBySyncingFlow {
-            validateConnectionString: root.validateConnectionString
-            syncState: root.syncState
-
-            onSyncProceedWithConnectionString:
-                (connectionString) => root.syncProceedWithConnectionString(connectionString)
-
-            onLoginWithSeedphraseRequested: {
+        onCreated: page => {
+            page.loginWithSyncingRequested.connect(() => d.pushDeferred(logInBySyncingFlow))
+            page.loginWithKeycardRequested.connect(() => {
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]", false)
+            })
+            page.loginWithSeedphraseRequested.connect(() => {
                 d.flow = Onboarding.OnboardingFlow.LoginWithSeedphrase
-
-                root.push(useRecoveryPhraseFlow,
-                          { type: UseRecoveryPhraseFlow.Type.Login })
-            }
-
-            onFinished: {
-                d.flow = Onboarding.OnboardingFlow.LoginWithSyncing
-                d.finishCurrentFlow()
-            }
-        }
-    }
-
-    OnboardingKeycardStore {
-        id: onboardingKeycardStore
-    }
-
-    function openKeycardPopup(flow: string, keyUid: string, keycardUid: string, cardMetadataName: string, cardMetadataWalletAccountsJson: string,
-                              keycardInitialized: bool) : void {
-        console.info("onboarding - openning keycard popup for flow: ", flow, " keyUid: ", keyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)
-        keycardManagementPopupComponent.createObject(root, {
-            flow: flow,
-            keyUid: keyUid || "",
-            keycardUid: keycardUid || "",
-            keycardInitialized: keycardInitialized,
-            cardMetadataName: cardMetadataName || "",
-            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson || "[]"
-        }).open()
-    }
-
-    Component {
-        id: keycardManagementPopupComponent
-
-        KeycardManagementPopup {
-            store: onboardingKeycardStore
-            passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
-
-            destroyOnClose: true
-
-            onMetadataResult: function(keycardInfo) {
-                const top = root.currentItem
-                if (top && top.objectName === "keycardDetailsPage") {
-                    for (const k in keycardInfo)
-                        top[k] = keycardInfo[k]
-                } else {
-                    root.push(keycardDetailsComponent, keycardInfo)
-                }
-            }
-
-            onKeycardFlowCompletedWithData: function(flow, dataJson) {
-                let onboardingFlow = Onboarding.OnboardingFlow.Unknown
-                switch (flow) {
-                case Constants.keycard.flow.onboardingLoginWithKeycard:
-                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingLoginWithKeycard
-                    break
-                case Constants.keycard.flow.onboardingImportNewKeyPair:
-                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingImportNewKeyPair
-                    break
-                case Constants.keycard.flow.onboardingImportSeedPhrase:
-                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingImportSeedPhrase
-                    break
-                case Constants.keycard.flow.startUsingProfileWithoutKeycard:
-                    onboardingFlow = Onboarding.OnboardingFlow.LoginWithLostKeycardSeedphrase
-                    break
-                default:
-                    console.warn("onboarding - unexpected keycard flow:", flow)
-                    return
-                }
-                console.info("onboarding - onbordingFlow: ", onboardingFlow, " keycard-flow: ", flow)
-                d.flow = onboardingFlow
-                root.skippedBiometricFlow()
-                root.onboardingKeycardFlowCompletedWithData(flow, dataJson)
-                root.finished(onboardingFlow)
-            }
-
-            onKeycardFlowCompleted: function(flow, kUid, kcUid, success) {
-                console.info("onboarding - keycard flow completed, flow: ", flow, " keyUid: ", keyUid, " keycardUid: ", keycardUid," done successfully: ", success)
-                if (flow === Constants.keycard.flow.readKeycard) {
-                    return
-                }
-                if (flow === Constants.keycard.flow.onboardingLoginWithKeycard
-                        || flow === Constants.keycard.flow.onboardingImportNewKeyPair
-                        || flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
-                    // successful keycard flow continues in onKeycardFlowCompletedWithData (continue-onboarding flow), unsuccessful returns to previous screen
-                    if (!success) {
-                        root.pop()
-                    }
-                    return
-                }
-                // the user returns to the screen the popup was opened from
-                if (root.currentItem && root.currentItem.objectName === "keycardDetailsPage") {
-                    root.pop()
-                }
-            }
+                d.pushDeferred(useRecoveryPhraseFlow,
+                               { type: RecoveryPhraseFlowType.Type.Login })
+            })
         }
     }
 
@@ -514,6 +384,165 @@ OnboardingStackView {
         }
     }
 
+    SQUtils.DeferredComponent {
+        id: createNewProfileFlow
+
+        source: Qt.resolvedUrl("CreateNewProfileFlow.qml")
+        properties: ({
+            passwordStrengthScoreFunction: root.passwordStrengthScoreFunction,
+            stayLoggedInAvailable: Qt.binding(() => root.stayLoggedInAvailable),
+            biometricsAvailable: Qt.binding(() => root.biometricsAvailable)
+        })
+
+        onCreated: flow => {
+            flow.stayLoggedInRequested.connect(enabled => root.stayLoggedInRequested(enabled))
+            flow.enableBiometricsRequested.connect(enable => root.enableBiometricsRequested(enable))
+            flow.finished.connect(password => {
+                root.setPasswordRequested(password)
+                d.flow = Onboarding.OnboardingFlow.CreateProfileWithPassword
+                d.finishCurrentFlow()
+            })
+        }
+    }
+
+    SQUtils.DeferredComponent {
+        id: useRecoveryPhraseFlow
+
+        source: Qt.resolvedUrl("UseRecoveryPhraseFlow.qml")
+        properties: ({
+            isSeedPhraseValid: root.isSeedPhraseValid,
+            isSeedPhraseDuplicate: root.isSeedPhraseDuplicate,
+            passwordStrengthScoreFunction: root.passwordStrengthScoreFunction,
+            stayLoggedInAvailable: Qt.binding(() => root.stayLoggedInAvailable),
+            biometricsAvailable: Qt.binding(() => root.biometricsAvailable),
+            isProfileMigratedToDEKEncryption: Qt.binding(() => {
+                const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
+                return keyUid ? root.isProfileMigratedToDEKEncryption(keyUid) : false
+            })
+        })
+
+        onCreated: flow => {
+            flow.seedphraseSubmitted.connect(seedphrase => root.seedphraseSubmitted(seedphrase))
+            flow.setPasswordRequested.connect(password => root.setPasswordRequested(password))
+            flow.stayLoggedInRequested.connect(enabled => root.stayLoggedInRequested(enabled))
+            flow.enableBiometricsRequested.connect(enable => root.enableBiometricsRequested(enable))
+            flow.importLocalBackupRequested.connect(importFilePath => root.importLocalBackupRequested(importFilePath))
+            flow.finished.connect(() => d.finishCurrentFlow())
+        }
+    }
+
+    SQUtils.DeferredComponent {
+        id: logInBySyncingFlow
+
+        source: Qt.resolvedUrl("LoginBySyncingFlow.qml")
+        properties: ({
+            validateConnectionString: root.validateConnectionString,
+            syncState: Qt.binding(() => root.syncState)
+        })
+
+        onCreated: flow => {
+            flow.syncProceedWithConnectionString.connect(
+                connectionString => root.syncProceedWithConnectionString(connectionString))
+            flow.loginWithSeedphraseRequested.connect(() => {
+                d.flow = Onboarding.OnboardingFlow.LoginWithSeedphrase
+
+                d.pushDeferred(useRecoveryPhraseFlow,
+                               { type: RecoveryPhraseFlowType.Type.Login })
+            })
+            flow.finished.connect(() => {
+                d.flow = Onboarding.OnboardingFlow.LoginWithSyncing
+                d.finishCurrentFlow()
+            })
+        }
+    }
+
+    OnboardingKeycardStore {
+        id: onboardingKeycardStore
+    }
+
+    function openKeycardPopup(flow: string, keyUid: string, keycardUid: string, cardMetadataName: string, cardMetadataWalletAccountsJson: string,
+                              keycardInitialized: bool) : void {
+        console.info("onboarding - openning keycard popup for flow: ", flow, " keyUid: ", keyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)
+        keycardManagementPopupComponent.createObject(root, {
+            flow: flow,
+            keyUid: keyUid || "",
+            keycardUid: keycardUid || "",
+            keycardInitialized: keycardInitialized,
+            cardMetadataName: cardMetadataName || "",
+            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson || "[]"
+        }).open()
+    }
+
+    SQUtils.DeferredComponent {
+        id: keycardManagementPopupComponent
+
+        module: "shared.popups.keycard_new"
+        typeName: "KeycardManagementPopup"
+        properties: ({
+            store: onboardingKeycardStore,
+            passwordStrengthScoreFunction: root.passwordStrengthScoreFunction,
+            destroyOnClose: true
+        })
+
+        onCreated: popup => {
+            popup.metadataResult.connect(keycardInfo => {
+                const top = root.currentItem
+                if (top && top.objectName === "keycardDetailsPage") {
+                    for (const k in keycardInfo)
+                        top[k] = keycardInfo[k]
+                } else {
+                    root.push(keycardDetailsComponent, keycardInfo)
+                }
+            })
+
+            popup.keycardFlowCompletedWithData.connect((flow, dataJson) => {
+                let onboardingFlow = Onboarding.OnboardingFlow.Unknown
+                switch (flow) {
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingLoginWithKeycard
+                    break
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingImportNewKeyPair
+                    break
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
+                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingImportSeedPhrase
+                    break
+                case Constants.keycard.flow.startUsingProfileWithoutKeycard:
+                    onboardingFlow = Onboarding.OnboardingFlow.LoginWithLostKeycardSeedphrase
+                    break
+                default:
+                    console.warn("onboarding - unexpected keycard flow:", flow)
+                    return
+                }
+                console.info("onboarding - onbordingFlow: ", onboardingFlow, " keycard-flow: ", flow)
+                d.flow = onboardingFlow
+                root.skippedBiometricFlow()
+                root.onboardingKeycardFlowCompletedWithData(flow, dataJson)
+                root.finished(onboardingFlow)
+            })
+
+            popup.keycardFlowCompleted.connect((flow, kUid, kcUid, success) => {
+                console.info("onboarding - keycard flow completed, flow: ", flow, " keyUid: ", popup.keyUid, " keycardUid: ", popup.keycardUid," done successfully: ", success)
+                if (flow === Constants.keycard.flow.readKeycard) {
+                    return
+                }
+                if (flow === Constants.keycard.flow.onboardingLoginWithKeycard
+                        || flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                        || flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
+                    // successful keycard flow continues in onKeycardFlowCompletedWithData (continue-onboarding flow), unsuccessful returns to previous screen
+                    if (!success) {
+                        root.pop()
+                    }
+                    return
+                }
+                // the user returns to the screen the popup was opened from
+                if (root.currentItem && root.currentItem.objectName === "keycardDetailsPage") {
+                    root.pop()
+                }
+            })
+        }
+    }
+
     // popups
     Component {
         id: privacyPolicyPopup
@@ -545,16 +574,18 @@ OnboardingStackView {
         }
     }
 
-    Component {
+    SQUtils.DeferredComponent {
         id: thirdpartyServicesPopup
 
-        ThirdpartyServicesPopup {
-            isOnboardingFlow: true
-            thirdPartyServicesEnabled: root.thirdpartyServicesEnabled
-
-            onToggleThirdpartyServicesEnabledRequested: root.toggleThirdpartyServicesEnabledRequested()
-            onOpenDiscussPageRequested: Qt.openUrlExternally(Constants.statusDiscussPageUrl)
-            onOpenThirdpartyServicesArticleRequested: Qt.openUrlExternally(Constants.statusThirdpartyServicesArticle)
+        source: Qt.resolvedUrl("../../../imports/shared/popups/ThirdpartyServicesPopup.qml")
+        properties: ({
+            isOnboardingFlow: true,
+            thirdPartyServicesEnabled: Qt.binding(() => root.thirdpartyServicesEnabled)
+        })
+        onCreated: popup => {
+            popup.toggleThirdpartyServicesEnabledRequested.connect(() => root.toggleThirdpartyServicesEnabledRequested())
+            popup.openDiscussPageRequested.connect(() => Qt.openUrlExternally(Constants.statusDiscussPageUrl))
+            popup.openThirdpartyServicesArticleRequested.connect(() => Qt.openUrlExternally(Constants.statusThirdpartyServicesArticle))
         }
     }
 

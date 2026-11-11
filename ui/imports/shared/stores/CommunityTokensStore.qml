@@ -66,7 +66,7 @@ QtObject {
                                                        tmtName, tmtSymbol, tmtDescription, otChainId, jsonArtworkFile)
         }
 
-        if (String(otArtworkSource).startsWith("https://localhost:")) {
+        if (/^https?:\/\/localhost:/.test(String(otArtworkSource))) {
             Utils.fetchImageBase64(otArtworkSource, (dataUrl) => {
                 deployOwnerTokenWithArtwork(subscriptionId, communityId, dataUrl,
                                             otChainId, otAccountAddress, otName, otSymbol, otDescription, otArtworkCropRect,

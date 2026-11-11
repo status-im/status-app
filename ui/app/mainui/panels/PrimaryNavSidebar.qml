@@ -74,6 +74,7 @@ Control {
     signal activityCenterRequested(bool shouldShow)
     signal supportBotChatRequested()
     signal viewProfileRequested(string pubKey)
+    signal profileMenuOpened()
     signal shareOwnProfileRequested
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
@@ -313,6 +314,7 @@ Control {
 
                     onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
                     onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
+                    onMenuOpened: root.profileMenuOpened()
                     onShareOwnProfileRequested: root.shareOwnProfileRequested()
                     onSettingsRequested: root.settingsRequested()
                     onQuitRequested: root.quitRequested()

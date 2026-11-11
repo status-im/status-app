@@ -1,6 +1,7 @@
 module StatusQ.Core.Utils
 
 ClippingWrapper 0.1 ClippingWrapper.qml
+DeferredComponent 0.1 DeferredComponent.qml
 DoubleFlickable 0.1 DoubleFlickable.qml
 DoubleFlickableWithFolding 0.1 DoubleFlickableWithFolding.qml
 IndexWindowSource 0.1 IndexWindowSource.qml

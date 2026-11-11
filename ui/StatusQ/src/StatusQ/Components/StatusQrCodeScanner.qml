@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 
+import StatusQ
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Backpressure
@@ -26,13 +27,18 @@ Item {
     property bool highlightContentZone: false
     property bool highlightCaptureZone: false
 
-    readonly property alias cameraAvailable: capture.cameraAvailable
-    readonly property size sourceSize: capture.sourceSize
-    readonly property size contentSize: capture.contentSize
-    readonly property real sourceRatio: capture.sourceRatio
+    readonly property bool cameraAvailable: !!d.capture && d.capture.cameraAvailable
+    readonly property size sourceSize: d.capture ? d.capture.sourceSize : Qt.size(0, 0)
+    readonly property size contentSize: d.capture ? d.capture.contentSize : Qt.size(0, 0)
+    readonly property real sourceRatio: d.capture ? d.capture.sourceRatio : 0
 
-    // Frames of the running camera, for the host's frame tap / decoder.
-    readonly property var videoSink: capture.videoSink
+    // Frames of the running camera, for the host's frame tap / decoder (Qt camera).
+    readonly property var videoSink: d.capture?.videoSink ?? null
+
+    // Android: frames come from the native camera (NativeQrCodeCapture), not from a
+    // video sink, so scanning does not load QtMultimedia. The host's decoder reads
+    // them through this handle (0 elsewhere).
+    readonly property int frameSource: d.capture?.frameSource ?? 0
 
     // The scan corners in this item's pixels and how the preview shows the
     // video: what a frame tap needs to crop each frame as shown, from that
@@ -40,8 +46,8 @@ Item {
     readonly property var captureArea: ({
         x: scanCorners.x, y: scanCorners.y,
         width: scanCorners.width, height: scanCorners.height,
-        previewWidth: capture.width, previewHeight: capture.height,
-        fillMode: capture.fillMode, mirrored: capture.mirrored
+        previewWidth: d.capture?.width ?? 0, previewHeight: d.capture?.height ?? 0,
+        fillMode: d.capture?.fillMode ?? 0, mirrored: d.capture?.mirrored ?? false
     })
 
     // The camera runs while this is true, the scanner is visible and the
@@ -57,7 +63,7 @@ Item {
     property bool imagePickerVisible: false
     property bool imagePickerEnabled: true
 
-    property bool flashlightAvailable: capture.cameraAvailable && capture.torchSupported
+    property bool flashlightAvailable: root.cameraAvailable && d.capture.torchSupported
 
     property bool flashlightOn: false
 
@@ -81,22 +87,51 @@ Item {
         id: d
 
         readonly property int radius: 16
+        readonly property var capture: captureLoader.item
+    }
+
+    onCaptureAreaChanged: {
+        if (d.capture && d.capture.frameSource)
+            d.capture.setPreviewRoi(scanCorners.x, scanCorners.y, scanCorners.width, scanCorners.height)
     }
 
     Item {
         anchors.fill: parent
-        visible: capture.cameraAvailable
+        visible: root.cameraAvailable
         clip: true
 
-        StatusQrCodeCapture {
-            id: capture
+        Loader {
+            id: captureLoader
 
             anchors.fill: parent
-            visible: true
-            clip: true
-            objectName: "qrCodeCapture"
-            active: root.capturing
-            torchOn: root.flashlightOn
+            sourceComponent: Qt.platform.os === "android" ? nativeCaptureComponent
+                                                          : qtCaptureComponent
+        }
+
+        Component {
+            id: qtCaptureComponent
+
+            StatusQrCodeCapture {
+                visible: true
+                clip: true
+                objectName: "qrCodeCapture"
+                active: root.capturing
+                torchOn: root.flashlightOn
+            }
+        }
+
+        Component {
+            id: nativeCaptureComponent
+
+            NativeQrCodeCapture {
+                clip: true
+                objectName: "qrCodeCapture"
+                active: root.capturing
+                torchOn: root.flashlightOn
+
+                Component.onCompleted: setPreviewRoi(scanCorners.x, scanCorners.y,
+                                                     scanCorners.width, scanCorners.height)
+            }
         }
 
         Loader {
@@ -110,10 +145,10 @@ Item {
                         return Theme.palette.dangerColor3
                     }
                 }
-                x: capture.contentRect.x
-                y: capture.contentRect.y
-                width: capture.contentRect.width
-                height: capture.contentRect.height
+                x: d.capture.contentRect.x
+                y: d.capture.contentRect.y
+                width: d.capture.contentRect.width
+                height: d.capture.contentRect.height
             }
         }
     }
@@ -194,16 +229,16 @@ Item {
 
         width: Math.min(implicitWidth, parent.width / 2)
         height: 40
-        visible: !cameraUnavailableText.visible && capture.availableCameras.length > 0
+        visible: !cameraUnavailableText.visible && (d.capture?.availableCameras.length ?? 0) > 0
         opacity: 0.7
-        model: capture.availableCameras
+        model: d.capture?.availableCameras ?? []
         control.textRole: "displayName"
         control.valueRole: "deviceId"
         control.padding: 8
         control.spacing: 8
         onCurrentValueChanged: {
             // Debounce to close combobox first
-            Backpressure.debounce(this, 50, () => { capture.setCameraDevice(currentValue) })()
+            Backpressure.debounce(this, 50, () => { d.capture?.setCameraDevice(currentValue) })()
         }
     }
 
@@ -218,18 +253,18 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             color: Theme.palette.dangerColor1
-            visible: !capture.cameraAvailable
+            visible: !root.cameraAvailable
             text: qsTr("Camera is not available")
             wrapMode: Text.WordWrap
         }
 
         StatusBaseText {
-            visible: cameraUnavailableText.visible && capture.cameraError
+            visible: cameraUnavailableText.visible && !!d.capture?.cameraError
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             color: Theme.palette.directColor5
-            text: capture.cameraError
+            text: d.capture?.cameraError ?? ""
             wrapMode: Text.WordWrap
         }
     }
@@ -243,7 +278,7 @@ Item {
             anchors.fill: parent
             color: Theme.palette.baseColor4
             radius: d.radius
-            visible: !capture.cameraAvailable
+            visible: !root.cameraAvailable
 
             StatusLoadingIndicator {
                 anchors.centerIn: parent

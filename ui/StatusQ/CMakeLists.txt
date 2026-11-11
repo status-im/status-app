@@ -39,42 +39,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT ANDROID)
     find_package(Qt6 COMPONENTS DBus REQUIRED)
 endif()
 
-# --- QML test hooks flag and TestConfig generation ---
+# QML test hooks flag (TestConfig.testMode, registered from C++ so it needs no QML compile at runtime)
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
-set(TEST_MODE false)
-if(STATUSQ_TESTMODE)
-    set(TEST_MODE true)
-endif()
-
-# Generate TestConfig.qml into the build tree
-set(_gen_qml ${CMAKE_CURRENT_BINARY_DIR}/src/StatusQ/Core/TestConfig.qml)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/StatusQ/Core)
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/StatusQ/Core/TestConfig.qml.in
-  ${_gen_qml}
-  @ONLY
-)
-if(NOT EXISTS ${_gen_qml})
-  message(FATAL_ERROR "Expected generated file missing: ${_gen_qml}")
-endif()
-
-# For shadow build OFF mode, also copy to source directory
-if(NOT ${STATUSQ_SHADOW_BUILD})
-  configure_file(${_gen_qml} ${CMAKE_CURRENT_SOURCE_DIR}/src/StatusQ/Core/TestConfig.qml COPYONLY)
-endif()
-
-# Generate a .qrc that includes the generated QML
-set(_gen_qrc ${CMAKE_CURRENT_BINARY_DIR}/TestConfig.generated.qrc)
-file(WRITE ${_gen_qrc}
-  "<RCC>\n"
-  "  <qresource prefix=\"/StatusQ\">\n"
-  "    <file alias=\"Core/TestConfig.qml\">${_gen_qml}</file>\n"
-  "  </qresource>\n"
-  "</RCC>\n"
-)
-
-qt_add_resources(STATUSQ_TESTCONFIG_RCC ${_gen_qrc})
-# --- END test hooks ---
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     find_package(Qt6 COMPONENTS QuickTest REQUIRED)
@@ -176,8 +142,9 @@ endif()
 
 add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
-        ${STATUSQ_TESTCONFIG_RCC}
         include/StatusQ/audioutils.h
+        include/StatusQ/mediabackend.h
+        include/StatusQ/nativeqrcodecapture.h
         include/StatusQ/skeletontileitem.h
         include/StatusQ/rippleitem.h
         include/StatusQ/backgroundgraphicsrelease.h
@@ -240,6 +207,8 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/urlutils.h
         include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
+        src/mediabackend.cpp
+        src/nativeqrcodecapture.cpp
         src/skeletontileitem.cpp
         src/rippleitem.cpp
         src/scenegraphanimation.cpp
@@ -328,6 +297,7 @@ add_library(StatusQ ${LIB_TYPE}
         )
 
 target_compile_features(StatusQ PRIVATE cxx_std_17)
+target_compile_definitions(StatusQ PRIVATE STATUSQ_TESTMODE=$<BOOL:${STATUSQ_TESTMODE}>)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::GuiPrivate Qt6::QuickPrivate
         Qt6::QuickLayoutsPrivate)
 
@@ -381,6 +351,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
         src/securestorage_android.cpp
         src/safutils_android.cpp
         src/lifecycleutils_android.cpp
+        src/platformhttpsreply_android.cpp
         src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
         src/StatusQ/Controls/NativeIndicatorItem_android.cpp
         src/shareutils_android.cpp

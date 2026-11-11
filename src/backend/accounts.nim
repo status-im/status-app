@@ -296,6 +296,9 @@ proc openedAccounts*(path: string): RpcResponse[JsonNode] =
       "metricsAddress": status_const.METRICS_ADDRESS,
       "wakuFleetsConfigFilePath": status_const.WAKU_FLEETS_CONFIG,
     }
+    # Plain HTTP on loopback keeps OpenSSL out of the UI process; the server has no client auth either way
+    when defined(android):
+      payload["mediaServerEnableTLS"] = %false
     # Do not remove the sleep 700
     # This sleep prevents a crash on intel MacOS
     # with errors like bad flushGen 12 in prepareForSweep; sweepgen 0

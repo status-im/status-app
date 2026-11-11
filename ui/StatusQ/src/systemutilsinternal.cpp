@@ -24,6 +24,9 @@
 #include <atomic>
 #include <mutex>
 #include <QQuickWindow>
+#include <QQmlEngine>
+#include <QtQml/private/qv4engine_p.h>
+#include <QtQml/private/qqmlmetatype_p.h>
 #include <qpa/qplatformscreen.h>
 
 #ifdef Q_OS_ANDROID
@@ -837,6 +840,31 @@ void SystemUtilsInternal::sharePaths(const QStringList& filePaths) const
 void SystemUtilsInternal::debugLog(const QString& message) const
 {
     qInfo() << "[QML]" << message;
+}
+
+QStringList SystemUtilsInternal::checkSourceCompiledQmlUnits(QObject *context) const
+{
+    QStringList urls;
+    const auto engine = qmlEngine(context);
+    if (!engine)
+        return urls;
+
+    // A unit without an ahead-of-time cached counterpart was compiled from its source text:
+    // a file left out of qmlcachegen, or a Qt.createQmlObject() string
+    const auto units = engine->handle()->compilationUnits();
+    for (const auto& url: units.uniqueKeys()) {
+        if (url.isEmpty()) // evaluated script snippets, not documents
+            continue;
+        QQmlMetaType::CachedUnitLookupError status;
+        if (!QQmlMetaType::findCachedCompilationUnit(url, QQmlMetaType::AcceptUntyped, &status))
+            urls.append(url.toString());
+    }
+
+    for (const auto& url: std::as_const(urls))
+        qWarning().noquote() << "[qml-source-compiled]" << url;
+    if (!urls.isEmpty() && qEnvironmentVariableIntValue("STATUS_FAIL_ON_QML_SOURCE_COMPILE") == 1)
+        qFatal("%lld QML units compiled from source at runtime", qlonglong(urls.size()));
+    return urls;
 }
 
 void SystemUtilsInternal::startShakeDetection()

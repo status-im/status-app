@@ -90,6 +90,11 @@ public:
 
     Q_INVOKABLE void tryCloseActivePopups();
 
+    // URLs of the QML/JS units in context's engine that were compiled from source at runtime
+    // instead of being loaded ahead-of-time compiled (qmlcachegen). Logs them, and aborts when
+    // STATUS_FAIL_ON_QML_SOURCE_COMPILE=1, so a smoke run of an AOT build catches a missing unit.
+    Q_INVOKABLE QStringList checkSourceCompiledQmlUnits(QObject *context) const;
+
     // exposes qFuzzyCompare(double, double) to QML
     Q_INVOKABLE bool fuzzyCompare(const QJSValue &lhs, const QJSValue &rhs) const;
 

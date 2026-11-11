@@ -39,6 +39,8 @@ StatusStackModal {
 
     property string communityId: ""
     property string chatId: "_newChannel"
+    property int channelPosition: -1
+    property var deleteChatConfirmationDialog
 
     property string categoryId: ""
     property string channelName: ""

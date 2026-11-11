@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQml.StateMachine as DSM
 
 import StatusQ
 import StatusQ.Core
@@ -50,176 +49,76 @@ Item {
         readonly property string registerENS: "RegisterENS"
         readonly property string setPubKey: "SetPubKey"
         readonly property string releaseENS: "ReleaseENS"
+
+        property string currentState
+
+        // Deferred like a state machine transition: the view emitting the signal is destroyed on enter
+        function transition(targetState: string) {
+            if (targetState !== "")
+                Qt.callLater(d.enter, targetState)
+        }
+
+        function enter(targetState: string) {
+            d.currentState = targetState
+            switch (targetState) {
+            case "welcome": loader.sourceComponent = welcome; break
+            case "search": loader.sourceComponent = search; break
+            case "added":
+                loader.sourceComponent = added
+                loader.item.ensUsername = ensView.addedUsername
+                break
+            case "list": loader.sourceComponent = list; break
+            case "details": loader.sourceComponent = details; break
+            case "tAndC": loader.sourceComponent = termsAndConditions; break
+            case "ensRegistered": loader.sourceComponent = ensRegistered; break
+            case "ensReleased": loader.sourceComponent = ensReleased; break
+            case "ensConnected": loader.sourceComponent = ensConnected; break
+            }
+        }
     }
 
-    DSM.StateMachine {
-        id: stateMachine
-        initialState: ensView.ensUsernamesStore.ensUsernamesModel.count > 0 ? listState : welcomeState
-        running: true
+    Component.onCompleted: d.enter(ensView.ensUsernamesStore.ensUsernamesModel.count > 0 ? "list" : "welcome")
 
-        DSM.State {
-            id: welcomeState
-            onEntered: loader.sourceComponent = welcome
-
-            DSM.SignalTransition {
-                targetState: searchState
-                signal: next
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: goToList
-            }
+    onNext: output => {
+        switch (d.currentState) {
+        case "welcome": d.transition("search"); break
+        case "search": d.transition(output === "available" ? "tAndC" : ""); break
+        case "list":
+            if (output === "search")
+                d.transition("search")
+            else if (output === "details")
+                d.transition("details")
+            break
+        case "added":
+        case "ensRegistered":
+        case "ensReleased":
+        case "ensConnected":
+            d.transition("list")
+            break
         }
+    }
 
-        DSM.State {
-            id: searchState
-            onEntered: loader.sourceComponent = search
-            DSM.SignalTransition {
-                targetState: tAndCState
-                signal: next
-                guard: output === "available"
-            }
-            DSM.SignalTransition {
-                targetState: addedState
-                signal: connect
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: goToList
-            }
-            DSM.SignalTransition {
-                targetState: welcomeState
-                signal: goToWelcome
-            }
-            DSM.SignalTransition {
-                targetState: ensConnectedState
-                signal: done
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: back
-            }
-        }
+    onBack: {
+        if (["search", "details", "tAndC"].includes(d.currentState))
+            d.transition("list")
+    }
 
-        DSM.State {
-            id: addedState
-            onEntered: {
-                loader.sourceComponent = added;
-                loader.item.ensUsername = addedUsername;
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: next
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: goToList
-            }
-            DSM.SignalTransition {
-                targetState: welcomeState
-                signal: goToWelcome
-            }
+    onDone: {
+        switch (d.currentState) {
+        case "search": d.transition("ensConnected"); break
+        case "details": d.transition("ensReleased"); break
+        case "tAndC": d.transition("ensRegistered"); break
         }
+    }
 
-        DSM.State {
-            id: listState
-            onEntered: {
-                loader.sourceComponent = list;
-            }
-            DSM.SignalTransition {
-                targetState: searchState
-                signal: next
-                guard: output === "search"
-            }
-            DSM.SignalTransition {
-                targetState: detailsState
-                signal: next
-                guard: output === "details"
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: goToList
-            }
-            DSM.SignalTransition {
-                targetState: welcomeState
-                signal: goToWelcome
-            }
-        }
+    onGoToList: {
+        if (["welcome", "search", "added", "list", "details", "tAndC"].includes(d.currentState))
+            d.transition("list")
+    }
 
-        DSM.State {
-            id: detailsState
-            onEntered: {
-                loader.sourceComponent = details;
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: back
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: goToList
-            }
-            DSM.SignalTransition {
-                targetState: welcomeState
-                signal: goToWelcome
-            }
-            DSM.SignalTransition {
-                targetState: ensReleasedState
-                signal: done
-            }
-        }
-
-        DSM.State {
-            id: tAndCState
-            onEntered:loader.sourceComponent = termsAndConditions
-            DSM.SignalTransition {
-                targetState: listState
-                signal: goToList
-            }
-            DSM.SignalTransition {
-                targetState: welcomeState
-                signal: goToWelcome
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: back
-            }
-            DSM.SignalTransition {
-                targetState: listState
-                signal: back
-            }
-            DSM.SignalTransition {
-                targetState: ensRegisteredState
-                signal: done
-            }
-        }
-
-        DSM.State {
-            id: ensRegisteredState
-            onEntered:loader.sourceComponent = ensRegistered
-            DSM.SignalTransition {
-                targetState: listState
-                signal: next
-            }
-        }
-
-        DSM.State {
-            id: ensReleasedState
-            onEntered:loader.sourceComponent = ensReleased
-            DSM.SignalTransition {
-                targetState: listState
-                signal: next
-            }
-        }
-
-        DSM.State {
-            id: ensConnectedState
-            onEntered:loader.sourceComponent = ensConnected
-            DSM.SignalTransition {
-                targetState: listState
-                signal: next
-            }
-        }
+    onGoToWelcome: {
+        if (["search", "added", "list", "details", "tAndC"].includes(d.currentState))
+            d.transition("welcome")
     }
 
     Loader {
@@ -447,10 +346,9 @@ Item {
         }
     }
 
-    Connections {
-        target: ensView
-        function onConnect(ensUsername: string) {
-            addedUsername = ensUsername;
-        }
+    onConnect: ensUsername => {
+        ensView.addedUsername = ensUsername
+        if (d.currentState === "search")
+            d.transition("added")
     }
 }

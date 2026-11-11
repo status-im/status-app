@@ -1,3 +1,4 @@
+from objectmaphelper import RegularExpression
 from gui.objects_map.names import statusDesktop_mainWindow
 from gui.objects_map.names import statusDesktop_mainWindow_overlay
 
@@ -23,7 +24,7 @@ mainWindow_chatLogView_StatusListView = {"container": statusDesktop_mainWindow, 
 chatLogView_chatMessageViewDelegate_MessageView = {"container": mainWindow_chatLogView_StatusListView, "objectName": "chatMessageViewDelegate", "type": "MessageView", "visible": True, "enabled": True}
 
 # Create Chat View
-mainWindow_CreateChatView = {"container": statusDesktop_mainWindow, "type": "CreateChatView", "unnamed": 1, "visible": True}
+mainWindow_CreateChatView = {"container": statusDesktop_mainWindow, "type": RegularExpression("^(CreateChatView|CreateChatViewInstance)$"), "unnamed": 1, "visible": True}
 createChatView_confirmBtn = {"container": statusDesktop_mainWindow, "objectName": "inlineSelectorConfirmButton", "type": "StatusButton"}
 createChatView_contactsList = {"container": statusDesktop_mainWindow, "objectName": "createChatContactsList", "type": "StatusListView", "visible": True}
 mainWindow_Cancel_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow, "text": "Cancel", "type": "StatusButton", "unnamed": 1, "visible": True}

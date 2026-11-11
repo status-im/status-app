@@ -1,6 +1,8 @@
 import QtQuick
 import QtMultimedia
 
+import StatusQ
+
 /*!
     \qmltype StatusVideo
     \inherits Item
@@ -24,7 +26,7 @@ import QtMultimedia
     \endqml
 
 */
-Item {
+MediaHost {
     id: root
 
     readonly property bool isLoading: video.playbackState !== MediaPlayer.PlayingState

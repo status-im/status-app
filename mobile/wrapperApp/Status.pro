@@ -1,19 +1,34 @@
 TEMPLATE = app
 
-QT += quick gui qml webview svg widgets multimedia
+QT += quick gui qml svg multimedia
 
-CONFIG += qtquickcompiler
+# AOT Storage classes are polymorphic; no RTTI user in this lib, so drop typeinfo
+CONFIG += rtti_off
+
+android {
+    QMAKE_CXXFLAGS_RELEASE -= -O2
+    QMAKE_CXXFLAGS_RELEASE += -Oz
+}
 # Per-binding AOT stats, written next to each generated .cpp
 QMLCACHE_FLAGS += --dump-aot-stats --module-id=status
 # qtquickcompiler.prf passes no import paths; without these, in-repo modules don't AOT-compile
 QMLCACHE_FLAGS += -I $$PWD/../../ui -I $$PWD/../../ui/imports -I $$PWD/../../ui/app -I $$PWD/../../ui/StatusQ/src
 
-# qmlcachegen cannot follow QtQuick.Controls' optional style imports; expose the Universal
+# qmlcachegen cannot follow QtQuick.Controls' optional style imports; expose the Basic
 # style under the plain Controls module name so Control-derived types AOT-compile
 QMLSHIM_DIR = $$OUT_PWD/qmlcontrols-shim
-SHIM_RESULT = $$system(bash $$PWD/../scripts/gen_controls_shim.sh $$[QT_INSTALL_QML] $$system_quote($$QMLSHIM_DIR) Universal 2>&1)
+SHIM_RESULT = $$system(bash $$PWD/../scripts/gen_controls_shim.sh $$[QT_INSTALL_QML] $$system_quote($$QMLSHIM_DIR) Basic 2>&1)
 !isEmpty(SHIM_RESULT): warning("gen_controls_shim: $$SHIM_RESULT")
 QMLCACHE_FLAGS += -I $$QMLSHIM_DIR
+
+# Code layout: hot-first symbol order from a device page capture (mobile/scripts/android/order)
+STATUS_LIB_SECTIONS = $$(STATUS_LIB_SECTIONS)
+!isEmpty(STATUS_LIB_SECTIONS) {
+    QMAKE_CFLAGS += -ffunction-sections -fdata-sections
+    QMAKE_CXXFLAGS += -ffunction-sections -fdata-sections
+}
+STATUS_LIB_ORDER = $$(STATUS_LIB_ORDER)
+!isEmpty(STATUS_LIB_ORDER): QMAKE_LFLAGS += -Wl,--symbol-ordering-file=$$STATUS_LIB_ORDER -Wl,--no-warn-symbol-ordering
 
 BUILD_VARIANT = $$(BUILD_VARIANT)
 TARGET = Status
@@ -30,7 +45,7 @@ contains(DEFINES, FLAG_KEYCARD_ENABLED) {
 
 equals(QT_MAJOR_VERSION, 6) {
     message("qt 6 config!!")
-    QT += core5compat core
+    QT += core
 }
 
 SOURCES += \
@@ -63,6 +78,8 @@ android {
 
     QMAKE_LFLAGS += -Wl,-z,max-page-size=16384
     QMAKE_LFLAGS_SHLIB += -Wl,-z,max-page-size=16384
+    # Packed relative relocations (Android tags: minSdk 28 < 30)
+    QMAKE_LFLAGS += -Wl,--pack-dyn-relocs=android+relr -Wl,--use-android-relr-tags
 
     ANDROID_VERSION_NAME = $$VERSION
 
@@ -128,6 +145,8 @@ ios {
 
     # Base libraries (always included)
     LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lstatusq -lhunspell-1.7 -lMobileWebView -lstatus -lsds -lssl_3 -lcrypto_3 -lZXing -lresolv -lqrcodegen
+    # libMobileWebView; no longer pulled in through QT += webview
+    LIBS += -framework WebKit
 
     # The Go facade owns the token ABI; keep it private in the final executable.
     QMAKE_LFLAGS += -Wl,-unexported_symbols_list,$$shell_quote($$PWD/../../vendor/status-go/scripts/tkl-unexported-macos.txt)
@@ -145,5 +164,21 @@ ios {
         MY_ENTITLEMENTS.name = CODE_SIGN_ENTITLEMENTS
         MY_ENTITLEMENTS.value = $$PWD/../ios/Status-NoKeycard.entitlements
         QMAKE_MAC_XCODE_SETTINGS += MY_ENTITLEMENTS
+    }
+}
+
+# Loaded here instead of CONFIG so RESOURCES holds the filtered qmlcache qrc files below
+load(qtquickcompiler)
+
+PROFILE_BUILD = $$(PROFILE)
+
+# A connected QML debugger turns the AOT cache off and compiles from source, so profile builds keep it
+android:!equals(PROFILE_BUILD, 1) {
+    QMLSTUB_FILE = $$OUT_PWD/qmlstub.qml
+    for(res, RESOURCES) {
+        contains(res, .*_qmlcache\\.qrc$) {
+            STUB_RESULT = $$system(bash $$PWD/../scripts/stub_qmlcache_sources.sh $$system_quote($$res) $$system_quote($$QMLSTUB_FILE) 2>&1)
+            !isEmpty(STUB_RESULT): error("stub_qmlcache_sources: $$STUB_RESULT")
+        }
     }
 }

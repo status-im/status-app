@@ -2,11 +2,12 @@ import QtQuick
 
 import QtMultimedia
 
+import StatusQ
 import StatusQ.Core.Utils as SQUtils
 
 // Camera preview for QR scanning. Qt only: decoding is done by the host, which
 // reads frames from `videoSink` and crops them as the preview shows them.
-Item {
+MediaHost {
     id: root
 
     readonly property size sourceSize: Qt.size(videoOutput.sourceRect.width,

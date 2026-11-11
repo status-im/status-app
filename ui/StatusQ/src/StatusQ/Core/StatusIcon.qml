@@ -12,7 +12,7 @@ ColorImage {
     fillMode: Image.PreserveAspectFit
 
     onIconChanged: {
-        if(icon.startsWith("data:image/") || icon.startsWith("https://") || icon.startsWith("qrc:/") || icon.startsWith("file:/")) {
+        if(icon.startsWith("data:image/") || icon.startsWith("https://") || icon.startsWith("http://") || icon.startsWith("qrc:/") || icon.startsWith("file:/")) {
             //raw image data
             source = icon
             objectName = "custom-icon"

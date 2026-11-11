@@ -2296,6 +2296,17 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
 </context>
 <context>
+    <name>BackupSeedModalInstance</name>
+    <message>
+        <source>Recovery phrase permanently removed from Status application storage</source>
+        <translation type="unfinished">Obnovovací fráze byla trvale odstraněna z úložiště aplikace Status</translation>
+    </message>
+    <message>
+        <source>You backed up your recovery phrase. Access it in Settings</source>
+        <translation type="unfinished">Zálohovali jste obnovovací frázi. Získejte k ní přístup v Nastavení</translation>
+    </message>
+</context>
+<context>
     <name>BackupSeedphraseIntro</name>
     <message>
         <source>Your recovery phrase has been created</source>
@@ -2598,6 +2609,13 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>Block</source>
         <translation>Blokovat</translation>
+    </message>
+</context>
+<context>
+    <name>BlockContactConfirmationDialogInstance</name>
+    <message>
+        <source>%1 blocked</source>
+        <translation type="unfinished">%1 zablokován</translation>
     </message>
 </context>
 <context>
@@ -6372,6 +6390,13 @@ Keycard bude vyžadována pro podepisování</translation>
     </message>
 </context>
 <context>
+    <name>DownloadImageDialogInstance</name>
+    <message>
+        <source>Please choose a directory</source>
+        <translation type="unfinished">Vyberte prosím adresář</translation>
+    </message>
+</context>
+<context>
     <name>DownloadPage</name>
     <message>
         <source>Thanks for using Status</source>
@@ -6985,14 +7010,14 @@ Keycard bude vyžadována pro podepisování</translation>
     </message>
 </context>
 <context>
-    <name>EnableBiometricsPopupHandler</name>
-    <message>
-        <source>Biometric login and transaction authentication enabled for this device</source>
-        <translation>Biometrické přihlášení a ověřování transakcí povoleno pro toto zařízení</translation>
-    </message>
+    <name>EnableBiometricsPopupInstance</name>
     <message>
         <source>Biometric setup failed. Try again.</source>
-        <translation>Nastavení biometrie selhalo. Zkuste to znovu.</translation>
+        <translation type="unfinished">Nastavení biometrie selhalo. Zkuste to znovu.</translation>
+    </message>
+    <message>
+        <source>Biometric login and transaction authentication enabled for this device</source>
+        <translation type="unfinished">Biometrické přihlášení a ověřování transakcí povoleno pro toto zařízení</translation>
     </message>
 </context>
 <context>
@@ -7082,6 +7107,13 @@ Keycard bude vyžadována pro podepisování</translation>
     <message>
         <source>Continue</source>
         <translation>Pokračovat</translation>
+    </message>
+</context>
+<context>
+    <name>EnablePushNotificationsPopupInstance</name>
+    <message>
+        <source>Push notifications enabled</source>
+        <translation type="unfinished">Zapnutá funkce push notifikací</translation>
     </message>
 </context>
 <context>
@@ -8189,6 +8221,13 @@ Opravdu to chcete udělat?</translation>
     </message>
 </context>
 <context>
+    <name>FinaliseOwnershipPopupInstance</name>
+    <message>
+        <source>Sign transaction - update %1 smart contract</source>
+        <translation type="unfinished">Podepsat transakci – aktualizovat chytrý kontrakt %1</translation>
+    </message>
+</context>
+<context>
     <name>FirstTokenReceivedPopup</name>
     <message>
         <source>Congratulations on receiving your first community asset: &lt;br&gt;&lt;b&gt;%1 %2 (%3) minted by %4&lt;/b&gt;. Community assets are assets that have been minted by a community. As these assets cannot be verified, always double check their origin and validity before interacting with them. If in doubt, ask a trusted member or admin of the relevant community.</source>
@@ -8541,13 +8580,6 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>Popular assets on %1</source>
         <translation>Populární aktiva na %1</translation>
-    </message>
-</context>
-<context>
-    <name>HandlersManager</name>
-    <message>
-        <source>Push notifications enabled</source>
-        <translation>Zapnutá funkce push notifikací</translation>
     </message>
 </context>
 <context>
@@ -9122,6 +9154,17 @@ app: %2</source>
     <message>
         <source>Supported image extensions: %1</source>
         <translation>Podporované přípony obrázků: %1</translation>
+    </message>
+</context>
+<context>
+    <name>ImageCropWorkflowInstance</name>
+    <message>
+        <source>Profile Picture</source>
+        <translation type="unfinished">Profilový obrázek</translation>
+    </message>
+    <message>
+        <source>Make this my Profile Pic</source>
+        <translation type="unfinished">Nastavit jako můj profilový obrázek</translation>
     </message>
 </context>
 <context>
@@ -10570,6 +10613,25 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
 </context>
 <context>
+    <name>LeaveCommunityPopupInstance</name>
+    <message>
+        <source>Are you sure want to leave &apos;%1&apos;?</source>
+        <translation type="unfinished">Opravdu chcete opustit &apos;%1&apos;?</translation>
+    </message>
+    <message>
+        <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
+        <translation type="unfinished">Budete muset požádat o opětovné přidání, pokud se v budoucnu budete chtít znovu stát členem. Pokud jste se ke komunitě připojili pomocí veřejného klíče, ujistěte se, že máte jeho kopii, než odejdete. </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Zrušit</translation>
+    </message>
+    <message>
+        <source>Leave %1</source>
+        <translation type="unfinished">Opustit %1</translation>
+    </message>
+</context>
+<context>
     <name>LeftTabView</name>
     <message>
         <source>Wallet</source>
@@ -11491,6 +11553,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>MarkAsIDVerifiedDialogInstance</name>
+    <message>
+        <source>%1 marked as trusted</source>
+        <translation type="unfinished">%1 označen jako důvěryhodný</translation>
+    </message>
+</context>
+<context>
     <name>MarkAsUntrustedPopup</name>
     <message>
         <source>Mark as untrusted</source>
@@ -11511,6 +11580,17 @@ selhalo</translation>
     <message>
         <source>Cancel</source>
         <translation>Zrušit</translation>
+    </message>
+</context>
+<context>
+    <name>MarkAsUntrustedPopupInstance</name>
+    <message>
+        <source>%1 removed from contacts and marked as untrusted</source>
+        <translation type="unfinished">%1 byl odebrán z kontaktů a označen jako nedůvěryhodný</translation>
+    </message>
+    <message>
+        <source>%1 marked as untrusted</source>
+        <translation type="unfinished">%1 označen jako nedůvěryhodný</translation>
     </message>
 </context>
 <context>
@@ -13851,80 +13931,8 @@ selhalo</translation>
         <translation>Nepodařilo se uložit obrázek</translation>
     </message>
     <message>
-        <source>%1 removed from contacts and marked as untrusted</source>
-        <translation>%1 byl odebrán z kontaktů a označen jako nedůvěryhodný</translation>
-    </message>
-    <message>
-        <source>%1 marked as trusted</source>
-        <translation>%1 označen jako důvěryhodný</translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation>Odebrána značka důvěryhodnosti %1, odebrán z kontaktů a označen jako nedůvěryhodný</translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed and marked as untrusted</source>
-        <translation>Odebrána značka důvěryhodnosti a %1 označen jako nedůvěryhodný</translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed and removed from contacts</source>
-        <translation>Odebrána značka důvěryhodnosti a %1 odebrán z kontaktů</translation>
-    </message>
-    <message>
-        <source>Contact request accepted</source>
-        <translation>Žádost o kontakt přijata</translation>
-    </message>
-    <message>
-        <source>Contact request ignored</source>
-        <translation>Žádost o kontakt ignorována</translation>
-    </message>
-    <message>
-        <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation>Obnovovací fráze byla trvale odstraněna z úložiště aplikace Status</translation>
-    </message>
-    <message>
-        <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation>Zálohovali jste obnovovací frázi. Získejte k ní přístup v Nastavení</translation>
-    </message>
-    <message>
-        <source>Profile Picture</source>
-        <translation>Profilový obrázek</translation>
-    </message>
-    <message>
-        <source>Make this my Profile Pic</source>
-        <translation>Nastavit jako můj profilový obrázek</translation>
-    </message>
-    <message>
-        <source>%1 marked as untrusted</source>
-        <translation>%1 označen jako nedůvěryhodný</translation>
-    </message>
-    <message>
-        <source>%1 unblocked</source>
-        <translation>%1 odblokován</translation>
-    </message>
-    <message>
-        <source>%1 blocked</source>
-        <translation>%1 zablokován</translation>
-    </message>
-    <message>
-        <source>Please choose a directory</source>
-        <translation>Vyberte prosím adresář</translation>
-    </message>
-    <message>
-        <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation>Opravdu chcete opustit &apos;%1&apos;?</translation>
-    </message>
-    <message>
-        <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation>Budete muset požádat o opětovné přidání, pokud se v budoucnu budete chtít znovu stát členem. Pokud jste se ke komunitě připojili pomocí veřejného klíče, ujistěte se, že máte jeho kopii, než odejdete. </translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Zrušit</translation>
-    </message>
-    <message>
-        <source>Leave %1</source>
-        <translation>Opustit %1</translation>
     </message>
     <message>
         <source>Align with paired device</source>
@@ -13949,10 +13957,6 @@ selhalo</translation>
     <message>
         <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
         <translation>Pokud si nepřejete, aby se tato zpráva zobrazovala znovu, přejděte do Nastavení/Peněženka a vypněte možnost „Automaticky aplikovat migrace páru klíčů ze spárovaného zařízení“. </translation>
-    </message>
-    <message>
-        <source>Sign transaction - update %1 smart contract</source>
-        <translation>Podepsat transakci – aktualizovat chytrý kontrakt %1</translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
@@ -15088,6 +15092,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>RemoveContactPopupInstance</name>
+    <message>
+        <source>%1 removed from contacts and marked as untrusted</source>
+        <translation type="unfinished">%1 byl odebrán z kontaktů a označen jako nedůvěryhodný</translation>
+    </message>
+</context>
+<context>
     <name>RemoveIDVerificationDialog</name>
     <message>
         <source>Remove trust mark</source>
@@ -15108,6 +15119,21 @@ selhalo</translation>
     <message>
         <source>Cancel</source>
         <translation>Zrušit</translation>
+    </message>
+</context>
+<context>
+    <name>RemoveIDVerificationDialogInstance</name>
+    <message>
+        <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
+        <translation type="unfinished">Odebrána značka důvěryhodnosti %1, odebrán z kontaktů a označen jako nedůvěryhodný</translation>
+    </message>
+    <message>
+        <source>%1 trust mark removed and marked as untrusted</source>
+        <translation type="unfinished">Odebrána značka důvěryhodnosti a %1 označen jako nedůvěryhodný</translation>
+    </message>
+    <message>
+        <source>%1 trust mark removed and removed from contacts</source>
+        <translation type="unfinished">Odebrána značka důvěryhodnosti a %1 odebrán z kontaktů</translation>
     </message>
 </context>
 <context>
@@ -15266,6 +15292,17 @@ selhalo</translation>
     <message>
         <source>Accept</source>
         <translation>Přijmout</translation>
+    </message>
+</context>
+<context>
+    <name>ReviewContactRequestPopupInstance</name>
+    <message>
+        <source>Contact request accepted</source>
+        <translation type="unfinished">Žádost o kontakt přijata</translation>
+    </message>
+    <message>
+        <source>Contact request ignored</source>
+        <translation type="unfinished">Žádost o kontakt ignorována</translation>
     </message>
 </context>
 <context>
@@ -15768,14 +15805,6 @@ selhalo</translation>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
         <translation>Token, který se snažíte odeslat, není podporovaný.</translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation>Vaše aktiva na %1</translation>
-    </message>
-    <message>
-        <source>Popular assets</source>
-        <translation>Populární aktiva</translation>
     </message>
 </context>
 <context>
@@ -16472,6 +16501,17 @@ selhalo</translation>
     <message>
         <source>Add %1</source>
         <translation>Přidat %1</translation>
+    </message>
+</context>
+<context>
+    <name>SimpleSendModalInstance</name>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished">Vaše aktiva na %1</translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
+        <translation type="unfinished">Populární aktiva</translation>
     </message>
 </context>
 <context>
@@ -19431,6 +19471,13 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <message>
         <source>Unblock</source>
         <translation>Odblokovat</translation>
+    </message>
+</context>
+<context>
+    <name>UnblockContactConfirmationDialogInstance</name>
+    <message>
+        <source>%1 unblocked</source>
+        <translation type="unfinished">%1 odblokován</translation>
     </message>
 </context>
 <context>

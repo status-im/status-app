@@ -24,6 +24,13 @@ public class StatusApplication extends QtApplication {
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
+        // Qt's FFmpeg OpenSSL stub otherwise dlopen()s libssl_3/libcrypto_3 when it is loaded at
+        // startup; with this it resolves them on the first https media playback instead.
+        try {
+            Os.setenv("QT_INSTANT_LOAD_FFMPEG_STUBS", "1", false);
+        } catch (Exception e) {
+            Log.w(TAG, "setenv failed", e);
+        }
         if (BuildFlags.PROFILING) applyEnvFile(base);
     }
 

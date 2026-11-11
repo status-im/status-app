@@ -185,7 +185,8 @@ StackLayout {
         readonly property int accessType: sectionItem.requiresTokenPermissionToJoin ? Constants.communityChatOnRequestAccess
                                                                                     : Constants.communityChatPublicAccess
 
-        sourceComponent: {
+        // the views shown instead of the chat to non-members are rare; they are loaded by URL
+        readonly property DeferredComponent gateView: {
             if (sectionItem.isCommunity() && !sectionItem.amIMember) {
                 if (!!sectionItemModel && sectionItemModel.amIBanned) {
                     return communityBanComponent
@@ -195,8 +196,19 @@ StackLayout {
                     return joinCommunityViewComponent
                 }
             }
-            return chatViewComponent
+            return null
         }
+
+        function load() {
+            if (gateView)
+                setSource(gateView.source, gateView.properties)
+            else
+                sourceComponent = chatViewComponent
+        }
+
+        onGateViewChanged: load()
+        Component.onCompleted: load()
+        onLoaded: gateView?.adopt(item)
     }
 
     Connections {
@@ -259,47 +271,47 @@ StackLayout {
         }
     }
 
-    Component {
+    DeferredComponent {
         id: joinCommunityViewComponent
-        JoinCommunityView {
-            id: joinCommunityView
-            readonly property string communityId: sectionItemModel.id
-            userUID: root.sectionLayout.userUID
-            sectionName: root.sectionLayout.sectionName + "_joinCommunityView"
-            name: sectionItemModel.name
-            introMessage: sectionItemModel.introMessage
-            communityDesc: sectionItemModel.description
-            color: sectionItemModel.color
-            image: sectionItemModel.image
-            membersCount: sectionItemModel.joinedMembersCount
-            accessType: mainViewLoader.accessType
-            joinCommunity: true
-            amISectionAdmin: sectionItemModel.memberRole === Constants.memberRole.owner ||
-                             sectionItemModel.memberRole === Constants.memberRole.admin ||
-                             sectionItemModel.memberRole === Constants.memberRole.tokenMaster
-            communityItemsModel: root.rootStore.communityItemsModel
-            requirementsMet: root.communityPermissionsStore.allTokenRequirementsMet
-            requirementsCheckPending: root.communityAccessStore.communityPermissionsCheckOngoing
-            requiresRequest: !sectionItemModel.amIMember
-            communityHoldingsModel: root.communityPermissionsStore.becomeMemberPermissionsModel
-            viewOnlyHoldingsModel: root.communityPermissionsStore.viewOnlyPermissionsModel
-            viewAndPostHoldingsModel: root.communityPermissionsStore.viewAndPostPermissionsModel
-            assetsModel: root.rootStore.assetsModel
-            collectiblesModel: root.rootStore.collectiblesModel
-            getTokenByKeyOrGroupKeyFromAllTokens: root.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
-            requestToJoinState: root.rootStore.chatCommunitySectionModule.requestToJoinState
-            onRequestToJoinClicked: {
-                Global.communityIntroPopupRequested(joinCommunityView.communityId, sectionItemModel.name,
-                                                    sectionItemModel.introMessage, sectionItemModel.image,
-                                                    root.isInvitationPending)
-            }
-            onInvitationPendingClicked: {
-                Global.communityIntroPopupRequested(joinCommunityView.communityId, sectionItemModel.name, sectionItemModel.introMessage,
-                                                    sectionItemModel.image, root.isInvitationPending)
-            }
 
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
+        source: Qt.resolvedUrl("../Communities/views/JoinCommunityView.qml")
+        properties: ({
+            userUID: Qt.binding(() => root.sectionLayout.userUID),
+            sectionName: Qt.binding(() => root.sectionLayout.sectionName + "_joinCommunityView"),
+            name: Qt.binding(() => root.sectionItemModel.name),
+            introMessage: Qt.binding(() => root.sectionItemModel.introMessage),
+            communityDesc: Qt.binding(() => root.sectionItemModel.description),
+            color: Qt.binding(() => root.sectionItemModel.color),
+            image: Qt.binding(() => root.sectionItemModel.image),
+            membersCount: Qt.binding(() => root.sectionItemModel.joinedMembersCount),
+            accessType: Qt.binding(() => mainViewLoader.accessType),
+            joinCommunity: true,
+            amISectionAdmin: Qt.binding(() => root.sectionItemModel.memberRole === Constants.memberRole.owner ||
+                                              root.sectionItemModel.memberRole === Constants.memberRole.admin ||
+                                              root.sectionItemModel.memberRole === Constants.memberRole.tokenMaster),
+            communityItemsModel: Qt.binding(() => root.rootStore.communityItemsModel),
+            requirementsMet: Qt.binding(() => root.communityPermissionsStore.allTokenRequirementsMet),
+            requirementsCheckPending: Qt.binding(() => root.communityAccessStore.communityPermissionsCheckOngoing),
+            requiresRequest: Qt.binding(() => !root.sectionItemModel.amIMember),
+            communityHoldingsModel: Qt.binding(() => root.communityPermissionsStore.becomeMemberPermissionsModel),
+            viewOnlyHoldingsModel: Qt.binding(() => root.communityPermissionsStore.viewOnlyPermissionsModel),
+            viewAndPostHoldingsModel: Qt.binding(() => root.communityPermissionsStore.viewAndPostPermissionsModel),
+            assetsModel: Qt.binding(() => root.rootStore.assetsModel),
+            collectiblesModel: Qt.binding(() => root.rootStore.collectiblesModel),
+            getTokenByKeyOrGroupKeyFromAllTokens: Qt.binding(() => root.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens),
+            requestToJoinState: Qt.binding(() => root.rootStore.chatCommunitySectionModule.requestToJoinState),
+            leftPanelWidthOverride: Qt.binding(() => root.leftPanelWidthOverride)
+        })
+
+        function openCommunityIntro() {
+            Global.communityIntroPopupRequested(root.sectionItemModel.id, root.sectionItemModel.name,
+                                                root.sectionItemModel.introMessage, root.sectionItemModel.image,
+                                                root.isInvitationPending)
+        }
+
+        onCreated: view => {
+            view.requestToJoinClicked.connect(openCommunityIntro)
+            view.invitationPendingClicked.connect(openCommunityIntro)
         }
     }
 
@@ -521,41 +533,37 @@ StackLayout {
         onLoaded: d.applyPendingCommunitySettingsSubsection()
     }
 
-    Component {
+    DeferredComponent {
         id: controlNodeOfflineComponent
-        ControlNodeOfflineCommunityView {
-            id: controlNodeOfflineView
 
-            userUID: root.sectionLayout.userUID
-            sectionName: root.sectionLayout.sectionName + "_controlNode"
-            name: root.sectionItemModel.name
-            communityDesc: root.sectionItemModel.description
-            color: root.sectionItemModel.color
-            image: root.sectionItemModel.image
-            membersCount: sectionItemModel.joinedMembersCount
-            communityItemsModel: root.rootStore.communityItemsModel
-
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
-        }
+        source: Qt.resolvedUrl("../Communities/views/ControlNodeOfflineCommunityView.qml")
+        properties: ({
+            userUID: Qt.binding(() => root.sectionLayout.userUID),
+            sectionName: Qt.binding(() => root.sectionLayout.sectionName + "_controlNode"),
+            name: Qt.binding(() => root.sectionItemModel.name),
+            communityDesc: Qt.binding(() => root.sectionItemModel.description),
+            color: Qt.binding(() => root.sectionItemModel.color),
+            image: Qt.binding(() => root.sectionItemModel.image),
+            membersCount: Qt.binding(() => root.sectionItemModel.joinedMembersCount),
+            communityItemsModel: Qt.binding(() => root.rootStore.communityItemsModel),
+            leftPanelWidthOverride: Qt.binding(() => root.leftPanelWidthOverride)
+        })
     }
 
-    Component {
+    DeferredComponent {
         id: communityBanComponent
-        BannedMemberCommunityView {
-            id: communityBanView
-            readonly property var communityData: sectionItemModel
-            userUID: root.sectionLayout.userUID
-            sectionName: root.sectionLayout.sectionName + "_bannedMembers"
-            name: root.sectionItemModel.name
-            communityDesc: root.sectionItemModel.description
-            color: root.sectionItemModel.color
-            image: root.sectionItemModel.image
-            membersCount: sectionItemModel.joinedMembersCount
-            communityItemsModel: root.rootStore.communityItemsModel
 
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
-        }
+        source: Qt.resolvedUrl("../Communities/views/BannedMemberCommunityView.qml")
+        properties: ({
+            userUID: Qt.binding(() => root.sectionLayout.userUID),
+            sectionName: Qt.binding(() => root.sectionLayout.sectionName + "_bannedMembers"),
+            name: Qt.binding(() => root.sectionItemModel.name),
+            communityDesc: Qt.binding(() => root.sectionItemModel.description),
+            color: Qt.binding(() => root.sectionItemModel.color),
+            image: Qt.binding(() => root.sectionItemModel.image),
+            membersCount: Qt.binding(() => root.sectionItemModel.joinedMembersCount),
+            communityItemsModel: Qt.binding(() => root.rootStore.communityItemsModel),
+            leftPanelWidthOverride: Qt.binding(() => root.leftPanelWidthOverride)
+        })
     }
 }

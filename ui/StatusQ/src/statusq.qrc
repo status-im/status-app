@@ -205,6 +205,7 @@
         <file>StatusQ/Core/Theme/qmldir</file>
         <file>StatusQ/Core/Utils/AmountsArithmetic.qml</file>
         <file>StatusQ/Core/Utils/ClippingWrapper.qml</file>
+        <file>StatusQ/Core/Utils/DeferredComponent.qml</file>
         <file>StatusQ/Core/Utils/DoubleFlickable.qml</file>
         <file>StatusQ/Core/Utils/DoubleFlickableWithFolding.qml</file>
         <file>StatusQ/Core/Utils/Emoji.qml</file>
@@ -284,9 +285,12 @@
         <file>StatusQ/Validators/qmldir</file>
         <file>StatusQ/Components/private/StatusNewItemGradient.qml</file>
         <file>StatusQ/Components/StatusSoundEffect.qml</file>
+        <file>StatusQ/Components/private/StatusQtSoundEffect.qml</file>
         <file>StatusQ/Popups/Dialog/StatusFolderDialog.qml</file>
         <file>StatusQ/Popups/Dialog/StatusFileDialog.qml</file>
         <file>StatusQ/Popups/Dialog/StatusSaveFileDialog.qml</file>
+        <file>StatusQ/Popups/Dialog/impl/FileDialogImpl.qml</file>
+        <file>StatusQ/Popups/Dialog/impl/FolderDialogImpl.qml</file>
         <file>StatusQ/Components/StatusLoadingPageIndicator.qml</file>
     </qresource>
 </RCC>

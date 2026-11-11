@@ -1,4 +1,6 @@
 #include "StatusQ/audioutils.h"
+#include "StatusQ/mediabackend.h"
+#include "StatusQ/nativeqrcodecapture.h"
 #include "StatusQ/skeletontileitem.h"
 #include "StatusQ/rippleitem.h"
 #include "StatusQ/browserbackendcapabilities.h"
@@ -152,6 +154,14 @@ void registerStatusQTypes() {
     qmlRegisterSingletonType<AudioUtils>("StatusQ", 0, 1, "AudioUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new AudioUtils(engine);
     });
+    qmlRegisterSingletonType<MediaBackendUtils>("StatusQ", 0, 1, "MediaBackend", [](QQmlEngine* engine, QJSEngine*) {
+        return new MediaBackendUtils(engine);
+    });
+    qmlRegisterType<MediaHost>("StatusQ", 0, 1, "MediaHost");
+    qmlRegisterType<NativeQrCodeCapture>("StatusQ", 0, 1, "NativeQrCodeCapture");
+    qmlRegisterSingletonType<NativeSound>("StatusQ", 0, 1, "NativeSound", [](QQmlEngine* engine, QJSEngine*) {
+        return new NativeSound(engine);
+    });
 
     qmlRegisterType<Keychain>("StatusQ", 0, 1, "Keychain");
     qRegisterMetaType<Keychain::Status>();
@@ -182,6 +192,11 @@ void registerStatusQTypes() {
         });
 
     qmlRegisterType<LocalNetworkPermission>("StatusQ.Core", 0, 1, "LocalNetworkPermission");
+    qmlRegisterSingletonType("StatusQ.Core", 0, 1, "TestConfig", [](QQmlEngine*, QJSEngine* jsEngine) {
+        auto config = jsEngine->newObject();
+        config.setProperty(QStringLiteral("testMode"), bool(STATUSQ_TESTMODE));
+        return config;
+    });
     qmlRegisterType<RenderSizedImage>("StatusQ.Components.private", 0, 1, "RenderSizedImage");
     qmlRegisterType<RoundedRenderSizedImage>("StatusQ.Components.private", 0, 1, "RoundedRenderSizedImage");
     qmlRegisterType<RoundedAnimatedImage>("StatusQ.Components.private", 0, 1, "RoundedAnimatedImage");
@@ -249,7 +264,6 @@ void registerStatusQTypes() {
 #endif
 
 #ifdef BUNDLE_QML_RESOURCES
-    Q_INIT_RESOURCE(TestConfig);
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     Q_INIT_RESOURCE(customwebview);
 #endif

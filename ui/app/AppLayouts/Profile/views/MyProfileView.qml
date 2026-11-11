@@ -454,49 +454,48 @@ SettingsContentBase {
             }
         }
 
-        Component {
+        DeferredComponent {
             id: profilePreview
 
-            ProfileDialog {
-                contactDetails: priv.liveContactDetails
-
-                profileStore: root.profileStore
-                contactsStore: root.contactsStore
-                walletStore: WalletStores.RootStore
-                utilsStore: root.utilsStore
-                networksStore: root.networksStore
-                sendToAccountEnabled: root.sendToAccountEnabled
-                onClosed: destroy()
-
-                showcaseCommunitiesModel: priv.showcaseModels.communitiesVisibleModel
-                showcaseAccountsModel: priv.showcaseModels.accountsVisibleModel
-                showcaseCollectiblesModel: priv.showcaseModels.collectiblesVisibleModel
-                showcaseSocialLinksModel: priv.showcaseModels.socialLinksVisibleModel
-
-                assetsModel: root.assetsModel
-                collectiblesModel: root.collectiblesModel
-            }
+            module: "shared.popups"
+            typeName: "ProfileDialog"
+            properties: ({
+                contactDetails: Qt.binding(() => priv.liveContactDetails),
+                profileStore: root.profileStore,
+                contactsStore: root.contactsStore,
+                walletStore: WalletStores.RootStore,
+                utilsStore: root.utilsStore,
+                networksStore: root.networksStore,
+                sendToAccountEnabled: Qt.binding(() => root.sendToAccountEnabled),
+                showcaseCommunitiesModel: Qt.binding(() => priv.showcaseModels.communitiesVisibleModel),
+                showcaseAccountsModel: Qt.binding(() => priv.showcaseModels.accountsVisibleModel),
+                showcaseCollectiblesModel: Qt.binding(() => priv.showcaseModels.collectiblesVisibleModel),
+                showcaseSocialLinksModel: Qt.binding(() => priv.showcaseModels.socialLinksVisibleModel),
+                assetsModel: Qt.binding(() => root.assetsModel),
+                collectiblesModel: Qt.binding(() => root.collectiblesModel)
+            })
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
         }
 
         Component {
             id: myProfilePreviewComponent
 
-            MyProfilePreview {
-                contactDetails: priv.liveContactDetails
-
-                profileStore: root.profileStore
-                contactsStore: root.contactsStore
-                utilsStore: root.utilsStore
-                networksStore: root.networksStore
-                sendToAccountEnabled: root.sendToAccountEnabled
-
-                showcaseCommunitiesModel: priv.showcaseModels.communitiesVisibleModel
-                showcaseAccountsModel: priv.showcaseModels.accountsVisibleModel
-                showcaseCollectiblesModel: priv.showcaseModels.collectiblesVisibleModel
-                showcaseSocialLinksModel: priv.showcaseModels.socialLinksVisibleModel
-
-                assetsModel: root.assetsModel
-                collectiblesModel: root.collectiblesModel
+            // MyProfilePreview by URL, so it is loaded with the first preview, not with the view
+            Loader {
+                Component.onCompleted: setSource(Qt.resolvedUrl("profile/MyProfilePreview.qml"), {
+                    contactDetails: Qt.binding(() => priv.liveContactDetails),
+                    profileStore: root.profileStore,
+                    contactsStore: root.contactsStore,
+                    utilsStore: root.utilsStore,
+                    networksStore: root.networksStore,
+                    sendToAccountEnabled: Qt.binding(() => root.sendToAccountEnabled),
+                    showcaseCommunitiesModel: Qt.binding(() => priv.showcaseModels.communitiesVisibleModel),
+                    showcaseAccountsModel: Qt.binding(() => priv.showcaseModels.accountsVisibleModel),
+                    showcaseCollectiblesModel: Qt.binding(() => priv.showcaseModels.collectiblesVisibleModel),
+                    showcaseSocialLinksModel: Qt.binding(() => priv.showcaseModels.socialLinksVisibleModel),
+                    assetsModel: Qt.binding(() => root.assetsModel),
+                    collectiblesModel: Qt.binding(() => root.collectiblesModel)
+                })
             }
         }
 

@@ -8,13 +8,7 @@ import AppLayouts.Onboarding.enums
 OnboardingStackView {
     id: root
 
-    enum Type {
-        NewProfile,
-        KeycardRecovery,
-        Login
-    }
-
-    required property int type
+    required property int type // RecoveryPhraseFlowType.Type
 
     property bool isProfileMigratedToDEKEncryption: false
     property bool stayLoggedInAvailable: false
@@ -32,7 +26,7 @@ OnboardingStackView {
     signal importLocalBackupRequested(url importFilePath)
     signal finished
 
-    initialItem: type === UseRecoveryPhraseFlow.Type.KeycardRecovery ? conversionAckPage : seedPhrasePage
+    initialItem: type === RecoveryPhraseFlowType.Type.KeycardRecovery ? conversionAckPage : seedPhrasePage
 
     Component {
         id: conversionAckPage
@@ -47,11 +41,11 @@ OnboardingStackView {
         SeedphrasePage {
             title: {
                 switch (root.type) {
-                case UseRecoveryPhraseFlow.Type.NewProfile:
+                case RecoveryPhraseFlowType.Type.NewProfile:
                     return qsTr("Create profile using a recovery phrase")
-                case UseRecoveryPhraseFlow.Type.KeycardRecovery:
+                case RecoveryPhraseFlowType.Type.KeycardRecovery:
                     return qsTr("Enter recovery phrase of lost Keycard")
-                case UseRecoveryPhraseFlow.Type.Login:
+                case RecoveryPhraseFlowType.Type.Login:
                     return qsTr("Log in with your Status recovery phrase")
                 }
 
@@ -62,7 +56,7 @@ OnboardingStackView {
                 const seedPhraseStr = seedPhrase.join(" ")
                 const valid = root.isSeedPhraseValid(seedPhraseStr)
 
-                if (root.type === UseRecoveryPhraseFlow.Type.KeycardRecovery) {
+                if (root.type === RecoveryPhraseFlowType.Type.KeycardRecovery) {
                     setSeedPhraseError(valid ? "" : qsTr("Recovery phrase doesn’t match the profile of an existing Keycard user on this device"))
                 } else {  // different error messages when trying to import a duplicate seedphrase
                     const isDuplicate = root.isSeedPhraseDuplicate(seedPhraseStr)
@@ -96,7 +90,7 @@ OnboardingStackView {
             onEnableBiometricsRequested: (enable) => root.enableBiometricsRequested(enable)
             onSetPasswordRequested: function(password) {
                 root.setPasswordRequested(password)
-                if (root.type === UseRecoveryPhraseFlow.Type.Login)
+                if (root.type === RecoveryPhraseFlowType.Type.Login)
                     root.push(importLocalBackupPage)
                 else
                     root.finished()

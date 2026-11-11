@@ -2283,6 +2283,17 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
 </context>
 <context>
+    <name>BackupSeedModalInstance</name>
+    <message>
+        <source>Recovery phrase permanently removed from Status application storage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You backed up your recovery phrase. Access it in Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BackupSeedphraseIntro</name>
     <message>
         <source>Your recovery phrase has been created</source>
@@ -2584,6 +2595,13 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Block</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>BlockContactConfirmationDialogInstance</name>
+    <message>
+        <source>%1 blocked</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6333,6 +6351,13 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
+    <name>DownloadImageDialogInstance</name>
+    <message>
+        <source>Please choose a directory</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DownloadPage</name>
     <message>
         <source>Thanks for using Status</source>
@@ -6944,13 +6969,13 @@ key pair. Keycard will be required for signing</source>
     </message>
 </context>
 <context>
-    <name>EnableBiometricsPopupHandler</name>
+    <name>EnableBiometricsPopupInstance</name>
     <message>
-        <source>Biometric login and transaction authentication enabled for this device</source>
+        <source>Biometric setup failed. Try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Biometric setup failed. Try again.</source>
+        <source>Biometric login and transaction authentication enabled for this device</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7040,6 +7065,13 @@ key pair. Keycard will be required for signing</source>
     </message>
     <message>
         <source>Continue</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>EnablePushNotificationsPopupInstance</name>
+    <message>
+        <source>Push notifications enabled</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8140,6 +8172,13 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
+    <name>FinaliseOwnershipPopupInstance</name>
+    <message>
+        <source>Sign transaction - update %1 smart contract</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FirstTokenReceivedPopup</name>
     <message>
         <source>Congratulations on receiving your first community asset: &lt;br&gt;&lt;b&gt;%1 %2 (%3) minted by %4&lt;/b&gt;. Community assets are assets that have been minted by a community. As these assets cannot be verified, always double check their origin and validity before interacting with them. If in doubt, ask a trusted member or admin of the relevant community.</source>
@@ -8491,13 +8530,6 @@ Are you sure you want to do this?</source>
     <name>GroupsModel</name>
     <message>
         <source>Popular assets on %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>HandlersManager</name>
-    <message>
-        <source>Push notifications enabled</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9067,6 +9099,17 @@ app: %2</source>
     </message>
     <message>
         <source>Supported image extensions: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ImageCropWorkflowInstance</name>
+    <message>
+        <source>Profile Picture</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make this my Profile Pic</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10506,6 +10549,25 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
 </context>
 <context>
+    <name>LeaveCommunityPopupInstance</name>
+    <message>
+        <source>Are you sure want to leave &apos;%1&apos;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Leave %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>LeftTabView</name>
     <message>
         <source>Wallet</source>
@@ -11416,6 +11478,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MarkAsIDVerifiedDialogInstance</name>
+    <message>
+        <source>%1 marked as trusted</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MarkAsUntrustedPopup</name>
     <message>
         <source>Mark as untrusted</source>
@@ -11435,6 +11504,17 @@ to load</source>
     </message>
     <message>
         <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MarkAsUntrustedPopupInstance</name>
+    <message>
+        <source>%1 removed from contacts and marked as untrusted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 marked as untrusted</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -13762,79 +13842,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>%1 removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 marked as trusted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed and marked as untrusted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 trust mark removed and removed from contacts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Contact request accepted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Contact request ignored</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Profile Picture</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Make this my Profile Pic</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 marked as untrusted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 unblocked</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 blocked</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please choose a directory</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Leave %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -13859,10 +13867,6 @@ to load</source>
     </message>
     <message>
         <source>If you don&apos;t want to see this message again, go to Settings/Wallet and toggle off &quot;Automatically apply key pair migrations from paired device&quot;.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sign transaction - update %1 smart contract</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -14997,6 +15001,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>RemoveContactPopupInstance</name>
+    <message>
+        <source>%1 removed from contacts and marked as untrusted</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RemoveIDVerificationDialog</name>
     <message>
         <source>Remove trust mark</source>
@@ -15016,6 +15027,21 @@ to load</source>
     </message>
     <message>
         <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>RemoveIDVerificationDialogInstance</name>
+    <message>
+        <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 trust mark removed and marked as untrusted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 trust mark removed and removed from contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15173,6 +15199,17 @@ to load</source>
     </message>
     <message>
         <source>Accept</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ReviewContactRequestPopupInstance</name>
+    <message>
+        <source>Contact request accepted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact request ignored</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15675,14 +15712,6 @@ to load</source>
     </message>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your assets on %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Popular assets</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16374,6 +16403,17 @@ to load</source>
     </message>
     <message>
         <source>Add %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SimpleSendModalInstance</name>
+    <message>
+        <source>Your assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Popular assets</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19314,6 +19354,13 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Unblock</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>UnblockContactConfirmationDialogInstance</name>
+    <message>
+        <source>%1 unblocked</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

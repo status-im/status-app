@@ -4,8 +4,8 @@ import QtQuick.Controls
 import StatusQ
 import StatusQ.Controls
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
-import shared.popups
 
 import utils
 
@@ -26,6 +26,7 @@ StatusIconTabButton {
     property var getEmojiHashFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
 
     signal viewProfileRequested(string pubKey)
+    signal menuOpened()
     signal shareOwnProfileRequested
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
@@ -83,6 +84,7 @@ StatusIconTabButton {
         }
         d.menu = userStatusContextMenuComponent.createObject(root)
         d.menu.open()
+        root.menuOpened()
     }
 
     QtObject {
@@ -90,39 +92,36 @@ StatusIconTabButton {
         property var menu: null
     }
 
-    Component {
+    SQUtils.DeferredComponent {
         id: userStatusContextMenuComponent
 
-        UserStatusContextMenu {
-            id: userStatusContextMenu
-            objectName: "userStatusContextMenu"
+        source: Qt.resolvedUrl("../popups/UserStatusContextMenu.qml")
+        properties: ({
+            objectName: "userStatusContextMenu",
+            directParent: root,
+            relativeX: Qt.binding(() => root.x + root.width + 8),
+            compressedPubKey: Qt.binding(() => root.compressedPubKey),
+            emojiHash: Qt.binding(() => root.getEmojiHashFn(root.pubKey)),
+            colorId: Qt.binding(() => root.colorId),
+            name: Qt.binding(() => root.name),
+            headerIcon: Qt.binding(() => root.iconSource),
+            usesDefaultName: Qt.binding(() => root.usesDefaultName),
+            bio: Qt.binding(() => root.bio),
+            currentUserStatus: Qt.binding(() => root.currentUserStatus)
+        })
 
-            directParent: root
-
-            relativeY: root.y - userStatusContextMenu.height + root.height
-            relativeX: root.x + root.width + 8
-
-            compressedPubKey: root.compressedPubKey
-            emojiHash: root.getEmojiHashFn(root.pubKey)
-            colorId: root.colorId
-            name: root.name
-            headerIcon: root.iconSource
-            usesDefaultName: root.usesDefaultName
-            bio: root.bio
-
-            currentUserStatus: root.currentUserStatus
-
-            onViewProfileRequested: root.viewProfileRequested(root.pubKey)
-            onShareOwnProfileRequested: root.shareOwnProfileRequested()
-            onSettingsRequested: root.settingsRequested()
-            onCopyLinkRequested: ClipboardUtils.setText(root.getLinkToProfileFn(root.pubKey))
-            onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
-            onQuitRequested: root.quitRequested()
-
-            onClosed: {
+        onCreated: menu => {
+            menu.relativeY = Qt.binding(() => root.y - menu.height + root.height)
+            menu.viewProfileRequested.connect(() => root.viewProfileRequested(root.pubKey))
+            menu.shareOwnProfileRequested.connect(() => root.shareOwnProfileRequested())
+            menu.settingsRequested.connect(() => root.settingsRequested())
+            menu.copyLinkRequested.connect(() => ClipboardUtils.setText(root.getLinkToProfileFn(root.pubKey)))
+            menu.setCurrentUserStatusRequested.connect(status => root.setCurrentUserStatusRequested(status))
+            menu.quitRequested.connect(() => root.quitRequested())
+            menu.closed.connect(() => {
                 d.menu = null
-                destroy()
-            }
+                menu.destroy()
+            })
         }
     }
 }

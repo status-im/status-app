@@ -50,7 +50,11 @@ COMMON_CMAKE_CONFIG+=(
 
 # Add Android-specific flags only for Android
 if [[ "$OS" == "android" ]]; then
-    COMMON_CMAKE_CONFIG+=(-DANDROID_PLATFORM=android-35)
+    COMMON_CMAKE_CONFIG+=(
+        -DANDROID_PLATFORM=android-35
+        # Packed relative relocations (Android tags: app minSdk 28 < 30)
+        "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--pack-dyn-relocs=android+relr -Wl,--use-android-relr-tags${STATUS_STATUSQ_ORDER:+ -Wl,--symbol-ordering-file=${STATUS_STATUSQ_ORDER} -Wl,--no-warn-symbol-ordering}"
+    )
 fi
 
 printf 'COMMON_CMAKE_CONFIG: %s\n' "${COMMON_CMAKE_CONFIG[@]}"

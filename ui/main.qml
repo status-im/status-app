@@ -481,12 +481,27 @@ Window {
         shakeToShareLoader.active = true
     }
 
-    StatusTrayIcon {
+    // Loaded by URL so mobile never compiles it (Qt.labs.platform pulls in QtWidgets)
+    Loader {
         id: systemTray
         objectName: "systemTray"
-        showRedDot: typeof mainModule !== "undefined" ? mainModule.notificationAvailable : false
-        onActivateApp: {
-            applicationWindow.makeStatusAppActive()
+
+        readonly property bool available: item?.available ?? false
+
+        function showMessage(title: string, message: string) : void {
+            item?.showMessage(title, message)
+        }
+
+        active: !SQUtils.Utils.isMobile
+        source: "app/mainui/StatusTrayIcon.qml"
+
+        onLoaded: item.showRedDot = Qt.binding(() => typeof mainModule !== "undefined" ? mainModule.notificationAvailable : false)
+
+        Connections {
+            target: systemTray.item
+            function onActivateApp() {
+                applicationWindow.makeStatusAppActive()
+            }
         }
     }
 
@@ -725,13 +740,30 @@ Window {
             service: "StatusDesktop.AutoLogin"
         }
 
+        // created on the first non-idle keycard state, released when closed in idle
         Loader {
-            active: SQUtils.Utils.isAndroid
-            sourceComponent: KeycardChannelDrawer {
-                id: keycardChannelDrawer
-                currentState: applicationWindow.keycardStateStore.state
-                onDismissed: {
-                    applicationWindow.keycardStateStore.keycardDismissed()
+            id: keycardChannelDrawerLoader
+
+            property bool needed: applicationWindow.keycardStateStore.state !== Constants.keycardChannelState.idle
+
+            active: SQUtils.Utils.isAndroid && needed
+            source: Qt.resolvedUrl("imports/shared/popups/KeycardChannelDrawer.qml")
+
+            onLoaded: {
+                item.currentState = Qt.binding(() => applicationWindow.keycardStateStore.state)
+                item.dismissed.connect(() => applicationWindow.keycardStateStore.keycardDismissed())
+                item.closed.connect(() => Qt.callLater(() => {
+                    if (applicationWindow.keycardStateStore.state === Constants.keycardChannelState.idle)
+                        keycardChannelDrawerLoader.needed = false
+                }))
+            }
+
+            Connections {
+                target: applicationWindow.keycardStateStore
+
+                function onStateChanged() {
+                    if (applicationWindow.keycardStateStore.state !== Constants.keycardChannelState.idle)
+                        keycardChannelDrawerLoader.needed = true
                 }
             }
         }

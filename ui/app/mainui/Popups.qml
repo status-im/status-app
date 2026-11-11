@@ -140,25 +140,34 @@ QtObject {
         }
     }
 
-    readonly property var communityFetchPopup: CommunityFetchPopup {
-        parent: root.popupParent
-        state: root.communitiesStore.communityFetchState
-        timeoutSeconds: root.communitiesStore.communityFetchTimeoutSeconds
+    property var communityFetchPopup: null
 
-        onCancelRequested: root.communitiesStore.cancelPendingCommunityFetch()
-        onTimeoutRequested: root.communitiesStore.timeoutPendingCommunityFetch()
-        onDismissFailedRequested: root.communitiesStore.clearCommunityFetchFailure()
-        onRetryRequested: root.communitiesStore.retryCommunityFetch()
+    readonly property SQUtils.DeferredComponent communityFetchPopupComponent: SQUtils.DeferredComponent {
+        source: Qt.resolvedUrl("../AppLayouts/Communities/popups/CommunityFetchPopup.qml")
+        properties: ({
+            parent: root.popupParent,
+            state: Qt.binding(() => root.communitiesStore.communityFetchState),
+            timeoutSeconds: Qt.binding(() => root.communitiesStore.communityFetchTimeoutSeconds)
+        })
+        onCreated: popup => {
+            popup.cancelRequested.connect(() => root.communitiesStore.cancelPendingCommunityFetch())
+            popup.timeoutRequested.connect(() => root.communitiesStore.timeoutPendingCommunityFetch())
+            popup.dismissFailedRequested.connect(() => root.communitiesStore.clearCommunityFetchFailure())
+            popup.retryRequested.connect(() => root.communitiesStore.retryCommunityFetch())
+        }
     }
 
     readonly property Connections communityFetchConnections: Connections {
         target: root.communitiesStore
 
         function onCommunityFetchStateChanged() {
-            if (root.communitiesStore.communityFetchState === Constants.CommunityFetchState.Idle)
-                root.communityFetchPopup.close()
-            else
-                root.communityFetchPopup.open()
+            if (root.communitiesStore.communityFetchState === Constants.CommunityFetchState.Idle) {
+                root.communityFetchPopup?.close()
+                return
+            }
+            if (!root.communityFetchPopup)
+                root.communityFetchPopup = root.communityFetchPopupComponent.createObject(root)
+            root.communityFetchPopup?.open()
         }
     }
 
@@ -703,748 +712,11 @@ QtObject {
     }
 
     readonly property list<Component> _components: [
-        Component {
-            id: removeContactConfirmationDialog
-
-            RemoveContactPopup {
-                onAccepted: {
-                    root.contactsStore.removeContact(publicKey)
-                    if (removeIDVerification)
-                        root.contactsStore.removeTrustStatus(publicKey)
-                    if (markAsUntrusted) {
-                        root.contactsStore.markUntrustworthy(publicKey)
-                        Global.displaySuccessToastMessage(qsTr("%1 removed from contacts and marked as untrusted").arg(mainDisplayName))
-                    }
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: markAsIDVerifiedPopupComponent
-            MarkAsIDVerifiedDialog {
-                onAccepted: {
-                    root.contactsStore.markAsTrusted(publicKey)
-                    Global.displaySuccessToastMessage(qsTr("%1 marked as trusted").arg(mainDisplayName))
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: removeIDVerificationPopupComponent
-            RemoveIDVerificationDialog {
-                onAccepted: {
-                    if (markAsUntrusted && removeContact) {
-                        root.contactsStore.markUntrustworthy(publicKey)
-                        root.contactsStore.removeContact(publicKey)
-                        Global.displaySuccessToastMessage(qsTr("%1 trust mark removed, removed from contacts and marked as untrusted").arg(mainDisplayName))
-                    } else if (markAsUntrusted) {
-                        root.contactsStore.markUntrustworthy(publicKey)
-                        Global.displaySuccessToastMessage(qsTr("%1 trust mark removed and marked as untrusted").arg(mainDisplayName))
-                    } else if (removeContact) {
-                        root.contactsStore.removeContact(publicKey)
-                        Global.displaySuccessToastMessage(qsTr("%1 trust mark removed and removed from contacts").arg(mainDisplayName))
-                    } else {
-                        root.contactsStore.removeTrustStatus(publicKey)
-                    }
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: inviteFriendsToCommunityPopup
-
-            InviteFriendsToCommunityPopup {
-                id: invitePopup
-
-                contactsModel: root.mutualContactsModel
-
-                // marks the friends who are already members
-                readonly property RosterHolder rosterHolder: RosterHolder {
-                    communitiesStore: root.communitiesStore
-                    communityId: invitePopup.community?.id ?? ""
-                }
-
-                onClosed: destroy()
-            }
-        },
-        Component {
-            id: sendContactRequestPopupComponent
-
-            SendContactRequestModal {
-                contactsStore: root.contactsStore
-
-                onAccepted: root.contactsStore.sendContactRequest(publicKey, message)
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: reviewContactRequestPopupComponent
-            ReviewContactRequestPopup {
-                onAccepted: {
-                    root.contactsStore.acceptContactRequest(publicKey, contactRequestId)
-                    Global.displaySuccessToastMessage(qsTr("Contact request accepted"))
-                    close()
-                }
-                onRejected: {
-                    root.contactsStore.dismissContactRequest(publicKey, contactRequestId)
-                    Global.displaySuccessToastMessage(qsTr("Contact request ignored"))
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: backupSeedModalComponent
-            BackupSeedModal {
-                mnemonic: root.privacyStore.getMnemonic()
-                onBackupSeedphraseFinished: function(removeSeedphrase) {
-                    if (removeSeedphrase)
-                        root.privacyStore.removeMnemonic()
-                    root.profileStore.setUserDeclinedBackupBanner() // remove the banner
-                    Global.displaySuccessToastMessage(removeSeedphrase ? qsTr("Recovery phrase permanently removed from Status application storage")
-                                                                       : qsTr("You backed up your recovery phrase. Access it in Settings"))
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: authenticationPopupComponent
-            AuthenticationPopup {
-                store: root.authenticationStore
-                keychain: root.keychain
-                secureStorage: root.secureStorage
-                getCredentialForStorage: (keyUid, password) => root.privacyStore.getBiometricCredentialForStorage(keyUid, password)
-                getStayLoggedInCredentialForStorage: (keyUid, credential) => root.privacyStore.getStayLoggedInCredentialForStorage(keyUid, credential)
-                biometricsAllowed: reason !== Constants.authenticationReason.syncDevice
-                                   && reason !== Constants.authenticationReason.disableBiometrics
-                                   && reason !== Constants.authenticationReason.disableStayLoggedIn
-                onAuthenticationSuccess: function(reason, password, pin, keyUid, chatPrivateKey) {
-                    root.authenticationStore.passwordProvided(keyUid, password)
-                    Global.authenticationResult(reason, password, pin, keyUid, chatPrivateKey)
-                }
-
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: signingPopupComponent
-            SignPopup {
-                id: signPopup
-
-                property bool succeeded: false
-                property string resultSignature: ""
-
-                store: root.signingStore
-                keychain: root.keychain
-                secureStorage: root.secureStorage
-                getCredentialForStorage: (keyUid, password) => root.privacyStore.getBiometricCredentialForStorage(keyUid, password)
-                getStayLoggedInCredentialForStorage: (keyUid, credential) => root.privacyStore.getStayLoggedInCredentialForStorage(keyUid, credential)
-
-                onPasswordProvided: function(password) {
-                    // in case of signing tx via keycard no password (enc pub key)
-                    root.signingStore.passwordProvided(signPopup.keyUid, password)
-                }
-
-                onSigningSuccess: function(signature) {
-                    signPopup.resultSignature = signature
-                    signPopup.succeeded = true
-                }
-
-                onClosed: {
-                    // Because of successive signing requests (in case of sharing multiple addresses) emit the result
-                    // on the next tick — after this popup is closed and removed from activePopupComponents — that way
-                    // a chained openSigningPopup isn't blocked by openPopup's same-component dedup guard.
-                    const reason = signPopup.reason
-                    const signature = signPopup.succeeded ? signPopup.resultSignature : ""
-                    const keyUid = signPopup.keyUid
-                    const path = signPopup.path
-                    const address = signPopup.address
-                    Qt.callLater(() => Global.signingResult(reason, signature, keyUid, path, address))
-                    destroy()
-                }
-            }
-        },
-
-        Component {
-            id: keycardManagementPopupComponent
-            KeycardManagementPopup {
-                store: root.keycardManagementStore
-                passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore
-                onMetadataResult: keycardInfo => Global.keycardManagementResult(keycardInfo)
-                onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {
-                    Global.keycardFlowDone(flow, keyUid, keycardUid, success)
-                }
-
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: downloadPageComponent
-            DownloadPage {
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: emojiPopupComponent
-            StatusEmojiPopup {
-                objectName: "StatusEmojiPopup"
-                height: 440
-                emojiModel: SQUtils.Emoji.emojiModel
-                skinColor: root.emojiSkinColor
-                onSkinColorSelected: skinColor => root.emojiSkinColorSelected(skinColor)
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: stickersPopupComponent
-            StatusStickersPopup {
-                objectName: "StatusStickersPopup"
-                height: 440
-                store: root.chatStore
-                isWalletEnabled: root.isWalletEnabled
-                thirdpartyServicesEnabled: root.rootStore.thirdpartyServicesEnabled
-
-                onBuyClicked: (packId, price) => root.buyStickerPackRequested(packId, price)
-                onEnableThirdpartyServicesRequested: root.enableThirdpartyServicesRequested()
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: imagePopupComponent
-            StatusImageModal {
-                id: imagePopup
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: videoPopupComponent
-            StatusVideoModal {
-                id: videoPopup
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: profilePopupComponent
-            ProfileDialog {
-                id: profilePopup
-
-                property string publicKey
-                readonly property bool isCurrentUser: contactDetails.isCurrentUser
-
-                profileStore: root.profileStore
-                contactsStore: root.contactsStore
-                walletStore: WalletStores.RootStore
-                utilsStore: root.utilsStore
-                networksStore: root.networksStore
-
-                sendToAccountEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled
-
-                showcaseCommunitiesModel: isCurrentUser ? root.profileStore.ownShowcaseCommunitiesModel
-                                                        : root.contactsStore.contactShowcaseCommunitiesModel
-                showcaseAccountsModel: isCurrentUser ? root.profileStore.ownShowcaseAccountsModel
-                                                     : root.contactsStore.contactShowcaseAccountsModel
-                showcaseCollectiblesModel: isCurrentUser ? root.profileStore.ownShowcaseCollectiblesModel
-                                                         : root.contactsStore.contactShowcaseCollectiblesModel
-                showcaseSocialLinksModel: isCurrentUser ? root.profileStore.ownShowcaseSocialLinksModel
-                                                        : root.contactsStore.contactShowcaseSocialLinksModel
-                
-                assetsModel: rootStore.globalAssetsModel
-                collectiblesModel: rootStore.globalCollectiblesModel
-
-                onOpened: {
-                    isCurrentUser ? root.profileStore.requestProfileShowcasePreferences()
-                                  : root.contactsStore.requestContactShowcase(publicKey)
-                }
-                onClosed: {
-                    if (profilePopup.parentPopup) {
-                        profilePopup.parentPopup.close()
-                    }
-                    destroy()
-                }
-
-                onNavigationRequested: Global.closeActivityCenterRequested()
-            }
-        },
-
-        Component {
-            id: changeProfilePicComponent
-            ImageCropWorkflow {
-                title: qsTr("Profile Picture")
-                acceptButtonText: qsTr("Make this my Profile Pic")
-                onImageCropped: (image, cropRect) => {
-                    if (!callback) {
-                        console.error("ImageCropWorkflow: no callback provided")
-                        return
-                    }
-                    callback(image,
-                             cropRect.x.toFixed(),
-                             cropRect.y.toFixed(),
-                             (cropRect.x + cropRect.width).toFixed(),
-                             (cropRect.y + cropRect.height).toFixed())
-                }
-                onDone: destroy()
-            }
-        },
-
-        Component {
-            id: communityProfilePopup
-
-            CommunityProfilePopup {
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: communityRulesPopup
-
-            CommunityRulesPopup {
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: pinnedMessagesPopup
-
-            PinnedMessagesPopup {
-                utilsStore: root.utilsStore
-
-                // Unfurling related data:
-                gifUnfurlingEnabled: root.sharedRootStore.gifUnfurlingEnabled
-                neverAskAboutUnfurlingAgain: root.sharedRootStore.neverAskAboutUnfurlingAgain
-
-                onClosed: destroy()
-
-                // Unfurling related requests:
-                onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
-                onPinMessageRequested: messageId => messageStore.pinMessage(messageId)
-                onUnpinMessageRequested: messageId => messageStore.unpinMessage(messageId)
-                onJumpToMessageRequested: messageId => messageStore.messageModule.jumpToMessage(messageId)
-            }
-        },
-
-        Component {
-            id: nicknamePopupComponent
-
-            NicknamePopup {
-                utilsStore: root.utilsStore
-
-                onEditDone: {
-                    if (nickname !== newNickname) {
-                        root.contactsStore.changeContactNickname(publicKey, newNickname, optionalDisplayName, !!nickname)
-                    }
-                    close()
-                }
-                onRemoveNicknameRequested: {
-                    root.contactsStore.changeContactNickname(publicKey, "", optionalDisplayName, true)
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: markAsUntrustedComponent
-            MarkAsUntrustedPopup {
-                onAccepted: {
-                    root.contactsStore.markUntrustworthy(publicKey)
-                    if (removeContact) {
-                        root.contactsStore.removeContact(publicKey)
-                        Global.displaySuccessToastMessage(qsTr("%1 removed from contacts and marked as untrusted").arg(mainDisplayName))
-                    } else {
-                        Global.displaySuccessToastMessage(qsTr("%1 marked as untrusted").arg(mainDisplayName))
-                    }
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: unblockContactConfirmationComponent
-            UnblockContactConfirmationDialog {
-                onAccepted: {
-                    root.contactsStore.unblockContact(publicKey)
-                    Global.displaySuccessToastMessage(qsTr("%1 unblocked").arg(mainDisplayName))
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: blockContactConfirmationComponent
-            BlockContactConfirmationDialog {
-                onAccepted: {
-                    root.contactsStore.blockContact(publicKey)
-                    if (removeIDVerification)
-                        root.contactsStore.removeTrustStatus(publicKey)
-                    if (removeContact)
-                        root.contactsStore.removeContact(publicKey)
-                    Global.displaySuccessToastMessage(qsTr("%1 blocked").arg(mainDisplayName))
-                    close()
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: importCommunitiesPopupComponent
-            ImportCommunityPopup {
-                id: importPopup
-
-                property CommunityStores.CommunityRootStore communityRootStore: root.messagingRootStore.createCommunityRootStore(this, importPopup.communityId)
-                readonly property CommunityStores.CommunityAccessStore communityAccessStore: communityRootStore ?
-                                                                                                 communityRootStore.communityAccessStore : null
-
-                store: root.communitiesStore
-                utilsStore: root.utilsStore
-                onJoinCommunityRequested: function(communityId, communityDetails) {
-                    close()
-                    communityAccessStore.spectateCommunity(communityId)
-                    openCommunityIntroPopup(communityId,
-                                            communityDetails.name,
-                                            communityDetails.introMessage,
-                                            communityDetails.image,
-                                            communityAccessStore.isMyCommunityRequestPending)
-                }
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: communityJoinDialogPopup
-
-            CommunityMembershipSetupDialog {
-                id: dialogRoot
-
-                property CommunityStores.CommunityRootStore communityRootStore: root.messagingRootStore.createCommunityRootStore(this, dialogRoot.communityId)
-                readonly property CommunityStores.CommunityAccessStore communityAccessStore: communityRootStore ?
-                                                                                                 communityRootStore.communityAccessStore : null
-
-                requirementsCheckPending: communityAccessStore ? communityAccessStore.spectatedPermissionsCheckOngoing : false
-                checkingPermissionToJoinInProgress: root.rootStore.checkingPermissionToJoinInProgress
-                joinPermissionsCheckCompletedWithoutErrors: root.rootStore.joinPermissionsCheckCompletedWithoutErrors
-
-                walletAccountsModel: root.rootStore.walletAccountsModel
-                walletCollectiblesModel: WalletStores.RootStore.collectiblesStore.allCollectiblesModel
-
-                walletAssetsModel: walletAssetsStore.groupedAccountAssetsModel
-                permissionsModel: {
-                    if(communityAccessStore) {
-                        communityAccessStore.prepareTokenModelForCommunity(dialogRoot.communityId)
-                        return communityAccessStore.spectatedPermissionsModel
-                    }
-                    return null
-                }
-                assetsModel: root.rootStore.assetsModel
-                collectiblesModel: root.rootStore.collectiblesModel
-                getTokenByKeyOrGroupKeyFromAllTokens: WalletStores.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
-
-                getCurrencyAmount: (balance, key) => {
-                    return currencyStore.getCurrencyAmount(balance, key)
-                }
-
-                onPrepareForSigning: {
-                    if(communityAccessStore) {
-                        communityAccessStore.prepareKeypairsForSigning(dialogRoot.communityId, dialogRoot.name, sharedAddresses, airdropAddress, false)
-                        dialogRoot.keypairSigningModel = root.rootStore.communitiesModuleInst.keypairsSigningModel
-                    }
-                }
-
-                onSignSharedAddressesForKeypair: {
-                    if(communityAccessStore) {
-                        communityAccessStore.signSharedAddressesForKeypair(keyUid)
-                    }
-                }
-
-                onJoinCommunity: {
-                    if(communityAccessStore) {
-                        communityAccessStore.joinCommunityOrEditSharedAddresses()
-                    }
-                }
-
-                onCancelMembershipRequest: {
-                    if(communityAccessStore) {
-                        communityAccessStore.cancelPendingRequest(dialogRoot.communityId)
-                    }
-                }
-
-                onSharedAddressesUpdated: {
-                    if(communityAccessStore) {
-                        communityAccessStore.updatePermissionsModel(dialogRoot.communityId, sharedAddresses)
-                    }
-                }
-
-                onAboutToShow: { root.rootStore.communityKeyToImport = dialogRoot.communityId; }
-
-                onClosed: {
-                    root.rootStore.communityKeyToImport = "";
-                    if(communityAccessStore) {
-                        communityAccessStore.cleanJoinEditCommunityData()
-                    }
-                }
-
-                Connections {
-                    target: dialogRoot.communityAccessStore
-
-                    function onCommunityAccessFailed(communityId: string, error: string) {
-                        if (communityId !== dialogRoot.communityId)
-                            return
-                        dialogRoot.close();
-                    }
-
-                    function onAllSharedAddressesSigned() {
-                        if (!!dialogRoot.replaceItem) {
-                            dialogRoot.replaceLoader.item.allSigned()
-                        }
-                    }
-                }
-            }
-        },
-
-        Component {
-            id: createCommunitiesPopupComponent
-            CreateCommunityPopup {
-                store: root.communitiesStore
-                advancedStore: root.advancedStore
-                isDevBuild: root.isDevBuild
-                onClosed: {
-                    destroy()
-                }
-            }
-        },
-
-        Component {
-            id: discordImportProgressDialog
-            DiscordImportProgressDialog {
-                store: root.communitiesStore
-            }
-        },
 
         Component {
             id: deleteMessageConfirmationDialogComponent
             DeleteMessageConfirmationPopup {
                 onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: downloadImageDialogComponent
-
-            StatusFolderDialog {
-                property string imageSource
-
-                title: qsTr("Please choose a directory")
-                currentFolder: StandardPaths.writableLocation(StandardPaths.PicturesLocation)
-
-                onAccepted: {
-                    SystemUtils.downloadImageByUrl(imageSource, selectedFolder)
-                    destroy()
-                }
-                onRejected: {
-                    destroy()
-                }
-            }
-        },
-
-        Component {
-            id: leaveCommunityPopupComponent
-            StatusModal {
-                id: leavePopup
-
-                property string community
-                property string communityId
-                property string outroMessage
-
-                headerSettings.title: qsTr("Are you sure want to leave '%1'?").arg(community)
-                padding: 16
-                width: 640
-                contentItem: ColumnLayout {
-                    spacing: 16
-                    StatusBaseText {
-                        id: outroMessage
-                        Layout.fillWidth: true
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        text: leavePopup.outroMessage
-                        visible: !!text
-                    }
-                    StatusMenuSeparator {
-                        Layout.fillWidth: true
-                        visible: outroMessage.visible
-                    }
-                    StatusBaseText {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        font.pixelSize: Theme.additionalTextSize
-                        text: qsTr("You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.")
-                    }
-                }
-
-                rightButtons: [
-                    StatusFlatButton {
-                        text: qsTr("Cancel")
-                        onClicked: leavePopup.close()
-                    },
-                    StatusButton {
-                        objectName: "CommunitiesListPanel_leaveCommunityButtonInPopup"
-                        type: StatusBaseButton.Type.Danger
-                        text: qsTr("Leave %1").arg(leavePopup.community)
-                        onClicked: {
-                            leavePopup.close()
-                            root.communitiesStore.leaveCommunity(leavePopup.communityId)
-                        }
-                    }
-                ]
-
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: testnetModal
-            TestnetModePopup {
-                areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled
-                onToggleTestnetRequested: root.networksStore.toggleTestNetworksEnabled()
-            }
-        },
-
-        Component {
-            id: exportControlNodePopup
-            ExportControlNodePopup {
-                devicesStore: root.devicesStore
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: importControlNodePopup
-            ImportControlNodePopup {
-                onClosed: destroy()
-                onImportControlNode: root.rootStore.promoteSelfToControlNode(communityId)
-            }
-        },
-
-        Component {
-            id: editSharedAddressesPopupComponent
-
-            CommunityMembershipSetupDialog {
-                id: editSharedAddressesPopup
-
-                // TODO: This will be replaced at some point to some combination of `CommunityStores` objects
-                readonly property ChatStores.RootStore chatStore: ChatStores.RootStore {
-                    contactsStore: root.contactsStore
-                    isChatSectionModule: false
-                    communityId: editSharedAddressesPopup.communityId
-                }
-
-                property CommunityStores.CommunityRootStore communityRootStore:  root.messagingRootStore.createCommunityRootStore(this, editSharedAddressesPopup.communityId)
-                readonly property CommunityStores.CommunityAccessStore communityAccessStore: communityRootStore ?
-                                                                                                 communityRootStore.communityAccessStore : null
-
-                isEditMode: true
-
-                currentSharedAddresses: root.rootStore.myRevealedAddressesForCurrentCommunity
-                currentAirdropAddress: root.rootStore.myRevealedAirdropAddressForCurrentCommunity
-
-                communityName: chatStore.sectionDetails.name
-                communityIcon: chatStore.sectionDetails.image
-
-                requirementsCheckPending: communityAccessStore ? communityAccessStore.spectatedPermissionsCheckOngoing : false
-                checkingPermissionToJoinInProgress: root.rootStore.checkingPermissionToJoinInProgress
-                joinPermissionsCheckCompletedWithoutErrors: root.rootStore.joinPermissionsCheckCompletedWithoutErrors
-
-                introMessage: chatStore.sectionDetails.introMessage
-
-                walletAccountsModel: root.rootStore.walletAccountsModel
-
-                walletAssetsModel: walletAssetsStore.groupedAccountAssetsModel
-                walletCollectiblesModel: WalletStores.RootStore.collectiblesStore.allCollectiblesModel
-
-                permissionsModel: {
-                    if(communityAccessStore) {
-                        communityAccessStore.prepareTokenModelForCommunity(editSharedAddressesPopup.communityId)
-                        return communityAccessStore.spectatedPermissionsModel
-                    }
-                    return null
-                }
-                assetsModel: chatStore.assetsModel
-                collectiblesModel: chatStore.collectiblesModel
-                getTokenByKeyOrGroupKeyFromAllTokens: WalletStores.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
-
-                getCurrencyAmount: (balance, key) => {
-                    return root.currencyStore.getCurrencyAmount(balance, key)
-                }
-
-                onSharedAddressesUpdated: {
-                    if(communityAccessStore) {
-                        communityAccessStore.updatePermissionsModel(editSharedAddressesPopup.communityId, sharedAddresses)
-                    }
-                }
-
-                onPrepareForSigning: {
-                    if(communityAccessStore) {
-                        communityAccessStore.prepareKeypairsForSigning(editSharedAddressesPopup.communityId, "", sharedAddresses, airdropAddress, true)
-                        editSharedAddressesPopup.keypairSigningModel = root.rootStore.communitiesModuleInst.keypairsSigningModel
-                    }
-                }
-
-                onSignSharedAddressesForKeypair: {
-                    if(communityAccessStore) {
-                        communityAccessStore.signSharedAddressesForKeypair(keyUid)
-                    }
-                }
-
-                onEditRevealedAddresses: {
-                    communityAccessStore.joinCommunityOrEditSharedAddresses()
-                }
-
-                onClosed: {
-                    communityAccessStore.cleanJoinEditCommunityData()
-                }
-
-                Connections {
-                    target: editSharedAddressesPopup.communityAccessStore
-
-                    function onAllSharedAddressesSigned() {
-                        if (!!editSharedAddressesPopup.replaceItem) {
-                            editSharedAddressesPopup.replaceLoader.item.allSigned()
-                        }
-                    }
-                }
-            }
-        },
-
-        Component {
-            id: transferOwnershipPopup
-            TransferOwnershipPopup {
-                onTransferOwnershipRequested: (tokenId, senderAddress, tokenName, tokenImage) =>
-                                                  root.transferOwnershipRequested(tokenId, senderAddress, tokenName, tokenImage)
-                onClosed: destroy()
-            }
-        },
-
-        Component {
-            id: confirmExternalLinkPopup
-            ConfirmExternalLinkPopup {
-                destroyOnClose: true
-                onOpenExternalLink: (link) => root.openExternalLink(link)
-                onSaveDomainToUnfurledWhitelist: (domain) => root.saveDomainToUnfurledWhitelist(domain)
             }
         },
 
@@ -1492,134 +764,9 @@ QtObject {
         },
 
         // Components related to transfer community ownership flow:
-        Component {
-            id: finaliseOwnershipPopup
-            FinaliseOwnershipPopup {
-                id: finalisePopup
 
-                property string communityId
-                readonly property var ownerTokenDetails: root.communityTokensStore.ownerTokenDetails
-                readonly property var communityData : root.communitiesStore.getCommunityDetailsAsJson(communityId)
-
-                readonly property TransactionFeesBroker feesBroker: TransactionFeesBroker {
-                    communityTokensStore: root.communityTokensStore
-                    active: finalisePopup.contentItem.Window.window.active
-                }
-
-                Component.onCompleted: root.communityTokensStore.asyncGetOwnerTokenDetails(communityId)
-
-                communityName: communityData.name
-                communityLogo: communityData.image
-                communityColor: communityData.color
-
-                tokenSymbol: ownerTokenDetails.symbol
-                tokenChainName: ownerTokenDetails.chainName
-
-                feeText: feeSubscriber.feeText
-                feeErrorText: feeSubscriber.feeErrorText
-                isFeeLoading: !feeSubscriber.feesResponse
-
-                accounts: WalletStores.RootStore.nonWatchAccounts
-
-                destroyOnClose: true
-
-                onRejectClicked: Global.openDeclineOwnershipPopup(finalisePopup.communityId, communityData.name)
-                onFinaliseOwnershipClicked: signPopup.open()
-
-                onVisitCommunityClicked: communitiesStore.navigateToCommunity(finalisePopup.communityId)
-                onOpenControlNodeDocClicked:(link) => Global.requestOpenLink(link)
-
-                onCalculateFees: {
-                    feesBroker.registerSetSignerFeesSubscriber(feeSubscriber)
-                }
-
-                onStopUpdatingFees: {
-                    communityTokensStore.stopUpdatesForSuggestedRoute()
-                }
-
-                onClosed: {
-                    communityTokensStore.stopUpdatesForSuggestedRoute()
-                }
-
-                SetSignerFeesSubscriber {
-                    id: feeSubscriber
-                    communityId: finalisePopup.communityId
-                    chainId: finalisePopup.ownerTokenDetails.chainId
-                    contractAddress: finalisePopup.ownerTokenDetails.contractAddress
-                    accountAddress: finalisePopup.selectedAccountAddress
-                    enabled: finalisePopup.visible || signPopup.visible
-                }
-
-                SignTransactionsPopup {
-                    id: signPopup
-
-                    title: qsTr("Sign transaction - update %1 smart contract").arg(finalisePopup.communityName)
-                    totalFeeText: finalisePopup.isFeeLoading ? "" : finalisePopup.feeText
-                    errorText: finalisePopup.feeErrorText
-                    accountName: finalisePopup.ownerTokenDetails.accountName
-                    migratedToColdWallet: !!SQUtils.ModelUtils.getByKey(root.rootStore.walletAccountsModel,
-                                                                        "address",
-                                                                        finalisePopup.selectedAccountAddress,
-                                                                        "migratedToColdWallet")
-                    keyUid: SQUtils.ModelUtils.getByKey(root.rootStore.walletAccountsModel,
-                                                        "address",
-                                                        finalisePopup.selectedAccountAddress,
-                                                        "keyUid") ?? ""
-
-                    model: QtObject {
-                        readonly property string title: finalisePopup.feeLabel
-                        readonly property string feeText: signPopup.totalFeeText
-                        readonly property bool error: finalisePopup.feeErrorText !== ""
-                    }
-
-                    onSignTransactionClicked: {
-                        finalisePopup.close()
-                        root.communityTokensStore.authenticateAndTransfer()
-                    }
-                }
-
-                Connections {
-                    target: root
-                    function onOwnershipDeclined(communityId: string, communityName: string) {
-                        finalisePopup.close()
-                        root.communityTokensStore.ownershipDeclined(communityId, communityName)
-                    }
-                }
-            }
-        },
-
-        Component {
-            id: declineOwnershipPopup
-            FinaliseOwnershipDeclinePopup {
-                destroyOnClose: true
-
-                onDeclineClicked: root.ownershipDeclined(communityId, communityName)
-            }
-        },
         // End of components related to transfer community ownership flow.
 
-        Component {
-            id: firstTokenReceivedPopup
-
-            FirstTokenReceivedPopup {
-                destroyOnClose: true
-                communitiesStore: root.communitiesStore
-
-                // The toast payload carries only a symbol, but the hide popups are keyed
-                // by token group key, so resolve it here.
-                onHideClicked: (tokenSymbol, tokenName, tokenImage, isAsset) => {
-                    if (!isAsset) {
-                        root.openConfirmHideCollectiblePopup(tokenSymbol, tokenName, tokenImage, true)
-                        return
-                    }
-                    const token = SQUtils.ModelUtils.getByKey(
-                                    root.walletAssetsStore.groupedAccountAssetsModel, "symbol", tokenSymbol)
-                    if (!token)
-                        return
-                    root.openConfirmHideAssetPopup(token.key, tokenSymbol, tokenName, tokenImage, true)
-                }
-            }
-        },
         Component {
             id: confirmHideAssetPopup
             ConfirmHideAssetPopup {
@@ -1680,47 +827,6 @@ QtObject {
             }
         },
         Component {
-            id: communityMemberMessagesPopup
-            CommunityMemberMessagesPopup {
-                id: memberMessagesPopup
-
-                sharedRootStore: root.sharedRootStore
-                utilsStore: root.utilsStore
-
-                // mention names in the messages come from the roster
-                readonly property RosterHolder rosterHolder: RosterHolder {
-                    communitiesStore: root.communitiesStore
-                    communityId: memberMessagesPopup.rootStore?.communityId ?? ""
-                }
-
-                onClosed: destroy()
-            }
-        },
-        Component {
-            id: buyCryptoModal
-            BuyCryptoModal {
-                // Own the buy picker model's lifecycle here: created for this modal
-                // instance and released when it is destroyed (avoids a per-open leak).
-                readonly property var _tokenSelector: WalletStores.RootStore.tokensStore.createTokenSelectorModel(2)
-
-                buyProvidersModel: root.buyCryptoStore.providersModel
-                isBuyProvidersModelLoading: root.buyCryptoStore.areProvidersLoading
-                formatCurrencyBalance: (amount) => root.currencyStore.formatCurrencyAmount(amount, root.currencyStore.currentCurrency)
-                walletAccountsModel: root.rootStore.accounts
-                tokenGroupsModel: root.walletAssetsStore.walletTokensStore.tokenGroupsModel
-                groupedAccountAssetsModel: root.walletAssetsStore.groupedAccountAssetsModel
-                networksModel: root.networksStore.activeNetworks
-                tokenSelectorModel: _tokenSelector.model
-                Component.onCompleted: {
-                    fetchProviders.connect(root.buyCryptoStore.fetchProviders)
-                    fetchProviderUrl.connect(root.buyCryptoStore.fetchProviderUrl)
-                    root.buyCryptoStore.providerUrlReady.connect(providerUrlReady)
-                }
-                Component.onDestruction: WalletStores.RootStore.tokensStore.releaseTokenSelectorModel(_tokenSelector.id)
-                onClosed: destroy()
-            }
-        },
-        Component {
             id: privacyPolicyPopupComponent
             StatusSimpleTextPopup {
                 title: qsTr("Status Software Privacy Policy")
@@ -1744,64 +850,6 @@ QtObject {
                 destroyOnClose: true
             }
         },
-        Component {
-            id: paymentRequestModalComponent
-            PaymentRequestModal {
-                id: paymentRequestModal
-
-                signal paymentRequested(string address, string amount, string tokenKey,
-                                        string symbol, string tokenLogoUri)
-
-                currentCurrency: root.currencyStore.currentCurrency
-                formatCurrencyAmount: root.currencyStore.formatCurrencyAmount
-                flatNetworksModel: root.networksStore.activeNetworks
-                accountsModel: WalletStores.RootStore.nonWatchAccounts
-
-                // the selected chain's token groups, held while the modal shows it
-                readonly property ChainTokenGroupsHolder chainTokenGroupsHolder: ChainTokenGroupsHolder {
-                    tokensStore: WalletStores.RootStore.tokensStore
-                    chainId: paymentRequestModal.selectedNetworkChainId
-                }
-
-                tokenGroupsForChainModel: chainTokenGroupsHolder.model
-                searchResultModel: WalletStores.RootStore.tokensStore.searchResultModel
-
-                onAllTokenGroupsAcquireRequested: WalletStores.RootStore.tokensStore.acquireAllTokenGroups()
-                onAllTokenGroupsReleaseRequested: WalletStores.RootStore.tokensStore.releaseAllTokenGroups()
-
-                onAccepted: {
-                    paymentRequested(selectedAccountAddress, amount,
-                                     selectedTokenKey, selectedSymbol,
-                                     selectedTokenLogoUri)
-                }
-                destroyOnClose: true
-            }
-        },
-        Component {
-            id: newsMessageComponent
-
-            NewsMessagePopup {
-                activityCenterNotifications: root.activityCenterStore.activityCenterNotifications
-                onLinkClicked: (link) => {
-                                   if (Utils.isStatusDeepLink(link))
-                                       Global.activateDeepLink(link)
-                                   else
-                                       Global.requestOpenLink(link)
-                                   close()
-                               }
-            }
-        },
-        Component {
-            id: quitConfirmPopupComponent
-
-            SignOutConfirmationDialog {
-                id: confirmDialog
-                secureStorage: root.secureStorage
-                privacyStore: root.privacyStore
-                keyUid: root.privacyStore.keyUid
-                onSignOutRequested: mainModule.signOutAndQuit()
-            }
-        },
 
         Component {
             id: infoComponent
@@ -1819,35 +867,6 @@ QtObject {
                 }
 
                 standardButtons: Dialog.Ok
-            }
-        },
-
-        Component {
-            id: qrCodeScannerDialogComponent
-
-            QRCodeScannerDialog {
-                destroyOnClose: true
-                onTagFound: (tagType, tag) => {
-                    if (tagType === QRCodeScannerDialog.TagType.Address) {
-                        Global.sendToRecipientRequested(tag)
-                    } else if (tagType === QRCodeScannerDialog.TagType.Link) {
-                        if (Utils.isStatusDeepLink(tag)) {
-                            root.rootStore.activateStatusDeepLink(tag)
-                            return
-                        }
-                        Global.requestOpenLink(tag)
-                    } else if (tagType === QRCodeScannerDialog.TagType.WCUri) {
-                        root.wcUriScanned(tag)
-                    }
-                }
-            }
-        },
-
-        Component {
-            id: shareProfileCmp
-            ShareProfileDialog {
-                destroyOnClose: true
-                qrCode: root.profileStore.getQrCodeSource(linkToProfile)
             }
         },
 
@@ -1898,6 +917,450 @@ QtObject {
                     root.restartRequested()
                 }
             }
+        }
+    ]
+
+    readonly property list<QtObject> _deferredComponents: [
+        SQUtils.DeferredComponent {
+            id: emojiPopupComponent
+
+            module: "shared.status"
+            typeName: "StatusEmojiPopup"
+            properties: ({
+                objectName: "StatusEmojiPopup",
+                height: 440,
+                emojiModel: SQUtils.Emoji.emojiModel,
+                skinColor: Qt.binding(() => root.emojiSkinColor)
+            })
+            onCreated: popup => {
+                popup.skinColorSelected.connect(skinColor => root.emojiSkinColorSelected(skinColor))
+                popup.closed.connect(() => popup.destroy())
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: imagePopupComponent
+
+            module: "shared.status"
+            typeName: "StatusImageModal"
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
+        },
+
+        SQUtils.DeferredComponent {
+            id: importCommunitiesPopupComponent
+
+            source: Qt.resolvedUrl("ImportCommunityPopupInstance.qml")
+            properties: ({
+                messagingRootStore: root.messagingRootStore,
+                store: root.communitiesStore,
+                utilsStore: root.utilsStore
+            })
+            onCreated: popup => {
+                popup.joinCommunityRequested.connect((communityId, communityDetails) => {
+                    popup.close()
+                    popup.communityAccessStore.spectateCommunity(communityId)
+                    root.openCommunityIntroPopup(communityId,
+                                                 communityDetails.name,
+                                                 communityDetails.introMessage,
+                                                 communityDetails.image,
+                                                 popup.communityAccessStore.isMyCommunityRequestPending)
+                })
+                popup.closed.connect(() => popup.destroy())
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: downloadImageDialogComponent
+
+            source: Qt.resolvedUrl("DownloadImageDialogInstance.qml")
+        },
+
+        SQUtils.DeferredComponent {
+            id: leaveCommunityPopupComponent
+
+            source: Qt.resolvedUrl("LeaveCommunityPopupInstance.qml")
+            onCreated: popup => {
+                popup.leaveRequested.connect(communityId => root.communitiesStore.leaveCommunity(communityId))
+                popup.closed.connect(() => popup.destroy())
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: confirmExternalLinkPopup
+
+            module: "shared.popups"
+            typeName: "ConfirmExternalLinkPopup"
+            properties: ({ destroyOnClose: true })
+            onCreated: popup => {
+                popup.openExternalLink.connect(link => root.openExternalLink(link))
+                popup.saveDomainToUnfurledWhitelist.connect(domain => root.saveDomainToUnfurledWhitelist(domain))
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: declineOwnershipPopup
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "FinaliseOwnershipDeclinePopup"
+            properties: ({ destroyOnClose: true })
+            onCreated: popup => popup.declineClicked.connect(() => root.ownershipDeclined(popup.communityId, popup.communityName))
+        },
+
+        SQUtils.DeferredComponent {
+            id: quitConfirmPopupComponent
+
+            source: Qt.resolvedUrl("SignOutConfirmationDialog.qml")
+            properties: ({
+                secureStorage: root.secureStorage,
+                privacyStore: root.privacyStore,
+                keyUid: root.privacyStore.keyUid
+            })
+            onCreated: popup => popup.signOutRequested.connect(() => mainModule.signOutAndQuit())
+        },
+
+        SQUtils.DeferredComponent {
+            id: downloadPageComponent
+
+            module: "shared.popups"
+            typeName: "DownloadPage"
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
+        },
+
+        SQUtils.DeferredComponent {
+            id: communityProfilePopup
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "CommunityProfilePopup"
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
+        },
+
+        SQUtils.DeferredComponent {
+            id: pinnedMessagesPopup
+
+            module: "AppLayouts.Chat.popups"
+            typeName: "PinnedMessagesPopup"
+            properties: ({
+                utilsStore: root.utilsStore,
+                gifUnfurlingEnabled: Qt.binding(() => root.sharedRootStore.gifUnfurlingEnabled),
+                neverAskAboutUnfurlingAgain: Qt.binding(() => root.sharedRootStore.neverAskAboutUnfurlingAgain)
+            })
+            onCreated: popup => {
+                popup.closed.connect(() => popup.destroy())
+                popup.setNeverAskAboutUnfurlingAgain.connect(neverAskAgain => root.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain))
+                popup.pinMessageRequested.connect(messageId => popup.messageStore.pinMessage(messageId))
+                popup.unpinMessageRequested.connect(messageId => popup.messageStore.unpinMessage(messageId))
+                popup.jumpToMessageRequested.connect(messageId => popup.messageStore.messageModule.jumpToMessage(messageId))
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: testnetModal
+
+            module: "shared.popups"
+            typeName: "TestnetModePopup"
+            properties: ({ areTestNetworksEnabled: Qt.binding(() => root.networksStore.areTestNetworksEnabled) })
+            onCreated: popup => popup.toggleTestnetRequested.connect(() => root.networksStore.toggleTestNetworksEnabled())
+        },
+
+        SQUtils.DeferredComponent {
+            id: exportControlNodePopup
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "ExportControlNodePopup"
+            properties: ({ devicesStore: root.devicesStore })
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
+        },
+
+        SQUtils.DeferredComponent {
+            id: importControlNodePopup
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "ImportControlNodePopup"
+            onCreated: popup => {
+                popup.closed.connect(() => popup.destroy())
+                popup.importControlNode.connect(communityId => root.rootStore.promoteSelfToControlNode(communityId))
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: transferOwnershipPopup
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "TransferOwnershipPopup"
+            onCreated: popup => {
+                popup.transferOwnershipRequested.connect((tokenId, senderAddress, tokenName, tokenImage) =>
+                                                         root.transferOwnershipRequested(tokenId, senderAddress, tokenName, tokenImage))
+                popup.closed.connect(() => popup.destroy())
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: firstTokenReceivedPopup
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "FirstTokenReceivedPopup"
+            properties: ({ destroyOnClose: true, communitiesStore: root.communitiesStore })
+            // The toast payload carries only a symbol, but the hide popups are keyed
+            // by token group key, so resolve it here.
+            onCreated: popup => popup.hideClicked.connect((tokenSymbol, tokenName, tokenImage, isAsset) => {
+                if (!isAsset) {
+                    root.openConfirmHideCollectiblePopup(tokenSymbol, tokenName, tokenImage, true)
+                    return
+                }
+                const token = SQUtils.ModelUtils.getByKey(
+                                root.walletAssetsStore.groupedAccountAssetsModel, "symbol", tokenSymbol)
+                if (!token)
+                    return
+                root.openConfirmHideAssetPopup(token.key, tokenSymbol, tokenName, tokenImage, true)
+            })
+        },
+
+        SQUtils.DeferredComponent {
+            id: communityMemberMessagesPopup
+
+            source: Qt.resolvedUrl("CommunityMemberMessagesPopupInstance.qml")
+            properties: ({
+                sharedRootStore: root.sharedRootStore,
+                utilsStore: root.utilsStore,
+                communitiesStore: root.communitiesStore
+            })
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
+        },
+
+        SQUtils.DeferredComponent {
+            id: shareProfileCmp
+
+            module: "shared.views.profile"
+            typeName: "ShareProfileDialog"
+            properties: ({ destroyOnClose: true })
+            onCreated: popup => popup.qrCode = Qt.binding(() => root.profileStore.getQrCodeSource(popup.linkToProfile))
+        },
+
+        SQUtils.DeferredComponent {
+            id: stickersPopupComponent
+
+            module: "shared.status"
+            typeName: "StatusStickersPopup"
+            properties: ({
+                objectName: "StatusStickersPopup",
+                height: 440,
+                store: Qt.binding(() => root.chatStore),
+                isWalletEnabled: Qt.binding(() => root.isWalletEnabled),
+                thirdpartyServicesEnabled: Qt.binding(() => root.rootStore.thirdpartyServicesEnabled)
+            })
+            onCreated: popup => {
+                popup.buyClicked.connect((packId, price) => root.buyStickerPackRequested(packId, price))
+                popup.enableThirdpartyServicesRequested.connect(() => root.enableThirdpartyServicesRequested())
+                popup.closed.connect(() => popup.destroy())
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: videoPopupComponent
+
+            module: "shared.status"
+            typeName: "StatusVideoModal"
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
+        },
+
+        SQUtils.DeferredComponent {
+            id: discordImportProgressDialog
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "DiscordImportProgressDialog"
+            properties: ({ store: Qt.binding(() => root.communitiesStore) })
+        },
+
+        SQUtils.DeferredComponent {
+            id: keycardManagementPopupComponent
+
+            module: "shared.popups.keycard_new"
+            typeName: "KeycardManagementPopup"
+            properties: ({
+                store: root.keycardManagementStore,
+                passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore
+            })
+            onCreated: popup => {
+                popup.metadataResult.connect(keycardInfo => Global.keycardManagementResult(keycardInfo))
+                popup.keycardFlowCompleted.connect((flow, keyUid, keycardUid, success) => {
+                    Global.keycardFlowDone(flow, keyUid, keycardUid, success)
+                })
+                popup.closed.connect(() => popup.destroy())
+            }
+        },
+
+        SQUtils.DeferredComponent {
+            id: createCommunitiesPopupComponent
+
+            module: "AppLayouts.Communities.popups"
+            typeName: "CreateCommunityPopup"
+            properties: ({
+                store: root.communitiesStore,
+                advancedStore: root.advancedStore,
+                isDevBuild: Qt.binding(() => root.isDevBuild)
+            })
+            onCreated: popup => popup.closed.connect(() => popup.destroy())
+        },
+
+        SQUtils.DeferredComponent {
+            id: profilePopupComponent
+
+            source: Qt.resolvedUrl("ProfileDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: communityJoinDialogPopup
+
+            source: Qt.resolvedUrl("CommunityJoinDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: editSharedAddressesPopupComponent
+
+            source: Qt.resolvedUrl("EditSharedAddressesDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: paymentRequestModalComponent
+
+            source: Qt.resolvedUrl("PaymentRequestModalInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: buyCryptoModal
+
+            source: Qt.resolvedUrl("BuyCryptoModalInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: qrCodeScannerDialogComponent
+
+            source: Qt.resolvedUrl("QRCodeScannerDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: finaliseOwnershipPopup
+
+            source: Qt.resolvedUrl("FinaliseOwnershipPopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: signingPopupComponent
+
+            source: Qt.resolvedUrl("SignPopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: backupSeedModalComponent
+
+            source: Qt.resolvedUrl("BackupSeedModalInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: authenticationPopupComponent
+
+            source: Qt.resolvedUrl("AuthenticationPopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: newsMessageComponent
+
+            source: Qt.resolvedUrl("NewsMessagePopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: sendContactRequestPopupComponent
+
+            source: Qt.resolvedUrl("SendContactRequestModalInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: nicknamePopupComponent
+
+            source: Qt.resolvedUrl("NicknamePopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: blockContactConfirmationComponent
+
+            source: Qt.resolvedUrl("BlockContactConfirmationDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: removeIDVerificationPopupComponent
+
+            source: Qt.resolvedUrl("RemoveIDVerificationDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: removeContactConfirmationDialog
+
+            source: Qt.resolvedUrl("RemoveContactPopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: markAsUntrustedComponent
+
+            source: Qt.resolvedUrl("MarkAsUntrustedPopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: reviewContactRequestPopupComponent
+
+            source: Qt.resolvedUrl("ReviewContactRequestPopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: unblockContactConfirmationComponent
+
+            source: Qt.resolvedUrl("UnblockContactConfirmationDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: markAsIDVerifiedPopupComponent
+
+            source: Qt.resolvedUrl("MarkAsIDVerifiedDialogInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: communityRulesPopup
+
+            source: Qt.resolvedUrl("CommunityRulesPopupInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: changeProfilePicComponent
+
+            source: Qt.resolvedUrl("ImageCropWorkflowInstance.qml")
+            properties: ({ host: root })
+        },
+
+        SQUtils.DeferredComponent {
+            id: inviteFriendsToCommunityPopup
+
+            source: Qt.resolvedUrl("InviteFriendsToCommunityPopupInstance.qml")
+            properties: ({ host: root })
         }
     ]
 }
