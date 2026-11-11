@@ -18,7 +18,7 @@ OnboardingPage {
 
     property bool restartRequired: true
 
-    signal restartRequested()
+    signal newSessionRequested()
     signal backToLoginRequested()
 
     StateGroup {
@@ -154,12 +154,12 @@ OnboardingPage {
                 visible: false
                 isOutline: false
                 text: root.restartRequired
-                      ? qsTr("Restart Status and log in with new password")
+                      ? qsTr("Log in with new password")
                       : qsTr("Back to login")
                 Layout.alignment: Qt.AlignHCenter
                 onClicked: {
                     if (root.restartRequired)
-                        root.restartRequested()
+                        root.newSessionRequested()
                     else
                         root.backToLoginRequested()
                 }

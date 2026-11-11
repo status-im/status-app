@@ -4,6 +4,8 @@ import QtTest
 
 import AppLayouts.Profile.popups
 
+import utils
+
 Item {
     id: root
 
@@ -22,6 +24,12 @@ Item {
     }
 
     property ConfirmChangePasswordModal controlUnderTest: null
+
+    SignalSpy {
+        id: reloginSpy
+        target: Global
+        signalName: "reloginRequested"
+    }
 
     SignalSpy {
         id: changePasswordSpy
@@ -78,7 +86,7 @@ Item {
             return checkbox.parent.visible
         }
 
-        function test_legacy_path_hides_rekey_and_requests_restart() {
+        function test_legacy_path_hides_rekey_and_requests_relogin() {
             openDialog(false)
 
             const checkbox = rekeyCheckbox()
@@ -89,13 +97,16 @@ Item {
             mouseClick(submitButton())
             tryCompare(changePasswordSpy, "count", 1)
             compare(changePasswordSpy.signalArguments[0][0], false)
-            compare(submitButton().text, "Restart Status")
+            compare(submitButton().text, "Log in again")
             verify(!submitButton().enabled)
 
             controlUnderTest.passwordSuccessfulyChanged()
-            compare(submitButton().text, "Restart Status")
+            compare(submitButton().text, "Log in again")
             verify(submitButton().enabled)
-            // Do not click Restart Status — SystemUtils.restartApplication exits the process.
+
+            reloginSpy.clear()
+            mouseClick(submitButton())
+            compare(reloginSpy.count, 1)
         }
 
         function test_fast_path_shows_close_and_emits_rekey_false() {
@@ -104,7 +115,7 @@ Item {
             const checkbox = rekeyCheckbox()
             verify(rekeySectionVisible(checkbox))
             verify(!checkbox.checked)
-            verify(description().text.indexOf("no restart needed") !== -1)
+            verify(description().text.indexOf("you stay logged in") !== -1)
             compare(submitButton().text, "Change password")
 
             mouseClick(submitButton())
@@ -135,8 +146,7 @@ Item {
             compare(changePasswordSpy.signalArguments[0][0], true)
 
             controlUnderTest.passwordSuccessfulyChanged()
-            compare(submitButton().text, "Restart Status")
-            // Do not click Restart Status — SystemUtils.restartApplication exits the process.
+            compare(submitButton().text, "Log in again")
         }
 
         function test_rekey_checkbox_hidden_while_in_progress_and_after_success() {

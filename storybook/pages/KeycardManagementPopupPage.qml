@@ -142,7 +142,6 @@ SplitView {
         function remainingKeypairCapacity() { return 5 }
         function remainingAccountCapacity() { return 5 }
         function prepareKeyPairModel() { logs.logEvent("prepareKeyPairModel()") }
-        function signOutAndQuit() { logs.logEvent("signOutAndQuit()") }
 
         // --- signals consumed by the popup's Connections ---
         signal keycardInteractionSuccessfullyCompleted()

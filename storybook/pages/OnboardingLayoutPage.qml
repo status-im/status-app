@@ -324,8 +324,8 @@ SplitView {
 
         ConvertKeycardAccountPage {
             convertKeycardAccountState: store.convertKeycardAccountState
-            onRestartRequested: {
-                logs.logEvent("restartRequested")
+            onNewSessionRequested: {
+                logs.logEvent("newSessionRequested")
                 root.restart()
             }
             onBackToLoginRequested: {

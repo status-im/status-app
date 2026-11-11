@@ -45,6 +45,9 @@ StatusDialog {
 
     signal keycardFlowCompletedWithData(string flow, string dataJson)
 
+    // The profile's key pair moved to or from a keycard: the user logs in again
+    signal signOutRequested()
+
     width: Constants.keycard.general.popupWidth
     padding: Theme.halfPadding
 
@@ -158,12 +161,15 @@ StatusDialog {
         property bool mixedFlowSuccess: false
         property string error: ""
 
-        readonly property bool profileConversionRequiresRestart:
+        // A legacy profile's databases are re-encrypted with the new key: the running
+        // session can't go on. A DEK profile only re-wraps its data key, and the session
+        // refreshes the profile key pair in place (wallet account service), so it stays.
+        readonly property bool profileConversionRequiresSignOut:
             (root.flow === Constants.keycard.flow.moveProfileKeyPair
              || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
             && !userProfile.migratedToDEKEncryption
         readonly property bool closingPopupDisabled: d.processing
-                                                     || profileConversionRequiresRestart && d.success
+                                                     || profileConversionRequiresSignOut && d.success
 
         property bool factoryResetConfirmationChecked: false
 
@@ -1161,8 +1167,8 @@ StatusDialog {
                     if (!!d.error) {
                         return qsTr("Done")
                     } else if (d.success) {
-                        if (d.profileConversionRequiresRestart) {
-                            return qsTr("Quit and restart Status")
+                        if (d.profileConversionRequiresSignOut) {
+                            return qsTr("Sign out")
                         }
                         return qsTr("Done")
                     }
@@ -1170,9 +1176,10 @@ StatusDialog {
                 }
 
                 onClicked: {
-                    if (d.success && d.profileConversionRequiresRestart) {
-                        console.info("the app is closing due to successfully converted profile key pair - flow: ", root.flow)
-                        root.store.signOutAndQuit()
+                    if (d.success && d.profileConversionRequiresSignOut) {
+                        // The profile's credential type changed: log in again from the login screen
+                        console.info("signing out after converting the profile key pair - flow: ", root.flow)
+                        root.signOutRequested()
                     }
 
                     root.close()

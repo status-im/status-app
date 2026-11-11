@@ -5,7 +5,6 @@ import view, controller
 
 import ../../../../../constants
 import ../../../../core/eventemitter
-import ../../../../global/global_singleton
 import ../../../../../app_service/service/settings/service as settings_service
 import ../../../../../app_service/service/stickers/service as stickers_service
 import ../../../../../app_service/service/node_configuration/service as node_configuration_service
@@ -59,12 +58,8 @@ method getModuleAsVariant*(self: Module): QVariant =
 method getFleet*(self: Module): string =
   return self.controller.getFleet()
 
-method setFleet*(self: Module, fleet: string) =
+method setFleet*(self: Module, fleet: string): bool =
   self.controller.setFleet(fleet)
-
-method onFleetSet*(self: Module) =
-  info "quit the app because of successful fleet change"
-  singletonInstance.application.exit() # TODO: change this to logout instead when supported
 
 method getLogDir*(self: Module): string =
   return constants.LOGDIR
@@ -78,7 +73,7 @@ method setWakuV2LightClientEnabled*(self: Module, enabled: bool): bool =
 method isDebugEnabled*(self: Module): bool =
   self.controller.isDebugEnabled()
 
-method toggleDebug*(self: Module) =
+method toggleDebug*(self: Module): bool =
   self.controller.toggleDebug()
 
 method onDebugToggled*(self: Module) =

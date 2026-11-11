@@ -122,7 +122,7 @@ StatusDialog {
             wrapMode: Text.WordWrap
             text: {
                 if (!d.doDeepPasswordChange) {
-                    return qsTr("Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.")
+                    return qsTr("Your password will be changed. This only re-encrypts your profile key file and takes a moment — you stay logged in.")
                 }
                 if (root.fastPasswordChangePossible) {
                     return qsTr("Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.")
@@ -149,7 +149,7 @@ StatusDialog {
                 wrapMode: Text.WordWrap
                 font.pixelSize: Theme.tertiaryTextFontSize
                 color: Theme.palette.baseColor1
-                text: qsTr("Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.")
+                text: qsTr("Only needed if you suspect your device was compromised. Takes considerably longer and requires logging in again.")
             }
         }
 
@@ -180,7 +180,7 @@ StatusDialog {
                 }
                 subTitle: {
                     if (!d.dbEncryptionInProgress) {
-                        return d.doDeepPasswordChange ? qsTr("Restart Status and log in using your new password")
+                        return d.doDeepPasswordChange ? qsTr("Log in again with your new password")
                                                       : qsTr("You can continue using Status")
                     }
                     return d.doDeepPasswordChange ? qsTr("Do not quit the app or turn off your device")
@@ -231,13 +231,13 @@ StatusDialog {
                     if (!d.dbEncryptionInProgress && !d.passwordChanged) {
                         return d.doDeepPasswordChange ? qsTr("Re-encrypt data using new password") : qsTr("Change password")
                     }
-                    return d.doDeepPasswordChange ? qsTr("Restart Status") : qsTr("Close")
+                    return d.doDeepPasswordChange ? qsTr("Log in again") : qsTr("Close")
                 }
                 enabled: !d.dbEncryptionInProgress
                 onClicked: {
                     if (d.passwordChanged) {
                         if (d.doDeepPasswordChange) {
-                            SystemUtils.restartApplication(true);
+                            Global.reloginRequested()
                         } else {
                             root.close();
                         }
