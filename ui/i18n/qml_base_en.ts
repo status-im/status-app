@@ -3404,7 +3404,15 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatView</name>
     <message>
+        <source>Couldn&apos;t send thread reply. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New thread</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11702,6 +11710,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Open thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Edit</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18438,6 +18450,25 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>More</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ThreadReplyStore</name>
+    <message>
+        <source>Couldn&apos;t open thread. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t send message. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t create thread. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t rename thread: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

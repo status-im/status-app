@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import utils
+import utils as AppUtils
 import shared
 import shared.panels
 import shared.popups
@@ -28,7 +29,10 @@ import AppLayouts.Communities.views
 import AppLayouts.Profile.stores
 import AppLayouts.Wallet.stores as WalletStore
 
+import QtModelsToolkit
 import SortFilterProxyModel
+import AppLayouts.stores.Messaging as MessagingStores
+import AppLayouts.Chat.adaptors
 import AppLayouts.Chat.controls
 import AppLayouts.Chat.stores as ChatStores
 
@@ -80,6 +84,7 @@ Item {
                                             || rightPanelLoader.status === Loader.Ready
 
     property ChatStores.RootStore rootStore
+    required property MessagingStores.ThreadReplyStore threadReplyStore
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
     property CommunitiesStores.CommunitiesStore communitiesStore
     required property WalletStore.WalletAssetsStore walletAssetsStore
@@ -188,7 +193,7 @@ Item {
     property bool amIChatAdmin
 
     onActiveItemIdChanged: {
-        if (d.openThreadId && root.activeItemId !== d.openThreadParentChatId)
+        if (d.threadPanelOpen && root.activeItemId !== (d.newThreadParentMessageId ? d.newThreadParentChatId : d.openThreadParentChatId))
             d.closeThreadPanel()
     }
 
@@ -215,6 +220,26 @@ Item {
         id: d
         objectName: "chatViewInternal"
 
+        property string newThreadParentMessageId
+        property string newThreadParentChatId
+        property QtObject threadDraft: null
+        property string threadDraftError
+
+        function submitThreadDraft(text, name, startNewThread) {
+            if (threadDraft?.pending)
+                return
+            threadDraftError = ""
+            text = root.rootStore.cleanMessageText(text)
+            const requestId = root.threadReplyStore.submit(root.rootStore.chatCommunitySectionModule,
+                infoMessageStore.messageModule, newThreadParentChatId, newThreadParentMessageId, text, name,
+                AppUtils.Utils.isOnlyEmoji(text) ? Constants.messageContentType.emojiType : Constants.messageContentType.messageType,
+                startNewThread)
+            threadDraft = root.threadReplyStore.getRequest(root.rootStore.chatCommunitySectionModule,
+                                                           newThreadParentChatId, newThreadParentMessageId)
+            if (!requestId)
+                threadDraftError = qsTr("Couldn't send thread reply. Try again.")
+        }
+        readonly property bool threadPanelOpen: !!openThreadId || !!newThreadParentMessageId
         readonly property string openThreadId: root.rootStore.openThreadId
         readonly property string openThreadName: root.rootStore.openThreadName
         readonly property string openThreadParentChatId: root.rootStore.openThreadParentChatId
@@ -241,6 +266,7 @@ Item {
         function openThreadPanel(threadId, threadName, parentChatId = root.activeItemId) {
             threadPanelRevision++
             root.rootStore.openThreadPanel(threadId, threadName, parentChatId)
+            newThreadParentMessageId = ""
             // Wait for the right panel page to exist before navigating to it.
             if (root.sectionLayout?.isPortrait)
                 Backpressure.setTimeout(root, 50, () => {
@@ -269,9 +295,30 @@ Item {
         }
 
         // On portrait the toolbar already carries the back button, so it also hosts the thread title
-        readonly property bool threadHeaderInToolbar: !!openThreadId && !!root.sectionLayout?.isPortrait
+        readonly property bool threadHeaderInToolbar: threadPanelOpen && !!root.sectionLayout?.isPortrait
+
+        function startThread(parentMessageId) {
+            if (newThreadParentMessageId === parentMessageId && newThreadParentChatId === root.activeItemId) {
+                threadPanelRevision++
+                if (root.sectionLayout?.isPortrait)
+                    root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+                rightPanelLoader.item?.newThreadPanel?.chatInput.forceInputActiveFocus()
+                return
+            }
+            closeThreadPanel()
+            newThreadParentChatId = root.activeItemId
+            threadDraft = root.threadReplyStore.getRequest(root.rootStore.chatCommunitySectionModule,
+                                                           newThreadParentChatId, parentMessageId)
+            threadDraftError = ""
+            newThreadParentMessageId = parentMessageId
+            threadOpenedFromInfo = false
+            if (root.sectionLayout?.isPortrait)
+                root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+        }
 
         function closeThreadPanel() {
+            newThreadParentMessageId = ""
+            threadDraft = null
             threadPanelRevision++
             threadNameEditId = ""
             root.rootStore.closeThreadPanel()
@@ -350,7 +397,7 @@ Item {
 
     // Portrait pages share the toolbar row with its back button.
     readonly property Item rightPanelHeaderContent: !root.sectionLayout?.isPortrait ? null :
-                                                   d.openThreadId ? root.threadToolbarHeader :
+                                                   d.threadPanelOpen ? root.threadToolbarHeader :
                                                    rightPanelLoader.item?.headerContent ?? null
 
     readonly property Item threadToolbarHeader: Loader {
@@ -362,6 +409,7 @@ Item {
             }
             StatusFlatRoundButton {
                 objectName: "searchThreadToolbarButton"
+                visible: !d.newThreadParentMessageId
                 icon.name: "search"
                 tooltip.text: qsTr("Search")
                 onClicked: root.openAppSearch(d.openThreadParentChatId, d.openThreadId)
@@ -392,8 +440,8 @@ Item {
             Component.onCompleted: if (editRequested) Qt.callLater(panelThreadHeader.editRequestedName)
 
             threadId: d.openThreadId
-            threadName: threadMessageStore.threadName
-            parentChatName: d.openThreadParentChatName
+            threadName: d.newThreadParentMessageId ? qsTr("New thread") : threadMessageStore.threadName
+            parentChatName: d.newThreadParentMessageId ? root.activeItemName : d.openThreadParentChatName
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
             onEditNameRequested: Qt.callLater(panelThreadHeader.beginEditing)
@@ -403,7 +451,7 @@ Item {
             ChatStores.MessageStore {
                 id: threadMessageStore
                 objectName: "threadPanelMessageStore"
-                messageModule: d.getThreadMessageModule(d.openThreadId)
+                messageModule: d.newThreadParentMessageId ? null : d.getThreadMessageModule(d.openThreadId)
                 chatSectionModule: root.rootStore.chatCommunitySectionModule
             }
 
@@ -444,7 +492,7 @@ Item {
     }
 
     readonly property bool showRightPanel: {
-        if (d.openThreadId)
+        if (d.threadPanelOpen)
             return true
 
         if (root.contentLocked || root.rootStore.openCreateChat ||
@@ -459,7 +507,7 @@ Item {
     // only because its answer is not known yet. Let the section chrome keep
     // the user-requested members column in that interval instead of resizing
     // from shown → hidden → shown as this view initializes.
-    readonly property bool rightPanelDecisionReady: !!d.openThreadId
+    readonly property bool rightPanelDecisionReady: d.threadPanelOpen
                                                   || !root.showUsersList
                                                   || root.contentLocked
                                                   || root.rootStore.openCreateChat
@@ -513,7 +561,49 @@ Item {
             sourceComponent: MembersListSkeleton {}
         }
 
-        sourceComponent: d.openThreadId ? threadChatPanelComponent : infoPanelComponent
+        sourceComponent: d.threadPanelOpen ? threadChatPanelComponent : infoPanelComponent
+        onLoaded: {
+            if (item?.newThreadPanel)
+                Qt.callLater(item.newThreadPanel.chatInput.forceInputActiveFocus)
+        }
+    }
+
+    Connections {
+        target: root.threadReplyStore
+        function onFinished(requestId, chatId, parentMessageId, threadId, threadName, error) {
+            if (!d.threadDraft || requestId !== d.threadDraft.requestId
+                    || chatId !== d.newThreadParentChatId || parentMessageId !== d.newThreadParentMessageId)
+                return
+            if (!error) {
+                if (d.threadDraft.asThread)
+                    d.openThreadPanel(threadId, threadName)
+                else
+                    d.closeThreadPanel()
+            }
+        }
+    }
+
+    Loader {
+        id: threadDraftMentions
+        active: !!d.newThreadParentMessageId
+        sourceComponent: MentionResolver {
+            sourceModel: names.model
+            nameRole: "preferredDisplayName"
+            aliasProvider: pubKey => root.rootStore.generateAlias(pubKey)
+            MentionNamesAdaptor {
+                id: names
+                chatUsersModel: root.usersModel
+                contactsModel: root.rootStore.contactsModel
+            }
+        }
+    }
+
+    ModelEntry {
+        id: threadParent
+        sourceModel: d.newThreadParentMessageId ? infoMessageStore.messagesModel : null
+        key: "id"
+        value: d.newThreadParentMessageId
+        cacheOnRemoval: true
     }
 
     ChatStores.MessageStore {
@@ -651,6 +741,7 @@ Item {
 
         ColumnLayout {
             id: threadPanel
+            readonly property alias newThreadPanel: newThreadLoader.item
             spacing: 0
 
             RowLayout {
@@ -679,6 +770,7 @@ Item {
 
                     StatusFlatRoundButton {
                         objectName: "searchThreadButton"
+                        visible: !d.newThreadParentMessageId
                         icon.name: "search"
                         tooltip.text: qsTr("Search")
                         tooltip.orientation: StatusToolTip.Orientation.Bottom
@@ -706,6 +798,67 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
                 color: Theme.palette.separator
+            }
+
+            Loader {
+                id: newThreadLoader
+                objectName: "newThreadLoader"
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                active: !!d.newThreadParentMessageId
+                visible: active
+                sourceComponent: NewThreadPanel {
+                    parentMessageText: threadParent.item?.unparsedText ?? ""
+                    initialText: d.threadDraft?.text ?? ""
+                    initialThreadName: d.threadDraft?.name ?? ""
+                    initialStartNewThread: d.threadDraft?.asThread ?? true
+                    initialMentionsMap: threadDraftMentions.item?.resolveFor(d.threadDraft?.text ?? "", "") ?? ({})
+                    pending: d.threadDraft?.pending ?? false
+                    error: d.threadDraftError || d.threadDraft?.error || ""
+                    usersModel: root.usersModel
+                    parentMessageContent: Component {
+                        MessageView {
+                            objectName: "newThreadParentMessage"
+                            rootStore: root.rootStore
+                            messageStore: infoMessageStore
+                            chatId: d.newThreadParentChatId
+                            messageId: d.newThreadParentMessageId
+                            unparsedText: threadParent.item?.unparsedText ?? ""
+                            mentionsMap: threadDraftMentions.item?.resolveFor(unparsedText, threadParent.item?.mentionedNames ?? "") ?? ({})
+                            senderId: threadParent.item?.senderId ?? ""
+                            senderDisplayName: threadParent.item?.senderDisplayName ?? ""
+                            senderIcon: threadParent.item?.senderIcon ?? ""
+                            senderColorId: threadParent.item?.senderColorId ?? 0
+                            messageContentType: threadParent.item?.contentType ?? Constants.messageContentType.messageType
+                            messageTimestamp: threadParent.item?.timestamp ?? 0
+                            deleted: threadParent.item?.deleted ?? false
+                            deletedBy: threadParent.item?.deletedBy ?? ""
+                            deletedByContactDisplayName: threadParent.item?.deletedByContactDisplayName ?? ""
+                            deletedByContactIcon: threadParent.item?.deletedByContactIcon ?? ""
+                            deletedByContactColorId: threadParent.item?.deletedByContactColorId ?? 0
+                            isEdited: threadParent.item?.isEdited ?? false
+                            paymentRequestModel: threadParent.item?.paymentRequestModel ?? null
+                            linkPreviewModel: threadParent.item?.linkPreviewModel ?? null
+                            links: threadParent.item?.links ?? ""
+                            transactionParams: threadParent.item?.transactionParameters ?? null
+                            messageAttachments: threadParent.item?.messageAttachments ?? ""
+                            albumMessageImages: threadParent.item?.albumMessageImages ?? ""
+                            albumCount: threadParent.item?.albumImagesCount ?? 0
+                            formatBalance: (amount, key) => root.rootStore.formatTokenAmount(amount, key)
+                            messageImage: threadParent.item?.messageImage ?? ""
+                            sticker: threadParent.item?.sticker ?? ""
+                            stickerPack: threadParent.item?.stickerPack ?? 0
+                            isInPinnedPopup: true
+                            isThreadView: true
+                            shouldRepeatHeader: true
+                        }
+                    }
+                    canPost: root.canPost && root.rootStore.sectionDetails.joined
+                             && !root.rootStore.sectionDetails.amIBanned
+                             && root.rootStore.isUserAllowedToSendMessage
+                             && !(root.chatContentModule?.chatDetails.blocked ?? false)
+                    onSendRequested: (text, threadName, startNewThread) => d.submitThreadDraft(text, threadName, startNewThread)
+                }
             }
 
             // Keep a thread's models and bindings together for its entire lifetime.
@@ -835,7 +988,7 @@ Item {
 
             usersModel: root.usersModel
             amIChatAdmin: root.amIChatAdmin
-            showMembersButtonHighlighted: root.showUsersList && !d.openThreadId
+            showMembersButtonHighlighted: root.showUsersList && !d.threadPanelOpen
 
             onEditThreadRequested: threadId => {
                 d.editThreadName(threadId, root.activeItemName, root.chatContentModule.messagesModule.getChatId())
@@ -865,12 +1018,12 @@ Item {
             onGroupMembersUpdateRequested: root.groupMembersUpdateRequested(membersPubKeysList)
             onShowPinsRequested: {
                 d.infoTab = ChatInfoPanel.Pins
-                if (d.openThreadId)
+                if (d.threadPanelOpen)
                     d.closeThreadPanel()
                 root.showUsersListRequested(true)
             }
             onToggleShowMembersRequested: {
-                if (d.openThreadId) {
+                if (d.threadPanelOpen) {
                     d.closeThreadPanel()
                     root.showUsersListRequested(true)
                 } else {
@@ -935,9 +1088,15 @@ Item {
 
             onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
-            onOpenThreadRequested: (threadId, threadName) => {
-                d.threadOpenedFromInfo = false
-                d.openThreadPanel(threadId, threadName)
+            onOpenThreadRequested: (threadId, threadName, parentMessageId) => {
+                const draft = root.threadReplyStore.getRequest(root.rootStore.chatCommunitySectionModule,
+                                                              root.activeItemId, parentMessageId)
+                if (!threadId || draft)
+                    d.startThread(parentMessageId)
+                else {
+                    d.threadOpenedFromInfo = false
+                    d.openThreadPanel(threadId, threadName)
+                }
             }
 
             // Unfurling related requests:

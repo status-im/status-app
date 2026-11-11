@@ -8,6 +8,9 @@ import ../../../../../../app_service/service/contacts/dto/contact_details
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
 
+method onTextMessageSent*(self: AccessInterface, requestId, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method delete*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -22,7 +25,7 @@ method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
 
 method sendChatMessage*(self: AccessInterface, msg: string, replyTo: string, contentType: int,
   linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest], startNewThread: bool,
-  newThreadName: string) {.base.} =
+  newThreadName: string, sendToken: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method sendImages*(self: AccessInterface, imagePathsJson: string, msg: string, replyTo: string,

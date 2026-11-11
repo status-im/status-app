@@ -10,5 +10,6 @@ MessageRowsSkeleton 1.0 MessageRowsSkeleton.qml
 MessagesChatSkeleton 1.0 MessagesChatSkeleton.qml
 MessagesListHeader 1.0 MessagesListHeader.qml
 MessagesListSkeleton 1.0 MessagesListSkeleton.qml
+NewThreadPanel 1.0 NewThreadPanel.qml
 SuggestionBoxPanel 1.0 SuggestionBoxPanel.qml
 UserListPanel 1.0 UserListPanel.qml
