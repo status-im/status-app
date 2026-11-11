@@ -471,6 +471,7 @@ Item {
         id: joinCommunityButton
 
         StatusButton {
+            objectName: "communityColumnJoinButton"
             enabled: !root.communityData.amIBanned
             loading: d.requestToJoinState === Constants.RequestToJoinState.InProgress
 
