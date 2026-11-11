@@ -11,6 +11,7 @@ import app/core/main
 import app/core/custom_urls/urls_manager
 import app/global/global_singleton
 import app/android/lifecycle as android_lifecycle
+import constants as main_constants
 from app/modules/shared_modules/collectibles/controller import releaseAllRequestIds
 from app_service/service/keycardV2/service import receiveKeycardSignalV2
 import backend/core as backend_core
@@ -76,6 +77,10 @@ proc disposeSession(self: AppSessions) =
   singletonInstance.localAccountSensitiveSettings.detach()
   backend_core.DB_BLOCKED_DUE_TO_PROFILE_MIGRATION = false
   releaseAllRequestIds()
+  # The ended profile's debug mode must not carry over to the login screen and the next
+  # profile.
+  if not main_constants.runtimeLogLevelSet():
+    setLogLevel(main_constants.defaultLogLevel())
 
 proc initializeSession(self: AppSessions): Result[SessionReceivers, string] =
   if not self.current.isNil:

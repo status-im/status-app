@@ -33,6 +33,8 @@ Item {
 
     signal contentLoaded()
     signal storeAppStateRequested()
+    // End the session: the next one starts at the login screen
+    signal signOutRequested()
 
     // Provided by Nim before the session's UI loads (see AppController.initializeQmlContext())
     readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
@@ -205,6 +207,9 @@ Item {
         }
         function onProfileSelected(keyUid: string) : void {
             localAppSettings.selectedProfileKeyUid = keyUid
+        }
+        function onNewSessionRequested() : void {
+            root.signOutRequested()
         }
     }
 

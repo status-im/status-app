@@ -220,6 +220,11 @@ Window {
         property int lastNonMinVisibility
         property var lastMinimizedScreen: null
 
+        function signOut() : void {
+            if (!sessionView.signOut())
+                console.warn("sign-out ignored: a session transition is running")
+        }
+
         function releaseSessionUi() : void {
             // Popups of the session are destroyed with its tree
             sessionLoader.active = false
@@ -472,7 +477,11 @@ Window {
         target: Global
 
         function onSignOutConfirmed() : void {
-            sessionView.signOut()
+            d.signOut()
+        }
+        function onReloginRequested() : void {
+            if (!sessionView.relogin())
+                console.warn("relogin ignored: a session transition is running")
         }
         function onQuitAppRequested() : void {
             applicationWindow.quitApp()
@@ -522,6 +531,7 @@ Window {
                     applicationWindow.contentLoaded()
                 }
                 onStoreAppStateRequested: applicationWindow.storeAppState()
+                onSignOutRequested: d.signOut()
             }
         }
 

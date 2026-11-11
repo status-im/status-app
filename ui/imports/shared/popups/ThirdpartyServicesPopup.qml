@@ -133,13 +133,13 @@ StatusDialog {
                         if(root.isOnboardingFlow) {
                             return qsTr("Disable third-party services")
                         }
-                        return qsTr("Disable services and restart the app")
+                        return qsTr("Disable services and log in again")
                     }
                     else {
                         if(root.isOnboardingFlow) {
                             return qsTr("Enable third-party services")
                         }
-                        return qsTr("Enable services and restart the app")
+                        return qsTr("Enable services and log in again")
                     }
                 }
                 onClicked: {

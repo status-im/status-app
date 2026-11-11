@@ -72,10 +72,6 @@ QtObject {
     }
 
     // functions to override
-    function signOutAndQuit() {
-        console.error("signOutAndQuit not implemented")
-    }
-
     function prepareKeyPairModel() {
         console.error("prepareKeyPairModel not implemented")
     }

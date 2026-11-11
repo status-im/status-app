@@ -33,12 +33,20 @@ RadioButtonSelector {
         id: confirmDialogComponent
         ConfirmationDialog {
             headerSettings.title: qsTr("Warning!")
-            confirmationText: qsTr("Change fleet to %1").arg(root.newFleet)
+            confirmationText: qsTr("Change fleet to %1").arg(root.newFleet) + "\n"
+                              + qsTr("You will be logged out and back in if you confirm.")
             onConfirmButtonClicked: {
-                root.advancedStore.setFleet(root.newFleet)
+                close()
+                if (root.advancedStore.setFleet(root.newFleet))
+                    Global.reloginRequested()
+                else
+                    Global.displayToastMessage(qsTr("Failed to change the fleet"), "", "warning",
+                                               false, Constants.ephemeralNotificationType.danger, "")
             }
             onClosed: {
-                destroy();
+                // Show the saved fleet again (cancelled or failed): the click broke the binding
+                root.checked = Qt.binding(() => root.advancedStore.fleet === root.fleetName)
+                destroy()
             }
         }
     }

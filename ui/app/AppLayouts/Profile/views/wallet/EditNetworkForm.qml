@@ -35,7 +35,7 @@ ColumnLayout {
         SameAsOther,
         NotSameChain,
         Empty,
-        RestartRequired
+        ReloginRequired
     }
 
     QtObject {
@@ -90,8 +90,8 @@ ColumnLayout {
                 return qsTr("JSON RPC URLs are the same")
             case EditNetworkForm.NotSameChain:
                 return qsTr("Chain ID returned from JSON RPC doesn’t match %1").arg(network.chainName)
-            case EditNetworkForm.RestartRequired:
-                return qsTr("Restart required for changes to take effect")
+            case EditNetworkForm.ReloginRequired:
+                return qsTr("Log in again for changes to take effect")
             default: return ""
             }
         }
@@ -102,7 +102,7 @@ ColumnLayout {
                 return Theme.palette.baseColor1
             case EditNetworkForm.SameAsOther:
             case EditNetworkForm.NotSameChain:
-            case EditNetworkForm.RestartRequired:
+            case EditNetworkForm.ReloginRequired:
                 return  Theme.palette.warningColor1
             case EditNetworkForm.Verified:
                 return Theme.palette.successColor1
@@ -116,7 +116,7 @@ ColumnLayout {
             case EditNetworkForm.Verified:
             case EditNetworkForm.SameAsOther:
             case EditNetworkForm.NotSameChain:
-            case EditNetworkForm.RestartRequired:
+            case EditNetworkForm.ReloginRequired:
                 return  Text.AlignLeft
             default: return Text.AlignRight
             }
@@ -208,7 +208,7 @@ ColumnLayout {
                     if (d.mainRpcProviderUrl === text) {
                         d.evaluationStatusMainRpc = EditNetworkForm.UnTouched
                         if (root.networkRPCChanged[network.chainId]) {
-                            d.evaluationStatusMainRpc = EditNetworkForm.RestartRequired
+                            d.evaluationStatusMainRpc = EditNetworkForm.ReloginRequired
                         }
                     } else {
                         d.evaluationStatusMainRpc = EditNetworkForm.Pending
@@ -243,7 +243,7 @@ ColumnLayout {
                 if (d.fallbackRpcProviderUrl === text) {
                     d.evaluationStatusFallBackRpc = EditNetworkForm.UnTouched
                     if (root.networkRPCChanged[network.chainId]) {
-                        d.evaluationStatusFallBackRpc = EditNetworkForm.RestartRequired
+                        d.evaluationStatusFallBackRpc = EditNetworkForm.ReloginRequired
                     }
                 } else {
                     d.evaluationStatusFallBackRpc = EditNetworkForm.Pending
@@ -290,8 +290,8 @@ ColumnLayout {
                 d.evaluationStatusFallBackRpc === EditNetworkForm.Empty ||
                 d.evaluationStatusMainRpc === EditNetworkForm.NotSameChain ||
                 d.evaluationStatusFallBackRpc === EditNetworkForm.NotSameChain ||
-                d.evaluationStatusMainRpc === EditNetworkForm.RestartRequired ||
-                d.evaluationStatusFallBackRpc === EditNetworkForm.RestartRequired
+                d.evaluationStatusMainRpc === EditNetworkForm.ReloginRequired ||
+                d.evaluationStatusFallBackRpc === EditNetworkForm.ReloginRequired
                 ) && warningCheckbox.checked
 
             onClicked: {
@@ -303,7 +303,7 @@ ColumnLayout {
     Component {
         id: confirmationDialogComponent
         StatusModal {
-            headerSettings.title: qsTr("RPC URL change requires app restart")
+            headerSettings.title: qsTr("RPC URL change requires logging in again")
             contentItem: Item {
                 width: parent.width
                 implicitHeight: childrenRect.height
@@ -318,7 +318,7 @@ ColumnLayout {
 
                     StatusBaseText {
                         objectName: "mustBeRestartedText"
-                        text: qsTr("For new JSON RPC URLs to take effect, Status must be restarted. Are you ready to do this now?")
+                        text: qsTr("For new JSON RPC URLs to take effect, you need to log in again. Are you ready to do this now?")
                         font.pixelSize: Theme.primaryTextFontSize
                         anchors.left: parent.left
                         anchors.right: parent.right
@@ -337,19 +337,19 @@ ColumnLayout {
                 StatusFlatButton {
                     id: laterButton
                     objectName: "laterButton"
-                    text: qsTr("Save and restart later")
+                    text: qsTr("Save and log in later")
                     type: StatusBaseButton.Type.Normal
                     onClicked: {
                         close()
                         d.save()
-                        d.evaluationStatusMainRpc = EditNetworkForm.RestartRequired
+                        d.evaluationStatusMainRpc = EditNetworkForm.ReloginRequired
                     }
                 },
                 StatusButton {
                     id: saveButton
                     objectName: "saveButton"
                     type: StatusBaseButton.Type.Normal
-                    text: qsTr("Save and restart Status")
+                    text: qsTr("Save and log in again")
                     focus: true
                     Keys.onReturnPressed: function(event) {
                         saveButton.clicked()
@@ -357,7 +357,7 @@ ColumnLayout {
                     onClicked: {
                         close()
                         d.save()
-                        Qt.exit(0)
+                        Global.reloginRequested()
                     }
                 }
             ]

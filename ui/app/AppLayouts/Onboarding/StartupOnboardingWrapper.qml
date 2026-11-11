@@ -37,6 +37,9 @@ Item {
     signal biometricFlowStarted()
     signal skippedBiometricFlow(bool available)
     signal contentLoaded()
+    // The converted profile's databases need a fresh backend: end the session, the next
+    // one starts at the login screen
+    signal newSessionRequested()
 
     OnboardingStore {
         id: defaultOnboardingStore
@@ -233,9 +236,7 @@ Item {
             ConvertKeycardAccountPage {
                 convertKeycardAccountState: root.onboardingStore.convertKeycardAccountState
                 restartRequired: root.onboardingStore.convertKeycardAccountRestartRequired
-                onRestartRequested: {
-                    SystemUtils.restartApplication(true)
-                }
+                onNewSessionRequested: root.newSessionRequested()
                 onBackToLoginRequested: {
                     d.loginRequestSent = false
                     onboardingLayout.unwindToLoginScreen()

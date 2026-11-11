@@ -140,8 +140,8 @@ proc connect(self: AppController) =
       let args = NodeLogLevelUpdatedArgs(a)
       if args.logLevel == chronicles.LogLevel.DEBUG:
         setLogLevel(chronicles.LogLevel.DEBUG)
-      elif defined(production):
-        setLogLevel(chronicles.LogLevel.INFO)
+      else:
+        setLogLevel(main_constants.defaultLogLevel())
 
 
 proc newAppController*(statusFoundation: StatusFoundation): AppController =
@@ -448,10 +448,11 @@ proc load(self: AppController) =
   self.currencyService.init()
   self.walletAccountService.init()
 
-  # Apply runtime log level settings
+  # The profile's debug mode decides; the process may already log at the level an
+  # earlier profile asked for.
   if not main_constants.runtimeLogLevelSet():
-    if self.nodeConfigurationService.isDebugEnabled():
-      setLogLevel(chronicles.LogLevel.DEBUG)
+    setLogLevel(if self.nodeConfigurationService.isDebugEnabled(): chronicles.LogLevel.DEBUG
+                else: main_constants.defaultLogLevel())
 
   # The HTTP traffic stats cost work on every request, so release builds keep
   # them for debug sessions; the HTTP statistics screen can still turn them on.
