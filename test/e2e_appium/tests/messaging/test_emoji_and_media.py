@@ -9,6 +9,8 @@ from pages.messaging.message_context_menu_page import MessageContextMenuPage
 from support.generators import generate_account_name
 from support.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
+THUMBS_UP = "\U0001f44d"
+
 
 def _unique_message(prefix: str) -> str:
     return f"{prefix}_{generate_account_name(8)}"
@@ -80,22 +82,22 @@ class TestEmojiAndMedia:
             starting_count + 1,
             timeout=self.UI_TIMEOUT,
         ), "Emoji message should appear in chat"
+        assert chat_page.wait_for_newest_message_body(THUMBS_UP), (
+            f"The newest message should read {THUMBS_UP!r}, "
+            f"it reads {chat_page.newest_message_body()!r}"
+        )
 
     @pytest.mark.gate
     @pytest.mark.spec("SC-MTYP-04")
     @pytest.mark.flaky(reruns=1, reruns_delay=5)
     async def test_emoji_received_cross_device(self) -> None:
-        """Verify emoji message is delivered to the receiving device.
+        """Verify the emoji itself is delivered to the receiving device.
 
         Desktop parity: D7 from test_messaging_1x1_chat.py verifies emoji
         character in unparsedText on both sender and receiver.
 
-        Note: emoji content is not assertable via content-desc — Emoji.parse()
-        converts the unicode character to an <img> tag in the QML RichText
-        renderer, leaving the accessibility label empty.  We assert delivery
-        via message count instead.  Content assertion requires adding
-        Accessible.name to StatusTextMessage_chatText (QML change, tracked
-        separately in OXI-123).
+        The message's accessibility label holds the emoji characters, so on
+        both devices the newest message must read as the emoji.
         """
         # Navigate secondary into chat and capture baseline count BEFORE
         # primary sends, so we have a reliable baseline to wait against.
@@ -144,6 +146,15 @@ class TestEmojiAndMedia:
             secondary_count_before + 1,
             timeout=self.CROSS_DEVICE_TIMEOUT,
         ), "Secondary: Emoji message should be delivered (cross-device sync)"
+
+        assert chat_page.wait_for_newest_message_body(THUMBS_UP), (
+            f"Primary: the newest message should read {THUMBS_UP!r}, "
+            f"it reads {chat_page.newest_message_body()!r}"
+        )
+        assert secondary_chat.wait_for_newest_message_body(THUMBS_UP), (
+            f"Secondary: the newest message should read {THUMBS_UP!r}, "
+            f"it reads {secondary_chat.newest_message_body()!r}"
+        )
 
     async def test_reply_shows_corner_indicator(self) -> None:
         chat_page = self._ensure_in_chat()
