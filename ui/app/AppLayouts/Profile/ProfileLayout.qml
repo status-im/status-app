@@ -489,9 +489,11 @@ StatusSectionLayout {
                 view.spellCheckSkipCapitalizedWordsChangeRequested.connect(value => root.languageStore.spellCheckSettings.setSkipCapitalizedWords(value))
                 view.enableSpellcheckLanguageRequested.connect((code, enabled) => root.languageStore.spellCheckSettings.toggleSpellcheckLanguage(code, enabled))
                 view.changeLanguageRequested.connect(newLanguageCode => {
-                    const result = root.languageStore.changeLanguage(newLanguageCode, false /*shouldRetranslate*/)
+                    // Retranslates what lives as long as the process; the new session
+                    // recreates the rest of the UI in the new language.
+                    const result = root.languageStore.changeLanguage(newLanguageCode, true /*shouldRetranslate*/)
                     if (result)
-                        Qt.callLater(() => SystemUtils.restartApplication())
+                        Global.reloginRequested()
                     else
                         console.warn("Failed setting language to:", newLanguageCode)
                 })
