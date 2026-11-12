@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include <QDirIterator>
 #include <QFontDatabase>
 #include <QRawFont>
@@ -129,8 +127,8 @@ private slots:
             QTest::newRow(qPrintable(path)) << path;
             ++count;
         }
-        // Inter x2, Roboto Mono x2, the generated emoji font, and the price-change triangles
-        QCOMPARE(count, 6);
+        // Inter x2, Roboto Mono x2, and the generated emoji font
+        QCOMPARE(count, 5);
     }
 
     void registeredFonts()
@@ -165,11 +163,9 @@ private slots:
         QCOMPARE(actual.familyName(), expected.familyName());
         QCOMPARE(actual.styleName(), expected.styleName());
         QCOMPARE(actual.fontTable("head"), expected.fontTable("head"));
-        // StatusSymbols only has the triangles
-        const auto glyphs = actual.glyphIndexesForString(QStringLiteral("Status 123\u25B4"));
-        const auto glyph = std::find_if(glyphs.cbegin(), glyphs.cend(), [](quint32 g) { return g != 0; });
-        QVERIFY(glyph != glyphs.cend());
-        QVERIFY(!actual.alphaMapForGlyph(*glyph, QRawFont::PixelAntialiasing).isNull());
+        const auto glyphs = actual.glyphIndexesForString(QStringLiteral("Status 123"));
+        QVERIFY(!glyphs.isEmpty());
+        QVERIFY(!actual.alphaMapForGlyph(glyphs.first(), QRawFont::PixelAntialiasing).isNull());
     }
 };
 

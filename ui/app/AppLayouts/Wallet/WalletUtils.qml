@@ -392,6 +392,6 @@ QtObject {
     function getUpDownTriangle(changePct24hour) {
         if (changePct24hour === 0)
             return ""
-        return changePct24hour < 0 ? "▾" : "▴"
+        return changePct24hour < 0 ? "▼" : "▲"
     }
 }

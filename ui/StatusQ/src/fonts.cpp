@@ -96,14 +96,6 @@ void Fonts::initFonts()
         }
     }
 
-    // ▴/▾ (24h price change) are not in Inter. Without an app fallback Qt opens every system
-    // family in turn (about 100 on Android, each kept for the process lifetime) looking for them.
-    const auto symbolsFontId = loadFont("StatusSymbols.ttf"_L1);
-    if (symbolsFontId != -1) {
-        for (const auto& family: QFontDatabase::applicationFontFamilies(symbolsFontId))
-            QFontDatabase::addApplicationFallbackFontFamily(QChar::Script_Common, family);
-    }
-
     // monoFont fine tuning (https://rsms.me/inter/#features)
     if (baseFontId != -1) {
         m_monoFont = m_baseFont;
