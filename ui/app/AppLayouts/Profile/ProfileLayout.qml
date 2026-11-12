@@ -451,12 +451,18 @@ StatusSectionLayout {
                 contentWidth: Qt.binding(() => d.contentWidth),
                 nativeWindowDpr: Qt.binding(() => root.nativeWindowDpr),
                 theme: Qt.binding(() => root.theme),
-                uiScaleFile: Qt.binding(() => uiScaleFilePath)
+                uiScaleFile: Qt.binding(() => uiScaleFilePath),
+                restartSupported: SystemUtils.canRestartApplication
             })
 
             onCreated: view => {
                 view.themeChangeRequested.connect((theme) => root.themeChangeRequested(theme))
-                view.restartRequested.connect(() => Qt.callLater(() => SystemUtils.restartApplication()))
+                view.zoomChangeSaved.connect(() => {
+                    if (SystemUtils.canRestartApplication)
+                        Qt.callLater(() => SystemUtils.restartApplication())
+                    else
+                        Global.displaySuccessToastMessage(qsTr("Close and reopen Status to apply the new interface zoom level"))
+                })
             }
         }
 
