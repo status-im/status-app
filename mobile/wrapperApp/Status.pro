@@ -3,6 +3,13 @@ TEMPLATE = app
 QT += quick gui qml webview svg widgets multimedia
 
 CONFIG += qtquickcompiler
+# AOT Storage classes are polymorphic; no RTTI user in this lib, so drop typeinfo
+CONFIG += rtti_off
+
+android {
+    QMAKE_CXXFLAGS_RELEASE -= -O2
+    QMAKE_CXXFLAGS_RELEASE += -Oz
+}
 # Per-binding AOT stats, written next to each generated .cpp
 QMLCACHE_FLAGS += --dump-aot-stats --module-id=status
 # qtquickcompiler.prf passes no import paths; without these, in-repo modules don't AOT-compile
@@ -63,6 +70,8 @@ android {
 
     QMAKE_LFLAGS += -Wl,-z,max-page-size=16384
     QMAKE_LFLAGS_SHLIB += -Wl,-z,max-page-size=16384
+    # Packed relative relocations (Android tags: minSdk 28 < 30)
+    QMAKE_LFLAGS += -Wl,--pack-dyn-relocs=android+relr -Wl,--use-android-relr-tags
 
     ANDROID_VERSION_NAME = $$VERSION
 
