@@ -52,7 +52,7 @@ StatusListItem {
     implicitWidth: ListView.view ? ListView.view.width : 0
 
     title: name
-    objectName: name
+    objectName: "savedAddressView_Delegate_" + name
     subTitle: {
         if (ens.length > 0)
             return ens
