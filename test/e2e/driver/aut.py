@@ -54,12 +54,14 @@ class AUT:
     def __init__(
             self,
             app_path: SystemPath = configs.AUT_PATH,
-            user_data: SystemPath = None
+            user_data: SystemPath = None,
+            test_mode: bool = True,
     ):
         self.path = app_path
         self.ctx = None
         self.pid = None
         self.port = None
+        self.test_mode = test_mode
         self.aut_id = f'AUT_{shortuuid.ShortUUID().random(length=8)}'
         self.app_data = configs.testpath.STATUS_DATA / f'app_{shortuuid.ShortUUID().random(length=10)}'
         if user_data is not None:
@@ -89,7 +91,10 @@ class AUT:
     def detach_context(self):
         if self.ctx is None:
             return
-        driver.currentApplicationContext().detach()
+        try:
+            driver.currentApplicationContext().detach()
+        except Exception as err:
+            LOG.debug('AUT context detach: %s', err)
         self.ctx = None
 
     @allure.step('Attach Squish to Test Application')
@@ -125,6 +130,8 @@ class AUT:
         command.extend(command_extras)
         child_env = os.environ.copy()
         child_env.update(env_overrides)
+        if not self.test_mode:
+            child_env['STATUS_RUNTIME_TEST_MODE'] = '0'
         command.extend(
             [
                 f'--LOG_LEVEL={configs.testpath.LOG_LEVEL}',
