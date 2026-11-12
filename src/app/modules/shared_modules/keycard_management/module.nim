@@ -7,6 +7,7 @@ import app/core/eventemitter
 import app/modules/shared/keypairs
 
 import app_service/service/keycardV2/service as keycard_serviceV2
+from app_service/service/keycardV2/dto import pairingSupportedAfterEvent
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/privacy/service as privacy_service
@@ -110,7 +111,6 @@ proc createWalletAccountsJson*[T](self: Module[T], walletAccounts: seq[keycard_s
   return walletsJson
 
 proc keycardUsesSecureChannelV2[T](self: Module[T]): bool =
-  ## The last read card is applet 4.x: no pairing, so status-go must not look for one
   return not self.view.getPairingSupported()
 
 method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
@@ -120,10 +120,7 @@ method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
   self.view.setRemainingPukAttempts(kcEvent.keycardStatus.remainingAttemptsPUK)
   self.view.setAvailableSlots(kcEvent.keycardInfo.availableSlots)
-  # Keep the last read card's generation through events without card info (card pulled, reader change):
-  # a flow completing right after one must still know the card had no pairing
-  if kcEvent.keycardInfo.instanceUID.len > 0:
-    self.view.setPairingSupported(kcEvent.keycardInfo.pairingSupported())
+  self.view.setPairingSupported(pairingSupportedAfterEvent(self.view.getPairingSupported(), kcEvent.keycardInfo))
   self.view.setCertificateTrusted(not kcEvent.keycardInfo.certificateUntrusted)
   self.view.setKeyUid(kcEvent.keycardInfo.keyUID)
   self.view.setKeycardUid(kcEvent.keycardInfo.instanceUID)

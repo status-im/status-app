@@ -2,8 +2,6 @@ from objectmaphelper import *
 
 from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay
 
-# Simulator (KeycardSimulatorController.qml)
-
 keycardSimulatorWindow = {"title": "Keycard Simulator Controller", "type": "QQuickApplicationWindow", "visible": True}
 keycardSimStartButton = {"container": keycardSimulatorWindow, "objectName": "keycardSimStartButton",
                          "type": "StatusButton"}
@@ -23,11 +21,20 @@ keycardSimPin = {"container": keycardSimulatorWindow, "objectName": "keycardSimP
 keycardSimPuk = {"container": keycardSimulatorWindow, "objectName": "keycardSimPuk", "type": "TextField"}
 keycardSimCreateWithSeedButton = {"container": keycardSimulatorWindow,
                                   "objectName": "keycardSimCreateWithSeedButton", "type": "StatusButton"}
-
-# Settings → Keycard
+keycardSimUseTag40 = {"container": keycardSimulatorWindow, "objectName": "keycardSimUseTag40", "type": "CheckBox"}
+keycardSimCreationStatus = {"container": keycardSimulatorWindow, "objectName": "keycardSimCreationStatus",
+                            "type": "StatusBaseText"}
+keycardSimUntrustedCa = {"container": keycardSimulatorWindow, "objectName": "keycardSimUntrustedCa", "type": "CheckBox"}
+keycardSimCounterfeitButton = {"container": keycardSimulatorWindow, "objectName": "keycardSimCounterfeitButton",
+                               "type": "StatusButton"}
+keycardSimCounterfeitStatus = {"container": keycardSimulatorWindow, "objectName": "keycardSimCounterfeitStatus",
+                               "type": "StatusBaseText"}
 
 mainWindow_KeycardView = {"container": statusDesktop_mainWindow, "objectName": "settings_KeycardView",
                           "type": "KeycardViewNew", "visible": True}
+keycardSettingsDetailsView = {"container": mainWindow_KeycardView, "type": "DetailsView", "visible": True}
+keycardSettingsCertificateWarning = {"container": keycardSettingsDetailsView,
+                                    "objectName": "keycardDetailsCertificateWarning"}
 settings_Keycard_ReadKeycardButton = {"container": mainWindow_KeycardView,
                                       "objectName": "settings_Keycard_ReadKeycardButton", "type": "StatusButton",
                                       "visible": True}
@@ -63,8 +70,6 @@ settingsKeycardDetailsSetOrChangePuk = {"container": mainWindow_KeycardView,
 settingsKeycardDetailsAddKeypairToStatus = {"container": mainWindow_KeycardView,
                                             "objectName": "keycardDetailsAddKeypairToStatus",
                                             "type": "StatusListItem", "visible": True}
-
-# Keycard management popup
 
 keycardManagementPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "KeycardManagementPopup",
                           "type": "PopupItem", "visible": True}
@@ -107,6 +112,8 @@ keycardManagementFactoryResetButton = {"container": statusDesktop_mainWindow_ove
                                        "type": "StatusButton", "visible": True}
 keycardProgressTitle = {"container": keycardManagementPopup, "objectName": "keycardProgressTitle",
                         "type": "StatusBaseText", "visible": True}
+keycardProgressMessage = {"container": keycardManagementPopup, "objectName": "keycardProgressMessage",
+                          "type": "StatusBaseText", "visible": True}
 keycardManagementPukInput = {"container": statusDesktop_mainWindow_overlay,
                              "objectName": "keycardManagementPukInput",
                              "type": "StatusPinInput", "visible": True}

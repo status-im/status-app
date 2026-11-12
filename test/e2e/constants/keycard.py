@@ -1,3 +1,7 @@
+KEYCARD_APPLET_3_2 = '3.2'
+KEYCARD_APPLET_4_0_1 = '4.0.1'
+KEYCARD_APPLET_VERSIONS = (KEYCARD_APPLET_3_2, KEYCARD_APPLET_4_0_1)
+
 DEFAULT_PIN = '111111'
 DEFAULT_PUK = '000000000000'
 NEW_PIN = '654321'
@@ -20,3 +24,8 @@ KEYCARD_CONVERT_SUCCESS_TITLE = 'Re-encryption complete'
 KEYCARD_PROFILE_MOVED_TO_STATUS_TITLE = 'Profile key pair has been moved to Status'
 KEYCARD_KEYPAIR_MOVED_TO_STATUS_TITLE = 'Key pair has been moved to Status'
 KEYCARD_KEYPAIR_NOT_ADDED_MESSAGE = 'Key pair has not been added to Status wallet'
+KEYCARD_NOT_VERIFIED_TITLE = 'Keycard not verified'
+KEYCARD_NOT_VERIFIED_MESSAGE = (
+    'This Keycard could not be verified as genuine. Try again with another Keycard.'
+)
+KEYCARD_NOT_CERTIFIED_SNIPPET = "isn't certified by Keycard"

@@ -27,6 +27,7 @@ class KeycardSettingsView(QObject):
         self._set_or_change_puk_item = Button(keycard_names.settingsKeycardDetailsSetOrChangePuk)
         self._add_keypair_to_status_item = Button(keycard_names.settingsKeycardDetailsAddKeypairToStatus)
         self._back_button = Button(settings_names.main_toolBar_back_button)
+        self._details_view = QObject(keycard_names.keycardSettingsDetailsView)
 
     @property
     def is_read_keycard_button_visible(self) -> bool:
@@ -51,6 +52,25 @@ class KeycardSettingsView(QObject):
     @property
     def key_pair_location(self) -> str:
         return str(getattr(self._key_pair_info.object, 'subTitle', ''))
+
+    @property
+    def key_uid(self) -> str:
+        return str(self._details_view.object.keyUid)
+
+    @property
+    def pairing_supported(self) -> bool:
+        return bool(self._details_view.object.pairingSupported)
+
+    @property
+    def certificate_warning_text(self) -> str:
+        warning = driver.waitForObjectExists(keycard_names.keycardSettingsCertificateWarning)
+        if not warning.visible:
+            return ''
+        return str(warning.text)
+
+    @property
+    def certificate_warning_visible(self) -> bool:
+        return bool(self.certificate_warning_text)
 
     @allure.step('Wait until keycard settings view appears')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):

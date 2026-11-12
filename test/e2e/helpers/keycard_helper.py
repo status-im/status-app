@@ -4,7 +4,8 @@ from web3 import Web3
 import configs
 from constants import DEFAULT_PIN, KEYCARD_EMPTY_TITLE
 from gui.components.sign_popup import SignPopup
-from helpers.onboarding_helper import open_create_profile_view, wait_until_logged_in
+from gui.screens.keycard_settings import KeycardSettingsView
+from helpers.onboarding_helper import open_create_profile_view, skip_biometrics_popup_if_visible, wait_until_logged_in
 from helpers.wallet_helper import get_status_account_address
 from scripts.utils.generators import get_wallet_address_from_mnemonic, keycard_card_id
 
@@ -36,12 +37,20 @@ def create_keycard_profile_from_seed(
     wait_until_logged_in(main_window)
 
 
+@allure.step('Create password profile and open Keycard settings')
+def open_keycard_settings_for_password_profile(main_window, user_account) -> KeycardSettingsView:
+    main_window.create_profile(user_account)
+    skip_biometrics_popup_if_visible()
+    return main_window.left_panel.open_settings().left_panel.open_keycard_settings()
+
+
 @allure.step('Read Keycard in settings and wait for {title}')
-def read_keycard_details(main_window, pin: str, title: str):
+def read_keycard_details(main_window, pin: str, title: str) -> KeycardSettingsView:
     keycard_settings = main_window.left_panel.open_settings().left_panel.open_keycard_settings()
     assert keycard_settings.is_read_keycard_button_visible
     keycard_settings.open_read_keycard().enter_keycard_pin_and_close(pin)
     keycard_settings.wait_until_details_appears(title)
+    return keycard_settings
 
 
 @allure.step('Assert Status account address matches seed')

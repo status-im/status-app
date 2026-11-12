@@ -7,6 +7,7 @@ from constants import (
     DEFAULT_PUK,
     KEYCARD_EMPTY_TITLE,
     KEYCARD_PROFILE_DETAILS_TITLE,
+    KEYCARD_APPLET_VERSIONS,
 )
 from driver.aut import AUT
 from gui.screens.onboarding import KeycardLoginView
@@ -24,6 +25,7 @@ from scripts.utils.generators import keycard_card_id
 
 @pytest.mark.keycard
 @pytest.mark.timeout(400)
+@pytest.mark.parametrize('keycard_simulator', KEYCARD_APPLET_VERSIONS, indirect=True)
 @allure.title('Onboarding — create profile on empty Keycard, restart, login with PIN')
 @allure.description(
     'Empty card → Create profile → Use Keycard → PIN → Import new key pair → '
@@ -32,6 +34,7 @@ from scripts.utils.generators import keycard_card_id
     'login with PIN → land in the same profile (wallet address matches seed, Read Keycard still profile)'
 )
 def test_onboarding_empty_keycard_log_in(keycard_simulator, main_window, aut: AUT):
+    applet_40 = keycard_simulator.applet_40
     card_id = keycard_card_id()
     keycard_simulator.create_empty_card(card_id=card_id)
     keycard_simulator.plug_reader()
@@ -39,6 +42,8 @@ def test_onboarding_empty_keycard_log_in(keycard_simulator, main_window, aut: AU
     keycard_simulator.select_card(card_id).insert_card()
     keycard_dtls_view = keycard_mng_popup.enter_keycard_pin(pin=DEFAULT_PIN)
     assert keycard_dtls_view.keycard_view_title.text == KEYCARD_EMPTY_TITLE
+    assert keycard_dtls_view.pairing_supported == (not applet_40)
+    pairings_file = aut.app_data / 'data' / 'keycard' / 'pairings.json'
 
     keycard_mng_popup = keycard_dtls_view.import_a_new_keypair()
     keycard_mng_popup.enter_new_pin_and_confirm(pin=DEFAULT_PIN)
@@ -50,6 +55,8 @@ def test_onboarding_empty_keycard_log_in(keycard_simulator, main_window, aut: AU
     skip_post_login_popups_if_visible()
 
     read_keycard_details(main_window, DEFAULT_PIN, KEYCARD_PROFILE_DETAILS_TITLE)
+    if applet_40:
+        assert not pairings_file.exists(), f'Profile setup created {pairings_file}'
 
     aut.restart()
     main_window.prepare()
@@ -66,4 +73,8 @@ def test_onboarding_empty_keycard_log_in(keycard_simulator, main_window, aut: AU
     skip_post_login_popups_if_visible()
 
     assert_status_account_matches_seed(main_window, seed_words)
-    read_keycard_details(main_window, DEFAULT_PIN, KEYCARD_PROFILE_DETAILS_TITLE)
+    keycard_settings = read_keycard_details(main_window, DEFAULT_PIN, KEYCARD_PROFILE_DETAILS_TITLE)
+    assert keycard_settings.pairing_supported == (not applet_40)
+    if applet_40:
+        assert not keycard_settings.certificate_warning_visible
+        assert not pairings_file.exists(), f'Login or Read Keycard created {pairings_file}'
