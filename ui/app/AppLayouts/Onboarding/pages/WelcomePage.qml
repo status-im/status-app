@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Controls
@@ -88,7 +89,7 @@ OnboardingPage {
                     anchors.top: parent.top
                     anchors.topMargin: root.isPortrait ? Theme.halfPadding : 0
                     languageCodes: root.availableLanguages
-                    activeLanguageCodes: [root.currentLanguage || "en"]
+                    activeLanguageCodes: [root.currentLanguage || LanguageService.defaultLanguageCode]
                     onLanguageSelected: (languageCode) => root.changeLanguageRequested(languageCode)
                 }
             }

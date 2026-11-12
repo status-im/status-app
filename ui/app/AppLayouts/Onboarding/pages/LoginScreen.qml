@@ -333,7 +333,7 @@ OnboardingPage {
         anchors.right: parent.right
         anchors.top: parent.top
         languageCodes: root.availableLanguages
-        activeLanguageCodes: [root.currentLanguage || "en"]
+        activeLanguageCodes: [root.currentLanguage || LanguageService.defaultLanguageCode]
         onLanguageSelected: (languageCode) => root.changeLanguageRequested(languageCode)
     }
 

@@ -14,6 +14,8 @@ namespace {
 constexpr auto kSpellCheckDictionaries = "spellCheckDictionaries"_L1;
 constexpr auto kSpellCheckEnabled = "spellCheckEnabled"_L1;
 constexpr auto kSpellCheckSkipCapitalizedWords = "spellCheckSkipCapitalizedWords"_L1;
+
+constexpr auto k_defaultLanguageCode = "en"_L1;
 }
 
 LanguageService::LanguageService(QObject *parent)
@@ -92,8 +94,8 @@ void LanguageService::setActiveSpellcheckLanguages(const QSet<QString>& dictLang
 {
     auto active = dictLangs;
     active.intersect(m_availableSpellcheckLanguages);
-    if (m_availableSpellcheckLanguages.contains("en"_L1))
-        active.insert("en"_L1);
+    if (m_availableSpellcheckLanguages.contains(k_defaultLanguageCode))
+        active.insert(k_defaultLanguageCode);
     if (active == m_activeSpellcheckLanguages)
         return;
     m_activeSpellcheckLanguages = active;
@@ -172,8 +174,8 @@ void LanguageService::load()
     setSpellCheckEnabled(settings.value(kSpellCheckEnabled, true).toBool());
     setSpellCheckSkipCapitalizedWords(settings.value(kSpellCheckSkipCapitalizedWords, true).toBool());
     auto activeDicts = settings.value(kSpellCheckDictionaries).toStringList();
-    if (activeDicts.isEmpty() && m_availableSpellcheckLanguages.contains("en"_L1)) { // pre-select en if available
-        activeDicts.append("en"_L1);
+    if (activeDicts.isEmpty() && m_availableSpellcheckLanguages.contains(k_defaultLanguageCode)) { // pre-select en if available
+        activeDicts.append(k_defaultLanguageCode);
     }
     settings.endGroup();
 
@@ -209,4 +211,9 @@ void LanguageService::setSpellCheckSkipCapitalizedWords(bool newSpellCheckSkipCa
         return;
     m_spellCheckSkipCapitalizedWords = newSpellCheckSkipCapitalizedWords;
     emit spellCheckSkipCapitalizedWordsChanged();
+}
+
+QString LanguageService::defaultLanguageCode() const
+{
+    return k_defaultLanguageCode;
 }

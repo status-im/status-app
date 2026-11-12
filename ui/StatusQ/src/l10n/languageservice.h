@@ -10,6 +10,7 @@ class LanguageService : public QObject
     // language
     Q_PROPERTY(QString userUID READ userUID WRITE setUserUID NOTIFY userUIDChanged FINAL)
     Q_PROPERTY(QStringList availableLanguages READ availableLanguages NOTIFY availableLanguagesChanged FINAL)
+    Q_PROPERTY(QString defaultLanguageCode READ defaultLanguageCode CONSTANT FINAL)
 
     // spellcheck
     Q_PROPERTY(bool spellCheckEnabled READ spellCheckEnabled WRITE setSpellCheckEnabled NOTIFY spellCheckEnabledChanged FINAL)
@@ -61,4 +62,6 @@ private:
     bool m_spellCheckSkipCapitalizedWords{true};
     bool spellCheckSkipCapitalizedWords() const;
     void setSpellCheckSkipCapitalizedWords(bool newSpellCheckSkipCapitalizedWords);
+
+    QString defaultLanguageCode() const;
 };
