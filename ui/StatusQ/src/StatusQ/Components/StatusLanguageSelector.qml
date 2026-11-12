@@ -24,6 +24,8 @@ Button {
     property bool selectMultiple
     property var disabledLanguageCodes: []
 
+    icon.name: "language"
+
     signal languageSelected(string languageCode)
     signal languageToggled(string languageCode, bool checked) // for selectMultiple
 
@@ -96,8 +98,9 @@ Button {
         StatusIcon {
             Layout.preferredWidth: 20
             Layout.preferredHeight: 20
-            icon: "globe"
+            icon: root.icon.name
             color: Theme.palette.primaryColor1
+            visible: root.display !== Button.TextOnly
         }
         StatusBaseText {
             Layout.fillWidth: true

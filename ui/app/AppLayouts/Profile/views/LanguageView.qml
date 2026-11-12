@@ -148,6 +148,7 @@ SettingsContentBase {
                 languageCodes: root.availableSpellcheckLanguages
                 activeLanguageCodes: root.activeSpellcheckLanguages
                 disabledLanguageCodes: ["en"]
+                display: Button.TextOnly
                 onLanguageToggled: (code, checked) => root.enableSpellcheckLanguageRequested(code, checked)
             }
         }
