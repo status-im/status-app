@@ -15,10 +15,27 @@ _ATTACH_RETRIES = 3
 _ATTACH_RETRY_DELAY_SEC = 1.0
 
 
+def _context_is_running(ctx) -> bool:
+    try:
+        return bool(ctx.isRunning)
+    except Exception:
+        return False
+
+
+def detach_stopped_contexts():
+    for ctx in list(driver.applicationContextList()):
+        if _context_is_running(ctx):
+            continue
+        try:
+            ctx.detach()
+        except Exception as error:
+            LOG.debug('Detaching stopped context failed: %s', error)
+
+
 def _existing_context(aut_id: str):
     for ctx in driver.applicationContextList():
         name = getattr(ctx, 'name', None)
-        if name == aut_id or str(ctx) == aut_id:
+        if (name == aut_id or str(ctx) == aut_id) and _context_is_running(ctx):
             return ctx
     return None
 
@@ -31,6 +48,7 @@ def get_context(aut_id: str):
     """
     LOG.info('Attaching to: %s', aut_id)
 
+    detach_stopped_contexts()
     existing = _existing_context(aut_id)
     if existing is not None:
         LOG.info('AUT %s already has an application context, reusing it', aut_id)
