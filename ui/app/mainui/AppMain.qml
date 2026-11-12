@@ -1008,6 +1008,11 @@ Item {
     QtObject {
         id: d
 
+        readonly property bool textInputFocused: {
+            const item = appMain.Window.activeFocusItem
+            return item instanceof TextInput || item instanceof TextEdit
+        }
+
         readonly property string myPublicKey: userProfile.pubKey // we need it very soon, before all the stores
         readonly property string supportBotPublicKey: {
             const chatKey = Constants.statusSupportBotChatKey
@@ -3591,10 +3596,25 @@ Item {
     // mention-suggestion list) the unconsumed Backspace reaches this shortcut and
     // hijacks a chat/subsection switch. Bind the explicit Alt+Left there instead so
     // Backspace never navigates; other platforms keep StandardKey.Back unchanged.
+    //
+    // On macOS StandardKey.Back binds Cmd+[ and Cmd+Left, and Cmd+Left is also
+    // "move to start of line", which a focused text input does not claim over a
+    // shortcut. Bind Cmd+[ here and Cmd+Left separately below.
     Shortcut {
-        sequences: Qt.platform.os === SQUtils.Utils.windows
-                   ? ["Alt+Left"] : [StandardKey.Back]
+        sequences: {
+            if (Qt.platform.os === SQUtils.Utils.windows)
+                return ["Alt+Left"]
+            if (SQUtils.Utils.isMacOS)
+                return ["Ctrl+["]
+            return [StandardKey.Back]
+        }
         enabled: !SQUtils.Utils.isMobile && appMain.canGoBackAnywhere
+        onActivated: appMain.tryGoBack()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+Left"
+        enabled: SQUtils.Utils.isMacOS && appMain.canGoBackAnywhere && !d.textInputFocused
         onActivated: appMain.tryGoBack()
     }
 
