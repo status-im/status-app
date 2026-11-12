@@ -149,6 +149,10 @@ add_executable(TestBackgroundGraphicsRelease src/tst_backgroundgraphicsrelease.c
 target_link_libraries(TestBackgroundGraphicsRelease PRIVATE Qt::Test Qt::Gui Qt::Quick StatusQ)
 add_test(NAME TestBackgroundGraphicsRelease COMMAND TestBackgroundGraphicsRelease)
 
+add_executable(TestQmlInventory src/tst_qmlinventory.cpp)
+target_link_libraries(TestQmlInventory PRIVATE Qt::Test Qt::CorePrivate Qt::Qml Qt::Quick StatusQ)
+add_test(NAME TestQmlInventory COMMAND TestQmlInventory)
+
 add_executable(TestIncubationController src/tst_incubationcontroller.cpp)
 target_link_libraries(TestIncubationController PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationController COMMAND TestIncubationController)
