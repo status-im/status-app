@@ -458,9 +458,11 @@ StatusSectionLayout {
                 currentLanguage: root.languageStore.currentLanguage
                 availableLanguages: root.languageStore.availableLanguages
                 onChangeLanguageRequested: function (newLanguageCode) {
-                    const result = root.languageStore.changeLanguage(newLanguageCode, false /*shouldRetranslate*/)
+                    // Retranslates what lives as long as the process; the new session
+                    // recreates the rest of the UI in the new language.
+                    const result = root.languageStore.changeLanguage(newLanguageCode, true /*shouldRetranslate*/)
                     if (result)
-                        Qt.callLater(() => SystemUtils.restartApplication())
+                        Global.reloginRequested()
                     else
                         console.warn("Failed setting language to:", newLanguageCode)
                 }

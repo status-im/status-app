@@ -193,8 +193,8 @@ SettingsContentBase {
                 destroyOnClose: true
                 confirmButtonObjectName: "languageViewLanguageChangeConfirmButton"
                 title: qsTr("Change language")
-                confirmationText: qsTr("Display language has been changed. You must restart the application for changes to take effect.")
-                confirmButtonLabel: qsTr("Restart")
+                confirmationText: qsTr("To show Status in the new language, you will be logged out and back in.")
+                confirmButtonLabel: qsTr("Change language")
                 onConfirmButtonClicked: {
                     root.changeLanguageRequested(newCode)
                     close()
