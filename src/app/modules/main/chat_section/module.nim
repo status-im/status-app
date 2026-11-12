@@ -19,6 +19,7 @@ import admin_members
 import chat_content/module as chat_content_module
 
 import app/global/global_singleton
+import app/global/app_signals
 import app/core/eventemitter
 import app/core/held_resource_qtimer
 import app/core/unique_event_emitter
@@ -73,6 +74,8 @@ type
     pendingThreadParentChatId: string
     pendingThreadPresentation: string
     pendingThreadMessageId: string
+    pendingThreadNavigation: bool
+    pendingThreadRefreshRequested: bool
     lastAppliedActiveItemId: string
     # community sections only: the on-demand member roster and its holders
     roster: CommunityRosterModel
@@ -86,6 +89,8 @@ type
     adminMembersState: AdminMembers
 
 # Forward declaration
+proc clearPendingThreadRestore(self: Module, clearSettings: bool)
+
 proc buildChatSectionUI(
   self: Module,
   communityId: string,
@@ -723,6 +728,8 @@ method openThreadPanel*(self: Module, threadId: string, threadName: string,
     error "openThreadPanel: unknown thread", threadId, parentChatId
     return
 
+  if self.pendingThreadNavigation:
+    self.clearPendingThreadRestore(clearSettings = false)
   self.ensureThreadContentModule(threadItem)
   self.view.setOpenThread(threadId, threadName, parentChatId)
   singletonInstance.localAccountSensitiveSettings.setSectionLastOpenThread(
@@ -773,12 +780,27 @@ proc clearPendingThreadRestore(self: Module, clearSettings: bool) =
   self.pendingThreadParentChatId = ""
   self.pendingThreadPresentation = ""
   self.pendingThreadMessageId = ""
+  self.pendingThreadNavigation = false
+  self.pendingThreadRefreshRequested = false
   if clearSettings:
     singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(
       self.controller.getMySectionId())
 
+proc failPendingThreadNavigation(self: Module) =
+  let notify = self.pendingThreadNavigation and self.pendingThreadMessageId.len == 0
+  self.clearPendingThreadRestore(clearSettings = false)
+  if notify:
+    self.events.emit(SIGNAL_THREAD_LINK_FAILED, Args())
+
+method requestThreadLinkRefresh*(self: Module, chatId: string) {.base.} =
+  self.controller.refreshChatThreadsForLink(chatId)
+
+method onChatThreadsInvalidated*(self: Module, chatId: string) =
+  if self.pendingThreadNavigation and self.pendingThreadParentChatId == chatId:
+    self.failPendingThreadNavigation()
+
 method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
-    completedChatIds: seq[string]) =
+    completedChatIds: seq[string], summariesLoaded: bool = false) =
   if not self.chatsLoaded:
     return
 
@@ -822,11 +844,26 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     for item in items:
       self.threadChatIds.incl(item.id)
 
-  let pendingMessageNavigation = self.pendingThreadMessageId.len > 0
-  let pendingThreadUpdated = pendingMessageNavigation and completedChatIds.len == 0 and threads.anyIt(
+  let pendingNavigation = self.pendingThreadNavigation
+  let pendingThreadUpdated = pendingNavigation and completedChatIds.len == 0 and threads.anyIt(
     it.chatId == self.pendingThreadParentChatId and it.threadId == self.pendingThreadId)
   if self.pendingThreadId.len == 0 or
       (self.pendingThreadParentChatId notin completedChatIds and not pendingThreadUpdated):
+    return
+
+  if pendingNavigation and self.pendingThreadMessageId.len == 0 and
+      self.pendingThreadParentChatId in completedChatIds and not threads.anyIt(
+        it.chatId == self.pendingThreadParentChatId and it.threadId == self.pendingThreadId and
+          it.parentMessageId.len > 0):
+    if not self.pendingThreadRefreshRequested:
+      # A cached list may predate a shared link. Refresh once, coalescing with
+      # an in-flight summary request, before reporting the thread unavailable.
+      self.pendingThreadRefreshRequested = true
+      self.requestThreadLinkRefresh(self.pendingThreadParentChatId)
+    elif summariesLoaded:
+      warn "Unable to resolve thread link"
+      self.failPendingThreadNavigation()
+    # A lightweight completion cannot settle the forced summary refresh.
     return
 
   let threadItem = self.view.chatsModel().getItemById(self.pendingThreadId)
@@ -834,15 +871,24 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
       threadItem.parentChatId != self.pendingThreadParentChatId:
     # A cached list may predate a search result or notification. Wait for its metadata
     # without discarding the previously saved thread.
-    if not pendingMessageNavigation:
+    if not pendingNavigation:
       self.clearPendingThreadRestore(clearSettings = true)
+    elif self.pendingThreadMessageId.len == 0 and self.pendingThreadParentChatId in completedChatIds:
+      warn "Unable to resolve thread link"
+      self.failPendingThreadNavigation()
     return
 
+  let parentItem = self.view.chatsModel().getItemById(self.pendingThreadParentChatId)
+  if self.pendingThreadNavigation and (parentItem.isNil or not parentItem.canView):
+    self.failPendingThreadNavigation()
+    return
+
+  let navigating = self.pendingThreadNavigation
   let presentation = self.pendingThreadPresentation
   let messageId = self.pendingThreadMessageId
   self.clearPendingThreadRestore(clearSettings = false)
   if presentation == THREAD_PRESENTATION_SELECTED_CHAT:
-    if messageId.len > 0:
+    if navigating:
       self.closeThreadPanel()
     self.setActiveItem(threadItem.id)
     if messageId.len > 0 and self.chatContentModules.contains(threadItem.id):
@@ -851,10 +897,14 @@ method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
     self.openThreadPanel(threadItem.id, threadItem.name,
       threadItem.parentChatId)
 
-method onChatThreadsLoadingFailed*(self: Module, chatId: string) =
+method onChatThreadsLoadingFailed*(self: Module, chatId: string, summariesRequested: bool = false) =
+  if summariesRequested and not self.pendingThreadRefreshRequested:
+    return
   if chatId == self.pendingThreadParentChatId:
-    if self.pendingThreadMessageId.len > 0:
-      self.clearPendingThreadRestore(clearSettings = false)
+    if self.pendingThreadNavigation:
+      if self.pendingThreadRefreshRequested and not summariesRequested:
+        return
+      self.failPendingThreadNavigation()
       return
     warn "preserving pending thread restoration after thread list load failure", chatId
 
@@ -872,6 +922,8 @@ proc updateActiveChatMembership*(self: Module) =
     self.view.setAmIMember(amIMember)
 
 method activeItemSet*(self: Module, itemId: string) =
+  if self.pendingThreadNavigation and itemId != self.pendingThreadParentChatId:
+    self.clearPendingThreadRestore(clearSettings = false)
   let mySectionId = self.controller.getMySectionId()
   if itemId == "":
     self.view.activeItem().resetActiveItemData()
@@ -1085,7 +1137,7 @@ method onSectionTransitionSettled*(self: Module) =
 
 method onActiveSectionChange*(self: Module, sectionId: string) =
   if sectionId != self.controller.getMySectionId():
-    if self.pendingThreadMessageId.len > 0:
+    if self.pendingThreadNavigation:
       self.clearPendingThreadRestore(clearSettings = false)
     self.controller.setIsCurrentSectionActive(false)
     return
@@ -2172,11 +2224,17 @@ method communityContainsChat*(self: Module, chatId: string): bool =
 
 method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messageId: string,
     threadId: string = ""): bool =
-  if self.pendingThreadMessageId.len > 0:
+  if self.pendingThreadNavigation:
     self.clearPendingThreadRestore(clearSettings = false)
   var conversationId = chatId
+  if threadId.len > 0 and not THREADS_ENABLED:
+    return false
   if THREADS_ENABLED and threadId.len > 0:
-    if self.chatsLoaded and self.view.chatsModel().getItemById(chatId).isNil:
+    let parentItem = self.view.chatsModel().getItemById(chatId)
+    if self.chatsLoaded and (parentItem.isNil or parentItem.isThread or not parentItem.canView):
+      return false
+    let existingThread = self.view.chatsModel().getItemById(threadId)
+    if not existingThread.isNil and (not existingThread.isThread or existingThread.parentChatId != chatId):
       return false
     let thread = self.controller.getThreadById(chatId, threadId)
     if not self.chatsLoaded or thread.threadId.len == 0:
@@ -2185,6 +2243,7 @@ method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messag
       self.pendingThreadParentChatId = chatId
       self.pendingThreadPresentation = THREAD_PRESENTATION_SELECTED_CHAT
       self.pendingThreadMessageId = messageId
+      self.pendingThreadNavigation = true
       self.setActiveItem(chatId)
       if self.chatsLoaded:
         self.controller.loadChatThreadsForChats(@[chatId])
@@ -2202,7 +2261,8 @@ method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messag
   self.setActiveItem(conversationId)
   if conversationId notin self.chatContentModules:
     return false
-  self.chatContentModules[conversationId].scrollToMessage(messageId)
+  if messageId.len > 0:
+    self.chatContentModules[conversationId].scrollToMessage(messageId)
   return true
 
 method updateRequestToJoinState*(self: Module, state: RequestToJoinState) =

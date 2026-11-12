@@ -215,6 +215,21 @@ Item {
             menu.close()
         }
 
+        function test_threadLinkReachesMenuAndControlsAvailability() {
+            header.threadLinkToCopyShare = "https://status.app/g/?a2=parent&thread-id=thread-id"
+            mouseClick(findChild(header, "threadHeaderMenuButton"))
+            const menu = findChild(header, "threadHeaderContextMenu")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            const copyEntry = findChild(menu, "threadContextMenu_copyShare")
+            verify(!!copyEntry)
+            compare(menu.threadLinkToCopyShare, header.threadLinkToCopyShare)
+            compare(copyEntry.enabled, true)
+            header.threadLinkToCopyShare = ""
+            tryCompare(copyEntry, "enabled", false)
+            menu.close()
+        }
+
         function test_nonAuthorCanMarkThreadAsRead() {
             header.canEdit = false
             mouseClick(findChild(header, "threadHeaderMenuButton"))

@@ -395,6 +395,11 @@ Item {
             }
         }
 
+        function onShowToastThreadLinkFailed() {
+            Global.displayToastMessage(qsTr("Couldn't open this thread. It may be unavailable or you may not have access."),
+                                       "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+        }
+
         function onShowToastAccountAdded(name: string) {
             Global.displayToastMessage(
                 qsTr("\"%1\" successfully added").arg(name),

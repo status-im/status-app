@@ -17,6 +17,7 @@ RowLayout {
     required property string threadName
     required property string parentChatName
     required property bool canEdit
+    property string threadLinkToCopyShare: ""
     required property bool pending
 
     readonly property bool editing: d.editing
@@ -178,7 +179,7 @@ RowLayout {
                 pinned: false
                 pinEnabled: false
                 deleteEnabled: false
-                threadLinkToCopyShare: ""
+                threadLinkToCopyShare: root.threadLinkToCopyShare
                 editEnabled: root.canEdit && !root.pending
                 onMarkAsReadRequested: root.markAsReadRequested()
                 onEditNameRequested: root.editNameRequested()

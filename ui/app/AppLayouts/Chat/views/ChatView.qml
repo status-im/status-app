@@ -392,6 +392,7 @@ Item {
             Component.onCompleted: if (editRequested) Qt.callLater(panelThreadHeader.editRequestedName)
 
             threadId: d.openThreadId
+            threadLinkToCopyShare: threadMessageStore.createThreadLink(d.openThreadParentChatId, d.openThreadId)
             threadName: threadMessageStore.threadName
             muted: threadMessageStore.threadMuted
             onMuteRequested: interval => threadMessageStore.setThreadMuted(interval)
@@ -998,14 +999,14 @@ Item {
 
         ThreadContextMenu {
             objectName: "threadListContextMenu"
-            isMobile: SQUtils.Utils.isMobile
+            isMobile: Utils.isMobile
             followed: false
             muted: listedThreadMessages.threadMuted
             pinned: false
             followEnabled: false
             pinEnabled: false
             deleteEnabled: false
-            threadLinkToCopyShare: ""
+            threadLinkToCopyShare: listedThreadMessages.createThreadLink(listedThreadMessages.chatId, threadMenuData.threadId)
             editEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending
             openHandler: function(threadId) { threadMenuData.threadId = threadId }
             onMuteRequested: interval => listedThreadMessages.setThreadMuted(interval)

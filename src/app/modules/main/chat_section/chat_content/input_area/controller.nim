@@ -255,7 +255,7 @@ proc handleUnfurlingPlan*(self: Controller, unfurlNewUrls: bool) =
   for metadata in self.unfurlingPlan.urls:
     allUrls.add(metadata.url)
 
-    # Message deep links are navigational links for now and intentionally have no
+    # Message deep links are navigational links and intentionally have no
     # preview payload, so keep them clickable/highlighted but don't unfurl.
     if isStatusMessageUrl(metadata.url):
       continue

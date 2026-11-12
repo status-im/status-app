@@ -6,6 +6,8 @@ import utils
 
 Item {
     id: root
+    width: 640
+    height: 480
 
     Component {
         id: componentUnderTest
@@ -14,6 +16,7 @@ Item {
             previewState: LinkPreviewMiniCard.State.Loaded
             type: Constants.LinkPreviewType.Standard
             linkData {
+                threadAccessible: true
                 title: "Example title"
                 domain: "www.example.com"
                 type: Constants.StandardLinkPreviewType.Link
@@ -49,6 +52,32 @@ Item {
             const card = createCard({ previewState: LinkPreviewMiniCard.State.Loading })
             compare(child(card, "linkPreviewSubtitleText").visible, false)
             verify(child(card, "linkPreviewTitleText").text.length > 0)
+        }
+
+        function test_threadPreview_showsThreadAndParent() {
+            const card = createCard({type: Constants.LinkPreviewType.StatusThread})
+            card.linkData.title = "<b>Release planning</b>"
+            card.linkData.description = "Alice"
+            compare(child(card, "linkPreviewTitleText").text, "<b>Release planning</b>")
+            compare(child(card, "linkPreviewTitleText").textFormat, Text.PlainText)
+            compare(child(card, "linkPreviewSubtitleText").text, "Alice")
+        }
+
+        function test_inaccessibleThreadHidesMetadata() {
+            const card = createCard({type: Constants.LinkPreviewType.StatusThread})
+            card.linkData.title = "Private title"
+            card.linkData.description = "Private origin"
+            card.linkData.threadAccessible = false
+            compare(child(card, "linkPreviewTitleText").text, "Unknown thread name")
+            compare(child(card, "linkPreviewSubtitleText").text, "Unknown")
+        }
+
+        function test_threadIconFitsAllocatedSpace() {
+            const card = createCard({type: Constants.LinkPreviewType.StatusThread})
+            verify(waitForPolish(card.contentItem.children[0]))
+            const icon = child(card, "statusRoundIcon")
+            tryCompare(icon.asset, "width", 16)
+            tryCompare(icon.asset, "height", 16)
         }
 
         function test_loadingFailed_hidesSubtitle() {

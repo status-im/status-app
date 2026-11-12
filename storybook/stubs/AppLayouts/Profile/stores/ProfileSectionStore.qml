@@ -1,3 +1,6 @@
 import QtQuick
 
-QtObject {}
+QtObject {
+    property bool localBackupEnabled: false
+    property var palette
+}

@@ -3,6 +3,7 @@ import ./status_link_preview, ./standard_link_preview
 import ./status_contact_link_preview, ./status_community_link_preview, ./status_community_channel_link_preview
 import ./link_preview_thumbnail
 import ../../contacts/dto/contact_details
+import app/core/intake/external_intake
 include ../../../common/json_utils
 
 
@@ -13,6 +14,7 @@ type
     StatusContactPreview
     StatusCommunityPreview
     StatusCommunityChannelPreview
+    StatusThreadPreview
 
   LinkPreview* = ref object
     url*: string
@@ -35,6 +37,8 @@ proc toLinkPreview*(jsonObj: JsonNode, standard: bool): LinkPreview =
     discard jsonObj.getProp("url", result.url)
     result.previewType = PreviewType.StandardPreview
     result.standardPreview = toStandardLinkPreview(jsonObj)
+    if isThreadDeepLink(result.url) and result.standardPreview.getLinkType() == LinkType.Link.int:
+      result.previewType = PreviewType.StatusThreadPreview
   else:
     discard jsonObj.getProp("url", result.url)
     var node: JsonNode
@@ -73,7 +77,7 @@ proc `%`*(self: LinkPreview): JsonNode =
 
 proc empty*(self: LinkPreview): bool =
   case self.previewType:
-    of PreviewType.StandardPreview:
+    of PreviewType.StandardPreview, PreviewType.StatusThreadPreview:
       return self.standardPreview == nil or self.standardPreview.empty()
     of PreviewType.StatusContactPreview:
       return self.statusContactPreview == nil or self.statusContactPreview.empty()
@@ -90,7 +94,7 @@ proc extractLinkPreviewsLists*(input: seq[LinkPreview]): (seq[StandardLinkPrevie
 
   for preview in input:
     case preview.previewType:
-      of PreviewType.StandardPreview:
+      of PreviewType.StandardPreview, PreviewType.StatusThreadPreview:
         if preview.standardPreview != nil:
           preview.standardPreview.url = preview.url
           standard.add(preview.standardPreview)

@@ -1552,6 +1552,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Enviando %1 %2 de %3 a %4</translation>
     </message>
     <message>
+        <source>Couldn&apos;t open this thread. It may be unavailable or you may not have access.</source>
+        <translation>No se pudo abrir este hilo. Puede que no esté disponible o que no tengas acceso.</translation>
+    </message>
+    <message>
         <source>Network fees changed</source>
         <translation>Las comisiones de red han cambiado</translation>
     </message>
@@ -10550,6 +10554,30 @@ la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status.</tran
         <source>Channel in</source>
         <translation>Canal en</translation>
     </message>
+    <message>
+        <source>Thread in %1</source>
+        <translation>Hilo en %1</translation>
+    </message>
+    <message>
+        <source>Thread in group chat</source>
+        <translation>Hilo en chat de grupo</translation>
+    </message>
+    <message>
+        <source>Thread in direct message</source>
+        <translation>Hilo en mensaje directo</translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation>Nombre de hilo desconocido</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Desconocido</translation>
+    </message>
+    <message>
+        <source>Thread in Unknown</source>
+        <translation>Hilo en Desconocido</translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewGifDelegate</name>
@@ -10567,6 +10595,14 @@ la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status.</tran
     <message>
         <source>Failed to generate preview</source>
         <translation>Error al generar vista previa</translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation>Nombre de hilo desconocido</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Desconocido</translation>
     </message>
 </context>
 <context>

@@ -1563,6 +1563,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Odesílání %1 %2 z %3 na %4</translation>
     </message>
     <message>
+        <source>Couldn&apos;t open this thread. It may be unavailable or you may not have access.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Network fees changed</source>
         <translation>Síťové poplatky se změnily</translation>
     </message>
@@ -10598,6 +10602,30 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>Channel in</source>
         <translation>Kanál v</translation>
     </message>
+    <message>
+        <source>Thread in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in group chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in direct message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewGifDelegate</name>
@@ -10615,6 +10643,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>Failed to generate preview</source>
         <translation>Generování náhledu selhalo</translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

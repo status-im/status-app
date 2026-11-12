@@ -20,18 +20,23 @@ QtObject:
     hostname: string
     title: string
     description: string
+    threadParentName: string
+    threadAccessible: bool
     linkType: LinkType
     thumbnail: LinkPreviewThumbnail
   
   proc setup*(self: StandardLinkPreview)
   proc delete*(self: StandardLinkPreview)
 
-  proc newStandardLinkPreview*(hostname: string, title: string, description: string, thumbnail: LinkPreviewThumbnail, linkType: LinkType): StandardLinkPreview =
+  proc newStandardLinkPreview*(hostname: string, title: string, description: string, thumbnail: LinkPreviewThumbnail, linkType: LinkType,
+      threadParentName: string = "", threadAccessible: bool = false): StandardLinkPreview =
     new(result, delete)
     result.setup()
     result.hostname = hostname
     result.title = title
     result.description = description
+    result.threadParentName = threadParentName
+    result.threadAccessible = threadAccessible
     result.linkType = linkType
     result.thumbnail.copy(thumbnail)
 
@@ -63,6 +68,20 @@ QtObject:
     read = getDescription
     notify = descriptionChanged
 
+  proc threadParentNameChanged*(self: StandardLinkPreview) {.signal.}
+  proc getThreadParentName*(self: StandardLinkPreview): string {.slot.} =
+    result = self.threadParentName
+  QtProperty[string] threadParentName:
+    read = getThreadParentName
+    notify = threadParentNameChanged
+
+  proc threadAccessibleChanged*(self: StandardLinkPreview) {.signal.}
+  proc getThreadAccessible*(self: StandardLinkPreview): bool {.slot.} =
+    result = self.threadAccessible
+  QtProperty[bool] threadAccessible:
+    read = getThreadAccessible
+    notify = threadAccessibleChanged
+
   proc linkTypeChanged*(self: StandardLinkPreview) {.signal.}
   proc getLinkType*(self: StandardLinkPreview): int {.slot.} =
     result = self.linkType.int
@@ -78,19 +97,23 @@ QtObject:
     var hostname: string
     var title: string
     var description: string
+    var threadParentName: string
+    var threadAccessible: bool
     var linkType: LinkType
     var thumbnail: LinkPreviewThumbnail
 
     discard jsonObj.getProp("hostname", hostname)
     discard jsonObj.getProp("title", title)
     discard jsonObj.getProp("description", description)
+    discard jsonObj.getProp("threadParentName", threadParentName)
+    discard jsonObj.getProp("threadAccessible", threadAccessible)
     linkType = toLinkType(jsonObj["type"].getInt)
 
     var thumbnailJson: JsonNode
     if jsonObj.getProp("thumbnail", thumbnailJson):
       thumbnail = toLinkPreviewThumbnail(thumbnailJson)
 
-    result = newStandardLinkPreview(hostname, title, description, thumbnail, linkType)
+    result = newStandardLinkPreview(hostname, title, description, thumbnail, linkType, threadParentName, threadAccessible)
 
   proc `$`*(self: StandardLinkPreview): string =
     result = fmt"""StandardLinkPreview(
@@ -110,7 +133,10 @@ QtObject:
       "title": self.title,
       "description": self.description,
       "thumbnail": %self.thumbnail,
-    }  
+    }
+    if self.threadParentName.len > 0:
+      result["threadParentName"] = %self.threadParentName
+      result["threadAccessible"] = %self.threadAccessible
 
   proc empty*(self: StandardLinkPreview): bool =
     return self.hostname.len == 0

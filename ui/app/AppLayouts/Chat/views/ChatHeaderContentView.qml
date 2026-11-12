@@ -273,6 +273,7 @@ RowLayout {
         id: threadHeader
         ThreadHeader {
             threadId: messageStore.threadId
+            threadLinkToCopyShare: messageStore.createThreadLink(messageStore.chatId, messageStore.threadId)
             threadName: messageStore.threadName
             muted: root.threadMuted
             onMuteRequested: interval => root.muteThreadRequested(interval)

@@ -1563,6 +1563,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Надсилання %1 %2 з %3 до %4</translation>
     </message>
     <message>
+        <source>Couldn&apos;t open this thread. It may be unavailable or you may not have access.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Network fees changed</source>
         <translation>Комісії мережі змінилися</translation>
     </message>
@@ -10599,6 +10603,30 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>Channel in</source>
         <translation>Канал у</translation>
     </message>
+    <message>
+        <source>Thread in %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in group chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thread in direct message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">Невідомо</translation>
+    </message>
+    <message>
+        <source>Thread in Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewGifDelegate</name>
@@ -10616,6 +10644,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>Failed to generate preview</source>
         <translation>Не вдалося створити перегляд</translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation type="unfinished">Невідомо</translation>
     </message>
 </context>
 <context>
