@@ -18,10 +18,8 @@ class SettingsLocators(BaseLocators):
     MESSAGING_MENU_ITEM = BaseLocators.tid("4-MenuItem")
     CONTACTS_MENU_ITEM = BaseLocators.tid("2-MenuItem")
 
-    SIGN_OUT_AND_QUIT = BaseLocators.text_contains("Sign out & Quit")
-    SIGN_OUT_AND_QUIT_ALT = BaseLocators.xpath(
-        "//*[contains(@content-desc, 'Sign out') and contains(@content-desc, 'Quit')] | //*[contains(@text, 'Sign out') and contains(@text, 'Quit')]"
-    )
+    SIGN_OUT_MENU_ITEM = BaseLocators.tid("100-MenuItem")
+    SIGN_OUT_MENU_ITEM_TEXT = BaseLocators.text_contains("Sign out")
 
-    CONFIRM_SIGN_OUT = BaseLocators.text_contains("Sign out")
-    CONFIRM_QUIT = BaseLocators.text_contains("Quit")
+    CONFIRM_SIGN_OUT = BaseLocators.tid("signOutConfirmation")
+    CONFIRM_SIGN_OUT_TEXT = BaseLocators.text_contains("Sign out")

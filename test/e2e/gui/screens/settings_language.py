@@ -13,7 +13,7 @@ class LanguageSettingsView(QObject):
     def __init__(self):
         super().__init__(settings_names.languageView)
         self.language_selector = TextLabel(settings_names.languageViewLanguageSelector)
-        self._confirm_restart_button = Button(settings_names.languageViewLanguageChangeConfirmButton)
+        self._confirm_language_change_button = Button(settings_names.languageViewLanguageChangeConfirmButton)
         self.spell_check_enabled = CheckBox(settings_names.languageViewSpellCheckEnabled)
 
     @allure.step('Set spell check to {1}')
@@ -25,6 +25,6 @@ class LanguageSettingsView(QObject):
         self.language_selector.click()
         LanguageSelector().wait_until_appears().select_language(language_code)
 
-    @allure.step('Confirm language change and restart')
-    def confirm_restart(self):
-        self._confirm_restart_button.click()
+    @allure.step('Confirm language change (logs out and back in)')
+    def confirm_language_change(self):
+        self._confirm_language_change_button.click()

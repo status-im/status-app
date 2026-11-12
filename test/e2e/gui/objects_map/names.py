@@ -532,13 +532,13 @@ mainWallet_Remove_Account_Popup_CancelButton = {"container": statusDesktop_mainW
                                                 "objectName": "RemoveAccountPopup-CancelButton",
                                                 "type": "StatusFlatButton", "visible": True}
 
-# RPC change restart popup
-save_and_restart_later_StatusFlatButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
-                                           "objectName": "laterButton", "type": "StatusFlatButton", "visible": True}
-save_and_restart_Status_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
-                                        "objectName": "saveButton", "type": "StatusButton", "visible": True}
-restart_required_StatusBaseText = {"container": statusDesktop_mainWindow_overlay, "objectName": "mustBeRestartedText",
-                                   "type": "StatusBaseText", "visible": True}
+# RPC change popup (applies on the next login)
+save_and_log_in_later_StatusFlatButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
+                                          "objectName": "laterButton", "type": "StatusFlatButton", "visible": True}
+save_and_log_in_again_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
+                                      "objectName": "saveButton", "type": "StatusButton", "visible": True}
+log_in_again_required_StatusBaseText = {"container": statusDesktop_mainWindow_overlay, "objectName": "mustBeRestartedText",
+                                        "type": "StatusBaseText", "visible": True}
 
 # Add saved address popup
 addEditSavedAddressPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "AddEditSavedAddressPopup",
