@@ -27,12 +27,14 @@ class AUT:
     def __init__(
             self,
             app_path: system_path.SystemPath = configs.AUT_PATH,
-            user_data: SystemPath = None
+            user_data: SystemPath = None,
+            test_mode: bool = True,
     ):
         self.path = app_path
         self.ctx = None
         self.pid = None
         self.port = None
+        self.test_mode = test_mode
         self.aut_id = f'AUT_{shortuuid.ShortUUID().random(length=8)}'
         self.app_data = configs.testpath.STATUS_DATA / f'app_{shortuuid.ShortUUID().random(length=10)}'
         if user_data is not None:
@@ -62,7 +64,10 @@ class AUT:
     def detach_context(self):
         if self.ctx is None:
             return
-        driver.currentApplicationContext().detach()
+        try:
+            driver.currentApplicationContext().detach()
+        except Exception as err:
+            LOG.debug('AUT context detach: %s', err)
         self.ctx = None
 
     @allure.step('Attach Squish to Test Application')
@@ -96,6 +101,8 @@ class AUT:
         ]
         child_env = os.environ.copy()
         child_env['STATUS_GO_DISABLE_SUPPORT_BOT_CONTACT_REQUEST'] = '1'
+        if not self.test_mode:
+            child_env['STATUS_RUNTIME_TEST_MODE'] = '0'
         use_local_waku = os.environ.get('E2E_LOCAL_WAKU_FLEET', '').lower() in _LOCAL_WAKU_ENV_VALUES
         if use_local_waku:
             repo_root = configs.testpath.ROOT.parent.parent
