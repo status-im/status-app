@@ -832,9 +832,9 @@
     <name>WakuTrafficDashboard</name>
     <message numerus="yes">
         <source>%n other peer(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n other peer</numerusform>
+            <numerusform>%n other peers</numerusform>
         </translation>
     </message>
 </context>

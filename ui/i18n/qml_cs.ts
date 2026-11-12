@@ -1217,10 +1217,6 @@
         <translation>Konverzace podle počtu zpráv</translation>
     </message>
     <message>
-        <source>The app will restart if you confirm.</source>
-        <translation>Aplikace se restartuje, pokud potvrdíte.</translation>
-    </message>
-    <message>
         <source>Choose a number between 1 and 50</source>
         <translation>Vyberte číslo mezi 1 a 50</translation>
     </message>
@@ -1303,6 +1299,10 @@
     <message>
         <source>Are you sure you want to enable debug mode?</source>
         <translation>Jste si jisti, že chcete zapnout režim ladění?</translation>
+    </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
+        <translation>Pokud potvrdíte, budete odhlášeni a znovu přihlášeni.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -1819,6 +1819,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>%1 přidáno k vašim důvěryhodným stránkám.</translation>
     </message>
     <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>Zavřete a znovu otevřete Status, aby se použilo nové měřítko obrazovky</translation>
+    </message>
+    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>Toto zařízení je nyní kontrolním uzlem pro komunitu %1</translation>
     </message>
@@ -2083,7 +2087,7 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Search messages in this thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat zprávy v tomto vlákně</translation>
     </message>
     <message>
         <source>Anywhere</source>
@@ -2091,7 +2095,7 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlákno</translation>
     </message>
 </context>
 <context>
@@ -2133,8 +2137,16 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Restartujte pro použití</translation>
     </message>
     <message>
+        <source>Save</source>
+        <translation>Uložit</translation>
+    </message>
+    <message>
         <source>Restart Status to apply the new interface zoom level</source>
         <translation>Restartujte, aby se použilo nové měřítko rozhraní</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
+        <translation>Zavřete a znovu otevřete Status, aby se použilo nové měřítko rozhraní</translation>
     </message>
     <message>
         <source>System</source>
@@ -3020,23 +3032,23 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Failed to remove the saved password</source>
-        <translation type="unfinished"></translation>
+        <translation>Uložené heslo se nepodařilo odstranit</translation>
     </message>
     <message>
         <source>Saved password removed — automatic login disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Uložené heslo odstraněno — automatické přihlášení vypnuto</translation>
     </message>
     <message>
         <source>Failed to save the password for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Heslo pro automatické přihlášení se nepodařilo uložit</translation>
     </message>
     <message>
         <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
-        <translation type="unfinished"></translation>
+        <translation>Uložení hesla nelze potvrdit — volba zůstala zapnutá a bude ověřena při příštím přihlášení</translation>
     </message>
     <message>
         <source>Password saved on this device for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Heslo uloženo na tomto zařízení pro automatické přihlášení</translation>
     </message>
     <message>
         <source>Change your password</source>
@@ -3052,11 +3064,11 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Automatic login disabled — the saved password could not be updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatické přihlášení vypnuto — uložené heslo nelze aktualizovat</translation>
     </message>
     <message>
         <source>Failed to update the saved password</source>
-        <translation type="unfinished"></translation>
+        <translation>Uložené heslo se nepodařilo aktualizovat</translation>
     </message>
     <message>
         <source>Change</source>
@@ -3290,7 +3302,7 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished">Info</translation>
+        <translation>Info</translation>
     </message>
     <message>
         <source>More</source>
@@ -3313,11 +3325,11 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlákna</translation>
     </message>
     <message>
         <source>Pins</source>
-        <translation type="unfinished"></translation>
+        <translation>Připnuté</translation>
     </message>
     <message>
         <source>Search members...</source>
@@ -3325,31 +3337,31 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Search threads...</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat vlákna...</translation>
     </message>
     <message>
         <source>Search pinned messages...</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat připnuté zprávy...</translation>
     </message>
     <message>
         <source>Loading threads...</source>
-        <translation type="unfinished"></translation>
+        <translation>Načítání vláken...</translation>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished">Vlákna nelze načíst</translation>
+        <translation>Vlákna nelze načíst</translation>
     </message>
     <message>
         <source>No threads found</source>
-        <translation type="unfinished"></translation>
+        <translation>Nebyla nalezena žádná vlákna</translation>
     </message>
     <message>
         <source>Threads will appear here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zde se zobrazí vlákna.</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">Zkusit znovu</translation>
+        <translation>Zkusit znovu</translation>
     </message>
 </context>
 <context>
@@ -3421,15 +3433,15 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <name>ChatView</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
     <message>
         <source>No pinned messages found</source>
-        <translation type="unfinished"></translation>
+        <translation>Nebyly nalezeny žádné připnuté zprávy</translation>
     </message>
     <message>
         <source>Pinned messages will appear here.</source>
-        <translation type="unfinished">Zde se zobrazí připnuté zprávy.</translation>
+        <translation>Zde se zobrazí připnuté zprávy.</translation>
     </message>
     <message>
         <source>Members</source>
@@ -3437,7 +3449,7 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Close thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Zavřít vlákno</translation>
     </message>
 </context>
 <context>
@@ -4147,29 +4159,10 @@ formát souboru</translation>
     </message>
 </context>
 <context>
-    <name>ConfirmAppRestartModal</name>
-    <message>
-        <source>Application Restart</source>
-        <translation>Restart aplikace</translation>
-    </message>
-    <message>
-        <source>Please restart the application to apply the changes.</source>
-        <translation>Pro uplatnění změn prosím restartujte aplikaci.</translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation>Restartovat</translation>
-    </message>
-</context>
-<context>
     <name>ConfirmChangePasswordModal</name>
     <message>
         <source>Re-encryption complete</source>
         <translation>Přešifrování dokončeno</translation>
-    </message>
-    <message>
-        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
-        <translation>Vaše heslo bude změněno. Toto pouze znovu zašifruje váš soubor klíčů profilu a zabere to jen chvilku – není potřeba restartovat.</translation>
     </message>
     <message>
         <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
@@ -4184,10 +4177,6 @@ formát souboru</translation>
         <translation>Také znovu zašifrovat moje data novým šifrovacím klíčem</translation>
     </message>
     <message>
-        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation>Potřebné pouze v případě, že máte podezření, že bylo vaše zařízení ohroženo. Trvá to výrazně déle a vyžaduje restart.</translation>
-    </message>
-    <message>
         <source>Password changed</source>
         <translation>Heslo změněno</translation>
     </message>
@@ -4200,8 +4189,16 @@ formát souboru</translation>
         <translation>Probíjá změna hesla...</translation>
     </message>
     <message>
-        <source>Restart Status and log in using your new password</source>
-        <translation>Restartujte Status a přihlaste se pomocí nového hesla</translation>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — you stay logged in.</source>
+        <translation>Vaše heslo bude změněno. Tím se pouze znovu zašifruje soubor s klíčem vašeho profilu, což chvíli trvá — zůstanete přihlášeni.</translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires logging in again.</source>
+        <translation>Potřebné jen v případě, že máte podezření na kompromitaci zařízení. Trvá podstatně déle a vyžaduje opětovné přihlášení.</translation>
+    </message>
+    <message>
+        <source>Log in again with your new password</source>
+        <translation>Přihlaste se znovu pomocí nového hesla</translation>
     </message>
     <message>
         <source>You can continue using Status</source>
@@ -4228,8 +4225,8 @@ formát souboru</translation>
         <translation>Přešifrovat data pomocí nového hesla</translation>
     </message>
     <message>
-        <source>Restart Status</source>
-        <translation>Restartovat Status</translation>
+        <source>Log in again</source>
+        <translation>Přihlásit se znovu</translation>
     </message>
     <message>
         <source>Close</source>
@@ -4741,8 +4738,8 @@ Přihlaste se pomocí nového hesla.</translation>
         <translation>Neukončujte Status ani nevypínejte zařízení. Mohlo by to vést ke ztrátě profilu a nemožnosti restartovat aplikaci.</translation>
     </message>
     <message>
-        <source>Restart Status and log in with new password</source>
-        <translation>Restartujte Status a přihlaste se novým heslem</translation>
+        <source>Log in with new password</source>
+        <translation>Přihlásit se novým heslem</translation>
     </message>
     <message>
         <source>Back to login</source>
@@ -6777,8 +6774,8 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Chain ID vrácené z JSON RPC neodpovídá %1</translation>
     </message>
     <message>
-        <source>Restart required for changes to take effect</source>
-        <translation>Pro projevení změn je vyžadován restart</translation>
+        <source>Log in again for changes to take effect</source>
+        <translation>Aby se změny projevily, přihlaste se znovu</translation>
     </message>
     <message>
         <source>Network name</source>
@@ -6817,20 +6814,20 @@ Keycard bude vyžadována pro podepisování</translation>
         <translation>Uložit změny</translation>
     </message>
     <message>
-        <source>RPC URL change requires app restart</source>
-        <translation>Změna RPC URL vyžaduje restart aplikace</translation>
+        <source>RPC URL change requires logging in again</source>
+        <translation>Změna RPC URL vyžaduje opětovné přihlášení</translation>
     </message>
     <message>
-        <source>For new JSON RPC URLs to take effect, Status must be restarted. Are you ready to do this now?</source>
-        <translation>Aby se nové JSON RPC URL projevily, musí být Status restartován. Jste připraveni to udělat nyní?</translation>
+        <source>For new JSON RPC URLs to take effect, you need to log in again. Are you ready to do this now?</source>
+        <translation>Aby se nové JSON RPC URL projevily, musíte se znovu přihlásit. Chcete to udělat nyní?</translation>
     </message>
     <message>
-        <source>Save and restart later</source>
-        <translation>Uložit a restartovat později</translation>
+        <source>Save and log in later</source>
+        <translation>Uložit a přihlásit se později</translation>
     </message>
     <message>
-        <source>Save and restart Status</source>
-        <translation>Uložit a restartovat Status</translation>
+        <source>Save and log in again</source>
+        <translation>Uložit a přihlásit se znovu</translation>
     </message>
 </context>
 <context>
@@ -6872,7 +6869,7 @@ Keycard bude vyžadována pro podepisování</translation>
     <name>EditPermissionView</name>
     <message>
         <source>Unknown token — amount in smallest units</source>
-        <translation type="unfinished"></translation>
+        <translation>Neznámý token — částka v nejmenších jednotkách</translation>
     </message>
     <message>
         <source>Anyone</source>
@@ -8233,6 +8230,14 @@ Opravdu to chcete udělat?</translation>
         <source>Change fleet to %1</source>
         <translation>Změnit fleet na %1</translation>
     </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
+        <translation>Pokud potvrdíte, budete odhlášeni a znovu přihlášeni.</translation>
+    </message>
+    <message>
+        <source>Failed to change the fleet</source>
+        <translation>Fleet se nepodařilo změnit</translation>
+    </message>
 </context>
 <context>
     <name>FleetsModal</name>
@@ -8658,7 +8663,7 @@ Opravdu to chcete udělat?</translation>
     <name>HoldingsSelectionModel</name>
     <message>
         <source>Loading…</source>
-        <translation type="unfinished"></translation>
+        <translation>Načítání…</translation>
     </message>
 </context>
 <context>
@@ -8739,11 +8744,11 @@ Opravdu to chcete udělat?</translation>
     <name>HttpStatsModal</name>
     <message>
         <source>%1h %2m</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation type="unfinished">%1m</translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>network %1 in %2 req · cache %3 in %4 req</source>
@@ -8751,87 +8756,87 @@ Opravdu to chcete udělat?</translation>
     </message>
     <message>
         <source>sent %1 · received %2 in %3 req</source>
-        <translation type="unfinished"></translation>
+        <translation>odesláno %1 · přijato %2 v %3 pož.</translation>
     </message>
     <message>
         <source>No data</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádná data</translation>
     </message>
     <message>
         <source>status-go: sent %1 · received %2</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go: odesláno %1 · přijato %2</translation>
     </message>
     <message>
         <source>app: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>aplikace: %1</translation>
     </message>
     <message>
         <source> · measuring %1</source>
-        <translation type="unfinished"></translation>
+        <translation> · měření %1</translation>
     </message>
     <message>
         <source>Collection is off</source>
-        <translation type="unfinished"></translation>
+        <translation>Sběr je vypnutý</translation>
     </message>
     <message>
         <source>Paused at %1 · counting continues</source>
-        <translation type="unfinished"></translation>
+        <translation>Pozastaveno v %1 · počítání pokračuje</translation>
     </message>
     <message>
         <source>Stopped while the app is in the background</source>
-        <translation type="unfinished"></translation>
+        <translation>Zastaveno, když je aplikace na pozadí</translation>
     </message>
     <message>
         <source>Stopped while the window is minimized</source>
-        <translation type="unfinished"></translation>
+        <translation>Zastaveno, když je okno minimalizované</translation>
     </message>
     <message>
         <source>Live · updated %1 s ago</source>
-        <translation type="unfinished"></translation>
+        <translation>Živě · aktualizováno před %1 s</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation type="unfinished">Obnovit</translation>
+        <translation>Obnovit</translation>
     </message>
     <message>
         <source>Pause updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Pozastavit aktualizace</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation type="unfinished"></translation>
+        <translation>Sbírat</translation>
     </message>
     <message>
         <source>status-go</source>
-        <translation type="unfinished">status-go</translation>
+        <translation>status-go</translation>
     </message>
     <message>
         <source>App (QML)</source>
-        <translation type="unfinished"></translation>
+        <translation>Aplikace (QML)</translation>
     </message>
     <message>
         <source>All</source>
-        <translation type="unfinished">Všechny</translation>
+        <translation>Vše</translation>
     </message>
     <message>
         <source>Waku</source>
-        <translation type="unfinished"></translation>
+        <translation>Waku</translation>
     </message>
     <message>
         <source>Webviews</source>
-        <translation type="unfinished"></translation>
+        <translation>Webviews</translation>
     </message>
     <message>
         <source>status-go does not report its HTTP traffic: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go nehlásí svůj HTTP provoz: %1</translation>
     </message>
     <message>
         <source>Collection is off. It costs a little work on every request, so release builds collect only while Debug is on. Turn it on to start measuring from now.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sběr je vypnutý. Každý požadavek tím stojí trochu práce, proto release buildy sbírají data jen při zapnutém ladění. Zapněte ho a měření začne od této chvíle.</translation>
     </message>
     <message>
         <source>Start collecting</source>
-        <translation type="unfinished"></translation>
+        <translation>Začít sbírat</translation>
     </message>
     <message>
         <source>Total: %1</source>
@@ -8843,16 +8848,17 @@ Opravdu to chcete udělat?</translation>
     </message>
     <message>
         <source>Not counted here: requests made outside the QML network access manager.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zde se nepočítají: požadavky provedené mimo QML network access manager.</translation>
     </message>
     <message>
         <source>status-go: %1
 app: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go: %1
+aplikace: %2</translation>
     </message>
     <message>
         <source>status-go does not report its Waku traffic: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go nehlásí svůj provoz Waku: %1</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -8875,203 +8881,203 @@ app: %2</source>
     <name>HttpTrafficDashboard</name>
     <message>
         <source>%1 req</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 pož.</translation>
     </message>
     <message>
         <source>%1 cached</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 z mezipaměti</translation>
     </message>
     <message>
         <source>%1 failed</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 selhalo</translation>
     </message>
     <message>
         <source>%1 h %2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>%1 s</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 s</translation>
     </message>
     <message>
         <source>%1 in background</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 na pozadí</translation>
     </message>
     <message>
         <source>No HTTP traffic yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zatím žádný HTTP provoz.</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; veškerého provozu.</translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per request</source>
-        <translation type="unfinished"></translation>
+        <translation>Převážně &lt;b&gt;%1&lt;/b&gt;: ~%2 na požadavek</translation>
     </message>
     <message>
         <source>upload</source>
-        <translation type="unfinished"></translation>
+        <translation>odesílání</translation>
     </message>
     <message numerus="yes">
         <source> (%n call(s) bundled)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform> (%n sloučené volání)</numerusform>
+            <numerusform> (%n sloučená volání)</numerusform>
+            <numerusform> (%n sloučených volání)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n other host(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n další hostitel</numerusform>
+            <numerusform>%n další hostitelé</numerusform>
+            <numerusform>%n dalších hostitelů</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>+ %n more source(s) · %1 together</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>+ %n další zdroj · celkem %1</numerusform>
+            <numerusform>+ %n další zdroje · celkem %1</numerusform>
+            <numerusform>+ %n dalších zdrojů · celkem %1</numerusform>
         </translation>
     </message>
     <message>
         <source>grey bars = in background</source>
-        <translation type="unfinished"></translation>
+        <translation>šedé sloupce = na pozadí</translation>
     </message>
     <message numerus="yes">
         <source>Multicall3 · %n call(s) bundled per request</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Multicall3 · %n sloučené volání na požadavek</numerusform>
+            <numerusform>Multicall3 · %n sloučená volání na požadavek</numerusform>
+            <numerusform>Multicall3 · %n sloučených volání na požadavek</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>Multicall3 · %n call(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Multicall3 · %n volání</numerusform>
+            <numerusform>Multicall3 · %n volání</numerusform>
+            <numerusform>Multicall3 · %n volání</numerusform>
         </translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per response.</source>
-        <translation type="unfinished"></translation>
+        <translation>Převážně &lt;b&gt;%1&lt;/b&gt;: ~%2 na odpověď.</translation>
     </message>
     <message>
         <source>download</source>
-        <translation type="unfinished"></translation>
+        <translation>stahování</translation>
     </message>
     <message>
         <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dále: &lt;b&gt;%1&lt;/b&gt; %2.</translation>
     </message>
     <message>
         <source>↑ Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ Odesláno</translation>
     </message>
     <message>
         <source>↓ Received</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ Přijato</translation>
     </message>
     <message>
         <source>In background · %1 · now</source>
-        <translation type="unfinished"></translation>
+        <translation>Na pozadí · %1 · nyní</translation>
     </message>
     <message>
         <source>In background · %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Na pozadí · %1</translation>
     </message>
     <message>
         <source>Top consumers</source>
-        <translation type="unfinished"></translation>
+        <translation>Největší spotřebitelé</translation>
     </message>
     <message>
         <source>click for details</source>
-        <translation type="unfinished"></translation>
+        <translation>klikněte pro podrobnosti</translation>
     </message>
     <message>
         <source>Show fewer sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit méně zdrojů</translation>
     </message>
     <message>
         <source>Where it goes</source>
-        <translation type="unfinished"></translation>
+        <translation>Kam to směřuje</translation>
     </message>
     <message>
         <source>All sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Všechny zdroje</translation>
     </message>
     <message>
         <source>Total · %1% of all traffic</source>
-        <translation type="unfinished"></translation>
+        <translation>Celkem · %1% veškerého provozu</translation>
     </message>
     <message>
         <source>Why so much upload</source>
-        <translation type="unfinished"></translation>
+        <translation>Proč tolik odesílání</translation>
     </message>
     <message>
         <source>Per response</source>
-        <translation type="unfinished"></translation>
+        <translation>Na odpověď</translation>
     </message>
     <message>
         <source>%1 per request</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 na požadavek</translation>
     </message>
     <message>
         <source>%1 per response</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 na odpověď</translation>
     </message>
     <message>
         <source>How often</source>
-        <translation type="unfinished"></translation>
+        <translation>Jak často</translation>
     </message>
     <message>
         <source>%1 requests</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 požadavků</translation>
     </message>
     <message>
         <source>%1 req/h</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 pož./h</translation>
     </message>
     <message>
         <source>Endpoints</source>
-        <translation type="unfinished"></translation>
+        <translation>Koncové body</translation>
     </message>
     <message>
         <source>Loading…</source>
-        <translation type="unfinished"></translation>
+        <translation>Načítání…</translation>
     </message>
     <message>
         <source>Connection bytes only: no HTTP requests went to this host, e.g. a WebSocket.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pouze bajty spojení: na tohoto hostitele nesměřovaly žádné HTTP požadavky, např. WebSocket.</translation>
     </message>
     <message>
         <source>↑ %1/req</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ %1/pož.</translation>
     </message>
     <message>
         <source>↓ %1/req</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ %1/pož.</translation>
     </message>
     <message>
         <source>⏱ %1 ms · p95 %2 ms</source>
-        <translation type="unfinished"></translation>
+        <translation>⏱ %1 ms · p95 %2 ms</translation>
     </message>
     <message>
         <source>%1 × %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 × %2</translation>
     </message>
     <message>
         <source>Caller: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Volající: %1</translation>
     </message>
 </context>
 <context>
@@ -9884,6 +9890,10 @@ app: %2</source>
         <translation>Importovat pár klíčů z obnovovací fráze</translation>
     </message>
     <message>
+        <source>Sign out</source>
+        <translation>Odhlásit se</translation>
+    </message>
+    <message>
         <source>No PIN? Skip</source>
         <translation>Žádný PIN? Přeskočit</translation>
     </message>
@@ -9998,10 +10008,6 @@ app: %2</source>
     <message>
         <source>Profile key pair has been moved to Keycard</source>
         <translation>Profilový pár klíčů byl přesunut do Keycard</translation>
-    </message>
-    <message>
-        <source>Quit and restart Status</source>
-        <translation>Ukončit a restartovat Status</translation>
     </message>
     <message>
         <source>Re-encrypting data may take some time</source>
@@ -10518,31 +10524,31 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Skip capitalized words and acronyms</source>
-        <translation type="unfinished"></translation>
+        <translation>Přeskakovat slova s velkými písmeny a zkratky</translation>
     </message>
     <message>
         <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Chcete vylepšit překlad, pomoci přidat nový jazyk nebo o nějaký požádat? Dejte nám vědět v našem %1.</translation>
     </message>
     <message>
         <source>channel</source>
-        <translation type="unfinished">kanál</translation>
+        <translation>kanálu</translation>
     </message>
     <message>
         <source>Spell Check</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontrola pravopisu</translation>
     </message>
     <message>
         <source>On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device&apos;s keyboard, so privacy depends on its settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Na počítači kontrola pravopisu používá pouze místní slovníky aplikace. Na mobilu návrhy používají klávesnici vašeho zařízení, takže soukromí závisí na jejím nastavení</translation>
     </message>
     <message>
         <source>Skips spelling checks for capitalized words and acronyms</source>
-        <translation type="unfinished"></translation>
+        <translation>Přeskakuje kontrolu pravopisu u slov s velkými písmeny a zkratek</translation>
     </message>
     <message>
         <source>Dictionaries</source>
-        <translation type="unfinished"></translation>
+        <translation>Slovníky</translation>
     </message>
     <message>
         <source>Time Format</source>
@@ -10561,12 +10567,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Změnit jazyk</translation>
     </message>
     <message>
-        <source>Display language has been changed. You must restart the application for changes to take effect.</source>
-        <translation>Jazyk zobrazení byl změněn. Je třeba restartovat aplikaci, aby se projevily změny.</translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation>Restartovat</translation>
+        <source>To show Status in the new language, you will be logged out and back in.</source>
+        <translation>Aby se Status zobrazil v novém jazyce, budete odhlášeni a znovu přihlášeni.</translation>
     </message>
 </context>
 <context>
@@ -12464,7 +12466,7 @@ selhalo</translation>
     <name>NetworkSelectPopup</name>
     <message>
         <source>All networks</source>
-        <translation type="unfinished"></translation>
+        <translation>Všechny sítě</translation>
     </message>
     <message>
         <source>Manage networks</source>
@@ -12761,7 +12763,7 @@ selhalo</translation>
     <name>NotificationAdaptorMessenger</name>
     <message>
         <source>Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlákno</translation>
     </message>
     <message>
         <source>GIF</source>
@@ -13828,7 +13830,7 @@ selhalo</translation>
     <name>Popups</name>
     <message>
         <source>Cannot move the profile key pair to Keycard: failed to remove the saved password, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Pár klíčů profilu nelze přesunout na Keycard: uložené heslo se nepodařilo odstranit, zkuste to prosím znovu</translation>
     </message>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
@@ -14272,31 +14274,31 @@ selhalo</translation>
     <name>ProfileEncryptionMigrationFlow</name>
     <message>
         <source>Failed to migrate to the new encryption format: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Migrace na nový formát šifrování selhala: %1</translation>
     </message>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
-        <translation type="unfinished">Biometrické přihlášení zakázáno - povolte jej v Nastavení</translation>
+        <translation>Biometrické přihlášení vypnuto — znovu ho zapněte v Nastavení</translation>
     </message>
     <message>
         <source>Updating encryption</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualizace šifrování</translation>
     </message>
     <message>
         <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše data se znovu šifrují v novém formátu šifrování. Může to chvíli trvat — neukončujte aplikaci ani nevypínejte zařízení.</translation>
     </message>
     <message>
         <source>Encryption updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Šifrování aktualizováno</translation>
     </message>
     <message>
-        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
-        <translation type="unfinished"></translation>
+        <source>Your profile was migrated to the new encryption format. Log in again to complete the process.</source>
+        <translation>Váš profil byl převeden na nový formát šifrování. Pro dokončení procesu se znovu přihlaste.</translation>
     </message>
     <message>
-        <source>Restart Status</source>
-        <translation type="unfinished">Restartovat Status</translation>
+        <source>Log in again</source>
+        <translation>Přihlásit se znovu</translation>
     </message>
 </context>
 <context>
@@ -14331,6 +14333,10 @@ selhalo</translation>
     <message>
         <source>Contacts</source>
         <translation>Kontakty</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
+        <translation>Zavřete a znovu otevřete Status, aby se použilo nové měřítko rozhraní</translation>
     </message>
 </context>
 <context>
@@ -15888,6 +15894,53 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>SessionTransitionView</name>
+    <message>
+        <source>Finishing background work…</source>
+        <translation>Dokončování práce na pozadí…</translation>
+    </message>
+    <message>
+        <source>Still signing out…</source>
+        <translation>Stále probíhá odhlašování…</translation>
+    </message>
+    <message>
+        <source>Signing out did not complete</source>
+        <translation>Odhlášení nebylo dokončeno</translation>
+    </message>
+    <message>
+        <source>Signed out, but Status could not get ready</source>
+        <translation>Odhlášeno, ale Status se nepodařilo připravit</translation>
+    </message>
+    <message>
+        <source>Signing out…</source>
+        <translation>Odhlašování…</translation>
+    </message>
+    <message>
+        <source>This is taking longer than usual. Status continues by itself once it&apos;s done, or you can close it now.</source>
+        <translation>Trvá to déle než obvykle. Status bude po dokončení pokračovat sám, nebo ho můžete nyní zavřít.</translation>
+    </message>
+    <message>
+        <source>Your account may still be signed in. Try again, or close Status.</source>
+        <translation>Váš účet může být stále přihlášen. Zkuste to znovu, nebo zavřete Status.</translation>
+    </message>
+    <message>
+        <source>Your account is signed out, but the login screen could not be prepared. Try again, or close Status.</source>
+        <translation>Váš účet je odhlášen, ale přihlašovací obrazovku se nepodařilo připravit. Zkuste to znovu, nebo zavřete Status.</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Zkusit znovu</translation>
+    </message>
+    <message>
+        <source>Close Status</source>
+        <translation>Zavřít Status</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Ukončit</translation>
+    </message>
+</context>
+<context>
     <name>SettingsDirtyToastMessage</name>
     <message>
         <source>Changes detected</source>
@@ -16005,8 +16058,8 @@ selhalo</translation>
         <translation>O aplikaci</translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>Odhlásit se a ukončit</translation>
+        <source>Sign out</source>
+        <translation>Odhlásit se</translation>
     </message>
     <message>
         <source>On-device backup</source>
@@ -16375,19 +16428,15 @@ selhalo</translation>
     <name>SignOutConfirmationDialog</name>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished">Odhlásit se</translation>
+        <translation>Odhlásit se</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished">Ujistěte se, že máte uložené heslo k účtu a obnovovací frázi. Bez nich můžete zablokovat přístup ke svému účtu a přijít o finanční prostředky.</translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Odhlásit se a ukončit</translation>
+        <translation>Ujistěte se, že máte uložené heslo k účtu a obnovovací frázi. Bez nich si můžete zablokovat přístup k účtu a přijít o prostředky.</translation>
     </message>
     <message>
         <source>Failed to turn off automatic login — sign out aborted, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatické přihlášení se nepodařilo vypnout — odhlášení přerušeno, zkuste to prosím znovu</translation>
     </message>
 </context>
 <context>
@@ -16887,7 +16936,7 @@ selhalo</translation>
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
 </context>
 <context>
@@ -17093,7 +17142,7 @@ selhalo</translation>
     <name>StatusLanguageSelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Hledat</translation>
+        <translation>Hledat</translation>
     </message>
 </context>
 <context>
@@ -17249,7 +17298,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Upload image</source>
-        <translation type="unfinished">Nahrát obrázek</translation>
+        <translation>Nahrát obrázek</translation>
     </message>
     <message>
         <source>Camera is not available</source>
@@ -17271,19 +17320,19 @@ selhalo</translation>
     </message>
     <message>
         <source>Search in</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledat v</translation>
     </message>
     <message>
         <source>Loading threads…</source>
-        <translation type="unfinished"></translation>
+        <translation>Načítání vláken…</translation>
     </message>
     <message>
         <source>Couldn&apos;t load threads. Retry</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlákna nelze načíst. Zkusit znovu</translation>
     </message>
     <message>
         <source>No threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádná vlákna</translation>
     </message>
 </context>
 <context>
@@ -17455,11 +17504,11 @@ selhalo</translation>
     <name>StatusTextEditMenu</name>
     <message>
         <source>Checking spelling...</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontrola pravopisu...</translation>
     </message>
     <message>
         <source>No suggestions</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádné návrhy</translation>
     </message>
     <message>
         <source>Cut</source>
@@ -17561,31 +17610,31 @@ selhalo</translation>
     <name>StayLoggedInSectionView</name>
     <message>
         <source>Save password on this device for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Uložit heslo na tomto zařízení pro automatické přihlášení</translation>
     </message>
     <message>
         <source>Your password is stored using your&lt;br/&gt;system&apos;s default secure storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše heslo je uloženo ve výchozím&lt;br/&gt;zabezpečeném úložišti vašeho systému</translation>
     </message>
     <message>
         <source>Secure storage is unavailable on this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zabezpečené úložiště není na tomto zařízení dostupné.</translation>
     </message>
     <message>
         <source>Not available for Keycard profiles - the Keycard is always required to log in.</source>
-        <translation type="unfinished"></translation>
+        <translation>Není dostupné pro profily Keycard - k přihlášení je vždy nutná Keycard.</translation>
     </message>
     <message>
         <source>To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.</source>
-        <translation type="unfinished"></translation>
+        <translation>Chcete-li tuto funkci používat, aktualizujte heslo (můžete zadat stejné) nebo proveďte migraci na nový formát šifrování.</translation>
     </message>
     <message>
         <source>Migrate to the new encryption format</source>
-        <translation type="unfinished"></translation>
+        <translation>Migrovat na nový formát šifrování</translation>
     </message>
     <message>
         <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vaše data se znovu šifrují v novém formátu šifrování. Může to chvíli trvat — neukončujte aplikaci ani nevypínejte zařízení.</translation>
     </message>
 </context>
 <context>
@@ -18422,16 +18471,16 @@ Tuto akci nelze vzít zpět.</translation>
         <translation>Sdílejte zpětnou vazbu nebo navrhněte vylepšení na našem %1.</translation>
     </message>
     <message>
-        <source>Disable services and restart the app</source>
-        <translation>Zakázat služby a restartovat aplikaci</translation>
-    </message>
-    <message>
-        <source>Enable services and restart the app</source>
-        <translation>Povolit služby a restartovat aplikaci</translation>
+        <source>Enable services and log in again</source>
+        <translation>Povolit služby a znovu se přihlásit</translation>
     </message>
     <message>
         <source>Disable third-party services</source>
         <translation>Zakázat služby třetích stran</translation>
+    </message>
+    <message>
+        <source>Disable services and log in again</source>
+        <translation>Zakázat služby a znovu se přihlásit</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
@@ -18528,24 +18577,24 @@ Tuto akci nelze vzít zpět.</translation>
     <name>ThreadHeader</name>
     <message>
         <source>Couldn&apos;t rename thread: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlákno nelze přejmenovat: %1</translation>
     </message>
     <message>
         <source>Thread name</source>
-        <translation type="unfinished"></translation>
+        <translation>Název vlákna</translation>
     </message>
     <message>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>v %1</translation>
     </message>
     <message>
         <source>Renaming...</source>
-        <translation type="unfinished"></translation>
+        <translation>Přejmenování...</translation>
     </message>
     <message>
         <source>More</source>
-        <translation type="unfinished">Více</translation>
+        <translation>Více</translation>
     </message>
 </context>
 <context>
@@ -18901,48 +18950,48 @@ Tuto akci nelze vzít zpět.</translation>
     <name>TrafficAnswerCard</name>
     <message>
         <source>Where does the traffic go?</source>
-        <translation type="unfinished"></translation>
+        <translation>Kam směřuje provoz?</translation>
     </message>
 </context>
 <context>
     <name>TrafficFormat</name>
     <message>
         <source>—/h</source>
-        <translation type="unfinished"></translation>
+        <translation>—/h</translation>
     </message>
     <message>
         <source>%1/h</source>
-        <translation type="unfinished"></translation>
+        <translation>%1/h</translation>
     </message>
     <message>
         <source>↑ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ %1</translation>
     </message>
     <message>
         <source>↓ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ %1</translation>
     </message>
 </context>
 <context>
     <name>TrafficLegend</name>
     <message>
         <source>%1 sent · %2 received · bold = total since start · chip = per hour</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 odesláno · %2 přijato · tučně = celkem od spuštění · štítek = za hodinu</translation>
     </message>
     <message>
         <source>↑</source>
-        <translation type="unfinished"></translation>
+        <translation>↑</translation>
     </message>
     <message>
         <source>↓</source>
-        <translation type="unfinished"></translation>
+        <translation>↓</translation>
     </message>
 </context>
 <context>
     <name>TrafficShares</name>
     <message>
         <source>%1%</source>
-        <translation type="unfinished">%1%</translation>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>
@@ -19513,8 +19562,12 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
         <translation>Nastavení</translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Odhlásit se a ukončit</translation>
+        <source>Sign out</source>
+        <translation>Odhlásit se</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Ukončit</translation>
     </message>
     <message>
         <source>Always online</source>
@@ -19851,135 +19904,135 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <name>WakuTrafficDashboard</name>
     <message>
         <source>Relay</source>
-        <translation type="unfinished"></translation>
+        <translation>Relay</translation>
     </message>
     <message>
         <source>messages of every chat on your shards pass through you</source>
-        <translation type="unfinished"></translation>
+        <translation>zprávy všech chatů ve vašich shardech procházejí přes vás</translation>
     </message>
     <message>
         <source>Store</source>
-        <translation type="unfinished"></translation>
+        <translation>Store</translation>
     </message>
     <message>
         <source>history fetched after start and after reconnects</source>
-        <translation type="unfinished"></translation>
+        <translation>historie načtená po spuštění a po opětovném připojení</translation>
     </message>
     <message>
         <source>Filter</source>
-        <translation type="unfinished">Filtr</translation>
+        <translation>Filter</translation>
     </message>
     <message>
         <source>messages of your chats, pushed by a service node</source>
-        <translation type="unfinished"></translation>
+        <translation>zprávy vašich chatů doručené servisním uzlem</translation>
     </message>
     <message>
         <source>Filter subscriptions</source>
-        <translation type="unfinished"></translation>
+        <translation>Odběry Filter</translation>
     </message>
     <message>
         <source>telling a service node which chats you follow</source>
-        <translation type="unfinished"></translation>
+        <translation>sdělování servisnímu uzlu, které chaty sledujete</translation>
     </message>
     <message>
         <source>Lightpush</source>
-        <translation type="unfinished"></translation>
+        <translation>Lightpush</translation>
     </message>
     <message>
         <source>your messages, handed to a service node to publish</source>
-        <translation type="unfinished"></translation>
+        <translation>vaše zprávy předané servisnímu uzlu ke zveřejnění</translation>
     </message>
     <message>
         <source>Peer exchange</source>
-        <translation type="unfinished"></translation>
+        <translation>Peer exchange</translation>
     </message>
     <message>
         <source>asking peers for more peers</source>
-        <translation type="unfinished"></translation>
+        <translation>žádání peerů o další peery</translation>
     </message>
     <message>
         <source>Metadata</source>
-        <translation type="unfinished"></translation>
+        <translation>Metadata</translation>
     </message>
     <message>
         <source>comparing shards with a new peer</source>
-        <translation type="unfinished"></translation>
+        <translation>porovnávání shardů s novým peerem</translation>
     </message>
     <message>
         <source>Identify</source>
-        <translation type="unfinished"></translation>
+        <translation>Identify</translation>
     </message>
     <message>
         <source>peers telling each other what they support</source>
-        <translation type="unfinished"></translation>
+        <translation>vzájemné sdělování podporovaných funkcí mezi peery</translation>
     </message>
     <message>
         <source>Ping</source>
-        <translation type="unfinished"></translation>
+        <translation>Ping</translation>
     </message>
     <message>
         <source>keeping connections alive</source>
-        <translation type="unfinished"></translation>
+        <translation>udržování spojení</translation>
     </message>
     <message>
         <source>Protocol negotiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyjednávání protokolu</translation>
     </message>
     <message>
         <source>streams that have not agreed on a protocol yet</source>
-        <translation type="unfinished"></translation>
+        <translation>streamy, které se ještě nedohodly na protokolu</translation>
     </message>
     <message>
         <source>No Waku traffic yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zatím žádný provoz Waku.</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; veškerého provozu.</translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Převážně &lt;b&gt;%1&lt;/b&gt;: %2.</translation>
     </message>
     <message>
         <source>upload</source>
-        <translation type="unfinished"></translation>
+        <translation>odesílání</translation>
     </message>
     <message>
         <source>download</source>
-        <translation type="unfinished"></translation>
+        <translation>stahování</translation>
     </message>
     <message>
         <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dále: &lt;b&gt;%1&lt;/b&gt; %2.</translation>
     </message>
     <message numerus="yes">
         <source>%n other peer(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n další peer</numerusform>
+            <numerusform>%n další peery</numerusform>
+            <numerusform>%n dalších peerů</numerusform>
         </translation>
     </message>
     <message>
         <source>↑ Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ Odesláno</translation>
     </message>
     <message>
         <source>↓ Received</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ Přijato</translation>
     </message>
     <message>
         <source>Protocols</source>
-        <translation type="unfinished"></translation>
+        <translation>Protokoly</translation>
     </message>
     <message>
         <source>Which peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Které peery</translation>
     </message>
     <message>
         <source>counted inside libp2p streams, without encryption and connection overhead</source>
-        <translation type="unfinished"></translation>
+        <translation>počítáno uvnitř streamů libp2p, bez režie šifrování a spojení</translation>
     </message>
 </context>
 <context>

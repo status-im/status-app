@@ -1205,10 +1205,6 @@
         <translation>Чати за кількістю повідомлень</translation>
     </message>
     <message>
-        <source>The app will restart if you confirm.</source>
-        <translation>Після підтвердження застосунок перезапуститься.</translation>
-    </message>
-    <message>
         <source>Choose a number between 1 and 50</source>
         <translation>Виберіть число від 1 до 50</translation>
     </message>
@@ -1303,6 +1299,10 @@
     <message>
         <source>Are you sure you want to enable debug mode?</source>
         <translation>Увімкнути режим налагодження?</translation>
+    </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
+        <translation>Якщо ви підтвердите, буде виконано вихід і повторний вхід.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -1819,6 +1819,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>%1 додано до ваших надійних сайтів.</translation>
     </message>
     <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>Закрийте та знову відкрийте Status, щоб застосувати новий масштаб дисплея</translation>
+    </message>
+    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>Тепер цей пристрій є керівним вузлом спільноти %1</translation>
     </message>
@@ -2083,7 +2087,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Search messages in this thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Пошук повідомлень у цій гілці</translation>
     </message>
     <message>
         <source>Anywhere</source>
@@ -2091,7 +2095,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Гілка</translation>
     </message>
 </context>
 <context>
@@ -2133,8 +2137,16 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Перезапустіть</translation>
     </message>
     <message>
+        <source>Save</source>
+        <translation>Зберегти</translation>
+    </message>
+    <message>
         <source>Restart Status to apply the new interface zoom level</source>
         <translation>Перезапустіть Status, щоб застосувати новий масштаб інтерфейсу</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
+        <translation>Закрийте та знову відкрийте Status, щоб застосувати новий масштаб інтерфейсу</translation>
     </message>
     <message>
         <source>System</source>
@@ -3020,23 +3032,23 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Failed to remove the saved password</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося видалити збережений пароль</translation>
     </message>
     <message>
         <source>Saved password removed — automatic login disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Збережений пароль видалено — автоматичний вхід вимкнено</translation>
     </message>
     <message>
         <source>Failed to save the password for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося зберегти пароль для автоматичного входу</translation>
     </message>
     <message>
         <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося підтвердити збереження пароля — параметр залишено ввімкненим, його буде перевірено під час наступного входу</translation>
     </message>
     <message>
         <source>Password saved on this device for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Пароль збережено на цьому пристрої для автоматичного входу</translation>
     </message>
     <message>
         <source>Change your password</source>
@@ -3048,15 +3060,15 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Біометричний вхід вимкнено — увімкніть його знову в налаштуваннях</translation>
     </message>
     <message>
         <source>Automatic login disabled — the saved password could not be updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматичний вхід вимкнено — не вдалося оновити збережений пароль</translation>
     </message>
     <message>
         <source>Failed to update the saved password</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося оновити збережений пароль</translation>
     </message>
     <message>
         <source>Change</source>
@@ -3207,7 +3219,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Copy thread ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Копіювати ID гілки</translation>
     </message>
     <message>
         <source>Copy channel ID</source>
@@ -3290,7 +3302,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished">Інформація</translation>
+        <translation>Інформація</translation>
     </message>
     <message>
         <source>More</source>
@@ -3313,11 +3325,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Гілки</translation>
     </message>
     <message>
         <source>Pins</source>
-        <translation type="unfinished"></translation>
+        <translation>Закріплені</translation>
     </message>
     <message>
         <source>Search members...</source>
@@ -3325,31 +3337,31 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Search threads...</source>
-        <translation type="unfinished"></translation>
+        <translation>Пошук гілок...</translation>
     </message>
     <message>
         <source>Search pinned messages...</source>
-        <translation type="unfinished"></translation>
+        <translation>Пошук закріплених повідомлень...</translation>
     </message>
     <message>
         <source>Loading threads...</source>
-        <translation type="unfinished"></translation>
+        <translation>Завантаження гілок...</translation>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося завантажити гілки</translation>
     </message>
     <message>
         <source>No threads found</source>
-        <translation type="unfinished"></translation>
+        <translation>Гілок не знайдено</translation>
     </message>
     <message>
         <source>Threads will appear here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Тут з’являться гілки.</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">Повторити</translation>
+        <translation>Повторити</translation>
     </message>
 </context>
 <context>
@@ -3368,11 +3380,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося завантажити гілки</translation>
     </message>
     <message>
         <source>Couldn&apos;t create thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося створити гілку</translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -3421,15 +3433,15 @@ Do you wish to override the security check and continue?</source>
     <name>ChatView</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Пошук</translation>
+        <translation>Пошук</translation>
     </message>
     <message>
         <source>No pinned messages found</source>
-        <translation type="unfinished"></translation>
+        <translation>Закріплених повідомлень не знайдено</translation>
     </message>
     <message>
         <source>Pinned messages will appear here.</source>
-        <translation type="unfinished">Тут з’являться закріплені повідомлення.</translation>
+        <translation>Тут з’являться закріплені повідомлення.</translation>
     </message>
     <message>
         <source>Members</source>
@@ -3437,7 +3449,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Close thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Закрити гілку</translation>
     </message>
 </context>
 <context>
@@ -4147,29 +4159,10 @@ file format</source>
     </message>
 </context>
 <context>
-    <name>ConfirmAppRestartModal</name>
-    <message>
-        <source>Application Restart</source>
-        <translation>Перезапуск застосунку</translation>
-    </message>
-    <message>
-        <source>Please restart the application to apply the changes.</source>
-        <translation>Перезапустіть застосунок, щоб застосувати зміни.</translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation>Перезапустити</translation>
-    </message>
-</context>
-<context>
     <name>ConfirmChangePasswordModal</name>
     <message>
         <source>Re-encryption complete</source>
         <translation>Повторне шифрування завершено</translation>
-    </message>
-    <message>
-        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
-        <translation>Ваш пароль буде змінено. Це лише повторно зашифрує файл ключа профілю, що займе мить. Перезапуск не потрібен.</translation>
     </message>
     <message>
         <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
@@ -4184,10 +4177,6 @@ file format</source>
         <translation>Також повторно зашифрувати мої дані новим ключем шифрування</translation>
     </message>
     <message>
-        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation>Потрібно, лише якщо ви підозрюєте, що ваш пристрій зламано. Це триватиме значно довше й потребуватиме перезапуску.</translation>
-    </message>
-    <message>
         <source>Password changed</source>
         <translation>Пароль змінено</translation>
     </message>
@@ -4200,8 +4189,16 @@ file format</source>
         <translation>Зміна пароля...</translation>
     </message>
     <message>
-        <source>Restart Status and log in using your new password</source>
-        <translation>Перезапустіть Status і ввійдіть із новим паролем</translation>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — you stay logged in.</source>
+        <translation>Ваш пароль буде змінено. Буде лише повторно зашифровано файл ключа вашого профілю — це займе мить, і ви залишитеся в системі.</translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires logging in again.</source>
+        <translation>Потрібно лише тоді, коли ви підозрюєте, що ваш пристрій скомпрометовано. Триває значно довше й вимагає повторного входу.</translation>
+    </message>
+    <message>
+        <source>Log in again with your new password</source>
+        <translation>Увійдіть знову з новим паролем</translation>
     </message>
     <message>
         <source>You can continue using Status</source>
@@ -4228,8 +4225,8 @@ file format</source>
         <translation>Повторно зашифрувати дані новим паролем</translation>
     </message>
     <message>
-        <source>Restart Status</source>
-        <translation>Перезапустити Status</translation>
+        <source>Log in again</source>
+        <translation>Увійти знову</translation>
     </message>
     <message>
         <source>Close</source>
@@ -4741,8 +4738,8 @@ Log in with your new password.</source>
         <translation>Не закривайте Status і не вимикайте пристрій. Інакше ви втратите профіль і не зможете перезапустити застосунок.</translation>
     </message>
     <message>
-        <source>Restart Status and log in with new password</source>
-        <translation>Перезапустити Status і ввійти з новим паролем</translation>
+        <source>Log in with new password</source>
+        <translation>Увійти з новим паролем</translation>
     </message>
     <message>
         <source>Back to login</source>
@@ -6777,8 +6774,8 @@ key pair. Keycard will be required for signing</source>
         <translation>ID ланцюга від JSON RPC не збігається з %1</translation>
     </message>
     <message>
-        <source>Restart required for changes to take effect</source>
-        <translation>Щоб зміни набули чинності, потрібен перезапуск</translation>
+        <source>Log in again for changes to take effect</source>
+        <translation>Увійдіть знову, щоб зміни набули чинності</translation>
     </message>
     <message>
         <source>Network name</source>
@@ -6817,20 +6814,20 @@ key pair. Keycard will be required for signing</source>
         <translation>Зберегти зміни</translation>
     </message>
     <message>
-        <source>RPC URL change requires app restart</source>
-        <translation>Зміна RPC URL потребує перезапуску</translation>
+        <source>RPC URL change requires logging in again</source>
+        <translation>Для зміни URL-адреси RPC потрібно увійти знову</translation>
     </message>
     <message>
-        <source>For new JSON RPC URLs to take effect, Status must be restarted. Are you ready to do this now?</source>
-        <translation>Щоб нові URL-адреси JSON RPC набули чинності, потрібно перезапустити Status. Перезапустити зараз?</translation>
+        <source>For new JSON RPC URLs to take effect, you need to log in again. Are you ready to do this now?</source>
+        <translation>Щоб нові URL-адреси JSON RPC набули чинності, потрібно увійти знову. Зробити це зараз?</translation>
     </message>
     <message>
-        <source>Save and restart later</source>
-        <translation>Зберегти, перезапустити пізніше</translation>
+        <source>Save and log in later</source>
+        <translation>Зберегти й увійти пізніше</translation>
     </message>
     <message>
-        <source>Save and restart Status</source>
-        <translation>Зберегти й перезапустити Status</translation>
+        <source>Save and log in again</source>
+        <translation>Зберегти й увійти знову</translation>
     </message>
 </context>
 <context>
@@ -6872,7 +6869,7 @@ key pair. Keycard will be required for signing</source>
     <name>EditPermissionView</name>
     <message>
         <source>Unknown token — amount in smallest units</source>
-        <translation type="unfinished"></translation>
+        <translation>Невідомий токен — сума в найменших одиницях</translation>
     </message>
     <message>
         <source>Anyone</source>
@@ -8233,6 +8230,14 @@ Are you sure you want to do this?</source>
         <source>Change fleet to %1</source>
         <translation>Змінити флот на %1</translation>
     </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
+        <translation>Якщо ви підтвердите, буде виконано вихід і повторний вхід.</translation>
+    </message>
+    <message>
+        <source>Failed to change the fleet</source>
+        <translation>Не вдалося змінити флот</translation>
+    </message>
 </context>
 <context>
     <name>FleetsModal</name>
@@ -8658,7 +8663,7 @@ Are you sure you want to do this?</source>
     <name>HoldingsSelectionModel</name>
     <message>
         <source>Loading…</source>
-        <translation type="unfinished"></translation>
+        <translation>Завантаження…</translation>
     </message>
 </context>
 <context>
@@ -8739,11 +8744,11 @@ Are you sure you want to do this?</source>
     <name>HttpStatsModal</name>
     <message>
         <source>%1h %2m</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 год %2 хв</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation type="unfinished">%1хв</translation>
+        <translation>%1 хв</translation>
     </message>
     <message>
         <source>network %1 in %2 req · cache %3 in %4 req</source>
@@ -8751,87 +8756,87 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>sent %1 · received %2 in %3 req</source>
-        <translation type="unfinished"></translation>
+        <translation>надіслано %1 · отримано %2 за %3 запит.</translation>
     </message>
     <message>
         <source>No data</source>
-        <translation type="unfinished"></translation>
+        <translation>Немає даних</translation>
     </message>
     <message>
         <source>status-go: sent %1 · received %2</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go: надіслано %1 · отримано %2</translation>
     </message>
     <message>
         <source>app: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>застосунок: %1</translation>
     </message>
     <message>
         <source> · measuring %1</source>
-        <translation type="unfinished"></translation>
+        <translation> · вимірювання %1</translation>
     </message>
     <message>
         <source>Collection is off</source>
-        <translation type="unfinished"></translation>
+        <translation>Збирання вимкнено</translation>
     </message>
     <message>
         <source>Paused at %1 · counting continues</source>
-        <translation type="unfinished"></translation>
+        <translation>Призупинено о %1 · підрахунок триває</translation>
     </message>
     <message>
         <source>Stopped while the app is in the background</source>
-        <translation type="unfinished"></translation>
+        <translation>Зупинено, поки застосунок у фоновому режимі</translation>
     </message>
     <message>
         <source>Stopped while the window is minimized</source>
-        <translation type="unfinished"></translation>
+        <translation>Зупинено, поки вікно згорнуто</translation>
     </message>
     <message>
         <source>Live · updated %1 s ago</source>
-        <translation type="unfinished"></translation>
+        <translation>Наживо · оновлено %1 с тому</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation type="unfinished">Продовжити</translation>
+        <translation>Продовжити</translation>
     </message>
     <message>
         <source>Pause updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Призупинити оновлення</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation type="unfinished"></translation>
+        <translation>Збирати</translation>
     </message>
     <message>
         <source>status-go</source>
-        <translation type="unfinished">status-go</translation>
+        <translation>status-go</translation>
     </message>
     <message>
         <source>App (QML)</source>
-        <translation type="unfinished"></translation>
+        <translation>Застосунок (QML)</translation>
     </message>
     <message>
         <source>All</source>
-        <translation type="unfinished">Усі</translation>
+        <translation>Усі</translation>
     </message>
     <message>
         <source>Waku</source>
-        <translation type="unfinished"></translation>
+        <translation>Waku</translation>
     </message>
     <message>
         <source>Webviews</source>
-        <translation type="unfinished"></translation>
+        <translation>Вебперегляди</translation>
     </message>
     <message>
         <source>status-go does not report its HTTP traffic: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go не повідомляє про свій HTTP-трафік: %1</translation>
     </message>
     <message>
         <source>Collection is off. It costs a little work on every request, so release builds collect only while Debug is on. Turn it on to start measuring from now.</source>
-        <translation type="unfinished"></translation>
+        <translation>Збирання вимкнено. Воно трохи навантажує кожен запит, тому релізні збірки збирають дані лише з увімкненим налагодженням. Увімкніть його, щоб почати вимірювання з цього моменту.</translation>
     </message>
     <message>
         <source>Start collecting</source>
-        <translation type="unfinished"></translation>
+        <translation>Почати збирання</translation>
     </message>
     <message>
         <source>Total: %1</source>
@@ -8843,16 +8848,17 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Not counted here: requests made outside the QML network access manager.</source>
-        <translation type="unfinished"></translation>
+        <translation>Тут не враховано: запити, зроблені поза менеджером мережевого доступу QML.</translation>
     </message>
     <message>
         <source>status-go: %1
 app: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go: %1
+застосунок: %2</translation>
     </message>
     <message>
         <source>status-go does not report its Waku traffic: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go не повідомляє про свій трафік Waku: %1</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -8875,203 +8881,203 @@ app: %2</source>
     <name>HttpTrafficDashboard</name>
     <message>
         <source>%1 req</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 запит.</translation>
     </message>
     <message>
         <source>%1 cached</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 з кешу</translation>
     </message>
     <message>
         <source>%1 failed</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 з помилкою</translation>
     </message>
     <message>
         <source>%1 h %2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 год %2 хв</translation>
     </message>
     <message>
         <source>%1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 хв</translation>
     </message>
     <message>
         <source>%1 s</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 с</translation>
     </message>
     <message>
         <source>%1 in background</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 у фоновому режимі</translation>
     </message>
     <message>
         <source>No HTTP traffic yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTP-трафіку ще немає.</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; усього трафіку.</translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per request</source>
-        <translation type="unfinished"></translation>
+        <translation>Здебільшого &lt;b&gt;%1&lt;/b&gt;: ~%2 на запит</translation>
     </message>
     <message>
         <source>upload</source>
-        <translation type="unfinished"></translation>
+        <translation>вивантаження</translation>
     </message>
     <message numerus="yes">
         <source> (%n call(s) bundled)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform> (%n виклик в одному запиті)</numerusform>
+            <numerusform> (%n виклики в одному запиті)</numerusform>
+            <numerusform> (%n викликів в одному запиті)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n other host(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n інший хост</numerusform>
+            <numerusform>%n інші хости</numerusform>
+            <numerusform>%n інших хостів</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>+ %n more source(s) · %1 together</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>+ ще %n джерело · разом %1</numerusform>
+            <numerusform>+ ще %n джерела · разом %1</numerusform>
+            <numerusform>+ ще %n джерел · разом %1</numerusform>
         </translation>
     </message>
     <message>
         <source>grey bars = in background</source>
-        <translation type="unfinished"></translation>
+        <translation>сірі стовпці = у фоновому режимі</translation>
     </message>
     <message numerus="yes">
         <source>Multicall3 · %n call(s) bundled per request</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Multicall3 · %n виклик в одному запиті</numerusform>
+            <numerusform>Multicall3 · %n виклики в одному запиті</numerusform>
+            <numerusform>Multicall3 · %n викликів в одному запиті</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>Multicall3 · %n call(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Multicall3 · %n виклик</numerusform>
+            <numerusform>Multicall3 · %n виклики</numerusform>
+            <numerusform>Multicall3 · %n викликів</numerusform>
         </translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per response.</source>
-        <translation type="unfinished"></translation>
+        <translation>Здебільшого &lt;b&gt;%1&lt;/b&gt;: ~%2 на відповідь.</translation>
     </message>
     <message>
         <source>download</source>
-        <translation type="unfinished"></translation>
+        <translation>завантаження</translation>
     </message>
     <message>
         <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Далі: &lt;b&gt;%1&lt;/b&gt; %2.</translation>
     </message>
     <message>
         <source>↑ Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ Надіслано</translation>
     </message>
     <message>
         <source>↓ Received</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ Отримано</translation>
     </message>
     <message>
         <source>In background · %1 · now</source>
-        <translation type="unfinished"></translation>
+        <translation>У фоновому режимі · %1 · зараз</translation>
     </message>
     <message>
         <source>In background · %1</source>
-        <translation type="unfinished"></translation>
+        <translation>У фоновому режимі · %1</translation>
     </message>
     <message>
         <source>Top consumers</source>
-        <translation type="unfinished"></translation>
+        <translation>Найбільші споживачі</translation>
     </message>
     <message>
         <source>click for details</source>
-        <translation type="unfinished"></translation>
+        <translation>натисніть, щоб переглянути деталі</translation>
     </message>
     <message>
         <source>Show fewer sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Показати менше джерел</translation>
     </message>
     <message>
         <source>Where it goes</source>
-        <translation type="unfinished"></translation>
+        <translation>Куди йде трафік</translation>
     </message>
     <message>
         <source>All sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Усі джерела</translation>
     </message>
     <message>
         <source>Total · %1% of all traffic</source>
-        <translation type="unfinished"></translation>
+        <translation>Разом · %1% усього трафіку</translation>
     </message>
     <message>
         <source>Why so much upload</source>
-        <translation type="unfinished"></translation>
+        <translation>Чому так багато вивантаження</translation>
     </message>
     <message>
         <source>Per response</source>
-        <translation type="unfinished"></translation>
+        <translation>На відповідь</translation>
     </message>
     <message>
         <source>%1 per request</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 на запит</translation>
     </message>
     <message>
         <source>%1 per response</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 на відповідь</translation>
     </message>
     <message>
         <source>How often</source>
-        <translation type="unfinished"></translation>
+        <translation>Як часто</translation>
     </message>
     <message>
         <source>%1 requests</source>
-        <translation type="unfinished"></translation>
+        <translation>Запитів: %1</translation>
     </message>
     <message>
         <source>%1 req/h</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 запит./год</translation>
     </message>
     <message>
         <source>Endpoints</source>
-        <translation type="unfinished"></translation>
+        <translation>Кінцеві точки</translation>
     </message>
     <message>
         <source>Loading…</source>
-        <translation type="unfinished"></translation>
+        <translation>Завантаження…</translation>
     </message>
     <message>
         <source>Connection bytes only: no HTTP requests went to this host, e.g. a WebSocket.</source>
-        <translation type="unfinished"></translation>
+        <translation>Лише байти з’єднання: до цього хоста не надходило HTTP-запитів, напр. WebSocket.</translation>
     </message>
     <message>
         <source>↑ %1/req</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ %1/запит</translation>
     </message>
     <message>
         <source>↓ %1/req</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ %1/запит</translation>
     </message>
     <message>
         <source>⏱ %1 ms · p95 %2 ms</source>
-        <translation type="unfinished"></translation>
+        <translation>⏱ %1 мс · p95 %2 мс</translation>
     </message>
     <message>
         <source>%1 × %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 × %2</translation>
     </message>
     <message>
         <source>Caller: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Викликає: %1</translation>
     </message>
 </context>
 <context>
@@ -9884,6 +9890,10 @@ app: %2</source>
         <translation>Імпортувати пару ключів із фрази відновлення</translation>
     </message>
     <message>
+        <source>Sign out</source>
+        <translation>Вийти</translation>
+    </message>
+    <message>
         <source>No PIN? Skip</source>
         <translation>Немає PIN-коду? Пропустити</translation>
     </message>
@@ -9998,10 +10008,6 @@ app: %2</source>
     <message>
         <source>Profile key pair has been moved to Keycard</source>
         <translation>Пару ключів профілю переміщено на Keycard</translation>
-    </message>
-    <message>
-        <source>Quit and restart Status</source>
-        <translation>Вийти й перезапустити Status</translation>
     </message>
     <message>
         <source>Re-encrypting data may take some time</source>
@@ -10519,31 +10525,31 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Skip capitalized words and acronyms</source>
-        <translation type="unfinished"></translation>
+        <translation>Пропускати слова з великої літери та абревіатури</translation>
     </message>
     <message>
         <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Хочете покращити переклад, допомогти додати нову мову або попросити про неї? Повідомте нас у нашому %1.</translation>
     </message>
     <message>
         <source>channel</source>
-        <translation type="unfinished">канал</translation>
+        <translation>каналі</translation>
     </message>
     <message>
         <source>Spell Check</source>
-        <translation type="unfinished"></translation>
+        <translation>Перевірка правопису</translation>
     </message>
     <message>
         <source>On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device&apos;s keyboard, so privacy depends on its settings</source>
-        <translation type="unfinished"></translation>
+        <translation>На комп’ютері перевірка правопису використовує лише локальні словники застосунку. На мобільному пристрої підказки надає клавіатура вашого пристрою, тож конфіденційність залежить від її налаштувань</translation>
     </message>
     <message>
         <source>Skips spelling checks for capitalized words and acronyms</source>
-        <translation type="unfinished"></translation>
+        <translation>Пропускає перевірку правопису для слів з великої літери та абревіатур</translation>
     </message>
     <message>
         <source>Dictionaries</source>
-        <translation type="unfinished"></translation>
+        <translation>Словники</translation>
     </message>
     <message>
         <source>Time Format</source>
@@ -10562,12 +10568,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Змінити мову</translation>
     </message>
     <message>
-        <source>Display language has been changed. You must restart the application for changes to take effect.</source>
-        <translation>Мову інтерфейсу змінено. Щоб зміни набули чинності, перезапустіть застосунок.</translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation>Перезапустити</translation>
+        <source>To show Status in the new language, you will be logged out and back in.</source>
+        <translation>Щоб показати Status новою мовою, буде виконано вихід і повторний вхід.</translation>
     </message>
 </context>
 <context>
@@ -11782,7 +11784,7 @@ to load</source>
     </message>
     <message>
         <source>Create Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Створити гілку</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -12465,7 +12467,7 @@ to load</source>
     <name>NetworkSelectPopup</name>
     <message>
         <source>All networks</source>
-        <translation type="unfinished"></translation>
+        <translation>Усі мережі</translation>
     </message>
     <message>
         <source>Manage networks</source>
@@ -12606,14 +12608,14 @@ to load</source>
     <message>
         <source>NEW</source>
         <comment>new message(s)</comment>
-        <translation type="unfinished">НОВЕ</translation>
+        <translation>НОВЕ</translation>
     </message>
     <message numerus="yes">
         <source>%n new message(s) since %1</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n нове повідомлення з %1</numerusform>
+            <numerusform>%n нові повідомлення з %1</numerusform>
+            <numerusform>%n нових повідомлень з %1</numerusform>
         </translation>
     </message>
 </context>
@@ -12762,7 +12764,7 @@ to load</source>
     <name>NotificationAdaptorMessenger</name>
     <message>
         <source>Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Гілка</translation>
     </message>
     <message>
         <source>GIF</source>
@@ -13829,7 +13831,7 @@ to load</source>
     <name>Popups</name>
     <message>
         <source>Cannot move the profile key pair to Keycard: failed to remove the saved password, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося перенести пару ключів профілю на Keycard: не вдалося видалити збережений пароль, спробуйте ще раз</translation>
     </message>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
@@ -14273,31 +14275,31 @@ to load</source>
     <name>ProfileEncryptionMigrationFlow</name>
     <message>
         <source>Failed to migrate to the new encryption format: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося перейти на новий формат шифрування: %1</translation>
     </message>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Біометричний вхід вимкнено — увімкніть його знову в налаштуваннях</translation>
     </message>
     <message>
         <source>Updating encryption</source>
-        <translation type="unfinished"></translation>
+        <translation>Оновлення шифрування</translation>
     </message>
     <message>
         <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторне шифрування ваших даних у новому форматі. Це може тривати деякий час — не закривайте застосунок і не вимикайте пристрій.</translation>
     </message>
     <message>
         <source>Encryption updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Шифрування оновлено</translation>
     </message>
     <message>
-        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
-        <translation type="unfinished"></translation>
+        <source>Your profile was migrated to the new encryption format. Log in again to complete the process.</source>
+        <translation>Ваш профіль перенесено на новий формат шифрування. Увійдіть знову, щоб завершити процес.</translation>
     </message>
     <message>
-        <source>Restart Status</source>
-        <translation type="unfinished">Перезапустити Status</translation>
+        <source>Log in again</source>
+        <translation>Увійти знову</translation>
     </message>
 </context>
 <context>
@@ -14332,6 +14334,10 @@ to load</source>
     <message>
         <source>Contacts</source>
         <translation>Контакти</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
+        <translation>Закрийте та знову відкрийте Status, щоб застосувати новий масштаб інтерфейсу</translation>
     </message>
 </context>
 <context>
@@ -15889,6 +15895,53 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>SessionTransitionView</name>
+    <message>
+        <source>Finishing background work…</source>
+        <translation>Завершення фонових завдань…</translation>
+    </message>
+    <message>
+        <source>Still signing out…</source>
+        <translation>Вихід усе ще триває…</translation>
+    </message>
+    <message>
+        <source>Signing out did not complete</source>
+        <translation>Не вдалося завершити вихід</translation>
+    </message>
+    <message>
+        <source>Signed out, but Status could not get ready</source>
+        <translation>Вихід виконано, але Status не вдалося підготуватися</translation>
+    </message>
+    <message>
+        <source>Signing out…</source>
+        <translation>Вихід…</translation>
+    </message>
+    <message>
+        <source>This is taking longer than usual. Status continues by itself once it&apos;s done, or you can close it now.</source>
+        <translation>Це триває довше, ніж зазвичай. Status продовжить роботу самостійно, щойно все завершиться, або ви можете закрити його зараз.</translation>
+    </message>
+    <message>
+        <source>Your account may still be signed in. Try again, or close Status.</source>
+        <translation>Можливо, ви все ще в обліковому записі. Спробуйте ще раз або закрийте Status.</translation>
+    </message>
+    <message>
+        <source>Your account is signed out, but the login screen could not be prepared. Try again, or close Status.</source>
+        <translation>Вихід з облікового запису виконано, але не вдалося підготувати екран входу. Спробуйте ще раз або закрийте Status.</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Повторити</translation>
+    </message>
+    <message>
+        <source>Close Status</source>
+        <translation>Закрити Status</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Вийти з програми</translation>
+    </message>
+</context>
+<context>
     <name>SettingsDirtyToastMessage</name>
     <message>
         <source>Changes detected</source>
@@ -16006,8 +16059,8 @@ to load</source>
         <translation>Про Status</translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>Вийти й закрити</translation>
+        <source>Sign out</source>
+        <translation>Вийти</translation>
     </message>
     <message>
         <source>On-device backup</source>
@@ -16060,14 +16113,14 @@ to load</source>
     <name>ShareComposer</name>
     <message>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>Повідомлення</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationDelegate</name>
     <message numerus="yes">
         <source>%n member(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n учасник</numerusform>
             <numerusform>%n учасники</numerusform>
             <numerusform>%n учасників</numerusform>
@@ -16078,41 +16131,41 @@ to load</source>
     <name>ShareDestinationList</name>
     <message>
         <source>No destinations found</source>
-        <translation type="unfinished"></translation>
+        <translation>Отримувачів не знайдено</translation>
     </message>
     <message>
         <source>Nothing selected yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Ще нічого не вибрано</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationPickerPanel</name>
     <message>
         <source>Share</source>
-        <translation type="unfinished"></translation>
+        <translation>Поділитися</translation>
     </message>
     <message>
         <source>Search chats and channels</source>
-        <translation type="unfinished"></translation>
+        <translation>Пошук чатів і каналів</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationTabBar</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Усі</translation>
+        <translation>Усі</translation>
     </message>
     <message>
         <source>Contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Контакти</translation>
     </message>
     <message>
         <source>Groups</source>
-        <translation type="unfinished"></translation>
+        <translation>Групи</translation>
     </message>
     <message>
         <source>Communities</source>
-        <translation type="unfinished">Спільноти</translation>
+        <translation>Спільноти</translation>
     </message>
 </context>
 <context>
@@ -16376,19 +16429,15 @@ to load</source>
     <name>SignOutConfirmationDialog</name>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished">Вийти</translation>
+        <translation>Вийти</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished">Переконайтеся, що зберегли пароль рахунку та фразу відновлення. Без них ви можете втратити доступ до рахунку та коштів.</translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Вийти й закрити</translation>
+        <translation>Переконайтеся, що ви зберегли пароль облікового запису та фразу відновлення. Без них ви можете втратити доступ до облікового запису та кошти.</translation>
     </message>
     <message>
         <source>Failed to turn off automatic login — sign out aborted, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося вимкнути автоматичний вхід — вихід скасовано, спробуйте ще раз</translation>
     </message>
 </context>
 <context>
@@ -16683,11 +16732,11 @@ to load</source>
     <name>StatusChatInput</name>
     <message>
         <source>Reply in %1, also send to %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Відповісти в %1, також надіслати в %2</translation>
     </message>
     <message>
         <source>Reply in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Відповісти в %1</translation>
     </message>
     <message>
         <source>Type something</source>
@@ -16735,86 +16784,86 @@ to load</source>
     </message>
     <message>
         <source>Add a thread name (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Додайте назву гілки (необов’язково)</translation>
     </message>
     <message>
         <source>Also send to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Також надіслати в %1</translation>
     </message>
     <message>
         <source>Confirm</source>
-        <translation type="unfinished">Підтвердити</translation>
+        <translation>Підтвердити</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Відповісти</translation>
+        <translation>Відповісти</translation>
     </message>
     <message>
         <source>Send</source>
-        <translation type="unfinished">Надіслати</translation>
+        <translation>Надіслати</translation>
     </message>
 </context>
 <context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
-        <translation type="unfinished"></translation>
+        <translation>Форматування</translation>
     </message>
     <message>
         <source>Bold</source>
-        <translation type="unfinished"></translation>
+        <translation>Жирний</translation>
     </message>
     <message>
         <source>Italics</source>
-        <translation type="unfinished"></translation>
+        <translation>Курсив</translation>
     </message>
     <message>
         <source>Strike through</source>
-        <translation type="unfinished"></translation>
+        <translation>Закреслений</translation>
     </message>
     <message>
         <source>Quote</source>
-        <translation type="unfinished"></translation>
+        <translation>Цитата</translation>
     </message>
     <message>
         <source>Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Код</translation>
     </message>
     <message>
         <source>Start a new thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Почати нову гілку</translation>
     </message>
     <message>
         <source>Camera</source>
-        <translation type="unfinished"></translation>
+        <translation>Камера</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Зображення</translation>
     </message>
     <message>
         <source>Payment</source>
-        <translation type="unfinished"></translation>
+        <translation>Платіж</translation>
     </message>
     <message>
         <source>Mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Згадка</translation>
     </message>
     <message>
         <source>Emojis</source>
-        <translation type="unfinished"></translation>
+        <translation>Емодзі</translation>
     </message>
     <message>
         <source>Stickers</source>
-        <translation type="unfinished"></translation>
+        <translation>Стікери</translation>
     </message>
     <message>
         <source>GIFs</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Reply in thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Відповісти в гілці</translation>
     </message>
 </context>
 <context>
@@ -16888,7 +16937,7 @@ to load</source>
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Пошук</translation>
+        <translation>Пошук</translation>
     </message>
 </context>
 <context>
@@ -17094,7 +17143,7 @@ to load</source>
     <name>StatusLanguageSelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished">Пошук</translation>
+        <translation>Пошук</translation>
     </message>
 </context>
 <context>
@@ -17250,7 +17299,7 @@ to load</source>
     </message>
     <message>
         <source>Upload image</source>
-        <translation type="unfinished">Завантажити зображення</translation>
+        <translation>Завантажити зображення</translation>
     </message>
     <message>
         <source>Camera is not available</source>
@@ -17272,19 +17321,19 @@ to load</source>
     </message>
     <message>
         <source>Search in</source>
-        <translation type="unfinished"></translation>
+        <translation>Шукати в</translation>
     </message>
     <message>
         <source>Loading threads…</source>
-        <translation type="unfinished"></translation>
+        <translation>Завантаження гілок…</translation>
     </message>
     <message>
         <source>Couldn&apos;t load threads. Retry</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося завантажити гілки. Повторити</translation>
     </message>
     <message>
         <source>No threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Гілок немає</translation>
     </message>
 </context>
 <context>
@@ -17456,11 +17505,11 @@ to load</source>
     <name>StatusTextEditMenu</name>
     <message>
         <source>Checking spelling...</source>
-        <translation type="unfinished"></translation>
+        <translation>Перевірка правопису...</translation>
     </message>
     <message>
         <source>No suggestions</source>
-        <translation type="unfinished"></translation>
+        <translation>Немає варіантів</translation>
     </message>
     <message>
         <source>Cut</source>
@@ -17562,31 +17611,31 @@ to load</source>
     <name>StayLoggedInSectionView</name>
     <message>
         <source>Save password on this device for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Зберегти пароль на цьому пристрої для автоматичного входу</translation>
     </message>
     <message>
         <source>Your password is stored using your&lt;br/&gt;system&apos;s default secure storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш пароль зберігається в стандартному&lt;br/&gt;захищеному сховищі вашої системи</translation>
     </message>
     <message>
         <source>Secure storage is unavailable on this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Захищене сховище недоступне на цьому пристрої.</translation>
     </message>
     <message>
         <source>Not available for Keycard profiles - the Keycard is always required to log in.</source>
-        <translation type="unfinished"></translation>
+        <translation>Недоступно для профілів Keycard — для входу завжди потрібна Keycard.</translation>
     </message>
     <message>
         <source>To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.</source>
-        <translation type="unfinished"></translation>
+        <translation>Щоб скористатися цією функцією, оновіть пароль (можна ввести той самий) або перейдіть на новий формат шифрування.</translation>
     </message>
     <message>
         <source>Migrate to the new encryption format</source>
-        <translation type="unfinished"></translation>
+        <translation>Перейти на новий формат шифрування</translation>
     </message>
     <message>
         <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторне шифрування ваших даних у новому форматі. Це може тривати деякий час — не закривайте застосунок і не вимикайте пристрій.</translation>
     </message>
 </context>
 <context>
@@ -18280,7 +18329,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Search in downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Пошук у завантаженнях</translation>
     </message>
     <message>
         <source>Edit bookmark</source>
@@ -18423,16 +18472,16 @@ This action cannot be undone.</source>
         <translation>Залиште відгук або запропонуйте вдосконалення на %1.</translation>
     </message>
     <message>
-        <source>Disable services and restart the app</source>
-        <translation>Вимкнути сервіси та перезапустити застосунок</translation>
-    </message>
-    <message>
-        <source>Enable services and restart the app</source>
-        <translation>Увімкнути сервіси та перезапустити застосунок</translation>
+        <source>Enable services and log in again</source>
+        <translation>Увімкнути сервіси й увійти знову</translation>
     </message>
     <message>
         <source>Disable third-party services</source>
         <translation>Вимкнути сторонні сервіси</translation>
+    </message>
+    <message>
+        <source>Disable services and log in again</source>
+        <translation>Вимкнути сервіси й увійти знову</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
@@ -18455,11 +18504,11 @@ This action cannot be undone.</source>
     <name>ThreadCard</name>
     <message>
         <source>deleted this thread</source>
-        <translation type="unfinished"></translation>
+        <translation>видаляє цю гілку</translation>
     </message>
     <message numerus="yes">
         <source>%n message(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n повідомлення</numerusform>
             <numerusform>%n повідомлення</numerusform>
             <numerusform>%n повідомлень</numerusform>
@@ -18470,83 +18519,83 @@ This action cannot be undone.</source>
     <name>ThreadContextMenu</name>
     <message>
         <source>Edit name</source>
-        <translation type="unfinished"></translation>
+        <translation>Змінити назву</translation>
     </message>
     <message>
         <source>Unfollow</source>
-        <translation type="unfinished"></translation>
+        <translation>Не відстежувати</translation>
     </message>
     <message>
         <source>Follow</source>
-        <translation type="unfinished"></translation>
+        <translation>Відстежувати</translation>
     </message>
     <message>
         <source>Mute thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Вимкнути гілку</translation>
     </message>
     <message>
         <source>Unmute thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Увімкнути гілку</translation>
     </message>
     <message>
         <source>Mark as read</source>
-        <translation type="unfinished">Прочитане</translation>
+        <translation>Прочитане</translation>
     </message>
     <message>
         <source>Share link</source>
-        <translation type="unfinished">Поділитися</translation>
+        <translation>Поділитися</translation>
     </message>
     <message>
         <source>Copy link</source>
-        <translation type="unfinished">Копіювати посилання</translation>
+        <translation>Копіювати посилання</translation>
     </message>
     <message>
         <source>Copied</source>
-        <translation type="unfinished">Скопійовано</translation>
+        <translation>Скопійовано</translation>
     </message>
     <message>
         <source>Unpin from list</source>
-        <translation type="unfinished"></translation>
+        <translation>Відкріпити у списку</translation>
     </message>
     <message>
         <source>Pin to list</source>
-        <translation type="unfinished"></translation>
+        <translation>Закріпити у списку</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Видалити</translation>
+        <translation>Видалити</translation>
     </message>
     <message>
         <source>Delete this thread?</source>
-        <translation type="unfinished"></translation>
+        <translation>Видалити цю гілку?</translation>
     </message>
     <message>
         <source>Are you sure you want to delete this thread? It may remain visible on other participants&apos; devices.</source>
-        <translation type="unfinished"></translation>
+        <translation>Справді видалити цю гілку? Вона може залишатися видимою на пристроях інших учасників.</translation>
     </message>
 </context>
 <context>
     <name>ThreadHeader</name>
     <message>
         <source>Couldn&apos;t rename thread: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося перейменувати гілку: %1</translation>
     </message>
     <message>
         <source>Thread name</source>
-        <translation type="unfinished"></translation>
+        <translation>Назва гілки</translation>
     </message>
     <message>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>у %1</translation>
     </message>
     <message>
         <source>Renaming...</source>
-        <translation type="unfinished"></translation>
+        <translation>Перейменування...</translation>
     </message>
     <message>
         <source>More</source>
-        <translation type="unfinished">Більше</translation>
+        <translation>Більше</translation>
     </message>
 </context>
 <context>
@@ -18902,48 +18951,48 @@ This action cannot be undone.</source>
     <name>TrafficAnswerCard</name>
     <message>
         <source>Where does the traffic go?</source>
-        <translation type="unfinished"></translation>
+        <translation>Куди йде трафік?</translation>
     </message>
 </context>
 <context>
     <name>TrafficFormat</name>
     <message>
         <source>—/h</source>
-        <translation type="unfinished"></translation>
+        <translation>—/год</translation>
     </message>
     <message>
         <source>%1/h</source>
-        <translation type="unfinished"></translation>
+        <translation>%1/год</translation>
     </message>
     <message>
         <source>↑ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ %1</translation>
     </message>
     <message>
         <source>↓ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ %1</translation>
     </message>
 </context>
 <context>
     <name>TrafficLegend</name>
     <message>
         <source>%1 sent · %2 received · bold = total since start · chip = per hour</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 надіслано · %2 отримано · жирний = усього від запуску · позначка = за годину</translation>
     </message>
     <message>
         <source>↑</source>
-        <translation type="unfinished"></translation>
+        <translation>↑</translation>
     </message>
     <message>
         <source>↓</source>
-        <translation type="unfinished"></translation>
+        <translation>↓</translation>
     </message>
 </context>
 <context>
     <name>TrafficShares</name>
     <message>
         <source>%1%</source>
-        <translation type="unfinished">%1%</translation>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>
@@ -19518,8 +19567,12 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>Налаштування</translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>Вийти й закрити</translation>
+        <source>Sign out</source>
+        <translation>Вийти</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Вийти з програми</translation>
     </message>
     <message>
         <source>Always online</source>
@@ -19856,135 +19909,135 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WakuTrafficDashboard</name>
     <message>
         <source>Relay</source>
-        <translation type="unfinished"></translation>
+        <translation>Relay</translation>
     </message>
     <message>
         <source>messages of every chat on your shards pass through you</source>
-        <translation type="unfinished"></translation>
+        <translation>повідомлення всіх чатів у ваших шардах проходять через вас</translation>
     </message>
     <message>
         <source>Store</source>
-        <translation type="unfinished"></translation>
+        <translation>Store</translation>
     </message>
     <message>
         <source>history fetched after start and after reconnects</source>
-        <translation type="unfinished"></translation>
+        <translation>історія, отримана після запуску та після повторних підключень</translation>
     </message>
     <message>
         <source>Filter</source>
-        <translation type="unfinished">Фільтр</translation>
+        <translation>Filter</translation>
     </message>
     <message>
         <source>messages of your chats, pushed by a service node</source>
-        <translation type="unfinished"></translation>
+        <translation>повідомлення ваших чатів, які надсилає сервісний вузол</translation>
     </message>
     <message>
         <source>Filter subscriptions</source>
-        <translation type="unfinished"></translation>
+        <translation>Підписки Filter</translation>
     </message>
     <message>
         <source>telling a service node which chats you follow</source>
-        <translation type="unfinished"></translation>
+        <translation>повідомлення сервісному вузлу, які чати ви відстежуєте</translation>
     </message>
     <message>
         <source>Lightpush</source>
-        <translation type="unfinished"></translation>
+        <translation>Lightpush</translation>
     </message>
     <message>
         <source>your messages, handed to a service node to publish</source>
-        <translation type="unfinished"></translation>
+        <translation>ваші повідомлення, передані сервісному вузлу для публікації</translation>
     </message>
     <message>
         <source>Peer exchange</source>
-        <translation type="unfinished"></translation>
+        <translation>Обмін вузлами</translation>
     </message>
     <message>
         <source>asking peers for more peers</source>
-        <translation type="unfinished"></translation>
+        <translation>запити до вузлів про інші вузли</translation>
     </message>
     <message>
         <source>Metadata</source>
-        <translation type="unfinished"></translation>
+        <translation>Метадані</translation>
     </message>
     <message>
         <source>comparing shards with a new peer</source>
-        <translation type="unfinished"></translation>
+        <translation>порівняння шардів із новим вузлом</translation>
     </message>
     <message>
         <source>Identify</source>
-        <translation type="unfinished"></translation>
+        <translation>Identify</translation>
     </message>
     <message>
         <source>peers telling each other what they support</source>
-        <translation type="unfinished"></translation>
+        <translation>вузли повідомляють один одному, що вони підтримують</translation>
     </message>
     <message>
         <source>Ping</source>
-        <translation type="unfinished"></translation>
+        <translation>Ping</translation>
     </message>
     <message>
         <source>keeping connections alive</source>
-        <translation type="unfinished"></translation>
+        <translation>підтримання з’єднань</translation>
     </message>
     <message>
         <source>Protocol negotiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Узгодження протоколу</translation>
     </message>
     <message>
         <source>streams that have not agreed on a protocol yet</source>
-        <translation type="unfinished"></translation>
+        <translation>потоки, які ще не узгодили протокол</translation>
     </message>
     <message>
         <source>No Waku traffic yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Трафіку Waku ще немає.</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; усього трафіку.</translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Здебільшого &lt;b&gt;%1&lt;/b&gt;: %2.</translation>
     </message>
     <message>
         <source>upload</source>
-        <translation type="unfinished"></translation>
+        <translation>вивантаження</translation>
     </message>
     <message>
         <source>download</source>
-        <translation type="unfinished"></translation>
+        <translation>завантаження</translation>
     </message>
     <message>
         <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Далі: &lt;b&gt;%1&lt;/b&gt; %2.</translation>
     </message>
     <message numerus="yes">
         <source>%n other peer(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n інший вузол</numerusform>
+            <numerusform>%n інші вузли</numerusform>
+            <numerusform>%n інших вузлів</numerusform>
         </translation>
     </message>
     <message>
         <source>↑ Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ Надіслано</translation>
     </message>
     <message>
         <source>↓ Received</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ Отримано</translation>
     </message>
     <message>
         <source>Protocols</source>
-        <translation type="unfinished"></translation>
+        <translation>Протоколи</translation>
     </message>
     <message>
         <source>Which peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Які вузли</translation>
     </message>
     <message>
         <source>counted inside libp2p streams, without encryption and connection overhead</source>
-        <translation type="unfinished"></translation>
+        <translation>враховано всередині потоків libp2p, без накладних витрат на шифрування та з’єднання</translation>
     </message>
 </context>
 <context>

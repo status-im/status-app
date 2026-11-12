@@ -1210,10 +1210,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The app will restart if you confirm.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Choose a number between 1 and 50</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1294,6 +1290,10 @@
     </message>
     <message>
         <source>Are you sure you want to enable debug mode?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1807,6 +1807,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2120,7 +2124,15 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Save</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4126,28 +4138,9 @@ file format</source>
     </message>
 </context>
 <context>
-    <name>ConfirmAppRestartModal</name>
-    <message>
-        <source>Application Restart</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Please restart the application to apply the changes.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ConfirmChangePasswordModal</name>
     <message>
         <source>Re-encryption complete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4163,10 +4156,6 @@ file format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Password changed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4179,7 +4168,15 @@ file format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Restart Status and log in using your new password</source>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — you stay logged in.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires logging in again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log in again with your new password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4207,7 +4204,7 @@ file format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Restart Status</source>
+        <source>Log in again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4716,7 +4713,7 @@ Log in with your new password.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Restart Status and log in with new password</source>
+        <source>Log in with new password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6736,7 +6733,7 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Restart required for changes to take effect</source>
+        <source>Log in again for changes to take effect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6776,19 +6773,19 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>RPC URL change requires app restart</source>
+        <source>RPC URL change requires logging in again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>For new JSON RPC URLs to take effect, Status must be restarted. Are you ready to do this now?</source>
+        <source>For new JSON RPC URLs to take effect, you need to log in again. Are you ready to do this now?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Save and restart later</source>
+        <source>Save and log in later</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Save and restart Status</source>
+        <source>Save and log in again</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8182,6 +8179,14 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Change fleet to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to change the fleet</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9821,6 +9826,10 @@ app: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Sign out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>No PIN? Skip</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9934,10 +9943,6 @@ app: %2</source>
     </message>
     <message>
         <source>Profile key pair has been moved to Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Quit and restart Status</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10497,11 +10502,7 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Display language has been changed. You must restart the application for changes to take effect.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restart</source>
+        <source>To show Status in the new language, you will be logged out and back in.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14201,11 +14202,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
+        <source>Your profile was migrated to the new encryption format. Log in again to complete the process.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Restart Status</source>
+        <source>Log in again</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14240,6 +14241,10 @@ to load</source>
     <name>ProfileLayout</name>
     <message>
         <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15796,6 +15801,53 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>SessionTransitionView</name>
+    <message>
+        <source>Finishing background work…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Still signing out…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing out did not complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signed out, but Status could not get ready</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing out…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is taking longer than usual. Status continues by itself once it&apos;s done, or you can close it now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your account may still be signed in. Try again, or close Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your account is signed out, but the login screen could not be prepared. Try again, or close Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SettingsDirtyToastMessage</name>
     <message>
         <source>Changes detected</source>
@@ -15913,7 +15965,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
+        <source>Sign out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16282,10 +16334,6 @@ to load</source>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -18316,15 +18364,15 @@ This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Disable services and restart the app</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable services and restart the app</source>
+        <source>Enable services and log in again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Disable third-party services</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disable services and log in again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -19397,7 +19445,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
+        <source>Sign out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
