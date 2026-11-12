@@ -565,6 +565,18 @@ class OnboardingCreatePasswordView(OnboardingView):
         self.create_password_view = QObject(onboarding_names.createPasswordView)
         self.password_strength_indicator = QObject(onboarding_names.passwordStrengthIndicator)
         self.password_component_indicator = QObject(onboarding_names.passwordComponentIndicator)
+        self.stay_logged_in_switch = QObject(onboarding_names.stayLoggedInSwitch)
+
+    @allure.step('Set stay logged in switch')
+    def set_stay_logged_in(self, enabled: bool):
+        self.stay_logged_in_switch.wait_until_appears()
+        if self.stay_logged_in_switch.is_checked == enabled:
+            return
+        self.stay_logged_in_switch.click()
+        assert driver.waitFor(
+            lambda: self.stay_logged_in_switch.is_checked == enabled,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), f'Save password switch did not become {enabled}'
 
     @allure.step('Set password and open Confirmation password view')
     def create_password(self, value: str):
