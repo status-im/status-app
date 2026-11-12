@@ -77,6 +77,7 @@ Item {
         contentWidth: root.width * 4 / 5
 
         nativeWindowDpr: d.nativeWindowDpr
+        restartSupported: restartSupportedCheckBox.checked
 
         theme: ThemeUtils.Style.System
         onThemeChangeRequested: function(theme) {
@@ -84,7 +85,15 @@ Item {
             this.theme = theme
         }
 
-        onRestartRequested: console.info("AppearanceView.onRestartRequested")
+        onZoomChangeSaved: console.info("AppearanceView.onZoomChangeSaved")
+    }
+
+    CheckBox {
+        id: restartSupportedCheckBox
+        anchors.top: parent.top
+        anchors.right: parent.right
+        text: "Restart supported (off: iOS)"
+        checked: true
     }
 }
 
