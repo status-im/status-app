@@ -323,7 +323,7 @@ StatusSectionLayout {
                         FastExpressionFilter {
                             expression: {
                                 root.collectiblesStore.collectiblesController.revision
-                                return root.collectiblesStore.collectiblesController.filterAcceptsKey(model.uid) // TODO: use token/group key
+                                return root.collectiblesStore.collectiblesController.filterAcceptsKey(model.key)
                             }
                             expectedRoles: ["uid"]
                         }
