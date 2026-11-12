@@ -29,7 +29,7 @@ NEW_PASSWORD = 'StatusPass1!'
 @allure.title('Wallet settings — Stop using Keycard for profile key pair')
 @allure.description(
     'Keycard profile → Wallet settings → profile keypair menu → Stop using Keycard → '
-    'confirm → seed → new password → re-encrypt → restart without clicking Quit → '
+    'confirm → seed → new password → re-encrypt → restart without clicking Sign out → '
     'password login → keypair shows On device'
 )
 def test_settings_stop_using_keycard_for_profile(keycard_simulator, main_window, aut: AUT):
