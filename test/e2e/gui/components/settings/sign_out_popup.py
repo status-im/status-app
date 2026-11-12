@@ -16,16 +16,16 @@ class SignOutPopup(QObject):
     def __init__(self):
         super().__init__(settings_names.signOutDialog)
         self.sign_out_dialog = QObject(settings_names.signOutDialog)
-        self._sign_out_and_quit_button = Button(settings_names.signOutConfirmationButton)
+        self._sign_out_button = Button(settings_names.signOutConfirmationButton)
 
-    @allure.step('Click sign out and quit button')
-    def sign_out_and_quit(self, attempts: int = 3):
+    @allure.step('Click sign out button')
+    def sign_out(self, attempts: int = 3):
         last_exception = None
         for attempt in range(1, attempts + 1):
             try:
                 self.wait_until_appears()
-                self._sign_out_and_quit_button.wait_until_appears()
-                self._sign_out_and_quit_button.wait_until_enabled(
+                self._sign_out_button.wait_until_appears()
+                self._sign_out_button.wait_until_enabled(
                     timeout_msec=configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
                 )
 
@@ -34,7 +34,7 @@ class SignOutPopup(QObject):
 
                 # TODO https://github.com/status-im/status-app/issues/15345
                 # mouseClick() waits for AUT response and can block up to Squish's 300s timeout
-                self._sign_out_and_quit_button.native_mouse_click()
+                self._sign_out_button.native_mouse_click()
                 return
             except Exception as exc:
                 LOG.info('Sign out attempt #%s failed: %s', attempt, exc)

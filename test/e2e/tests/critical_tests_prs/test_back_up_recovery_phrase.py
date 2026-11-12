@@ -1,11 +1,13 @@
 import pytest
 from allure import step
 
+import configs
 import constants
 from driver.aut import AUT
 from gui.components.back_up_your_seed_phrase_banner import BackUpSeedPhraseBanner
 
 from gui.main_window import MainWindow
+from gui.screens.onboarding import ReturningLoginView
 
 @pytest.mark.critical  # TODO 'https://github.com/status-im/status-desktop/issues/13013'
 @pytest.mark.smoke
@@ -46,6 +48,9 @@ def test_back_up_recovery_phrase_sign_out(
         assert not settings.left_panel.settings_section_back_up_seed_option.exists, f"Back up seed option is present"
         assert not BackUpSeedPhraseBanner().back_up_seed_banner.exists, "Back up seed banner is present"
 
-    with step('Click sign out and quit in settings'):
-        sign_out_screen = settings.left_panel.open_sign_out_and_quit()
-        sign_out_screen.sign_out_and_quit()
+    with step('Sign out in settings'):
+        sign_out_screen = settings.left_panel.open_sign_out()
+        sign_out_screen.sign_out()
+
+    with step('The login screen follows in the same app'):
+        ReturningLoginView().wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)

@@ -68,9 +68,9 @@ class SettingsLeftPanel(QObject):
     def open_syncing_settings(self) -> 'SyncingSettingsView':
         return SyncingSettingsView().wait_until_appears()
 
-    @allure.step('Choose sign out and quit in settings')
+    @allure.step('Choose sign out in settings')
     @retry_settings(SignOutPopup, '100-MenuItem')
-    def open_sign_out_and_quit(self) -> 'SignOutPopup':
+    def open_sign_out(self) -> 'SignOutPopup':
         return SignOutPopup().wait_until_appears()
 
     @allure.step('Open ENS usernames settings')

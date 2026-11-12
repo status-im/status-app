@@ -17,7 +17,7 @@ class TestBackupRecoveryPhrase(StepMixin):
             assert settings.is_loaded(), "Settings not detected"
 
         async with self.step(self.device, "Sign out"):
-            assert settings.open_sign_out_and_quit(), "Failed to open 'Sign out & Quit'"
+            assert settings.open_sign_out(), "Failed to open 'Sign out'"
             assert settings.confirm_sign_out(), "Failed to confirm sign out"
 
         async with self.step(self.device, "Verify authentication required"):
