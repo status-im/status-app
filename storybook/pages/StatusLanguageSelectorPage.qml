@@ -22,13 +22,38 @@ SplitView {
         SplitView.fillHeight: true
 
         StatusLanguageSelector {
+            property var activeLanguages: [ctrlCurrentLanguage.text]
+
             anchors.centerIn: parent
             enabled: ctrlEnabled.checked
             languageCodes: ctrlLanguageCodes.text.split(',')
-            activeLanguageCodes: [ctrlCurrentLanguage.text]
+            activeLanguageCodes: activeLanguages
+            selectMultiple: ctrlMultipleSelection.checked
+            disabledLanguageCodes: selectMultiple ? [ctrlCurrentLanguage.text] : []
+            Binding on display {
+                when: !ctrlWithIcon.checked
+                value: Button.TextOnly
+            }
+
             onLanguageSelected: function(languageCode) {
+                if (selectMultiple)
+                    return
                 logs.logEvent("onChangeLanguageRequested", ["languageCode"], arguments)
-                activeLanguageCodes = [languageCode]
+                activeLanguages = [languageCode]
+            }
+            onLanguageToggled: function(code, checked) {
+                if (!selectMultiple)
+                    return
+                logs.logEvent("onLanguageToggled", ["languageCode", "checked"], arguments)
+                if (checked) {
+                    const active = [...activeLanguages]
+                    active.push(code)
+                    activeLanguages = active
+                } else {
+                    const active = [...activeLanguages]
+                    active.splice(active.indexOf(code), 1)
+                    activeLanguages = active
+                }
             }
         }
     }
@@ -36,8 +61,8 @@ SplitView {
     LogsAndControlsPanel {
         id: logsAndControlsPanel
 
-        SplitView.minimumHeight: 200
-        SplitView.preferredHeight: 200
+        SplitView.minimumHeight: 250
+        SplitView.preferredHeight: 250
 
         logsView.logText: logs.logText
 
@@ -46,6 +71,17 @@ SplitView {
             Switch {
                 id: ctrlEnabled
                 text: "Enabled"
+                checked: true
+            }
+            Switch {
+                Layout.leftMargin: 16
+                id: ctrlMultipleSelection
+                text: "Multiple selection"
+                enabled: ctrlEnabled.checked
+            }
+            Switch {
+                id: ctrlWithIcon
+                text: "With icon"
                 checked: true
             }
             RowLayout {
