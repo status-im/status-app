@@ -77,7 +77,7 @@ SettingsContentBase {
                 id: languagePicker
                 objectName: "languageViewLanguageSelector"
                 languageCodes: root.availableLanguages
-                activeLanguageCodes: [root.currentLanguage || "en"]
+                activeLanguageCodes: [root.currentLanguage || LanguageService.defaultLanguageCode]
                 onLanguageSelected: (languageCode) =>
                                     languageConfirmationDialog.createObject(root, {oldCode: root.currentLanguage, newCode: languageCode}).open()
             }
@@ -147,7 +147,7 @@ SettingsContentBase {
                 selectMultiple: true
                 languageCodes: root.availableSpellcheckLanguages
                 activeLanguageCodes: root.activeSpellcheckLanguages
-                disabledLanguageCodes: ["en"]
+                disabledLanguageCodes: [LanguageService.defaultLanguageCode]
                 display: Button.TextOnly
                 onLanguageToggled: (code, checked) => root.enableSpellcheckLanguageRequested(code, checked)
             }
