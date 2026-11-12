@@ -9,6 +9,10 @@
 #include "StatusQ/chattextitem.h"
 #include "StatusQ/chattextappearance.h"
 #include "StatusQ/chatsinglelinetextitem.h"
+#include "StatusQ/messageheaderappearance.h"
+#include "StatusQ/messageheaderdata.h"
+#include "StatusQ/messageheaderitem.h"
+#include "StatusQ/messageheaderservices.h"
 #include "StatusQ/fastexpressionfilter.h"
 #include "StatusQ/fastexpressionrole.h"
 #include "StatusQ/fastexpressionsorter.h"
@@ -101,6 +105,10 @@ void registerStatusQTypes() {
     qmlRegisterTypesAndRevisions<ChatTextSegment>("StatusQ", 0);
     qmlRegisterType<ChatSingleLineTextItem>("StatusQ", 0, 1, "ChatSingleLineTextItem");
     qmlRegisterType<ChatTextAppearance>("StatusQ", 0, 1, "ChatTextAppearance");
+    qmlRegisterTypesAndRevisions<MessageHeaderData>("StatusQ", 0);
+    qmlRegisterType<MessageHeaderItem>("StatusQ", 0, 1, "MessageHeaderItem");
+    qmlRegisterType<MessageHeaderAppearance>("StatusQ", 0, 1, "MessageHeaderAppearance");
+    qmlRegisterType<MessageHeaderServices>("StatusQ", 0, 1, "MessageHeaderServices");
     qmlRegisterType<ChatTextItem>("StatusQ", 0, 1, "ChatTextItem");
 
     qmlRegisterUncreatableType<QValidator>(

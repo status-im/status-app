@@ -119,6 +119,7 @@ StackLayout {
     property DelegatePool rowPool: null
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
 
     // Unfurling related data:
     property bool gifUnfurlingEnabled
@@ -329,6 +330,7 @@ StackLayout {
             rowPool: root.rowPool
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             sectionItemModel: root.sectionItemModel
             joinedMembersCount: root.sectionItemModel?.joinedMembersCount ?? 0
             areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled

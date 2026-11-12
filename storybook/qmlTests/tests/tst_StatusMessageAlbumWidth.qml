@@ -26,6 +26,7 @@ Item {
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
         theme: root.Theme
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 600
     height: 800
@@ -40,6 +41,7 @@ Item {
             StatusMessage {
                 textAppearance: root.textAppearance
                 previewAppearance: root.previewAppearance
+                headerServices: root.messageHeaderServices
                 objectName: "albumMessage"
 
                 Layout.fillWidth: true

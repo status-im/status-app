@@ -74,6 +74,9 @@ Item {
         theme: appMain.Theme
         selectionPalette: appMain.ApplicationWindow.window?.palette ?? systemPalette
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices {
+        theme: appMain.Theme
+    }
 
     focus: true
     Component.onCompleted: {
@@ -2439,6 +2442,7 @@ Item {
                         rowPool: appMain.messageRowPool
                         textAppearance: appMain.textAppearance
                         previewAppearance: appMain.previewAppearance
+                        messageHeaderServices: appMain.messageHeaderServices
 
                         createChatViewOpened: createChatView.opened
                         isPortraitMode: appMain.isPortraitMode
@@ -2646,6 +2650,7 @@ Item {
                             rowPool: appMain.messageRowPool
                             textAppearance: appMain.textAppearance
                             previewAppearance: appMain.previewAppearance
+                            messageHeaderServices: appMain.messageHeaderServices
 
                             createChatViewOpened: createChatView.opened
                             isPortraitMode: appMain.isPortraitMode

@@ -34,6 +34,7 @@ Item {
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
         theme: root.Theme
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 800
     height: 600
@@ -245,6 +246,7 @@ Item {
         ChatMessagesView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             width: root.width
             height: root.height
 
@@ -509,6 +511,34 @@ Item {
                 compare(row.content.textAppearance, root.previewAppearance)
                 compare(row.content.previewAppearance, root.textAppearance)
             }
+        }
+
+        // Each row's header shows that row's message, with the shared services,
+        // including rows reused for another chat.
+        function test_reusedRowsHeadersShowTheirOwnMessage() {
+            prewarmedPool()
+            const view = openView()
+            function verifyHeaders() {
+                let headers = 0
+                for (const row of rowItems(view)) {
+                    const header = findChild(row.content, "StatusMessage_header")
+                    if (!header)
+                        continue
+                    ++headers
+                    header.applyPendingChanges()
+                    compare(header.services, root.messageHeaderServices)
+                    compare(header.displayName, row.content.senderDisplayName)
+                    compare(header.headerData.timestamp, row.content.messageTimestamp)
+                }
+                verify(headers > 0, "some rows show a header")
+            }
+            verifyHeaders()
+            const original = rowItems(view).map(row => row.content)
+            view.messageStore = storeB
+            view.chatContentModule = moduleB
+            settle(view)
+            verify(rowItems(view).some(row => original.indexOf(row.content) >= 0), "a pooled row was reused")
+            verifyHeaders()
         }
 
         // Fewer items ready than the window wants: the rows wait for the pool

@@ -95,6 +95,7 @@ Item {
     property DelegatePool rowPool: null
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
     property bool stickersLoaded: false
 
     readonly property var chatContentModule: rootStore.currentChatContentModule() || null
@@ -730,6 +731,7 @@ Item {
                 delegate: ChatColumnView {
                     textAppearance: root.textAppearance
                     previewAppearance: root.previewAppearance
+                    messageHeaderServices: root.messageHeaderServices
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
@@ -916,6 +918,7 @@ Item {
             rowPool: root.rowPool
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost

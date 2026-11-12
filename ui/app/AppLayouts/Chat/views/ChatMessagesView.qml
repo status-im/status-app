@@ -59,6 +59,7 @@ Item {
     property DelegatePool rowPool: null
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
 
     // Users related data:
     property var usersModel
@@ -624,7 +625,7 @@ Item {
             "chatLogView", "chatContentModule", "formatBalance", "usersModel",
             "isChatBlocked", "joined", "sendViaPersonalChatEnabled",
             "messageLinkSharingEnabled", "threadsFeatureEnabled", "isThreadView",
-            "disabledTooltipText", "textAppearance", "previewAppearance",
+            "disabledTooltipText", "textAppearance", "previewAppearance", "messageHeaderServices",
             "areTestNetworksEnabled", "extraLeftPadding", "gifUnfurlingEnabled",
             "neverAskAboutUnfurlingAgain", "myPublicKey", "stickersLoaded"
         ]

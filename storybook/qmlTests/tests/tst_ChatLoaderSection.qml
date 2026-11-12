@@ -26,6 +26,7 @@ Item {
 
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance { theme: root.Theme }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 1000
     height: 700
@@ -283,6 +284,7 @@ Item {
         sourceComponent: ChatLoader {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             active: true
 
             userUID: "0xdeadbeef"

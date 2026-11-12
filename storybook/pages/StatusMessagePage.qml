@@ -23,6 +23,7 @@ SplitView {
         theme: root.Theme
         selectionPalette: root.palette
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     Logs { id: logs }
 
@@ -332,6 +333,7 @@ Some other comment there`
                 delegate: StatusMessage {
                     textAppearance: root.textAppearance
                     previewAppearance: root.previewAppearance
+                    headerServices: root.messageHeaderServices
                     readonly property bool hasThreadCard: index < 2
                                                           || model.message === d.messageWithThreeReactions[0].message
 

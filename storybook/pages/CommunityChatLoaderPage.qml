@@ -33,6 +33,7 @@ SplitView {
 
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance { theme: root.Theme }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     orientation: Qt.Vertical
 
@@ -156,6 +157,7 @@ SplitView {
                 sourceComponent: CommunityChatLoader {
                     textAppearance: root.textAppearance
                     previewAppearance: root.previewAppearance
+                    messageHeaderServices: root.messageHeaderServices
                     active: true
 
                     userUID: "0xdeadbeef"
