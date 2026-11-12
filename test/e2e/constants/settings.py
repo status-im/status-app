@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class PasswordView(Enum):
-    RESTART_STATUS = 'Restart Status'
+    LOG_IN_AGAIN = 'Log in again'
     CLOSE = 'Close'
