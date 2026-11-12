@@ -2385,6 +2385,52 @@ Item {
             compare(control.cursorPosition, data.to)
         }
 
+        // macOS only: Cmd+Backspace / Cmd+Delete remove to the start / end of the line.
+        function test_macLineDeletion_data() {
+            return [
+                {tag: "Cmd+Backspace", text: "alpha beta\ngamma delta", from: 16,
+                 key: Qt.Key_Backspace, expected: "alpha beta\n delta", to: 11},
+                {tag: "Cmd+Delete", text: "alpha beta\ngamma delta", from: 5,
+                 key: Qt.Key_Delete, expected: "alpha\ngamma delta", to: 5},
+                {tag: "Cmd+Backspace at line start", text: "alpha\nbeta", from: 6,
+                 key: Qt.Key_Backspace, expected: "alpha\nbeta", to: 6},
+                {tag: "Cmd+Delete at line end", text: "alpha\nbeta", from: 5,
+                 key: Qt.Key_Delete, expected: "alpha\nbeta", to: 5},
+                {tag: "Cmd+Backspace in quote keeps prefix", text: "> alpha beta", from: 8,
+                 key: Qt.Key_Backspace, expected: "> beta", to: 2},
+            ]
+        }
+
+        function test_macLineDeletion(data) {
+            if (Qt.platform.pluginName !== "cocoa")
+                skip("macOS-only key bindings")
+
+            control.text = data.text
+            control.forceActiveFocus()
+            control.cursorPosition = data.from
+
+            keyClick(data.key, Qt.ControlModifier)
+            compare(control.text, data.expected)
+            compare(control.cursorPosition, data.to)
+
+            if (data.expected !== data.text) {
+                keySequence(StandardKey.Undo)
+                compare(control.text, data.text)
+            }
+        }
+
+        function test_macLineDeletion_removesSelection() {
+            if (Qt.platform.pluginName !== "cocoa")
+                skip("macOS-only key bindings")
+
+            control.text = "alpha beta gamma"
+            control.forceActiveFocus()
+            control.select(6, 11)
+
+            keyClick(Qt.Key_Backspace, Qt.ControlModifier)
+            compare(control.text, "alpha gamma")
+        }
+
         // ── mentions behave as a single atomic object
         //
         // In ChatTextArea a mention is one embedded object char (U+FFFC), so the "mention acts
