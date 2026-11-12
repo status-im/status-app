@@ -52,6 +52,8 @@ suite "local path for community token artwork":
     let crop = newCroppedImage(normalizedJson)
     check crop.x == 1 and crop.y == 2 and crop.width == 3 and crop.height == 4
     check convertUrlToLocalPath("file:///home/jenkins/my%2Blogo%23x.jpeg") == "/home/jenkins/my+logo#x.jpeg"
+    check convertUrlToLocalPath("file:///home/jenkins/workspace/status-app/e2e/prs%402/ext/test_images/comm_banner.jpeg") ==
+      "/home/jenkins/workspace/status-app/e2e/prs@2/ext/test_images/comm_banner.jpeg"
 
   test "empty input is not a local file":
     check convertUrlToLocalPath("") == ""

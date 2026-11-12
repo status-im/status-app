@@ -451,7 +451,7 @@ StatusStackModal {
                     pinMessagesAllowedForMembers: generalViewLayout.options.pinMessagesEnabled,
                     archiveSupporVisible: true
                 },
-                bannerJsonStr: JSON.stringify({imagePath: String(generalViewLayout.bannerPath).replace("file://", ""), cropRect: generalViewLayout.bannerCropRect})
+                bannerJsonStr: Utils.getImageAndCropInfoJson(generalViewLayout.bannerPath, generalViewLayout.bannerCropRect)
             }
         }
 
