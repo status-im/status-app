@@ -428,8 +428,14 @@ StatusSectionLayout {
                 nativeWindowDpr: root.nativeWindowDpr
                 theme: root.theme
                 uiScaleFile: uiScaleFilePath
+                restartSupported: SystemUtils.canRestartApplication
                 onThemeChangeRequested: (theme) => root.themeChangeRequested(theme)
-                onRestartRequested: Qt.callLater(() => SystemUtils.restartApplication())
+                onZoomChangeSaved: {
+                    if (SystemUtils.canRestartApplication)
+                        Qt.callLater(() => SystemUtils.restartApplication())
+                    else
+                        Global.displaySuccessToastMessage(qsTr("Close and reopen Status to apply the new interface zoom level"))
+                }
             }
         }
 

@@ -41,6 +41,7 @@ int runRestartHelper(QCoreApplication& app)
         const bool previousInstancePresent = socket.waitForConnected(100);
         const bool backendReleased = lock.tryLock(0);
         QJsonObject report {
+            {"program", app.arguments().first()},
             {"arguments", QJsonArray::fromStringList(app.arguments().mid(1))},
             {"workingDirectory", QDir::currentPath()},
             {"environment", qEnvironmentVariable("STATUSQ_RESTART_TEST_VALUE")},
@@ -104,22 +105,40 @@ private slots:
     {
         QTest::addColumn<QString>("request");
         QTest::addColumn<QStringList>("arguments");
-        QTest::newRow("no arguments") << QString("no-argument") << QStringList();
+        QTest::addColumn<QString>("appImage"); // "", "unrelated" or "own"
+        QTest::newRow("no arguments") << QString("no-argument") << QStringList() << QString();
         const QStringList arguments {"--datadir", "data directory", "value with \"quotes\""};
-        QTest::newRow("preserve arguments") << QString("restart") << arguments;
-        QTest::newRow("desktop ignores killBackend") << QString("kill-backend") << arguments;
-        QTest::newRow("launcher closes output pipes") << QString("closed-output") << arguments;
-        QTest::newRow("launch failure is logged") << QString("launch-failure") << arguments;
-        QTest::newRow("ordinary quit does not restart") << QString("quit") << arguments;
+        QTest::newRow("preserve arguments") << QString("restart") << arguments << QString();
+        QTest::newRow("desktop ignores killBackend") << QString("kill-backend") << arguments << QString();
+        QTest::newRow("launcher closes output pipes") << QString("closed-output") << arguments << QString();
+        QTest::newRow("launch failure is logged") << QString("launch-failure") << arguments << QString();
+        QTest::newRow("ordinary quit does not restart") << QString("quit") << arguments << QString();
+        // Started from another AppImage (e.g. a terminal of an AppImage IDE): relaunch itself
+        QTest::newRow("another AppImage is not relaunched") << QString("restart") << arguments
+                                                             << QString("unrelated");
+        // ... also without APPDIR, run from the binary's own directory
+        QTest::newRow("another AppImage, no APPDIR") << QString("restart") << arguments
+                                                      << QString("unrelated-no-appdir");
+        QTest::newRow("another AppImage, empty APPDIR") << QString("restart") << arguments
+                                                         << QString("unrelated-empty-appdir");
+        // Running as an AppImage's payload: relaunch the AppImage, not the mounted binary
+        QTest::newRow("own AppImage is relaunched") << QString("restart") << arguments
+                                                     << QString("own");
     }
 
     void restart()
     {
         QFETCH(QString, request);
         QFETCH(QStringList, arguments);
+        QFETCH(QString, appImage);
         QTemporaryDir directory;
         QVERIFY(directory.isValid());
-        const auto workingDirectory = directory.path() + "/working directory";
+        const auto binary = QCoreApplication::applicationFilePath();
+        // Without APPDIR the binary's directory is the working directory: an empty APPDIR
+        // must not stand for it
+        const bool runFromBinaryDirectory = appImage.startsWith("unrelated-");
+        const auto workingDirectory = runFromBinaryDirectory ? QFileInfo(binary).absolutePath()
+                                                             : directory.path() + "/working directory";
         QVERIFY(QDir().mkpath(workingDirectory));
 
         auto environment = QProcessEnvironment::systemEnvironment();
@@ -127,6 +146,22 @@ private slots:
         environment.insert("STATUSQ_RESTART_TEST_PHASE", "request");
         environment.insert("STATUSQ_RESTART_TEST_REQUEST", request);
         environment.insert("STATUSQ_RESTART_TEST_VALUE", "preserved value");
+        auto expectedProgram = binary;
+        environment.remove("APPIMAGE");
+        environment.remove("APPDIR");
+        if (appImage.startsWith("unrelated"))
+            environment.insert("APPIMAGE", directory.path() + "/Other.AppImage");
+        if (appImage == "unrelated") {
+            environment.insert("APPDIR", directory.path());
+        } else if (appImage == "unrelated-empty-appdir") {
+            environment.insert("APPDIR", QString());
+        } else if (appImage == "own") {
+            // The AppImage stands in as a link to this binary, mounted at its directory
+            expectedProgram = directory.path() + "/Status.AppImage";
+            QVERIFY(QFile::link(binary, expectedProgram));
+            environment.insert("APPIMAGE", expectedProgram);
+            environment.insert("APPDIR", QFileInfo(binary).absolutePath());
+        }
         QProcess process;
         process.setProcessEnvironment(environment);
         process.setWorkingDirectory(workingDirectory);
@@ -164,6 +199,7 @@ private slots:
         QJsonParseError error;
         const auto report = QJsonDocument::fromJson(reports.first(), &error).object();
         QCOMPARE(error.error, QJsonParseError::NoError);
+        QCOMPARE(report["program"].toString(), expectedProgram);
         QCOMPARE(report["arguments"].toArray(), QJsonArray::fromStringList(arguments));
         QCOMPARE(report["workingDirectory"].toString(), QDir(workingDirectory).canonicalPath());
         QCOMPARE(report["environment"].toString(), QString("preserved value"));
