@@ -15,7 +15,7 @@ constexpr auto kSpellCheckDictionaries = "spellCheckDictionaries"_L1;
 constexpr auto kSpellCheckEnabled = "spellCheckEnabled"_L1;
 constexpr auto kSpellCheckSkipCapitalizedWords = "spellCheckSkipCapitalizedWords"_L1;
 
-constexpr auto k_defaultLanguageCode = "en"_L1;
+constexpr auto k_defaultLanguageCode = "en_US"_L1;
 }
 
 LanguageService::LanguageService(QObject *parent)
@@ -94,13 +94,16 @@ void LanguageService::setActiveSpellcheckLanguages(const QSet<QString>& dictLang
 {
     auto active = dictLangs;
     active.intersect(m_availableSpellcheckLanguages);
-    if (m_availableSpellcheckLanguages.contains(k_defaultLanguageCode))
-        active.insert(k_defaultLanguageCode);
     if (active == m_activeSpellcheckLanguages)
         return;
     m_activeSpellcheckLanguages = active;
     qCDebug(languageService) << Q_FUNC_INFO << "!!! Active spellcheck languages:" << m_activeSpellcheckLanguages;
     emit activeSpellcheckLanguagesChanged();
+
+    // disable spellcheck when the user disables all dictionaries
+    if (m_activeSpellcheckLanguages.isEmpty()) {
+        setSpellCheckEnabled(false);
+    }
 }
 
 QStringList LanguageService::activeSpellcheckLanguages() const
@@ -174,7 +177,7 @@ void LanguageService::load()
     setSpellCheckEnabled(settings.value(kSpellCheckEnabled, true).toBool());
     setSpellCheckSkipCapitalizedWords(settings.value(kSpellCheckSkipCapitalizedWords, true).toBool());
     auto activeDicts = settings.value(kSpellCheckDictionaries).toStringList();
-    if (activeDicts.isEmpty() && m_availableSpellcheckLanguages.contains(k_defaultLanguageCode)) { // pre-select en if available
+    if (m_spellCheckEnabled && activeDicts.isEmpty() && m_availableSpellcheckLanguages.contains(k_defaultLanguageCode)) { // pre-select en_US if available
         activeDicts.append(k_defaultLanguageCode);
     }
     settings.endGroup();

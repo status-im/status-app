@@ -10469,16 +10469,12 @@ la pérdida de tu perfil de Status y la imposibilidad de reiniciar Status.</tran
         <translation>Idioma</translation>
     </message>
     <message>
+        <source>Want to improve a translation, help add a new language, or request one? Let us know in %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Skip capitalized words and acronyms</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>channel</source>
-        <translation type="unfinished">canal</translation>
     </message>
     <message>
         <source>Spell Check</source>
@@ -17010,6 +17006,10 @@ al cargar</translation>
 </context>
 <context>
     <name>StatusLanguageSelector</name>
+    <message>
+        <source>Select language</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Search</source>
         <translation type="unfinished">Buscar</translation>
