@@ -1,6 +1,6 @@
 # E2E Testing Framework
 
-Automated end-to-end testing for Status Desktop using Appium and LambdaTest.
+Automated end-to-end testing for the Status mobile app using Appium, on BrowserStack or a local device.
 
 ## Quick Start
 
@@ -10,15 +10,8 @@ cd test/e2e_appium
 pip install -r requirements.txt
 ```
 
-### 2. Configure LambdaTest (GitHub Secrets)
-Repository administrators need to set:
-- `LT_USERNAME` - Your LambdaTest username
-- `LT_ACCESS_KEY` - Your LambdaTest access key
-
-### 3. Run Tests via GitHub Actions
-1. Build APK using `android-build.yml` workflow (architecture: `x86_64`)
-2. Run tests using `e2e-appium-android.yml` workflow
-3. Use artifact name: `Status-x86_64`
+### 2. Run on BrowserStack from GitHub Actions
+See [GitHub Actions](#github-actions) below.
 
 ## A headless status-backend as a chat participant
 
@@ -84,35 +77,84 @@ export LOCAL_APP_PATH="/path/to/Status.apk"
 pytest -m onboarding --env=local -v
 ```
 
-## GitHub Actions Workflows
+## GitHub Actions
 
-### Build APK Workflow
-- **File**: `android-build.yml`
-- **Architecture**: `x86_64` (required for LambdaTest)
-- **Output**: `Status-x86_64` artifact
+`.github/workflows/e2e-android.yml` runs the lane on BrowserStack with a
+status-backend peer. It is advisory and QA-owned: do not make its check
+required, because a run in a repository without BrowserStack secrets ends as
+skipped (its summary says NOT RUN).
 
-### E2E Testing Workflow
-- **File**: `e2e-appium-android.yml`
-- **APK source**: GitHub artifact (default)
-- **Test target**: `onboarding` (default)
-- **Device**: Galaxy Tab S8 (default)
+**By hand:** Actions > E2E Android > Run workflow, with a `bs://` app id that a
+user in the account's BrowserStack group uploaded. Pick a branch whose
+`test/e2e_appium` matches the APK: an app id can be up to 30 days older or
+newer than the branch, and the summary warns when the APK was not built from
+the tested commit.
 
-## Workflow Input Options
+**From a workflow that built an APK:**
 
-### APK Sources
-- **GitHub artifacts**: `Status-x86_64` (recommended)
-- **Direct URLs**: `https://example.com/app.apk`
-- **LambdaTest IDs**: `lt://APP123456789`
+```yaml
+e2e:
+  needs: apk
+  uses: ./.github/workflows/e2e-android.yml
+  with: { apk-artifact: <artifact with one APK>, account: '1' }
+  secrets: inherit
+```
 
-### Device Options
-- **default**: Galaxy Tab S8 (Android 14)
-- **pixel_tablet**: Google Pixel Tablet
-- **galaxy_tab_a**: Samsung Galaxy Tab A
+The APK must be built with `STATUSQ_TESTMODE=true`, or the e2e hooks are
+compiled out. Release APKs cannot run the suite.
 
-### Test Targets
-- **onboarding**: Complete user onboarding flow
-- **smoke**: Quick critical functionality tests
-- **critical**: Essential features that must pass
+**On pull requests, opt in with a label.** The PR workflow that builds the APK
+runs this one only when the PR has the `e2e-android` label:
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  apk:
+    # builds the APK and uploads it as the artifact "apk"
+  e2e:
+    needs: apk
+    if: contains(github.event.pull_request.labels.*.name, 'e2e-android')
+    uses: ./.github/workflows/e2e-android.yml
+    with: { apk-artifact: apk, account: '1' }
+    secrets: inherit
+```
+
+- Without the label, the e2e job is skipped and nothing reaches BrowserStack.
+- Adding the label reruns the PR workflow, so the tests run against an APK
+  built from that PR. Every later push runs them again until the label is
+  removed.
+- PRs from forks get no secrets, so their run ends as NOT RUN.
+- Runs on the same account queue one at a time.
+
+**Inputs:** `selection` (`gate` or `smoke`), or `tests` (node ids under
+`tests/`), or `markers` (an expression of marker names from `pytest.ini`);
+`device` (Android ids from `config/environments/browserstack.yaml`); `workers`
+(`auto` is 4 for the gate, which leaves one of the account's 5 sessions spare,
+and 2 when multi-phone tests can be selected); `account` (`1` or `2`).
+
+**Queueing:** one run per BrowserStack account per repository at a time. A run
+in progress is never cancelled; GitHub keeps one waiting run per account, so a
+newer waiting run replaces an older one. Queues are per repository, and a
+BrowserStack group's 5 sessions are shared by every user in it, so runs from
+two repositories on the same group do not see each other. The harness's
+capacity check is then the only guard. Apps are visible only inside the group
+that uploaded them.
+
+**Secrets:** `BROWSERSTACK_USERNAME` and `BROWSERSTACK_ACCESS_KEY` for account
+1, and the same names with `_2` for account 2.
+
+**Peer image:** `.github/workflows/e2e-peer-image.yml` publishes
+`ghcr.io/<owner>/status-app-e2e-peer:<status-go commit>` from the default
+branch. An e2e run pulls it, or builds it (about 7 to 10 minutes) when the
+vendored status-go has no published image yet.
+
+**Results:** the job summary names the APK, its upload date, the tested
+commit and every failed test with its message, and each failure is an error
+annotation. Reports, logs and screenshots are in the `e2e-android-reports-*`
+artifact for 14 days.
 
 ## Onboarding Fixture
 
@@ -136,11 +178,12 @@ def test_with_custom_onboarding(self, onboarded_user):
 
 ## Environment Configuration
 
-### For LambdaTest (Cloud)
+### For BrowserStack
 ```bash
-# Set in GitHub repository secrets
-LT_USERNAME=your_username
-LT_ACCESS_KEY=your_access_key
+export BROWSERSTACK_USERNAME=...
+export BROWSERSTACK_ACCESS_KEY=...
+export BROWSERSTACK_APP_ID=bs://...
+pytest -m gate --env=browserstack
 ```
 
 ### For Local Testing
@@ -151,14 +194,9 @@ export CURRENT_TEST_ENVIRONMENT="local"
 
 ## Troubleshooting
 
-**APK Build Issues:**
-- Verify x86_64 architecture selected in android-build.yml
-- Check build workflow completed successfully
-
-**Test Execution Issues:**
-- Verify LambdaTest credentials in repository secrets
-- Check APK artifact name matches exactly: `Status-x86_64`
-- Review workflow logs for detailed error messages
+**BrowserStack runs:**
+- "not in BrowserStack account N's group": the app was deleted after 30 days or uploaded to another group. Upload it again.
+- Many "message not visible" or login failures at once: check the summary's APK warning; the tests probably do not match the APK.
 
 **Local Testing Issues:**
 - Ensure Appium server running: `appium`
