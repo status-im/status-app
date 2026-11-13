@@ -148,6 +148,18 @@ signal. It is queued while the UI is backgrounded, then processed through the sa
 response path as a normal in-app send when the UI returns. `local-notifications` continues to
 update only the Android notification thread.
 
+### 8a. Mark as read
+
+Message notifications carry a "Mark as read" action (`ACTION_MARK_AS_READ`), handled by the same
+receiver. It cancels the conversation's notification at once, then calls `wakuext_markAllRead`
+with the chat ID, or `wakuext_markThreadRead` when the notification belongs to a thread. The
+whole conversation is marked, exactly as when it is opened in the app, not only the messages
+the notification showed.
+
+The response is forwarded to the UI process as an internal `notification.conversation.read`
+signal through the same queue as `notification.reply.sent`, and handled there like an in-app
+mark-all-read. A failed call is only logged: the conversation stays unread in the app.
+
 ---
 
 ## What was considered
