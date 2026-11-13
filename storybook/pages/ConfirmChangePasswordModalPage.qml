@@ -23,7 +23,7 @@ SplitView {
             id: modal
 
             visible: true
-            modal: false
+            modal: modalCheckBox.checked
             fastPasswordChangePossible: fastPathCheckBox.checked
 
             onChangePasswordRequested: passwordChangedTimer.start()
@@ -31,7 +31,7 @@ SplitView {
             Timer {
                 id: passwordChangedTimer
 
-                interval: 2000
+                interval: durationSpinBox.value * 1000
                 repeat: false
                 onTriggered: {
                     if (successFlow.checked) {
@@ -51,13 +51,29 @@ SplitView {
 
         ColumnLayout {
             CheckBox {
+                id: modalCheckBox
+                objectName: "modalCheckBox"
+                text: "Modal (shows the in-progress blurred backdrop)"
+                checked: false
+            }
+            RowLayout {
+                Label { text: "Change duration (s):" }
+                SpinBox {
+                    id: durationSpinBox
+                    objectName: "durationSpinBox"
+                    from: 1
+                    to: 60
+                    value: 2
+                }
+            }
+            CheckBox {
                 id: fastPathCheckBox
                 text: "Fast password change possible (DEK)"
                 checked: true
             }
             CheckBox {
                 id: successFlow
-                text: "%1 in 2 seconds".arg(successFlow.checked ? "Success" : "Error")
+                text: "%1 after the change duration".arg(successFlow.checked ? "Success" : "Error")
                 checked: true
             }
             Label {
