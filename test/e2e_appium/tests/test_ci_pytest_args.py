@@ -10,7 +10,7 @@ from scripts.ci_pytest_args import build_args
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ci_pytest_args.py"
 KNOWN = {"pixel_8_android_14", "galaxy_tab_s10p_android_15"}
-MARKERS = {"gate", "smoke", "two_phone", "backend_peer", "messaging"}
+MARKERS = {"gate", "smoke", "two_phone", "backend_peer", "messaging", "wallet"}
 GATE = "(gate and not two_phone) or backend_peer"
 TAIL = ["-n", "4", "--env", "browserstack"]
 
@@ -188,3 +188,20 @@ def test_workflow_workers_default_to_auto():
     workers = _dispatch_inputs()["workers"]
     assert workers["default"] == "auto"
     assert workers["options"] == ["auto", "1", "2", "3", "4", "5"]
+
+
+@pytest.mark.parametrize(
+    "markers",
+    ["smoke and", "smoke smoke", "()", "and smoke", "smoke not wallet", "not", "(smoke) (wallet)", "smoke or ()"],
+)
+def test_rejects_malformed_marker_expressions(markers):
+    with pytest.raises(ValueError):
+        build_args("gate", "4", "", "", KNOWN, markers, MARKERS)
+
+
+@pytest.mark.parametrize(
+    "markers",
+    ["smoke", "not smoke", "smoke and not wallet", "(smoke or wallet) and not two_phone", "not (smoke and wallet)"],
+)
+def test_accepts_well_formed_marker_expressions(markers):
+    assert build_args("gate", "4", "", "", KNOWN, markers, MARKERS)[:2] == ["-m", markers]

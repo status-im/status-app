@@ -31,16 +31,34 @@ PYTEST_INI = Path(__file__).resolve().parents[1] / "pytest.ini"
 
 
 def marker_args(markers: str, known_markers: set[str]) -> list[str]:
+    """Check the expression is well formed, so a bad one fails here rather than
+    after the run has queued for a BrowserStack account."""
     tokens = MARKER_TOKEN.findall(markers)
     if not tokens:
         raise ValueError("markers is empty")
     depth = 0
+    expect_operand = True
     for token in tokens:
         if token not in MARKER_OPERATORS and token not in known_markers:
             raise ValueError(f"not a marker or and/or/not: {token!r}; markers are {sorted(known_markers)}")
-        depth += {"(": 1, ")": -1}.get(token, 0)
-        if depth < 0:
-            raise ValueError(f"unbalanced parentheses in {markers!r}")
+        if expect_operand:
+            if token == "(":
+                depth += 1
+            elif token in known_markers:
+                expect_operand = False
+            elif token != "not":
+                raise ValueError(f"expected a marker, 'not' or '(' before {token!r} in {markers!r}")
+        else:
+            if token == ")":
+                depth -= 1
+                if depth < 0:
+                    raise ValueError(f"unbalanced parentheses in {markers!r}")
+            elif token in ("and", "or"):
+                expect_operand = True
+            else:
+                raise ValueError(f"expected 'and', 'or' or ')' before {token!r} in {markers!r}")
+    if expect_operand:
+        raise ValueError(f"{markers!r} ends without a marker")
     if depth:
         raise ValueError(f"unbalanced parentheses in {markers!r}")
     return ["-m", " ".join(markers.split()), "tests"]
