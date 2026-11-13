@@ -440,15 +440,20 @@ target_link_libraries(StatusQ PRIVATE hunspell)
 qt_add_resources(StatusQ "statusq_dictionaries"
     PREFIX "/StatusQ/dictionaries"
     BASE "${CMAKE_CURRENT_SOURCE_DIR}/src/assets/dictionaries"
+    if (NOT (ANDROID OR IOS))
+      BIG_RESOURCES
+    endif()
     FILES
         src/assets/dictionaries/cs_CZ.aff
         src/assets/dictionaries/cs_CZ.dic
         src/assets/dictionaries/en_US.aff
         src/assets/dictionaries/en_US.dic
+        src/assets/dictionaries/en_GB.aff
+        src/assets/dictionaries/en_GB.dic
         src/assets/dictionaries/es_ES.aff
         src/assets/dictionaries/es_ES.dic
-        src/assets/dictionaries/fr.aff
-        src/assets/dictionaries/fr.dic
+        src/assets/dictionaries/fr_FR.aff
+        src/assets/dictionaries/fr_FR.dic
         src/assets/dictionaries/ko_KR.aff
         src/assets/dictionaries/ko_KR.dic
         src/assets/dictionaries/uk_UA.aff
