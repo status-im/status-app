@@ -97,7 +97,7 @@ private:
     QSharedPointer<QAtomicInteger<quint64>> m_suggestionToken = QSharedPointer<QAtomicInteger<quint64>>::create(0);
     bool m_workerUser = false;
     bool m_enabled = true;
-    QSet<QString> m_languages = {QStringLiteral("en")};
+    QSet<QString> m_languages = {QStringLiteral("en_US")};
     QString m_preferredLanguage = QLocale().name();
     bool m_skipCapitalizedWords = true;
     int m_cursorPosition = -1;

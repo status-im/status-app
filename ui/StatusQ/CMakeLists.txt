@@ -444,18 +444,20 @@ qt_add_resources(StatusQ "statusq_dictionaries"
       BIG_RESOURCES
     endif()
     FILES
-        src/assets/dictionaries/cs.aff
-        src/assets/dictionaries/cs.dic
-        src/assets/dictionaries/en.aff
-        src/assets/dictionaries/en.dic
-        src/assets/dictionaries/es.aff
-        src/assets/dictionaries/es.dic
-        src/assets/dictionaries/fr.aff
-        src/assets/dictionaries/fr.dic
-        src/assets/dictionaries/ko.aff
-        src/assets/dictionaries/ko.dic
-        src/assets/dictionaries/uk.aff
-        src/assets/dictionaries/uk.dic
+        src/assets/dictionaries/cs_CZ.aff
+        src/assets/dictionaries/cs_CZ.dic
+        src/assets/dictionaries/en_US.aff
+        src/assets/dictionaries/en_US.dic
+        src/assets/dictionaries/en_GB.aff
+        src/assets/dictionaries/en_GB.dic
+        src/assets/dictionaries/es_ES.aff
+        src/assets/dictionaries/es_ES.dic
+        src/assets/dictionaries/fr_FR.aff
+        src/assets/dictionaries/fr_FR.dic
+        src/assets/dictionaries/ko_KR.aff
+        src/assets/dictionaries/ko_KR.dic
+        src/assets/dictionaries/uk_UA.aff
+        src/assets/dictionaries/uk_UA.dic
         src/assets/dictionaries/HUNSPELL_COPYING.MPL
         src/assets/dictionaries/SOURCES
 )
