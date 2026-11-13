@@ -534,7 +534,7 @@ Item {
 
             // read somewhere above the newest message
             lv.contentY = Math.max(0, lv.contentHeight - lv.height * 2.5)
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
             const before = messageIdAtViewportTop(view)
             verify(!!before)
 
@@ -569,7 +569,7 @@ Item {
 
             moduleT.messagesModule.scrollToMessage(150)
             tryVerify(() => !lv.busy && lv.rowForKey("t-150") >= 0, 10000, "deep in history")
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
             const before = messageIdAtViewportTop(view)
             verify(!!before)
 
@@ -616,7 +616,7 @@ Item {
 
             moduleT.messagesModule.scrollToMessage(150)
             tryVerify(() => !lv.busy && lv.rowForKey("t-150") >= 0, 10000, "deep in history")
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
             const before = messageIdAtViewportTop(view)
             verify(!!before)
 
@@ -628,7 +628,7 @@ Item {
             moduleT.messagesModule.loading = true
             moduleT.messagesModule.threadId = ""
             resettingModel.sourceModel = refilledRows
-            waitForRendering(lv)       // the re-placement after the reset has run
+            waitForRendering(lv, 100)       // the re-placement after the reset has run
             fill(refilledRows, "t", 200)
             moduleT.messagesModule.loading = false
 
@@ -685,7 +685,7 @@ Item {
             const lv = view.chatLogView
 
             lv.contentY = Math.max(lv.originY, lv.contentHeight - lv.height * 1.5)
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
             verify(!lv.atBottom, "reading above the newest message")
 
             const at = messageIdAtViewportTop(view)
@@ -729,7 +729,7 @@ Item {
             settle(view)
             verifyBackAbove(view, at)
 
-            waitForRendering(view.chatLogView)
+            waitForRendering(view.chatLogView, 100)
             compare(moduleA.markAllMessagesReadCalls, marked, "chat a is still unread")
         }
 
@@ -750,7 +750,7 @@ Item {
             settle(view)
             verifyBackAbove(view, at)
 
-            waitForRendering(view.chatLogView)
+            waitForRendering(view.chatLogView, 100)
             compare(moduleA.markAllMessagesReadCalls, marked, "chat a is still unread")
         }
 
@@ -803,7 +803,7 @@ Item {
             // The reply is already rendered when its unread summary arrives.
             messagesA.insert(0, makeMessage("a", -1))
             settle(view)
-            waitForRendering(view.chatLogView)
+            waitForRendering(view.chatLogView, 100)
             if (data.above)
                 readAboveTheNewestMessage(view)
             if (data.background)
@@ -894,7 +894,7 @@ Item {
                 verify(lv.moreAvailableTop, "the band stands for the history still to come")
                 lv.contentY = lv.originY
                 tryVerify(() => !lv.busy, 5000)
-                waitForRendering(lv)
+                waitForRendering(lv, 100)
             }
 
             compare(messagesA.count, 46, "every page of history was fetched, then the banner")
@@ -944,12 +944,12 @@ Item {
             const view = openView()
             const lv = view.chatLogView
             tryVerify(() => !lv.busy && lv.atBottom, 5000, "opened at the newest message")
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
 
             // scrolled up, the way a wheel does, until the page is asked for
             for (let i = 0; i < 40 && !moduleA.answerOwed; ++i) {
                 lv.contentY = Math.max(lv.originY, lv.contentY - 60)
-                waitForRendering(lv)
+                waitForRendering(lv, 100)
             }
             verify(moduleA.answerOwed, "the first page was asked for")
 
@@ -958,7 +958,7 @@ Item {
 
             moduleA.answer()
             tryVerify(() => !lv.busy && lv.rowForKey("a-29") >= 0, 5000, "the page arrived")
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
 
             verify(!lv.atBottom, "not thrown to the newest message")
             const after = messageIdAtViewportTop(view)
@@ -977,7 +977,7 @@ Item {
             const view = openView()
             const lv = view.chatLogView
             tryVerify(() => !lv.busy, 5000)
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
 
             const fetches = moduleA.fetchCalls
             lv.contentY = lv.originY + lv.height + 100
@@ -986,10 +986,10 @@ Item {
 
             tryVerify(() => moduleA.fetchCalls > fetches && !lv.busy, 5000, "history fetched")
             for (let i = 0; i < 10; ++i)
-                waitForRendering(lv)
+                waitForRendering(lv, 100)
             const settled = moduleA.fetchCalls
             for (let i = 0; i < 10; ++i)
-                waitForRendering(lv)
+                waitForRendering(lv, 100)
 
             compare(moduleA.fetchCalls, settled, "the fetching stopped")
             verify(moduleA.fetchCalls - fetches <= 2, "after a page or two")
@@ -1011,7 +1011,7 @@ Item {
             const view = openView()
             const lv = view.chatLogView
             tryVerify(() => !lv.busy, 5000)
-            waitForRendering(lv)
+            waitForRendering(lv, 100)
 
             const bar = lv.ScrollBar.vertical
             verify(!!bar && bar.visible)
@@ -1023,7 +1023,7 @@ Item {
 
             for (let i = 9; i >= 0; --i) {
                 mouseMove(bar, x, bar.height * i / 10)
-                waitForRendering(lv)
+                waitForRendering(lv, 100)
             }
 
             compare(moduleA.fetchCalls, fetches, "nothing fetched while the handle is held")
