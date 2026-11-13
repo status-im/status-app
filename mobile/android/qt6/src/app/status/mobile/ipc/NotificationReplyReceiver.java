@@ -160,6 +160,11 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
 
                 StatusNotificationManager mgr = StatusNotificationManager.getInstance();
 
+                if (!failed) {
+                    // Replying implies the conversation was read; the notification stays.
+                    markConversationRead(conversationId, threadId);
+                }
+
                 if (failed) {
                     Log.w(TAG, "sendChatMessage failed: " + errorMsg);
                     if (mgr != null) mgr.clearConversation(conversationKey);
