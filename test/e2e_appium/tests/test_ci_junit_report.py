@@ -44,17 +44,17 @@ def test_failures_carry_node_id_and_first_message_line(junit):
     assert failures[0].message == "AssertionError: Message not visible after sending: x_1"
 
 
-def test_summary_names_the_apk_and_warns_it_is_not_this_commit(junit):
+def test_summary_names_the_apk_and_warns_its_commit_is_unverified(junit):
     text = render_summary(read_junit(junit), APP, commit="0c1b85ece52", app_from_this_commit=False, account="1", build_url="")
     assert APP["app_name"] in text
     assert "2026-11-10 15:56:55 UTC" in text
-    assert "not built from this commit" in text
+    assert "could not be verified" in text
     assert "`0c1b85ece52`" in text
 
 
 def test_summary_omits_the_warning_for_an_apk_built_in_this_run(junit):
     text = render_summary(read_junit(junit), APP, commit="abc", app_from_this_commit=True, account="1", build_url="")
-    assert "not built from this commit" not in text
+    assert "could not be verified" not in text
 
 
 def test_summary_lists_every_failure(junit):
@@ -118,3 +118,10 @@ def test_passes_from_a_successful_test_step_are_passed(tmp_path):
 def test_failures_stay_failed_whatever_the_outcome(junit):
     text = render_summary(read_junit(junit), APP, "abc", True, "1", "", tests_outcome="cancelled")
     assert text.splitlines()[0].startswith("## E2E Android failed:")
+
+
+def test_all_skipped_is_not_run(tmp_path):
+    path = tmp_path / "r.xml"
+    path.write_text('<testsuite tests="1" failures="0" errors="0" skipped="1"><testcase classname="tests.test_c" name="a"><skipped/></testcase></testsuite>')
+    text = render_summary(read_junit(path), APP, "abc", True, "1", "")
+    assert text.splitlines()[0] == "## E2E Android NOT RUN: all 1 selected tests were skipped"

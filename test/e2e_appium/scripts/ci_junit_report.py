@@ -74,6 +74,8 @@ def render_summary(
 ) -> str:
     if result.total == 0:
         heading = "## E2E Android NOT RUN: no tests were selected"
+    elif result.skipped == result.total:
+        heading = f"## E2E Android NOT RUN: all {result.total} selected tests were skipped"
     elif result.failed == 0 and tests_outcome != "success":
         # A cancelled or timed-out step still writes results for the tests that finished.
         heading = f"## E2E Android incomplete: {result.passed} passed before the test step ended as {tests_outcome}"
@@ -95,8 +97,8 @@ def render_summary(
     if not app_from_this_commit:
         lines += [
             "",
-            f"> The APK was given by app id, so it was not built from this commit (`{commit}`). "
-            "A failure can come from a mismatch between the APK and the tests.",
+            f"> The APK was given by app id, so its commit could not be verified against this one (`{commit}`). "
+            "A mismatch between the APK and the tests can cause failures.",
         ]
     if result.failures:
         lines += ["", "### Failed tests", "", "| Test | Message |", "|---|---|"]
