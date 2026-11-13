@@ -116,12 +116,25 @@ QtObject:
     new(result, delete)
     result.setup(settingsFileDir)
 
-  proc setFileName*(self: LocalAccountSensitiveSettings, fileName: string) =
-    if(not self.settings.isNil):
+  proc releaseSettings(self: LocalAccountSensitiveSettings) =
+    # Deleting the QSettings flushes its pending writes to the file.
+    if not self.settings.isNil:
       self.settings.delete
+      self.settings = nil
+
+  proc setFileName*(self: LocalAccountSensitiveSettings, fileName: string) =
+    self.releaseSettings()
 
     let filePath = os.joinPath(self.settingsFileDir, fileName)
     self.settings = newQSettings(filePath, QSettingsFormat.IniFormat)
+
+  proc detach*(self: LocalAccountSensitiveSettings) =
+    ## Unbinds the current account's file on logout so its values stop being served;
+    ## reads fall back to defaults until the next account binds its own file. The file
+    ## is keyed by the account's public key and never renamed. Like `setFileName`, no
+    ## property is notified: its readers live in the session's QML tree, which is
+    ## already unloaded when a session ends.
+    self.releaseSettings()
 
   # float type must be exposed through QVariant property.
   proc getSettingsPropQVariant(self: LocalAccountSensitiveSettings, prop: string, default: QVariant): QVariant =

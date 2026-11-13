@@ -178,7 +178,7 @@ method cleanJoinEditCommunityData*(self: Module) =
   self.joiningCommunityDetails.clear()
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("communitiesModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("communitiesModule", self.viewVariant)
   self.controller.init()
   self.communityTokensModule.load()
   self.view.load()

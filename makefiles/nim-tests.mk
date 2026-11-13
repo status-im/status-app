@@ -23,6 +23,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	collectibles_selector_bench \
 	collectibles_selector_model_bench \
 	community_accept_request_test \
+	held_resource_qtimer_test \
 	community_permission_save_test \
 	contact_info_requests_test \
 	message_history_paging_test \
@@ -31,11 +32,15 @@ NIM_TESTS_LINK_STATUSQ := \
 	send_handler_lookup_bench \
 	send_modal_instantiation_bench \
 	services_pause_bridge_test \
+	session_host_lifecycle_test \
+	session_host_signals_test \
 	share_intake_wake_test \
 	signal_handler_test \
 	thread_edit_service_test \
 	swap_key_harvest_bench \
 	swap_modal_instantiation_bench \
+	task_session_generation_test \
+	threadpool_admission_test \
 	thread_navigation_test \
 	thread_notifications_test \
 	thread_search_test \

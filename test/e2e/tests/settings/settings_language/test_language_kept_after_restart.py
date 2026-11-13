@@ -16,7 +16,7 @@ def test_language_kept_after_settings_restart(aut: AUT, main_screen: MainWindow,
         assert language_settings.language_selector.text == LanguageCodes.ENGLISH.value, \
             'English should be the default language'
         language_settings.select_language(new_language.lower())
-        language_settings.confirm_restart()
+        language_settings.confirm_language_change()
 
     with step('Restart application'):
         aut.restart()

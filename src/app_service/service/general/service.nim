@@ -1,7 +1,8 @@
-import nimqml, os, json, chronicles
+import nimqml, os, json, chronicles, results
 
 import backend/general as status_general
 import app/core/eventemitter
+import app/core/signal_epoch
 import app/core/tasks/[qt, threadpool]
 import ../../../constants as app_constants
 import ../../common/types
@@ -70,17 +71,18 @@ QtObject:
       error "error:", procName="startMessenger", errName = e.name, errDesription = startError
     self.events.emit(SIGNAL_MESSENGER_STARTED, MessengerStartedArgs(error: startError))
 
-  proc logout*(self: Service) =
-    try:
-      let response = status_general.logout()
-      let errMsg = response.result{"error"}.getStr
-      if errMsg.len > 0:
-        error "logout failed", errDescription=errMsg
-      else:
-        debug "logout succeeded"
-        self.messengerStartScheduled = false
-    except Exception as e:
-      error "logout failed", errName=e.name, errDescription=e.msg
+  proc logout*(self: Service): Result[void, string] =
+    ## Logs the backend out, and accepts the signals of the backend session that starts
+    ## with it (also when the logout failed after the backend had started it).
+    let response = status_general.logout()
+    if response.signalEpoch != NoEpoch:
+      acceptSignalEpoch(response.signalEpoch)
+    if response.error.len > 0:
+      error "logout failed", errDescription=response.error
+      return err(response.error)
+    debug "logout succeeded", signalEpoch=response.signalEpoch
+    self.messengerStartScheduled = false
+    ok()
 
   proc getWakuPeerCount*(self: Service): int =
     try:

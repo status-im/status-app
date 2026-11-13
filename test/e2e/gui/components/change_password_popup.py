@@ -15,9 +15,9 @@ class ChangePasswordPopup(QObject):
         """
         Starts the password change and completes the popup flow.
 
-        Returns True when the app is restarting (slow path: one-time migration of a legacy
-        profile, or the rekey option), False when the fast path finished — the popup was
-        closed and the app keeps running.
+        Returns True when the session ends to log in again (slow path: one-time migration of
+        a legacy profile, or the rekey option), False when the fast path finished — the popup
+        was closed and the session keeps running.
 
         The button is visible but disabled while the operation runs — wait for enabled,
         not merely for the object to exist (see ConfirmChangePasswordModal.qml).
@@ -28,8 +28,8 @@ class ChangePasswordPopup(QObject):
         self.re_encrypt_data_restart_button.wait_until_enabled(timeout_msec=timeout_msec)
 
         label = getattr(self.re_encrypt_data_restart_button.object, 'text')
-        assert label in (PasswordView.RESTART_STATUS.value, PasswordView.CLOSE.value), \
-            f'Expected Restart/Close button label, got {label!r}'
+        assert label in (PasswordView.LOG_IN_AGAIN.value, PasswordView.CLOSE.value), \
+            f'Expected "Log in again"/Close button label, got {label!r}'
 
         self.re_encrypt_data_restart_button.click()
-        return label == PasswordView.RESTART_STATUS.value
+        return label == PasswordView.LOG_IN_AGAIN.value

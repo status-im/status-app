@@ -120,6 +120,14 @@ proc hasLogLevelOption*(): bool =
 proc runtimeLogLevelSet*(): bool =
   return existsEnv(RUN_TIME_PREFIX & "_LOG_LEVEL") or hasLogLevelOption()
 
+proc defaultLogLevel*(): chronicles.LogLevel =
+  ## The process's log level while no profile asks for debug logging: LOG_LEVEL, which
+  ## defaults to INFO in production builds and DEBUG otherwise.
+  try:
+    parseEnum[chronicles.LogLevel](LOG_LEVEL)
+  except ValueError:
+    if defined(production): chronicles.LogLevel.INFO else: chronicles.LogLevel.DEBUG
+
 proc getStatusGoLogLevel*(): string =
   if LOG_LEVEL == "TRACE":
     return "DEBUG"

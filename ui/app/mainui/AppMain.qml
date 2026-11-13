@@ -1351,7 +1351,12 @@ Item {
         onTransferOwnershipRequested: (tokenId, senderAddress, tokenName, tokenImage) => popupRequestsHandler.transferOwnership(tokenId, senderAddress, tokenName, tokenImage)
         onWcUriScanned: uri => d.pairWalletConnectUri(uri)
         onNavigationEducationDialogSeenRequested: appMainGlobalSettings.newMenuEducationPopupSeen = true
-        onRestartRequested: SystemUtils.restartApplication()
+        onRestartRequested: {
+            if (SystemUtils.canRestartApplication)
+                SystemUtils.restartApplication()
+            else
+                Global.displaySuccessToastMessage(qsTr("Close and reopen Status to apply your new display zoom"))
+        }
         onEmojiSkinColorSelected: skinColor => appMainLocalSettings.skinColor = skinColor
         onBuyStickerPackRequested: (packId, price) => popupRequestsHandler.buyStickerPack(packId, price)
         onEnableThirdpartyServicesRequested: popupRequestsHandler.openThirdpartyServicesPopup()
@@ -2836,6 +2841,7 @@ Item {
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
                 onSettingsRequested: d.openSettingsRoot()
+                onSignOutRequested: Global.signOutRequested()
                 onQuitRequested: Global.quitAppRequested()
 
                 onSupportBotChatRequested: {

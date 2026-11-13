@@ -74,7 +74,6 @@ Item {
         function remainingKeypairCapacity() { return 5 }
         function remainingAccountCapacity() { return 5 }
         function prepareKeyPairModel() {}
-        function signOutAndQuit() {}
 
         signal keycardInteractionSuccessfullyCompleted()
         signal keycardGetMetadataSuccess()
@@ -784,6 +783,71 @@ Item {
 
             tryVerify(() => !!findChild(popup, "keycardPinStepTitle"), 3000)
             compare(findChild(popup, "keycardPinStepTitle").text, data.title)
+        }
+    }
+
+    SignalSpy {
+        id: signOutSpy
+        signalName: "signOutRequested"
+    }
+
+    TestCase {
+        name: "KeycardManagementPopup_profileConversion"
+        when: windowShown
+
+        function cleanup() {
+            signOutSpy.target = null
+            userProfile.migratedToDEKEncryption = false
+            if (popup)
+                popup.close()
+        }
+
+        function openConversion(flow) {
+            mockStore.calls = []
+            mockStore.keycardState = "ready"
+            popup = createTemporaryObject(popupFactory, root, { flow: flow })
+            verify(!!popup)
+            signOutSpy.target = popup
+            signOutSpy.clear()
+            popup.open()
+        }
+
+        function completeConversion(flow) {
+            if (flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+                mockStore.stopUsingKeycardForProfileKeyPairSuccess()
+            else
+                mockStore.keycardMoveProfileKeyPairSuccess()
+
+            const button = findChild(popup, "keycardManagementDoneButton")
+            tryVerify(() => !!button && button.visible, 3000)
+            return button
+        }
+
+        function test_profileConversion_data() {
+            return [
+                { tag: "legacy, stop using keycard", dek: false, signOut: true,
+                  flow: Constants.keycard.flow.stopUsingKeycardForProfile },
+                { tag: "legacy, move to keycard", dek: false, signOut: true,
+                  flow: Constants.keycard.flow.moveProfileKeyPair },
+                { tag: "DEK, stop using keycard", dek: true, signOut: false,
+                  flow: Constants.keycard.flow.stopUsingKeycardForProfile },
+                { tag: "DEK, move to keycard", dek: true, signOut: false,
+                  flow: Constants.keycard.flow.moveProfileKeyPair },
+            ]
+        }
+
+        // A legacy profile's databases were re-encrypted: the only way on is to sign out.
+        // A DEK profile keeps its session (the conversion only re-wraps its data key).
+        function test_profileConversion(data) {
+            userProfile.migratedToDEKEncryption = data.dek
+            openConversion(data.flow)
+
+            const button = completeConversion(data.flow)
+            compare(button.text, data.signOut ? "Sign out" : "Done")
+            compare(signOutSpy.count, 0)
+
+            button.clicked()
+            compare(signOutSpy.count, data.signOut ? 1 : 0)
         }
     }
 }

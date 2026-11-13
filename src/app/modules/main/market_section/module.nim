@@ -41,7 +41,7 @@ method delete*(self: Module) =
   self.view.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("marketSection", self.viewVariant)
+  singletonInstance.setSessionContextProperty("marketSection", self.viewVariant)
   self.controller.init()
   self.view.load()
 

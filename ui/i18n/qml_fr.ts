@@ -1210,10 +1210,6 @@
         <translation>Discussions par nombre de messages</translation>
     </message>
     <message>
-        <source>The app will restart if you confirm.</source>
-        <translation>L’application redémarrera si vous confirmez.</translation>
-    </message>
-    <message>
         <source>Choose a number between 1 and 50</source>
         <translation>Choisissez un nombre entre 1 et 50</translation>
     </message>
@@ -1299,6 +1295,10 @@
     <message>
         <source>Are you sure you want to enable debug mode?</source>
         <translation>Êtes-vous sûr de vouloir activer le mode débogage&#xa0;?</translation>
+    </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
+        <translation>Si vous confirmez, vous serez déconnecté puis reconnecté.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -1808,6 +1808,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>%1 ajouté à vos sites de confiance.</translation>
     </message>
     <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>Fermez et rouvrez Status pour appliquer le nouveau zoom d’affichage</translation>
+    </message>
+    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>Cet appareil est maintenant le node de contrôle pour la communauté %1</translation>
     </message>
@@ -2071,7 +2075,7 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Search messages in this thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher des messages dans ce fil</translation>
     </message>
     <message>
         <source>Anywhere</source>
@@ -2079,7 +2083,7 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Fil de discussion</translation>
     </message>
 </context>
 <context>
@@ -2121,8 +2125,16 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>Redémarrer pour appliquer</translation>
     </message>
     <message>
+        <source>Save</source>
+        <translation>Enregistrer</translation>
+    </message>
+    <message>
         <source>Restart Status to apply the new interface zoom level</source>
         <translation>Redémarrer pour appliquer le nouveau niveau de zoom de l’interface</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
+        <translation>Fermez et rouvrez Status pour appliquer le nouveau niveau de zoom de l’interface</translation>
     </message>
     <message>
         <source>System</source>
@@ -3006,23 +3018,23 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Failed to remove the saved password</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de la suppression du mot de passe enregistré</translation>
     </message>
     <message>
         <source>Saved password removed — automatic login disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Mot de passe enregistré supprimé — connexion automatique désactivée</translation>
     </message>
     <message>
         <source>Failed to save the password for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l’enregistrement du mot de passe pour la connexion automatique</translation>
     </message>
     <message>
         <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
-        <translation type="unfinished"></translation>
+        <translation>L’enregistrement du mot de passe n’a pas pu être confirmé — l’option est restée activée et sera vérifiée lors de votre prochaine connexion</translation>
     </message>
     <message>
         <source>Password saved on this device for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Mot de passe enregistré sur cet appareil pour la connexion automatique</translation>
     </message>
     <message>
         <source>Change your password</source>
@@ -3034,15 +3046,15 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Connexion biométrique désactivée — réactivez-la dans les paramètres</translation>
     </message>
     <message>
         <source>Automatic login disabled — the saved password could not be updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Connexion automatique désactivée — le mot de passe enregistré n’a pas pu être mis à jour</translation>
     </message>
     <message>
         <source>Failed to update the saved password</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de la mise à jour du mot de passe enregistré</translation>
     </message>
     <message>
         <source>Change</source>
@@ -3193,7 +3205,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Copy thread ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier l’ID du fil</translation>
     </message>
     <message>
         <source>Copy channel ID</source>
@@ -3276,7 +3288,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Infos</translation>
     </message>
     <message>
         <source>More</source>
@@ -3298,11 +3310,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Fils de discussion</translation>
     </message>
     <message>
         <source>Pins</source>
-        <translation type="unfinished"></translation>
+        <translation>Épinglés</translation>
     </message>
     <message>
         <source>Search members...</source>
@@ -3310,31 +3322,31 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Search threads...</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher des fils...</translation>
     </message>
     <message>
         <source>Search pinned messages...</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher des messages épinglés...</translation>
     </message>
     <message>
         <source>Loading threads...</source>
-        <translation type="unfinished"></translation>
+        <translation>Chargement des fils...</translation>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de charger les fils</translation>
     </message>
     <message>
         <source>No threads found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun fil trouvé</translation>
     </message>
     <message>
         <source>Threads will appear here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Les fils de discussion apparaîtront ici.</translation>
     </message>
     <message>
         <source>Retry</source>
-        <translation type="unfinished">Réessayer</translation>
+        <translation>Réessayer</translation>
     </message>
 </context>
 <context>
@@ -3353,11 +3365,11 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Couldn&apos;t load threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de charger les fils</translation>
     </message>
     <message>
         <source>Couldn&apos;t create thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de créer le fil</translation>
     </message>
     <message>
         <source>Send Contact Request</source>
@@ -3406,15 +3418,15 @@ Do you wish to override the security check and continue?</source>
     <name>ChatView</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher</translation>
     </message>
     <message>
         <source>No pinned messages found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun message épinglé trouvé</translation>
     </message>
     <message>
         <source>Pinned messages will appear here.</source>
-        <translation type="unfinished">Les messages épinglés apparaîtront ici.</translation>
+        <translation>Les messages épinglés apparaîtront ici.</translation>
     </message>
     <message>
         <source>Members</source>
@@ -3422,7 +3434,7 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Close thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Fermer le fil</translation>
     </message>
 </context>
 <context>
@@ -4127,29 +4139,10 @@ file format</source>
     </message>
 </context>
 <context>
-    <name>ConfirmAppRestartModal</name>
-    <message>
-        <source>Application Restart</source>
-        <translation>Redémarrage de l’application</translation>
-    </message>
-    <message>
-        <source>Please restart the application to apply the changes.</source>
-        <translation>Veuillez redémarrer l’application pour appliquer les modifications.</translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation>Redémarrer</translation>
-    </message>
-</context>
-<context>
     <name>ConfirmChangePasswordModal</name>
     <message>
         <source>Re-encryption complete</source>
         <translation>Réchiffrement terminé</translation>
-    </message>
-    <message>
-        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.</source>
-        <translation>Votre mot de passe sera modifié. Cette opération consiste uniquement à recrypter votre fichier de clé de profil et ne prend que quelques instants&#xa0;; aucun redémarrage n&apos;est nécessaire.</translation>
     </message>
     <message>
         <source>Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.</source>
@@ -4164,10 +4157,6 @@ file format</source>
         <translation>Également crypter mes données à nouveau avec une nouvelle clé de chiffrement.</translation>
     </message>
     <message>
-        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.</source>
-        <translation>Nécessaire seulement si vous soupçonnez que votre appareil a été compromis. Cette procédure est beaucoup plus longue et nécessite un redémarrage.</translation>
-    </message>
-    <message>
         <source>Password changed</source>
         <translation>Mot de passe modifié</translation>
     </message>
@@ -4180,8 +4169,16 @@ file format</source>
         <translation>Changement de votre mot de passe...</translation>
     </message>
     <message>
-        <source>Restart Status and log in using your new password</source>
-        <translation>Redémarrez Status et connectez-vous à l’aide de votre nouveau mot de passe</translation>
+        <source>Your password will be changed. This only re-encrypts your profile key file and takes a moment — you stay logged in.</source>
+        <translation>Votre mot de passe va être modifié. Seul le fichier de clé de votre profil est rechiffré, ce qui ne prend qu’un instant — vous restez connecté.</translation>
+    </message>
+    <message>
+        <source>Only needed if you suspect your device was compromised. Takes considerably longer and requires logging in again.</source>
+        <translation>Nécessaire uniquement si vous pensez que votre appareil a été compromis. Cela prend beaucoup plus de temps et nécessite de vous reconnecter.</translation>
+    </message>
+    <message>
+        <source>Log in again with your new password</source>
+        <translation>Reconnectez-vous avec votre nouveau mot de passe</translation>
     </message>
     <message>
         <source>You can continue using Status</source>
@@ -4208,8 +4205,8 @@ file format</source>
         <translation>Réchiffrer les données avec le nouveau mot de passe</translation>
     </message>
     <message>
-        <source>Restart Status</source>
-        <translation>Redémarrer Status</translation>
+        <source>Log in again</source>
+        <translation>Se reconnecter</translation>
     </message>
     <message>
         <source>Close</source>
@@ -4720,8 +4717,8 @@ Connectez-vous avec votre nouveau mot de passe.</translation>
         <translation>Ne quittez pas Status ou n’éteignez pas votre appareil. Cela entraînerait une perte de profil et l’impossibilité de redémarrer l’application.</translation>
     </message>
     <message>
-        <source>Restart Status and log in with new password</source>
-        <translation>Redémarrez Status et connectez-vous avec le nouveau mot de passe</translation>
+        <source>Log in with new password</source>
+        <translation>Se connecter avec le nouveau mot de passe</translation>
     </message>
     <message>
         <source>Back to login</source>
@@ -6746,8 +6743,8 @@ key pair. Keycard will be required for signing</source>
         <translation>L’ID de chaîne renvoyé par l’RPC ne correspond pas à %1</translation>
     </message>
     <message>
-        <source>Restart required for changes to take effect</source>
-        <translation>Un redémarrage est nécessaire pour que les modifications soient prises en compte</translation>
+        <source>Log in again for changes to take effect</source>
+        <translation>Reconnectez-vous pour que les modifications prennent effet</translation>
     </message>
     <message>
         <source>Network name</source>
@@ -6786,20 +6783,20 @@ key pair. Keycard will be required for signing</source>
         <translation>Enregistrer les modifications</translation>
     </message>
     <message>
-        <source>RPC URL change requires app restart</source>
-        <translation>La modification de l’URL RPC nécessite un redémarrage de l’application</translation>
+        <source>RPC URL change requires logging in again</source>
+        <translation>La modification de l’URL RPC nécessite de vous reconnecter</translation>
     </message>
     <message>
-        <source>For new JSON RPC URLs to take effect, Status must be restarted. Are you ready to do this now?</source>
-        <translation>Pour que les nouvelles URL JSON RPC soient prises en compte, Status doit être redémarré. Êtes-vous prêt à le faire maintenant&#xa0;?</translation>
+        <source>For new JSON RPC URLs to take effect, you need to log in again. Are you ready to do this now?</source>
+        <translation>Pour que les nouvelles URL JSON RPC prennent effet, vous devez vous reconnecter. Voulez-vous le faire maintenant&#xa0;?</translation>
     </message>
     <message>
-        <source>Save and restart later</source>
-        <translation>Enregistrer et redémarrer plus tard</translation>
+        <source>Save and log in later</source>
+        <translation>Enregistrer et se reconnecter plus tard</translation>
     </message>
     <message>
-        <source>Save and restart Status</source>
-        <translation>Enregistrer et redémarrer Status</translation>
+        <source>Save and log in again</source>
+        <translation>Enregistrer et se reconnecter</translation>
     </message>
 </context>
 <context>
@@ -6841,7 +6838,7 @@ key pair. Keycard will be required for signing</source>
     <name>EditPermissionView</name>
     <message>
         <source>Unknown token — amount in smallest units</source>
-        <translation type="unfinished"></translation>
+        <translation>Jeton inconnu — montant en plus petites unités</translation>
     </message>
     <message>
         <source>Anyone</source>
@@ -8194,6 +8191,14 @@ Are you sure you want to do this?</source>
         <source>Change fleet to %1</source>
         <translation>Changer de groupe à %1</translation>
     </message>
+    <message>
+        <source>You will be logged out and back in if you confirm.</source>
+        <translation>Si vous confirmez, vous serez déconnecté puis reconnecté.</translation>
+    </message>
+    <message>
+        <source>Failed to change the fleet</source>
+        <translation>Échec du changement de flotte</translation>
+    </message>
 </context>
 <context>
     <name>FleetsModal</name>
@@ -8619,7 +8624,7 @@ Are you sure you want to do this?</source>
     <name>HoldingsSelectionModel</name>
     <message>
         <source>Loading…</source>
-        <translation type="unfinished"></translation>
+        <translation>Chargement…</translation>
     </message>
 </context>
 <context>
@@ -8700,11 +8705,11 @@ Are you sure you want to do this?</source>
     <name>HttpStatsModal</name>
     <message>
         <source>%1h %2m</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation type="unfinished">%1&#xa0;min</translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>network %1 in %2 req · cache %3 in %4 req</source>
@@ -8712,87 +8717,87 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>sent %1 · received %2 in %3 req</source>
-        <translation type="unfinished"></translation>
+        <translation>envoyé %1 · reçu %2 en %3 req.</translation>
     </message>
     <message>
         <source>No data</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune donnée</translation>
     </message>
     <message>
         <source>status-go: sent %1 · received %2</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go&#xa0;: envoyé %1 · reçu %2</translation>
     </message>
     <message>
         <source>app: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>app&#xa0;: %1</translation>
     </message>
     <message>
         <source> · measuring %1</source>
-        <translation type="unfinished"></translation>
+        <translation> · mesure depuis %1</translation>
     </message>
     <message>
         <source>Collection is off</source>
-        <translation type="unfinished"></translation>
+        <translation>La collecte est désactivée</translation>
     </message>
     <message>
         <source>Paused at %1 · counting continues</source>
-        <translation type="unfinished"></translation>
+        <translation>En pause à %1 · le comptage continue</translation>
     </message>
     <message>
         <source>Stopped while the app is in the background</source>
-        <translation type="unfinished"></translation>
+        <translation>Arrêté tant que l’application est en arrière-plan</translation>
     </message>
     <message>
         <source>Stopped while the window is minimized</source>
-        <translation type="unfinished"></translation>
+        <translation>Arrêté tant que la fenêtre est réduite</translation>
     </message>
     <message>
         <source>Live · updated %1 s ago</source>
-        <translation type="unfinished"></translation>
+        <translation>En direct · mis à jour il y a %1 s</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation type="unfinished">Reprendre</translation>
+        <translation>Reprendre</translation>
     </message>
     <message>
         <source>Pause updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Suspendre les mises à jour</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation type="unfinished"></translation>
+        <translation>Collecter</translation>
     </message>
     <message>
         <source>status-go</source>
-        <translation type="unfinished">status-go</translation>
+        <translation>status-go</translation>
     </message>
     <message>
         <source>App (QML)</source>
-        <translation type="unfinished"></translation>
+        <translation>App (QML)</translation>
     </message>
     <message>
         <source>All</source>
-        <translation type="unfinished">Tout</translation>
+        <translation>Tout</translation>
     </message>
     <message>
         <source>Waku</source>
-        <translation type="unfinished"></translation>
+        <translation>Waku</translation>
     </message>
     <message>
         <source>Webviews</source>
-        <translation type="unfinished"></translation>
+        <translation>Webviews</translation>
     </message>
     <message>
         <source>status-go does not report its HTTP traffic: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go ne signale pas son trafic HTTP&#xa0;: %1</translation>
     </message>
     <message>
         <source>Collection is off. It costs a little work on every request, so release builds collect only while Debug is on. Turn it on to start measuring from now.</source>
-        <translation type="unfinished"></translation>
+        <translation>La collecte est désactivée. Elle ajoute un léger travail à chaque requête&#xa0;; les versions de production ne collectent donc que lorsque le débogage est activé. Activez-la pour commencer à mesurer à partir de maintenant.</translation>
     </message>
     <message>
         <source>Start collecting</source>
-        <translation type="unfinished"></translation>
+        <translation>Démarrer la collecte</translation>
     </message>
     <message>
         <source>Total: %1</source>
@@ -8804,16 +8809,17 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Not counted here: requests made outside the QML network access manager.</source>
-        <translation type="unfinished"></translation>
+        <translation>Non comptabilisé ici&#xa0;: les requêtes effectuées en dehors du gestionnaire d’accès réseau QML.</translation>
     </message>
     <message>
         <source>status-go: %1
 app: %2</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go&#xa0;: %1
+app&#xa0;: %2</translation>
     </message>
     <message>
         <source>status-go does not report its Waku traffic: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>status-go ne signale pas son trafic Waku&#xa0;: %1</translation>
     </message>
     <message>
         <source>Refresh</source>
@@ -8836,198 +8842,198 @@ app: %2</source>
     <name>HttpTrafficDashboard</name>
     <message>
         <source>%1 req</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 req.</translation>
     </message>
     <message>
         <source>%1 cached</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 en cache</translation>
     </message>
     <message>
         <source>%1 failed</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 en échec</translation>
     </message>
     <message>
         <source>%1 h %2 min</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1 min</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>%1 s</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 s</translation>
     </message>
     <message>
         <source>%1 in background</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 en arrière-plan</translation>
     </message>
     <message>
         <source>No HTTP traffic yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun trafic HTTP pour l’instant.</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; de tout le trafic.</translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per request</source>
-        <translation type="unfinished"></translation>
+        <translation>Surtout &lt;b&gt;%1&lt;/b&gt;&#xa0;: ~%2 par requête</translation>
     </message>
     <message>
         <source>upload</source>
-        <translation type="unfinished"></translation>
+        <translation>envoi</translation>
     </message>
     <message numerus="yes">
         <source> (%n call(s) bundled)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform> (%n appel regroupé)</numerusform>
+            <numerusform> (%n appels regroupés)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n other host(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n autre hôte</numerusform>
+            <numerusform>%n autres hôtes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>+ %n more source(s) · %1 together</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>+ %n autre source · %1 au total</numerusform>
+            <numerusform>+ %n autres sources · %1 au total</numerusform>
         </translation>
     </message>
     <message>
         <source>grey bars = in background</source>
-        <translation type="unfinished"></translation>
+        <translation>barres grises = en arrière-plan</translation>
     </message>
     <message numerus="yes">
         <source>Multicall3 · %n call(s) bundled per request</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Multicall3 · %n appel regroupé par requête</numerusform>
+            <numerusform>Multicall3 · %n appels regroupés par requête</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>Multicall3 · %n call(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Multicall3 · %n appel</numerusform>
+            <numerusform>Multicall3 · %n appels</numerusform>
         </translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: ~%2 per response.</source>
-        <translation type="unfinished"></translation>
+        <translation>Surtout &lt;b&gt;%1&lt;/b&gt;&#xa0;: ~%2 par réponse.</translation>
     </message>
     <message>
         <source>download</source>
-        <translation type="unfinished"></translation>
+        <translation>réception</translation>
     </message>
     <message>
         <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ensuite&#xa0;: &lt;b&gt;%1&lt;/b&gt; %2.</translation>
     </message>
     <message>
         <source>↑ Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ Envoyé</translation>
     </message>
     <message>
         <source>↓ Received</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ Reçu</translation>
     </message>
     <message>
         <source>In background · %1 · now</source>
-        <translation type="unfinished"></translation>
+        <translation>En arrière-plan · %1 · maintenant</translation>
     </message>
     <message>
         <source>In background · %1</source>
-        <translation type="unfinished"></translation>
+        <translation>En arrière-plan · %1</translation>
     </message>
     <message>
         <source>Top consumers</source>
-        <translation type="unfinished"></translation>
+        <translation>Principaux consommateurs</translation>
     </message>
     <message>
         <source>click for details</source>
-        <translation type="unfinished"></translation>
+        <translation>cliquez pour plus de détails</translation>
     </message>
     <message>
         <source>Show fewer sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher moins de sources</translation>
     </message>
     <message>
         <source>Where it goes</source>
-        <translation type="unfinished"></translation>
+        <translation>Où va le trafic</translation>
     </message>
     <message>
         <source>All sources</source>
-        <translation type="unfinished"></translation>
+        <translation>Toutes les sources</translation>
     </message>
     <message>
         <source>Total · %1% of all traffic</source>
-        <translation type="unfinished"></translation>
+        <translation>Total · %1% de tout le trafic</translation>
     </message>
     <message>
         <source>Why so much upload</source>
-        <translation type="unfinished"></translation>
+        <translation>Pourquoi autant d’envoi</translation>
     </message>
     <message>
         <source>Per response</source>
-        <translation type="unfinished"></translation>
+        <translation>Par réponse</translation>
     </message>
     <message>
         <source>%1 per request</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 par requête</translation>
     </message>
     <message>
         <source>%1 per response</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 par réponse</translation>
     </message>
     <message>
         <source>How often</source>
-        <translation type="unfinished"></translation>
+        <translation>Fréquence</translation>
     </message>
     <message>
         <source>%1 requests</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 requêtes</translation>
     </message>
     <message>
         <source>%1 req/h</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 req./h</translation>
     </message>
     <message>
         <source>Endpoints</source>
-        <translation type="unfinished"></translation>
+        <translation>Points de terminaison</translation>
     </message>
     <message>
         <source>Loading…</source>
-        <translation type="unfinished"></translation>
+        <translation>Chargement…</translation>
     </message>
     <message>
         <source>Connection bytes only: no HTTP requests went to this host, e.g. a WebSocket.</source>
-        <translation type="unfinished"></translation>
+        <translation>Octets de connexion uniquement&#xa0;: aucune requête HTTP n’a été envoyée à cet hôte (p. ex. un WebSocket).</translation>
     </message>
     <message>
         <source>↑ %1/req</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ %1/req.</translation>
     </message>
     <message>
         <source>↓ %1/req</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ %1/req.</translation>
     </message>
     <message>
         <source>⏱ %1 ms · p95 %2 ms</source>
-        <translation type="unfinished"></translation>
+        <translation>⏱ %1 ms · p95 %2 ms</translation>
     </message>
     <message>
         <source>%1 × %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 × %2</translation>
     </message>
     <message>
         <source>Caller: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Appelant&#xa0;: %1</translation>
     </message>
 </context>
 <context>
@@ -9831,6 +9837,10 @@ app: %2</source>
         <translation>Importer une paire de clés à partir d&apos;une phrase de récupération</translation>
     </message>
     <message>
+        <source>Sign out</source>
+        <translation>Se déconnecter</translation>
+    </message>
+    <message>
         <source>No PIN? Skip</source>
         <translation>Pas de PIN&#xa0;? Ignorer</translation>
     </message>
@@ -9945,10 +9955,6 @@ app: %2</source>
     <message>
         <source>Profile key pair has been moved to Keycard</source>
         <translation>La paire de clés du profil a été déplacée vers la Keycard</translation>
-    </message>
-    <message>
-        <source>Quit and restart Status</source>
-        <translation>Quitter et redémarrer Status</translation>
     </message>
     <message>
         <source>Re-encrypting data may take some time</source>
@@ -10464,31 +10470,31 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Skip capitalized words and acronyms</source>
-        <translation type="unfinished"></translation>
+        <translation>Ignorer les mots en majuscules et les acronymes</translation>
     </message>
     <message>
         <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vous souhaitez améliorer une traduction, aider à ajouter une nouvelle langue ou en demander une&#xa0;? Faites-le-nous savoir sur notre %1.</translation>
     </message>
     <message>
         <source>channel</source>
-        <translation type="unfinished">chaîne</translation>
+        <translation>canal</translation>
     </message>
     <message>
         <source>Spell Check</source>
-        <translation type="unfinished"></translation>
+        <translation>Correcteur orthographique</translation>
     </message>
     <message>
         <source>On Desktop, spell check uses only local app dictionaries. On Mobile, the suggestions use your device&apos;s keyboard, so privacy depends on its settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Sur ordinateur, le correcteur orthographique utilise uniquement les dictionnaires locaux de l’application. Sur mobile, les suggestions proviennent du clavier de votre appareil&#xa0;; la confidentialité dépend donc de ses paramètres</translation>
     </message>
     <message>
         <source>Skips spelling checks for capitalized words and acronyms</source>
-        <translation type="unfinished"></translation>
+        <translation>N’effectue pas la vérification orthographique des mots en majuscules et des acronymes</translation>
     </message>
     <message>
         <source>Dictionaries</source>
-        <translation type="unfinished"></translation>
+        <translation>Dictionnaires</translation>
     </message>
     <message>
         <source>Time Format</source>
@@ -10507,12 +10513,8 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Changer la langue</translation>
     </message>
     <message>
-        <source>Display language has been changed. You must restart the application for changes to take effect.</source>
-        <translation>La langue d’affichage a été modifiée. Vous devez redémarrer l’application pour que les modifications soient prises en compte.</translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation>Redémarrer</translation>
+        <source>To show Status in the new language, you will be logged out and back in.</source>
+        <translation>Pour afficher Status dans la nouvelle langue, vous serez déconnecté puis reconnecté.</translation>
     </message>
 </context>
 <context>
@@ -11714,7 +11716,7 @@ chargement</translation>
     </message>
     <message>
         <source>Create Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Créer un fil</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -12395,7 +12397,7 @@ chargement</translation>
     <name>NetworkSelectPopup</name>
     <message>
         <source>All networks</source>
-        <translation type="unfinished"></translation>
+        <translation>Tous les réseaux</translation>
     </message>
     <message>
         <source>Manage networks</source>
@@ -12536,13 +12538,13 @@ chargement</translation>
     <message>
         <source>NEW</source>
         <comment>new message(s)</comment>
-        <translation type="unfinished">NOUVEAU</translation>
+        <translation>NOUVEAU</translation>
     </message>
     <message numerus="yes">
         <source>%n new message(s) since %1</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n nouveau message depuis %1</numerusform>
+            <numerusform>%n nouveaux messages depuis %1</numerusform>
         </translation>
     </message>
 </context>
@@ -12690,7 +12692,7 @@ chargement</translation>
     <name>NotificationAdaptorMessenger</name>
     <message>
         <source>Thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Fil de discussion</translation>
     </message>
     <message>
         <source>GIF</source>
@@ -13754,7 +13756,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>Popups</name>
     <message>
         <source>Cannot move the profile key pair to Keycard: failed to remove the saved password, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de transférer la paire de clés du profil vers la Keycard&#xa0;: échec de la suppression du mot de passe enregistré, veuillez réessayer</translation>
     </message>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
@@ -14197,31 +14199,31 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>ProfileEncryptionMigrationFlow</name>
     <message>
         <source>Failed to migrate to the new encryption format: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de la migration vers le nouveau format de chiffrement&#xa0;: %1</translation>
     </message>
     <message>
         <source>Biometric login disabled — re-enable it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Connexion biométrique désactivée — réactivez-la dans les paramètres</translation>
     </message>
     <message>
         <source>Updating encryption</source>
-        <translation type="unfinished"></translation>
+        <translation>Mise à jour du chiffrement</translation>
     </message>
     <message>
         <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechiffrement de vos données avec le nouveau format de chiffrement. Cela peut prendre un certain temps — ne quittez pas l’application et n’éteignez pas votre appareil.</translation>
     </message>
     <message>
         <source>Encryption updated</source>
-        <translation type="unfinished"></translation>
+        <translation>Chiffrement mis à jour</translation>
     </message>
     <message>
-        <source>Your profile was migrated to the new encryption format. Status must restart to complete the process.</source>
-        <translation type="unfinished"></translation>
+        <source>Your profile was migrated to the new encryption format. Log in again to complete the process.</source>
+        <translation>Votre profil a été migré vers le nouveau format de chiffrement. Reconnectez-vous pour terminer le processus.</translation>
     </message>
     <message>
-        <source>Restart Status</source>
-        <translation type="unfinished">Redémarrer Status</translation>
+        <source>Log in again</source>
+        <translation>Se reconnecter</translation>
     </message>
 </context>
 <context>
@@ -14256,6 +14258,10 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Contacts</source>
         <translation>Contacts</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply the new interface zoom level</source>
+        <translation>Fermez et rouvrez Status pour appliquer le nouveau niveau de zoom de l’interface</translation>
     </message>
 </context>
 <context>
@@ -15811,6 +15817,53 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
 </context>
 <context>
+    <name>SessionTransitionView</name>
+    <message>
+        <source>Finishing background work…</source>
+        <translation>Finalisation des tâches en arrière-plan…</translation>
+    </message>
+    <message>
+        <source>Still signing out…</source>
+        <translation>Déconnexion toujours en cours…</translation>
+    </message>
+    <message>
+        <source>Signing out did not complete</source>
+        <translation>La déconnexion n’a pas abouti</translation>
+    </message>
+    <message>
+        <source>Signed out, but Status could not get ready</source>
+        <translation>Déconnecté, mais Status n’a pas pu se préparer</translation>
+    </message>
+    <message>
+        <source>Signing out…</source>
+        <translation>Déconnexion…</translation>
+    </message>
+    <message>
+        <source>This is taking longer than usual. Status continues by itself once it&apos;s done, or you can close it now.</source>
+        <translation>Cela prend plus de temps que d’habitude. Status continuera de lui-même une fois terminé, ou vous pouvez le fermer maintenant.</translation>
+    </message>
+    <message>
+        <source>Your account may still be signed in. Try again, or close Status.</source>
+        <translation>Votre compte est peut-être encore connecté. Réessayez ou fermez Status.</translation>
+    </message>
+    <message>
+        <source>Your account is signed out, but the login screen could not be prepared. Try again, or close Status.</source>
+        <translation>Votre compte est déconnecté, mais l’écran de connexion n’a pas pu être préparé. Réessayez ou fermez Status.</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Réessayer</translation>
+    </message>
+    <message>
+        <source>Close Status</source>
+        <translation>Fermer Status</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Quitter</translation>
+    </message>
+</context>
+<context>
     <name>SettingsDirtyToastMessage</name>
     <message>
         <source>Changes detected</source>
@@ -15928,8 +15981,8 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <translation>À propos</translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
-        <translation>Déconnexion et fermeture</translation>
+        <source>Sign out</source>
+        <translation>Se déconnecter</translation>
     </message>
     <message>
         <source>On-device backup</source>
@@ -15982,14 +16035,14 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>ShareComposer</name>
     <message>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>Message</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationDelegate</name>
     <message numerus="yes">
         <source>%n member(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n membre</numerusform>
             <numerusform>%n membres</numerusform>
         </translation>
@@ -15999,41 +16052,41 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>ShareDestinationList</name>
     <message>
         <source>No destinations found</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune destination trouvée</translation>
     </message>
     <message>
         <source>Nothing selected yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune sélection pour l’instant</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationPickerPanel</name>
     <message>
         <source>Share</source>
-        <translation type="unfinished"></translation>
+        <translation>Partager</translation>
     </message>
     <message>
         <source>Search chats and channels</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher des conversations et des canaux</translation>
     </message>
 </context>
 <context>
     <name>ShareDestinationTabBar</name>
     <message>
         <source>All</source>
-        <translation type="unfinished">Tout</translation>
+        <translation>Tout</translation>
     </message>
     <message>
         <source>Contacts</source>
-        <translation type="unfinished">Contacts</translation>
+        <translation>Contacts</translation>
     </message>
     <message>
         <source>Groups</source>
-        <translation type="unfinished"></translation>
+        <translation>Groupes</translation>
     </message>
     <message>
         <source>Communities</source>
-        <translation type="unfinished">Communautés</translation>
+        <translation>Communautés</translation>
     </message>
 </context>
 <context>
@@ -16293,19 +16346,15 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>SignOutConfirmationDialog</name>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished">Se déconnecter</translation>
+        <translation>Se déconnecter</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished">Assurez-vous d’avoir enregistré le mot de passe de votre compte et la phrase de récupération. Sans ces éléments, vous risquez de bloquer l’accès à votre compte et de perdre vos fonds.</translation>
-    </message>
-    <message>
-        <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Déconnexion et fermeture</translation>
+        <translation>Assurez-vous d’avoir conservé le mot de passe de votre compte et votre phrase de récupération. Sans eux, vous risquez de perdre l’accès à votre compte et vos fonds.</translation>
     </message>
     <message>
         <source>Failed to turn off automatic login — sign out aborted, please try again</source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de la désactivation de la connexion automatique — déconnexion annulée, veuillez réessayer</translation>
     </message>
 </context>
 <context>
@@ -16598,11 +16647,11 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>StatusChatInput</name>
     <message>
         <source>Reply in %1, also send to %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Répondre dans %1, envoyer aussi à %2</translation>
     </message>
     <message>
         <source>Reply in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Répondre dans %1</translation>
     </message>
     <message>
         <source>Type something</source>
@@ -16649,86 +16698,86 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
     <message>
         <source>Add a thread name (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajouter un nom de fil (facultatif)</translation>
     </message>
     <message>
         <source>Also send to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Envoyer aussi à %1</translation>
     </message>
     <message>
         <source>Confirm</source>
-        <translation type="unfinished">Confirmer</translation>
+        <translation>Confirmer</translation>
     </message>
     <message>
         <source>Reply</source>
-        <translation type="unfinished">Répondre</translation>
+        <translation>Répondre</translation>
     </message>
     <message>
         <source>Send</source>
-        <translation type="unfinished">Envoyer</translation>
+        <translation>Envoyer</translation>
     </message>
 </context>
 <context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
-        <translation type="unfinished"></translation>
+        <translation>Mise en forme</translation>
     </message>
     <message>
         <source>Bold</source>
-        <translation type="unfinished"></translation>
+        <translation>Gras</translation>
     </message>
     <message>
         <source>Italics</source>
-        <translation type="unfinished"></translation>
+        <translation>Italique</translation>
     </message>
     <message>
         <source>Strike through</source>
-        <translation type="unfinished"></translation>
+        <translation>Barré</translation>
     </message>
     <message>
         <source>Quote</source>
-        <translation type="unfinished"></translation>
+        <translation>Citation</translation>
     </message>
     <message>
         <source>Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Code</translation>
     </message>
     <message>
         <source>Start a new thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Démarrer un nouveau fil</translation>
     </message>
     <message>
         <source>Camera</source>
-        <translation type="unfinished"></translation>
+        <translation>Appareil photo</translation>
     </message>
     <message>
         <source>Image</source>
-        <translation type="unfinished"></translation>
+        <translation>Image</translation>
     </message>
     <message>
         <source>Payment</source>
-        <translation type="unfinished"></translation>
+        <translation>Paiement</translation>
     </message>
     <message>
         <source>Mention</source>
-        <translation type="unfinished"></translation>
+        <translation>Mention</translation>
     </message>
     <message>
         <source>Emojis</source>
-        <translation type="unfinished"></translation>
+        <translation>Émojis</translation>
     </message>
     <message>
         <source>Stickers</source>
-        <translation type="unfinished"></translation>
+        <translation>Stickers</translation>
     </message>
     <message>
         <source>GIFs</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <source>Reply in thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Répondre dans le fil</translation>
     </message>
 </context>
 <context>
@@ -16802,7 +16851,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>StatusCurrencySelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher</translation>
     </message>
 </context>
 <context>
@@ -17008,7 +17057,7 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <name>StatusLanguageSelector</name>
     <message>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher</translation>
     </message>
 </context>
 <context>
@@ -17163,7 +17212,7 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Upload image</source>
-        <translation type="unfinished">Importer une image</translation>
+        <translation>Importer une image</translation>
     </message>
     <message>
         <source>Camera is not available</source>
@@ -17185,19 +17234,19 @@ avec un retour à la ligne</translation>
     </message>
     <message>
         <source>Search in</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher dans</translation>
     </message>
     <message>
         <source>Loading threads…</source>
-        <translation type="unfinished"></translation>
+        <translation>Chargement des fils…</translation>
     </message>
     <message>
         <source>Couldn&apos;t load threads. Retry</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de charger les fils. Réessayer</translation>
     </message>
     <message>
         <source>No threads</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun fil</translation>
     </message>
 </context>
 <context>
@@ -17368,11 +17417,11 @@ avec un retour à la ligne</translation>
     <name>StatusTextEditMenu</name>
     <message>
         <source>Checking spelling...</source>
-        <translation type="unfinished"></translation>
+        <translation>Vérification de l’orthographe...</translation>
     </message>
     <message>
         <source>No suggestions</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune suggestion</translation>
     </message>
     <message>
         <source>Cut</source>
@@ -17473,31 +17522,31 @@ avec un retour à la ligne</translation>
     <name>StayLoggedInSectionView</name>
     <message>
         <source>Save password on this device for automatic login</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrer le mot de passe sur cet appareil pour la connexion automatique</translation>
     </message>
     <message>
         <source>Your password is stored using your&lt;br/&gt;system&apos;s default secure storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre mot de passe est stocké dans le stockage&lt;br/&gt;sécurisé par défaut de votre système</translation>
     </message>
     <message>
         <source>Secure storage is unavailable on this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le stockage sécurisé n’est pas disponible sur cet appareil.</translation>
     </message>
     <message>
         <source>Not available for Keycard profiles - the Keycard is always required to log in.</source>
-        <translation type="unfinished"></translation>
+        <translation>Non disponible pour les profils Keycard - la Keycard est toujours requise pour se connecter.</translation>
     </message>
     <message>
         <source>To use this feature, update your password (you can provide the same one) or migrate to the new encryption format.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pour utiliser cette fonctionnalité, mettez à jour votre mot de passe (vous pouvez saisir le même) ou migrez vers le nouveau format de chiffrement.</translation>
     </message>
     <message>
         <source>Migrate to the new encryption format</source>
-        <translation type="unfinished"></translation>
+        <translation>Migrer vers le nouveau format de chiffrement</translation>
     </message>
     <message>
         <source>Re-encrypting your data with the new encryption format. This may take some time — do not quit the app or turn off your device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechiffrement de vos données avec le nouveau format de chiffrement. Cela peut prendre un certain temps — ne quittez pas l’application et n’éteignez pas votre appareil.</translation>
     </message>
 </context>
 <context>
@@ -18189,7 +18238,7 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Search in downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Rechercher dans les téléchargements</translation>
     </message>
     <message>
         <source>Edit bookmark</source>
@@ -18332,16 +18381,16 @@ This action cannot be undone.</source>
         <translation>Partagez vos commentaires ou suggérez des améliorations sur notre %1.</translation>
     </message>
     <message>
-        <source>Disable services and restart the app</source>
-        <translation>Désactiver les services et redémarrer l’application</translation>
-    </message>
-    <message>
-        <source>Enable services and restart the app</source>
-        <translation>Activer les services et redémarrer l’application</translation>
+        <source>Enable services and log in again</source>
+        <translation>Activer les services et se reconnecter</translation>
     </message>
     <message>
         <source>Disable third-party services</source>
         <translation>Désactiver les services tiers</translation>
+    </message>
+    <message>
+        <source>Disable services and log in again</source>
+        <translation>Désactiver les services et se reconnecter</translation>
     </message>
     <message>
         <source>Enable third-party services</source>
@@ -18364,11 +18413,11 @@ This action cannot be undone.</source>
     <name>ThreadCard</name>
     <message>
         <source>deleted this thread</source>
-        <translation type="unfinished"></translation>
+        <translation>a supprimé ce fil</translation>
     </message>
     <message numerus="yes">
         <source>%n message(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n message</numerusform>
             <numerusform>%n messages</numerusform>
         </translation>
@@ -18378,83 +18427,83 @@ This action cannot be undone.</source>
     <name>ThreadContextMenu</name>
     <message>
         <source>Edit name</source>
-        <translation type="unfinished"></translation>
+        <translation>Modifier le nom</translation>
     </message>
     <message>
         <source>Unfollow</source>
-        <translation type="unfinished"></translation>
+        <translation>Ne plus suivre</translation>
     </message>
     <message>
         <source>Follow</source>
-        <translation type="unfinished"></translation>
+        <translation>Suivre</translation>
     </message>
     <message>
         <source>Mute thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Couper le son du fil</translation>
     </message>
     <message>
         <source>Unmute thread</source>
-        <translation type="unfinished"></translation>
+        <translation>Réactiver le son du fil</translation>
     </message>
     <message>
         <source>Mark as read</source>
-        <translation type="unfinished">Marquer comme lu</translation>
+        <translation>Marquer comme lu</translation>
     </message>
     <message>
         <source>Share link</source>
-        <translation type="unfinished">Partager le lien</translation>
+        <translation>Partager le lien</translation>
     </message>
     <message>
         <source>Copy link</source>
-        <translation type="unfinished">Copier le lien</translation>
+        <translation>Copier le lien</translation>
     </message>
     <message>
         <source>Copied</source>
-        <translation type="unfinished">Copié</translation>
+        <translation>Copié</translation>
     </message>
     <message>
         <source>Unpin from list</source>
-        <translation type="unfinished"></translation>
+        <translation>Désépingler de la liste</translation>
     </message>
     <message>
         <source>Pin to list</source>
-        <translation type="unfinished"></translation>
+        <translation>Épingler à la liste</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Supprimer</translation>
+        <translation>Supprimer</translation>
     </message>
     <message>
         <source>Delete this thread?</source>
-        <translation type="unfinished"></translation>
+        <translation>Supprimer ce fil&#xa0;?</translation>
     </message>
     <message>
         <source>Are you sure you want to delete this thread? It may remain visible on other participants&apos; devices.</source>
-        <translation type="unfinished"></translation>
+        <translation>Voulez-vous vraiment supprimer ce fil&#xa0;? Il peut rester visible sur les appareils des autres participants.</translation>
     </message>
 </context>
 <context>
     <name>ThreadHeader</name>
     <message>
         <source>Couldn&apos;t rename thread: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible de renommer le fil&#xa0;: %1</translation>
     </message>
     <message>
         <source>Thread name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nom du fil</translation>
     </message>
     <message>
         <source>in %1</source>
         <extracomment>Thread header: %1 is the parent channel or chat name.</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>dans %1</translation>
     </message>
     <message>
         <source>Renaming...</source>
-        <translation type="unfinished"></translation>
+        <translation>Renommage...</translation>
     </message>
     <message>
         <source>More</source>
-        <translation type="unfinished">Plus</translation>
+        <translation>Plus</translation>
     </message>
 </context>
 <context>
@@ -18809,48 +18858,48 @@ Vos droits d’administration et de propriété sur %1 ont été transférés au
     <name>TrafficAnswerCard</name>
     <message>
         <source>Where does the traffic go?</source>
-        <translation type="unfinished"></translation>
+        <translation>Où va le trafic&#xa0;?</translation>
     </message>
 </context>
 <context>
     <name>TrafficFormat</name>
     <message>
         <source>—/h</source>
-        <translation type="unfinished"></translation>
+        <translation>—/h</translation>
     </message>
     <message>
         <source>%1/h</source>
-        <translation type="unfinished"></translation>
+        <translation>%1/h</translation>
     </message>
     <message>
         <source>↑ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ %1</translation>
     </message>
     <message>
         <source>↓ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ %1</translation>
     </message>
 </context>
 <context>
     <name>TrafficLegend</name>
     <message>
         <source>%1 sent · %2 received · bold = total since start · chip = per hour</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 envoyé · %2 reçu · gras = total depuis le démarrage · pastille = par heure</translation>
     </message>
     <message>
         <source>↑</source>
-        <translation type="unfinished"></translation>
+        <translation>↑</translation>
     </message>
     <message>
         <source>↓</source>
-        <translation type="unfinished"></translation>
+        <translation>↓</translation>
     </message>
 </context>
 <context>
     <name>TrafficShares</name>
     <message>
         <source>%1%</source>
-        <translation type="unfinished">%1%</translation>
+        <translation>%1%</translation>
     </message>
 </context>
 <context>
@@ -19425,8 +19474,12 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
         <translation>Paramètres</translation>
     </message>
     <message>
-        <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Déconnexion et fermeture</translation>
+        <source>Sign out</source>
+        <translation>Se déconnecter</translation>
+    </message>
+    <message>
+        <source>Quit</source>
+        <translation>Quitter</translation>
     </message>
     <message>
         <source>Always online</source>
@@ -19758,134 +19811,134 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <name>WakuTrafficDashboard</name>
     <message>
         <source>Relay</source>
-        <translation type="unfinished"></translation>
+        <translation>Relay</translation>
     </message>
     <message>
         <source>messages of every chat on your shards pass through you</source>
-        <translation type="unfinished"></translation>
+        <translation>les messages de toutes les conversations de vos shards transitent par vous</translation>
     </message>
     <message>
         <source>Store</source>
-        <translation type="unfinished"></translation>
+        <translation>Store</translation>
     </message>
     <message>
         <source>history fetched after start and after reconnects</source>
-        <translation type="unfinished"></translation>
+        <translation>historique récupéré après le démarrage et après les reconnexions</translation>
     </message>
     <message>
         <source>Filter</source>
-        <translation type="unfinished">Filtrer</translation>
+        <translation>Filter</translation>
     </message>
     <message>
         <source>messages of your chats, pushed by a service node</source>
-        <translation type="unfinished"></translation>
+        <translation>les messages de vos conversations, transmis par un nœud de service</translation>
     </message>
     <message>
         <source>Filter subscriptions</source>
-        <translation type="unfinished"></translation>
+        <translation>Abonnements Filter</translation>
     </message>
     <message>
         <source>telling a service node which chats you follow</source>
-        <translation type="unfinished"></translation>
+        <translation>indiquer à un nœud de service les conversations que vous suivez</translation>
     </message>
     <message>
         <source>Lightpush</source>
-        <translation type="unfinished"></translation>
+        <translation>Lightpush</translation>
     </message>
     <message>
         <source>your messages, handed to a service node to publish</source>
-        <translation type="unfinished"></translation>
+        <translation>vos messages, confiés à un nœud de service pour publication</translation>
     </message>
     <message>
         <source>Peer exchange</source>
-        <translation type="unfinished"></translation>
+        <translation>Échange de pairs</translation>
     </message>
     <message>
         <source>asking peers for more peers</source>
-        <translation type="unfinished"></translation>
+        <translation>demander d’autres pairs aux pairs</translation>
     </message>
     <message>
         <source>Metadata</source>
-        <translation type="unfinished"></translation>
+        <translation>Métadonnées</translation>
     </message>
     <message>
         <source>comparing shards with a new peer</source>
-        <translation type="unfinished"></translation>
+        <translation>comparer les shards avec un nouveau pair</translation>
     </message>
     <message>
         <source>Identify</source>
-        <translation type="unfinished"></translation>
+        <translation>Identify</translation>
     </message>
     <message>
         <source>peers telling each other what they support</source>
-        <translation type="unfinished"></translation>
+        <translation>les pairs s’indiquent mutuellement ce qu’ils prennent en charge</translation>
     </message>
     <message>
         <source>Ping</source>
-        <translation type="unfinished"></translation>
+        <translation>Ping</translation>
     </message>
     <message>
         <source>keeping connections alive</source>
-        <translation type="unfinished"></translation>
+        <translation>maintien des connexions actives</translation>
     </message>
     <message>
         <source>Protocol negotiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Négociation de protocole</translation>
     </message>
     <message>
         <source>streams that have not agreed on a protocol yet</source>
-        <translation type="unfinished"></translation>
+        <translation>flux qui ne se sont pas encore accordés sur un protocole</translation>
     </message>
     <message>
         <source>No Waku traffic yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun trafic Waku pour l’instant.</translation>
     </message>
     <message>
         <source>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; of all traffic.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;%1&lt;/b&gt; — &lt;b&gt;%2&lt;/b&gt; (%3), &lt;b&gt;%4%&lt;/b&gt; de tout le trafic.</translation>
     </message>
     <message>
         <source>Mostly &lt;b&gt;%1&lt;/b&gt;: %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Surtout &lt;b&gt;%1&lt;/b&gt;&#xa0;: %2.</translation>
     </message>
     <message>
         <source>upload</source>
-        <translation type="unfinished"></translation>
+        <translation>envoi</translation>
     </message>
     <message>
         <source>download</source>
-        <translation type="unfinished"></translation>
+        <translation>réception</translation>
     </message>
     <message>
         <source>Next: &lt;b&gt;%1&lt;/b&gt; %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ensuite&#xa0;: &lt;b&gt;%1&lt;/b&gt; %2.</translation>
     </message>
     <message numerus="yes">
         <source>%n other peer(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n autre pair</numerusform>
+            <numerusform>%n autres pairs</numerusform>
         </translation>
     </message>
     <message>
         <source>↑ Sent</source>
-        <translation type="unfinished"></translation>
+        <translation>↑ Envoyé</translation>
     </message>
     <message>
         <source>↓ Received</source>
-        <translation type="unfinished"></translation>
+        <translation>↓ Reçu</translation>
     </message>
     <message>
         <source>Protocols</source>
-        <translation type="unfinished"></translation>
+        <translation>Protocoles</translation>
     </message>
     <message>
         <source>Which peers</source>
-        <translation type="unfinished"></translation>
+        <translation>Quels pairs</translation>
     </message>
     <message>
         <source>counted inside libp2p streams, without encryption and connection overhead</source>
-        <translation type="unfinished"></translation>
+        <translation>comptabilisé au sein des flux libp2p, sans le surcoût du chiffrement et de la connexion</translation>
     </message>
 </context>
 <context>

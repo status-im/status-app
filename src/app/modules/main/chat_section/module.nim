@@ -1,7 +1,8 @@
 import nimqml, tables, chronicles, json, sequtils, strutils, std/strformat, sugar, marshal, std/sets
-from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop, isActive
+from seaqt/qtimer import QTimer, create, setSingleShot, start, stop, isActive
 
 import io_interface
+import app/core/session_timer
 import ../io_interface as delegate_interface
 import view, controller, active_item
 import model as chats_model
@@ -1066,11 +1067,8 @@ proc scheduleInitialChatsBuild(self: Module) =
     self.initialBuildTimer = QTimer.create()
     self.initialBuildTimer.setSingleShot(true)
     let m = self
-    self.initialBuildTimer.onTimeout(proc() {.closure, raises: [].} =
-      try:
-        m.onInitialChatsBuildTimeout()
-      except Exception as e:
-        error "initial chats build failed", msg = e.msg)
+    self.initialBuildTimer.onSessionTimeout("initial chats build",
+      proc() = m.onInitialChatsBuildTimeout())
   self.initialBuildTimer.start(INITIAL_CHATS_BUILD_DELAY_MS)
 
 method onSectionTransitionSettled*(self: Module) =

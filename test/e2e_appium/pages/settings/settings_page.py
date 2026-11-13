@@ -22,18 +22,16 @@ class SettingsPage(BasePage):
     def is_loaded(self, timeout: Optional[int] = 6) -> bool:
         return self.is_element_visible(self.locators.PROFILE_MENU_ITEM, timeout=timeout)
 
-    def open_sign_out_and_quit(self) -> bool:
-        if self.try_click(
-            self.locators.SIGN_OUT_AND_QUIT,
-            fallback_locators=[self.locators.SIGN_OUT_AND_QUIT_ALT], 
-        ):
-            return True
-        return False
+    def open_sign_out(self) -> bool:
+        return self.try_click(
+            self.locators.SIGN_OUT_MENU_ITEM,
+            fallback_locators=[self.locators.SIGN_OUT_MENU_ITEM_TEXT],
+        )
 
     def confirm_sign_out(self) -> bool:
         return self.try_click(
             self.locators.CONFIRM_SIGN_OUT,
-            fallback_locators=[self.locators.CONFIRM_QUIT],
+            fallback_locators=[self.locators.CONFIRM_SIGN_OUT_TEXT],
         )
 
     def open_backup_recovery_phrase(self) -> Optional[BackupSeedModal]:

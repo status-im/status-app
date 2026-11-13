@@ -77,6 +77,7 @@ SplitView {
                 property string fleet: "fleet-123"
                 function setFleet(fl) {
                     fleet = fl
+                    return true
                 }
 
                 property bool wakuV2LightClientEnabled
@@ -101,6 +102,7 @@ SplitView {
                 function collectStorageStats() {}
                 function toggleDebug() {
                     isDebugEnabled = !isDebugEnabled
+                    return true
                 }
                 function setArchiveProtocolMode(mode) {}
                 function toggleEnsCommunityPermissionsEnabled() {}

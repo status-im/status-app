@@ -291,7 +291,7 @@ method setFilterAllAddresses*(self: Module) =
   self.notifyFilterChanged()
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSection", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSection", self.viewVariant)
 
   self.events.on(SIGNAL_KEYPAIR_SYNCED) do(e: Args):
     let args = KeypairArgs(e)

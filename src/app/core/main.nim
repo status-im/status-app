@@ -24,15 +24,14 @@ proc newStatusFoundation*(): StatusFoundation =
   result.signalsManager = newSignalsManager(result.events)
 
 proc delete*(self: StatusFoundation) =
+  ## The urls manager outlives the session: its owner deletes it.
   self.signalsManager.delete()
-  self.urlsManager.delete()
   self.threadpool.teardown()
 
-proc initUrlSchemeManager*(self: StatusFoundation, urlSchemeEvent: UrlSchemeEvent,
-    singleInstance: SingleInstance, protocolUriOnStart: string,
-    intakeSlot: PendingIntakeSlot = nil, shareIntakeCacheDir: string = "") =
-  self.urlsManager = newUrlsManager(self.events, urlSchemeEvent, singleInstance,
-    protocolUriOnStart, intakeSlot, shareIntakeCacheDir)
+proc attachUrlsManager*(self: StatusFoundation, urlsManager: UrlsManager) =
+  ## The process-lifetime urls manager, attached to this session.
+  self.urlsManager = urlsManager
+  urlsManager.attachSession(self.events)
 
 proc appReady*(self: StatusFoundation) =
   self.urlsManager.appReady()

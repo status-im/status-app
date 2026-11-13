@@ -92,14 +92,6 @@ BaseKeycardManagementStore {
         d.ready = false
     }
 
-    function signOutAndQuit() {
-        if (!backend) {
-            console.error("keycard management module was not created")
-            return
-        }
-        d.mainModuleInst.signOutAndQuit()
-    }
-
     function prepareKeyPairModel() {
         if (!backend) {
             console.error("keycard management module was not created")

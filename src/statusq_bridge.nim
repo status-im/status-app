@@ -16,6 +16,14 @@ proc statusq_osnotification_show_badge_notification*(obj: pointer, notifications
 proc statusq_osnotification_delete*(obj: pointer) {.cdecl, importc.}
 
 proc statusq_invoke_method_queued*(obj: pointer, meth: cstring, arg: cstring) {.cdecl, importc.}
+# Like statusq_invoke_method_queued, but the GUI thread drops the call unless
+# `generation` still matches the one last set with statusq_set_session_generation.
+proc statusq_invoke_method_queued_in_generation*(obj: pointer, meth: cstring, arg: cstring,
+  generation: uint64) {.cdecl, importc.}
+proc statusq_set_session_generation*(generation: uint64) {.cdecl, importc.}
+# Delivers "<tag>|<arg>" to the slot; the payload is built on the C++ side.
+proc statusq_invoke_method_queued_tagged*(obj: pointer, meth: cstring, arg: cstring, tag: uint64)
+  {.cdecl, importc.}
 
 proc statusq_urlscheme_create*(): pointer {.cdecl, importc.}
 proc statusq_urlscheme_set_instance*(obj: pointer) {.cdecl, importc.}

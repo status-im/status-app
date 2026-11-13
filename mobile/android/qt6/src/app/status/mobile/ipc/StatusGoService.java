@@ -70,6 +70,9 @@ public final class StatusGoService extends Service {
     private final Object notificationReplyLock = new Object();
     private final Deque<String> pendingNotificationReplySignals = new ArrayDeque<>();
     private volatile boolean foregroundStarted = false;
+    // The UI logged the account out and no login followed: nothing to keep running once the
+    // UI goes away.
+    private volatile boolean loggedOut = false;
     private volatile boolean uiVisible = false;
 
     private final ExecutorService lifecycleExecutor = Executors.newSingleThreadExecutor();
@@ -169,10 +172,26 @@ public final class StatusGoService extends Service {
      * consumes this response to update chat state; status-go does not emit messages.new for
      * locally initiated sends.
      */
-    public static boolean publishNotificationReplyResult(String rpcResponseJson) {
+    public static boolean publishNotificationReplyResult(String rpcResponseJson, long signalEpoch) {
         final StatusGoService service = sInstance;
         if (service == null || rpcResponseJson == null || rpcResponseJson.isEmpty()) return false;
-        return service.publishNotificationReplyResultInternal(rpcResponseJson);
+        return service.publishNotificationReplyResultInternal(rpcResponseJson, signalEpoch);
+    }
+
+    /**
+     * Epoch status-go stamps on the signals it sends now (0 if unknown). The frontend only
+     * accepts signals of the backend session it is logged in to, so signals built here
+     * carry the epoch of the session they belong to.
+     */
+    public static long currentSignalEpoch() {
+        final String response = callRpc("SignalEpoch", "[]");
+        if (response == null || response.isEmpty()) return 0;
+        try {
+            return new JSONObject(response).optLong("signalEpoch", 0);
+        } catch (Throwable t) {
+            Log.w(TAG, "unreadable SignalEpoch response", t);
+            return 0;
+        }
     }
 
     /**
@@ -253,15 +272,18 @@ public final class StatusGoService extends Service {
                 ByteBuffer.wrap(jsonSignal.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private boolean publishNotificationReplyResultInternal(String rpcResponseJson) {
+    private boolean publishNotificationReplyResultInternal(String rpcResponseJson, long signalEpoch) {
         final String signal;
         try {
-            JSONObject envelope = new JSONObject();
-            envelope.put("type", "notification.reply.sent");
-            envelope.put("event", new JSONObject(rpcResponseJson));
-            signal = envelope.toString();
+            // Parsing validates the response JSON.
+            signal = NotificationReplySignal.envelope(
+                    new JSONObject(rpcResponseJson).toString(), signalEpoch);
         } catch (Throwable t) {
             Log.w(TAG, "failed to create notification reply frontend signal", t);
+            return false;
+        }
+        if (signal == null) {
+            Log.w(TAG, "notification reply result without a signal epoch, not published");
             return false;
         }
 
@@ -291,6 +313,7 @@ public final class StatusGoService extends Service {
             final JSONObject event = new JSONObject(jsonSignal).optJSONObject("event");
             if (event == null) return;
             if (!event.optString("error", "").isEmpty()) return;
+            loggedOut = false;
             ensureForegroundStarted();
         } catch (Throwable t) {
             // Best-effort only; don't crash the service.
@@ -319,7 +342,12 @@ public final class StatusGoService extends Service {
                 stopForeground(true);
             } catch (Throwable ignored) {}
             foregroundStarted = false;
-            stopSelf();
+            loggedOut = true;
+            // With a UI attached this is a sign-out that returns to the login screen: stay
+            // started, so the next login's foreground state survives the UI going away
+            // (a bound-only service is destroyed on unbind). Stopped when the UI goes away
+            // logged out (see registerSignalListener).
+            if (listeners.getRegisteredCallbackCount() == 0) stopSelf();
         } catch (Throwable t) {
             // Best-effort only.
         }
@@ -538,7 +566,10 @@ public final class StatusGoService extends Service {
             // RemoteCallbackList.unregister() calls unlinkToDeath internally, so clean
             // unregistration does not trigger this callback.
             try {
-                listener.asBinder().linkToDeath(() -> applyUiVisibility(false), 0);
+                listener.asBinder().linkToDeath(() -> {
+                    applyUiVisibility(false);
+                    if (loggedOut) stopSelf();
+                }, 0);
             } catch (RemoteException ignored) {
                 // Binder already dead — notification suppression is not a concern.
             }

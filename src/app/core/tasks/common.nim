@@ -9,6 +9,8 @@ type
   Task* = proc(arg: string): void {.gcsafe, nimcall.}
   TaskArg* = ref object of RootObj
     tptr* {.dontSerialize.}: Task # Only used during task creation (don't access in tasks)
+    # App session generation, stamped by ThreadPool.start; read by QObjectTaskArg.finish*
+    sessionGeneration*: uint64
 
 proc decode*[T](arg: string): T =
   Json.decode(arg, T, allowUnknownFields = true)

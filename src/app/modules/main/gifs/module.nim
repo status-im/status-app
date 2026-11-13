@@ -37,7 +37,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("gifsModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("gifsModule", self.viewVariant)
 
   self.controller.init()
   self.view.load()

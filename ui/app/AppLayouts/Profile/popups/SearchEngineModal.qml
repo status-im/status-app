@@ -46,9 +46,9 @@ StatusDialog {
                     
                     RadioButtonSelector {
                         Layout.fillWidth: true
-                        implicitHeight: model.description ? 80 : 52
-                        title: model.name
-                        subTitle: model.description
+                        implicitHeight: subTitle ? 80 : 52
+                        title: SearchEnginesConfig.getEngineName(model.engineId)
+                        subTitle: SearchEnginesConfig.getEngineDescription(model.engineId)
                         asset.name: Assets.svg(model.iconUrl)
                         asset.isImage: true
                         buttonGroup: searchEnginGroup

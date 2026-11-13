@@ -20,9 +20,13 @@ SettingsContentBase {
     required property int theme // ThemeUtils.Style.xxx
     required property real nativeWindowDpr // baseline/native DPR of the respective Screen
     property string uiScaleFile: StandardPaths.writableLocation(StandardPaths.AppLocalDataLocation) + "/ui-scale"
+    // The zoom applies from the next app start: whether the app relaunches itself for it
+    // or the user closes and reopens it (iOS)
+    property bool restartSupported: true
 
     signal themeChangeRequested(int theme)
-    signal restartRequested
+    // The new zoom was saved; it applies from the next app start
+    signal zoomChangeSaved
 
     QtObject {
         id: d
@@ -61,15 +65,17 @@ SettingsContentBase {
     Binding on dirty {
         value: d.dirty
     }
-    toast.saveChangesText: qsTr("Restart to apply")
-    toast.saveChangesTooltipText: qsTr("Restart Status to apply the new interface zoom level")
+    toast.saveChangesText: root.restartSupported ? qsTr("Restart to apply") : qsTr("Save")
+    toast.saveChangesTooltipText: root.restartSupported
+                                  ? qsTr("Restart Status to apply the new interface zoom level")
+                                  : qsTr("Close and reopen Status to apply the new interface zoom level")
     saveChangesButtonEnabled: dirty
     onResetChangesClicked: d.reset()
     onSaveChangesClicked: {
         if (SQUtils.StringUtils.writeTextFile(root.uiScaleFile, d.resultFactor)) {
             d.prevValue = slider.value
             d.dirty = false
-            root.restartRequested()
+            root.zoomChangeSaved()
         } else {
             console.warn("Writing 'ui-scale' setting failed!")
             d.reset()

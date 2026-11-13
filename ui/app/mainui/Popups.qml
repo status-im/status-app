@@ -690,8 +690,8 @@ QtObject {
         openPopup(termsOfUsePopupComponent)
     }
 
-    function openQuitConfirmPopup() {
-        openPopup(quitConfirmPopupComponent)
+    function openSignOutConfirmPopup() {
+        openPopup(signOutConfirmPopupComponent)
     }
 
     function openQRScannerPopup() {
@@ -884,6 +884,7 @@ QtObject {
                 onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {
                     Global.keycardFlowDone(flow, keyUid, keycardUid, success)
                 }
+                onSignOutRequested: Global.signOutConfirmed()
 
                 onClosed: destroy()
             }
@@ -1792,14 +1793,14 @@ QtObject {
             }
         },
         Component {
-            id: quitConfirmPopupComponent
+            id: signOutConfirmPopupComponent
 
             SignOutConfirmationDialog {
                 id: confirmDialog
                 secureStorage: root.secureStorage
                 privacyStore: root.privacyStore
                 keyUid: root.privacyStore.keyUid
-                onSignOutRequested: mainModule.signOutAndQuit()
+                onSignOutRequested: Global.signOutConfirmed()
             }
         },
 

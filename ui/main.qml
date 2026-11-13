@@ -6,11 +6,9 @@ import QtQuick.Layouts
 
 import utils
 import shared.panels
-import shared.popups
 import shared.stores
 
 import mainui
-import mainui.sectionLoaders
 import AppLayouts.stores as AppStores
 import AppLayouts.Profile.stores
 
@@ -19,7 +17,6 @@ import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
-import StatusQ.Core.Backpressure
 import StatusQ.Platform
 import StatusQ.Popups.Dialog
 
@@ -30,13 +27,6 @@ Window {
 
     Theme.style: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
                  ? Theme.Style.Dark : Theme.Style.Light
-
-    // Provided by Nim before `main.qml` starts (see AppController.initializeQmlContext()).
-    readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
-                                       ? skipOnboardingContextProperty
-                                       : false
-
-    property bool appIsReady: false
 
     readonly property AppStores.FeatureFlagsStore featureFlagsStore: AppStores.FeatureFlagsStore {
         readonly property var featureFlags: typeof featureFlagsRootContextProperty !== undefined ? featureFlagsRootContextProperty : null
@@ -65,10 +55,8 @@ Window {
     readonly property UtilsStore utilsStore: UtilsStore {}
     readonly property LanguageStore languageStore: LanguageStore {}
     readonly property bool appThemeDark: Theme.style === Theme.Style.Dark
-    readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
     readonly property bool portraitLayout: height > width
-    readonly property bool userLoggedIn: loader.item !== null
-    property bool biometricFlowPending: false
+    readonly property bool userLoggedIn: sessionLoader.item?.userLoggedIn ?? false
 
     // Use native Android keyboard tracking via WindowInsets API
     // This bypasses Qt's unreliable inputMethod and works with any windowSoftInputMode
@@ -181,6 +169,12 @@ Window {
         localAppSettings.geometry = newRect
     }
 
+    // Quits the app: during a session transition ending the session takes care of it
+    function quitApp() : void {
+        if (!sessionView.quit())
+            Qt.exit(0)
+    }
+
     onPortraitLayoutChanged: {
         // Android looses status bar icon color when switching orientation
         if (SQUtils.Utils.isAndroid) {
@@ -190,8 +184,9 @@ Window {
 
     QtObject {
         id: d
-        property bool appMainTriggered: false
         property bool splashDismissed: false
+        // The ended session's UI is unloaded and the next session's content not shown yet
+        property bool awaitingSessionContent: false
         property double lastShakeShareMs: 0
 
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
@@ -225,7 +220,16 @@ Window {
         property int lastNonMinVisibility
         property var lastMinimizedScreen: null
 
-        property bool showSkippedBiometricFlow: false
+        function signOut() : void {
+            if (!sessionView.signOut())
+                console.warn("sign-out ignored: a session transition is running")
+        }
+
+        function releaseSessionUi() : void {
+            // Popups of the session are destroyed with its tree
+            sessionLoader.active = false
+            Qt.callLater(() => sessionView.uiReleased())
+        }
 
         property var keycardSimulatorWindow
         function createKeycardSimulatorController() : void {
@@ -286,9 +290,7 @@ Window {
 
     Action {
         shortcut: StandardKey.Quit
-        onTriggered: {
-            Qt.exit(0)
-        }
+        onTriggered: applicationWindow.quitApp()
     }
 
     //TODO remove direct backend access
@@ -299,19 +301,6 @@ Window {
         function onDisplayWindowsOsNotification(title: string, message: string) : void {
             systemTray.showMessage(title, message)
         }
-    }
-
-    OpacityAnimator {
-        id: appMainFadeIn
-        target: loader
-        from: 0
-        to: 1
-        duration: 120
-        running: false
-    }
-
-    function moveToAppMain() : void {
-        d.appMainTriggered = true
     }
 
     /* When the app is closed via CMD+Q or via tray icon, it should be closed (not minimized)
@@ -327,7 +316,7 @@ Window {
 
         function onQuit(spontaneous: bool) : void {
             if (spontaneous)
-                Qt.exit(0)
+                applicationWindow.quitApp()
         }
     }
 
@@ -368,14 +357,18 @@ Window {
             applicationWindow.storeAppState() // noop on mobile
             if (SQUtils.Utils.isMobile) {
                 close.accepted = false
-                if (loader.item && loader.item.tryGoBack && loader.item.tryGoBack())
+                if (sessionLoader.item && sessionLoader.item.tryGoBack())
                     return
                 if (SQUtils.Utils.isAndroid)
                     MobileUI.backToHomeScreen()
                 else
                     applicationWindow.showMinimized()
                 return
-            } else if (!loader.item) {
+            } else if (sessionView.phase !== SessionTransitionView.Phase.Active) {
+                // closing during a session transition quits once that is safe
+                close.accepted = false
+                applicationWindow.quitApp()
+            } else if (!applicationWindow.userLoggedIn) {
                 close.accepted = true
             }
             // In case user has set to close should quit app
@@ -465,9 +458,33 @@ Window {
         d.createKeycardSimulatorController()
 
         Global.openShakeToSharePopupRequested.connect(openShakeToSharePopup)
+    }
 
-        if (applicationWindow.skipOnboarding) {
-            moveToAppMain()
+    Connections {
+        target: sessionView
+
+        function onSessionEnding() : void {
+            d.awaitingSessionContent = true
+            // not from within the call that ended the session (e.g. a dialog's handler)
+            Qt.callLater(d.releaseSessionUi)
+        }
+        function onSessionReady() : void {
+            sessionLoader.active = true
+        }
+    }
+
+    Connections {
+        target: Global
+
+        function onSignOutConfirmed() : void {
+            d.signOut()
+        }
+        function onReloginRequested() : void {
+            if (!sessionView.relogin())
+                console.warn("relogin ignored: a session transition is running")
+        }
+        function onQuitAppRequested() : void {
+            applicationWindow.quitApp()
         }
     }
 
@@ -488,88 +505,33 @@ Window {
         onActivateApp: {
             applicationWindow.makeStatusAppActive()
         }
+        onQuitRequested: applicationWindow.quitApp()
     }
 
     Item {
         anchors.fill: parent
         SafeArea.additionalMargins.bottom: applicationWindow.additionalBottomMargin
 
-        AppMainLoader {
-            id: loader
+        Loader {
+            id: sessionLoader
 
             anchors.fill: parent
-            anchors.topMargin: SQUtils.Utils.isMacOS && !applicationWindow.portraitLayout ? 0
-                                                                                          : parent.SafeArea.margins.top
-            anchors.bottomMargin: parent.SafeArea.margins.bottom
-            anchors.leftMargin: applicationWindow.portraitLayout ? parent.SafeArea.margins.left
-                                                      : 0 // the PrimaryNavSidebar is visible in landscape and already has it
-            anchors.rightMargin: parent.SafeArea.margins.right
 
-            opacity: 0
-            visible: !startupOnboardingLoader.active
+            sourceComponent: SessionRoot {
+                featureFlagsStore: applicationWindow.featureFlagsStore
+                languageStore: applicationWindow.languageStore
+                utilsStore: applicationWindow.utilsStore
+                systemTrayIconAvailable: systemTray.available
+                portraitLayout: applicationWindow.portraitLayout
+                allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)
 
-            Behavior on opacity {
-                NumberAnimation { duration: 120 }
-            }
-
-            active: d.appMainTriggered && (typeof mainModule !== "undefined")
-            mainReady: typeof mainModule !== "undefined" && (mainModule?.mainLoaded ?? false)
-
-            featureFlagsStore: applicationWindow.featureFlagsStore
-            languageStore: applicationWindow.languageStore
-            keychain: appKeychain
-            secureStorage: appSecureStorage
-            systemTrayIconAvailable: systemTray.available
-            utilsStore: applicationWindow.utilsStore
-
-            onLoaded: {
-                // Remember the logged-in profile as the last selected one. The login
-                // screen's profileSelected only covers profiles picked THERE — a freshly
-                // onboarded profile never passes through it, yet startup auto-login
-                // ("Stay logged in") targets exactly this key UID on the next launch.
-                if (typeof userProfile !== "undefined" && userProfile.keyUid)
-                    localAppSettings.selectedProfileKeyUid = userProfile.keyUid
-
-                appMainFadeIn.running = true
-                startupOnboardingLoader.active = false
-                splashScreenLoader.active = false
-                applicationWindow.contentLoaded()
-                if (typeof onboardingModule !== "undefined"
-                        && !!onboardingModule) {
-                    Qt.callLater(() => onboardingModule.cleanupAfterMainTransition())
+                onContentLoaded: {
+                    splashScreenLoader.active = false
+                    d.awaitingSessionContent = false
+                    applicationWindow.contentLoaded()
                 }
-                if (mainReady) {
-                    Global.appIsReady = true
-                    applicationWindow.appIsReady = true
-                    applicationWindow.storeAppState()
-                }
-                if (mainReady && d.showSkippedBiometricFlow) {
-                    d.showSkippedBiometricFlow = false
-                    loader.item.showEnableBiometricsFlow()
-                }
-            }
-
-            onStatusChanged: {
-                if (status === Loader.Error) {
-                    console.error("Failed to load AppMain.qml")
-                    Qt.exit(-1)
-                }
-            }
-        }
-
-        Connections {
-            target: typeof mainModule !== "undefined" ? mainModule : null
-
-            function onMainLoadedChanged() {
-                if (!mainModule.mainLoaded || startupOnboardingLoader.active)
-                    return
-                Global.appIsReady = true
-                applicationWindow.appIsReady = true
-                applicationWindow.storeAppState()
-                if (d.showSkippedBiometricFlow && loader.item) {
-                    d.showSkippedBiometricFlow = false
-                    loader.item.showEnableBiometricsFlow()
-                }
+                onStoreAppStateRequested: applicationWindow.storeAppState()
+                onSignOutRequested: d.signOut()
             }
         }
 
@@ -631,109 +593,14 @@ Window {
             }
         }
 
-        Loader {
-            id: startupOnboardingLoader
-
+        SessionTransitionView {
             anchors.fill: parent
-            anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac ? 0 : parent.SafeArea.margins.top
-            anchors.leftMargin: parent.SafeArea.margins.left
-            anchors.rightMargin: parent.SafeArea.margins.right
-            anchors.bottomMargin: parent.SafeArea.margins.bottom
-            active: !applicationWindow.skipOnboarding
+            visible: phase !== SessionTransitionView.Phase.Active || d.awaitingSessionContent
+            phase: sessionView.phase
+            isMobile: SQUtils.Utils.isMobile
 
-            source: active ? "app/AppLayouts/Onboarding/StartupOnboardingWrapper.qml" : ""
-
-            onLoaded: {
-                item.featureFlagsStore = applicationWindow.featureFlagsStore
-                item.languageStore = applicationWindow.languageStore
-                item.keychain = appKeychain
-                item.secureStorage = appSecureStorage
-                item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
-                item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
-                // MUST be assigned LAST: enabling triggers the one-shot auto-login
-                // attempt, which needs the key UID (and storage) already in place.
-                // e2e runs must never auto-login: the OS secure store is not
-                // per-data-dir, so a leftover developer credential could hijack a run.
-                const autoLoginSuppressed = localAppSettings.isAutoLoginSuppressed(localAppSettings.selectedProfileKeyUid)
-                if (localAppSettings.testEnvironment || autoLoginSuppressed)
-                    console.info("auto-login: disabled —",
-                                 localAppSettings.testEnvironment ? "test mode"
-                                                                  : "suppressed after a sign-out")
-                item.autoLoginEnabled = !localAppSettings.testEnvironment && !autoLoginSuppressed
-                splashScreenLoader.active = false
-                applicationWindow.contentLoaded()
-                Backpressure.debounce(applicationWindow, 750, () => {
-                    Qt.callLater(() => QmlCompiler.precompileAll()) // precompile all components after onboarding is loaded to speed up the login flow
-                })()
-            }
-        }
-
-        Connections {
-            target: startupOnboardingLoader.item
-            ignoreUnknownSignals: true
-
-            function onAppReady() : void {
-                applicationWindow.appIsReady = true
-            }
-            function onStoreAppStateRequested() : void {
-                applicationWindow.storeAppState()
-            }
-            function onRequestMoveToAppMain() : void {
-                applicationWindow.moveToAppMain()
-            }
-            function onBiometricFlowStarted() : void {
-                applicationWindow.biometricFlowPending = true
-            }
-            function onSkippedBiometricFlow(available: bool) : void {
-                d.showSkippedBiometricFlow = available
-            }
-            function onProfileSelected(keyUid: string) : void {
-                localAppSettings.selectedProfileKeyUid = keyUid
-            }
-        }
-
-        Keychain {
-            service: "StatusDesktop"
-
-            id: appKeychain
-
-            // These signal handlers keep the compatibility with the old keychain approach,
-            // which is used by `keycard_popup` (any auth inside the app) and the old onboarding.
-            // NOTE: this hack won't work if changes are made with another Keychain instance.
-            onCredentialSaved: function (account) {
-                applicationWindow.biometricFlowPending = false
-                // load appMain if not already after biometric flow is complete
-                if(!loader.item && applicationWindow.appIsReady) {
-                    moveToAppMain()
-                }
-                localAccountSettings.storeToKeychainValue = Constants.keychain.storedValue.store
-            }
-            onCredentialDeleted: (account) => localAccountSettings.storeToKeychainValue = Constants.keychain.storedValue.never
-            onGetCredentialRequestCompleted: function(status, secret) {
-                // Handle Failure to safely move on to appMain
-                if (status !== Keychain.StatusSuccess &&
-                        !loader.item &&
-                        applicationWindow.appIsReady) {
-                    moveToAppMain()
-                }
-            }
-        }
-
-        SecureStorage {
-            id: appSecureStorage
-
-            service: "StatusDesktop.AutoLogin"
-        }
-
-        Loader {
-            active: SQUtils.Utils.isAndroid
-            sourceComponent: KeycardChannelDrawer {
-                id: keycardChannelDrawer
-                currentState: applicationWindow.keycardStateStore.state
-                onDismissed: {
-                    applicationWindow.keycardStateStore.keycardDismissed()
-                }
-            }
+            onRetryRequested: sessionView.retry()
+            onQuitRequested: applicationWindow.quitApp()
         }
 
         Loader {

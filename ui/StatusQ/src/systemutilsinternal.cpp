@@ -287,6 +287,39 @@ void SystemUtilsInternal::showInFolder(const QString &path) const
 #endif
 }
 
+#if QT_CONFIG(process) && !defined(Q_OS_ANDROID)
+namespace {
+// What to relaunch. In an AppImage the binary runs from a mount that goes away with this
+// process, so the AppImage itself is relaunched - but only when this binary is its payload:
+// APPIMAGE and APPDIR are inherited by anything started from an AppImage.
+QString restartProgram()
+{
+    const auto binary = QCoreApplication::applicationFilePath();
+    const auto appImage = qEnvironmentVariable("APPIMAGE");
+    const auto appDirValue = qEnvironmentVariable("APPDIR");
+    // Checked before QDir: an empty path stands for the current directory there
+    if (appImage.isEmpty() || appDirValue.isEmpty())
+        return binary;
+    const auto appDir = QDir(appDirValue).canonicalPath();
+    if (appDir.isEmpty()
+            || !QFileInfo(binary).canonicalFilePath().startsWith(appDir + QLatin1Char('/')))
+        return binary;
+    return appImage;
+}
+} // namespace
+#endif
+
+bool SystemUtilsInternal::canRestartApplication() const
+{
+#if defined(Q_OS_ANDROID)
+    return true;
+#elif QT_CONFIG(process) && !defined(Q_OS_IOS)
+    return true;
+#else
+    return false;
+#endif
+}
+
 void SystemUtilsInternal::restartApplication() const
 {
     restartApplication(false);
@@ -311,7 +344,7 @@ void SystemUtilsInternal::restartApplication(bool killBackend) const
         return;
 
     restartingApplication = app;
-    const auto program = QCoreApplication::applicationFilePath();
+    const auto program = restartProgram();
     const auto arguments = QCoreApplication::arguments().mid(1);
     const auto workingDirectory = QDir::currentPath();
     const auto environment = QProcessEnvironment::systemEnvironment();

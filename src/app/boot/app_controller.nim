@@ -1,4 +1,4 @@
-import nimqml, sequtils, chronicles
+import nimqml, sequtils, chronicles, results
 
 import app_service/service/general/service as general_service
 import app_service/service/keycardV2/service as keycard_serviceV2
@@ -40,6 +40,7 @@ import app_service/service/market/service as market_service
 import app/modules/onboarding/module as onboarding_module
 import app/modules/onboarding/post_onboarding/[keycard_replacement_task, keycard_convert_account, save_biometrics_task]
 import app/modules/main/module as main_module
+import app/core/signal_handler
 import app/modules/keycard_channel/module as keycard_channel_module
 import app/core/notifications/notifications_manager
 import app/global/global_singleton
@@ -60,11 +61,9 @@ type
 
     # Global
     appSettingsVariant: QVariant
-    localAppSettingsVariant: QVariant
     localAccountSettingsVariant: QVariant
     localAccountSensitiveSettingsVariant: QVariant
     userProfileVariant: QVariant
-    globalUtilsVariant: QVariant
 
     # Services
     generalService: general_service.Service
@@ -110,6 +109,8 @@ type
     keycardChannelModule: keycard_channel_module.AccessInterface
 
     resumeLogin: bool
+    # The process's first session loads main.qml; later ones reuse its window.
+    firstSession: bool
 
 #################################################
 # Forward declaration section
@@ -122,7 +123,6 @@ proc runPostOnboardingTasks(self: AppController)
 proc onboardingDidLoad*(self: AppController)
 proc userLoggedIn*(self: AppController): string
 proc appReady*(self: AppController)
-proc logout*(self: AppController)
 proc finishAppLoading*(self: AppController)
 
 # Main Module Delegate Interface
@@ -140,8 +140,8 @@ proc connect(self: AppController) =
       let args = NodeLogLevelUpdatedArgs(a)
       if args.logLevel == chronicles.LogLevel.DEBUG:
         setLogLevel(chronicles.LogLevel.DEBUG)
-      elif defined(production):
-        setLogLevel(chronicles.LogLevel.INFO)
+      else:
+        setLogLevel(main_constants.defaultLogLevel())
 
 
 proc newAppController*(statusFoundation: StatusFoundation): AppController =
@@ -154,11 +154,9 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.notificationsManager = newNotificationsManager(statusFoundation.events, result.settingsService)
 
   # Global
-  result.localAppSettingsVariant = newQVariant(singletonInstance.localAppSettings)
   result.localAccountSettingsVariant = newQVariant(singletonInstance.localAccountSettings)
   result.localAccountSensitiveSettingsVariant = newQVariant(singletonInstance.localAccountSensitiveSettings)
   result.userProfileVariant = newQVariant(singletonInstance.userProfile)
-  result.globalUtilsVariant = newQVariant(singletonInstance.utils)
 
   # Services
   result.generalService = general_service.newService(statusFoundation.events, statusFoundation.threadpool)
@@ -300,14 +298,31 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   if result.resumeLogin:
     result.accountsService.setLoggedInAccount(initialAccount)
 
-proc delete*(self: AppController) =
+proc stopActivity*(self: AppController) =
+  ## First step of ending the session (logout), once its UI is released: stops what
+  ## would otherwise keep running session code while the backend logs out. The
+  ## controller is not reused afterwards: the next session gets a new one. Runs as the
+  ## `stopActivity` operation of SessionHost.setOps, which also stops delivering the
+  ## session's signals and advances the keycard epoch once the session is disposed.
+  # Completions of the session's tasks, and its timers, stop reaching it.
+  discard advanceSessionGeneration()
+  self.statusFoundation.threadpool.close()
+  featureGuard KEYCARD_ENABLED:
+    # SessionHost advances the keycard epoch once its queued events were delivered.
+    self.keycardServiceV2.stop()
+  self.notificationsManager.stop()
+
+proc delete*(self: AppController, logoutBackend: bool) =
+  ## `logoutBackend`: on process exit, unless the backend is logged out already (an
+  ## ended session). Android keeps its backend service logged in (keepalive).
   when defined(android):
+    if logoutBackend:
       info "Skipping logout on AppController.delete (Android keepalive enabled)"
   else:
-    info "logging out..."
-    self.generalService.logout()
+    if logoutBackend:
+      info "logging out..."
+      discard self.generalService.logout()
 
-  singletonInstance.delete
   self.notificationsManager.delete
   self.contactsService.delete
   self.bookmarkService.delete
@@ -322,11 +337,9 @@ proc delete*(self: AppController) =
     self.keycardChannelModule = nil
 
   self.appSettingsVariant.delete
-  self.localAppSettingsVariant.delete
   self.localAccountSettingsVariant.delete
   self.localAccountSensitiveSettingsVariant.delete
   self.userProfileVariant.delete
-  self.globalUtilsVariant.delete
 
   self.accountsService.delete
   self.chatService.delete
@@ -360,17 +373,16 @@ proc delete*(self: AppController) =
   self.marketService.delete
 
 proc initializeQmlContext(self: AppController) =
-  singletonInstance.engine.setRootContextProperty("localAppSettings", self.localAppSettingsVariant)
-  singletonInstance.engine.setRootContextProperty("localAccountSettings", self.localAccountSettingsVariant)
-  singletonInstance.engine.setRootContextProperty("globalUtils", self.globalUtilsVariant)
+  singletonInstance.setSessionContextProperty("localAccountSettings", self.localAccountSettingsVariant)
 
   # Expose a lightweight login flag that is available as soon as `main.qml` starts evaluating.
-  singletonInstance.engine.setRootContextProperty("skipOnboardingContextProperty", newQVariant(self.resumeLogin))
+  singletonInstance.setSessionContextProperty("skipOnboardingContextProperty", newQVariant(self.resumeLogin))
 
   # Load keycard channel module (available before login for Session API)
   self.keycardChannelModule.load()
 
-  singletonInstance.engine.load(newQUrl("qrc:///main.qml"))
+  if self.firstSession:
+    singletonInstance.engine.load(newQUrl("qrc:///main.qml"))
 
 proc onboardingDidLoad*(self: AppController) =
   self.initializeQmlContext()
@@ -379,17 +391,20 @@ proc mainDidLoad*(self: AppController) =
   if not self.onboardingModule.isNil:
     self.runPostOnboardingTasks()
 
-proc start*(self: AppController) =
+proc start*(self: AppController, firstSession: bool): Result[void, string] =
+  ## `firstSession`: the process starts; otherwise a logout ended the previous session
+  ## and main.qml's window is reused. Err when the backend failed to initialize.
+  self.firstSession = firstSession
   self.generalService.init()
   self.accountsService.init()
   self.devicesService.init()
 
   if not self.resumeLogin:
-    self.onboardingModule.load()
-  else:
-    self.initializeQmlContext()
-    self.finishAppLoading()
-    self.appReady()
+    return self.onboardingModule.load()
+  self.initializeQmlContext()
+  self.finishAppLoading()
+  self.appReady()
+  ok()
 
 proc load(self: AppController) =
   self.settingsService.init()
@@ -425,8 +440,7 @@ proc load(self: AppController) =
   self.advancedService.init()
 
   # Accessible after user login
-  singletonInstance.engine.setRootContextProperty("appSettings", self.appSettingsVariant)
-  singletonInstance.engine.setRootContextProperty("globalUtils", self.globalUtilsVariant)
+  singletonInstance.setSessionContextProperty("appSettings", self.appSettingsVariant)
 
   self.networkService.init()
   self.tokenService.init()
@@ -434,10 +448,11 @@ proc load(self: AppController) =
   self.currencyService.init()
   self.walletAccountService.init()
 
-  # Apply runtime log level settings
+  # The profile's debug mode decides; the process may already log at the level an
+  # earlier profile asked for.
   if not main_constants.runtimeLogLevelSet():
-    if self.nodeConfigurationService.isDebugEnabled():
-      setLogLevel(chronicles.LogLevel.DEBUG)
+    setLogLevel(if self.nodeConfigurationService.isDebugEnabled(): chronicles.LogLevel.DEBUG
+                else: main_constants.defaultLogLevel())
 
   # The HTTP traffic stats cost work on every request, so release builds keep
   # them for debug sessions; the HTTP statistics screen can still turn them on.
@@ -489,13 +504,11 @@ proc finishAppLoading*(self: AppController) =
 
   self.notificationsManager.onAppReady()
 
-proc logout*(self: AppController) =
-  self.generalService.logout()
 
 proc buildAndRegisterLocalAccountSensitiveSettings(self: AppController) =
   var pubKey = self.settingsService.getPublicKey()
   singletonInstance.localAccountSensitiveSettings.setFileName(pubKey)
-  singletonInstance.engine.setRootContextProperty("localAccountSensitiveSettings", self.localAccountSensitiveSettingsVariant)
+  singletonInstance.setSessionContextProperty("localAccountSensitiveSettings", self.localAccountSensitiveSettingsVariant)
 
 proc buildAndRegisterUserProfile(self: AppController) =
   let pubKey = self.settingsService.getPublicKey()
@@ -514,7 +527,7 @@ proc buildAndRegisterUserProfile(self: AppController) =
   singletonInstance.userProfile.setLargeImage(loggedInAccount.images.large)
   singletonInstance.userProfile.setCurrentUserStatus(currentUserStatus.statusType.int)
 
-  singletonInstance.engine.setRootContextProperty("userProfile", self.userProfileVariant)
+  singletonInstance.setSessionContextProperty("userProfile", self.userProfileVariant)
 
 proc runPostOnboardingTasks(self: AppController) =
     debug "running post-onboarding tasks"

@@ -65,6 +65,7 @@ SplitView {
                 logs.logEvent("onSetCurrentUserStatusRequested", ["status"], arguments)
                 d.currentUserStatus = status
             }
+            onSignOutRequested: logs.logEvent("onSignOutRequested")
             onQuitRequested: logs.logEvent("onQuitRequested")
         }
     }

@@ -114,7 +114,7 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
   result.walletModule = wallet_module.newModule(result, events, accountsService, walletAccountService, settingsService,
     networkService, devicesService, nodeService)
 
-  singletonInstance.engine.setRootContextProperty("profileSectionModule", result.viewVariant)
+  singletonInstance.setSessionContextProperty("profileSectionModule", result.viewVariant)
 
 method delete*(self: Module) =
   self.profileModule.delete
