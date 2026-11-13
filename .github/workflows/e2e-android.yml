@@ -117,6 +117,7 @@ jobs:
       pytest-args: ${{ steps.args.outputs.pytest-args }}
       image: ${{ steps.peer.outputs.image }}
       artifact: ${{ steps.peer.outputs.artifact }}
+      published: ${{ steps.peer.outputs.published }}
       call-id: ${{ steps.peer.outputs.call-id }}
     env:
       SELECTION: ${{ inputs.selection }}
@@ -153,7 +154,7 @@ jobs:
         id: args
         working-directory: test/e2e_appium
         run: |
-          pip install --quiet pyyaml
+          pip install --quiet "$(grep -i '^pyyaml==' requirements.txt)"
           python scripts/ci_pytest_args.py \
             --selection "$SELECTION" --workers "$WORKERS" --device "$DEVICE" --tests "$TESTS" --markers "$MARKERS" \
             > "$RUNNER_TEMP/pytest.args"
@@ -179,17 +180,24 @@ jobs:
           # Published only by e2e-peer-image.yml from the default branch, so a
           # branch run can read it but never write it.
           published="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/status-app-e2e-peer:${sha}"
-          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null
-          if docker pull --quiet "$published"; then
+          # Any GHCR failure falls back to building the image here.
+          pulled=""
+          if echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null \
+            && docker pull --quiet "$published"; then
             docker tag "$published" "$local_name"
+            pulled=true
             echo "Pulled ${published}"
+            echo "published=${published}" >> "$GITHUB_OUTPUT"
           else
-            echo "No published peer image for status-go ${sha}; building it"
+            echo "No published peer image for status-go ${sha}, or GHCR is unreachable; building it"
           fi
           image=$(test/e2e_appium/scripts/peer_image.sh "peer-image-${GITHUB_RUN_ID}")
-          docker save "$image" | gzip -1 > "$RUNNER_TEMP/peer-image.tar.gz"
-          ls -lh "$RUNNER_TEMP/peer-image.tar.gz"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
+          # A pulled image is pulled again by the e2e job; only a built one is handed over.
+          if [[ -z "$pulled" ]]; then
+            docker save "$image" | gzip -1 > "$RUNNER_TEMP/peer-image.tar.gz"
+            ls -lh "$RUNNER_TEMP/peer-image.tar.gz"
+          fi
           # A rerun of failed jobs reuses this job and its outputs, and a caller
           # may call this workflow twice in one run, so names carry this job's
           # attempt and a per-call id rather than the e2e job's attempt.
@@ -198,10 +206,12 @@ jobs:
           echo "artifact=e2e-android-peer-image-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${call_id}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.peer.outputs.published == ''
         with:
           name: ${{ steps.peer.outputs.artifact }}
           path: ${{ runner.temp }}/peer-image.tar.gz
-          retention-days: 1
+          # Long enough for "Re-run failed jobs" after a weekend.
+          retention-days: 4
           compression-level: 0
           if-no-files-found: error
 
@@ -212,9 +222,11 @@ jobs:
     timeout-minutes: 110
     permissions:
       contents: read
+      packages: read
     # Only this job holds the account: the peer image is ready before it
-    # queues. A run in progress is never cancelled; GitHub keeps one waiting
-    # run per group, so a newer waiting run replaces an older one unseen.
+    # queues. This group never cancels a run in progress (a caller's own
+    # cancel-in-progress still can); GitHub keeps one waiting run per group,
+    # so a newer waiting run replaces an older one unseen.
     concurrency:
       group: e2e-android-bs-account-${{ inputs.account }}
       cancel-in-progress: false
@@ -251,6 +263,7 @@ jobs:
         run: pip install -r requirements.txt -r requirements-backend-peer.txt
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: needs.peer-image.outputs.published == ''
         with:
           name: ${{ needs.peer-image.outputs.artifact }}
           path: ${{ runner.temp }}/peer
@@ -258,11 +271,27 @@ jobs:
       - name: Load the peer image
         env:
           PYTEST_ARGS_B64: ${{ needs.peer-image.outputs.pytest-args }}
+          PUBLISHED: ${{ needs.peer-image.outputs.published }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          gunzip -c "$RUNNER_TEMP/peer/peer-image.tar.gz" | docker load
-          # Finds the loaded image and creates the network the harness expects.
+          if [[ -z "$PUBLISHED" ]]; then
+            gunzip -c "$RUNNER_TEMP/peer/peer-image.tar.gz" | docker load
+          elif echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null \
+            && docker pull --quiet "$PUBLISHED"; then
+            docker tag "$PUBLISHED" "$STATUS_BACKEND_IMAGE"
+          fi
+          # Finds the image, building it if GHCR failed since the peer image
+          # job, and creates the network the harness expects.
           test/e2e_appium/scripts/peer_image.sh "$STATUS_BACKEND_DOCKER_PROJECT" > /dev/null
           base64 -d <<< "$PYTEST_ARGS_B64" > "$RUNNER_TEMP/pytest.args"
+
+      - name: Select the account's credentials
+        env:
+          # The one place in this job that maps the account to its secrets.
+          BS_USER: ${{ inputs.account == '1' && secrets.BROWSERSTACK_USERNAME || inputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
+          BS_KEY: ${{ inputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || inputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
+        run: |
+          { echo "BS_USER=${BS_USER}"; echo "BS_KEY=${BS_KEY}"; } >> "$GITHUB_ENV"
 
       - name: Download the APK
         if: inputs.apk-artifact != ''
@@ -274,9 +303,6 @@ jobs:
       - name: Upload the APK to BrowserStack
         id: upload
         if: inputs.apk-artifact != ''
-        env:
-          BS_USER: ${{ inputs.account == '1' && secrets.BROWSERSTACK_USERNAME || inputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
-          BS_KEY: ${{ inputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || inputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
         run: |
           mapfile -t apks < <(find "$RUNNER_TEMP/apk" -type f -name '*.apk')
           if [[ ${#apks[@]} -ne 1 ]]; then
@@ -300,8 +326,6 @@ jobs:
         id: app
         env:
           APP_ID: ${{ steps.upload.outputs.app-id || inputs.app-id }}
-          BS_USER: ${{ inputs.account == '1' && secrets.BROWSERSTACK_USERNAME || inputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
-          BS_KEY: ${{ inputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || inputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
         run: |
           # Apps are usable by every user in the BrowserStack group, so ask for
           # the group's uploads (kept 30 days); a lookup by id cannot prove absence.
@@ -330,14 +354,13 @@ jobs:
         timeout-minutes: 90
         working-directory: test/e2e_appium
         env:
-          BROWSERSTACK_USERNAME: ${{ inputs.account == '1' && secrets.BROWSERSTACK_USERNAME || inputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
-          BROWSERSTACK_ACCESS_KEY: ${{ inputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || inputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
           BROWSERSTACK_APP_ID: ${{ steps.app.outputs.app-id }}
           BROWSERSTACK_PROJECT_NAME: Mobile E2E GHA
           BROWSERSTACK_BUILD_NAME: e2e-android-${{ github.run_number }}
           GIT_COMMIT: ${{ github.sha }}
           BUILD_ID: ${{ github.run_id }}
         run: |
+          export BROWSERSTACK_USERNAME="$BS_USER" BROWSERSTACK_ACCESS_KEY="$BS_KEY"
           if [[ -n "$DEVICE" ]]; then export TEST_DEVICE_ID="$DEVICE"; fi
           mapfile -d '' -t args < "$RUNNER_TEMP/pytest.args"
           python -m pytest "${args[@]}"
@@ -345,9 +368,6 @@ jobs:
       - name: Find the BrowserStack build and stop its leftover sessions
         id: build
         if: always() && steps.app.outcome == 'success'
-        env:
-          BS_USER: ${{ inputs.account == '1' && secrets.BROWSERSTACK_USERNAME || inputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
-          BS_KEY: ${{ inputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || inputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
         run: |
           # A cancelled or timed-out run leaves sessions open until BrowserStack's
           # idle timeout; ending them frees the account for the next run.

@@ -116,7 +116,10 @@ jobs:
     # builds the APK and uploads it as the artifact "apk"
   e2e:
     needs: apk
-    if: contains(github.event.pull_request.labels.*.name, 'e2e-android')
+    # Adding any other label also sends a labeled event; only this one may start a run.
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'e2e-android')
+      && (github.event.action != 'labeled' || github.event.label.name == 'e2e-android')
     uses: ./.github/workflows/e2e-android.yml
     with: { apk-artifact: apk, account: '1' }
     secrets: inherit
@@ -128,6 +131,9 @@ jobs:
   removed.
 - PRs from forks get no secrets, so their run ends as NOT RUN.
 - Runs on the same account queue one at a time.
+- If the PR workflow sets `cancel-in-progress: true`, a push cancels the e2e
+  run in progress along with the rest of that workflow. Its leftover
+  BrowserStack sessions are still stopped.
 
 **Inputs:** `selection` (`gate` or `smoke`), or `tests` (node ids under
 `tests/`), or `markers` (an expression of marker names from `pytest.ini`);
@@ -135,8 +141,9 @@ jobs:
 (`auto` is 4 for the gate, which leaves one of the account's 5 sessions spare,
 and 2 when multi-phone tests can be selected); `account` (`1` or `2`).
 
-**Queueing:** one run per BrowserStack account per repository at a time. A run
-in progress is never cancelled; GitHub keeps one waiting run per account, so a
+**Queueing:** one run per BrowserStack account per repository at a time. The
+queue never cancels a run in progress, though a calling workflow's own
+`cancel-in-progress` can; GitHub keeps one waiting run per account, so a
 newer waiting run replaces an older one. Queues are per repository, and a
 BrowserStack group's 5 sessions are shared by every user in it, so runs from
 two repositories on the same group do not see each other. The harness's
@@ -149,7 +156,8 @@ that uploaded them.
 **Peer image:** `.github/workflows/e2e-peer-image.yml` publishes
 `ghcr.io/<owner>/status-app-e2e-peer:<status-go commit>` from the default
 branch. An e2e run pulls it, or builds it (about 7 to 10 minutes) when the
-vendored status-go has no published image yet.
+vendored status-go has no published image yet or GHCR cannot be reached. A
+built image is handed to the e2e job as an artifact kept for 4 days.
 
 **Results:** the job summary names the APK, its upload date, the tested
 commit and every failed test with its message, and each failure is an error
@@ -197,6 +205,8 @@ export CURRENT_TEST_ENVIRONMENT="local"
 **BrowserStack runs:**
 - "not in BrowserStack account N's group": the app was deleted after 30 days or uploaded to another group. Upload it again.
 - Many "message not visible" or login failures at once: check the summary's APK warning; the tests probably do not match the APK.
+- "Re-run failed jobs" fails to download the peer image: the artifact expired after 4 days. Re-run all jobs.
+- "incomplete" in the summary heading: the test step was cancelled. "error" with no failed tests: the step timed out, or pytest exited with an error outside the tests.
 
 **Local Testing Issues:**
 - Ensure Appium server running: `appium`
