@@ -117,6 +117,7 @@ jobs:
       pytest-args: ${{ steps.args.outputs.pytest-args }}
       image: ${{ steps.peer.outputs.image }}
       artifact: ${{ steps.peer.outputs.artifact }}
+      call-id: ${{ steps.peer.outputs.call-id }}
     env:
       SELECTION: ${{ inputs.selection }}
       TESTS: ${{ inputs.tests }}
@@ -189,9 +190,12 @@ jobs:
           docker save "$image" | gzip -1 > "$RUNNER_TEMP/peer-image.tar.gz"
           ls -lh "$RUNNER_TEMP/peer-image.tar.gz"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
-          # Named after this job's attempt: a rerun of failed jobs reuses this
-          # job and its output, and the e2e job downloads by this name.
-          echo "artifact=e2e-android-peer-image-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+          # A rerun of failed jobs reuses this job and its outputs, and a caller
+          # may call this workflow twice in one run, so names carry this job's
+          # attempt and a per-call id rather than the e2e job's attempt.
+          call_id=$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')
+          echo "call-id=${call_id}" >> "$GITHUB_OUTPUT"
+          echo "artifact=e2e-android-peer-image-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${call_id}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -208,7 +212,6 @@ jobs:
     timeout-minutes: 110
     permissions:
       contents: read
-      actions: read
     # Only this job holds the account: the peer image is ready before it
     # queues. A run in progress is never cancelled; GitHub keeps one waiting
     # run per group, so a newer waiting run replaces an older one unseen.
@@ -220,7 +223,7 @@ jobs:
       DEVICE: ${{ inputs.device != 'default' && inputs.device || '' }}
       APK_ARTIFACT: ${{ inputs.apk-artifact }}
       E2E_RUN_ID: gha-${{ github.run_id }}-${{ github.run_attempt }}
-      BROWSERSTACK_BUILD_IDENTIFIER: ${{ github.run_id }}-${{ github.run_attempt }}
+      BROWSERSTACK_BUILD_IDENTIFIER: ${{ github.run_id }}-${{ github.run_attempt }}-${{ needs.peer-image.outputs.call-id }}
       STATUS_BACKEND_DOCKER_PROJECT: e2e-${{ github.run_id }}-${{ github.run_attempt }}
       STATUS_BACKEND_IMAGE: ${{ needs.peer-image.outputs.image }}
       PYTHONUNBUFFERED: '1'
@@ -323,6 +326,7 @@ jobs:
           echo "app-json=${app}" >> "$GITHUB_OUTPUT"
 
       - name: Run the tests
+        id: tests
         timeout-minutes: 90
         working-directory: test/e2e_appium
         env:
@@ -370,6 +374,7 @@ jobs:
           APP_JSON: ${{ steps.app.outputs.app-json }}
           BUILD_URL: ${{ steps.build.outputs.url }}
           COMMIT: ${{ github.sha }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
         run: |
           # Normally under reports/<run id>/; the harness writes to reports/
           # itself when it cannot load its configuration.
@@ -386,13 +391,13 @@ jobs:
           if [[ -z "$app" ]]; then app='{}'; fi
           python scripts/ci_junit_report.py --junit "$junit" --summary "$GITHUB_STEP_SUMMARY" \
             --app-json "$app" --commit "${COMMIT:0:11}" --app-from-this-commit "$from_commit" \
-            --account "$ACCOUNT" --build-url "$BUILD_URL"
+            --account "$ACCOUNT" --build-url "$BUILD_URL" --tests-outcome "$TESTS_OUTCOME"
 
       - name: Upload the reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-android-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          name: e2e-android-reports-${{ github.run_id }}-${{ github.run_attempt }}-${{ needs.peer-image.outputs.call-id }}
           path: test/e2e_appium/reports/
           retention-days: 14
           if-no-files-found: warn
