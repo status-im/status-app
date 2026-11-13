@@ -130,8 +130,9 @@ benches-nim: $(NIM_BENCHES)
 # executors, so BENCH_ASSERTS=0 downgrades them to report-only, and BENCH_QUICK=1
 # trims the size sweeps to the assert-relevant sizes (see
 # test/nim/benchmarks/perf_gate.nim).
-# -j1 sub-make with shared nimcache: one test at a time, reusing C objects across tests.
+# The tests build in parallel, each with its own nimcache; the output of a test
+# is printed in one piece when it ends.
 tests-nim-linux: export BENCH_ASSERTS := 0
 tests-nim-linux: export BENCH_QUICK := 1
 tests-nim-linux:
-	+ "$(MAKE)" --no-print-directory -j1 NIM_TESTS_SHARED_CACHE=1 tests-nim benches-nim
+	+ "$(MAKE)" --no-print-directory --output-sync=target tests-nim benches-nim
