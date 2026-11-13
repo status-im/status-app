@@ -1,0 +1,34 @@
+# Regexes on lib file names removed from the APK by trim_qt_deploy.py.
+# The script fails the build if a kept lib still DT_NEEDs a removed one.
+
+# Controls styles the app never uses: it runs on the platform default (Material), the
+# Universal style some components import and their Basic fallback
+# (qmlimportscanner follows every optional style import)
+QuickControls2(Imagine|Fusion|FluentWinUI3)
+QtQuick_Controls_(Imagine|Fusion|FluentWinUI3|Windows|macOS|iOS)_
+
+# QtWidgets chain (StatusTrayIcon is desktop-only)
+libQt6Widgets_
+libplugins_styles_
+libQt6LabsPlatform_
+libqml_Qt_labs_platform_
+
+# Pulled in by Qt module defaults, no user
+libQt6VirtualKeyboard
+platforminputcontexts_qtvirtualkeyboard
+libQt6Lottie
+VectorImageGenerator
+libplugins_vectorimageformats_
+libQt6Quick3DUtils
+qmldbg_quick3dprofiler
+libplugins_platforms_q(offscreen|minimal)_
+libplugins_imageformats_q(tiff|tga|wbmp|icns)_
+
+# Not imported anywhere
+libQt6LabsQmlModels
+libqml_Qt_labs_qmlmodels_
+
+# Dropped from Status.pro; stale copies survive incremental builds
+libQt6Core5Compat_
+libQt6WebView_
+libplugins_webview_

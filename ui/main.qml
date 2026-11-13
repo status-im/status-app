@@ -503,14 +503,35 @@ Window {
         shakeToShareLoader.active = true
     }
 
-    StatusTrayIcon {
+    // Mobile ships without Qt.labs.platform (it links QtWidgets), so the type is only loaded on desktop
+    Loader {
         id: systemTray
         objectName: "systemTray"
-        showRedDot: typeof mainModule !== "undefined" ? mainModule.notificationAvailable : false
-        onActivateApp: {
-            applicationWindow.makeStatusAppActive()
+
+        readonly property bool available: item?.available ?? false
+
+        function showMessage(title: string, message: string) : void {
+            item?.showMessage(title, message)
         }
-        onQuitRequested: applicationWindow.quitApp()
+
+        active: !SQUtils.Utils.isMobile
+        source: "app/mainui/StatusTrayIcon.qml"
+
+        Binding {
+            target: systemTray.item
+            property: "showRedDot"
+            value: typeof mainModule !== "undefined" ? mainModule.notificationAvailable : false
+        }
+
+        Connections {
+            target: systemTray.item
+            function onActivateApp() {
+                applicationWindow.makeStatusAppActive()
+            }
+            function onQuitRequested() {
+                applicationWindow.quitApp()
+            }
+        }
     }
 
     Item {

@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += quick gui qml webview svg widgets multimedia
+QT += quick gui qml svg multimedia
 
 CONFIG += qtquickcompiler
 # AOT Storage classes are polymorphic; no RTTI user in this lib, so drop typeinfo
@@ -37,7 +37,7 @@ contains(DEFINES, FLAG_KEYCARD_ENABLED) {
 
 equals(QT_MAJOR_VERSION, 6) {
     message("qt 6 config!!")
-    QT += core5compat core
+    QT += core
 }
 
 SOURCES += \
@@ -96,6 +96,10 @@ android {
 ios {
     CONFIG += add_ios_ffmpeg_libraries
 
+    # Keep the QML plugins the app never loads out of the static link
+    QT_TOOL.qmlimportscanner.binary = python3 -I $$PWD/../scripts/ios/filter_qml_imports.py \
+        $$[QT_HOST_LIBEXECS]/qmlimportscanner $$PWD/../scripts/ios/qml-import-deny.txt
+
     QMAKE_CXXFLAGS += -Wno-implicit-function-declaration
     QMAKE_CFLAGS += -Wno-implicit-function-declaration
 
@@ -138,6 +142,8 @@ ios {
 
     # Base libraries (always included)
     LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lstatusq -lhunspell-1.7 -lMobileWebView -lstatus -lsds -lssl_3 -lcrypto_3 -lZXing -lresolv -lqrcodegen
+    # libMobileWebView; no longer pulled in through QT += webview
+    LIBS += -framework WebKit
 
     # The Go facade owns the token ABI; keep it private in the final executable.
     QMAKE_LFLAGS += -Wl,-unexported_symbols_list,$$shell_quote($$PWD/../../vendor/status-go/scripts/tkl-unexported-macos.txt)

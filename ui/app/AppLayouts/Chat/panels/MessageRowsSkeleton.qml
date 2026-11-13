@@ -1,5 +1,5 @@
 import QtQuick
-import Qt.labs.qmlmodels
+import QtQml.Models
 
 import StatusQ.Components
 import StatusQ.Core.Theme

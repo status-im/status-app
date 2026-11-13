@@ -82,6 +82,17 @@ if [[ "${OS}" == "android" ]]; then
     cp -f "$CWD/../lib/android/qt${QT_MAJOR}/$lib" "$BUILD_DIR/android-build/libs/arm64-v8a/$lib"
   done
 
+  # android-build/ is shared between variants; drop the other variant's main lib
+  for stale in Status StatusPR; do
+    [[ "$stale" == "$OUTPUT_NAME" ]] || rm -f "$BUILD_DIR/android-build/libs/arm64-v8a/lib${stale}_arm64-v8a.so"
+  done
+
+  # Qt System.load()s every deployed Qt lib at startup; drop the unused ones and keep
+  # only the DT_NEEDED/JNI_OnLoad libs in its eager lists
+  python3 -I "$CWD/android/trim_qt_deploy.py" "$BUILD_DIR/android-build" \
+    "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/$(uname -s | tr '[:upper:]' '[:lower:]')-x86_64/bin/llvm-readelf" \
+    "${ANDROID_ABI:-arm64-v8a}" "$CWD/android/qt-deploy-deny.txt" "$OUTPUT_NAME"
+
   # Copy custom Android files, preserve Qt-generated libs.xml
   cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties,proguard-rules.pro} "$BUILD_DIR/android-build/"
   rsync -a --exclude='libs.xml' "$CWD/../android/qt${QT_MAJOR}/res/" "$BUILD_DIR/android-build/res/" 2>/dev/null || true
