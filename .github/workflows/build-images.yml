@@ -34,7 +34,7 @@ jobs:
       (github.event_name != 'pull_request' ||
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
@@ -59,15 +59,6 @@ jobs:
             echo "published=true" >> "$GITHUB_OUTPUT"
             echo "$image is already published"
           fi
-      # The runner starts with about 14 GB free; an image needs more to build.
-      - name: Free disk space
-        if: steps.image.outputs.published != 'true'
-        run: |
-          df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-            /usr/share/swift /opt/hostedtoolcache/CodeQL
-          docker image prune --all --force > /dev/null
-          df -h /
       - name: Build
         if: steps.image.outputs.published != 'true'
         env:

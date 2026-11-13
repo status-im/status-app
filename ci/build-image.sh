@@ -40,7 +40,8 @@ case "$action" in
   check)
     tools='qmake --version && cmake --version && nim --version && nimble --version && go version && protoc --version'
     if [ "$name" = android ]; then
-      tools="$tools && java -version && test -d \"\$ANDROID_NDK_ROOT\" && test -f \"\$OPENSSL_LIB_DIR/libssl.a\""
+      # Gradle takes Java from JAVA_HOME, which is not the java on PATH.
+      tools="$tools && \"\$JAVA_HOME/bin/java\" -version && test -d \"\$ANDROID_NDK_ROOT\" && test -f \"\$OPENSSL_LIB_DIR/libssl.a\""
     fi
     docker run --rm --platform linux/amd64 --entrypoint "" "$image" bash -c "$tools"
     ;;
