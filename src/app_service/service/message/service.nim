@@ -840,6 +840,19 @@ QtObject:
 
     self.events.emit(SIGNAL_RELOAD_MESSAGES, ReloadMessagesArgs(communityId: communityId))
 
+  proc allMessagesMarkedRead(self: Service, chatId: string, threadId: string,
+      threadsJson: JsonNode, activityCenterNotifications: JsonNode) =
+    var threads: seq[ThreadDto]
+    if threadsJson != nil and threadsJson.kind == JArray:
+      for jsonThread in threadsJson:
+        threads.add(jsonThread.toThreadDto)
+    if threads.len > 0:
+      self.handleThreadsUpdate(threads)
+
+    let data = MessagesMarkedAsReadArgs(chatId: chatId, threadId: threadId, allMessagesMarked: true)
+    self.events.emit(SIGNAL_MESSAGES_MARKED_AS_READ, data)
+    checkAndEmitACNotificationsFromResponse(self.events, activityCenterNotifications)
+
   proc init*(self: Service) =
     self.events.on(chat_service.SIGNAL_CHAT_THREADS_UPDATED) do(e: Args):
       let args = chat_service.ChatThreadsUpdatedArgs(e)
@@ -849,6 +862,15 @@ QtObject:
       let receivedData = MessageDeliveredSignal(e)
       let data = MessageDeliveredArgs(chatId: receivedData.chatId, messageId: receivedData.messageId)
       self.events.emit(SIGNAL_MESSAGE_DELIVERED, data)
+
+    self.events.on(SignalType.NotificationConversationRead.event) do(e: Args):
+      let receivedData = NotificationConversationReadSignal(e)
+      if receivedData.chatId.len == 0:
+        error "notification conversation read signal without chat id"
+        return
+      let res = receivedData.response{"result"}
+      self.allMessagesMarkedRead(receivedData.chatId, receivedData.threadId, res{"threads"},
+        res{"activityCenterNotifications"})
 
     self.events.on(SignalType.EnvelopeSent.event) do(e: Args):
       let receivedData = EnvelopeSentSignal(e)
@@ -1622,16 +1644,8 @@ QtObject:
       var threadId: string
       discard responseObj.getProp("threadId", threadId)
 
-      var threads: seq[ThreadDto]
-      if responseObj{"threads"} != nil:
-        for jsonThread in responseObj["threads"]:
-          threads.add(jsonThread.toThreadDto)
-      if threads.len > 0:
-        self.handleThreadsUpdate(threads)
-
-      let data = MessagesMarkedAsReadArgs(chatId: chatId, threadId: threadId, allMessagesMarked: true)
-      self.events.emit(SIGNAL_MESSAGES_MARKED_AS_READ, data)
-      checkAndEmitACNotificationsFromResponse(self.events, responseObj{"activityCenterNotifications"})
+      self.allMessagesMarkedRead(chatId, threadId, responseObj{"threads"},
+        responseObj{"activityCenterNotifications"})
     except Exception as e:
       error "error: ", procName="onMarkAllMessagesRead", errDesription = e.msg
 

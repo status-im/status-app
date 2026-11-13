@@ -79,6 +79,7 @@ QtObject:
       of SignalType.Message: MessageSignal.fromEvent(jsonSignal)
       of SignalType.MessageDelivered: MessageDeliveredSignal.fromEvent(jsonSignal)
       of SignalType.NotificationReplySent: NotificationReplySentSignal.fromEvent(jsonSignal)
+      of SignalType.NotificationConversationRead: NotificationConversationReadSignal.fromEvent(jsonSignal)
       of SignalType.EnvelopeSent: EnvelopeSentSignal.fromEvent(jsonSignal)
       of SignalType.EnvelopeExpired: EnvelopeExpiredSignal.fromEvent(jsonSignal)
       of SignalType.WhisperFilterAdded: WhisperFilterSignal.fromEvent(jsonSignal)
