@@ -3,6 +3,7 @@
 # gets a new tag and an unchanged one is found in the registry.
 #
 #   ci/build-image.sh <desktop|android>          build the image
+#   ci/build-image.sh --pull <desktop|android>   pull it, or build it when the pull fails
 #   ci/build-image.sh --image <desktop|android>  print its reference
 #   ci/build-image.sh --check <desktop|android>  run the tools the builds need in it
 set -euo pipefail
@@ -12,6 +13,7 @@ repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 action=build
 case "${1:-}" in
   --image) action=image; shift ;;
+  --pull) action=pull; shift ;;
   --check) action=check; shift ;;
 esac
 
@@ -19,7 +21,7 @@ case "${1:-}" in
   desktop) dockerfile=ci/Dockerfile ;;
   android) dockerfile=mobile/docker/Dockerfile ;;
   *)
-    echo "usage: $0 [--image|--check] <desktop|android>" >&2
+    echo "usage: $0 [--image|--pull|--check] <desktop|android>" >&2
     exit 2
     ;;
 esac
@@ -31,6 +33,12 @@ image="${STATUS_APP_BUILD_REGISTRY:-ghcr.io/status-im}/status-app-build:$name-$t
 case "$action" in
   image)
     echo "$image"
+    ;;
+  pull)
+    if ! docker pull --quiet "$image"; then
+      echo "$image cannot be pulled, building it" >&2
+      "$0" "$name"
+    fi
     ;;
   build)
     docker build --platform linux/amd64 --tag "$image" \

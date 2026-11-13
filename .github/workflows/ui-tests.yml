@@ -31,25 +31,12 @@ jobs:
         env:
           USE_SYSTEM_NIM: '1'
         run: scripts/ci-fetch-submodules.sh
-      - name: Pull the image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          image="$(ci/build-image.sh --image desktop)"
-          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          docker pull --quiet "$image"
-          echo "IMAGE=$image" >> "$GITHUB_ENV"
-      # The capability and the AppArmor exemption are what the Qt WebEngine
-      # sandbox needs inside a container.
-      - name: Start the container
-        run: |
-          docker run --detach --name build \
-            --cap-add=SYS_ADMIN --security-opt apparmor=unconfined \
-            --volume "$PWD:$PWD" --workdir "$PWD" \
-            --env "MAKEFLAGS=-j$(nproc) V=1 USE_SYSTEM_NIM=1" \
-            --env QML_DISABLE_DISK_CACHE=true \
-            --env QT_QPA_PLATFORM=offscreen \
-            "$IMAGE" sleep infinity
+      - uses: ./.github/actions/container
+        with:
+          image: desktop
+          env: |
+            QML_DISABLE_DISK_CACHE=true
+            QT_QPA_PLATFORM=offscreen
       - name: QML lint
         run: $IN_IMAGE make qml-lint
       - name: StatusQ tests
