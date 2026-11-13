@@ -176,6 +176,28 @@ public final class StatusGoService extends Service {
     }
 
     /**
+     * Queues the successful mark-read JSON-RPC response from an Android notification
+     * action so the frontend clears the conversation's unread state.
+     */
+    public static boolean publishNotificationConversationRead(String chatId, String threadId,
+            String rpcResponseJson) {
+        final StatusGoService service = sInstance;
+        if (service == null || chatId == null || chatId.isEmpty()
+                || rpcResponseJson == null || rpcResponseJson.isEmpty()) return false;
+        final JSONObject event;
+        try {
+            event = new JSONObject();
+            event.put("chatId", chatId);
+            event.put("threadId", threadId == null ? "" : threadId);
+            event.put("response", new JSONObject(rpcResponseJson));
+        } catch (Throwable t) {
+            Log.w(TAG, "failed to create notification conversation read event", t);
+            return false;
+        }
+        return service.queueNotificationActionSignal("notification.conversation.read", event);
+    }
+
+    /**
      * Defense-in-depth: ensure only our own app UID can invoke Binder methods.
      *
      * Note: this service is also declared with android:exported="false" and a signature-level
@@ -254,14 +276,26 @@ public final class StatusGoService extends Service {
     }
 
     private boolean publishNotificationReplyResultInternal(String rpcResponseJson) {
+        final JSONObject event;
+        try {
+            event = new JSONObject(rpcResponseJson);
+        } catch (Throwable t) {
+            Log.w(TAG, "failed to create notification reply frontend signal", t);
+            return false;
+        }
+        return queueNotificationActionSignal("notification.reply.sent", event);
+    }
+
+    /** Delivers a notification-action result to the frontend, or queues it until the UI is visible. */
+    private boolean queueNotificationActionSignal(String type, JSONObject event) {
         final String signal;
         try {
             JSONObject envelope = new JSONObject();
-            envelope.put("type", "notification.reply.sent");
-            envelope.put("event", new JSONObject(rpcResponseJson));
+            envelope.put("type", type);
+            envelope.put("event", event);
             signal = envelope.toString();
         } catch (Throwable t) {
-            Log.w(TAG, "failed to create notification reply frontend signal", t);
+            Log.w(TAG, "failed to create " + type + " frontend signal", t);
             return false;
         }
 
