@@ -4,9 +4,10 @@ import string
 from dataclasses import dataclass
 from functools import lru_cache
 
-from zpywallet import HDWallet
-from zpywallet.network import EthereumMainNet
+from eth_account import Account
 from eth_account.hdaccount import Language, generate_mnemonic, Mnemonic
+
+Account.enable_unaudited_hdwallet_features()
 
 import configs
 from constants import WalletAccountColors
@@ -99,10 +100,10 @@ def random_wallet_acc_keypair_name():
 
 
 def get_wallet_address_from_mnemonic(mnemonic_data) -> str:
-    w = HDWallet.from_mnemonic(mnemonic=mnemonic_data, passphrase='', network=EthereumMainNet)
-    child_w = w.get_child_for_path("m/44'/60'/0'/0/0")
-    address_from_mnemonic = child_w.address()
-    return address_from_mnemonic
+    account = Account.from_mnemonic(
+        mnemonic_data, passphrase='', account_path="m/44'/60'/0'/0/0"
+    )
+    return account.address
 
 
 def random_text_message():
