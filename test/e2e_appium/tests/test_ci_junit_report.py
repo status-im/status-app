@@ -100,12 +100,22 @@ def test_zero_tests_is_not_run_not_passed(tmp_path):
 PASSING = '<testsuite tests="2" failures="0" errors="0" skipped="0"><testcase classname="tests.test_c" name="a"/><testcase classname="tests.test_c" name="b"/></testsuite>'
 
 
-@pytest.mark.parametrize("outcome", ["cancelled", "failure"])
-def test_passes_from_an_unfinished_test_step_are_incomplete(tmp_path, outcome):
+def test_passes_from_a_cancelled_test_step_are_incomplete(tmp_path):
     path = tmp_path / "r.xml"
     path.write_text(PASSING)
-    text = render_summary(read_junit(path), APP, "abc", True, "1", "", tests_outcome=outcome)
-    assert text.splitlines()[0] == f"## E2E Android incomplete: 2 passed before the test step ended as {outcome}"
+    text = render_summary(read_junit(path), APP, "abc", True, "1", "", tests_outcome="cancelled")
+    assert text.splitlines()[0] == "## E2E Android incomplete: 2 passed before the test step was cancelled"
+
+
+def test_passes_from_a_failed_test_step_are_an_error_not_incomplete(tmp_path):
+    path = tmp_path / "r.xml"
+    path.write_text(PASSING)
+    heading = render_summary(read_junit(path), APP, "abc", True, "1", "", tests_outcome="failure").splitlines()[0]
+    assert heading == (
+        "## E2E Android error: 2 passed and none failed, but the test step ended as failure "
+        "(a timeout, or an error outside the tests)"
+    )
+    assert "incomplete" not in heading
 
 
 def test_passes_from_a_successful_test_step_are_passed(tmp_path):

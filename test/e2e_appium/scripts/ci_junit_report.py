@@ -76,9 +76,15 @@ def render_summary(
         heading = "## E2E Android NOT RUN: no tests were selected"
     elif result.skipped == result.total:
         heading = f"## E2E Android NOT RUN: all {result.total} selected tests were skipped"
+    elif result.failed == 0 and tests_outcome == "cancelled":
+        # A cancelled step still writes results for the tests that finished.
+        heading = f"## E2E Android incomplete: {result.passed} passed before the test step was cancelled"
     elif result.failed == 0 and tests_outcome != "success":
-        # A cancelled or timed-out step still writes results for the tests that finished.
-        heading = f"## E2E Android incomplete: {result.passed} passed before the test step ended as {tests_outcome}"
+        # A step timeout and an error outside the tests both end as failure.
+        heading = (
+            f"## E2E Android error: {result.passed} passed and none failed, but the test step ended as "
+            f"{tests_outcome} (a timeout, or an error outside the tests)"
+        )
     else:
         verdict = "passed" if result.failed == 0 else "failed"
         heading = f"## E2E Android {verdict}: {result.passed} passed, {result.failed} failed, {result.skipped} skipped"
