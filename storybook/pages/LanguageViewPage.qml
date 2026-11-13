@@ -27,20 +27,32 @@ SplitView {
             SplitView.fillHeight: true
             contentWidth: parent.width - 150
 
+            // translation language
             availableLanguages: ["de", "cs", "en", "en_CA", "en_US", "ko", "ar", "fr", "fr_CA", "pt_BR", "pt", "uk", "ja", "el"]
             currentLanguage: "en"
-
-            availableSpellcheckLanguages: LanguageService.availableSpellcheckLanguages
-            activeSpellcheckLanguages: LanguageService.activeSpellcheckLanguages
-
-            onEnableSpellcheckLanguageRequested: function(code, enabled) {
-                logs.logEvent("onEnableSpellcheckLanguageRequested", ["code", "enabled"], arguments)
-                LanguageService.toggleSpellcheckLanguage(code, enabled)
-            }
 
             onChangeLanguageRequested: function(newLanguageCode) {
                 logs.logEvent("onChangeLanguageRequested", ["newLanguageCode"], arguments)
                 currentLanguage = newLanguageCode
+            }
+
+            // spellcheck
+            spellCheckEnabled: LanguageService.spellCheckEnabled
+            spellCheckSkipCapitalizedWords: LanguageService.spellCheckSkipCapitalizedWords
+            availableSpellcheckLanguages: LanguageService.availableSpellcheckLanguages
+            activeSpellcheckLanguages: LanguageService.activeSpellcheckLanguages
+
+            onSpellCheckEnabledChangeRequested: function(enabled) {
+                logs.logEvent("onSpellCheckEnabledChangeRequested", ["enabled"], arguments)
+                LanguageService.spellCheckEnabled = enabled
+            }
+            onSpellCheckSkipCapitalizedWordsChangeRequested: function (enabled) {
+                logs.logEvent("onSpellCheckSkipCapitalizedWordsChangeRequested", ["enabled"], arguments)
+                LanguageService.spellCheckSkipCapitalizedWords = enabled
+            }
+            onEnableSpellcheckLanguageRequested: function(code, enabled) {
+                logs.logEvent("onEnableSpellcheckLanguageRequested", ["code", "enabled"], arguments)
+                LanguageService.toggleSpellcheckLanguage(code, enabled)
             }
 
             currentCurrency: "USD"

@@ -132,35 +132,6 @@ Item {
             verify(!skip.visible)
         }
 
-        function test_dictionariesKeepEnglishSelected() {
-            const selector = findChild(controlUnderTest, "languageViewSpellcheckLanguageSelector")
-            verify(!!selector)
-            verify(selector.activeLanguageCodes.includes("en_US"))
-            mouseClick(selector)
-            const dropdown = findChild(selector, "statusLanguageSelectorDropdown")
-            tryCompare(dropdown, "opened", true)
-            const listView = findChild(dropdown.contentItem, "statusLanguageSelectorListView")
-            verify(waitForRendering(listView))
-            const english = findChild(listView, "itemDelegate_en_US")
-            const czech = findChild(listView, "itemDelegate_cs_CZ")
-            verify(!!english)
-            verify(!!czech)
-            verify(english.checked)
-            verify(!english.enabled)
-            mouseClick(english)
-            verify(english.checked)
-            mouseClick(czech)
-            tryVerify(() => LanguageService.activeSpellcheckLanguages.includes("cs_CZ"))
-            verify(english.checked)
-            mouseClick(czech)
-            tryVerify(() => !LanguageService.activeSpellcheckLanguages.includes("cs_CZ"))
-            verify(english.checked)
-            LanguageService.toggleSpellcheckLanguage("en_US", false)
-            verify(LanguageService.activeSpellcheckLanguages.includes("en_US"))
-            verify(english.checked)
-            dropdown.close()
-        }
-
         function test_switchingProfilesPreservesAvailableDictionaries() {
             LanguageService.toggleSpellcheckLanguage("cs_CZ", true)
             LanguageService.userUID = originalUID + "-other"

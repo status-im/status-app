@@ -35,9 +35,9 @@ SettingsContentBase {
 
     signal changeLanguageRequested(string newLanguageCode)
     signal changeCurrencyRequested(string newCurrency)
+
     signal spellCheckEnabledChangeRequested(bool value)
     signal spellCheckSkipCapitalizedWordsChangeRequested(bool value)
-
     signal enableSpellcheckLanguageRequested(string code, bool enabled)
 
     ColumnLayout {
@@ -92,7 +92,7 @@ SettingsContentBase {
             padding: Theme.halfPadding
             text: {
                 const link = "https://status.app/cc/G-gAAORqbagnhrSvikdvJE1-f7iUTLVeGDI6uS1gbdHJClvLOIsozcOgbrhs8sVle2GBnz0QghKrJugxwVVmAGNFIcm4KPPNFIKvKdf_83iSXsosZUr1rHgLeJqn0el8TPRaMwxCExy35wPCYGG0TH9dzY_YAnS4705bQNv18a-cEVCyBKPdTgXvRJjjowqNh-zcFB9U6PpT2klNfmPCj05HNG3ShpUfTYxsXslmjKKSyWWQUsyikZIz8sV0zsia-Wwe#zQ3shZeEJqTC1xhGUjxuS4rtHSrhJ8vUYp64v6qWkLpvdy9L9"
-                return qsTr("Want to improve a translation, help add a new language, or request one? Let us know in our %1.").arg(`<a href='${link}'>` + qsTr("channel") + "</a>")
+                return qsTr("Want to improve a translation, help add a new language, or request one? Let us know in %1.").arg(`<a href='${link}'>#translations</a>`)
             }
             onLinkActivated: link => Global.activateDeepLink(link)
         }
@@ -143,13 +143,22 @@ SettingsContentBase {
                 elide: Text.ElideRight
             }
             StatusLanguageSelector {
+                id: activeSpellcheckLanguagesSelector
                 objectName: "languageViewSpellcheckLanguageSelector"
                 selectMultiple: true
                 languageCodes: root.availableSpellcheckLanguages
                 activeLanguageCodes: root.activeSpellcheckLanguages
-                disabledLanguageCodes: [LanguageService.defaultLanguageCode]
                 display: Button.TextOnly
                 onLanguageToggled: (code, checked) => root.enableSpellcheckLanguageRequested(code, checked)
+
+                // close the popup when the spellcheck gets disabled (due to 0 active dictionaries)
+                Connections {
+                    target: root
+                    function onActiveSpellcheckLanguagesChanged() {
+                        if (root.activeSpellcheckLanguages.length === 0)
+                            activeSpellcheckLanguagesSelector.close()
+                    }
+                }
             }
         }
 
