@@ -318,6 +318,8 @@ QtObject {
         return sharedUrlsModule.createThreadUrl(chatId, threadId)
     }
 
+    readonly property QtObject profileUrlResolver: typeof sharedUrlsModule === "undefined" ? null : sharedUrlsModule
+
     function createThread(parentMessageId) {
         if (!messageModule)
             return

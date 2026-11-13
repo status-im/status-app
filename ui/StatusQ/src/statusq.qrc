@@ -50,6 +50,8 @@
         <file>StatusQ/Components/StatusMemberListItem.qml</file>
         <file>StatusQ/Components/StatusMessage.qml</file>
         <file>StatusQ/Components/StatusMessageDetails.qml</file>
+        <file>StatusQ/Components/StatusInlineLinkSupport.qml</file>
+        <file>StatusQ/Components/StatusInlineLinkText.qml</file>
         <file>StatusQ/Components/StatusMessageHeader.qml</file>
         <file>StatusQ/Components/StatusMessageSenderDetails.qml</file>
         <file>StatusQ/Components/StatusNavigationListItem.qml</file>

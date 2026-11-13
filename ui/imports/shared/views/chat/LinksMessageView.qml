@@ -19,6 +19,7 @@ import shared.controls.delegates
 
 Flow {
     id: root
+    objectName: "LinksMessageView"
 
     property UtilsStore utilsStore
 
@@ -26,6 +27,9 @@ Flow {
     required property bool playAnimations
 
     required property var linkPreviewModel
+    property var inlineLinks: ({})
+    readonly property bool hasContent: enableGifLoader.active || paymentRequestRepeater.count > 0
+                                       || tempRepeater.count > 0 || children.some(child => child?.showPreview === true)
     required property var gifLinks
 
     required property var paymentRequestModel
@@ -67,6 +71,7 @@ Flow {
     }
 
     Loader {
+        id: enableGifLoader
         visible: active
         active: root.gifLinks && root.gifLinks.length > 0
                  && !root.gifUnfurlingEnabled
@@ -127,7 +132,11 @@ Flow {
         model: root.linkPreviewModel
         delegate: LinkPreviewCardDelegate {
             id: delegate
+            objectName: "linkPreviewCard_" + url
 
+            readonly property bool showPreview: !root.inlineLinks[url]
+                                                && previewType !== Constants.LinkPreviewType.NoPreview
+            visible: showPreview
             width: d.contentWidth
 
             highlight: url === root.highlightLink
