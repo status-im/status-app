@@ -148,6 +148,8 @@ signal. It is queued while the UI is backgrounded, then processed through the sa
 response path as a normal in-app send when the UI returns. `local-notifications` continues to
 update only the Android notification thread.
 
+A successful reply also marks the conversation as read (see below); the notification stays.
+
 ### 8a. Mark as read
 
 Message notifications carry a "Mark as read" action (`ACTION_MARK_AS_READ`), handled by the same
