@@ -42,6 +42,8 @@ class ChatTextItem : public QQuickItem
     //     bold: bool, italic: bool, strikethrough: bool, underline: bool,
     //     code: bool, mention: bool,
     //     href: string,            // anchor target; appearance resolves its color
+    //     inlineIconOffsets: [int], // text offsets reserving space for QML icons
+    //     copyText: string,        // source copied when the complete span is selected
     //     newBlock: bool,          // start a new paragraph before this segment
     //     codeBlock: bool,         // the segment is a code block: a paragraph of
     //                              // its own, in codeFontFamily, framed;
@@ -55,6 +57,9 @@ class ChatTextItem : public QQuickItem
     // `hasSourceClassification` distinguishes a supplied false classification
     // from an unspecified one when values are copied through QML.
     Q_PROPERTY(QList<ChatTextSegment> segments READ segments WRITE setSegments NOTIFY segmentsChanged)
+    // Positions reserved for QML decorations, indexed by the source segment.
+    Q_PROPERTY(QVariantList inlineIconRects READ inlineIconRects NOTIFY inlineIconRectsChanged)
+    Q_PROPERTY(QVariantList inlineLinkRects READ inlineLinkRects NOTIFY inlineIconRectsChanged)
 
     // Localized, selectable " (edited)" suffix. Inline after normal text;
     // outside the decoration after a trailing quote or code block. Empty
@@ -90,7 +95,8 @@ class ChatTextItem : public QQuickItem
                NOTIFY persistentSelectionChanged)
 
     // Plain text of the current selection, paragraph separators normalised to
-    // newlines. Empty when nothing is selected.
+    // newlines. Complete inline spans use copyText when supplied. Empty when
+    // nothing is selected.
     Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectionChanged)
 
     // Anchor under the pointer, updated by hoverAt(). Empty when none.
@@ -115,6 +121,8 @@ public:
 
     QList<ChatTextSegment> segments() const;
     void setSegments(const QList<ChatTextSegment>& segments);
+    QVariantList inlineIconRects() const;
+    QVariantList inlineLinkRects() const;
 
     bool edited() const;
     void setEdited(bool edited);
@@ -175,6 +183,7 @@ public:
 signals:
     void appearanceChanged();
     void segmentsChanged();
+    void inlineIconRectsChanged();
     void editedChanged();
     void textChanged();
     void contentHeightChanged();
@@ -266,7 +275,7 @@ private:
     // Mention backgrounds and link highlights, in item coordinates. Painted
     // under the text by the item, so hover and highlight changes touch
     // neither the document nor its layout.
-    QVector<std::pair<QRectF, QColor>> computeBackgrounds() const;
+    QVector<std::pair<QRectF, QColor>> computeBackgrounds(bool inlineLinks = false) const;
 
     // Snaps a character position to the nearest grapheme-cluster boundary at or
     // before it. Without this a drag can cut an emoji ZWJ sequence or a
@@ -280,6 +289,15 @@ private:
     std::unique_ptr<QTextDocument> m_document;
     using Segment = ChatTextSegment;
     QVector<Segment> m_segments;
+    struct InlineIcon { int position; int index; };
+    struct InlineSpan {
+        int start;
+        int end;
+        int segmentIndex;
+        QList<InlineIcon> icons;
+        bool trailingPadding;
+    };
+    QVector<InlineSpan> m_inlineSpans;
     bool m_edited = false;
     QString m_hoveredLink;
     QString m_highlightedLink;

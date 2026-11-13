@@ -46,6 +46,7 @@ Control {
         FailedResending
     }
 
+    // Content may expose hasContent to collapse this section without unloading it.
     property alias linksComponent: linksLoader.sourceComponent
     property alias invitationComponent: invitationBubbleLoader.sourceComponent
 
@@ -411,7 +412,7 @@ Control {
                                 ((!!root.linkPreviewModel && root.linkPreviewModel.count > 0)
                                 || (!!root.gifLinks && root.gifLinks.length > 0)
                                 || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0))
-                        visible: active 
+                        visible: active && (item?.hasContent ?? true)
                     }
                     Loader {
                         id: invitationBubbleLoader

@@ -43,6 +43,7 @@ constexpr int QuoteRightToLeftProperty = QTextFormat::UserProperty + 4; // bool,
 // bool, left-to-right code in a right-to-left quote: its box sits on the
 // right, so its left margin is fitted to the widest line after layout.
 constexpr int FittedCodeProperty = QTextFormat::UserProperty + 5;
+constexpr int InlineLinkProperty = QTextFormat::UserProperty + 6; // QML paints rounded backgrounds
 
 // A paint key's colour, compared as one QRgb. An invalid colour means "use the
 // default" and must not compare equal to opaque black, which its rgba() is.
@@ -519,7 +520,9 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
     bool afterCodeBlock = false;
     bool hasLinks = false;
 
-    for (const Segment& segment : std::as_const(m_segments)) {
+    m_inlineSpans.clear();
+    for (qsizetype segmentIndex = 0; segmentIndex < m_segments.size(); ++segmentIndex) {
+        const Segment& segment = m_segments.at(segmentIndex);
         const bool codeBlock = segment.has(Segment::CodeBlock);
         hasLinks |= !segment.href.isEmpty();
         m_hasCodeBlocks |= codeBlock;
@@ -551,6 +554,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         // supplies it for segments that carry none, and leaving it out means a
         // colour change no longer needs the document rebuilt.
         QTextCharFormat format = ChatTextFormat::emphasis(segment);
+        if (!segment.inlineIconOffsets.isEmpty())
+            format.setProperty(InlineLinkProperty, true);
 
         if (segment.has(Segment::Code)) {
             setCodeFont(format, m_appearance->codeFontFamily());
@@ -579,15 +584,38 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         }
 
         const int start = cursor.position();
+        QList<InlineIcon> icons;
+        bool trailingPadding = false;
         if (codeBlock) {
             // Code keeps its lines inside one paragraph. Only this path needs
             // a mutable copy; ordinary spans can borrow the segment's text.
             QString text = segment.text;
             text.replace(QLatin1Char('\n'), QChar::LineSeparator);
             cursor.insertText(text, format);
-        } else {
+        } else if (segment.inlineIconOffsets.isEmpty()) {
             cursor.insertText(segment.text, format);
+        } else {
+            int previous = 0;
+            for (qsizetype i = 0; i < segment.inlineIconOffsets.size(); ++i) {
+                const int offset = segment.inlineIconOffsets.at(i);
+                if (offset < previous || offset > segment.text.size())
+                    continue;
+                cursor.insertText(QStringView(segment.text).mid(previous, offset - previous).toString(), format);
+                icons.append({cursor.position(), int(i)});
+                // Reserve font-sized space for the inline icon.
+                // Keep the icon with the following text when wrapping.
+                cursor.insertText(i == 0 ? QStringLiteral("\u202f\u2003\u202f\u2060")
+                                         : QStringLiteral("\u2003\u202f\u2060"), format);
+                previous = offset;
+            }
+            cursor.insertText(QStringView(segment.text).mid(previous).toString(), format);
+            // A final icon already has a trailing gap; labels need the same padding.
+            trailingPadding = !icons.isEmpty() && previous < segment.text.size();
+            if (trailingPadding)
+                cursor.insertText(QStringLiteral("\u202f"), format);
         }
+        if (!icons.isEmpty() || !segment.copyText.isEmpty())
+            m_inlineSpans.append({start, cursor.position(), int(segmentIndex), icons, trailingPadding});
         int kinds = 0;
         if (role == ChatTextFormat::ForegroundRole::Mention)
             kinds |= MentionForegroundAppearance;
@@ -1110,6 +1138,7 @@ void ChatTextItem::ensureLayout()
     if (m_hasFittedCode && fitCodeMargins(true))
         height = m_document->documentLayout()->documentSize().height();
 
+    emit inlineIconRectsChanged();
     if (qFuzzyCompare(m_contentHeight, height))
         return;
 
@@ -1238,6 +1267,25 @@ QString ChatTextItem::selectedText() const
         const int to = qMin(end, block.position() + block.length() - 1) - block.position();
 
         QString text = block.text().mid(from, to - from);
+        // Work backwards so substitutions do not move subsequent positions.
+        for (auto it = m_inlineSpans.crbegin(); it != m_inlineSpans.crend(); ++it) {
+            const int spanStart = it->start - block.position();
+            const int spanEnd = it->end - block.position();
+            const auto& segment = m_segments.at(it->segmentIndex);
+            if (from <= spanStart && to >= spanEnd && !segment.copyText.isEmpty()) {
+                text.replace(spanStart - from, spanEnd - spanStart, segment.copyText);
+            } else {
+                if (it->trailingPadding && from < spanEnd && to >= spanEnd)
+                    text.remove(spanEnd - from - 1, 1);
+                for (auto icon = it->icons.crbegin(); icon != it->icons.crend(); ++icon) {
+                    const int position = icon->position - block.position();
+                    const int iconStart = qMax(from, position);
+                    const int iconEnd = qMin(to, position + (icon->index == 0 ? 4 : 3));
+                    if (iconEnd > iconStart)
+                        text.remove(iconStart - from, iconEnd - iconStart);
+                }
+            }
+        }
         text.replace(QChar::LineSeparator, QLatin1Char('\n'));
 
         const int level = block.blockFormat().intProperty(QTextFormat::BlockQuoteLevel);
@@ -1251,6 +1299,43 @@ QString ChatTextItem::selectedText() const
     }
 
     return lines.join(QLatin1Char('\n'));
+}
+
+QVariantList ChatTextItem::inlineIconRects() const
+{
+    QVariantList result;
+    for (const auto& span : m_inlineSpans) {
+        const QTextBlock block = m_document->findBlock(span.start);
+        const auto* layout = block.layout();
+        if (!layout)
+            continue;
+        const QPointF origin = m_document->documentLayout()->blockBoundingRect(block).topLeft();
+        for (const auto& icon : span.icons) {
+            const int position = icon.position - block.position() + (icon.index == 0 ? 1 : 0);
+            const auto line = layout->lineForTextPosition(position);
+            if (!line.isValid())
+                continue;
+            const qreal x1 = line.cursorToX(position);
+            const qreal x2 = line.cursorToX(position + 1);
+            const qreal size = qMin(qAbs(x2 - x1), line.height());
+            result.append(QVariantMap{{QStringLiteral("segmentIndex"), span.segmentIndex},
+                                     {QStringLiteral("iconIndex"), icon.index},
+                                     {QStringLiteral("rect"), QRectF(origin.x() + qMin(x1, x2),
+                                         origin.y() + line.y() + (line.height() - size) / 2, size, size)}});
+        }
+    }
+    return result;
+}
+
+QVariantList ChatTextItem::inlineLinkRects() const
+{
+    QVariantList result;
+    for (const auto& background : computeBackgrounds(true)) {
+        const QRectF& rect = background.first;
+        result.append(QVariantMap{{QStringLiteral("rect"), rect},
+                                 {QStringLiteral("href"), linkAt(rect.center().x(), rect.center().y())}});
+    }
+    return result;
 }
 
 bool ChatTextItem::selectable() const
@@ -1670,7 +1755,7 @@ void ChatTextItem::setHoveredLink(const QString& link)
 // Use visual runs: a logical anchor or mention can occupy disjoint regions
 // within a bidirectional line. Backgrounds cover each run's advance width and
 // the full line height. A highlight replaces the mention background.
-QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds() const
+QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds(bool inlineLinks) const
 {
     QVector<std::pair<QRectF, QColor>> backgrounds;
     const QColor highlight = m_appearance->hoverHighlightColor();
@@ -1682,13 +1767,15 @@ QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds() const
         for (auto it = block.begin(); !it.atEnd(); ++it) {
             const QTextFragment fragment = it.fragment();
             const QTextCharFormat format = fragment.charFormat();
+            if (format.boolProperty(InlineLinkProperty) != inlineLinks)
+                continue;
             QColor color;
             const QString href = highlighting ? format.anchorHref() : QString();
             if (!href.isEmpty() && (href == m_hoveredLink || href == m_highlightedLink))
                 color = highlight;
             else if (format.boolProperty(MentionProperty))
                 color = m_appearance->mentionBackground();
-            if (!color.isValid() || color.alpha() == 0)
+            if (!inlineLinks && (!color.isValid() || color.alpha() == 0))
                 continue;
 
             const int from = fragment.position() - block.position();

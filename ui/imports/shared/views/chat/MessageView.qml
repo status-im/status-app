@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
+import QtQml.Models
 import QtModelsToolkit
 import SortFilterProxyModel
 
@@ -485,6 +486,12 @@ Loader {
 
     QtObject {
         id: d
+
+        readonly property ProfileLinkResolver profileLinkResolver: ProfileLinkResolver {
+            text: root.unparsedText
+            contactsModel: root.rootStore?.contactsModel ?? null
+            parseProfileUrl: root.messageStore ? url => root.messageStore.parseProfileUrl(url) : null
+        }
 
         readonly property int chatButtonSize: 32
         readonly property bool gifOnlyMessage: root.gifUnfurlingEnabled
@@ -1113,7 +1120,13 @@ Loader {
                         return
                     }
 
-                    const linkPreviewType = root.linkPreviewModel.getLinkPreviewType(link)
+                    if (d.profileLinkResolver.links[link]) {
+                        Global.activateDeepLink(link)
+                        return
+                    }
+
+                    const linkPreviewType = root.linkPreviewModel?.getLinkPreviewType(link)
+                        ?? Constants.LinkPreviewType.NoPreview
 
                     if (linkPreviewType === Constants.LinkPreviewType.Standard || !Utils.isStatusDeepLink(link)) {
                         Global.requestOpenLink(link)
@@ -1211,6 +1224,7 @@ Loader {
                     }
                     unparsedText: d.gifOnlyMessage ? "" : root.unparsedText
                     mentionsMap: root.mentionsMap
+                    inlineLinks: d.profileLinkResolver.links
                     messageContent: {
                         switch (delegate.contentType)
                         {
@@ -1283,6 +1297,8 @@ Loader {
                 linksComponent: Component {
                     LinksMessageView {
                         id: linksMessageView
+
+                        inlineLinks: d.profileLinkResolver.links
 
                         linkPreviewModel: root.linkPreviewModel
                         gifLinks: root.gifLinks

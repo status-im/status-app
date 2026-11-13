@@ -260,6 +260,19 @@ QtObject {
         return sharedUrlsModule.createThreadUrl(chatId, threadId)
     }
 
+    function parseProfileUrl(url) {
+        try {
+            const profile = JSON.parse(sharedUrlsModule.parseContactSharedUrl(url))
+            if (!profile.publicKey)
+                return null
+            if (globalUtils.isCompressedPubKey(profile.publicKey))
+                profile.publicKey = globalUtils.getDecompressedPk(profile.publicKey)
+            return profile
+        } catch (error) {
+            return null
+        }
+    }
+
     function createThread(parentMessageId) {
         if (!messageModule)
             return
