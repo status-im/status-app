@@ -23,7 +23,7 @@ WORKERS = {"1", "2", "3", "4", "5"}
 # Other selections can hold two- and three-phone tests: 2 workers fit 5 sessions.
 AUTO_WORKERS_GATE = "4"
 AUTO_WORKERS_OTHER = "2"
-NODE_ID = re.compile(r"^tests/[A-Za-z0-9_./\[\]:-]+$")
+NODE_ID = re.compile(r"^tests/[A-Za-z0-9_./\[\]:@-]+$")
 MARKER_TOKEN = re.compile(r"[()]|[^\s()]+")
 MARKER_OPERATORS = {"and", "or", "not", "(", ")"}
 BROWSERSTACK_CONFIG = Path(__file__).resolve().parents[1] / "config" / "environments" / "browserstack.yaml"

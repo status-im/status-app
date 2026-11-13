@@ -205,3 +205,8 @@ def test_rejects_malformed_marker_expressions(markers):
 )
 def test_accepts_well_formed_marker_expressions(markers):
     assert build_args("gate", "4", "", "", KNOWN, markers, MARKERS)[:2] == ["-m", markers]
+
+
+def test_node_id_with_an_image_digest_is_allowed():
+    node_id = "tests/test_backend_peer_core.py::test_every_reference_form_of_the_built_image_is_accepted[statusgo-peer-27bca1fc5ce8@sha256:aaaa]"
+    assert build_args("gate", "4", "", node_id, KNOWN)[0] == node_id
