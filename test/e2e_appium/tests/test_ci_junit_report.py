@@ -87,3 +87,11 @@ def test_testsuite_root_without_testsuites(tmp_path):
     path = tmp_path / "r.xml"
     path.write_text('<testsuite tests="1" failures="0" errors="0" skipped="0"><testcase classname="tests.test_c" name="t"/></testsuite>')
     assert read_junit(path).passed == 1
+
+
+def test_zero_tests_is_not_run_not_passed(tmp_path):
+    path = tmp_path / "r.xml"
+    path.write_text('<testsuites><testsuite tests="0" failures="0" errors="0" skipped="0"/></testsuites>')
+    text = render_summary(read_junit(path), APP, commit="abc", app_from_this_commit=True, account="1", build_url="")
+    assert text.splitlines()[0] == "## E2E Android NOT RUN: no tests were selected"
+    assert "passed" not in text.splitlines()[0]

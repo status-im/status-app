@@ -64,9 +64,13 @@ def _cell(text: str) -> str:
 
 
 def render_summary(result: Result, app: dict, commit: str, app_from_this_commit: bool, account: str, build_url: str) -> str:
-    verdict = "passed" if result.failed == 0 else "failed"
+    if result.total == 0:
+        heading = "## E2E Android NOT RUN: no tests were selected"
+    else:
+        verdict = "passed" if result.failed == 0 else "failed"
+        heading = f"## E2E Android {verdict}: {result.passed} passed, {result.failed} failed, {result.skipped} skipped"
     lines = [
-        f"## E2E Android {verdict}: {result.passed} passed, {result.failed} failed, {result.skipped} skipped",
+        heading,
         "",
         "| | |",
         "|---|---|",
