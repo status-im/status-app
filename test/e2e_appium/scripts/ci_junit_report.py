@@ -63,9 +63,20 @@ def _cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")[:300]
 
 
-def render_summary(result: Result, app: dict, commit: str, app_from_this_commit: bool, account: str, build_url: str) -> str:
+def render_summary(
+    result: Result,
+    app: dict,
+    commit: str,
+    app_from_this_commit: bool,
+    account: str,
+    build_url: str,
+    tests_outcome: str = "success",
+) -> str:
     if result.total == 0:
         heading = "## E2E Android NOT RUN: no tests were selected"
+    elif result.failed == 0 and tests_outcome != "success":
+        # A cancelled or timed-out step still writes results for the tests that finished.
+        heading = f"## E2E Android incomplete: {result.passed} passed before the test step ended as {tests_outcome}"
     else:
         verdict = "passed" if result.failed == 0 else "failed"
         heading = f"## E2E Android {verdict}: {result.passed} passed, {result.failed} failed, {result.skipped} skipped"
@@ -111,6 +122,7 @@ def main() -> int:
     parser.add_argument("--app-from-this-commit", default="false")
     parser.add_argument("--account", default="")
     parser.add_argument("--build-url", default="")
+    parser.add_argument("--tests-outcome", default="success")
     opts = parser.parse_args()
 
     result = read_junit(opts.junit)
@@ -121,6 +133,7 @@ def main() -> int:
         opts.app_from_this_commit == "true",
         opts.account,
         opts.build_url,
+        opts.tests_outcome,
     )
     with opts.summary.open("a") as handle:
         handle.write(summary)
