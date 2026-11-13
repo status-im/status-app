@@ -78,6 +78,13 @@ public slots:
         qmlRegisterType<ObjectCounter>("Storybook.Testing", 1, 0, "ObjectCounter");
         qmlRegisterType<TextDocumentTester>("Storybook.Testing", 1, 0, "TextDocumentTester");
 
+        qmlRegisterType(QUrl::fromLocalFile(QML_IMPORT_ROOT u"/../ui/StatusQ/src/StatusQ/Components/private/statusMessage/StatusTextMessage.qml"_s),
+                        "Storybook.Testing", 1, 0, "BenchmarkTextMessage");
+        qmlRegisterType(QUrl::fromLocalFile(QML_IMPORT_ROOT u"/pages/InlineLinkTextPage.qml"_s),
+                        "Storybook.Testing", 1, 0, "InlineLinkTextPage");
+        qmlRegisterType(QUrl::fromLocalFile(QML_IMPORT_ROOT u"/pages/ProfileLinksPage.qml"_s),
+                        "Storybook.Testing", 1, 0, "ProfileLinksPage");
+
         // Register the same context-property mocks the storybook app uses (e.g. userProfile),
         // so components that read them (via Utils) behave the same under test.
         QDirIterator mocksIt(QML_IMPORT_ROOT u"/stubs/nim/sectionmocks"_s, QDirIterator::Subdirectories);

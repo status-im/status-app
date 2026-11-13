@@ -12,6 +12,8 @@ class ChatTextSegment
     QML_STRUCTURED_VALUE
     Q_PROPERTY(QString text MEMBER text)
     Q_PROPERTY(QString href MEMBER href)
+    Q_PROPERTY(QList<int> inlineIconOffsets MEMBER inlineIconOffsets)
+    Q_PROPERTY(QString copyText MEMBER copyText)
     Q_PROPERTY(int quoteLevel MEMBER quoteLevel)
     Q_PROPERTY(bool mention READ mention WRITE setMention)
     Q_PROPERTY(bool bold READ bold WRITE setBold)
@@ -29,6 +31,10 @@ public:
     Q_DECLARE_FLAGS(Flags, Flag)
     QString text;
     QString href;
+    // Text offsets at which to reserve font-sized space for a QML icon.
+    // Copying the whole span uses its source instead of the display label.
+    QList<int> inlineIconOffsets;
+    QString copyText;
     int quoteLevel = 0;
     Flags flags;
     Flags present;
@@ -61,11 +67,13 @@ public:
     void setHasSourceClassification(bool enabled) { present.setFlag(SourceIsOnlyEmoji, enabled); }
     bool sameContent(const ChatTextSegment& other) const {
         constexpr Flags structure = Flags(NewBlock) | CodeBlock;
-        return text == other.text && href == other.href && quoteLevel == other.quoteLevel
+        return text == other.text && href == other.href && inlineIconOffsets == other.inlineIconOffsets
+                && copyText == other.copyText && quoteLevel == other.quoteLevel
                 && (flags & structure) == (other.flags & structure);
     }
     bool operator==(const ChatTextSegment& other) const {
-        return text == other.text && href == other.href && quoteLevel == other.quoteLevel
+        return text == other.text && href == other.href && inlineIconOffsets == other.inlineIconOffsets
+                && copyText == other.copyText && quoteLevel == other.quoteLevel
                 && flags == other.flags && present == other.present;
     }
 };

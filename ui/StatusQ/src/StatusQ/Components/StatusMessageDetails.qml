@@ -13,6 +13,8 @@ QtObject {
     property string unparsedText: ""
     // pubKey -> display name, used to resolve mentions in `unparsedText`.
     property var mentionsMap: ({})
+    // URL -> StatusInlineLinkText metadata, resolved by the application.
+    property var inlineLinks: ({})
     property string messageContent: ""
     property string messageOriginInfo: ""
     property bool messageDeleted: false
