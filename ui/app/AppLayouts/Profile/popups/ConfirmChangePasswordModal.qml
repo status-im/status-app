@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 import QtQml.Models
 import QtQuick.Effects
 
@@ -73,12 +72,16 @@ StatusDialog {
             anchors.fill: parent
             visible: d.dbEncryptionInProgress && d.doDeepPasswordChange
 
-            // Update the blur source only once, when the modal is shown for performance reasons
             onVisibleChanged: {
                 if (!visible) {
-                    return;
+                    windowLayers.model = []
+                    return
                 }
-                blurSource.scheduleUpdate()
+                const overlay = Overlay.overlay
+                windowLayers.model = Array.from(overlay.parent.children, (item, index) => ({ item, index }))
+                    .filter(entry => entry.item !== overlay && entry.item.visible)
+                    .sort((a, b) => a.item.z - b.item.z || a.index - b.index)
+                    .map(entry => entry.item)
             }
 
             MultiEffect {
@@ -86,28 +89,45 @@ StatusDialog {
                 blurMax: 16
                 blur: 1.0
                 autoPaddingEnabled: false
-                visible: true
 
                 anchors.fill: parent
                 source: blurSource
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: normalBackground.color
-                    opacity: 0.6
-                }
             }
 
-            // Capture the entire main window content to be blurred
-            ShaderEffectSource {
+            Rectangle {
+                anchors.fill: parent
+                color: Theme.palette.backdropColor
+                opacity: 0.6
+            }
+
+            // Static snapshot of the window content to be blurred
+            Item {
                 id: blurSource
 
-                sourceItem: Window.window.contentItem
-                width: Window.window.contentItem.width
-                height: Window.window.contentItem.height
-
-                live: false
+                anchors.fill: parent
                 visible: false
+
+                Repeater {
+                    id: windowLayers
+
+                    model: []
+
+                    delegate: ShaderEffectSource {
+                        required property Item modelData
+
+                        sourceItem: modelData
+                        live: false
+
+                        // Geometry is set once, to match the frozen texture: binding it
+                        // would stretch the snapshot if the window resizes meanwhile.
+                        Component.onCompleted: {
+                            x = modelData.x
+                            y = modelData.y
+                            width = modelData.width
+                            height = modelData.height
+                        }
+                    }
+                }
             }
         }
     }

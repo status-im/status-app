@@ -10,6 +10,11 @@ Item {
     width: 1024
     height: 768
 
+    Rectangle {
+        anchors.fill: parent
+        color: "#808080"
+    }
+
     Component {
         id: componentUnderTest
 
@@ -151,6 +156,47 @@ Item {
 
             controlUnderTest.passwordSuccessfulyChanged()
             verify(!rekeySectionVisible(checkbox))
+        }
+
+        // Regression: the in-progress blurred backdrop captured the window
+        // content that contained the backdrop itself, so the blur sampled its
+        // own render target and the backdrop came out magenta.
+        function test_deep_change_backdrop_is_not_corrupted() {
+            controlUnderTest.modal = true
+            openDialog(true)
+
+            mouseClick(rekeyCheckbox())
+            mouseClick(submitButton())
+            tryCompare(changePasswordSpy, "count", 1)
+
+            // Wait for the one-shot capture and the blur to render.
+            let failure = ""
+            tryVerify(() => {
+                failure = backdropFailure(grabImage(root))
+                if (failure !== "")
+                    console.warn(failure)
+                return failure === ""
+            }, 2000, "backdrop corrupted or not dimmed (see warnings)")
+        }
+
+        // Returns "" when every corner (well outside the centered dialog) is a
+        // neutral, dimmed grey, otherwise a description of the first bad pixel.
+        function backdropFailure(image) {
+            // The grab is in device pixels.
+            const w = image.width
+            const h = image.height
+            const points = [[10, 10], [w - 10, 10], [10, h - 10], [w - 10, h - 10]]
+            for (const [x, y] of points) {
+                const pixel = image.pixel(x, y)
+                // Neutral grey background + greyscale backdrop must stay neutral;
+                // a corrupted backdrop shows up as a strong hue (magenta).
+                if (Math.abs(pixel.r - pixel.g) >= 0.12 || Math.abs(pixel.b - pixel.g) >= 0.12)
+                    return `backdrop pixel at ${x},${y} is not neutral: ${pixel}`
+                // ...and dimmed by the backdrop color.
+                if (pixel.g >= 0.45)
+                    return `backdrop pixel at ${x},${y} is not dimmed: ${pixel}`
+            }
+            return ""
         }
     }
 }
