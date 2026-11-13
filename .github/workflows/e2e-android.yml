@@ -116,6 +116,7 @@ jobs:
     outputs:
       pytest-args: ${{ steps.args.outputs.pytest-args }}
       image: ${{ steps.peer.outputs.image }}
+      artifact: ${{ steps.peer.outputs.artifact }}
     env:
       SELECTION: ${{ inputs.selection }}
       TESTS: ${{ inputs.tests }}
@@ -188,10 +189,13 @@ jobs:
           docker save "$image" | gzip -1 > "$RUNNER_TEMP/peer-image.tar.gz"
           ls -lh "$RUNNER_TEMP/peer-image.tar.gz"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
+          # Named after this job's attempt: a rerun of failed jobs reuses this
+          # job and its output, and the e2e job downloads by this name.
+          echo "artifact=e2e-android-peer-image-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-android-peer-image-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ steps.peer.outputs.artifact }}
           path: ${{ runner.temp }}/peer-image.tar.gz
           retention-days: 1
           compression-level: 0
@@ -245,7 +249,7 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: e2e-android-peer-image-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ needs.peer-image.outputs.artifact }}
           path: ${{ runner.temp }}/peer
 
       - name: Load the peer image
@@ -311,7 +315,7 @@ jobs:
           fi
           app=$(jq -c --arg id "$APP_ID" 'first(.[] | select(.app_url == $id)) | {app_id: .app_url, app_name, uploaded_at}' <<< "$apps")
           if [[ -z "$app" ]]; then
-            echo "::error::${APP_ID} is not in BrowserStack account ${ACCOUNT}'s group: deleted after 30 days, or uploaded to another group."
+            echo "::error::${APP_ID} is not among the 200 newest uploads of BrowserStack account ${ACCOUNT}'s group: deleted after 30 days, uploaded to another group, or older than those 200."
             exit 1
           fi
           echo "$app"
@@ -367,9 +371,11 @@ jobs:
           BUILD_URL: ${{ steps.build.outputs.url }}
           COMMIT: ${{ github.sha }}
         run: |
+          # Normally under reports/<run id>/; the harness writes to reports/
+          # itself when it cannot load its configuration.
           junit=""
-          if [[ -d "reports/${E2E_RUN_ID}" ]]; then
-            junit=$(find "reports/${E2E_RUN_ID}" -name 'pytest_results_*.xml' | head -1)
+          if [[ -d reports ]]; then
+            junit=$(find reports -name 'pytest_results_*.xml' -printf '%T@ %p\n' | sort -nr | sed -n '1s/^[^ ]* //p')
           fi
           if [[ -z "$junit" ]]; then
             echo "## E2E Android: no test results, the run stopped before pytest reported" >> "$GITHUB_STEP_SUMMARY"
