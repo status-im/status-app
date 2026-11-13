@@ -1,0 +1,75 @@
+name: UI Tests
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - 'release/**'
+      # The branch runs it until there is a pull request.
+      - ab/issue-23128-gh-actions-ci
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: read
+concurrency:
+  group: ui-tests-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  # One long-lived container; every step below runs a make target in it.
+  IN_IMAGE: docker exec build
+  STATUSQ_TESTS_BUILD_PATH: ui/StatusQ/build/ci-tests
+jobs:
+  ui:
+    name: ui
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Fetch submodules
+        env:
+          USE_SYSTEM_NIM: '1'
+        run: scripts/ci-fetch-submodules.sh
+      - name: Pull the image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          image="$(ci/build-image.sh --image desktop)"
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker pull --quiet "$image"
+          echo "IMAGE=$image" >> "$GITHUB_ENV"
+      # The capability and the AppArmor exemption are what the Qt WebEngine
+      # sandbox needs inside a container.
+      - name: Start the container
+        run: |
+          docker run --detach --name build \
+            --cap-add=SYS_ADMIN --security-opt apparmor=unconfined \
+            --volume "$PWD:$PWD" --workdir "$PWD" \
+            --env "MAKEFLAGS=-j$(nproc) V=1 USE_SYSTEM_NIM=1" \
+            --env QML_DISABLE_DISK_CACHE=true \
+            --env QT_QPA_PLATFORM=offscreen \
+            "$IMAGE" sleep infinity
+      - name: QML lint
+        run: $IN_IMAGE make qml-lint
+      - name: StatusQ tests
+        if: ${{ !cancelled() }}
+        run: $IN_IMAGE make run-statusq-tests "STATUSQ_BUILD_PATH=$STATUSQ_TESTS_BUILD_PATH"
+      - name: StatusQ sanity checker
+        if: ${{ !cancelled() }}
+        run: $IN_IMAGE make run-statusq-sanity-checker "STATUSQ_BUILD_PATH=$STATUSQ_TESTS_BUILD_PATH"
+      - name: Storybook tests
+        if: ${{ !cancelled() }}
+        run: $IN_IMAGE make run-storybook-tests
+      - name: Storybook pages validator
+        if: ${{ !cancelled() }}
+        run: $IN_IMAGE make run-storybook-pages-validator
+      - name: Translations are up to date
+        if: ${{ !cancelled() }}
+        run: |
+          $IN_IMAGE make update-translations
+          if ! git diff --quiet -- 'ui/i18n/*.ts'; then
+            git diff --stat -- 'ui/i18n/*.ts'
+            echo "::error::Translation files are out of date: run 'make update-translations' and commit the result."
+            exit 1
+          fi
