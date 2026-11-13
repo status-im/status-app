@@ -25,6 +25,14 @@ QtObject:
   proc parseContactSharedUrl*(self: View, url: string): string {.slot.} =
     return self.delegate.parseContactSharedUrl(url)
 
+  proc resolveProfileUrls*(self: View, urlsJson: string): string {.slot.} =
+    return self.delegate.resolveProfileUrls(urlsJson)
+
+  proc releaseProfileUrls*(self: View, urlsJson: string) {.slot.} =
+    self.delegate.releaseProfileUrls(urlsJson)
+
+  proc profileUrlsResolved*(self: View, profilesJson: string) {.signal.}
+
   proc createMessageUrl*(self: View, chatId: string, messageId: string): string {.slot.} =
     return self.delegate.createMessageUrl(chatId, messageId)
 

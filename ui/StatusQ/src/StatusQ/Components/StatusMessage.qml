@@ -51,6 +51,7 @@ Control {
         FailedResending
     }
 
+    // Content may expose hasContent to collapse this section without unloading it.
     property alias linksComponent: linksLoader.sourceComponent
     property alias invitationComponent: invitationBubbleLoader.sourceComponent
 
@@ -64,6 +65,11 @@ Control {
     property string messageId: ""
     property bool editMode: false
     property bool isAReply: false
+    readonly property bool showReply: isAReply &&
+                                      messageDetails.contentType !== StatusMessage.ContentType.SystemMessagePinnedMessage &&
+                                      messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventSent &&
+                                      messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventAccepted &&
+                                      messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventRemoved
     property bool isEdited: false
 
     property bool hasMention: false
@@ -221,11 +227,7 @@ Control {
 
             Loader {
                 Layout.fillWidth: true
-                active: isAReply &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessagePinnedMessage &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventSent &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventAccepted &&
-                    root.messageDetails.contentType !== StatusMessage.ContentType.SystemMessageMutualEventRemoved
+                active: root.showReply
 
                 visible: active
                 sourceComponent: StatusMessageReply {
@@ -416,7 +418,7 @@ Control {
                                 ((!!root.linkPreviewModel && root.linkPreviewModel.count > 0)
                                 || (!!root.gifLinks && root.gifLinks.length > 0)
                                 || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0))
-                        visible: active 
+                        visible: active && (item?.hasContent ?? true)
                     }
                     Loader {
                         id: invitationBubbleLoader

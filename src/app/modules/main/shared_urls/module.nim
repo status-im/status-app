@@ -40,6 +40,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
+  self.controller.init()
   singletonInstance.setSessionContextProperty("sharedUrlsModule", self.viewVariant)
   self.view.load()
 
@@ -63,6 +64,15 @@ method parseCommunityChannelSharedUrl*(self: Module, url: string): string =
 method parseContactSharedUrl*(self: Module, url: string): string =
   let contactData = self.controller.parseContactSharedUrl(url)
   return $contactData
+
+method resolveProfileUrls*(self: Module, urlsJson: string): string =
+  self.controller.resolveProfileUrls(urlsJson)
+
+method releaseProfileUrls*(self: Module, urlsJson: string) =
+  self.controller.releaseProfileUrls(urlsJson)
+
+method profileUrlsResolved*(self: Module, profilesJson: string) =
+  self.view.profileUrlsResolved(profilesJson)
 
 method createMessageUrl*(self: Module, chatId: string, messageId: string): string =
   return self.controller.createMessageUrl(chatId, messageId)

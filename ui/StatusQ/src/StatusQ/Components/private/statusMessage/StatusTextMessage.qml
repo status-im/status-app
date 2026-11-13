@@ -34,7 +34,34 @@ ChatTextItem {
     persistentSelection: !root.clearSelectionOnLostFocus
 
     edited: root.isEdited
-    segments: MarkdownUtils.toChatTextSegments(root.messageDetails.unparsedText, root.messageDetails.mentionsMap)
+    segments: inlineLinkSupport.item ? inlineLinkSupport.item.segments : d.sourceSegments
+
+    QtObject {
+        id: d
+
+        readonly property list<chatTextSegment> sourceSegments: root.messageDetails.textSegments
+        readonly property var inlineLinks: {
+            const inlineLinks = root.messageDetails.inlineLinks
+            if (!Object.keys(inlineLinks).length)
+                return inlineLinks
+            // A lone URL keeps its existing preview presentation. Inline
+            // wrappers are for links accompanied by other message content.
+            const text = d.sourceSegments.map(segment => segment.text).join("").trim()
+            const link = d.sourceSegments.find(segment => !!segment.href)
+            return link && text === link.href ? ({}) : inlineLinks
+        }
+    }
+
+    Loader {
+        id: inlineLinkSupport
+        objectName: "StatusTextMessage_inlineLinkSupport"
+        active: Object.keys(d.inlineLinks).length > 0
+        sourceComponent: StatusInlineLinkSupport {
+            textItem: root
+            sourceSegments: d.sourceSegments
+            links: d.inlineLinks
+        }
+    }
 
     // Profile mentions use //<pubkey>; URLs and wallet intents keep their href.
     onLinkActivated: href => {

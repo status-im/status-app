@@ -126,6 +126,8 @@ QtObject {
             return ""
         return "https://status.app/g/?a2=" + encodeURIComponent(chatId) + "&thread-id=" + encodeURIComponent(threadId)
     }
+
+    property QtObject profileUrlResolver: null
     function resendMessage(messageId) {}
     function createThread(parentMessageId) {
         if (messageModule && messageModule.createThread)
