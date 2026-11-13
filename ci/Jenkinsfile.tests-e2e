@@ -15,7 +15,7 @@ pipeline {
            '--group-add docker ' +
            '--volume=/var/run/docker.sock:/var/run/docker.sock ' +
            '--volume=/home/jenkins/.squish-license:/home/jenkins/.squish-license ' +
-           '--volume=/opt/squish-runner-9.2.2-qt-6.11:/opt/squish-runner-9.2.2-qt-6.11 ' +
+           '--volume=/opt/squish-runner-9.3.0-qt-6.11:/opt/squish-runner-9.3.0-qt-6.11 ' +
            '--user jenkins'
     }
   }
@@ -90,9 +90,9 @@ pipeline {
   environment {
     PLATFORM = 'tests/e2e'
 
-    SQUISH_DIR = '/opt/squish-runner-9.2.2-qt-6.11'
+    SQUISH_DIR = '/opt/squish-runner-9.3.0-qt-6.11'
     PYTHONPATH = "${SQUISH_DIR}/lib:${SQUISH_DIR}/lib/python:${PYTHONPATH}"
-    LD_LIBRARY_PATH = "${SQUISH_DIR}/lib:${SQUISH_DIR}/python3/lib:${LD_LIBRARY_PATH}"
+    LD_LIBRARY_PATH = "${SQUISH_DIR}/lib:${SQUISH_DIR}/python/lib:${SQUISH_DIR}/python3/lib:${LD_LIBRARY_PATH}"
 
     /* To stop e2e tests using port 8545 */
     STATUS_RUNTIME_HTTP_API = 'False'
@@ -158,8 +158,10 @@ pipeline {
     stage('Deps') {
       steps {
         script { dir('test/e2e') {
-          sh "python3 -m venv ${VIRTUAL_ENV}"
-          sh 'pip3 install -r requirements.txt'
+          sh "${SQUISH_DIR}/python/bin/python3.14 -m venv ${VIRTUAL_ENV}"
+          sh "${VIRTUAL_ENV}/bin/python -m pip install -U pip"
+          sh "${VIRTUAL_ENV}/bin/python -m pip install -r requirements.txt"
+          sh "${VIRTUAL_ENV}/bin/python -c 'import squishtest, cv2'"
         } }
         script { dir('test/e2e/scripts/wallet_connect_dapp') {
           sh 'npm ci --no-audit --no-fund'
@@ -240,7 +242,7 @@ pipeline {
                       string(credentialsId: 'wallet-test-user-seed', variable: 'WALLET_TEST_USER_SEED')
                     ]) {
                       sh """
-                        ${env.WORKSPACE}/ci/start-session-keyring.sh python3 -m pytest -m "${getPytestMarkerExpr()}" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
+                        ${env.WORKSPACE}/ci/start-session-keyring.sh ${VIRTUAL_ENV}/bin/python -m pytest -m "${getPytestMarkerExpr()}" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
                           --disable-warnings \
                           --alluredir=./allure-results \
                           -o timeout_func_only=true

@@ -79,7 +79,7 @@ pipeline {
   environment {
     PLATFORM = 'tests/e2e-windows'
 
-    SQUISH_DIR = 'C:\\squish-runner-9.2.2-qt-6.11'
+    SQUISH_DIR = 'C:\\squish-runner-9.3.0-qt-6.11'
     PYTHONPATH = "${SQUISH_DIR}\\lib;${SQUISH_DIR}\\bin;${SQUISH_DIR}\\lib\\python;${PYTHONPATH}"
 
     /* To stop e2e tests using port 8545 */
@@ -88,7 +88,7 @@ pipeline {
 
     /* Avoid race conditions with other builds using virtualenv. */
     VIRTUAL_ENV = "${WORKSPACE_TMP}\\venv"
-    PATH = "${VIRTUAL_ENV}\\bin;C:\\Qt\\${QT_VERSION}\\msvc2022_64\\bin;${PATH}"
+    PATH = "${VIRTUAL_ENV}\\bin;${SQUISH_DIR}\\lib;${SQUISH_DIR}\\bin;C:\\Qt\\${QT_VERSION}\\msvc2022_64\\bin;${PATH}"
 
     /* To store user configuratiin files in temp dir */
     XDG_CONFIG_HOME = "${WORKSPACE_TMP}/config"
@@ -142,9 +142,10 @@ pipeline {
       steps {
         script { dir('test/e2e') {
           bat """
-            python310 -m venv ${VIRTUAL_ENV}
+            "%SQUISH_DIR%\\python\\python.exe" -m venv ${VIRTUAL_ENV}
             ${VIRTUAL_ENV}\\Scripts\\python.exe -m pip install --upgrade pip
             ${VIRTUAL_ENV}\\Scripts\\python.exe -m pip install -r requirements.txt
+            ${VIRTUAL_ENV}\\Scripts\\python.exe -c "import squishtest, cv2"
           """
         } }
         script { dir('test/e2e/scripts/wallet_connect_dapp') {
