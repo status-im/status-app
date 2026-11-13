@@ -1,0 +1,88 @@
+name: Build images
+# Publishes the images the desktop and Android jobs run in. A job cannot build
+# one itself in reasonable time, so they pull the tag ci/build-image.sh prints.
+on:
+  push:
+    branches:
+      - master
+      # The branch runs it until there is a pull request.
+      - ab/issue-23128-gh-actions-ci
+    paths:
+      - 'ci/Dockerfile'
+      - 'mobile/docker/Dockerfile'
+      - 'ci/build-image.sh'
+      - '.github/workflows/build-images.yml'
+  # A pull request that changes an image publishes it too, so its other jobs
+  # have something to pull. Forks cannot push packages and are skipped.
+  pull_request:
+    paths:
+      - 'ci/Dockerfile'
+      - 'mobile/docker/Dockerfile'
+      - 'ci/build-image.sh'
+      - '.github/workflows/build-images.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: build-images-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  image:
+    name: image (${{ matrix.image }})
+    if: >-
+      github.repository == 'status-im/status-app' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [desktop, android]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Look for a published image
+        id: image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NAME: ${{ matrix.image }}
+        run: |
+          image="$(ci/build-image.sh --image "$NAME")"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          if docker manifest inspect "$image" >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "$image is already published"
+          fi
+      # The runner starts with about 14 GB free; an image needs more to build.
+      - name: Free disk space
+        if: steps.image.outputs.published != 'true'
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /opt/hostedtoolcache/CodeQL
+          docker image prune --all --force > /dev/null
+          df -h /
+      - name: Build
+        if: steps.image.outputs.published != 'true'
+        env:
+          NAME: ${{ matrix.image }}
+        run: ci/build-image.sh "$NAME"
+      - name: Check the tools
+        if: steps.image.outputs.published != 'true'
+        env:
+          NAME: ${{ matrix.image }}
+        run: |
+          ci/build-image.sh --check "$NAME"
+          docker image ls
+          df -h /
+      - name: Publish
+        if: steps.image.outputs.published != 'true'
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+        run: docker push "$IMAGE"
