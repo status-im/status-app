@@ -131,7 +131,8 @@ jobs:
 
       - name: Qt
         run: |
-          python -m pip install --quiet aqtinstall
+          # Not released yet: 3.3.0 does not know where Qt 6.11 for Windows is.
+          python -m pip install --quiet "git+https://github.com/miurahr/aqtinstall@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7"
           # shellcheck disable=SC2086
           python -m aqt install-qt windows desktop "$QT_VERSION" win64_msvc2022_64 -m $QT_MODULES -O "$RUNNER_TEMP\\qt"
           qt="$(cygpath -u "$RUNNER_TEMP")/qt/$QT_VERSION/msvc2022_64"
