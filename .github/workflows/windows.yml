@@ -101,6 +101,7 @@ jobs:
           inno='C:\Program Files (x86)\Inno Setup 6'
           [ -f "$inno/ISCC.exe" ] || choco install innosetup --yes --no-progress
           openssl='C:\Program Files\OpenSSL'
+          [ -f 'C:\Program Files\CMake\bin\cmake.exe' ] || { echo "::error::No CMake on the runner"; exit 1; }
           [ -f "$openssl/bin/libcrypto-3-x64.dll" ] || { echo "::error::No OpenSSL in $openssl"; exit 1; }
           vs="$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath)"
           go="$(cygpath -m "$RUNNER_TEMP")/go"
@@ -124,6 +125,8 @@ jobs:
             cygpath -w "$tools/protoc/bin"
             cygpath -w "$tools/llvm/bin"
             cygpath -w "$tools/mingw64/bin"
+            # The compiler archive has a cmake of its own, which builds with Ninja.
+            echo 'C:\Program Files\CMake\bin'
             cygpath -w "$tools/nim-2.2.10/bin"
             # Nim ships an older nimble next to the compiler.
             cygpath -w "$tools/nimble"
