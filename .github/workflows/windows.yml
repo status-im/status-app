@@ -78,8 +78,8 @@ jobs:
           cp "$tools/mingw64/bin/mingw32-make.exe" "$tools/mingw64/bin/make.exe"
           # clang 22.1.8, which compiles the client against Qt's MSVC build
           fetch https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-win64.exe \
-            16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c "$tools/llvm.exe"
-          extract "$tools/llvm.exe" "$tools/llvm"
+            16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c "$tools/llvm-setup.exe"
+          extract "$tools/llvm-setup.exe" "$tools/llvm"
           # Nim 2.2.10
           fetch https://github.com/nim-lang/nightlies/releases/download/2026-04-24-version-2-2-bfeb3146d1638b39f69007a4ae5a23e23ae4e5ef/nim-2.2.10-windows_x64.zip \
             fe0686a9b298e5b13d0a983df37e002a8c6320f8b16cc45a51d15cf4046a109f "$tools/nim.zip"
