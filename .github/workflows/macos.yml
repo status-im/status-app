@@ -119,7 +119,7 @@ jobs:
       - name: status-go
         run: make status-go
 
-      # Not signed: MACOS_CODESIGN_IDENT is not set.
+      # MACOS_CODESIGN_IDENT is not set: the bundle is signed ad hoc.
       - name: Package
         run: make pkg-macos
 

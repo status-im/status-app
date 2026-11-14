@@ -1015,11 +1015,14 @@ endif
 		$(MACOS_INNER_BUNDLE) \
 		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess
 
-	# if MACOS_CODESIGN_IDENT is not set then the outer and inner .app
-	# bundles are not signed
+	# Without MACOS_CODESIGN_IDENT the bundle gets an ad-hoc signature: it
+	# starts, but Gatekeeper does not accept it.
 ifdef MACOS_CODESIGN_IDENT
 	scripts/sign-macos-pkg.sh $(MACOS_OUTER_BUNDLE) $(MACOS_CODESIGN_IDENT) \
 		--entitlements $(ENTITLEMENTS)
+else
+	codesign --force --deep --sign - $(MACOS_OUTER_BUNDLE)
+	codesign --verify --strict=all --deep $(MACOS_OUTER_BUNDLE)
 endif
 
 	echo -e $(BUILD_MSG) "dmg"
