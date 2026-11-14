@@ -1,0 +1,42 @@
+name: Container
+description: >-
+  Starts the build image as a container named "build", with the checkout
+  mounted at its own path. Steps run in it with "docker exec build".
+inputs:
+  image:
+    description: desktop or android
+    required: true
+  env:
+    description: Environment of the container, one NAME=value per line.
+    default: ''
+runs:
+  using: composite
+  steps:
+    # The registry is a speed-up: without access to it the image is built here.
+    - name: Get the image
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        NAME: ${{ inputs.image }}
+      run: |
+        echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin \
+          || echo "No GHCR login."
+        ci/build-image.sh --pull "$NAME"
+        echo "IMAGE=$(ci/build-image.sh --image "$NAME")" >> "$GITHUB_ENV"
+    # The capability and the AppArmor exemption are what the Qt WebEngine
+    # sandbox needs inside a container. cmake --build gets its own job count:
+    # called from a make recipe it cannot join make's and builds one file at a time.
+    # The Android image's entrypoint is a shell that takes one string, so it is cleared.
+    - name: Start the container
+      shell: bash
+      env:
+        CONTAINER_ENV: ${{ inputs.env }}
+      run: |
+        printf '%s\n' "$CONTAINER_ENV" > "$RUNNER_TEMP/build.env"
+        docker run --detach --name build --entrypoint "" \
+          --cap-add=SYS_ADMIN --security-opt apparmor=unconfined \
+          --volume "$PWD:$PWD" --workdir "$PWD" \
+          --env "MAKEFLAGS=-j$(nproc) V=1 USE_SYSTEM_NIM=1" \
+          --env "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)" \
+          --env-file "$RUNNER_TEMP/build.env" \
+          "$IMAGE" sleep infinity

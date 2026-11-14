@@ -1,0 +1,65 @@
+name: Linux
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IN_IMAGE: docker exec build
+
+jobs:
+  appimage:
+    name: appimage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # The app's version comes from git describe.
+          fetch-depth: 0
+
+      - name: Fetch submodules
+        env:
+          USE_SYSTEM_NIM: '1'
+        run: scripts/ci-fetch-submodules.sh
+
+      # linuxdeployqt and appimagetool are AppImages themselves: without FUSE
+      # in the container they unpack to a temporary directory and run from it.
+      - uses: ./.github/actions/container
+        with:
+          image: desktop
+          env: |
+            APPIMAGE_EXTRACT_AND_RUN=1
+            NIMFLAGS=--colors:off
+            FLAG_SWAP_ENABLED=1
+            FLAG_RELAY_ENABLED=1
+            FLAG_LIFI_ENABLED=0
+            FLAG_PARASWAP_ENABLED=0
+
+      - name: Dependencies
+        run: |
+          $IN_IMAGE make update
+          $IN_IMAGE make deps
+
+      - name: status-go
+        run: $IN_IMAGE make status-go
+
+      - name: Package
+        run: $IN_IMAGE make tgz-linux
+
+      # The tarball keeps the AppImage executable; the artifact's zip would not.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Status-linux-x86_64
+          path: pkg/Status.tar.gz
+          if-no-files-found: error
+          retention-days: 7

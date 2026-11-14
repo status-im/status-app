@@ -1,0 +1,73 @@
+name: Android
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IN_IMAGE: docker exec build
+  QT: /opt/qt/6.11.0
+
+jobs:
+  apk:
+    name: apk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # The app's version comes from git describe.
+          fetch-depth: 0
+
+      - name: Fetch submodules
+        env:
+          USE_SYSTEM_NIM: '1'
+        run: scripts/ci-fetch-submodules.sh --mobile
+
+      - uses: ./.github/actions/container
+        with:
+          image: android
+          env: |
+            QMAKE=${{ env.QT }}/android_arm64_v8a/bin/qmake
+            BUILD_VARIANT=pr
+            STATUSQ_TESTMODE=true
+            FLAG_SWAP_ENABLED=1
+            FLAG_RELAY_ENABLED=1
+            FLAG_LIFI_ENABLED=0
+            FLAG_PARASWAP_ENABLED=0
+            STATUS_APP_KEYSTORE_PATH=/tmp/throwaway.keystore
+            STATUS_APP_KEYSTORE_PASSWORD=throwaway
+            STATUS_APP_KEY_ALIAS=throwaway
+            STATUS_APP_KEY_PASSWORD=throwaway
+
+      - name: QML lint
+        run: $IN_IMAGE make qml-lint-mobile "QTDIR=$QT/gcc_64" "QT_MOBILE_DIR=$QT/android_arm64_v8a"
+
+      # The release build has to be signed. This key lives for one run, so the
+      # APK installs only where no other StatusPR is installed.
+      - name: Signing key
+        run: |
+          $IN_IMAGE keytool -genkeypair -keystore /tmp/throwaway.keystore -storetype PKCS12 \
+            -storepass throwaway -alias throwaway -keyalg RSA -keysize 2048 -validity 30 \
+            -dname "CN=Status PR build"
+
+      - name: Build
+        run: $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: StatusPR-android-arm64
+          path: |
+            mobile/bin/android/qt6/StatusPR.apk
+            mobile/bin/android/qt6/StatusPR-mapping.txt
+          if-no-files-found: error
+          retention-days: 7

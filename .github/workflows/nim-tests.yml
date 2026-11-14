@@ -1,0 +1,56 @@
+name: Nim Tests
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: read
+concurrency:
+  group: nim-tests-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  IN_IMAGE: docker exec build
+jobs:
+  nim:
+    name: nim
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # The version compiled into the tests comes from git describe.
+          fetch-depth: 0
+      - name: Fetch submodules
+        env:
+          USE_SYSTEM_NIM: '1'
+        run: scripts/ci-fetch-submodules.sh
+      - uses: ./.github/actions/container
+        with:
+          image: desktop
+          env: |
+            QML_DISABLE_DISK_CACHE=true
+            QT_QPA_PLATFORM=offscreen
+            NIMFLAGS=--colors:off
+            FLAG_SWAP_ENABLED=1
+            FLAG_RELAY_ENABLED=1
+            FLAG_LIFI_ENABLED=0
+            FLAG_PARASWAP_ENABLED=0
+      - name: Dependencies
+        run: |
+          $IN_IMAGE make update
+          $IN_IMAGE make deps
+      - name: status-go
+        run: $IN_IMAGE make status-go
+      # The tests build one at a time, so what they link is built here, each
+      # with every core.
+      - name: Libraries and resources
+        run: |
+          for target in statusq qrcodegen zxing status-keycard-qt rcc; do
+            $IN_IMAGE make "$target"
+          done
+      - name: Nim tests
+        run: $IN_IMAGE make tests-nim-linux
