@@ -38,10 +38,11 @@ jobs:
           # The app's version comes from git describe.
           fetch-depth: 0
 
+      # With OpenSSL: the macOS build compiles it from mobile/vendors/openssl.
       - name: Fetch submodules
         env:
           USE_SYSTEM_NIM: '1'
-        run: scripts/ci-fetch-submodules.sh
+        run: scripts/ci-fetch-submodules.sh --mobile
 
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
