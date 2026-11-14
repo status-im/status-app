@@ -48,14 +48,8 @@ jobs:
           go-version: '1.26.5'
           cache: false
 
-      - name: Protocol buffer compiler
-        uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3
-        with:
-          version: '36.0'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
       # Prebuilt compilers: building Nim from source takes about five minutes each.
-      - name: Nim and nimble
+      - name: Nim, nimble and protoc
         run: |
           tools="$RUNNER_TEMP/toolchain"
           nightlies=https://github.com/nim-lang/nightlies/releases/download
@@ -79,6 +73,12 @@ jobs:
           # nimble 0.26.1
           fetch "$tools/nimble/bin" ec27b85cd743dee9814b34811cece487b53cb19a3b696e72c06a9bc4c9a18c42 \
             https://github.com/nim-lang/nimble/releases/download/v0.26.1/nimble-macosx_aarch64.tar.gz
+          # protoc 36.0
+          curl -sSfL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/download" \
+            https://github.com/protocolbuffers/protobuf/releases/download/v36.0/protoc-36.0-osx-aarch_64.zip
+          echo "b6bc4afdcb880124bf342851d05155b6e3d9b6e661236d87b9c614250d26ae00  $RUNNER_TEMP/download" | shasum -a 256 -c -
+          unzip -q "$RUNNER_TEMP/download" -d "$tools/protoc"
+          echo "$tools/protoc/bin" >> "$GITHUB_PATH"
           # Nim ships an older nimble next to the compiler; the path added last comes first.
           echo "$tools/nim/bin" >> "$GITHUB_PATH"
           echo "$tools/nimble/bin" >> "$GITHUB_PATH"
