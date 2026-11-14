@@ -5,8 +5,6 @@ on:
     branches:
       - master
       - 'release/**'
-      # The branch runs it until there is a pull request.
-      - ab/issue-23128-gh-actions-ci
   workflow_dispatch:
 permissions:
   contents: read
