@@ -980,6 +980,8 @@ MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
 MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app
 
 STATUS_CLIENT_DMG ?= pkg/Status.dmg
+# The command that builds the disk image.
+DMGBUILD ?= nix run .\#dmgbuild --
 
 $(STATUS_CLIENT_DMG): MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
 $(STATUS_CLIENT_DMG): MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app
@@ -1022,7 +1024,7 @@ endif
 
 	echo -e $(BUILD_MSG) "dmg"
 	mkdir -p pkg
-	nix run .#dmgbuild -- \
+	$(DMGBUILD) \
 		-s scripts/dmg-settings.py -D app=$(MACOS_OUTER_BUNDLE) "Status" pkg/Status.dmg
 	mv "`ls pkg/*.dmg`" $(STATUS_CLIENT_DMG)
 
