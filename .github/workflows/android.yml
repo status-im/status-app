@@ -48,6 +48,23 @@ jobs:
             STATUS_APP_KEYSTORE_PASSWORD=throwaway
             STATUS_APP_KEY_ALIAS=throwaway
             STATUS_APP_KEY_PASSWORD=throwaway
+            QMAKE_EXTRA_CONFIG=ccache
+            CMAKE_C_COMPILER_LAUNCHER=ccache
+            CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            CCACHE_DIR=${{ github.workspace }}/.ccache
+            CCACHE_MAXSIZE=2G
+
+      # Compiled objects of StatusQ and of the app's QML, kept between runs.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .ccache
+          key: ccache-android-${{ github.sha }}
+          restore-keys: ccache-android-
+
+      - name: ccache
+        run: |
+          docker exec --user root build sh -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends ccache'
+          $IN_IMAGE ccache --zero-stats
 
       - name: QML lint
         run: $IN_IMAGE make qml-lint-mobile "QTDIR=$QT/gcc_64" "QT_MOBILE_DIR=$QT/android_arm64_v8a"
@@ -62,6 +79,10 @@ jobs:
 
       - name: Build
         run: $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
+
+      - name: ccache statistics
+        if: ${{ !cancelled() }}
+        run: $IN_IMAGE ccache --show-stats --verbose
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
