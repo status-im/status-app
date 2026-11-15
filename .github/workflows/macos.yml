@@ -49,40 +49,7 @@ jobs:
           go-version: '1.26.5'
           cache: false
 
-      # Prebuilt compilers: building Nim from source takes about five minutes each.
-      - name: Nim, nimble and protoc
-        run: |
-          tools="$RUNNER_TEMP/toolchain"
-          nightlies=https://github.com/nim-lang/nightlies/releases/download
-          fetch() { # <directory> <sha256> <url> [tar options]
-            local dir="$1" sum="$2" url="$3"
-            shift 3
-            mkdir -p "$dir"
-            curl -sSfL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/download" "$url"
-            echo "$sum  $RUNNER_TEMP/download" | shasum -a 256 -c -
-            tar -xf "$RUNNER_TEMP/download" -C "$dir" "$@"
-          }
-          # Nim 2.2.10
-          fetch "$tools/nim" 9a3b012d0680d11d6163dd2f145470b090c1045f5e634f42daf119bea1cb2b5e \
-            "$nightlies/2026-04-24-version-2-2-bfeb3146d1638b39f69007a4ae5a23e23ae4e5ef/nim-2.2.10-macosx_arm64.tar.xz" \
-            --strip-components=1
-          # Nim 2.2.6, the compiler nim-sds pins. nimble builds it from source
-          # unless it is already in its directory.
-          fetch "$HOME/.nimble/nimbinaries/nim-2.2.6" a62ff3c34a2eb3fc69866fcae05b32dc5c2b6668ecfb1d10d91ad72c0183fae5 \
-            "$nightlies/2025-10-31-version-2-2-ab00c56904e3126ad826bb520d243513a139436a/nim-2.2.6-macosx_arm64.tar.xz" \
-            --strip-components=1
-          # nimble 0.26.1
-          fetch "$tools/nimble/bin" ec27b85cd743dee9814b34811cece487b53cb19a3b696e72c06a9bc4c9a18c42 \
-            https://github.com/nim-lang/nimble/releases/download/v0.26.1/nimble-macosx_aarch64.tar.gz
-          # protoc 36.0
-          curl -sSfL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/download" \
-            https://github.com/protocolbuffers/protobuf/releases/download/v36.0/protoc-36.0-osx-aarch_64.zip
-          echo "b6bc4afdcb880124bf342851d05155b6e3d9b6e661236d87b9c614250d26ae00  $RUNNER_TEMP/download" | shasum -a 256 -c -
-          unzip -q "$RUNNER_TEMP/download" -d "$tools/protoc"
-          echo "$tools/protoc/bin" >> "$GITHUB_PATH"
-          # Nim ships an older nimble next to the compiler; the path added last comes first.
-          echo "$tools/nim/bin" >> "$GITHUB_PATH"
-          echo "$tools/nimble/bin" >> "$GITHUB_PATH"
+      - uses: ./.github/actions/macos-nim
 
       - name: Qt and dmgbuild
         run: |
