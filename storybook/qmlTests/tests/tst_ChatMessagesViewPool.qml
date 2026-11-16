@@ -38,6 +38,9 @@ Item {
     width: 800
     height: 600
 
+    // Past the log's last deferral: ten 16 ms settle or clamp ticks, a frame and a callLater, doubled.
+    readonly property int quietMs: 400
+
     ChatStores.RootStore { id: rootStoreMock }
     AppStateDriver { id: appState }
 
@@ -729,7 +732,7 @@ Item {
             settle(view)
             verifyBackAbove(view, at)
 
-            waitForRendering(view.chatLogView, 100)
+            wait(root.quietMs)
             compare(moduleA.markAllMessagesReadCalls, marked, "chat a is still unread")
         }
 
@@ -750,7 +753,7 @@ Item {
             settle(view)
             verifyBackAbove(view, at)
 
-            waitForRendering(view.chatLogView, 100)
+            wait(root.quietMs)
             compare(moduleA.markAllMessagesReadCalls, marked, "chat a is still unread")
         }
 
@@ -985,11 +988,11 @@ Item {
             verify(!!top)
 
             tryVerify(() => moduleA.fetchCalls > fetches && !lv.busy, 5000, "history fetched")
-            for (let i = 0; i < 10; ++i)
-                waitForRendering(lv, 100)
+            // The next page is asked for on a 0 ms timer as the last one lands.
+            wait(root.quietMs)
+            tryVerify(() => !lv.busy, 5000, "what that asked for has landed")
             const settled = moduleA.fetchCalls
-            for (let i = 0; i < 10; ++i)
-                waitForRendering(lv, 100)
+            wait(root.quietMs)
 
             compare(moduleA.fetchCalls, settled, "the fetching stopped")
             verify(moduleA.fetchCalls - fetches <= 2, "after a page or two")

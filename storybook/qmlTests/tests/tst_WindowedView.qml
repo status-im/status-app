@@ -20,6 +20,9 @@ Item {
     readonly property int chunk: 10
     readonly property int windowSize: 20
 
+    // Past the view's last deferral: ten 16 ms settle or clamp ticks, a frame and a 0 ms timer, doubled.
+    readonly property int quietMs: 400
+
     // ------------------------------------------------------------------
     // Row content. Two shapes, because they settle differently.
     // ------------------------------------------------------------------
@@ -1833,12 +1836,9 @@ Item {
             const atReveal = view.contentY
             const offsetAtReveal = offsetOf(before.value)
 
-            // Two more frames, because a stale height is corrected on the very
-            // next polish: if the reveal had used one, this is where it shows.
-            // Frames rather than a fixed wait - the claim is "nothing changes on
-            // the following polish", not "nothing changes within N ms".
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            // A stale height is corrected on the very next polish: if the
+            // reveal had used one, this is where it shows.
+            wait(root.quietMs)
 
             compare(owner.sumAtReveal, revealedContentSum(),
                     "the heights the batch was revealed at were the final ones")
@@ -2677,9 +2677,7 @@ Item {
             view.autoRequest = true
 
             root.width = 0
-
-            for (let i = 0; i < 6; ++i)
-                waitForRendering(view, 100)
+            wait(root.quietMs)
 
             compare(view.width, 0, "the view really collapsed")
             compare(view.contentHeight, view.height, "and the rows with it")
@@ -3063,7 +3061,7 @@ Item {
 
             wheel(-1)
             verify(!view.wheelScrolling)
-            waitForRendering(view, 100)
+            wait(root.quietMs)
             compare(view.contentY, 1000)
         }
     }
@@ -3144,11 +3142,6 @@ Item {
         function toStartBand() {
             view.contentY = 0
             waitForRendering(view, 100)
-        }
-
-        function quiet(frames) {
-            for (let i = 0; i < frames; ++i)
-                waitForRendering(view, 100)
         }
 
         function test_aBandInTheViewportAsksForMore() {
@@ -3624,7 +3617,7 @@ Item {
 
             const rows = view.rowCount
 
-            quiet(6)
+            wait(root.quietMs)
 
             compare(view.rowCount, rows, "nothing more was asked for")
             compare(view.busy, false)
@@ -3659,7 +3652,7 @@ Item {
             view.autoRequest = false
 
             toStartBand()
-            quiet(6)
+            wait(root.quietMs)
 
             compare(owner.startBudget, 3, "the flag gates it")
         }
@@ -3671,7 +3664,7 @@ Item {
             view.placeholder = null
 
             toStartBand()
-            quiet(6)
+            wait(root.quietMs)
 
             compare(owner.startBudget, 3, "no band, no trigger area")
         }
@@ -3798,10 +3791,9 @@ Item {
             verify(frames >= 2, "sampled more than once: " + frames)
             verify(frames < 400, "the fill finished")
 
-            for (let i = 0; i < 3; ++i) {
-                heights.add(view.contentHeight)
-                waitForRendering(view, 100)
-            }
+            heights.add(view.contentHeight)
+            wait(root.quietMs)
+            heights.add(view.contentHeight)
 
             compare(heights.size, 2,
                     "the viewport, then the content, and nothing in between: "
@@ -5384,7 +5376,7 @@ Item {
             const offset = topOf(20)
 
             verify(view.positionViewAtRow(20, contain))
-            waitForRendering(view, 100)
+            wait(root.quietMs)
 
             compare(view.contentY, before, "the view did not move")
             fuzzyCompare(topOf(20), offset, 0.5)
