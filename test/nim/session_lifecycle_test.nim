@@ -14,6 +14,8 @@ type Fake = ref object
   initializeResult: Result[void, string]
   readyPolicy: AutoLoginPolicy
   exitedLoggedOut: bool
+  hardExitBackend: BackendLogoutStatus
+  phases: seq[SessionPhase]
 
 proc newFake(): (Fake, SessionLifecycle) =
   let fake = Fake(drained: true, initializeResult: Result[void, string].ok())
@@ -30,15 +32,20 @@ proc newFake(): (Fake, SessionLifecycle) =
   ops.sessionReady = proc(policy: AutoLoginPolicy) =
     fake.calls.add("ready")
     fake.readyPolicy = policy
-  ops.drainTimedOut = proc() = fake.calls.add("drainTimedOut")
-  ops.logoutTimedOut = proc() = fake.calls.add("logoutTimedOut")
-  ops.failed = proc(step: SessionStep, error: string) = fake.calls.add("failed:" & $step)
+  ops.stateChanged = proc(state: SessionState, failedStep: SessionStep) =
+    fake.phases.add(phaseOf(state, failedStep))
+    case state
+    of SessionState.DrainTimeout: fake.calls.add("drainTimedOut")
+    of SessionState.LogoutTimeout: fake.calls.add("logoutTimedOut")
+    of SessionState.Failed: fake.calls.add("failed:" & $failedStep)
+    else: discard
   ops.exit = proc(backendLoggedOut: bool) =
     fake.calls.add("exit")
     fake.exitedLoggedOut = backendLoggedOut
-  ops.hardExit = proc(backendLoggedOut: bool) =
+  ops.hardExit = proc(backend: BackendLogoutStatus) =
     fake.calls.add("hardExit")
-    fake.exitedLoggedOut = backendLoggedOut
+    fake.exitedLoggedOut = backend == BackendLogoutStatus.Done
+    fake.hardExitBackend = backend
   (fake, newSessionLifecycle(ops, Deadline, LogoutDeadline))
 
 let loggedOut = Result[void, string].ok()
@@ -129,6 +136,7 @@ suite "session lifecycle":
     fake.drained = true
     lc.onTick(6 * Deadline)
     check lc.state == SessionState.BackendLogout
+    check fake.phases[^1] == SessionPhase.Ending
 
   test "quit during a drain timeout hard-exits without tearing the pool down":
     let (fake, lc) = newFake()
@@ -139,7 +147,7 @@ suite "session lifecycle":
     check lc.requestQuit()
     check lc.state == SessionState.Exiting
     check fake.calls[^1] == "hardExit"
-    check not fake.exitedLoggedOut
+    check fake.hardExitBackend == BackendLogoutStatus.NotStarted
     check "finishDrain" notin fake.calls
 
   test "quit latched while draining hard-exits at the deadline":
@@ -217,7 +225,7 @@ suite "session lifecycle":
     lc.onTick(LogoutDeadline)
     check lc.requestQuit()
     check fake.calls[^1] == "hardExit"
-    check not fake.exitedLoggedOut
+    check fake.hardExitBackend == BackendLogoutStatus.Running
 
   test "a late failed response after the timeout offers a retry":
     let (fake, lc) = newFake()
@@ -257,11 +265,31 @@ suite "session lifecycle":
     discard lc.requestEnd(AutoLoginPolicy.AllowOnce)
     lc.onUiReleased(0)
     lc.onBackendLogoutDone(logoutFailed)
+    check fake.phases[^1] == SessionPhase.LogoutFailed
     lc.retry(0)
     check lc.state == SessionState.BackendLogout
+    check fake.phases[^1] == SessionPhase.Ending
     lc.onBackendLogoutDone(loggedOut)
     check lc.state == SessionState.Active
+    check fake.phases[^1] == SessionPhase.Active
     check fake.readyPolicy == AutoLoginPolicy.AllowOnce
+
+  test "the window phase follows every state":
+    let (fake, lc) = newFake()
+    fake.drained = false
+    discard lc.requestEnd(AutoLoginPolicy.Disabled)
+    check fake.phases == @[SessionPhase.Ending]
+    lc.onUiReleased(0)
+    lc.onTick(Deadline)
+    check fake.phases[^1] == SessionPhase.DrainTimeout
+    fake.drained = true
+    lc.onTick(Deadline + 1)
+    check fake.phases[^1] == SessionPhase.Ending
+    lc.onTick(Deadline + 1 + LogoutDeadline)
+    check fake.phases[^1] == SessionPhase.LogoutTimeout
+    lc.onBackendLogoutDone(loggedOut)
+    check fake.phases[^1] == SessionPhase.Active
+    check phaseOf(SessionState.Failed, SessionStep.Initialize) == SessionPhase.StartFailed
 
   test "a failed initialization reports no ready session and can be retried":
     let (fake, lc) = newFake()

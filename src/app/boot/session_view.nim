@@ -10,17 +10,6 @@ import app/global/global_singleton
 logScope:
   topics = "session-view"
 
-type
-  SessionPhase* {.pure.} = enum
-    ## What the window shows about the session (see SessionView.phase). Mirrored by
-    ## SessionTransitionView.Phase in QML: keep the order in sync.
-    Active        ## the session's UI
-    Ending        ## signing out: a progress screen
-    DrainTimeout  ## background work of the ended session takes long: keep waiting or quit
-    LogoutTimeout ## the backend logout takes long: keep waiting or quit
-    LogoutFailed  ## the backend logout failed: retry or quit
-    StartFailed   ## logged out, but the next session failed to start: retry or quit
-
 QtObject:
   type SessionView* = ref object of QObject
     host: SessionHost
@@ -46,6 +35,8 @@ QtObject:
     notify = phaseChanged
 
   proc setPhase*(self: SessionView, phase: SessionPhase) =
+    if self.phase == phase:
+      return
     self.phase = phase
     self.phaseChanged()
 
