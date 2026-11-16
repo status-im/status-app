@@ -8,6 +8,12 @@ import app_service/common/types
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
 
+method getInlineThreadDetails*(self: AccessInterface, chatId, threadId, messageId: string): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method inlineLinkDataChanged*(self: AccessInterface, changes: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method delete*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 

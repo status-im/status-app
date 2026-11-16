@@ -7,6 +7,7 @@ import app/modules/main/chat_section/chat_content/io_interface as chat_content_i
 import app/modules/main/chat_section/chat_content/messages/module as messages_module
 import app_service/service/message/service as message_service
 import app/global/feature_flags
+import app/global/[global_singleton, user_profile]
 import app/modules/main/chat_section/chat_content/messages/[controller, view]
 import app/modules/main/chat_section/chat_content/messages/io_interface as messages_interface
 import app/modules/shared_models/message_model
@@ -21,6 +22,8 @@ import app_service/service/message/dto/thread
 import app_service/common/types
 import backend/response_type
 
+privateAccess(chat_service.Service)
+privateAccess(community_service.Service)
 privateAccess(messages_module.Module)
 privateAccess(message_service.Service)
 
@@ -39,6 +42,7 @@ type
     namesAtCompletion: seq[string]
     deletions: seq[string]
     summaries: seq[ThreadDto]
+    inlineChanges: seq[JsonNode]
 
   SendDelegate = ref object of messages_interface.AccessInterface
     started, finished, errors: seq[string]
@@ -55,6 +59,9 @@ method onSendingFinished(self: SendDelegate, sendToken: string) =
 
 method onSendingMessageError(self: SendDelegate, error: string) =
   self.errors.add(error)
+
+method inlineLinkDataChanged(self: ThreadDetailsDelegate, changes: string) =
+  self.inlineChanges.add(parseJson(changes))
 
 method updateThreadDetails(self: ThreadDetailsDelegate) =
   self.names.add(self.controller.getThread().name)
@@ -267,6 +274,25 @@ suite "thread navigation":
     check channel.errors.len == 0
     check threadB.finished.len == 0
     check threadB.errors.len == 0
+
+  test "inline thread notifications reuse the existing subscription and disconnect":
+    let events = createEventEmitter()
+    let delegate = ThreadDetailsDelegate()
+    let reader = controller.newController(delegate, events, "section", "current", false,
+      nil, nil, nil, nil, nil, nil)
+    reader.init()
+    let loaded = ChatThreadsForChatsLoadedArgs(completedChatIds: @["other"], threads: @[
+      ThreadDto(chatId: "other", threadId: "one"),
+      ThreadDto(chatId: "other", threadId: "two")])
+    events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED, loaded)
+    require delegate.inlineChanges.len == 1
+    check delegate.inlineChanges[0]["chats"] == %*["other"]
+    events.emit(SIGNAL_INLINE_MESSAGE_DATA_CHANGED, ChatArgs(chatId: "other"))
+    check delegate.inlineChanges.len == 2
+    reader.delete()
+    events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED, loaded)
+    events.emit(SIGNAL_INLINE_MESSAGE_DATA_CHANGED, ChatArgs(chatId: "other"))
+    check delegate.inlineChanges.len == 2
 
   test "thread-only signals carry archive transitions without losing summaries":
     let events = createEventEmitter()
@@ -770,6 +796,9 @@ suite "thread navigation":
       service.asyncLoadChatThreadSummaries("chat-id")
       require(completed.len == 1)
       check(completed[0].name == "First")
+      completed = @[]
+      service.asyncLoadChatThreadSummaries("chat-id", notifyIfCached = false)
+      check(completed.len == 0)
       events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED,
         chat_service.ChatThreadsUpdatedArgs(threads: @[
           ThreadDto(chatId: "chat-id", threadId: "thread-id", parentMessageId: "parent-id",
@@ -939,3 +968,29 @@ suite "threads and the chat history restart":
     }))
 
     check(thread.view.model().findIndexForMessageId("reply-1") >= 0)
+
+suite "inline metadata read bridge":
+  test "cached thread details respect group membership and channel visibility":
+    singletonInstance.userProfile.setFixedData("", "", "me", false, false)
+    let events = createEventEmitter()
+    let chats = chat_service.Service()
+    let communities = community_service.Service()
+    let messages = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    messages.chatThreadSummariesLoadedChats.incl("chat")
+    messages.chatThreadsByParentIdByChat["chat"] = {
+      "parent": ThreadDto(chatId: "chat", threadId: "thread", parentMessageId: "parent", name: "Plans")
+    }.toTable
+    let reader = controller.newController(ThreadDetailsDelegate(), events, "section", "current", false,
+      nil, communities, chats, messages, nil, nil)
+    defer: reader.delete()
+    for row in [
+      (chat: ChatDto(id: "chat", name: "Group", active: true, chatType: ChatType.PrivateGroupChat,
+        members: @[ChatMember(id: "me")]), readable: true),
+      (chat: ChatDto(id: "chat", name: "Group", active: true, chatType: ChatType.PrivateGroupChat,
+        members: @[ChatMember(id: "other")]), readable: false),
+      (chat: ChatDto(id: "chat", name: "Channel", chatType: ChatType.CommunityChat, canView: true), readable: true),
+      (chat: ChatDto(id: "chat", name: "Channel", chatType: ChatType.CommunityChat, canView: false), readable: false)]:
+      chats.chats["chat"] = row.chat
+      let data = reader.getInlineThreadDetails("chat", "thread", "")
+      check data["noAccess"].getBool == not row.readable
+      check data["threadName"].getStr == (if row.readable: "Plans" else: "")

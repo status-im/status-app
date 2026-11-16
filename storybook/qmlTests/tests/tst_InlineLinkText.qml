@@ -262,7 +262,7 @@ Item {
         }
 
         function test_fullColorMessageBubble() {
-            const source = Assets.svg("message-bubble")
+            const source = Assets.svg("message-link")
             const item = createText({title: "TravelHUB", trailingIcons: [{image: source}]})
             const bubble = findChild(item, "inlineLinkImage")
             verify(bubble)

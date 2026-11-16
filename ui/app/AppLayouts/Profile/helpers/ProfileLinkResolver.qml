@@ -17,6 +17,25 @@ QObject {
     // A profile value of false defers the request until a batch frees capacity.
     property QtObject profileUrlResolver: null
     readonly property string text: messageDetails.unparsedText
+    readonly property var embeddedUrls: {
+        const lowerText = text.toLowerCase()
+        if (!lowerText.includes(Constants.externalStatusLink + "/") && !lowerText.includes(Constants.deepLinkPrefix))
+            return []
+
+        const segments = messageDetails.textSegments
+        const link = segments.find(segment => !!segment.href)
+        if (link && segments.map(segment => segment.text).join("").trim() === link.href)
+            return []
+
+        const urls = new Set()
+        for (const segment of segments) {
+            const url = segment.href
+            if (url && !segment.explicitLink && !segment.code && !segment.codeBlock
+                    && segment.text === url && Utils.isStatusDeepLink(url))
+                urls.add(url)
+        }
+        return Array.from(urls)
+    }
     readonly property var links: {
         d.revision
         const result = {}
@@ -28,7 +47,7 @@ QObject {
         return result
     }
 
-    onTextChanged: d.scheduleRefresh()
+    onEmbeddedUrlsChanged: d.scheduleRefresh()
     onProfileUrlResolverChanged: d.scheduleRefresh()
     Component.onCompleted: Qt.callLater(d.refresh)
     Component.onDestruction: d.releasePending()
@@ -61,22 +80,10 @@ QObject {
         }
 
         function refresh() {
-            if (!root.profileUrlResolver || !/\/u(?:\/|#)/.test(root.text))
+            if (!root.profileUrlResolver)
                 return
 
-            const segments = root.messageDetails.textSegments
-            const link = segments.find(segment => !!segment.href)
-            if (link && segments.map(segment => segment.text).join("").trim() === link.href)
-                return
-
-            const seen = new Set()
-            for (const segment of segments) {
-                const url = segment.href
-                if (url && !segment.explicitLink && !segment.code && !segment.codeBlock
-                        && /\/u(?:\/|#)/.test(url) && Utils.isStatusDeepLink(url))
-                    seen.add(url)
-            }
-            d.candidateUrls = Array.from(seen)
+            d.candidateUrls = root.embeddedUrls.filter(url => /\/u(?:\/|#)/.test(url))
             if (d.candidateUrls.length) {
                 d.requestResolver = root.profileUrlResolver
                 d.profiles = d.requestProfiles(d.candidateUrls)

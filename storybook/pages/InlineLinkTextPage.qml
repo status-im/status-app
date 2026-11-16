@@ -19,7 +19,7 @@ SplitView {
     readonly property string statusImage: ModelsData.icons.status
     readonly property string travelImage: "data:image/svg+xml," + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#00bfa5"/><path d="M4 25 13 7l7 18z" fill="#8b6549"/><path d="m13 7-4 8 4-2 3 2z" fill="white"/><path d="m12 25 9-16 8 16z" fill="#a57b55"/><path d="m21 9-4 7 4-2 3 2z" fill="white"/></svg>')
-    readonly property string bubbleImage: Assets.svg("message-bubble")
+    readonly property string bubbleImage: Assets.svg("message-link")
     // Key-only URLs from status-go sharedurls fixtures; display metadata is mocked locally.
     readonly property string profileUrl: "https://status.app/u#zQ3shwQPhRuDJSjVGVBnTjCdgXy5i9WQaeVPdGJD6yTarJQSj"
     readonly property string communityUrl: "https://status.app/c#zQ3shYSHp7GoiXaauJMnDcjwU2yNjdzpXLosAWapPS4CFxc11"

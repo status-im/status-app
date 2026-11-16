@@ -1,4 +1,4 @@
-import chronicles, uuids, times, tables
+import chronicles, uuids, times, tables, json
 import io_interface
 
 import ../../../../../../app/global/global_singleton
@@ -58,6 +58,13 @@ proc delete*(self: Controller) =
   self.events.disconnect()
 
 proc init*(self: Controller) =
+  for event in [SIGNAL_CHAT_THREADS_INVALIDATED, SIGNAL_INLINE_MESSAGE_DATA_CHANGED]:
+    self.events.on(event) do(e: Args):
+      self.delegate.inlineLinkDataChanged($(%* {"chats": [ChatArgs(e).chatId], "communities": []}))
+
+  self.events.on(SIGNAL_CHAT_MEMBER_REMOVED) do(e: Args):
+    self.delegate.inlineLinkDataChanged($(%* {"chats": [ChatMemberRemovedArgs(e).chatId], "communities": []}))
+
   self.events.on(SignalType.MediaServerStarted.event) do(e: Args):
     let args = MediaServerStartedSignal(e)
     self.delegate.onMediaServerStarted(args.port)
@@ -237,6 +244,7 @@ proc init*(self: Controller) =
     self.delegate.onHistoryCleared()
 
   self.events.on(SIGNAL_CHAT_MEMBER_UPDATED) do(e: Args):
+    self.delegate.inlineLinkDataChanged($(%* {"chats": [ChatMemberUpdatedArgs(e).chatId], "communities": []}))
     let args = ChatMemberUpdatedArgs(e)
     if args.chatId != self.chatId:
       return
@@ -277,6 +285,12 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED) do(e: Args):
     let args = ChatThreadsForChatsLoadedArgs(e)
+    var chatIds: seq[string]
+    for chatId in args.completedChatIds:
+      if chatId notin chatIds: chatIds.add(chatId)
+    for thread in args.threads:
+      if thread.chatId notin chatIds: chatIds.add(thread.chatId)
+    self.delegate.inlineLinkDataChanged($(%* {"chats": chatIds, "communities": []}))
     if self.threadId.len > 0:
       for thread in args.threads:
         if thread.chatId == self.chatId and thread.threadId == self.threadId:
@@ -457,6 +471,25 @@ proc asyncGetMessageById*(self: Controller, messageId: string): UUID =
 
 proc parseSharedUrl*(self: Controller, url: string): UrlDataDto =
   return self.sharedUrlsService.parseSharedUrl(url)
+
+proc getInlineThreadDetails*(self: Controller, chatId, threadId, messageId: string): JsonNode =
+  let chat = self.chatService.getChatById(chatId, showWarning = false)
+  var canRead = chat.id.len > 0 and chat.active and chat.chatType == ChatType.OneToOne
+  if chat.chatType == ChatType.CommunityChat:
+    canRead = chat.canView
+  elif chat.chatType == ChatType.PrivateGroupChat:
+    var member = false
+    for item in chat.members:
+      if item.id == singletonInstance.userProfile.getPubKey(): member = true
+    canRead = chat.id.len > 0 and chat.active and member
+  var resolvedThreadId = threadId
+  if messageId.len > 0 and canRead:
+    resolvedThreadId = self.messageService.inlineMessageThreadId(chatId, messageId)
+  if resolvedThreadId.len > 0 and canRead:
+    self.messageService.asyncLoadChatThreadSummaries(chatId, notifyIfCached = false)
+  let thread = self.messageService.getThreadById(chatId, resolvedThreadId)
+  return %* {"threadId": resolvedThreadId,
+    "threadName": (if canRead: thread.name else: ""), "noAccess": chat.id.len > 0 and not canRead}
 
 proc loadChatThreads*(self: Controller) =
   self.messageService.asyncLoadChatThreadSummaries(self.chatId)

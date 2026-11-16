@@ -84,6 +84,10 @@ public slots:
                         "Storybook.Testing", 1, 0, "InlineLinkTextPage");
         qmlRegisterType(QUrl::fromLocalFile(QML_IMPORT_ROOT u"/pages/ProfileLinksPage.qml"_s),
                         "Storybook.Testing", 1, 0, "ProfileLinksPage");
+        qmlRegisterType(QUrl::fromLocalFile(QML_IMPORT_ROOT u"/pages/InlineLinkIntegrationPage.qml"_s),
+                        "Storybook.Testing", 1, 0, "InlineLinkIntegrationPage");
+        qmlRegisterType(QUrl::fromLocalFile(QML_IMPORT_ROOT u"/../ui/app/AppLayouts/Chat/stores/MessageStore.qml"_s),
+                        "Storybook.Testing", 1, 0, "MessageStoreUnderTest");
 
         // Register the same context-property mocks the storybook app uses (e.g. userProfile),
         // so components that read them (via Utils) behave the same under test.

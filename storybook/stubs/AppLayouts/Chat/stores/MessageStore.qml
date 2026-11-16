@@ -9,6 +9,12 @@ QtObject {
     property var messageModule
     property var messagesModel
     property var chatSectionModule
+    property int inlineLinkRevision: 0
+    function chatModelForInlineLink(communityId) { return null }
+    property var inlineCommunitiesModel: null
+    signal inlineLinkDataChanged(var changes)
+    function parseInlineLink(url) { return null }
+    function resolveInlineLink(target) { return null }
 
     readonly property bool loadingHistoryMessagesInProgress: chatSectionModule ?
                                                                  !!chatSectionModule.loadingHistoryMessagesInProgress : false
@@ -78,6 +84,7 @@ QtObject {
     }
 
     onMessageModuleChanged: {
+        ++root.inlineLinkRevision
         if (messageModule)
             messagesModel = messageModule.model
     }

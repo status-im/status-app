@@ -11,7 +11,7 @@ struct Options {
     // block (and suppresses emphasis there).
     bool formatUnclosedCodeFence = false;
 
-    // When true (default), auto-detect http(s) URLs and emit Link nodes.
+    // When true (default), auto-detect http(s) and status-app URLs and emit Link nodes.
     bool detectLinks = true;
 };
 
