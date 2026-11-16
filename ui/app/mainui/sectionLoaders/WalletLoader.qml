@@ -122,7 +122,7 @@ StatusSectionLoader {
         id: accountsSkeleton
         // the privacy wall is a full-page item: no panels will ever arrive,
         // so don't keep a skeleton alive behind the hidden chrome
-        active: !leftPanelGate.up && d.targetUrl !== d.privacyWallUrl
+        active: root.active && !leftPanelGate.up && d.targetUrl !== d.privacyWallUrl
         visible: active
 
         sourceComponent: WalletAccountsSkeleton {
@@ -133,7 +133,7 @@ StatusSectionLoader {
 
     Loader {
         id: centerSkeleton
-        active: !centerPanelGate.up && d.targetUrl !== d.privacyWallUrl
+        active: root.active && !centerPanelGate.up && d.targetUrl !== d.privacyWallUrl
         visible: active
 
         sourceComponent: WalletCenterPanelSkeleton {
@@ -224,6 +224,11 @@ StatusSectionLoader {
         loadSection()
     }
     onLoaded: {
+        if (root.source === d.realUrl)
+            Qt.callLater(() => {
+                QmlCompiler.precompile(QmlCompiler.sendModalUrl)
+                QmlCompiler.precompile(QmlCompiler.swapModalUrl)
+            })
         if (root.item.resetView)
             root.item.resetView()
         root.item.visible = true
