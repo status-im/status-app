@@ -291,7 +291,9 @@ SQUtils.QObject {
             required property int index
 
             // a child of this entry, so it goes with the entry when the request is removed
-            readonly property QtObject modal: dappSignRequestModalComponent.createObject(requestEntry, {
+            property QtObject modal
+
+            Component.onCompleted: modal = dappSignRequestModalComponent.createObject(requestEntry, {
                 host: root,
                 model: requestEntry.model,
                 index: requestEntry.index
