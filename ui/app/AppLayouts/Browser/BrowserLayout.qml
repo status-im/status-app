@@ -899,11 +899,7 @@ StatusSectionLayout {
                 const icon = savedSessionContext.displayIcon(webView)
                 return root.browserRootStore.determineRealURL(icon || Assets.svg("globe"))
             },
-            bookmarksModel: Qt.binding(() => root.bookmarksStore.bookmarksModel)
-        })
-
-        onCreated: overviewModal => {
-            overviewModal.getWebViewScreenshot = function (tabIndex, targetImage) {
+            getWebViewScreenshot: function (tabIndex, targetImage) {
                 const webView = webViewContext.getWebView(tabIndex)
                 if (!webView)
                     return ""
@@ -920,7 +916,7 @@ StatusSectionLayout {
                         grabImage()
                 }
 
-                const isCurrentTab = tabIndex === overviewModal.currentTabIndex
+                const isCurrentTab = tabIndex === tabs.currentIndex
                 if (!isCurrentTab) {
                     const cached = browserPreferencesStore.getSnapshot(webView.uid)
                     if (cached) {
@@ -933,8 +929,11 @@ StatusSectionLayout {
                     grabImage()
                 else
                     webView.htmlPageLoadedChanged.connect(grabImageWhenLoaded)
-            }
+            },
+            bookmarksModel: Qt.binding(() => root.bookmarksStore.bookmarksModel)
+        })
 
+        onCreated: overviewModal => {
             overviewModal.activateTabRequested.connect(tabIndex => tabs.activateTab(tabIndex))
             overviewModal.addTabRequested.connect(() => _internal.addNewEmptyTab())
             overviewModal.addBookmarkRequested.connect(() => _internal.openFavoriteModal())
