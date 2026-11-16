@@ -360,6 +360,8 @@ StatusSectionLayout {
                 contentWidth: Qt.binding(() => d.contentWidth),
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.password))
             })
+
+            onCreated: view => view.reloginRequested.connect(() => Global.reloginRequested())
         }
 
         SQUtils.DeferredComponent {
@@ -437,6 +439,7 @@ StatusSectionLayout {
             onCreated: view => {
                 view.addressWasShownRequested.connect(address => root.addressWasShownRequested(address))
                 view.backButtonNameChanged.connect(() => d.backButtonName = view.backButtonName)
+                view.reloginRequested.connect(() => Global.reloginRequested())
                 view.initStack()
             }
         }
@@ -563,6 +566,8 @@ StatusSectionLayout {
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.advanced)),
                 contentWidth: Qt.binding(() => d.contentWidth)
             })
+
+            onCreated: view => view.reloginRequested.connect(() => Global.reloginRequested())
         }
 
         SQUtils.DeferredComponent {

@@ -4,7 +4,6 @@ import QtTest
 
 import AppLayouts.Profile.popups
 
-import utils
 
 Item {
     id: root
@@ -27,7 +26,7 @@ Item {
 
     SignalSpy {
         id: reloginSpy
-        target: Global
+        target: controlUnderTest
         signalName: "reloginRequested"
     }
 
@@ -46,6 +45,8 @@ Item {
             verify(!!controlUnderTest)
             changePasswordSpy.target = controlUnderTest
             changePasswordSpy.clear()
+            reloginSpy.target = controlUnderTest
+            reloginSpy.clear()
         }
 
         function cleanup() {

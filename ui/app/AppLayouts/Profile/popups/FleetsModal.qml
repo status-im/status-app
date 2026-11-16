@@ -17,6 +17,9 @@ StatusDialog {
 
     property string newFleet
 
+    // A new fleet was saved: log in again to apply it
+    signal reloginRequested()
+
     standardButtons: Dialog.Ok
     width: 480
 
@@ -25,32 +28,28 @@ StatusDialog {
 
         ButtonGroup { id: fleetSettings }
 
-        FleetRadioSelector {
-            Layout.fillWidth: true
-            advancedStore: popup.advancedStore
-            fleetName: Constants.waku_sandbox
-            buttonGroup: fleetSettings
-        }
+        Repeater {
+            id: selectors
+            objectName: "fleetSelectors"
 
-        FleetRadioSelector {
-            Layout.fillWidth: true
-            advancedStore: popup.advancedStore
-            fleetName: Constants.waku_test
-            buttonGroup: fleetSettings
-        }
+            model: [Constants.waku_sandbox, Constants.waku_test, Constants.status_prod,
+                Constants.status_staging]
 
-        FleetRadioSelector {
-            Layout.fillWidth: true
-            advancedStore: popup.advancedStore
-            fleetName: Constants.status_prod
-            buttonGroup: fleetSettings
-        }
+            FleetRadioSelector {
+                required property string modelData
 
-        FleetRadioSelector {
-            Layout.fillWidth: true
-            advancedStore: popup.advancedStore
-            fleetName: Constants.status_staging
-            buttonGroup: fleetSettings
+                Layout.fillWidth: true
+                advancedStore: popup.advancedStore
+                fleetName: modelData
+                buttonGroup: fleetSettings
+
+                onReloginRequested: popup.reloginRequested()
+                // The group unchecked the saved fleet's button, not only this one's
+                onFleetChangeCancelled: {
+                    for (let i = 0; i < selectors.count; ++i)
+                        selectors.itemAt(i).showSavedFleet()
+                }
+            }
         }
     }
 }

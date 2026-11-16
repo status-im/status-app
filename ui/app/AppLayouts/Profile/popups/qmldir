@@ -15,3 +15,4 @@ ENSPopup 1.0 ENSPopup.qml
 EnsTermsAndConditionsPopup 1.0 EnsTermsAndConditionsPopup.qml
 SearchEngineModal 1.0 SearchEngineModal.qml
 ExemptionNotificationsModal 1.0 ExemptionNotificationsModal.qml
+FleetsModal 1.0 FleetsModal.qml

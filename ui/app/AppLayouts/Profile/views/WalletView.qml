@@ -63,6 +63,8 @@ SettingsContentBase {
     property bool isKeycardEnabled: true
 
     signal addressWasShownRequested(string address)
+    // Saved network settings need a new login
+    signal reloginRequested()
 
     function goBack() {
         // This case means it was in Level 2 deep:
@@ -337,6 +339,7 @@ SettingsContentBase {
             areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled
             onEvaluateRpcEndPoint: (url, isMainUrl) => root.networksStore.evaluateRpcEndPoint(url, isMainUrl)
             onUpdateNetworkValues: (chainId, newMainRpcInput, newFailoverRpcUrl) => root.networksStore.updateNetworkEndPointValues(chainId, newMainRpcInput, newFailoverRpcUrl)
+            onReloginRequested: root.reloginRequested()
         }
 
         AccountOrderView {
