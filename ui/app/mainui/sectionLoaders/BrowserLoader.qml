@@ -52,6 +52,7 @@ StatusSectionLoader {
         }
         onDropping: {
             root.item?.captureSession?.()
+            root.item?.terminateRenderers?.()
             console.info("[Browser] Drop: Tabs kept in memory:", d.sessionCache.tabs.length)
         }
         onKeepLoadedChanged: console.info("[Browser] Drop: layout", keepLoaded ? "kept" : "dropped")

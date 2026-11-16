@@ -68,6 +68,8 @@ Item {
     function forceReload() {}
     function detachView() { root.detachCalls += 1 }
     function saveState() { return root.savedState }
+    property int terminateRendererCalls: 0
+    function terminateRenderer() { root.terminateRendererCalls += 1 }
     function restoreState(state) { root.restoredStates = root.restoredStates.concat([state]) }
     function triggerWebAction(action) {}
     function runJavaScript(script, callback) {}

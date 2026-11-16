@@ -140,6 +140,12 @@ AbstractWebView {
         d.crashed = false
     }
 
+    /// Ends the renderer behind this Tab's Backend, shared by its profile.
+    function terminateRenderer() {
+        if (loader.item && typeof loader.item.terminateRenderer === "function")
+            loader.item.terminateRenderer()
+    }
+
     function loadUrl(u) {
         root.url = u
         if (u && u.toString())
