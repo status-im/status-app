@@ -29,6 +29,9 @@ SettingsContentBase {
     required property Keychain keychain
     required property SecureStorage secureStorage
 
+    // The data was re-encrypted with the new password: log in again
+    signal reloginRequested()
+
     QtObject {
         id: d
 
@@ -367,6 +370,7 @@ SettingsContentBase {
         ConfirmChangePasswordModal {
             id: confirmPasswordChangePopup
             objectName: "confirmChangePasswordModal"
+            onReloginRequested: root.reloginRequested()
             onChangePasswordRequested: function(rekey) {
                 d.ownPasswordChangePending = true
                 root.privacyStore.changePassword(choosePasswordForm.currentPswText, choosePasswordForm.newPswText, rekey);

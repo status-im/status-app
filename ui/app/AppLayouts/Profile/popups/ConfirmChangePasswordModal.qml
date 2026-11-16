@@ -28,6 +28,8 @@ StatusDialog {
     property bool fastPasswordChangePossible: false
 
     signal changePasswordRequested(bool rekey)
+    // The data was re-encrypted with the new password: log in again
+    signal reloginRequested()
     // Currently this modal handles only the happy path
     // The error is handled in the caller
     function passwordSuccessfulyChanged() {
@@ -237,7 +239,7 @@ StatusDialog {
                 onClicked: {
                     if (d.passwordChanged) {
                         if (d.doDeepPasswordChange) {
-                            Global.reloginRequested()
+                            root.reloginRequested()
                         } else {
                             root.close();
                         }

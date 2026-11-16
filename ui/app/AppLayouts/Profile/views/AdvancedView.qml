@@ -40,6 +40,9 @@ SettingsContentBase {
     property bool messageLinkSharingFeatureEnabled: false
     property bool minimizeOnCloseOptionVisible
     property bool refetchTxHistoryClicked: false
+
+    // A setting the backend reads at login was saved: log in again to apply it
+    signal reloginRequested()
     onVisibleChanged: {
         if (visible) {
             root.advancedStore.refreshLogsFolderSize()
@@ -413,7 +416,7 @@ SettingsContentBase {
                         onConfirmButtonClicked: {
                             close()
                             if (root.advancedStore.setWakuV2LightClientEnabled(lightMode))
-                                Global.reloginRequested()
+                                root.reloginRequested()
                         }
                         onCancelButtonClicked: {
                             close()
@@ -699,6 +702,7 @@ SettingsContentBase {
         FleetsModal {
             id: fleetModal
             advancedStore: root.advancedStore
+            onReloginRequested: root.reloginRequested()
         }
 
         Component {
@@ -717,7 +721,7 @@ SettingsContentBase {
                 onConfirmButtonClicked: {
                     close()
                     if (root.advancedStore.toggleDebug())
-                        Global.reloginRequested()
+                        root.reloginRequested()
                 }
                 onCancelButtonClicked: close()
             }

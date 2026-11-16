@@ -25,6 +25,8 @@ ColumnLayout {
     property var networkRPCChanged
     signal evaluateRpcEndPoint(string url, bool isMainUrl)
     signal updateNetworkValues(int chainId, string newMainRpcInput, string newFailoverRpcUrl)
+    // The RPC URLs were saved: log in again to use them
+    signal reloginRequested()
 
     enum EvaluationState {
         UnTouched,
@@ -357,7 +359,7 @@ ColumnLayout {
                     onClicked: {
                         close()
                         d.save()
-                        Global.reloginRequested()
+                        root.reloginRequested()
                     }
                 }
             ]
