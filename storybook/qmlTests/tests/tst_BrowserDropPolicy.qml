@@ -77,6 +77,7 @@ Item {
 
             verify(policy.keepLoaded)
             compare(policy.idleDrops, 1)
+            compare(policy.droppings, 0, "a kept-alive renderer is never ended")
         }
 
         function test_theLastReasonEndingRestartsTheDelay() {

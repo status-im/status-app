@@ -104,6 +104,12 @@ Item {
             compare(view.saveState(), "new")
         }
 
+        function test_terminateRendererReachesTheBackend() {
+            const { view, fake } = makeLoadedView()
+            view.terminateRenderer()
+            compare(fake.terminateRendererCalls, 1)
+        }
+
         function test_droppingAnUnloadedTabDoesNothing() {
             const view = createTemporaryObject(lazyViewComponent, root)
             view.drop()

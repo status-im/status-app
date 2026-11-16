@@ -115,6 +115,10 @@ AbstractWebView {
         return backend.saveState()
     }
 
+    function terminateRenderer() {
+        backend.terminateRenderer()
+    }
+
     /// Call before the first load: replaces it with the restored history.
     function restoreState(state) {
         backend.restoreState(state)

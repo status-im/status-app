@@ -76,6 +76,11 @@ StatusSectionLayout {
         savedSessionContext.captureToCache()
     }
 
+    /// The layout goes with nothing kept alive: no renderer has to stay.
+    function terminateRenderers() {
+        webViewContext.terminateRenderers()
+    }
+
     /// Back on screen: a dropped current Tab loads again.
     function resumeCurrentTab() {
         webViewContext.ensureCurrentWebViewLoaded()

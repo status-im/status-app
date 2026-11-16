@@ -129,6 +129,16 @@ QtObject {
         }
     }
 
+    /// End every profile's renderer, before a Drop that keeps nothing alive
+    /// destroys the last Web Views (WebView keeps renderers around otherwise).
+    function terminateRenderers() {
+        for (let i = 0; i < tabsModel.count; ++i) {
+            const view = getWebView(i)
+            if (view?.adapterItem && typeof view.terminateRenderer === "function")
+                view.terminateRenderer()
+        }
+    }
+
     readonly property string currentClientId: currentWebView?.bridge?.clientId
                                               ?? ConnectorConstants.clientIdFor(currentWebView ? currentWebView.offTheRecord : false)
 

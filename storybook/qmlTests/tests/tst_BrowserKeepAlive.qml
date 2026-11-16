@@ -27,6 +27,7 @@ Item {
             property bool playingAudio: false
             property bool retained: false
             property int dropCalls: 0
+            property int terminateCalls: 0
             readonly property QtObject bridge: QtObject {
                 readonly property QtObject connectorManager: QtObject {
                     property bool hasPendingRequests: false
@@ -34,6 +35,7 @@ Item {
             }
 
             function drop() { dropCalls += 1; adapterItem = null }
+            function terminateRenderer() { terminateCalls += 1 }
             function detachView() {}
         }
     }
@@ -160,6 +162,17 @@ Item {
             compare(tabs[0].dropCalls, 0)
             compare(tabs[1].dropCalls, 1)
             compare(tabs[2].dropCalls, 0)
+        }
+
+        // One call per loaded Web View covers every profile's renderer.
+        function test_renderersEndThroughTheLoadedViews() {
+            tabs[1].drop()
+
+            context.terminateRenderers()
+
+            compare(tabs[0].terminateCalls, 1)
+            compare(tabs[1].terminateCalls, 0, "a dropped Tab has no renderer")
+            compare(tabs[2].terminateCalls, 1)
         }
 
         function test_droppedOrBlankTabsShowNoPage() {
