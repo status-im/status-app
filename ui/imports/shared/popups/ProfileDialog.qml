@@ -5,6 +5,7 @@ import StatusQ.Popups.Dialog
 
 import shared.views
 import shared.controls
+import shared.stores as SharedStores
 
 import AppLayouts.Profile.helpers
 
@@ -20,9 +21,9 @@ StatusDialog {
     property alias contactsStore: profileView.contactsStore
     property alias walletStore: profileView.walletStore
     property alias utilsStore: profileView.utilsStore
-    property alias networksStore: profileView.networksStore
+    required property SharedStores.NetworksStore networksStore
 
-    property alias sendToAccountEnabled: profileView.sendToAccountEnabled
+    required property bool sendToAccountEnabled
 
     property alias showcaseCommunitiesModel: profileView.showcaseCommunitiesModel
     property alias showcaseAccountsModel: profileView.showcaseAccountsModel
@@ -67,6 +68,8 @@ StatusDialog {
         id: profileView
 
         contactDetails: root.contactDetails
+        networksStore: root.networksStore
+        sendToAccountEnabled: root.sendToAccountEnabled
 
         onCloseRequested: root.close()
         onNavigationRequested: root.navigationRequested()
