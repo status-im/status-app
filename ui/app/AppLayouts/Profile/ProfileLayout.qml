@@ -492,9 +492,9 @@ StatusSectionLayout {
                 view.spellCheckSkipCapitalizedWordsChangeRequested.connect(value => root.languageStore.spellCheckSettings.setSkipCapitalizedWords(value))
                 view.enableSpellcheckLanguageRequested.connect((code, enabled) => root.languageStore.spellCheckSettings.toggleSpellcheckLanguage(code, enabled))
                 view.changeLanguageRequested.connect(newLanguageCode => {
-                    // Retranslates what lives as long as the process; the new session
-                    // recreates the rest of the UI in the new language.
-                    const result = root.languageStore.changeLanguage(newLanguageCode, true /*shouldRetranslate*/)
+                    // Saved only: the window applies it once the relogin has unloaded this
+                    // session's UI (retranslating that UI right before it goes is wasted)
+                    const result = root.languageStore.changeLanguage(newLanguageCode, false /*shouldRetranslate*/)
                     if (result)
                         Global.reloginRequested()
                     else
