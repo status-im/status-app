@@ -111,21 +111,26 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
 
+concurrency:
+  # A run for any other label gets a group of its own, so it cancels nothing.
+  group: ${{ github.event.action == 'labeled' && github.event.label.name != 'e2e-android' && github.run_id || format('android-{0}', github.ref) }}
+  cancel-in-progress: true
+
 jobs:
   apk:
+    # Any label sends a labeled event. Only this one needs a new build.
+    if: github.event.action != 'labeled' || github.event.label.name == 'e2e-android'
     # builds the APK and uploads it as the artifact "apk"
   e2e:
     needs: apk
-    # Adding any other label also sends a labeled event; only this one may start a run.
-    if: >-
-      contains(github.event.pull_request.labels.*.name, 'e2e-android')
-      && (github.event.action != 'labeled' || github.event.label.name == 'e2e-android')
+    if: contains(github.event.pull_request.labels.*.name, 'e2e-android')
     uses: ./.github/workflows/e2e-android.yml
     with: { apk-artifact: apk, account: '1' }
     secrets: inherit
 ```
 
 - Without the label, the e2e job is skipped and nothing reaches BrowserStack.
+- Other labels skip every job and do not cancel a build in progress.
 - Adding the label reruns the PR workflow, so the tests run against an APK
   built from that PR. Every later push runs them again until the label is
   removed.
