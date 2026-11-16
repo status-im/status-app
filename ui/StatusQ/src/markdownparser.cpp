@@ -91,7 +91,7 @@ bool overlapsRange(const Ranges& ranges, qsizetype start, qsizetype end)
 const QRegularExpression& kLinkRegex()
 {
     static const QRegularExpression re(
-        QStringLiteral(R"(\bhttps?://[a-zA-Z0-9](?:[a-zA-Z0-9\-.]*[a-zA-Z0-9])?(?:/[^\s<>()\[\]{}'"]*)?(?<![.,;:!?*~]))"),
+        QStringLiteral(R"(\b(?:https?://[a-zA-Z0-9](?:[a-zA-Z0-9\-.]*[a-zA-Z0-9])?(?:/[^\s<>()\[\]{}'"]*)?|status-app://[a-zA-Z0-9][^\s<>()\[\]{}'"]*)(?<![.,;:!?*~]))"),
         QRegularExpression::CaseInsensitiveOption
     );
     return re;
@@ -136,7 +136,7 @@ const QRegularExpression& kExplicitLinkLabelRegex()
 }
 
 // Explicit markdown links: "[label](url)". The label is the display text; the url must satisfy the
-// same http(s) rule as auto-detected links (kLinkRegex), so "[a](foo)" stays literal text. Each
+// same supported-scheme rule as auto-detected links (kLinkRegex), so "[a](foo)" stays literal text. Each
 // span covers the whole "[label](url)" with the label range carried separately (labelStart/End) so
 // the AST can show the label while linking to the url.
 QVector<LinkSpan> scanExplicitLinks(QStringView text, const Ranges& urls)

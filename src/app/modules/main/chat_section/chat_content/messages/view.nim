@@ -134,6 +134,13 @@ QtObject:
   proc updateKeepUnread*(self: View, flag: bool) {.slot.} =
     self.setKeepUnread(flag)
 
+  proc getInlineThreadDetails*(self: View, chatId: string, threadId: string, messageId: string): string {.slot.} =
+    return self.delegate.getInlineThreadDetails(chatId, threadId, messageId)
+
+  proc inlineLinkDataChanged*(self: View, changes: string) {.signal.}
+  proc emitInlineLinkDataChanged*(self: View, changes: string) =
+    self.inlineLinkDataChanged(changes)
+
   proc getMessageByIdAsJson*(self: View, messageId: string): string {.slot.} =
     let jsonObj = self.model.getMessageByIdAsJson(messageId)
     if(jsonObj.isNil):

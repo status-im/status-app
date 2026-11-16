@@ -26,6 +26,8 @@ NIM_TESTS_LINK_STATUSQ := \
 	held_resource_qtimer_test \
 	community_permission_save_test \
 	contact_info_requests_test \
+	inline_link_parsing_test \
+	inline_message_service_test \
 	input_area_text_send_test \
 	message_history_paging_test \
 	message_loading_isolation_test \
