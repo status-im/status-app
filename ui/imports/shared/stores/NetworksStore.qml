@@ -12,14 +12,14 @@ QtObject {
 
     property var networksModuleInst: networksModule
 
-    readonly property bool areTestNetworksEnabled: networksModuleInst.areTestNetworksEnabled
+    readonly property bool areTestNetworksEnabled: networksModuleInst?.areTestNetworksEnabled ?? false
 
     // Full list of networks.
     // All list representations should have L1 at the top, then grouped Active and Inactive
     // chains, sorted by chainName.
     // For use when extracting properties from a given network or in the network settings screen.
     readonly property SortFilterProxyModel allNetworks: SortFilterProxyModel {
-        sourceModel: networksModuleInst.flatNetworks
+        sourceModel: networksModuleInst?.flatNetworks ?? null
         sorters: [
             RoleSorter {
                 roleName: "isDeactivatable"
@@ -49,9 +49,9 @@ QtObject {
     }
 
     /* This property holds networks currently selected in the Wallet Main layout  */
-    readonly property var networkFilters: networksModuleInst.enabledChainIds
+    readonly property var networkFilters: networksModuleInst?.enabledChainIds ?? null
 
-    readonly property var rpcProviders: networksModuleInst.rpcProviders
+    readonly property var rpcProviders: networksModuleInst?.rpcProviders ?? null
 
     property var networkRPCChanged: ({}) // add network id to the object if changed
 
