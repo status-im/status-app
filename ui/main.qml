@@ -228,6 +228,11 @@ Window {
         function releaseSessionUi() : void {
             // Popups of the session are destroyed with its tree
             sessionLoader.active = false
+            // A language changed in the session applies from here: only the window is
+            // retranslated, the next session's UI is created in the new language
+            const language = languageStore.currentLanguage
+            if (language !== "" && Qt.uiLanguage !== language)
+                Qt.uiLanguage = language
             Qt.callLater(() => sessionView.uiReleased())
         }
 
