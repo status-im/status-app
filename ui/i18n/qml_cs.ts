@@ -1819,10 +1819,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>%1 přidáno k vašim důvěryhodným stránkám.</translation>
     </message>
     <message>
-        <source>Close and reopen Status to apply your new display zoom</source>
-        <translation>Zavřete a znovu otevřete Status, aby se použilo nové měřítko obrazovky</translation>
-    </message>
-    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>Toto zařízení je nyní kontrolním uzlem pro komunitu %1</translation>
     </message>
@@ -2281,11 +2277,11 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <name>AttachmentPreparer</name>
     <message>
         <source>Animated images can be at most %1 KB and %2 px</source>
-        <translation type="unfinished"></translation>
+        <translation>Animované obrázky mohou mít nejvýše %1 KB a %2 px</translation>
     </message>
     <message>
         <source>This image can&apos;t be sent</source>
-        <translation type="unfinished"></translation>
+        <translation>Tento obrázek nelze odeslat</translation>
     </message>
 </context>
 <context>
@@ -14036,12 +14032,20 @@ selhalo</translation>
         <translation>Restartovat</translation>
     </message>
     <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
         <source>Not Now</source>
         <translation>Nyní ne</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
         <translation>Restartujte aplikaci Status, aby se použilo nové zvětšení displeje</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>Zavřete a znovu otevřete Status, aby se použilo nové měřítko obrazovky</translation>
     </message>
 </context>
 <context>

@@ -1808,10 +1808,6 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <translation>%1 ajouté à vos sites de confiance.</translation>
     </message>
     <message>
-        <source>Close and reopen Status to apply your new display zoom</source>
-        <translation>Fermez et rouvrez Status pour appliquer le nouveau zoom d’affichage</translation>
-    </message>
-    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>Cet appareil est maintenant le node de contrôle pour la communauté %1</translation>
     </message>
@@ -2269,11 +2265,11 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
     <name>AttachmentPreparer</name>
     <message>
         <source>Animated images can be at most %1 KB and %2 px</source>
-        <translation type="unfinished"></translation>
+        <translation>Les images animées peuvent faire au maximum %1 Ko et %2 px</translation>
     </message>
     <message>
         <source>This image can&apos;t be sent</source>
-        <translation type="unfinished"></translation>
+        <translation>Cette image ne peut pas être envoyée</translation>
     </message>
 </context>
 <context>
@@ -13962,12 +13958,20 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
         <translation>Redémarrer</translation>
     </message>
     <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
         <source>Not Now</source>
         <translation>Pas maintenant</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
         <translation>Redémarrez Status pour appliquer votre nouveau zoom.</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>Fermez et rouvrez Status pour appliquer le nouveau zoom d’affichage</translation>
     </message>
 </context>
 <context>

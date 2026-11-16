@@ -1807,10 +1807,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Close and reopen Status to apply your new display zoom</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13946,11 +13942,19 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Not Now</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
