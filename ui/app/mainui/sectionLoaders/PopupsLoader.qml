@@ -47,6 +47,7 @@ Loader {
     property var allContactsModel
     property var mutualContactsModel
     property bool isDevBuild
+    property bool restartSupported: true
 
     // Signals re-emitted from the loaded Popups instance (see Popups.qml lines 95–100).
     signal openExternalLink(string link)
@@ -112,6 +113,7 @@ Loader {
             allContactsModel:       Qt.binding(() => root.allContactsModel),
             mutualContactsModel:    Qt.binding(() => root.mutualContactsModel),
             isDevBuild:             Qt.binding(() => root.isDevBuild),
+            restartSupported:       Qt.binding(() => root.restartSupported),
         })
     }
 
