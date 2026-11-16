@@ -371,6 +371,8 @@ proc delete*(self: AppController, logoutBackend: bool) =
   self.keycardServiceV2.delete
   self.networkConnectionService.delete
   self.marketService.delete
+  self.followingAddressService.delete
+  self.sharedUrlsService.delete
 
 proc initializeQmlContext(self: AppController) =
   singletonInstance.setSessionContextProperty("localAccountSettings", self.localAccountSettingsVariant)
