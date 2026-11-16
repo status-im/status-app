@@ -3014,14 +3014,14 @@ Item {
 
         Component.onCompleted: setSource(Qt.resolvedUrl("../../imports/shared/status/StatusSearchListPopup.qml"), {
             directParent: appMain,
-            searchBoxPlaceholder: qsTr("Where do you want to go?")
+            searchBoxPlaceholder: qsTr("Where do you want to go?"),
+            model: Qt.binding(() => rootStore.chatSearchModel)
         })
 
         onLoaded: {
             const popup = item
             popup.relativeX = Qt.binding(() => appMain.width/2 - popup.width/2)
             popup.relativeY = Qt.binding(() => appMain.height/2 - popup.height/2)
-            popup.model = Qt.binding(() => rootStore.chatSearchModel)
             popup.selected.connect((sectionId, chatId) => {
                 rootStore.setActiveSectionChat(sectionId, chatId)
                 popup.close()
