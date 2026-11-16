@@ -133,18 +133,14 @@ Rectangle {
             root.accountDeletionRequested(removeAccountConfirmation.accountAddress, password)
         }
 
-        onActiveChanged: {
-            if (!active)
-                return
-            setSource(Qt.resolvedUrl("../../../../imports/shared/popups/RemoveAccountConfirmationPopup.qml"), {
-                accountType: Qt.binding(() => removeAccountConfirmation.accountType),
-                accountName: Qt.binding(() => removeAccountConfirmation.accountName),
-                accountAddress: Qt.binding(() => removeAccountConfirmation.accountAddress),
-                accountDerivationPath: Qt.binding(() => removeAccountConfirmation.accountDerivationPath),
-                emoji: Qt.binding(() => removeAccountConfirmation.emoji),
-                color: Qt.binding(() => Utils.getColorForId(Theme.palette, removeAccountConfirmation.colorId))
-            })
-        }
+        Component.onCompleted: setSource(Qt.resolvedUrl("../../../../imports/shared/popups/RemoveAccountConfirmationPopup.qml"), {
+            accountType: Qt.binding(() => removeAccountConfirmation.accountType),
+            accountName: Qt.binding(() => removeAccountConfirmation.accountName),
+            accountAddress: Qt.binding(() => removeAccountConfirmation.accountAddress),
+            accountDerivationPath: Qt.binding(() => removeAccountConfirmation.accountDerivationPath),
+            emoji: Qt.binding(() => removeAccountConfirmation.emoji),
+            color: Qt.binding(() => Utils.getColorForId(Theme.palette, removeAccountConfirmation.colorId))
+        })
 
         onLoaded: {
             const popup = removeAccountConfirmation.item
