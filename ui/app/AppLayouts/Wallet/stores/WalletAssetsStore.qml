@@ -30,11 +30,11 @@ QtObject {
             balance         [string] - balance that the `account` has for token with `tokenKey`
 
     */
-    readonly property var baseGroupedAccountAssetModel: walletSectionAssets.groupedAccountAssetsModel
+    readonly property var baseGroupedAccountAssetModel: walletSectionAssets?.groupedAccountAssetsModel ?? null
 
     // Terminal, already-aggregated assets model built in Nim (replaces the QML
     // AssetsViewAdaptor proxy chain). Consumed by AssetsView in RightTabView.
-    readonly property var assetsModel: walletSectionAssetsView.assetsModel
+    readonly property var assetsModel: walletSectionAssetsView?.assetsModel ?? null
 
     // Re-sorts the terminal assets model in place. AssetsView emits the sort
     // intent; this wires it to the model.
