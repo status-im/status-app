@@ -1808,10 +1808,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>%1 agregado a tus sitios de confianza.</translation>
     </message>
     <message>
-        <source>Close and reopen Status to apply your new display zoom</source>
-        <translation>Cierra y vuelve a abrir Status para aplicar el nuevo zoom de pantalla</translation>
-    </message>
-    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>Este dispositivo es ahora el nodo de control para la Comunidad %1</translation>
     </message>
@@ -2269,11 +2265,11 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <name>AttachmentPreparer</name>
     <message>
         <source>Animated images can be at most %1 KB and %2 px</source>
-        <translation type="unfinished"></translation>
+        <translation>Las imágenes animadas pueden tener como máximo %1 KB y %2 px</translation>
     </message>
     <message>
         <source>This image can&apos;t be sent</source>
-        <translation type="unfinished"></translation>
+        <translation>Esta imagen no se puede enviar</translation>
     </message>
 </context>
 <context>
@@ -13966,12 +13962,20 @@ al cargar</translation>
         <translation>Reiniciar</translation>
     </message>
     <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
         <source>Not Now</source>
         <translation>Ahora no</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
         <translation>Reinicia Status para aplicar tu nuevo zoom de pantalla</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>Cierra y vuelve a abrir Status para aplicar el nuevo zoom de pantalla</translation>
     </message>
 </context>
 <context>

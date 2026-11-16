@@ -1819,10 +1819,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>%1 додано до ваших надійних сайтів.</translation>
     </message>
     <message>
-        <source>Close and reopen Status to apply your new display zoom</source>
-        <translation>Закрийте та знову відкрийте Status, щоб застосувати новий масштаб дисплея</translation>
-    </message>
-    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>Тепер цей пристрій є керівним вузлом спільноти %1</translation>
     </message>
@@ -2281,11 +2277,11 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <name>AttachmentPreparer</name>
     <message>
         <source>Animated images can be at most %1 KB and %2 px</source>
-        <translation type="unfinished"></translation>
+        <translation>Анімовані зображення можуть мати не більше %1 КБ і %2 px</translation>
     </message>
     <message>
         <source>This image can&apos;t be sent</source>
-        <translation type="unfinished"></translation>
+        <translation>Це зображення не можна надіслати</translation>
     </message>
 </context>
 <context>
@@ -14037,12 +14033,20 @@ to load</source>
         <translation>Перезапустити</translation>
     </message>
     <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
         <source>Not Now</source>
         <translation>Не зараз</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
         <translation>Перезапустіть Status, щоб застосувати новий масштаб інтерфейсу</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>Закрийте та знову відкрийте Status, щоб застосувати новий масштаб дисплея</translation>
     </message>
 </context>
 <context>
