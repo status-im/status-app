@@ -16,7 +16,7 @@ WalletPopups.ReceiveModal {
     property var receiverAccounts
     property string selectedReceiverAddress
 
-    signal receiverAccountSelected(string address)
+    property var receiverAccountSelectedFn: address => {}
 
     ModelEntry {
         id: selectedReceiverAccount
@@ -35,6 +35,6 @@ WalletPopups.ReceiveModal {
 
     onUpdateSelectedAddress: address => {
         if (!root.fixedAccount)
-            root.receiverAccountSelected(address)
+            root.receiverAccountSelectedFn(address)
     }
 }

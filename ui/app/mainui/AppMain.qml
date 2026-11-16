@@ -3283,7 +3283,8 @@ Item {
                 fixedSelectedAccount: Qt.binding(() => showQR.selectedAccount),
                 allAccounts: Qt.binding(() => appMain.walletRootStore.accounts),
                 receiverAccounts: Qt.binding(() => appMain.transactionStore.accounts),
-                selectedReceiverAddress: Qt.binding(() => appMain.transactionStore.selectedReceiverAccountAddress)
+                selectedReceiverAddress: Qt.binding(() => appMain.transactionStore.selectedReceiverAccountAddress),
+                receiverAccountSelectedFn: address => appMain.transactionStore.setReceiverAccount(address)
             })
             showQR.active = true
         }
@@ -3295,7 +3296,6 @@ Item {
         onLoaded: {
             showQR.item.switchingAccounsEnabled = showQR.params.switchingAccounsEnabled?? true
             showQR.item.hasFloatingButtons = showQR.params.hasFloatingButtons?? true
-            showQR.item.receiverAccountSelected.connect(address => appMain.transactionStore.setReceiverAccount(address))
             showQR.item.closed.connect(showQR.close)
 
             showQR.item.open()
