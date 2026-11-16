@@ -11,6 +11,12 @@ QtObject {
     required property var determineRealURL
     required property var preferencesStore
     required property Item currentWebView
+    property var otrProfileParams: null
+
+    /// Outlives the layout: the Tab set and each Tab's back/forward history,
+    /// kept in memory whatever the Session setting (which only covers disk).
+    /// { tabs: [{ uuid, url, title, icon, offTheRecord, state }], currentIndex }
+    property var sessionCache: null
 
     property Item previousWebView: null
     property var persistedTabs: []
@@ -117,7 +123,66 @@ QtObject {
         // tab.url = determineRealURL("https://simpledapp.eth");
     }
 
+    /// Fill sessionCache from the live Tabs; local previews are no browsing Tabs.
+    function captureToCache() {
+        if (!sessionCache)
+            return
+
+        const records = []
+        let currentIndex = 0
+        for (let i = 0; i < tabs.count; i++) {
+            const view = webViewContext.getWebView(i)
+            if (!view || view.profileParams?.localPreview)
+                continue
+            if (i === tabs.currentIndex)
+                currentIndex = records.length
+            records.push({
+                uuid: view.uid,
+                url: view.url.toString(),
+                title: view.title || "",
+                icon: BrowserSessionUtils.normalizeIcon(view.icon),
+                offTheRecord: !!view.offTheRecord,
+                state: typeof view.saveState === "function" ? view.saveState() : null
+            })
+        }
+        sessionCache.tabs = records
+        sessionCache.currentIndex = currentIndex
+    }
+
+    function _restoreFromCache() {
+        const records = sessionCache.tabs
+        const savedIndex = sessionCache.currentIndex
+        sessionCache.tabs = []
+
+        setPersisted(records.map(r => ({ uuid: r.uuid, url: r.url, title: r.title, icon: r.icon })))
+        purgeSnapshots()
+
+        records.forEach(record => {
+            const profileParams = record.offTheRecord && otrProfileParams
+                ? otrProfileParams : defaultProfileParams
+            const view = webViewContext.createEmptyTab(profileParams, false, false, record.url,
+                                                       record.title, record.icon, record.uuid)
+            if (view && record.state && typeof view.setPendingState === "function")
+                view.setPendingState(record.state)
+        })
+
+        Qt.callLater(() => {
+            if (tabs.count === 0) {
+                openDefaultTab()
+                return
+            }
+            if (savedIndex >= 0 && savedIndex < tabs.count)
+                tabs.activateTab(savedIndex)
+            webViewContext.ensureCurrentWebViewLoaded()
+        })
+    }
+
     function restoreSession() {
+        if (sessionCache && sessionCache.tabs.length > 0) {
+            _restoreFromCache()
+            return
+        }
+
         const tabsToRestore = preferencesStore.getRestoreOpenTabs()
             ? preferencesStore.getOpenTabs()
             : []

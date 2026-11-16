@@ -87,6 +87,48 @@ QtObject {
         return params && !params.localPreview ? params : defaultProfileParams
     }
 
+    /// A Tab has a loaded Web View with a page in it.
+    readonly property bool hasLivePage: {
+        const views = hostStackLayout?.children ?? []
+        for (let i = 0; i < views.length; ++i) {
+            if (views[i].adapterItem && views[i].url.toString())
+                return true
+        }
+        return false
+    }
+
+    /// A Web View holds a Keep-alive reason (CONTEXT): a non-terminal Download
+    /// (Retained Views included), a dApp request awaiting its answer, or audible
+    /// media.
+    readonly property bool hasKeepAliveReason: {
+        if (downloadsStore?.hasNonTerminalDownloads ?? false)
+            return true
+        const views = hostStackLayout?.children ?? []
+        for (let i = 0; i < views.length; ++i) {
+            if (viewHasKeepAliveReason(views[i]))
+                return true
+        }
+        return false
+    }
+
+    function viewHasKeepAliveReason(view) {
+        if (!view)
+            return false
+        return !!view.playingAudio
+            || !!view.bridge?.connectorManager.hasPendingRequests
+            || (!!downloadsStore && typeof downloadsStore.viewHasNonTerminalDownloads === "function"
+                && downloadsStore.viewHasNonTerminalDownloads(view))
+    }
+
+    /// Drop (CONTEXT) every Tab's Web View that holds no Keep-alive reason.
+    function dropIdleViews() {
+        for (let i = 0; i < tabsModel.count; ++i) {
+            const view = getWebView(i)
+            if (view && typeof view.drop === "function" && !viewHasKeepAliveReason(view))
+                view.drop()
+        }
+    }
+
     readonly property string currentClientId: currentWebView?.bridge?.clientId
                                               ?? ConnectorConstants.clientIdFor(currentWebView ? currentWebView.offTheRecord : false)
 

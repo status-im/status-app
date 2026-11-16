@@ -1,6 +1,7 @@
 import QtQml
 import QtQuick
 
+import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 
 import utils
@@ -12,6 +13,7 @@ import AppLayouts.stores as AppStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Wallet.stores as WalletStores
+import AppLayouts.Browser.webview
 
 StatusSectionLoader {
     id: root
@@ -25,7 +27,43 @@ StatusSectionLoader {
 
     required property HandlersManagerLoader popupHandler
 
+    /// The Browser section is the current one.
+    property bool sectionCurrent: false
+
+    /// Whether the layout should exist. Mobile gives it back when inactive
+    /// (BrowserDropPolicy); desktop keeps it from the first visit on.
+    readonly property bool keepLoaded: SQUtils.Utils.isMobile ? dropPolicy.keepLoaded
+                                                              : d.visited || sectionCurrent
+
     asynchronous: false
+
+    BrowserDropPolicy {
+        id: dropPolicy
+
+        // Inactive (a system sheet on top) is still in front; Suspended is not.
+        shown: root.sectionCurrent && (Qt.application.state === Qt.ApplicationActive
+                                       || Qt.application.state === Qt.ApplicationInactive)
+        hasLivePage: root.item?.hasLivePage ?? false
+        keepAlive: root.item?.keepAlive ?? false
+
+        onDropIdleViewsRequested: {
+            console.info("[Browser] Drop: idle Web Views (a Keep-alive reason holds the layout)")
+            root.item?.dropIdleTabs?.()
+        }
+        onDropping: {
+            root.item?.captureSession?.()
+            console.info("[Browser] Drop: Tabs kept in memory:", d.sessionCache.tabs.length)
+        }
+        onKeepLoadedChanged: console.info("[Browser] Drop: layout", keepLoaded ? "kept" : "dropped")
+        onShownChanged: if (shown) root.item?.resumeCurrentTab?.()
+    }
+
+    Connections {
+        target: SystemUtils
+        function onMemoryPressure() { dropPolicy.memoryPressure() }
+    }
+
+    onSectionCurrentChanged: if (sectionCurrent) d.visited = true
 
     QtObject {
         id: d
@@ -36,6 +74,14 @@ StatusSectionLoader {
 
         // Holder for the per-load store instances; rebuilt on each privacy-wall toggle.
         property QtObject storeParent: null
+
+        property bool visited: false
+
+        // The Tab set and back/forward histories across layout unloads.
+        readonly property QtObject sessionCache: QtObject {
+            property var tabs: []
+            property int currentIndex: 0
+        }
     }
 
     Component { id: bookmarksStoreComp; BrowserStores.BookmarksStore {} }
@@ -102,6 +148,7 @@ StatusSectionLoader {
             isDebugEnabled:             Qt.binding(() => root.advancedStore.isDebugEnabled),
             transactionStore:           Qt.binding(() => root.transactionStore),
             leftPanelWidthOverride:     Qt.binding(() => root.leftPanelWidthOverride),
+            sessionCache:               d.sessionCache,
             "anchors.fill":             root,
         })
     }
@@ -111,6 +158,9 @@ StatusSectionLoader {
             loadSection()
             return
         }
+        // Otherwise reactivation rebuilds the layout from the old initial
+        // properties, i.e. the stores destroyed below.
+        root.source = ""
         if (d.storeParent) {
             d.storeParent.destroy()
             d.storeParent = null

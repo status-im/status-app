@@ -31,6 +31,22 @@ capabilities are.
 The set of open Tabs, their order, and the active Tab, persisted so the browser
 reopens where the user left it. Opt-in; independent of Download History.
 
+### Drop
+Giving back the memory of a Web View, or of the whole browser, that is not on
+screen, while the user loses nothing they can see: the Tabs, their order, the
+active Tab and each Tab's back/forward history stay, and a dropped page loads
+again when its Tab is next shown. Happens a while after the browser leaves the
+screen, sooner when the system is short of memory, and at once when no Tab
+shows a page. Only the active Tab loads on return.
+_Avoid_: unload, suspend, discard, hibernate.
+
+### Keep-alive reason
+Something a Web View is doing for the user that a Drop would break: a
+non-terminal Download, a dApp request awaiting the user's answer, audible
+media, or camera or microphone use. A Web View with a Keep-alive reason is
+never dropped, and keeps the browser around it; the others are still dropped.
+_Avoid_: pin, lock, busy.
+
 ## Downloads
 
 ### Download Record

@@ -20,6 +20,10 @@ QtObject {
     property var accounts: []
     property bool _initialConnectionDone: false
     property var _ownRequestIds: ({})
+    property int _pendingRequests: 0
+
+    // A request of this page awaits its answer (e.g. the user's approval).
+    readonly property bool hasPendingRequests: _pendingRequests > 0
 
     // SIGNALS
     // Notify to re-read all properties
@@ -68,6 +72,8 @@ QtObject {
         }
 
         connectorController.connectorCallRPC(requestId, JSON.stringify(rpcRequest))
+        if (!_ownRequestIds[requestId])
+            _pendingRequests++
         _ownRequestIds[requestId] = true
 
         // Return immediately - response comes via connectorCallRPCResult signal
@@ -207,6 +213,7 @@ QtObject {
                 return
 
             delete _ownRequestIds[requestId]
+            _pendingRequests--
 
             // Emit to Eip1193ProviderAdapter → ethereum_wrapper.js
             requestCompletedEvent({
