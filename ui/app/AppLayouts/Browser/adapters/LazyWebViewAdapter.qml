@@ -34,6 +34,8 @@ AbstractWebView {
 
     readonly property QtObject d: QtObject {
         property bool crashed: false
+        // Back/forward history to rebuild on the next load (see drop()).
+        property var pendingState: null
     }
 
     function _handleRenderProcessTerminated(status) {
@@ -66,6 +68,7 @@ AbstractWebView {
     // page of its own, so no Download may close it.
     onHtmlPageLoadedChanged: if (htmlPageLoaded) root.pristinePopup = false
     readonly property bool loading: loader.item ? loader.item.loading : false
+    readonly property bool playingAudio: loader.item ? !!loader.item.playingAudio : false
     readonly property bool canGoBack: loader.item ? loader.item.canGoBack : false
     readonly property bool canGoForward: loader.item ? loader.item.canGoForward : false
     readonly property real loadProgress: loader.item ? loader.item.loadProgress : 0
@@ -107,6 +110,34 @@ AbstractWebView {
         if (!SQUtils.Utils.isMobile)
             props.profileManager = Qt.binding(() => root.profileManager)
         loader.setSource(root.adapterPath, props)
+    }
+
+    /// Back/forward history to rebuild when the Backend next loads, instead of
+    /// a plain load of `url`. Ignored by Backends that cannot restore it.
+    function setPendingState(state) {
+        d.pendingState = state || null
+    }
+
+    /// The newest back/forward history: the live Backend's, else a pending one.
+    function saveState() {
+        if (loader.item && typeof loader.item.saveState === "function") {
+            const state = loader.item.saveState()
+            if (state && (state.byteLength ?? state.length) > 0)
+                return state
+        }
+        return d.pendingState
+    }
+
+    /// Drop (CONTEXT: Drop): destroy the Backend, keep the Tab. The next
+    /// ensureLoaded() brings the page back with its history.
+    function drop() {
+        if (!loader.item)
+            return
+        d.pendingState = root.saveState()
+        loader.item.detachView()
+        loader.source = ""
+        root.htmlPageLoaded = false
+        d.crashed = false
     }
 
     function loadUrl(u) {
@@ -191,6 +222,9 @@ AbstractWebView {
         anchors.fill: parent
         onLoaded: {
             if (root.url.toString()) loader.item.url = root.url
+            if (d.pendingState && typeof loader.item.restoreState === "function")
+                loader.item.restoreState(d.pendingState)
+            d.pendingState = null
             root.syncFromAdapterItem()
         }
 

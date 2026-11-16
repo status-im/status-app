@@ -2454,13 +2454,8 @@ Item {
                     BrowserLoader {
                         id: browserLayoutContainer
 
-                        // Do not unload section data from the memory once activated
-                        active: false
-                        Binding on active {
-                            when: d.isBrowserEnabled && appView.currentIndex === Constants.appViewStackIndex.browser
-                            value: true
-                            restoreMode: Binding.RestoreNone
-                        }
+                        active: d.isBrowserEnabled && keepLoaded
+                        sectionCurrent: appView.currentIndex === Constants.appViewStackIndex.browser
 
                         userUID: d.myPublicKey
                         sectionName: "browser"

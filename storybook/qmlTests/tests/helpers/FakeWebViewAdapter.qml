@@ -29,6 +29,7 @@ Item {
     property var history: null
     property var scrollPosition: Qt.point(0, 0)
     property bool clearing: false
+    property bool playingAudio: false
 
     property bool supportsZoom: true
     property bool supportsDevTools: true
@@ -53,6 +54,10 @@ Item {
 
     property int reloadCalls: 0
     property var loadedUrls: []
+    property int detachCalls: 0
+    // Back/forward history as the Backend would hand it out, and what it was given.
+    property var savedState: null
+    property var restoredStates: []
 
     function reload() { root.reloadCalls += 1 }
     function loadUrl(u) { root.url = u; root.loadedUrls = root.loadedUrls.concat([String(u)]) }
@@ -61,7 +66,9 @@ Item {
     function goBackOrForward(offset) {}
     function stop() {}
     function forceReload() {}
-    function detachView() {}
+    function detachView() { root.detachCalls += 1 }
+    function saveState() { return root.savedState }
+    function restoreState(state) { root.restoredStates = root.restoredStates.concat([state]) }
     function triggerWebAction(action) {}
     function runJavaScript(script, callback) {}
 

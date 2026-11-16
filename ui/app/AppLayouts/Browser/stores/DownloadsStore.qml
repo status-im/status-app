@@ -299,6 +299,16 @@ QtObject {
         return record
     }
 
+    /// True while any Download Record is still non-terminal.
+    readonly property bool hasNonTerminalDownloads: {
+        for (let i = 0; i < downloadModel.length; ++i) {
+            const record = downloadModel[i]
+            if (record && !record.isTerminal)
+                return true
+        }
+        return false
+    }
+
     /// True while any Download Record for this host Web View is still non-terminal.
     function viewHasNonTerminalDownloads(view) {
         if (!view)
