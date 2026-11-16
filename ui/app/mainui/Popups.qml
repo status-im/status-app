@@ -116,6 +116,8 @@ QtObject {
     property var mutualContactsModel
 
     property bool isDevBuild
+    // Whether the app can restart itself (not on iOS): otherwise the user reopens Status
+    property bool restartSupported: true
 
     signal openExternalLink(string link)
     signal saveDomainToUnfurledWhitelist(string domain)
@@ -1888,15 +1890,18 @@ QtObject {
             ConfirmationDialog {
                 title: qsTr("Display zoom changed")
                 destroyOnClose: true
-                confirmButtonLabel: qsTr("Restart")
+                confirmButtonLabel: root.restartSupported ? qsTr("Restart") : qsTr("OK")
                 cancelButtonLabel: qsTr("Not Now")
                 cancelBtnType: ""
-                showCancelButton: true
-                confirmationText: qsTr("Restart Status to apply your new display zoom")
+                showCancelButton: root.restartSupported
+                confirmationText: root.restartSupported
+                                  ? qsTr("Restart Status to apply your new display zoom")
+                                  : qsTr("Close and reopen Status to apply your new display zoom")
                 onCancelButtonClicked: close()
                 onConfirmButtonClicked: {
                     close()
-                    root.restartRequested()
+                    if (root.restartSupported)
+                        root.restartRequested()
                 }
             }
         }
