@@ -71,13 +71,16 @@ proc newHostWithFakes(fakeBackend = false): (SessionHost, Fake) =
   ops.finishDrain = proc() = fake.calls.add("finishDrain")
   ops.dispose = proc() = fake.calls.add("dispose")
   ops.sessionReady = proc(policy: AutoLoginPolicy) = fake.calls.add("ready")
-  ops.drainTimedOut = proc() = fake.calls.add("drainTimedOut")
-  ops.logoutTimedOut = proc() = fake.calls.add("logoutTimedOut")
-  ops.failed = proc(step: SessionStep, error: string) =
-    fake.calls.add("failed")
-    fake.failedStep = $step
+  ops.stateChanged = proc(state: SessionState, failedStep: SessionStep) =
+    case state
+    of SessionState.DrainTimeout: fake.calls.add("drainTimedOut")
+    of SessionState.LogoutTimeout: fake.calls.add("logoutTimedOut")
+    of SessionState.Failed:
+      fake.calls.add("failed")
+      fake.failedStep = $failedStep
+    else: discard
   ops.exit = proc(backendLoggedOut: bool) = fake.calls.add("exit")
-  ops.hardExit = proc(backendLoggedOut: bool) = fake.calls.add("hardExit")
+  ops.hardExit = proc(backend: BackendLogoutStatus) = fake.calls.add("hardExit")
   host.setOps(ops, proc(): Result[SessionReceivers, string] =
     fake.calls.add("initialize")
     ok(SessionReceivers(signal: proc(s: string) = discard,
