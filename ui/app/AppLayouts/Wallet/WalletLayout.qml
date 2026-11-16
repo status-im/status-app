@@ -117,7 +117,7 @@ Item {
         function onDisplayKeypairImportPopup() {
             if (d.keypairImportPopup)
                 return
-            d.keypairImportPopup = keypairImport.createObject(root, { keypairImportModule: RootStore.keypairImportModule })
+            d.keypairImportPopup = keypairImport.createObject(root, { keypairImportModule: Qt.binding(() => RootStore.keypairImportModule) })
             d.keypairImportPopup?.open()
         }
 
