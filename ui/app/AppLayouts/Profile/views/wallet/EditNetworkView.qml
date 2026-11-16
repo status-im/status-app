@@ -18,6 +18,7 @@ ColumnLayout {
 
     signal evaluateRpcEndPoint(string url, bool isMainUrl)
     signal updateNetworkValues(int chainId, string newMainRpcInput, string newFailoverRpcUrl)
+    signal reloginRequested()
 
     EditNetworkForm {
         Layout.fillWidth: true
@@ -27,5 +28,6 @@ ColumnLayout {
         networkRPCChanged: root.networkRPCChanged
         onEvaluateRpcEndPoint: root.evaluateRpcEndPoint(url, isMainUrl)
         onUpdateNetworkValues: root.updateNetworkValues(chainId, newMainRpcInput, newFailoverRpcUrl)
+        onReloginRequested: root.reloginRequested()
     }
 }
