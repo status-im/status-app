@@ -2,6 +2,7 @@ import QtCore
 import QtQuick
 
 import StatusQ
+import StatusQ.Core
 import StatusQ.Popups.Dialog
 
 StatusFolderDialog {
