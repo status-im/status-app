@@ -39,7 +39,7 @@ EnableBiometricsPopup {
             // If credential not retrieved (cancelled, failed, or could not be prepared)
             if (keyUid === "" || credential === "") {
                 popup.loading = false
-                popup.errorText = qsTr("Biometric setup failed. Try again.")
+                popup.errorText = qsTranslate("EnableBiometricsPopupHandler", "Biometric setup failed. Try again.")
                 return
             }
 
@@ -47,7 +47,7 @@ EnableBiometricsPopup {
 
             if (status !== Keychain.StatusSuccess) {
                 popup.loading = false
-                popup.errorText = qsTr("Biometric setup failed. Try again.")
+                popup.errorText = qsTranslate("EnableBiometricsPopupHandler", "Biometric setup failed. Try again.")
             }
         }
     }
@@ -58,14 +58,14 @@ EnableBiometricsPopup {
             popup.loading = false
             popup.close()
             Global.displayToastMessage(
-                qsTr("Biometric login and transaction authentication enabled for this device"),
+                qsTranslate("EnableBiometricsPopupHandler", "Biometric login and transaction authentication enabled for this device"),
                 "", "checkmark-circle", false, Constants.ephemeralNotificationType.success, "")
         }
 
         function onGetCredentialRequestCompleted(status, secret) {
             if (status !== Keychain.StatusSuccess) {
                 popup.loading = false
-                popup.errorText = qsTr("Biometric setup failed. Try again.")
+                popup.errorText = qsTranslate("EnableBiometricsPopupHandler", "Biometric setup failed. Try again.")
             }
         }
     }

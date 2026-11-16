@@ -7,7 +7,7 @@ import StatusQ.Popups.Dialog
 StatusFolderDialog {
     property string imageSource
 
-    title: qsTr("Please choose a directory")
+    title: qsTranslate("Popups", "Please choose a directory")
     currentFolder: StandardPaths.writableLocation(StandardPaths.PicturesLocation)
 
     onAccepted: {

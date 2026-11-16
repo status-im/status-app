@@ -53,7 +53,7 @@ RemoveContactPopup {
             root.host.contactsStore.removeTrustStatus(publicKey)
         if (markAsUntrusted) {
             root.host.contactsStore.markUntrustworthy(publicKey)
-            Global.displaySuccessToastMessage(qsTr("%1 removed from contacts and marked as untrusted").arg(mainDisplayName))
+            Global.displaySuccessToastMessage(qsTranslate("Popups", "%1 removed from contacts and marked as untrusted").arg(mainDisplayName))
         }
         close()
     }

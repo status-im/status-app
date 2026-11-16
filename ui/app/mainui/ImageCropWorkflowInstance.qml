@@ -47,8 +47,8 @@ ImageCropWorkflow {
     id: root
 
     required property Popups host
-    title: qsTr("Profile Picture")
-    acceptButtonText: qsTr("Make this my Profile Pic")
+    title: qsTranslate("Popups", "Profile Picture")
+    acceptButtonText: qsTranslate("Popups", "Make this my Profile Pic")
     onImageCropped: (image, cropRect) => {
         if (!callback) {
             console.error("ImageCropWorkflow: no callback provided")

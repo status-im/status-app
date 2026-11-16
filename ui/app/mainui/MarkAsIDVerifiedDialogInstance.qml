@@ -49,7 +49,7 @@ MarkAsIDVerifiedDialog {
     required property Popups host
     onAccepted: {
         root.host.contactsStore.markAsTrusted(publicKey)
-        Global.displaySuccessToastMessage(qsTr("%1 marked as trusted").arg(mainDisplayName))
+        Global.displaySuccessToastMessage(qsTranslate("Popups", "%1 marked as trusted").arg(mainDisplayName))
         close()
     }
     onClosed: destroy()

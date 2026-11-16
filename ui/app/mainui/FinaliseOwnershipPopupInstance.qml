@@ -104,7 +104,7 @@ FinaliseOwnershipPopup {
     SignTransactionsPopup {
         id: signPopup
 
-        title: qsTr("Sign transaction - update %1 smart contract").arg(finalisePopup.communityName)
+        title: qsTranslate("Popups", "Sign transaction - update %1 smart contract").arg(finalisePopup.communityName)
         totalFeeText: finalisePopup.isFeeLoading ? "" : finalisePopup.feeText
         errorText: finalisePopup.feeErrorText
         accountName: finalisePopup.ownerTokenDetails.accountName

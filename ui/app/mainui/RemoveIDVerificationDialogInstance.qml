@@ -51,13 +51,13 @@ RemoveIDVerificationDialog {
         if (markAsUntrusted && removeContact) {
             root.host.contactsStore.markUntrustworthy(publicKey)
             root.host.contactsStore.removeContact(publicKey)
-            Global.displaySuccessToastMessage(qsTr("%1 trust mark removed, removed from contacts and marked as untrusted").arg(mainDisplayName))
+            Global.displaySuccessToastMessage(qsTranslate("Popups", "%1 trust mark removed, removed from contacts and marked as untrusted").arg(mainDisplayName))
         } else if (markAsUntrusted) {
             root.host.contactsStore.markUntrustworthy(publicKey)
-            Global.displaySuccessToastMessage(qsTr("%1 trust mark removed and marked as untrusted").arg(mainDisplayName))
+            Global.displaySuccessToastMessage(qsTranslate("Popups", "%1 trust mark removed and marked as untrusted").arg(mainDisplayName))
         } else if (removeContact) {
             root.host.contactsStore.removeContact(publicKey)
-            Global.displaySuccessToastMessage(qsTr("%1 trust mark removed and removed from contacts").arg(mainDisplayName))
+            Global.displaySuccessToastMessage(qsTranslate("Popups", "%1 trust mark removed and removed from contacts").arg(mainDisplayName))
         } else {
             root.host.contactsStore.removeTrustStatus(publicKey)
         }

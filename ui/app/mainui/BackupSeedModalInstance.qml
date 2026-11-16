@@ -52,8 +52,8 @@ BackupSeedModal {
         if (removeSeedphrase)
             root.host.privacyStore.removeMnemonic()
         root.host.profileStore.setUserDeclinedBackupBanner() // remove the banner
-        Global.displaySuccessToastMessage(removeSeedphrase ? qsTr("Recovery phrase permanently removed from Status application storage")
-                                                           : qsTr("You backed up your recovery phrase. Access it in Settings"))
+        Global.displaySuccessToastMessage(removeSeedphrase ? qsTranslate("Popups", "Recovery phrase permanently removed from Status application storage")
+                                                           : qsTranslate("Popups", "You backed up your recovery phrase. Access it in Settings"))
     }
     onClosed: destroy()
 }

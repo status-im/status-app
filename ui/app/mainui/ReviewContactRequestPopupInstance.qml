@@ -49,12 +49,12 @@ ReviewContactRequestPopup {
     required property Popups host
     onAccepted: {
         root.host.contactsStore.acceptContactRequest(publicKey, contactRequestId)
-        Global.displaySuccessToastMessage(qsTr("Contact request accepted"))
+        Global.displaySuccessToastMessage(qsTranslate("Popups", "Contact request accepted"))
         close()
     }
     onRejected: {
         root.host.contactsStore.dismissContactRequest(publicKey, contactRequestId)
-        Global.displaySuccessToastMessage(qsTr("Contact request ignored"))
+        Global.displaySuccessToastMessage(qsTranslate("Popups", "Contact request ignored"))
         close()
     }
     onClosed: destroy()

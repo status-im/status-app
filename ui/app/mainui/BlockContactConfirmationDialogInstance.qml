@@ -53,7 +53,7 @@ BlockContactConfirmationDialog {
             root.host.contactsStore.removeTrustStatus(publicKey)
         if (removeContact)
             root.host.contactsStore.removeContact(publicKey)
-        Global.displaySuccessToastMessage(qsTr("%1 blocked").arg(mainDisplayName))
+        Global.displaySuccessToastMessage(qsTranslate("Popups", "%1 blocked").arg(mainDisplayName))
         close()
     }
     onClosed: destroy()

@@ -26,7 +26,7 @@ EnablePushNotificationsPopup {
 
             if (PushNotifications.status === PushNotifications.Granted) {
                 Global.displayToastMessage(
-                    qsTr("Push notifications enabled"),
+                    qsTranslate("HandlersManager", "Push notifications enabled"),
                     "",
                     "checkmark-circle",
                     false,

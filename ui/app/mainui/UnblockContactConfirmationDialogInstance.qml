@@ -49,7 +49,7 @@ UnblockContactConfirmationDialog {
     required property Popups host
     onAccepted: {
         root.host.contactsStore.unblockContact(publicKey)
-        Global.displaySuccessToastMessage(qsTr("%1 unblocked").arg(mainDisplayName))
+        Global.displaySuccessToastMessage(qsTranslate("Popups", "%1 unblocked").arg(mainDisplayName))
         close()
     }
     onClosed: destroy()

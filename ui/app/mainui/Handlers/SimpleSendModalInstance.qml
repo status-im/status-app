@@ -330,7 +330,7 @@ SimpleSendModal {
             const chainName = SQUtils.ModelUtils.getByKey(
                 sendHandler.flatNetworksModel, "chainId", simpleSendModal.selectedChainId, "chainName") || ""
             handler.assetsSelectorModel.setSectionNames(
-                qsTr("Your assets on %1").arg(chainName), qsTr("Popular assets"))
+                qsTranslate("SendModalHandler", "Your assets on %1").arg(chainName), qsTranslate("SendModalHandler", "Popular assets"))
         }
         Component.onCompleted: handler.updateSendSectionNames()
 
