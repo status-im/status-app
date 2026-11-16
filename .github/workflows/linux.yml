@@ -19,12 +19,13 @@ jobs:
   appimage:
     name: appimage
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The app's version comes from git describe.
+          # The app's version is git describe of the pull request's head.
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Fetch submodules
@@ -32,8 +33,7 @@ jobs:
           USE_SYSTEM_NIM: '1'
         run: scripts/ci-fetch-submodules.sh
 
-      # linuxdeployqt and appimagetool are AppImages themselves: without FUSE
-      # in the container they unpack to a temporary directory and run from it.
+      # linuxdeployqt and appimagetool are AppImages: without FUSE they unpack and run.
       - uses: ./.github/actions/container
         with:
           image: desktop
@@ -46,15 +46,20 @@ jobs:
             FLAG_PARASWAP_ENABLED=0
 
       - name: Dependencies
-        run: |
-          $IN_IMAGE make update
-          $IN_IMAGE make deps
+        run: $IN_IMAGE make update
 
       - name: status-go
         run: $IN_IMAGE make status-go
 
+      # The Nim compiler reads the three keys from its environment.
       - name: Package
-        run: $IN_IMAGE make tgz-linux
+        env:
+          STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
+          STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
+          STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
+        run: |
+          docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY \
+            --env STATUS_BUILD_KLIPY_API_KEY build make tgz-linux
 
       # The tarball keeps the AppImage executable; the artifact's zip would not.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -63,3 +68,4 @@ jobs:
           path: pkg/Status.tar.gz
           if-no-files-found: error
           retention-days: 7
+          compression-level: 0

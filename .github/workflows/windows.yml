@@ -17,12 +17,10 @@ env:
     qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtwebengine
     qtpositioning qtserialport qtshadertools qtimageformats qtscxml qthttpserver
   NIMFLAGS: --colors:off
-  QML_DISABLE_DISK_CACHE: 1
   FLAG_SWAP_ENABLED: 1
   FLAG_RELAY_ENABLED: 1
   FLAG_LIFI_ENABLED: 0
   FLAG_PARASWAP_ENABLED: 0
-  CMAKE_POLICY_VERSION_MINIMUM: 3.5
   # Nim dependency trees nest past MAX_PATH, and Bash needs the scripts with LF
   # endings. Set here so that the checkout and nimble's clones see it too.
   GIT_CONFIG_COUNT: 2
@@ -44,7 +42,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The app's version comes from git describe.
+          # The app's version is git describe of the pull request's head, not of the merge commit.
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Fetch submodules
@@ -56,6 +55,10 @@ jobs:
         with:
           go-version: '1.26.5'
           cache: false
+
+      # go-generate-fast prints "file.go: command" lines, which setup-go's matcher reports as errors.
+      - name: Go problem matcher
+        run: echo "::remove-matcher owner=go::"
 
       # The versions scripts/windows_build_setup.ps1 installs.
       - name: Compilers and tools
@@ -99,10 +102,10 @@ jobs:
 
           # Inno Setup and OpenSSL come with the runner image.
           inno='C:\Program Files (x86)\Inno Setup 6'
-          [ -f "$inno/ISCC.exe" ] || choco install innosetup --yes --no-progress
+          [ -f "$inno/ISCC.exe" ] || { echo "::error::No Inno Setup in $inno"; exit 1; }
           openssl='C:\Program Files\OpenSSL'
           [ -f 'C:\Program Files\CMake\bin\cmake.exe' ] || { echo "::error::No CMake on the runner"; exit 1; }
-          [ -f "$openssl/bin/libcrypto-3-x64.dll" ] || { echo "::error::No OpenSSL in $openssl"; exit 1; }
+          [ -f "$openssl/bin/libcrypto-3-x64.dll" ] && [ -f "$openssl/bin/libssl-3-x64.dll" ] || { echo "::error::No OpenSSL in $openssl"; exit 1; }
           vs="$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath)"
           go="$(cygpath -m "$RUNNER_TEMP")/go"
           {
@@ -111,7 +114,6 @@ jobs:
             # Where windeployqt finds the Visual C++ runtime installer.
             echo "VCINSTALLDIR=$(cygpath -m "$vs")/VC"
             echo "GOPATH=$go"
-            echo "GOBIN=$go/bin"
             echo "GOCACHE=$go/cache"
             echo "MAKEFLAGS=-j$(nproc) V=1 USE_SYSTEM_NIM=1"
             echo "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)"
@@ -119,8 +121,6 @@ jobs:
           # The path added last comes first.
           {
             echo "$inno"
-            echo "$openssl\\bin"
-            cygpath -w "$go/bin"
             cygpath -w "$tools/rcedit"
             cygpath -w "$tools/protoc/bin"
             cygpath -w "$tools/llvm/bin"
@@ -139,13 +139,10 @@ jobs:
           # shellcheck disable=SC2086
           python -m aqt install-qt windows desktop "$QT_VERSION" win64_msvc2022_64 -m $QT_MODULES -O "$RUNNER_TEMP\\qt"
           qt="$(cygpath -u "$RUNNER_TEMP")/qt/$QT_VERSION/msvc2022_64"
-          echo "QTDIR=$qt" >> "$GITHUB_ENV"
           cygpath -w "$qt/bin" >> "$GITHUB_PATH"
 
       - name: Toolchain versions
         run: |
-          # go-generate-fast prints "file.go: command" lines, which setup-go's matcher reports as errors.
-          echo "::remove-matcher owner=go::"
           missing=0
           for tool in go nim nimble gcc make windres clang lld-link llvm-dlltool protoc qmake windeployqt cmake rcedit ISCC 7z unix2dos python git; do
             echo "$tool: $(command -v "$tool" || { echo MISSING; })"
@@ -174,6 +171,10 @@ jobs:
 
       # Not signed: WINDOWS_CODESIGN_PFX_PATH is not set.
       - name: Package
+        env:
+          STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
+          STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
+          STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
         run: make zip-windows
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

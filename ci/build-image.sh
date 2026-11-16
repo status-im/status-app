@@ -28,7 +28,7 @@ esac
 name="$1"
 
 tag="$(git -C "$repo" hash-object "$dockerfile" | cut -c1-12)"
-image="${STATUS_APP_BUILD_REGISTRY:-ghcr.io/status-im}/status-app-build:$name-$tag"
+image="ghcr.io/status-im/status-app-build:$name-$tag"
 
 case "$action" in
   image)
@@ -36,7 +36,7 @@ case "$action" in
     ;;
   pull)
     if ! docker pull --quiet "$image"; then
-      echo "$image cannot be pulled, building it" >&2
+      echo "::warning::$image cannot be pulled, building it here" >&2
       "$0" "$name"
     fi
     ;;
@@ -49,7 +49,7 @@ case "$action" in
     tools='qmake --version && cmake --version && nim --version && nimble --version && go version && protoc --version'
     if [ "$name" = android ]; then
       # Gradle takes Java from JAVA_HOME, which is not the java on PATH.
-      tools="$tools && \"\$JAVA_HOME/bin/java\" -version && test -d \"\$ANDROID_NDK_ROOT\" && test -f \"\$OPENSSL_LIB_DIR/libssl.a\""
+      tools="$tools && \"\$JAVA_HOME/bin/java\" -version && test -d \"\$ANDROID_NDK_ROOT\" && ccache --version"
     fi
     docker run --rm --platform linux/amd64 --entrypoint "" "$image" bash -c "$tools"
     ;;

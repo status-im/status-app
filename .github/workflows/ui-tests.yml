@@ -9,12 +9,11 @@ permissions:
   contents: read
   packages: read
 concurrency:
-  group: ui-tests-${{ github.ref }}
-  cancel-in-progress: true
+  group: ui-tests-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # One long-lived container; every step below runs a make target in it.
   IN_IMAGE: docker exec build
-  STATUSQ_TESTS_BUILD_PATH: ui/StatusQ/build/ci-tests
 jobs:
   ui:
     name: ui
@@ -24,11 +23,15 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          # scripts/version.sh, run by every make call, needs the tags and the history.
+          fetch-depth: 0
+          filter: blob:none
       - name: Fetch submodules
         env:
           USE_SYSTEM_NIM: '1'
         run: scripts/ci-fetch-submodules.sh
       - uses: ./.github/actions/container
+        id: container
         with:
           image: desktop
           env: |
@@ -37,19 +40,19 @@ jobs:
       - name: QML lint
         run: $IN_IMAGE make qml-lint
       - name: StatusQ tests
-        if: ${{ !cancelled() }}
-        run: $IN_IMAGE make run-statusq-tests "STATUSQ_BUILD_PATH=$STATUSQ_TESTS_BUILD_PATH"
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
+        run: $IN_IMAGE make run-statusq-tests
       - name: StatusQ sanity checker
-        if: ${{ !cancelled() }}
-        run: $IN_IMAGE make run-statusq-sanity-checker "STATUSQ_BUILD_PATH=$STATUSQ_TESTS_BUILD_PATH"
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
+        run: $IN_IMAGE make run-statusq-sanity-checker
       - name: Storybook tests
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
         run: $IN_IMAGE make run-storybook-tests
       - name: Storybook pages validator
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
         run: $IN_IMAGE make run-storybook-pages-validator
       - name: Translations are up to date
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
         run: |
           $IN_IMAGE make update-translations
           if ! git diff --quiet -- 'ui/i18n/*.ts'; then

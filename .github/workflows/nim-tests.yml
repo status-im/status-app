@@ -9,8 +9,8 @@ permissions:
   contents: read
   packages: read
 concurrency:
-  group: nim-tests-${{ github.ref }}
-  cancel-in-progress: true
+  group: nim-tests-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   IN_IMAGE: docker exec build
 jobs:
@@ -22,8 +22,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The version compiled into the tests comes from git describe.
+          # scripts/version.sh, run by every make call, needs the tags and the history.
           fetch-depth: 0
+          filter: blob:none
       - name: Fetch submodules
         env:
           USE_SYSTEM_NIM: '1'
@@ -40,9 +41,7 @@ jobs:
             FLAG_LIFI_ENABLED=0
             FLAG_PARASWAP_ENABLED=0
       - name: Dependencies
-        run: |
-          $IN_IMAGE make update
-          $IN_IMAGE make deps
+        run: $IN_IMAGE make update
       - name: status-go
         run: $IN_IMAGE make status-go
       # The tests build one at a time, so what they link is built here, each

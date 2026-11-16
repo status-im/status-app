@@ -1,6 +1,5 @@
 name: Build images
-# Publishes the images the desktop and Android jobs run in. A job cannot build
-# one itself in reasonable time, so they pull the tag ci/build-image.sh prints.
+# Publishes the images the desktop and Android jobs run in: one build for all of them, no mirrors at job time.
 on:
   push:
     branches:
@@ -23,7 +22,7 @@ permissions:
   contents: read
 concurrency:
   group: build-images-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   image:
     name: image (${{ matrix.image }})
@@ -53,9 +52,13 @@ jobs:
           image="$(ci/build-image.sh --image "$NAME")"
           echo "image=$image" >> "$GITHUB_OUTPUT"
           echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          if docker manifest inspect "$image" >/dev/null 2>&1; then
+          # Only a missing tag leads to a build; any other answer fails the job.
+          if answer="$(docker manifest inspect "$image" 2>&1 >/dev/null)"; then
             echo "published=true" >> "$GITHUB_OUTPUT"
             echo "$image is already published"
+          elif [[ "$answer" != *"manifest unknown"* ]]; then
+            echo "::error::The registry could not be asked about $image: $answer"
+            exit 1
           fi
       - name: Build
         if: steps.image.outputs.published != 'true'
@@ -66,10 +69,7 @@ jobs:
         if: steps.image.outputs.published != 'true'
         env:
           NAME: ${{ matrix.image }}
-        run: |
-          ci/build-image.sh --check "$NAME"
-          docker image ls
-          df -h /
+        run: ci/build-image.sh --check "$NAME"
       - name: Publish
         if: steps.image.outputs.published != 'true'
         env:

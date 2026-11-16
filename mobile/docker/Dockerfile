@@ -93,7 +93,7 @@ ENV LANG=en_US.UTF-8 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Build essentials
     build-essential cmake ninja-build pkg-config extra-cmake-modules \
-    autoconf automake libtool gcc-13 g++-13 \
+    autoconf automake libtool gcc-13 g++-13 ccache \
     # Dev tools
     git git-lfs curl wget unzip file xz-utils jq rsync s3cmd fuse \
     gnupg2 openssh-client ca-certificates locales sudo \

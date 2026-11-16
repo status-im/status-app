@@ -25,6 +25,10 @@ env:
   # The Makefile's default builds the disk image through Nix.
   DMGBUILD: dmgbuild
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   dmg:
     name: dmg
@@ -35,7 +39,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The app's version comes from git describe.
+          # The app's version is git describe of the pull request's head, not of the merge commit.
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       # With OpenSSL: the macOS build compiles it from mobile/vendors/openssl.
@@ -49,22 +54,24 @@ jobs:
           go-version: '1.26.5'
           cache: false
 
+      # go-generate-fast prints "file.go: command" lines, which setup-go's matcher reports as errors.
+      - name: Go problem matcher
+        run: echo "::remove-matcher owner=go::"
+
       - uses: ./.github/actions/macos-nim
 
       - name: Qt and dmgbuild
         run: |
-          pipx install aqtinstall
-          pipx install dmgbuild
+          pipx install aqtinstall==3.3.0
+          pipx install dmgbuild==1.6.7
           # shellcheck disable=SC2086
           aqt install-qt mac desktop "$QT_VERSION" clang_64 -m $QT_MODULES -O "$RUNNER_TEMP/qt"
           qt="$RUNNER_TEMP/qt/$QT_VERSION/macos"
           {
-            echo "QTDIR=$qt"
             echo "QMAKE=$qt/bin/qmake"
             echo "MAKEFLAGS=-j$(sysctl -n hw.logicalcpu) V=1 USE_SYSTEM_NIM=1"
             echo "CMAKE_BUILD_PARALLEL_LEVEL=$(sysctl -n hw.logicalcpu)"
           } >> "$GITHUB_ENV"
-          echo "$qt/libexec" >> "$GITHUB_PATH"
           echo "$qt/bin" >> "$GITHUB_PATH"
 
       - name: Toolchain versions
@@ -88,11 +95,17 @@ jobs:
 
       # MACOS_CODESIGN_IDENT is not set: the bundle is signed ad hoc.
       - name: Package
+        env:
+          STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
+          STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
+          STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
         run: make pkg-macos
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-macos-aarch64
           path: pkg/Status.dmg
+          # Compressed already.
+          compression-level: 0
           if-no-files-found: error
           retention-days: 7

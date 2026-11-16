@@ -995,6 +995,8 @@ $(STATUS_CLIENT_DMG): nim_status_client
 	cp -R Info.plist status-macos.svg resources.rcc \
 		$(MACOS_OUTER_BUNDLE)/Contents/
 	cp bin/nim_status_client $(MACOS_OUTER_BUNDLE)/Contents/MacOS/
+	# make run leaves a custom icon on the binary, which codesign refuses to sign.
+	xattr -c $(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client
 	cp status.icns $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp resources/macos/Assets.car $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp status-macos.svg $(MACOS_OUTER_BUNDLE)/Contents/
@@ -1010,10 +1012,12 @@ endif
 		$(MACOS_OUTER_BUNDLE) \
 		-executable=$(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client \
 		-qmldir=ui \
-		-qmlimport=$(QT_QMLDIR)
+		-qmlimport=$(QT_QMLDIR) \
+		-no-codesign
 	macdeployqt \
 		$(MACOS_INNER_BUNDLE) \
-		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess
+		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess \
+		-no-codesign
 
 	# Without MACOS_CODESIGN_IDENT the bundle gets an ad-hoc signature: it
 	# starts, but Gatekeeper does not accept it.
@@ -1060,11 +1064,9 @@ $(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_la
 	rcedit $(OUTPUT)/bin/Status.exe --set-icon $(OUTPUT)/resources/status.ico
 	rcedit $(OUTPUT)/Status.exe --set-icon $(OUTPUT)/resources/status.ico
 	cp $(STATUSGO) $(STATUSKEYCARD_QT_LIB) $(NIMSDS_LIBFILE) $(STATUSQ_LIB_PATH)/* $(STATUSQ_BUILD_PATH)/bin/$(COMMON_CMAKE_BUILD_TYPE)/* $(OUTPUT)/bin/
-	cp "$(shell which libstdc++-6.dll)"     $(OUTPUT)/bin/
-	cp "$(shell which libgcc_s_seh-1.dll)"  $(OUTPUT)/bin/
-	cp "$(shell which libwinpthread-1.dll)" $(OUTPUT)/bin/
-	cp "$(shell which libcrypto-3-x64.dll)" $(OUTPUT)/bin/
-	cp "$(shell which libssl-3-x64.dll)"    $(OUTPUT)/bin/
+	# The runtime of the gcc that built the libraries, and the OpenSSL they link against.
+	cp -v "$$(dirname "$$(which gcc)")"/{libstdc++-6,libgcc_s_seh-1,libwinpthread-1}.dll $(OUTPUT)/bin/
+	cp -v "$(WIN_OPENSSL_ROOT)"/bin/{libcrypto,libssl}-3-x64.dll $(OUTPUT)/bin/
 ifeq ($(USE_SIMULATED_KEYCARD),true)
 	$(MAKE) keycard-simulator
 	$(MAKE) keycard-simulator-bundle KEYCARD_SIM_DEST=$(OUTPUT)/resources/keycard-simulator

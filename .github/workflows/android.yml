@@ -20,12 +20,13 @@ jobs:
   apk:
     name: apk
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The app's version comes from git describe.
+          # The app's version is git describe of the pull request's head.
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Fetch submodules
@@ -55,38 +56,49 @@ jobs:
             CCACHE_MAXSIZE=2G
 
       # Compiled objects of StatusQ and of the app's QML, kept between runs.
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: ccache
         with:
           path: .ccache
           key: ccache-android-${{ github.sha }}
           restore-keys: ccache-android-
 
-      - name: ccache
-        run: |
-          docker exec --user root build sh -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends ccache'
-          $IN_IMAGE ccache --zero-stats
-
       - name: QML lint
         run: $IN_IMAGE make qml-lint-mobile "QTDIR=$QT/gcc_64" "QT_MOBILE_DIR=$QT/android_arm64_v8a"
 
-      # The release build has to be signed. This key lives for one run, so the
-      # APK installs only where no other StatusPR is installed.
+      # The release build must be signed; this key lives for one run.
       - name: Signing key
         run: |
-          $IN_IMAGE keytool -genkeypair -keystore /tmp/throwaway.keystore -storetype PKCS12 \
-            -storepass throwaway -alias throwaway -keyalg RSA -keysize 2048 -validity 30 \
-            -dname "CN=Status PR build"
+          $IN_IMAGE sh -c 'keytool -genkeypair -keystore "$STATUS_APP_KEYSTORE_PATH" -storetype PKCS12 \
+            -storepass "$STATUS_APP_KEYSTORE_PASSWORD" -alias "$STATUS_APP_KEY_ALIAS" \
+            -keyalg RSA -keysize 2048 -validity 30 -dname "CN=Status PR build"'
 
+      # The Nim compiler reads the three keys from its environment.
       - name: Build
-        run: $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
+        env:
+          STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
+          STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
+          STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
+        run: |
+          $IN_IMAGE ccache --zero-stats
+          docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY \
+            --env STATUS_BUILD_KLIPY_API_KEY build make mobile-build PACKAGE_TYPE=apk
+          ls -l mobile/bin/android/qt6/StatusPR.apk mobile/bin/android/qt6/StatusPR-mapping.txt
 
       - name: ccache statistics
         if: ${{ !cancelled() }}
         run: $IN_IMAGE ccache --show-stats --verbose
 
+      # A failed build keeps what it compiled; a cancelled one may still be writing.
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: ${{ !cancelled() && steps.ccache.outputs.cache-hit != 'true' }}
+        with:
+          path: .ccache
+          key: ccache-android-${{ github.sha }}
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: StatusPR-android-arm64
+          name: Status-android-arm64
           path: |
             mobile/bin/android/qt6/StatusPR.apk
             mobile/bin/android/qt6/StatusPR-mapping.txt

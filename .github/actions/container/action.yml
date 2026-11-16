@@ -12,7 +12,7 @@ inputs:
 runs:
   using: composite
   steps:
-    # The registry is a speed-up: without access to it the image is built here.
+    # Without access to the registry the image is built here, from the mirrors.
     - name: Get the image
       shell: bash
       env:
