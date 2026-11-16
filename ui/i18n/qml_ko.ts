@@ -1792,10 +1792,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>동기화 중입니다. 기기를 켜 두고 앱을 열어 두세요.</translation>
     </message>
     <message>
-        <source>Close and reopen Status to apply your new display zoom</source>
-        <translation>새 디스플레이 확대/축소를 적용하려면 Status를 닫았다가 다시 여세요</translation>
-    </message>
-    <message>
         <source>This device is now the control node for the %1 Community</source>
         <translation>이 기기는 이제 %1 커뮤니티의 제어 Node입니다</translation>
     </message>
@@ -2256,11 +2252,11 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <name>AttachmentPreparer</name>
     <message>
         <source>Animated images can be at most %1 KB and %2 px</source>
-        <translation type="unfinished"></translation>
+        <translation>애니메이션 이미지는 최대 %1KB, %2px까지 가능합니다</translation>
     </message>
     <message>
         <source>This image can&apos;t be sent</source>
-        <translation type="unfinished"></translation>
+        <translation>이 이미지는 보낼 수 없습니다</translation>
     </message>
 </context>
 <context>
@@ -13896,12 +13892,20 @@ to load</source>
         <translation>다시 시작</translation>
     </message>
     <message>
+        <source>OK</source>
+        <translation>확인</translation>
+    </message>
+    <message>
         <source>Not Now</source>
         <translation>나중에</translation>
     </message>
     <message>
         <source>Restart Status to apply your new display zoom</source>
         <translation>새 디스플레이 확대/축소를 적용하려면 Status를 다시 시작하세요</translation>
+    </message>
+    <message>
+        <source>Close and reopen Status to apply your new display zoom</source>
+        <translation>새 디스플레이 확대/축소를 적용하려면 Status를 닫았다가 다시 여세요</translation>
     </message>
 </context>
 <context>
