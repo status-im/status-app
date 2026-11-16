@@ -290,10 +290,6 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 args.put(rpcRequest.toString());
                 String argsJson = args.toString();
 
-                // The reply belongs to the backend session it is sent in. Read the epoch
-                // first: if a logout lands while the send is in flight, the result keeps the
-                // old epoch and the next session drops it.
-                final long signalEpoch = StatusGoService.currentSignalEpoch();
                 String result = StatusGoService.callRpc("CallPrivateRPC", argsJson);
                 boolean failed = false;
                 String errorMsg = null;

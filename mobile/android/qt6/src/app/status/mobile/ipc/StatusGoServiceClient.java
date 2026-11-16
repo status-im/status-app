@@ -62,8 +62,10 @@ public final class StatusGoServiceClient {
     private volatile boolean hasUiVisibilityHint = false;
     // Tracks whether this process ever had a live Binder connection to status-go.
     private volatile boolean everConnected = false;
-    // The service process went away while the UI was hidden (no restart possible then): the
-    // service that comes up next is a fresh, logged-out backend the UI knows nothing about.
+    // The service process went away while the UI was hidden: the service that comes up next
+    // is a fresh, logged-out backend the UI knows nothing about. The frontend restarts once
+    // it is visible again (an activity start from the background is blocked on Android 10+,
+    // or brings Status to the front on its own where it is allowed).
     private volatile boolean serviceLostWhileHidden = false;
 
     private final IStatusGoSignalListener signalListener = new IStatusGoSignalListener.Stub() {
@@ -109,7 +111,7 @@ public final class StatusGoServiceClient {
                 }
                 if (connectedLatch != null) connectedLatch.countDown();
             }
-            if (serviceLostWhileHidden) {
+            if (serviceLostWhileHidden && hasUiVisibilityHint && desiredUiVisible) {
                 serviceLostWhileHidden = false;
                 requestFrontendRestart(StatusGoStub.getContext(), "statusgo_service_restarted");
                 return;
@@ -409,6 +411,11 @@ public final class StatusGoServiceClient {
         desiredUiVisible = visible;
         hasUiVisibilityHint = true;
         final Context app = context.getApplicationContext();
+        if (visible && serviceLostWhileHidden) {
+            serviceLostWhileHidden = false;
+            requestFrontendRestart(app, "statusgo_service_restarted");
+            return;
+        }
         runUiVisibilityAsync(() -> setUiVisibleSync(app, visible));
     }
 
