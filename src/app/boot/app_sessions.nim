@@ -111,16 +111,19 @@ proc logoutWithDeadline() =
   while not hardExitLogoutDone.load() and getMonoTime() < deadline:
     sleep(20)
 
-proc hardExit(backendLoggedOut: bool) =
+proc hardExit(backend: BackendLogoutStatus) =
   ## Quits while work of the ended session may still run (or the backend logout hangs):
   ## nothing that waits for it. The backend must not outlive the process logged in.
-  if not backendLoggedOut:
+  if backend != BackendLogoutStatus.Done:
     when defined(android):
       # status-go runs in a separate service process: stop it.
       android_lifecycle.stopBackgroundService()
     else:
-      logoutWithDeadline()
-  info "hard exit after ending the session", backendLoggedOut
+      # A logout still running past its deadline holds the backend: a second one would
+      # only wait for it.
+      if backend == BackendLogoutStatus.NotStarted:
+        logoutWithDeadline()
+  info "hard exit after ending the session", backend
   c_Exit(0)
 
 proc exitAtSafePoint(self: AppSessions, backendLoggedOut: bool) =
@@ -140,7 +143,6 @@ proc newAppSessions*(host: SessionHost, urlsManager: UrlsManager): AppSessions =
     # Links and shares arriving from now on wait for the next session (its appReady)
     # instead of reaching the ended one, whose UI is gone.
     self.urlsManager.detachSession()
-    self.view.setPhase(SessionPhase.Ending)
     self.view.sessionEnding()
   ops.stopActivity = proc() =
     self.current.controller.stopActivity()
@@ -151,21 +153,14 @@ proc newAppSessions*(host: SessionHost, urlsManager: UrlsManager): AppSessions =
   ops.dispose = proc() =
     self.disposeSession()
   ops.sessionReady = proc(policy: AutoLoginPolicy) =
-    self.view.setPhase(SessionPhase.Active)
     self.view.sessionReady()
-  ops.drainTimedOut = proc() =
-    self.view.setPhase(SessionPhase.DrainTimeout)
-  ops.logoutTimedOut = proc() =
-    self.view.setPhase(SessionPhase.LogoutTimeout)
-  ops.failed = proc(step: SessionStep, error: string) =
-    # The error is logged by the lifecycle; the window shows which step failed.
-    self.view.setPhase(case step
-      of SessionStep.BackendLogout: SessionPhase.LogoutFailed
-      of SessionStep.Initialize: SessionPhase.StartFailed)
+  ops.stateChanged = proc(state: SessionState, failedStep: SessionStep) =
+    # Leaving a timeout or failure screen (Retry, a late drain or logout) included.
+    self.view.setPhase(phaseOf(state, failedStep))
   ops.exit = proc(backendLoggedOut: bool) =
     self.exitAtSafePoint(backendLoggedOut)
-  ops.hardExit = proc(backendLoggedOut: bool) =
-    hardExit(backendLoggedOut)
+  ops.hardExit = proc(backend: BackendLogoutStatus) =
+    hardExit(backend)
   host.setOps(ops, proc(): Result[SessionReceivers, string] = self.initializeSession())
   self
 

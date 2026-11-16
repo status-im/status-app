@@ -34,6 +34,12 @@ type
     BackendLogout
     Initialize
 
+  BackendLogoutStatus* {.pure.} = enum
+    ## Where the backend logout is when the process hard-exits.
+    NotStarted ## the session's work did not drain: the backend is still logged in
+    Running    ## the logout runs (past its deadline): a second one would only wait for it
+    Done       ## the backend is logged out
+
   AutoLoginPolicy* {.pure.} = enum
     ColdStart ## process start: the regular startup rule decides
     AllowOnce ## relogin: one silent login if a stored credential exists
@@ -56,16 +62,26 @@ type
     initialize*: proc(): Result[void, string]
       ## Build the next session.
     sessionReady*: proc(policy: AutoLoginPolicy)
-    drainTimedOut*: proc()
-    logoutTimedOut*: proc()
-    failed*: proc(step: SessionStep, error: string)
+    stateChanged*: proc(state: SessionState, failedStep: SessionStep)
+      ## Every state change, before the operation of the new state runs: what the window
+      ## shows follows from it. `failedStep` tells which step a Failed state is about.
     exit*: proc(backendLoggedOut: bool)
       ## Quit at a safe point: nothing of the ended session is running anymore.
-    hardExit*: proc(backendLoggedOut: bool)
+    hardExit*: proc(backend: BackendLogoutStatus)
       ## Quit while tasks of the ended session, or the backend logout itself, may still
       ## run: no teardown that waits for them (nor joins the logout thread). Without a
       ## confirmed backend logout the backend must not outlive the process logged in:
       ## Android runs it in a separate service process, which must be stopped.
+
+  SessionPhase* {.pure.} = enum
+    ## What the window shows about the session (see SessionView.phase). Mirrored by
+    ## SessionTransitionView.Phase in QML: keep the order in sync.
+    Active        ## the session's UI
+    Ending        ## signing out: a progress screen
+    DrainTimeout  ## background work of the ended session takes long: keep waiting or quit
+    LogoutTimeout ## the backend logout takes long: keep waiting or quit
+    LogoutFailed  ## the backend logout failed: retry or quit
+    StartFailed   ## logged out, but the next session failed to start: retry or quit
 
   SessionLifecycle* = ref object
     ops: SessionOps
@@ -99,6 +115,20 @@ proc newSessionLifecycle*(ops: SessionOps, drainDeadlineMs, logoutDeadlineMs: in
   SessionLifecycle(ops: ops, state: SessionState.Active, drainDeadlineMs: drainDeadlineMs,
     logoutDeadlineMs: logoutDeadlineMs)
 
+proc phaseOf*(state: SessionState, failedStep: SessionStep): SessionPhase =
+  ## What the window shows in a lifecycle state.
+  case state
+  of SessionState.Active: SessionPhase.Active
+  of SessionState.DrainTimeout: SessionPhase.DrainTimeout
+  of SessionState.LogoutTimeout: SessionPhase.LogoutTimeout
+  of SessionState.Failed:
+    case failedStep
+    of SessionStep.BackendLogout: SessionPhase.LogoutFailed
+    of SessionStep.Initialize: SessionPhase.StartFailed
+  of SessionState.ReleasingUi, SessionState.Draining, SessionState.BackendLogout,
+      SessionState.Disposing, SessionState.Initializing, SessionState.Exiting:
+    SessionPhase.Ending
+
 proc state*(self: SessionLifecycle): SessionState =
   self.state
 
@@ -108,12 +138,12 @@ proc isTransitioning*(self: SessionLifecycle): bool =
 proc enter(self: SessionLifecycle, state: SessionState) =
   debug "session state", previous = self.state, state
   self.state = state
+  self.ops.stateChanged(state, self.failedStep)
 
 proc fail(self: SessionLifecycle, step: SessionStep, error: string) =
   error "ending the session failed", step, error
   self.failedStep = step
   self.enter(SessionState.Failed)
-  self.ops.failed(step, error)
 
 proc exitAtSafePoint(self: SessionLifecycle) =
   self.enter(SessionState.Exiting)
@@ -134,8 +164,13 @@ proc startBackendLogout(self: SessionLifecycle, nowMs: int64) =
   self.ops.startBackendLogout()
 
 proc hardExit(self: SessionLifecycle) =
+  let backend =
+    if self.backendLoggedOut: BackendLogoutStatus.Done
+    elif self.state in {SessionState.BackendLogout, SessionState.LogoutTimeout}:
+      BackendLogoutStatus.Running
+    else: BackendLogoutStatus.NotStarted
   self.enter(SessionState.Exiting)
-  self.ops.hardExit(self.backendLoggedOut)
+  self.ops.hardExit(backend)
 
 proc requestEnd*(self: SessionLifecycle, policy: AutoLoginPolicy): bool =
   ## Starts ending the session; the next one starts with `policy`. Ignored, returning
@@ -159,19 +194,17 @@ proc onTick*(self: SessionLifecycle, nowMs: int64) =
       self.startBackendLogout(nowMs)
     elif self.state == SessionState.Draining and
         nowMs - self.drainStartedMs >= self.drainDeadlineMs:
-      self.enter(SessionState.DrainTimeout)
       if self.quitLatched:
         # The user already asked to quit; don't make them ask again.
         self.hardExit()
       else:
-        self.ops.drainTimedOut()
+        self.enter(SessionState.DrainTimeout)
   of SessionState.BackendLogout:
     if nowMs - self.logoutStartedMs >= self.logoutDeadlineMs:
-      self.enter(SessionState.LogoutTimeout)
       if self.quitLatched:
         self.hardExit()
       else:
-        self.ops.logoutTimedOut()
+        self.enter(SessionState.LogoutTimeout)
   else:
     discard
 
