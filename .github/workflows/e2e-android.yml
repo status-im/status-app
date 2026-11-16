@@ -180,7 +180,6 @@ jobs:
           # Published only by e2e-peer-image.yml from the default branch, so a
           # branch run can read it but never write it.
           published="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/status-app-e2e-peer:${sha}"
-          # Any GHCR failure falls back to building the image here.
           pulled=""
           if echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null \
             && docker pull --quiet "$published"; then
@@ -224,9 +223,8 @@ jobs:
       contents: read
       packages: read
     # Only this job holds the account: the peer image is ready before it
-    # queues. This group never cancels a run in progress (a caller's own
-    # cancel-in-progress still can); GitHub keeps one waiting run per group,
-    # so a newer waiting run replaces an older one unseen.
+    # queues. GitHub keeps one waiting run per group, so a newer waiting run
+    # replaces an older one.
     concurrency:
       group: e2e-android-bs-account-${{ inputs.account }}
       cancel-in-progress: false
@@ -249,7 +247,8 @@ jobs:
 
       - name: Check out the vendored status-go
         run: |
-          # The harness drives the peer through status-go's own test client.
+          # The harness drives the peer through status-go's own test client, and
+          # the image is rebuilt from it if GHCR fails.
           git submodule init vendor/status-go
           git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
           git submodule update --depth 1 vendor/status-go
@@ -280,8 +279,7 @@ jobs:
             && docker pull --quiet "$PUBLISHED"; then
             docker tag "$PUBLISHED" "$STATUS_BACKEND_IMAGE"
           fi
-          # Finds the image, building it if GHCR failed since the peer image
-          # job, and creates the network the harness expects.
+          # Builds the image if GHCR failed since the peer image job.
           test/e2e_appium/scripts/peer_image.sh "$STATUS_BACKEND_DOCKER_PROJECT" > /dev/null
           base64 -d <<< "$PYTEST_ARGS_B64" > "$RUNNER_TEMP/pytest.args"
 
@@ -309,7 +307,7 @@ jobs:
             echo "::error::Expected one APK in artifact ${APK_ARTIFACT}, found ${#apks[@]}."
             exit 1
           fi
-          # Credentials go to curl on stdin, not on its command line.
+          # Credentials go to curl on stdin so they never appear in the process list.
           response=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
             --silent --show-error --fail-with-body \
             --form "file=@${apks[0]}" \
