@@ -207,8 +207,16 @@ StackLayout {
                 sourceComponent = chatViewComponent
         }
 
-        onGateViewChanged: load()
-        Component.onCompleted: load()
+        property bool completed: false
+
+        onGateViewChanged: {
+            if (completed)
+                load()
+        }
+        Component.onCompleted: {
+            completed = true
+            load()
+        }
         onLoaded: gateView?.adopt(item)
     }
 
