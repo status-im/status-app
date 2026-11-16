@@ -840,19 +840,15 @@ StatusSectionLayout {
     Loader {
         id: mobileSettingsMenuLoader
         active: false
-        onActiveChanged: {
-            if (!active)
-                return
-            setSource(Qt.resolvedUrl("popups/MobileSettingsMenu.qml"), {
-                supportsIncognito: Qt.binding(() => _internal.currentWebView?.supportsIncognito ?? false),
-                incognitoMode: Qt.binding(() => _internal.currentTabIncognito),
-                supportsZoom: Qt.binding(() => _internal.currentWebView?.supportsZoom ?? false),
-                zoomFactor: Qt.binding(() => _internal.currentWebView?.zoomFactor ?? 1),
-                supportsFind: Qt.binding(() => _internal.currentTabSupportsFindInPage),
-                clearSiteDataSupported: Qt.binding(() => _internal.currentWebView?.clearSiteDataSupported ?? false),
-                clearing: Qt.binding(() => _internal.currentWebView?.clearing ?? false)
-            })
-        }
+        Component.onCompleted: setSource(Qt.resolvedUrl("popups/MobileSettingsMenu.qml"), {
+            supportsIncognito: Qt.binding(() => _internal.currentWebView?.supportsIncognito ?? false),
+            incognitoMode: Qt.binding(() => _internal.currentTabIncognito),
+            supportsZoom: Qt.binding(() => _internal.currentWebView?.supportsZoom ?? false),
+            zoomFactor: Qt.binding(() => _internal.currentWebView?.zoomFactor ?? 1),
+            supportsFind: Qt.binding(() => _internal.currentTabSupportsFindInPage),
+            clearSiteDataSupported: Qt.binding(() => _internal.currentWebView?.clearSiteDataSupported ?? false),
+            clearing: Qt.binding(() => _internal.currentWebView?.clearing ?? false)
+        })
         onLoaded: {
             const menu = item
             menu.zoomIn.connect(() => webViewContext.changeZoomCurrent(0.1))
