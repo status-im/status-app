@@ -332,7 +332,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
     # "Stay logged in" opt-in from the onboarding password screen (password profiles
     # only; the task additionally skips keycard profiles as a safety net)
     if data{"stayLoggedIn"}.getBool(false) and pin.len == 0 and password.len > 0:
-      self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(password, enablePreference = true))
+      self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(password, action = StayLoggedInAction.Enable))
     if backupImportFileUrl != "":
       self.postLoginTasks.add(newLocalBackupTask(backupImportFileUrl))
 
@@ -359,18 +359,19 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
 
     case self.loginFlow:
       of LoginMethod.Password:
-        # Re-store (or reconcile) the "Stay logged in" credential after any successful
-        # password-method login. The task is a no-op unless the per-account preference is
-        # ON (checked QML-side) — this is what makes the preference survive logout: the
-        # next explicit login puts the credential back.
+        # After a successful password-method login the task follows the stored preference
+        # (re-stores the credential when it is ON, removes a leftover one when it is OFF) —
+        # that is what makes the preference survive logout. The login screen sends
+        # "stayLoggedIn" only when the user changed the toggle; then that choice is applied.
+        let action = stayLoggedInActionFromLoginData(data)
         let dek = data{"dek"}.getStr
         if dek.len > 0:
-          self.postLoginTasks.add(newSaveStayLoggedInDekTask(dek, keyUid = keyUid))
+          self.postLoginTasks.add(newSaveStayLoggedInDekTask(dek, keyUid = keyUid, action = action))
           self.controller.loginWithDEK(account, dek)
         else:
           if data{"updateBiometrics"}.getBool(false):
             self.postLoginTasks.add(newSaveBiometricsTask(data["password"].str, isPin = false, keyUid = keyUid))
-          self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(data["password"].str, keyUid = keyUid))
+          self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(data["password"].str, keyUid = keyUid, action = action))
           self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
         # Removes a leftover "save password" credential, e.g. one a
