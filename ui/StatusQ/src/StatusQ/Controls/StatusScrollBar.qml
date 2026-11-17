@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Controls as T
+import QtQuick.Controls.Universal as T
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -76,6 +76,10 @@ T.ScrollBar {
     // background from showing on Windows, and one Item per bar is not free when
     // a section builds dozens of them.
     background: null
+
+    // The thumb fades itself (below); the style's fade would animate the
+    // missing background
+    transitions: []
 
     contentItem: Loader {
         active: d.thumbShown
