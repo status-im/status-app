@@ -6,6 +6,7 @@ import StatusQ
 import StatusQ.Components
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Layout
 import utils
 
 import Models
@@ -129,6 +130,7 @@ Item {
             mock.canViewPrivateChannels = true
             mock.canPostInPrivateChannels = true
             mock.chatsLoaded = true
+            mock.sectionModule.viewState.shownPanel = 0
             mock.install()
         }
 
@@ -810,6 +812,53 @@ Item {
             findChildByTypePrefix(loader, "ChatColumnView").rootStore.contactsModel = namedStranger
             revisitChat(input)
             compare(inputMentionNames(input), ["@Xena"])
+        }
+
+        // as the section is dropped: the UI goes, chrome and all
+        function dropAndRestore(loader) {
+            loader.active = false
+            loader.chromeNeeded = false
+            tryVerify(() => !loader.item)
+
+            loader.chromeNeeded = true
+            loader.active = true
+            tryVerify(() => loader.status === Loader.Ready, 10000)
+        }
+
+        function test_theDraftSurvivesADrop() {
+            const loader = loadSectionWithInput()
+            const preserved = mock.d.contentModuleFor(mock.activeChatId).inputAreaModule.preservedProperties
+            chatInput(loader).textInput.insert(0, "draft")
+            preserved.replyMessageId = "reply-1"
+
+            dropAndRestore(loader)
+
+            compare(preserved.text, "draft")
+            compare(preserved.replyMessageId, "reply-1")
+            tryCompare(chatInput(loader).textInput, "text", "draft")
+        }
+
+        function test_theShownPanelSurvivesADrop() {
+            const loader = loadSection()
+            const chrome = findChild(loader, "sectionChrome")
+            verify(!!chrome)
+            chrome.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            compare(mock.sectionModule.viewState.shownPanel, StatusSectionLayout.CentralPanel)
+
+            dropAndRestore(loader)
+
+            const rebuilt = findChild(loader, "sectionChrome")
+            verify(!!rebuilt)
+            verify(rebuilt !== chrome, "built again")
+            compare(rebuilt.currentIndex, StatusSectionLayout.CentralPanel)
+        }
+
+        // the thread or members page is no panel to come back to
+        function test_theRightPanelComesBackAsTheChat() {
+            const loader = loadSection()
+            findChild(loader, "sectionChrome").setCurrentIndex(StatusSectionLayout.RightPanel)
+
+            compare(mock.sectionModule.viewState.shownPanel, StatusSectionLayout.CentralPanel)
         }
 
         ListModel {

@@ -173,6 +173,9 @@ QtObject {
         readonly property var adminMembersModel: ListModel {}
         readonly property var contactRequestsModel: null
         readonly property string emoji: ""
+        readonly property QtObject viewState: QtObject {
+            property int shownPanel: 0
+        }
 
         signal openNoPermissionsToJoinPopup(string communityName, string chatName, string communityId, string chatId)
         signal permissionSavedSuccessfully()
@@ -471,7 +474,6 @@ QtObject {
                 archived: false,
                 followed: false,
                 parentChatId: "",
-                loaderActive: false,
                 locked: isPrivate && !root.canViewPrivateChannels,
                 requiresPermissions: isPrivate,
                 canPost: !isPrivate || root.canPostInPrivateChannels,
@@ -818,8 +820,6 @@ QtObject {
                 chatsModel.setProperty(i, "active", isActive)
                 chatsModel.setProperty(i, "selected", isActive)
             }
-            if (isActive && !row.loaderActive)
-                chatsModel.setProperty(i, "loaderActive", true)
         }
         activeChatId = id
         sectionModule.activeItem = ({ id: id, type: Constants.chatType.communityChat })

@@ -455,9 +455,6 @@ method onJoinedCommunity*(self: AccessInterface) {.base.} =
 method onAcceptRequestToJoinFailedNoPermission*(self: AccessInterface, communityId: string, memberKey: string, requestId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onDeactivateChatLoader*(self: AccessInterface, chatId: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onCommunityCheckPermissionsToJoinResponse*(self: AccessInterface, checkPermissionsToJoinResponse: CheckPermissionsToJoinResponseDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 

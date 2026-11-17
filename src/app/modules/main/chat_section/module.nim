@@ -962,13 +962,10 @@ method activeItemSet*(self: Module, itemId: string) =
     singletonInstance.localAccountSensitiveSettings.setSectionLastOpenThread(mySectionId,
       chat_item.id, chat_item.parentChatId, THREAD_PRESENTATION_SELECTED_CHAT)
 
-  let (deactivateSectionId, deactivateChatId) = singletonInstance.loaderDeactivator.addChatInMemory(mySectionId, activeChatId)
-
   # notify parent module about active chat/channel
   self.delegate.onActiveChatChange(mySectionId,
     if chat_item.isThread: chat_item.parentChatId else: activeChatId,
     if chat_item.isThread: activeChatId else: "")
-  self.delegate.onDeactivateChatLoader(deactivateSectionId, deactivateChatId)
 
   if self.controller.isCommunity():
     if not self.controller.getMyCommunity().isPrivilegedUser:
@@ -1258,7 +1255,6 @@ proc getChatItemFromChatDto(
     chatDto.highlight,
     categoryOpened,
     onlineStatus = onlineStatus,
-    loaderActive = setChatAsActive,
     locked = tokenGated and not canPost,
     requiresPermissions = tokenGated,
     canPost = canPost,
@@ -2169,9 +2165,6 @@ method createOrEditCommunityTokenPermission*(self: Module, permissionId: string,
 
 method deleteCommunityTokenPermission*(self: Module, permissionId: string) =
   self.controller.deleteCommunityTokenPermission(permissionId)
-
-method onDeactivateChatLoader*(self: Module, chatId: string) =
-  self.view.chatsModel().disableChatLoader(chatId)
 
 method collectCommunityMetricsMessagesTimestamps*(self: Module, intervals: string) =
   self.controller.collectCommunityMetricsMessagesTimestamps(intervals)

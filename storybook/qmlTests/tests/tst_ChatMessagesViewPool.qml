@@ -114,6 +114,19 @@ Item {
             function getChatId() { return moduleMock.mockChatId }
             function updateKeepUnread(flag) {}
 
+            // the backend's per-chat record of where the reader was
+            readonly property var readingPositions: QtObject {
+                property var records: ({})
+
+                function getRecord(threadId) { return records[threadId] ?? "" }
+                function setRecord(threadId, record) {
+                    if (record)
+                        records[threadId] = record
+                    else
+                        delete records[threadId]
+                }
+            }
+
             // the messages this chat was asked to stop editing
             property var editModeOffCalls: []
             function setEditModeOff(messageId) { editModeOffCalls.push(messageId) }
@@ -285,6 +298,9 @@ Item {
             moduleA.messagesModule.keepUnread = false
             moduleA.messagesModule.editModeOffCalls = []
             moduleB.messagesModule.editModeOffCalls = []
+            moduleA.messagesModule.readingPositions.records = {}
+            moduleB.messagesModule.readingPositions.records = {}
+            moduleT.messagesModule.readingPositions.records = {}
         }
 
         function cleanup() {
@@ -557,6 +573,96 @@ Item {
                 return !!after && after.key === before.key
                         && Math.abs(after.offset - before.offset) < 1
             }, 5000, "back where the reader was in chat a")
+        }
+
+        function windowKeys(view) {
+            const lv = view.chatLogView
+            return { first: lv.keyAtRow(0), last: lv.keyAtRow(lv.rowCount - 1) }
+        }
+
+        function recordOf(module) {
+            const json = module.messagesModule.readingPositions.getRecord("")
+            return json ? JSON.parse(json) : null
+        }
+
+        // The section's UI is dropped and built again: the backend keeps the
+        // record, and the new view rebuilds the same window around it.
+        function test_theReadingPositionOutlivesTheView() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+
+            lv.contentY = Math.max(0, lv.contentHeight - lv.height * 2.5)
+            waitForRendering(lv)
+            const before = messageIdAtViewportTop(view)
+            const windowBefore = windowKeys(view)
+            verify(!!before)
+
+            view.visible = false
+            view.destroy()
+            wait(0)
+
+            const record = recordOf(moduleA)
+            verify(!!record, "recorded in the backend")
+            compare(record.key, before.key)
+            compare(record.firstKey, windowBefore.first)
+            compare(record.lastKey, windowBefore.last)
+
+            const rebuilt = openView()
+            const rlv = rebuilt.chatLogView
+
+            tryVerify(() => {
+                const after = messageIdAtViewportTop(rebuilt)
+                return !rlv.busy && !!after && after.key === before.key
+                        && Math.abs(after.offset - before.offset) < 1
+            }, 5000, "back where the reader was")
+            compare(windowKeys(rebuilt).first, windowBefore.first, "the same window")
+        }
+
+        function test_leavingTheForegroundRecordsThePosition() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+
+            lv.contentY = Math.max(0, lv.contentHeight - lv.height * 2.5)
+            waitForRendering(lv)
+            const before = messageIdAtViewportTop(view)
+            verify(!recordOf(moduleA))
+
+            appState.setActive(false)
+
+            const record = recordOf(moduleA)
+            verify(!!record)
+            compare(record.key, before.key)
+        }
+
+        function test_aRecordWhoseWindowEdgeIsGoneCentresOnItsMessage() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify(
+                { key: "a-100", offset: 0, firstKey: "a-gone", lastKey: "a-150" }))
+
+            const view = openView()
+            const lv = view.chatLogView
+
+            tryVerify(() => {
+                const after = messageIdAtViewportTop(view)
+                return !lv.busy && !!after && after.key === "a-100"
+            }, 5000, "at the recorded message")
+            const row = lv.rowForKey("a-100")
+            verify(row > lv.rowCount / 4 && row < lv.rowCount * 3 / 4, "centred in the window")
+        }
+
+        function test_aRecordWhoseMessageIsGoneOpensAtTheNewest() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify(
+                { key: "a-gone", offset: 0, firstKey: "a-90", lastKey: "a-150" }))
+
+            const view = openView()
+            const lv = view.chatLogView
+
+            compare(lv.keyAtRow(0), "a-0", "the newest message")
+            verify(lv.atBottom)
+            verify(!recordOf(moduleA), "the stale record is forgotten")
         }
 
         // The model resets in place: the window must not keep bounds that lie
