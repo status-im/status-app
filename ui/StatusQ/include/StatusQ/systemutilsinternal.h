@@ -115,6 +115,9 @@ signals:
     void imageSaveToGalleryFailed();
     void nativeDprChanged(qreal value);
 
+    // Android: the system is short of memory (onTrimMemory, UI_HIDDEN aside).
+    void memoryPressure();
+
 private:
     int m_androidKeyboardHeight = 0;
     bool m_androidKeyboardVisible = false;
