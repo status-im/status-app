@@ -14,7 +14,17 @@ Item {
     readonly property bool isError: d.status === SoundEffect.Error
     readonly property string statusString: d.status
 
+    onIsErrorChanged: {
+        if(isError) {
+            console.warn("Sound error:",
+                         statusString)
+        }
+    }
+
     function play() {
+        if (AudioUtils.isSilent || root.muted) // no need to construct the effect if we're not gonna use it
+            return
+
         if (!d.soundEffect)
             d.soundEffect = soundEffectComponent.createObject(root)
 

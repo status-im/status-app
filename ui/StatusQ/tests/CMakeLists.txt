@@ -157,6 +157,10 @@ add_executable(TestKeyboardState src/tst_keyboardstate.cpp)
 target_link_libraries(TestKeyboardState PRIVATE Qt::Test Qt::Gui Qt::Quick StatusQ)
 add_test(NAME TestKeyboardState COMMAND TestKeyboardState)
 
+qt_add_executable(TestAudioUtils src/tst_audioutils.cpp)
+target_link_libraries(TestAudioUtils PRIVATE Qt::Test Qt::Gui StatusQ)
+add_test(NAME TestAudioUtils COMMAND TestAudioUtils)
+
 if(NOT ANDROID AND NOT IOS)
     qt_add_executable(TestBrowserCertDistrust src/tst_browsercertdistrust.cpp)
     target_link_libraries(TestBrowserCertDistrust PRIVATE Qt::Test Qt::Network Qt::WebEngineQuick StatusQ)

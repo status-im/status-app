@@ -28,6 +28,8 @@
 -keep class app.status.mobile.MediaStoreHelper { *; }
 -keep class app.status.mobile.DensityListener { *; }
 -keep class app.status.mobile.ShakeDetector { *; }
+# AudioUtils constructs this listener and calls start/stop through JNI.
+-keep class app.status.mobile.SilentModeListener { *; }
 
 # ui/StatusQ/src/safutils_android.cpp: callStaticMethod on SafHelper
 # (takePersistablePermission, getReadableTreePath, copyFromPathToTree).

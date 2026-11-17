@@ -1645,13 +1645,6 @@ Item {
         volume: convertVolume(rootStore.volume)
         muted: !rootStore.notificationSoundsEnabled
         source: "qrc:/imports/assets/audio/send_message.wav"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
     }
 
     StatusSoundEffect {
@@ -1660,13 +1653,6 @@ Item {
         volume: convertVolume(rootStore.volume)
         muted: !rootStore.notificationSoundsEnabled
         source: "qrc:/imports/assets/audio/notification.wav"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
     }
 
     StatusSoundEffect {
@@ -1675,13 +1661,6 @@ Item {
         volume: convertVolume(rootStore.volume)
         muted: !rootStore.notificationSoundsEnabled
         source: "qrc:/imports/assets/audio/error.mp3"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
     }
 
     Loader {

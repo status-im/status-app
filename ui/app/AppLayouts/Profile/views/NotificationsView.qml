@@ -515,7 +515,7 @@ SettingsContentBase {
                         stepSize: 1
 
                         function commitVolume() {
-                            if (d.notificationsSettings.volume === value) 
+                            if (SystemUtils.fuzzyCompare(d.notificationsSettings.volume, value))
                                 return
                             d.notificationsSettings.volume = value
                             Global.playNotificationSound()
