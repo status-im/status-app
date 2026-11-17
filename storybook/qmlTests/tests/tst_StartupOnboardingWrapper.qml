@@ -108,6 +108,7 @@ Item {
                 function inputConnectionStringForBootstrapping(connectionString) {}
                 function finishOnboardingFlow(flow, data) { return "" }
                 function loginRequested(keyUid, method, data) {}
+                function selectLoginAccount(keyUid) {}
 
                 signal accountLoginError(string error, bool wrongPassword)
                 signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference)

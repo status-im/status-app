@@ -192,6 +192,9 @@ proc getOpenedAccounts*(self: Controller): seq[AccountDto] =
 proc getAccountByKeyUid*(self: Controller, keyUid: string): AccountDto =
   return self.accountsService.getAccountByKeyUid(keyUid)
 
+proc selectLoginAccount*(self: Controller, keyUid: string) =
+  self.accountsService.selectLoginAccount(keyUid)
+
 proc login*(
     self: Controller,
     account: AccountDto,
