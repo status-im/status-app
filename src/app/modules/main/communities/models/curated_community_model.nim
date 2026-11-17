@@ -1,7 +1,11 @@
 import app/modules/shared_models/model_utils
 import nimqml, tables
 import curated_community_item
-import ../../../shared_models/token_permission_item
+import ../../../shared_models/[token_permission_item, token_permissions_model]
+import ../../../shared_models/[token_criteria_model, token_permission_chat_list_model]
+
+when defined(QT_MODEL_SPY):
+  import ../../../shared/qt_model_spy
 
 type
   ModelRole {.pure.} = enum
@@ -21,6 +25,19 @@ type
     AmIBanned
     Joined
     Encrypted
+
+proc samePermissions(a, b: TokenPermissionsModel): bool =
+  let x = a.getItems()
+  let y = b.getItems()
+  if x.len != y.len:
+    return false
+  for i in 0 ..< x.len:
+    if x[i].id != y[i].id or x[i].`type` != y[i].`type` or x[i].isPrivate != y[i].isPrivate or
+        x[i].tokenCriteriaMet != y[i].tokenCriteriaMet or x[i].state != y[i].state or
+        x[i].tokenCriteria.getItems() != y[i].tokenCriteria.getItems() or
+        x[i].chatList.getItems() != y[i].chatList.getItems():
+      return false
+  true
 
 QtObject:
   type CuratedCommunityModel* = ref object of QAbstractListModel
@@ -144,14 +161,23 @@ QtObject:
     if ind != -1:
       updateRolesAndNotify:
         updateRolesFromItem(item, id, available, name, description, icon, banner, featured, members, activeMembers, color, tags, amIBanned, joined, encrypted)
-        updateRoleWithValue(permissionModel, item.permissionModel, Permissions)
+        if not samePermissions(self.items[ind].permissionModel, item.permissionModel):
+          self.items[ind].permissionModel = item.permissionModel
+          roles.add(ModelRole.Permissions.int)
+        when defined(QT_MODEL_SPY):
+          if roles.len > 0:
+            recordDataChanged(ind, ind, roles)
       return
 
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
+    when defined(QT_MODEL_SPY):
+      recordBeginInsertRows(self.items.len, self.items.len)
     self.beginInsertRows(parentModelIndex, self.items.len, self.items.len)
     self.items.add(item)
     self.endInsertRows()
+    when defined(QT_MODEL_SPY):
+      recordEndInsertRows()
     self.countChanged()
 
   proc setPermissionItems*(self: CuratedCommunityModel, itemId: string, items: seq[TokenPermissionItem]) =
