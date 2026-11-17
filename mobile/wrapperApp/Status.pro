@@ -123,6 +123,7 @@ ios {
             -framework CoreMotion \
             -framework UIKit \
             -framework PhotosUI \
+            -framework AVFoundation \
             -framework Foundation \
             -framework UserNotifications
 
