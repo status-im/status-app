@@ -2,7 +2,7 @@
 
 import pytest
 
-from scripts.ci_junit_report import annotation, node_id, read_junit, render_summary
+from scripts.ci_junit_report import annotation, node_id, read_junit, read_reruns, render_summary
 
 pytestmark = pytest.mark.component
 
@@ -161,3 +161,56 @@ def test_all_skipped_is_not_run(tmp_path):
     path.write_text('<testsuite tests="1" failures="0" errors="0" skipped="1"><testcase classname="tests.test_c" name="a"><skipped/></testcase></testsuite>')
     text = render_summary(read_junit(path), APP, "abc", True, "1", "")
     assert text.splitlines()[0] == "## E2E Android NOT RUN: all 1 selected tests were skipped"
+
+
+PYTEST_LOG = """\
+[gw1] [ 53%] RERUN tests/test_onboarding_import_seed.py::TestOnboardingImportSeed::test_import_seed_phrase
+[gw1] [ 55%] PASSED tests/test_onboarding_import_seed.py::TestOnboardingImportSeed::test_import_seed_phrase
+[gw0] [ 60%] RERUN tests/messaging/test_a.py::TestA::test_bad[device_0]
+[gw0] [ 61%] RERUN tests/messaging/test_a.py::TestA::test_bad[device_0]
+[gw0] [ 62%] FAILED tests/messaging/test_a.py::TestA::test_bad[device_0]
+=================== 59 passed, 1 failed, 3 rerun in 1102.37s ===================
+"""
+
+
+def test_reruns_are_read_once_each_from_the_pytest_log(tmp_path):
+    log = tmp_path / "pytest.log"
+    log.write_text(PYTEST_LOG)
+    assert read_reruns(log) == [
+        "tests/test_onboarding_import_seed.py::TestOnboardingImportSeed::test_import_seed_phrase",
+        "tests/messaging/test_a.py::TestA::test_bad[device_0]",
+    ]
+
+
+def test_a_missing_pytest_log_gives_no_reruns(tmp_path):
+    assert read_reruns(None) == []
+    assert read_reruns(tmp_path / "absent.log") == []
+
+
+def test_summary_lists_only_the_reruns_that_passed(junit, tmp_path):
+    log = tmp_path / "pytest.log"
+    log.write_text(PYTEST_LOG)
+    text = render_summary(read_junit(junit), APP, "abc", True, "1", "", reruns=read_reruns(log))
+    section = text.split("### Passed on a rerun")[1].split("###")[0]
+    assert "test_import_seed_phrase" in section
+    assert "test_bad" not in section
+
+
+def test_summary_has_no_rerun_section_without_reruns(junit):
+    assert "Passed on a rerun" not in render_summary(read_junit(junit), APP, "abc", True, "1", "")
+
+
+@pytest.mark.parametrize(
+    "behind_base, expected",
+    [
+        ("0 master", "| Tests from | `abc`, up to date with `master` |"),
+        ("1 master", "| Tests from | `abc`, 1 commit behind `master` |"),
+        ("12 release/2.39", "| Tests from | `abc`, 12 commits behind `release/2.39` |"),
+        ("", "| Tests from | `abc` |"),
+        ("unknown master", "| Tests from | `abc` |"),
+        ("3", "| Tests from | `abc` |"),
+    ],
+)
+def test_summary_says_how_far_the_tested_commit_is_behind_its_base(junit, behind_base, expected):
+    text = render_summary(read_junit(junit), APP, "abc", True, "1", "", behind_base=behind_base)
+    assert expected in text

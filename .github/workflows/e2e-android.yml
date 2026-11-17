@@ -407,7 +407,8 @@ jobs:
           export BROWSERSTACK_USERNAME="$BS_USER" BROWSERSTACK_ACCESS_KEY="$BS_KEY"
           if [[ -n "$DEVICE" ]]; then export TEST_DEVICE_ID="$DEVICE"; fi
           mapfile -d '' -t args < "$RUNNER_TEMP/pytest.args"
-          python -m pytest "${args[@]}"
+          # The log is kept for the summary: only pytest's output names the reruns.
+          python -m pytest "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/pytest.log"
 
       - name: Find the BrowserStack build and stop its leftover sessions
         id: build
@@ -438,6 +439,8 @@ jobs:
           APP_JSON: ${{ steps.app.outputs.app-json }}
           BUILD_URL: ${{ steps.build.outputs.url }}
           COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          GH_TOKEN: ${{ github.token }}
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
         run: |
           # Normally under reports/<run id>/; the harness writes to reports/
@@ -453,9 +456,16 @@ jobs:
           if [[ -n "$APK_ARTIFACT" ]]; then from_commit=true; else from_commit=false; fi
           app="${APP_JSON}"
           if [[ -z "$app" ]]; then app='{}'; fi
+          # The PR head is tested, not the merge, so say how far it is behind its base.
+          behind=""
+          if [[ -n "$BASE_REF" ]]; then
+            count=$(gh api "repos/${GITHUB_REPOSITORY}/compare/$(jq -rn --arg ref "$BASE_REF" '$ref | @uri')...${COMMIT}" --jq .behind_by 2> /dev/null) || count=""
+            if [[ "$count" =~ ^[0-9]+$ ]]; then behind="${count} ${BASE_REF}"; fi
+          fi
           python scripts/ci_junit_report.py --junit "$junit" --summary "$GITHUB_STEP_SUMMARY" \
             --app-json "$app" --commit "${COMMIT:0:11}" --app-from-this-commit "$from_commit" \
-            --account "$ACCOUNT" --build-url "$BUILD_URL" --tests-outcome "$TESTS_OUTCOME"
+            --account "$ACCOUNT" --build-url "$BUILD_URL" --tests-outcome "$TESTS_OUTCOME" \
+            --pytest-log "$RUNNER_TEMP/pytest.log" --behind-base "$behind"
 
       - name: Upload the reports
         if: always()

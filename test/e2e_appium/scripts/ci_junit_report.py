@@ -7,12 +7,14 @@ see, so they name the APK under test and every failure with its message.
 
 import argparse
 import json
+import re
 import sys
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 
 MAX_ANNOTATIONS = 50
+RERUN_LINE = re.compile(r"\bRERUN (tests/\S+)")
 
 
 @dataclass
@@ -71,6 +73,19 @@ def read_junit(path: Path) -> Result:
     return result
 
 
+def read_reruns(log: Path | None) -> list[str]:
+    """Node ids pytest reran, in first-seen order. The JUnit file keeps only the
+    last try of a test, so reruns can only be read from pytest's own output."""
+    if log is None or not log.is_file():
+        return []
+    seen: dict[str, None] = {}
+    for line in log.read_text(errors="replace").splitlines():
+        match = RERUN_LINE.search(line)
+        if match:
+            seen.setdefault(match.group(1))
+    return list(seen)
+
+
 def _cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")[:300]
 
@@ -83,6 +98,8 @@ def render_summary(
     account: str,
     build_url: str,
     tests_outcome: str = "success",
+    reruns: tuple[str, ...] | list[str] = (),
+    behind_base: str = "",
 ) -> str:
     if result.total == 0:
         heading = "## E2E Android NOT RUN: no tests were selected"
@@ -107,7 +124,7 @@ def render_summary(
         "|---|---|",
         f"| APK | `{_cell(app.get('app_name', ''))}` (`{app.get('app_id', '')}`) |",
         f"| Uploaded | {app.get('uploaded_at', '')} |",
-        f"| Tests from | `{commit}` |",
+        f"| Tests from | `{commit}`{_behind(behind_base)} |",
         f"| BrowserStack account | {account} |",
     ]
     if build_url:
@@ -121,11 +138,27 @@ def render_summary(
     if result.failures:
         lines += ["", "### Failed tests", "", "| Test | Message |", "|---|---|"]
         lines += [f"| `{_cell(f.node_id)}` | {_cell(f.message)} |" for f in result.failures]
+    failed_ids = {f.node_id for f in result.failures}
+    passed_on_rerun = [node for node in reruns if node not in failed_ids]
+    if passed_on_rerun:
+        # A pass on the second try is still a pass, so it shows nowhere else.
+        lines += ["", "### Passed on a rerun", ""]
+        lines += [f"- `{_cell(node)}`" for node in passed_on_rerun]
     if result.skips:
         # A skip is silent in the verdict, so a reader must see what did not run and why.
         lines += ["", "### Skipped tests", "", "| Test | Reason |", "|---|---|"]
         lines += [f"| `{_cell(s.node_id)}` | {_cell(s.reason)} |" for s in result.skips]
     return "\n".join(lines) + "\n"
+
+
+def _behind(behind_base: str) -> str:
+    """`behind_base` is "<count> <branch>", or empty when it is not known."""
+    count, _, branch = behind_base.partition(" ")
+    if not count.isdigit() or not branch:
+        return ""
+    if count == "0":
+        return f", up to date with `{_cell(branch)}`"
+    return f", {count} commit{'' if count == '1' else 's'} behind `{_cell(branch)}`"
 
 
 def _escape_data(text: str) -> str:
@@ -147,6 +180,8 @@ def main() -> int:
     parser.add_argument("--account", default="")
     parser.add_argument("--build-url", default="")
     parser.add_argument("--tests-outcome", default="success")
+    parser.add_argument("--pytest-log", type=Path)
+    parser.add_argument("--behind-base", default="")
     opts = parser.parse_args()
 
     result = read_junit(opts.junit)
@@ -158,6 +193,8 @@ def main() -> int:
         opts.account,
         opts.build_url,
         opts.tests_outcome,
+        read_reruns(opts.pytest_log),
+        opts.behind_base,
     )
     with opts.summary.open("a") as handle:
         handle.write(summary)
