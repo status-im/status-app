@@ -179,13 +179,13 @@ AbstractWebView {
         property bool navigatedSinceCrash: false
         Accessible.ignored: rendererGone
 
-        settings.autoLoadImages: root.localAccountSensitiveSettings.autoLoadImages
-        settings.javascriptEnabled: root.localAccountSensitiveSettings.javaScriptEnabled
-        settings.errorPageEnabled: root.localAccountSensitiveSettings.errorPageEnabled
-        settings.pluginsEnabled: root.localAccountSensitiveSettings.pluginsEnabled
-        settings.autoLoadIconsForPage: root.localAccountSensitiveSettings.autoLoadIconsForPage
-        settings.touchIconsEnabled: root.localAccountSensitiveSettings.touchIconsEnabled
-        settings.webRTCPublicInterfacesOnly: root.localAccountSensitiveSettings.webRTCPublicInterfacesOnly
+        settings.autoLoadImages: root.localAccountSettings.autoLoadImages
+        settings.javascriptEnabled: root.localAccountSettings.javaScriptEnabled
+        settings.errorPageEnabled: root.localAccountSettings.errorPageEnabled
+        settings.pluginsEnabled: root.localAccountSettings.pluginsEnabled
+        settings.autoLoadIconsForPage: root.localAccountSettings.autoLoadIconsForPage
+        settings.touchIconsEnabled: root.localAccountSettings.touchIconsEnabled
+        settings.webRTCPublicInterfacesOnly: root.localAccountSettings.webRTCPublicInterfacesOnly
         settings.pdfViewerEnabled: true
         settings.focusOnNavigationEnabled: true
         settings.forceDarkMode: Application.styleHints.colorScheme === Qt.ColorScheme.Dark

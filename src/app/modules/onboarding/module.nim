@@ -1,4 +1,4 @@
-import nimqml, chronicles, json, strutils, sequtils, results
+import nimqml, chronicles, json, strutils, sequtils, sets, options, results
 
 import io_interface, states
 import view, controller
@@ -42,6 +42,8 @@ type
     accountsService: accounts_service.Service
     generalService: general_service.Service
     resumeLogin: bool
+    # Profiles on the login screen; any other one logging in is new on this device.
+    listedKeyUids: Option[HashSet[string]]
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
     keycardModule: keycard_management_module.Module[Module[T]]
     events: EventEmitter
@@ -157,6 +159,7 @@ proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
       ))
 
     self.view.setLoginAccountsModelItems(items)
+  self.listedKeyUids = some(openedAccounts.mapIt(it.keyUid).toHashSet())
   ok()
 
 method load*[T](self: Module[T]): Result[void, string] =
@@ -401,7 +404,8 @@ method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settin
     self.onAccountLoginError(err)
     return
   info "account logged in", keyUid = account.keyUid
-  self.controller.setLoggedInAccount(account)
+  let newOnDevice = self.listedKeyUids.isSome and account.keyUid notin self.listedKeyUids.get
+  self.controller.setLoggedInAccount(account, newOnDevice)
   discard self.delegate.userLoggedIn()
 
 method onMessengerStarted*[T](self: Module[T], err: string) =

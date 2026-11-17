@@ -1157,7 +1157,7 @@ Item {
                                                            activeSectionType === Constants.appSection.dApp
 
         readonly property bool isBrowserEnabled: appMain.featureFlagsStore.browserEnabled &&
-                                                 localAccountSensitiveSettings.isBrowserEnabled
+                                                 localAccountSettings.isBrowserEnabled
         readonly property int syncingBadgeCount: (appMain.devicesStore?.totalDevicesCount ?? 0)
                               - (appMain.devicesStore?.pairedDevicesCount ?? 0)
 

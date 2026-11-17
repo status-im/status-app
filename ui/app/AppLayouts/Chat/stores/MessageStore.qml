@@ -223,7 +223,7 @@ QtObject {
     }
 
     function warnAndDeleteMessage(messageId) {
-        if (localAccountSensitiveSettings.showDeleteMessageWarning)
+        if (localAccountSettings.showDeleteMessageWarning)
             Global.openDeleteMessagePopup(messageId, this)
         else
             deleteMessage(messageId)

@@ -62,7 +62,6 @@ type
     # Global
     appSettingsVariant: QVariant
     localAccountSettingsVariant: QVariant
-    localAccountSensitiveSettingsVariant: QVariant
     userProfileVariant: QVariant
 
     # Services
@@ -115,7 +114,7 @@ type
 #################################################
 # Forward declaration section
 proc load(self: AppController)
-proc buildAndRegisterLocalAccountSensitiveSettings(self: AppController)
+proc mergeLegacyPublicKeySettings(self: AppController)
 proc buildAndRegisterUserProfile(self: AppController)
 proc runPostOnboardingTasks(self: AppController)
 
@@ -155,7 +154,6 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
 
   # Global
   result.localAccountSettingsVariant = newQVariant(singletonInstance.localAccountSettings)
-  result.localAccountSensitiveSettingsVariant = newQVariant(singletonInstance.localAccountSensitiveSettings)
   result.userProfileVariant = newQVariant(singletonInstance.userProfile)
 
   # Services
@@ -338,7 +336,6 @@ proc delete*(self: AppController, logoutBackend: bool) =
 
   self.appSettingsVariant.delete
   self.localAccountSettingsVariant.delete
-  self.localAccountSensitiveSettingsVariant.delete
   self.userProfileVariant.delete
 
   self.accountsService.delete
@@ -411,7 +408,7 @@ proc start*(self: AppController, firstSession: bool): Result[void, string] =
 proc load(self: AppController) =
   self.settingsService.init()
 
-  self.buildAndRegisterLocalAccountSensitiveSettings()
+  self.mergeLegacyPublicKeySettings()
   self.buildAndRegisterUserProfile()
 
   self.settingsService.migrateBackupPath()
@@ -507,10 +504,8 @@ proc finishAppLoading*(self: AppController) =
   self.notificationsManager.onAppReady()
 
 
-proc buildAndRegisterLocalAccountSensitiveSettings(self: AppController) =
-  var pubKey = self.settingsService.getPublicKey()
-  singletonInstance.localAccountSensitiveSettings.setFileName(pubKey)
-  singletonInstance.setSessionContextProperty("localAccountSensitiveSettings", self.localAccountSensitiveSettingsVariant)
+proc mergeLegacyPublicKeySettings(self: AppController) =
+  singletonInstance.localAccountSettings.mergeLegacyPublicKeyFile(self.settingsService.getPublicKey())
 
 proc buildAndRegisterUserProfile(self: AppController) =
   let pubKey = self.settingsService.getPublicKey()

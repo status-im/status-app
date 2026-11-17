@@ -109,7 +109,7 @@ StatusMenu {
         icon.name: "delete"
         type: StatusAction.Type.Danger
         onTriggered: {
-            if (localAccountSensitiveSettings.showDeleteThreadWarning)
+            if (localAccountSettings.showDeleteThreadWarning)
                 Global.openPopup(confirmDeletePopupComponent)
             else
                 root.deleteRequested()
@@ -137,7 +137,7 @@ StatusMenu {
                     return
                 }
                 if (doNotShowAgainChecked) {
-                    localAccountSensitiveSettings.showDeleteThreadWarning = false
+                    localAccountSettings.showDeleteThreadWarning = false
                 }
                 root.deleteRequested()
                 close()

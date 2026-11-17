@@ -179,8 +179,8 @@ QtObject:
     when defined(android):
       # On Android we cannot use arbitrary paths without requesting storage permissions
       return
-    if singletonInstance.localAccountSensitiveSettings.getLocalBackupChosenPathSetting().len == 0 and self.settings.backupPath.len > 0:
-      singletonInstance.localAccountSensitiveSettings.setLocalBackupChosenPath(self.settings.backupPath)
+    if singletonInstance.localAccountSettings.getLocalBackupChosenPathSetting().len == 0 and self.settings.backupPath.len > 0:
+      singletonInstance.localAccountSettings.setLocalBackupChosenPath(self.settings.backupPath)
 
   proc initNotificationSettings(self: Service) =
     # set initial values from RPC before initialization is done
@@ -1278,7 +1278,7 @@ QtObject:
         pathToSaveInDB = formattedPath
 
       # We save this path in the local setting as it is the chosen path by the user
-      singletonInstance.localAccountSensitiveSettings.setLocalBackupChosenPath(formattedPath)
+      singletonInstance.localAccountSettings.setLocalBackupChosenPath(formattedPath)
 
       # In the DB, we save the path where we will actually write the backups
       # For most OSes, it will be the exact same path, but for Android, it will be

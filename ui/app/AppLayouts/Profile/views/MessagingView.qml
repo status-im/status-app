@@ -125,9 +125,9 @@ SettingsContentBase {
             components: [
                 StatusSwitch {
                     id: showGifPreviewsSwitch
-                    checked: localAccountSensitiveSettings.gifUnfurlingEnabled
+                    checked: localAccountSettings.gifUnfurlingEnabled
                     onClicked: {
-                        localAccountSensitiveSettings.gifUnfurlingEnabled = !localAccountSensitiveSettings.gifUnfurlingEnabled
+                        localAccountSettings.gifUnfurlingEnabled = !localAccountSettings.gifUnfurlingEnabled
                     }
                 }
             ]

@@ -251,7 +251,7 @@ QtObject {
         value: root.volume
     }
 
-    readonly property bool openLinksInStatus: localAccountSensitiveSettings.openLinksInStatus
+    readonly property bool openLinksInStatus: localAccountSettings.openLinksInStatus
 
     readonly property QtObject _d: QtObject {
         id: d

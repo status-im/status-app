@@ -67,14 +67,14 @@ proc delete(self: AppSession, logoutBackend: bool) =
 
 proc disposeSession(self: AppSessions) =
   ## Deletes the ended session (its UI is unloaded, its work drained, the backend logged
-  ## out) and resets the per-account state of the process.
+  ## out) and resets the per-account state of the process. The settings file stays bound for
+  ## the login screen, which preselects the same profile.
   self.urlsManager.detachSession()
   singletonInstance.clearSessionContextProperties()
   if not self.current.isNil:
     self.current.delete(logoutBackend = false)
     self.current = nil
-  singletonInstance.localAccountSettings.detach()
-  singletonInstance.localAccountSensitiveSettings.detach()
+  singletonInstance.localAccountSettings.flush()
   backend_core.DB_BLOCKED_DUE_TO_PROFILE_MIGRATION = false
   releaseAllRequestIds()
   # The ended profile's debug mode must not carry over to the login screen and the next

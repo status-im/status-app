@@ -9,15 +9,15 @@ QtObject {
     property var profileSectionModuleInst: profileSectionModule
     property var privacyModule: profileSectionModuleInst.privacyModule
     property var appSettingsInst: Global.appIsReady && !!appSettings? appSettings : null
-    property var accountSensitiveSettings: Global.appIsReady && !!localAccountSensitiveSettings? localAccountSensitiveSettings : null
+    property var accountSettings: Global.appIsReady && !!localAccountSettings? localAccountSettings : null
 
-    readonly property bool neverAskAboutUnfurlingAgain: !!accountSensitiveSettings ? accountSensitiveSettings.neverAskAboutUnfurlingAgain : false
-    readonly property bool gifUnfurlingEnabled: !!accountSensitiveSettings ? accountSensitiveSettings.gifUnfurlingEnabled : false
+    readonly property bool neverAskAboutUnfurlingAgain: !!accountSettings ? accountSettings.neverAskAboutUnfurlingAgain : false
+    readonly property bool gifUnfurlingEnabled: !!accountSettings ? accountSettings.gifUnfurlingEnabled : false
 
     required property CurrenciesStore currencyStore
 
     function setNeverAskAboutUnfurlingAgain(value) {
-        localAccountSensitiveSettings.neverAskAboutUnfurlingAgain = value;
+        localAccountSettings.neverAskAboutUnfurlingAgain = value;
     }
 
     function getPasswordStrengthScore(password) {

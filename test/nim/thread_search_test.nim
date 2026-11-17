@@ -30,7 +30,7 @@ privateAccess(search_module.Module)
 privateAccess(view.View)
 privateAccess(message_service.Service)
 privateAccess(chat_service.Service)
-privateAccess(LocalAccountSensitiveSettings)
+privateAccess(LocalAccountSettings)
 
 type SearchDelegate = ref object of search_interface.AccessInterface
   completions: seq[seq[MessageDto]]
@@ -357,7 +357,7 @@ suite "thread search result navigation":
       let content = ContentStub()
       section.chatContentModules["thread"] = content
 
-      let settings = singletonInstance.localAccountSensitiveSettings
+      let settings = singletonInstance.localAccountSettings
       let previousSettings = settings.settings
       let settingsDir = createTempDir("thread-search-", "")
       let settingsFile = settingsDir / "settings.ini"

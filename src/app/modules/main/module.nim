@@ -705,7 +705,7 @@ method load*[T](
   let homePageEnabled = singletonInstance.featureFlags().getHomePageEnabled()
 
   var activeSection: SectionItem
-  var activeSectionId = singletonInstance.localAccountSensitiveSettings.getActiveSection()
+  var activeSectionId = singletonInstance.localAccountSettings.getActiveSection()
 
   # Default to Wallet section if no active section is set or if the active section is the settings section
   # or if the active section is the home page section but home page is not enabled
@@ -808,7 +808,7 @@ method load*[T](
     hasNotification = false,
     notificationsCount = 0,
     active = false,
-    enabled = singletonInstance.localAccountSensitiveSettings.getIsBrowserEnabled(),
+    enabled = singletonInstance.localAccountSettings.getIsBrowserEnabled(),
   )
   self.view.model().addItem(browserSectionItem)
   if activeSectionId == browserSectionItem.id:
@@ -942,7 +942,7 @@ method onChatsLoaded*[T](
     return
   let myPubKey = singletonInstance.userProfile.getPubKey()
   var activeSection: SectionItem
-  var activeSectionId = singletonInstance.localAccountSensitiveSettings.getActiveSection()
+  var activeSectionId = singletonInstance.localAccountSettings.getActiveSection()
 
   # Create personal chat section
   self.chatSectionModules[myPubKey] = chat_section_module.newModule(
@@ -1280,7 +1280,7 @@ method activeSectionSet*[T](self: Module[T], sectionId: string, skipSavingInSett
   self.view.activeSectionSet(item)
 
   if not skipSavingInSettings:
-    singletonInstance.localAccountSensitiveSettings.setActiveSection(sectionId)
+    singletonInstance.localAccountSettings.setActiveSection(sectionId)
 
   self.notifySubModulesAboutChange(sectionId)
 
@@ -1292,9 +1292,9 @@ proc setSectionAvailability[T](self: Module[T], sectionType: SectionType, availa
 
 method toggleSection*[T](self: Module[T], sectionType: SectionType) =
   if (sectionType == SectionType.Browser):
-    let enabled = singletonInstance.localAccountSensitiveSettings.getIsBrowserEnabled()
+    let enabled = singletonInstance.localAccountSettings.getIsBrowserEnabled()
     self.setSectionAvailability(sectionType, not enabled)
-    singletonInstance.localAccountSensitiveSettings.setIsBrowserEnabled(not enabled)
+    singletonInstance.localAccountSettings.setIsBrowserEnabled(not enabled)
 
 method setCurrentUserStatus*[T](self: Module[T], status: StatusType) =
   self.controller.setCurrentUserStatus(status)
@@ -1422,7 +1422,7 @@ method communityLeft*[T](self: Module[T], communityId: string) =
 
   self.view.model().removeItem(communityId)
 
-  singletonInstance.localAccountSensitiveSettings.removeSectionChatRecord(communityId)
+  singletonInstance.localAccountSettings.removeSectionChatRecord(communityId)
 
   if (self.controller.getActiveSectionId() == communityId):
     let item = self.view.model().getItemById(singletonInstance.userProfile.getPubKey())
@@ -2059,7 +2059,7 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
 
       self.controller.switchTo(communityId, chatId, "")
 
-    elif action == StatusUrlAction.OpenLinkInBrowser and singletonInstance.localAccountSensitiveSettings.getIsBrowserEnabled():
+    elif action == StatusUrlAction.OpenLinkInBrowser and singletonInstance.localAccountSettings.getIsBrowserEnabled():
       let item = self.view.model().getItemById(BROWSER_SECTION_ID)
       self.setActiveSection(item)
       self.browserSectionModule.openUrl(url)

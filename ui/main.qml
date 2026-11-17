@@ -377,7 +377,7 @@ Window {
                 close.accepted = true
             }
             // In case user has set to close should quit app
-            else if (localAccountSensitiveSettings.quitOnClose) {
+            else if (localAccountSettings.quitOnClose) {
                 close.accepted = true
             }
             else {

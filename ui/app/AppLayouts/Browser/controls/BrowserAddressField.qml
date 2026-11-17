@@ -20,7 +20,7 @@ StatusTextField {
     property bool showFavicon
     property bool loading
 
-    readonly property url searchEngineIcon: Assets.svg(SearchEnginesConfig.getEngineIcon(localAccountSensitiveSettings.selectedBrowserSearchEngineId))
+    readonly property url searchEngineIcon: Assets.svg(SearchEnginesConfig.getEngineIcon(localAccountSettings.selectedBrowserSearchEngineId))
 
     implicitHeight: 40
 
