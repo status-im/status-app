@@ -15,6 +15,7 @@ type
     marketDataProxyUrl*: string
     marketDataProxyUser*: string
     marketDataProxyPassword*: string
+    marketDataProxyUsePuzzleAuth*: bool
     ethRpcProxyUser*: string
     ethRpcProxyPassword*: string
     ethRpcProxyUrl*: string
@@ -40,6 +41,7 @@ proc toJson*(self: WalletSecretsConfig): JsonNode =
     "marketDataProxyUrl": self.marketDataProxyUrl,
     "marketDataProxyUser": self.marketDataProxyUser,
     "marketDataProxyPassword": self.marketDataProxyPassword,
+    "marketDataProxyUsePuzzleAuth": self.marketDataProxyUsePuzzleAuth,
     "ethRpcProxyUser": self.ethRpcProxyUser,
     "ethRpcProxyPassword": self.ethRpcProxyPassword,
     "ethRpcProxyUrl": self.ethRpcProxyUrl,
