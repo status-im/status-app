@@ -249,6 +249,7 @@ Page {
 
         biometricsAvailable: root.keychain.available
         stayLoggedInAvailable: root.secureStorage ? root.secureStorage.available : false
+        stayLoggedIn: root.onboardingStore.stayLoggedIn
         isKeycardEnabled: root.isKeycardEnabled
         lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
         networkChecksEnabled: root.networkChecksEnabled
