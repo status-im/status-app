@@ -84,6 +84,7 @@ let
   MARKET_DATA_PROXY_URL_RESOLVED* = desktopConfig.marketDataProxyUrl
   MARKET_DATA_PROXY_USER_RESOLVED* = desktopConfig.marketDataProxyUser
   MARKET_DATA_PROXY_PASSWORD_RESOLVED* = desktopConfig.marketDataProxyPassword
+  MARKET_DATA_PROXY_USE_PUZZLE_AUTH_RESOLVED* = desktopConfig.marketDataProxyUsePuzzleAuth
   MARKET_DATA_FULL_REFRESH_INTERVAL* = desktopConfig.marketDataFullRefreshInterval
   MARKET_DATA_PRICE_REFRESH_INTERVAL* = desktopConfig.marketDataPricesRefreshInterval
   ETH_RPC_PROXY_USER_RESOLVED* = desktopConfig.ethRpcProxyUser
