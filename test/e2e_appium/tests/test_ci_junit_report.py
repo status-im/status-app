@@ -2,7 +2,7 @@
 
 import pytest
 
-from scripts.ci_junit_report import annotation, read_junit, render_summary
+from scripts.ci_junit_report import annotation, node_id, read_junit, render_summary
 
 pytestmark = pytest.mark.component
 
@@ -63,6 +63,32 @@ def test_summary_lists_every_failure(junit):
     assert "TimeoutError: no session" in text
     assert text.splitlines()[0].startswith("## ")
     assert "2 failed" in text.splitlines()[0]
+
+
+def test_summary_lists_every_skip_with_its_reason(junit):
+    text = render_summary(read_junit(junit), APP, commit="abc", app_from_this_commit=True, account="1", build_url="")
+    assert "### Skipped tests" in text
+    assert "| `tests/test_b.py::test_skip` | needs peer |" in text
+
+
+def test_summary_has_no_skipped_section_without_skips(tmp_path):
+    path = tmp_path / "r.xml"
+    path.write_text(PASSING)
+    text = render_summary(read_junit(path), APP, commit="abc", app_from_this_commit=True, account="1", build_url="")
+    assert "Skipped tests" not in text
+
+
+@pytest.mark.parametrize(
+    "classname, expected",
+    [
+        ("tests.test_suites.test_a.TestA", "tests/test_suites/test_a.py::TestA::test_x"),
+        ("tests.b.TestB", "tests/b.py::TestB::test_x"),
+        ("tests.test_a.TestA.TestInner", "tests/test_a.py::TestA::TestInner::test_x"),
+        ("tests.messaging.test_a", "tests/messaging/test_a.py::test_x"),
+    ],
+)
+def test_node_id_splits_the_module_from_the_first_class(classname, expected):
+    assert node_id(classname, "test_x") == expected
 
 
 def test_summary_links_the_browserstack_build(junit):

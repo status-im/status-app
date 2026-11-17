@@ -22,11 +22,18 @@ class Failure:
 
 
 @dataclass
+class Skip:
+    node_id: str
+    reason: str
+
+
+@dataclass
 class Result:
     total: int = 0
     failed: int = 0
     skipped: int = 0
     failures: list[Failure] = field(default_factory=list)
+    skips: list[Skip] = field(default_factory=list)
 
     @property
     def passed(self) -> int:
@@ -35,7 +42,8 @@ class Result:
 
 def node_id(classname: str, name: str) -> str:
     parts = classname.split(".")
-    module_end = next((i for i, part in enumerate(parts) if part.startswith("test_")), len(parts) - 1)
+    # Classes are CamelCase and modules are not: the module is the part before the first class.
+    module_end = max(next((i for i, part in enumerate(parts) if part[:1].isupper()), len(parts)) - 1, 0)
     path = "/".join(parts[: module_end + 1]) + ".py"
     return "::".join([path, *parts[module_end + 1 :], name])
 
@@ -54,8 +62,12 @@ def read_junit(path: Path) -> Result:
                 result.failed += 1
                 message = (bad.get("message") or bad.text or "").strip().splitlines()
                 result.failures.append(Failure(node_id(case.get("classname", ""), case.get("name", "")), message[0] if message else ""))
-            elif case.find("skipped") is not None:
+                continue
+            skipped = case.find("skipped")
+            if skipped is not None:
                 result.skipped += 1
+                reason = (skipped.get("message") or skipped.text or "").strip().splitlines()
+                result.skips.append(Skip(node_id(case.get("classname", ""), case.get("name", "")), reason[0] if reason else ""))
     return result
 
 
@@ -109,6 +121,10 @@ def render_summary(
     if result.failures:
         lines += ["", "### Failed tests", "", "| Test | Message |", "|---|---|"]
         lines += [f"| `{_cell(f.node_id)}` | {_cell(f.message)} |" for f in result.failures]
+    if result.skips:
+        # A skip is silent in the verdict, so a reader must see what did not run and why.
+        lines += ["", "### Skipped tests", "", "| Test | Reason |", "|---|---|"]
+        lines += [f"| `{_cell(s.node_id)}` | {_cell(s.reason)} |" for s in result.skips]
     return "\n".join(lines) + "\n"
 
 
