@@ -257,6 +257,71 @@ suite "LocalAccountSettings display-name file merge":
     check hasIniKey(settingsDir / aliceUid, LS_KEY_DISPLAY_NAME_FILE_MERGED)
     check fileExists(dir / "outside")
 
+suite "LocalAccountSettings profile removal":
+  var dir: string
+
+  setup:
+    dir = createTempDir("local_account_settings_remove_", "")
+
+  teardown:
+    removeDir(dir)
+
+  test "removes the bound profile's file and serves defaults":
+    let s = newLocalAccountSettings(dir)
+    s.bindAccount(aliceUid)
+    s.setExpandUsersList(false)
+    s.removeAccount(aliceUid, "Alice", @[])
+    check not fileExists(dir / aliceUid)
+    check s.getExpandUsersList()
+
+  test "removes another profile's file and keeps the bound one":
+    writeIni(dir / bobUid, {LSS_KEY_EXPAND_USERS_LIST: newQVariant(false)})
+    let s = newLocalAccountSettings(dir)
+    s.bindAccount(aliceUid)
+    s.setExpandUsersList(false)
+    s.removeAccount(bobUid, "Bob", @[(aliceUid, "Alice")])
+    check not fileExists(dir / bobUid)
+    check not s.getExpandUsersList()
+
+  test "a profile created again after removal starts with defaults":
+    let s = newLocalAccountSettings(dir)
+    s.bindAccount(aliceUid)
+    s.markProfileFresh()
+    s.removeAccount(aliceUid, "", @[])
+    s.bindAccount(aliceUid)
+    check not s.isFreshProfile()
+
+  test "removes the legacy display-name file unless another profile still needs it":
+    writeIni(dir / "Sam", {LS_KEY_STORE_TO_KEYCHAIN: newQVariant(LS_VALUE_STORE)})
+    writeIni(dir / "Alice", {LS_KEY_STORE_TO_KEYCHAIN: newQVariant(LS_VALUE_STORE)})
+    let s = newLocalAccountSettings(dir)
+    s.removeAccount(aliceUid, "Sam", @[(bobUid, "Sam")])
+    check fileExists(dir / "Sam")
+    s.removeAccount(aliceUid, "Alice", @[(bobUid, "Sam")])
+    check not fileExists(dir / "Alice")
+
+  test "removes a shared legacy display-name file the other profile merged":
+    writeIni(dir / "Sam", {LS_KEY_STORE_TO_KEYCHAIN: newQVariant(LS_VALUE_STORE)})
+    writeIni(dir / bobUid, {LS_KEY_DISPLAY_NAME_FILE_MERGED: newQVariant(true)})
+    let s = newLocalAccountSettings(dir)
+    s.removeAccount(aliceUid, "Sam", @[(bobUid, "Sam")])
+    check not fileExists(dir / "Sam")
+
+  test "never removes the app settings file":
+    writeIni(dir / APP_SETTINGS_FILE_NAME, {LS_KEY_FRESH_PROFILE: newQVariant(true)})
+    let s = newLocalAccountSettings(dir)
+    s.removeAccount(aliceUid, APP_SETTINGS_FILE_NAME, @[])
+    check fileExists(dir / APP_SETTINGS_FILE_NAME)
+
+  test "never removes a file outside the settings directory":
+    let outside = dir / "outside"
+    writeIni(outside, {LS_KEY_FRESH_PROFILE: newQVariant(true)})
+    let settingsDir = dir / "qt"
+    createDir(settingsDir)
+    let s = newLocalAccountSettings(settingsDir)
+    s.removeAccount(aliceUid, "../outside", @[])
+    check fileExists(outside)
+
 suite "LocalAccountSettings public-key file merge":
   var dir: string
 
