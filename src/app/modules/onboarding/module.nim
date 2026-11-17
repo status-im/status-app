@@ -496,6 +496,8 @@ method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   if err.len > 0:
     return err
 
+  if self.listedKeyUids.isSome:
+    self.listedKeyUids.get.excl(keyUid)
   self.view.removeLoginAccountItem(keyUid)
   return ""
 
