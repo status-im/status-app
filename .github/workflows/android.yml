@@ -2,6 +2,10 @@ name: Android
 
 on:
   pull_request:
+  # Runs on master save the ccache that pull requests restore.
+  push:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
@@ -9,8 +13,8 @@ permissions:
   packages: read
 
 concurrency:
-  group: android-${{ github.ref }}
-  cancel-in-progress: true
+  group: android-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   IN_IMAGE: docker exec build
@@ -90,8 +94,9 @@ jobs:
         run: $IN_IMAGE ccache --show-stats --verbose
 
       # A failed build keeps what it compiled; a cancelled one may still be writing.
+      # A cache saved by a pull request is not visible to other pull requests, so they only restore.
       - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        if: ${{ !cancelled() && steps.ccache.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && github.event_name != 'pull_request' && steps.ccache.outputs.cache-hit != 'true' }}
         with:
           path: .ccache
           key: ccache-android-${{ github.sha }}
