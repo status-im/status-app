@@ -18,30 +18,50 @@ constexpr auto webpMime = "image/webp";
 }
 
 UrlUtils::UrlUtils(QObject *parent): QObject(parent) {
-    const auto webpSupported = QImageReader::supportedMimeTypes().contains(webpMime);
-    if (webpSupported)
-        m_validImageMimeTypes.append(webpMime);
+    QStringList mimeTypes{QStringLiteral("image/jpeg"), QStringLiteral("image/png"), QStringLiteral("image/gif")};
+    if (QImageReader::supportedMimeTypes().contains(webpMime))
+        mimeTypes.append(webpMime);
+
+    m_imageTypes = makeImageTypes(mimeTypes);
+    m_chatImageTypes = makeImageTypes(mimeTypes + QStringList{QStringLiteral("image/svg+xml")});
+}
+
+UrlUtils::ImageTypes UrlUtils::makeImageTypes(const QStringList& mimeTypes) const
+{
+    ImageTypes types;
+    types.mimeTypes = mimeTypes;
 
     QStringList imgFilters;
-    for (const auto& mime: std::as_const(m_validImageMimeTypes)) {
+    for (const auto& mime: mimeTypes) {
         const auto mimeData = m_mimeDb.mimeTypeForName(mime);
         imgFilters.append(mimeData.globPatterns());
-        m_imgExtensions.append(mimeData.preferredSuffix());
-        m_allImgExtensions.append(mimeData.suffixes());
+        types.preferredSuffixes.append(mimeData.preferredSuffix());
+        types.allSuffixes.append(mimeData.suffixes());
     }
 
-    m_imgFilters = imgFilters.join(' ');
-    m_imgFilters.append(QStringLiteral(" "));
-    m_imgFilters.append(m_imgFilters.toUpper()); // include the uppercase extensions too for case sensitive file systems
+    types.nameFilters = imgFilters.join(' ');
+    types.nameFilters.append(QStringLiteral(" "));
+    types.nameFilters.append(types.nameFilters.toUpper()); // include the uppercase extensions too for case sensitive file systems
+    return types;
 }
 
 bool UrlUtils::isValidImageUrl(const QUrl &url) const
+{
+    return isValidImageUrl(url, m_imageTypes);
+}
+
+bool UrlUtils::isValidChatImageUrl(const QUrl &url) const
+{
+    return isValidImageUrl(url, m_chatImageTypes);
+}
+
+bool UrlUtils::isValidImageUrl(const QUrl &url, const ImageTypes& types) const
 {
     const auto urlEndsWithSupportedExtension = [&](const QString& url) {
         const auto suffix = url.mid(url.lastIndexOf('.')+1);
         if (suffix.isEmpty())
             return false;
-        return m_allImgExtensions.contains(suffix, Qt::CaseInsensitive);
+        return types.allSuffixes.contains(suffix, Qt::CaseInsensitive);
     };
 
     // don't convert "content:/" like URLs to an empty path
@@ -52,7 +72,7 @@ bool UrlUtils::isValidImageUrl(const QUrl &url) const
 
     const auto mimeType = m_mimeDb.mimeTypeForFile(filePath, QMimeDatabase::MatchContent).name();
 
-    return m_validImageMimeTypes.contains(mimeType);
+    return types.mimeTypes.contains(mimeType);
 }
 
 qint64 UrlUtils::getFileSize(const QUrl& url)

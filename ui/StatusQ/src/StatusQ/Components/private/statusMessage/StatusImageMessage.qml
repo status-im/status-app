@@ -21,6 +21,9 @@ Item {
 
     property bool isAppWindowActive: false
     property url source: ""
+    // The image's format ("gif", "webp", "jpeg", "png") when known: image message URLs
+    // carry no extension, so this is what tells an animation apart.
+    property string format: ""
     property bool allCornersRounded: false
     property bool isLeftCorner: true
     property int imageWidth: 350
@@ -51,7 +54,8 @@ Item {
 
     QtObject {
         id: _internal
-        readonly property bool isAnimated: !!source && source.toString().endsWith('.gif')
+        readonly property bool isAnimated: !!source && (format === "gif" || format === "webp"
+                                                       || source.toString().endsWith('.gif'))
         readonly property int imageStatus: imageContainer.imageAlias ? imageContainer.imageAlias.status : Image.Loading
         // A gif's decode width, in pixels: in 128px steps so a layout-driven
         // imageWidth (albums on narrow screens, rotation) doesn't re-decode

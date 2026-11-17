@@ -31,6 +31,7 @@ type
     OutgoingStatus
     UnparsedText
     MessageImage
+    MessageImageFormat
     Timestamp
     ContentType
     MessageType
@@ -159,6 +160,7 @@ QtObject:
       ModelRole.Mentioned.int:"mentioned",
       ModelRole.UnparsedText.int:"unparsedText",
       ModelRole.MessageImage.int:"messageImage",
+      ModelRole.MessageImageFormat.int:"messageImageFormat",
       ModelRole.Timestamp.int:"timestamp",
       ModelRole.ContentType.int:"contentType",
       ModelRole.MessageType.int:"messageType",
@@ -377,6 +379,8 @@ QtObject:
       result = newQVariant(item.unparsedText)
     of ModelRole.MessageImage:
       result = newQVariant(item.messageImage)
+    of ModelRole.MessageImageFormat:
+      result = newQVariant(item.messageImageFormat)
     of ModelRole.Timestamp:
       result = newQVariant(item.timestamp)
     of ModelRole.ContentType:
@@ -1161,3 +1165,4 @@ QtObject:
       senderColorId = colorIdFor(message.`from`, sender),
     )
     result.mentionedNames = message.mentionedNames
+    result.messageImageFormat = message.imageFormat

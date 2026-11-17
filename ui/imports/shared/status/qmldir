@@ -6,6 +6,7 @@ SkinToneFilteredEmojiModel 1.0 SkinToneFilteredEmojiModel.qml
 StatusChatCommandPopup 1.0 StatusChatCommandPopup.qml
 StatusChatImageExtensionValidator 1.0 StatusChatImageExtensionValidator.qml
 StatusChatImageLoader 1.0 StatusChatImageLoader.qml
+StatusChatImagePreparationValidator 1.0 StatusChatImagePreparationValidator.qml
 StatusChatImageQtyValidator 1.0 StatusChatImageQtyValidator.qml
 StatusChatImageSizeValidator 1.0 StatusChatImageSizeValidator.qml
 StatusChatImageValidator 1.0 StatusChatImageValidator.qml

@@ -49,6 +49,7 @@ type
     unparsedText: string
     mentionedNames: Table[string, string]
     messageImage: string
+    messageImageFormat: string
     sticker: string
     stickerPack: int
     gapFrom: int64
@@ -481,6 +482,12 @@ proc `mentionedNames=`*(self: Item, value: Table[string, string]) {.inline.} =
 
 proc messageImage*(self: Item): string {.inline.} =
   self.messageImage
+
+proc messageImageFormat*(self: Item): string {.inline.} =
+  self.messageImageFormat
+
+proc `messageImageFormat=`*(self: Item, value: string) {.inline.} =
+  self.messageImageFormat = value
 
 proc albumId*(self: Item): string {.inline.} =
   self.albumId

@@ -80,6 +80,7 @@ Loader {
     // user models cannot; an input to mentionsMap, which the owner builds.
     property string mentionedNames: ""
     property string messageImage: ""
+    property string messageImageFormat: "" // "gif", "webp", "jpeg", "png" when known
     property double messageTimestamp: 0 // We use double, because QML's int is too small
     property string messageOutgoingStatus: ""
     property string resendError: ""
@@ -1224,6 +1225,7 @@ Loader {
                         }
                         return "";
                     }
+                    messageContentFormat: delegate.contentType === StatusMessage.ContentType.Image ? root.messageImageFormat : ""
                     album: root.album
                     albumCount: root.albumCount
 

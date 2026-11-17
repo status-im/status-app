@@ -6,14 +6,18 @@
 class UrlUtils : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString validImageNameFilters READ validImageNameFilters FINAL CONSTANT) // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif *.svg"
-    Q_PROPERTY(QStringList validPreferredImageExtensions READ validPreferredImageExtensions FINAL CONSTANT) // ["jpg", "png", "webp", "gif", "svg"]
-    Q_PROPERTY(QStringList allValidImageExtensions READ allValidImageExtensions FINAL CONSTANT) // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif", "svg"]
+    Q_PROPERTY(QString validImageNameFilters READ validImageNameFilters FINAL CONSTANT) // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif"
+    Q_PROPERTY(QStringList validPreferredImageExtensions READ validPreferredImageExtensions FINAL CONSTANT) // ["jpg", "png", "webp", "gif"]
+    Q_PROPERTY(QStringList allValidImageExtensions READ allValidImageExtensions FINAL CONSTANT) // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif"]
+    // Chat Attachments additionally accept SVG, which is rasterised before sending (AttachmentPreparer)
+    Q_PROPERTY(QString validChatImageNameFilters READ validChatImageNameFilters FINAL CONSTANT)
+    Q_PROPERTY(QStringList validChatPreferredImageExtensions READ validChatPreferredImageExtensions FINAL CONSTANT)
 
 public:
     explicit UrlUtils(QObject* parent = nullptr);
 
     Q_INVOKABLE bool isValidImageUrl(const QUrl &url) const;
+    Q_INVOKABLE bool isValidChatImageUrl(const QUrl &url) const;
     Q_INVOKABLE static qint64 getFileSize(const QUrl &url);
 
     Q_INVOKABLE QString convertUrlToLocalPath(const QString& url) const;
@@ -33,22 +37,26 @@ public:
 private:
     QMimeDatabase m_mimeDb;
 
-    QStringList m_validImageMimeTypes{QStringLiteral("image/jpeg"),
-                                      QStringLiteral("image/png"),
-                                      QStringLiteral("image/gif"),
-                                      QStringLiteral("image/svg")};
+    struct ImageTypes
+    {
+        QStringList mimeTypes;
+        QString nameFilters;           // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif" (+ uppercase)
+        QStringList preferredSuffixes; // ["jpg", "png", "webp", "gif"]
+        QStringList allSuffixes;       // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif"]
+    };
+    ImageTypes makeImageTypes(const QStringList& mimeTypes) const;
+    bool isValidImageUrl(const QUrl& url, const ImageTypes& types) const;
 
-    // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif *.svg"
-    QString m_imgFilters;
-    QString validImageNameFilters() const { return m_imgFilters; }
+    // Images status-go can decode (webp only when Qt can display it)
+    ImageTypes m_imageTypes;
+    // + SVG, which only chat Attachments accept (rasterised by AttachmentPreparer)
+    ImageTypes m_chatImageTypes;
 
-    // ["jpg", "png", "webp", "gif", "svg"]
-    QStringList m_imgExtensions;
-    QStringList validPreferredImageExtensions() const { return m_imgExtensions; }
-
-    // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif", "svg"]
-    QStringList m_allImgExtensions;
-    QStringList allValidImageExtensions() const { return m_allImgExtensions; }
+    QString validImageNameFilters() const { return m_imageTypes.nameFilters; }
+    QStringList validPreferredImageExtensions() const { return m_imageTypes.preferredSuffixes; }
+    QStringList allValidImageExtensions() const { return m_imageTypes.allSuffixes; }
+    QString validChatImageNameFilters() const { return m_chatImageTypes.nameFilters; }
+    QStringList validChatPreferredImageExtensions() const { return m_chatImageTypes.preferredSuffixes; }
 
 #ifdef Q_OS_ANDROID
     QString resolveAndroidContentUrl(const QString& urlPath) const;

@@ -73,7 +73,9 @@ Loader {
 
         // imagePaths is the attachment list as it left the composer: cached
         // copies detached there are released right away since no send will
-        // ever consume them.
+        // ever consume them. That includes copies the composer replaced by
+        // their prepared file (AttachmentPreparer), which lives outside the
+        // share-intake cache and is never released by it.
         function complete(destinations, text: string, imagePaths) {
             const cachedPaths = sharedImagePaths
             const removedCached = cachedPaths.filter(path => !imagePaths.includes(path))

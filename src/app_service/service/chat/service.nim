@@ -530,6 +530,8 @@ QtObject:
 
 
   proc onAsyncSendImagesDone*(self: Service, rpcResponseJson: string) {.slot.} =
+    # perf marker, after the success/failure events are handled.
+    defer: debug "perf: send-images end"
     var rpcResponseObj: JsonNode = newJObject()
     try:
       rpcResponseObj = rpcResponseJson.parseJson
@@ -599,6 +601,8 @@ QtObject:
       self.finishSending(chatId, token)
 
   proc onAsyncSendMessageDone*(self: Service, rpcResponseJson: string) {.slot.} =
+    # perf marker, after the success/failure events are handled.
+    defer: debug "perf: send-message end"
     var rpcResponseObj: JsonNode = newJObject()
     try:
       rpcResponseObj = rpcResponseJson.parseJson

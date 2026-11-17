@@ -14,6 +14,8 @@ QtObject {
     // pubKey -> display name, used to resolve mentions in `unparsedText`.
     property var mentionsMap: ({})
     property string messageContent: ""
+    // Format of an image messageContent ("gif", "webp", "jpeg", "png"), when known
+    property string messageContentFormat: ""
     property string messageOriginInfo: ""
     property bool messageDeleted: false
     property var album: []

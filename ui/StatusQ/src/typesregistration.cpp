@@ -1,3 +1,4 @@
+#include "StatusQ/attachmentpreparer.h"
 #include "StatusQ/audioutils.h"
 #include "StatusQ/skeletontileitem.h"
 #include "StatusQ/rippleitem.h"
@@ -140,6 +141,8 @@ void registerStatusQTypes() {
                                                 [](QQmlEngine *engine, QJSEngine *scriptEngine) {
         return ImageEncoderUtils::qmlInstance(engine, scriptEngine);
     });
+    qmlRegisterSingletonType<AttachmentPreparer>("StatusQ", 0, 1, "AttachmentPreparer",
+                                                 &AttachmentPreparer::qmlInstance);
     qmlRegisterSingletonType<UrlUtils>("StatusQ", 0, 1, "UrlUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new UrlUtils(engine);
     });

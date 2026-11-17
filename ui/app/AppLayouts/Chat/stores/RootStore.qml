@@ -309,18 +309,28 @@ QtObject {
         const textMsg = cleanMessageText(text)
 
         if (fileUrlsAndSources.length > 0) {
-            let convertedImagePaths = fileUrlsAndSources.map((file) => {
-                if (isBase64DataUrl(file)) {
-                    // No need to convert base64 data URLs, they are already in the correct format
-                    return file
-                } else {
-                    return UrlUtils.convertUrlToLocalPath(file)
+            const sources = fileUrlsAndSources.map(file => file.toString())
+            const inputAreaModule = chatContentModule.inputAreaModule
+            const waitStart = Date.now()
+            // Attachments are prepared in the background since they were attached; usually
+            // that's done by now, otherwise wait for it (the input is cleared meanwhile).
+            AttachmentPreparer.whenPrepared(sources, () => {
+                const waited = Date.now() - waitStart
+                if (waited > 0)
+                    console.debug("perf: waited", waited, "ms for attachments to be prepared")
+
+                const sendable = sources.filter(file => !AttachmentPreparer.isRejected(file))
+                if (sendable.length === 0) {
+                    if (textMsg.trim().length > 0)
+                        inputAreaModule.sendMessage(textMsg, replyMessageId, Constants.messageContentType.messageType,
+                                                    startNewThread, newThreadName)
+                    return
                 }
+                const imagePaths = sendable.map(file => AttachmentPreparer.resolve(file,
+                    // No need to convert base64 data URLs, they are already in the correct format
+                    isBase64DataUrl(file) ? file : UrlUtils.convertUrlToLocalPath(file)))
+                inputAreaModule.sendImages(JSON.stringify(imagePaths), textMsg.trim(), replyMessageId)
             })
-            chatContentModule.inputAreaModule.sendImages(
-                        JSON.stringify(convertedImagePaths),
-                        textMsg.trim(),
-                        replyMessageId)
             result = true
         } else {
             result = chatContentModule.inputAreaModule.sendMessage(
