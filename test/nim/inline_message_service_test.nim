@@ -1,7 +1,8 @@
 import std/[importutils, json, tables, sets, unittest, options, monotimes]
 import uuids
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
-from seaqt/qtimer import start, isActive
+from seaqt/qcoreapplication import QCoreApplication, create, processEvents, sendEvent
+from seaqt/qtimer import start, isActive, timerId
+from seaqt/qtimerevent import QTimerEvent, create
 import std/[os, times]
 
 discard QCoreApplication.create()
@@ -25,6 +26,7 @@ suite "shared inline message reads":
   test "repeated consumers reuse the existing request and the completed value":
     let service = messages.newService(createEventEmitter(), nil, nil, nil, nil, nil, nil)
     let request = service.reserve("chat", "message")
+    check not service.inlineMessageUnavailable("chat", "message")
     for i in 0 ..< 100:
       check service.inlineMessageThreadId("chat", "message") == ""
     check service.inlineMessageRequests.len == 1
@@ -51,6 +53,7 @@ suite "shared inline message reads":
         if mismatch: "" else: "temporary failure")
       check service.inlineMessageRequests.len == 0
       check service.inlineMessageThreads["chat:message"].retryAt.isSome
+      check service.inlineMessageUnavailable("chat", "message")
       # A nil threadpool would expose an accidental immediate retry.
       check service.inlineMessageThreadId("chat", "message") == ""
 
@@ -127,9 +130,114 @@ suite "shared inline message reads":
   test "completed results remain bounded while history is traversed":
     let service = messages.newService(createEventEmitter(), nil, nil, nil, nil, nil, nil)
     for i in 0 ..< InlineLinkCacheLimit:
-      service.inlineMessageThreads["chat:" & $i] = ("chat", "thread", none(MonoTime))
+      service.inlineMessageThreads["chat:" & $i] = ("chat", "thread", none(MonoTime), false)
     let request = service.reserve("chat", "new-message")
     service.respond(request, "chat", "new-message", "new-thread")
     check service.inlineMessageThreads.len == InlineLinkCacheLimit
     check not service.inlineMessageThreads.hasKey("chat:0")
     check service.inlineMessageThreadId("chat", "new-message") == "new-thread"
+
+  test "deleted messages are unavailable and late reads cannot restore them":
+    let events = createEventEmitter()
+    let service = messages.newService(events, nil, nil, nil, nil, nil, nil)
+    service.init()
+    let request = service.reserve("chat", "message")
+    events.emit(SIGNAL_MESSAGE_REMOVED, MessageRemovedArgs(chatId: "chat", messageId: "message"))
+    check service.inlineMessageUnavailable("chat", "message")
+    service.respond(request, "chat", "message", "thread")
+    check service.inlineMessageUnavailable("chat", "message")
+    check not service.inlineMessageThreads["chat:message"].retryAt.isSome
+
+  test "deletion flags and recovered reads update availability":
+    let events = createEventEmitter()
+    let service = messages.newService(events, nil, nil, nil, nil, nil, nil)
+    service.init()
+    let request = service.reserve("chat", "message")
+    service.onAsyncGetMessageById($(%* {
+      "requestId": $request, "messageId": "message", "error": "",
+      "message": {"id": "message", "localChatId": "chat", "deleted": true}
+    }))
+    check service.inlineMessageUnavailable("chat", "message")
+    events.emit(SIGNAL_NEW_MESSAGE_RECEIVED, MessagesArgs(chatId: "chat",
+      messages: @[MessageDto(id: "message", localChatId: "chat", deletedForMe: true)]))
+    check service.inlineMessageUnavailable("chat", "message")
+    events.emit(SIGNAL_NEW_MESSAGE_RECEIVED, MessagesArgs(chatId: "chat",
+      messages: @[MessageDto(id: "message", localChatId: "chat")]))
+    check not service.inlineMessageUnavailable("chat", "message")
+
+  test "bulk deletion updates existing inline consumers":
+    let events = createEventEmitter()
+    let service = messages.newService(events, nil, nil, nil, nil, nil, nil)
+    service.init()
+    let request = service.reserve("chat", "message")
+    service.respond(request, "chat", "message", "")
+    check not service.inlineMessageUnavailable("chat", "message")
+    events.emit(SIGNAL_MESSAGES_DELETED, MessagesDeletedArgs(deletedMessages: {"chat": @["message"]}.toTable))
+    check service.inlineMessageUnavailable("chat", "message")
+
+  test "missing threads are unavailable only after summaries settle":
+    let service = messages.newService(createEventEmitter(), nil, nil, nil, nil, nil, nil)
+    check not service.inlineThreadUnavailable("chat", "missing")
+    service.chatThreadSummariesLoadingChats.incl("chat")
+    check not service.inlineThreadUnavailable("chat", "missing")
+    service.chatThreadSummariesLoadingChats.excl("chat")
+    service.chatThreadSummariesLoadedChats.incl("chat")
+    check service.inlineThreadUnavailable("chat", "missing")
+    service.chatThreadsByParentIdByChat["chat"] = {
+      "parent": ThreadDto(chatId: "chat", threadId: "found", parentMessageId: "parent")
+    }.toTable
+    check not service.inlineThreadUnavailable("chat", "found")
+
+  test "failed summaries report unavailability without hiding known threads":
+    let service = messages.newService(createEventEmitter(), nil, nil, nil, nil, nil, nil)
+    defer: service.delete()
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat"], "includeSummaries": true, "error": "read failed"
+    }))
+    check service.inlineThreadUnavailable("chat", "missing")
+    service.chatThreadsByParentIdByChat["chat"] = {
+      "parent": ThreadDto(chatId: "chat", threadId: "found", parentMessageId: "parent")
+    }.toTable
+    check not service.inlineThreadUnavailable("chat", "found")
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat"], "includeSummaries": true,
+      "threads": [{"chatId": "chat", "threadId": "missing", "parentMessageId": "other-parent"}]
+    }))
+    check not service.inlineThreadUnavailable("chat", "missing")
+    check "chat:" notin service.inlineMessageThreads
+
+  test "failed thread summaries reuse the shared retry timer and wake consumers":
+    let events = createEventEmitter()
+    let service = messages.newService(events, nil, nil, nil, nil, nil, nil)
+    defer: service.delete()
+    let read = service.reserve("chat", "message")
+    service.respond(read, "chat", "message", "", "read failed")
+    let timer = service.inlineMessageRetryTimer.h
+    service.chatThreadSummariesLoadedChats.incl("chat")
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat"], "includeSummaries": true, "error": "read failed"
+    }))
+    check service.inlineMessageRetryTimer.h == timer
+    check service.inlineThreadUnavailable("chat", "thread")
+    # A nil threadpool exposes retries that bypass the backoff.
+    service.asyncLoadChatThreadSummaries("chat", notifyIfCached = false)
+    check "chat" notin service.chatThreadSummariesLoadingChats
+    var notifications = 0
+    events.on(SIGNAL_INLINE_MESSAGE_DATA_CHANGED) do(e: Args):
+      if chats.ChatArgs(e).chatId == "chat": inc notifications
+    let expired = getMonoTime() - initDuration(seconds = 1)
+    service.inlineMessageThreads["chat:message"].retryAt = some(expired)
+    service.inlineMessageThreads["chat:"].retryAt = some(expired)
+    let timeout = QTimerEvent.create(service.inlineMessageRetryTimer.timerId())
+    discard QCoreApplication.sendEvent(service.inlineMessageRetryTimer, timeout)
+    check notifications == 1
+    check "chat:" notin service.inlineMessageThreads
+    check "chat" notin service.chatThreadSummariesLoadedChats
+    check not service.inlineThreadUnavailable("chat", "thread")
+    check not service.inlineMessageRetryTimer.isActive()
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat"], "includeSummaries": true,
+      "threads": [{"chatId": "chat", "threadId": "thread", "parentMessageId": "parent"}]
+    }))
+    check service.getThreadById("chat", "thread").threadId == "thread"
+    check not service.inlineThreadUnavailable("chat", "thread")

@@ -41,6 +41,8 @@ Item {
         function test_variations_data() {
             return [
                 {tag: "profile", data: {title: "JohnDoe.ETH"}, label: "JohnDoe.ETH", icons: 1},
+                {tag: "unavailable", data: {title: "Content unavailable", emoji: "⚠️"}, label: "Content unavailable", icons: 1},
+                {tag: "no-access", data: {title: "Status", emoji: "🔒", path: [{text: "# no access"}]}, label: "Status › # no access", icons: 1},
                 {tag: "community", data: {title: "Status App"}, label: "Status App", icons: 1},
                 {tag: "channel", data: {title: "Status App", path: [{text: "# feedback-desktop"}]}, label: "Status App › # feedback-desktop", icons: 1},
                 {tag: "channel-message", data: {title: "Status App", path: [{text: "# feedback-desktop"}], trailingIcons: ["chat"]}, label: "Status App › # feedback-desktop › ", icons: 2},
