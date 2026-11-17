@@ -5671,6 +5671,29 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
 </context>
 <context>
+    <name>DeepLinkErrorDialog</name>
+    <message>
+        <source>No access</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Content unavailable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Got it</source>
+        <translation type="unfinished">확인했습니다</translation>
+    </message>
+    <message>
+        <source>You don&apos;t have permission to open this link. Get access to view it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The content couldn&apos;t be retrieved or may have been deleted.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DefaultDAppExplorerView</name>
     <message>
         <source>None</source>
@@ -9212,6 +9235,14 @@ app: %2</source>
     </message>
     <message>
         <source>No access</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source># no access</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Content unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

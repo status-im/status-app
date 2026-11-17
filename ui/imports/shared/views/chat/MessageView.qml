@@ -35,6 +35,11 @@ import AppLayouts.Profile.helpers
 Loader {
     id: root
 
+    Component {
+        id: deepLinkErrorDialogComponent
+        DeepLinkErrorDialog {}
+    }
+
     // The message surface owns these instances; pooled rows borrow them.
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
@@ -1144,8 +1149,16 @@ Loader {
                         return
                     }
 
-                    if (inlineLinkResolver.links[link]) {
-                        Global.activateDeepLink(Utils.canonicalStatusUrl(link))
+                    const inlineLink = inlineLinkResolver.refreshLink(link)
+                    if (inlineLink) {
+                        if (inlineLink.error) {
+                            const dialog = deepLinkErrorDialogComponent.createObject(root, {
+                                noAccess: inlineLink.error === "noAccess", destroyOnClose: true
+                            })
+                            dialog.open()
+                        } else {
+                            Global.activateDeepLink(Utils.canonicalStatusUrl(link))
+                        }
                         return
                     }
 
