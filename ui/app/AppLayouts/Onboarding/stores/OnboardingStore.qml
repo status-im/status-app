@@ -37,6 +37,11 @@ QtObject {
         localAccountSettings.stayLoggedIn = value
     }
 
+    // Binds localAccountSettings before login; "" for a profile being created
+    function selectLoginAccount(keyUid) {
+        d.onboardingModuleInst.setSelectedLoginAccount(keyUid)
+    }
+
     function setAutoLoginSuppressed(keyUid, value) {
         return localAppSettings.setAutoLoginSuppressed(keyUid, value)
     }

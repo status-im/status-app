@@ -206,6 +206,10 @@ QtObject:
   proc loginRequested(self: View, keyUid: string, loginFlow: int, dataJson: string) {.slot.} =
     self.delegate.loginRequested(keyUid, loginFlow, dataJson)
 
+  # Empty while a new profile is being onboarded.
+  proc setSelectedLoginAccount(self: View, keyUid: string) {.slot.} =
+    self.delegate.setSelectedLoginAccount(keyUid)
+
   proc prepareKeycardModule(self: View) {.slot.} =
     self.delegate.prepareKeycardModule()
 

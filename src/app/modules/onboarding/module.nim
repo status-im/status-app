@@ -341,6 +341,9 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
     error "Error finishing Onboarding Flow", msg = e.msg
     return e.msg
 
+method setSelectedLoginAccount*[T](self: Module[T], keyUid: string) =
+  self.controller.selectLoginAccount(keyUid)
+
 method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJson: string) =
   try:
     self.tmpKeyUid = keyUid
@@ -463,6 +466,8 @@ method onKeycardAccountConverted*[T](self: Module[T], success: bool) =
   self.view.setConvertKeycardAccountRestartRequired(restartRequired)
   self.view.setConvertKeycardAccountState(state)
   discard self.generalService.logout()
+  # Logged out: the login screen binds the selected profile's settings again.
+  self.accountsService.clear()
   if success and not restartRequired:
     self.postLoginTasks = newSeq[PostOnboardingTask]()
     self.accountsService.clearOpenedAccountsCache()

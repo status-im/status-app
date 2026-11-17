@@ -148,6 +148,16 @@ QtObject:
     if self.loggedInAccount.isValid():
       self.bindLocalAccountSettings(account.keyUid, newOnDevice)
 
+  proc selectLoginAccount*(self: Service, keyUid: string) =
+    ## The login screen selection; empty while a new profile is being onboarded.
+    # Once logged in, a login screen still alive during the transition must not rebind.
+    if self.loggedInAccount.isValid():
+      return
+    if keyUid.len == 0:
+      singletonInstance.localAccountSettings.detach()
+    else:
+      self.bindLocalAccountSettings(keyUid, newOnDevice = false)
+
   proc isAppRestartRequiredAfterProfileConversion*(self: Service): bool =
     return DB_BLOCKED_DUE_TO_PROFILE_MIGRATION
 
