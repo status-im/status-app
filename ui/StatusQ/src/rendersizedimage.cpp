@@ -96,7 +96,7 @@ public:
         providerOptions.setPreserveAspectRatioFit(false);
         providerOptions.setPreserveAspectRatioCrop(cover);
 
-        decodeBox = decodeBoxFor(sourcesize, targetDevicePixelRatio);
+        decodeBox = decodeBoxFor(sourcesize, decodeRatioFor(targetDevicePixelRatio));
         devicePixelRatio = requestRatio();
         renderSized = true;
         return true;
@@ -111,6 +111,12 @@ public:
         while (boundary < devicePx && boundary < RenderSizedImage::maxDecodeSide)
             boundary += qMax(16, qCeil(boundary / 8.0));
         return qMin(boundary, int(RenderSizedImage::maxDecodeSide));
+    }
+
+    qreal decodeRatioFor(qreal targetDevicePixelRatio) const
+    {
+        return maxDecodeRatio > 0 ? qMin(targetDevicePixelRatio, maxDecodeRatio)
+                                  : targetDevicePixelRatio;
     }
 
     static QSize decodeBoxFor(const QSize& logical, qreal targetDevicePixelRatio)
@@ -231,6 +237,7 @@ public:
     bool nativeKnown = false;
     bool explicitlySized = false;
     bool vector = false;
+    qreal maxDecodeRatio = 0;
     QSize decodeBox;
 };
 
@@ -252,7 +259,8 @@ void RenderSizedImage::setSourceSize(const QSize& size)
     Q_D(RenderSizedImage);
     const bool sameDecode = d->renderSized && isComponentComplete() && d->status == Ready
             && size.isValid() && size != d->sourcesize
-            && RenderSizedImagePrivate::decodeBoxFor(size, d->effectiveDevicePixelRatio())
+            && RenderSizedImagePrivate::decodeBoxFor(
+                       size, d->decodeRatioFor(d->effectiveDevicePixelRatio()))
                == d->decodeBox;
     if (!sameDecode) {
         QQuickImage::setSourceSize(size);
@@ -284,6 +292,28 @@ bool RenderSizedImage::isVector() const
 {
     Q_D(const RenderSizedImage);
     return d->vector;
+}
+
+qreal RenderSizedImage::maxDecodeDevicePixelRatio() const
+{
+    Q_D(const RenderSizedImage);
+    return d->maxDecodeRatio;
+}
+
+void RenderSizedImage::setMaxDecodeDevicePixelRatio(qreal ratio)
+{
+    Q_D(RenderSizedImage);
+    if (ratio == d->maxDecodeRatio)
+        return;
+    d->maxDecodeRatio = ratio;
+    emit maxDecodeDevicePixelRatioChanged();
+
+    const bool decodeChanges = d->renderSized
+            && RenderSizedImagePrivate::decodeBoxFor(
+                       d->sourcesize, d->decodeRatioFor(d->effectiveDevicePixelRatio()))
+               != d->decodeBox;
+    if (decodeChanges && isComponentComplete())
+        load();
 }
 
 void RenderSizedImage::load()
