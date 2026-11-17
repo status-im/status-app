@@ -95,10 +95,21 @@ the tested commit.
 ```yaml
 e2e:
   needs: apk
+  permissions:
+    contents: read
+    packages: read
   uses: ./.github/workflows/e2e-android.yml
   with: { apk-artifact: <artifact with one APK>, account: '1' }
   secrets: inherit
 ```
+
+The called jobs need `contents: read` and `packages: read`. A called workflow
+cannot get more than its caller has, so a caller with narrower permissions
+fails at startup.
+
+On a pull request, build the APK from the PR head
+(`github.event.pull_request.head.sha`). The tests are checked out from that
+commit, not from the merge commit.
 
 The APK must be built with `STATUSQ_TESTMODE=true`, or the e2e hooks are
 compiled out. Release APKs cannot run the suite.
@@ -124,6 +135,9 @@ jobs:
   e2e:
     needs: apk
     if: contains(github.event.pull_request.labels.*.name, 'e2e-android')
+    permissions:
+      contents: read
+      packages: read
     uses: ./.github/workflows/e2e-android.yml
     with: { apk-artifact: apk, account: '1' }
     secrets: inherit
@@ -156,7 +170,8 @@ capacity check is then the only guard. Apps are visible only inside the group
 that uploaded them.
 
 **Secrets:** `BROWSERSTACK_USERNAME` and `BROWSERSTACK_ACCESS_KEY` for account
-1, and the same names with `_2` for account 2.
+1, and the same names with `_2` for account 2. The wallet seed is not passed,
+so `smoke` skips the wallet send test and the summary lists it as skipped.
 
 **Peer image:** `.github/workflows/e2e-peer-image.yml` publishes
 `ghcr.io/<owner>/status-app-e2e-peer:<status-go commit>` from the default
@@ -165,8 +180,8 @@ vendored status-go has no published image yet or GHCR cannot be reached. A
 built image is handed to the e2e job as an artifact kept for 4 days.
 
 **Results:** the job summary names the APK, its upload date, the tested
-commit and every failed test with its message, and each failure is an error
-annotation. Reports, logs and screenshots are in the `e2e-android-reports-*`
+commit, every failed test with its message and every skipped test with its
+reason, and each failure is an error annotation. Reports, logs and screenshots are in the `e2e-android-reports-*`
 artifact for 14 days.
 
 ## Onboarding Fixture

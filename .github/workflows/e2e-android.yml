@@ -145,6 +145,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # On a pull request the default is the merge commit. The caller builds
+          # its APK from the PR head, so the tests must come from it too.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
@@ -244,6 +247,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # On a pull request the default is the merge commit. The caller builds
+          # its APK from the PR head, so the tests must come from it too.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Check out the vendored status-go
         run: |
@@ -275,9 +281,15 @@ jobs:
         run: |
           if [[ -z "$PUBLISHED" ]]; then
             gunzip -c "$RUNNER_TEMP/peer/peer-image.tar.gz" | docker load
-          elif echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null \
-            && docker pull --quiet "$PUBLISHED"; then
-            docker tag "$PUBLISHED" "$STATUS_BACKEND_IMAGE"
+          elif echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null; then
+            # Retry before falling back: a rebuild here holds the account queue.
+            for attempt in 1 2 3; do
+              if docker pull --quiet "$PUBLISHED"; then
+                docker tag "$PUBLISHED" "$STATUS_BACKEND_IMAGE"
+                break
+              fi
+              if [[ "$attempt" -lt 3 ]]; then sleep $((attempt * 20)); fi
+            done
           fi
           # Builds the image if GHCR failed since the peer image job.
           test/e2e_appium/scripts/peer_image.sh "$STATUS_BACKEND_DOCKER_PROJECT" > /dev/null
@@ -308,14 +320,17 @@ jobs:
             exit 1
           fi
           # Credentials go to curl on stdin so they never appear in the process list.
-          response=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
+          if ! response=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
             --silent --show-error --fail-with-body \
             --form "file=@${apks[0]}" \
             --form "custom_id=${E2E_RUN_ID}" \
-            https://api-cloud.browserstack.com/app-automate/upload)
+            https://api-cloud.browserstack.com/app-automate/upload); then
+            echo "::error::BrowserStack upload failed: ${response}"
+            exit 1
+          fi
           app_id=$(jq -r '.app_url // empty' <<< "$response")
           if [[ -z "$app_id" ]]; then
-            echo "::error::BrowserStack upload failed: ${response}"
+            echo "::error::BrowserStack upload answered without an app_url: ${response}"
             exit 1
           fi
           echo "app-id=${app_id}" >> "$GITHUB_OUTPUT"
@@ -327,9 +342,12 @@ jobs:
         run: |
           # Apps are usable by every user in the BrowserStack group, so ask for
           # the group's uploads (kept 30 days); a lookup by id cannot prove absence.
-          apps=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
+          if ! apps=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
             --silent --show-error --fail-with-body \
-            "https://api-cloud.browserstack.com/app-automate/recent_group_apps?limit=200")
+            "https://api-cloud.browserstack.com/app-automate/recent_group_apps?limit=200"); then
+            echo "::error::BrowserStack could not list apps: ${apps}"
+            exit 1
+          fi
           # An account with no uploads answers with a message, not an empty list.
           if jq -e 'type == "object" and .message == "No results found"' <<< "$apps" > /dev/null; then
             apps='[]'
@@ -355,7 +373,7 @@ jobs:
           BROWSERSTACK_APP_ID: ${{ steps.app.outputs.app-id }}
           BROWSERSTACK_PROJECT_NAME: Mobile E2E GHA
           BROWSERSTACK_BUILD_NAME: e2e-android-${{ github.run_number }}
-          GIT_COMMIT: ${{ github.sha }}
+          GIT_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
           BUILD_ID: ${{ github.run_id }}
         run: |
           export BROWSERSTACK_USERNAME="$BS_USER" BROWSERSTACK_ACCESS_KEY="$BS_KEY"
@@ -391,7 +409,7 @@ jobs:
         env:
           APP_JSON: ${{ steps.app.outputs.app-json }}
           BUILD_URL: ${{ steps.build.outputs.url }}
-          COMMIT: ${{ github.sha }}
+          COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
         run: |
           # Normally under reports/<run id>/; the harness writes to reports/
