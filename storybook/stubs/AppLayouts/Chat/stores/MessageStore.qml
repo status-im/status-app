@@ -31,6 +31,7 @@ QtObject {
     readonly property bool threadEditPending: messageModule?.threadEditPending ?? false
     readonly property bool threadMuted: messageModule?.threadMuted ?? false
     readonly property real threadMuteTill: messageModule?.threadMuteTill ?? 0
+    readonly property var readingPositions: messageModule?.readingPositions ?? null
 
     function setThreadMuted(interval) {
         if (messageModule && messageModule.setThreadMuted)

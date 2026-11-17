@@ -3,6 +3,7 @@ import QtQuick
 import SortFilterProxyModel
 
 import StatusQ
+import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Backpressure
@@ -62,8 +63,35 @@ StatusSectionLoader {
     required property bool isPortraitMode
     property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
+    /// The community section is the current one.
+    property bool sectionCurrent: false
+
+    /// Whether the section's UI should exist. Mobile gives it back while it is
+    /// not on screen (SectionDropPolicy); desktop keeps it from the first visit
+    /// on.
+    readonly property bool keepLoaded: SQUtils.Utils.isMobile ? dropPolicy.keepLoaded
+                                                              : d.visited || root.sectionCurrent
+
     signal openAppSearchRequested(string chatId, string threadId)
     signal supportBotChatRequested()
+
+    SectionDropPolicy {
+        id: dropPolicy
+
+        // Inactive (a system sheet on top) is still in front; Suspended is not.
+        shown: root.sectionCurrent && (Qt.application.state === Qt.ApplicationActive
+                                       || Qt.application.state === Qt.ApplicationInactive)
+
+        onKeepLoadedChanged: console.info("[Community] Drop:", root.sectionId,
+                                          keepLoaded ? "kept" : "dropped")
+    }
+
+    Connections {
+        target: SystemUtils
+        function onMemoryPressure() { dropPolicy.memoryPressure() }
+    }
+
+    onSectionCurrentChanged: if (sectionCurrent) d.visited = true
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
@@ -113,6 +141,8 @@ StatusSectionLoader {
         anchors.fill: parent
         active: root.chromeNeeded
 
+        onLoaded: d.restoreShownPanel()
+
         sourceComponent: StatusSectionLayout {
             objectName: "sectionChrome"
 
@@ -134,6 +164,17 @@ StatusSectionLoader {
 
             onPanelSwitchStarted: d.panelSwitchOngoing = true
             onPanelSwitchEnded: d.panelSwitchOngoing = false
+        }
+    }
+
+    // The panel shown is part of the section's view state: it outlives the UI.
+    // The right panel (a thread, the members) comes back as the chat.
+    Connections {
+        target: root.active ? chromeLoader.item : null
+
+        function onCurrentIndexChanged() {
+            d.chatRootStore?.setShownPanel(Math.min(chromeLoader.item.currentIndex,
+                                                    StatusSectionLayout.CentralPanel))
         }
     }
 
@@ -261,6 +302,12 @@ StatusSectionLoader {
         property int pendingSettingsSubsection: -1
         property bool showUsersPanel: root.accountSettingsStore.showUsersList
         property int pendingViewIndex: -1
+        property bool visited: false
+
+        function restoreShownPanel() {
+            if (chromeLoader.item && d.chatRootStore)
+                chromeLoader.item.setCurrentIndex(d.chatRootStore.shownPanel)
+        }
 
         // The view switch may arrive while the section still incubates —
         // queue it and replay on load, like the settings subsection below
@@ -325,6 +372,7 @@ StatusSectionLoader {
         if (!!root.item)
             return
         d.createStores()
+        d.restoreShownPanel()
         setSource(d.url, {
             isChatView:                     false,
             visible:                        false,

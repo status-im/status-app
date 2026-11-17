@@ -32,6 +32,10 @@ QtObject {
     readonly property bool threadMuted: messageModule ? messageModule.threadMuted : false
     readonly property real threadMuteTill: messageModule ? messageModule.threadMuteTill : 0
 
+    // Where the reader was in the chat and its threads; getRecord(threadId) /
+    // setRecord(threadId, json)
+    readonly property var readingPositions: messageModule ? messageModule.readingPositions : null
+
     function setThreadMuted(interval: int) {
         if (root.messageModule)
             root.messageModule.setThreadMuted(interval)

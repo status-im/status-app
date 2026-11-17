@@ -32,7 +32,6 @@ type
     highlight: bool
     trustStatus: TrustStatus
     onlineStatus: OnlineStatus
-    loaderActive: bool
     locked: bool
     requiresPermissions: bool
     canPostReactions: bool
@@ -83,7 +82,6 @@ proc initChatItem*(
     categoryOpened: bool = true,
     trustStatus: TrustStatus = TrustStatus.Unknown,
     onlineStatus = OnlineStatus.Inactive,
-    loaderActive = false,
     locked = false,
     requiresPermissions = false,
     canPost = true,
@@ -125,7 +123,6 @@ proc initChatItem*(
   result.categoryOpened = categoryOpened
   result.trustStatus = trustStatus
   result.onlineStatus = onlineStatus
-  result.loaderActive = loaderActive
   result.locked = locked
   result.requiresPermissions = requiresPermissions
   result.canPost = canPost
@@ -167,7 +164,6 @@ proc `$`*(self: ChatItem): string =
     categoryOpened: {$self.categoryOpened},
     trustStatus: {$self.trustStatus},
     onlineStatus: {$self.onlineStatus},
-    loaderActive: {$self.loaderActive},
     locked: {$self.locked},
     requiresPermissions: {$self.requiresPermissions},
     canPost: {$self.canPost},
@@ -203,7 +199,6 @@ proc toJsonNode*(self: ChatItem): JsonNode =
     "categoryOpened": self.categoryOpened,
     "trustStatus": self.trustStatus,
     "onlineStatus": self.onlineStatus,
-    "loaderActive": self.loaderActive,
     "locked": self.locked,
     "requiresPermissions": self.requiresPermissions,
     "canPost": self.canPost,
@@ -384,12 +379,6 @@ proc `onlineStatus=`*(self: var ChatItem, value: OnlineStatus) =
 
 proc setHasUnreadMessages*(self: ChatItem, value: bool) =
   self.hasUnreadMessages = value
-
-proc loaderActive*(self: ChatItem): bool =
-  self.loaderActive
-
-proc `loaderActive=`*(self: var ChatItem, value: bool) =
-  self.loaderActive = value
 
 proc isCategory*(self: ChatItem): bool =
   self.`type` == CATEGORY_TYPE

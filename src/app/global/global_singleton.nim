@@ -5,7 +5,6 @@ import local_app_settings
 import user_profile
 import utils
 import global_events
-import loader_deactivator
 import feature_flags
 import app_lifecycle
 
@@ -14,7 +13,6 @@ export local_app_settings
 export user_profile
 export utils
 export global_events
-export loader_deactivator
 export feature_flags
 
 
@@ -120,12 +118,6 @@ proc globalEvents*(self: GlobalSingleton): GlobalEvents =
     globalEvents = newGlobalEvents()
   return globalEvents
 
-proc loaderDeactivator*(self: GlobalSingleton): LoaderDeactivator =
-  var loaderDeactivator {.global.}: LoaderDeactivator
-  if (loaderDeactivator.isNil):
-    loaderDeactivator = newLoaderDeactivator()
-  return loaderDeactivator
-
 proc featureFlags*(self: GlobalSingleton): FeatureFlags =
   var featureFlags {.global.}: FeatureFlags
   if (featureFlags.isNil):
@@ -137,5 +129,4 @@ proc delete*(self: GlobalSingleton) =
   self.localAccountSettings.delete()
   self.localAppSettings.delete()
   self.userProfile.delete()
-  self.loaderDeactivator.delete()
   self.featureFlags.delete()
