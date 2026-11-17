@@ -184,6 +184,21 @@ QtObject:
       self.settings.remove(marker)
       warn "failed to write the merged legacy settings", keyUid = self.keyUid, marker
 
+  proc removeUnusedDisplayNameFile(self: LocalAccountSettings, displayName: string,
+      otherProfiles: seq[ProfileName]) =
+    ## Unless a profile sharing it hasn't merged it yet, or it is the app file.
+    if not isPlainFileName(displayName):
+      return
+    let legacyPath = self.filePath(displayName)
+    if not fileExists(legacyPath) or
+        isSameFile(legacyPath, self.filePath(APP_SETTINGS_FILE_NAME)):
+      return
+    for other in otherProfiles:
+      if isSameFile(legacyPath, self.filePath(other.displayName)) and
+          not self.isFileMerged(other.keyUid, LS_KEY_DISPLAY_NAME_FILE_MERGED):
+        return
+    removeLegacyFile(legacyPath)
+
   proc mergeLegacyDisplayNameFile(self: LocalAccountSettings, displayName: string,
       otherProfiles: seq[ProfileName]) =
     ## Profiles whose names map to the same file share it: each takes all of its keys, as
@@ -210,14 +225,8 @@ QtObject:
       self.settings.copyIfMissing(legacy, LS_KEY_STAY_LOGGED_IN & "/" & self.keyUid,
         LS_KEY_STAY_LOGGED_IN)
 
-    if not self.commitMarker(LS_KEY_DISPLAY_NAME_FILE_MERGED) or not hasLegacyFile or
-        isSameFile(legacyPath, self.filePath(APP_SETTINGS_FILE_NAME)):
-      return
-    for other in otherProfiles:
-      if isSameFile(legacyPath, self.filePath(other.displayName)) and
-          not self.isFileMerged(other.keyUid, LS_KEY_DISPLAY_NAME_FILE_MERGED):
-        return
-    removeLegacyFile(legacyPath)
+    if self.commitMarker(LS_KEY_DISPLAY_NAME_FILE_MERGED) and hasLegacyFile:
+      self.removeUnusedDisplayNameFile(displayName, otherProfiles)
 
   proc bindAccount*(self: LocalAccountSettings, keyUid: string, displayName = "",
       otherProfiles: seq[ProfileName] = @[]) =
@@ -264,10 +273,24 @@ QtObject:
         self.notifyAll()
 
   proc detach*(self: LocalAccountSettings) =
-    ## For a profile being created; logout keeps the binding.
+    ## For a profile being created or deleted; logout keeps the binding.
     self.releaseSettings()
     self.keyUid = ""
     self.notifyAll()
+
+  proc removeAccount*(self: LocalAccountSettings, keyUid: string, displayName: string,
+      otherProfiles: seq[ProfileName]) =
+    ## An unmerged legacy public-key file stays: the public key is unknown before login.
+    if keyUid.len == 0:
+      return
+    if keyUid == self.keyUid:
+      self.detach()
+    let path = self.filePath(keyUid)
+    try:
+      removeFile(path)
+    except OSError as e:
+      warn "failed to remove the profile's settings file", keyUid, msg = e.msg
+    self.removeUnusedDisplayNameFile(displayName, otherProfiles)
 
   proc storeToKeychainValueChanged*(self: LocalAccountSettings) {.signal.}
 

@@ -120,6 +120,20 @@ QtObject:
   proc clearOpenedAccountsCache*(self: Service) =
     self.accounts = @[]
 
+  proc localProfileNames(self: Service, keyUid: string):
+      tuple[displayName: string, otherProfiles: seq[ProfileName]] =
+    ## Empty if the profiles can't be read.
+    var accounts: seq[AccountDto]
+    try:
+      accounts = self.openedAccounts()
+    except CatchableError:
+      return
+    for account in accounts:
+      if account.keyUid == keyUid:
+        result.displayName = account.name
+      else:
+        result.otherProfiles.add((keyUid: account.keyUid, displayName: account.name))
+
   proc bindLocalAccountSettings(self: Service, keyUid: string, newOnDevice: bool) =
     let settings = singletonInstance.localAccountSettings
     if newOnDevice:
@@ -127,20 +141,7 @@ QtObject:
       settings.markNewOnDevice()
       return
 
-    var accounts: seq[AccountDto]
-    try:
-      accounts = self.openedAccounts()
-    except CatchableError:
-      # Merging a shared file needs the other profiles; retried on the next bind.
-      settings.bindAccount(keyUid)
-      return
-    var displayName = ""
-    for account in accounts:
-      if account.keyUid == keyUid:
-        displayName = account.name
-    let otherProfiles = accounts
-      .filterIt(it.keyUid != keyUid)
-      .mapIt((keyUid: it.keyUid, displayName: it.name))
+    let (displayName, otherProfiles) = self.localProfileNames(keyUid)
     settings.bindAccount(keyUid, displayName, otherProfiles)
 
   proc setLoggedInAccount*(self: Service, account: AccountDto, newOnDevice = false) =
@@ -360,6 +361,7 @@ QtObject:
       error "restore account failed", procName="restoreAccountAndLogin", errName = e.name, errDesription = e.msg
 
   proc deleteMultiaccount*(self: Service, keyUid: string): string =
+    let (displayName, otherProfiles) = self.localProfileNames(keyUid)
     try:
       let response = status_account.deleteMultiaccount(keyUid, joinPath(main_constants.ROOTKEYSTOREDIR, keyUid))
 
@@ -368,14 +370,16 @@ QtObject:
         raise newException(RpcException, "invalid response: no error field found")
 
       let error = response.result["error"].getStr
-      if error == "":
-        debug "Account deleted succesfully"
-        return ""
-
-      raise newException(RpcException, error)
+      if error != "":
+        raise newException(RpcException, error)
+      debug "Account deleted succesfully"
     except Exception as e:
       error "deleteMultiaccount failed", procName="deleteMultiaccount", errName = e.name, errDesription = e.msg
       return "deleteMultiaccount failed: " & e.msg
+
+    self.clearOpenedAccountsCache()
+    singletonInstance.localAccountSettings.removeAccount(keyUid, displayName, otherProfiles)
+    return ""
 
   proc createAccountFromPrivateKey*(self: Service, privateKey: string): GeneratedAccountDto =
     if privateKey.len == 0:
