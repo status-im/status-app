@@ -362,16 +362,22 @@ QtObject:
       if community.listedInDirectory:
         result[communityId] = community
 
+  proc onCommunityFound*(self: Service, community: CommunityDto) =
+    var found = community
+    var wasCuratedPlaceholder = false
+    self.communities.withValue(community.id, known):
+      found.listedInDirectory = known.listedInDirectory
+      found.featuredInDirectory = known.featuredInDirectory
+      wasCuratedPlaceholder = known.listedInDirectory and not known[].isAvailable
+    self.communities[found.id] = found
+    self.events.emit(SIGNAL_COMMUNITY_DATA_IMPORTED, CommunityArgs(community: found))
+
+    if wasCuratedPlaceholder:
+      self.events.emit(SIGNAL_CURATED_COMMUNITY_FOUND, CommunityArgs(community: found))
+
   proc doConnect(self: Service) =
     self.events.on(SignalType.CommunityFound.event) do(e: Args):
-      var receivedData = CommunitySignal(e)
-      self.communities[receivedData.community.id] = receivedData.community
-      self.events.emit(SIGNAL_COMMUNITY_DATA_IMPORTED, CommunityArgs(community: receivedData.community))
-
-      if self.communities.contains(receivedData.community.id) and
-          self.communities[receivedData.community.id].listedInDirectory and not
-          self.communities[receivedData.community.id].isAvailable:
-        self.events.emit(SIGNAL_CURATED_COMMUNITY_FOUND, CommunityArgs(community: self.communities[receivedData.community.id]))
+      self.onCommunityFound(CommunitySignal(e).community)
 
     self.events.on(SignalType.CuratedCommunitiesUpdated.event) do(e: Args):
       var receivedData = CuratedCommunitiesSignal(e)
@@ -1935,8 +1941,15 @@ QtObject:
         error "Error loading curated communities", msg
         self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED, Args())
         return
-      let curatedCommunities = parseCuratedCommunities(reply["result"])
-      for curatedCommunity in curatedCommunities:
+      var curatedCommunities = parseCuratedCommunities(reply["result"])
+      for curatedCommunity in curatedCommunities.mitems:
+        if not curatedCommunity.isAvailable:
+          self.communities.withValue(curatedCommunity.id, known):
+            if known[].isAvailable:
+              let featured = curatedCommunity.featuredInDirectory
+              curatedCommunity = known[]
+              curatedCommunity.listedInDirectory = true
+              curatedCommunity.featuredInDirectory = featured
         self.communities[curatedCommunity.id] = curatedCommunity
       self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADED, CommunitiesArgs(communities: curatedCommunities))
     except Exception as e:
