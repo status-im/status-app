@@ -11,7 +11,7 @@ on:
         type: string
         required: true
       account:
-        description: 'BrowserStack account. Runs on the same account queue one at a time.'
+        description: 'BrowserStack account that holds the app id. Runs on the same account wait in a queue, one at a time.'
         type: choice
         options: ['1', '2']
         default: '1'
@@ -48,8 +48,9 @@ on:
         type: string
         default: ''
       account:
+        description: '1, 2 or auto. auto spreads pull requests that pass apk-artifact over both accounts by PR number; with app-id it is account 1.'
         type: string
-        default: '1'
+        default: auto
       selection:
         type: string
         default: gate
@@ -82,25 +83,51 @@ jobs:
     timeout-minutes: 5
     outputs:
       ready: ${{ steps.check.outputs.ready }}
+      account: ${{ steps.check.outputs.account }}
     steps:
-      - name: Check the account has credentials
+      - name: Pick the account and check it has credentials
         id: check
+        shell: bash
         env:
-          # Each account maps to its own secrets only: an unknown account must
-          # never fall back to account 1's keys under another queue.
-          BS_USER: ${{ inputs.account == '1' && secrets.BROWSERSTACK_USERNAME || inputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
-          BS_KEY: ${{ inputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || inputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
-          ACCOUNT: ${{ inputs.account }}
+          ACCOUNT_INPUT: ${{ inputs.account }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          APK_ARTIFACT: ${{ inputs.apk-artifact }}
+          # Only whether each account has credentials; the keys stay out of this job.
+          READY_1: ${{ secrets.BROWSERSTACK_USERNAME != '' && secrets.BROWSERSTACK_ACCESS_KEY != '' }}
+          READY_2: ${{ secrets.BROWSERSTACK_USERNAME_2 != '' && secrets.BROWSERSTACK_ACCESS_KEY_2 != '' }}
         run: |
-          if [[ ! "$ACCOUNT" =~ ^[12]$ ]]; then
-            echo "::error::account must be 1 or 2, got '${ACCOUNT}'."
-            exit 1
-          fi
-          if [[ -n "$BS_USER" && -n "$BS_KEY" ]]; then
+          case "$ACCOUNT_INPUT" in
+            1|2)
+              account="$ACCOUNT_INPUT"
+              ;;
+            auto)
+              # An app id works only on the account that uploaded it, so only
+              # runs that upload their own APK are spread: odd pull requests
+              # on account 1, even ones on account 2.
+              account=1
+              if [[ -n "$APK_ARTIFACT" && "$PR_NUMBER" =~ ^[0-9]+$ ]] && (( 10#$PR_NUMBER % 2 == 0 )); then
+                account=2
+              fi
+              # A repository with one account's secrets still runs.
+              chosen="READY_${account}"
+              other="READY_$(( 3 - account ))"
+              if [[ "${!chosen}" != "true" && "${!other}" == "true" ]]; then
+                account=$(( 3 - account ))
+              fi
+              ;;
+            *)
+              echo "::error::account must be 1, 2 or auto, got '${ACCOUNT_INPUT}'."
+              exit 1
+              ;;
+          esac
+          echo "account=${account}" >> "$GITHUB_OUTPUT"
+          chosen="READY_${account}"
+          if [[ "${!chosen}" == "true" ]]; then
+            echo "BrowserStack account ${account}"
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::NOT RUN: no BrowserStack credentials for account ${ACCOUNT} in this repository."
-            echo "## E2E Android NOT RUN: no BrowserStack credentials for account ${ACCOUNT}" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::NOT RUN: no BrowserStack credentials for account ${account} in this repository."
+            echo "## E2E Android NOT RUN: no BrowserStack credentials for account ${account}" >> "$GITHUB_STEP_SUMMARY"
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -226,13 +253,14 @@ jobs:
       contents: read
       packages: read
     # Only this job holds the account: the peer image is ready before it
-    # queues. GitHub keeps one waiting run per group, so a newer waiting run
-    # replaces an older one.
+    # queues. Without queue: max GitHub keeps one waiting run per group and
+    # cancels the one that waited before it.
     concurrency:
-      group: e2e-android-bs-account-${{ inputs.account }}
+      group: e2e-android-bs-account-${{ needs.credentials.outputs.account }}
       cancel-in-progress: false
+      queue: max
     env:
-      ACCOUNT: ${{ inputs.account }}
+      ACCOUNT: ${{ needs.credentials.outputs.account }}
       DEVICE: ${{ inputs.device != 'default' && inputs.device || '' }}
       APK_ARTIFACT: ${{ inputs.apk-artifact }}
       E2E_RUN_ID: gha-${{ github.run_id }}-${{ github.run_attempt }}
@@ -298,8 +326,8 @@ jobs:
       - name: Select the account's credentials
         env:
           # The one place in this job that maps the account to its secrets.
-          BS_USER: ${{ inputs.account == '1' && secrets.BROWSERSTACK_USERNAME || inputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
-          BS_KEY: ${{ inputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || inputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
+          BS_USER: ${{ needs.credentials.outputs.account == '1' && secrets.BROWSERSTACK_USERNAME || needs.credentials.outputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
+          BS_KEY: ${{ needs.credentials.outputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || needs.credentials.outputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
         run: |
           { echo "BS_USER=${BS_USER}"; echo "BS_KEY=${BS_KEY}"; } >> "$GITHUB_ENV"
 

@@ -151,4 +151,4 @@ jobs:
         working-directory: test/e2e_appium
         run: |
           pip install --quiet -r requirements.txt
-          python -m pytest -m component tests/test_ci_pytest_args.py tests/test_ci_junit_report.py tests/test_session_manager_device.py
+          python -m pytest -m component tests/test_ci_pytest_args.py tests/test_ci_account_choice.py tests/test_ci_junit_report.py tests/test_session_manager_device.py

@@ -99,7 +99,7 @@ e2e:
     contents: read
     packages: read
   uses: ./.github/workflows/e2e-android.yml
-  with: { apk-artifact: <artifact with one APK>, account: '1' }
+  with: { apk-artifact: <artifact with one APK>, account: auto }
   secrets: inherit
 ```
 
@@ -139,7 +139,7 @@ jobs:
       contents: read
       packages: read
     uses: ./.github/workflows/e2e-android.yml
-    with: { apk-artifact: apk, account: '1' }
+    with: { apk-artifact: apk, account: auto }
     secrets: inherit
 ```
 
@@ -149,7 +149,8 @@ jobs:
   built from that PR. Every later push runs them again until the label is
   removed.
 - PRs from forks get no secrets, so their run ends as NOT RUN.
-- Runs on the same account queue one at a time.
+- Odd pull requests run on account 1 and even ones on account 2. Runs on
+  the same account wait in a queue, one at a time.
 - If the PR workflow sets `cancel-in-progress: true`, a push cancels the e2e
   run in progress along with the rest of that workflow. Its leftover
   BrowserStack sessions are still stopped.
@@ -158,16 +159,21 @@ jobs:
 `tests/`), or `markers` (an expression of marker names from `pytest.ini`);
 `device` (Android ids from `config/environments/browserstack.yaml`); `workers`
 (`auto` is 4 for the gate, which leaves one of the account's 5 sessions spare,
-and 2 when multi-phone tests can be selected); `account` (`1` or `2`).
+and 2 when multi-phone tests can be selected); `account` (`1`, `2` or `auto`).
+
+**Accounts:** each BrowserStack account has its own 5 sessions, and an app
+exists only on the account that uploaded it. A run with `app-id` must name
+that account. With `apk-artifact` the run uploads the APK itself, so
+`account: auto` can choose: odd pull requests on account 1, even ones on
+account 2. `auto` uses the other account when the chosen one has no secrets,
+and account 1 when there is no pull request number.
 
 **Queueing:** one run per BrowserStack account per repository at a time. The
-queue never cancels a run in progress, though a calling workflow's own
-`cancel-in-progress` can; GitHub keeps one waiting run per account, so a
-newer waiting run replaces an older one. Queues are per repository, and a
-BrowserStack group's 5 sessions are shared by every user in it, so runs from
-two repositories on the same group do not see each other. The harness's
-capacity check is then the only guard. Apps are visible only inside the group
-that uploaded them.
+others wait in line (`queue: max`, up to 100) and none is cancelled by the
+queue. GitHub starts them in the order they began to wait, but does not
+guarantee that order. A calling workflow's own `cancel-in-progress` can still
+cancel a run. Queues are per repository, so runs from two repositories on the
+same account do not see each other.
 
 **Secrets:** `BROWSERSTACK_USERNAME` and `BROWSERSTACK_ACCESS_KEY` for account
 1, and the same names with `_2` for account 2. The wallet seed is not passed,
