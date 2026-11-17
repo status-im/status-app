@@ -871,8 +871,11 @@ Control {
                     onImageRemoved: (index) => {
                         // Spread into a new array so assigning back triggers the property change notification
                         let urls = [...root.fileUrlsAndSources]
-                        if (index < urls.length)
+                        if (index < urls.length) {
+                            // its prepared file isn't needed anymore
+                            AttachmentPreparer.forget(urls[index].toString())
                             urls.splice(index, 1)
+                        }
                         root.fileUrlsAndSources = urls
                         validateImages(root.fileUrlsAndSources)
                     }

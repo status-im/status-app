@@ -131,6 +131,7 @@ type
     releaseCachedFiles: bool
     sendToken: string
     releasePathsJson: string
+    preparedAttachmentsDir: string
 
 const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncSendImagesTaskArg](argEncoded)
@@ -179,17 +180,20 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
       "sendToken": arg.sendToken,
     })
   finally:
-    # Release the app-private cached copies now the shared images have been
-    # consumed (or the send failed for good). Mobile only: this list is
-    # whatever the user picked, and the guard inside only matches on the
-    # parent directory name — on desktop, where there is no share-intake
-    # cache at all, a match could only ever be a user-owned file.
-    when defined(android) or defined(ios):
-      if arg.releaseCachedFiles:
-        # A chunked share releases every cached copy from its last chunk.
-        var toRelease = imagePaths
-        try:
-          toRelease.add(Json.decode(arg.releasePathsJson, seq[string]))
-        except CatchableError:
-          discard
+    # Release the app-owned copies now the images have been consumed (or the
+    # send failed for good). A chunked share releases every copy from its
+    # last chunk.
+    if arg.releaseCachedFiles:
+      var toRelease = imagePaths
+      try:
+        toRelease.add(Json.decode(arg.releasePathsJson, seq[string]))
+      except CatchableError:
+        discard
+      # Prepared Attachments: guarded to the exact AttachmentPreparer directory.
+      releasePreparedAttachments(toRelease, arg.preparedAttachmentsDir)
+      # Share-intake copies, mobile only: this list is whatever the user
+      # picked, and the guard inside only matches on the parent directory
+      # name — on desktop, where there is no share-intake cache at all, a
+      # match could only ever be a user-owned file.
+      when defined(android) or defined(ios):
         releaseCachedShareFiles(toRelease)

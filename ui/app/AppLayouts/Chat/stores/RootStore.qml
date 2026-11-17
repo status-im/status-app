@@ -329,6 +329,8 @@ QtObject {
                 const imagePaths = sendable.map(file => AttachmentPreparer.resolve(file,
                     // No need to convert base64 data URLs, they are already in the correct format
                     isBase64DataUrl(file) ? file : UrlUtils.convertUrlToLocalPath(file)))
+                // The send owns the prepared files now and deletes them once sent
+                sources.forEach(file => AttachmentPreparer.release(file))
                 inputAreaModule.sendImages(JSON.stringify(imagePaths), textMsg.trim(), replyMessageId)
             })
             result = true

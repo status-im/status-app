@@ -288,6 +288,41 @@ private slots:
         QCOMPARE(decode(readFile(path)).size(), QSize(2000, 1333));
     }
 
+    void forgettingDeletesThePreparedFileReleasingKeepsIt()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        AttachmentPreparer preparer;
+        preparer.setDirectory(dir.filePath("out"));
+        QSignalSpy prepared(&preparer, &AttachmentPreparer::prepared);
+
+        QStringList sources;
+        for (const auto& name : {QStringLiteral("removed.jpg"), QStringLiteral("sent.jpg")}) {
+            const auto srcPath = dir.filePath(name);
+            QFile f(srcPath);
+            QVERIFY(f.open(QIODevice::WriteOnly));
+            f.write(encode(noiseImage(3000, 2000, 60), "jpeg", 92));
+            f.close();
+            preparer.prepare(srcPath, srcPath);
+            sources << srcPath;
+        }
+        QTRY_COMPARE_WITH_TIMEOUT(prepared.count(), 2, 30000);
+
+        // removed from the input: its file isn't needed anymore
+        const auto removedPath = preparer.resolve(sources[0], sources[0]);
+        QVERIFY(removedPath != sources[0]);
+        preparer.forget(sources[0]);
+        QVERIFY(!QFile::exists(removedPath));
+        QVERIFY(QFile::exists(sources[0])); // the original is never touched
+
+        // handed over to the send: the send deletes it once sent
+        const auto sentPath = preparer.resolve(sources[1], sources[1]);
+        QVERIFY(sentPath != sources[1]);
+        preparer.release(sources[1]);
+        QVERIFY(QFile::exists(sentPath));
+        QCOMPARE(preparer.resolve(sources[1], sources[1]), sources[1]); // state dropped
+    }
+
     void preparerWritesDataUrlsSentAsTheyAre()
     {
         QTemporaryDir dir;

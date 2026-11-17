@@ -37,6 +37,7 @@ Control {
 
     function reset() {
         d.cancelPendingSend()
+        d.forgetAttachments()
         chatInput.setText(root.text)
         d.attachSharedImages()
     }
@@ -52,7 +53,10 @@ Control {
     }
 
     Component.onCompleted: reset()
-    Component.onDestruction: d.cancelPendingSend()
+    Component.onDestruction: {
+        d.cancelPendingSend()
+        d.forgetAttachments()
+    }
 
     QtObject {
         id: d
@@ -68,6 +72,16 @@ Control {
             if (pendingSend)
                 pendingSend.cancelled = true
             pendingSend = null
+        }
+
+        // Payload replaced or picker closed: the prepared files of the
+        // Attachments still in the input aren't needed anymore. After a send
+        // this is a no-op: the send released them.
+        function forgetAttachments() {
+            if (!chatInput)
+                return
+            chatInput.fileUrlsAndSources.forEach(
+                source => AttachmentPreparer.forget(source.toString()))
         }
 
         // Same as the in-chat send (RootStore.sendMessage): wait for the
@@ -86,6 +100,8 @@ Control {
                 const imagePaths = sources
                     .filter(source => !AttachmentPreparer.isRejected(source))
                     .map(source => AttachmentPreparer.resolve(source, d.toImagePath(source)))
+                // The send owns the prepared files now and deletes them once sent
+                sources.forEach(source => AttachmentPreparer.release(source))
                 if (text.trim() === "" && imagePaths.length === 0
                         && d.paymentRequestCount === 0)
                     return

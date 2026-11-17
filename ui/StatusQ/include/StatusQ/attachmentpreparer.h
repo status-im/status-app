@@ -17,8 +17,9 @@ class QQmlEngine;
 // docs/adr/0008-client-side-image-preparation.md).
 //
 // Attachments are identified by their `source` as the chat input holds it (a file/content URL
-// or a data: URI). Prepared files are written to a temporary directory and swept once stale,
-// since the send reads them asynchronously after the chat input has moved on.
+// or a data: URI). Prepared files are written to a temporary directory. A file is deleted when
+// its Attachment is removed (forget), or handed over to the send (release), which deletes it
+// once status-go has read it. Files left behind (e.g. by a crash) are swept once stale.
 class AttachmentPreparer : public QObject
 {
     Q_OBJECT
@@ -42,8 +43,15 @@ public:
     // Calls `callback` once none of `sources` is being prepared (right away if none is).
     Q_INVOKABLE void whenPrepared(const QStringList& sources, const QJSValue& callback);
 
-    // Drops the state of a removed Attachment (its file is swept later).
+    // Drops the state of a removed Attachment and deletes its prepared file.
     Q_INVOKABLE void forget(const QString& source);
+
+    // Drops the state of a sent Attachment, keeping its prepared file: the send owns it now
+    // and deletes it once sent. Call after resolve().
+    Q_INVOKABLE void release(const QString& source);
+
+    // Where prepared files are written by default (the send deletes files found there).
+    static QString defaultDirectory();
 
     // For tests.
     void setLimits(const ImagePreparation::Limits& limits);

@@ -54,8 +54,13 @@ void sweepStaleFiles(const QString& directory)
 AttachmentPreparer::AttachmentPreparer(QObject* parent)
     : QObject(parent)
 {
-    setDirectory(QStandardPaths::writableLocation(QStandardPaths::TempLocation)
-                 + QStringLiteral("/status-attachments"));
+    setDirectory(defaultDirectory());
+}
+
+QString AttachmentPreparer::defaultDirectory()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+           + QStringLiteral("/status-attachments");
 }
 
 AttachmentPreparer::~AttachmentPreparer()
@@ -185,8 +190,16 @@ void AttachmentPreparer::whenPrepared(const QStringList& sources, const QJSValue
 
 void AttachmentPreparer::forget(const QString& source)
 {
-    m_entries.remove(source);
+    const auto entry = m_entries.take(source);
+    if (!entry.path.isEmpty())
+        QFile::remove(entry.path); // a pending one is removed when it finishes (onFinished)
     notifyWaiters(); // a waiter may have been waiting for it
+}
+
+void AttachmentPreparer::release(const QString& source)
+{
+    m_entries.remove(source);
+    notifyWaiters();
 }
 
 void AttachmentPreparer::notifyWaiters()
