@@ -51,6 +51,8 @@ OnboardingStackView {
 
     required property bool biometricsAvailable
     property bool stayLoggedInAvailable: false
+    // stored "Save password" preference of the profile selected on the login screen
+    property bool stayLoggedIn: false
     required property bool displayKeycardPromoBanner
     required property bool networkChecksEnabled
 
@@ -215,6 +217,9 @@ OnboardingStackView {
             lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
             isBiometricsLogin: root.biometricsAvailable &&
                                root.isBiometricsLogin(loginScreen.selectedProfileKeyId)
+            stayLoggedInAvailable: root.stayLoggedInAvailable
+            stayLoggedIn: root.stayLoggedIn
+            isProfileMigratedToDEKEncryption: root.isProfileMigratedToDEKEncryption
 
             onProfileSelected: (keyUid) => root.profileSelected(keyUid)
             onBiometricsRequested: (profileId) => {
