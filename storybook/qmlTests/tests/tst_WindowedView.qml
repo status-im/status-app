@@ -22,6 +22,8 @@ Item {
 
     // Past the view's last deferral: ten 16 ms settle or clamp ticks, a frame and a 0 ms timer, doubled.
     readonly property int quietMs: 400
+    // Longest a single frame may take before the test moves on without it.
+    readonly property int frameMs: 100
 
     // ------------------------------------------------------------------
     // Row content. Two shapes, because they settle differently.
@@ -741,7 +743,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -845,7 +847,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -890,7 +892,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1003,7 +1005,7 @@ Item {
                 compare(view.staging, true, "the batch is still staged")
                 compare(view.loadingBottom, true, "the owner still owes an answer")
                 compare(owner.revealCount, reveals, "and nothing was revealed")
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             owner.answer()
@@ -1049,7 +1051,7 @@ Item {
             const deadline = Date.now() + 1400
 
             while (Date.now() < deadline)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
 
             provider.mute = true
             owner.answer()
@@ -1091,7 +1093,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1176,7 +1178,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1227,7 +1229,7 @@ Item {
             while (Date.now() < deadline) {
                 compare(view.busy, true, "still waiting on the owner")
                 compare(owner.revealCount, reveals, "and nothing was revealed")
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             rows.append(rows.make(100, 5))
@@ -1237,7 +1239,7 @@ Item {
 
             while (Date.now() < deadline) {
                 compare(hiddenShells().length, 5, "the late rows are staged")
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             view.endBatch()
@@ -1291,7 +1293,7 @@ Item {
             while (Date.now() < deadline) {
                 compare(view.busy, true, "but the batch is still open")
                 compare(owner.revealCount, reveals)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             view.endBatch()
@@ -1373,7 +1375,7 @@ Item {
             tryVerify(() => !view.busy && positionedSpy.count === 1, 8000,
                       "the jump was honoured")
             view.batchRevealed.disconnect(onRevealed)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             verify(asked)
             compare(owner.revealCount, reveals + 1, "in a single reveal")
@@ -1405,7 +1407,7 @@ Item {
         }
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1460,7 +1462,7 @@ Item {
 
         function scrollTo(y) {
             view.contentY = y
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function topReveal() {
@@ -1534,7 +1536,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1707,7 +1709,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1774,7 +1776,7 @@ Item {
             compare(provider.acquiredCount + provider.availableCount,
                     provider.builtCount, "and none was lost")
 
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(provider.acquiredCount + provider.availableCount,
                     provider.builtCount, "nor after the shells were deleted")
         }
@@ -1804,7 +1806,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1857,7 +1859,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -1886,7 +1888,7 @@ Item {
                 positions.add(scrollBar.position.toFixed(4))
                 sizes.add(scrollBar.size.toFixed(4))
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(frames >= 2, "sampled more than once: " + frames)
@@ -1908,7 +1910,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -2007,7 +2009,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -2076,11 +2078,11 @@ Item {
             compare(view.atBottom, true, "parked at the bottom")
 
             view.contentY = Math.round((view.contentHeight - view.height) / 2)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(view.atBottom, false, "and not once scrolled away")
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(view.atBottom, true, "back again")
         }
 
@@ -2152,7 +2154,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -2210,7 +2212,7 @@ Item {
 
                 heights.add(view.contentHeight)
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(frames >= 2, "sampled more than once: " + frames)
@@ -2233,7 +2235,7 @@ Item {
             while (view.initialLoading && frames < 300) {
                 compare(view.busy, true, "busy for as long as the fill runs")
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(frames >= 2, "the flag outlived more than one frame: " + frames)
@@ -2260,7 +2262,7 @@ Item {
                 compare(view.requestMore(WindowedView.Edge.Bottom), false,
                         "still refused mid-fill")
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             finishFill(40)
@@ -2399,7 +2401,7 @@ Item {
         readonly property int short: 260
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -2430,8 +2432,8 @@ Item {
 
         function narrowIt() {
             root.width = resizeTests.narrow
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
+            waitForRendering(view, root.frameMs)
 
             compare(view.width, resizeTests.narrow, "the view really narrowed")
         }
@@ -2457,7 +2459,7 @@ Item {
             fill(40)
 
             view.contentY = Math.round((view.contentHeight - view.height) / 2)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
             verify(before.value !== -9999, "there is a row to hold")
@@ -2481,7 +2483,7 @@ Item {
 
             verify(!!third)
             view.contentY = third.y + third.height / 2
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
 
@@ -2512,7 +2514,7 @@ Item {
             fill(40)
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
 
@@ -2535,7 +2537,7 @@ Item {
                    "the row covers the viewport: " + covering.height)
 
             view.contentY = covering.y + 40       // nothing starts on screen
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(topVisible().value, -9999, "no row has its top edge visible")
 
             const offsetBefore = covering.y - view.contentY
@@ -2584,8 +2586,8 @@ Item {
                          "at the bottom to begin with")
 
             root.height = resizeTests.short
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
+            waitForRendering(view, root.frameMs)
 
             compare(view.height, resizeTests.short, "the view really shrank")
             fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
@@ -2601,8 +2603,8 @@ Item {
                          "at the bottom to begin with")
 
             root.height = resizeTests.tall
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
+            waitForRendering(view, root.frameMs)
 
             compare(view.height, resizeTests.tall, "the view really grew")
             fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
@@ -2619,12 +2621,12 @@ Item {
             fill(40)
 
             view.contentY = view.contentHeight - view.height - 20
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(view.atBottom, false, "near the end, but not at it")
 
             root.width = resizeTests.wide
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(view.contentY, view.contentHeight - view.height, 0.5,
                          "the shrinking content carried it to the end")
@@ -2660,7 +2662,7 @@ Item {
             fill(40)
 
             view.contentY = Math.round((view.contentHeight - view.height) / 2)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
 
@@ -2684,8 +2686,8 @@ Item {
             compare(owner.startBudget, 5, "nothing was asked for meanwhile")
 
             root.width = resizeTests.wide
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
+            waitForRendering(view, root.frameMs)
 
             const after = offsetOf(before.value)
 
@@ -2698,7 +2700,7 @@ Item {
             fill(40)
 
             view.contentY = Math.round((view.contentHeight - view.height) / 2)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             provider.delay = 60
 
@@ -2727,12 +2729,12 @@ Item {
             fill(40)
 
             view.contentY = Math.round((view.contentHeight - view.height) / 2)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             narrowIt()
 
             view.contentY = view.contentHeight - view.height   // a user move
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             owner.appendLive()
             tryVerify(() => settled(41), 5000, "the live row landed")
@@ -2755,7 +2757,7 @@ Item {
         readonly property real growth: 100
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -2780,12 +2782,12 @@ Item {
         function bottomUp() {
             view.verticalLayoutDirection
                     = WindowedView.VerticalLayoutDirection.BottomToTop
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function midContent() {
             view.contentY = Math.round((view.contentHeight - view.height) / 2)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(view.contentY > 100, "there is room above the viewport")
         }
 
@@ -2884,7 +2886,7 @@ Item {
             fill(40)
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             resize(view.itemAtRow(0), growthTests.growth)
 
@@ -2900,7 +2902,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -2942,7 +2944,7 @@ Item {
         function test_aNotchScrollsTheSetDistance() {
             freshFill(40)
             view.contentY = 1000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             wheel(-1)
             verify(view.wheelScrolling, "gliding rather than jumping")
@@ -2959,7 +2961,7 @@ Item {
         function test_notchesAddUp() {
             freshFill(40)
             view.contentY = 1000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             wheel(-1)
             wheel(-1)
@@ -2971,7 +2973,7 @@ Item {
         function test_theGlideStaysWithinTheContent() {
             freshFill(40)
             view.contentY = 50
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             wheel(3)
             glided()
@@ -2979,7 +2981,7 @@ Item {
 
             const bottom = view.contentHeight - view.height
             view.contentY = bottom - 50
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             wheel(-3)
             glided()
@@ -2991,7 +2993,7 @@ Item {
         function test_theScrollBarShowsWhileGliding() {
             freshFill(40)
             view.contentY = 1000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             view.wheelScrollDuration = 300
 
             wheel(-1)
@@ -3008,13 +3010,13 @@ Item {
             view.placeholderHeight = 100
             freshFill(40)
             view.contentY = 1000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             view.wheelScrollDuration = 300
 
             const before = topRow()
 
             wheel(-2)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(view.wheelScrolling, "still gliding when the band goes")
 
             view.moreAvailableTop = false
@@ -3027,7 +3029,7 @@ Item {
         function test_aDeliberatePositionStopsTheGlide() {
             freshFill(40)
             view.contentY = 1000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             view.wheelScrollDuration = 300
 
             wheel(-3)
@@ -3036,8 +3038,8 @@ Item {
             view.positionViewAtRow(5, WindowedView.PositionMode.Beginning)
             verify(!view.wheelScrolling, "the jump replaces the glide")
 
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(view.viewportOffsetToRow(5), 0, 0.5, "and stays where it put the view")
         }
 
@@ -3045,7 +3047,7 @@ Item {
         function test_theDefaultLeavesTheWheelToFlickable() {
             freshFill(40)
             view.contentY = 1000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             view.customWheelScrolling = false
 
             wheel(-1)
@@ -3056,7 +3058,7 @@ Item {
         function test_aViewThatIsNotInteractiveIgnoresTheWheel() {
             freshFill(40)
             view.contentY = 1000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             view.interactive = false
 
             wheel(-1)
@@ -3085,7 +3087,7 @@ Item {
         }
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -3141,7 +3143,7 @@ Item {
 
         function toStartBand() {
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function test_aBandInTheViewportAsksForMore() {
@@ -3164,11 +3166,11 @@ Item {
         // and the deferred request has run by the time it does.
         function scrollWithin(offset) {
             view.contentY = view.placeholderHeight + 400
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             arm(3)
 
             view.contentY = view.placeholderHeight + offset
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function test_aBandWithinTheMarginAsksForMore() {
@@ -3209,7 +3211,7 @@ Item {
             // top slide and after it
             view.prefetchMargin = 1100
             view.contentY = 300
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             arm(5)
 
             tryVerify(() => owner.startBudget < 5 && !view.busy, 5000, "it slid at the top")
@@ -3217,7 +3219,7 @@ Item {
             // a frame through the event loop - moving up, which leaves the
             // bottom held - so a request the bottom had pending would have run
             view.contentY = view.contentY - 1
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             tryVerify(() => !view.busy, 5000)
             compare(owner.endBudget, 5, "the bottom was not asked without a move towards it")
 
@@ -3235,7 +3237,7 @@ Item {
             // it all the way up - letting the scrollbar drive contentY, as a
             // real drag does, rather than jumping the view underneath it.
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const x = scrollBar.width / 2
 
@@ -3244,7 +3246,7 @@ Item {
 
             for (let i = 5; i >= 0; --i) {
                 mouseMove(scrollBar, x, scrollBar.height * i / 6)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
                 compare(owner.startBudget, 3, "held: nothing asked")
             }
 
@@ -3286,7 +3288,7 @@ Item {
 
             for (let i = 5; i >= 0; --i) {
                 mouseMove(scrollBar, x, scrollBar.height * i / 6)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(view.contentY < view.placeholderHeight,
@@ -3322,7 +3324,7 @@ Item {
             verify(view.busy)
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(owner.startBudget, 3, "nothing asked while the slide is open")
 
             owner.holdAnswer = false
@@ -3341,7 +3343,7 @@ Item {
             arm(3)
 
             view.contentY = view.placeholderHeight * 3
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const x = view.width / 2
 
@@ -3352,13 +3354,13 @@ Item {
             // mouseMove() holds none by default, and a Flickable only drags for
             // a held button.
             mouseMove(view, x, 60, 16, Qt.LeftButton)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             let askedWhileDragging = false
 
             for (let i = 2; i <= 8; ++i) {
                 mouseMove(view, x, 20 + i * 40, 16, Qt.LeftButton)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
 
                 if (view.dragging && owner.startBudget < 3)
                     askedWhileDragging = true
@@ -3380,13 +3382,13 @@ Item {
             arm(3)
 
             view.contentY = view.placeholderHeight * 3
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const x = view.width / 2
 
             mousePress(view, x, 20)
             mouseMove(view, x, 60, 16, Qt.LeftButton)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const anchor = topRow()
 
@@ -3397,7 +3399,7 @@ Item {
                 const before = offsetOf(anchor.value)
 
                 mouseMove(view, x, 20 + i * 40, 16, Qt.LeftButton)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
 
                 // the step the batch landed on is the only one that can show a
                 // discontinuity, and comparing across it alone keeps the drag's
@@ -3424,7 +3426,7 @@ Item {
 
             // positive velocity scrolls toward the top, so toward the start band
             view.contentY = view.placeholderHeight * 4
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             view.flick(0, 2000)
             verify(view.flickingVertically, "flicking")
 
@@ -3436,7 +3438,7 @@ Item {
                     askedWhileFlicking = true
 
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(askedWhileFlicking, "asked without waiting for the flick to end")
@@ -3464,7 +3466,7 @@ Item {
             // about 2700 px/s^2 here, so v=3000 carries roughly 1700 px. Start
             // inside that, and the band is still reached at some speed.
             view.contentY = 1200
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             view.flick(0, 3000)             // positive scrolls toward the top
             verify(view.flickingVertically, "flicking")
@@ -3485,8 +3487,8 @@ Item {
             // implementation lose the flick.
             const at = view.contentY
 
-            waitForRendering(view, 100)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
+            waitForRendering(view, root.frameMs)
 
             verify(view.contentY < at,
                    "and still travelling the same way: " + view.contentY
@@ -3508,14 +3510,14 @@ Item {
             arm(3)
 
             view.contentY = 6000
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             tryVerify(() => view.busy, 2000, "a batch is in flight")
 
             view.flick(0, 3000)
             verify(view.flickingVertically, "flicking")
 
             for (let i = 0; i < 4; ++i)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
 
             const grow = (fraction, by) => {
                 const y = view.contentY + view.height * fraction
@@ -3543,7 +3545,7 @@ Item {
             for (let i = 0; i < 4; ++i) {
                 verify(view.busy, "still in flight at change " + i)
                 grow(0.2 + i * 0.2, 120)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(view.flickingVertically, "still flicking after all of them")
@@ -3554,7 +3556,7 @@ Item {
             const at = view.contentY
 
             for (let i = 0; i < 6 && view.contentY >= at; ++i)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
 
             verify(view.contentY < at,
                    "and still travelling the same way: " + view.contentY + " from " + at)
@@ -3597,7 +3599,7 @@ Item {
                        "never more than one chunk over the window: "
                        + view.rowCount)
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             tryVerify(() => !view.busy, 8000)
@@ -3638,7 +3640,7 @@ Item {
                 compare(view.rowCount, 40, "the first paint is never disturbed")
                 compare(owner.startBudget, 3)
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(frames >= 2, "sampled more than once: " + frames)
@@ -3677,7 +3679,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             // Before any placement has wanted one. The instance is kept for the
             // view's life once built, so this is the only moment the claim can
@@ -3733,7 +3735,7 @@ Item {
         function finishShortFill(count) {
             tryVerify(() => !view.busy && view.rowCount === count
                             && hiddenShells().length === 0, 8000, "rows laid out")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function rowsHeight() {
@@ -3785,7 +3787,7 @@ Item {
                                     || hiddenShells().length > 0)) {
                 heights.add(view.contentHeight)
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(frames >= 2, "sampled more than once: " + frames)
@@ -3793,7 +3795,7 @@ Item {
 
             for (let i = 0; i < 3; ++i) {
                 heights.add(view.contentHeight)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
             wait(root.quietMs)
             heights.add(view.contentHeight)
@@ -3821,11 +3823,11 @@ Item {
             finishFill(40)
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(host(), "topPlaceholder", "at the top it takes the top band")
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(host(), "bottomPlaceholder", "at the bottom, the bottom one")
 
             compare(placeholderProbe.created, 1, "and it was never rebuilt")
@@ -3839,12 +3841,12 @@ Item {
             finishFill(40)
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(host(), "topPlaceholder")
             verify(!view.placeholderBelowRows, "above the rows")
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             compare(host(), "bottomPlaceholder")
             verify(view.placeholderBelowRows, "below them")
         }
@@ -3874,7 +3876,7 @@ Item {
             compare(view.loadingTop, true)
 
             view.moreAvailableTop = false      // that was the last of it
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             compare(host(), "topPlaceholder",
                     "still shown, because a batch is on its way")
@@ -3912,7 +3914,7 @@ Item {
             const before = topRow()
 
             view.moreAvailableTop = true
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const after = offsetOf(before.value)
             verify(!isNaN(after), "the row is still there")
@@ -3928,7 +3930,7 @@ Item {
             const before = topRow()
 
             view.moreAvailableTop = false
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const after = offsetOf(before.value)
             verify(!isNaN(after), "the row is still there")
@@ -3946,7 +3948,7 @@ Item {
             finishFill(40)
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = placeholderProbe.reparents
             const bottom = view.contentHeight - view.height
@@ -3955,7 +3957,7 @@ Item {
             // start -> parked -> end
             for (let i = 1; i <= 20; ++i) {
                 view.contentY = Math.round(bottom * i / 20)
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             compare(host(), "bottomPlaceholder")
@@ -3975,7 +3977,7 @@ Item {
             finishFill(40)
 
             view.contentY = atTop ? 0 : view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const band = atTop ? "topPlaceholder" : "bottomPlaceholder"
             compare(host(), band)
@@ -3999,7 +4001,7 @@ Item {
                 compare(view.contentHeight, heightBefore,
                         "and still occupies exactly its space")
                 ++frames
-                waitForRendering(view, 100)
+                waitForRendering(view, root.frameMs)
             }
 
             verify(frames >= 2, "sampled more than once: " + frames)
@@ -4038,7 +4040,7 @@ Item {
 
             view.header = headerComponent
             tryVerify(() => !!view.itemAtRow(0), 2000, "rows are up")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const slot = named("topSlot")
             const band = named("topPlaceholder")
@@ -4060,7 +4062,7 @@ Item {
 
             view.header = headerComponent
             view.footer = footerComponent
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             owner.startBudget = 3
             owner.endBudget = 3
@@ -4069,7 +4071,7 @@ Item {
             view.autoRequest = true
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             tryVerify(() => owner.startBudget < 3, 3000,
                       "the band in the viewport asked for more")
@@ -4108,7 +4110,7 @@ Item {
             finishFill(30)
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             compare(host(), "topPlaceholder")
 
@@ -4132,7 +4134,7 @@ Item {
             finishFill(30)
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(view.atBottom, "parked at the newest row")
 
             const before = view.contentHeight
@@ -4396,7 +4398,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -4454,7 +4456,7 @@ Item {
             tryVerify(() => !!named(name), 2000, name + " loaded")
             // the Loader has its item the moment the component is assigned; the
             // column only re-lays out on the next polish
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             return named(name)
         }
 
@@ -4486,7 +4488,7 @@ Item {
             root.bannerHeight = height
             tryVerify(() => Math.abs(named(name).height - height) < 0.5, 2000,
                       name + " took its new height")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function wholeOnScreen(item) {
@@ -4546,7 +4548,7 @@ Item {
             fill(60)
 
             view.contentY = 300
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
 
@@ -4572,7 +4574,7 @@ Item {
 
             view.header = null
             tryVerify(() => !named("headerBanner"), 2000, "the slot went away")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             after = topVisible()
             compare(after.value, before.value)
@@ -4596,7 +4598,7 @@ Item {
         function pad(top, bottom) {
             view.topPadding = top
             view.bottomPadding = bottom
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function test_thePaddingIsSpaceAtTheContentEdges() {
@@ -4604,12 +4606,12 @@ Item {
             pad(16, 24)
 
             view.positionViewAtBeginning()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(rowTopInViewport(0), 16, 0.5,
                          "the first row starts below the top padding")
 
             view.positionViewAtEnd()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(rowBottomInViewport(59), view.height - 24, 0.5,
                          "and the last ends above the bottom padding")
         }
@@ -4621,11 +4623,11 @@ Item {
             pad(16, 24)
 
             view.positionViewAtBeginning()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(topInViewport(header), 16, 0.5, "the header is inside it")
 
             view.positionViewAtEnd()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(topInViewport(footer) + footer.height, view.height - 24,
                          0.5, "and so is the footer")
         }
@@ -4639,7 +4641,7 @@ Item {
             pad(16, 24)
 
             view.positionViewAtBeginning()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(rowBottomInViewport(0), view.height - 24, 0.5,
                          "the model's first row rests on the bottom padding")
         }
@@ -4648,7 +4650,7 @@ Item {
             fill(60)
 
             view.contentY = 300
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
 
@@ -4704,7 +4706,7 @@ Item {
 
             view.footer = null
             tryVerify(() => !named("footerBanner"), 2000, "the slot went away")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             tryVerify(() => Math.abs(view.contentY - bottomEdge()) < 0.5, 2000,
                       "and the bottom is still the bottom")
             verify(view.atBottom)
@@ -4778,7 +4780,7 @@ Item {
             fill(60)
 
             view.contentY = 200
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
 
@@ -4800,7 +4802,7 @@ Item {
             const footer = show("footer", footerComponent, "footerBanner")
 
             view.contentY = bottomEdge()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(view.atBottom, "at the bottom to begin with")
 
             const before = topVisible()
@@ -4825,7 +4827,7 @@ Item {
             verify(view.positionViewAtRow(30,
                                           WindowedView.PositionMode.Beginning),
                    "accepted")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const without = topInViewport(view.itemAtRow(30))
 
@@ -4834,13 +4836,13 @@ Item {
 
             verify(view.positionViewAtRow(30,
                                           WindowedView.PositionMode.Beginning))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(topInViewport(view.itemAtRow(30)), without, 0.5,
                          "the row still lands at the viewport top")
 
             verify(view.positionViewAtRow(30, WindowedView.PositionMode.Center))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const item = view.itemAtRow(30)
 
@@ -4854,7 +4856,7 @@ Item {
             show("footer", footerComponent, "footerBanner")
 
             view.contentY = 400
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const row = 25
             const captured = view.viewportOffsetToRow(row)
@@ -4862,7 +4864,7 @@ Item {
             verify(!isNaN(captured), "captured an offset")
 
             view.positionViewAtEnd()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(Math.abs(view.viewportOffsetToRow(row) - captured) > 20,
                    "the position is genuinely lost")
 
@@ -4879,14 +4881,14 @@ Item {
             const footer = show("footer", footerComponent, "footerBanner")
 
             view.positionViewAtBeginning()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(view.contentY, 0, 0.5, "the beginning is the content's")
             verify(wholeOnScreen(header),
                    "which is where the header is, above the first row")
 
             view.positionViewAtEnd()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(view.contentY, bottomEdge(), 0.5)
             verify(wholeOnScreen(footer), "and the footer is at the end")
@@ -4899,13 +4901,13 @@ Item {
             show("footer", footerComponent, "footerBanner")
 
             view.contentY = 300
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topVisible()
 
             root.width = 380
             tryVerify(() => !view.busy, 5000, "the re-wrap settled")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const after = topVisible()
 
@@ -4923,7 +4925,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(smokeView, 100)
+            waitForRendering(smokeView, root.frameMs)
             tryVerify(() => !smokeView.busy && smokeView.rowCount === 30
                             && smokeView.contentHeight > smokeView.height, 10000,
                       "the real source and pool filled the window")
@@ -4995,7 +4997,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(pooledView, 100)
+            waitForRendering(pooledView, root.frameMs)
         }
 
         function init() {
@@ -5010,7 +5012,7 @@ Item {
             tryVerify(() => pooled.queue.length === 0 && !pooledView.busy
                             && pooledView.rowCount === 30, 30000,
                       "the window filled from the pool")
-            waitForRendering(pooledView, 100)
+            waitForRendering(pooledView, root.frameMs)
 
             pooledRowPool.clearBoost(pooledRowPool.kind)
             pooled.starved = 0
@@ -5080,7 +5082,7 @@ Item {
                     = WindowedView.VerticalLayoutDirection.BottomToTop
             tryVerify(() => !pooledView.busy && pooledView.rowCount === 30,
                       20000, "refilled upside down")
-            waitForRendering(pooledView, 100)
+            waitForRendering(pooledView, root.frameMs)
 
             for (let row = 0; row < pooledView.rowCount; ++row) {
                 const shell = pooledView.itemAtRow(row)
@@ -5187,7 +5189,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -5292,7 +5294,7 @@ Item {
         readonly property int contain: WindowedView.PositionMode.Contain
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -5341,7 +5343,7 @@ Item {
             fill(40)
 
             verify(view.positionViewAtRow(20, beginning))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(topOf(20), 0, 0.5)
         }
@@ -5350,7 +5352,7 @@ Item {
             fill(40)
 
             verify(view.positionViewAtRow(20, centre))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const item = view.itemAtRow(20)
 
@@ -5361,7 +5363,7 @@ Item {
             fill(40)
 
             verify(view.positionViewAtRow(20, atEnd))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const item = view.itemAtRow(20)
 
@@ -5373,7 +5375,7 @@ Item {
             fill(40)
 
             verify(view.positionViewAtRow(20, centre))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = view.contentY
             const offset = topOf(20)
@@ -5389,13 +5391,13 @@ Item {
             fill(40)
 
             verify(view.positionViewAtRow(20, beginning))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             // one row further down is partly or wholly below the viewport
             const far = 20 + Math.max(1, Math.floor(view.height / 60))
 
             verify(view.positionViewAtRow(far, contain))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const item = view.itemAtRow(far)
 
@@ -5432,7 +5434,7 @@ Item {
             fill(40)
 
             verify(view.positionViewAtRowOffset(20, 30))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(topOf(20), -30, 0.5, "the viewport top is 30px into it")
             compare(positionedSpy.count, 0)
@@ -5451,7 +5453,7 @@ Item {
             fill(60)
 
             verify(view.positionViewAtRow(30, centre))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const key = view.keyAtRow(30)
             const captured = view.viewportOffsetToRow(30)
@@ -5460,7 +5462,7 @@ Item {
 
             // somewhere else entirely
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(Math.abs(view.viewportOffsetToRow(30) - captured) > 10,
                    "the position is genuinely lost")
 
@@ -5468,7 +5470,7 @@ Item {
 
             compare(row, 30, "found again by key")
             verify(view.positionViewAtRowOffset(row, captured))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(view.viewportOffsetToRow(30), captured, 0.5,
                          "and back to the pixel")
@@ -5478,11 +5480,11 @@ Item {
             fill(40)
 
             view.positionViewAtBeginning()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(view.contentY, 0, 0.5, "top-down the model starts up")
 
             view.positionViewAtEnd()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(view.contentY, bottomY(), 0.5)
 
             view.verticalLayoutDirection
@@ -5490,12 +5492,12 @@ Item {
             tryVerify(() => settled(40), 8000, "rebuilt bottom-up")
 
             view.positionViewAtBeginning()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(view.contentY, bottomY(), 0.5,
                          "bottom-up the model starts at the bottom")
 
             view.positionViewAtEnd()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(view.contentY, 0, 0.5)
         }
 
@@ -5517,7 +5519,7 @@ Item {
 
             tryVerify(() => positionedSpy.count === 1, 8000,
                       "the reveal honoured it")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             fuzzyCompare(topOf(30), 0, 0.5)
         }
 
@@ -5529,7 +5531,7 @@ Item {
             fill(30)
 
             view.contentY = bottomY()
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(view.atBottom)
 
             owner.removeOnReveal = false
@@ -5538,7 +5540,7 @@ Item {
             verify(view.positionViewAtRow(5, beginning))
 
             tryVerify(() => positionedSpy.count === 1, 8000, "honoured")
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             fuzzyCompare(topOf(5), 0, 0.5, "where it was asked for")
             verify(!view.atBottom, "not dragged back to the bottom")
@@ -5550,7 +5552,7 @@ Item {
             fill(40)
 
             verify(view.positionViewAtRow(20, centre))
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const offset = view.viewportOffsetToRow(20)
 
@@ -5696,7 +5698,7 @@ Item {
             tryVerify(() => !view.busy && positionedSpy.count === 1, 8000,
                       "the jump was honoured")
             view.batchRevealed.disconnect(onRevealed)
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             verify(asked, "the reveal is where the jump was asked for")
 
@@ -5718,7 +5720,7 @@ Item {
 
             // the user has other ideas
             view.contentY = 40
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             tryVerify(() => !view.busy, 8000, "the batch was revealed")
             compare(positionedSpy.count, 0, "the jump was abandoned")
@@ -5732,7 +5734,7 @@ Item {
         when: windowShown
 
         function initTestCase() {
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
         }
 
         function init() {
@@ -5814,7 +5816,7 @@ Item {
             fill(30)
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(view.atBottom, "parked at the newest row")
 
             const before = view.contentHeight
@@ -5836,7 +5838,7 @@ Item {
             fill(30)
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
 
             const before = topRow()
 
@@ -5873,7 +5875,7 @@ Item {
             fill(30)
 
             view.contentY = view.contentHeight - view.height - 150
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(!view.atBottom, "reading just above the newest row")
 
             const before = topRow()
@@ -5914,11 +5916,11 @@ Item {
             fill(40)
 
             view.contentY = 0
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(!view.atBottom, "at the top of the content")
 
             view.contentY = view.contentHeight - view.height
-            waitForRendering(view, 100)
+            waitForRendering(view, root.frameMs)
             verify(view.atBottom)
         }
 
