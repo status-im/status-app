@@ -1928,12 +1928,14 @@ QtObject:
 
   proc onAsyncLoadCuratedCommunitiesDone*(self: Service, response: string) {.slot.} =
     try:
-      let rpcResponseObj = response.parseJson
-      if (rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != ""):
-        error "Error loading curated communities", msg = rpcResponseObj{"error"}.getStr
+      let reply = response.parseJson
+      let replyError = reply{"error"}
+      if not replyError.isNil and replyError.kind != JNull:
+        let msg = if replyError.kind == JString: replyError.getStr else: replyError{"message"}.getStr
+        error "Error loading curated communities", msg
         self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED, Args())
         return
-      let curatedCommunities = parseCuratedCommunities(rpcResponseObj["response"]["result"])
+      let curatedCommunities = parseCuratedCommunities(reply["result"])
       for curatedCommunity in curatedCommunities:
         self.communities[curatedCommunity.id] = curatedCommunity
       self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADED, CommunitiesArgs(communities: curatedCommunities))
