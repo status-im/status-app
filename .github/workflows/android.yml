@@ -21,16 +21,23 @@ env:
   QT: /opt/qt/6.11.0
 
 jobs:
+  changes:
+    permissions:
+      pull-requests: read
+    uses: ./.github/workflows/changes.yml
+
   apk:
     name: apk
+    needs: changes
+    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The app's version is git describe of the pull request's head.
-          ref: ${{ github.event.pull_request.head.sha }}
+          # The merge commit is built; scripts/version.sh names the build after the pull request's head.
           fetch-depth: 0
           filter: blob:none
 
@@ -43,6 +50,7 @@ jobs:
         with:
           image: android
           env: |
+            STATUS_APP_VERSION_COMMIT=${{ github.event.pull_request.head.sha }}
             QMAKE=${{ env.QT }}/android_arm64_v8a/bin/qmake
             BUILD_VARIANT=pr
             STATUSQ_TESTMODE=true

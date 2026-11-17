@@ -16,16 +16,23 @@ env:
   IN_IMAGE: docker exec build
 
 jobs:
+  changes:
+    permissions:
+      pull-requests: read
+    uses: ./.github/workflows/changes.yml
+
   appimage:
     name: appimage
+    needs: changes
+    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The app's version is git describe of the pull request's head.
-          ref: ${{ github.event.pull_request.head.sha }}
+          # The merge commit is built; scripts/version.sh names the build after the pull request's head.
           fetch-depth: 0
           filter: blob:none
 
@@ -39,6 +46,7 @@ jobs:
         with:
           image: desktop
           env: |
+            STATUS_APP_VERSION_COMMIT=${{ github.event.pull_request.head.sha }}
             APPIMAGE_EXTRACT_AND_RUN=1
             NIMFLAGS=--colors:off
             FLAG_SWAP_ENABLED=1

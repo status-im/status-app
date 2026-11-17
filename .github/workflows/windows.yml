@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  STATUS_APP_VERSION_COMMIT: ${{ github.event.pull_request.head.sha }}
   QT_VERSION: 6.11.0
   QT_MODULES: >-
     qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtwebengine
@@ -30,8 +31,16 @@ env:
   GIT_CONFIG_VALUE_1: 'false'
 
 jobs:
+  changes:
+    permissions:
+      pull-requests: read
+    uses: ./.github/workflows/changes.yml
+
   installer:
     name: installer
+    needs: changes
+    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: windows-2022
     timeout-minutes: 120
     defaults:
@@ -42,8 +51,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          # The app's version is git describe of the pull request's head, not of the merge commit.
-          ref: ${{ github.event.pull_request.head.sha }}
+          # The merge commit is built; scripts/version.sh names the build after the pull request's head.
           fetch-depth: 0
           filter: blob:none
 

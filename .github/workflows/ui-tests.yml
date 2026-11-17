@@ -15,8 +15,16 @@ env:
   # One long-lived container; every step below runs a make target in it.
   IN_IMAGE: docker exec build
 jobs:
+  changes:
+    permissions:
+      pull-requests: read
+    uses: ./.github/workflows/changes.yml
+
   ui:
     name: ui
+    needs: changes
+    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
