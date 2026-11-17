@@ -425,12 +425,25 @@ jobs:
             exit 0
           fi
           echo "url=https://app-automate.browserstack.com/dashboard/v2/builds/${build}" >> "$GITHUB_OUTPUT"
-          running=$(bs "https://api-cloud.browserstack.com/app-automate/builds/${build}/sessions.json?limit=100" \
-            | jq -r '.[].automation_session | select(.status == "running") | .hashed_id') || true
+          running_sessions() {
+            bs "https://api-cloud.browserstack.com/app-automate/builds/${build}/sessions.json?limit=100" \
+              | jq -r '.[].automation_session | select(.status == "running") | .hashed_id'
+          }
+          running=$(running_sessions) || true
+          if [[ -z "$running" ]]; then
+            exit 0
+          fi
           for session in $running; do
             echo "Stopping session ${session}"
             bs --request DELETE "https://hub-cloud.browserstack.com/wd/hub/session/${session}" > /dev/null || true
           done
+          # BrowserStack needs a moment to close a session it was told to stop.
+          sleep 15
+          left=$(running_sessions | wc -l) || left="unknown"
+          echo "Sessions still running after the stop: ${left// /}"
+          if [[ "${left// /}" != "0" ]]; then
+            echo "::warning::${left// /} BrowserStack session(s) of this run are still running; they end at BrowserStack's idle timeout."
+          fi
 
       - name: Summarise the results
         if: always()
