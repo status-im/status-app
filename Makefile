@@ -995,8 +995,6 @@ $(STATUS_CLIENT_DMG): nim_status_client
 	cp -R Info.plist status-macos.svg resources.rcc \
 		$(MACOS_OUTER_BUNDLE)/Contents/
 	cp bin/nim_status_client $(MACOS_OUTER_BUNDLE)/Contents/MacOS/
-	# make run leaves a custom icon on the binary, which codesign refuses to sign.
-	xattr -c $(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client
 	cp status.icns $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp resources/macos/Assets.car $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp status-macos.svg $(MACOS_OUTER_BUNDLE)/Contents/
@@ -1018,6 +1016,9 @@ endif
 		$(MACOS_INNER_BUNDLE) \
 		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess \
 		-no-codesign
+
+	# codesign refuses files with Finder info or a resource fork; make run leaves a custom icon on the binary.
+	xattr -cr $(MACOS_OUTER_BUNDLE)
 
 	# Without MACOS_CODESIGN_IDENT the bundle gets an ad-hoc signature: it
 	# starts, but Gatekeeper does not accept it.

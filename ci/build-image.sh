@@ -37,6 +37,7 @@ case "$action" in
   pull)
     if ! docker pull --quiet "$image"; then
       echo "::warning::$image cannot be pulled, building it here" >&2
+      [[ -z "${GITHUB_STEP_SUMMARY:-}" ]] || echo "The \`$name\` image was built in this job: \`$image\` could not be pulled." >> "$GITHUB_STEP_SUMMARY"
       "$0" "$name"
     fi
     ;;

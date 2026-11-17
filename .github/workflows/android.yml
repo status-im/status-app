@@ -32,6 +32,7 @@ jobs:
           # The app's version is git describe of the pull request's head.
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          filter: blob:none
 
       - name: Fetch submodules
         env:

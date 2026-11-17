@@ -48,6 +48,7 @@ jobs:
           # The app's version is git describe of the pull request's head, not of the merge commit.
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          filter: blob:none
 
       - name: Fetch submodules
         env:

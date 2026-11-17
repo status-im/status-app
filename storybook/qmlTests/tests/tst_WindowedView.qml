@@ -3791,7 +3791,10 @@ Item {
             verify(frames >= 2, "sampled more than once: " + frames)
             verify(frames < 400, "the fill finished")
 
-            heights.add(view.contentHeight)
+            for (let i = 0; i < 3; ++i) {
+                heights.add(view.contentHeight)
+                waitForRendering(view, 100)
+            }
             wait(root.quietMs)
             heights.add(view.contentHeight)
 
