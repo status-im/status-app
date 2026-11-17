@@ -15,6 +15,9 @@ Control {
     required property bool profileMigrated
 
     property bool keycardProfile: false
+    // false where migration cannot be started (e.g. the login screen): the hint stays,
+    // the migrate button is hidden
+    property bool migrationActionAllowed: true
 
     // Migration to the new encryption format in progress (full re-encryption)
     property bool busy: false
@@ -102,7 +105,8 @@ Control {
         StatusButton {
             objectName: "migrateToNewEncryptionButton"
             text: qsTr("Migrate to the new encryption format")
-            visible: root.storageAvailable && !root.profileMigrated && !root.keycardProfile && !root.busy
+            visible: root.migrationActionAllowed && root.storageAvailable && !root.profileMigrated
+                     && !root.keycardProfile && !root.busy
             onClicked: root.migrateRequested()
         }
         StatusBaseText {

@@ -14,6 +14,7 @@ Item {
     property bool keycardFlag: false
     property bool enabledFlag: false
     property bool busyFlag: false
+    property bool migrationAllowedFlag: true
 
     property var toggleArgs: []
     property int migrateCount: 0
@@ -29,6 +30,7 @@ Item {
             profileMigrated: root.migratedFlag
             keycardProfile: root.keycardFlag
             busy: root.busyFlag
+            migrationActionAllowed: root.migrationAllowedFlag
 
             onToggleStayLoggedIn: checked => root.toggleArgs.push(checked)
             onMigrateRequested: root.migrateCount++
@@ -47,6 +49,7 @@ Item {
             root.keycardFlag = false
             root.enabledFlag = false
             root.busyFlag = false
+            root.migrationAllowedFlag = true
             root.toggleArgs = []
             root.migrateCount = 0
             section = createTemporaryObject(sectionComponent, root)
@@ -67,6 +70,8 @@ Item {
                   switchEnabled: false, switchChecked: false, unavailableVisible: true, hintVisible: false, migrateVisible: false, busyVisible: false },
                 { tag: "legacy (non-migrated) profile", available: true, migrated: false, busy: false, featureOn: false,
                   switchEnabled: false, switchChecked: false, unavailableVisible: false, hintVisible: true, migrateVisible: true, busyVisible: false },
+                { tag: "legacy profile, migration not allowed here", available: true, migrated: false, busy: false, featureOn: false, migrationAllowed: false,
+                  switchEnabled: false, switchChecked: false, unavailableVisible: false, hintVisible: true, migrateVisible: false, busyVisible: false },
                 { tag: "migration running", available: true, migrated: false, busy: true, featureOn: false,
                   switchEnabled: false, switchChecked: false, unavailableVisible: false, hintVisible: false, migrateVisible: false, busyVisible: true },
                 { tag: "keycard profile", available: true, migrated: true, busy: false, featureOn: true, keycard: true,
@@ -85,6 +90,7 @@ Item {
             root.keycardFlag = data.keycard ?? false
             root.busyFlag = data.busy
             root.enabledFlag = data.featureOn
+            root.migrationAllowedFlag = data.migrationAllowed ?? true
 
             const toggle = findChild(section, "stayLoggedInSwitch")
             verify(!!toggle)
