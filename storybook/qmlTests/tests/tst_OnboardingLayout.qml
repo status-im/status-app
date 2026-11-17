@@ -30,6 +30,7 @@ Item {
         property string existingPin
         property bool profileEncryptionMigrated: false
         property bool secureStorageAvailable: true
+        property bool stayLoggedIn: false
 
         readonly property string mnemonic: "apple banana cat country catalog catch category cattle dog elephant fish grape"
         readonly property string dummyNewPassword: "0123456789"
@@ -121,6 +122,9 @@ Item {
                 function isProfileMigratedToDEKEncryption(keyUid: string) { // -> bool
                     return mockDriver.profileEncryptionMigrated
                 }
+
+                // stored "Save password" preference of the selected profile
+                readonly property bool stayLoggedIn: mockDriver.stayLoggedIn
 
                 function finishOnboardingFlow(flow: int, data: Object) { // -> bool
                     return true
@@ -244,6 +248,7 @@ Item {
             mockDriver.existingPin = ""
             mockDriver.profileEncryptionMigrated = false
             mockDriver.secureStorageAvailable = true
+            mockDriver.stayLoggedIn = false
             dynamicSpy.cleanup()
             finishedSpy.clear()
             loginSpy.clear()
@@ -642,6 +647,8 @@ Item {
             compare(loginSpy.signalArguments[0][0], "uid_1")
             compare(loginSpy.signalArguments[0][1], Onboarding.LoginMethod.Password)
             compare(loginSpy.signalArguments[0][2].dek, dummyDekHex)
+            // silent auto-login follows the stored preference: no choice is sent
+            compare(loginSpy.signalArguments[0][2].stayLoggedIn, undefined)
             compare(controlUnderTest.autoLoginAttempted, true)
 
             // The failure consumer yields the attempted profile exactly once: a later
@@ -1182,6 +1189,183 @@ Item {
             verify(!!resultData)
             compare(resultData.dek, dekHex)
             compare(resultData.password, undefined)
+        }
+
+        // "Save password" toggle on the login screen
+
+        function openLoginScreenWithProfile(keyUid) {
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
+            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+            const userSelector = findChild(page, "loginUserSelector")
+            verify(!!userSelector)
+            userSelector.setSelection(keyUid)
+            tryCompare(userSelector, "selectedProfileKeyId", keyUid)
+            return page
+        }
+
+        function loginStayLoggedInSwitch(page) {
+            const section = findChild(page, "loginStayLoggedInSection")
+            verify(!!section)
+            const toggle = findChild(section, "stayLoggedInSwitch")
+            verify(!!toggle)
+            return toggle
+        }
+
+        function setLoginStayLoggedIn(page, checked) {
+            const toggle = loginStayLoggedInSwitch(page)
+            tryCompare(toggle, "enabled", true)
+            if (toggle.checked !== checked)
+                clickUntil(toggle, () => toggle.checked === checked)
+        }
+
+        function submitLoginPassword(page, password) {
+            const passwordInput = findChild(page, "loginPasswordInput")
+            verify(!!passwordInput)
+            mouseClick(passwordInput)
+            keyClickSequence(password)
+            const loginButton = findChild(page, "loginButton")
+            verify(!!loginButton)
+            tryCompare(loginButton, "enabled", true)
+            const count = loginSpy.count
+            mouseClick(loginButton)
+            tryCompare(loginSpy, "count", count + 1)
+            return loginSpy.signalArguments[count][2]
+        }
+
+        function test_loginScreen_stayLoggedIn_visibility_data() {
+            return [
+                { tag: "migrated password profile", keyUid: "uid_1", migrated: true,
+                    storage: true, visible: true, enabled: true },
+                { tag: "non-migrated password profile", keyUid: "uid_1", migrated: false,
+                    storage: true, visible: true, enabled: false },
+                { tag: "keycard profile", keyUid: "uid_4", migrated: true,
+                    storage: true, visible: false },
+                { tag: "secure storage unavailable", keyUid: "uid_1", migrated: true,
+                    storage: false, visible: false },
+            ]
+        }
+
+        function test_loginScreen_stayLoggedIn_visibility(data) {
+            mockDriver.profileEncryptionMigrated = data.migrated
+            mockDriver.secureStorageAvailable = data.storage
+            const page = openLoginScreenWithProfile(data.keyUid)
+
+            const section = findChild(page, "loginStayLoggedInSection")
+            verify(!!section)
+            tryCompare(section, "visible", data.visible)
+            if (!data.visible)
+                return
+
+            compare(loginStayLoggedInSwitch(page).enabled, data.enabled)
+            const hint = findChild(section, "migrationHintText")
+            verify(!!hint)
+            compare(hint.visible, !data.migrated)
+            // migration cannot be started from the login screen
+            const migrateButton = findChild(section, "migrateToNewEncryptionButton")
+            verify(!!migrateButton)
+            compare(migrateButton.visible, false)
+        }
+
+        function test_loginScreen_stayLoggedIn_followsStoredPreference_data() {
+            return [{ tag: "intent re-initialised from the stored preference" }]
+        }
+
+        function test_loginScreen_stayLoggedIn_followsStoredPreference() {
+            mockDriver.profileEncryptionMigrated = true
+            mockDriver.stayLoggedIn = true
+            const page = openLoginScreenWithProfile("uid_1")
+            const toggle = loginStayLoggedInSwitch(page)
+            tryCompare(toggle, "checked", true)
+
+            // the user's change is local until login
+            setLoginStayLoggedIn(page, false)
+
+            // switching profile resets the intent to that profile's stored preference
+            const userSelector = findChild(page, "loginUserSelector")
+            userSelector.setSelection("uid_2")
+            tryCompare(userSelector, "selectedProfileKeyId", "uid_2")
+            tryCompare(toggle, "checked", true)
+
+            // a rebind (stored preference changes) re-initialises it too
+            mockDriver.stayLoggedIn = false
+            tryCompare(toggle, "checked", false)
+        }
+
+        function test_loginScreen_stayLoggedIn_loginData_data() {
+            return [
+                { tag: "untouched, stored OFF", stored: false, choice: false, expected: undefined },
+                { tag: "untouched, stored ON", stored: true, choice: true, expected: undefined },
+                { tag: "turned ON", stored: false, choice: true, expected: true },
+                { tag: "turned OFF", stored: true, choice: false, expected: false },
+            ]
+        }
+
+        function test_loginScreen_stayLoggedIn_loginData(data) {
+            mockDriver.profileEncryptionMigrated = true
+            mockDriver.stayLoggedIn = data.stored
+            const page = openLoginScreenWithProfile("uid_1")
+            setLoginStayLoggedIn(page, data.choice)
+
+            const loginData = submitLoginPassword(page, mockDriver.dummyNewPassword)
+            compare(loginData.password, mockDriver.dummyNewPassword)
+            compare(loginData.stayLoggedIn, data.expected)
+        }
+
+        function test_loginScreen_stayLoggedIn_notSentForNonMigratedProfile_data() {
+            return [{ tag: "non-migrated profile never sends a choice" }]
+        }
+
+        function test_loginScreen_stayLoggedIn_notSentForNonMigratedProfile() {
+            mockDriver.profileEncryptionMigrated = false
+            mockDriver.stayLoggedIn = true
+            const page = openLoginScreenWithProfile("uid_1")
+            const loginData = submitLoginPassword(page, mockDriver.dummyNewPassword)
+            compare(loginData.stayLoggedIn, undefined)
+        }
+
+        function test_loginScreen_stayLoggedIn_keptAfterLoginError_data() {
+            return [{ tag: "choice survives a wrong password" }]
+        }
+
+        function test_loginScreen_stayLoggedIn_keptAfterLoginError() {
+            mockDriver.profileEncryptionMigrated = true
+            const page = openLoginScreenWithProfile("uid_1")
+            setLoginStayLoggedIn(page, true)
+
+            // the mock reports a wrong password through setAccountLoginError
+            const first = submitLoginPassword(page, "wrong-password")
+            compare(first.stayLoggedIn, true)
+            const passwordInput = findChild(page, "loginPasswordInput")
+            tryCompare(passwordInput, "hasError", true)
+
+            compare(loginStayLoggedInSwitch(page).checked, true)
+            const second = submitLoginPassword(page, mockDriver.dummyNewPassword)
+            compare(second.stayLoggedIn, true)
+        }
+
+        function test_loginScreen_stayLoggedIn_biometricsWithDek_data() {
+            return [
+                { tag: "turned ON", stored: false, choice: true, expected: true },
+                { tag: "turned OFF", stored: true, choice: false, expected: false },
+                { tag: "untouched", stored: true, choice: true, expected: undefined },
+            ]
+        }
+
+        function test_loginScreen_stayLoggedIn_biometricsWithDek(data) {
+            mockDriver.profileEncryptionMigrated = true
+            mockDriver.biometricsAvailable = true
+            mockDriver.stayLoggedIn = data.stored
+            const page = openLoginScreenWithProfile("uid_1")
+            setLoginStayLoggedIn(page, data.choice)
+
+            loginSpy.clear()
+            controlUnderTest.keychain.getCredentialRequestCompleted(
+                        Keychain.StatusSuccess, "dek:" + dummyDekHex)
+            tryCompare(loginSpy, "count", 1)
+            const loginData = loginSpy.signalArguments[0][2]
+            compare(loginData.dek, dummyDekHex)
+            compare(loginData.stayLoggedIn, data.expected)
         }
 
         function test_loginScreen_profileSelectionIsSavedAndRestoredAfterWrongPassword_data() {

@@ -59,6 +59,10 @@ SplitView {
 
         isBiometricsLogin: ctrlTouchIdUser.checked
 
+        stayLoggedInAvailable: ctrlSecureStorage.checked
+        stayLoggedIn: ctrlStayLoggedIn.checked
+        isProfileMigratedToDEKEncryption: (keyUid) => ctrlProfileMigrated.checked
+
         onBiometricsRequested: biometricsPopup.open()
         onDismissBiometricsRequested: biometricsPopup.close()
 
@@ -174,6 +178,24 @@ SplitView {
                 Switch {
                     id: ctrlTouchIdUser
                     text: "Touch ID login"
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Switch {
+                    id: ctrlSecureStorage
+                    text: "Secure storage available"
+                    checked: true
+                }
+                Switch {
+                    id: ctrlProfileMigrated
+                    text: "Profile DEK-migrated"
+                    checked: true
+                }
+                Switch {
+                    id: ctrlStayLoggedIn
+                    text: "Stored save-password preference"
                 }
             }
 
