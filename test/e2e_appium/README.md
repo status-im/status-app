@@ -98,10 +98,21 @@ e2e:
   permissions:
     contents: read
     packages: read
+  # A new push to the same pull request cancels its older e2e run.
+  concurrency:
+    group: e2e-android-pr-${{ github.event.pull_request.number || github.run_id }}
+    cancel-in-progress: true
   uses: ./.github/workflows/e2e-android.yml
   with: { apk-artifact: <artifact with one APK>, account: auto }
-  secrets: inherit
+  secrets:
+    BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+    BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+    BROWSERSTACK_USERNAME_2: ${{ secrets.BROWSERSTACK_USERNAME_2 }}
+    BROWSERSTACK_ACCESS_KEY_2: ${{ secrets.BROWSERSTACK_ACCESS_KEY_2 }}
 ```
+
+Pass the four secrets by name. `secrets: inherit` also works, but it hands
+every secret of the repository to the called workflow.
 
 The called jobs need `contents: read` and `packages: read`. A called workflow
 cannot get more than its caller has, so a caller with narrower permissions
@@ -140,7 +151,11 @@ jobs:
       packages: read
     uses: ./.github/workflows/e2e-android.yml
     with: { apk-artifact: apk, account: auto }
-    secrets: inherit
+    secrets:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      BROWSERSTACK_USERNAME_2: ${{ secrets.BROWSERSTACK_USERNAME_2 }}
+      BROWSERSTACK_ACCESS_KEY_2: ${{ secrets.BROWSERSTACK_ACCESS_KEY_2 }}
 ```
 
 - Without the label, the e2e job is skipped and nothing reaches BrowserStack.
@@ -149,6 +164,9 @@ jobs:
   built from that PR. Every later push runs them again until the label is
   removed.
 - PRs from forks get no secrets, so their run ends as NOT RUN.
+- In a stack of PRs, put the label on the top PR only. It contains the
+  changes of the PRs below it, and every labelled PR in the stack queues its
+  own run after a rebase.
 - Odd pull requests run on account 1 and even ones on account 2. Runs on
   the same account wait in a queue, one at a time.
 - If the PR workflow sets `cancel-in-progress: true`, a push cancels the e2e
@@ -186,8 +204,9 @@ vendored status-go has no published image yet or GHCR cannot be reached. A
 built image is handed to the e2e job as an artifact kept for 4 days.
 
 **Results:** the job summary names the APK, its upload date, the tested
-commit, every failed test with its message and every skipped test with its
-reason, and each failure is an error annotation. Reports, logs and screenshots are in the `e2e-android-reports-*`
+commit and how far it is behind its base branch, every failed test with its
+message, every test that passed only on a rerun and every skipped test with
+its reason. Each failure is an error annotation. Reports, logs and screenshots are in the `e2e-android-reports-*`
 artifact for 14 days.
 
 ## Onboarding Fixture
