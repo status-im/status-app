@@ -56,9 +56,9 @@ QtObject {
 
     function getFormedUrl(selectedBrowserSearchEngineId, url) {
         return SearchEnginesConfig.formatSearchUrl(
-            localAccountSensitiveSettings.selectedBrowserSearchEngineId,
+            localAccountSettings.selectedBrowserSearchEngineId,
             url,
-            localAccountSensitiveSettings.customSearchEngineUrl
+            localAccountSettings.customSearchEngineUrl
         )
     }
 

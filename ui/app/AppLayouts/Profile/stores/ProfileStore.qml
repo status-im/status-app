@@ -24,7 +24,7 @@ QtObject {
     property string preferredName: userProfile.preferredName
     property string profileLargeImage: userProfile.largeImage
     property string icon: userProfile.icon
-    readonly property bool userDeclinedBackupBanner: Global.appIsReady? localAccountSensitiveSettings.userDeclinedBackupBanner : false
+    readonly property bool userDeclinedBackupBanner: Global.appIsReady? localAccountSettings.userDeclinedBackupBanner : false
     readonly property string keyUid: userProfile.keyUid
     readonly property bool migratedToColdWallet: userProfile.migratedToColdWallet
     readonly property int currentUserStatus: userProfile.currentUserStatus
@@ -137,6 +137,6 @@ QtObject {
     }
 
     function setUserDeclinedBackupBanner(value = true) {
-        localAccountSensitiveSettings.userDeclinedBackupBanner = value
+        localAccountSettings.userDeclinedBackupBanner = value
     }
 }

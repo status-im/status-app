@@ -221,8 +221,8 @@ SettingsContentBase {
                 visible: root.minimizeOnCloseOptionVisible
                 text: qsTr("Minimize to tray icon on close")
                 isSwitch: true
-                checked: !localAccountSensitiveSettings.quitOnClose
-                onToggled: localAccountSensitiveSettings.quitOnClose = !checked
+                checked: !localAccountSettings.quitOnClose
+                onToggled: localAccountSettings.quitOnClose = !checked
             }
 
             RowLayout {
@@ -335,9 +335,9 @@ SettingsContentBase {
                 width: parent.width
                 text: qsTr("Web/dApp Browser")
                 isSwitch: true
-                checked: localAccountSensitiveSettings.isBrowserEnabled // user setting
+                checked: localAccountSettings.isBrowserEnabled // user setting
                 onToggled: {
-                    checked = Qt.binding(() => localAccountSensitiveSettings.isBrowserEnabled)
+                    checked = Qt.binding(() => localAccountSettings.isBrowserEnabled)
 
                     if (!checked) {
                         confirmationPopup.experimentalFeature = root.advancedStore.experimentalFeatures.browser

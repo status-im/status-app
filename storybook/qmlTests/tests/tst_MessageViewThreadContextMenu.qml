@@ -10,7 +10,7 @@ Item {
     height: 600
 
     QtObject {
-        id: localAccountSensitiveSettings
+        id: localAccountSettings
         property bool showDeleteThreadWarning: true
     }
     property var activePopup: null

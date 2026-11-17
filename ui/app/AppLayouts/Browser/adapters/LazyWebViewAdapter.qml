@@ -94,7 +94,7 @@ AbstractWebView {
             bookmarksStore:                Qt.binding(() => root.bookmarksStore),
             webChannel:                    Qt.binding(() => root.webChannel),
             enableJsLogs:                  Qt.binding(() => root.enableJsLogs),
-            localAccountSensitiveSettings: Qt.binding(() => root.localAccountSensitiveSettings),
+            localAccountSettings: Qt.binding(() => root.localAccountSettings),
             devToolsEnabled:               Qt.binding(() => root.devToolsEnabled),
             freeze:                        Qt.binding(() => root.freeze),
         }

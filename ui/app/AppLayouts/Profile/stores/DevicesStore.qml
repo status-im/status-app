@@ -33,17 +33,17 @@ QtObject {
     readonly property string backupImportError: syncModule ? syncModule.backupImportError : ""
     readonly property string backupDataError: syncModule ? syncModule.backupDataError : ""
     readonly property url backupPath: {
-        if (!d.localAccountSensitiveSettingsInst.localBackupChosenPath) {
+        if (!d.localAccountSettingsInst.localBackupChosenPath) {
             return ""
         }
-        return toFileUri(d.localAccountSensitiveSettingsInst.localBackupChosenPath)
+        return toFileUri(d.localAccountSettingsInst.localBackupChosenPath)
     }
     readonly property bool messagesBackupEnabled: d.appSettingsInst.messagesBackupEnabled
 
     readonly property QtObject _d: StatusQUtils.QObject {
         id: d
         readonly property var appSettingsInst: appSettings
-        readonly property var localAccountSensitiveSettingsInst: localAccountSensitiveSettings
+        readonly property var localAccountSettingsInst: localAccountSettings
         readonly property var globalUtilsInst: globalUtils
 
         property bool waitingForAuthentication: false

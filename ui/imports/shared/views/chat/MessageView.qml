@@ -1309,7 +1309,7 @@ Loader {
                         }
                         onHoveredLinkChanged: delegate.highlightedLink = linksMessageView.hoveredLink
                         gifUnfurlingEnabled: root.gifUnfurlingEnabled
-                        onSetGifUnfurlingEnabled: localAccountSensitiveSettings.gifUnfurlingEnabled = true
+                        onSetGifUnfurlingEnabled: localAccountSettings.gifUnfurlingEnabled = true
                         canAskToUnfurlGifs: !root.neverAskAboutUnfurlingAgain
                         onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
                         onPaymentRequestClicked: (index) => {

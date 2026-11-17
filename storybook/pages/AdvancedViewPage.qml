@@ -124,7 +124,7 @@ SplitView {
                 }
                 function toggleExperimentalFeature(feat) {
                     if (feat === experimentalFeatures.browser)
-                        advancedView.localAccountSensitiveSettings.isBrowserEnabled = !advancedView.localAccountSensitiveSettings.isBrowserEnabled
+                        advancedView.localAccountSettings.isBrowserEnabled = !advancedView.localAccountSettings.isBrowserEnabled
                 }
                 function toggleCopyMessageLinksEnabled() {
                     copyMessageLinksEnabled = !copyMessageLinksEnabled
@@ -134,7 +134,7 @@ SplitView {
                     readonly property string browser: "browser"
                 }
             }
-            readonly property var localAccountSensitiveSettings: QtObject {
+            readonly property var localAccountSettings: QtObject {
                 property bool quitOnClose
                 property bool isBrowserEnabled: true
             }

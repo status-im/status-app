@@ -399,7 +399,7 @@ QtObject {
             bookmarksStore: root.bookmarksStore
             profileManager: root.profileManager
             enableJsLogs: root.isDebugEnabled
-            localAccountSensitiveSettings: root.browserSettings
+            localAccountSettings: root.browserSettings
 
             devToolsEnabled: root.browserSettings.devToolsEnabled
             onDevToolsToggled: enabled => root.browserSettings.devToolsEnabled = enabled

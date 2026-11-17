@@ -430,9 +430,9 @@ proc buildChatSectionUI(
   let chatIds = chats.mapIt(it.id)
   var sectionLastOpenChat = self.controller.getActiveChatId()
   if sectionLastOpenChat == "":
-    sectionLastOpenChat = singletonInstance.localAccountSensitiveSettings.getSectionLastOpenChat(self.controller.getMySectionId())
+    sectionLastOpenChat = singletonInstance.localAccountSettings.getSectionLastOpenChat(self.controller.getMySectionId())
     if self.pendingNavigation.chatId notin chatIds:
-      let lastThread = parseLastSectionThread(singletonInstance.localAccountSensitiveSettings.getSectionLastOpenThread(
+      let lastThread = parseLastSectionThread(singletonInstance.localAccountSettings.getSectionLastOpenThread(
         self.controller.getMySectionId()))
       if lastThread.threadId.len > 0:
         self.pendingThreadId = lastThread.threadId
@@ -740,14 +740,14 @@ method openThreadPanel*(self: Module, threadId: string, threadName: string,
 
   self.ensureThreadContentModule(threadItem)
   self.view.setOpenThread(threadId, threadName, parentChatId)
-  singletonInstance.localAccountSensitiveSettings.setSectionLastOpenThread(
+  singletonInstance.localAccountSettings.setSectionLastOpenThread(
     self.controller.getMySectionId(), threadId, parentChatId, THREAD_PRESENTATION_SIDE_PANEL)
 
 method closeThreadPanel*(self: Module) =
   if self.view.getOpenThreadId().len == 0:
     return
   self.view.setOpenThread("", "", "")
-  singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(
+  singletonInstance.localAccountSettings.removeSectionLastOpenThread(
     self.controller.getMySectionId())
 
 method openThreadAsChat*(self: Module, parentChatId: string, threadId: string, threadName: string, parentMessageId: string,
@@ -794,7 +794,7 @@ proc clearPendingThreadRestore(self: Module, clearSettings: bool) =
   self.pendingThreadMessageId = ""
   self.pendingThreadNavigation = false
   if clearSettings:
-    singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(
+    singletonInstance.localAccountSettings.removeSectionLastOpenThread(
       self.controller.getMySectionId())
 
 method onChatThreadsForChatsLoaded*(self: Module, threads: seq[ThreadDto],
@@ -912,7 +912,7 @@ method activeItemSet*(self: Module, itemId: string) =
   let mySectionId = self.controller.getMySectionId()
   if itemId == "":
     self.view.activeItem().resetActiveItemData()
-    singletonInstance.localAccountSensitiveSettings.removeSectionChatRecord(mySectionId)
+    singletonInstance.localAccountSettings.removeSectionChatRecord(mySectionId)
     self.lastAppliedActiveItemId = ""
     return
 
@@ -943,7 +943,7 @@ method activeItemSet*(self: Module, itemId: string) =
       self.clearPendingThreadRestore(clearSettings = true)
     elif self.pendingThreadId.len == 0 and itemId != self.lastAppliedActiveItemId:
       self.closeThreadPanel()
-      singletonInstance.localAccountSensitiveSettings.removeSectionLastOpenThread(mySectionId)
+      singletonInstance.localAccountSettings.removeSectionLastOpenThread(mySectionId)
 
   self.lastAppliedActiveItemId = itemId
   self.updateActiveChatMembership()
@@ -958,9 +958,9 @@ method activeItemSet*(self: Module, itemId: string) =
       chatContentModule.onMadeInactive()
 
   # save last open chat in settings for restore on the next app launch
-  singletonInstance.localAccountSensitiveSettings.setSectionLastOpenChat(mySectionId, activeChatId)
+  singletonInstance.localAccountSettings.setSectionLastOpenChat(mySectionId, activeChatId)
   if chat_item.isThread:
-    singletonInstance.localAccountSensitiveSettings.setSectionLastOpenThread(mySectionId,
+    singletonInstance.localAccountSettings.setSectionLastOpenThread(mySectionId,
       chat_item.id, chat_item.parentChatId, THREAD_PRESENTATION_SELECTED_CHAT)
 
   let (deactivateSectionId, deactivateChatId) = singletonInstance.loaderDeactivator.addChatInMemory(mySectionId, activeChatId)
@@ -1395,7 +1395,7 @@ proc removeThreadsForParent(self: Module, parentChatId: string) =
 method onCommunityChannelDeletedOrChatLeft*(self: Module, chatId: string) =
   if self.view.chatsModel().getItemById(chatId).isNil:
     return
-  let savedThread = parseLastSectionThread(singletonInstance.localAccountSensitiveSettings.getSectionLastOpenThread(
+  let savedThread = parseLastSectionThread(singletonInstance.localAccountSettings.getSectionLastOpenThread(
     self.controller.getMySectionId()))
   if savedThread.threadId == chatId or savedThread.parentChatId == chatId:
     self.clearPendingThreadRestore(clearSettings = true)

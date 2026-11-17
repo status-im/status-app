@@ -3,6 +3,8 @@ import app/global/qt_settings
 
 import constants
 
+const APP_SETTINGS_FILE_NAME* = "global"
+
 # Local App Settings keys:
 const LAS_KEY_LANGUAGE* = "global/language"
 const DEFAULT_LAS_KEY_LANGUAGE* = "en"

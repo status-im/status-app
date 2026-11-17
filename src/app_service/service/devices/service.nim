@@ -122,7 +122,7 @@ QtObject:
           if receivedData.fileName.len == 0:
             raise newException(CatchableError, "no backup file name received")
 
-          let backupPath = singletonInstance.localAccountSensitiveSettings.getLocalBackupChosenPath()
+          let backupPath = singletonInstance.localAccountSettings.getLocalBackupChosenPath()
 
           if backupPath.len == 0 or not backupPath.startsWith("content://"):
             raise newException(CatchableError, "invalid backup path for SAF copy")

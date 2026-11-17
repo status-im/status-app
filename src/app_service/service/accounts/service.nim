@@ -71,23 +71,12 @@ QtObject:
     result.events = events
     result.threadpool = threadpool
 
-  proc setLocalAccountSettingsFile(self: Service) =
-    if self.loggedInAccount.isValid():
-      singletonInstance.localAccountSettings.setFileName(self.loggedInAccount.name)
-      # The file is per display name (not unique) — keyUid-namespaced settings need this
-      singletonInstance.localAccountSettings.setKeyUid(self.loggedInAccount.keyUid)
-
   proc getLoggedInAccount*(self: Service): AccountDto =
     return self.loggedInAccount
-
-  proc setLoggedInAccount*(self: Service, account: AccountDto) =
-    self.loggedInAccount = account
-    self.setLocalAccountSettingsFile()
 
   proc updateLoggedInAccount*(self: Service, displayName: string, images: Images) =
     self.loggedInAccount.name = displayName
     self.loggedInAccount.images = images
-    singletonInstance.localAccountSettings.setFileName(displayName)
 
   proc init*(self: Service) =
     discard
@@ -130,6 +119,34 @@ QtObject:
 
   proc clearOpenedAccountsCache*(self: Service) =
     self.accounts = @[]
+
+  proc bindLocalAccountSettings(self: Service, keyUid: string, newOnDevice: bool) =
+    let settings = singletonInstance.localAccountSettings
+    if newOnDevice:
+      settings.bindAccount(keyUid)
+      settings.markNewOnDevice()
+      return
+
+    var accounts: seq[AccountDto]
+    try:
+      accounts = self.openedAccounts()
+    except CatchableError:
+      # Merging a shared file needs the other profiles; retried on the next bind.
+      settings.bindAccount(keyUid)
+      return
+    var displayName = ""
+    for account in accounts:
+      if account.keyUid == keyUid:
+        displayName = account.name
+    let otherProfiles = accounts
+      .filterIt(it.keyUid != keyUid)
+      .mapIt((keyUid: it.keyUid, displayName: it.name))
+    settings.bindAccount(keyUid, displayName, otherProfiles)
+
+  proc setLoggedInAccount*(self: Service, account: AccountDto, newOnDevice = false) =
+    self.loggedInAccount = account
+    if self.loggedInAccount.isValid():
+      self.bindLocalAccountSettings(account.keyUid, newOnDevice)
 
   proc isAppRestartRequiredAfterProfileConversion*(self: Service): bool =
     return DB_BLOCKED_DUE_TO_PROFILE_MIGRATION
@@ -476,7 +493,6 @@ QtObject:
       return
 
     debug "login request accepted, waiting for node.login signal"
-    self.setLocalAccountSettingsFile()
 
   proc login*(self: Service, account: AccountDto, hashedPassword: string, chatPrivateKey: string = "", mnemonic: string = "",
     walletXPub: string = "", dek: string = "") =

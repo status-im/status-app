@@ -17,7 +17,7 @@ QtObject {
     readonly property bool autoApplyKeypairMigrations: root.walletModule ? root.walletModule.autoApplyKeypairMigrations : true
     property var collectibles: _jointCollectiblesBySymbolModel
 
-    property var accountSensitiveSettings: Global.appIsReady? localAccountSensitiveSettings : null
+    property var accountSettings: Global.appIsReady? localAccountSettings : null
     readonly property var dappList: Global.appIsReady? dappPermissionsModule.dapps : null
 
     readonly property bool isWalletEnabled: Global.appIsReady ?
