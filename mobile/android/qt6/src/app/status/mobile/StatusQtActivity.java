@@ -110,6 +110,8 @@ public class StatusQtActivity extends QtActivity {
         ShakeDetector.start(this);
         // Set up density change detection
         DensityListener.start(this);
+        // Set up memory pressure detection
+        MemoryPressureListener.start(this);
 
         // A fresh launch can't have an in-flight share flow: drop cached
         // copies a previous run left behind (killed before send/cancel

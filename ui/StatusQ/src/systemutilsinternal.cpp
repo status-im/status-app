@@ -70,6 +70,7 @@ static void handleIOSFilePickerRejected();
 extern "C" {
 static void jni_nativeShakeDetected(JNIEnv*, jclass);
 static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density);
+static void jni_nativeMemoryPressure(JNIEnv*, jclass);
 static void jni_nativeKeyboardHeightChanged(JNIEnv*, jclass, jint height);
 }
 #endif
@@ -85,7 +86,8 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
     QObject::connect(filter, &QuitFilter::quit, this, &SystemUtilsInternal::quit);
 
 #ifdef Q_OS_ANDROID
-    // Register native methods for density listener and start listening
+    // Register native methods for the density and memory pressure listeners,
+    // and start the density listener
     static std::once_flag densityRegOnce;
     std::call_once(densityRegOnce, []{
         QJniEnvironment env;
@@ -100,6 +102,20 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
             env->DeleteLocalRef(clazz);
             if (rc != 0) {
                 qWarning() << "[Android Density] RegisterNatives failed:" << rc;
+            }
+        }
+
+        clazz = env->FindClass("app/status/mobile/MemoryPressureListener");
+        if (clazz) {
+            const JNINativeMethod methods[] = {
+                { const_cast<char*>("nativeOnMemoryPressure"),
+                  const_cast<char*>("()V"),
+                  reinterpret_cast<void*>(jni_nativeMemoryPressure) },
+            };
+            jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
+            env->DeleteLocalRef(clazz);
+            if (rc != 0) {
+                qWarning() << "[Android MemoryPressure] RegisterNatives failed:" << rc;
             }
         }
 
@@ -1031,6 +1047,14 @@ static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density)
         qInfo() << "[Android Density] SystemUtilsInternal: nativeDprChanged signal emitted with" << density;
 #endif
         emit self->nativeDprChanged(static_cast<qreal>(density));
+    }, Qt::QueuedConnection);
+}
+
+static void jni_nativeMemoryPressure(JNIEnv*, jclass)
+{
+    QMetaObject::invokeMethod(qApp, []() {
+        if (auto self = s_systemUtilsInternal.load())
+            emit self->memoryPressure();
     }, Qt::QueuedConnection);
 }
 
