@@ -33,12 +33,12 @@ Item {
 
             // Test-only override so each test can drive the "do not show
             // again" persisted setting without touching the real Settings
-            // singleton (localAccountSensitiveSettings is dependency-injected
+            // singleton (localAccountSettings is dependency-injected
             // via QML scope lookup; in the app it is a real Settings object).
-            property alias showDeleteThreadWarning: localAccountSensitiveSettings.showDeleteThreadWarning
+            property alias showDeleteThreadWarning: localAccountSettings.showDeleteThreadWarning
 
             QtObject {
-                id: localAccountSensitiveSettings
+                id: localAccountSettings
                 property bool showDeleteThreadWarning: true
             }
         }

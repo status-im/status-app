@@ -291,8 +291,8 @@ StatusSectionLayout {
         }
 
         function onRequestLaunchInBrowser(url) {
-            if (localAccountSensitiveSettings.useBrowserEthereumExplorer !== Constants.browserEthereumExplorerNone && url.startsWith("0x")) {
-                webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
+            if (localAccountSettings.useBrowserEthereumExplorer !== Constants.browserEthereumExplorerNone && url.startsWith("0x")) {
+                webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSettings.useBrowserEthereumExplorer, url))
                 return
             }
             // A local path dead-ends here (ADR 0006 §8) rather than becoming
@@ -304,8 +304,8 @@ StatusSectionLayout {
             // view-source://…, about:blank. isURL() only knows http(s). file://
             // is left out: browsing tabs never reach it (ADR 0006 §8).
             const hasScheme = /^(?!file:)[a-z][a-z0-9+.-]*:\/\//i.test(url) || /^about:\S+$/i.test(url)
-            if (localAccountSensitiveSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !hasScheme && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
-                webViewContext.setCurrentWebUrl(root.browserRootStore.getFormedUrl(localAccountSensitiveSettings.selectedBrowserSearchEngineId, url))
+            if (localAccountSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !hasScheme && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
+                webViewContext.setCurrentWebUrl(root.browserRootStore.getFormedUrl(localAccountSettings.selectedBrowserSearchEngineId, url))
                 return
             } else if (Utils.isURLWithOptionalProtocol(url)) {
                 url = "https://" + url
@@ -379,7 +379,7 @@ StatusSectionLayout {
         id: favoritesContext
         currentWebView: _internal.currentWebView
         bookmarksStore: root.bookmarksStore
-        shouldShowFavoritesBar: localAccountSensitiveSettings.shouldShowFavoritesBar
+        shouldShowFavoritesBar: localAccountSettings.shouldShowFavoritesBar
     }
 
     BrowserDialogsContext {
@@ -418,7 +418,7 @@ StatusSectionLayout {
         isDebugEnabled: root.isDebugEnabled
         isMobile: SQUtils.Utils.isMobile // non-UI, do not override with root.isMobile
         hasPopups: SQUtils.Utils.hasPopups(root.Overlay.overlay.children)
-        browserSettings: localAccountSensitiveSettings
+        browserSettings: localAccountSettings
         connectorController: root.dappsEnabled ? root.connectorController : null
         dappsEnabled: root.dappsEnabled
         hostStackLayout: webStackView
@@ -819,7 +819,7 @@ StatusSectionLayout {
 
         incognitoMode: _internal.currentTabIncognito
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
-        browserSettings: localAccountSensitiveSettings
+        browserSettings: localAccountSettings
         clearingBrowsingData: _internal.currentWebView?.clearing ?? false
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
         onForceReload: webViewContext.forceReloadCurrent()

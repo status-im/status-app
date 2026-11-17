@@ -14,6 +14,6 @@ QObject {
     QtObject {
         id: d
 
-        readonly property var settings: localAccountSensitiveSettings
+        readonly property var settings: localAccountSettings
     }
 }

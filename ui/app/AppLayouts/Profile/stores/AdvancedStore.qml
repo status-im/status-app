@@ -35,8 +35,8 @@ QtObject {
             return qsTr("Disabled")
         }
     }
-    readonly property bool ensCommunityPermissionsEnabled: localAccountSensitiveSettings.ensCommunityPermissionsEnabled
-    readonly property bool copyMessageLinksEnabled: localAccountSensitiveSettings.copyMessageLinksEnabled
+    readonly property bool ensCommunityPermissionsEnabled: localAccountSettings.ensCommunityPermissionsEnabled
+    readonly property bool copyMessageLinksEnabled: localAccountSettings.copyMessageLinksEnabled
 
     property var customNetworksModel: advancedModule? advancedModule.customNetworksModel : []
 
@@ -188,7 +188,7 @@ QtObject {
             advancedModule.toggleCommunitiesPortalSection()
         }
         else if (feature === experimentalFeatures.activityCenter) {
-            localAccountSensitiveSettings.isActivityCenterEnabled = !localAccountSensitiveSettings.isActivityCenterEnabled
+            localAccountSettings.isActivityCenterEnabled = !localAccountSettings.isActivityCenterEnabled
         }
     }
 
@@ -209,11 +209,11 @@ QtObject {
     }
 
     function toggleEnsCommunityPermissionsEnabled() {
-        localAccountSensitiveSettings.ensCommunityPermissionsEnabled = !root.ensCommunityPermissionsEnabled
+        localAccountSettings.ensCommunityPermissionsEnabled = !root.ensCommunityPermissionsEnabled
     }
 
     function toggleCopyMessageLinksEnabled() {
-        localAccountSensitiveSettings.copyMessageLinksEnabled = !root.copyMessageLinksEnabled
+        localAccountSettings.copyMessageLinksEnabled = !root.copyMessageLinksEnabled
     }
 
     function toggleManageCommunityOnTestnet() {

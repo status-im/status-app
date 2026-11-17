@@ -47,7 +47,7 @@ SplitView {
             onDeleteRequested: logs.logEvent("onDeleteRequested()")
 
             QtObject {
-                id: localAccountSensitiveSettings
+                id: localAccountSettings
                 property bool showDeleteThreadWarning: true
             }
         }

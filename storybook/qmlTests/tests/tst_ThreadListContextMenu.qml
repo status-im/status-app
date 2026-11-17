@@ -16,7 +16,7 @@ Item {
     property string openedChatId
 
     QtObject {
-        id: localAccountSensitiveSettings
+        id: localAccountSettings
         property bool showDeleteThreadWarning: true
     }
 
@@ -239,7 +239,7 @@ Item {
             section.readThreadId = ""
             root.openedMenu = null
             root.openedChatId = ""
-            localAccountSensitiveSettings.showDeleteThreadWarning = true
+            localAccountSettings.showDeleteThreadWarning = true
         }
 
         function cleanup() {

@@ -156,7 +156,7 @@ StatusSectionLayout {
         id: settingsEntriesModel
 
         showWalletEntries: root.walletStore.isWalletEnabled
-        showBrowserEntries: root.isBrowserEnabled && localAccountSensitiveSettings.isBrowserEnabled
+        showBrowserEntries: root.isBrowserEnabled && localAccountSettings.isBrowserEnabled
         showBackUpSeed: !root.privacyStore.mnemonicBackedUp
         backUpSeedBadgeCount: root.profileStore.userDeclinedBackupBanner ? 0 : showBackUpSeed
         isKeycardEnabled: root.isKeycardEnabled
@@ -544,7 +544,7 @@ StatusSectionLayout {
             prefetch: true
             properties: ({
                 userUID: Qt.binding(() => root.userUID),
-                accountSettings: Qt.binding(() => localAccountSensitiveSettings),
+                accountSettings: Qt.binding(() => localAccountSettings),
                 browserPreferencesStore: root.browserPreferencesStore,
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.browserSettings)),
                 contentWidth: Qt.binding(() => d.contentWidth)

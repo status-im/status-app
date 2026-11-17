@@ -52,7 +52,7 @@ QtObject {
     property bool balanceLoading: overview?.balanceLoading ?? false
     readonly property var accounts: walletSectionAccounts?.accounts ?? null
     property var appSettings: localAppSettings
-    property var accountSensitiveSettings: localAccountSensitiveSettings
+    property var accountSettings: localAccountSettings
 
     property CollectiblesStore collectiblesStore: CollectiblesStore {}
 

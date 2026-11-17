@@ -11,7 +11,7 @@ Item {
     property var bookmarksStore: null
     property var webChannel: null
     property bool enableJsLogs: false
-    property var localAccountSensitiveSettings: null
+    property var localAccountSettings: null
     property bool devToolsEnabled: false
     property bool freeze: false
     property var profileManager: null

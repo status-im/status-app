@@ -172,8 +172,8 @@ proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: strin
     thirdpartyServicesEnabled,
   )
 
-proc setLoggedInAccount*(self: Controller, account: AccountDto) =
-  self.accountsService.setLoggedInAccount(account)
+proc setLoggedInAccount*(self: Controller, account: AccountDto, newOnDevice = false) =
+  self.accountsService.setLoggedInAccount(account, newOnDevice)
   self.accountsService.updateLoggedInAccount(account.name, account.images)
 
 proc loginLocalPairingAccount*(self: Controller, account: AccountDto, password, chatkey: string) =

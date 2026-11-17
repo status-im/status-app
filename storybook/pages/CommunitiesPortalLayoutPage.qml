@@ -59,7 +59,7 @@ SplitView {
             }
 
             QtObject {
-                id: localAccountSensitiveSettings
+                id: localAccountSettings
                 readonly property bool isDiscordImportToolEnabled: false
             }
         }

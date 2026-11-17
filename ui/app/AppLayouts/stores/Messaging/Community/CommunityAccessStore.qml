@@ -101,7 +101,7 @@ StatusQUtils.QObject {
 
         readonly property var mainModuleInst: mainModule
         readonly property var communitiesModuleInst: communitiesModule
-        readonly property var localAccountSensitiveSettingsInst: localAccountSensitiveSettings
+        readonly property var localAccountSettingsInst: localAccountSettings
     }
 
     readonly property Connections mainModuleInstConnections: Connections {
