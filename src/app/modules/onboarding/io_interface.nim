@@ -61,6 +61,9 @@ method finishOnboardingFlow*(self: AccessInterface, flowInt: int, dataJson: stri
 method loginRequested*(self: AccessInterface, keyUid: string, loginFlow: int, dataJson: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method setSelectedLoginAccount*(self: AccessInterface, keyUid: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onLocalPairingStatusUpdate*(self: AccessInterface, status: LocalPairingStatus) {.base.} =
   raise newException(ValueError, "No implementation available")
 

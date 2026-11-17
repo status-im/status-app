@@ -200,11 +200,15 @@ Item {
         }
 
         onProfileSelected: function (keyUid) {
+            // Before the filter: the initial selection must bind too
+            root.onboardingStore.selectLoginAccount(keyUid)
             if (root.lastSelectedProfileKeyUid === keyUid) {
                 return
             }
             root.profileSelected(keyUid)
         }
+
+        onNewProfileFlowStarted: root.onboardingStore.selectLoginAccount("")
 
         onLoginRequested: function (keyUid, method, data) {
             let selectedProfile = SQUtils.ModelUtils.getByKey(root.onboardingStore.loginAccountsModel, "keyUid", keyUid)

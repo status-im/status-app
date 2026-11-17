@@ -81,6 +81,7 @@ Page {
     //    "data:var": contains "password" or "pin"
     signal loginRequested(string keyUid, int method, var data)
     signal profileSelected(string keyUid)
+    signal newProfileFlowStarted()
 
     function restartFlow() : void {
         unload()
@@ -272,6 +273,7 @@ Page {
 
         onLoginRequested: (keyUid, method, data) => root.loginRequested(keyUid, method, data)
         onProfileSelected: (keyUid) => root.profileSelected(keyUid)
+        onNewProfileFlowStarted: root.newProfileFlowStarted()
 
         onSyncProceedWithConnectionString: (connectionString) =>
             root.onboardingStore.inputConnectionStringForBootstrapping(connectionString)
