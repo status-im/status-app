@@ -1038,10 +1038,9 @@ Item {
             objectName: "threadListContextMenu"
             threadId: threadMenuData.threadId
             isMobile: SQUtils.Utils.isMobile
-            followed: false
+            followed: listedThreadMessages.threadFollowed
             muted: listedThreadMessages.threadMuted
             pinned: false
-            followEnabled: false
             pinEnabled: false
             deleteEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending &&
                            !listedThreadMessages.threadDeletePending && !listedThreadParentMessages.threadDeletePending
@@ -1050,6 +1049,8 @@ Item {
             openHandler: function(threadId) { threadMenuData.threadId = threadId }
             onMuteRequested: interval => listedThreadMessages.setThreadMuted(interval)
             onUnmuteRequested: listedThreadMessages.setThreadMuted(Constants.MutingVariations.Unmuted)
+            onFollowRequested: listedThreadMessages.setThreadFollowed(true)
+            onUnfollowRequested: listedThreadMessages.setThreadFollowed(false)
             onDeleteRequested: listedThreadParentMessages.deleteThreadById(threadMenuData.threadId)
             onEditNameRequested: d.editThreadName(threadMenuData.threadId, listedThreadMessages.threadName, listedThreadMessages.chatId)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(listedThreadMessages.chatId, threadMenuData.threadId)
