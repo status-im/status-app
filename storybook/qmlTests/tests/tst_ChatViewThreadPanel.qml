@@ -59,6 +59,8 @@ Item {
                 property bool canEditThread: true
                 property bool threadEditPending: false
                 property bool threadDeletePending: false
+                property bool threadFollowed: true
+                property var requestedFollowed: null
                 property bool threadMuted: false
                 property real threadMuteTill: 0
                 property int requestedMuteInterval: -1
@@ -70,6 +72,10 @@ Item {
                 function getChatId() { return parentChatId }
                 function editThread(name) { requestedName = name }
                 function setThreadMuted(interval) { requestedMuteInterval = interval }
+                function setThreadFollowedById(id, followed) {
+                    if (id === threadId)
+                        requestedFollowed = followed
+                }
                 function deleteThreadById(id) {
                     if (id === threadId)
                         deleteRequests++
@@ -156,6 +162,7 @@ Item {
                     if (row.type === Constants.chatType.communityChat && row.itemId !== view.activeItemId) {
                         messages.threadId = row.itemId
                         threadName = row.name
+                        model.setProperty(i, "followed", true)
                         model.setProperty(i, "isThread", true)
                         break
                     }
@@ -193,6 +200,14 @@ Item {
                 verify(!!parentStore)
                 parentStore.messageModule = messages
                 compare(menu.threadId, messages.threadId)
+                compare(menu.followEnabled, true)
+                compare(menu.followed, true)
+                findChild(menu, "threadContextMenu_follow").trigger()
+                compare(messages.requestedFollowed, false)
+                messages.threadFollowed = false
+                compare(menu.followed, false)
+                findChild(menu, "threadContextMenu_follow").trigger()
+                compare(messages.requestedFollowed, true)
                 compare(menu.deleteEnabled, true)
                 messages.threadDeletePending = true
                 compare(menu.deleteEnabled, false)
