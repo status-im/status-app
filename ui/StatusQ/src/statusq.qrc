@@ -56,6 +56,7 @@
         <file>StatusQ/Components/StatusNavigationPanelHeadline.qml</file>
         <file>StatusQ/Components/StatusOnlineBadge.qml</file>
         <file>StatusQ/Components/StatusPageIndicator.qml</file>
+        <file>StatusQ/Components/StatusPullToRefresh.qml</file>
         <file>StatusQ/Components/StatusQrCodeCapture.qml</file>
         <file>StatusQ/Components/StatusQrCodeScanner.qml</file>
         <file>StatusQ/Components/StatusRoundIcon.qml</file>
