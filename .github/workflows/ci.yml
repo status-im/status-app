@@ -120,11 +120,9 @@ jobs:
   ui-tests:
     name: ui-tests
     needs: [changes, image]
-    # Skipped for a pull request that changes only documentation; a failed
-    # filter does not skip it. Runs without the image job where that is skipped.
-    if: &if-code-and-image >-
-      ${{ !cancelled() && needs.changes.outputs.code != 'false' &&
-      (needs.image.result == 'success' || needs.image.result == 'skipped') }}
+    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
+    # Nor does a failed or skipped image job: the container action then builds the image itself.
+    if: &if-code ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -190,7 +188,7 @@ jobs:
   nim-tests:
     name: nim-tests
     needs: [changes, image]
-    if: *if-code-and-image
+    if: *if-code
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
@@ -203,15 +201,17 @@ jobs:
           env: |
             QML_DISABLE_DISK_CACHE=true
             QT_QPA_PLATFORM=offscreen
-      # Go's build cache changes with status-go, so it is saved once per revision.
+      # Go's build cache changes with status-go, so it is saved once per revision,
+      # under the rule of ccache.
       - &revisions
         name: Submodule revisions
         id: revisions
         run: |
           echo "status-go=$(git rev-parse HEAD:vendor/status-go)" >> "$GITHUB_OUTPUT"
           echo "openssl=$(git rev-parse HEAD:mobile/vendors/openssl)" >> "$GITHUB_OUTPUT"
-      - &go-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      - &restore-go
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: go
         with:
           path: .ci-cache/go-build
           key: go-${{ github.job }}-${{ steps.revisions.outputs.status-go }}
@@ -230,12 +230,20 @@ jobs:
           done
       - name: Nim tests
         run: $IN_IMAGE make tests-nim-linux
+      - &save-go
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: >-
+          ${{ !cancelled() && steps.go.outputs.cache-hit != 'true' &&
+          (github.event_name != 'pull_request' || steps.go.outputs.cache-matched-key == '') }}
+        with:
+          path: .ci-cache/go-build
+          key: go-${{ github.job }}-${{ steps.revisions.outputs.status-go }}
       - *save-ccache
 
   linux:
     name: linux
     needs: [changes, image]
-    if: *if-code-and-image
+    if: *if-code
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -248,7 +256,7 @@ jobs:
           image: desktop
           env: APPIMAGE_EXTRACT_AND_RUN=1
       - *revisions
-      - *go-cache
+      - *restore-go
       - *restore-ccache
       - name: Dependencies
         run: $IN_IMAGE make update
@@ -260,6 +268,7 @@ jobs:
           STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
           STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
         run: $IN_IMAGE make tgz-linux
+      - *save-go
       - *save-ccache
       # The tarball keeps the AppImage executable; the artifact's zip would not.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -273,7 +282,7 @@ jobs:
   android:
     name: android
     needs: [changes, image]
-    if: *if-code-and-image
+    if: *if-code
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     steps:
@@ -293,7 +302,7 @@ jobs:
             STATUS_APP_KEY_ALIAS=throwaway
             STATUS_APP_KEY_PASSWORD=throwaway
       - *revisions
-      - *go-cache
+      - *restore-go
       - *restore-ccache
       # OpenSSL changes only with its submodule and the build scripts. The
       # libraries are touched after the restore: make compares them with the sources.
@@ -324,6 +333,7 @@ jobs:
         run: |
           $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
           ls -l mobile/bin/android/qt6/StatusPR.apk mobile/bin/android/qt6/StatusPR-mapping.txt
+      - *save-go
       - *save-ccache
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -337,8 +347,7 @@ jobs:
   macos:
     name: macos
     needs: changes
-    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
-    if: &if-code ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: *if-code
     # GitHub's macOS runners are Apple Silicon.
     runs-on: macos-26
     timeout-minutes: 120
@@ -355,7 +364,7 @@ jobs:
         with:
           qt-modules: ${{ env.QT_MODULES }}
       - *revisions
-      - *go-cache
+      - *restore-go
       - *restore-ccache
       - *openssl-cache
       - *openssl-touch
@@ -370,6 +379,7 @@ jobs:
       - name: Package
         env: *build-keys
         run: make pkg-macos
+      - *save-go
       - *save-ccache
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -407,7 +417,7 @@ jobs:
             qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtconnectivity
             qtpositioning qtshadertools qtimageformats qtscxml qthttpserver
       - *revisions
-      - *go-cache
+      - *restore-go
       - *restore-ccache
       - *openssl-cache
       - *openssl-touch
@@ -419,6 +429,7 @@ jobs:
       - name: App
         env: *build-keys
         run: make mobile-build
+      - *save-go
       - *save-ccache
       # The layout of an .ipa; it installs only after it is signed.
       - name: Package
@@ -558,7 +569,7 @@ jobs:
           echo "WIN_OPENSSL_ROOT=$WIN_OPENSSL_ROOT"
           ls "$VCINSTALLDIR/Redist/MSVC"
       - *revisions
-      - *go-cache
+      - *restore-go
       - name: Dependencies
         run: |
           make update
@@ -569,6 +580,7 @@ jobs:
       - name: Package
         env: *build-keys
         run: make zip-windows
+      - *save-go
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-windows-x86_64
