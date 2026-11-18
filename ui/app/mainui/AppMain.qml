@@ -361,8 +361,7 @@ Item {
         }
 
         function onPlayNotificationSound() {
-            notificationSound.stop()
-            notificationSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/notification.wav")
         }
 
         function onMailserverWorking() {
@@ -1458,18 +1457,15 @@ Item {
         }
 
         function onPlaySendMessageSound() {
-            sendMessageSound.stop()
-            sendMessageSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/send_message.wav")
         }
 
         function onPlayNotificationSound() {
-            notificationSound.stop()
-            notificationSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/notification.wav")
         }
 
         function onPlayErrorSound() {
-            errorSound.stop()
-            errorSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/error.mp3")
         }
 
         function onSetNthEnabledSectionActive(nthSection: int) {
@@ -1637,30 +1633,6 @@ Item {
         Backpressure.setTimeout(this, 1, () => {
             appMain.rootStore.setActiveSectionById(sectionId)
         })
-    }
-
-    StatusSoundEffect {
-        id: sendMessageSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/send_message.wav"
-    }
-
-    StatusSoundEffect {
-        id: notificationSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/notification.wav"
-    }
-
-    StatusSoundEffect {
-        id: errorSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/error.mp3"
     }
 
     Loader {
