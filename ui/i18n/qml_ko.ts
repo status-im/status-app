@@ -12217,6 +12217,18 @@ to load</source>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
+    <message>
+        <source>Collapse warning</source>
+        <translation>경고 접기</translation>
+    </message>
+    <message>
+        <source>Close warning</source>
+        <translation>경고 닫기</translation>
+    </message>
+    <message>
+        <source>Expand warning</source>
+        <translation>경고 펼치기</translation>
+    </message>
 </context>
 <context>
     <name>MuteChatMenuItem</name>

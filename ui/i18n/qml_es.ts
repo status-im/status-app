@@ -12280,6 +12280,18 @@ al cargar</translation>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
+    <message>
+        <source>Collapse warning</source>
+        <translation>Contraer advertencia</translation>
+    </message>
+    <message>
+        <source>Close warning</source>
+        <translation>Cerrar advertencia</translation>
+    </message>
+    <message>
+        <source>Expand warning</source>
+        <translation>Expandir advertencia</translation>
+    </message>
 </context>
 <context>
     <name>MuteChatMenuItem</name>

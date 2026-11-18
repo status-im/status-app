@@ -12343,6 +12343,18 @@ selhalo</translation>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
+    <message>
+        <source>Collapse warning</source>
+        <translation>Sbalit upozornění</translation>
+    </message>
+    <message>
+        <source>Close warning</source>
+        <translation>Zavřít upozornění</translation>
+    </message>
+    <message>
+        <source>Expand warning</source>
+        <translation>Rozbalit upozornění</translation>
+    </message>
 </context>
 <context>
     <name>MuteChatMenuItem</name>

@@ -12274,6 +12274,18 @@ chargement</translation>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
+    <message>
+        <source>Collapse warning</source>
+        <translation>Réduire l&apos;avertissement</translation>
+    </message>
+    <message>
+        <source>Close warning</source>
+        <translation>Fermer l&apos;avertissement</translation>
+    </message>
+    <message>
+        <source>Expand warning</source>
+        <translation>Développer l&apos;avertissement</translation>
+    </message>
 </context>
 <context>
     <name>MuteChatMenuItem</name>
