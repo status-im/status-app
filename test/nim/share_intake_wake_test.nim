@@ -17,6 +17,7 @@
 ##    with pre-ready buffering.
 
 import unittest, os, json
+import ./support/qt_app
 import nimqml
 import app/core/eventemitter
 import app/core/custom_urls/url_scheme_event
@@ -28,9 +29,9 @@ import app/global/single_instance
 import statusq_bridge
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # gen_qobject_types.QObject and make nimqml's QObject ambiguous (see url_scheme_event_test).
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
 
-discard QCoreApplication.create()  # one app for the whole suite
+ensureQtCoreApp()  # one app for the whole suite
 
 proc processEventsUntil(cond: proc(): bool) =
   var spins = 0

@@ -2,7 +2,8 @@ import std/[atomics, importutils, monotimes, os, strutils, tempfiles, times, uni
 import nimqml
 import taskpools
 import app/core/tasks/[qt, threadpool]
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+import ./support/qt_app
+from seaqt/qcoreapplication import QCoreApplication, processEvents
 
 privateAccess(ThreadPool)
 
@@ -36,7 +37,7 @@ QtObject:
     self.order.add(parseInt(response))
     self.completionThread = getThreadId()
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 proc blockedIO(encoded: string) {.gcsafe, nimcall.} =
   discard blockersStarted.fetchAdd(1)

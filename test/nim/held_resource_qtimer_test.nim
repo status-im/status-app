@@ -1,9 +1,10 @@
 import std/[unittest, monotimes, times]
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+import ./support/qt_app
+from seaqt/qcoreapplication import QCoreApplication, processEvents
 
 import app/core/held_resource_qtimer
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 type Witness = object
   freed: ref bool
