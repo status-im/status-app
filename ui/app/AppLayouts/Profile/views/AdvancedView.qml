@@ -213,6 +213,7 @@ SettingsContentBase {
             }
 
             StatusSettingsLineButton {
+                objectName: "minimizeToTrayOnCloseButton"
                 width: parent.width
                 visible: root.minimizeOnCloseOptionVisible
                 text: qsTr("Minimize to tray icon on close")
