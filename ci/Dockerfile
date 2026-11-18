@@ -98,7 +98,7 @@ RUN apt update -yq && apt install -yq software-properties-common \
     libxext6 libxrender1 libxkbcommon-dev libxkbcommon-x11-dev libxcomposite1 libxtst6 \
     libxrandr2 libxcursor1 libxi6 libxcb-randr0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
     libxcb-render-util0 libxcb-shape0 libxcb-render0 libxcb-xinerama0 \
-    autoconf automake libtool gcc-11 g++-11 \
+    autoconf automake libtool gcc-11 g++-11 ccache \
     libxslt1.1 libxslt1-dev libxkbfile1 libxkbfile-dev \
     libxcb-cursor0 libxcb-cursor-dev \
     libatk1.0-0 libatk1.0-dev \

@@ -47,10 +47,10 @@ case "$action" in
       --file "$repo/$dockerfile" "$(dirname "$repo/$dockerfile")"
     ;;
   check)
-    tools='qmake --version && cmake --version && nim --version && nimble --version && go version && protoc --version'
+    tools='qmake --version && cmake --version && nim --version && nimble --version && go version && protoc --version && ccache --version'
     if [ "$name" = android ]; then
       # Gradle takes Java from JAVA_HOME, which is not the java on PATH.
-      tools="$tools && \"\$JAVA_HOME/bin/java\" -version && test -d \"\$ANDROID_NDK_ROOT\" && ccache --version"
+      tools="$tools && \"\$JAVA_HOME/bin/java\" -version && test -d \"\$ANDROID_NDK_ROOT\""
     fi
     docker run --rm --platform linux/amd64 --entrypoint "" "$image" bash -c "$tools"
     ;;
