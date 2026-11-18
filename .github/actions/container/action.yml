@@ -12,7 +12,8 @@ inputs:
 runs:
   using: composite
   steps:
-    # Without access to the registry the image is built here, from the mirrors.
+    # The image job publishes the image first. Where the registry cannot be
+    # read or written, as in a fork, the image is built here.
     - name: Get the image
       shell: bash
       env:
@@ -32,7 +33,12 @@ runs:
       env:
         CONTAINER_ENV: ${{ inputs.env }}
       run: |
-        printf '%s\n' "$CONTAINER_ENV" > "$RUNNER_TEMP/build.env"
+        # A bare name passes the workflow's value on.
+        printf '%s\n' "$CONTAINER_ENV" \
+          GITHUB_ACTIONS STATUS_APP_VERSION_COMMIT NIMFLAGS "${!FLAG_@}" \
+          GOCACHE GOMODCACHE CCACHE_DIR CCACHE_MAXSIZE \
+          CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          > "$RUNNER_TEMP/build.env"
         docker run --detach --name build --entrypoint "" \
           --cap-add=SYS_ADMIN --security-opt apparmor=unconfined \
           --volume "$PWD:$PWD" --workdir "$PWD" \

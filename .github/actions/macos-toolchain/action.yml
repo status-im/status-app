@@ -1,0 +1,95 @@
+name: macOS toolchain
+description: >-
+  Puts Go, prebuilt Nim, nimble and protoc, ccache and Qt for Apple Silicon on
+  the PATH. Reads GO_VERSION and QT_VERSION from the environment.
+inputs:
+  qt-modules:
+    description: Modules of the macOS Qt.
+    required: true
+  qt-ios-modules:
+    description: Modules of the iOS Qt, which is installed next to the macOS one when this is set.
+    default: ''
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: false
+
+    # Building Nim from source takes about five minutes each.
+    - name: Nim, nimble and protoc
+      shell: bash
+      run: |
+        # go-generate-fast prints "file.go: command" lines, which setup-go's matcher reports as errors.
+        echo "::remove-matcher owner=go::"
+        tools="$RUNNER_TEMP/toolchain"
+        nightlies=https://github.com/nim-lang/nightlies/releases/download
+        fetch() { # <directory> <sha256> <url> [tar options]
+          local dir="$1" sum="$2" url="$3"
+          shift 3
+          mkdir -p "$dir"
+          curl -sSfL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/download" "$url"
+          echo "$sum  $RUNNER_TEMP/download" | shasum -a 256 -c -
+          tar -xf "$RUNNER_TEMP/download" -C "$dir" "$@"
+        }
+        # Nim 2.2.10
+        fetch "$tools/nim" 9a3b012d0680d11d6163dd2f145470b090c1045f5e634f42daf119bea1cb2b5e \
+          "$nightlies/2026-04-24-version-2-2-bfeb3146d1638b39f69007a4ae5a23e23ae4e5ef/nim-2.2.10-macosx_arm64.tar.xz" \
+          --strip-components=1
+        # Nim 2.2.6, the compiler nim-sds pins. nimble builds it from source
+        # unless it is already in its directory.
+        fetch "$HOME/.nimble/nimbinaries/nim-2.2.6" a62ff3c34a2eb3fc69866fcae05b32dc5c2b6668ecfb1d10d91ad72c0183fae5 \
+          "$nightlies/2025-10-31-version-2-2-ab00c56904e3126ad826bb520d243513a139436a/nim-2.2.6-macosx_arm64.tar.xz" \
+          --strip-components=1
+        # nimble 0.26.1
+        fetch "$tools/nimble/bin" ec27b85cd743dee9814b34811cece487b53cb19a3b696e72c06a9bc4c9a18c42 \
+          https://github.com/nim-lang/nimble/releases/download/v0.26.1/nimble-macosx_aarch64.tar.gz
+        # protoc 36.0
+        fetch "$tools/protoc" b6bc4afdcb880124bf342851d05155b6e3d9b6e661236d87b9c614250d26ae00 \
+          https://github.com/protocolbuffers/protobuf/releases/download/v36.0/protoc-36.0-osx-aarch_64.zip
+        echo "$tools/protoc/bin" >> "$GITHUB_PATH"
+        # Nim ships an older nimble next to the compiler; the path added last comes first.
+        echo "$tools/nim/bin" >> "$GITHUB_PATH"
+        echo "$tools/nimble/bin" >> "$GITHUB_PATH"
+
+    - name: Qt and ccache
+      shell: bash
+      env:
+        QT_MODULES: ${{ inputs.qt-modules }}
+        QT_IOS_MODULES: ${{ inputs.qt-ios-modules }}
+      run: |
+        HOMEBREW_NO_AUTO_UPDATE=1 brew install --quiet ccache
+        pipx install aqtinstall==3.3.0
+        # shellcheck disable=SC2086
+        aqt install-qt mac desktop "$QT_VERSION" clang_64 -m $QT_MODULES -O "$RUNNER_TEMP/qt"
+        qt="$RUNNER_TEMP/qt/$QT_VERSION/macos"
+        if [[ -n "$QT_IOS_MODULES" ]]; then
+          # The iOS build runs the tools of the macOS Qt.
+          echo "QT_HOST_PATH=$qt" >> "$GITHUB_ENV"
+          echo "$qt/bin" >> "$GITHUB_PATH"
+          # shellcheck disable=SC2086
+          aqt install-qt mac ios "$QT_VERSION" ios -m $QT_IOS_MODULES -O "$RUNNER_TEMP/qt"
+          qt="$RUNNER_TEMP/qt/$QT_VERSION/ios"
+        fi
+        {
+          echo "QMAKE=$qt/bin/qmake"
+          echo "MAKEFLAGS=-j$(sysctl -n hw.logicalcpu) V=1 USE_SYSTEM_NIM=1"
+          echo "CMAKE_BUILD_PARALLEL_LEVEL=$(sysctl -n hw.logicalcpu)"
+          echo "CMAKE_C_COMPILER_LAUNCHER=ccache"
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=ccache"
+        } >> "$GITHUB_ENV"
+        echo "$qt/bin" >> "$GITHUB_PATH"
+
+    - name: Toolchain versions
+      shell: bash
+      run: |
+        xcodebuild -version
+        go version
+        protoc --version
+        nim --version | head -n 1
+        nimble --version | grep -F 'nimble v0.26.1'
+        cmake --version | head -n 1
+        ccache --version | head -n 1
+        qmake --version
+        qmake -query QMAKE_XSPEC
