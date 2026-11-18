@@ -97,43 +97,40 @@ NIM_TESTS_MODEL_SPY := \
 NIM_MODEL_SPY_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_MODEL_SPY))
 $(NIM_MODEL_SPY_TARGETS): NIM_PARAMS += -d:QT_MODEL_SPY
 
-# Tests that need nothing beyond the two lists above build and run as three
-# programs, so the modules they share are compiled and linked once:
-#   plain   - no flags of their own
-#   spy     - QT_MODEL_SPY
-#   statusq - link StatusQ or need a QCoreApplication (test/nim/support/qt_app.nim)
+# Most tests build and run as two programs, so the modules they share are
+# compiled and linked once:
+#   main    - built with QT_MODEL_SPY and StatusQ, which the other tests tolerate
+#   threads - the thread tests: they turn the threads feature flag on for the process
 # NIM_TESTS_MERGE=0 builds every test as its own program.
 NIM_TESTS_MERGE ?= 1
-NIM_MERGED_GROUPS := plain spy statusq
+NIM_MERGED_GROUPS := main threads
 nim_test_paths = $(patsubst %,test/nim/%.nim,$1)
 nim_merged_file = build/nim-tests/merged_$1_tests.nim
 nim_merged_target = nim-test-run/$(call nim_merged_file,$1)
 
-# Kept apart: a define, library or environment of their own, or a GUI application object.
-NIM_OWN_PROGRAM := \
-	$(call nim_test_paths,qml_libs_resources_test qrscan_zxing_errors_test) \
-	$(call nim_test_paths,thread_navigation_test thread_notifications_test thread_search_test) \
+# Kept apart: a define or resource of their own, or a GUI application object.
+NIM_OWN_PROGRAM := $(call nim_test_paths,qml_libs_resources_test qrscan_zxing_errors_test) \
 	$(shell grep -lE 'newQ(Gui)?Application|QQmlApplicationEngine' $(NIM_TEST_FILES))
-NIM_SPY := $(call nim_test_paths,$(NIM_TESTS_MODEL_SPY))
-NIM_STATUSQ := $(call nim_test_paths,$(NIM_TESTS_LINK_STATUSQ)) $(shell grep -l ensureQtCoreApp $(NIM_TEST_FILES))
-# A test on both lists is kept apart as well.
-NIM_MERGEABLE := $(filter-out $(NIM_OWN_PROGRAM) $(filter $(NIM_SPY),$(NIM_STATUSQ)),$(NIM_TEST_FILES))
-
-NIM_MERGED_plain := $(filter-out $(NIM_SPY) $(NIM_STATUSQ),$(NIM_MERGEABLE))
-NIM_MERGED_spy := $(filter $(NIM_SPY),$(NIM_MERGEABLE))
-NIM_MERGED_statusq := $(filter $(NIM_STATUSQ),$(NIM_MERGEABLE))
+NIM_MERGED_threads := $(call nim_test_paths,thread_navigation_test thread_notifications_test thread_search_test)
+NIM_MERGED_main := $(filter-out $(NIM_OWN_PROGRAM) $(NIM_MERGED_threads),$(NIM_TEST_FILES))
 NIM_MERGED_TARGETS := $(foreach g,$(NIM_MERGED_GROUPS),$(call nim_merged_target,$g))
 
 ifeq ($(NIM_TESTS_MERGE),1)
- NIM_TESTS_RUN := $(addprefix nim-test-run/,$(filter-out $(NIM_MERGEABLE),$(NIM_TEST_FILES))) $(NIM_MERGED_TARGETS)
+ NIM_TESTS_RUN := $(addprefix nim-test-run/,$(filter $(NIM_OWN_PROGRAM),$(NIM_TEST_FILES))) $(NIM_MERGED_TARGETS)
 else
  NIM_TESTS_RUN := $(NIM_TESTS)
 endif
 
-NIM_MODEL_SPY_TARGETS += $(call nim_merged_target,spy)
-$(call nim_merged_target,spy): NIM_PARAMS += -d:QT_MODEL_SPY
-$(call nim_merged_target,statusq): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-$(call nim_merged_target,statusq): | statusq
+$(NIM_MERGED_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+$(NIM_MERGED_TARGETS): | statusq
+NIM_MODEL_SPY_TARGETS += $(call nim_merged_target,main)
+$(call nim_merged_target,main): NIM_PARAMS += -d:QT_MODEL_SPY
+$(call nim_merged_target,threads): export FLAG_THREADS_ENABLED := 1
+$(call nim_merged_target,threads): NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
+$(call nim_merged_target,threads): | $(STATUSKEYCARD_QT_LIB)
+ifeq ($(mkspecs),linux)
+$(call nim_merged_target,threads): export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
+endif
 
 # Each program is a file of imports, written on every run so it follows test/nim/.
 define nim_write_merged
