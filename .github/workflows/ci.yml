@@ -37,7 +37,6 @@ env:
   FLAG_PARASWAP_ENABLED: 0
   # Go's build cache and ccache, kept between runs.
   GOCACHE: ${{ github.workspace }}/.ci-cache/go-build
-  GOMODCACHE: ${{ github.workspace }}/.ci-cache/go-mod
   CCACHE_DIR: ${{ github.workspace }}/.ci-cache/ccache
   CCACHE_MAXSIZE: 2G
   # Runs a command in the container the container action starts. A step that
@@ -145,15 +144,16 @@ jobs:
           env: |
             QML_DISABLE_DISK_CACHE=true
             QT_QPA_PLATFORM=offscreen
-      # A pull request restores what master saved. It saves only when there was
-      # nothing to restore, into a cache that no other pull request sees.
-      - &restore-cache
+      # ccache changes with every commit. A pull request restores what master
+      # saved, and saves only when there was nothing to restore, into a cache
+      # that no other pull request sees.
+      - &restore-ccache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        id: cache
+        id: ccache
         with:
-          path: .ci-cache
-          key: build-${{ github.job }}-${{ github.sha }}
-          restore-keys: build-${{ github.job }}-
+          path: .ci-cache/ccache
+          key: ccache-${{ github.job }}-${{ github.sha }}
+          restore-keys: ccache-${{ github.job }}-
       - name: QML lint
         run: $IN_IMAGE make qml-lint
       - name: StatusQ tests
@@ -178,14 +178,14 @@ jobs:
             exit 1
           fi
       # A failed build keeps what it compiled; a cancelled one may still be writing.
-      - &save-cache
+      - &save-ccache
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         if: >-
-          ${{ !cancelled() && steps.cache.outputs.cache-hit != 'true' &&
-          (github.event_name != 'pull_request' || steps.cache.outputs.cache-matched-key == '') }}
+          ${{ !cancelled() && steps.ccache.outputs.cache-hit != 'true' &&
+          (github.event_name != 'pull_request' || steps.ccache.outputs.cache-matched-key == '') }}
         with:
-          path: .ci-cache
-          key: build-${{ github.job }}-${{ github.sha }}
+          path: .ci-cache/ccache
+          key: ccache-${{ github.job }}-${{ github.sha }}
 
   nim-tests:
     name: nim-tests
@@ -203,7 +203,20 @@ jobs:
           env: |
             QML_DISABLE_DISK_CACHE=true
             QT_QPA_PLATFORM=offscreen
-      - *restore-cache
+      # Go's build cache changes with status-go, so it is saved once per revision.
+      - &revisions
+        name: Submodule revisions
+        id: revisions
+        run: |
+          echo "status-go=$(git rev-parse HEAD:vendor/status-go)" >> "$GITHUB_OUTPUT"
+          echo "openssl=$(git rev-parse HEAD:mobile/vendors/openssl)" >> "$GITHUB_OUTPUT"
+      - &go-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .ci-cache/go-build
+          key: go-${{ github.job }}-${{ steps.revisions.outputs.status-go }}
+          restore-keys: go-${{ github.job }}-
+      - *restore-ccache
       - name: Dependencies
         run: $IN_IMAGE make update
       - name: status-go
@@ -217,7 +230,7 @@ jobs:
           done
       - name: Nim tests
         run: $IN_IMAGE make tests-nim-linux
-      - *save-cache
+      - *save-ccache
 
   linux:
     name: linux
@@ -234,7 +247,9 @@ jobs:
         with:
           image: desktop
           env: APPIMAGE_EXTRACT_AND_RUN=1
-      - *restore-cache
+      - *revisions
+      - *go-cache
+      - *restore-ccache
       - name: Dependencies
         run: $IN_IMAGE make update
       - name: status-go
@@ -245,7 +260,7 @@ jobs:
           STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
           STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
         run: $IN_IMAGE make tgz-linux
-      - *save-cache
+      - *save-ccache
       # The tarball keeps the AppImage executable; the artifact's zip would not.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -277,13 +292,11 @@ jobs:
             STATUS_APP_KEYSTORE_PASSWORD=throwaway
             STATUS_APP_KEY_ALIAS=throwaway
             STATUS_APP_KEY_PASSWORD=throwaway
-      - *restore-cache
+      - *revisions
+      - *go-cache
+      - *restore-ccache
       # OpenSSL changes only with its submodule and the build scripts. The
       # libraries are touched after the restore: make compares them with the sources.
-      - &openssl-revision
-        name: OpenSSL revision
-        id: openssl
-        run: echo "revision=$(git rev-parse HEAD:mobile/vendors/openssl)" >> "$GITHUB_OUTPUT"
       - &openssl-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
@@ -293,7 +306,7 @@ jobs:
             mobile/lib/**/libcrypto_3.*
             mobile/build/**/openssl-*/include
           key: >-
-            openssl-${{ github.job }}-${{ steps.openssl.outputs.revision }}-${{
+            openssl-${{ github.job }}-${{ steps.revisions.outputs.openssl }}-${{
             hashFiles('Makefile', 'mobile/Makefile', 'mobile/scripts/**', 'mobile/docker/Dockerfile') }}
       - &openssl-touch
         name: OpenSSL is up to date
@@ -311,7 +324,7 @@ jobs:
         run: |
           $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
           ls -l mobile/bin/android/qt6/StatusPR.apk mobile/bin/android/qt6/StatusPR-mapping.txt
-      - *save-cache
+      - *save-ccache
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-android-arm64
@@ -341,8 +354,9 @@ jobs:
       - uses: ./.github/actions/macos-toolchain
         with:
           qt-modules: ${{ env.QT_MODULES }}
-      - *restore-cache
-      - *openssl-revision
+      - *revisions
+      - *go-cache
+      - *restore-ccache
       - *openssl-cache
       - *openssl-touch
       - name: Dependencies
@@ -356,7 +370,7 @@ jobs:
       - name: Package
         env: *build-keys
         run: make pkg-macos
-      - *save-cache
+      - *save-ccache
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-macos-aarch64
@@ -392,8 +406,9 @@ jobs:
           qt-ios-modules: >-
             qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtconnectivity
             qtpositioning qtshadertools qtimageformats qtscxml qthttpserver
-      - *restore-cache
-      - *openssl-revision
+      - *revisions
+      - *go-cache
+      - *restore-ccache
       - *openssl-cache
       - *openssl-touch
       - name: Dependencies
@@ -404,7 +419,7 @@ jobs:
       - name: App
         env: *build-keys
         run: make mobile-build
-      - *save-cache
+      - *save-ccache
       # The layout of an .ipa; it installs only after it is signed.
       - name: Package
         run: |
@@ -542,7 +557,8 @@ jobs:
           qmake --version
           echo "WIN_OPENSSL_ROOT=$WIN_OPENSSL_ROOT"
           ls "$VCINSTALLDIR/Redist/MSVC"
-      - *restore-cache
+      - *revisions
+      - *go-cache
       - name: Dependencies
         run: |
           make update
@@ -553,7 +569,6 @@ jobs:
       - name: Package
         env: *build-keys
         run: make zip-windows
-      - *save-cache
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-windows-x86_64
