@@ -1728,7 +1728,7 @@ Item {
 
         spacing: 0
 
-        ColumnLayout {
+        ModuleWarningStack {
             id: bannersLayout
 
             enabled: !localAppSettings.testEnvironment
@@ -1740,8 +1740,6 @@ Item {
             // apply left/right margins when we remove the window titlebar
             Layout.leftMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.left : 0
             Layout.rightMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.right : 0
-
-            spacing: 0
 
             GlobalBanner {
                 Layout.fillWidth: true

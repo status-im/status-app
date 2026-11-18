@@ -7,6 +7,8 @@ EditCroppedImagePanel 1.0 EditCroppedImagePanel.qml
 EnterSeedPhrase 1.0 EnterSeedPhrase.qml
 ImageLoader 1.0 ImageLoader.qml
 ModuleWarning 1.0 ModuleWarning.qml
+ModuleWarningButton 1.0 ModuleWarningButton.qml
+ModuleWarningStack 1.0 ModuleWarningStack.qml
 NoImageUploadedPanel 1.0 NoImageUploadedPanel.qml
 PrivacyWallCarousel 1.0 PrivacyWallCarousel.qml
 RoundedIcon 1.0 RoundedIcon.qml

@@ -12262,6 +12262,18 @@ to load</source>
         <source>%1%</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Collapse warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Expand warning</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MuteChatMenuItem</name>
