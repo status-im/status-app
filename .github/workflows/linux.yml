@@ -1,0 +1,80 @@
+name: Linux
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IN_IMAGE: docker exec build
+
+jobs:
+  changes:
+    permissions:
+      pull-requests: read
+    uses: ./.github/workflows/changes.yml
+
+  appimage:
+    name: appimage
+    needs: changes
+    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # The merge commit is built; scripts/version.sh names the build after the pull request's head.
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Fetch submodules
+        env:
+          USE_SYSTEM_NIM: '1'
+        run: scripts/ci-fetch-submodules.sh
+
+      # linuxdeployqt and appimagetool are AppImages: without FUSE they unpack and run.
+      - uses: ./.github/actions/container
+        with:
+          image: desktop
+          env: |
+            STATUS_APP_VERSION_COMMIT=${{ github.event.pull_request.head.sha }}
+            APPIMAGE_EXTRACT_AND_RUN=1
+            NIMFLAGS=--colors:off
+            FLAG_SWAP_ENABLED=1
+            FLAG_RELAY_ENABLED=1
+            FLAG_LIFI_ENABLED=0
+            FLAG_PARASWAP_ENABLED=0
+
+      - name: Dependencies
+        run: $IN_IMAGE make update
+
+      - name: status-go
+        run: $IN_IMAGE make status-go
+
+      # The Nim compiler reads the three keys from its environment.
+      - name: Package
+        env:
+          STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
+          STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
+          STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
+        run: |
+          docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY \
+            --env STATUS_BUILD_KLIPY_API_KEY build make tgz-linux
+
+      # The tarball keeps the AppImage executable; the artifact's zip would not.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Status-linux-x86_64
+          path: pkg/Status.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

@@ -32,7 +32,7 @@ cmake -S "${STATUSQ}" -B "${BUILD_DIR}" \
     -DSTATUSQ_BUNDLE_QML=OFF \
     -DSTATUSQ_TESTMODE=$([[ "${STATUSQ_TESTMODE}" == "true" ]] && echo ON || echo OFF)
 
-make -C "${BUILD_DIR}" StatusQ -j "$(nproc)"
+make -C "${BUILD_DIR}" StatusQ -j "$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
 
 MOBILEWEBVIEW_JAVA_DIR_FILE="${BUILD_DIR}/mobilewebview_java_dir.txt"
 if [[ -f "${MOBILEWEBVIEW_JAVA_DIR_FILE}" ]]; then
