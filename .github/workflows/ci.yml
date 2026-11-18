@@ -228,8 +228,13 @@ jobs:
           for target in statusq qrcodegen zxing status-keycard-qt rcc; do
             $IN_IMAGE make "$target"
           done
+      # Nim generates the same C for a test whose sources did not change, so
+      # its compiler runs through ccache: the directory holds gcc as a link to it.
       - name: Nim tests
-        run: $IN_IMAGE make tests-nim-linux
+        run: |
+          $IN_IMAGE ccache --zero-stats
+          $IN_IMAGE sh -c 'PATH="/usr/lib/ccache:$PATH" make tests-nim-linux'
+          $IN_IMAGE ccache --show-stats
       - &save-go
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         if: >-
