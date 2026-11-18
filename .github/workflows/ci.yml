@@ -428,7 +428,9 @@ jobs:
           make update
       - name: App
         env: *build-keys
-        run: make mobile-build
+        run: |
+          make mobile-build
+          ccache --show-stats
       - *save-go
       - *save-ccache
       # The layout of an .ipa; it installs only after it is signed.
