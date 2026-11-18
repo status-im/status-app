@@ -278,6 +278,26 @@ jobs:
             STATUS_APP_KEY_ALIAS=throwaway
             STATUS_APP_KEY_PASSWORD=throwaway
       - *restore-cache
+      # OpenSSL changes only with its submodule and the build scripts. The
+      # libraries are touched after the restore: make compares them with the sources.
+      - &openssl-revision
+        name: OpenSSL revision
+        id: openssl
+        run: echo "revision=$(git rev-parse HEAD:mobile/vendors/openssl)" >> "$GITHUB_OUTPUT"
+      - &openssl-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            tmp/openssl
+            mobile/lib/**/libssl_3.*
+            mobile/lib/**/libcrypto_3.*
+            mobile/build/**/openssl-*/include
+          key: >-
+            openssl-${{ github.job }}-${{ steps.openssl.outputs.revision }}-${{
+            hashFiles('Makefile', 'mobile/Makefile', 'mobile/scripts/**', 'mobile/docker/Dockerfile') }}
+      - &openssl-touch
+        name: OpenSSL is up to date
+        run: touch -c mobile/lib/*/*/libssl_3.* mobile/lib/*/*/libcrypto_3.*
       - name: QML lint
         run: $IN_IMAGE make qml-lint-mobile "QTDIR=/opt/qt/$QT_VERSION/gcc_64" "QT_MOBILE_DIR=/opt/qt/$QT_VERSION/android_arm64_v8a"
       # The release build must be signed; this key lives for one run.
@@ -322,6 +342,9 @@ jobs:
         with:
           qt-modules: ${{ env.QT_MODULES }}
       - *restore-cache
+      - *openssl-revision
+      - *openssl-cache
+      - *openssl-touch
       - name: Dependencies
         run: |
           pipx install dmgbuild==1.6.7
@@ -370,6 +393,9 @@ jobs:
             qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtconnectivity
             qtpositioning qtshadertools qtimageformats qtscxml qthttpserver
       - *restore-cache
+      - *openssl-revision
+      - *openssl-cache
+      - *openssl-touch
       - name: Dependencies
         run: |
           xcrun --sdk "$IPHONE_SDK" --show-sdk-version
