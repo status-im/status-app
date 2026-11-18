@@ -97,51 +97,52 @@ NIM_TESTS_MODEL_SPY := \
 NIM_MODEL_SPY_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_MODEL_SPY))
 $(NIM_MODEL_SPY_TARGETS): NIM_PARAMS += -d:QT_MODEL_SPY
 
-# Tests that differ only by what the lists above give them build and run as
-# three programs, so the modules they share are compiled and linked once:
-# the plain ones, the ones with QT_MODEL_SPY, and the ones that link StatusQ or
-# need a QCoreApplication (test/nim/support/qt_app.nim shares it).
+# Tests that need nothing beyond the two lists above build and run as three
+# programs, so the modules they share are compiled and linked once:
+#   plain   - no flags of their own
+#   spy     - QT_MODEL_SPY
+#   statusq - link StatusQ or need a QCoreApplication (test/nim/support/qt_app.nim)
 # NIM_TESTS_MERGE=0 builds every test as its own program.
 NIM_TESTS_MERGE ?= 1
-# Their own define, library or environment, or a GUI application object.
-NIM_TESTS_OWN_PROGRAM := \
-	qml_libs_resources_test \
-	qrscan_zxing_errors_test \
-	thread_navigation_test \
-	thread_notifications_test \
-	thread_search_test
-NIM_TESTS_OWN_PROGRAM_FILES := $(patsubst %,test/nim/%.nim,$(NIM_TESTS_OWN_PROGRAM)) \
+NIM_MERGED_GROUPS := plain spy statusq
+nim_test_paths = $(patsubst %,test/nim/%.nim,$1)
+nim_merged_file = build/nim-tests/merged_$1_tests.nim
+nim_merged_target = nim-test-run/$(call nim_merged_file,$1)
+
+# Kept apart: a define, library or environment of their own, or a GUI application object.
+NIM_OWN_PROGRAM := \
+	$(call nim_test_paths,qml_libs_resources_test qrscan_zxing_errors_test) \
+	$(call nim_test_paths,thread_navigation_test thread_notifications_test thread_search_test) \
 	$(shell grep -lE 'newQ(Gui)?Application|QQmlApplicationEngine' $(NIM_TEST_FILES))
-NIM_MERGEABLE_TEST_FILES := $(filter-out $(NIM_TESTS_OWN_PROGRAM_FILES),$(NIM_TEST_FILES))
-NIM_SPY_TEST_FILES := $(patsubst %,test/nim/%.nim,$(NIM_TESTS_MODEL_SPY))
-NIM_STATUSQ_TEST_FILES := $(patsubst %,test/nim/%.nim,$(NIM_TESTS_LINK_STATUSQ)) \
-	$(shell grep -l 'ensureQtCoreApp' $(NIM_TEST_FILES))
-NIM_MERGED_STATUSQ_TEST_FILES := $(filter-out $(NIM_SPY_TEST_FILES),$(filter $(NIM_STATUSQ_TEST_FILES),$(NIM_MERGEABLE_TEST_FILES)))
-NIM_MERGED_SPY_TEST_FILES := $(filter-out $(NIM_STATUSQ_TEST_FILES),$(filter $(NIM_SPY_TEST_FILES),$(NIM_MERGEABLE_TEST_FILES)))
-NIM_MERGED_TEST_FILES := $(filter-out $(NIM_SPY_TEST_FILES) $(NIM_STATUSQ_TEST_FILES),$(NIM_MERGEABLE_TEST_FILES))
-NIM_MERGED_TESTS := build/nim-tests/merged_tests.nim
-NIM_MERGED_SPY_TESTS := build/nim-tests/merged_spy_tests.nim
-NIM_MERGED_STATUSQ_TESTS := build/nim-tests/merged_statusq_tests.nim
-NIM_MERGED_TARGETS := nim-test-run/$(NIM_MERGED_TESTS) nim-test-run/$(NIM_MERGED_SPY_TESTS) nim-test-run/$(NIM_MERGED_STATUSQ_TESTS)
+NIM_SPY := $(call nim_test_paths,$(NIM_TESTS_MODEL_SPY))
+NIM_STATUSQ := $(call nim_test_paths,$(NIM_TESTS_LINK_STATUSQ)) $(shell grep -l ensureQtCoreApp $(NIM_TEST_FILES))
+# A test on both lists is kept apart as well.
+NIM_MERGEABLE := $(filter-out $(NIM_OWN_PROGRAM) $(filter $(NIM_SPY),$(NIM_STATUSQ)),$(NIM_TEST_FILES))
+
+NIM_MERGED_plain := $(filter-out $(NIM_SPY) $(NIM_STATUSQ),$(NIM_MERGEABLE))
+NIM_MERGED_spy := $(filter $(NIM_SPY),$(NIM_MERGEABLE))
+NIM_MERGED_statusq := $(filter $(NIM_STATUSQ),$(NIM_MERGEABLE))
+NIM_MERGED_TARGETS := $(foreach g,$(NIM_MERGED_GROUPS),$(call nim_merged_target,$g))
+
 ifeq ($(NIM_TESTS_MERGE),1)
- NIM_TESTS_RUN := $(filter-out $(addprefix nim-test-run/,$(NIM_MERGED_TEST_FILES) $(NIM_MERGED_SPY_TEST_FILES) $(NIM_MERGED_STATUSQ_TEST_FILES)),$(NIM_TESTS)) $(NIM_MERGED_TARGETS)
+ NIM_TESTS_RUN := $(addprefix nim-test-run/,$(filter-out $(NIM_MERGEABLE),$(NIM_TEST_FILES))) $(NIM_MERGED_TARGETS)
 else
  NIM_TESTS_RUN := $(NIM_TESTS)
 endif
 
-NIM_MODEL_SPY_TARGETS += nim-test-run/$(NIM_MERGED_SPY_TESTS)
-nim-test-run/$(NIM_MERGED_SPY_TESTS): NIM_PARAMS += -d:QT_MODEL_SPY
-nim-test-run/$(NIM_MERGED_STATUSQ_TESTS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
-nim-test-run/$(NIM_MERGED_STATUSQ_TESTS): | statusq
+NIM_MODEL_SPY_TARGETS += $(call nim_merged_target,spy)
+$(call nim_merged_target,spy): NIM_PARAMS += -d:QT_MODEL_SPY
+$(call nim_merged_target,statusq): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+$(call nim_merged_target,statusq): | statusq
 
-# Written on every run, so the lists follow the files in test/nim/.
-nim_merged_file = { echo '{.warning[UnusedImport]: off.}'; printf 'import "../../%s"\n' $(basename $1); } > $2
+# Each program is a file of imports, written on every run so it follows test/nim/.
+define nim_write_merged
+{ echo '{.warning[UnusedImport]: off.}'; printf 'import "../../%s"\n' $(basename $(NIM_MERGED_$1)); } > $(call nim_merged_file,$1)
+endef
 $(NIM_MERGED_TARGETS): | nim-merged-tests
 nim-merged-tests:
-	mkdir -p $(dir $(NIM_MERGED_TESTS))
-	$(call nim_merged_file,$(NIM_MERGED_TEST_FILES),$(NIM_MERGED_TESTS))
-	$(call nim_merged_file,$(NIM_MERGED_SPY_TEST_FILES),$(NIM_MERGED_SPY_TESTS))
-	$(call nim_merged_file,$(NIM_MERGED_STATUSQ_TEST_FILES),$(NIM_MERGED_STATUSQ_TESTS))
+	mkdir -p build/nim-tests
+	$(foreach g,$(NIM_MERGED_GROUPS),$(call nim_write_merged,$g);)
 .PHONY: nim-merged-tests
 
 ifneq ($(mkspecs),win32)
