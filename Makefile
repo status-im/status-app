@@ -44,6 +44,9 @@ BUILD_MSG := "\\x1B[92mBuilding:\\x1B[39m"
 	pkg-linux \
 	pkg-macos \
 	pkg-windows \
+	bundle-linux \
+	bundle-macos \
+	bundle-windows \
 	run \
 	run-linux \
 	run-macos \
@@ -861,9 +864,9 @@ PRODUCTION_PARAMETERS ?= -d:production
 
 export APP_DIR := tmp/linux/dist
 
-$(STATUS_CLIENT_APPIMAGE): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
-$(STATUS_CLIENT_APPIMAGE): nim_status_client $(APPIMAGE_TOOL) nim-status.desktop $(FCITX5_QT)
-	rm -rf pkg/*.AppImage
+bundle-linux: override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
+# Order-only: fetching appimagetool clears tmp/linux.
+bundle-linux: nim_status_client nim-status.desktop $(FCITX5_QT) | $(APPIMAGE_TOOL)
 	chmod -R u+w tmp || true
 
 ifeq ($(USE_SIMULATED_KEYCARD),true)
@@ -890,19 +893,9 @@ endif
 	rm $(APP_DIR)/AppRun
 	cp AppRun $(APP_DIR)/.
 
-	mkdir -p pkg
-	$(APPIMAGE_TOOL) $(APP_DIR) $(STATUS_CLIENT_APPIMAGE)
-
-# Fix rpath and interpreter for AppImage
-ifdef IN_NIX_SHELL
-	patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $(STATUS_CLIENT_APPIMAGE)
-	patchelf --remove-rpath $(STATUS_CLIENT_APPIMAGE)
-endif
-
-# if LINUX_GPG_PRIVATE_KEY_FILE is not set then we don't generate a signature
-ifdef LINUX_GPG_PRIVATE_KEY_FILE
-	scripts/sign-linux-file.sh $(STATUS_CLIENT_APPIMAGE)
-endif
+$(STATUS_CLIENT_APPIMAGE): bundle-linux
+	rm -rf pkg/*.AppImage
+	APPIMAGE_TOOL="$(APPIMAGE_TOOL)" scripts/finalize-linux.sh $(APP_DIR) $(STATUS_CLIENT_APPIMAGE)
 
 $(STATUS_CLIENT_TARBALL): $(STATUS_CLIENT_APPIMAGE)
 	cd $(shell dirname $(STATUS_CLIENT_APPIMAGE)) && \
@@ -953,12 +946,9 @@ STATUS_CLIENT_DMG ?= pkg/Status.dmg
 # The command that builds the disk image.
 DMGBUILD ?= nix run .\#dmgbuild --
 
-$(STATUS_CLIENT_DMG): MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
-$(STATUS_CLIENT_DMG): MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app
-$(STATUS_CLIENT_DMG): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
-$(STATUS_CLIENT_DMG): ENTITLEMENTS ?= resources/Entitlements.plist
-$(STATUS_CLIENT_DMG): nim_status_client
-	rm -rf tmp/macos pkg/*.dmg
+bundle-macos: override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
+bundle-macos: nim_status_client
+	rm -rf tmp/macos
 	mkdir -p \
 		$(MACOS_OUTER_BUNDLE)/Contents/Resources \
 		$(MACOS_OUTER_BUNDLE)/Contents/MacOS
@@ -989,28 +979,12 @@ endif
 	scripts/thin-macos-bundle.sh $(MACOS_OUTER_BUNDLE) \
 		$(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client
 
-	# codesign refuses files with Finder info or a resource fork; make run leaves a custom icon on the binary.
-	xattr -cr $(MACOS_OUTER_BUNDLE)
-
-	# Without MACOS_CODESIGN_IDENT the bundle gets an ad-hoc signature: it
-	# starts, but Gatekeeper does not accept it.
-ifdef MACOS_CODESIGN_IDENT
-	scripts/sign-macos-pkg.sh $(MACOS_OUTER_BUNDLE) $(MACOS_CODESIGN_IDENT) \
-		--entitlements $(ENTITLEMENTS)
-else
-	codesign --force --deep --sign - $(MACOS_OUTER_BUNDLE)
-	codesign --verify --strict=all --deep $(MACOS_OUTER_BUNDLE)
-endif
-
+$(STATUS_CLIENT_DMG): ENTITLEMENTS ?= resources/Entitlements.plist
+$(STATUS_CLIENT_DMG): bundle-macos
+	rm -rf pkg/*.dmg
 	echo -e $(BUILD_MSG) "dmg"
-	mkdir -p pkg
-	$(DMGBUILD) \
-		-s scripts/dmg-settings.py -D app=$(MACOS_OUTER_BUNDLE) "Status" pkg/Status.dmg
-	mv "`ls pkg/*.dmg`" $(STATUS_CLIENT_DMG)
-
-ifdef MACOS_CODESIGN_IDENT
-	scripts/sign-macos-pkg.sh $(STATUS_CLIENT_DMG) $(MACOS_CODESIGN_IDENT)
-endif
+	MACOS_CODESIGN_IDENT="$(MACOS_CODESIGN_IDENT)" ENTITLEMENTS="$(ENTITLEMENTS)" DMGBUILD="$(DMGBUILD)" \
+		scripts/finalize-macos.sh $(MACOS_OUTER_BUNDLE) $(STATUS_CLIENT_DMG)
 
 notarize-macos: export CHECK_TIMEOUT ?= 10m
 notarize-macos: export MACOS_BUNDLE_ID ?= im.status.ethereum.desktop
@@ -1023,11 +997,10 @@ nim_windows_launcher: | deps
 STATUS_CLIENT_EXE ?= pkg/Status.exe
 STATUS_CLIENT_7Z ?= pkg/Status.7z
 
-$(STATUS_CLIENT_EXE): override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
-$(STATUS_CLIENT_EXE): OUTPUT := tmp/windows/dist/Status
-$(STATUS_CLIENT_EXE): INSTALLER_OUTPUT := pkg
-$(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_launcher
-	rm -rf pkg/*.exe tmp/windows/dist
+bundle-windows: override RESOURCES_LAYOUT := $(PRODUCTION_PARAMETERS)
+bundle-windows: OUTPUT := tmp/windows/dist/Status
+bundle-windows: compile_windows_resources nim_status_client nim_windows_launcher
+	rm -rf tmp/windows/dist
 	mkdir -p $(OUTPUT)/bin $(OUTPUT)/resources $(OUTPUT)/vendor $(OUTPUT)/bin/plugins/tls
 	cat windows-install.txt | unix2dos > $(OUTPUT)/INSTALL.txt
 	cp status.ico status.png resources.rcc $(OUTPUT)/resources/
@@ -1050,20 +1023,12 @@ endif
 	mv tmp/windows/dist/Status/bin/vc_redist.x64.exe tmp/windows/dist/Status/vendor/
 	cp status.iss $(OUTPUT)/status.iss
 	cp $(QT_INSTALL_PREFIX)/plugins/tls/qopensslbackend.dll $(OUTPUT)/bin/plugins/tls/
-# if WINDOWS_CODESIGN_PFX_PATH is not set then DLLs, EXEs are not signed
-ifdef WINDOWS_CODESIGN_PFX_PATH
-	scripts/sign-windows-bin.sh ./tmp/windows/dist/Status
-endif
+
+$(STATUS_CLIENT_EXE): OUTPUT := tmp/windows/dist/Status
+$(STATUS_CLIENT_EXE): bundle-windows
+	rm -rf pkg/*.exe
 	echo -e $(BUILD_MSG) "exe"
-	mkdir -p $(INSTALLER_OUTPUT)
-	ISCC \
-	   -O"$(INSTALLER_OUTPUT)" \
-	   -D"BaseName=$(shell basename $(STATUS_CLIENT_EXE) .exe)" \
-	   -D"Version=$(DESKTOP_VERSION)" \
-	   $(OUTPUT)/status.iss
-ifdef WINDOWS_CODESIGN_PFX_PATH
-	scripts/sign-windows-bin.sh $(INSTALLER_OUTPUT)
-endif
+	DESKTOP_VERSION="$(DESKTOP_VERSION)" scripts/finalize-windows.sh ./$(OUTPUT) $(STATUS_CLIENT_EXE)
 
 $(STATUS_CLIENT_7Z): OUTPUT := tmp/windows/dist/Status
 $(STATUS_CLIENT_7Z): $(STATUS_CLIENT_EXE)

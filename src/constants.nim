@@ -97,14 +97,14 @@ let
   NFT_PROXY_PASSWORD_RESOLVED* = desktopConfig.nftProxyPassword
   NFT_PROXY_USE_PUZZLE_AUTH_RESOLVED* = desktopConfig.nftProxyUsePuzzleAuth
 
-  WALLET_CONNECT_PROJECT_ID* = BUILD_WALLET_CONNECT_PROJECT_ID
+  WALLET_CONNECT_PROJECT_ID* = desktopConfig.walletConnectProjectId
   MIXPANEL_APP_ID* = desktopConfig.mixpanelAppId
   MIXPANEL_TOKEN* = desktopConfig.mixpanelToken
   BUILD_MODE* = if defined(production): "prod" else: "test"
   HTTP_API_ENABLED* = desktopConfig.httpApiEnabled
   WS_API_ENABLED* = desktopConfig.wsApiEnabled
-  SENTRY_DSN_STATUS_GO* = BUILD_SENTRY_DSN_STATUS_GO
-  SENTRY_DSN_STATUS_GO_DESKTOP* = BUILD_SENTRY_DSN_STATUS_DESKTOP
+  SENTRY_DSN_STATUS_GO* = desktopConfig.sentryDsnStatusGo
+  SENTRY_DSN_STATUS_GO_DESKTOP* = desktopConfig.sentryDsnStatusDesktop
   API_LOGGING* = desktopConfig.apiLogging
   KEYCARD_LOGS_ENABLED* = if defined(production): false else: true
   METRICS_ENABLED* = desktopConfig.metricsEnabled

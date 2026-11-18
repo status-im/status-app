@@ -6,6 +6,9 @@ on:
   push:
     branches:
       - master
+      - release/**
+    tags:
+      - '*'
   workflow_dispatch:
 
 permissions:
@@ -29,6 +32,13 @@ env:
     qtpositioning qtserialport qtshadertools qtimageformats qtscxml qthttpserver
   # The merge commit is built; scripts/version.sh names the build after the pull request's head.
   STATUS_APP_VERSION_COMMIT: ${{ github.event.pull_request.head.sha }}
+  # A release/* branch or a tag builds the release variant, which ci/fetch-bundle.sh
+  # requires of a release.
+  BUILD_VARIANT: >-
+    ${{ (startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/tags/'))
+    && 'release' || 'pr' }}
+  SENTRY_PRODUCTION: >-
+    ${{ startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/tags/') }}
   NIMFLAGS: --colors:off
   FLAG_SWAP_ENABLED: 1
   FLAG_RELAY_ENABLED: 1
@@ -39,7 +49,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/.ci-cache/ccache
   CCACHE_MAXSIZE: 2G
   # Runs a command in the container the container action starts. A step that
-  # sets the three keys passes them on: the Nim compiler reads them from its environment.
+  # sets the three keys passes them on to the packaging scripts.
   IN_IMAGE: >-
     docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY
     --env STATUS_BUILD_KLIPY_API_KEY build
@@ -283,6 +293,11 @@ jobs:
     if: *if-code
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    permissions: &attest-permissions
+      contents: read
+      packages: read
+      id-token: write
+      attestations: write
     steps:
       - *checkout
       # Jenkins builds ci/tests.Dockerfile without BASE, so its default must name the current image.
@@ -300,7 +315,9 @@ jobs:
       - uses: ./.github/actions/container
         with:
           image: desktop
-          env: APPIMAGE_EXTRACT_AND_RUN=1
+          env: |
+            APPIMAGE_EXTRACT_AND_RUN=1
+            SENTRY_PRODUCTION
       - *cache-keys
       - *restore-go
       - *restore-ccache
@@ -311,14 +328,35 @@ jobs:
         run: $IN_IMAGE make update
       - name: status-go
         run: $IN_IMAGE make status-go
+      - name: Bundle
+        run: |
+          $IN_IMAGE make bundle-linux
+          $IN_IMAGE mkdir -p pkg
+          $IN_IMAGE tar -C tmp/linux -czf pkg/Status-linux-x86_64-bundle.tar.gz dist
+      - *save-go
+      - *save-ccache
+      # A pull request from a fork gets no token to attest with.
+      - &attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        with:
+          subject-path: |
+            pkg/*-bundle.*
+            pkg/*-unsigned.ipa
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: linux-x86_64
+          file: pkg/Status-linux-x86_64-bundle.tar.gz
+          suffix: -bundle.tar.gz
       - name: Package
         env: &build-keys
           STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
           STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
           STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
-        run: $IN_IMAGE make tgz-linux
-      - *save-go
-      - *save-ccache
+        run: |
+          $IN_IMAGE env APPIMAGE_TOOL=tmp/linux/tools/appimagetool \
+            scripts/finalize-linux.sh tmp/linux/dist pkg/Status.AppImage
+          $IN_IMAGE tar -C pkg -czf pkg/Status.tar.gz Status.AppImage
       # The tarball preserves the AppImage's executable bit.
       - uses: ./.github/actions/build-artifact
         with:
@@ -365,6 +403,7 @@ jobs:
     if: *if-code
     runs-on: ubuntu-24.04
     timeout-minutes: 75
+    permissions: *attest-permissions
     steps:
       - *checkout
       - name: Fetch submodules
@@ -375,8 +414,8 @@ jobs:
           env: |
             QMAKE=/opt/qt/${{ env.QT_VERSION }}/android_arm64_v8a/bin/qmake
             QMAKE_EXTRA_CONFIG=ccache
-            BUILD_VARIANT=pr
-            STATUSQ_TESTMODE=true
+            BUILD_VARIANT
+            STATUSQ_TESTMODE=${{ env.BUILD_VARIANT == 'pr' }}
             STATUS_APP_KEYSTORE_PATH=/tmp/throwaway.keystore
             STATUS_APP_KEYSTORE_PASSWORD=throwaway
             STATUS_APP_KEY_ALIAS=throwaway
@@ -411,22 +450,49 @@ jobs:
           $IN_IMAGE sh -c 'keytool -genkeypair -keystore "$STATUS_APP_KEYSTORE_PATH" -storetype PKCS12 \
             -storepass "$STATUS_APP_KEYSTORE_PASSWORD" -alias "$STATUS_APP_KEY_ALIAS" \
             -keyalg RSA -keysize 2048 -validity 30 -dname "CN=Status PR build"'
+      # A release also builds the bundle the Play Store takes.
       - name: Build
-        env: *build-keys
         run: |
-          $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
-          ls -l mobile/bin/android/qt6/StatusPR.apk mobile/bin/android/qt6/StatusPR-mapping.txt
+          if [[ "$BUILD_VARIANT" == release ]]; then
+            app=mobile/bin/android/qt6/Status
+            $IN_IMAGE make mobile-build PACKAGE_TYPE=apk-aab
+          else
+            app=mobile/bin/android/qt6/StatusPR
+            $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
+          fi
+          $IN_IMAGE mkdir -p pkg
+          $IN_IMAGE cp "$app.apk" pkg/Status-bundle.apk
+          $IN_IMAGE cp "$app-mapping.txt" pkg/Status-mapping.txt
+          if [[ "$BUILD_VARIANT" == release ]]; then
+            $IN_IMAGE cp "$app.aab" pkg/Status-bundle.aab
+          fi
+          ls -l pkg
       - *save-go
       - *save-ccache
+      - *attest
       - uses: ./.github/actions/build-artifact
         with:
           platform: android-arm64
-          file: mobile/bin/android/qt6/StatusPR.apk
+          file: pkg/Status-bundle.apk
+          suffix: -bundle.apk
+      - uses: ./.github/actions/build-artifact
+        if: ${{ env.BUILD_VARIANT == 'release' }}
+        with:
+          platform: android-arm64
+          file: pkg/Status-bundle.aab
+          suffix: -bundle.aab
+      - name: Package
+        env: *build-keys
+        run: $IN_IMAGE mobile/scripts/android/finalize.sh pkg/Status-bundle.apk pkg/Status.apk
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: android-arm64
+          file: pkg/Status.apk
           suffix: .apk
       - uses: ./.github/actions/build-artifact
         with:
           platform: android-arm64
-          file: mobile/bin/android/qt6/StatusPR-mapping.txt
+          file: pkg/Status-mapping.txt
           suffix: -mapping.txt
 
   macos:
@@ -436,6 +502,7 @@ jobs:
     # GitHub's macOS runners are Apple Silicon.
     runs-on: macos-26
     timeout-minutes: 120
+    permissions: *attest-permissions
     env:
       CMAKE_POLICY_VERSION_MINIMUM: 3.5
       # The Makefile's default builds the disk image through Nix.
@@ -465,12 +532,23 @@ jobs:
           make deps
       - name: status-go
         run: make status-go
+      - name: Bundle
+        run: |
+          make bundle-macos
+          mkdir -p pkg
+          tar -C tmp/macos/dist -czf pkg/Status-macos-aarch64-bundle.tar.gz Status.app
+      - *save-go
+      - *save-ccache
+      - *attest
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: macos-aarch64
+          file: pkg/Status-macos-aarch64-bundle.tar.gz
+          suffix: -bundle.tar.gz
       # MACOS_CODESIGN_IDENT is not set: the bundle is signed ad hoc.
       - name: Package
         env: *build-keys
-        run: make pkg-macos
-      - *save-go
-      - *save-ccache
+        run: scripts/finalize-macos.sh tmp/macos/dist/Status.app pkg/Status.dmg
       - uses: ./.github/actions/build-artifact
         with:
           platform: macos-aarch64
@@ -483,15 +561,14 @@ jobs:
     if: *if-code
     runs-on: macos-26
     timeout-minutes: 120
+    permissions: *attest-permissions
     env:
       CMAKE_POLICY_VERSION_MINIMUM: 3.5
       IPHONE_SDK: iphoneos
-      BUILD_VARIANT: pr
       # Builds without a signature.
       QMAKE_EXTRA_CONFIG: fastlane
       # Goes into the build number.
       CHANGE_ID: ${{ github.event.pull_request.number }}
-      FLAG_BUY_ENABLED: 1
       CCACHE_KEY_FILES: >-
         mobile/wrapperApp/Status.pro mobile/scripts/buildApp.sh
         mobile/scripts/commonCmakeConfig.sh .github/actions/macos-toolchain/action.yml
@@ -522,7 +599,8 @@ jobs:
           xcbeautify --version
           make update
       - name: App
-        env: *build-keys
+        env:
+          FLAG_BUY_ENABLED: ${{ env.BUILD_VARIANT == 'release' && '0' || '1' }}
         run: |
           ccache --zero-stats
           make mobile-build
@@ -532,15 +610,17 @@ jobs:
       # The layout of an .ipa; it installs only after it is signed.
       - name: Package
         run: |
-          app=mobile/bin/ios/qt6/StatusPR.app
+          app=Status
+          if [[ "$BUILD_VARIANT" == pr ]]; then app=StatusPR; fi
           mkdir -p pkg/Payload
-          cp -R "$app" pkg/Payload/
-          (cd pkg && zip -qry StatusPR-unsigned.ipa Payload)
-          ls -l pkg/StatusPR-unsigned.ipa
+          cp -R "mobile/bin/ios/qt6/$app.app" pkg/Payload/
+          (cd pkg && zip -qry Status-unsigned.ipa Payload)
+          ls -l pkg/Status-unsigned.ipa
+      - *attest
       - uses: ./.github/actions/build-artifact
         with:
           platform: ios-arm64-unsigned
-          file: pkg/StatusPR-unsigned.ipa
+          file: pkg/Status-unsigned.ipa
           suffix: .ipa
 
   windows:
@@ -549,6 +629,7 @@ jobs:
     if: *if-code
     runs-on: windows-2022
     timeout-minutes: 120
+    permissions: *attest-permissions
     env:
       # Nim dependency trees nest past MAX_PATH, and Bash needs the scripts with LF
       # endings. Symlinks are checked out as files: nimble cannot handle the
@@ -683,11 +764,24 @@ jobs:
           make deps
       - name: status-go
         run: make status-go
+      - name: Bundle
+        run: |
+          make bundle-windows
+          mkdir -p pkg
+          tar -C tmp/windows/dist -czf pkg/Status-windows-x86_64-bundle.tar.gz Status
+      - *save-go
+      - *attest
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: windows-x86_64
+          file: pkg/Status-windows-x86_64-bundle.tar.gz
+          suffix: -bundle.tar.gz
       # Not signed: WINDOWS_CODESIGN_PFX_PATH is not set.
       - name: Package
         env: *build-keys
-        run: make zip-windows
-      - *save-go
+        run: |
+          DESKTOP_VERSION="$(scripts/version.sh)" scripts/finalize-windows.sh ./tmp/windows/dist/Status pkg/Status.exe
+          7z a pkg/Status.7z ./tmp/windows/dist/Status
       - uses: ./.github/actions/build-artifact
         with:
           platform: windows-x86_64

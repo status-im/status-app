@@ -142,6 +142,9 @@ platform :ios do
       UI.user_error!("Provisioning profile for #{ext_identifier} not found (run match for it)!")
     end
 
+    sh(File.join(PROJECT_DIR, "..", "scripts", "write-build-config.sh"),
+       File.join(app_path, "build-config.json"))
+
     UI.message("Creating unsigned IPA...")
     FileUtils.rm_f(ipa_path)
 
