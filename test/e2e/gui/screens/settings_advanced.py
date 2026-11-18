@@ -16,6 +16,7 @@ class AdvancedSettingsView(QObject):
         self.scroll = Scroll(settings_names.settingsContentBase_ScrollView)
         self.manage_community_on_testnet_button = Button(
             settings_names.manageCommunitiesOnTestnetButton_StatusSettingsLineButton)
+        self.minimize_to_tray_on_close_button = Button(settings_names.minimizeToTrayOnCloseButton)
         self.rpc_statistics_button = Button(settings_names.rpcStatisticsButton)
         self.light_mode_button = Button(settings_names.settingsContentBaseScrollViewLightWakuModeBloomSelectorButton)
         self.relay_mode_button = Button(settings_names.settingsContentBaseScrollViewRelayWakuModeBloomSelectorButton)
@@ -35,6 +36,14 @@ class AdvancedSettingsView(QObject):
                     return self
                 time.sleep(wait_timeout / 5)
         raise RuntimeError('Could not enable Manage communities on testnet toggle')
+
+    @allure.step('Set minimize to tray on close to {enabled}')
+    def set_minimize_to_tray_on_close(self, enabled: bool):
+        toggle = self.minimize_to_tray_on_close_button
+        self.scroll.vertical_scroll_down(toggle)
+        if toggle.is_checked != enabled:
+            toggle.click()
+        assert toggle.is_checked == enabled
 
     @allure.step('Switch waku mode')
     def switch_waku_mode(self, mode):
