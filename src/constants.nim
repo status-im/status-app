@@ -102,8 +102,8 @@ let
   BUILD_MODE* = if defined(production): "prod" else: "test"
   HTTP_API_ENABLED* = desktopConfig.httpApiEnabled
   WS_API_ENABLED* = desktopConfig.wsApiEnabled
-  SENTRY_DSN_STATUS_GO* = BUILD_SENTRY_DSN_STATUS_GO
-  SENTRY_DSN_STATUS_GO_DESKTOP* = BUILD_SENTRY_DSN_STATUS_DESKTOP
+  SENTRY_DSN_STATUS_GO* = desktopConfig.sentryDsnStatusGo
+  SENTRY_DSN_STATUS_GO_DESKTOP* = desktopConfig.sentryDsnStatusDesktop
   API_LOGGING* = desktopConfig.apiLogging
   KEYCARD_LOGS_ENABLED* = if defined(production): false else: true
   METRICS_ENABLED* = desktopConfig.metricsEnabled

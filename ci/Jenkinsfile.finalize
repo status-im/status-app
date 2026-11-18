@@ -1,0 +1,284 @@
+#!/usr/bin/env groovy
+
+library 'status-jenkins-lib@v1.10.4'
+
+/* Signs an app built by GitHub Actions, see "Packaging in two steps" in ci/README.md. */
+
+QT_VERSION = "6.11.0"
+
+descLinks = [:]
+
+pipeline {
+  agent none
+
+  parameters {
+    choice(
+      name: 'PLATFORM',
+      description: 'Which app of the workflow run to sign.',
+      choices: ['linux', 'macos', 'windows', 'android', 'ios']
+    )
+    string(
+      name: 'RUN_ID',
+      description: 'ID of the GitHub Actions run that built the app: the number in the URL of the run.',
+      defaultValue: ''
+    )
+    booleanParam(
+      name: 'RELEASE',
+      description: 'Decides whether release credentials are used. The app must then have been built from master, a release branch or a tag.',
+      defaultValue: false
+    )
+    booleanParam(
+      name: 'PUBLISH',
+      description: 'Windows: sign with the DigiCert KeyLocker certificate.',
+      defaultValue: false
+    )
+    choice(
+      name: 'ENTITLEMENTS',
+      description: 'macOS: app entitlements. Squish requires extra entitlements.',
+      choices: ['resources/Entitlements.plist', 'resources/Entitlements_squish.plist']
+    )
+    choice(
+      name: 'WINDOWS_CODESIGN_TIMESTAMP_URL',
+      description: 'Windows: Time Stamp Authority (TSA) server for signing binaries.',
+      choices: [
+        'http://timestamp.digicert.com',
+        'http://timestamp.apple.com/ts01',
+        'http://timestamp.sectigo.com?td=sha256',
+        'http://time.certum.pl',
+        'https://freetsa.org',
+      ]
+    )
+  }
+
+  options {
+    timestamps()
+    timeout(time: 60, unit: 'MINUTES')
+    buildDiscarder(logRotator(
+      numToKeepStr: '20',
+      daysToKeepStr: '30',
+      artifactNumToKeepStr: '10',
+      artifactDaysToKeepStr: '30',
+    ))
+    disableRestartFromStage()
+  }
+
+  environment {
+    RELEASE = "${params.RELEASE}"
+    PUBLISH = "${params.PUBLISH}"
+    ENTITLEMENTS = "${params.ENTITLEMENTS}"
+    WINDOWS_CODESIGN_TIMESTAMP_URL = "${params.WINDOWS_CODESIGN_TIMESTAMP_URL}"
+    STATUS_BUILD_PROXY_STAGE_NAME = "${params.RELEASE ? 'prod' : 'test'}"
+  }
+
+  stages {
+    stage('Linux') {
+      when {
+        beforeAgent true
+        expression { params.PLATFORM == 'linux' }
+      }
+      agent {
+        docker {
+          label 'linuxcontainer'
+          image "harbor.status.im/status-im/status-desktop-build:20261021-qt${QT_VERSION}"
+          args '--entrypoint="" ' +
+               '--cap-add=SYS_ADMIN ' +
+               '--security-opt=apparmor:unconfined ' +
+               '--device=/dev/fuse ' +
+               '--volume=/nix:/nix ' +
+               '--volume=/etc/nix:/etc/nix '
+        }
+      }
+      steps { script {
+        fetchBundle()
+        def appimage = pkgName('AppImage', 'x86_64')
+        def tarball = pkgName('tar.gz', 'x86_64')
+        sh '''
+          mkdir -p tmp/tools
+          wget -nv -O tmp/tools/appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x tmp/tools/appimagetool
+        '''
+        status.signingSecrets('linux') { status.commonSecrets {
+          withEnv(['APPIMAGE_TOOL=tmp/tools/appimagetool']) {
+            sh "scripts/finalize-linux.sh bundle/dist ${appimage}"
+          }
+          sh """
+            cd pkg
+            tar czf ${utils.getFilename(tarball)} --ignore-failed-read \
+              ${utils.getFilename(appimage)} ${utils.getFilename(appimage)}.asc
+          """
+          sh "scripts/sign-linux-file.sh ${tarball}"
+        } }
+        publish(AppImage: tarball)
+      } }
+      post { cleanup { cleanWs(disableDeferredWipeout: true) } }
+    }
+
+    stage('macOS') {
+      when {
+        beforeAgent true
+        expression { params.PLATFORM == 'macos' }
+      }
+      agent { label 'macos && aarch64' }
+      environment {
+        MACOS_NOTARIZE_TEAM_ID = "8B5X2M6H2Y"
+        MACOS_BUNDLE_ID = "im.status.ethereum.desktop"
+      }
+      steps { script {
+        fetchBundle()
+        def dmg = pkgName('dmg', 'aarch64')
+        status.signingSecrets('macos') { status.commonSecrets {
+          sh "scripts/finalize-macos.sh bundle/Status.app ${dmg}"
+        } }
+        if (params.RELEASE) {
+          withCredentials([
+            usernamePassword(
+              credentialsId: 'macos-notarization-auth',
+              usernameVariable: 'MACOS_NOTARIZE_USERNAME',
+              passwordVariable: 'MACOS_NOTARIZE_PASSWORD'
+            )
+          ]) {
+            sh "scripts/notarize-macos-pkg.sh ${dmg}"
+          }
+        }
+        publish(Dmg: dmg)
+      } }
+      post { cleanup { cleanWs(disableDeferredWipeout: true) } }
+    }
+
+    stage('Windows') {
+      when {
+        beforeAgent true
+        expression { params.PLATFORM == 'windows' }
+      }
+      agent { label 'windows && x86_64' }
+      environment {
+        PATH = "${windowsPath()}"
+      }
+      steps { script {
+        fetchBundle()
+        def exe = pkgName('exe', 'x86_64')
+        def archive = pkgName('7z', 'x86_64')
+        status.signingSecrets('windows') { status.commonSecrets {
+          withEnv(["DESKTOP_VERSION=${env.BUNDLE_VERSION}"]) {
+            sh "scripts/finalize-windows.sh ./bundle/Status ${exe}"
+          }
+        } }
+        sh "7z a ${archive} ./bundle/Status"
+        publish(Exe: exe, Zip: archive)
+      } }
+      post { cleanup { cleanWs(disableDeferredWipeout: true) } }
+    }
+
+    stage('Android') {
+      when {
+        beforeAgent true
+        expression { params.PLATFORM == 'android' }
+      }
+      agent {
+        docker {
+          label 'linuxcontainer'
+          image "harbor.status.im/status-im/status-desktop-build:20261021-qt${QT_VERSION}-android"
+          alwaysPull true
+          args '--entrypoint="" ' +
+               '--volume=/nix:/nix ' +
+               '--volume=/etc/nix:/etc/nix '
+        }
+      }
+      steps { script {
+        fetchBundle()
+        def apk = pkgName('apk', 'arm64')
+        status.signingSecrets('android') { status.commonSecrets {
+          sh "mobile/scripts/android/finalize.sh bundle/StatusPR-bundle.apk ${apk}"
+        } }
+        publish(APK: apk)
+      } }
+      post { cleanup { cleanWs(disableDeferredWipeout: true) } }
+    }
+
+    stage('iOS') {
+      when {
+        beforeAgent true
+        expression { params.PLATFORM == 'ios' }
+      }
+      agent { label 'macos && aarch64' }
+      environment {
+        BUILD_VARIANT = "pr"
+      }
+      steps { script {
+        fetchBundle()
+        def ipa = pkgName('ipa', 'arm64')
+        sh '''
+          rm -rf mobile/bin/ios/qt6
+          mkdir -p mobile/bin/ios/qt6
+          mv bundle/Payload/StatusPR.app mobile/bin/ios/qt6/
+        '''
+        status.signingSecrets('ios') { status.commonSecrets {
+          dir('mobile/fastlane') {
+            sshagent(credentials: ['status-im-auto-ssh']) {
+              nix.develop("bundle exec fastlane ios ${env.BUILD_VARIANT}", pure: false)
+            }
+          }
+        } }
+        sh "mkdir -p pkg && cp mobile/bin/ios/qt6/StatusPR.ipa ${ipa}"
+        publish(Ipa: ipa)
+      } }
+      post { cleanup { cleanWs(disableDeferredWipeout: true) } }
+    }
+  }
+
+  post {
+    always { script { jenkins.setBuildDesc(descLinks) } }
+  }
+}
+
+def fetchBundle() {
+  if (!(params.RUN_ID ==~ /\d+/)) {
+    error("RUN_ID must be the number of a GitHub Actions run, got: '${params.RUN_ID}'")
+  }
+  def cmd = "ci/fetch-bundle.sh ${params.RUN_ID} ${params.PLATFORM} bundle"
+  withCredentials([
+    usernamePassword(
+      credentialsId: 'status-im-auto',
+      usernameVariable: 'GITHUB_USER',
+      passwordVariable: 'GH_TOKEN'
+    )
+  ]) {
+    if (params.PLATFORM == 'windows') {
+      sh cmd
+    } else {
+      nix.shell(cmd, packages: ['gh'], pure: false)
+    }
+  }
+  env.BUNDLE_VERSION = readFile('bundle/VERSION').trim()
+  env.BUNDLE_COMMIT = readFile('bundle/COMMIT').trim()
+}
+
+def pkgName(String ext, String arch) {
+  return 'pkg/' + utils.pkgFilename(
+    ext: ext,
+    arch: arch,
+    version: "v${env.BUNDLE_VERSION.replaceFirst(/^v/, '')}",
+    commit: env.BUNDLE_COMMIT.take(6),
+  )
+}
+
+def publish(Map packages) {
+  packages.each { label, path ->
+    descLinks[label] = s5cmd.upload(path)
+    archiveArtifacts(path)
+  }
+}
+
+def windowsPath() {
+  def binPaths = [
+    'C:/Windows/system32/WindowsPowerShell/v1.0',
+    'C:/Windows/system32',
+    'C:/Windows',
+    'C:/ProgramData/scoop/apps/inno-setup/6.7.0',
+    'C:/ProgramData/scoop/apps/git/current/bin',
+    'C:/ProgramData/scoop/shims',
+    'C:/Program Files/DigiCert/DigiCert One Signing Manager Tools',
+  ]
+  return (['/mingw64/bin', '/usr/bin', '/bin'] + binPaths).join(';')
+}

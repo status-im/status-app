@@ -23,6 +23,7 @@ nim-status-client*.tgz
 /package/
 TODO
 resources.rcc
+/build-config.json
 ui/resources.qrc
 ui/resources_webscripts.qrc
 status-react-translations/

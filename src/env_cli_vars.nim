@@ -1,9 +1,10 @@
 import os, sequtils, strutils, chronicles
 
 import app/global/feature_flags
+import build_config
 
 import # vendor libs
-  confutils
+  confutils, confutils/json/defs, json_serialization/std/options
 
 const BUILD_TIME_PREFIX = "STATUS_BUILD_"
 const RUN_TIME_PREFIX = "STATUS_RUNTIME"
@@ -217,6 +218,16 @@ type StatusDesktopConfig = object
     desc: "Sets market data prices refresh interval"
     name: $BASE_NAME_MARKET_DATA_PRICES_REFRESH_INTERVAL
     abbr: "market-data-prices-refresh-interval" .}: string
+  sentryDsnStatusGo* {.
+    defaultValue: BUILD_SENTRY_DSN_STATUS_GO
+    desc: "Sets the Sentry DSN of status-go"
+    name: $BASE_NAME_SENTRY_DSN_STATUS_GO
+    abbr: "sentry-dsn-status-go" .}: string
+  sentryDsnStatusDesktop* {.
+    defaultValue: BUILD_SENTRY_DSN_STATUS_DESKTOP
+    desc: "Sets the Sentry DSN of the app"
+    name: $BASE_NAME_SENTRY_DSN_STATUS_DESKTOP
+    abbr: "sentry-dsn-status-desktop" .}: string
   ethRpcProxyUser* {.
     defaultValue: BUILD_ETH_RPC_PROXY_USER
     desc: "Sets ETH RPC proxy username"
@@ -347,4 +358,18 @@ else:
 if defined(macosx):
   cliParams.keepIf(proc(p: string): bool = not p.startsWith("-psn_"))
 
-let desktopConfig = StatusDesktopConfig.load(cmdLine = cliParams, envVarsPrefix = RUN_TIME_PREFIX)
+# Precedence: command line, STATUS_RUNTIME_* environment, build config file, compiled-in default.
+let desktopConfig = StatusDesktopConfig.load(
+  cmdLine = cliParams,
+  envVarsPrefix = RUN_TIME_PREFIX,
+  secondarySources = proc (
+      config: StatusDesktopConfig, sources: auto
+  ) {.raises: [ConfigurationError], gcsafe.} =
+    let content = getEnv(BUILD_CONFIG_CONTENT_ENV)
+    let path = buildConfigPath()
+    if content.len > 0:
+      sources.addConfigFileContentWithParams(Json, content, allowUnknownFields = true)
+    elif path.len > 0:
+      sources.addConfigFileWithParams(Json, InputFile(path), allowUnknownFields = true)
+)
+delEnv(BUILD_CONFIG_CONTENT_ENV)

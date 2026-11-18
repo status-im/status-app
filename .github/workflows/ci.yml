@@ -40,7 +40,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/.ci-cache/ccache
   CCACHE_MAXSIZE: 2G
   # Runs a command in the container the container action starts. A step that
-  # sets the three keys passes them on: the Nim compiler reads them from its environment.
+  # sets the three keys passes them on to the packaging scripts.
   IN_IMAGE: >-
     docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY
     --env STATUS_BUILD_KLIPY_API_KEY build
@@ -246,6 +246,11 @@ jobs:
     if: *if-code
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    permissions: &attest-permissions
+      contents: read
+      packages: read
+      id-token: write
+      attestations: write
     steps:
       - *checkout
       - name: Fetch submodules
@@ -262,14 +267,37 @@ jobs:
         run: $IN_IMAGE make update
       - name: status-go
         run: $IN_IMAGE make status-go
+      - name: Bundle
+        run: |
+          $IN_IMAGE make bundle-linux
+          $IN_IMAGE mkdir -p pkg
+          $IN_IMAGE tar -C tmp/linux -czf pkg/Status-linux-x86_64-bundle.tar.gz dist
+      - *save-go
+      - *save-ccache
+      # A pull request from a fork gets no token to attest with.
+      - &attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        with:
+          subject-path: |
+            pkg/*-bundle.*
+            pkg/*-unsigned.ipa
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Status-linux-x86_64-bundle
+          path: pkg/Status-linux-x86_64-bundle.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
       - name: Package
         env: &build-keys
           STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
           STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
           STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
-        run: $IN_IMAGE make tgz-linux
-      - *save-go
-      - *save-ccache
+        run: |
+          $IN_IMAGE env APPIMAGE_TOOL=tmp/linux/tools/appimagetool \
+            scripts/finalize-linux.sh tmp/linux/dist pkg/Status.AppImage
+          $IN_IMAGE tar -C pkg -czf pkg/Status.tar.gz Status.AppImage
       # The tarball keeps the AppImage executable; the artifact's zip would not.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -285,6 +313,7 @@ jobs:
     if: *if-code
     runs-on: ubuntu-24.04
     timeout-minutes: 75
+    permissions: *attest-permissions
     steps:
       - *checkout
       - name: Fetch submodules
@@ -329,12 +358,26 @@ jobs:
             -storepass "$STATUS_APP_KEYSTORE_PASSWORD" -alias "$STATUS_APP_KEY_ALIAS" \
             -keyalg RSA -keysize 2048 -validity 30 -dname "CN=Status PR build"'
       - name: Build
-        env: *build-keys
         run: |
           $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
-          ls -l mobile/bin/android/qt6/StatusPR.apk mobile/bin/android/qt6/StatusPR-mapping.txt
+          $IN_IMAGE mkdir -p pkg
+          $IN_IMAGE cp mobile/bin/android/qt6/StatusPR.apk pkg/StatusPR-bundle.apk
+          ls -l pkg/StatusPR-bundle.apk mobile/bin/android/qt6/StatusPR-mapping.txt
       - *save-go
       - *save-ccache
+      - *attest
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Status-android-arm64-bundle
+          path: pkg/StatusPR-bundle.apk
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Package
+        env: *build-keys
+        run: >-
+          $IN_IMAGE mobile/scripts/android/finalize.sh
+          pkg/StatusPR-bundle.apk mobile/bin/android/qt6/StatusPR.apk
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-android-arm64
@@ -351,6 +394,7 @@ jobs:
     # GitHub's macOS runners are Apple Silicon.
     runs-on: macos-26
     timeout-minutes: 120
+    permissions: *attest-permissions
     env:
       CMAKE_POLICY_VERSION_MINIMUM: 3.5
       # The Makefile's default builds the disk image through Nix.
@@ -375,12 +419,25 @@ jobs:
           make deps
       - name: status-go
         run: make status-go
+      - name: Bundle
+        run: |
+          make bundle-macos
+          mkdir -p pkg
+          tar -C tmp/macos/dist -czf pkg/Status-macos-aarch64-bundle.tar.gz Status.app
+      - *save-go
+      - *save-ccache
+      - *attest
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Status-macos-aarch64-bundle
+          path: pkg/Status-macos-aarch64-bundle.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
       # MACOS_CODESIGN_IDENT is not set: the bundle is signed ad hoc.
       - name: Package
         env: *build-keys
-        run: make pkg-macos
-      - *save-go
-      - *save-ccache
+        run: scripts/finalize-macos.sh tmp/macos/dist/Status.app pkg/Status.dmg
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-macos-aarch64
@@ -396,6 +453,7 @@ jobs:
     if: *if-code
     runs-on: macos-26
     timeout-minutes: 120
+    permissions: *attest-permissions
     env:
       CMAKE_POLICY_VERSION_MINIMUM: 3.5
       IPHONE_SDK: iphoneos
@@ -427,7 +485,6 @@ jobs:
           xcbeautify --version
           make update
       - name: App
-        env: *build-keys
         run: make mobile-build
       - *save-go
       - *save-ccache
@@ -439,6 +496,7 @@ jobs:
           cp -R "$app" pkg/Payload/
           (cd pkg && zip -qry StatusPR-unsigned.ipa Payload)
           ls -l pkg/StatusPR-unsigned.ipa
+      - *attest
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-ios-arm64-unsigned
@@ -454,6 +512,7 @@ jobs:
     if: *if-code
     runs-on: windows-2022
     timeout-minutes: 120
+    permissions: *attest-permissions
     env:
       # Nim dependency trees nest past MAX_PATH, and Bash needs the scripts with LF
       # endings. Set here so that the checkout and nimble's clones see it too.
@@ -576,11 +635,26 @@ jobs:
           make deps
       - name: status-go
         run: make status-go
+      - name: Bundle
+        run: |
+          make bundle-windows
+          mkdir -p pkg
+          tar -C tmp/windows/dist -czf pkg/Status-windows-x86_64-bundle.tar.gz Status
+      - *save-go
+      - *attest
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Status-windows-x86_64-bundle
+          path: pkg/Status-windows-x86_64-bundle.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
       # Not signed: WINDOWS_CODESIGN_PFX_PATH is not set.
       - name: Package
         env: *build-keys
-        run: make zip-windows
-      - *save-go
+        run: |
+          DESKTOP_VERSION="$(scripts/version.sh)" scripts/finalize-windows.sh ./tmp/windows/dist/Status pkg/Status.exe
+          7z a pkg/Status.7z ./tmp/windows/dist/Status
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-windows-x86_64
