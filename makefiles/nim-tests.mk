@@ -97,6 +97,33 @@ NIM_TESTS_MODEL_SPY := \
 NIM_MODEL_SPY_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_MODEL_SPY))
 $(NIM_MODEL_SPY_TARGETS): NIM_PARAMS += -d:QT_MODEL_SPY
 
+# Tests with no flags of their own and no Qt application object build and run
+# as one program, so the modules they share are compiled and linked once.
+# NIM_TESTS_MERGE=0 builds every test as its own program.
+NIM_TESTS_MERGE ?= 1
+NIM_TESTS_OWN_PROGRAM := $(NIM_TESTS_LINK_STATUSQ) $(NIM_TESTS_MODEL_SPY) \
+	qml_libs_resources_test \
+	qrscan_zxing_errors_test \
+	thread_navigation_test \
+	thread_notifications_test \
+	thread_search_test
+NIM_TESTS_OWN_PROGRAM_FILES := $(patsubst %,test/nim/%.nim,$(NIM_TESTS_OWN_PROGRAM)) \
+	$(shell grep -lE 'Q(Core|Gui)?Application|QQmlApplicationEngine' $(NIM_TEST_FILES))
+NIM_MERGED_TEST_FILES := $(filter-out $(NIM_TESTS_OWN_PROGRAM_FILES),$(NIM_TEST_FILES))
+NIM_MERGED_TESTS := build/nim-tests/merged_tests.nim
+ifeq ($(NIM_TESTS_MERGE),1)
+ NIM_TESTS_RUN := $(filter-out $(addprefix nim-test-run/,$(NIM_MERGED_TEST_FILES)),$(NIM_TESTS)) nim-test-run/$(NIM_MERGED_TESTS)
+else
+ NIM_TESTS_RUN := $(NIM_TESTS)
+endif
+
+# Written on every run, so the list follows the files in test/nim/.
+nim-test-run/$(NIM_MERGED_TESTS): | nim-merged-tests
+nim-merged-tests:
+	mkdir -p $(dir $(NIM_MERGED_TESTS))
+	{ echo '{.warning[UnusedImport]: off.}'; printf 'import "../../%s"\n' $(basename $(NIM_MERGED_TEST_FILES)); } > $(NIM_MERGED_TESTS)
+.PHONY: nim-merged-tests
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
@@ -123,13 +150,13 @@ ifeq ($(mkspecs),win32)
  NIM_TEST_ORDER_DEPS := $(WIN_IMPORT_LIBS)
 endif
 # Tests build without LTO, which only lengthens their links; the benchmarks keep the application's flags.
-$(NIM_TESTS): NIM_TEST_DROP := -d:lto
+$(NIM_TESTS) nim-test-run/$(NIM_MERGED_TESTS): NIM_TEST_DROP := -d:lto
 
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN) $(NIM_TEST_ORDER_DEPS)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
 	nim c $(filter-out $(NIM_TEST_DROP),$(NIM_PARAMS)) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
-tests-nim: $(NIM_TESTS)
+tests-nim: $(NIM_TESTS_RUN)
 
 benches-nim: $(NIM_BENCHES)
 
